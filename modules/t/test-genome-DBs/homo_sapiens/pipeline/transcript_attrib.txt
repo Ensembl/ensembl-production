@@ -1,0 +1,920 @@
+1598544	3	XXbac-BPG258E24.8-001
+1598544	4	XXbac-BPG258E24.8-001
+1598544	52	Havana
+1598544	53	vega@sanger.ac.uk
+1598545	3	XXbac-BPG258E24.1-001
+1598545	4	XXbac-BPG258E24.1-001
+1598545	52	Havana
+1598545	53	vega@sanger.ac.uk
+1598546	3	XXbac-BPG258E24.7-001
+1598546	4	XXbac-BPG258E24.7-001
+1598546	52	Havana
+1598546	53	vega@sanger.ac.uk
+1598546	123	pseudopolyA not annotated as genomic has mutated from AATAAA -> AATTAA
+1598547	92	chromosome:GRCh37:6:29054084:29055090:1
+1598548	3	XXbac-BPG171B11.2-001
+1598548	4	XXbac-BPG171B11.2-001
+1598548	52	Havana
+1598548	53	vega@sanger.ac.uk
+1598548	123	previously classified as pseudogene OR2J1P
+1598548	191	rs2394517,1000GENOMES:pilot_1_CEU_low_coverage_panel
+1598548	191	rs2394517,1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel
+1598548	191	rs2394517,CSHL-HAPMAP:HapMap-CEU
+1598548	191	rs2394517,CSHL-HAPMAP:HapMap-HCB
+1598548	191	rs2394517,CSHL-HAPMAP:HapMap-JPT
+1598549	3	XXbac-BPG171B11.3-001
+1598549	4	XXbac-BPG171B11.3-001
+1598549	52	Havana
+1598549	53	vega@sanger.ac.uk
+1598550	3	XXbac-BPG258E24.10-001
+1598550	4	XXbac-BPG258E24.10-001
+1598550	52	Havana
+1598550	53	vega@sanger.ac.uk
+1598550	123	masked by repeat
+1598551	3	XXbac-BPG171B11.7-001
+1598551	4	XXbac-BPG171B11.7-001
+1598551	52	Havana
+1598551	53	vega@sanger.ac.uk
+1598551	54	unitary_pseudogene
+1598551	123	annotated as part of ENCODE based on yale unitary pseudogene prediction which used e.g. MGI:2177519 as evidence
+1598552	92	chromosome:GRCh37:6:29141080:29142351:1
+1598553	3	XXbac-BPG171B11.6-001
+1598553	4	XXbac-BPG171B11.6-001
+1598553	52	Havana
+1598553	53	vega@sanger.ac.uk
+1598554	3	XXbac-BPG171B11.4-001
+1598554	4	XXbac-BPG171B11.4-001
+1598554	52	Havana
+1598554	53	vega@sanger.ac.uk
+1598555	4	XXbac-BPG308J9.3-001
+1598555	52	Havana
+1598555	53	vega@sanger.ac.uk
+1598556	3	XXbac-BPG171B11.1-001
+1598556	4	XXbac-BPG171B11.1-001
+1598556	52	Havana
+1598556	53	vega@sanger.ac.uk
+1598557	3	XXbac-BPG308J9.2-001
+1598557	4	XXbac-BPG308J9.2-001
+1598557	52	Havana
+1598557	53	vega@sanger.ac.uk
+1598557	123	LTR splits ORF although cds 'appears' to splice around it
+1598558	3	XXbac-BPG308J9.1-001
+1598558	4	XXbac-BPG308J9.1-001
+1598558	52	Havana
+1598558	53	vega@sanger.ac.uk
+1598559	3	XXbac-BPG1H2.5-001
+1598559	4	XXbac-BPG1H2.5-001
+1598559	52	Havana
+1598559	53	vega@sanger.ac.uk
+1598559	54	unitary_pseudogene
+1598559	123	annotated as part of ENCODE based on yale unitary pseudogene prediction which used MGI:3030057 as evidence
+1598560	92	chromosome:GRCh37:6:29274467:29275432:1
+1598561	3	XXbac-BPG1H2.2-001
+1598561	4	XXbac-BPG1H2.2-001
+1598561	52	Havana
+1598561	53	vega@sanger.ac.uk
+1598562	3	XXbac-BPG1H2.4-002
+1598562	4	XXbac-BPG1H2.4-002
+1598562	52	Havana
+1598562	53	vega@sanger.ac.uk
+1598563	3	XXbac-BPG1H2.4-001
+1598563	4	XXbac-BPG1H2.4-001
+1598563	52	Havana
+1598563	53	vega@sanger.ac.uk
+1598565	3	XXbac-BPG1H2.3-001
+1598565	4	XXbac-BPG1H2.3-001
+1598565	52	Havana
+1598565	53	vega@sanger.ac.uk
+1598567	92	chromosome:GRCh37:6:29364332:29365400:1
+1598568	3	XXbac-BPG13B8.5-001
+1598568	4	XXbac-BPG13B8.5-001
+1598568	52	Havana
+1598568	53	vega@sanger.ac.uk
+1598568	54	unitary_pseudogene
+1598569	3	XXbac-BPG13B8.3-001
+1598569	4	XXbac-BPG13B8.3-001
+1598569	52	Havana
+1598569	53	vega@sanger.ac.uk
+1598570	3	XXbac-BPG13B8.3-002
+1598570	4	XXbac-BPG13B8.3-002
+1598570	52	Havana
+1598570	53	vega@sanger.ac.uk
+1598570	54	alternative 5' UTR
+1598572	3	XXbac-BPG13B8.1-001
+1598572	4	XXbac-BPG13B8.1-001
+1598572	52	Havana
+1598572	53	vega@sanger.ac.uk
+1598573	3	XXbac-BPG13B8.2-002
+1598573	4	XXbac-BPG13B8.2-002
+1598573	52	Havana
+1598573	53	vega@sanger.ac.uk
+1598573	123	splice acceptor variant at coding exon
+1598574	3	XXbac-BPG13B8.2-001
+1598574	4	XXbac-BPG13B8.2-001
+1598574	52	Havana
+1598574	53	vega@sanger.ac.uk
+1598575	3	XXbac-BPG13B8.2-003
+1598575	4	XXbac-BPG13B8.2-003
+1598575	52	Havana
+1598575	53	vega@sanger.ac.uk
+1598575	123	5' UTR variant
+1598576	3	XXbac-BPG13B8.2-004
+1598576	4	XXbac-BPG13B8.2-004
+1598576	52	Havana
+1598576	53	vega@sanger.ac.uk
+1598576	54	FLJ46099
+1598577	3	XXbac-BPG13B8.2-007
+1598577	4	XXbac-BPG13B8.2-007
+1598577	52	Havana
+1598577	53	vega@sanger.ac.uk
+1598577	123	non-splicing variant
+1598578	3	XXbac-BPG13B8.2-005
+1598578	4	XXbac-BPG13B8.2-005
+1598578	52	Havana
+1598578	53	vega@sanger.ac.uk
+1598579	3	XXbac-BPG13B8.2-006
+1598579	4	XXbac-BPG13B8.2-006
+1598579	52	Havana
+1598579	53	vega@sanger.ac.uk
+1598581	3	XXbac-BPG13B8.4-001
+1598581	4	XXbac-BPG13B8.4-001
+1598581	52	Havana
+1598581	53	vega@sanger.ac.uk
+1598582	3	XXbac-BPG13B8.9-001
+1598582	4	XXbac-BPG13B8.9-001
+1598582	52	Havana
+1598582	53	vega@sanger.ac.uk
+1598583	92	chromosome:GRCh37:6:29454474:29455733:1
+1598584	3	XXbac-BPG13B8.8-001
+1598584	4	XXbac-BPG13B8.8-001
+1598584	52	Havana
+1598584	53	vega@sanger.ac.uk
+1598585	4	XXbac-BPG13B8.10-001
+1598585	52	Havana
+1598585	53	vega@sanger.ac.uk
+1598585	123	5' and 3' EST pair
+1598585	123	polyA features
+1598586	3	XXbac-BPG158F21.2-001
+1598586	4	XXbac-BPG158F21.2-001
+1598586	52	Havana
+1598586	53	vega@sanger.ac.uk
+1598586	54	FLJ40394
+1598587	3	XXbac-BPG158F21.2-002
+1598587	4	XXbac-BPG158F21.2-002
+1598587	52	Havana
+1598587	53	vega@sanger.ac.uk
+1598588	3	XXbac-BPG158F21.1-001
+1598588	4	XXbac-BPG158F21.1-001
+1598588	52	Havana
+1598588	53	vega@sanger.ac.uk
+1598589	3	XXbac-BPG126D10.8-001
+1598589	4	XXbac-BPG126D10.8-001
+1598589	52	Havana
+1598589	53	vega@sanger.ac.uk
+1598589	123	a lot of EST evidence may suggest transcription at this locus
+1598591	3	XXbac-BPG126D10.7-001
+1598591	4	XXbac-BPG126D10.7-001
+1598591	52	Havana
+1598591	53	vega@sanger.ac.uk
+1598592	3	XXbac-BPG126D10.5-002
+1598592	4	XXbac-BPG126D10.5-002
+1598592	52	Havana
+1598592	53	vega@sanger.ac.uk
+1598592	123	3'-UTR exon is part of UBD gene
+1598593	3	XXbac-BPG126D10.5-013
+1598593	4	XXbac-BPG126D10.5-013
+1598593	52	Havana
+1598593	53	vega@sanger.ac.uk
+1598593	123	not organism-supported
+1598594	3	XXbac-BPG126D10.5-007
+1598594	4	XXbac-BPG126D10.5-007
+1598594	52	Havana
+1598594	53	vega@sanger.ac.uk
+1598594	123	alternative acceptor splice site on final exon
+1598594	123	skips 3 exons
+1598594	124	1
+1598594	126	1
+1598595	3	XXbac-BPG126D10.5-003
+1598595	4	XXbac-BPG126D10.5-003
+1598595	52	Havana
+1598595	53	vega@sanger.ac.uk
+1598595	123	skips exon but remains in frame
+1598596	3	XXbac-BPG126D10.5-004
+1598596	4	XXbac-BPG126D10.5-004
+1598596	52	Havana
+1598596	53	vega@sanger.ac.uk
+1598596	54	alternative 3' UTR
+1598596	123	alternative coding variant
+1598597	3	XXbac-BPG126D10.5-005
+1598597	4	XXbac-BPG126D10.5-005
+1598597	52	Havana
+1598597	53	vega@sanger.ac.uk
+1598597	123	3' UTR has a deletion in mRNA AB208790.1
+1598597	123	alternative splice donor introduces frameshift
+1598598	3	XXbac-BPG126D10.5-001
+1598598	4	XXbac-BPG126D10.5-001
+1598598	52	Havana
+1598598	53	vega@sanger.ac.uk
+1598599	3	XXbac-BPG126D10.5-008
+1598599	4	XXbac-BPG126D10.5-008
+1598599	52	Havana
+1598599	53	vega@sanger.ac.uk
+1598600	3	XXbac-BPG126D10.5-006
+1598600	4	XXbac-BPG126D10.5-006
+1598600	52	Havana
+1598600	53	vega@sanger.ac.uk
+1598600	123	frameshift introduces early termination
+1598600	123	skips exon
+1598601	3	XXbac-BPG126D10.5-020
+1598601	4	XXbac-BPG126D10.5-020
+1598601	52	Havana
+1598601	53	vega@sanger.ac.uk
+1598602	3	XXbac-BPG126D10.5-012
+1598602	4	XXbac-BPG126D10.5-012
+1598602	52	Havana
+1598602	53	vega@sanger.ac.uk
+1598603	3	XXbac-BPG126D10.5-019
+1598603	4	XXbac-BPG126D10.5-019
+1598603	52	Havana
+1598603	53	vega@sanger.ac.uk
+1598604	3	XXbac-BPG126D10.5-011
+1598604	4	XXbac-BPG126D10.5-011
+1598604	52	Havana
+1598604	53	vega@sanger.ac.uk
+1598605	3	XXbac-BPG126D10.5-018
+1598605	4	XXbac-BPG126D10.5-018
+1598605	52	Havana
+1598605	53	vega@sanger.ac.uk
+1598606	3	XXbac-BPG126D10.5-010
+1598606	4	XXbac-BPG126D10.5-010
+1598606	52	Havana
+1598606	53	vega@sanger.ac.uk
+1598607	3	XXbac-BPG126D10.5-017
+1598607	4	XXbac-BPG126D10.5-017
+1598607	52	Havana
+1598607	53	vega@sanger.ac.uk
+1598608	3	XXbac-BPG126D10.5-014
+1598608	4	XXbac-BPG126D10.5-014
+1598608	52	Havana
+1598608	53	vega@sanger.ac.uk
+1598608	123	not organism-supported
+1598609	3	XXbac-BPG126D10.5-009
+1598609	4	XXbac-BPG126D10.5-009
+1598609	52	Havana
+1598609	53	vega@sanger.ac.uk
+1598610	3	XXbac-BPG126D10.5-015
+1598610	4	XXbac-BPG126D10.5-015
+1598610	52	Havana
+1598610	53	vega@sanger.ac.uk
+1598610	54	alternative 5' UTR
+1598610	125	1
+1598610	127	1
+1598611	3	XXbac-BPG126D10.5-016
+1598611	4	XXbac-BPG126D10.5-016
+1598611	52	Havana
+1598611	53	vega@sanger.ac.uk
+1598611	125	1
+1598611	127	1
+1598613	3	XXbac-BPG126D10.6-001
+1598613	4	XXbac-BPG126D10.6-001
+1598613	52	Havana
+1598613	53	vega@sanger.ac.uk
+1598614	3	XXbac-BPG126D10.10-001
+1598614	4	XXbac-BPG126D10.10-001
+1598614	52	Havana
+1598614	53	vega@sanger.ac.uk
+1598614	123	formerly known as \\
+1598615	62	1:84\t.5(7.8)7.8(3.(7.4)10.24
+1598616	3	XXbac-BPG126D10.4-001
+1598616	4	XXbac-BPG126D10.4-001
+1598616	52	Havana
+1598616	53	vega@sanger.ac.uk
+1598617	92	chromosome:GRCh37:6:29555232:29556815:1
+1598618	3	XXbac-BPG126D10.3-001
+1598618	4	XXbac-BPG126D10.3-001
+1598618	52	Havana
+1598618	53	vega@sanger.ac.uk
+1598619	3	XXbac-BPG126D10.1-001
+1598619	4	XXbac-BPG126D10.1-001
+1598619	52	Havana
+1598619	53	vega@sanger.ac.uk
+1598620	3	XXbac-BPG126D10.1-012
+1598620	4	XXbac-BPG126D10.1-012
+1598620	52	Havana
+1598620	53	vega@sanger.ac.uk
+1598620	123	exon 2 splice acceptor variant
+1598621	3	XXbac-BPG126D10.1-003
+1598621	4	XXbac-BPG126D10.1-003
+1598621	52	Havana
+1598621	53	vega@sanger.ac.uk
+1598621	123	skips coding exon 2, remains in frame
+1598622	3	XXbac-BPG126D10.1-002
+1598622	4	XXbac-BPG126D10.1-002
+1598622	52	Havana
+1598622	53	vega@sanger.ac.uk
+1598622	123	apparent retained intron at 3' may give rise to protein isoform with alternative C-terminus
+1598623	3	XXbac-BPG126D10.1-013
+1598623	4	XXbac-BPG126D10.1-013
+1598623	52	Havana
+1598623	53	vega@sanger.ac.uk
+1598624	3	XXbac-BPG126D10.1-007
+1598624	4	XXbac-BPG126D10.1-007
+1598624	52	Havana
+1598624	53	vega@sanger.ac.uk
+1598624	123	exon 6 novel
+1598625	3	XXbac-BPG126D10.1-015
+1598625	4	XXbac-BPG126D10.1-015
+1598625	52	Havana
+1598625	53	vega@sanger.ac.uk
+1598626	3	XXbac-BPG126D10.1-016
+1598626	4	XXbac-BPG126D10.1-016
+1598626	52	Havana
+1598626	53	vega@sanger.ac.uk
+1598627	3	XXbac-BPG126D10.1-017
+1598627	4	XXbac-BPG126D10.1-017
+1598627	52	Havana
+1598627	53	vega@sanger.ac.uk
+1598627	123	not organism-supported
+1598628	3	XXbac-BPG126D10.1-008
+1598628	4	XXbac-BPG126D10.1-008
+1598628	52	Havana
+1598628	53	vega@sanger.ac.uk
+1598629	3	XXbac-BPG126D10.1-005
+1598629	4	XXbac-BPG126D10.1-005
+1598629	52	Havana
+1598629	53	vega@sanger.ac.uk
+1598629	123	alternative 3' end
+1598630	3	XXbac-BPG126D10.1-004
+1598630	4	XXbac-BPG126D10.1-004
+1598630	52	Havana
+1598630	53	vega@sanger.ac.uk
+1598631	3	XXbac-BPG126D10.1-006
+1598631	4	XXbac-BPG126D10.1-006
+1598631	52	Havana
+1598631	53	vega@sanger.ac.uk
+1598631	123	alternative 3' end
+1598631	123	exon 6 novel
+1598632	3	XXbac-BPG126D10.1-009
+1598632	4	XXbac-BPG126D10.1-009
+1598632	52	Havana
+1598632	53	vega@sanger.ac.uk
+1598632	54	Human Swiss-Prot :Q16653-2.1
+1598633	3	XXbac-BPG126D10.1-018
+1598633	4	XXbac-BPG126D10.1-018
+1598633	52	Havana
+1598633	53	vega@sanger.ac.uk
+1598634	3	XXbac-BPG126D10.1-019
+1598634	4	XXbac-BPG126D10.1-019
+1598634	52	Havana
+1598634	53	vega@sanger.ac.uk
+1598635	3	XXbac-BPG126D10.1-010
+1598635	4	XXbac-BPG126D10.1-010
+1598635	52	Havana
+1598635	53	vega@sanger.ac.uk
+1598635	123	novel exon disrupting cds
+1598635	124	1
+1598635	126	1
+1598636	3	XXbac-BPG126D10.1-011
+1598636	4	XXbac-BPG126D10.1-011
+1598636	52	Havana
+1598636	53	vega@sanger.ac.uk
+1598636	123	novel exon disrupting cds
+1598636	124	1
+1598636	126	1
+1598637	3	XXbac-BPG126D10.1-020
+1598637	4	XXbac-BPG126D10.1-020
+1598637	52	Havana
+1598637	53	vega@sanger.ac.uk
+1598640	3	XXbac-BPG126D10.9-002
+1598640	4	XXbac-BPG126D10.9-002
+1598640	52	Havana
+1598640	53	vega@sanger.ac.uk
+1598641	3	XXbac-BPG126D10.9-001
+1598641	4	XXbac-BPG126D10.9-001
+1598641	52	Havana
+1598641	53	vega@sanger.ac.uk
+1598643	3	XXbac-BPG126D10.11-001
+1598643	4	XXbac-BPG126D10.11-001
+1598643	52	Havana
+1598643	53	vega@sanger.ac.uk
+1598644	3	XXbac-BPG170G13.20-001
+1598644	4	XXbac-BPG170G13.20-001
+1598644	52	Havana
+1598644	53	vega@sanger.ac.uk
+1598645	3	XXbac-BPG170G13.20-004
+1598645	4	XXbac-BPG170G13.20-004
+1598645	52	Havana
+1598645	53	vega@sanger.ac.uk
+1598645	125	1
+1598645	127	1
+1598646	3	XXbac-BPG170G13.20-007
+1598646	4	XXbac-BPG170G13.20-007
+1598646	52	Havana
+1598646	53	vega@sanger.ac.uk
+1598647	3	XXbac-BPG170G13.20-003
+1598647	4	XXbac-BPG170G13.20-003
+1598647	52	Havana
+1598647	53	vega@sanger.ac.uk
+1598647	123	alternative 3' end
+1598648	3	XXbac-BPG170G13.20-008
+1598648	4	XXbac-BPG170G13.20-008
+1598648	52	Havana
+1598648	53	vega@sanger.ac.uk
+1598649	3	XXbac-BPG170G13.20-009
+1598649	4	XXbac-BPG170G13.20-009
+1598649	52	Havana
+1598649	53	vega@sanger.ac.uk
+1598650	3	XXbac-BPG170G13.20-002
+1598650	4	XXbac-BPG170G13.20-002
+1598650	52	Havana
+1598650	53	vega@sanger.ac.uk
+1598650	123	skips exon
+1598651	3	XXbac-BPG170G13.20-010
+1598651	4	XXbac-BPG170G13.20-010
+1598651	52	Havana
+1598651	53	vega@sanger.ac.uk
+1598651	123	splice variant
+1598652	3	XXbac-BPG170G13.20-011
+1598652	4	XXbac-BPG170G13.20-011
+1598652	52	Havana
+1598652	53	vega@sanger.ac.uk
+1598653	3	XXbac-BPG170G13.20-006
+1598653	4	XXbac-BPG170G13.20-006
+1598653	52	Havana
+1598653	53	vega@sanger.ac.uk
+1598653	124	1
+1598653	126	1
+1598654	3	XXbac-BPG170G13.20-012
+1598654	4	XXbac-BPG170G13.20-012
+1598654	52	Havana
+1598654	53	vega@sanger.ac.uk
+1598655	3	XXbac-BPG170G13.20-014
+1598655	4	XXbac-BPG170G13.20-014
+1598655	52	Havana
+1598655	53	vega@sanger.ac.uk
+1598655	123	alternative long-distance 3' end
+1598656	3	XXbac-BPG170G13.20-013
+1598656	4	XXbac-BPG170G13.20-013
+1598656	52	Havana
+1598656	53	vega@sanger.ac.uk
+1598656	123	alternative 3' end
+1598657	3	XXbac-BPG170G13.20-005
+1598657	4	XXbac-BPG170G13.20-005
+1598657	52	Havana
+1598657	53	vega@sanger.ac.uk
+1598657	123	splice variant
+1598657	124	1
+1598657	126	1
+1598660	3	XXbac-BPG170G13.30-001
+1598660	4	XXbac-BPG170G13.30-001
+1598660	52	Havana
+1598660	53	vega@sanger.ac.uk
+1598661	3	XXbac-BPG170G13.28-002
+1598661	4	XXbac-BPG170G13.28-002
+1598661	52	Havana
+1598661	53	vega@sanger.ac.uk
+1598661	123	Shares first exon with pseudogene MICE.
+1598662	3	XXbac-BPG170G13.28-001
+1598662	4	XXbac-BPG170G13.28-001
+1598662	52	Havana
+1598662	53	vega@sanger.ac.uk
+1598662	54	DKFZp762B162
+1598662	123	Shares first two exons of MICE.
+1598663	3	XXbac-BPG170G13.28-003
+1598663	4	XXbac-BPG170G13.28-003
+1598663	52	Havana
+1598663	53	vega@sanger.ac.uk
+1598664	3	XXbac-BPG170G13.3-001
+1598664	4	XXbac-BPG170G13.3-001
+1598664	52	Havana
+1598664	53	vega@sanger.ac.uk
+1598665	3	XXbac-BPG170G13.16-001
+1598665	4	XXbac-BPG170G13.16-001
+1598665	52	Havana
+1598665	53	vega@sanger.ac.uk
+1598665	123	Shares two exons with locus DAQB-335A13.8
+1598666	3	XXbac-BPG170G13.5-001
+1598666	4	XXbac-BPG170G13.5-001
+1598666	52	Havana
+1598666	53	vega@sanger.ac.uk
+1598667	62	1:102\t(8.(11.13(3.8)3.5(.4).18)6.3)13.4
+1598668	3	XXbac-BPG170G13.17-001
+1598668	4	XXbac-BPG170G13.17-001
+1598668	52	Havana
+1598668	53	vega@sanger.ac.uk
+1598669	3	XXbac-BPG170G13.26-006
+1598669	4	XXbac-BPG170G13.26-006
+1598669	52	Havana
+1598669	53	vega@sanger.ac.uk
+1598669	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
+1598670	3	XXbac-BPG170G13.26-005
+1598670	4	XXbac-BPG170G13.26-005
+1598670	52	Havana
+1598670	53	vega@sanger.ac.uk
+1598670	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
+1598671	3	XXbac-BPG170G13.26-004
+1598671	4	XXbac-BPG170G13.26-004
+1598671	52	Havana
+1598671	53	vega@sanger.ac.uk
+1598671	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
+1598671	123	The DAQB-335A13.14 transcripts and dJ77H14.4 (HLA-75) share sequence and overlap HCG4 on the opposite strand. Short ORFs could be seen for all variants which showed HLA class I leader homology. DAQB-335A13.14-001 is a complete match with the PGF and SSTO haplotypes. PGF and SSTO have a repeat (59 copies of 4 mer TCTT on the front of an AluSq) within intron 2 of DAQB-335A13.14-001. DAQB-335A13.14-001 does not fully match COX and QBL which have a 21 base deletion (7 amino acid in-frame deletion of RAPWMEQ) in exon 2 and one copy of the TCTT. DAQB-335A13.14-002 and DAQB-335A13.14-003 match with COX and QBL having the 21 bp deletion and one copy of the TCTT which is located in exonic sequence for these variants
+1598672	3	XXbac-BPG170G13.26-002
+1598672	4	XXbac-BPG170G13.26-002
+1598672	52	Havana
+1598672	53	vega@sanger.ac.uk
+1598672	54	XXbac-BPG170G13.21-002
+1598672	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
+1598672	123	The DAQB-335A13.14 transcripts and dJ77H14.4 (HLA-75) share sequence and overlap HCG4 on the opposite strand. Short ORFs could be seen for all variants which showed HLA class I leader homology. DAQB-335A13.14-001 is a complete match with the PGF and SSTO haplotypes. PGF and SSTO have a repeat (59 copies of 4 mer TCTT on the front of an AluSq) within intron 2 of DAQB-335A13.14-001. DAQB-335A13.14-001 does not fully match COX and QBL which have a 21 base deletion (7 amino acid in-frame deletion of RAPWMEQ) in exon 2 and one copy of the TCTT. DAQB-335A13.14-002 and DAQB-335A13.14-003 match with COX and QBL having the 21 bp deletion and one copy of the TCTT which is located in exonic sequence for these variants
+1598673	3	XXbac-BPG170G13.26-003
+1598673	4	XXbac-BPG170G13.26-003
+1598673	52	Havana
+1598673	53	vega@sanger.ac.uk
+1598673	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
+1598673	123	The DAQB-335A13.14 transcripts and dJ77H14.4 (HLA-75) share sequence and overlap HCG4 on the opposite strand. Short ORFs could be seen for all variants which showed HLA class I leader homology. DAQB-335A13.14-001 is a complete match with the PGF and SSTO haplotypes. PGF and SSTO have a repeat (59 copies of 4 mer TCTT on the front of an AluSq) within intron 2 of DAQB-335A13.14-001. DAQB-335A13.14-001 does not fully match COX and QBL which have a 21 base deletion (7 amino acid in-frame deletion of RAPWMEQ) in exon 2 and one copy of the TCTT. DAQB-335A13.14-002 and DAQB-335A13.14-003 match with COX and QBL having the 21 bp deletion and one copy of the TCTT which is located in exonic sequence for these variants
+1598674	3	XXbac-BPG170G13.26-001
+1598674	4	XXbac-BPG170G13.26-001
+1598674	52	Havana
+1598674	53	vega@sanger.ac.uk
+1598674	123	HLA-75 and HLA-90 were merged (into HLA-90) because they were part of the same unprocessed pseudogene
+1598675	3	XXbac-BPG170G13.4-001
+1598675	4	XXbac-BPG170G13.4-001
+1598675	52	Havana
+1598675	53	vega@sanger.ac.uk
+1598675	123	ORF disrupted by frameshift (2bp insertion in genomic reference). Theoretical translation for Em:AF036977.1 may be identified in another haplotype
+1598676	59	1
+1598677	3	XXbac-BPG170G13.1-001
+1598677	4	XXbac-BPG170G13.1-001
+1598677	52	Havana
+1598677	53	vega@sanger.ac.uk
+1598678	3	XXbac-BPG170G13.7-001
+1598678	4	XXbac-BPG170G13.7-001
+1598678	52	Havana
+1598678	53	vega@sanger.ac.uk
+1598679	3	XXbac-BPG170G13.19-001
+1598679	4	XXbac-BPG170G13.19-001
+1598679	52	Havana
+1598679	53	vega@sanger.ac.uk
+1598679	54	A known pseudogene that does not show protein matches on the F-map
+1598679	123	(rcg) pseudogene corresponds to the last 43 amino acids of MICB. This suggests that MICG is a duplication of the final exon of MICB - therefore an unprocessed pseudogene
+1598680	3	XXbac-BPG12I6.3-002
+1598680	4	XXbac-BPG12I6.3-002
+1598680	52	Havana
+1598680	53	vega@sanger.ac.uk
+1598680	123	alternative 5' end
+1598680	315	Q5RIS3.1
+1598681	3	XXbac-BPG12I6.3-001
+1598681	4	XXbac-BPG12I6.3-001
+1598681	52	Havana
+1598681	53	vega@sanger.ac.uk
+1598681	54	HLA-G1
+1598681	315	Q5RIS3.1
+1598682	3	XXbac-BPG12I6.3-003
+1598682	4	XXbac-BPG12I6.3-003
+1598682	52	Havana
+1598682	53	vega@sanger.ac.uk
+1598682	54	HLA-G5
+1598683	3	XXbac-BPG12I6.3-004
+1598683	4	XXbac-BPG12I6.3-004
+1598683	52	Havana
+1598683	53	vega@sanger.ac.uk
+1598683	54	HLA-G2.2
+1598683	123	evidence used (M90685.1) not on Fmap
+1598683	315	Q5RIS3.1
+1598684	3	XXbac-BPG12I6.3-005
+1598684	4	XXbac-BPG12I6.3-005
+1598684	52	Havana
+1598684	53	vega@sanger.ac.uk
+1598684	54	HLA-G2.1
+1598684	123	evidence used (M90684.1) not on Fmap
+1598684	315	Q5RIS3.1
+1598685	3	XXbac-BPG12I6.3-006
+1598685	4	XXbac-BPG12I6.3-006
+1598685	52	Havana
+1598685	53	vega@sanger.ac.uk
+1598685	54	HLA-G3
+1598685	123	human evidence used (M90686.1) not on Fmap,
+1598685	315	Q5RIS3.1
+1598686	315	Q5RIS3.1
+1598687	3	XXbac-BPG12I6.5-001
+1598687	4	XXbac-BPG12I6.5-001
+1598687	52	Havana
+1598687	53	vega@sanger.ac.uk
+1598687	123	This family of annotated objects is located on the complement strand of the HLA genes (5' end, overlapping CpG island). The founding member, HCG4, is located on the complement strand at the 5' end of the HLA-75 pseudogene. There is a 100% cDNA match at the HCG4 locus (Em:BC021249.2) and this contains several small ORFs. The cDNA (Em:AF036977.1) is a 99.9% match to the genomic and contains a 2bp deletion relative to the genomic sequence. The cDNA has a theoretical translation of 331aa but this is frameshifted within the human reference sequence. Therefore, this locus in the PGF haplotype, is annotated as a pseudogene. There is a good amount of transcriptional evidence for this locus and polyA features support this too. It was thought that the full ORF may found in an alternative haplotype but this has so far proved not to be the case (PGF, COX, QBL, SSTO so far analysed). The rest of the family are also designated as pseudogenes although not all members have been annotated. I will annotate all possible HCG4 members - this will increase the size of the family! Pseudogene annotation based on protein Tr:O95141 (331aa) (rcg)
+1598688	3	XXbac-BPG12I6.1-001
+1598688	4	XXbac-BPG12I6.1-001
+1598688	52	Havana
+1598688	53	vega@sanger.ac.uk
+1598688	54	A known pseudogene that does not show on the F-map
+1598688	123	Other protein evidence not available in the LACE database: AAC39846, AAC39847, AAC39848
+1598689	3	XXbac-BPG12I6.6-001
+1598689	4	XXbac-BPG12I6.6-001
+1598689	52	Havana
+1598689	53	vega@sanger.ac.uk
+1598689	123	This family of annotated objects is located on the complement strand of the HLA genes (5' end, overlapping CpG island). The founding member, HCG4, is located on the complement strand at the 5' end of the HLA-75 pseudogene. There is a 100% cDNA match at the HCG4 locus (Em:BC021249.2) and this contains several small ORFs. The cDNA (Em:AF036977.1) is a 99.9% match to the genomic and contains a 2bp deletion relative to the genomic sequence. The cDNA has a theoretical translation of 331aa but this is frameshifted within the human reference sequence. Therefore, this locus in the PGF haplotype, is annotated as a pseudogene. There is a good amount of transcriptional evidence for this locus and polyA features support this too. It was thought that the full ORF may found in an alternative haplotype but this has so far proved not to be the case (PGF, COX, QBL, SSTO so far analysed). The rest of the family are also designated as pseudogenes although not all members have been annotated. I will annotate all possible HCG4 members - this will increase the size of the family! Pseudogene annotation based on protein Tr:O95141 (331aa) (rcg)
+1598690	3	XXbac-BPG12I6.2-001
+1598690	4	XXbac-BPG12I6.2-001
+1598690	52	Havana
+1598690	53	vega@sanger.ac.uk
+1598692	3	XXbac-BPG12I6.4-001
+1598692	4	XXbac-BPG12I6.4-001
+1598692	52	Havana
+1598692	53	vega@sanger.ac.uk
+1598693	3	XXbac-BPG8G10.2-001
+1598693	4	XXbac-BPG8G10.2-001
+1598693	52	Havana
+1598693	53	vega@sanger.ac.uk
+1598694	3	XXbac-BPG8G10.3-001
+1598694	4	XXbac-BPG8G10.3-001
+1598694	52	Havana
+1598694	53	vega@sanger.ac.uk
+1598695	3	XXbac-BPG309N1.6-001
+1598695	4	XXbac-BPG309N1.6-001
+1598695	52	Havana
+1598695	53	vega@sanger.ac.uk
+1598697	3	XXbac-BPG309N1.1-001
+1598697	4	XXbac-BPG309N1.1-001
+1598697	52	Havana
+1598697	53	vega@sanger.ac.uk
+1598698	3	XXbac-BPG309N1.13-001
+1598698	4	XXbac-BPG309N1.13-001
+1598698	52	Havana
+1598698	53	vega@sanger.ac.uk
+1598699	3	XXbac-BPG309N1.2-001
+1598699	4	XXbac-BPG309N1.2-001
+1598699	52	Havana
+1598699	53	vega@sanger.ac.uk
+1598699	191	rs9260156,1000GENOMES:pilot_1_CEU_low_coverage_panel
+1598699	191	rs9260156,1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel
+1598700	3	XXbac-BPG309N1.2-002
+1598700	4	XXbac-BPG309N1.2-002
+1598700	52	Havana
+1598700	53	vega@sanger.ac.uk
+1598700	123	exon 5 splice donor variant
+1598700	191	rs9260156,1000GENOMES:pilot_1_CEU_low_coverage_panel
+1598700	191	rs9260156,1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel
+1598701	3	XXbac-BPG309N1.2-004
+1598701	4	XXbac-BPG309N1.2-004
+1598701	52	Havana
+1598701	53	vega@sanger.ac.uk
+1598701	123	exon 2/3 splice junction variant + retained intron
+1598702	3	XXbac-BPG309N1.2-003
+1598702	4	XXbac-BPG309N1.2-003
+1598702	52	Havana
+1598702	53	vega@sanger.ac.uk
+1598702	123	skips 3 exons - remains in-frame
+1598702	191	rs9260156,1000GENOMES:pilot_1_CEU_low_coverage_panel
+1598702	191	rs9260156,1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel
+1598703	3	XXbac-BPG309N1.2-005
+1598703	4	XXbac-BPG309N1.2-005
+1598703	52	Havana
+1598703	53	vega@sanger.ac.uk
+1598703	123	intron 2 retained. exon 5 splice acceptor variant
+1598704	3	XXbac-BPG309N1.2-006
+1598704	4	XXbac-BPG309N1.2-006
+1598704	52	Havana
+1598704	53	vega@sanger.ac.uk
+1598704	123	intron 2 retained
+1598705	3	XXbac-BPG309N1.2-007
+1598705	4	XXbac-BPG309N1.2-007
+1598705	52	Havana
+1598705	53	vega@sanger.ac.uk
+1598705	123	retained intron and exon 4 splice donor variant
+1598706	191	rs9260156,1000GENOMES:pilot_1_CEU_low_coverage_panel
+1598706	191	rs9260156,1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel
+1598707	3	XXbac-BPG309N1.14-001
+1598707	4	XXbac-BPG309N1.14-001
+1598707	52	Havana
+1598707	53	vega@sanger.ac.uk
+1598708	3	XXbac-BPG309N1.11-001
+1598708	4	XXbac-BPG309N1.11-001
+1598708	52	Havana
+1598708	53	vega@sanger.ac.uk
+1598709	3	XXbac-BPG309N1.5-001
+1598709	4	XXbac-BPG309N1.5-001
+1598709	52	Havana
+1598709	53	vega@sanger.ac.uk
+1598710	3	XXbac-BPG309N1.9-001
+1598710	4	XXbac-BPG309N1.9-001
+1598710	52	Havana
+1598710	53	vega@sanger.ac.uk
+1598710	123	exon 3 is FRAM SINE
+1598710	123	hypothetical ORF makes transcript subject to NMD. no evidence for CDS, therefore changed to transcript
+1598711	3	XXbac-BPG309N1.9-002
+1598711	4	XXbac-BPG309N1.9-002
+1598711	52	Havana
+1598711	53	vega@sanger.ac.uk
+1598712	3	XXbac-BPG309N1.15-001
+1598712	4	XXbac-BPG309N1.15-001
+1598712	52	Havana
+1598712	53	vega@sanger.ac.uk
+1598713	3	XXbac-BPG309N1.16-001
+1598713	4	XXbac-BPG309N1.16-001
+1598713	52	Havana
+1598713	53	vega@sanger.ac.uk
+1598714	3	XXbac-BPG250I8.4-009
+1598714	4	XXbac-BPG250I8.4-009
+1598714	52	Havana
+1598714	53	vega@sanger.ac.uk
+1598715	3	XXbac-BPG250I8.4-007
+1598715	4	XXbac-BPG250I8.4-007
+1598715	52	Havana
+1598715	53	vega@sanger.ac.uk
+1598716	3	XXbac-BPG250I8.4-006
+1598716	4	XXbac-BPG250I8.4-006
+1598716	52	Havana
+1598716	53	vega@sanger.ac.uk
+1598716	54	antisense to HLA-J
+1598717	3	XXbac-BPG250I8.4-004
+1598717	4	XXbac-BPG250I8.4-004
+1598717	52	Havana
+1598717	53	vega@sanger.ac.uk
+1598718	3	XXbac-BPG250I8.4-008
+1598718	4	XXbac-BPG250I8.4-008
+1598718	52	Havana
+1598718	53	vega@sanger.ac.uk
+1598718	54	DKFZp686B1842
+1598719	3	XXbac-BPG250I8.4-003
+1598719	4	XXbac-BPG250I8.4-003
+1598719	52	Havana
+1598719	53	vega@sanger.ac.uk
+1598720	3	XXbac-BPG250I8.4-010
+1598720	4	XXbac-BPG250I8.4-010
+1598720	52	Havana
+1598720	53	vega@sanger.ac.uk
+1598721	3	XXbac-BPG250I8.4-001
+1598721	4	XXbac-BPG250I8.4-001
+1598721	52	Havana
+1598721	53	vega@sanger.ac.uk
+1598722	3	XXbac-BPG250I8.4-005
+1598722	4	XXbac-BPG250I8.4-005
+1598722	52	Havana
+1598722	53	vega@sanger.ac.uk
+1598722	54	DKFZp686I0445
+1598723	3	XXbac-BPG250I8.4-002
+1598723	4	XXbac-BPG250I8.4-002
+1598723	52	Havana
+1598723	53	vega@sanger.ac.uk
+1598724	3	XXbac-BPG309N1.17-001
+1598724	4	XXbac-BPG309N1.17-001
+1598724	52	Havana
+1598724	53	vega@sanger.ac.uk
+1598725	3	XXbac-BPG250I8.1-002
+1598725	4	XXbac-BPG250I8.1-002
+1598725	52	Havana
+1598725	53	vega@sanger.ac.uk
+1598725	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
+1598726	3	XXbac-BPG250I8.1-003
+1598726	4	XXbac-BPG250I8.1-003
+1598726	52	Havana
+1598726	53	vega@sanger.ac.uk
+1598726	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
+1598727	3	XXbac-BPG250I8.1-004
+1598727	4	XXbac-BPG250I8.1-004
+1598727	52	Havana
+1598727	53	vega@sanger.ac.uk
+1598727	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
+1598728	3	XXbac-BPG250I8.1-001
+1598728	4	XXbac-BPG250I8.1-001
+1598728	52	Havana
+1598728	53	vega@sanger.ac.uk
+1598729	3	XXbac-BPG250I8.2-001
+1598729	4	XXbac-BPG250I8.2-001
+1598729	52	Havana
+1598729	53	vega@sanger.ac.uk
+1598729	123	split by a SINE
+1598730	3	LL0YNC03-29C1.1-001
+1598730	4	LL0YNC03-29C1.1-001
+1598730	52	Havana
+1598730	53	vega@sanger.ac.uk
+1598731	3	LL0XNC01-136G2.1-001
+1598731	4	LL0XNC01-136G2.1-001
+1598731	52	Havana
+1598731	53	vega@sanger.ac.uk
+1598731	54	FLJ11323
+1598731	123	Have merged last two exons as they are split due to repeats. Structure corresponds with mouse Plxcd1
+1598732	3	LL0XNC01-136G2.1-009
+1598732	4	LL0XNC01-136G2.1-009
+1598732	52	Havana
+1598732	53	vega@sanger.ac.uk
+1598732	123	likely NMD if continued
+1598733	3	LL0XNC01-136G2.1-010
+1598733	4	LL0XNC01-136G2.1-010
+1598733	52	Havana
+1598733	53	vega@sanger.ac.uk
+1598733	54	alternative 5' UTR
+1598733	125	1
+1598733	127	1
+1598734	3	LL0XNC01-136G2.1-005
+1598734	4	LL0XNC01-136G2.1-005
+1598734	52	Havana
+1598734	53	vega@sanger.ac.uk
+1598734	54	alternative 5' UTR
+1598734	125	1
+1598734	127	1
+1598735	3	LL0XNC01-136G2.1-002
+1598735	4	LL0XNC01-136G2.1-002
+1598735	52	Havana
+1598735	53	vega@sanger.ac.uk
+1598735	54	alternative 5' UTR
+1598735	123	Have merged last two exons as they are split due to repeats. Structure corresponds with mouse Plxcd1
+1598736	3	LL0XNC01-136G2.1-006
+1598736	4	LL0XNC01-136G2.1-006
+1598736	52	Havana
+1598736	53	vega@sanger.ac.uk
+1598736	54	alternative 5' UTR
+1598736	125	1
+1598736	127	1
+1598737	3	LL0XNC01-136G2.1-003
+1598737	4	LL0XNC01-136G2.1-003
+1598737	52	Havana
+1598737	53	vega@sanger.ac.uk
+1598737	54	alternative 5' UTR
+1598737	125	1
+1598737	127	1
+1598738	3	LL0XNC01-136G2.1-007
+1598738	4	LL0XNC01-136G2.1-007
+1598738	52	Havana
+1598738	53	vega@sanger.ac.uk
+1598738	54	alternative 5' UTR
+1598738	125	1
+1598738	127	1
+1598739	3	LL0XNC01-136G2.1-008
+1598739	4	LL0XNC01-136G2.1-008
+1598739	52	Havana
+1598739	53	vega@sanger.ac.uk
+1598739	54	alternative 5' UTR
+1598739	125	1
+1598739	127	1
+1598740	3	LL0XNC01-136G2.1-004
+1598740	4	LL0XNC01-136G2.1-004
+1598740	52	Havana
+1598740	53	vega@sanger.ac.uk
+1598740	54	alternative 5' UTR
+1598740	125	1
+1598740	127	1
+1598742	3	LL0XNC01-136G2.2-002
+1598742	4	LL0XNC01-136G2.2-002
+1598742	52	Havana
+1598742	53	vega@sanger.ac.uk
+1598742	54	novel transcript
+1598743	3	LL0XNC01-136G2.2-001
+1598743	4	LL0XNC01-136G2.2-001
+1598743	52	Havana
+1598743	53	vega@sanger.ac.uk
+1598743	54	pseudoautosomal GTP-binding protein-like (PGPL)
+1598743	124	1
+1598743	126	1
+1598744	316	split_tscript
+1598745	3	LL0YNC03-56G10.2-001
+1598745	4	LL0YNC03-56G10.2-001
+1598745	52	Havana
+1598745	53	vega@sanger.ac.uk
+1598746	3	LL0YNC03-56G10.1-001
+1598746	4	LL0YNC03-56G10.1-001
+1598746	52	Havana
+1598746	53	vega@sanger.ac.uk
+1598747	3	LL0YNC03-56G10.1-008
+1598747	4	LL0YNC03-56G10.1-008
+1598747	52	Havana
+1598747	53	vega@sanger.ac.uk
+1598748	3	LL0YNC03-56G10.1-003
+1598748	4	LL0YNC03-56G10.1-003
+1598748	52	Havana
+1598748	53	vega@sanger.ac.uk
+1598749	3	LL0YNC03-56G10.1-006
+1598749	4	LL0YNC03-56G10.1-006
+1598749	52	Havana
+1598749	53	vega@sanger.ac.uk
+1598750	3	LL0YNC03-56G10.1-004
+1598750	4	LL0YNC03-56G10.1-004
+1598750	52	Havana
+1598750	53	vega@sanger.ac.uk
+1598751	3	LL0YNC03-56G10.1-005
+1598751	4	LL0YNC03-56G10.1-005
+1598751	52	Havana
+1598751	53	vega@sanger.ac.uk
+1598752	3	LL0YNC03-56G10.1-007
+1598752	4	LL0YNC03-56G10.1-007
+1598752	52	Havana
+1598752	53	vega@sanger.ac.uk
+1598753	3	LL0YNC03-56G10.1-010
+1598753	4	LL0YNC03-56G10.1-010
+1598753	52	Havana
+1598753	53	vega@sanger.ac.uk
+1598754	3	LL0YNC03-56G10.1-009
+1598754	4	LL0YNC03-56G10.1-009
+1598754	52	Havana
+1598754	53	vega@sanger.ac.uk
+1598755	3	LL0YNC03-56G10.1-002
+1598755	4	LL0YNC03-56G10.1-002
+1598755	52	Havana
+1598755	53	vega@sanger.ac.uk
+1598755	125	1
+1598755	127	1
+1598756	4	RP11-309M23.1-001
+1598756	52	Havana
+1598756	53	vega@sanger.ac.uk
+1598757	4	RP11-309M23.2-001
+1598757	52	Havana
+1598757	53	vega@sanger.ac.uk
+1598757	54	ribosomal protein L14 (RPL14) pseudogene
