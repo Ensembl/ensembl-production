@@ -27,7 +27,7 @@ sub run {
 
   my $density_type = $self->get_density_type($analysis);
   Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'DensityType')->store($density_type);
-  my $slices = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice')->fetch_all('toplevel');
+  my $slices = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice')->fetch_all_karyotype();
   my $option = $self->get_option();
   my $total  = $self->get_total($option);
   my $count  = 0;
@@ -39,9 +39,8 @@ sub run {
   while (my $slice = shift @sorted_slices) {
 	$iteration++;
 	$count += $self->get_density($slice, $option);
-	if ($slice->has_karyotype) {
-	  my @blocks = $self->generate_blocks($slice);
-	  for my $block (@blocks) {
+        my @blocks = $self->generate_blocks($slice);
+        for my $block (@blocks) {
 		my $feature = $self->get_density($block, $option);
 		my $df = Bio::EnsEMBL::DensityFeature->new(-seq_region    => $slice,
 												   -start         => $block->start - $slice->start + 1,
@@ -51,18 +50,7 @@ sub run {
 		if ($feature > 0) {
 		  push(@features, $df);
 		}
-	  }
-	} else {
-	  my $feature = $self->get_density($slice, $option);
-	  my $df = Bio::EnsEMBL::DensityFeature->new(-seq_region    => $slice,
-												 -start         => $slice->start,
-												 -end           => $slice->end,
-												 -density_type  => $density_type,
-												 -density_value => $feature);
-	  if ($feature > 0) {
-		push(@features, $df);
-	  }
-	}
+        }
 	if ($count >= $total || $iteration == $max_run) {
 	  last;
 	}
