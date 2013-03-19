@@ -70,17 +70,19 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpTypeFactory',
         -parameters => {
           types => $self->o('types'),
-          input_id => { species => '#species#', type => '#type#' },
-          fan_branch_code => 2
         },
-        -flow_into  => { 2 => ['DumpFlatfile', 'ChecksumGenerator'] },
+        -flow_into  => {
+          2 => { 'DumpFlatfile' => { species => "#species#", type => "#type#" },
+                 'ChecksumGenerator' => { species => "#species#", type => "#type#" },
+          },
+        },
       },
       
       {
         -logic_name => 'DumpFlatfile',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile',
         -max_retry_count  => 1,
-        -hive_capacity    => 10,
+        -analysis_capacity => 10,
         -rc_name => 'dump',
       },
       
@@ -88,9 +90,9 @@ sub pipeline_analyses {
       
       {
         -logic_name => 'ChecksumGenerator',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::ChecksumGenerator',
+        -module     => 'Bio::EnsEMBL::Pipeline::Flatfile::ChecksumGenerator',
         -wait_for   => [qw/DumpFlatfile/],
-        -hive_capacity => 10, 
+        -analysis_capacity => 10, 
       },
       
       ####### NOTIFICATION
