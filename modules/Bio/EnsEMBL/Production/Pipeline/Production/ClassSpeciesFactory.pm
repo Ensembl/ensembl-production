@@ -20,7 +20,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Pipeline::Production::ClassSpeciesFactory
+Bio::EnsEMBL::Production::Pipeline::Production::ClassSpeciesFactory
 
 =head1 DESCRIPTION
 

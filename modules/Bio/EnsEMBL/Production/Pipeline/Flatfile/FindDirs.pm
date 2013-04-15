@@ -42,7 +42,7 @@ package Bio::EnsEMBL::Production::Pipeline::FASTA::FindDirs;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::FindDirs Bio::EnsEMBL::Pipeline::Flatfile::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::FindDirs Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
 use File::Spec;
 

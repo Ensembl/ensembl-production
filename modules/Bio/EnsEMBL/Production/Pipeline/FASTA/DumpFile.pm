@@ -20,7 +20,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Pipeline::FASTA::DumpFile
+Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile
 
 =head1 DESCRIPTION
 
@@ -79,12 +79,12 @@ Allowed parameters are:
 
 =cut
 
-package Bio::EnsEMBL::Pipeline::FASTA::DumpFile;
+package Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile;
 
 use strict;
 use warnings;
 
-use base qw(Bio::EnsEMBL::Pipeline::FASTA::Base);
+use base qw(Bio::EnsEMBL::Production::Pipeline::FASTA::Base);
 
 use File::Spec;
 use IO::Compress::Gzip qw/gzip $GzipError/;
