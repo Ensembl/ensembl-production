@@ -22,7 +22,7 @@ ok(1);
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
 
 my $db = $multi->get_DBAdaptor("pipeline");
-debug("Pipeline database instatiated");
+debug("Pipeline database instantiated");
 ok($db);
 
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf');
