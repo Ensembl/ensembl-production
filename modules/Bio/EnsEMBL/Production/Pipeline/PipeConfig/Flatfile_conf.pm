@@ -90,7 +90,7 @@ sub pipeline_analyses {
       
       {
         -logic_name => 'ChecksumGenerator',
-        -module     => 'Bio::EnsEMBL::Pipeline::Flatfile::ChecksumGenerator',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::ChecksumGenerator',
         -wait_for   => [qw/DumpFlatfile/],
         -analysis_capacity => 10, 
       },
