@@ -16,16 +16,19 @@ use Bio::EnsEMBL::Utils::CliHelper;
 my $reg = 'Bio::EnsEMBL::Registry';
 $reg->no_version_check(1); ## version not relevant to production db
 
-debug("Startup test");
-ok(1);
-
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
 
+
 my $db = $multi->get_DBAdaptor("pipeline");
-debug("Pipeline database instantiated");
-ok($db);
+ok($db,"Pipeline database instantiated");
 
+my $web = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
+my $db2 = $web->get_DBAdaptor("web");
+ok($db2,"Test web database made");
+
+$| = 1;
+$ENV{'PATH'} = $ENV{'PATH'}.":".$ENV{'ENSEMBL_CVS_ROOT_DIR'}."ensembl-production/modules/t/fake_fasta_binaries";
+# use __FILE__ to find locality of this script  ----^
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf');
-
 
 done_testing();
