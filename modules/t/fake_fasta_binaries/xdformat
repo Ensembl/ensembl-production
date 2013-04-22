@@ -1,0 +1,6 @@
+#!/usr/bin/env perl
+
+# Fake program that pretends to run wublast - xdformat
+print "xdformat running\n";
+
+exit;

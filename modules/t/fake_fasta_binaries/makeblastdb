@@ -1,0 +1,6 @@
+#!/usr/bin/env perl
+# Fake makeblastdb program
+
+print "makeblastdb running\n";
+
+exit;

@@ -1,0 +1,13 @@
+#!/usr/bin/env perl
+# Fake faToTwoBit program
+
+use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
+print "faToTwoBit running\n";
+
+my ($source,$target) = @ARGV;
+work_with_file($target,'w', sub {
+    my ($fh) = @_;
+    print $fh "0"x100; 
+});
+
+exit;
