@@ -40,6 +40,7 @@ package Bio::EnsEMBL::Production::Pipeline::FindDirs;
 
 use strict;
 use warnings;
+use Bio::EnsEMBL::Production::Pipeline::Base;
 
 use base qw/Bio::EnsEMBL::Hive::RunnableDB::JobFactory/;
 
@@ -75,6 +76,10 @@ sub dirs {
   }
   
   return \@dirs;
+}
+
+sub info {
+   Bio::EnsEMBL::Production::Pipeline::Base::info(@_); 
 }
 
 1;
