@@ -124,7 +124,14 @@ sub jobs {
 
 sub failed {
   my ($self) = @_;
-  my $failed = $self->db()->get_AnalysisJobAdaptor()->fetch_all_failed_jobs();
+  my $failed;
+  if ($self->db()->get_AnalysisJobAdaptor()->can(fetch_all_by_analysis_id_status) ) {
+      $failed = $self->db()->get_AnalysisJobAdaptor()->fetch_all_by_analysis_id_status(undef,'FAILED');
+  } elsif ($self->db()->get_AnalysisJobAdaptor()->can(fetch_all_failed_jobs) ) {
+      $failed = $self->db()->get_AnalysisJobAdaptor()->fetch_all_failed_jobs();
+  } else {
+      $self->throw("The failed analysis lookup method in Hive has changed again.");
+  }
   if(! @{$failed}) {
     return 'No jobs failed. Congratulations!';
   }
