@@ -1,0 +1,25 @@
+{
+# arrangement for tunneling to databases away from the farm.
+# remember to also alter test.pipeline.conf
+  'port'   => '3367',
+  'driver' => 'mysql',
+  'user'   => 'user',
+  'pass'   => 'pass',
+  'host'   => '127.0.0.1',
+
+  # add a line with the dbname and module
+  'databases' => {
+    'homo_sapiens' => {
+      'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'empty' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'pipeline' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+    },
+    'circ' => {
+      'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+    },
+    'multi' => {
+      'web' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+    },
+  },
+
+}
