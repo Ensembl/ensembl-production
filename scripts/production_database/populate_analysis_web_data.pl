@@ -65,20 +65,20 @@ $| = 1;
 
 my ($dsn,$dbh);
 
-my $dbhost = 'ens-staging1';
+my $dbhost;
 my $dbport = 3306;
-my $dbname = 'felis_catus_rnaseq_72_62';
-my $dbuser = 'ensro';
+my $dbname;
+my $dbuser;
 my $dbpass;
-my $mhost = 'ens-production';
+my $mhost;
 my $mport = 3306;
-my $mdbname = 'mr6_production_db';
-my $muser = 'ensadmin';
-my $mpass = 'ensembl';
-my $species = 'felis_catus';
-my $dbtype = 'rnaseq';
+my $mdbname;
+my $muser;
+my $mpass;
+my $species;
+my $dbtype;
 my $noupdate;
-my $user_id = '97245';
+my $user_id;
 my $help = 0;
 
 
