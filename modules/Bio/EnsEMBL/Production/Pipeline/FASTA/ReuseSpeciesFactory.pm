@@ -79,7 +79,6 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  $self->_add_force_species_to_species();
   $self->SUPER::fetch_input();
   $self->throw("Need to define a release parameter") unless $self->param('release');
   
@@ -91,16 +90,6 @@ sub fetch_input {
   }
   $self->param('force_species_lookup', \%force_species_lookup);
   
-  return;
-}
-
-#Allows a user to use '-force_species human' rather than '-force_species human -species human'
-sub _add_force_species_to_species {
-  my ($self) = @_;
-  my $force_species = $self->param('force_species');
-  my $species = $self->param('species');
-  my %final_species = map { $_ => 1 } (@{$force_species}, @{$species});
-  $self->param('species', [keys %final_species]);
   return;
 }
 

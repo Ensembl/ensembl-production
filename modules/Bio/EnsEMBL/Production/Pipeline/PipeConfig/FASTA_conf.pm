@@ -49,6 +49,19 @@ sub default_options {
         previous_release => (software_version() - 1),
         
         run_all => 0, #always run every species
+
+        ### Indexers
+        skip_blat => 0,
+
+        skip_wublast => 0,
+
+        skip_ncbiblast => 0,
+
+        skip_blat_masking => 1,
+
+        skip_wublast_masking => 0,
+
+        skip_ncbiblast_masking => 1,
         
         ### SCP code
         
@@ -130,8 +143,8 @@ sub pipeline_analyses {
         -logic_name => 'DumpGenes',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
         -flow_into  => {
-          2 => ['BlastPepIndex'],
-          3 => ['BlastGeneIndex']
+          2 => ['NcbiBlastPepIndex', 'BlastPepIndex'],
+          3 => ['NcbiBlastGeneIndex', 'BlastGeneIndex']
         },
         -max_retry_count  => 1,
         -hive_capacity    => 10,
@@ -146,7 +159,7 @@ sub pipeline_analyses {
         -can_be_empty => 1,
         -max_retry_count => 5,
         -flow_into  => {
-          1 => [qw/BlastDNAIndex BlatDNAIndex BlatSmDNAIndex PrimaryAssembly/]
+          1 => [qw/NcbiBlastDNAIndex BlastDNAIndex BlatDNAIndex BlatSmDNAIndex PrimaryAssembly/]
         },
       },
       
@@ -175,7 +188,8 @@ sub pipeline_analyses {
         -logic_name => 'BlastDNAIndex',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::WuBlastIndexer',
         -parameters => {
-          molecule => 'dna', type => 'genomic', program => $self->o('wublast_exe')
+          molecule => 'dna', type => 'genomic', program => $self->o('wublast_exe'), skip => $self->o('skip_wublast'),
+          index_masked_files => $self->o('skip_wublast_masking'),
         },
         -hive_capacity => 10,
         -can_be_empty => 1,
@@ -186,7 +200,7 @@ sub pipeline_analyses {
         -logic_name => 'BlastPepIndex',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::WuBlastIndexer',
         -parameters => {
-          molecule => 'pep', type => 'genes', program => $self->o('wublast_exe')
+          molecule => 'pep', type => 'genes', program => $self->o('wublast_exe'), skip => $self->o('skip_wublast'),
         },
         -hive_capacity => 5,
         -can_be_empty => 1,
@@ -199,7 +213,7 @@ sub pipeline_analyses {
         -logic_name => 'BlastGeneIndex',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::WuBlastIndexer',
         -parameters => {
-          molecule => 'dna', type => 'genes', program => $self->o('wublast_exe')
+          molecule => 'dna', type => 'genes', program => $self->o('wublast_exe'), skip => $self->o('skip_wublast'),
         },
         -hive_capacity => 5,
         -can_be_empty => 1,
@@ -214,7 +228,9 @@ sub pipeline_analyses {
         -parameters => {
           port_offset => $self->o('port_offset'), 
           program => $self->o('blat_exe'),
-          'index' => 'dna' 
+          'index' => 'dna',
+          skip => $self->o('skip_blat'),
+          index_masked_files => $self->o('skip_blat_masking'),
         },
         -can_be_empty => 1,
         -hive_capacity => 5,
@@ -227,11 +243,57 @@ sub pipeline_analyses {
         -parameters => {
           port_offset => $self->o('port_offset'), 
           program => $self->o('blat_exe'),
-          'index' => 'dna_sm' 
+          'index' => 'dna_sm',
+          skip => $self->o('skip_blat'),
+          index_masked_files => $self->o('skip_blat_masking'),
         },
         -can_be_empty => 1,
         -hive_capacity => 5,
         -rc_name => 'indexing',
+      },
+
+      {
+        -logic_name => 'NcbiBlastDNAIndex',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::NcbiBlastIndexer',
+        -parameters => {
+          molecule => 'dna', 
+          type => 'genomic', 
+          program => $self->o('ncbiblast_exe'), 
+          skip => $self->o('skip_ncbiblast'), 
+          index_masked_files => $self->o('skip_ncbiblast_masking'),
+        },
+        -hive_capacity => 10,
+        -can_be_empty => 1,
+        -rc_name => 'indexing',
+        # -flow_into => {
+        #   1 => [qw/SCPBlast/],
+        # },
+      },
+      
+      {
+        -logic_name => 'NcbiBlastPepIndex',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::NcbiBlastIndexer',
+        -parameters => {
+          molecule => 'pep', type => 'genes', program => $self->o('ncbiblast_exe'), skip => $self->o('skip_ncbiblast'),
+        },
+        -hive_capacity => 5,
+        -can_be_empty => 1,
+        # -flow_into => {
+        #   1 => [qw/SCPBlast/],
+        # },
+      },
+      
+      {
+        -logic_name => 'NcbiBlastGeneIndex',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::NcbiBlastIndexer',
+        -parameters => {
+          molecule => 'dna', type => 'genes', program => $self->o('ncbiblast_exe'), skip => $self->o('skip_ncbiblast'),
+        },
+        -hive_capacity => 5,
+        -can_be_empty => 1,
+        # -flow_into => {
+        #   1 => [qw/SCPBlast/],
+        # },
       },
       
       ######## COPYING

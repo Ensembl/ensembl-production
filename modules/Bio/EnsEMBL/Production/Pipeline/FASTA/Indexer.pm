@@ -9,6 +9,17 @@ use File::Copy qw/copy/;
 use File::Spec;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
+sub param_defaults {
+  my ($self) = @_;
+  return {
+    program => 'xdformat',
+    blast_dir => 'blast',
+    skip => 0,
+    index_masked_files => 1,
+  };
+}
+
+
 sub decompress {
   my ($self) = @_;
   my $source = $self->param('file');
@@ -40,8 +51,13 @@ SQL
 
 sub run {
   my ($self) = @_;
+  return if ! $self->ok_to_index_file();
   my $decompressed = $self->decompress();
   $self->index_file($decompressed);
+  if(-f $decompressed) {
+    $self->info("Cleaning up the file '${decompressed}' from the file system");
+    unlink $decompressed or $self->throw("Cannot unlink '$decompressed' from the file system: $!");
+  }
   $self->cleanup_DBAdaptor();
   return;
 }
@@ -54,5 +70,13 @@ sub target_dir {
   die "Implement";
 }
 
+sub ok_to_index_file {
+  my ($self) = @_;
+  return 0 if $self->param('skip');
+  my $source = $self->param('file');
+  # If it was a masked DNA file & we asked not to index them then skip
+  return 0 if $self->param('index_masked_files') && $source =~ /\.dna_[sr]m\./;
+  return 1;
+}
 
 1;

@@ -50,6 +50,10 @@ Allowed parameters are:
                   I<dna>, I<dna_sm> or I<dna_rm>. If specified we will look for this
                   string in the filename surrounded by '.' e.g. .dna.
 
+=item skip - Skip this iteration of the pipeline
+
+=item index_masked_files - If set to false then we will skip processing every masked file name
+
 =back
 
 The registry should also have a DBAdaptor for the website schema 
@@ -74,6 +78,7 @@ use Bio::EnsEMBL::Registry;
 sub param_defaults {
   my ($self) = @_;
   return {
+    %{$self->SUPER::param_defaults()},
     program => 'faToTwoBit',
     port_offset => 30000,
     'index' => 'dna', #or dna_rm and dna_sm
@@ -82,14 +87,15 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
+  return if ! $self->ok_to_index_file();
   $self->assert_executable($self->param('program'));
-  $self->assert_executable('zcat');
   $self->assert_executable('gunzip');
   return;
 }
 
 sub run {
   my ($self) = @_;
+  return if ! $self->ok_to_index_file();
   if($self->run_indexing()) {
     $self->SUPER::run();
   }

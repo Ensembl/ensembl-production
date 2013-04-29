@@ -20,11 +20,11 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::FASTA::NcbiBlastIndexer
+Bio::EnsEMBL::Production::Pipeline::FASTA::BlastIndexer
 
 =head1 DESCRIPTION
 
-Creates NCBI Blast indexes of the given GZipped file. The resulting index
+A stub blast indexer of the given GZipped file. The resulting index
 is created under the parameter location I<base_path> in I<blast_dir> and then in a
 directory defined by the type of dump. The type of dump also changes the file
 name generated. Genomic dumps have their release number replaced with the
@@ -46,6 +46,8 @@ Allowed parameters are:
 
 =item release - Required for correct DB naming
 
+=item skip - Skip this iteration of the pipeline
+
 =back
 
 =cut
@@ -64,6 +66,7 @@ use POSIX qw/strftime/;
 sub param_defaults {
   my ($self) = @_;
   return {
+    %{$self->SUPER::param_defaults()},
 #    program => 'xdformat', #program to use for indexing
 #    molecule => 'pep', #pep or dna
 #    type => 'genes',    #genes or genomic
@@ -73,6 +76,7 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
+  return if ! $self->ok_to_index_file();
   my $mol = $self->param('molecule');
   throw "No molecule param given" unless defined $mol;
   if($mol ne 'dna' && $mol ne 'pep') {
@@ -89,33 +93,13 @@ sub fetch_input {
 
 sub write_output {
   my ($self) = @_;
+  return if $self->param('skip');
   $self->dataflow_output_id({
     species     => $self->param('species'),
     type        => $self->param('type'),
     molecule    => $self->param('molecule'),
     index_base  => $self->param('index_base')
   }, 1);
-  return;
-}
-
-sub index_file {
-  my ($self, $file) = @_;
-  my $molecule_arg = ($self->param('molecule') eq 'dna') ? '-n' : '-p' ;
-  my $silence = ($self->debug()) ? 0 : 1;
-  my $target_dir = $self->target_dir();
-  my $target_file = $self->target_file($file);
-  my $db_title = $self->db_title($file);
-  my $date = $self->db_date();
-  
-  my $cmd = sprintf(q{cd %s && %s %s -q%d -I -t %s -d %s -o %s %s }, 
-    $target_dir, $self->param('program'), $molecule_arg, $silence, $db_title, $date, $target_file, $file);
-  
-  $self->info('About to run "%s"', $cmd);
-  my $output = `$cmd 2>&1`;
-  my $rc = $? >> 8;
-  throw "Cannot run program '$cmd'. Return code was ${rc}. Program output was $output" if $rc;
-  unlink $file or throw "Cannot remove the file '$file' from the filesystem: $!";
-  $self->param('index_base', $target_file);
   return;
 }
 

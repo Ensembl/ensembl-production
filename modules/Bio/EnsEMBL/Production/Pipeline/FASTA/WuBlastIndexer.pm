@@ -43,25 +43,25 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::FASTA::BlastIndexer/;
 sub param_defaults {
   my ($self) = @_;
   return {
+    %{$self->SUPER::param_defaults()},
     program => 'xdformat',
     blast_dir => 'blast',
   };
 }
 
 sub index_file {
-  my ($self, $file) = @_;
+  my ($self, $source_file) = @_;
   my $molecule_arg = ($self->param('molecule') eq 'dna') ? '-n' : '-p' ;
   my $silence = ($self->debug()) ? 0 : 1;
   my $target_dir = $self->target_dir();
-  my $target_file = $self->target_file($file);
-  my $db_title = $self->db_title($file);
+  my $target_file = $self->target_file($source_file);
+  my $db_title = $self->db_title($source_file);
   my $date = $self->db_date();
   
   my $cmd = sprintf(q{cd %s && %s %s -q%d -I -t %s -d %s -o %s %s }, 
-    $target_dir, $self->param('program'), $molecule_arg, $silence, $db_title, $date, $target_file, $file);
+    $target_dir, $self->param('program'), $molecule_arg, $silence, $db_title, $date, $target_file, $source_file);
   
   $self->run_cmd($cmd);
-  unlink $file or $self->throw("Cannot remove the file '$file' from the filesystem: $!");
   $self->param('index_base', $target_file);
   return;
 }
