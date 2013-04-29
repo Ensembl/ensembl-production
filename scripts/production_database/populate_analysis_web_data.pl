@@ -79,6 +79,7 @@ my $species;
 my $dbtype;
 my $noupdate;
 my $user_id;
+my $skip_missing;
 my $help = 0;
 
 
@@ -94,11 +95,16 @@ my $help = 0;
   'muser|mdbuser=s'     => \$muser,
   'mpass|mdbpass=s'     => \$mpass,
   'species=s'           => \$species,
-  'dbtype'              => \$dbtype,
-  'user_id=s'           => \$user_id,
+  'dbtype=s'            => \$dbtype,
   'noupdate'            => \$noupdate,
+  'user_id'             => \$user_id,
+  'skip_missing'        => \$skip_missing,
   'h|help!'             => \$help
 );
+
+  if($help){
+    usage();
+  }
 
   if (!$dbhost) {
     print ("Need to pass a dbhost\n");
@@ -119,15 +125,9 @@ my $help = 0;
   }
   if (!$dbtype) {
     $dbname =~ /([a-z]*_[a-z]*)_(core|otherfeatures|vega|rnaseq|cdna|presite|sangervega)/;
-    $dbtype = $1;
+    $dbtype = $2;
     warn("No dbtype defined, using $dbtype inferred from database name");
   }
-
-
-  if($help){
-    usage();
-  }
-
 
 
   my $db = new Bio::EnsEMBL::DBSQL::DBAdaptor(
@@ -149,6 +149,10 @@ my $help = 0;
   );
 
   my ($ad_id, $wd_id, $display, $description, $display_label, $db_version);
+  my $cnt_ana = 0;
+  my $add_ad = 0;
+  my $add_aw = 0;
+  my $skip = 0;
   my $helper = $mdb->dbc->sql_helper();
 
   my $species_id = get_species_id($helper, $species);
@@ -160,6 +164,7 @@ my $help = 0;
   # Loop through all analyses
   foreach my $analysis(@$analyses){
 
+    $cnt_ana++;
     my $logic_name = lc($analysis->logic_name());
     printf( "\nProcessing %s to analysis_web_data\n", $logic_name);
 
@@ -167,7 +172,7 @@ my $help = 0;
     my $result = get_analysis_description($helper, $logic_name);
 
     # If not, see if we can add a new one copying a similar entry
-    if (!$result) {
+    if (!$result && !$skip_missing) {
       printf( "%s has no entry in analysis_description, trying to use default\n", $logic_name);
       $logic_name =~ /^([a-z]*)_([a-z0-9_]*)/;
       my $prefix = ucfirst($1);
@@ -181,6 +186,7 @@ my $help = 0;
         $description =~ s/Species/$prefix/;
         $display_label =~ s/Species/$prefix/;
         printf( "Adding analysis_description for %s using %s\n", $logic_name, $default_logic_name);
+        $add_ad++;
       } else {
         throw("No analysis description added for $default_logic_name, exiting now");
       }
@@ -189,6 +195,10 @@ my $help = 0;
         $ad_id = add_analysis_description($helper, $logic_name, $description, $display_label, $db_version, $user_id, $wd_id, $display);
       }
 
+    } elsif (!$result && $skip_missing) {
+      printf( "Skipping %s\n", $logic_name );
+      $skip++;
+      next;
     } else {
       ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @{ $result };
     }
@@ -200,12 +210,18 @@ my $help = 0;
     if (!$exists) {
       if (!$noupdate) {
         add_analysis_web_data($helper, $ad_id, $wd_id, $species_id, $dbtype, $display, $user_id);
+        $add_aw++;
       }
       printf( "Adding entry in analysis_web_data for species %s, logic name %s and database type %s\n", $species, $logic_name, $dbtype );
     } else {
       printf( "Entry already exists for %s and %s\n", $species, $logic_name);
     }
   }
+
+printf( "\n\n   Processed %s analyses\n", $cnt_ana);
+printf( "   Added %s entries to analysis_description table\n", $add_ad);
+printf( "   Added %s entries to analysis_web_data table\n", $add_aw);
+printf( "   Skipped %s analyses with missing analysis_description entry\n", $skip);
 
 sub get_species_id {
   my ($helper, $species) = @_;
