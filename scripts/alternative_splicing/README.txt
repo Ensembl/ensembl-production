@@ -38,7 +38,7 @@ described in section 4) of this document.
 1) Dump gene models in GFF 
 --------------------------
 
-use ensembl/misc-scripts/alternative_splicing/Fetch_gff.pl,  i.e.
+use alternative_splicing/Fetch_gff.pl,  i.e.
 
 perl Fetch_gff.pl -dbhost host1 -dbuser ro -dbname ianl_homo_sapiens_core_55_37 > ianl_homo_sapiens_core_55_37.gff
 
@@ -51,7 +51,7 @@ perl Fetch_gff.pl -dbhost host1 -dbuser ro -dbname ianl_homo_sapiens_core_55_37 
 the AltSplicingToolkit must be installed to compute the splicing events.
 Please refer to the documentation in 
 
-ensembl/misc-scripts/alternative_splicing/AltSplicingToolkit/INSTALL
+alternative_splicing/AltSplicingToolkit/INSTALL
 
 to install this toolkit.
 
@@ -68,7 +68,17 @@ altSpliceFinder -i ianl_homo_sapiens_core_55_37.gff -o ianl_homo_sapiens_core_55
 cat ianl_homo_sapiens_core_55_37_AS_events.gff | \
 perl load_alt_splice_gff.pl -user admin -pass XXX -dbname ianl_homo_sapiens_core_55_37 -host host1
 
-4) All in one: pipeline script at Sanger
+4) Running update_meta_coord.pl
+-------------------------------
+
+The alt splicing toolkit loader does not update meta_coord resulting in failing healthchecks. You should run 
+the following script from the Ensembl checkout.
+
+perl ensembl/misc-scripts/meta_coord/update_meta_coord.pl -dbhost host1 -dbuser ro \
+  -dbpass XXX -dbpattern ianl_homo_sapiens_core_55_37
+
+
+5) All in one: pipeline script at Sanger
 ----------------------------------------
 
 Run the script as_event_computations.sh with the following parameters:

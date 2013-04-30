@@ -154,6 +154,16 @@ echo "Populate ${db} with alternative splicing information";
 if [ -n "$password" ]
 then
 		perl load_alt_splice_gff.pl -file ${output_dir}/${db}_${NOW}_events.gff -host ${host} -user ${user} -pass ${password} -dbname ${db}
+
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    meta_cmdline_opts="-dbhost ${host} -dbuser ${user} -dbpass ${password} -dbpattern ${db}"
+    if [ -d $DIR/../../../ensembl]; then
+      echo "Running update_meta_coord.pl for this new data"
+      perl $DIR/../../../ensembl/misc-scripts/meta_coord/update_meta_coord.pl $meta_cmdline_opts
+    else
+      echo "Cannot find the ensembl checkout directory. You can run the script yourself using the following command line"
+      echo "perl misc-scripts/meta_coord/update_meta_coord $meta_cmdline_opts"
+    fi
 else 
 		echo "Sorry, you did not provide any password. The script can't populate the database with the Alternative splicing information.";
 		echo "However, the results are available in ${output_dir}/${db}_${NOW}_events.gff";
