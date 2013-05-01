@@ -157,7 +157,7 @@ then
 
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     meta_cmdline_opts="-dbhost ${host} -dbuser ${user} -dbpass ${password} -dbpattern ${db}"
-    if [ -d $DIR/../../../ensembl]; then
+    if [ -d $DIR/../../../ensembl ]; then
       echo "Running update_meta_coord.pl for this new data"
       perl $DIR/../../../ensembl/misc-scripts/meta_coord/update_meta_coord.pl $meta_cmdline_opts
     else
