@@ -55,6 +55,7 @@ my $queue = &LSF_QUEUE;
             'dblist=s'     => \$dblist,
             'dbname_ref=s' => \$dbname_human,
             'dbhost_ref=s' => \$dbhost_human,
+            'dbuser_ref=s' => \$human_user,
             'dbport_ref=s' => \$human_port,
             'log_file=s'   => \$log_file_name,
             'queue=s'      => \$queue,
@@ -255,7 +256,7 @@ sub check_if_exists {
 
 sub Usage {
     print <<EOF
- $0 --host <host name> --dbname_ref <DB name> [--dblist <DB name>] [--write] [--dbhost_ref <host name>] [--dbport_ref <port number>] [--port <int>] [--user <user name>] [--pass <passwd>] [--log_file <path to file>] [--parallel]
+ $0 --host <host name> --dbname_ref <DB name> [--dblist <DB name>] [--write] [--dbhost_ref <host name for the human db>] [--dbport_ref <port number for the human db>] [--dbuser_ref <user name for the human db>] [--port <int>] [--user <user name>] [--pass <passwd>] [--log_file <path to file>] [--parallel]
         
         Mandatory
             --host       Name of the host of the target database
