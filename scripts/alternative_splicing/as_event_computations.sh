@@ -162,7 +162,7 @@ then
       perl $DIR/../../../ensembl/misc-scripts/meta_coord/update_meta_coord.pl $meta_cmdline_opts
     else
       echo "Cannot find the ensembl checkout directory. You can run the script yourself using the following command line"
-      echo "perl misc-scripts/meta_coord/update_meta_coord $meta_cmdline_opts"
+      echo "perl misc-scripts/meta_coord/update_meta_coord.pl $meta_cmdline_opts"
     fi
 else 
 		echo "Sorry, you did not provide any password. The script can't populate the database with the Alternative splicing information.";
