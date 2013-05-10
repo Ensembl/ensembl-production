@@ -14,24 +14,24 @@ $Data::Dumper::Indent = 0;
 my $release = software_version();
 
 
-my $base_dir = "/lustre/scratch109/ensembl/tm6/projections_run2";
+my $base_dir = "mydir";
 
 my $conf = "release_${release}.ini"; # registry config file, specifies Compara location
 
 # location of other databases
 
 my @config = ( {
-    '-host'       => 'ens-staging1',
-    '-port'       => '3306',
-    '-user'       => 'ensadmin',
-    '-pass'       => 'ensembl',
+    '-host'       => 'HOST',
+    '-port'       => 'PORT',
+    '-user'       => 'USER',
+    '-pass'       => 'PASS',
     '-db_version' => $release
   },
   {
-    '-host'       => 'ens-staging2',
-    '-port'       => '3306',
-    '-user'       => 'ensadmin',
-    '-pass'       => 'ensembl',
+    '-host'       => 'HOST',
+    '-port'       => 'PORT',
+    '-user'       => 'USER',
+    '-pass'       => 'PASS',
     '-db_version' => $release
   } );
 
@@ -65,17 +65,178 @@ my %names_1_1;
 # the execution order array that follows.
 ######
 $names_1_1{'human'} =  [qw(
+    alpaca
+    anolis
+    armadillo
+    bushbaby
+    cat
+    chicken
+    chimp
+    coelacanth
+    cow
+    dog
+    dolphin
+    elephant
+    gibbon
+    gorilla
+    ground_shrew
+    guinea_pig
+    horse
+    hyrax
+    macaque
+    marmoset
+    megabat
+    microbat
+    mouse_lemur
+    mustela_putorius_furo
+    opossum
+    orang_utan
+    panda
     pig
+    pika
+    platypus
+    psinensis
+    rabbit
+    sloth
+    squirrel
+    tarsier
+    tasmanian_devil
+    tenrec
+    tree_shrew
+    turkey
+    wallaby
+    western_european_hedgehog
+    xenopus
+    zebrafinch
     )];
 
-my %go_terms;
-$go_terms{'human'} = [qw(  
-    pig
+$names_1_1{'mouse'} = [qw(
+    kangaroo_rat
+    mustela_putorius_furo
+    rat    
+)];
 
+my %names_1_many;
+$names_1_many{'human'} = [qw(
+    cod
+    fugu
+    lamprey
+    medaka
+    stickleback
+    tetraodon
+    tilapia
+    xiphophorus_maculatus
+    zebrafish
+)];
+
+my %go_terms;
+$go_terms{'human'} = [qw(
+    alpaca
+    anolis
+    armadillo
+    bushbaby
+    cat
+    chicken
+    chimp
+    cow
+    dog
+    dolphin
+    elephant
+    gibbon
+    gorilla
+    ground_shrew
+    guinea_pig
+    horse
+    hyrax
+    kangaroo_rat
+    macaque
+    marmoset
+    megabat
+    microbat
+    mouse
+    mouse_lemur
+    mustela_putorius_furo
+    opossum
+    orang_utan
+    panda
+    pig
+    pika
+    platypus
+    psinensis
+    rabbit
+    rat
+    sloth
+    squirrel
+    tarsier
+    tasmanian_devil
+    tenrec
+    tree_shrew
+    turkey
+    wallaby
+    western_european_hedgehog
+    zebrafinch
 )];
 $go_terms{'mouse'} = [qw(
+    alpaca
+    anolis
+    armadillo
+    bushbaby
+    cat
+    chicken
+    chimp
+    cow
+    dog
+    dolphin
+    elephant
+    gorilla
+    ground_shrew
+    guinea_pig
+    horse
+    human
+    hyrax
+    kangaroo_rat
+    macaque
+    marmoset
+    megabat
+    microbat
+    mouse_lemur
+    mustela_putorius_furo
+    opossum
+    orang_utan
+    panda
     pig
+    pika
+    platypus
+    psinensis
+    rabbit
+    rat
+    sloth
+    squirrel
+    tarsier
+    tasmanian_devil
+    tenrec
+    tree_shrew
+    turkey
+    wallaby
+    western_european_hedgehog
+    zebrafinch
 )];
+$go_terms{'rat'} = [qw(
+    human
+    mouse
+)];
+$go_terms{'zebrafish'} = [qw(
+    cod
+    coelacanth
+    fugu
+    lamprey
+    stickleback
+    tetraodon
+    tilapia
+    xenopus
+    xiphophorus_maculatus
+)];
+$go_terms{'xenopus'} = [qw(zebrafish)];
 
 # order to run projections in, just in case they are order-sensitive.
 my @execution_order = qw/human mouse rat zebrafish xenopus/;
@@ -117,8 +278,6 @@ foreach my $from (@execution_order) {
 }
 $last_name = "";
 
-<<<<<<< submit_projections.pl
-=======
 print "Deleting projected names (one to many)\n";
 foreach my $from (keys %names_1_many) {
     foreach my $to (@{$names_1_many{$from}}) {
@@ -144,7 +303,6 @@ foreach my $from (@execution_order) {
 }
 
 $last_name = "";
->>>>>>> 1.69
 
 # ----------------------------------------
 # GO terms
