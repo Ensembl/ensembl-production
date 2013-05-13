@@ -21,7 +21,7 @@ sub run {
 
   my %unique;
   my $pops = $self->get_populations();
-  my %samples = $self->get_sample_ids($dbva, $pops);
+  my %pop_ids = $self->get_population_ids($dbva, $pops);
   my $transcripts = $self->get_features($dbva);
   foreach my $transcript (@{ $transcripts }) {
     my @transcript = @$transcript;
@@ -66,27 +66,27 @@ sub store_attribute {
 }
 
 
-sub get_sample_ids {
+sub get_population_ids {
   my ($self, $dbva, $pops) = @_;
-  my %samples;
+  my %pop_ids;
   my $helper = $dbva->dbc()->sql_helper();
 
-  my ($sample_id, $name);
+  my ($population_id, $name);
   my $sql = q{
-     SELECT p.sample_id, p.name
-     FROM population p
-     WHERE p.name = ? };
+     SELECT population_id, name
+     FROM population 
+     WHERE name = ? };
   foreach my $pop (@$pops) {
     my $result = $helper->execute(-SQL => $sql, -PARAMS => [$pop])->[0] ;
     if ($result) {
-      $sample_id = @$result[0];
+      $population_id = @$result[0];
       $name = @$result[1];
     }
-    if ($sample_id) {
-      $samples{$sample_id} = $name;
+    if ($population_id) {
+      $samples{$population_id} = $name;
     }
   }
-  return %samples;
+  return %pop_ids;
 }
 
 sub get_features {
