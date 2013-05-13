@@ -25,8 +25,8 @@ sub run {
   my $transcripts = $self->get_features($dbva);
   foreach my $transcript (@{ $transcripts }) {
     my @transcript = @$transcript;
-    if ($samples{$transcript->[0]}) {
-      my $pop = $samples{$transcript->[0]};
+    if ($pop_ids{$transcript->[0]}) {
+      my $pop = $pop_ids{$transcript->[0]};
       my $transcript_stable_id = $transcript->[1];
       my $rsid = $transcript->[2];
       my $consequence = $transcript->[3];
@@ -83,7 +83,7 @@ sub get_population_ids {
       $name = @$result[1];
     }
     if ($population_id) {
-      $samples{$population_id} = $name;
+      $pop_ids{$population_id} = $name;
     }
   }
   return %pop_ids;
