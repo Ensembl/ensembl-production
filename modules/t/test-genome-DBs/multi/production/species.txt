@@ -1,0 +1,1 @@
+21	homo_sapiens	human	Human	Homo sapiens	homo_sapiens	Homo_sapiens	9606	ENS	1	NULL	NULL	NULL	NULL	366
