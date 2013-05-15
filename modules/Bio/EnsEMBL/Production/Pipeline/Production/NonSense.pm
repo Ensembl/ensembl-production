@@ -170,9 +170,8 @@ sub get_populations {
     '1000GENOMES:phase_1_AMR',
     '1000GENOMES:phase_1_ASN',
     '1000GENOMES:phase_1_EUR',
-    '1000GENOMES:pilot_1_CEU_low_coverage_panel',
-    '1000GENOMES:pilot_1_CHB+JPT_low_coverage_panel',
-    '1000GENOMES:pilot_1_YRI_low_coverage_panel',
+    'ESP6500:African_American',
+    'ESP6500:European_American',
   );
   return \@pops;
 }
