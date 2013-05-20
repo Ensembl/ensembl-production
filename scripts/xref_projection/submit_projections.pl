@@ -259,7 +259,6 @@ foreach my $species (keys %names_1_1) {
 my $last_name; # for waiting in queue
 
 foreach my $from (@execution_order) {
-    my $last_name; # for waiting in queue
     if (not exists($names_1_1{$from})) {next;}
     foreach my $to (@{$names_1_1{$from}}) {
         my $o = "$dir/names_${from}_$to.out";
