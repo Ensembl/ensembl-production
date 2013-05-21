@@ -55,19 +55,14 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::FASTA::Base/;
 use File::Spec;
 use File::stat;
 
-sub param_defaults {
-  my ($self) = @_;
-  return {
-    dna => {
-      regex => qr/.+\.dna\..+\.fa\.gz$/,
-    },
-    dna_rm => {
-      regex => qr/.+\.dna_rm\..+\.fa\.gz$/,
-    },
-    dna_sm => {
-      regex => qr/.+\.dna_sm\..+\.fa\.gz$/,
-    },
-  };
+sub file_pattern {
+  my ($self,$type) = @_;
+   my %regexes = (
+    dna => qr/.+\.dna\..+\.fa\.gz$/,
+    dna_rm => qr/.+\.dna_rm\..+\.fa\.gz$/,
+    dna_sm => qr/.+\.dna_sm\..+\.fa\.gz$/,
+  );
+  return $regexes{$type};
 }
 
 sub fetch_input {
@@ -132,11 +127,8 @@ sub get_dna_files {
   my ($self) = @_;
   my $path = $self->fasta_path('dna');
   my $data_type = $self->param('data_type'); 
-  my $regex_hash = $self->param($data_type); 
-  if(! $regex_hash ) {
-    $self->throw("We do not have an entry for the data_type $data_type in our regex lookup hash. Edit this module");
-  }
-  my $regex = $regex_hash->{regex};
+  
+  my $regex = $self->file_pattern($data_type);
   my $filter = sub {
     my ($filename) = @_;
     return ($filename =~ $regex && $filename !~ /\.toplevel\./) ? 1 : 0;
