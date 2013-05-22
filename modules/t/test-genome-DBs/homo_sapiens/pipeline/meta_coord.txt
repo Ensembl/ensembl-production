@@ -1,9 +1,0 @@
-gene	2	78348
-exon	2	9663
-dna_align_feature	2	60133
-protein_align_feature	2	23678
-transcript	2	9771
-repeat_feature	2	50000
-simple_feature	2	17502
-misc_feature	2	216723
-density_feature	2	1140768

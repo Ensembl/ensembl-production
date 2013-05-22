@@ -1,5 +1,0 @@
-1	Coding gene density as calculated by <a rel="external" href="http://cvs.sanger.ac.uk/cgi-bin/viewvc.cgi/ensembl/modules/Bio/EnsEMBL/Pipeline/Production/CodingDensity.pm?root=ensembl&view=markup">gene_density_calc.pl</a>.	Coding genes (density)	1	NULL
-2	Percentage of repetitive elements for top level sequences (such as chromosomes, scaffolds, etc.)	Repeats (percent)	1	NULL
-3	Non-coding gene density as calculated by <a rel="external" href="http://cvs.sanger.ac.uk/cgi-bin/viewvc.cgi/ensembl/modules/Bio/EnsEMBL/Pipeline/Production/NonCodingDensity.pm?root=ensembl&view=markup">NonCodingDensity.pm</a>.	Non-coding genes (density)	1	NULL
-4	Percentage of G/C bases in the sequence.	GC content	1	NULL
-5	Pseudogene density as calculated by <a rel="external" href="http://cvs.sanger.ac.uk/cgi-bin/viewvc.cgi/ensembl/modules/Bio/EnsEMBL/Pipeline/Production/PseudogeneDensity.pm?root=ensembl&view=markup">PseudogeneDensity</a>.	Pseudogenes (density)	1	NULL
