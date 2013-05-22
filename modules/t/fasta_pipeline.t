@@ -1,7 +1,9 @@
 use strict;
 use warnings;
 
-## run on empty production db
+# user specifies a base_path that tells the pipeline where the dump will occur.
+# export CVS_ROOT and ENSEMBL_CVS_ROOT_DIR to the shell prior to execution
+# e.g. perl fasta_pipeline.t '-run_all 1 -base_path ./'
 
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
