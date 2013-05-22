@@ -93,7 +93,7 @@ sub fetch_input {
   if(!check_ref($servers, 'ARRAY') || ! @{$servers}) {
     my $msg = 'Will not perform copy as we have no servers';
     my $is_error = 0;
-    $self->db()->get_JobMessageAdaptor()->register_message(
+    $self->db()->get_LogMessageAdaptor()->register_message(
       $self->input_job()->dbID(), $msg, $is_error
     );
     $self->info($msg);
