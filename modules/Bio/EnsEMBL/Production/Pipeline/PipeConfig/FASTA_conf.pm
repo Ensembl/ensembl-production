@@ -322,13 +322,11 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::FindDirs',
         -parameters => {
           column_names => [qw/dir/],
-          input_id => { 'dir' => '#dir#' },
           fan_branch_code => 2,
         },
         -wait_for   => [qw/DumpDNA DumpGenes PrimaryAssembly BlastDNAIndex BlastGeneIndex BlastPepIndex/],
-        -flow_into  => { 2 => ['ChecksumGenerator'] } 
+        -flow_into  => { 2 => {'ChecksumGenerator' => { dir => '#dir#'}} },
       },
-      
       {
         -logic_name => 'ChecksumGenerator',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator',
