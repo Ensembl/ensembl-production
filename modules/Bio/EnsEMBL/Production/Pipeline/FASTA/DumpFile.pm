@@ -116,7 +116,9 @@ sub param_defaults {
     #used to track if we need to reopen a file in append mode or not
     generated_files => {}, 
     remove_files_from_dir => {},
-    dataflows => []
+    dataflows => [],
+    process_logic_active => 0,
+    skip_logic_active => 0,
   };
 }
 
