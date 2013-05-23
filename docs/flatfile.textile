@@ -44,7 +44,7 @@ We recommend if you have a number of parameters which do not change between rele
 
 bc. 
 	package MyCnf;
-	use base qw/Bio::EnsEMBL::Pipeline::Flatfile::Flatfile_conf/;
+	use base qw/Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf/;
 	sub default_options {
 	  my ($self) = @_;
 	  return {
@@ -104,20 +104,20 @@ h2. Example Commands
 h3. To load use normally:
 
 bc. 
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::Flatfile_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf \
 	-pipeline_db -host=my-db-host -base_path /path/to/dumps -registry reg.pm
 
 h3. Run a subset of species (no forcing & supports registry aliases):
 
 bc. 
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::Flatfile_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf \
 	-pipeline_db -host=my-db-host -species anolis -species celegans -species human \
 	-base_path /path/to/dumps -registry reg.pm
 
 h3. Dumping just EMBL data (no genbank):
 
 bc. 
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::Flatfile_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf \
 	-pipeline_db -host=my-db-host -type embl \
 	-base_path /path/to/dumps -registry reg.pm
 
@@ -143,7 +143,7 @@ run using @standaloneJob.pl@. We will list some useful commands to run
 h3. Dumping a Single Species
 
 bc. 
-  standaloneJob.pl Bio::EnsEMBL::Pipeline::Flatfile::DumpFile \
+  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile \
   -reg_conf reg.pm -debug 2 \
   -release 67 -species homo_sapiens -type embl \
   -base_path /path/to/dumps
@@ -163,11 +163,11 @@ to work with embl and another to work with genbank.
 The pipeline searches for all files matching the format *.dat.gz.
 
 bc. 
-  init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FlatfileChecker_conf \
+  init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FlatfileChecker_conf \
   -base_path /path/to/embl/dumps -type embl
 
 bc. 
-  init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FlatfileChecker_conf \
+  init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FlatfileChecker_conf \
   -base_path /path/to/genbank/dumps -type genbank
 
 h3. Running without a Pipeline
@@ -176,7 +176,7 @@ You can run this module without a pipeline if you need to check a single
 file.
 
 bc. 
-  standaloneJob.pl Bio::EnsEMBL::Pipeline::Flatfile::CheckFlatfile \
+  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::Flatfile::CheckFlatfile \
   -file /path/to/embl/dumps/homo_sapiens/Homo_sapiens.chromosome.1.dat.gz \
   -type embl
 

@@ -65,7 +65,7 @@
 <p>We recommend if you have a number of parameters which do not change between releases to create a configuration file which inherits from the root config file e.g.</p>
 <pre><code>
 	package MyCnf;
-	use base qw/Bio::EnsEMBL::Pipeline::FASTA::FASTA_conf/;
+	use base qw/Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf/;
 	sub default_options {
 	  my ($self) = @_;
 	  return {
@@ -345,41 +345,41 @@
 <h2>Example Commands</h2>
 <h3>To load use normally:</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Run a subset of species (no forcing &amp; supports registry aliases):</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -species anolis -species celegans -species human \
 	-base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Specifying species to force (supports all registry aliases):</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -force_species anolis -force_species celegans -force_species human \
 	-base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Running &amp; forcing a species:</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -species celegans -force_species celegans \
 	-base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Running everything:</h3>
 <p>bc.<br />
-	 init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \<br />
+	 init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \<br />
 	 -pipeline_db -host=my-db-host -run_all 1 \<br />
 	 -base_path /path/to/dumps -registry reg.pm</p>
 <h3>Dumping just gene data (no <span class="caps">DNA</span> or ncRNA):</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -dump_type cdna \
 	-base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Using a different <span class="caps">SCP</span> user &amp; identity:</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host -scp_user anotherusr -scp_identity /users/anotherusr/.pri/identity \
 	-base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Skipping WUBlast indexing</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::FASTA_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf \
 	-pipeline_db -host=my-db-host \
 	-base_path /path/to/dumps -registry reg.pm \
 	-skip_wublast 1</code></pre>
@@ -408,19 +408,19 @@
 run using <code>standaloneJob.pl</code>. We will list some useful commands to run</p>
 <h3>Running <span class="caps">DNA</span> Dumping</h3>
 <pre><code>
-  standaloneJob.pl Bio::EnsEMBL::Pipeline::FASTA::DumpFile \
+  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile \
   -reg_conf reg.pm -debug 2 \
   -release 67 -species homo_sapiens -sequence_type_list '["dna"]' \
   -base_path /path/to/dumps</code></pre>
 <h3>Running Gene Dumping</h3>
 <pre><code>
-  standaloneJob.pl Bio::EnsEMBL::Pipeline::FASTA::DumpFile \
+  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile \
   -reg_conf reg.pm -debug 2 \
   -release 67 -species homo_sapiens -sequence_type_list '["cdna"]' \
   -base_path /path/to/dumps</code></pre>
 <h3>Running Gene Dumping</h3>
 <pre><code>
-  standaloneJob.pl Bio::EnsEMBL::Pipeline::FASTA::DumpFile \
+  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile \
   -reg_conf reg.pm -debug 2 \
   -release 67 -species homo_sapiens -sequence_type_list '["ncrna"]' \
   -base_path /path/to/dumps</code></pre>
