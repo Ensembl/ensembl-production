@@ -36,7 +36,7 @@
 <p>We recommend if you have a number of parameters which do not change between releases to create a configuration file which inherits from the root config file e.g.</p>
 <pre><code>
 	package MyCnf;
-	use base qw/Bio::EnsEMBL::Pipeline::Flatfile::Flatfile_conf/;
+	use base qw/Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile::Flatfile_conf/;
 	sub default_options {
 	  my ($self) = @_;
 	  return {
@@ -153,7 +153,7 @@
 <h2>Example Commands</h2>
 <h3>To load use normally:</h3>
 <pre><code>
-	init_pipeline.pl Bio::EnsEMBL::Pipeline::PipeConfig::Flatfile_conf \
+	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf \
 	-pipeline_db -host=my-db-host -base_path /path/to/dumps -registry reg.pm</code></pre>
 <h3>Run a subset of species (no forcing &amp; supports registry aliases):</h3>
 <pre><code>
