@@ -59,8 +59,7 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -flow_into  => {
           1 => 'Notify',
-          2 => 'DumpGTF',
-	  3 => 'ChecksumGenerator' 
+          2 => [ qw/DumpGTF ChecksumGenerator/ ]
         },
       },
       
