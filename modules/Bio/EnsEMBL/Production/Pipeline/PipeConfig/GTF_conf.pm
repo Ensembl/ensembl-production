@@ -59,38 +59,28 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -flow_into  => {
           1 => 'Notify',
-          2 => ['DumpTypeFactory'],
+          2 => 'DumpGTF',
+	  3 => 'ChecksumGenerator' 
         },
       },
       
       ######### DUMPING DATA
-      
-      {
-        -logic_name => 'DumpTypeFactory',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpTypeFactory',
-        -parameters => {
-          types => $self->o('types'),
-        },
-        -flow_into  => {
-          2 => { 'DumpGTF' => { species => "#species#", type => "#type#" },
-                 'ChecksumGenerator' => { species => "#species#", type => "#type#" },
-          },
-        },
-      },
-      
+      # do not need the DumpTypeFactory,
+      # we only have one type of file
       {
         -logic_name => 'DumpGTF',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
-        -max_retry_count  => 1,
-        -analysis_capacity => 10,
+        -max_retry_count  => 1, # correct?
+        -analysis_capacity => 10, # correct?
         -rc_name => 'dump',
       },
       
       ####### CHECKSUMMING
       
+      # to check if it is the correct module to apply
       {
         -logic_name => 'ChecksumGenerator',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::ChecksumGenerator',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::ChecksumGenerator', 
         -wait_for   => [qw/DumpGTF/],
         -analysis_capacity => 10, 
       },
