@@ -48,10 +48,9 @@ use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::GTF::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::Utils::SeqDumper;
-use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file work_with_file/;
+use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
+use Bio::EnsEMBL::Utils::IO::GTFSerializer;
 use File::Path qw/rmtree/;
-
 
 sub fetch_input {
   my ($self) = @_;
@@ -71,81 +70,45 @@ sub run {
     $self->info('Directory "%s" already exists; removing', $root);
     rmtree($root);
   }
-  
-  my $type = $self->param('type');
-  my $target = "dump_${type}";
-  my $seq_dumper = $self->_seq_dumper();
-  
-  my @chromosomes;
-  my @non_chromosomes;
-  foreach my $s (@{$self->get_Slices()}) {
-    my $chr = $s->is_chromosome();
-    push(@chromosomes, $s) if $chr;
-    push(@non_chromosomes, $s) if ! $chr;
-  }
-  
-  if(@non_chromosomes) {
-    my $path = $self->_generate_file_name('nonchromosomal');
-    $self->info('Dumping non-chromosomal data to %s', $path);
-    gz_work_with_file($path, 'w', sub {
-      my ($fh) = @_;
-      foreach my $slice (@non_chromosomes) {
-        $self->fine('Dumping non-chromosomal %s', $slice->name());
-        $seq_dumper->$target($slice, $fh);
-      }
-      return;
-    });
-  }
-  else {
-    $self->info('Did not find any non-chromosomal data');
-  }
-  
-  foreach my $slice (@chromosomes) {
-    $self->fine('Dumping chromosome %s', $slice->name());
-    my $path = $self->_generate_file_name($slice->coord_system_name(), $slice->seq_region_name());
-    my $args = {};
-    if(-f $path) {
-      $self->fine('Path "%s" already exists; appending', $path);
-      $args->{Append} = 1;
-    }
-    gz_work_with_file($path, 'w', sub {
-      my ($fh) = @_;
-      $seq_dumper->$target($slice, $fh);
-      return;
-    }, $args);
-  }
+
+  my $path = $self->_generate_file_name();
+  $self->info("Dumping GTF to %s", $path);
+  gz_work_with_file($path, 'w', 
+		    sub {
+		      my ($fh) = @_;
+		      my $gtf_serializer = 
+			Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
+
+		      # filter for 1st portion of human Y
+		      foreach my $slice (@{$self->get_Slices('core', 1)}) { 
+			foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
+			  foreach my $transcript (@{$gene->get_all_Transcripts()}) {
+			    $gtf_serializer->print_feature($transcript);
+			  }
+			}
+		      }
+		    });
   
   return;
 }
 
-sub _seq_dumper {
-  my ($self) = @_;
-  my $seq_dumper = Bio::EnsEMBL::Utils::SeqDumper->new();
-  $seq_dumper->disable_feature_type('similarity');
-  $seq_dumper->disable_feature_type('genscan');
-  $seq_dumper->disable_feature_type('variation');
-  $seq_dumper->disable_feature_type('repeat');
-  return $seq_dumper;
-}
-
 sub _generate_file_name {
-  my ($self, $section, $name) = @_;
+  my ($self) = @_;
 
   # File name format looks like:
-  # <species>.<assembly>.<release>.<section.name|section>.dat.gz
-  # e.g. Homo_sapiens.GRCh37.64.chromosome.20.dat.gz
-  #      Homo_sapiens.GRCh37.64.nonchromosomal.dat.gz
+  # <species>.<assembly>.<release>.gtf.gz
+  # e.g. Homo_sapiens.GRCh37.71.gtf.gz
   my @name_bits;
   push @name_bits, $self->web_name();
   push @name_bits, $self->assembly();
   push @name_bits, $self->param('release');
-  push @name_bits, $section if $section;
-  push @name_bits, $name if $name;
-  push @name_bits, 'dat', 'gz';
+  push @name_bits, 'gtf', 'gz';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();
+
   return File::Spec->catfile($path, $file_name);
+
 }
 
 
