@@ -24,8 +24,6 @@ sub default_options {
       
       release => software_version(),
 
-      types => [], # not needed
-      
       ### Defaults 
       
       pipeline_name => 'gtf_dump_'.$self->o('release'),
@@ -64,23 +62,21 @@ sub pipeline_analyses {
       },
       
       ######### DUMPING DATA
-      # do not need the DumpTypeFactory,
-      # we only have one type of file
+
       {
         -logic_name => 'DumpGTF',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
-        -max_retry_count  => 1, # correct?
-        -analysis_capacity => 10, # correct?
+        -max_retry_count  => 1, 
+        -analysis_capacity => 10, 
         -rc_name => 'dump',
       },
       
       ####### CHECKSUMMING
       
-      # to check if it is the correct module to apply
       {
         -logic_name => 'ChecksumGenerator',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::ChecksumGenerator', 
-        -wait_for   => [qw/DumpGTF/],
+        -wait_for   => [ qw/DumpGTF/ ],
         -analysis_capacity => 10, 
       },
       
