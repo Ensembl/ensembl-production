@@ -47,11 +47,22 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator Bio::EnsEMBL::
 
 sub fetch_input {
   my ($self) = @_;
-  $self->throw("No 'species' parameter specified") unless $self->param('species');
+
+  $self->throw("No 'species' parameter specified") 
+    unless $self->param('species');
+
   my $dir = $self->data_path();
   $self->param('dir', $dir);
+
   $self->SUPER::fetch_input();
+
   return;
 }
+
+#
+# NOTE:
+# run method from base class needs to be overridden in case we generate 
+# README files (need to be skipped as well).
+#
 
 1;
