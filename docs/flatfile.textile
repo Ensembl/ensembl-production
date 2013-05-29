@@ -60,7 +60,7 @@ h2. Environment
 
 h3. PERL5LIB
 
-* ensembl
+* ensembl-production
 * ensembl-hive
 * bioperl
 
