@@ -48,7 +48,7 @@ use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::GTF::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
+use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
 use Bio::EnsEMBL::Utils::IO::GTFSerializer;
 use File::Path qw/rmtree/;
 
@@ -120,6 +120,9 @@ sub _gene_pred_check {
 
   throw sprintf "genePredCheck reports failure for %s GTF dump", $self->param('species')
     unless $output =~ /failed: 0/;
+
+  # unlink $info_out;
+  # unlink $genepred_out;
 
   return;
 }
