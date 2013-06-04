@@ -121,8 +121,8 @@ sub _gene_pred_check {
   throw sprintf "genePredCheck reports failure for %s GTF dump", $self->param('species')
     unless $output =~ /failed: 0/;
 
-  # unlink $info_out;
-  # unlink $genepred_out;
+  unlink $info_out;
+  unlink $genepred_out;
 
   return;
 }
