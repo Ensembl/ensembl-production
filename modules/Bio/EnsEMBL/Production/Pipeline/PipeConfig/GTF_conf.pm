@@ -22,12 +22,19 @@ sub default_options {
       ### Optional overrides        
       species => [],
       
+      # the release of the data
       release => software_version(),
+
+      # always run every species
+      run_all => 0, 
 
       ### Defaults 
       
       pipeline_name => 'gtf_dump_'.$self->o('release'),
       
+      gtftogenepred_exe => 'gtfToGenePred',
+      genepredcheck_exe => 'genePredCheck',
+
       email => $self->o('ENV', 'USER').'@sanger.ac.uk',
       
     };
@@ -66,11 +73,15 @@ sub pipeline_analyses {
       {
         -logic_name => 'DumpGTF',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
+        -parameters => {
+          gtf_to_genepred => $self->o('gtftogenepred_exe'),
+          gene_pred_check => $self->o('genepredcheck_exe')
+        },
         -max_retry_count  => 1, 
         -analysis_capacity => 10, 
         -rc_name => 'dump',
       },
-      
+
       ####### CHECKSUMMING
       
       {
@@ -90,7 +101,7 @@ sub pipeline_analyses {
           subject => $self->o('pipeline_name').' has finished',
           text    => 'Your pipeline has finished. Please consult the hive output'
         },
-        -wait_for   => ['ChecksumGenerator'],
+        -wait_for   => [ qw/GTFCheck ChecksumGenerator/ ],
       }
     
     ];
