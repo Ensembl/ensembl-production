@@ -81,7 +81,7 @@ sub run {
 
   my $path = $self->_generate_file_name();
   $self->info("Dumping GTF to %s", $path);
-  work_with_file($path, 'w', 
+  gz_work_with_file($path, 'w', 
 		 sub {
 		   my ($fh) = @_;
 		   my $gtf_serializer = 
@@ -100,7 +100,7 @@ sub run {
   $self->info(sprintf "Checking GTF file %s", $path);
   $self->_gene_pred_check($path);
   
-  $self->run_cmd("gzip $path");
+  # $self->run_cmd("gzip $path");
 
   $self->info("Dumping GTF README for %s", $self->param('species'));
   $self->_create_README();  
@@ -139,7 +139,7 @@ sub _generate_file_name {
   push @name_bits, $self->web_name();
   push @name_bits, $self->assembly();
   push @name_bits, $self->param('release');
-  push @name_bits, 'gtf'; #, 'gz';
+  push @name_bits, 'gtf', 'gz';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();
