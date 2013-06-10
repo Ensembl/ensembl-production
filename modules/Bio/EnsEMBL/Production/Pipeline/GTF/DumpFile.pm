@@ -158,64 +158,87 @@ sub _create_README {
 --------
 GTF DUMP
 --------
-This directory contains the GTF dump for species $species
 
-Ensembl provides an automatic reannotation of $species 
-genomic data. These data will be dumped in a number of forms - one 
-of them being GTF files.  As the annotation of this form comes from 
-Ensembl, and not the original sequence entry, the two annotations 
-are likely to be different.
+This directory includes a summary of the gene annotation information 
+and GTF format.
 
-GTF file format dumping provides all the confirmed protein coding 
-genes known by Ensembl. Considerably more information is stored in 
-Ensembl: the GTF file just gives a representation which is compatible 
-with existing tools.
+Ensembl provides an automatic gene annotation for $species.
+For some species (including human, mouse, zebrafish and pig), the
+annotation provided through Ensembl also includes manual annoation
+from HAVANA.
+These data will be dumped in a number of forms - one of them being 
+GTF files. Our annotation is based on alignments of biological 
+sequences data (eg. proteins, cDNAs) to the genome assembly. 
+The annotation dumped here is transcribed and translated from the 
+genome assembly and is not the original input sequence data that 
+we used for alignment. Therefore, the sequences provided by Ensembl 
+may differ from the original input sequence data where the genome 
+assembly is different to the aligned sequence. 
+
+GTF file format dumping provides all the annotated protein coding 
+genes in this release genes's set. Considerably more information 
+is stored in Ensembl: the GTF file just gives a representation which 
+is compatible with existing tools.
 
 --------------------------------
 Definition and supported options
 --------------------------------
 
-The GFF (General Feature Format) format consists of one line per feature, 
-each containing 9 columns of data, plus optional track definition lines. 
-The following documentation is based on the Version 2 specifications.
-
-The GTF (General Transfer Format) is identical to GFF version 2.
+The GFF (General Feature Format) format consists of one line per 
+feature, each containing 9 columns of data, plus optional track 
+definition lines. The following documentation is based on the 
+Version 2 specifications. The GTF (General Transfer Format) is 
+identical to GFF version 2.
 
 Fields
 
-Fields must be tab-separated. Also, all but the final field in each feature 
-line must contain a value; "empty" columns should be denoted with a '.'
+Fields must be tab-separated. Also, all but the final field in each 
+feature line must contain a value; "empty" columns should be denoted 
+with a '.'
 
-    seqname   - name of the chromosome or scaffold; chromosome names can be 
-                given with or without the 'chr' prefix.
-    source    - name of the program that generated this feature, or the data 
-                source (database or project name)
+    seqname   - name of the chromosome or scaffold; chromosome names 
+                can be given with or without the 'chr' prefix (the 
+                convention in Ensembl is to omit the 'chr' prefix).
+    source    - name of the program that generated this feature, or 
+                the data source (database or project name)
     feature   - feature type name, e.g. Gene, Variation, Similarity
-    start     - start position of the feature, with sequence numbering starting 
-                at 1.
-    end       - end position of the feature, with sequence numbering starting 
-                at 1.
+    start     - start position of the feature, with sequence numbering 
+                starting at 1.
+    end       - end position of the feature, with sequence numbering 
+                starting at 1.
     score     - a floating point value.
     strand    - defined as + (forward) or - (reverse).
-    frame     - one of '0', '1' or '2'. '0' indicates that the first base of 
-                the feature is the first base of a codon, '1' that the second 
-                base is the first base of a codon, and so on..
+    frame     - one of '0', '1' or '2'. '0' indicates that the first 
+                base of the feature is the first base of a codon, '1' 
+                that the second base is the first base of a codon, and 
+                so on..
     attribute - a semicolon-separated list of tag-value pairs, providing 
                 additional information about each feature.
 
 Track lines
 
-Although not part of the formal GFF specification, Ensembl will use track 
-lines to further configure sets of features. Track lines should be placed 
-at the beginning of the list of features they are to affect.
+Although not part of the formal GFF specification, Ensembl will use 
+track lines to further configure sets of features. Track lines should 
+be placed at the beginning of the list of features they are to affect.
 
 The track line consists of the word 'track' followed by space-separated 
 key=value pairs. Valid parameters used by Ensembl are:
 
-    name        - unique name to identify this track when parsing the file
-    description - Label to be displayed under the track in Region in Detail
-    priority    - integer defining the order in which to display tracks, if 
-                  multiple tracks are defined.
+    name        - unique name to identify this track when parsing the 
+                  file
+    description - Label to be displayed under the track in Region in 
+                  Detail
+    priority    - integer defining the order in which to display tracks, 
+                  if multiple tracks are defined.
+
+--------------
+Example output
+--------------
+
+Mito    protein_coding  exon    18954   18991   .       +       .       gene_id "Q0045"; transcript_id "Q0045"; exon_number "3"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; exon_id "Q0045.3";
+Mito    protein_coding  CDS     18954   18991   .       +       1       gene_id "Q0045"; transcript_id "Q0045"; exon_number "3"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; protein_id "Q0045";
+Mito    protein_coding  exon    20508   20984   .       +       .       gene_id "Q0045"; transcript_id "Q0045"; exon_number "4"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; exon_id "Q0045.4";
+Mito    protein_coding  CDS     20508   20984   .       +       0       gene_id "Q0045"; transcript_id "Q0045"; exon_number "4"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; protein_id "Q0045";
 
 README
   
