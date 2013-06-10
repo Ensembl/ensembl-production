@@ -164,11 +164,11 @@ and GTF format.
 
 Ensembl provides an automatic gene annotation for $species.
 For some species (including human, mouse, zebrafish and pig), the
-annotation provided through Ensembl also includes manual annoation
+annotation provided through Ensembl also includes manual annotation
 from HAVANA.
 These data will be dumped in a number of forms - one of them being 
 GTF files. Our annotation is based on alignments of biological 
-sequences data (eg. proteins, cDNAs) to the genome assembly. 
+sequence data (eg. proteins, cDNAs) to the genome assembly. 
 The annotation dumped here is transcribed and translated from the 
 genome assembly and is not the original input sequence data that 
 we used for alignment. Therefore, the sequences provided by Ensembl 
@@ -235,10 +235,10 @@ key=value pairs. Valid parameters used by Ensembl are:
 Example output
 --------------
 
-Mito    protein_coding  exon    18954   18991   .       +       .       gene_id "Q0045"; transcript_id "Q0045"; exon_number "3"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; exon_id "Q0045.3";
-Mito    protein_coding  CDS     18954   18991   .       +       1       gene_id "Q0045"; transcript_id "Q0045"; exon_number "3"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; protein_id "Q0045";
-Mito    protein_coding  exon    20508   20984   .       +       .       gene_id "Q0045"; transcript_id "Q0045"; exon_number "4"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; exon_id "Q0045.4";
-Mito    protein_coding  CDS     20508   20984   .       +       0       gene_id "Q0045"; transcript_id "Q0045"; exon_number "4"; gene_name "COX1"; gene_biotype "protein_coding"; transcript_name "COX1"; protein_id "Q0045";
+MT      Mt_tRNA exon    3230    3304    .       +       .       gene_id "ENSG00000209082"; transcript_id "ENST00000386347"; exon_number "1"; gene_name "MT-TL1"; gene_biotype "Mt_tRNA"; transcript_name "MT-TL1-201"; exon_id "ENSE00002006242";
+MT      protein_coding  exon    3307    4262    .       +       .       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; exon_id "ENSE00001435714";
+MT      protein_coding  CDS     3307    4262    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; protein_id "ENSP00000354687";
+MT      protein_coding  start_codon     3307    3309    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201";
 
 README
   
