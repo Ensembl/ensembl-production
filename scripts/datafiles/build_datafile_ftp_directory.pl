@@ -170,6 +170,7 @@ sub _process_datafile {
     my $target = File::Spec->catfile($target_dir, $name);
     if($self->opts()->{dry}) {
       $self->v("\tWould have linked '%s' -> '%s'", $filepath, $target);
+      $self->_flag_missing_ftp_link($datafile);
     }
     else {
       if(-e $target) {
