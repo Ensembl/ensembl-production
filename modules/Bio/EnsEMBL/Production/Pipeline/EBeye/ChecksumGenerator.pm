@@ -20,7 +20,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::Flatfile::ChecksumGenerator
+Bio::EnsEMBL::Production::Pipeline::EBeye::ChecksumGenerator
 
 =head1 DESCRIPTION
 
