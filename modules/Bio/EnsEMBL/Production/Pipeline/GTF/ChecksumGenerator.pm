@@ -59,10 +59,4 @@ sub fetch_input {
   return;
 }
 
-#
-# NOTE:
-# run method from base class needs to be overridden in case we generate 
-# README files (need to be skipped as well).
-#
-
 1;
