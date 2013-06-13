@@ -2,7 +2,7 @@
 
 =head1 LICENSE
 
-  Copyright (c) 1999-2012 The European Bioinformatics Institute and
+  Copyright (c) 1999-2013 The European Bioinformatics Institute and
   Genome Research Limited.  All rights reserved.
 
   This software is distributed under a modified Apache license.
@@ -20,24 +20,23 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpTypeFactory
+Bio::EnsEMBL::Production::Pipeline::EBeye::DumpTypeFactory
 
 =head1 DESCRIPTION
 
-Small extension of the job factory to do default type submission as otherwise
-we get every type of file being produced.
+Small extension of the job factory to do default database type submission.
 
 Allowed parameters are:
 
 =over 8
 
-=item types - The types to use; defaults to embl and genbank
+=item types - The database types to use; defaults to core and vega
 
 =back
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpTypeFactory;
+package Bio::EnsEMBL::Production::Pipeline::EBeye::DumpTypeFactory;
 
 use strict;
 use warnings;
@@ -50,7 +49,7 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults()},
     column_names => ['type','species'],
-    default_types => [qw/embl genbank/],
+    default_types => [qw/core vega/],
   };
 }
 
