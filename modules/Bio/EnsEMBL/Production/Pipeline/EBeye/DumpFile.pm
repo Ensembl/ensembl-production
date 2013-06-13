@@ -81,14 +81,17 @@ sub fetch_input {
 
 sub run {
   my ($self) = @_;
-  
-  my ($want_species_orthologs, $ortholog_lookup) =
-    $self->_fetch_orthologs;
 
   my $type = $self->param('type');
   my $dba = $self->get_DBAdaptor($type);
 
-  return;
+  return unless defined $dba;
+  
+  my ($want_species_orthologs, $ortholog_lookup) =
+    $self->_fetch_orthologs;
+
+  
+  
 }
 
 sub _fetch_orthologs {
@@ -162,25 +165,22 @@ sub _fetch_orthologs {
     $self->info("Done Fetching Orthologs");
   }
 
-  return ($want_species_orthologs, );
+  return ($want_species_orthologs, $ortholog_lookup);
 }
 
 
 
 sub _generate_file_name {
-  my ($self, $section, $name) = @_;
+  my ($self) = @_;
 
   # File name format looks like:
-  # <species>.<assembly>.<release>.<section.name|section>.dat.gz
-  # e.g. Homo_sapiens.GRCh37.64.chromosome.20.dat.gz
-  #      Homo_sapiens.GRCh37.64.nonchromosomal.dat.gz
+  # Gene_<dbname>.xml.gz
+  # e.g. Gene_homo_sapiens_core_72_37.xml.gz
+  #      Gene_mus_musculus_vega_72_38.xml.gz
   my @name_bits;
-  push @name_bits, $self->web_name();
-  push @name_bits, $self->assembly();
-  push @name_bits, $self->param('release');
-  push @name_bits, $section if $section;
-  push @name_bits, $name if $name;
-  push @name_bits, 'dat', 'gz';
+  push @name_bits, 'Gene';
+  push @name_bits, $self->_dbname();
+  push @name_bits, 'xml', 'gz';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();
@@ -188,7 +188,15 @@ sub _generate_file_name {
   return File::Spec->catfile($path, $file_name);
 }
 
+sub _dbname {
+  my $self = shift;
 
+  my $type = $self->param('type');
+  my $dbname = $self->get_DBAdaptor($type)->dbc()->dbname();
+  die "Unable to get dbname" unless defined $dbname;
+  
+  return $dbname;
+}
 
 1;
 
