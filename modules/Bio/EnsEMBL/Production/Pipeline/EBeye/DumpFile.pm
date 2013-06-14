@@ -54,7 +54,6 @@ use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::EBeye::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::Utils::SeqDumper;
 use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file work_with_file/;
 use File::Path qw/rmtree/;
 
@@ -86,13 +85,68 @@ sub run {
   my $dba = $self->get_DBAdaptor($type);
 
   return unless defined $dba;
-  
-  my ($want_species_orthologs, $ortholog_lookup) =
-    $self->_fetch_orthologs;
 
-  
+  # disable for the moment
+  # my ($want_species_orthologs, $ortholog_lookup) =
+  #   $self->_fetch_orthologs;
+
+  my ($exons, $haplotypes) = 
+    ($self->_fetch_exons($dba),
+     $self->_fetch_haplotypes($dba));
   
 }
+
+sub _fetch_haplotypes {
+  my ($self, $dba) = @_;
+
+  my $dbc = $dba->dbc();
+  defined $dbc or die "Unable to get DBConnection";
+
+  my $haplotypes = $dbc->db_handle->selectall_hashref("SELECT gene_id, exc_type 
+					               FROM gene g, assembly_exception ae 
+                                                       WHERE g.seq_region_id=ae.seq_region_id
+                                                             AND ae.exc_type IN (?,?,?)", 
+						      'gene_id', {}, 'HAP', 'PATCH_NOVEL', 'PATCH_FIX'
+						     ) or die $dbc->db_handle->errstr;
+
+  return $haplotypes;
+}
+
+sub _fetch_exons {
+  my ($self, $dba) = @_;
+
+  my $dbc = $dba->dbc();
+  defined $dbc or die "Unable to get DBConnection";
+
+  my %exons = ();
+  my $get_genes_sth = $dbc->prepare("SELECT DISTINCT t.gene_id, e.stable_id
+                                     FROM transcript AS t, exon_transcript As et, exon AS e
+                                     WHERE t.transcript_id = et.transcript_id and et.exon_id = e.exon_id"
+				   );
+
+
+  $get_genes_sth->execute;
+  my $gene_rows = [];		# cache for batches of rows
+
+  while (
+	 my $row = (
+		    shift(@$gene_rows) || # get row from cache, or reload cache:
+		    shift(
+			  @{
+			    $gene_rows =
+			      $get_genes_sth->fetchall_arrayref( undef, 10_000 )
+				|| []
+			      }
+			 )
+		   )
+	) {
+    $exons{ $row->[0] }{ $row->[1] } = 1;
+  }
+  $get_genes_sth->finish;
+
+  return \%exons;
+}
+
 
 sub _fetch_orthologs {
   my $self = shift;
