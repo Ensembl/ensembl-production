@@ -83,24 +83,85 @@ sub run {
 
   my $type = $self->param('type');
   my $dba = $self->get_DBAdaptor($type);
-
+  
   return unless defined $dba;
+
+  my $dbc = $dba->dbc();
+  defined $dbc or die "Unable to get DBConnection";
 
   # disable for the moment
   # my ($want_species_orthologs, $ortholog_lookup) =
   #   $self->_fetch_orthologs;
 
-  my ($exons, $haplotypes) = 
-    ($self->_fetch_exons($dba),
-     $self->_fetch_haplotypes($dba));
+  my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info) = 
+    ($self->_fetch_exons($dbc),
+     $self->_fetch_haplotypes($dbc),
+     $self->_fetch_alt_alleles($dbc),
+     $self->_fetch_xrefs($dbc),
+     $self->_fetch_gene_info($dbc));
   
 }
 
-sub _fetch_haplotypes {
-  my ($self, $dba) = @_;
+sub _fetch_gene_info {
+  my ($self, $dbc) = @_;
 
-  my $dbc = $dba->dbc();
-  defined $dbc or die "Unable to get DBConnection";
+  my $gene_info = $dbc->db_handle->selectall_arrayref("SELECT g.gene_id, t.transcript_id, tr.translation_id,
+                                                              g.stable_id AS gsid, t.stable_id AS tsid, tr.stable_id AS trsid,
+                                                              g.description, ed.db_name, x.dbprimary_acc, 
+                                                              x.display_label, ad.display_label, ad.description, 
+                                                              g.source, g.status, g.biotype
+                                                       FROM ((
+                                                             ( gene AS g, analysis_description AS ad, transcript AS t) 
+                                                             LEFT JOIN 
+                                                               translation AS tr ON t.transcript_id = tr.transcript_id) 
+                                                             LEFT JOIN
+                                                               xref AS x ON g.display_xref_id = x.xref_id) 
+                                                             LEFT JOIN
+                                                               external_db AS ed ON ed.external_db_id = x.external_db_id
+                                                       WHERE t.gene_id = g.gene_id AND g.analysis_id = ad.analysis_id
+                                                       ORDER BY g.stable_id, t.stable_id" 
+						     ) or die $dbc->db_handle->errstr;
+}
+
+sub _fetch_xrefs {
+  my ($self, $dbc) = @_;
+
+  my %xrefs      = ();
+  foreach my $type (qw(Gene Transcript Translation)) {
+    my $T = $dbc->db_handle->selectall_arrayref("SELECT ox.ensembl_id, x.display_label, x.dbprimary_acc, ed.db_name, es.synonym
+                                                 FROM (object_xref AS ox, xref AS x, external_db AS ed) LEFT JOIN external_synonym AS es ON es.xref_id = x.xref_id
+                                                 WHERE ox.ensembl_object_type = '$type' AND ox.xref_id = x.xref_id AND x.external_db_id = ed.external_db_id"
+					       ) or die $dbc->db_handle->errstr;
+
+    foreach (@$T) {
+      $xrefs{$type}{ $_->[0] }{ $_->[3] }{ $_->[1] } = 1 if $_->[1];
+      $xrefs{$type}{ $_->[0] }{ $_->[3] }{ $_->[2] } = 1 if $_->[2];
+      $xrefs{$type}{ $_->[0] }{ $_->[3] . "_synonym" }{ $_->[4] } = 1
+	if $_->[4];
+    }
+
+  }
+
+  return \%xrefs;
+}
+
+#
+# WARNING
+#
+# This has to be changed at some point, 
+# as Kieron is changing the table structure
+#
+sub _fetch_alt_alleles {
+  my ($self, $dbc) = @_;
+
+  my $alt_alleles = $dbc->db_handle->selectall_hashref(qq{SELECT gene_id, is_ref FROM alt_allele}, 
+						       'gene_id') or die $dbc->db_handle->errstr;
+
+  return $alt_alleles;
+}
+
+sub _fetch_haplotypes {
+  my ($self, $dbc) = @_;
 
   my $haplotypes = $dbc->db_handle->selectall_hashref("SELECT gene_id, exc_type 
 					               FROM gene g, assembly_exception ae 
@@ -113,10 +174,7 @@ sub _fetch_haplotypes {
 }
 
 sub _fetch_exons {
-  my ($self, $dba) = @_;
-
-  my $dbc = $dba->dbc();
-  defined $dbc or die "Unable to get DBConnection";
+  my ($self, $dbc) = @_;
 
   my %exons = ();
   my $get_genes_sth = $dbc->prepare("SELECT DISTINCT t.gene_id, e.stable_id
