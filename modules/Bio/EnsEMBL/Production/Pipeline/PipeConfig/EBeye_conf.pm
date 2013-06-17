@@ -70,20 +70,20 @@ sub pipeline_analyses {
       
       {
         -logic_name => 'DumpTypeFactory',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpTypeFactory',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::DumpTypeFactory',
         -parameters => {
           types => $self->o('types'),
         },
         -flow_into  => {
-          2 => { 'DumpFlatfile' => { species => "#species#", type => "#type#" },
+          2 => { 'DumpEBeyeSearch' => { species => "#species#", type => "#type#" },
                  'ChecksumGenerator' => { species => "#species#", type => "#type#" },
           },
         },
       },
       
       {
-        -logic_name => 'DumpFlatfile',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile',
+        -logic_name => 'DumpEBeyeSearch',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::DumpFile',
         -max_retry_count  => 1,
         -analysis_capacity => 10,
         -rc_name => 'dump',
@@ -93,8 +93,8 @@ sub pipeline_analyses {
       
       {
         -logic_name => 'ChecksumGenerator',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::ChecksumGenerator',
-        -wait_for   => [qw/DumpFlatfile/],
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::ChecksumGenerator',
+        -wait_for   => [qw/DumpEBeyeSearch/],
         -analysis_capacity => 10, 
       },
       
