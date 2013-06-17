@@ -301,11 +301,7 @@ sub _generate_file_name {
   # e.g. Gene_homo_sapiens_core_72_37.xml.gz
   #      Gene_mus_musculus_vega_72_38.xml.gz
   my @name_bits;
-  push @name_bits, 'Gene';
-  push @name_bits, $self->_dbname();
-  push @name_bits, 'xml', 'gz';
-
-  my $file_name = join( '.', @name_bits );
+  my $file_name = sprintf "Gene_%s.xml.gz", $self->_dbname();
   my $path = $self->data_path();
 
   return File::Spec->catfile($path, $file_name);
