@@ -117,6 +117,22 @@ sub run {
 
   $w->xmlDecl("ISO-8859-1");
   $w->doctype("database");
+  
+  $w->startTag("database");
+  
+  $w->startTag("name");
+  $w->characters($self->_dbname);
+  $w->endTag;
+  
+  $w->startTag("description");
+  $w->characters(sprintf "Ensembl %s %s database", $self->param("species"), $self->param("type"));
+  $w->endTag;
+  
+  $w->startTag("release"); 
+  $w->characters($self->param("release")); 
+  $w->endTag;
+    
+  $w->endTag("database");
   $w->end();
   $fh->close();
 
