@@ -58,6 +58,11 @@ use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
 use IO::File;
 use XML::Writer;
 
+my %exception_type_to_description = ('REF' => 'reference', 
+				     'HAP' => 'haplotype', 
+				     'PATCH_FIX' => 'fix_patch', 
+				     'PATCH_NOVEL' => 'novel_patch');
+
 sub param_defaults {
   my ($self) = @_;
   return {
@@ -90,17 +95,18 @@ sub run {
   my $dbc = $dba->dbc();
   defined $dbc or die "Unable to get DBConnection";
 
-  # disable for the moment
-  # my ($want_species_orthologs, $ortholog_lookup) =
-  #   $self->_fetch_orthologs;
-  #
-  # my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info) = 
-  #   ($self->_fetch_exons($dbc),
-  #    $self->_fetch_haplotypes($dbc),
-  #    $self->_fetch_alt_alleles($dbc),
-  #    $self->_fetch_xrefs($dbc),
-  #    $self->_fetch_gene_info($dbc));
+  my ($want_species_orthologs, $ortholog_lookup) =
+    $self->_fetch_orthologs;
   
+  my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info, $snp_sth, $taxon_id) = 
+    ($self->_fetch_exons($dbc),
+     $self->_fetch_haplotypes($dbc),
+     $self->_fetch_alt_alleles($dbc),
+     $self->_fetch_xrefs($dbc),
+     $self->_fetch_gene_info($dbc),
+     $self->_get_snp_sth,
+     $self->_taxon_id($dbc));
+
   my $path = $self->_generate_file_name();
   $self->info("Dumping EBI Search output to %s", $path);
 
@@ -110,7 +116,9 @@ sub run {
   # 		      print $fh "Test\n";
   # 		    });
 
-  my $fh = IO::File->new($path, 'w');
+  # my $fh = IO::File->new($path, 'w');
+  my $fh = IO::Zlib->new();
+  $fh->open($path, "wb9");
   my $w = XML::Writer->new(OUTPUT => $fh, 
 			   DATA_MODE => 1, 
 			   DATA_INDENT => 2);
@@ -131,12 +139,284 @@ sub run {
   $w->startTag("release"); 
   $w->characters($self->param("release")); 
   $w->endTag;
-    
+
+  # my %old;
+
+  # foreach my $row (@$gene_info) {
+  #   my (
+  # 	$gene_id,                            $transcript_id,
+  # 	$translation_id,                     $gene_stable_id,
+  # 	$transcript_stable_id,               $translation_stable_id,
+  # 	$gene_description,                   $extdb_db_display_name,
+  # 	$xref_primary_acc,                   $xref_display_label,
+  # 	$analysis_description_display_label, $analysis_description,
+  # 	$gene_source,                        $gene_status,
+  # 	$gene_biotype
+  #      ) = @$row;
+  #   if ( $old{'gene_id'} != $gene_id ) {
+  #     if ( $old{'gene_id'} ) {
+
+  # 	if ( $snp_sth && $type eq 'core' ) {
+  # 	  my @transcript_stable_ids =
+  # 	    keys %{ $old{transcript_stable_ids} };
+  # 	  $snp_sth->execute("@transcript_stable_ids");
+  # 	  $old{snps} = $snp_sth->fetchall_arrayref;
+  # 	}
+
+  # 	if ($want_species_orthologs) {
+  # 	  $old{orthologs} =
+  # 	    $ortholog_lookup->{ $old{'gene_stable_id'} };
+  # 	}
+
+  # 	# p geneLineXML( $dbspecies, \%old, $counter );
+  # 	$self->_write_gene($w, \%old);
+
+  #     }
+
+  #     my $alt_allele = 0;
+  #     if (exists $alt_alleles->{$gene_id}) { # meaning reverses as alt_allele defines the ref alone
+  # 	$alt_allele = $alt_alleles->{$gene_id} == 1 ? 0 : 1; 
+  #     }
+  #     my $hap_type = $haplotypes->{$gene_id} || q{REF};
+                                
+  #     %old = (
+  # 	      'gene_id'                 => $gene_id,
+  # 	      'haplotype'               => $exception_type_to_description{$hap_type},
+  # 	      'alt_allele'              => $alt_allele,
+  # 	      'gene_stable_id'          => $gene_stable_id,
+  # 	      'description'             => $gene_description,
+  # 	      'taxon_id'                => $taxon_id,
+  # 	      'translation_stable_ids'  => {
+  # 					    $translation_stable_id ? ( $translation_stable_id => 1 )
+  # 					    : ()
+  # 					   },
+  # 	      'transcript_stable_ids' => {
+  # 					  $transcript_stable_id ? ( $transcript_stable_id => 1 )
+  # 					  : ()
+  # 					 },
+  # 	      'transcript_ids' => {
+  # 				   $transcript_id ? ( $transcript_id => 1 )
+  # 				   : ()
+  # 				  },
+  # 	      'exons'                => {},
+  # 	      'external_identifiers' => {},
+  # 	      'alt'                  => $xref_display_label
+  # 	      ? "($extdb_db_display_name: $xref_display_label)"
+  # 	      : "(novel gene)",
+  # 	      'gene_name' => $xref_display_label ? $xref_display_label
+  # 	      : $gene_stable_id,
+  # 	      'ana_desc_label' => $analysis_description_display_label,
+  # 	      'ad'             => $analysis_description,
+  # 	      'source'         => ucfirst($gene_source),
+  # 	      'st'             => $gene_status,
+  # 	      'biotype'        => $gene_biotype
+  # 	     );
+  #     $old{'source'} =~ s/base/Base/;
+  #     $old{'exons'} = $exons->{$gene_id};
+  #     foreach my $K ( keys %{ $exons->{$gene_id} } ) {
+  # 	$old{'i'}{$K} = 1;
+  #     }
+
+  #     foreach my $db ( keys %{ $xrefs->{'Gene'}{$gene_id} || {} } ) {
+  # 	foreach my $K ( keys %{ $xrefs->{'Gene'}{$gene_id}{$db} } ) {
+  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+
+  # 	}
+  #     }
+  #     foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
+  # 	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
+  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+
+  # 	}
+  #     }
+  #     foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  # 	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+  # 	}
+  #     }
+  #   } else {
+  #     $old{'transcript_stable_ids'}{$transcript_stable_id}   = 1;
+  #     $old{'transcript_ids'}{$transcript_id}                 = 1;
+  #     $old{'translation_stable_ids'}{$translation_stable_id} = 1;
+
+  #     foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
+  # 	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
+  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+  # 	}
+  #     }
+  #     foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  # 	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+
+  # 	}
+  #     }
+  #   }
+  # }
+
+  # if ( $snp_sth && $type eq 'core' ) {
+  #   my @transcript_stable_ids = keys %{ $old{transcript_stable_ids} };
+  #   $snp_sth->execute("@transcript_stable_ids");
+  #   $old{snps} = $snp_sth->fetchall_arrayref;
+  # }
+  # if ($want_species_orthologs) {
+  #   $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} };
+
+  # }
+
+  # # p geneLineXML( $dbspecies, \%old, $counter );
+  # $self->_write_gene($w, \%old);
+
+  # # footer( $counter->() );
+
+
   $w->endTag("database");
   $w->end();
   $fh->close();
 
   
+}
+
+sub _write_gene {
+  my ($self, $writer, $xml_data) = @_;
+
+  return warn "gene id not set" if $xml_data->{'gene_stable_id'} eq '';
+
+  my $gene_id     = $xml_data->{'gene_stable_id'};
+  my $altid       = $xml_data->{'alt'} or die "altid not set";
+  my $transcripts = $xml_data->{'transcript_stable_ids'}
+    or die "transcripts not set";
+
+  my $snps      = $xml_data->{'snps'};
+  my $orthologs = $xml_data->{'orthologs'};
+
+  my $peptides = $xml_data->{'translation_stable_ids'}
+    or die "peptides not set";
+  my $exons = $xml_data->{'exons'} or die "exons not set";
+  my $external_identifiers = $xml_data->{'external_identifiers'}
+    or die "external_identifiers not set";
+  my $description = $xml_data->{'description'};
+  my $gene_name   = $xml_data->{'gene_name'};
+  my $type        = $xml_data->{'source'} . ' ' . $xml_data->{'biotype'}
+    or die "problem setting type";
+  my $haplotype        = $xml_data->{'haplotype'};
+  my $alt_allele       = $xml_data->{'alt_allele'};
+  my $taxon_id         = $xml_data->{'taxon_id'};
+  my $exon_count       = scalar keys %$exons;
+  my $transcript_count = scalar keys %$transcripts;
+  # $description = escapeXML($description);
+  # $gene_name = escapeXML($gene_name);
+  # $gene_id = escapeXML($gene_id);
+  # $altid = escapeXML($altid);
+
+  $writer->startTag('entry', 'id' => $gene_id);
+
+  $writer->startTag('name');
+  $writer->characters("$gene_id $altid");
+  $writer->endTag;
+
+  $writer->startTag('description');
+  $writer->characters($description);
+  $writer->endTag;
+
+  $writer->startTag('cross_references');
+  $writer->emptyTag('ref', 'dbname' => 'ncbi_taxonomy_id', 'dbkey' => $taxon_id);
+
+  my ($synonyms, $unique_synonyms);
+
+  # for some types of xref, merge the subtypes into the larger type
+  # e.g. Uniprot/SWISSPROT and Uniprot/TREMBL become just Uniprot
+  # synonyms are stored as additional fields rather than cross references
+
+  foreach my $ext_db_name ( keys %$external_identifiers ) {
+
+    if ( $ext_db_name =~
+	 /(Uniprot|GO|Interpro|Medline|Sequence_Publications|EMBL)/ ) {
+
+      my $matched_db_name = $1;
+
+      if ( $ext_db_name =~ /_synonym/ ) { # synonyms
+
+	foreach my $ed_key ( keys %{ $external_identifiers->{$ext_db_name} } ) {
+	  $synonyms->{"${matched_db_name}_synonym"} = $ed_key;
+	}
+
+      } else { # non-synonyms
+	map { $writer->emptyTag('ref', 'dbname' => $matched_db_name, 'dbkey' => $_) } 
+	  keys %{ $external_identifiers->{$ext_db_name} };
+      }
+
+    } else {
+
+      foreach my $key ( keys %{ $external_identifiers->{$ext_db_name} } ) {
+	$key = escapeXML($key);
+	$ext_db_name =~ s/^Ens.*/ENSEMBL/;
+
+	if ( $ext_db_name =~ /_synonym/ ) {
+	  $unique_synonyms->{$key} = 1;
+	  $synonyms->{"$ext_db_name"} = $key;
+
+	} else {
+	  $writer->emptyTag('ref', 'dbname' => $ext_db_name, 'dbkey' => $key);
+	}
+      }
+
+    }
+  }
+
+  map { $writer->emptyTag('ref', 'dbname' => 'ensemblvariation', 'dbkey' => $_->[0]) } @$snps;
+  map { $writer->emptyTag('ref', 'dbname' => $_->[1], 'dbkey' => $_->[0]) } @$orthologs;
+  $writer->endTag('cross_references');
+
+  $writer->startTag('additional_fields');
+
+  $writer->startTag('field', 'name' => 'species'); $writer->characters($self->param('species')); $writer->endTag;
+  $writer->startTag('field', 'name' => 'featuretype'); $writer->characters('Gene'); $writer->endTag;
+  $writer->startTag('field', 'name' => 'source'); $writer->characters($type); $writer->endTag;
+  $writer->startTag('field', 'name' => 'transcript_count'); $writer->characters($transcript_count); $writer->endTag;
+  $writer->startTag('field', 'name' => 'gene_name'); $writer->characters($gene_name); $writer->endTag;
+  $writer->startTag('field', 'name' => 'haplotype'); $writer->characters($haplotype); $writer->endTag;
+  $writer->startTag('field', 'name' => 'alt_allele'); $writer->characters($alt_allele); $writer->endTag;
+  
+  map { $writer->startTag('field', 'name' => 'transcript'); $writer->characters($_); $writer->endTag } 
+    keys %{$transcripts};
+  $writer->startTag('field', 'name' => 'exon_count'); $writer->characters($exon_count); $writer->endTag;
+  map { $writer->startTag('field', 'name' => 'exon'); $writer->characters($_); $writer->endTag } 
+    keys %{$exons};
+  map { $writer->startTag('field', 'name' => 'peptide'); $writer->characters($_); $writer->endTag } 
+    keys %{$peptides};
+
+  map { $writer->startTag('field', 'name' => 'gene_synonym'); $writer->characters($_); $writer->endTag } 
+    keys %$unique_synonyms;
+  map { $writer->startTag('field', 'name' => $_); $writer->characters($synonyms->{$_}); $writer->endTag }
+    keys %{$synonyms};
+
+  $writer->endTag('additional_fields');
+  $writer->endTag('entry');
+
+  return;
+}
+
+
+sub _get_snp_sth {
+  my ($self) = @_;
+  my $dba = $self->get_DBAdaptor("variation");
+  defined $dba and return $dba->dbc->prepare("SELECT distinct(vf.variation_name) 
+                                              FROM transcript_variation AS tv, variation_feature AS vf 
+                                              WHERE vf.variation_feature_id = tv.variation_feature_id AND tv.feature_stable_id in(?)"
+					    );
+  
+  return;
+}
+
+sub _taxon_id {
+  my ($self, $dbc) = @_;
+
+  my $taxon_id = $dbc->db_handle->selectrow_arrayref("SELECT meta_value 
+                                                      FROM meta 
+                                                      WHERE meta_key='species.taxonomy_id'")
+    or die $dbc->db_handle->errstr;
+  
+  return $taxon_id->[0];
 }
 
 sub _fetch_gene_info {
