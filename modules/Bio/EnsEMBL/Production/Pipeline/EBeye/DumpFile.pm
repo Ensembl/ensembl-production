@@ -55,7 +55,8 @@ use base qw(Bio::EnsEMBL::Production::Pipeline::EBeye::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
-use File::Path qw/rmtree/;
+use IO::File;
+use XML::Writer;
 
 sub param_defaults {
   my ($self) = @_;
@@ -103,11 +104,22 @@ sub run {
   my $path = $self->_generate_file_name();
   $self->info("Dumping EBI Search output to %s", $path);
 
-  gz_work_with_file($path, 'w', 
-		    sub {
-		      my ($fh) = @_;
-		      print $fh "Test\n";
-		    });
+  # gz_work_with_file($path, 'w', 
+  # 		    sub {
+  # 		      my ($fh) = @_;
+  # 		      print $fh "Test\n";
+  # 		    });
+
+  my $fh = IO::File->new($path, 'w');
+  my $w = XML::Writer->new(OUTPUT => $fh, 
+			   DATA_MODE => 1, 
+			   DATA_INDENT => 2);
+
+  $w->xmlDecl("ISO-8859-1");
+  $w->doctype("database");
+  $w->end();
+  $fh->close();
+
   
 }
 
@@ -300,8 +312,7 @@ sub _generate_file_name {
   # Gene_<dbname>.xml.gz
   # e.g. Gene_homo_sapiens_core_72_37.xml.gz
   #      Gene_mus_musculus_vega_72_38.xml.gz
-  my @name_bits;
-  my $file_name = sprintf "Gene_%s.xml.gz", $self->_dbname();
+  my $file_name = sprintf "Gene_%s.xml", $self->_dbname();
   my $path = $self->data_path();
 
   return File::Spec->catfile($path, $file_name);
