@@ -54,7 +54,7 @@ use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::EBeye::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file work_with_file/;
+use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
 use File::Path qw/rmtree/;
 
 sub param_defaults {
@@ -92,13 +92,22 @@ sub run {
   # disable for the moment
   # my ($want_species_orthologs, $ortholog_lookup) =
   #   $self->_fetch_orthologs;
+  #
+  # my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info) = 
+  #   ($self->_fetch_exons($dbc),
+  #    $self->_fetch_haplotypes($dbc),
+  #    $self->_fetch_alt_alleles($dbc),
+  #    $self->_fetch_xrefs($dbc),
+  #    $self->_fetch_gene_info($dbc));
+  
+  my $path = $self->_generate_file_name();
+  $self->info("Dumping EBI Search output to %s", $path);
 
-  my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info) = 
-    ($self->_fetch_exons($dbc),
-     $self->_fetch_haplotypes($dbc),
-     $self->_fetch_alt_alleles($dbc),
-     $self->_fetch_xrefs($dbc),
-     $self->_fetch_gene_info($dbc));
+  gz_work_with_file($path, 'w', 
+		    sub {
+		      my ($fh) = @_;
+		      print $fh "Test\n";
+		    });
   
 }
 
@@ -121,6 +130,8 @@ sub _fetch_gene_info {
                                                        WHERE t.gene_id = g.gene_id AND g.analysis_id = ad.analysis_id
                                                        ORDER BY g.stable_id, t.stable_id" 
 						     ) or die $dbc->db_handle->errstr;
+
+  return $gene_info;
 }
 
 sub _fetch_xrefs {
