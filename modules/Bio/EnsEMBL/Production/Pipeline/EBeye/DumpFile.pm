@@ -55,7 +55,7 @@ use base qw(Bio::EnsEMBL::Production::Pipeline::EBeye::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
-use IO::File;
+use IO::Zlib;
 use XML::Writer;
 
 my %exception_type_to_description = ('REF' => 'reference', 
@@ -110,13 +110,6 @@ sub run {
   my $path = $self->_generate_file_name();
   $self->info("Dumping EBI Search output to %s", $path);
 
-  # gz_work_with_file($path, 'w', 
-  # 		    sub {
-  # 		      my ($fh) = @_;
-  # 		      print $fh "Test\n";
-  # 		    });
-
-  # my $fh = IO::File->new($path, 'w');
   my $fh = IO::Zlib->new();
   $fh->open($path, "wb9");
   my $w = XML::Writer->new(OUTPUT => $fh, 
@@ -140,140 +133,134 @@ sub run {
   $w->characters($self->param("release")); 
   $w->endTag;
 
-  # my %old;
+  my %old;
 
-  # foreach my $row (@$gene_info) {
-  #   my (
-  # 	$gene_id,                            $transcript_id,
-  # 	$translation_id,                     $gene_stable_id,
-  # 	$transcript_stable_id,               $translation_stable_id,
-  # 	$gene_description,                   $extdb_db_display_name,
-  # 	$xref_primary_acc,                   $xref_display_label,
-  # 	$analysis_description_display_label, $analysis_description,
-  # 	$gene_source,                        $gene_status,
-  # 	$gene_biotype
-  #      ) = @$row;
-  #   if ( $old{'gene_id'} != $gene_id ) {
-  #     if ( $old{'gene_id'} ) {
+  foreach my $row (@$gene_info) {
+    my (
+  	$gene_id,                            $transcript_id,
+  	$translation_id,                     $gene_stable_id,
+  	$transcript_stable_id,               $translation_stable_id,
+  	$gene_description,                   $extdb_db_display_name,
+  	$xref_primary_acc,                   $xref_display_label,
+  	$analysis_description_display_label, $analysis_description,
+  	$gene_source,                        $gene_status,
+  	$gene_biotype
+       ) = @$row;
+    if ( $old{'gene_id'} != $gene_id ) {
+      if ( $old{'gene_id'} ) {
 
-  # 	if ( $snp_sth && $type eq 'core' ) {
-  # 	  my @transcript_stable_ids =
-  # 	    keys %{ $old{transcript_stable_ids} };
-  # 	  $snp_sth->execute("@transcript_stable_ids");
-  # 	  $old{snps} = $snp_sth->fetchall_arrayref;
-  # 	}
+  	if ( $snp_sth && $type eq 'core' ) {
+  	  my @transcript_stable_ids =
+  	    keys %{ $old{transcript_stable_ids} };
+  	  $snp_sth->execute("@transcript_stable_ids");
+  	  $old{snps} = $snp_sth->fetchall_arrayref;
+  	}
 
-  # 	if ($want_species_orthologs) {
-  # 	  $old{orthologs} =
-  # 	    $ortholog_lookup->{ $old{'gene_stable_id'} };
-  # 	}
+  	if ($want_species_orthologs) {
+  	  $old{orthologs} =
+  	    $ortholog_lookup->{ $old{'gene_stable_id'} };
+  	}
 
-  # 	# p geneLineXML( $dbspecies, \%old, $counter );
-  # 	$self->_write_gene($w, \%old);
+  	$self->_write_gene($w, \%old);
+      }
 
-  #     }
-
-  #     my $alt_allele = 0;
-  #     if (exists $alt_alleles->{$gene_id}) { # meaning reverses as alt_allele defines the ref alone
-  # 	$alt_allele = $alt_alleles->{$gene_id} == 1 ? 0 : 1; 
-  #     }
-  #     my $hap_type = $haplotypes->{$gene_id} || q{REF};
+      my $alt_allele = 0;
+      if (exists $alt_alleles->{$gene_id}) { # meaning reverses as alt_allele defines the ref alone
+  	$alt_allele = $alt_alleles->{$gene_id} == 1 ? 0 : 1; 
+      }
+      my $hap_type = $haplotypes->{$gene_id} || q{REF};
                                 
-  #     %old = (
-  # 	      'gene_id'                 => $gene_id,
-  # 	      'haplotype'               => $exception_type_to_description{$hap_type},
-  # 	      'alt_allele'              => $alt_allele,
-  # 	      'gene_stable_id'          => $gene_stable_id,
-  # 	      'description'             => $gene_description,
-  # 	      'taxon_id'                => $taxon_id,
-  # 	      'translation_stable_ids'  => {
-  # 					    $translation_stable_id ? ( $translation_stable_id => 1 )
-  # 					    : ()
-  # 					   },
-  # 	      'transcript_stable_ids' => {
-  # 					  $transcript_stable_id ? ( $transcript_stable_id => 1 )
-  # 					  : ()
-  # 					 },
-  # 	      'transcript_ids' => {
-  # 				   $transcript_id ? ( $transcript_id => 1 )
-  # 				   : ()
-  # 				  },
-  # 	      'exons'                => {},
-  # 	      'external_identifiers' => {},
-  # 	      'alt'                  => $xref_display_label
-  # 	      ? "($extdb_db_display_name: $xref_display_label)"
-  # 	      : "(novel gene)",
-  # 	      'gene_name' => $xref_display_label ? $xref_display_label
-  # 	      : $gene_stable_id,
-  # 	      'ana_desc_label' => $analysis_description_display_label,
-  # 	      'ad'             => $analysis_description,
-  # 	      'source'         => ucfirst($gene_source),
-  # 	      'st'             => $gene_status,
-  # 	      'biotype'        => $gene_biotype
-  # 	     );
-  #     $old{'source'} =~ s/base/Base/;
-  #     $old{'exons'} = $exons->{$gene_id};
-  #     foreach my $K ( keys %{ $exons->{$gene_id} } ) {
-  # 	$old{'i'}{$K} = 1;
-  #     }
+      %old = (
+  	      'gene_id'                 => $gene_id,
+  	      'haplotype'               => $exception_type_to_description{$hap_type},
+  	      'alt_allele'              => $alt_allele,
+  	      'gene_stable_id'          => $gene_stable_id,
+  	      'description'             => $gene_description,
+  	      'taxon_id'                => $taxon_id,
+  	      'translation_stable_ids'  => {
+  					    $translation_stable_id ? ( $translation_stable_id => 1 )
+  					    : ()
+  					   },
+  	      'transcript_stable_ids' => {
+  					  $transcript_stable_id ? ( $transcript_stable_id => 1 )
+  					  : ()
+  					 },
+  	      'transcript_ids' => {
+  				   $transcript_id ? ( $transcript_id => 1 )
+  				   : ()
+  				  },
+  	      'exons'                => {},
+  	      'external_identifiers' => {},
+  	      'alt'                  => $xref_display_label
+  	      ? "($extdb_db_display_name: $xref_display_label)"
+  	      : "(novel gene)",
+  	      'gene_name' => $xref_display_label ? $xref_display_label
+  	      : $gene_stable_id,
+  	      'ana_desc_label' => $analysis_description_display_label,
+  	      'ad'             => $analysis_description,
+  	      'source'         => ucfirst($gene_source),
+  	      'st'             => $gene_status,
+  	      'biotype'        => $gene_biotype
+  	     );
+      $old{'source'} =~ s/base/Base/;
+      $old{'exons'} = $exons->{$gene_id};
+      foreach my $K ( keys %{ $exons->{$gene_id} } ) {
+  	$old{'i'}{$K} = 1;
+      }
 
-  #     foreach my $db ( keys %{ $xrefs->{'Gene'}{$gene_id} || {} } ) {
-  # 	foreach my $K ( keys %{ $xrefs->{'Gene'}{$gene_id}{$db} } ) {
-  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+      foreach my $db ( keys %{ $xrefs->{'Gene'}{$gene_id} || {} } ) {
+  	foreach my $K ( keys %{ $xrefs->{'Gene'}{$gene_id}{$db} } ) {
+  	  $old{'external_identifiers'}{$db}{$K} = 1;
 
-  # 	}
-  #     }
-  #     foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
-  # 	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
-  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+  	}
+      }
+      foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
+  	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
+  	  $old{'external_identifiers'}{$db}{$K} = 1;
 
-  # 	}
-  #     }
-  #     foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
-  # 	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
-  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
-  # 	}
-  #     }
-  #   } else {
-  #     $old{'transcript_stable_ids'}{$transcript_stable_id}   = 1;
-  #     $old{'transcript_ids'}{$transcript_id}                 = 1;
-  #     $old{'translation_stable_ids'}{$translation_stable_id} = 1;
+  	}
+      }
+      foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  	  $old{'external_identifiers'}{$db}{$K} = 1;
+  	}
+      }
+    } else {
+      $old{'transcript_stable_ids'}{$transcript_stable_id}   = 1;
+      $old{'transcript_ids'}{$transcript_id}                 = 1;
+      $old{'translation_stable_ids'}{$translation_stable_id} = 1;
 
-  #     foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
-  # 	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
-  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
-  # 	}
-  #     }
-  #     foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
-  # 	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
-  # 	  $old{'external_identifiers'}{$db}{$K} = 1;
+      foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
+  	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
+  	  $old{'external_identifiers'}{$db}{$K} = 1;
+  	}
+      }
+      foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  	  $old{'external_identifiers'}{$db}{$K} = 1;
 
-  # 	}
-  #     }
-  #   }
-  # }
+  	}
+      }
+    }
+  }
 
-  # if ( $snp_sth && $type eq 'core' ) {
-  #   my @transcript_stable_ids = keys %{ $old{transcript_stable_ids} };
-  #   $snp_sth->execute("@transcript_stable_ids");
-  #   $old{snps} = $snp_sth->fetchall_arrayref;
-  # }
-  # if ($want_species_orthologs) {
-  #   $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} };
+  if ( $snp_sth && $type eq 'core' ) {
+    my @transcript_stable_ids = keys %{ $old{transcript_stable_ids} };
+    $snp_sth->execute("@transcript_stable_ids");
+    $old{snps} = $snp_sth->fetchall_arrayref;
+  }
+  if ($want_species_orthologs) {
+    $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} };
 
-  # }
+  }
 
-  # # p geneLineXML( $dbspecies, \%old, $counter );
-  # $self->_write_gene($w, \%old);
-
-  # # footer( $counter->() );
-
+  $self->_write_gene($w, \%old);
 
   $w->endTag("database");
   $w->end();
   $fh->close();
 
-  
+  return;
 }
 
 sub _write_gene {
@@ -608,7 +595,7 @@ sub _generate_file_name {
   # Gene_<dbname>.xml.gz
   # e.g. Gene_homo_sapiens_core_72_37.xml.gz
   #      Gene_mus_musculus_vega_72_38.xml.gz
-  my $file_name = sprintf "Gene_%s.xml", $self->_dbname();
+  my $file_name = sprintf "Gene_%s.xml.gz", $self->_dbname();
   my $path = $self->data_path();
 
   return File::Spec->catfile($path, $file_name);
