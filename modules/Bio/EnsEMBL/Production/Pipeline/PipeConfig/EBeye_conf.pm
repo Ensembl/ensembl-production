@@ -30,7 +30,9 @@ sub default_options {
       types => [],
       
       ### Defaults 
-      
+
+      release_date => `date '+%d-%b-%Y'`,
+ 
       pipeline_name => 'ebeye_dump_'.$self->o('release'),
       
       email => $self->o('ENV', 'USER').'@sanger.ac.uk',
@@ -76,6 +78,8 @@ sub pipeline_analyses {
         },
         -flow_into  => {
           2 => { 'DumpEBeyeSearch' => { species => "#species#", type => "#type#" },
+		 # checksum generator shouldn't need these parameters, everything is
+                 # is put in the same directory
                  'ChecksumGenerator' => { species => "#species#", type => "#type#" },
           },
         },
@@ -88,13 +92,20 @@ sub pipeline_analyses {
         -analysis_capacity => 10,
         -rc_name => 'dump',
       },
+
+      {
+        -logic_name => 'DumpReleaseNotes',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::DumpReleaseNotesFile',
+        -wait_for   => [ qw/DumpEBeyeSearch/ ],
+        -analysis_capacity => 10, 
+      },
       
       ####### CHECKSUMMING
       
       {
         -logic_name => 'ChecksumGenerator',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::ChecksumGenerator',
-        -wait_for   => [qw/DumpEBeyeSearch/],
+        -wait_for   => [ qw/DumpReleaseNotes/ ],
         -analysis_capacity => 10, 
       },
       
