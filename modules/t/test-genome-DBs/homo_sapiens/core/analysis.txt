@@ -12,7 +12,7 @@
 53	2002-08-12 14:52:26	human_refseq_protein		1		TGE_gw	1			TargettedGeneWise		TGE_gw	gene
 1280	2002-08-12 14:52:26	other_swall_protein		1		similarity_genewise	1			FPC_BlastMiniGenewise		similarity_genewise	gene
 1281	2002-08-12 14:52:26	combined-protein_cdna		1		combined_gw_e2g	1			Combine_Genewises_and_E2Gs		combined_gw_e2g	gene
-1282	2002-08-12 14:52:26	ensembl		1		ensembl	1			Gene_Builder		ensembl	gene
+8337	2002-08-12 14:52:26	ensembl		1		ensembl	1			Gene_Builder		ensembl	gene
 1290	2002-08-12 14:52:26	refseq_cdna	human_mRNA	1		exonerate_e2g	1			FilterESTs_and_E2G		exonerate	gene
 1291	2002-08-12 14:52:26	embl_vertrna	human_mRNA	1		exonerate_e2g	1			FilterESTs_and_E2G		exonerate	gene
 49	0000-00-00 00:00:00	Pfam	Pfam	1	/data/blastdb/Ensembl/Pfam_ls;/data/blastdb/Ensembl/Pfam_fs	/nfs/farm/Worms/bin/hmmpfam	1	/nfs/farm/Worms/bin/hmmpfam		Pfam	1	PFAM	domain
@@ -31,3 +31,6 @@
 1501	0000-00-00 00:00:00	cisred	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 1502	0000-00-00 00:00:00	cisred_search	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 1503	0000-00-00 00:00:00	DitagAlign	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8352    2009-05-14 15:43:42     havana      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N
+8356    0000-00-00 00:00:00     ensembl_havana_lincrna      \N      \N      \N      \N      \N      \N      \N      lincRNAEvaluator      \N      \N      \N
+8363    2009-05-12 18:26:57     ncrna      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N
