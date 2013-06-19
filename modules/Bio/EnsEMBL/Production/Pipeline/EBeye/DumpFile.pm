@@ -55,6 +55,7 @@ use base qw(Bio::EnsEMBL::Production::Pipeline::EBeye::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
+
 use IO::Zlib;
 use XML::Writer;
 
@@ -133,9 +134,21 @@ sub run {
   $w->characters($self->param("release")); 
   $w->endTag;
 
+  $w->startTag("entries");
+
+  # debug
+  # $w->startTag('entry', 'id' => rand);
+  # $w->characters("aaa");
+  # $w->endTag('entry');
+
+  # $w->startTag('entry', 'id' => rand);
+  # $w->characters("bbb");
+  # $w->endTag('entry');
+  # end debug
+
   my %old;
 
-  foreach my $row (@$gene_info) {
+  foreach my $row (@{$gene_info}) {
     my (
   	$gene_id,                            $transcript_id,
   	$translation_id,                     $gene_stable_id,
@@ -249,13 +262,13 @@ sub run {
     $snp_sth->execute("@transcript_stable_ids");
     $old{snps} = $snp_sth->fetchall_arrayref;
   }
-  if ($want_species_orthologs) {
-    $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} };
 
-  }
+  $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} }
+    if $want_species_orthologs and scalar @{$gene_info};
 
   $self->_write_gene($w, \%old);
 
+  $w->endTag("entries");
   $w->endTag("database");
   $w->end();
   $fh->close();
@@ -266,7 +279,9 @@ sub run {
 sub _write_gene {
   my ($self, $writer, $xml_data) = @_;
 
-  return warn "gene id not set" if $xml_data->{'gene_stable_id'} eq '';
+  return warn "gene id not set" 
+    unless exists $xml_data->{'gene_stable_id'} and
+      $xml_data->{'gene_stable_id'};
 
   my $gene_id     = $xml_data->{'gene_stable_id'};
   my $altid       = $xml_data->{'alt'} or die "altid not set";
@@ -335,7 +350,7 @@ sub _write_gene {
     } else {
 
       foreach my $key ( keys %{ $external_identifiers->{$ext_db_name} } ) {
-	$key = escapeXML($key);
+	# $key = escapeXML($key);
 	$ext_db_name =~ s/^Ens.*/ENSEMBL/;
 
 	if ( $ext_db_name =~ /_synonym/ ) {
@@ -487,11 +502,9 @@ sub _fetch_exons {
                                      FROM transcript AS t, exon_transcript As et, exon AS e
                                      WHERE t.transcript_id = et.transcript_id and et.exon_id = e.exon_id"
 				   );
-
-
   $get_genes_sth->execute;
-  my $gene_rows = [];		# cache for batches of rows
 
+  my $gene_rows = []; # cache for batches of rows
   while (
 	 my $row = (
 		    shift(@$gene_rows) || # get row from cache, or reload cache:
@@ -534,7 +547,9 @@ sub _fetch_orthologs {
 
     $self->info("Fetching orthologs [%s]", $species);
 
-    my $dbc = Bio::EnsEMBL::Registry->get_DBAdaptor('Multi', 'compara')->dbc();
+    my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor('Multi', 'compara');
+    defined $dba or die "Unable to get Compara DBAdaptor";
+    my $dbc = $dba->dbc();
     defined $dbc or die "Unable to get Compara DBConnection";
 
     my @wanted_ortholog_species = keys %$orth_species;
