@@ -31,7 +31,7 @@ sub default_options {
       
       ### Defaults 
 
-      release_date => `date '+%d-%b-%Y'`,
+      release_date => '18-Jun-2013', # `date '+%d-%b-%Y'`,
  
       pipeline_name => 'ebeye_dump_'.$self->o('release'),
       
@@ -81,6 +81,7 @@ sub pipeline_analyses {
 		 # checksum generator shouldn't need these parameters, everything is
                  # is put in the same directory
                  'ChecksumGenerator' => { species => "#species#", type => "#type#" },
+		 'DumpReleaseNotes' => { species => "#species#", type => "#type#" }
           },
         },
       },
@@ -132,6 +133,7 @@ sub pipeline_wide_parameters {
         %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
         base_path => $self->o('base_path'),
         release => $self->o('release'),
+        release_date => $self->o('release_date'),
     };
 }
 
