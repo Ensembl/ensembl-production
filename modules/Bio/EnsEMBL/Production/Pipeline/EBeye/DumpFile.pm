@@ -162,12 +162,17 @@ sub run {
     if ( $old{'gene_id'} != $gene_id ) {
       if ( $old{'gene_id'} ) {
 
-  	if ( $snp_sth && $type eq 'core' ) {
-  	  my @transcript_stable_ids =
-  	    keys %{ $old{transcript_stable_ids} };
-  	  $snp_sth->execute("@transcript_stable_ids");
-  	  $old{snps} = $snp_sth->fetchall_arrayref;
-  	}
+	# safe guard against problems with the variation DB
+	# e.g. during testing, we don't have either the definition
+	# of human variation test db or an up-to-date schema version
+	eval {
+	  if ( $snp_sth && $type eq 'core' ) {
+	    my @transcript_stable_ids =
+	      keys %{ $old{transcript_stable_ids} };
+	    $snp_sth->execute("@transcript_stable_ids");
+	    $old{snps} = $snp_sth->fetchall_arrayref;
+	  }
+	};
 
   	if ($want_species_orthologs) {
   	  $old{orthologs} =
@@ -257,11 +262,16 @@ sub run {
     }
   }
 
-  if ( $snp_sth && $type eq 'core' ) {
-    my @transcript_stable_ids = keys %{ $old{transcript_stable_ids} };
-    $snp_sth->execute("@transcript_stable_ids");
-    $old{snps} = $snp_sth->fetchall_arrayref;
-  }
+  # safe guard against problems with the variation DB
+  # e.g. during testing, we don't have either the definition
+  # of human variation test db or an up-to-date schema version
+  eval {
+    if ( $snp_sth && $type eq 'core' ) {
+      my @transcript_stable_ids = keys %{ $old{transcript_stable_ids} };
+      $snp_sth->execute("@transcript_stable_ids");
+      $old{snps} = $snp_sth->fetchall_arrayref;
+    }
+  };
 
   $old{orthologs} = $ortholog_lookup->{ $old{'gene_stable_id'} }
     if $want_species_orthologs and scalar @{$gene_info};
@@ -402,12 +412,13 @@ sub _write_gene {
 sub _get_snp_sth {
   my ($self) = @_;
   my $dba = $self->get_DBAdaptor("variation");
-  defined $dba and return $dba->dbc->prepare("SELECT distinct(vf.variation_name) 
-                                              FROM transcript_variation AS tv, variation_feature AS vf 
-                                              WHERE vf.variation_feature_id = tv.variation_feature_id AND tv.feature_stable_id in(?)"
-					    );
+  defined $dba and 
+    return $dba->dbc->prepare("SELECT distinct(vf.variation_name) 
+                               FROM transcript_variation AS tv, variation_feature AS vf 
+                               WHERE vf.variation_feature_id = tv.variation_feature_id AND tv.feature_stable_id in(?)"
+			     );
   
-  return;
+  return undef;
 }
 
 sub _taxon_id {
