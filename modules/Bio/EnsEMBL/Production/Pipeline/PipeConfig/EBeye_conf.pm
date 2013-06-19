@@ -78,10 +78,8 @@ sub pipeline_analyses {
         },
         -flow_into  => {
           2 => { 'DumpEBeyeSearch' => { species => "#species#", type => "#type#" },
-		 # checksum generator shouldn't need these parameters, everything is
-                 # is put in the same directory
-                 'ChecksumGenerator' => { species => "#species#", type => "#type#" },
-		 'DumpReleaseNotes' => { species => "#species#", type => "#type#" }
+                 'ChecksumGenerator' => {},
+		 'DumpReleaseNotes' => {}
           },
         },
       },
