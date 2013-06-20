@@ -381,7 +381,10 @@ sub _write_gene {
 
   $writer->startTag('additional_fields');
 
-  $writer->startTag('field', 'name' => 'species'); $writer->characters($self->param('species')); $writer->endTag;
+  my $species = $self->param('species');
+  $species =~ s/_/ /g;
+  $species = ucfirst($species);
+  $writer->startTag('field', 'name' => 'species'); $writer->characters($species); $writer->endTag;
   $writer->startTag('field', 'name' => 'featuretype'); $writer->characters('Gene'); $writer->endTag;
   $writer->startTag('field', 'name' => 'source'); $writer->characters($type); $writer->endTag;
   $writer->startTag('field', 'name' => 'transcript_count'); $writer->characters($transcript_count); $writer->endTag;
