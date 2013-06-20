@@ -387,7 +387,7 @@ sub project_display_names {
 
       my $dbname = $dbEntry->dbname();
 
-      return if (!($dbname =~ /MGI/ || $dbname =~ /HGNC/));
+      return if (!($dbname =~ /MGI/ || $dbname =~ /HGNC/ || $dbname =~ /ZFIN_ID/));
 
       # Skip clone names if projecting all sources
       return if (lc($dbname) =~ /clone/);
@@ -785,7 +785,8 @@ sub check_overwrite_display_xref {
   #Exit early if it was a RefSeq predicted name & source was a vetted good symbol
   if ($to_dbname eq "RefSeq_mRNA_predicted" || $to_dbname eq "RefSeq_ncRNA_predicted" || $to_dbname eq "RefSeq_peptide_predicted") {
     if (  ($from_species eq "human" && $from_dbname =~ /HGNC/) ||
-          ($from_species eq "mouse" && $from_dbname =~ /MGI/)) {
+          ($from_species eq "mouse" && $from_dbname =~ /MGI/) ||
+          ($from_species eq "zebrafish" && $from_dbname =~ /ZFIN_ID/)) {
       if ($to_species eq "zebrafish" and is_in_blacklist($from_gene->display_xref)){
         return 0;
       }
