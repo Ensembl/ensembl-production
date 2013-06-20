@@ -117,6 +117,18 @@ $names_1_1{'mouse'} = [qw(
 )];
 
 my %names_1_many;
+$names_1_many{'zebrafish'} = [qw(
+    cod
+    fugu
+    lamprey
+    medaka
+    stickleback
+    tetraodon
+    tilapia
+    coelacanth
+    xiphophorus_maculatus
+)];
+
 $names_1_many{'human'} = [qw(
     cod
     fugu
@@ -242,6 +254,7 @@ $go_terms{'xenopus'} = [qw(zebrafish)];
 my @execution_order = qw/human mouse rat zebrafish xenopus/;
 # except of course order is irrelevant to the job queue. See the -w command below
 # in the bsub command to cause serial execution.
+my @many_execution_order = qw/zebrafish human/;
 
 
 # ----------------------------------------
@@ -285,7 +298,7 @@ foreach my $from (keys %names_1_many) {
 }
 
 # 1:many
-foreach my $from (@execution_order) {
+foreach my $from (@many_execution_order) {
     if (not exists($names_1_many{$from})) {next;}
     foreach my $to (@{$names_1_many{$from}}) {
         my $o = "$dir/names_${from}_$to.out";        
