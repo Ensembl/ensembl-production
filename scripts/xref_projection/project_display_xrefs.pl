@@ -433,7 +433,7 @@ sub project_display_names {
         $to_gene->add_DBEntry($dbEntry);
         $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1) if (!$print);
       } 
-      elsif ($type eq "Transcript" || $dbname eq 'HGNC_transcript_name') {
+      elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
         $to_transcript->add_DBEntry($dbEntry);
         $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1) if (!$print);
       } 
@@ -857,11 +857,16 @@ sub overwrite_transcript_display_xrefs {
   my $transcripts = $to_gene->get_all_Transcripts();
   my @havana = grep { 
     $_->analysis->logic_name eq 'ensembl_havana_transcript' ||
+    $_->analysis->logic_name eq 'proj_ensembl_havana_transcript' ||
     $_->analysis->logic_name eq 'havana' ||
-    $_->analysis->logic_name eq 'havana_ig_gene'
+    $_->analysis->logic_name eq 'proj_havana' ||
+    $_->analysis->logic_name eq 'havana_ig_gene' ||
+    $_->analysis->logic_name eq 'proj_havana_ig_gene'
   } @{$transcripts};
   my @ensembl = grep { 
     $_->analysis->logic_name eq 'ensembl' ||
+    $_->analysis->logic_name eq 'proj_ensembl' ||
+    $_->analysis->logic_name eq 'ensembl_projection' ||
     $_->analysis->logic_name eq 'ensembl_ig_gene'
   } @{$transcripts};
   _process_transcripts($ref_dbEntry, $info_txt, 1, \@havana);
@@ -877,7 +882,7 @@ sub _process_transcripts {
   my $base_name  = $ref_dbEntry->display_id();
   foreach my $t (@{$transcripts}) {
     my $name = sprintf('%s-%03d', $base_name, $offset);
-    my $dbname = "${from_dbname}_transcript_name";
+    my $dbname = "${from_dbname}_trans_name";
     my $xref = Bio::EnsEMBL::DBEntry->new(
       -PRIMARY_ID => $name, -DISPLAY_ID => $name, -DBNAME => $dbname,
       -INFO_TYPE => 'PROJECTION', -INFO_TEXT => $info_txt,
