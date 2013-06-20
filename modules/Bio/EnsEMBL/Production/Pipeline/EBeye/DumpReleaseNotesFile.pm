@@ -24,6 +24,18 @@ Bio::EnsEMBL::Production::Pipeline::EBeye::DumpReleaseNotesFile
 
 =head1 DESCRIPTION
 
+Module responsible for creating the release_note.txt file.
+
+Allowed parameters are:
+
+=over 8
+
+=item release - The current release we are emitting
+
+=item release_date - The current release date we are emitting
+
+=back
+
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::EBeye::DumpReleaseNotesFile;

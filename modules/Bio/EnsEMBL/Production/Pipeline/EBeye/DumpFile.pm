@@ -339,7 +339,7 @@ sub _write_gene {
   # e.g. Uniprot/SWISSPROT and Uniprot/TREMBL become just Uniprot
   # synonyms are stored as additional fields rather than cross references
 
-  foreach my $ext_db_name ( keys %$external_identifiers ) {
+  foreach my $ext_db_name ( keys %{$external_identifiers} ) {
 
     if ( $ext_db_name =~
 	 /(Uniprot|GO|Interpro|Medline|Sequence_Publications|EMBL)/ ) {
@@ -349,7 +349,7 @@ sub _write_gene {
       if ( $ext_db_name =~ /_synonym/ ) { # synonyms
 
 	foreach my $ed_key ( keys %{ $external_identifiers->{$ext_db_name} } ) {
-	  $synonyms->{"${matched_db_name}_synonym"} = $ed_key;
+	  push @{$synonyms->{"${matched_db_name}_synonym"}}, $ed_key;
 	}
 
       } else { # non-synonyms
@@ -365,7 +365,7 @@ sub _write_gene {
 
 	if ( $ext_db_name =~ /_synonym/ ) {
 	  $unique_synonyms->{$key} = 1;
-	  $synonyms->{"$ext_db_name"} = $key;
+	  push @{$synonyms->{"$ext_db_name"}}, $key;
 
 	} else {
 	  $writer->emptyTag('ref', 'dbname' => $ext_db_name, 'dbkey' => $key);
@@ -397,10 +397,13 @@ sub _write_gene {
   map { $writer->startTag('field', 'name' => 'peptide'); $writer->characters($_); $writer->endTag } 
     keys %{$peptides};
 
+  foreach my $s (keys %{$synonyms}) {
+    map { $writer->startTag('field', 'name' => $s); $writer->characters($_); $writer->endTag }
+      @{$synonyms->{$s}};
+  }
+    
   map { $writer->startTag('field', 'name' => 'gene_synonym'); $writer->characters($_); $writer->endTag } 
     keys %$unique_synonyms;
-  map { $writer->startTag('field', 'name' => $_); $writer->characters($synonyms->{$_}); $writer->endTag }
-    keys %{$synonyms};
 
   $writer->endTag('additional_fields');
   $writer->endTag('entry');
