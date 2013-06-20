@@ -127,7 +127,8 @@ sub run {
   $w->endTag;
   
   $w->startTag("description");
-  $w->characters(sprintf "Ensembl %s %s database", $self->param("species"), $self->param("type"));
+  my $species = $self->param('species'); $species =~ s/_/ /g;
+  $w->characters(sprintf "Ensembl %s %s database", ucfirst($species), $self->param("type"));
   $w->endTag;
   
   $w->startTag("release"); 
