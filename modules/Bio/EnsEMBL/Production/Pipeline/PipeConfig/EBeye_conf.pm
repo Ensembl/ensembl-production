@@ -31,7 +31,9 @@ sub default_options {
       
       ### Defaults 
 
-      release_date => '18-Jun-2013', # `date '+%d-%b-%Y'`,
+      xmlstarlet_exe => 'xml',
+
+      # release_date => `date '+%d-%b-%Y'`,
  
       pipeline_name => 'ebeye_dump_'.$self->o('release'),
       
@@ -87,6 +89,9 @@ sub pipeline_analyses {
       {
         -logic_name => 'DumpEBeyeSearch',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::DumpFile',
+        -parameters => {
+          xmlstarlet => $self->o('xmlstarlet_exe')
+        },
         -max_retry_count  => 1,
         -analysis_capacity => 10,
         -rc_name => 'dump',
