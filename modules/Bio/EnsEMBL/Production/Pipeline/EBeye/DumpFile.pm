@@ -81,6 +81,10 @@ sub fetch_input {
   throw "Need a species" unless $self->param('species');
   throw "Need a release" unless $self->param('release');
   throw "Need a base_path" unless $self->param('base_path');
+
+  throw "No xmlstarlet executable given" 
+    unless $self->param('xmlstarlet');
+  $self->assert_executable($self->param('xmlstarlet'));
   
   return;
 }
@@ -136,16 +140,6 @@ sub run {
   $w->endTag;
 
   $w->startTag("entries");
-
-  # debug
-  # $w->startTag('entry', 'id' => rand);
-  # $w->characters("aaa");
-  # $w->endTag('entry');
-
-  # $w->startTag('entry', 'id' => rand);
-  # $w->characters("bbb");
-  # $w->endTag('entry');
-  # end debug
 
   my %old;
 
