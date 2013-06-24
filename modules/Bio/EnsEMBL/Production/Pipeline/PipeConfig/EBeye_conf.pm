@@ -8,6 +8,7 @@ use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 my $default_release_date = `date '+%d-%b-%Y'`;
+chomp($default_release_date);
 
 sub default_options {
     my ($self) = @_;
