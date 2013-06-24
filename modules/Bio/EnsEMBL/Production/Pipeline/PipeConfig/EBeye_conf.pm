@@ -7,6 +7,8 @@ use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
+my $default_release_date = `date '+%d-%b-%Y'`;
+
 sub default_options {
     my ($self) = @_;
     
@@ -33,7 +35,7 @@ sub default_options {
 
       xmlstarlet_exe => 'xml',
 
-      # release_date => `date '+%d-%b-%Y'`,
+      release_date => $default_release_date,
  
       pipeline_name => 'ebeye_dump_'.$self->o('release'),
       
