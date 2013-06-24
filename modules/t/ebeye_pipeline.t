@@ -78,12 +78,12 @@ my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Producti
 #
 # NOTE
 #
-# Here we simply test some expected files have been produced.
+# Here we simply test that some expected files have been produced
 #
 my @expected_files = ( 
    'ebeye/CHECKSUMS',
    "ebeye/Gene_${core_dbname}.xml.gz",
-   "release_note.txt"
+   "ebeye/release_note.txt"
    );
 
 map { ok(check_file($_), "File $_ is present and non-zero size") } @expected_files;
