@@ -82,7 +82,7 @@ my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Producti
 #
 my @expected_files = ( 
    'ebeye/CHECKSUMS',
-   "ebeye/Gene_${core_dbname}.xml.gz"
+   "ebeye/Gene_${core_dbname}.xml.gz",
    "release_note.txt"
    );
 
