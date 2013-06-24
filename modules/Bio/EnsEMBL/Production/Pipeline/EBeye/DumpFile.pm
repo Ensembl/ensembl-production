@@ -288,120 +288,6 @@ sub run {
   return;
 }
 
-sub _validate {
-  my ($self, $ebeye_dump_xml) = @_;
-
-  my $xsd = $self->_create_ebeye_search_dump_xsd();
-  my $err_file = $ebeye_dump_xml . '.err';
-
-  my $cmd = 
-    sprintf(q{%s val -e -s %s %s 2> %s}, 
-	    $self->param('xmlstarlet'),
-	    $xsd,
-	    $ebeye_dump_xml,
-	    $err_file);
-  my ($rc, $output) = $self->run_cmd($cmd);
-  
-  throw sprintf "XML validator reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
-    unless $output =~ /- valid/;
-
-  unlink $err_file;
-  unlink $xsd;
-
-  return;
-}
-
-sub _create_ebeye_search_dump_xsd {
-  my ($self) = @_;
-  
-  my $xsd = <<XSD;
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-  <xsd:element name="database" type="databaseType" />
-  
-  <xsd:complexType name="databaseType">
-    <xsd:all>
-      <xsd:element name="name" type="xsd:string" minOccurs="1" />
-      <xsd:element name="description" type="xsd:string" minOccurs="0" />
-      <xsd:element name="release" type="xsd:string" minOccurs="0" />
-      <xsd:element name="release_date" type="xsd:string" minOccurs="0" />
-      <xsd:element name="entry_count" type="xsd:int" minOccurs="0" />
-      <xsd:element name="entries" type="entriesType" minOccurs="1" />
-    </xsd:all>
-  </xsd:complexType>
-  
-  <xsd:complexType name="entriesType">
-    <xsd:sequence>
-      <xsd:element name="entry" type="entryType" maxOccurs="unbounded" minOccurs="1" />
-    </xsd:sequence>
-  </xsd:complexType>
-  
-  <xsd:complexType name="entryType">
-    <xsd:all>
-      <xsd:element name="name" type="xsd:string" minOccurs="0" />
-      <xsd:element name="description" type="xsd:string" minOccurs="0" />
-      <xsd:element name="authors" type="xsd:string" minOccurs="0" />
-      <xsd:element name="keywords" type="xsd:string" minOccurs="0" />
-      <xsd:element name="dates" type="datesType" minOccurs="0" />
-      <xsd:element name="cross_references" type="cross_referencesType" minOccurs="0" />
-      <xsd:element name="additional_fields" type="additional_fieldsType" minOccurs="0" />
-    </xsd:all>
-    <xsd:attribute name="id" type="xsd:string" use="required"/>
-    <xsd:attribute name="acc" type="xsd:string" />
-  </xsd:complexType>
-  
-  <xsd:complexType name="additional_fieldsType">
-    <xsd:sequence>
-      <xsd:element name="field" type="fieldType" maxOccurs="unbounded" minOccurs="0" />
-    </xsd:sequence>
-  </xsd:complexType>
-  
-  <xsd:complexType name="fieldType">
-    <xsd:simpleContent>
-      <xsd:extension base="xsd:string">
-        <xsd:attribute name="name" type="xsd:string" use="required" />
-      </xsd:extension>
-    </xsd:simpleContent>
-  </xsd:complexType>
-  
-  <xsd:complexType name="cross_referencesType">
-    <xsd:sequence>
-      <xsd:element name="ref" type="refType" maxOccurs="unbounded" minOccurs="0" />
-    </xsd:sequence>
-  </xsd:complexType>
-  
-  <xsd:complexType name="refType">
-    <xsd:attribute name="dbname" type="xsd:string" use="required" />
-    <xsd:attribute name="dbkey" type="xsd:string" use="required" />
-  </xsd:complexType>
-  
-  <xsd:complexType name="datesType">
-    <xsd:sequence>
-      <xsd:element name="date" type="dateType" maxOccurs="unbounded" minOccurs="0" />
-    </xsd:sequence>
-  </xsd:complexType>
-  
-  <xsd:complexType name="dateType">
-    <xsd:attribute name="type" type="xsd:string" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="required" />
-  </xsd:complexType>
-  
-</xsd:schema>
-XSD
-  
-  my $ebeye_search_dump_xsd = 'ebeye_search_dump.xsd';
-  my $path = File::Spec->catfile($self->data_path(), $ebeye_search_dump_xsd);
-  unless (-e $path) {
-    work_with_file($path, 'w', sub {
-		     my ($fh) = @_;
-		     print $fh $xsd;
-		     return;
-		   });
-  }
-
-  return $ebeye_search_dump_xsd;
-}
 
 sub _write_gene {
   my ($self, $writer, $xml_data) = @_;
@@ -758,6 +644,121 @@ sub _dbname {
   die "Unable to get dbname" unless defined $dbname;
   
   return $dbname;
+}
+
+sub _validate {
+  my ($self, $ebeye_dump_xml) = @_;
+
+  my $xsd = $self->_create_ebeye_search_dump_xsd();
+  my $err_file = $ebeye_dump_xml . '.err';
+
+  my $cmd = 
+    sprintf(q{%s val -e -s %s %s 2> %s}, 
+	    $self->param('xmlstarlet'),
+	    $xsd,
+	    $ebeye_dump_xml,
+	    $err_file);
+  my ($rc, $output) = $self->run_cmd($cmd);
+  
+  throw sprintf "XML validator reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
+    unless $output =~ /- valid/;
+
+  unlink $err_file;
+  unlink $xsd;
+
+  return;
+}
+
+sub _create_ebeye_search_dump_xsd {
+  my ($self) = @_;
+  
+  my $xsd = <<XSD;
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:element name="database" type="databaseType" />
+  
+  <xsd:complexType name="databaseType">
+    <xsd:all>
+      <xsd:element name="name" type="xsd:string" minOccurs="1" />
+      <xsd:element name="description" type="xsd:string" minOccurs="0" />
+      <xsd:element name="release" type="xsd:string" minOccurs="0" />
+      <xsd:element name="release_date" type="xsd:string" minOccurs="0" />
+      <xsd:element name="entry_count" type="xsd:int" minOccurs="0" />
+      <xsd:element name="entries" type="entriesType" minOccurs="1" />
+    </xsd:all>
+  </xsd:complexType>
+  
+  <xsd:complexType name="entriesType">
+    <xsd:sequence>
+      <xsd:element name="entry" type="entryType" maxOccurs="unbounded" minOccurs="1" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="entryType">
+    <xsd:all>
+      <xsd:element name="name" type="xsd:string" minOccurs="0" />
+      <xsd:element name="description" type="xsd:string" minOccurs="0" />
+      <xsd:element name="authors" type="xsd:string" minOccurs="0" />
+      <xsd:element name="keywords" type="xsd:string" minOccurs="0" />
+      <xsd:element name="dates" type="datesType" minOccurs="0" />
+      <xsd:element name="cross_references" type="cross_referencesType" minOccurs="0" />
+      <xsd:element name="additional_fields" type="additional_fieldsType" minOccurs="0" />
+    </xsd:all>
+    <xsd:attribute name="id" type="xsd:string" use="required"/>
+    <xsd:attribute name="acc" type="xsd:string" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="additional_fieldsType">
+    <xsd:sequence>
+      <xsd:element name="field" type="fieldType" maxOccurs="unbounded" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="fieldType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="name" type="xsd:string" use="required" />
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="cross_referencesType">
+    <xsd:sequence>
+      <xsd:element name="ref" type="refType" maxOccurs="unbounded" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="refType">
+    <xsd:attribute name="dbname" type="xsd:string" use="required" />
+    <xsd:attribute name="dbkey" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="datesType">
+    <xsd:sequence>
+      <xsd:element name="date" type="dateType" maxOccurs="unbounded" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="dateType">
+    <xsd:attribute name="type" type="xsd:string" use="required" />
+    <xsd:attribute name="value" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+</xsd:schema>
+XSD
+  
+  my $ebeye_search_dump_xsd = 'ebeye_search_dump.xsd';
+  my $path = File::Spec->catfile($self->data_path(), $ebeye_search_dump_xsd);
+  unless (-e $path) {
+    work_with_file($path, 'w', sub {
+		     my ($fh) = @_;
+		     print $fh $xsd;
+		     return;
+		   });
+  }
+
+  return $path;
 }
 
 1;
