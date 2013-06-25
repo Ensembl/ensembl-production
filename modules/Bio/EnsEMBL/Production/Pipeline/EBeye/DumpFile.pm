@@ -672,12 +672,14 @@ sub _validate {
 sub _create_ebeye_search_dump_xsd {
   my ($self) = @_;
   
+  # from http://www.ebi.ac.uk/ebisearch/XML4dbDumps.xsd 
   my $xsd = <<XSD;
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
   <xsd:element name="database" type="databaseType" />
-  
+
   <xsd:complexType name="databaseType">
     <xsd:all>
       <xsd:element name="name" type="xsd:string" minOccurs="1" />
@@ -688,16 +690,33 @@ sub _create_ebeye_search_dump_xsd {
       <xsd:element name="entries" type="entriesType" minOccurs="1" />
     </xsd:all>
   </xsd:complexType>
-  
+
   <xsd:complexType name="entriesType">
     <xsd:sequence>
       <xsd:element name="entry" type="entryType" maxOccurs="unbounded" minOccurs="1" />
     </xsd:sequence>
   </xsd:complexType>
-  
+
   <xsd:complexType name="entryType">
     <xsd:all>
-      <xsd:element name="name" type="xsd:string" minOccurs="0" />
+
+      <xsd:element name="name" minOccurs="0">
+	<xsd:complexType>
+	  <xsd:simpleContent>
+	    <xsd:extension base="xsd:string">
+	      <xsd:attribute name="boost" use="optional">
+		<xsd:simpleType>
+		  <xsd:restriction base="xsd:float">
+		    <xsd:minInclusive value="1"/>
+		    <xsd:maxInclusive value="3"/>
+		  </xsd:restriction>
+		</xsd:simpleType>
+	      </xsd:attribute>
+	    </xsd:extension>
+	  </xsd:simpleContent>
+	</xsd:complexType>
+      </xsd:element>
+
       <xsd:element name="description" type="xsd:string" minOccurs="0" />
       <xsd:element name="authors" type="xsd:string" minOccurs="0" />
       <xsd:element name="keywords" type="xsd:string" minOccurs="0" />
@@ -705,46 +724,62 @@ sub _create_ebeye_search_dump_xsd {
       <xsd:element name="cross_references" type="cross_referencesType" minOccurs="0" />
       <xsd:element name="additional_fields" type="additional_fieldsType" minOccurs="0" />
     </xsd:all>
-    <xsd:attribute name="id" type="xsd:string" use="required"/>
+    <xsd:attribute name="id" type="xsd:string" use="required" />
     <xsd:attribute name="acc" type="xsd:string" />
   </xsd:complexType>
-  
+
   <xsd:complexType name="additional_fieldsType">
     <xsd:sequence>
       <xsd:element name="field" type="fieldType" maxOccurs="unbounded" minOccurs="0" />
     </xsd:sequence>
   </xsd:complexType>
-  
+
   <xsd:complexType name="fieldType">
     <xsd:simpleContent>
       <xsd:extension base="xsd:string">
-        <xsd:attribute name="name" type="xsd:string" use="required" />
+	<xsd:attribute name="name" type="xsd:string" use="required" />
+	<xsd:attribute name="boost" use="optional">
+	  <xsd:simpleType>
+	    <xsd:restriction base="xsd:float">
+	      <xsd:minInclusive value="1"/>
+	      <xsd:maxInclusive value="3"/>
+	    </xsd:restriction>
+	  </xsd:simpleType>
+	</xsd:attribute>
       </xsd:extension>
     </xsd:simpleContent>
   </xsd:complexType>
-  
+
   <xsd:complexType name="cross_referencesType">
     <xsd:sequence>
       <xsd:element name="ref" type="refType" maxOccurs="unbounded" minOccurs="0" />
     </xsd:sequence>
   </xsd:complexType>
-  
+
   <xsd:complexType name="refType">
     <xsd:attribute name="dbname" type="xsd:string" use="required" />
     <xsd:attribute name="dbkey" type="xsd:string" use="required" />
+    <xsd:attribute name="boost" use="optional">
+      <xsd:simpleType>
+	<xsd:restriction base="xsd:float">
+	  <xsd:minInclusive value="1"/>
+	  <xsd:maxInclusive value="3"/>
+	</xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
   </xsd:complexType>
-  
+
   <xsd:complexType name="datesType">
     <xsd:sequence>
       <xsd:element name="date" type="dateType" maxOccurs="unbounded" minOccurs="0" />
     </xsd:sequence>
   </xsd:complexType>
-  
+
   <xsd:complexType name="dateType">
     <xsd:attribute name="type" type="xsd:string" use="required" />
     <xsd:attribute name="value" type="xsd:string" use="required" />
   </xsd:complexType>
-  
+
 </xsd:schema>
 XSD
   
