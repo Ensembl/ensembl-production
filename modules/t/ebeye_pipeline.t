@@ -76,6 +76,11 @@ unlink('hive_registry');
 
 done_testing();
 
+#
+# NOTE
+# This requires whoever runs the test to have the set up
+# to forward to ens-research through 33067
+#
 sub create_multi_test_db_conf {
   my ($self) = @_;
   
