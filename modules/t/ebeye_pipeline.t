@@ -31,7 +31,6 @@ $reg->no_version_check(1); ## version not relevant to production db
 debug("Startup test");
 ok(1);
 
-create_multi_test_db_conf();
 my $hs_db = Bio::EnsEMBL::Test::MultiTestDB->new();
 
 my $core_adap = $hs_db->get_DBAdaptor("core");
@@ -70,54 +69,10 @@ my @expected_files = (
 map { ok(check_file($_), "File $_ is present and non-zero size") } @expected_files;
 
 remove_tree($base_path . 'ebeye');
-unlink('MultiTestDB.conf');
 unlink('beekeeper.log');
 unlink('hive_registry');
 
 done_testing();
-
-#
-# NOTE
-# This requires whoever runs the test to have the set up
-# to forward to ens-research through 33067
-#
-sub create_multi_test_db_conf {
-  my ($self) = @_;
-  
-  my $conf = <<CONF;
-{
-  'port'   => '33067',
-  'driver' => 'mysql',
-  'user'   => 'ensadmin',
-  'pass'   => 'ensembl',
-  'host'   => '127.0.0.1',
-
-  # add a line with the dbname and module
-  'databases' => {
-    'homo_sapiens' => {
-      'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-      'variation' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-      'empty' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-      'pipeline' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-    },
-    'multi' => {
-      'compara' => 'Bio::EnsEMBL::DBSQL::DBAdaptor'
-    },
-  },
-
-}
-CONF
-  
-  my $conf_file = 'MultiTestDB.conf';
-  unless (-e $conf_file) {
-    work_with_file($conf_file, 'w', sub {
-		     my ($fh) = @_;
-		     print $fh $conf;
-		     return;
-		   });
-  }
-
-}
 
 sub check_file {
     my $path = shift;
