@@ -1,4 +1,4 @@
-#!/usr/local/ensembl/bin/perl -w
+#!/usr/bin/env perl
 
 # POD documentation - main docs before the code
 
@@ -6,7 +6,7 @@
 
 =head1 NAME
 
-  populate_analysis_web_data.pl
+  import_analysis_web_from_core.pl
 
 =head1 SYNOPSIS
 
@@ -46,7 +46,7 @@
 
 =head1 EXAMPLES
 
- perl populate_analysis_web_data.pl -dbhost my_host -dbuser user -dbpass ***** -dbname my_db
+ perl import_analysis_web_from_core.pl -dbhost my_host -dbuser user -dbpass ***** -dbname my_db
  -mhost prod_host -muser user -mpass *** -mdbname prod_db
  -species homo_sapiens -dbtype core -user_id 1
 
@@ -162,8 +162,8 @@ my $help = 0;
   my $analyses = $aa->fetch_all();
 
   # Loop through all analyses
-  foreach my $analysis(@$analyses){
-
+  foreach my $analysis(@$analyses)
+  {
     $cnt_ana++;
     my $logic_name = lc($analysis->logic_name());
     printf( "\nProcessing %s to analysis_web_data\n", $logic_name);
@@ -172,34 +172,59 @@ my $help = 0;
     my $result = get_analysis_description($helper, $logic_name);
 
     # If not, see if we can add a new one copying a similar entry
-    if (!$result && !$skip_missing) {
+    if (!$result && !$skip_missing) 
+    {
       printf( "%s has no entry in analysis_description, trying to use default\n", $logic_name);
-      $logic_name =~ /^([a-z]*)_([a-z0-9_]*)/;
-      my $prefix = ucfirst($1);
 
-      my $suffix = $2;
-      my $default_logic_name = "species_" . $suffix;
-      
-      my $ad = get_analysis_description($helper, $default_logic_name);
-      if ($ad) {
-        ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @$ad;
-        $description =~ s/Species/$prefix/;
-        $display_label =~ s/Species/$prefix/;
-        printf( "Adding analysis_description for %s using %s\n", $logic_name, $default_logic_name);
-        $add_ad++;
-      } else {
-        throw("No analysis description added for $default_logic_name, exiting now");
+      #the defaults in analysis web data are of form species_xxx bar repeatmask_repbase_ analyses
+      if( $logic_name =~ /^repeatmask_repbase_(.*)/ )
+      {
+          my $species_name = $1 ;
+          my $default_logic_name = "repeatmask_repbase_species" ;
+          my $ad = get_analysis_description($helper, $default_logic_name);
+          ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @$ad;
+          $description =~ s/Species/$species_name/;
+          $display_label =~ s/Species/$species_name/;
+          printf( "Adding analysis_description for %s using %s\n", $logic_name, $default_logic_name);
+          $add_ad++;
+      }
+      else
+      {
+          $logic_name =~ /^([a-z]*)_([a-z0-9_]*)/;
+          my $prefix = ucfirst($1);
+          my $suffix = $2;
+          my $default_logic_name = "species_" . $suffix;
+          my $ad = get_analysis_description($helper, $default_logic_name);
+          if ($ad) 
+          {
+              ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @$ad;
+              $description =~ s/Species/$prefix/;
+              $display_label =~ s/Species/$prefix/;
+              printf( "Adding analysis_description for %s using %s\n", $logic_name, $default_logic_name);
+              $add_ad++;
+          } 
+          else 
+          {
+              throw("No analysis description added for $default_logic_name, exiting now");
+          }
       }
 
-      if (!$noupdate) {
+      
+
+      if (!$noupdate) 
+      {
         $ad_id = add_analysis_description($helper, $logic_name, $description, $display_label, $db_version, $user_id, $wd_id, $display);
       }
 
-    } elsif (!$result && $skip_missing) {
+    } 
+    elsif (!$result && $skip_missing) 
+    {
       printf( "Skipping %s\n", $logic_name );
       $skip++;
       next;
-    } else {
+    } 
+    else 
+    {
       ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @{ $result };
     }
 
@@ -207,13 +232,21 @@ my $help = 0;
     my $exists = get_aw($helper, $ad_id, $species_id);
 
     # If not, add it
-    if (!$exists) {
-      if (!$noupdate) {
+    if (!$exists) 
+    {
+      if (!$noupdate) 
+      {
+        if( !defined($display) )
+        {
+            $display = 1 ;
+        }
         add_analysis_web_data($helper, $ad_id, $wd_id, $species_id, $dbtype, $display, $user_id);
         $add_aw++;
       }
       printf( "Adding entry in analysis_web_data for species %s, logic name %s and database type %s\n", $species, $logic_name, $dbtype );
-    } else {
+    } 
+    else 
+    {
       printf( "Entry already exists for %s and %s\n", $species, $logic_name);
     }
   }
@@ -223,21 +256,25 @@ printf( "   Added %s entries to analysis_description table\n", $add_ad);
 printf( "   Added %s entries to analysis_web_data table\n", $add_aw);
 printf( "   Skipped %s analyses with missing analysis_description entry\n", $skip);
 
-sub get_species_id {
+sub get_species_id 
+{
   my ($helper, $species) = @_;
   my $sql = "SELECT species_id FROM species WHERE db_name = ?";
   my $species_id = $helper->execute_simple(-SQL => $sql, -PARAMS => [$species])->[0];
-  if (!$species_id) {
+  if (!$species_id) 
+  {
     throw("$species could not be found in the production database");
   }
   return $species_id;
 }
 
-sub get_analysis_description {
+sub get_analysis_description 
+{
   my ($helper, $logic_name) = @_;
   my $sql = "SELECT analysis_description_id, description, display_label, db_version, default_web_data_id, default_displayable FROM analysis_description WHERE logic_name = ?";
   my $result = $helper->execute(-SQL => $sql, -PARAMS => [$logic_name])->[0];
-  if (!$result) {
+  if (!$result) 
+  {
     printf( "No entry in analysis_description for %s\n", $logic_name );
   }
   return $result;
