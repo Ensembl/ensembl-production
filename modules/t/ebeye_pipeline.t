@@ -3,7 +3,7 @@ use warnings;
 
 # user specifies a base_path that tells the pipeline where the dump will occur.
 # export CVS_ROOT and ENSEMBL_CVS_ROOT to the shell prior to execution
-# e.g. perl flatfile_pipeline.t '-run_all 1 -base_path ./'
+# e.g. perl ebeye_pipeline.t '-run_all 1 -base_path ./'
 
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
