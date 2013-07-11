@@ -209,8 +209,6 @@ my $help = 0;
           }
       }
 
-      
-
       if (!$noupdate) 
       {
         $ad_id = add_analysis_description($helper, $logic_name, $description, $display_label, $db_version, $user_id, $wd_id, $display);
@@ -280,23 +278,26 @@ sub get_analysis_description
   return $result;
 }
 
-sub add_analysis_description {
+sub add_analysis_description 
+{
   my ($helper, $logic_name, $description, $display_label, $db_version, $user_id, $wd_id, $display) = @_;
   my $sql = "INSERT INTO analysis_description (logic_name, description, display_label, db_version, is_current, created_by, created_at, default_web_data_id, default_displayable)
-             VALUES (?, ?, ?, ?, 0, ?, now(), ?, ?)";
+             VALUES (?, ?, ?, ?, 1, ?, now(), ?, ?)";
   my $mdbname = $helper->db_connection()->dbname();
   $helper->execute_update(-SQL => $sql, -PARAMS => [$logic_name, $description, $display_label, $db_version, $user_id, $wd_id, $display]);
   my $ad_id = $mdb->dbc()->db_handle()->last_insert_id(undef, $mdbname, 'analysis_description', 'analysis_description_id');
   return $ad_id;
 }
 
-sub get_aw {
+sub get_aw 
+{
   my ($helper, $ad_id, $species_id) = @_;
   my $sql = "SELECT analysis_web_data_id FROM analysis_web_data WHERE analysis_description_id = ? AND species_id = ?";
   return $helper->execute_simple(-SQL => $sql, -PARAMS => [$ad_id, $species_id])->[0];
 }
 
-sub add_analysis_web_data {
+sub add_analysis_web_data 
+{
   my ($helper, $ad_id, $wd_id, $species_id, $dbtype, $display, $user_id) = @_;
   my $sql = "INSERT INTO analysis_web_data(analysis_description_id, web_data_id, species_id, db_type, displayable, created_by, created_at)
              VALUES (?, ?, ?, ?, ?, ?, now())";
@@ -306,7 +307,8 @@ sub add_analysis_web_data {
   return $aw_id;
 }
 
-sub usage{
+sub usage
+{
   exec('perldoc', $0);
   exit;
 }
