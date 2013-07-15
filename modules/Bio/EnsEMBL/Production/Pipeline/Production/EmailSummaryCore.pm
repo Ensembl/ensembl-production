@@ -16,7 +16,8 @@ sub fetch_input {
   my $percent_repeat = $self->jobs('PercentRepeat');
   my $coding_density = $self->jobs('CodingDensity');
   my $pseudogene_density = $self->jobs('PseudogeneDensity');
-  my $non_coding_density = $self->jobs('NonCodingDensity');
+  my $short_non_coding_density = $self->jobs('ShortNonCodingDensity');
+  my $long_non_coding_density = $self->jobs('LongNonCodingDensity');
   my $gene_count = $self->jobs('GeneCount');
   my $ct_exons = $self->jobs('ConstitutiveExons');
 
@@ -34,8 +35,10 @@ sub fetch_input {
     $coding_density->{failed_jobs},
     $pseudogene_density->{successful_jobs},
     $pseudogene_density->{failed_jobs},
-    $non_coding_density->{successful_jobs},
-    $non_coding_density->{failed_jobs},
+    $short_non_coding_density->{successful_jobs},
+    $short_non_coding_density->{failed_jobs},
+    $long_non_coding_density->{successful_jobs},
+    $long_non_coding_density->{failed_jobs},
     $gene_count->{successful_jobs},
     $gene_count->{failed_jobs},
     $ct_exons->{successful_jobs},
@@ -47,7 +50,8 @@ sub fetch_input {
     $self->summary($percent_repeat),
     $self->summary($coding_density),
     $self->summary($pseudogene_density),
-    $self->summary($non_coding_density),
+    $self->summary($short_non_coding_density),
+    $self->summary($long_non_coding_density),
     $self->summary($gene_count),
     $self->summary($ct_exons),
   );
@@ -61,7 +65,8 @@ Your FASTA Pipeline has finished. We have:
   * %d species with percent repeat (%d failed)
   * %d species with coding density (%d failed)
   * %d species with pseudogene density (%d failed)
-  * %d species with non coding density (%d failed)
+  * %d species with short non coding density (%d failed)
+  * %d species with long non coding density (%d failed)
   * %d species with gene count (%d failed)
   * %d species with constitutive exons (%d failed)
 
@@ -70,6 +75,8 @@ Your FASTA Pipeline has finished. We have:
 ===============================================================================
 
 Full breakdown follows ...
+
+%s
 
 %s
 

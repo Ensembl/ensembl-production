@@ -8,7 +8,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 
 sub get_attrib_codes {
   my ($self) = @_;
-  my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'noncoding_cnt');
+  my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'snoncoding_cnt', 'lnoncoding_cnt');
   my %biotypes;
   foreach my $code (@attrib_codes) {
     my ($group) = $code =~ /(\w+)\_cnt/;
@@ -20,7 +20,7 @@ sub get_attrib_codes {
 
 sub get_alt_attrib_codes {
   my ($self) = @_;
-  my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'noncoding_acnt');
+  my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'snoncoding_acnt', 'lnoncoding_acnt');
   my %biotypes;
   foreach my $alt_code (@alt_attrib_codes) {
     my ($group) = $alt_code =~ /(\w+)\_acnt/;
