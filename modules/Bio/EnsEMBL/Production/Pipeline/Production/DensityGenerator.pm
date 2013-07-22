@@ -7,6 +7,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::Utils::ConversionSupport;
+use Bio::EnsEMBL::Analysis;
 use Bio::EnsEMBL::DensityType;
 use Bio::EnsEMBL::DensityFeature;
 
