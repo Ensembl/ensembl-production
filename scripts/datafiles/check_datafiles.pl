@@ -13,20 +13,10 @@ use Getopt::Long qw/:config no_ignore_case auto_version bundling_override/;
 use Pod::Usage;
 use Test::More;
 
-#Optionally bring in Bio::DB::Sam for BAM querying
+#Optionally bring in Bio::DB::Sam for BAM querying or use the binary. Dependent
+#on cmdline options
 my $NO_SAM_PERL;
-eval 'require Bio::DB::Sam';
-$NO_SAM_PERL = $@ if $@;
-
-#Optionally look for samtools
 my $NO_SAMTOOLS;
-if($NO_SAM_PERL) {
-  my $output = `which samtools`;
-  $output = `locate samtools` unless $output;
-  if(!$output) {
-    $NO_SAMTOOLS = 'Unavailable after searching using `which` and `locate`. Add to your PATH';
-  }
-}
 
 my $Test = Test::Builder->new();
 
@@ -60,6 +50,8 @@ sub args {
       species=s
       group=s
       no_bamchecks!
+      force_samtools_binary!
+      samtools_binary=s
       help
       man
       /
@@ -110,6 +102,10 @@ sub check {
 sub setup {
   my ($self) = @_;
   my $o = $self->opts();
+
+  $self->v('Detecting which samtools to use');
+  $self->_find_perl_samtools();
+  $self->_find_samtools();
   
   $self->v('Using the database server %s@%s:%d', map { $o->{$_} } qw/username host port/);
   
@@ -322,8 +318,8 @@ sub _get_bam_region_names_from_perl {
   my $bam = Bio::DB::Bam->open($path);
   my $header = $bam->header();
   my $target_names = $header->target_name;
-  my $length_arrayref = $header->target_len;
-  for(my $i = 0; $i < $length_arrayref; $i++) {
+  my $target_count = $header->n_targets;
+  for(my $i = 0; $i < $target_count; $i++) {
     my $seq_id = $target_names->[$i];
     push(@names, $seq_id);
   }
@@ -355,6 +351,33 @@ sub _get_toplevel_slice_names {
     $self->{toplevel_names}->{$species} = \%lookup;
   }
   return $self->{toplevel_names}->{$species};
+}
+
+sub _find_perl_samtools {
+  my ($self) = @_;
+  if($self->opts()->{force_samtools_binary}) {
+    $NO_SAM_PERL = 'Forced samtools binary usage';
+  }
+  else {
+    eval 'require Bio::DB::Sam';
+    $NO_SAM_PERL = $@ if $@;
+  }
+  return;
+}
+
+sub _find_samtools {
+  my ($self) = @_;
+  #Optionally look for samtools
+  if($NO_SAM_PERL) {
+    my $opts = $self->opts();
+    my $samtools_binary = $opts->{samtools_binary} || 'samtools';
+    my $output = `which $samtools_binary`;
+    $output = `locate $samtools_binary` unless $output;
+    if(!$output) {
+      $NO_SAMTOOLS = 'Unavailable after searching using `which` and `locate` (and using $samtools_binary). Add to your PATH';
+    }
+  }
+  return;
 }
 
 Script->run();
@@ -438,6 +461,15 @@ Only run tests on a single type of database registry group
 
 Specify to stop any BAM file checks from occuring. This is normally sanity checks such
 as are all BAM regions toplevel core regions
+
+=item B<--force_samtools_binary>
+
+Force the use of samtools binary over Perl bindings.
+
+=item B<--samtools_binary>
+
+User specify the location of the SamTools binary. Please note we do not really want to
+use samtools binary since the Perl bindings are sufficient to work
 
 =item B<--help>
 
