@@ -76,7 +76,9 @@ $names_1_1{'human'} =  [qw(
     cow
     dog
     dolphin
+    duck
     elephant
+    flycatcher
     gibbon
     gorilla
     ground_shrew
@@ -153,7 +155,9 @@ $go_terms{'human'} = [qw(
     cow
     dog
     dolphin
+    duck
     elephant
+    flycatcher
     gibbon
     gorilla
     ground_shrew
@@ -199,7 +203,9 @@ $go_terms{'mouse'} = [qw(
     cow
     dog
     dolphin
+    duck
     elephant
+    flycatcher
     gorilla
     ground_shrew
     guinea_pig
