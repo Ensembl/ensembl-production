@@ -330,7 +330,8 @@ sub _get_bam_region_names_from_samtools {
   my ($self, $path) = @_;
   return if $NO_SAMTOOLS;
   my @names;  
-  my $output = `samtools idxstats $path`;
+  my $samtools_binary = $self->opts->{samtools_binary};
+  my $output = `$samtools_binary idxstats $path`;
   my @lines = split(/\n/, $output);
   foreach my $line (@lines) {
     my ($name) = split(/\s/, $line);
@@ -373,7 +374,10 @@ sub _find_samtools {
     my $samtools_binary = $opts->{samtools_binary} || 'samtools';
     my $output = `which $samtools_binary`;
     $output = `locate $samtools_binary` unless $output;
-    if(!$output) {
+    if($output) {
+      $opts->{samtools_binary} = $samtools_binary;
+    }
+    else {
       $NO_SAMTOOLS = 'Unavailable after searching using `which` and `locate` (and using $samtools_binary). Add to your PATH';
     }
   }
