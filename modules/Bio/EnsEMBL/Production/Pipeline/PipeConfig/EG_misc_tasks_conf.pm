@@ -55,8 +55,8 @@ sub pipeline_analyses {
       '3->B'  => ['PercentRepeat'],
       'B->3'  => ['PercentGC'],
       '3->C'  => ['CodingDensity'],
-      'C->3'  => ['NonCodingDensity'],
-      '3->A'  => ['PercentRepeat', 'CodingDensity', 'NonCodingDensity', 'PercentGC'],
+      'C->3'  => ['LongNonCodingDensity'],
+      '3->A'  => ['PercentRepeat', 'CodingDensity', 'ShortNonCodingDensity', 'PercentGC'],
       '2->A'  => ['GeneGC', 'PepStats', 'GeneCount', 'ConstitutiveExons'],
       'A->1'  => ['Notify'],
     };
@@ -112,16 +112,28 @@ sub pipeline_analyses {
       },
 
       {
-        -logic_name => 'NonCodingDensity',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::NonCodingDensity',
+        -logic_name => 'ShortNonCodingDensity',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::ShortNonCodingDensity',
         -parameters => {
-          logic_name => 'noncodingdensity', value_type => 'sum',
+          logic_name => 'shortnoncodingdensity', value_type => 'sum',
         },
         -max_retry_count  => 3,
         -hive_capacity    => 100,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
         -flow_into => ['PseudogeneDensity'],
+      },
+
+      {
+        -logic_name => 'LongNonCodingDensity',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::LongNonCodingDensity',
+        -parameters => {
+          logic_name => 'longnoncodingdensity', value_type => 'sum',
+        },
+        -max_retry_count  => 3,
+        -hive_capacity    => 100,
+        -rc_name          => 'normal',
+        -can_be_empty     => 1,
       },
 
       {
