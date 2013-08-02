@@ -341,6 +341,7 @@ sub _get_bam_region_names_from_samtools {
   return \@names;
 }
 
+# We support top level names and their UCSC synonyms
 sub _get_toplevel_slice_names {
   my ($self, $dba) = @_;
   my $species = $dba->species();
@@ -348,7 +349,12 @@ sub _get_toplevel_slice_names {
     delete $self->{toplevel_names};
     my $core = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $slices = $core->get_SliceAdaptor()->fetch_all('toplevel');
-    my %lookup = map { $_->seq_region_name() => 1 } @{$slices};
+    my %lookup;
+    while( my $slice = shift @{$slices}) {
+      $lookup{$slice->seq_region_name()} = 1;
+      my $synonyms = $slice->get_all_synonyms('UCSC');
+      $lookup{$_} = 1 for @{$synonyms};
+    }
     $self->{toplevel_names}->{$species} = \%lookup;
   }
   return $self->{toplevel_names}->{$species};
