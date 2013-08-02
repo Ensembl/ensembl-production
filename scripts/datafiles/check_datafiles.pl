@@ -353,7 +353,7 @@ sub _get_toplevel_slice_names {
     while( my $slice = shift @{$slices}) {
       $lookup{$slice->seq_region_name()} = 1;
       my $synonyms = $slice->get_all_synonyms('UCSC');
-      $lookup{$_} = 1 for @{$synonyms};
+      $lookup{$_->name()} = 1 for @{$synonyms};
     }
     $self->{toplevel_names}->{$species} = \%lookup;
   }
