@@ -386,7 +386,7 @@ sub _get_toplevel_slice_info {
 sub _has_ucsc_synonyms {
   my ($self, $dba) = @_;
   my $ucsc_dbid = $dba->get_DBEntryAdaptor->get_external_db_id('UCSC');
-  return $dba->dbc()->sql_helper()->execute_simple_result(
+  return $dba->dbc()->sql_helper()->execute_single_result(
     -SQL => 'select count(*) from seq_region_synonym where external_db_id =?',
     -PARAMS => [$ucsc_dbid]
   );
