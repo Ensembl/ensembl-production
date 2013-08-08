@@ -361,18 +361,32 @@ sub _get_toplevel_slice_info {
   my $species = $dba->species();
   if(! exists $self->{toplevel_names}->{$species}) {
     delete $self->{toplevel_names};
+    my $has_ucsc_synonyms = $self->_has_ucsc_synonyms($dba);
     my $core = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $slices = $core->get_SliceAdaptor()->fetch_all('toplevel');
     my %lookup;
     while( my $slice = shift @{$slices}) {
       my $seq_region_len = $slice->seq_region_length;
       $lookup{$slice->seq_region_name()} = $seq_region_len;
-      my $synonyms = $slice->get_all_synonyms('UCSC');
-      $lookup{$_->name()} = $seq_region_len for @{$synonyms};
+      if($has_ucsc_synonyms) {
+        my $synonyms = $slice->get_all_synonyms('UCSC');
+        $lookup{$_->name()} = $seq_region_len for @{$synonyms};
+      }
     }
     $self->{toplevel_names}->{$species} = \%lookup;
   }
   return $self->{toplevel_names}->{$species};
+}
+
+#See if there are any UCSC synonyms hanging around. If not then we 
+#do not have to look for them
+sub _has_ucsc_synonyms {
+  my ($self, $dba) = @_;
+  my $ucsc_dbid = $dba->get_DBEntryAdaptor->get_external_db_id('UCSC');
+  return $dba->dbc()->sql_helper()->execute_simple_result(
+    -SQL => 'select count(*) from seq_region_synonym where external_db_id =?',
+    -PARAMS => [$ucsc_dbid]
+  );
 }
 
 sub _find_perl_samtools {
