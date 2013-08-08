@@ -313,7 +313,8 @@ sub _get_bam_region_info {
     $data = $self->_get_bam_region_info_from_perl($path);
   }
   else {
-    diag "Cannot use Bio::DB::Bam as it is not installed. Falling back to samtools compiled binary";
+    diag "Cannot use Bio::DB::Bam as it is not installed. Falling back to samtools compiled binary" if ! $self->{samtools_warning};
+    $self->{samtools_warning} = 1;
     if($NO_SAMTOOLS) {
       diag $NO_SAMTOOLS;
     }
