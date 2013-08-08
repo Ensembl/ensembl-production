@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 use Bio::EnsEMBL::Registry;
+use Bio::EnsEMBL::Utils::Exception qw/throw warning/;
 use Fcntl ':mode';
 use File::Basename qw/dirname/;
 use File::Spec::Functions qw/:ALL/;
@@ -223,13 +224,20 @@ sub _process_dba {
 
 sub _process_bam {
   my ($self, $dba, $data_file) = @_;
-  my $bam_names = $self->_get_bam_region_names($data_file);
-  return unless $bam_names;
-  my $toplevel_names = $self->_get_toplevel_slice_names($dba);
+
+  my $bam_info = $self->_get_bam_region_info($data_file);
+  return unless $bam_info;
+
+  my $toplevel_slices = $self->_get_toplevel_slice_info($dba);
+
   my @missing_names;
-  foreach my $bam_seq_name (@{$bam_names}) {
-    if(! exists $toplevel_names->{$bam_seq_name}) {
+  my @mismatching_lengths;
+  foreach my $bam_seq_name (keys %{$bam_info}) {
+    if(! exists $toplevel_slices->{$bam_seq_name}) {
       push(@missing_names, $bam_seq_name);
+    } else {
+      push(@mismatching_lengths, $bam_seq_name)
+	if $toplevel_slices->{$bam_seq_name} != $bam_info->{$bam_seq_name};
     }
   }
   
@@ -241,7 +249,15 @@ sub _process_bam {
   else {
     pass("All names in the BAM file are toplevel sequence region names");
   }
-  
+  my $mismatching_count = scalar(@mismatching_lengths);
+  if($mismatching_count > 0) {
+    fail("We have regions in the BAM file whose lengths do not agree with EnsEMBL. Please see note output for more details");
+    note(sprintf('Mismatching lengths: [%s]', join(q{,}, @mismatching_lengths)));
+  }
+  else {
+    pass("All regions in the BAM file have the same length as the corresponding toplevel sequence regions");
+  }
+
   return;
 }
 
@@ -291,13 +307,13 @@ sub _get_gid {
   return $group_uid;
 }
 
-sub _get_bam_region_names {
+sub _get_bam_region_info {
   my ($self, $data_file) = @_;
   my $path = $data_file->path($self->opts->{datafile_dir});
-  my $names;
+  my $data;
   
   if(!$NO_SAM_PERL) {
-    $names = $self->_get_bam_region_names_from_perl($path);
+    $data = $self->_get_bam_region_info_from_perl($path);
   }
   else {
     diag "Cannot use Bio::DB::Bam as it is not installed. Falling back to samtools compiled binary";
@@ -305,44 +321,45 @@ sub _get_bam_region_names {
       diag $NO_SAMTOOLS;
     }
     else {
-      $names = $self->_get_bam_region_names_from_samtools($path);
+      $data = $self->_get_bam_region_info_from_samtools($path);
     }
   }
   
-  return $names;
+  return $data;
 }
 
-sub _get_bam_region_names_from_perl {
+sub _get_bam_region_info_from_perl {
   my ($self, $path) = @_;
-  my @names;
-  my $bam = Bio::DB::Bam->open($path);
-  my $header = $bam->header();
-  my $target_names = $header->target_name;
-  my $target_count = $header->n_targets;
-  for(my $i = 0; $i < $target_count; $i++) {
-    my $seq_id = $target_names->[$i];
-    push(@names, $seq_id);
-  }
-  return \@names;
+
+  my $bam = eval { Bio::DB::Bam->open($path); };
+  throw "Error opening bam file $path" if $@;
+
+  my $header = $bam->header;
+  my $data;
+  $data->{$header->target_name->[$_]} = $header->target_len->[$_] 
+    for 0..$header->n_targets-1;
+
+  return $data;
 }
 
-sub _get_bam_region_names_from_samtools {
+sub _get_bam_region_info_from_samtools {
   my ($self, $path) = @_;
   return if $NO_SAMTOOLS;
-  my @names;  
+
+  my $data;
   my $samtools_binary = $self->opts->{samtools_binary};
-  my $output = `$samtools_binary idxstats $path`;
-  my @lines = split(/\n/, $output);
-  foreach my $line (@lines) {
-    my ($name) = split(/\s/, $line);
+
+  foreach my $line (split(/\n/, `$samtools_binary idxstats $path`)) {
+    my ($name, $len) = split(/\s/, $line);
     next if $name eq '*';
-    push(@names, $name);
+    $data->{$name} = $len;
   }
-  return \@names;
+
+  return $data;
 }
 
 # We support top level names and their UCSC synonyms
-sub _get_toplevel_slice_names {
+sub _get_toplevel_slice_info {
   my ($self, $dba) = @_;
   my $species = $dba->species();
   if(! exists $self->{toplevel_names}->{$species}) {
@@ -351,9 +368,10 @@ sub _get_toplevel_slice_names {
     my $slices = $core->get_SliceAdaptor()->fetch_all('toplevel');
     my %lookup;
     while( my $slice = shift @{$slices}) {
-      $lookup{$slice->seq_region_name()} = 1;
+      my $seq_region_len = $slice->seq_region_length;
+      $lookup{$slice->seq_region_name()} = $seq_region_len;
       my $synonyms = $slice->get_all_synonyms('UCSC');
-      $lookup{$_->name()} = 1 for @{$synonyms};
+      $lookup{$_->name()} = $seq_region_len for @{$synonyms};
     }
     $self->{toplevel_names}->{$species} = \%lookup;
   }
