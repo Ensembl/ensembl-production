@@ -332,9 +332,12 @@ sub _get_bam_region_info_from_perl {
   throw "Error opening bam file $path" if $@;
 
   my $header = $bam->header;
+  my $targets = $header->n_targets;
+  my $target_names = $header->target_name();
+  my $target_lengths = $header->target_len();
   my $data;
-  $data->{$header->target_name->[$_]} = $header->target_len->[$_] 
-    for 0..$header->n_targets-1;
+  $data->{$target_names->[$_]} = $target_lengths->[$_] 
+    for 0..($targets-1);
 
   return $data;
 }
