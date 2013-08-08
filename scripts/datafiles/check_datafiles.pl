@@ -21,9 +21,6 @@ my $NO_SAMTOOLS;
 
 my $Test = Test::Builder->new();
 
-my $rcsid = '$Revision$';
-our ($VERSION) = $rcsid =~ /(\d+\.\d+)/;
-
 sub run {
   my ($class) = @_;
   my $self = bless({}, $class);
