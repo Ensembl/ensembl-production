@@ -24,6 +24,13 @@ INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_72_73a.sql|schema version');
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_72_73b.sql|add constraints on species columns');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'path', 'patch_72_73c.sql|biotype group in biotype table');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'path', 'patch_72_73d.sql|mitochondrion in changelog');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'path', 'patch_72_73e.sql|new db_types');
+
 
 
 -- The 'species' table.
@@ -110,9 +117,12 @@ CREATE TABLE biotype (
   object_type   ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
   db_type       SET('cdna', 'core', 'coreexpressionatlas',
                     'coreexpressionest', 'coreexpressiongnf', 'funcgen',
-                    'otherfeatures', 'rnaseq', 'variation', 'vega')
+                    'otherfeatures', 'rnaseq', 'variation', 'vega',
+                    'presite', 'sangerverga')
                     NOT NULL DEFAULT 'core',
+  attrib_type_id INT(11) DEFAULT NULL,
   description   TEXT,
+  biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','undefined') DEFAULT NULL,
 
   -- Columns for the web interface:
   created_by    INTEGER,
@@ -168,6 +178,7 @@ CREATE TABLE analysis_description (
   db_version                TINYINT(1) NOT NULL DEFAULT '1',
   is_current                BOOLEAN NOT NULL DEFAULT true,
   default_web_data_id       INT(10) UNSIGNED DEFAULT NULL,
+  default_displayable       BOOLEAN DEFAULT NULL,
 
   -- Columns for the web interface:
   created_by    INTEGER,
@@ -327,8 +338,9 @@ CREATE TABLE changelog (
   affy_mapping              ENUM('N','Y') NOT NULL DEFAULT 'N',
   biomart_affected          ENUM('N','Y') NOT NULL DEFAULT 'N',
   variation_pos_changed     ENUM('N','Y') NOT NULL DEFAULT 'N',
+  mitochondrion             ENUM('N','Y', 'changed') NOT NULL DEFAULT 'N',
   db_status                 ENUM('N/A','unchanged','patched','new') NOT NULL DEFAULT 'N/A',
-  db_type_affected          SET('cdna','core','funcgen','otherfeatures','rnaseq','variation','vega') DEFAULT NULL,
+  db_type_affected          SET('cdna','core','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') DEFAULT NULL,
   priority                  TINYINT(1) NOT NULL DEFAULT '2',
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
