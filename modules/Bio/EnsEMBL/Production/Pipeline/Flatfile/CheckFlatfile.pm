@@ -50,37 +50,49 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
 sub fetch_input {
   my ($self) = @_;
-  $self->throw("No 'file' parameter specified") unless $self->param('file');
+
+  $self->throw("No 'species' parameter specified") unless $self->param('species');
   $self->throw("No 'type' parameter specified") unless $self->param('type');
+
   return;
 }
 
 sub run {
   my ($self) = @_;
-  my $fh = $self->get_fh();
-  my $type = $self->param('type');
-  my $stream = Bio::SeqIO->new(-FH => $fh, -FORMAT => $type);
-  my $count = 0;
-  while ( (my $seq = $stream->next_seq()) ) {
-    $self->fine("Found the record %s", $seq->accession());
-    $count++;
+
+  my $dir = $self->data_path();
+  opendir(my $dh, $dir) or die "Cannot open directory $dir";
+  my @files = grep { $_ =~ /\.dat\.gz$/ } readdir($dh);
+  closedir($dh) or die "Cannot close directory $dir";
+
+  foreach my $file (@files) {
+    my $fh = $self->get_fh($file);
+    my $type = $self->param('type');
+    my $stream = Bio::SeqIO->new(-FH => $fh, -FORMAT => $type);
+
+    my $count = 0;
+    while ( (my $seq = $stream->next_seq()) ) {
+      $self->fine("Found the record %s", $seq->accession());
+      $count++;
+    }
+
+    $self->info("Processed %d record(s)", $count);
+    close $fh;
   }
-  $self->info("Processed %d record(s)", $count);
-  close $fh;
+
   return;
 }
 
 sub get_fh {
-  my ($self) = @_;
-  my $file = $self->param('file');
+  my ($self, $file) = @_;
+    
   $self->throw("Cannot find file $file") unless -f $file;
+  $self->throw("File $file seems not to be gzipped, as expected")
+    if $file !~ /\.gz$/;
+
   my $fh;
-  if($file =~ /\.gz$/) {
-    open $fh, '-|', 'gzip -c -d '.$file or die "Cannot open $file for gunzip: $!";
-  }
-  else {
-    open $fh, '<', $file or die "Cannot open file $file: $!";
-  }
+  open $fh, '-|', 'gzip -c -d '.$file or die "Cannot open $file for gunzip: $!";
+
   return $fh;
 }
 

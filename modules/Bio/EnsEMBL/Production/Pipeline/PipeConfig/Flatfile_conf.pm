@@ -73,6 +73,7 @@ sub pipeline_analyses {
         },
         -flow_into  => {
           2 => { 'DumpFlatfile' => { species => "#species#", type => "#type#" },
+		 'CheckFlatfile' => { species => "#species#", type => "#type#" },
                  'ChecksumGenerator' => { species => "#species#", type => "#type#" },
           },
         },
@@ -86,7 +87,15 @@ sub pipeline_analyses {
         -rc_name => 'dump',
       },
       
-      ####### CHECKSUMMING
+      ####### CHECK
+
+      {
+       -logic_name => 'CheckFlatfile',
+       -module     => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::CheckFlatfile',
+       -wait_for   => [qw/DumpFlatfile/],
+       -analysis_capacity => 15,
+       -rc_name => 'check',
+      },
       
       {
         -logic_name => 'ChecksumGenerator',
@@ -131,8 +140,8 @@ sub resource_classes {
     my $self = shift;
     return {
       %{$self->SUPER::resource_classes()},
-      #Max memory consumed in a previous run was 1354MB. This gives us some breathing room
       dump => { 'LSF' => '-q normal -M1600 -R"select[mem>1600] rusage[mem=1600]"'},
+      check => { 'LSF' => '-q normal -M3000 -R"select[mem>3000] rusage[mem=3000]"'},
     }
 }
 
