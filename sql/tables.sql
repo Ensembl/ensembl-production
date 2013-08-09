@@ -22,6 +22,9 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_72_73a.sql|schema version');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_72_73b.sql|add constraints on species columns');
+
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
@@ -32,9 +35,9 @@ CREATE TABLE species (
   web_name        VARCHAR(255) NOT NULL, -- Name that the web site is using.
   scientific_name VARCHAR(255) NOT NULL, -- Full name of the species
   production_name VARCHAR(255) NOT NULL, -- Name that production processes use
-  url_name        VARCHAR(255) NOT NULL, -- Name that is used in URLs
-  taxon           VARCHAR(20),
-  species_prefix  VARCHAR(20),
+  url_name        VARCHAR(255) NOT NULL DEFAULT '', -- Name that is used in URLs
+  taxon           VARCHAR(8) NOT NULL,
+  species_prefix  VARCHAR(7) NOT NULL,
   is_current      BOOLEAN NOT NULL DEFAULT true,
   attrib_type_id  SMALLINT(5) UNSIGNED DEFAULT NULL,
 
@@ -45,7 +48,10 @@ CREATE TABLE species (
   modified_at   DATETIME,
 
   PRIMARY KEY (species_id),
-  UNIQUE INDEX db_name_idx (db_name)
+  UNIQUE INDEX db_name_idx (db_name),
+  UNIQUE INDEX production_name_idx (production_name),
+  UNIQUE INDEX species_prefix_idx (species_prefix),
+  UNIQUE INDEX taxon_idx (taxon)
 );
 
 -- The 'species_alias' table
