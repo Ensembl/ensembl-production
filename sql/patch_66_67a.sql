@@ -102,3 +102,7 @@ SELECT
 FROM    master_unmapped_reason
 WHERE   is_current = true
 ORDER BY unmapped_reason_id;
+
+-- Patch identifier
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_66_67a.sql|making all views have invoker security');

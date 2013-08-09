@@ -30,3 +30,7 @@ AFTER web_name;
 ALTER TABLE species
 ADD COLUMN url_name VARCHAR(255) NOT NULL
 AFTER production_name;
+
+-- Patch identifier
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_66_67b.sql|Patching in support for numerous different names for trinomials');
