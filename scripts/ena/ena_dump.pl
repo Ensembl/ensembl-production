@@ -20,6 +20,7 @@ my $dump_only;
 my $ftp_user;
 my $ftp_pass;
 my $help;
+my $reg_file;
 
 GetOptions(
 	"gene_file=s" => \$gene_file,
@@ -33,12 +34,15 @@ GetOptions(
 	"ftp_user=s" => \$ftp_user,
 	"ftp_pass=s" => \$ftp_pass,
 	"h|help!" => \$help,
+	"reg_file=s" => \$reg_file,
 );
 
 if ( 
        ($upload_only && $gene_file && $trans_file && $ftp_user && $ftp_pass)
     || ($dump_only && $host && $user && $port && $gene_file && $trans_file)
-    || ($host && $port && $user && $gene_file && $trans_file && $ftp_user && $ftp_pass)    
+    || ($host && $port && $user && $gene_file && $trans_file && $ftp_user && $ftp_pass)
+    || ($dump_only && $reg_file && $gene_file && $trans_file)
+    || ($reg_file && $gene_file && $trans_file && $ftp_user && $ftp_pass)
 ) {
     print "Beginning\n";
 } elsif ($help) {
@@ -55,15 +59,18 @@ our ($gene_fh, $transcript_fh);
 unless ($upload_only) {
     print "Dumping\n";
     
-    $reg->load_registry_from_db(
-          -host    => $host,
-          -user    => $user,
-          -port    => $port,
-          -DB_VERSION => $version,
-          -set_disconnect_when_inactive => 1,
-          -set_reconnect_when_lost => 1,
-    );
-    
+    if ($reg_file) {
+        $reg->load_all($reg_file);
+    } else {
+        $reg->load_registry_from_db(
+              -host    => $host,
+              -user    => $user,
+              -port    => $port,
+              -DB_VERSION => $version,
+              -set_disconnect_when_inactive => 1,
+              -set_reconnect_when_lost => 1,
+        );
+    }
     
     $gene_fh = new IO::File "> $gene_file";
     $transcript_fh = new IO::File "> $trans_file";
@@ -167,6 +174,11 @@ Script for extracting all Gene and Transcript cross-links from Ensembl databases
 derive from the EMBL source. 
 
 Arguments:
+
+--reg_file       when dumping from multiple hosts, use a registry file to configure the
+                 database parameters. It is wise to include a -set_reconnect_when_lost => 1
+                 argument in the file.
+
 --user           collected login details for the Ensembl databases
 --pass
 --host
