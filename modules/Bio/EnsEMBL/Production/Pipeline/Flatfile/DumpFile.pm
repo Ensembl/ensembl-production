@@ -143,6 +143,9 @@ sub _seq_dumper {
   $seq_dumper->disable_feature_type('genscan');
   $seq_dumper->disable_feature_type('variation');
   $seq_dumper->disable_feature_type('repeat');
+  if(!$self->_has_marker_features()) {
+    $seq_dumper->disable_feature_type('marker');
+  }
   return $seq_dumper;
 }
 
@@ -246,6 +249,22 @@ README
     return;
   });
   return;
+}
+
+sub _has_marker_features {
+  my ($self) = @_;
+  my $dba = $self->get_DBAdaptor();
+  my $sql = <<'SQL';
+select count(*) 
+from coord_system 
+join seq_region using (coord_system_id) 
+join marker_feature using (seq_region_id) 
+where species_id =?
+SQL
+  return $dba->dbc()->sql_helper()->execute_single_result(
+    -SQL => '',
+    -PARAMS => [$dba->species_id()]
+  );
 }
 
 
