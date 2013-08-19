@@ -262,7 +262,7 @@ join marker_feature using (seq_region_id)
 where species_id =?
 SQL
   return $dba->dbc()->sql_helper()->execute_single_result(
-    -SQL => '',
+    -SQL => $sql,
     -PARAMS => [$dba->species_id()]
   );
 }
