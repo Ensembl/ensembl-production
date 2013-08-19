@@ -45,7 +45,7 @@ use strict;
 use warnings;
 
 use Bio::SeqIO;
-use File:Spec;
+use File::Spec;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
@@ -89,7 +89,7 @@ sub run {
 sub get_fh {
   my ($self, $file) = @_;
   my $data_path = $self->data_path();
-  my $full_path = File:Spec->catfile($data_path, $file);
+  my $full_path = File::Spec->catfile($data_path, $file);
   $self->throw("Cannot find file $full_path") unless -f $full_path;
   $self->throw("File $full_path seems not to be gzipped, as expected")
     if $file !~ /\.gz$/;
