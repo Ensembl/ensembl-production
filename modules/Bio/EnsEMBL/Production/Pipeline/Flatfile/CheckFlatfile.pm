@@ -45,6 +45,7 @@ use strict;
 use warnings;
 
 use Bio::SeqIO;
+use File:Spec;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
@@ -76,7 +77,9 @@ sub run {
       $count++;
     }
 
-    $self->info("Processed %d record(s)", $count);
+    my $msg = sprintf("Processed %d record(s)", $count);
+    $self->info($msg);
+    $self->warning($msg);
     close $fh;
   }
 
@@ -85,13 +88,13 @@ sub run {
 
 sub get_fh {
   my ($self, $file) = @_;
-    
-  $self->throw("Cannot find file $file") unless -f $file;
-  $self->throw("File $file seems not to be gzipped, as expected")
+  my $data_path = $self->data_path();
+  my $full_path = File:Spec->catfile($data_path, $file);
+  $self->throw("Cannot find file $full_path") unless -f $full_path;
+  $self->throw("File $full_path seems not to be gzipped, as expected")
     if $file !~ /\.gz$/;
 
-  my $fh;
-  open $fh, '-|', 'gzip -c -d '.$file or die "Cannot open $file for gunzip: $!";
+  open my $fh, '-|', 'gzip -c -d '.$full_path or die "Cannot open $full_path for gunzip: $!";
 
   return $fh;
 }
