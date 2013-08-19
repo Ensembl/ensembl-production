@@ -72,7 +72,6 @@ sub param_defaults {
     %{$self->SUPER::param_defaults()},
     
     force_species => [],
-    force_all_species => 1,
   };
   return $p;
 }
@@ -98,7 +97,9 @@ sub dna_flow {
   my $parent_flow = $self->SUPER::dna_flow($dba);
   return 0 if ! $parent_flow; #return if parent decided to skip
   if(! $self->param('ftp_dir')) {
-    $self->fine('No ftp_dir param defined so will flow %s to %d', $dba->species(), $parent_flow);
+    my $msg = sprintf('No ftp_dir param defined so will flow %s to %d', $dba->species(), $parent_flow);
+    $self->warning($msg);
+    $self->fine($msg);
     return $parent_flow;
   }
   my $requires_new_dna = $self->requires_new_dna($dba);
@@ -110,12 +111,16 @@ sub requires_new_dna {
   my ($self, $dba) = @_;
   
   if($self->force_run($dba)) {
-    $self->fine('Automatically forcing DNA rerun for %s', $dba->species());
+    my $msg = 'Automatically forcing DNA rerun for %s', $dba->species();
+    $self->fine($msg);
+    $self->warning($msg);
     return 1;
   }
   
   if(!$self->has_source_dir($dba)) {
-    $self->fine('Source directory is missing; forcing DNA rerun for %s', $dba->species());
+    my $msg = 'Source directory is missing; forcing DNA rerun for %s', $dba->species();
+    $self->fine($msg);
+    $self->warning($msg);
     return 1;
   }
   
