@@ -7,6 +7,15 @@ use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
 
+my $options;
+if(@ARGV) {
+  $options = join(q{ }, @ARGV);
+}
+else {
+  $options = '-run_all 1';
+}
+
+
 ok(1, 'Startup test');
 
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
@@ -34,7 +43,7 @@ my $gene = $ga->fetch_by_stable_id('ENSG00000167393');
 my $transcript = $ta->fetch_by_stable_id('ENST00000376806');
 my $translation = $tla->fetch_by_stable_id('ENSP00000334263');
 my $exon = $ea->fetch_by_stable_id('ENSE00001654835');
-my $exon2 = $ea->fetch_by_stable_id('ENSE00001612438');
+my $exon2 = $ea->fetch_by_stable_id('ENSE00001730680');
 
 
 # Check coding density for chromosome 6
@@ -43,7 +52,7 @@ my $coding_density = 0;
 foreach my $c (@coding_density) {
    $coding_density+= $c->density_value;
 }
-is($coding_density, 21, "Coding density on chromosome 6");
+is($coding_density, 22, "Coding density on chromosome 6");
 
 # Check coding density for all chromosomes
 @coding_density = @{ $dfa->fetch_all('codingdensity') };
@@ -51,7 +60,7 @@ $coding_density = 0;
 foreach my $c (@coding_density) {
    $coding_density+= $c->density_value;
 }
-is($coding_density, 24, "Coding density on all chromosomes");
+is($coding_density, 25, "Coding density on all chromosomes");
 
 # Check coding count for chromosome 6
 my @coding_count = @{ $aa->fetch_all_by_Slice($slice, 'coding_cnt') };
@@ -59,7 +68,7 @@ my $coding_count = 0;
 foreach my $c (@coding_count) {
    $coding_count += $c->value;
 }
-is($coding_count, 21, "Coding count on chromosome 6");
+is($coding_count, 22, "Coding count on chromosome 6");
 
 # Check coding count for all reference chromosomes
 @coding_count = @{ $aa->fetch_all_by_Slice(undef, 'coding_cnt') };
@@ -67,7 +76,7 @@ $coding_count = 0;
 foreach my $c (@coding_count) {
    $coding_count += $c->value;
 }
-is($coding_count, 24, "Coding count on all reference chromosomes");
+is($coding_count, 25, "Coding count on all reference chromosomes");
 
 # Check coding count for all alternate sequences
 my @coding_acount = @{ $aa->fetch_all_by_Slice(undef, 'coding_acnt') };
@@ -119,46 +128,85 @@ foreach my $c (@pseudo_acount) {
 is($pseudo_acount, 1, "Pseudogene count on all alternate sequences");
 
 
-# Check noncoding density for chromosome 6
-my @noncoding_density = @{ $dfa->fetch_all_by_Slice($slice, 'noncodingdensity') };
-my $noncoding_density = 0;
-foreach my $n (@noncoding_density) {
-   $noncoding_density += $n->density_value;
+# Check long noncoding density for chromosome 6
+my @long_noncoding_density = @{ $dfa->fetch_all_by_Slice($slice, 'longnoncodingdensity') };
+my $long_noncoding_density = 0;
+foreach my $n (@long_noncoding_density) {
+   $long_noncoding_density += $n->density_value;
 }
-is($noncoding_density, 9, "NonCoding density on chromosome 6");
+is($long_noncoding_density, 7, "LongNonCoding density on chromosome 6");
 
-# Check noncoding density for all chromosomes
-@noncoding_density = @{ $dfa->fetch_all('noncodingdensity') };
-$noncoding_density = 0;
-foreach my $n (@noncoding_density) {
-   $noncoding_density += $n->density_value;
+# Check long noncoding density for all chromosomes
+@long_noncoding_density = @{ $dfa->fetch_all('longnoncodingdensity') };
+$long_noncoding_density = 0;
+foreach my $n (@long_noncoding_density) {
+   $long_noncoding_density += $n->density_value;
 }
-is($noncoding_density, 10, "Non coding density on all reference chromosomes");
+is($long_noncoding_density, 8, "Long non coding density on all reference chromosomes");
 
-# Check noncoding count for chromosome 6
-my @noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'noncoding_cnt') };
-my $noncoding_count = 0;
-foreach my $c (@noncoding_count) {
-   $noncoding_count += $c->value;
+# Check long noncoding count for chromosome 6
+my @long_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'lnoncoding_cnt') };
+my $long_noncoding_count = 0;
+foreach my $c (@long_noncoding_count) {
+   $long_noncoding_count += $c->value;
 }
-is($noncoding_count, 9, "Non coding count on chromosome 6");
+is($long_noncoding_count, 7, "Long non coding count on chromosome 6");
 
-# Check noncoding count for all reference chromosomes
-@noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt') };
-$noncoding_count = 0;
-foreach my $c (@noncoding_count) {
-   $noncoding_count += $c->value;
+# Check long noncoding count for all reference chromosomes
+@long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'lnoncoding_cnt') };
+$long_noncoding_count = 0;
+foreach my $c (@long_noncoding_count) {
+   $long_noncoding_count += $c->value;
 }
-is($noncoding_count, 10, "Non coding count on all reference chromosomes");
+is($long_noncoding_count, 8, "Long non coding count on all reference chromosomes");
 
-# Check noncoding count for all alternate sequences
-my @noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_acnt') };
-my $noncoding_acount = 0;
-foreach my $c (@noncoding_acount) {
-   $noncoding_acount += $c->value;
+# Check long noncoding count for all alternate sequences
+my @long_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'lnoncoding_acnt') };
+my $long_noncoding_acount = 0;
+foreach my $c (@long_noncoding_acount) {
+   $long_noncoding_acount += $c->value;
 }
-is($noncoding_acount, 1, "Non coding count on all alternate sequences");
+is($long_noncoding_acount, 1, "Long non coding count on all alternate sequences");
 
+# Check short noncoding density for chromosome 6
+my @short_noncoding_density = @{ $dfa->fetch_all_by_Slice($slice, 'shortnoncodingdensity') };
+my $short_noncoding_density = 0;
+foreach my $n (@short_noncoding_density) {
+   $short_noncoding_density += $n->density_value;
+}
+is($short_noncoding_density, 2, "LongNonCoding density on chromosome 6");
+
+# Check short noncoding density for all chromosomes
+@short_noncoding_density = @{ $dfa->fetch_all('shortnoncodingdensity') };
+$short_noncoding_density = 0;
+foreach my $n (@short_noncoding_density) {
+   $short_noncoding_density += $n->density_value;
+}
+is($short_noncoding_density, 2, "Long non coding density on all reference chromosomes");
+
+# Check short noncoding count for chromosome 6
+my @short_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'snoncoding_cnt') };
+my $short_noncoding_count = 0;
+foreach my $c (@short_noncoding_count) {
+   $short_noncoding_count += $c->value;
+}
+is($short_noncoding_count, 2, "Long non coding count on chromosome 6");
+
+# Check short noncoding count for all reference chromosomes
+@short_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'snoncoding_cnt') };
+$short_noncoding_count = 0;
+foreach my $c (@short_noncoding_count) {
+   $short_noncoding_count += $c->value;
+}
+is($short_noncoding_count, 2, "Long non coding count on all reference chromosomes");
+
+# Check short noncoding count for all alternate sequences
+my @short_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'snoncoding_acnt') };
+my $short_noncoding_acount = 0;
+foreach my $c (@short_noncoding_acount) {
+   $short_noncoding_acount += $c->value;
+}
+is($short_noncoding_acount, 0, "Long non coding count on all alternate sequences");
 
 # Check snp density for chromosome 6
 #my @snp_density = @{ $dfa->fetch_all_by_Slice($slice, 'snpdensity') };
@@ -170,27 +218,27 @@ my $snp_density = 0;
 
 # Check snp density for all chromosomes
 #@snp_density = @{ $dfa->fetch_all('snpdensity') };
-$snp_density = 0;
+#$snp_density = 0;
 #foreach my $s (@snp_density) {
 #   $snp_density += $s->density_value;
 #}
 #is($snp_density, 5668790, "SNP density on all reference chromosomes");
-
+#
 # Check snp count for chromosome 6
-my @snp_count =@{  $aa->fetch_all_by_Slice($slice, 'SNPCount') };
-my $snp_count = 0;
-foreach my $c (@snp_count) {
-   $snp_count += $c->value;
-}
+#my @snp_count =@{  $aa->fetch_all_by_Slice($slice, 'SNPCount') };
+#my $snp_count = 0;
+#foreach my $c (@snp_count) {
+#   $snp_count += $c->value;
+#}
 #is($snp_count, 3399247, "SNP count on chromosome 6");
-
+#
 # Check snp count for all reference chromosomes
-@snp_count =@{  $aa->fetch_all_by_Slice(undef, 'SNPCount') };
-$snp_count = 0;
-foreach my $c (@snp_count) {
-   $snp_count += $c->value;
-}
-#is($snp_count, 5668790, "SNP count on all reference chromosomes");
+#@snp_count =@{  $aa->fetch_all_by_Slice(undef, 'SNPCount') };
+#$snp_count = 0;
+#foreach my $c (@snp_count) {
+#   $snp_count += $c->value;
+#}
+##is($snp_count, 5668790, "SNP count on all reference chromosomes");
 
 
 # Check repeat density for chromosome 6
@@ -245,13 +293,13 @@ is($is_constitutive, 0, "ENSE00001612438 is not constitutive");
 
 
 # Check non sense attributes
-my @nonsense = @{ $aa->fetch_all_by_Transcript($transcript, 'StopGained') };
-my $rs;
-foreach my $n (@nonsense) {
-   if ($n->value =~ /(rs[0-9]*)/) {
-      $rs = $1;
-   }
-}
-is($rs, "rs9260156", "ENST00000376806 has stop gained attribute");
+#my @nonsense = @{ $aa->fetch_all_by_Transcript($transcript, 'StopGained') };
+#my $rs;
+#foreach my $n (@nonsense) {
+#   if ($n->value =~ /(rs[0-9]*)/) {
+#      $rs = $1;
+#   }
+#}
+#is($rs, "rs9260156", "ENST00000376806 has stop gained attribute");
 
 done_testing();
