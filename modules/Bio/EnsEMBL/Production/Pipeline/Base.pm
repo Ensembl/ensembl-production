@@ -72,7 +72,7 @@ sub get_Slices {
     }
   }
   
-  return [ sort { $a->length() <=> $b->length() }  @slices ];
+  return [ sort { $b->length() <=> $a->length() } @slices ];
 }
 
 # Registry is loaded by Hive (see beekeeper_extra_cmdline_options() in conf)
