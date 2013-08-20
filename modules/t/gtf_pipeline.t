@@ -9,10 +9,9 @@ use warnings;
 # e.g. perl gtf_pipeline.t '-base_path ./'
 
 use Test::More;
-use Test::Files;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Utils::IO qw/gz_slurp_to_array/;
+use Bio::EnsEMBL::Test::TestUtils qw/ok_directory_contents is_file_line_count/;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use File::Spec;
 
@@ -26,10 +25,10 @@ $dir->unlink_on_destroy(1);
 my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::GTF_conf';
 my $options;
 if(@ARGV) {
-	$options = join(q{ }, @ARGV);
+  $options = join(q{ }, @ARGV);
 }
 else {
-	$options = '-base_path '.$dir;
+  $options = '-base_path '.$dir;
 }
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 ok($pipeline, 'Pipeline has been created '.$module);
@@ -37,19 +36,19 @@ $pipeline->add_fake_binaries('fake_gtf_binaries');
 $pipeline->run();
 
 if(! @ARGV) {
-	my $target_dir = File::Spec->catdir($dir, 'gtf', 'homo_sapiens');
-	#Expcting a file like Homo_sapiens.GRCh37.73.gtf.gz
-	my ($cs) = @{$human_dba->get_CoordSystemAdaptor->fetch_all('toplevel')};
-	my $schema = software_version();
-	my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
-	$gtf_file = ucfirst($gtf_file);
-	dir_contains_ok(
+  my $target_dir = File::Spec->catdir($dir, 'gtf', 'homo_sapiens');
+  #Expcting a file like Homo_sapiens.GRCh37.73.gtf.gz
+  my ($cs) = @{$human_dba->get_CoordSystemAdaptor->fetch_all('toplevel')};
+  my $schema = software_version();
+  my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
+  $gtf_file = ucfirst($gtf_file);
+  ok_directory_contents(
     $target_dir,
     [qw/CHECKSUMS README/, $gtf_file],
-  	"$target_dir has GTF, README and CHECKSUM files"
-	);
-	my $contents = gz_slurp_to_array(File::Spec->catfile($target_dir, $gtf_file));
-	cmp_ok(scalar(@{$contents}), '==', 1546, 'Expect 1546 rows in the GTF file');
+    "$target_dir has GTF, README and CHECKSUM files"
+  );
+  my $gtf_loc = File::Spec->catfile($target_dir, $gtf_file);
+  is_file_line_count($gtf_loc, 1546, 'Expect 1546 rows in the GTF file');
 }
 
 done_testing();

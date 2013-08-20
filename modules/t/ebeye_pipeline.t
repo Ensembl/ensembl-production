@@ -8,7 +8,7 @@ use warnings;
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
+use Bio::EnsEMBL::Test::TestUtils qw/ok_directory_contents/;
 use File::Spec;
 use File::Temp;
 
@@ -46,19 +46,10 @@ $pipeline->run();
 # Here we simply test that the expected files have been produced
 #
 my $core_dbname = $human_dba->dbc()->dbname();
-my @dump_dirs = ($dir, 'ebeye');
-my @expected_files = ( 
-   File::Spec->catfile(@dump_dirs, 'CHECKSUMS'),
-   File::Spec->catfile(@dump_dirs, "Gene_${core_dbname}.xml.gz"),
-   File::Spec->catfile(@dump_dirs, 'release_note.txt')
-   );
-
-map { ok(check_file($_), "File $_ is present and non-zero size") } @expected_files;
-
+ok_directory_contents(
+  File::Spec->catdir($dir, 'ebeye'),
+  [qw/CHECKSUMS release_note.txt/, "Gene_${core_dbname}.xml.gz"],
+  "Dump dir has flatfile, release notes and CHECKSUM files"
+);
 
 done_testing();
-
-sub check_file {
-    my $path = shift;
-    return -e $path && -s $path;
-}

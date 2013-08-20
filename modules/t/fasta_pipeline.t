@@ -6,9 +6,9 @@ use warnings;
 # e.g. perl fasta_pipeline.t '-run_all 1 -base_path ./'
 
 use Test::More;
-use Test::Files;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
+use Bio::EnsEMBL::Test::TestUtils qw/ok_directory_contents/;
 use Bio::EnsEMBL::ApiVersion;
 use File::Temp;
 
@@ -74,7 +74,7 @@ if(! @ARGV) {
     my ($sub_dirs, $files) = @{$setup};
     $_ =~ s/release/$release/ for @{$files}; #replace release into it
     my $target_dir = File::Spec->catdir($dir, @{$sub_dirs});
-    dir_contains_ok($target_dir, $files, "Checking that $target_dir has all required dump files");
+    ok_directory_contents($target_dir, $files, "Checking that $target_dir has all required dump files");
   }
 }
 
