@@ -28,7 +28,7 @@ sub fetch_input {
   );
   
   my $msg = sprintf(<<'MSG', @args);
-Your FASTA Pipeline has finished. We have:
+Your Production Pipeline has finished. We have:
 
   * %d species with snp density (%d failed)
   * %d species with snp count (%d failed)
