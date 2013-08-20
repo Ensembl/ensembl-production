@@ -1,1 +1,1 @@
-21	homo_sapiens	human	Human	Homo sapiens	homo_sapiens	Homo_sapiens	9606	ENS	1	NULL	NULL	NULL	NULL	366
+21	homo_sapiens	human	Human	Homo sapiens	homo_sapiens	Homo_sapiens	9606	ENS	1	\N	\N	\N	2013-05-29 13:08:16	366

@@ -1,0 +1,51 @@
+1	Marker matches multiple times	Marker aligns to the genome > 3 times	1	\N	\N	\N	\N
+2	Marker does not align	Unable to align to the genome	1	\N	\N	\N	\N
+3	Failed to find Stable ID	Stable ID that this xref was linked to no longer exists	1	\N	\N	\N	\N
+4	No mapping done	No mapping done for this type of xref	1	\N	\N	\N	\N
+5	Failed to match	Unable to match to any ensembl entity at all	1	\N	\N	\N	\N
+6	Failed to match at thresholds	Unable to match at the thresholds of 90% for the query or 90% for the target	1	\N	\N	\N	\N
+7	No Master	The dependent xref was not matched due to there being no master xref	1	\N	\N	\N	\N
+8	Master failed	The dependent xref was not matched due to the master xref not being mapped	1	\N	\N	\N	\N
+66	Did not meet threshold	Match score for transcript lower than threshold (0.75)	1	\N	\N	\N	\N
+65	Was not best match	Did not top best transcript match score (1.00)	1	\N	\N	\N	\N
+64	Was not best match	Did not top best transcript match score (0.99)	1	\N	\N	\N	\N
+63	Was not best match	Did not top best transcript match score (0.98)	1	\N	\N	\N	\N
+62	Was not best match	Did not top best transcript match score (0.97)	1	\N	\N	\N	\N
+61	Was not best match	Did not top best transcript match score (0.96)	1	\N	\N	\N	\N
+60	Was not best match	Did not top best transcript match score (0.95)	1	\N	\N	\N	\N
+59	Was not best match	Did not top best transcript match score (0.94)	1	\N	\N	\N	\N
+58	Was not best match	Did not top best transcript match score (0.93)	1	\N	\N	\N	\N
+57	Was not best match	Did not top best transcript match score (0.92)	1	\N	\N	\N	\N
+56	Was not best match	Did not top best transcript match score (0.91)	1	\N	\N	\N	\N
+55	Was not best match	Did not top best transcript match score (0.90)	1	\N	\N	\N	\N
+54	Was not best match	Did not top best transcript match score (0.89)	1	\N	\N	\N	\N
+53	Was not best match	Did not top best transcript match score (0.88)	1	\N	\N	\N	\N
+52	Was not best match	Did not top best transcript match score (0.87)	1	\N	\N	\N	\N
+51	Was not best match	Did not top best transcript match score (0.86)	1	\N	\N	\N	\N
+50	Was not best match	Did not top best transcript match score (0.85)	1	\N	\N	\N	\N
+49	Was not best match	Did not top best transcript match score (0.84)	1	\N	\N	\N	\N
+48	Was not best match	Did not top best transcript match score (0.83)	1	\N	\N	\N	\N
+47	Was not best match	Did not top best transcript match score (0.82)	1	\N	\N	\N	\N
+46	Was not best match	Did not top best transcript match score (0.81)	1	\N	\N	\N	\N
+45	Was not best match	Did not top best transcript match score (0.80)	1	\N	\N	\N	\N
+44	Was not best match	Did not top best transcript match score (0.79)	1	\N	\N	\N	\N
+43	Was not best match	Did not top best transcript match score (0.78)	1	\N	\N	\N	\N
+42	Was not best match	Did not top best transcript match score (0.77)	1	\N	\N	\N	\N
+41	Was not best match	Did not top best transcript match score (0.76)	1	\N	\N	\N	\N
+40	Was not best match	Did not top best transcript match score (0.75)	1	\N	\N	\N	\N
+67	No overlap	No coordinate overlap with any Ensembl transcript	1	\N	\N	\N	\N
+96	Failed to match at thresholds	Unable to match at the thresholds of 100% for the query or 100% for the target	1	\N	\N	\N	\N
+125	Failed to match at thresholds	Unable to match at the thresholds of 55% for the query or 55% for the target	1	\N	\N	\N	\N
+126	>10% N-strings	More than 10% of the sequence consists of strings of Ns. Sequences are not rejected for this reason but this may explain a low coverage hit	1	\N	\N	\N	\N
+127	All long introns	Every intron in these hits is of length 250000-400000bp, we require at least one intron to be shorter than 250000bp	1	\N	\N	\N	\N
+128	GSS sequence	This cDNA has been excluded from the analysis because it is in the GSS (Genome Survey Sequence) division of GenBank	1	\N	\N	\N	\N
+129	Low coverage	Coverage of the best alignment is less than 90% - see query_score for coverage	1	\N	\N	\N	\N
+130	Low coverage with long intron	Hits containing introns longer than 250000bp are rejected if coverage is less than 98% - see query_score for coverage	1	\N	\N	\N	\N
+131	Low percent_id with long intron	Hits containing introns longer than 250000bp are rejected if percentage identity is less than 98% - see query_score for percent_id	1	\N	\N	\N	\N
+132	Low percent_id	Percentage identity of the best alignment is less than 97% - see query_score for percent_id	1	\N	\N	\N	\N
+133	No output from Exonerate	Exonerate returned no hits using standard parameters plus options --maxintron 400000 and --softmasktarget FALSE	1	\N	\N	\N	\N
+134	Parent xref failed to match	Unable to match as parent xref was not mapped	1	\N	\N	\N	\N
+135	Processed pseudogene	Rejected as a processed pseudogene because there are multiple-exon hits with the same coverage which have been rejected for other reasons	1	\N	\N	\N	\N
+136	See kill-list database	This sequence has been excluded from the analysis - see the kill-list database for further details	1	\N	\N	\N	\N
+137	Failed to match at thresholds	Unable to match at the thresholds of 99% for the query or 99% for the target	1	\N	\N	\N	\N
+138	Marker matches multiple times	Marker aligns to the genome > 5 times	1	\N	\N	\N	\N
