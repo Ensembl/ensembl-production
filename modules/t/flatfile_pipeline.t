@@ -2,30 +2,54 @@ use strict;
 use warnings;
 
 # user specifies a base_path that tells the pipeline where the dump will occur.
-# export CVS_ROOT and ENSEMBL_CVS_ROOT to the shell prior to execution
-# e.g. perl flatfile_pipeline.t '-run_all 1 -base_path ./'
+# User can set ENSEMBL_CVS_ROOT to the shell prior to execution or let the
+# code select it. All init_pipeline.pl options can be specified. This is
+# useful for dumping to another location (base_path is set to a tmp dir removed on cleanup)
+# e.g. perl gtf_pipeline.t
+# e.g. perl gtf_pipeline.t '-base_path ./'
 
 use Test::More;
+use Test::Files;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Test::TestUtils;
+# use Bio::EnsEMBL::Utils::IO qw/gz_slurp_to_array/;
+# use Bio::EnsEMBL::ApiVersion qw/software_version/;
+# use File::Spec;
 
-my $options = shift @ARGV;
-$options ||= '-run_all 1'; 
+my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+my $human_dba = $human->get_DBAdaptor('core');
+ok($human_dba, 'Human is available');
 
-my $reg = 'Bio::EnsEMBL::Registry';
-$reg->no_version_check(1); ## version not relevant to production db
+my $dir = File::Temp->newdir();
+$dir->unlink_on_destroy(1);
 
-debug("Startup test");
-ok(1);
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf';
+my $options;
+if(@ARGV) {
+	$options = join(q{ }, @ARGV);
+}
+else {
+	$options = '-base_path '.$dir;
+}
+my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+ok($pipeline, 'Pipeline has been created '.$module);
 
-my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
+$pipeline->run();
 
-my $db = $multi->get_DBAdaptor("pipeline");
-debug("Pipeline database instantiated");
-ok($db);
-
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf',undef,$options);
-
+if(! @ARGV) {
+	# my $target_dir = File::Spec->catdir($dir, 'gtf', 'homo_sapiens');
+	# #Expcting a file like Homo_sapiens.GRCh37.73.gtf.gz
+	# my ($cs) = @{$human_dba->get_CoordSystemAdaptor->fetch_all('toplevel')};
+	# my $schema = software_version();
+	# my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
+	# $gtf_file = ucfirst($gtf_file);
+	# dir_contains_ok(
+ #    $target_dir,
+ #    [qw/CHECKSUMS README/, $gtf_file],
+ #  	"$target_dir has GTF, README and CHECKSUM files"
+	# );
+	# my $contents = gz_slurp_to_array(File::Spec->catfile($target_dir, $gtf_file));
+	# cmp_ok(scalar(@{$contents}), '==', 1546, 'Expect 1546 rows in the GTF file');
+}
 
 done_testing();

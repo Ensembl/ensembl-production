@@ -8,58 +8,45 @@ use warnings;
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Test::TestUtils;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
+use File::Spec;
+use File::Temp;
 
-use File::Path qw( remove_tree );
+my $dir = File::Temp->newdir();
+$dir->unlink_on_destroy(1);
 
-$ENV{'CVS_ROOT'} 
-  or die "Variable CVS_ROOT must be set";
-$ENV{'ENSEMBL_CVS_ROOT_DIR'} 
-  or die "Variable ENSEMBL_CVS_ROOT_DIR must be set";
+my $options;
+if(@ARGV) {
+	$options = join(q{ }, @ARGV, '-release_date 31-08-2013');
+}
+else {
+	$options = join(q{ }, '-base_path', $dir, '-release_date 31-08-2013');
+}
 
-$ENV{'PATH'} = $ENV{'PATH'}.":".$ENV{'ENSEMBL_CVS_ROOT_DIR'}."/ensembl-production/modules/t/fake_ebeye_binaries";
+ok(1, 'Startup test');
 
-my $options = shift @ARGV;
-$options ||= '-run_all 1 -base_path ./ -release_date ' . `date '+%d-%b-%Y'`;
-$options =~ /base_path\s+(.+?)\s/;
-my $base_path = $1;
-
-my $reg = 'Bio::EnsEMBL::Registry';
-$reg->no_version_check(1); ## version not relevant to production db
-
-debug("Startup test");
-ok(1);
-
-my $hs_db = Bio::EnsEMBL::Test::MultiTestDB->new();
-
-my $core_adap = $hs_db->get_DBAdaptor("core");
-# ok($core_adap,"Test core database successfully contacted");
-my $core_dbname = $core_adap->dbc->dbname;
-ok($core_dbname, "Test core database successfully contacted");
-
-#
-# Disable this check until we get an up-to-date variation DB test configuration
-#
-# my $variation_adap = $hs_db->get_DBAdaptor("variation");
-# ok($variation_adap,"Test variation database successfully contacted");
-
-my $db = $hs_db->get_DBAdaptor("pipeline");
-debug("Pipeline database instantiated");
+my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+my $human_dba = $human->get_DBAdaptor('core');
+ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do not continue';
 
 my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
-
 my $compara_adap = $multi_db->get_DBAdaptor("compara");
-ok($compara_adap,"Test compara database successfully contacted");
+ok($compara_adap,"Test compara database successfully contacted") or BAIL_OUT 'Cannot get compara DB. Do not continue';
+my $production_dba = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf',undef,$options);
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf';
+my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+$pipeline->add_fake_binaries('fake_ebeye_binaries');
+
+$pipeline->run();
 
 #
 # NOTE
 #
 # Here we simply test that the expected files have been produced
 #
-my @dump_dirs = ($base_path, 'ebeye');
+my $core_dbname = $human_dba->dbc()->dbname();
+my @dump_dirs = ($dir, 'ebeye');
 my @expected_files = ( 
    File::Spec->catfile(@dump_dirs, 'CHECKSUMS'),
    File::Spec->catfile(@dump_dirs, "Gene_${core_dbname}.xml.gz"),
@@ -68,9 +55,6 @@ my @expected_files = (
 
 map { ok(check_file($_), "File $_ is present and non-zero size") } @expected_files;
 
-remove_tree($base_path . 'ebeye');
-unlink('beekeeper.log');
-unlink('hive_registry');
 
 done_testing();
 

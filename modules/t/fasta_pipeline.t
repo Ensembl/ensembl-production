@@ -6,78 +6,76 @@ use warnings;
 # e.g. perl fasta_pipeline.t '-run_all 1 -base_path ./'
 
 use Test::More;
+use Test::Files;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Test::TestUtils;
-use Bio::EnsEMBL::Utils::CliHelper;
 use Bio::EnsEMBL::ApiVersion;
+use File::Temp;
 
-use File::Path qw( remove_tree);
-# options to hand through to eHive for pipeline execution
-my $options = shift @ARGV;
-$options ||= '-run_all 1';
+ok(1, 'Startup test');
 
-my $reg = 'Bio::EnsEMBL::Registry';
-$reg->no_version_check(1); ## version not relevant to production db
+my $dir = File::Temp->newdir();
+$dir->unlink_on_destroy(1);
 
-my $test_db = Bio::EnsEMBL::Test::MultiTestDB->new();
+my $options;
+if(@ARGV) {
+  $options = join(q{ }, @ARGV);
+}
+else {
+  $options = '-base_path '.$dir;
+}
 
-my $pipe_adap = $test_db->get_DBAdaptor("core");
-ok($pipe_adap,"Pipeline database instantiated");
+my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+my $human_dba = $human->get_DBAdaptor('core');
+ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do not continue';
 
 my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
-my $web_adap = $multi_db->get_DBAdaptor("web");
-ok($web_adap,"Test web database successfully contacted");
+my $web = $multi_db->get_DBAdaptor('web') or BAIL_OUT 'Cannot get web DB. Do not continue';
+my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $prod_adapt = $multi_db->get_DBAdaptor("production");
-ok($prod_adapt,"Test production database successfully contacted");
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf';
+my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+$pipeline->add_fake_binaries('fake_fasta_binaries');
 
-$ENV{'PATH'} = $ENV{'PATH'}.":".$ENV{'ENSEMBL_CVS_ROOT_DIR'}."ensembl-production/modules/t/fake_fasta_binaries";
-# can't find a nicer way to do this, based on the lack of knowledge of where a user invokes the test from.
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($pipe_adap, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::FASTA_conf',undef,$options);
+$pipeline->run();
 
-ok($pipeline,"Pipeline ran to completion");
 
 # check the outputs exist.
 
 my $release = Bio::EnsEMBL::ApiVersion->software_version();
 
-my @expected_files = qw(
-    blat/dna/30001.Homo_sapiens.GRCh37.2bit
-    fasta/homo_sapiens/cdna/CHECKSUMS
-    fasta/homo_sapiens/cdna/Homo_sapiens.GRCh37.release.cdna.all.fa.gz
-    fasta/homo_sapiens/cdna/README
-    fasta/homo_sapiens/dna/CHECKSUMS
-    fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.release.dna.chromosome.6.fa.gz
-    fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.release.dna.chromosome.HG480_HG481_PATCH.fa.gz
-    fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.release.dna.chromosome.X.fa.gz
-    fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.release.dna.primary_assembly.fa.gz
-    fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.release.dna.toplevel.fa.gz
-    fasta/homo_sapiens/dna/README
-    fasta/homo_sapiens/ncrna/CHECKSUMS
-    fasta/homo_sapiens/ncrna/Homo_sapiens.GRCh37.release.ncrna.fa.gz
-    fasta/homo_sapiens/ncrna/README
-    fasta/homo_sapiens/pep/CHECKSUMS
-    fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.release.pep.all.fa.gz
-    fasta/homo_sapiens/pep/README
-);
+if(! @ARGV) {
+  my @expected_files = (
+    [[qw/blat dna/], ['30001.Homo_sapiens.GRCh37.2bit']],
+    [[qw/fasta homo_sapiens cdna/], [qw/
+        CHECKSUMS README
+        Homo_sapiens.GRCh37.release.cdna.all.fa.gz
+    /]],
+    [[qw/fasta homo_sapiens dna/], [qw/
+        CHECKSUMS README 
+        Homo_sapiens.GRCh37.release.dna.chromosome.6.fa.gz
+        Homo_sapiens.GRCh37.release.dna.chromosome.6.fa.gz
+        Homo_sapiens.GRCh37.release.dna.chromosome.HG480_HG481_PATCH.fa.gz
+        Homo_sapiens.GRCh37.release.dna.chromosome.X.fa.gz
+        Homo_sapiens.GRCh37.release.dna.primary_assembly.fa.gz
+        Homo_sapiens.GRCh37.release.dna.toplevel.fa.gz
+    /]],
+    [[qw/fasta homo_sapiens ncrna/], [qw/
+        CHECKSUMS README
+        Homo_sapiens.GRCh37.release.ncrna.all.fa.gz
+    /]],
+    [[qw/fasta homo_sapiens pep/], [qw/
+        CHECKSUMS README
+        Homo_sapiens.GRCh37.release.pep.all.fa.gz
+    /]],
+  );
 
-for (my $x=0; $x<scalar(@expected_files); $x++) {
-    $expected_files[$x] =~ s/release/$release/;
-};
-
-foreach my $file (@expected_files) {
-    ok(check_file($file),"$file is present and non-zero size");
+  foreach my $setup (@expected_files) {
+    my ($sub_dirs, $files) = @{$setup};
+    $_ =~ s/release/$release/ for @{$files}; #replace release into it
+    my $target_dir = File::Spec->catdir($dir, @{$sub_dirs});
+    dir_contains_ok($target_dir, $files, "Checking that $target_dir has all required dump files");
+  }
 }
-
-remove_tree(qw(fasta blat blast ncbi_blast));
-unlink("beekeeper.log");
 
 done_testing();
-
-
-
-sub check_file {
-    my $path = shift;
-    return -e $path && -s $path;
-}

@@ -1,0 +1,4 @@
+1	\N	schema_version	73
+2	\N	schema_type	compara
+3	\N	patch	patch_72_73_a.sql|schema_version
+3	\N	patch	patch_72_73_b.sql|homology_genetree_links

@@ -31,6 +31,8 @@
 1501	0000-00-00 00:00:00	cisred	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 1502	0000-00-00 00:00:00	cisred_search	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 1503	0000-00-00 00:00:00	DitagAlign	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-8352    2009-05-14 15:43:42     havana      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N
-8356    0000-00-00 00:00:00     ensembl_havana_lincrna      \N      \N      \N      \N      \N      \N      \N      lincRNAEvaluator      \N      \N      \N
-8363    2009-05-12 18:26:57     ncrna      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N      \N
+8339	2009-05-14 15:43:42	ensembl_other	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8352	2009-05-14 15:43:42	havana	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8356	0000-00-00 00:00:00	ensembl_havana_lincrna	\N	\N	\N	\N	\N	\N	\N	lincRNAEvaluator	\N	\N	\N
+8357	2009-05-14 15:43:42	havana_other	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8363	2009-05-12 18:26:57	ncrna	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N

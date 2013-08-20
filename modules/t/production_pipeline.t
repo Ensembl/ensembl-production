@@ -6,35 +6,28 @@ use warnings;
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Test::TestUtils;
 
-
-use Data::Dumper;
-use Bio::EnsEMBL::Utils::CliHelper;
-
-
-my $reg = 'Bio::EnsEMBL::Registry';
-$reg->no_version_check(1); ## version not relevant to production db
-
-debug("Startup test");
-ok(1);
+ok(1, 'Startup test');
 
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
 
-my $db = $multi->get_DBAdaptor("pipeline");
-debug("Pipeline database instatiated");
-ok($db);
+my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+my $human_dba = $human->get_DBAdaptor('core');
+ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do not continue';
 
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($db, 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf');
-#$pipeline->run($db, 'pipeline', 'Bio::EnsEMBL::Pipeline::Core_handover_conf', 'homo_sapiens');
+my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
+my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $dfa  = $db->get_DensityFeatureAdaptor();
-my $sa = $db->get_SliceAdaptor();
-my $aa = $db->get_AttributeAdaptor();
-my $ga = $db->get_GeneAdaptor();
-my $ta = $db->get_TranscriptAdaptor();
-my $tla = $db->get_TranslationAdaptor();
-my $ea = $db->get_ExonAdaptor();
+my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf');
+$pipeline->run();
+
+my $dfa  = $human_dba->get_DensityFeatureAdaptor();
+my $sa = $human_dba->get_SliceAdaptor();
+my $aa = $human_dba->get_AttributeAdaptor();
+my $ga = $human_dba->get_GeneAdaptor();
+my $ta = $human_dba->get_TranscriptAdaptor();
+my $tla = $human_dba->get_TranslationAdaptor();
+my $ea = $human_dba->get_ExonAdaptor();
 
 my $slice = $sa->fetch_by_region('chromosome', '6');
 my $gene = $ga->fetch_by_stable_id('ENSG00000167393');
