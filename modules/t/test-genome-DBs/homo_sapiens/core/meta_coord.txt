@@ -6,4 +6,3 @@ transcript	2	9771
 repeat_feature	2	50000
 simple_feature	2	17502
 misc_feature	2	216723
-density_feature	2	1140768
