@@ -15,10 +15,7 @@ else {
   $options = '-run_all 1';
 }
 
-
 ok(1, 'Startup test');
-
-my $multi = Bio::EnsEMBL::Test::MultiTestDB->new();
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
 my $human_dba = $human->get_DBAdaptor('core');
@@ -208,38 +205,6 @@ foreach my $c (@short_noncoding_acount) {
 }
 is($short_noncoding_acount, 0, "Long non coding count on all alternate sequences");
 
-# Check snp density for chromosome 6
-#my @snp_density = @{ $dfa->fetch_all_by_Slice($slice, 'snpdensity') };
-my $snp_density = 0;
-#foreach my $s (@snp_density) {
-#   $snp_density += $s->density_value;
-#}
-#is($snp_density, 3399247, "SNP density on chromosome 6");
-
-# Check snp density for all chromosomes
-#@snp_density = @{ $dfa->fetch_all('snpdensity') };
-#$snp_density = 0;
-#foreach my $s (@snp_density) {
-#   $snp_density += $s->density_value;
-#}
-#is($snp_density, 5668790, "SNP density on all reference chromosomes");
-#
-# Check snp count for chromosome 6
-#my @snp_count =@{  $aa->fetch_all_by_Slice($slice, 'SNPCount') };
-#my $snp_count = 0;
-#foreach my $c (@snp_count) {
-#   $snp_count += $c->value;
-#}
-#is($snp_count, 3399247, "SNP count on chromosome 6");
-#
-# Check snp count for all reference chromosomes
-#@snp_count =@{  $aa->fetch_all_by_Slice(undef, 'SNPCount') };
-#$snp_count = 0;
-#foreach my $c (@snp_count) {
-#   $snp_count += $c->value;
-#}
-##is($snp_count, 5668790, "SNP count on all reference chromosomes");
-
 
 # Check repeat density for chromosome 6
 my @repeat_density = @{ $dfa->fetch_all_by_Slice($slice, 'percentagerepeat') };
@@ -291,15 +256,5 @@ is($is_constitutive, 1, "ENSE00001654835 is constitutive");
 $is_constitutive = $exon2->is_constitutive();
 is($is_constitutive, 0, "ENSE00001612438 is not constitutive");
 
-
-# Check non sense attributes
-#my @nonsense = @{ $aa->fetch_all_by_Transcript($transcript, 'StopGained') };
-#my $rs;
-#foreach my $n (@nonsense) {
-#   if ($n->value =~ /(rs[0-9]*)/) {
-#      $rs = $1;
-#   }
-#}
-#is($rs, "rs9260156", "ENST00000376806 has stop gained attribute");
 
 done_testing();
