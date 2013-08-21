@@ -9,14 +9,13 @@ use warnings;
 # e.g. perl gtf_pipeline.t '-base_path ./'
 
 use Test::More;
-use Test::Files;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
 # use Bio::EnsEMBL::Utils::IO qw/gz_slurp_to_array/;
 # use Bio::EnsEMBL::ApiVersion qw/software_version/;
 # use File::Spec;
 
-my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+my $human = Bio::EnsEMBL::Test::MultiTestDB->new('saccharomyces_cerevisiae');
 my $human_dba = $human->get_DBAdaptor('core');
 ok($human_dba, 'Human is available');
 

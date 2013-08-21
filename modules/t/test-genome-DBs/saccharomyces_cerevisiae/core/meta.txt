@@ -1,0 +1,102 @@
+1	\N	schema_type	core
+2	\N	schema_version	73
+3	\N	patch	patch_60_61_a.sql|schema_version
+4	\N	patch	patch_60_61_b.sql|create_seq_region_synonym_table
+5	\N	patch	patch_60_61_c.sql|rejig_object_xref_indexes
+533	1	assembly.overlapping_regions	0
+6	1	genebuild.id	1
+68	1	marker.priority	1
+8	1	genebuild.start_date	2011-09-SGD
+9	1	genebuild.initial_release_date	2011-11
+90	1	assembly.date	2011-09
+10	1	genebuild.last_geneset_update	2011-12
+588	1	species.url	Saccharomyces_cerevisiae
+572	1	species.taxonomy_id	4932
+11	1	repeat.analysis	dust
+91	1	assembly.name	EF 4
+92	1	assembly.default	EF4
+64	1	repeat.analysis	repeatmask
+586	1	species.scientific_name	Saccharomyces cerevisiae
+564	1	species.alias	saccharomyces cerevisiae (baker's yeast)
+12	1	repeat.analysis	trf
+39	1	assembly.mapping	chromosome:EF4#contig
+65	1	assembly.coverage_depth	high
+137	1	removed_evidence_flag.uniprot_dbversion	uniprot_2013_07
+69	1	genebuild.method	import
+136	1	removed_evidence_flag.ensembl_dbversion	homo_sapiens_core_73_37
+587	1	species.production_name	saccharomyces_cerevisiae
+41	1	genebuild.level	toplevel
+42	1	transcriptbuild.level	toplevel
+43	1	exonbuild.level	toplevel
+44	1	repeat_featurebuild.level	toplevel
+47	1	simple_featurebuild.level	toplevel
+138	1	xref.timestamp	2011-12-21 21:09:09
+105	\N	patch	patch_61_62_a.sql|schema_version
+106	\N	patch	patch_61_62_b.sql|synonym_field_extension
+107	\N	patch	patch_61_62_c.sql|db_name_db_release_idx
+108	\N	patch	patch_61_62_d.sql|remove_display_label_linkable
+112	1	assembly.mapping	chromosome:EF4#chromosome:EF2
+113	\N	patch	patch_61_62_e.sql|seq_region_synonym_seq_region_idx
+114	\N	patch	patch_62_63_a.sql|schema_version
+115	\N	patch	patch_62_63_b.sql|indexing_changes
+116	\N	patch	patch_62_63_c.sql|remove_dbprimary_acc_linkable
+121	\N	patch	patch_63_64_a.sql|schema_version
+122	\N	patch	patch_63_64_b.sql|add_operons
+123	\N	patch	patch_63_64_c.sql|is_ref_added_to_alt_allele
+124	\N	patch	patch_63_64_d.sql|linkage_type change in ontology_xref
+125	\N	patch	patch_64_65_a.sql|schema_version
+126	\N	patch	patch_64_65_b.sql|merge_stable_id_with_object
+127	\N	patch	patch_64_65_c.sql|add_data_file
+128	\N	patch	patch_64_65_d.sql|add_checksum_info_type
+139	\N	patch	patch_65_66_a.sql|schema_version
+140	\N	patch	patch_65_66_b.sql|fix_external_db_id
+141	\N	patch	patch_65_66_c.sql|reorder_unmapped_obj_index
+142	\N	patch	patch_65_66_d.sql|add_index_to_ontology_xref_table
+143	\N	patch	patch_65_66_e.sql|fix_external_db_id_in_xref
+144	\N	patch	patch_65_66_f.sql|drop_default_values
+573	1	species.common_name	baker's yeast
+194	\N	patch	patch_66_67_a.sql|schema_version
+195	\N	patch	patch_66_67_b.sql|drop_stable_id_views
+196	\N	patch	patch_66_67_c.sql|adding_intron_supporting_evidence
+197	\N	patch	patch_66_67_d.sql|adding_gene_transcript_annotated
+198	\N	patch	patch_66_67_e.sql|index_canonical_transcript_id
+574	1	species.display_name	Saccharomyces cerevisiae
+411	\N	patch	patch_67_68_a.sql|schema_version
+412	\N	patch	patch_67_68_b.sql|xref_uniqueness
+413	1	assembly.web_accession_source	NCBI
+414	1	assembly.web_accession_type	GenBank Assembly ID
+415	\N	patch	patch_67_68_c.sql|altering_intron_supporting_evidence
+416	\N	patch	patch_67_68_d.sql|add_is_splice_canonical_and_seq_index
+569	1	species.alias	saccharomyces_cerevisiae
+577	1	species.classification	Saccharomycetales
+444	\N	patch	patch_67_68_e.sql|fix_67_68_e_xref_index
+445	\N	patch	patch_68_69_a.sql|schema_version
+565	1	species.alias	s_cerevisiae
+576	1	species.classification	Saccharomycetaceae
+473	\N	patch	patch_69_70_a.sql|schema_version
+474	\N	patch	patch_69_70_b.sql|add_mapping_set_history
+475	\N	patch	patch_69_70_c.sql|column_datatype_consistency
+476	\N	patch	patch_69_70_d.sql|data_file_id_auto_increment
+477	\N	patch	patch_69_70_e.sql|protein_feature_hit_description
+578	1	species.classification	Saccharomycetes
+505	\N	patch	patch_70_71_a.sql|schema_version
+506	\N	patch	patch_70_71_b.sql|mapping_set_index
+568	1	species.alias	scerevisiae
+563	1	species.alias	4932
+575	1	species.classification	Saccharomyces cerevisiae
+534	\N	patch	patch_71_72_a.sql|schema_version
+535	\N	patch	patch_71_72_b.sql|associated_xref
+566	1	species.alias	scer
+567	1	species.alias	baker's yeast
+581	1	species.classification	Ascomycota
+579	1	species.classification	Saccharomycotina
+580	1	species.classification	saccharomyceta
+562	\N	patch	patch_72_73_a.sql|schema_version
+570	1	species.alias	saccharomyces cerevisiae
+571	1	species.alias	saccer
+582	1	species.classification	Dikarya
+583	1	species.classification	Fungi
+584	1	species.classification	Opisthokonta
+585	1	species.classification	Eukaryota
+589	\N	patch	patch_72_73_b.sql|alt_allele_type
+590	\N	patch	patch_72_73_c.sql|add_object_type_marker

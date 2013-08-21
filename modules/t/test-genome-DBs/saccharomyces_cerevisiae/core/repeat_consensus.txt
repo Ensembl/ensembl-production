@@ -1,0 +1,84 @@
+2394	trf	trf	Tandem repeats	CCCACACACCACA
+2395	trf	trf	Tandem repeats	CCCACA
+2396	dust	dust	Dust	N
+2397	trf	trf	Tandem repeats	CA
+2398	trf	trf	Tandem repeats	ACCCTAACACT
+2399	trf	trf	Tandem repeats	GACGCTGAGTCTTTACC
+2400	trf	trf	Tandem repeats	TGAAAAAAG
+2401	trf	trf	Tandem repeats	A
+2402	trf	trf	Tandem repeats	AT
+2403	trf	trf	Tandem repeats	ATATATATACAC
+2404	trf	trf	Tandem repeats	ATATAGATATACACATATATAG
+2405	trf	trf	Tandem repeats	TATGT
+2406	trf	trf	Tandem repeats	TTTG
+2407	trf	trf	Tandem repeats	GTTTATTTATTTGTTGATTT
+2408	trf	trf	Tandem repeats	TTTA
+2409	trf	trf	Tandem repeats	TTTGTTTATTTA
+2410	trf	trf	Tandem repeats	ATTTAATCGAAAACTACAGCATGT
+2411	trf	trf	Tandem repeats	AAACAATAAAAAACA
+2412	trf	trf	Tandem repeats	CTCTTC
+2413	trf	trf	Tandem repeats	CCAAATGCTACGCAG
+2414	trf	trf	Tandem repeats	TA
+2415	trf	trf	Tandem repeats	AAAAAAAAAAAAAC
+2416	trf	trf	Tandem repeats	AAATGAAAA
+2417	trf	trf	Tandem repeats	AAAAAAACAAAAAAAAAA
+2418	trf	trf	Tandem repeats	TTTTTTAATTTATTATGG
+2419	trf	trf	Tandem repeats	TATACA
+2420	trf	trf	Tandem repeats	TATTA
+2421	trf	trf	Tandem repeats	CAAGGT
+2422	trf	trf	Tandem repeats	CAATACAACCAACAG
+2423	trf	trf	Tandem repeats	CAACCAGCAGCAATACAAGCAACAAGGCCAAAA
+2424	TY1-LTR	LTR/Copia	LTRs	N
+2425	trf	trf	Tandem repeats	TGTTGGAATAAAAATCAACTATCATCTACTAACTAGTATTTACGTTACTAGTATATTATCATATACGGTGTTAGAAGATGACGCAAATGATGAGAAATAGTCATCTAAATTAGTGGAAGCTGAAACACAAGGATTGATAATGTAATAGGATCAATGAATATTAACATATAAAATGATGATAATAATATTTATAGAATTGTATAGAATTGCAGATTCCCTTTTATGG
+2426	TY2_LTR	LTR/Copia	LTRs	N
+2427	TY2_I-int	LTR/Copia	LTRs	N
+2428	trf	trf	Tandem repeats	TTCAAAAGAAGACCAAGACAAA
+2429	trf	trf	Tandem repeats	TATTTTTAAAAAAAGTAAAAAATAAAATAGTAGTG
+2430	trf	trf	Tandem repeats	TTC
+2431	TY	LTR/Copia	LTRs	N
+2432	trf	trf	Tandem repeats	TCTTCTATCC
+2433	TY4	LTR/Copia	LTRs	N
+2434	trf	trf	Tandem repeats	CTTTCTG
+2435	TY3-LTR	LTR/Gypsy	LTRs	N
+2436	trf	trf	Tandem repeats	TTCCTC
+2437	trf	trf	Tandem repeats	AAATA
+2438	trf	trf	Tandem repeats	ATGAAAA
+2439	trf	trf	Tandem repeats	ATACAGATACAAGTATACATATACAAGG
+2440	trf	trf	Tandem repeats	ATACATATACAAGT
+2441	trf	trf	Tandem repeats	TATACAAG
+2442	trf	trf	Tandem repeats	TCTGCTTCT
+2443	trf	trf	Tandem repeats	ACGGTGAAGACT
+2444	trf	trf	Tandem repeats	TCTATATATATA
+2445	trf	trf	Tandem repeats	TCGTTCTCT
+2446	trf	trf	Tandem repeats	GACATG
+2447	trf	trf	Tandem repeats	GACATGGATATG
+2448	trf	trf	Tandem repeats	AAAACACTAGTGGGTTCCGAATTGTCAGCC
+2449	trf	trf	Tandem repeats	AAG
+2450	trf	trf	Tandem repeats	TTTTTTTTTTTCTCTATAGCAATCACT
+2451	(CATG)n	Simple_repeat	Simple repeats	CATG
+2452	(TA)n	Simple_repeat	Simple repeats	TA
+2453	trf	trf	Tandem repeats	TACA
+2454	trf	trf	Tandem repeats	ATATATATAT
+2455	trf	trf	Tandem repeats	ATAT
+2456	trf	trf	Tandem repeats	ACCTCAAACCAAATC
+2457	trf	trf	Tandem repeats	GCCAGATCCTGAACCTCCAAATCC
+2458	trf	trf	Tandem repeats	TGCCGCTGC
+2459	trf	trf	Tandem repeats	GTTGCTGTTGTTGAA
+2460	(CTG)n	Simple_repeat	Simple repeats	CTG
+2461	trf	trf	Tandem repeats	CTGTTGCCGCTGTTG
+2462	trf	trf	Tandem repeats	GCTGCT
+2463	trf	trf	Tandem repeats	GCTGCTGCT
+2464	trf	trf	Tandem repeats	CTGCTGCTGCTTCTGCTT
+2465	trf	trf	Tandem repeats	CTGCTGCTGCTT
+2466	trf	trf	Tandem repeats	CTGCTT
+2467	trf	trf	Tandem repeats	GAAGAAGCACCT
+2468	trf	trf	Tandem repeats	TCA
+2469	trf	trf	Tandem repeats	ACA
+2470	trf	trf	Tandem repeats	TAT
+2471	trf	trf	Tandem repeats	TAAACTTAC
+2472	trf	trf	Tandem repeats	ATTGCTATGTGTTTATACA
+2473	trf	trf	Tandem repeats	ATGGCGATTATATTC
+2474	trf	trf	Tandem repeats	TATTCTAAAAA
+2475	trf	trf	Tandem repeats	ATCGCTGCCGGTATTGCCGCC
+2476	trf	trf	Tandem repeats	AGGGTAACGAGAGGGGAGGT
+2477	trf	trf	Tandem repeats	GTGTGTGGGTGTGGTGTGTGGGTGTGGTGTGTGGGTGTGGT

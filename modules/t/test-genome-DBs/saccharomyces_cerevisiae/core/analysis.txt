@@ -1,0 +1,16 @@
+39	2011-02-10 22:06:52	sgd	SGD	1	\N	SGD	\N	\N	\N	\N	\N	SGD	gene
+40	2011-02-10 22:37:05	xrefexoneratedna	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+41	2011-02-10 22:37:05	xrefexonerateprotein	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+42	2011-07-15 11:40:33	xrefchecksum	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+43	2011-02-10 22:06:52	seg	low_complexity	\N	\N	seg	\N	/nas/seqdb/integr8/production/code/external/bin/seg	\N	ProteinAnnotation/Seg	\N	Seg	annotation
+44	2011-02-10 22:06:52	pfam	Pfam	\N	/ebi/production/interpro/data/members/pfam/23.0/Pfam_ls;/ebi/production/interpro/data/members/pfam/23.0/Pfam_fs	hmmpfam	\N	/sw/arch/bin/hmmpfam	--cut_ga	ProteinAnnotation/Pfam	\N	Pfam	domain
+45	2011-02-10 22:06:52	superfamily	Superfamily	\N	/nfs/seqdb/production/interpro/data/iprscan/superfamily.hmm	hmmpfam	\N	/sw/arch/bin/hmmpfam	-scopmap => /nfs/seqdb/production/interpro/data/iprscan/superfamily.tab, -evalue => 0.02	ProteinAnnotation/Superfamily	\N	Superfamily	domain
+46	2011-02-10 22:06:52	tmhmm	transmembrane	\N	\N	decodeanhmm	\N	/nas/seqdb/integr8/production/code/external/TMHMM2.0c/bin/decodeanhmm	-modelfile => /nas/seqdb/integr8/production/code/external/TMHMM2.0c/lib/TMHMM2.0.model, -optionsfile => /nas/seqdb/integr8/production/code/external/TMHMM2.0c/lib/TMHMM2.0.options	ProteinAnnotation/Tmhmm	\N	Tmhmm	annotation
+47	2011-02-10 22:06:52	pfscan	Prosite_profiles	\N	/nfs/panda/ensemblgenomes/production/protein_pipelines/databases/prosite.profiles	pfscan	\N	/nfs/seqdb/production/interpro/binaries/64_bit_Linux/pfscan	\N	ProteinAnnotation/PrositeProfile	\N	Profile	Domain
+48	2011-02-10 22:06:52	smart	Smart	\N	/nfs/seqdb/production/interpro/data/iprscan/smart.HMMs	hmmpfam	\N	/sw/arch/bin/hmmpfam	-E 0.01	ProteinAnnotation/Hmmpfam	\N	Smart	domain
+49	2011-02-10 22:06:52	pirsf	PIRSF	\N	/nfs/seqdb/production/interpro/data/iprscan/sf_hmm;/nfs/seqdb/production/interpro/data/iprscan/sf_hmm_sub	hmmpfam	\N	/sw/arch/bin/hmmpfam	-thresholds => /nfs/seqdb/production/interpro/data/iprscan/pirsf.dat, -options => -E 0.01	ProteinAnnotation/PIRSF	\N	PIRSF	domain
+50	2011-02-10 22:06:52	scanprosite	Prosite_patterns	\N	/nfs/seqdb/production/interpro/data/members/prosite/20.52/prosite.patterns	\N	\N	\N	-confirm => /nfs/panda/ensemblgenomes/production/protein_pipelines/databases/confirm.patterns	ProteinAnnotation/PrositeProfile	\N	Prosite_pattern	domain
+51	2011-02-10 22:06:52	ncoils	coiled_coil	\N	/nas/seqdb/integr8/production/code/external/src/coils	ncoils	\N	/nas/seqdb/integr8/production/code/external/bin/ncoils	\N	ProteinAnnotation/Coil	\N	ncoils	annotation
+52	2011-02-10 22:06:52	signalp	signal_peptide	\N	\N	signalp	\N	/homes/ensgen/signalp-3.0/signalp	\N	ProteinAnnotation/Signalp	\N	Signalp	annotation
+53	2011-02-10 22:06:52	prints	Prints	\N	/nfs/seqdb/production/interpro/data/iprscan/prints.pval	FingerPRINTScan	\N	/nfs/seqdb/production/interpro/binaries/64_bit_Linux/fingerPRINTScan	\N	ProteinAnnotation/Prints	\N	Prints	domain
+54	2011-02-10 22:06:52	tigrfam	TIGRfam	\N	/nfs/seqdb/production/interpro/data/iprscan/TIGRFAMs_HMM.LIB	hmmpfam	\N	/sw/arch/bin/hmmpfam	--cut_ga	ProteinAnnotation/Hmmpfam	\N	TIGRFAM	domain
