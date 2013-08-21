@@ -495,7 +495,7 @@ sub _fetch_xrefs {
 sub _fetch_alt_alleles {
   my ($self, $dbc) = @_;
 
-  my $alt_alleles = $dbc->db_handle->selectall_hashref(qq{SELECT gene_id, is_ref FROM alt_allele}, 
+  my $alt_alleles = $dbc->db_handle->selectall_hashref(qq{SELECT gene_id, attrib FROM alt_allele a, alt_allele_attrib aa WHERE a.alt_allele_id = aa.alt_allele_id}, 
 						       'gene_id') or die $dbc->db_handle->errstr;
 
   return $alt_alleles;
