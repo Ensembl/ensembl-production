@@ -62,7 +62,7 @@ if(! @ARGV) {
     /]],
     [[qw/fasta homo_sapiens ncrna/], [qw/
         CHECKSUMS README
-        Homo_sapiens.GRCh37.release.ncrna.all.fa.gz
+        Homo_sapiens.GRCh37.release.ncrna.fa.gz
     /]],
     [[qw/fasta homo_sapiens pep/], [qw/
         CHECKSUMS README
