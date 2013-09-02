@@ -20,7 +20,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile
+Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator
 
 =head1 DESCRIPTION
 
