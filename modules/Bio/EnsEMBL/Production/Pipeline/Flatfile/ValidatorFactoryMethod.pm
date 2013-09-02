@@ -31,7 +31,7 @@ Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod - FlatFile 
 
 Implementation of the factory method pattern to create instances of
 Validator subclasses.
-At the moment, the only supported type of validator is EMBL.
+At the moment, the only supported types of validator are embl/genbank.
 
 =back
 
@@ -40,6 +40,7 @@ At the moment, the only supported type of validator is EMBL.
 package Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
 
 use Bio::EnsEMBL::Production::Pipeline::Flatfile::EMBLValidator;
+use Bio::EnsEMBL::Production::Pipeline::Flatfile::GenbankValidator;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
 
@@ -85,6 +86,9 @@ sub create_instance {
   {
     $validator = Bio::EnsEMBL::Production::Pipeline::Flatfile::EMBLValidator->new(), last SWITCH
       if $type =~ /embl/i;
+
+    $validator = Bio::EnsEMBL::Production::Pipeline::Flatfile::GenbankValidator->new(), last SWITCH
+      if $type =~ /genbank/i;
 
     throw "Unknown type $type for Validator";
   }
