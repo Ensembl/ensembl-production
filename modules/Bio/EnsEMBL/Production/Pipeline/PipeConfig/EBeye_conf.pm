@@ -27,6 +27,8 @@ sub default_options {
       
       release => software_version(),
 
+      validator => 'xmlstarlet',
+
       # always run every species
       run_all => 0, 
 
@@ -35,6 +37,8 @@ sub default_options {
       ### Defaults 
 
       xmlstarlet_exe => 'xml',
+
+      xmllint_exe => 'xmllint',
 
       release_date => $default_release_date,
  

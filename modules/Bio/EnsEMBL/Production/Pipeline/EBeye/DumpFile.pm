@@ -59,6 +59,7 @@ use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 # use IO::Zlib;
 use IO::File;
 use XML::Writer;
+use File::Temp;
 
 my %exception_type_to_description = ('REF' => 'reference', 
 				     'HAP' => 'haplotype', 
@@ -69,6 +70,9 @@ sub param_defaults {
   my ($self) = @_;
   return {
     supported_types => { core => 1, vega => 1 },
+    validator => 'xmlstarlet', #can be xmlstarlet or xmllint
+    xmlstarlet => 'xml',
+    xmllint => 'xmllint',
   };
 }
 
@@ -648,24 +652,52 @@ sub _dbname {
 
 sub _validate {
   my ($self, $ebeye_dump_xml) = @_;
+  my $validator = $self->param('validator');
+  if($validator eq 'xmlstarlet') {
+    $self->_validate_xmlstarlet($ebeye_dump_xml);
+  }
+  elsif($validator eq 'xmllint') {
+    $self->_validate_xmllint($ebeye_dump_xml);
+  }
+  else {
+    $self->throw("Do not know how to validate using ${validator}");
+  }
+  return;
+}
 
+sub _validate_xmlstarlet {
+  my ($self, $ebeye_dump_xml) = @_;
   my $xsd = $self->_create_ebeye_search_dump_xsd();
   my $err_file = $ebeye_dump_xml . '.err';
-
   my $cmd = 
     sprintf(q{%s val -e -s %s %s 2> %s}, 
-	    $self->param('xmlstarlet'),
-	    $xsd,
-	    $ebeye_dump_xml,
-	    $err_file);
+      $self->param('xmlstarlet'),
+      $xsd->filename(),
+      $ebeye_dump_xml,
+      $err_file);
   my ($rc, $output) = $self->run_cmd($cmd);
-  
-  throw sprintf "XML validator reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
+  throw sprintf "XML validator xmlstarlet reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
     unless $output =~ /- valid/;
-
   unlink $err_file;
   unlink $xsd;
+  return;
+}
 
+sub _validate_xmllint {
+  my ($self, $ebeye_dump_xml) = @_;
+  my $xsd = $self->_create_ebeye_search_dump_xsd();
+  my $err_file = $ebeye_dump_xml . '.err';
+  my $cmd = 
+    sprintf(q{%s --schema %s -noout %s 2> %s}, 
+      $self->param('xmllint'),
+      $xsd->filename(),
+      $ebeye_dump_xml,
+      $err_file);
+  my ($rc, $output) = $self->run_cmd($cmd);
+  throw sprintf "XML validator xmllint reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
+    if $rc != 0;
+  unlink $err_file;
+  unlink $xsd;
   return;
 }
 
@@ -783,17 +815,10 @@ sub _create_ebeye_search_dump_xsd {
 </xsd:schema>
 XSD
   
-  my $ebeye_search_dump_xsd = 'ebeye_search_dump.xsd';
-  my $path = File::Spec->catfile($self->data_path(), $ebeye_search_dump_xsd);
-  unless (-e $path) {
-    work_with_file($path, 'w', sub {
-		     my ($fh) = @_;
-		     print $fh $xsd;
-		     return;
-		   });
-  }
-
-  return $path;
+  my $fh = File::Temp->new();
+  print $fh $xsd;
+  $fh->close();
+  return $fh;
 }
 
 1;
