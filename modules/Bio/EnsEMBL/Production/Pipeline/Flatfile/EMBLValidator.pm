@@ -90,7 +90,7 @@ sub _parse {
       while ( defined ($_ = $self->_readline) ) {
 	m{^//} and do { $self->_pushback($_); } and last;
 	# check the sequence
-	/^\s{5}([ACGT]{10}\s+){6}\s+\d+?$|^\s{5}([ACGT]+\s)+\s+\d+?$/ or
+	/^\s{5}([ACGTN]{10}\s){6}\s*\d+?$|^\s{5}([ACGTN]+\s)+\s+\d+?$/ or
 	  throw "Invalid sequence line:\n\n$_";
       }
     }
