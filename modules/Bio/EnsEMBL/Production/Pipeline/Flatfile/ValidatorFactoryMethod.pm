@@ -83,7 +83,7 @@ sub create_instance {
 
  SWITCH:
   {
-    $validator = EMBLValidator->new(), last SWITCH
+    $validator = Bio::EnsEMBL::Production::Pipeline::Flatfile::EMBLValidator->new(), last SWITCH
       if $type =~ /embl/i;
 
     throw "Unknown type $type for Validator";
