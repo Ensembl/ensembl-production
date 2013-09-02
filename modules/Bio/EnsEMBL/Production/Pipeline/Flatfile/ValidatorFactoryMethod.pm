@@ -20,13 +20,18 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator::FactoryMethod
+Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod - FlatFile validator factory
+
+=head1 SYNOPSIS
+
+  my $factory = Bio::EnsEMBL::Production::Pipeline::FlatFile::ValidatorFactoryMethod->new();
+  my $embl_validator = $factory->create_instance('embl');
 
 =head1 DESCRIPTION
 
 Implementation of the factory method pattern to create instances of
 Validator subclasses.
-At the moment, the validator type supported is EMBL.
+At the moment, the only supported type of validator is EMBL.
 
 =back
 
@@ -37,12 +42,37 @@ package Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
 use Bio::EnsEMBL::Production::Pipeline::Flatfile::EMBLValidator;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
+
+=head2 new
+
+  Arg [...]  : None
+  Description: Creates a new ValidatorFactoryMethod object.
+  Returntype : Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod
+  Exceptions : None
+  Caller     : general
+  Status     : Stable
+
+=cut
+
 sub new {
   my ($class, @args) = @_;
   my $self = bless {}, $class;
     
   return $self;
 }
+
+=head2 create_instance
+
+  Arg [1]    : String; validator type
+  Description: Build a validator for the file type specified as argument.
+               Supported file types are:
+               - embl
+  Exceptions : If type not specified or unsupported file format
+  Returntype : Subclass of Bio::EnsEMBL::Production::Pipeline::FlatFile::Validator
+  Caller     : general
+  Status     : Stable
+
+=cut
 
 sub create_instance {
   my ($self, $type) = @_;
