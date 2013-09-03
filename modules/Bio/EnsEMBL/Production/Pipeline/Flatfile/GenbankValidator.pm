@@ -85,24 +85,17 @@ sub _parse {
     if (/^(DEFINITION)|^(ACCESSION)|^(KEYWORDS)|^(COMMENT)/) {
       my $code = $1;
       /^DEFINITION\s{2}\S.*?|^ACCESSION\s{3}\S+|^KEYWORDS\s{4}\S+|^COMMENT\s{5}\S+/ or
-	throw "Invalid $code line: $_";
+	throw "Invalid line: $_";
 
       while ( defined ($_ = $self->_readline) ) {
 	/^\S+/ and do { $self->_pushback($_); } and last;
 	/^\s{12}\S+/ or throw "Invalid $code line: $_";
       }
-    } 
-
-    # PID
-    /^PID\s{9}\S+/ or throw "Invalid version line: $_"
-      if /^PID/;
-
-    # version number
-    /^VERSION\s{5}\S+/ or throw "Invalid version line: $_"
-      if /^VERSION/;
-
-    # organism name(s) and phylogenetic information
-    if (/^SOURCE/) {
+    } elsif (/^PID/) { # PID
+      /^PID\s{9}\S+/ or throw "Invalid version line: $_"
+    } elsif (/^VERSION/) { # version number
+      /^VERSION\s{5}\S+/ or throw "Invalid version line: $_";
+    } elsif (/^SOURCE/) { # organism name(s) and phylogenetic information
       /^SOURCE\s{6}\S+/ or throw "Invalid source line: $_";
       
       while ( defined ($_ = $self->_readline) ) {
@@ -110,10 +103,7 @@ sub _parse {
 	/^\s{12}\S+|^\s{2}(?:CLASSIFICATION|ORGANISM)\s+\S+/ 
 	  or throw "Invalid SOURCE line: $_";
       }
-    }
-
-    # reference entry
-    if (/^REFERENCE/) {
+    } elsif (/^REFERENCE/) { # reference entry
       /^REFERENCE\s{3}\d+\s+\S/ or throw "Invalid reference line: $_";
 
       while ( defined ($_ = $self->_readline) ) {
@@ -121,49 +111,49 @@ sub _parse {
 	/^\s{12}\S+|^\s{2}(?:AUTHORS|CONSRTM|TITLE|JOURNAL|REMARK|MEDLINE|PUBMED)\s+\S+/ 
 	  or throw "Invalid reference line: $_";
       }
-    }
-
-    # project entry
-    /^PROJECT\s{5}\S+/ or throw "Invalid project line: $_"
-      if /^PROJECT/;
-
-    # DB xrefs
-    if (/^DB/) {
+    } elsif (/^PROJECT/) { # project entry
+      /^PROJECT\s{5}\S+/ or throw "Invalid project line: $_"
+    } elsif (/^DB/) { # DB xrefs
       /^DB(?:SOURCE|LINK)\s+\S.+/ or throw "Invalid xref line: $_";
 
       # advance until next entry
       while ( defined ($_ = $self->_readline) ) {
 	/^\S+/ and do { $self->_pushback($_); } and last;
       }
-    }
-
-    # features
-    if (/^FEATURES/) {
+    } elsif (/^FEATURES/) { # features
       /^FEATURES\s+\S+/ or throw "Invalid feature line: $_";
       
       while ( defined ($_ = $self->_readline) ) {
 	/^\S+/ and do { $self->_pushback($_); } and last;
-	/^\s{5}\S+\s+\S+|^\s{21}\S+/ 
+	/^(\s{5}\S+\s+)\S+|^(\s{21})\S+/ 
 	  or throw "Invalid feature line: $_";
+	# defined $1 and length($1) == 21 or throw sprintf "Invalid feature line: %s ** %s **", $_, $1;
       } 
-    }
-
-    # sequence
-    if (/^BASE/) {
+    } elsif (/^BASE/) { # sequence
       /^BASE COUNT\s+\d+\s[acgt]\s+\d+\s[acgt]\s+\d+\s[acgt]\s+\d+\s[acgt]/ or
 	throw "Invalid base count line: $_";
 
       $_ = $self->_readline;
-      /^ORIGIN$/ or throw "No sequence header after base count";
+      /^ORIGIN$/ or throw "No sequence header after base count: $_";
 
       while ( defined ($_ = $self->_readline) ) {
 	m{^//} and do { $self->_pushback($_); } and last;
 	# check the sequence
-	/^\s+\d+\s([ACGTN]{10}\s){6}\s*?$|^\s+\d+\s([ACGTN]+\s)+\s+$/i or
+	#
+	# WARNING
+	# this would also match when we have less characters in a complete
+	# line (6 groups of letters) as the second option would match
+	#
+	# TODO
+	# find out how to exclude this case
+	#
+	/^\s*?\d+\s([ACGTN]{10}\s){6}\s*?$|^\s*?\d+\s([ACGTN]+\s)+\s*$/i or
+	# /^\s*?\d+\s([ACGTN]{10}\s){0,6}([ACGTN]+\s)*\s*?$/i or
 	  throw "Invalid sequence line:\n\n$_";
       }
+    } else {
+      throw "Unrecognised code in line: $_";
     }
-
     #
     # TODO
     # check for CONTIG|WGS
