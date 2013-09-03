@@ -81,84 +81,98 @@ sub _parse {
 
     m{^//} and do { $end_of_entry = 1; } and last;
 
-    if (/^DEFINITION/) {
-      /^DEFINITION\s{2}\S.*\S/ or
-	throw "Invalid definition: $_";
+    # definition|accession|keyword|comment entry
+    if (/^(DEFINITION)|^(ACCESSION)|^(KEYWORDS)|^(COMMENT)/) {
+      my $code = $1;
+      /^DEFINITION\s{2}\S.*?|^ACCESSION\s{3}\S+|^KEYWORDS\s{4}\S+|^COMMENT\s{5}\S+/ or
+	throw "Invalid $code line: $_";
 
       while ( defined ($_ = $self->_readline) ) {
 	/^\S+/ and do { $self->_pushback($_); } and last;
-	/\s{12}\S+/ or throw "Invalid definition: $_";
-      }
-    } elsif (/^ACCESSION/) {
-      /^ACCESSION\s{3}\S+/ or throw "Invalid accession line: $_";
-    }
-    # HERE
-
-    # accession number
-    if (/^(AC|PA)/) { 
-      if ( /^..\s{3}(.*)?/) {
-	my @accs = split(/[; ]+/, $1); # allow space in addition
-	throw "Cannot get accession numbers from line: $_" unless @accs;
-      } else {
-	throw "Invalid AC/PA line: $_";
+	/^\s{12}\S+/ or throw "Invalid $code line: $_";
       }
     } 
 
-    # project identifier
-    /^PR\s{3}\S/ or throw "Invalid PR line: $_"
-      if /^PR/;
-    
-    # date
-    if (/^DT/) {
-      if ( /^DT\s{3}(.+)$/ ) {
-	my $line = $1;
-	my ($date, $version) = split(' ', $line, 2);
-	
-	$date =~ tr/,//d; # remove comma if new version
-	throw "Invalid date: $_"
-	  unless $date =~ /^\d{2}-[A-Z]{3}-\d{4}/;
+    # PID
+    /^PID\s{9}\S+/ or throw "Invalid version line: $_"
+      if /^PID/;
 
-      } else {
-	throw "Invalid date format: $_";
+    # version number
+    /^VERSION\s{5}\S+/ or throw "Invalid version line: $_"
+      if /^VERSION/;
+
+    # organism name(s) and phylogenetic information
+    if (/^SOURCE/) {
+      /^SOURCE\s{6}\S+/ or throw "Invalid source line: $_";
+      
+      while ( defined ($_ = $self->_readline) ) {
+	/^\S+/ and do { $self->_pushback($_); } and last;
+	/^\s{12}\S+|^\s{2}(?:CLASSIFICATION|ORGANISM)\s+\S+/ 
+	  or throw "Invalid SOURCE line: $_";
       }
     }
-   
-    # description line(s)
-    /^DE\s{3}\w/ or throw "Invalid DE line: $_"
-      if /^DE/;
 
-    # keywords
-    /^KW\s{3}\S/ or throw "Invalid KW line: $_"
-      if /^KW/;
-    
-    # organism name and phylogenetic information
-    if (/^O[SCG]/) {
-      /^O[SCG]\s{3}(.+)/;
-      throw "Invalid organism/phylogenetic information on line: $_"
-	unless $1;
-    }
- 
-    # references
-    /^R[NCPXGATL]\s{3}\S/ or throw "Invalid reference line: $_"
-      if /^R/;
- 
-    # DB Xrefs
-    if(/^DR/) {
-      if (/^DR\s{3}([^\s;]+);\s*([^\s;]+);?\s*([^\s;]+)?\.$/) {
-	throw "Missing database/primary identifier in line: $_"
-	  unless $1 and $2;
-      } else {
-	throw "Invalid cross-reference: $_";
+    # reference entry
+    if (/^REFERENCE/) {
+      /^REFERENCE\s{3}\d+\s+\S/ or throw "Invalid reference line: $_";
+
+      while ( defined ($_ = $self->_readline) ) {
+	/^\S+/ and do { $self->_pushback($_); } and last;
+	/^\s{12}\S+|^\s{2}(?:AUTHORS|CONSRTM|TITLE|JOURNAL|REMARK|MEDLINE|PUBMED)\s+\S+/ 
+	  or throw "Invalid reference line: $_";
       }
     }
- 
-    # comments
-    /^CC\s{3}\S/ or throw "Invalid comment line: $_"
-      if /^CC/;
+
+    # project entry
+    /^PROJECT\s{5}\S+/ or throw "Invalid project line: $_"
+      if /^PROJECT/;
+
+    # DB xrefs
+    if (/^DB/) {
+      /^DB(?:SOURCE|LINK)\s+\S.+/ or throw "Invalid xref line: $_";
+
+      # advance until next entry
+      while ( defined ($_ = $self->_readline) ) {
+	/^\S+/ and do { $self->_pushback($_); } and last;
+      }
+    }
+
+    # features
+    if (/^FEATURES/) {
+      /^FEATURES\s+\S+/ or throw "Invalid feature line: $_";
+      
+      while ( defined ($_ = $self->_readline) ) {
+	/^\S+/ and do { $self->_pushback($_); } and last;
+	/^\s{5}\S+\s+\S+|^\s{21}\S+/ 
+	  or throw "Invalid feature line: $_";
+      } 
+    }
+
+    # sequence
+    if (/^BASE/) {
+      /^BASE COUNT\s+\d+\s[acgt]\s+\d+\s[acgt]\s+\d+\s[acgt]\s+\d+\s[acgt]/ or
+	throw "Invalid base count line: $_";
+
+      $_ = $self->_readline;
+      /^ORIGIN$/ or throw "No sequence header after base count";
+
+      while ( defined ($_ = $self->_readline) ) {
+	m{^//} and do { $self->_pushback($_); } and last;
+	# check the sequence
+	/^\s+\d+\s([ACGTN]{10}\s){6}\s*?$|^\s+\d+\s([ACGTN]+\s)+\s+$/i or
+	  throw "Invalid sequence line:\n\n$_";
+      }
+    }
+
+    #
+    # TODO
+    # check for CONTIG|WGS
+    #
 
     $buffer = $self->_readline;
   }
  
+
   throw "Missing end-of-entry code"
     unless $end_of_entry;
 
