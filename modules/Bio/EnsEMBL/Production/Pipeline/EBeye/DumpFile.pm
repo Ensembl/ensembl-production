@@ -688,7 +688,7 @@ sub _validate_xmllint {
   my $xsd = $self->_create_ebeye_search_dump_xsd();
   my $err_file = $ebeye_dump_xml . '.err';
   my $cmd = 
-    sprintf(q{%s --schema %s -noout %s 2> %s}, 
+    sprintf(q{%s --schema %s --sax --stream -noout %s 2> %s}, 
       $self->param('xmllint'),
       $xsd->filename(),
       $ebeye_dump_xml,
