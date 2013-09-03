@@ -41,6 +41,17 @@ use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
 Readonly my $RECORD_SEPARATOR => "//\n";
 
+=head2 _parse
+
+  Arg [...]  : None
+  Description: parse and validate a sequence entry from the stream
+  Returntype : true on success
+  Exceptions : if any error is detected during validation
+  Caller     : Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator::next_seq
+  Status     : Stable
+
+=cut
+
 sub _parse {
   my $self = shift;
 
