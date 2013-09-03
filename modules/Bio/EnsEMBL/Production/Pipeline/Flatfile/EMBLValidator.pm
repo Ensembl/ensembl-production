@@ -25,6 +25,8 @@ Bio::EnsEMBL::Production::Pipeline::Flatfile::EMBLValidator
 =head1 DESCRIPTION
 
 Implements a validator for EMBL files.
+Code is inspired by the BioPerl EMBL parser, see Bio::SeqIO::embl
+from the BioPerl distribution.
 
 =back
 

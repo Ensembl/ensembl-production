@@ -25,6 +25,8 @@ Bio::EnsEMBL::Production::Pipeline::Flatfile::GenbankValidator
 =head1 DESCRIPTION
 
 Implements a validator for Genbank files.
+Code is inspired by the BioPerl Genbank parser, see Bio::SeqIO::genbank 
+from the BioPerl distribution.
 
 =back
 
