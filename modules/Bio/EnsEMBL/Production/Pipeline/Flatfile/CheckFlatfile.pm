@@ -33,7 +33,7 @@ Allowed parameters are:
 
 =item file - The file to parse
 
-=item type - Passed into SeqIO; the format to parse
+=item type - The format to parse
 
 =back
 
@@ -48,6 +48,8 @@ use Bio::SeqIO;
 use File::Spec;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
+
+use Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
 
 sub fetch_input {
   my ($self) = @_;
@@ -66,21 +68,29 @@ sub run {
   my @files = grep { $_ =~ /\.dat\.gz$/ } readdir($dh);
   closedir($dh) or die "Cannot close directory $dir";
 
+  my $validator_factory = 
+    Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod->new();
+  my $data_path = $self->data_path();
+  my $type = $self->param('type');
+
   foreach my $file (@files) {
-    my $fh = $self->get_fh($file);
-    my $type = $self->param('type');
-    my $stream = Bio::SeqIO->new(-FH => $fh, -FORMAT => $type);
+    my $full_path = File::Spec->catfile($data_path, $file);
+    my $validator = $validator_factory->create_instance($type);
+
+    $validator->file($full_path);
 
     my $count = 0;
-    while ( (my $seq = $stream->next_seq()) ) {
-      $self->fine("Found the record %s", $seq->accession());
-      $count++;
-    }
+    eval {
+      while ( $validator->next_seq() ) {
+	$self->fine("%s: OK", $file);
+	$count++;
+      }
+    };
+    $@ and $self->throw("Error parsing $type file $file: $@");
 
     my $msg = sprintf("Processed %d record(s)", $count);
     $self->info($msg);
     $self->warning($msg);
-    close $fh;
   }
 
   return;
