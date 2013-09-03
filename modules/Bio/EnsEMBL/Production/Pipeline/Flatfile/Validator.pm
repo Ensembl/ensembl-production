@@ -38,6 +38,17 @@ use warnings;
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
+=head2 new
+
+  Arg [file] : String; the path to the file to validate
+  Description: creates a new Validator object.
+  Returntype : Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator
+  Exceptions : None
+  Caller     : general
+  Status     : Stable
+
+=cut
+
 sub new {
   my $class = shift;
   my %args  = ( @_ && ref $_[0] eq 'HASH' ) ? %{ $_[0] } : @_;
@@ -57,6 +68,18 @@ sub DESTROY {
     close $fh;
   }
 }
+
+=head2 file
+
+  Arg [1]    : String; file path
+  Description: opens a filehandle on the (compressed or not) file
+               specified as argument
+  Returntype : true on success
+  Exceptions : if file doesn't exist, is empty or unreadable
+  Caller     : general
+  Status     : Stable
+
+=cut
 
 sub file {
   my $self = shift;
@@ -82,6 +105,17 @@ sub file {
   return 1;
 }
 
+=head2 next_seq
+
+  Arg [...]  : None
+  Description: parse the next sequence entry in the stream
+  Returntype : true on success
+  Exceptions : if file hasn't been specified either from the
+               constructor or by calling the file method
+  Caller     : general
+  Status     : Stable
+
+=cut
 
 sub next_seq {
   my $self = shift;
@@ -93,11 +127,34 @@ sub next_seq {
   }
 }
 
+=head2 _parse
+
+  Arg [...]  : None
+  Description: abstract method, must be implemented in subclasses
+  Returntype : None
+  Exceptions : if file hasn't been specified either from the
+               constructor or by calling the file method
+  Caller     : general
+  Status     : Stable
+
+=cut
+
 sub _parse {
   my $self = shift;
 
   throw "Can't call _parse method on Validator";
 }
+
+=head2 _readline
+
+  Arg [...]  : None
+  Description: reads a line of input from the stream
+  Returntype : String; the line which has been read
+  Exceptions : None
+  Caller     : Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator::_parse
+  Status     : Stable
+
+=cut
 
 sub _readline {
   my $self = shift;
@@ -119,6 +176,18 @@ sub _readline {
 
   return $line;
 }
+
+=head2 _pushback
+
+  Arg [...]  : None
+  Description: puts a line previously read with _readline back into a buffer,
+               buffer can hold as many lines as system memory permits.
+  Returntype : None
+  Exceptions : None
+  Caller     : Bio::EnsEMBL::Production::Pipeline::Flatfile::Validator::_parse
+  Status     : Stable
+
+=cut
 
 sub _pushback {
   my ($self, $value) = @_;
