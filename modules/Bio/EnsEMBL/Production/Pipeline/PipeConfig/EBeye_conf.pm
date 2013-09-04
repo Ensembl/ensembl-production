@@ -157,8 +157,8 @@ sub resource_classes {
     my $self = shift;
     return {
       %{$self->SUPER::resource_classes()},
-      #Max memory consumed in a previous run was 1354MB. This gives us some breathing room
-      dump => { 'LSF' => '-q normal -M1600 -R"select[mem>1600] rusage[mem=1600]"'},
+      #Max memory consumed in a previous run was 2662.4MB. This gives us some breathing room
+      dump => { 'LSF' => '-q normal -M3500 -R"select[mem>3500] rusage[mem=3500]"'},
     }
 }
 
