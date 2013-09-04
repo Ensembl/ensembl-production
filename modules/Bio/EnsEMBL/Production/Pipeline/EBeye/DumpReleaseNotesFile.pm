@@ -77,7 +77,7 @@ sub run {
     };
 
   foreach my $file (@files) {
-    next unless $file =~ /xml/;
+    next unless $file =~ /\.xml\.gz/;
     
     my $path = File::Spec->catfile($dir, $file);
     $release_notes->{'entry_count'} += $self->_count_entries($path);
