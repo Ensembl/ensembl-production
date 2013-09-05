@@ -55,7 +55,7 @@ use base qw(Bio::EnsEMBL::Production::Pipeline::Flatfile::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::SeqDumper;
-use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file work_with_file/;
+use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use File::Path qw/rmtree/;
 
 sub param_defaults {
@@ -103,7 +103,7 @@ sub run {
   if(@non_chromosomes) {
     my $path = $self->_generate_file_name('nonchromosomal');
     $self->info('Dumping non-chromosomal data to %s', $path);
-    gz_work_with_file($path, 'w', sub {
+    work_with_file($path, 'w', sub {
       my ($fh) = @_;
       foreach my $slice (@non_chromosomes) {
         $self->fine('Dumping non-chromosomal %s', $slice->name());
@@ -111,6 +111,7 @@ sub run {
       }
       return;
     });
+    $self->run_cmd("gzip $path");
   }
   else {
     $self->info('Did not find any non-chromosomal data');
@@ -124,11 +125,12 @@ sub run {
       $self->fine('Path "%s" already exists; appending', $path);
       $args->{Append} = 1;
     }
-    gz_work_with_file($path, 'w', sub {
+    work_with_file($path, 'w', sub {
       my ($fh) = @_;
       $seq_dumper->$target($slice, $fh);
       return;
     }, $args);
+    $self->run_cmd("gzip $path");
   }
   
   $self->_create_README();
