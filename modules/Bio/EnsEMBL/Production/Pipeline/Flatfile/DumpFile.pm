@@ -140,7 +140,10 @@ sub run {
 
 sub _seq_dumper {
   my ($self) = @_;
-  my $seq_dumper = Bio::EnsEMBL::Utils::SeqDumper->new();
+
+  my $seq_dumper =   # 6Mb buffer
+    Bio::EnsEMBL::Utils::SeqDumper->new({ chunk_factor => 100000 });
+
   $seq_dumper->disable_feature_type('similarity');
   $seq_dumper->disable_feature_type('genscan');
   $seq_dumper->disable_feature_type('variation');
