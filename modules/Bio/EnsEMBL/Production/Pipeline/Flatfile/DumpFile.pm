@@ -167,7 +167,7 @@ sub _generate_file_name {
   push @name_bits, $self->param('release');
   push @name_bits, $section if $section;
   push @name_bits, $name if $name;
-  push @name_bits, 'dat', 'gz';
+  push @name_bits, 'dat';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();
