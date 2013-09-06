@@ -111,7 +111,7 @@ sub run {
       }
       return;
     });
-    $self->run_cmd("gzip $path");
+    $self->run_cmd("gzip -f $path");
   }
   else {
     $self->info('Did not find any non-chromosomal data');
@@ -130,7 +130,7 @@ sub run {
       $seq_dumper->$target($slice, $fh);
       return;
     }, $args);
-    $self->run_cmd("gzip $path");
+    $self->run_cmd("gzip -f $path");
   }
   
   $self->_create_README();
