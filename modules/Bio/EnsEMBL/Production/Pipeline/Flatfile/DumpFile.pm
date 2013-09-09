@@ -111,16 +111,16 @@ sub run {
       }
       return;
     });
-    $self->run_cmd("gzip -f $path");
-  }
-  else {
+    $self->run_cmd("gzip $path");
+  } else {
     $self->info('Did not find any non-chromosomal data');
   }
   
+  my @compress = ();
   foreach my $slice (@chromosomes) {
     $self->fine('Dumping chromosome %s', $slice->name());
     my $path = $self->_generate_file_name($slice->coord_system_name(), $slice->seq_region_name());
-    my $args = {};
+    my $args = { };
     if(-f $path) {
       $self->fine('Path "%s" already exists; appending', $path);
       $args->{Append} = 1;
@@ -130,9 +130,12 @@ sub run {
       $seq_dumper->$target($slice, $fh);
       return;
     }, $args);
-    $self->run_cmd("gzip -f $path");
+
+    push @compress, $path unless $path ~~ @compress;
   }
   
+  map { $self->run_cmd("gzip $_") } @compress;
+
   $self->_create_README();
   
   return;
