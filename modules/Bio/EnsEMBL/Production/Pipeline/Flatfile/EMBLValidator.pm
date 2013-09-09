@@ -97,7 +97,7 @@ sub _parse {
       or throw "Unrecognized code in line: $_";
 
     if (/^SQ/) {
-      /^SQ\s{3}Sequence\s\d+\sBP;\s\d+\s[ACGT];\s\d+\s[ACGT];\s\d+\s[ACGT];\s\d+\s[ACGT];/
+      /^SQ\s{3}Sequence\s+\d+\sBP;\s+\d+\s[ACGT];\s+\d+\s[ACGT];\s+\d+\s[ACGT];\s+\d+\s[ACGT];/
 	or throw "Invalid format for sequence header: $_";
 
       while ( defined ($_ = $self->_readline) ) {
@@ -133,7 +133,7 @@ sub _parse {
 	
 	$date =~ tr/,//d; # remove comma if new version
 	throw "Invalid date: $_"
-	  unless $date =~ /^\d{2}-[A-Z]{3}-\d{4}/;
+	  unless $date =~ /^\d+-[A-Z]{3}-\d{4}/;
 
       } else {
 	throw "Invalid date format: $_";
