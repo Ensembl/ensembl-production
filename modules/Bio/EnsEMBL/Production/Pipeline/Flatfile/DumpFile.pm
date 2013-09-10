@@ -123,7 +123,10 @@ sub run {
     my $mode = 'w';
     if(-f $path) {
       $self->fine('Path "%s" already exists; appending', $path);
-      $mode = '>>';
+      # open in read/write mode as append does not allow
+      # SeqDumper::dump_(embl|genbank) to seek to arbitrary
+      # positions in the file
+      $mode = '+<';
     } else { push @compress, $path;  }
 
     work_with_file($path, $mode, sub {
