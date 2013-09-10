@@ -49,6 +49,7 @@ use File::Spec;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
+use Bio::EnsEMBL::Utils::IO qw(filter_dir);
 use Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
 
 sub fetch_input {
@@ -63,22 +64,22 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
 
-  my $dir = $self->data_path();
-  opendir(my $dh, $dir) or die "Cannot open directory $dir";
-  my @files = grep { $_ =~ /\.dat\.gz$/ } readdir($dh);
-  closedir($dh) or die "Cannot close directory $dir";
+  # select dat.gz files in the directory
+  my $data_path = $self->data_path();
+  my $files = filter_dir($data_path, sub { 
+			   my $file = shift;
+			   return $file if $file =~ /\.dat\.gz$/; 
+			 });
 
   my $validator_factory = 
     Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod->new();
-  my $data_path = $self->data_path();
   my $type = $self->param('type');
 
-  foreach my $file (@files) {
+  foreach my $file (@{$files}) {
     my $full_path = File::Spec->catfile($data_path, $file);
     my $validator = $validator_factory->create_instance($type);
 
     $validator->file($full_path);
-
     my $count = 0;
     eval {
       while ( $validator->next_seq() ) {
@@ -88,25 +89,12 @@ sub run {
     };
     $@ and $self->throw("Error parsing $type file $file: $@");
 
-    my $msg = sprintf("Processed %d record(s)", $count);
+    my $msg = sprintf("%s: processed %d record(s)", $file, $count);
     $self->info($msg);
     $self->warning($msg);
   }
 
   return;
-}
-
-sub get_fh {
-  my ($self, $file) = @_;
-  my $data_path = $self->data_path();
-  my $full_path = File::Spec->catfile($data_path, $file);
-  $self->throw("Cannot find file $full_path") unless -f $full_path;
-  $self->throw("File $full_path seems not to be gzipped, as expected")
-    if $file !~ /\.gz$/;
-
-  open my $fh, '-|', 'gzip -c -d '.$full_path or die "Cannot open $full_path for gunzip: $!";
-
-  return $fh;
 }
 
 1;
