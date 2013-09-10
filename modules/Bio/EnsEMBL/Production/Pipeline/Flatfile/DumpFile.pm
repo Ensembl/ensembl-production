@@ -120,18 +120,17 @@ sub run {
   foreach my $slice (@chromosomes) {
     $self->fine('Dumping chromosome %s', $slice->name());
     my $path = $self->_generate_file_name($slice->coord_system_name(), $slice->seq_region_name());
-    my $args = { };
+    my $mode = 'w';
     if(-f $path) {
       $self->fine('Path "%s" already exists; appending', $path);
-      $args->{Append} = 1;
-    }
-    work_with_file($path, 'w', sub {
+      $mode = '>>';
+    } else { push @compress, $path;  }
+
+    work_with_file($path, $mode, sub {
       my ($fh) = @_;
       $seq_dumper->$target($slice, $fh);
       return;
-    }, $args);
-
-    push @compress, $path unless $path ~~ @compress;
+    });
   }
   
   map { $self->run_cmd("gzip $_") } @compress;
