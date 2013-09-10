@@ -2,7 +2,7 @@
 
 =head1 LICENSE
 
-  Copyright (c) 1999-2012 The European Bioinformatics Institute and
+  Copyright (c) 1999-2013 The European Bioinformatics Institute and
   Genome Research Limited.  All rights reserved.
 
   This software is distributed under a modified Apache license.
@@ -24,14 +24,13 @@ Bio::EnsEMBL::Production::Pipeline::Flatfile::CheckFlatfile
 
 =head1 DESCRIPTION
 
-Takes in a file and passes it through BioPerl's SeqIO parser code. This
-is just a smoke test to ensure the files are well formatted.
+Validates all compressed files in the pipeline data directory 
+(i.e. base_path + type + species) according to the format as 
+specified by the type argument (embl|genbank).
 
 Allowed parameters are:
 
 =over 8
-
-=item file - The file to parse
 
 =item type - The format to parse
 
@@ -44,9 +43,6 @@ package Bio::EnsEMBL::Production::Pipeline::Flatfile::CheckFlatfile;
 use strict;
 use warnings;
 
-use Bio::SeqIO;
-use File::Spec;
-
 use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
 
 use Bio::EnsEMBL::Utils::IO qw(filter_dir);
@@ -55,7 +51,6 @@ use Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
 sub fetch_input {
   my ($self) = @_;
 
-  $self->throw("No 'species' parameter specified") unless $self->param('species');
   $self->throw("No 'type' parameter specified") unless $self->param('type');
 
   return;
