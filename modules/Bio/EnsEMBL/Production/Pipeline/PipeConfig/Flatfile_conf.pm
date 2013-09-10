@@ -114,7 +114,7 @@ sub pipeline_analyses {
           subject => $self->o('pipeline_name').' has finished',
           text    => 'Your pipeline has finished. Please consult the hive output'
         },
-        -wait_for   => ['ChecksumGenerator'],
+        -wait_for   => [qw/ CheckFlatfile ChecksumGenerator /],
       }
     
     ];
