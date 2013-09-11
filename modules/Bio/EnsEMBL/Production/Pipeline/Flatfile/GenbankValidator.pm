@@ -81,7 +81,7 @@ sub _parse {
   # Check validity of various tokens
   #
   throw "Unrecognized format for Genbank LOCUS header line:\n\n$line\n"
-    unless $line =~ m/^LOCUS\s{7}\w+\s+(\S+)/;
+    unless $line =~ m/^LOCUS\s{7}[\w.]+\s+(\S+)/;
 
   my $buffer = $self->_readline;
 
