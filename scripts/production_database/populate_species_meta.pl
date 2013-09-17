@@ -464,6 +464,10 @@ User for the production database
 
 Pass for the production database
 
+=item B<-md|--mdatabase>
+
+Database name for the production database
+
 =item B<-th|--thost>
 
 Host for the taxonomy database
