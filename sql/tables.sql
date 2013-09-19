@@ -17,20 +17,11 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES 
   (NULL, 'schema_type', 'production'), 
-  (NULL, 'schema_version', 73);
+  (NULL, 'schema_version', 74);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_72_73a.sql|schema version');
-INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_72_73b.sql|add constraints on species columns');
-INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_72_73c.sql|biotype group in biotype table');
-INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_72_73d.sql|mitochondrion in changelog');
-INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_72_73e.sql|new db_types');
-
+  VALUES (NULL, 'patch', 'patch_73_74a.sql|schema version');
 
 
 -- The 'species' table.
