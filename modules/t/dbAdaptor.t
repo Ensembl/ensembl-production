@@ -16,10 +16,17 @@ ok($production_dba, "Production database has been created");
 
 my $manager = 'ORM::EnsEMBL::DB::Production::Manager::Biotype';
 
-# test list of unique biotype groups
+# test for the set of groups in the production db
 is_deeply($manager->fetch_all_biotype_groups, 
 	  [ qw/coding pseudogene undefined snoncoding lnoncoding/ ], 
 	  'fetch all biotype groups');
+
+my @got = sort @{$manager->group_members('lnoncoding')};
+my @expected = sort qw /ambiguous_orf antisense lincRNA non_coding processed_transcript retained_intron ncrna_host 3prime_overlapping_ncrna antisense_RNA sense_intronic sense_overlapping/;
+is_deeply(\@got, \@expected, 'coding biotype group members');
+throws_ok { $manager->group_members('dummy_group') }
+  qr /Invalid biotype group/, 'request for group members with non existant group throws exception';
+
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
 my $human_dba = $human->get_DBAdaptor('core');
@@ -34,6 +41,8 @@ my $gene = $gene_adaptor->fetch_by_stable_id('ENSG00000204704');
 is($manager->fetch_biotype($gene)->biotype_group, 'coding', 'gene biotype group');
 ok($manager->is_member_of_group($gene, 'coding'), 'gene biotype belongs to coding');
 ok(!$manager->is_member_of_group($gene, 'pseudogene'), 'gene biotype does not belong to pseudogene');
+throws_ok { $manager->is_member_of_group($gene, 'dummy_group') }
+  qr /Invalid biotype group/, 'call to is_member_of_group with non-existant group throws exception';
 
 # transcript: biotype = lincRNA, biotype = lnoncoding
 my $transcript = $transcript_adaptor->fetch_by_stable_id('ENST00000436804');
