@@ -59,22 +59,24 @@ sub new {
   #
   # Temporary hack
   # 
-  # Works for the local copy of ORM::EnsEMBL::Rose::Metadata
+  # Works for the local copy of ORM::EnsEMBL::Rose::Metadata,
+  # before 04/10/2013 Harpreet update to ensembl-orm Metadata.pm,
   # where method trackable check for the following environment
   #
-  $ENV{ENS_NOTRACKING} = 1;
+  # $ENV{ENS_NOTRACKING} = 1;
   #
   #############################################################
 
   my $self = $class->SUPER::new(@args) or
     throw "Unable to connect to DBA using parameters (".join(', ', @args).")\n";
 
-  ORM::EnsEMBL::Rose::DbConnection->register_database({type => 'production', 
-						       (database => $self->dbc->dbname, 
-							host => $self->dbc->host, 
-							port => $self->dbc->port, 
-							username => $self->dbc->username,
-						        password => $self->dbc->password)});
+  ORM::EnsEMBL::Rose::DbConnection->register_database({type      => 'production', 
+						       database  => $self->dbc->dbname, 
+						       host      => $self->dbc->host, 
+						       port      => $self->dbc->port, 
+						       username  => $self->dbc->username,
+						       password  => $self->dbc->password,
+						       trackable => 0});
 
   # this needs to be executed after the registration of the database,
   # otherwise we get a compilation error
