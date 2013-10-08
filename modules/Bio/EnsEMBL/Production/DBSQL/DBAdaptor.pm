@@ -47,6 +47,7 @@ use strict;
 use warnings;
 
 use ORM::EnsEMBL::Rose::DbConnection;
+use ORM::EnsEMBL::DB::Production::Manager::Biotype;
 
 use Bio::EnsEMBL::Utils::Exception qw( throw );
 use base ('Bio::EnsEMBL::DBSQL::DBAdaptor');
@@ -55,22 +56,10 @@ use base ('Bio::EnsEMBL::DBSQL::DBAdaptor');
 sub new {
   my ($class, @args) = @_;
 
-  #############################################################
-  #
-  # Temporary hack
-  # 
-  # Works for the local copy of ORM::EnsEMBL::Rose::Metadata,
-  # before Harpreet updated the repository version, where method 
-  # trackable check for the following environment
-  #
-  # $ENV{ENS_NOTRACKING} = 1;
-  #
-  #############################################################
-
   my $self = $class->SUPER::new(@args) or
     throw "Unable to connect to DBA using parameters (".join(', ', @args).")\n";
 
-  ORM::EnsEMBL::Rose::DbConnection->register_database({# domain    => 'ensembl',
+  ORM::EnsEMBL::Rose::DbConnection->register_database({domain    => 'ensembl',
 						       type      => 'production', 
 						       database  => $self->dbc->dbname, 
 						       host      => $self->dbc->host, 
@@ -79,9 +68,7 @@ sub new {
 						       password  => $self->dbc->password,
 						       trackable => 0});
 
-  # this needs to be executed after the registration of the database,
-  # otherwise we get a compilation error
-  require ORM::EnsEMBL::DB::Production::Manager::Biotype;
+  # require ORM::EnsEMBL::DB::Production::Manager::Biotype;
 
   return $self;
 }
