@@ -78,8 +78,10 @@ sub get_Slices {
 # Registry is loaded by Hive (see beekeeper_extra_cmdline_options() in conf)
 sub get_DBAdaptor {
   my ($self, $type) = @_;
-  my $species = $self->param('species');
+
   $type ||= 'core';
+  my $species = ($type eq 'production')?'multi':$self->param('species');
+
   return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
 }
 
