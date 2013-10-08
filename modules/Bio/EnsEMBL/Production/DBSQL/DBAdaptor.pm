@@ -60,8 +60,8 @@ sub new {
   # Temporary hack
   # 
   # Works for the local copy of ORM::EnsEMBL::Rose::Metadata,
-  # before 04/10/2013 Harpreet update to ensembl-orm Metadata.pm,
-  # where method trackable check for the following environment
+  # before Harpreet updated the repository version, where method 
+  # trackable check for the following environment
   #
   # $ENV{ENS_NOTRACKING} = 1;
   #
@@ -70,7 +70,8 @@ sub new {
   my $self = $class->SUPER::new(@args) or
     throw "Unable to connect to DBA using parameters (".join(', ', @args).")\n";
 
-  ORM::EnsEMBL::Rose::DbConnection->register_database({type      => 'production', 
+  ORM::EnsEMBL::Rose::DbConnection->register_database({# domain    => 'ensembl',
+						       type      => 'production', 
 						       database  => $self->dbc->dbname, 
 						       host      => $self->dbc->host, 
 						       port      => $self->dbc->port, 
@@ -87,6 +88,12 @@ sub new {
 
 sub get_available_adaptors {
   return {};
+}
+
+sub get_biotype_manager {
+  my $self = shift;
+  
+  return 'ORM::EnsEMBL::DB::Production::Manager::Biotype';
 }
 
 1;
