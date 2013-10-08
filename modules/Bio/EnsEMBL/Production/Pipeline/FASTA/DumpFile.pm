@@ -322,6 +322,7 @@ sub _convert_softmask_to_hardmask {
 sub _dump_transcripts {
   my ($self, $transcript_type, $type) = @_;
   
+
   my $has_transcript_data = 0;
   my $has_protein_data = 0;
 
@@ -338,8 +339,27 @@ sub _dump_transcripts {
   }
 
   # work out what biotypes correspond to $transcript_type
-  my $biotype_mapper = Bio::EnsEMBL::Utils::BiotypeMapper->new();
-  my $biotypes_list  = $biotype_mapper->group_members($transcript_type);
+  # my $biotype_mapper = Bio::EnsEMBL::Utils::BiotypeMapper->new();
+  # my $biotypes_list  = $biotype_mapper->group_members($transcript_type);
+  my $biotype_mapper = 
+    $self->get_DBAdaptor('production')->get_biotype_manager();
+  my $biotypes_list;
+
+  my @biotype_groups;
+  #
+  # WARNING:
+  #
+  # Using coding and pseudogene group members from the production db,
+  # instead of the precompiled list from BiotypeMapper, leaves 
+  # 'processed_transcript', 'antisense' and 'ambiguous_orf' out of the
+  # list
+  #
+  if ($transcript_type eq 'cdna') { push @biotype_groups, 'coding', 'pseudogene'; } 
+  elsif ($transcript_type eq 'ncrna') { push @biotype_groups, 'snoncoding', 'lnoncoding'; }
+  else { throw "Invalid transcript type: $transcript_type"; }
+  
+  map { push @{$biotypes_list}, @{ $biotype_mapper->group_members($_)} } 
+    @biotype_groups;
 
   my $dba          = $self->get_DBAdaptor($type);
   my $gene_adaptor = $dba->get_GeneAdaptor();
@@ -359,7 +379,7 @@ sub _dump_transcripts {
         my $transcript_seq = $transcript->seq();
         $self->_create_display_id($transcript, $transcript_seq, $transcript_type);
         $transcript_serializer->print_Seq($transcript_seq);
-        if ($biotype_mapper->member_of_group( $biotype, 'peptide_producing')) {
+        if ($biotype_mapper->is_member_of_group( $transcript, 'coding')) {
           my $translation = $transcript->translation();
           if ($translation) {
             my $translation_seq = $transcript->translate();
