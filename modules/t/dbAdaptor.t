@@ -14,7 +14,7 @@ my $multi = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $production_dba = $multi->get_DBAdaptor('production');
 ok($production_dba, "Production database has been created");
 
-my $manager = 'ORM::EnsEMBL::DB::Production::Manager::Biotype';
+my $manager = $production_dba->get_biotype_manager(); 
 
 # test for the set of groups in the production db
 is_deeply($manager->fetch_all_biotype_groups, 
