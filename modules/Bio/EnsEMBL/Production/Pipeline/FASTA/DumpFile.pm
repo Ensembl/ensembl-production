@@ -883,7 +883,7 @@ Fasta cDNA dumps
 #################
 
 These files hold the cDNA sequences corresponding to Ensembl gene 
-predictions. This includes long non-coding RNA transcripts.
+predictions.
 
 ------------
 FILE NAMES
@@ -951,8 +951,7 @@ Fasta RNA dumps
 #################
 
 These files hold the transcript sequences corresponding to non-coding RNA genes 
-(ncRNA); specifically short non-coding RNA transcript. For long ncRNA 
-transcripts please see our cDNA FASTA dumps.
+(ncRNA) both short and long.
 
 ------------
 FILE NAMES
