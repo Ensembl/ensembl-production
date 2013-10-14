@@ -250,7 +250,7 @@ foreach my $local_to_species (@to_multi) {
 
   print "Percentage complete: " if (!$quiet);
 
-  foreach my $from_stable_id (keys %$homologies) {
+  foreach my $from_stable_id ( sort {$a <=> $b}keys %$homologies) {
 
     $last_pc = print_progress($i, $total_genes, $last_pc) if (!$quiet);
 
@@ -267,7 +267,7 @@ foreach my $local_to_species (@to_multi) {
 
     my @to_genes = @{$homologies->{$from_stable_id}};
     my $i = 1;
-    foreach my $to_stable_id (@to_genes) {
+    foreach my $to_stable_id ( sort {$a <=> $b} @to_genes) {
 
       my $to_gene = $to_ga->fetch_by_stable_id($to_stable_id);
 
