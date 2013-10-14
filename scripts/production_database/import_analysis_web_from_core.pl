@@ -205,7 +205,22 @@ my $help = 0;
           } 
           else 
           {
-              throw("No analysis description added for $default_logic_name, exiting now");
+              $logic_name =~ /^([a-z]*)_([a-z]*)_([a-z0-9_]*)/;
+              $prefix = ucfirst($1)."_".ucfirst($2);
+              $suffix = $3;
+              $default_logic_name = "species_" . $suffix;
+              $ad = get_analysis_description($helper, $default_logic_name);
+              if ($ad)
+              {
+                  ($ad_id, $description, $display_label, $db_version, $wd_id, $display) = @$ad;
+                  $description =~ s/Species/$prefix/;
+                  $display_label =~ s/Species/$prefix/;
+                  printf( "Adding analysis_description for %s using %s\n", $logic_name, $default_logic_name);
+                  $add_ad++;
+              }
+              else {
+                  throw("No analysis description added for $default_logic_name, exiting now");
+              }
           }
       }
 
@@ -227,7 +242,7 @@ my $help = 0;
     }
 
     # Check if there already is an analysis web data entry for that logic name and species
-    my $exists = get_aw($helper, $ad_id, $species_id);
+    my $exists = get_aw($helper, $ad_id, $species_id, $dbtype);
 
     # If not, add it
     if (!$exists) 
@@ -291,9 +306,9 @@ sub add_analysis_description
 
 sub get_aw 
 {
-  my ($helper, $ad_id, $species_id) = @_;
-  my $sql = "SELECT analysis_web_data_id FROM analysis_web_data WHERE analysis_description_id = ? AND species_id = ?";
-  return $helper->execute_simple(-SQL => $sql, -PARAMS => [$ad_id, $species_id])->[0];
+  my ($helper, $ad_id, $species_id, $dbtype) = @_;
+  my $sql = "SELECT analysis_web_data_id FROM analysis_web_data WHERE analysis_description_id = ? AND species_id = ? AND db_type = ?";
+  return $helper->execute_simple(-SQL => $sql, -PARAMS => [$ad_id, $species_id, $dbtype])->[0];
 }
 
 sub add_analysis_web_data 
