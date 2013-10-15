@@ -61,7 +61,7 @@ my $script_opts =
   . "-quiet -backup_dir '$dir'";
 
 my $bsub_opts = "";
-$bsub_opts .= "-M2000000 -R'select[mem>2000] rusage[mem=2000]'";
+$bsub_opts .= "-M2000 -R'select[mem>2000] rusage[mem=2000]'";
 
 my %names_1_1;
 
