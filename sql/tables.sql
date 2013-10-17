@@ -22,6 +22,8 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_73_74a.sql|schema version');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'path', 'patch_73_74b.sql|db_display_name_not_null');
 
 
 -- The 'species' table.
@@ -256,7 +258,7 @@ CREATE TABLE master_external_db (
   db_release                VARCHAR(255) DEFAULT NULL,
   status                    ENUM('KNOWNXREF','KNOWN','XREF','PRED','ORTH','PSEUDO') NOT NULL,
   priority                  INT(11) NOT NULL,
-  db_display_name           VARCHAR(255) DEFAULT NULL,
+  db_display_name           VARCHAR(255) NOT NULL,
   type                      ENUM('ARRAY','ALT_TRANS','ALT_GENE','MISC','LIT','PRIMARY_DB_SYNONYM','ENSEMBL') DEFAULT NULL,
   secondary_db_name         VARCHAR(255) DEFAULT NULL,
   secondary_db_table        VARCHAR(255) DEFAULT NULL,
