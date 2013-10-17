@@ -19,7 +19,7 @@ my $user1 = 'ensro';
 my $pass1;
 my $port1 = 3306;
 my $host2 = 'ens-staging2';
-my $user2 = 'ensro';
+my $user2;
 my $pass2;
 my $port2 = 3306;
 my $compara_host = 'ens-livemirror';
@@ -49,6 +49,8 @@ GetOptions('conf=s'            => \$conf,
            'help'              => sub { usage(); exit(0); });
 
 if (!$conf) { $conf = "release_${release}.ini"; } # registry config file, specifies Compara location
+if (!$user2) { $user2 = $user1; }
+if (!$pass2 && $pass1 && $user1 == $user2) { $pass2 = $pass1; }
 
 
 
