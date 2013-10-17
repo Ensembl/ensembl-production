@@ -24,39 +24,63 @@ my $method_link_type = "ENSEMBL_ORTHOLOGUES";
 
 my %seen;
 
-my ($conf, $registryconf, $version, $compara, $from_species, @to_multi, $print, $names, $go_terms, $delete_names, $delete_go_terms, $no_backup, $backup_dir, $full_stats, $descriptions, $release, $no_database, $quiet, $max_genes, $one_to_many, $go_check, $all_sources, $delete_only,  $to_species, $from_gene);
+my ($conf, $no_backup, $backup_dir, $release, $no_database);
+my ($print, $quiet, $full_stats);
+my ($from_species, @to_multi, $one_to_many, $go_terms, $go_check, $descriptions, $names);
+my ($delete_names, $delete_go_terms, $delete_only);
 
-GetOptions('conf=s'          => \$conf,
-	   'registryconf=s'  => \$registryconf,
-	   'version=i'       => \$version,
-	   'compara=s'       => \$compara,
-	   'from=s'          => \$from_species,
-	   'to=s'            => \@to_multi,
-	   'method=s'        => \$method_link_type,
-	   'names'           => \$names,
-	   'go_terms'        => \$go_terms,
-	   'print'           => \$print,
-	   'delete_names'    => \$delete_names,
-	   'delete_go_terms' => \$delete_go_terms,
-	   'nobackup'        => \$no_backup,
-	   'backup_dir=s'    => \$backup_dir,
-	   'full_stats'      => \$full_stats,
-           'descriptions'    => \$descriptions,
-	   'release=i'       => \$release,
-	   'no_database'     => \$no_database,
-	   'quiet'           => \$quiet,
-	   'max_genes=i'     => \$max_genes,
-	   'one_to_many'     => \$one_to_many,
-	   'go_check'        => \$go_check,
-	   'all_sources'     => \$all_sources,
-	   'delete_only'     => \$delete_only,
-	   'help'            => sub { usage(); exit(0); });
+my $host1 = 'ens-staging';
+my $user1 = 'ensro';
+my $pass1;
+my $port1 = 3306;
+my $host2 = 'ens-staging2';
+my $user2 = 'ensro';
+my $pass2;
+my $port2 = 3306;
+my $compara_host = 'ens-livemirror';
+my $compara_user = 'ensro';
+my $compara_pass;
+my $compara_port = 3306;
+my $compara_dbname;
+
+GetOptions('conf=s'            => \$conf,
+           'host1=s'           => \$host1,
+           'user1=s'           => \$user1,
+           'pass1=s'           => \$pass1,
+           'port1=s'           => \$port1,
+           'host2=s'           => \$host2,
+           'user2=s'           => \$user2,
+           'pass2=s'           => \$pass2,
+           'port2=s'           => \$port2,
+           'compara_host=s'    => \$compara_host,
+           'compara_user=s'    => \$compara_user,
+           'compara_pass=s'    => \$compara_pass,
+           'compara_port=s'    => \$compara_port,
+           'compara_dbname=s'  => \$compara_dbname,
+	   'from=s'            => \$from_species,
+	   'to=s'              => \@to_multi,
+	   'method=s'          => \$method_link_type,
+	   'names'             => \$names,
+	   'go_terms'          => \$go_terms,
+	   'print'             => \$print,
+	   'delete_names'      => \$delete_names,
+	   'delete_go_terms'   => \$delete_go_terms,
+	   'nobackup'          => \$no_backup,
+	   'backup_dir=s'      => \$backup_dir,
+	   'full_stats'        => \$full_stats,
+           'descriptions'      => \$descriptions,
+	   'release=i'         => \$release,
+	   'no_database'       => \$no_database,
+	   'quiet'             => \$quiet,
+	   'one_to_many'       => \$one_to_many,
+	   'delete_only'       => \$delete_only,
+	   'help'              => sub { usage(); exit(0); });
 
 $| = 1; # auto flush stdout
 
 $descriptions = 1;
 
-if (!$conf && !$registryconf && !$delete_only) {
+if (!$conf && !$delete_only) {
 
   print STDERR "Configuration file must be supplied via -conf or -registryconf argument\n";
   usage();
@@ -115,7 +139,8 @@ my @evidence_codes = ( "IDA", "IEP", "IGI", "IMP", "IPI", "EXP" );
 @to_multi = split(/,/,join(',',@to_multi));
 
 # load from database and conf file
-Bio::EnsEMBL::Registry->no_version_check(1);
+my $registry = "Bio::EnsEMBL::Registry";
+$registry->no_version_check(1);
 
 # Default the directory to the current working directory if one was not given
 # and try to create it if the directory does not exist
@@ -130,21 +155,39 @@ if(! -d $backup_dir) {
 # script or a file name containing the same information that is passed on the command line.
 
 my $args;
+$registry->load_registry_from_multiple_dbs(
+          {
+              '-host'       => $host1,
+              '-user'       => $user1,
+              '-pass'       => $pass1,
+              '-port'       => $port1,
+              '-db_version' => $release,
+          },
+          {
+              '-host'       => $host2,
+              '-user'       => $user2,
+              '-pass'       => $pass2,
+              '-port'       => $port2,
+              '-db_version' => $release,
+          }
+);
 
-if (defined($registryconf)) {
-	if (-f $registryconf) {
-		open(CONF, $registryconf);
-		my @contents = <CONF>;
-		$args = eval(join("\n", @contents));
-		close(CONF);
-	} else {
-		$args = eval($registryconf);
-	}
+if ($compara_dbname) {
+  my $compara_db = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+              '-host'    => $compara_host,
+              '-user'    => $compara_user,
+              '-pass'    => $compara_pass,
+              '-port'    => $compara_port,
+              '-dbname'  => $compara_dbname,
+              '-species' => 'multi',
+              '-dbtype'  => 'compara',
+  );
+  $registry->add_DBAdaptor($compara_db);
+} elsif ($conf) {
+  $registry->load_all($conf, 0, 1);
 }
 
-Bio::EnsEMBL::Registry->load_registry_from_multiple_dbs(@{$args});
-
-Bio::EnsEMBL::Registry->load_all($conf, 0, 1); # options mean "not verbose" and "don't clear registry"
+#$registry->load_all($conf, 0, 1); # options mean "not verbose" and "don't clear registry"
 
 # only delete names/GO terms if -delete_only has been specified
 if ($delete_only) {
@@ -152,8 +195,8 @@ if ($delete_only) {
     print "Just deleting, no projection\n";
     foreach my $to_species (@to_multi) {
 
-    	my $to_ga  = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Gene');
-    	my $to_ta  = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
+    	my $to_ga  = $registry->get_adaptor($to_species, 'core', 'Gene');
+    	my $to_ta  = $registry->get_adaptor($to_species, 'core', 'Transcript');
     	die("Can't get gene adaptor for $to_species - check database connection details; make sure meta table contains the correct species alias\n") if (!$to_ga);
     	delete_names($to_ga, $to_ta) if ($delete_names);
     	delete_go_terms($to_ga) if ($delete_go_terms);
@@ -170,42 +213,42 @@ my $ha;
 my $ma;
 my $gdba;
 
-if ($compara) {
+#if ($compara_db) {
+#
+#   $mlssa = $registry->get_adaptor($compara_db, 'compara', 'MethodLinkSpeciesSet');
+#   $ha    = $registry->get_adaptor($compara_db, 'compara', 'Homology');
+#   $ma    = $registry->get_adaptor($compara_db, 'compara', 'Member');
+#   $gdba  = $registry->get_adaptor($compara_db, "compara", "GenomeDB");
+#
+#   die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
-   $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
-   $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
-   $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
+#} else {
 
-   die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
-
-} else {
-
-   $mlssa = @{Bio::EnsEMBL::Registry->get_all_adaptors(-group => "compara", -type => "MethodLinkSpeciesSet")}[0];
-   $ha    = @{Bio::EnsEMBL::Registry->get_all_adaptors(-group => "compara", -type => "Homology")}[0];
-   $ma    = @{Bio::EnsEMBL::Registry->get_all_adaptors(-group => "compara", -type => "Member")}[0];
-   $gdba  = @{Bio::EnsEMBL::Registry->get_all_adaptors(-group => "compara", -type => "GenomeDB")}[0];
+   $mlssa = @{$registry->get_all_adaptors(-group => "compara", -type => "MethodLinkSpeciesSet")}[0];
+   $ha    = @{$registry->get_all_adaptors(-group => "compara", -type => "Homology")}[0];
+   $ma    = @{$registry->get_all_adaptors(-group => "compara", -type => "Member")}[0];
+   $gdba  = @{$registry->get_all_adaptors(-group => "compara", -type => "GenomeDB")}[0];
 
    die "Can't connect to Compara database from registry - check registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
-}
+#}
 
-my $from_ga = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
+my $from_ga = $registry->get_adaptor($from_species, 'core', 'Gene');
 
 my %projections_by_evidence_type;
 my %projections_by_source;
 my %forbidden_terms;
 
-my $from_mammal;
-my $to_mammal;
+my $from_gene;
+my $to_species;
 
 foreach my $local_to_species (@to_multi) {
 
   $to_species = $local_to_species;
-  my $to_ga   = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Gene');
-  my $to_ta   = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
+  my $to_ga   = $registry->get_adaptor($to_species, 'core', 'Gene');
+  my $to_ta   = $registry->get_adaptor($to_species, 'core', 'Transcript');
   die("Can't get gene adaptor for $to_species - check database connection details; make sure meta table contains the correct species alias\n") if (!$to_ga);
-  my $to_dbea = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'DBEntry');
+  my $to_dbea = $registry->get_adaptor($to_species, 'core', 'DBEntry');
 
 
     # Interrogate GOA web service for forbidden GO terms for the given species.
@@ -253,8 +296,6 @@ foreach my $local_to_species (@to_multi) {
   foreach my $from_stable_id ( sort {$a cmp $b} keys %$homologies) {
 
     $last_pc = print_progress($i, $total_genes, $last_pc) if (!$quiet);
-
-    last if ($max_genes && $i > $max_genes);
 
     $i++;
 
@@ -520,10 +561,9 @@ sub project_go_terms {
     next DBENTRY if (unwanted_go_term($to_translation->stable_id,$dbEntry->primary_id));
 
 
-
     # check that each from GO term isn't already projected
     next if ($go_check && go_xref_exists($dbEntry, $to_go_xrefs));
-    
+
     # Force loading of external synonyms for the xref
     $dbEntry->get_all_synonyms();
 
@@ -573,8 +613,8 @@ sub go_xref_exists {
     next if (ref($dbEntry) ne "Bio::EnsEMBL::OntologyXref" || ref($xref) ne "Bio::EnsEMBL::OntologyXref");
 
     if ($xref->dbname() eq $dbEntry->dbname() &&
-	$xref->primary_id() eq $dbEntry->primary_id() &&
-	join("", @{$xref->get_all_linkage_types()}) eq join("", @{$dbEntry->get_all_linkage_types()})) {
+     $xref->primary_id() eq $dbEntry->primary_id() &&
+     join("", @{$xref->get_all_linkage_types()}) eq join("", @{$dbEntry->get_all_linkage_types()})) {
       return 1;
     }
 
@@ -582,7 +622,7 @@ sub go_xref_exists {
     # will lead to duplicates when the projected term has its evidence code changed to IEA after projection
     if ($xref->primary_id() eq $dbEntry->primary_id()) {
       foreach my $evidence_code (@{$xref->get_all_linkage_types()}) {
-	return 1 if ($evidence_code eq "IEA");
+     return 1 if ($evidence_code eq "IEA");
       }
     }
 
@@ -592,7 +632,7 @@ sub go_xref_exists {
 
 }
 
-# ----------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 
 sub print_stats {
 
@@ -933,7 +973,10 @@ sub backup {
   my @tables = qw/gene transcript xref object_xref external_synonym/;
   
   foreach my $table (@tables) {
-    unless (system("$mysql_binary -h$host -P$port -u$user -p$pass -N -e 'select * from $table' $dbname | gzip -c -6 > $backup_dir/$dbname.$table.backup.gz") == 0) {
+    my $command = "$mysql_binary -h$host -P$port -u$user ";
+    $command .= "-p $pass" if ($pass);
+    $command .= "-N -e 'select * from $table' $dbname | gzip -c -6 > $backup_dir/$dbname.$table.backup.gz";
+    unless (system($command) == 0) {
       print STDERR "Can't dump the original $table table from $dbname for backup\n";
       exit 1;
     } else {
@@ -1117,8 +1160,6 @@ sub usage {
 			commandline. 
 
 
-   --version
-
                         Note that a combination of the host/user and conf files
                         can be used. Databases specified in both will use the
                         conf file setting preferentially.
@@ -1141,7 +1182,7 @@ sub usage {
                         the registry file is used.
 
   [--names]             Project display names and descriptions. Note only HGNC
-                        display names are projected by default (see --all_sources).
+                        display names are projected by default.
 
   [--go_terms]          Project GO terms.
 
@@ -1153,13 +1194,11 @@ sub usage {
 
   [--method]            Type of homologs (default: TREE_HOMOLOGIES)
 
-  [--all_sources]       Use all sources for name projection (default is HGNC only).
-
   [--nobackup]          Skip dumping of table backups
 
   [--full_stats]        Print full statistics, i.e.:
                          - number of terms per evidence type for projected GO terms
-                         - number of display names per source (if using --all_sources)
+                         - number of display names per source
 
   [--no_database]       Don't write to the projection_info database.
 

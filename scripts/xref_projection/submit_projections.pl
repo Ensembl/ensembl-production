@@ -1,6 +1,7 @@
 use strict;
 
 use Data::Dumper;
+use Getopt::Long;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 $Data::Dumper::Useqq  = 1;
@@ -13,29 +14,43 @@ $Data::Dumper::Indent = 0;
 # ------------------------------ config -------------------------------
 my $release = software_version();
 
+my $host1 = 'ens-staging';
+my $user1 = 'ensro';
+my $pass1;
+my $port1 = 3306;
+my $host2 = 'ens-staging2';
+my $user2 = 'ensro';
+my $pass2;
+my $port2 = 3306;
+my $compara_host = 'ens-livemirror';
+my $compara_user = 'ensro';
+my $compara_pass;
+my $compara_port = 3306;
+my $compara_dbname;
 
-my $base_dir = "mydir";
+my ($conf, $base_dir);
 
-my $conf = "release_${release}.ini"; # registry config file, specifies Compara location
+GetOptions('conf=s'            => \$conf,
+           'release=s'         => \$release,
+           'host1=s'           => \$host1,
+           'user1=s'           => \$user1,
+           'pass1=s'           => \$pass1,
+           'port1=s'           => \$port1,
+           'host2=s'           => \$host2,
+           'user2=s'           => \$user2,
+           'pass2=s'           => \$pass2,
+           'port2=s'           => \$port2,
+           'compara_host=s'    => \$compara_host,
+           'compara_user=s'    => \$compara_user,
+           'compara_pass=s'    => \$compara_pass,
+           'compara_port=s'    => \$compara_port,
+           'compara_dbname=s'  => \$compara_dbname,
+           'base_dir=s'        => \$base_dir,
+           'help'              => sub { usage(); exit(0); });
 
-# location of other databases
+if (!$conf) { $conf = "release_${release}.ini"; } # registry config file, specifies Compara location
 
-my @config = ( {
-    '-host'       => 'HOST',
-    '-port'       => 'PORT',
-    '-user'       => 'USER',
-    '-pass'       => 'PASS',
-    '-db_version' => $release
-  },
-  {
-    '-host'       => 'HOST',
-    '-port'       => 'PORT',
-    '-user'       => 'USER',
-    '-pass'       => 'PASS',
-    '-db_version' => $release
-  } );
 
-my $registryconf = Dumper(\@config);
 
 # -------------------------- end of config ----------------------------
 
@@ -55,10 +70,22 @@ if (! -e $dir) {
 # common options
 my $script_opts =
     "-conf '$conf' "
-  . "-registryconf '$registryconf' "
-  . "-version '$release' "
   . "-release '$release' "
   . "-quiet -backup_dir '$dir'";
+
+$script_opts .= "-host1 $host1 " if $host1;
+$script_opts .= "-user1 $user1 " if $user1;
+$script_opts .= "-pass1 $pass1 " if $pass1;
+$script_opts .= "-port1 $port1 " if $port1;
+$script_opts .= "-host2 $host2 " if $host2;
+$script_opts .= "-user2 $user2 " if $user2;
+$script_opts .= "-pass2 $pass2 " if $pass2;
+$script_opts .= "-port2 $port2 " if $port2;
+$script_opts .= "-compara_host $compara_host " if $compara_host;
+$script_opts .= "-compara_user $compara_user " if $compara_user;
+$script_opts .= "-compara_pass $compara_pass " if $compara_pass;
+$script_opts .= "-compara_port $compara_port " if $compara_port;
+
 
 my $bsub_opts = "";
 $bsub_opts .= "-M2000 -R'select[mem>2000] rusage[mem=2000]'";
