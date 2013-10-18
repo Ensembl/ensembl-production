@@ -71,6 +71,11 @@ sub run {
       next;
     }
 
+    my $variation = $self->production_flow($dba, 'variation');
+    if ($variation) {
+      push(@dbs, [$self->input_id($dba), $variation]);
+    }
+
     my $all = $self->production_flow($dba, 'all');
     if ($self->param('run_all')) {
       $all = 2;
@@ -80,10 +85,6 @@ sub run {
       my $vega = $self->production_flow($dba, 'vega');
       if ($vega) {
         push(@dbs, [$self->input_id($dba), $vega]);
-      }
-      my $variation = $self->production_flow($dba, 'variation');
-      if ($variation) {
-        push(@dbs, [$self->input_id($dba), $variation]);
       }
       my $karyotype = $self->production_flow($dba, 'karyotype');
       if ($karyotype) {
@@ -185,19 +186,24 @@ sub is_run {
      WHERE  c.changelog_id = cs.changelog_id 
      AND    release_id = ?
      AND    status not in ('cancelled', 'postponed') 
-     AND    (gene_set = 'Y' OR assembly = 'Y' OR repeat_masking = 'Y' OR variation_pos_changed = 'Y'))
 SQL
 
   my @params = ("$production_name%", $self->param('release'));
 
   if ($class =~ 'variation') {
     $sql .= <<'SQL';
+     AND    (gene_set = 'Y' OR assembly = 'Y' OR repeat_masking = 'Y' OR variation_pos_changed = 'Y'))
      AND    species_id IN (
      SELECT distinct species_id 
      FROM   db 
      WHERE  db_release = ? AND db_type = 'variation')
 SQL
     push (@params, $self->param('release'));
+  }
+  else {
+    $sql .= <<'SQL';
+     AND    (gene_set = 'Y' OR assembly = 'Y' OR repeat_masking = 'Y'))
+SQL
   }
 
   $dba->dbc()->disconnect_if_idle();
