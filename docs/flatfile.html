@@ -5,7 +5,7 @@
 <ul>
 	<li>The core (and any other) databases to dump from</li>
 </ul>
-<p>Here is an example of a file for v67 of Ensembl. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the <strong>-db_version</strong> parameter and only use <span class="caps">HEAD</span> checkouts of Ensembl then this will automatically select the latest version of the <span class="caps">API</span>. Any change to version here must be reflected in the configuration file.</p>
+<p>Here is an example of a registry file. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the <strong>-db_version</strong> parameter and only use <span class="caps">HEAD</span> checkouts of Ensembl then this will automatically select the latest version of the <span class="caps">API</span>. Any change to version here must be reflected in the configuration file.</p>
 <pre><code>
 	package Reg;
 	use Bio::EnsEMBL::Registry;
@@ -29,14 +29,23 @@
 	      -NO_CACHE =&gt; 1,
 	    },
 	  );
+	  Bio::EnsEMBL::Production::DBSQL::DBAdaptor-&gt;new(
+	    -host =&gt; 'mydb-3',
+	    -port =&gt; 3306,
+	    -user =&gt; 'user',
+	    -dbname =&gt; 'ensembl_production',
+	    -species =&gt; 'multi',
+	    -group =&gt; 'production'
+	  );
 	}
 	1;</code></pre>
+<p>Note the different than usual scoping of the DBAdaptor package for the ensembl_production database.</p>
 <p>You give the registry to the <strong>init_pipeline.pl</strong> script via the <strong>-registry</strong> option</p>
 <h2>Overriding Defaults Using a New Config File</h2>
 <p>We recommend if you have a number of parameters which do not change between releases to create a configuration file which inherits from the root config file e.g.</p>
 <pre><code>
 	package MyCnf;
-	use base qw/Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile::Flatfile_conf/;
+	use base qw/Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf/;
 	sub default_options {
 	  my ($self) = @_;
 	  return {
@@ -51,6 +60,7 @@
 <ul>
 	<li>ensembl-production</li>
 	<li>ensembl</li>
+	<li>ensembl-orm</li>
 	<li>ensembl-hive</li>
 	<li>bioperl</li>
 </ul>
