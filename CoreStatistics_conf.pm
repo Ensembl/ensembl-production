@@ -29,7 +29,7 @@ use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
 sub default_options {
   my ($self) = @_;
   return {
-    %{ $self->SUPER::default_options() },
+    %{$self->SUPER::default_options},
     
     pipeline_name => 'core_statistics_'.$self->o('ensembl_release'),
     
@@ -37,7 +37,7 @@ sub default_options {
     division => [],
     run_all => 0,
     
-    release => self->o('ensembl_release'),
+    release => $self->o('ensembl_release'),
     bin_count => '150',
     max_run => '100',
     

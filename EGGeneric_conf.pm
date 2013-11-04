@@ -1,24 +1,16 @@
+
+=pod
+
 =head1 NAME
 
 EGGeneric_conf
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
 
 EG specific extensions to the generic hive config.
 Serves as a single place to configure EG pipelines.
 
-=head1 DESCRIPTION
-
-
-
 =cut
-
-package Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf;
-
-use strict;
-use warnings;
-
-use base qw( Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf );
 
 =head2 default_options
 
@@ -27,8 +19,15 @@ Description: Interface method that should return a hash of
              
 =cut
 
+package Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf;
+
+use strict;
+use warnings;
+
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+
 sub default_options {
-  my $self = shift;
+  my ($self) = @_;
   return {
     # Inherit options from the base class.
     # Useful ones are:
@@ -40,7 +39,7 @@ sub default_options {
     # specific *_conf.pm files or on the command line:
     #  host, port, user, password, pipeline_name.
     # These variables are the default parameters used to create the pipeline_db.
-    %{ $self->SUPER::default_options },
+    %{$self->SUPER::default_options},
     
     # Generic EG-related options.
     email => $self->o('ENV', 'USER').'@ebi.ac.uk',
@@ -55,7 +54,7 @@ Description: Interface method that should return a hash of
 =cut
 
 sub resource_classes {
-  my $self = shift;
+  my ($self) = @_;
   return {
     'default'          => {'LSF' => ''},
     'normal'           => {'LSF' => '-q production-rh6 -M  4000 -R "rusage[mem=4000]"'},
