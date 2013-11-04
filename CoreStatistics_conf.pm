@@ -1,3 +1,24 @@
+
+=pod
+
+=head1 NAME
+
+Bio::EnsEMBL::EGPipeline::PipeConfig::CoreStatistics_conf
+
+=head1 DESCRIPTION
+
+Configuration for running the Core Statistics pipeline, which
+includes the statistics and density feature code from the main
+Ensembl Production pipeline (ensembl-production/modules/Bio/EnsEMBL/
+Production/Pipeline/Production), and EG-specific modules for
+miscellaneous tasks that are required to finalise a core database.
+
+=head1 Author
+
+James Allen
+
+=cut
+
 package Bio::EnsEMBL::EGPipeline::PipeConfig::CoreStatistics_conf;
 
 use strict;
@@ -66,7 +87,7 @@ sub pipeline_analyses {
   };
   
   if (!$self->o('snp_analyses_only')) {
-    $flow_into{'2->A'} =
+    $$flow_into{'2->A'} =
       [ # These analyses are run for all species.
         'ConstitutiveExons',
         'GeneCount',
@@ -75,7 +96,7 @@ sub pipeline_analyses {
         'MetaLevels',
       ];
     
-    $flow_into{'3->A'} =
+    $$flow_into{'3->A'} =
       [ # These analyses are only for species with chromosomes.
         'CodingDensity',
         'PseudogeneDensity',

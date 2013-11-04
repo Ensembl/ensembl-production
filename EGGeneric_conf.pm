@@ -13,7 +13,7 @@ Serves as a single place to configure EG pipelines.
 
 =cut
 
-package EGGeneric_conf;
+package Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf;
 
 use strict;
 use warnings;
@@ -28,6 +28,7 @@ Description: Interface method that should return a hash of
 =cut
 
 sub default_options {
+  my $self = shift;
   return {
     # Inherit options from the base class.
     # Useful ones are:
@@ -43,7 +44,7 @@ sub default_options {
     
     # Generic EG-related options.
     email => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    
+  }
 }
 
 =head2 resource_classes
