@@ -42,7 +42,7 @@ sub default_options {
     max_run => '100',
     
     long_noncoding_density => 0,
-    pepstats => 1,
+    no_pepstats => 0,
     snp_analyses_only => 0,
     
     emboss_dir => '/nfs/panda/ensemblgenomes/external/EMBOSS',
@@ -104,13 +104,16 @@ sub pipeline_analyses {
         'PercentGC',
         'PercentRepeat',
       ];
-    
-    if ($self->o('pepstats')) {
+  }
+  
+  if (!$self->o('no_pepstats')) {
+    # Prevent running pepstats in 'snp_analyses_only' mode.
+    if (exists $$flow_into{'2->A'}) {
       push @{$$flow_into{'2->A'}}, 'PepStats';
     }
-    if ($self->o('long_noncoding_density')) {
-      push @{$$flow_into{'3->A'}}, 'LongNonCodingDensity';
-    }
+  }
+  if ($self->o('long_noncoding_density')) {
+    push @{$$flow_into{'3->A'}}, 'LongNonCodingDensity';
   }
   
   return [
