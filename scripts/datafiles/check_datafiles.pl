@@ -137,12 +137,7 @@ sub test_path {
   
   #File attributes now we know it's here
   my @stat = stat($path);
-  my $mode = $stat[2];
-  my $user_r = ($mode & S_IRUSR) >> 6;
-  my $user_w = ($mode & S_IWUSR) >> 6;
-  my $group_r = ($mode & S_IRGRP) >> 3;
-  my $other_r = ($mode & S_IROTH) >> 0;
-  
+  my $mode = $stat[2];  
   my $user_rwx = ($mode & S_IRWXU) >> 6;
   my $group_rwx = ($mode & S_IRWXG) >> 3;
   my $other_rwx = ($mode & S_IRWXO);
@@ -151,7 +146,7 @@ sub test_path {
   
   #Now do the tests
   ok(-s $path, "$prefix has data");
-  is($user_rwx, 6, "$prefix is ReadWrite (mode 6) by user");
+  is($user_rwx, 4, "$prefix is Read (mode 4) by user");
   is($group_rwx, 4, "$prefix is Read (mode 4) by group");
   is($other_rwx, 4, "$prefix is Read (mode 4) by owner");
   
