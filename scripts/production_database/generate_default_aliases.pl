@@ -112,7 +112,7 @@ SQL
     $self->v('Querying production for current species like %s', $species);
     $dbc->sql_helper()->execute_no_return(-SQL => $sql, -PARAMS => [$species], -CALLBACK => sub {
       my ($row) = @_;
-      my ($id, $common_name, $web_name, $scientific_name, $production_name, $url_name, $taxon_id) = @{$row};
+      my ($id, $common_name, $web_name, $scientific_name, $production_name, $url_name, $taxon) = @{$row};
       if (!$common_name) {
         throw("no common name specified for $production_name, exiting");
       }
