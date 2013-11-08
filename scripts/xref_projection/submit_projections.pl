@@ -133,6 +133,7 @@ $names_1_1{'human'} =  [qw(
     platypus
     psinensis
     rabbit
+    sheep
     sloth
     squirrel
     tarsier
@@ -154,9 +155,11 @@ $names_1_1{'mouse'} = [qw(
 
 my %names_1_many;
 $names_1_many{'zebrafish'} = [qw(
+    astyanax_mexicanus
     cod
     fugu
     lamprey
+    lepisosteus_oculatus
     medaka
     stickleback
     tetraodon
@@ -166,9 +169,11 @@ $names_1_many{'zebrafish'} = [qw(
 )];
 
 $names_1_many{'human'} = [qw(
+    astyanax_mexicanus
     cod
     fugu
     lamprey
+    lepisosteus_oculatus
     medaka
     stickleback
     tetraodon
@@ -215,6 +220,7 @@ $go_terms{'human'} = [qw(
     psinensis
     rabbit
     rat
+    sheep
     sloth
     squirrel
     tarsier
@@ -262,6 +268,7 @@ $go_terms{'mouse'} = [qw(
     psinensis
     rabbit
     rat
+    sheep
     sloth
     squirrel
     tarsier
@@ -278,10 +285,12 @@ $go_terms{'rat'} = [qw(
     mouse
 )];
 $go_terms{'zebrafish'} = [qw(
+    astyanax_mexicanus
     cod
     coelacanth
     fugu
     lamprey
+    lepisosteus_oculatus
     stickleback
     tetraodon
     tilapia
