@@ -102,7 +102,7 @@ sub _species {
   my $dbc   = $self->_production_dbc();
   my $h     = $dbc->sql_helper();
   my $sql   = <<'SQL';
-select species_id, common_name, web_name, scientific_name, production_name, url_name
+select species_id, common_name, web_name, scientific_name, production_name, url_name, taxon
 from species
 where production_name like ?
 and is_current = 1
@@ -112,7 +112,7 @@ SQL
     $self->v('Querying production for current species like %s', $species);
     $dbc->sql_helper()->execute_no_return(-SQL => $sql, -PARAMS => [$species], -CALLBACK => sub {
       my ($row) = @_;
-      my ($id, $common_name, $web_name, $scientific_name, $production_name, $url_name) = @{$row};
+      my ($id, $common_name, $web_name, $scientific_name, $production_name, $url_name, $taxon_id) = @{$row};
       if (!$common_name) {
         throw("no common name specified for $production_name, exiting");
       }
@@ -123,7 +123,8 @@ SQL
           common => $common_name, 
           web => $web_name, 
           scientific => $scientific_name, 
-          url => $url_name
+          url => $url_name,
+          taxon => $taxon,
         };
       }
       return;
@@ -162,10 +163,12 @@ sub _automatic_aliases {
   my $production_name = $species->{production};
   my $common_name = lc($species->{common});
   my $web_name = lc($species->{web});
+  my $taxon = $species->{taxon};
     
   my $automatic_aliases = {};
   $automatic_aliases->{$common_name} = 1;
   $automatic_aliases->{$web_name} = 1;
+  $automatic_aliases->{$taxon} = 1 if $taxon;
 
   # *** Assume homo_sapiens ***
   my $alias = $production_name;
