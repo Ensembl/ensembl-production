@@ -9,7 +9,7 @@
     },
     'multi' => {
       'web' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-      'production' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'production' => 'Bio::EnsEMBL::Production::DBSQL::DBAdaptor',
       'compara' => 'Bio::EnsEMBL::Compara::DBSQL::DBAdaptor',
     },
     'hive' => {
