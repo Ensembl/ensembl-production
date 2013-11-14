@@ -24,7 +24,16 @@ ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do n
 my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf');
+my $options;
+if(@ARGV) {
+        $options = join(q{ }, @ARGV);
+}
+else {
+        $options = '-run_all 1';
+}
+
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf';
+my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 $pipeline->run();
 
 my $dfa  = $human_dba->get_DensityFeatureAdaptor();
@@ -239,7 +248,7 @@ foreach my $p (@pep_count) {
    if ($p->code eq "Charge") {
       is($p->value, "-7.0", "Charge for ENSP00000334263");
    } elsif ($p->code eq "IsoPoint") {
-      is($p->value, "5.2750", "IsoPoint for ENSP00000334263");
+      is($p->value, "5.2743", "IsoPoint for ENSP00000334263");
    } elsif ($p->code eq "NumResidues") {
       is($p->value, "346", "Number of residues for ENSP00000334263");
    } elsif ($p->code eq "MolecularWeight") {
