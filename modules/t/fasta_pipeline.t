@@ -68,6 +68,10 @@ if(! @ARGV) {
         CHECKSUMS README
         Homo_sapiens.GRCh37.release.pep.all.fa.gz
     /]],
+    [[qw/fasta homo_sapiens cds/], [qw/
+        CHECKSUMS README
+        Homo_sapiens.GRCh37.release.cds.all.fa.gz
+    /]],
   );
 
   foreach my $setup (@expected_files) {
