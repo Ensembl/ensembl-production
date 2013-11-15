@@ -99,6 +99,7 @@ use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
 my $DNA_INDEXING_FLOW = 1;
 my $PEPTIDE_INDEXING_FLOW = 2;
 my $GENE_INDEXING_FLOW = 3;
+my $CDS_INDEXING_FLOW = 4;
 
 sub param_defaults {
   my ($self) = @_;
@@ -195,6 +196,7 @@ sub run_type {
     
     $self->_create_README('cdna') if $transcripts || $pred_transcripts;
     $self->_create_README('pep') if $peptide || $pred_proteins;
+    $self->_create_README('cds') if $peptide;
   }
   if ( $sequence_types->{ncrna} ) {
     $self->info( "Starting ncRNA dump for " . $species );
@@ -331,11 +333,14 @@ sub _dump_transcripts {
     $self->_generate_fasta_serializer( $transcript_type, $transcript_level );
 
   my ( $peptide_filename, $pep_fh, $peptide_serializer );
+  my ( $cds_filename, $cds_fh, $cds_serializer );
 
   # some cDNAs are translated, make a file to receive them.
   if ( $transcript_type eq 'cdna') {
     ( $peptide_filename, $pep_fh, $peptide_serializer ) =
       $self->_generate_fasta_serializer( 'pep', 'all' );
+    ( $cds_filename, $cds_fh, $cds_serializer ) =
+      $self->_generate_fasta_serializer( 'cds', 'all' );
   }
 
   # work out what biotypes correspond to $transcript_type
@@ -385,6 +390,9 @@ sub _dump_transcripts {
             my $translation_seq = $transcript->translate();
             $self->_create_display_id($translation, $translation_seq, $transcript_type);
             $peptide_serializer->print_Seq($translation_seq);
+            my $cds_seq = Bio::Seq->new(-seq => $transcript->translateable_seq(), moltype => 'dna', alphabet => 'dna', id => $transcript->display_id());
+            $self->_create_display_id($transcript, $cds_seq, 'cds');
+            $cds_serializer->print_Seq($cds_seq);
             
             $has_protein_data = 1;
           }
@@ -398,10 +406,12 @@ sub _dump_transcripts {
   $self->tidy_file_handle( $fh, $filename );
   if ( $transcript_type eq 'cdna' ) {
     $self->tidy_file_handle( $pep_fh, $peptide_filename );
+    $self->tidy_file_handle( $cds_fh, $cds_filename );
   }
   
   if($has_protein_data) {
     push(@{$self->param('dataflows')}, [{ file => $self->_final_filename($peptide_filename), species => $self->param('species') }, $PEPTIDE_INDEXING_FLOW]);
+    push(@{$self->param('dataflows')}, [{ file => $self->_final_filename($cds_filename), species => $self->param('species') }, $PEPTIDE_INDEXING_FLOW]);
   }
   if($has_transcript_data) {
     push(@{$self->param('dataflows')}, [{ file => $self->_final_filename($filename), species => $self->param('species') }, $GENE_INDEXING_FLOW]);
@@ -944,6 +954,67 @@ Example of an Ensembl cDNA header:
 
 
 README
+
+    cds => <<'README',
+##################
+Fasta cds dumps
+#################
+
+These files hold the coding sequences corresponding to Ensembl gene 
+predictions.
+
+------------
+FILE NAMES
+------------
+The files are consistently named following this pattern:
+<species>.<assembly>.<release>.<sequence type>.<status>.fa.gz
+
+<species>: The systematic name of the species.
+<assembly>: The assembly build name.
+<release>: The release number.
+<sequence type>: cdna for cDNA sequences
+<status>
+  * 'cds.all' - the super-set of all transcripts coding sequences resulting from
+     Ensembl known, novel and pseudo gene predictions (see more below).
+
+EXAMPLES  (Note: Most species do not have sequences for each different <status>)
+  for Human:
+    Homo_sapiens.NCBI37.74.cds.all.fa.gz
+      cds sequences for all transcripts: known, novel and pseudo
+
+Difference between known and novel transcripts
+-----------------------------------------------
+Transcript or protein models that can be mapped to species-specific entries
+in Swiss-Prot, RefSeq or SPTrEMBL are referred to as known genes in Ensembl.
+Those that cannot be mapped are called novel genes (e.g. genes predicted on
+the basis of evidence from closely related species).
+
+For models annotated by HAVANA the status is set manually. Models that have 
+an HGNC name are referred to as known and the remaining models are referred to
+as novel.
+
+-------------------------------
+FASTA Sequence Header Lines
+------------------------------
+The FASTA sequence header lines are designed to be consistent across
+all types of Ensembl FASTA sequences.  This gives enough information
+for the sequence to be identified outside the context of the FASTA file.
+
+General format:
+
+>ID SEQTYPE:STATUS LOCATION GENE
+
+Example of an Ensembl cDNA header:
+
+>ENST00000525148 cds:known chromosome:GRCh37:11:66188562:66193526:1 gene:ENSG00000174576 gene_biotype:protein_coding transcript_biotype:nonsense_mediated_decay
+ ^               ^    ^     ^                                       ^                    ^                           ^       
+ ID              |    |  LOCATION                         GENE: gene stable ID        GENE: gene biotype        TRANSCRIPT: transcript biotype
+                 |  STATUS
+              SEQTYPE
+
+
+README
+
 
     ncrna => <<'README',
 ##################
