@@ -33,7 +33,7 @@ bc.
 	      -NO_CACHE => 1,
 	    },
 	  );
-	  Bio::EnsEMBL::Production::DBSQL::DBAdaptor->new(
+	  Bio::EnsEMBL::DBSQL::DBAdaptor->new(
 	    -host => 'mydb-3',
 	    -port => 3306,
 	    -user => 'user',
@@ -44,7 +44,6 @@ bc.
 	}
 	1;
 
-Note the different than usual scoping of the DBAdaptor package for the ensembl_production database.
 
 You give the registry to the *init_pipeline.pl* script via the *-registry* option
 
@@ -72,7 +71,6 @@ h3. PERL5LIB
 
 * ensembl-production
 * ensembl
-* ensembl-orm
 * ensembl-hive
 * bioperl
 

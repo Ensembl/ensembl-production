@@ -29,7 +29,7 @@
 	      -NO_CACHE =&gt; 1,
 	    },
 	  );
-	  Bio::EnsEMBL::Production::DBSQL::DBAdaptor-&gt;new(
+	  Bio::EnsEMBL::DBSQL::DBAdaptor-&gt;new(
 	    -host =&gt; 'mydb-3',
 	    -port =&gt; 3306,
 	    -user =&gt; 'user',
@@ -39,7 +39,6 @@
 	  );
 	}
 	1;</code></pre>
-<p>Note the different than usual scoping of the DBAdaptor package for the ensembl_production database.</p>
 <p>You give the registry to the <strong>init_pipeline.pl</strong> script via the <strong>-registry</strong> option</p>
 <h2>Overriding Defaults Using a New Config File</h2>
 <p>We recommend if you have a number of parameters which do not change between releases to create a configuration file which inherits from the root config file e.g.</p>
@@ -60,7 +59,6 @@
 <ul>
 	<li>ensembl-production</li>
 	<li>ensembl</li>
-	<li>ensembl-orm</li>
 	<li>ensembl-hive</li>
 	<li>bioperl</li>
 </ul>

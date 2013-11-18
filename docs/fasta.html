@@ -17,7 +17,7 @@
 		<li>Used to name <span class="caps">BLAT</span> index files</li>
 	</ul></li>
 </ul>
-<p>Here is an example of a file for v67 of Ensembl. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the <strong>-db_version</strong> parameter and only use <span class="caps">HEAD</span> checkouts of Ensembl then this will automatically select the latest version of the <span class="caps">API</span>. Any change to version here must be reflected in the configuration file.</p>
+<p>Here is an example of a reigstry file. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the <strong>-db_version</strong> parameter and only use <span class="caps">HEAD</span> checkouts of Ensembl then this will automatically select the latest version of the <span class="caps">API</span>. Any change to version here must be reflected in the configuration file.</p>
 <pre><code>
 	package Reg;
 	use Bio::EnsEMBL::Registry;
@@ -50,7 +50,7 @@
 	    -SPECIES =&gt; 'multi',
 	    -GROUP =&gt; 'web'
 	  );
-	  Bio::EnsEMBL::DBSQL::DBAdaptor-&gt;new(
+	  Bio::EnsEMBL::Production::DBSQL::DBAdaptor-&gt;new(
 	    -HOST =&gt; 'mydb-2',
 	    -PORT =&gt; 3306,
 	    -USER =&gt; 'user',
@@ -60,6 +60,7 @@
 	  );
 	}
 	1;</code></pre>
+<p>Note the different than usual scoping of the DBAdaptor package for the ensembl_production database.</p>
 <p>You give the registry to the <strong>init_pipeline.pl</strong> script via the <strong>-registry</strong> option</p>
 <h2>Overriding Defaults Using a New Config File</h2>
 <p>We recommend if you have a number of parameters which do not change between releases to create a configuration file which inherits from the root config file e.g.</p>
@@ -80,6 +81,7 @@
 <ul>
 	<li>ensembl</li>
 	<li>ensembl-hive</li>
+	<li>ensembl-orm</li>
 	<li>bioperl</li>
 </ul>
 <h3><span class="caps">PATH</span></h3>
@@ -334,11 +336,27 @@
 		<td><strong>NO</strong></td>
 	</tr>
 	<tr>
-		<td><code>-index_masked_files</code></td>
+		<td><code>-skip_blat_masking</code></td>
 		<td>Boolean</td>
 		<td>No</td>
-		<td>Prevents the indexing of masked files (both soft and hard masked)</td>
+		<td>Prevents the indexing of masked files (both soft and hard masked) for Blat</td>
+		<td>1</td>
+		<td><strong>NO</strong></td>
+	</tr>
+	<tr>
+		<td><code>-skip_wublast_masking</code></td>
+		<td>Boolean</td>
+		<td>No</td>
+		<td>Prevents the indexing of masked files (both soft and hard masked) for WUBlast</td>
 		<td>0</td>
+		<td><strong>NO</strong></td>
+	</tr>
+	<tr>
+		<td><code>-skip_ncbiblast_masking</code></td>
+		<td>Boolean</td>
+		<td>No</td>
+		<td>Prevents the indexing of masked files (both soft and hard masked) for <span class="caps">NCBI</span> Blast</td>
+		<td>1</td>
 		<td><strong>NO</strong></td>
 	</tr>
 </table>

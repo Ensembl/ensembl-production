@@ -16,7 +16,7 @@ This is the way we retrieve the database connections to work with. The registry 
 ** *group = web*
 ** Used to name BLAT index files
 
-Here is an example of a file for v67 of Ensembl. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the *==-db_version==* parameter and only use HEAD checkouts of Ensembl then this will automatically select the latest version of the API. Any change to version here must be reflected in the configuration file.
+Here is an example of a reigstry file. Note the use of the Registry object within a registry file and the scoping of the package. If you omit the *==-db_version==* parameter and only use HEAD checkouts of Ensembl then this will automatically select the latest version of the API. Any change to version here must be reflected in the configuration file.
 
 bc. 
 	package Reg;
@@ -50,7 +50,7 @@ bc.
 	    -SPECIES => 'multi',
 	    -GROUP => 'web'
 	  );
-	  Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+	  Bio::EnsEMBL::Production::DBSQL::DBAdaptor->new(
 	    -HOST => 'mydb-2',
 	    -PORT => 3306,
 	    -USER => 'user',
@@ -60,6 +60,8 @@ bc.
 	  );
 	}
 	1;
+
+Note the different than usual scoping of the DBAdaptor package for the ensembl_production database.
 
 You give the registry to the *init_pipeline.pl* script via the *-registry* option
 
@@ -87,6 +89,7 @@ h3. PERL5LIB
 
 * ensembl
 * ensembl-hive
+* ensembl-orm
 * bioperl
 
 h3. PATH
