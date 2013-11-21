@@ -80,7 +80,6 @@ sub pipeline_analyses {
     '4->A' => [ # These analyses are only for species with a variation db.
                 'SnpCount',
                 'SnpDensity',
-                'NonSense',
               ],
     'A->2' => ['AnalyzeTables'],
     '1'    => ['Notify'],
@@ -141,6 +140,19 @@ sub pipeline_analyses {
       -max_retry_count  => 3,
       -hive_capacity    => 10,
       -rc_name          => 'normal',
+      -flow_into => ['CanonicalTranscripts_Check'],
+    },
+
+    {
+      -logic_name => 'CanonicalTranscripts_Check',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      -parameters => {
+        description => 'Every gene should have a canonical transcript.',
+        query => 'SELECT gene.stable_id FROM gene LEFT OUTER JOIN transcript ON canonical_transcript_id = transcript_id WHERE transcript_id IS NULL',
+      },
+      -max_retry_count  => 2,
+      -hive_capacity    => 10,
+      -rc_name => 'normal',
     },
 
     {
@@ -160,12 +172,43 @@ sub pipeline_analyses {
       -max_retry_count  => 3,
       -hive_capacity    => 10,
       -rc_name          => 'normal',
+      -flow_into => ['GeneCount_Check'],
+    },
+
+    {
+      -logic_name => 'GeneCount_Check',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      -parameters => {
+        description => 'Every gene should be included in one of the counts.',
+        query =>
+          'SELECT COUNT(*) AS total FROM gene UNION '.
+          'SELECT sum(value) AS total FROM seq_region_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code IN ("coding_cnt", "pseudogene_cnt", "snoncoding_cnt", "lnoncoding_cnt")',
+        expected_size => '= 1'
+      },
+      -max_retry_count  => 2,
+      -hive_capacity    => 10,
+      -rc_name => 'normal',
     },
 
     {
       -logic_name => 'GeneGC',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGC',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGCBatch',
       -max_retry_count  => 3,
+      -hive_capacity    => 10,
+      -rc_name => 'normal',
+      -flow_into => ['GeneGC_Check'],
+    },
+
+    {
+      -logic_name => 'GeneGC_Check',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      -parameters => {
+        description => 'Every gene should have GC calculated.',
+        query =>
+          'SELECT * FROM gene WHERE gene_id NOT IN '.
+          '(SELECT gene_id FROM gene_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "GeneGC")',
+      },
+      -max_retry_count  => 2,
       -hive_capacity    => 10,
       -rc_name => 'normal',
     },
@@ -187,6 +230,20 @@ sub pipeline_analyses {
       -max_retry_count  => 3,
       -hive_capacity    => 10,
       -rc_name => 'normal',
+      -flow_into => ['MetaLevels_Check'],
+    },
+
+    {
+      -logic_name => 'MetaLevels_Check',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      -parameters => {
+        description => 'Genes should be on the top level.',
+        query => 'SELECT * FROM meta WHERE meta_key = "genebuild.level" and meta_value = "toplevel"',
+        expected_size => 1,
+      },
+      -max_retry_count  => 2,
+      -hive_capacity    => 10,
+      -rc_name => 'normal',
       -flow_into => ['CanonicalTranscripts'],
     },
 
@@ -200,7 +257,27 @@ sub pipeline_analyses {
       -max_retry_count  => 3,
       -hive_capacity    => 10,
       -rc_name          => '12Gb_mem',
+      #-flow_into => ['PepStats_Check'],
     },
+
+    #{
+      #-logic_name => 'PepStats_Check',
+      #-module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      #-parameters => {
+        #description => 'Every translation should have 5 peptide statistics.',
+        #query =>
+          #'SELECT COUNT(*) FROM translation UNION '.
+          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "AvgResWeight")'.
+          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "Charge")'.
+          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "IsoPoint")'.
+          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "MolecularWeight")'.
+          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "NumResidues")',
+        #expected_size => 1,
+      #},
+      #-max_retry_count  => 2,
+      #-hive_capacity    => 10,
+      #-rc_name => 'normal',
+    #},
 
     {
       -logic_name => 'CodingDensity',
@@ -296,17 +373,18 @@ sub pipeline_analyses {
       -can_be_empty     => 1,
     },
 
-    {
-      -logic_name => 'NonSense',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::NonSense',
-      -parameters => {
-        frequency => 0.1, observation => 20,
-      },
-      -max_retry_count  => 2,
-      -hive_capacity    => 10,
-      -rc_name          => 'normal',
-      -can_be_empty     => 1,
-    },
+    # This module is only relevant for human variation.
+    #{
+    #  -logic_name => 'NonSense',
+    #  -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::NonSense',
+    #  -parameters => {
+    #    frequency => 0.1, observation => 20,
+    #  },
+    #  -max_retry_count  => 2,
+    #  -hive_capacity    => 10,
+    #  -rc_name          => 'normal',
+    #  -can_be_empty     => 1,
+    #},
 
     {
       -logic_name => 'AnalyzeTables',
