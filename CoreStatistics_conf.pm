@@ -257,27 +257,27 @@ sub pipeline_analyses {
       -max_retry_count  => 3,
       -hive_capacity    => 10,
       -rc_name          => '12Gb_mem',
-      #-flow_into => ['PepStats_Check'],
+      -flow_into => ['PepStats_Check'],
     },
 
-    #{
-      #-logic_name => 'PepStats_Check',
-      #-module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
-      #-parameters => {
-        #description => 'Every translation should have 5 peptide statistics.',
-        #query =>
-          #'SELECT COUNT(*) FROM translation UNION '.
-          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "AvgResWeight")'.
-          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "Charge")'.
-          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "IsoPoint")'.
-          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "MolecularWeight")'.
-          #'SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "NumResidues")',
-        #expected_size => 1,
-      #},
-      #-max_retry_count  => 2,
-      #-hive_capacity    => 10,
-      #-rc_name => 'normal',
-    #},
+    {
+      -logic_name => 'PepStats_Check',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::SqlHealthcheck',
+      -parameters => {
+        description => 'Every translation should have 5 peptide statistics.',
+        query =>
+          'SELECT COUNT(*) FROM translation '.
+          'UNION SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "AvgResWeight" '.
+          'UNION SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "Charge" '.
+          'UNION SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "IsoPoint" '.
+          'UNION SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "MolecularWeight" '.
+          'UNION SELECT COUNT(*) FROM translation_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code = "NumResidues" ',
+        expected_size => 1,
+      },
+      -max_retry_count  => 2,
+      -hive_capacity    => 10,
+      -rc_name => 'normal',
+    },
 
     {
       -logic_name => 'CodingDensity',
