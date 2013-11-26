@@ -972,7 +972,7 @@ The files are consistently named following this pattern:
 <species>: The systematic name of the species.
 <assembly>: The assembly build name.
 <release>: The release number.
-<sequence type>: cdna for cDNA sequences
+<sequence type>: cds for CDS sequences
 <status>
   * 'cds.all' - the super-set of all transcripts coding sequences resulting from
      Ensembl known, novel and pseudo gene predictions (see more below).
@@ -1004,7 +1004,7 @@ General format:
 
 >ID SEQTYPE:STATUS LOCATION GENE
 
-Example of an Ensembl cDNA header:
+Example of an Ensembl CDS header:
 
 >ENST00000525148 cds:known chromosome:GRCh37:11:66188562:66193526:1 gene:ENSG00000174576 gene_biotype:protein_coding transcript_biotype:nonsense_mediated_decay
  ^               ^    ^     ^                                       ^                    ^                           ^       
