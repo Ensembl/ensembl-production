@@ -43,6 +43,10 @@ my ($print, $quiet, $full_stats);
 my ($from_species, @to_multi, $one_to_many, $go_terms, $go_check, $descriptions, $names);
 my ($delete_names, $delete_go_terms, $delete_only);
 
+my $host;
+my $user = 'ensro';
+my $pass;
+my $port = 3306;
 my $host1 = 'ens-staging';
 my $user1 = 'ensro';
 my $pass1;
@@ -58,6 +62,10 @@ my $compara_port = 3306;
 my $compara_dbname;
 
 GetOptions('conf=s'            => \$conf,
+           'host=s'            => \$host,
+           'user=s'            => \$user,
+           'pass=s'            => \$pass,
+           'port=s'            => \$port,
            'host1=s'           => \$host1,
            'user1=s'           => \$user1,
            'pass1=s'           => \$pass1,
@@ -169,7 +177,18 @@ if(! -d $backup_dir) {
 # script or a file name containing the same information that is passed on the command line.
 
 my $args;
-$registry->load_registry_from_multiple_dbs(
+if ($host) {
+  $registry->load_registry_from_multiple_dbs(
+          {
+              '-host'       => $host,
+              '-user'       => $user,
+              '-pass'       => $pass,
+              '-port'       => $port,
+              '-db_version' => $release,
+          },
+  );
+} else {
+  $registry->load_registry_from_multiple_dbs(
           {
               '-host'       => $host1,
               '-user'       => $user1,
@@ -184,7 +203,8 @@ $registry->load_registry_from_multiple_dbs(
               '-port'       => $port2,
               '-db_version' => $release,
           }
-);
+  );
+}
 
 if ($compara_dbname) {
   my $compara_db = Bio::EnsEMBL::DBSQL::DBAdaptor->new(

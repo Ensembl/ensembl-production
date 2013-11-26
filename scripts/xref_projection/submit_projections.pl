@@ -28,6 +28,10 @@ $Data::Dumper::Indent = 0;
 # ------------------------------ config -------------------------------
 my $release = software_version();
 
+my $host;
+my $user = 'ensro';
+my $pass;
+my $port = 3306;
 my $host1 = 'ens-staging';
 my $user1 = 'ensro';
 my $pass1;
@@ -46,6 +50,10 @@ my ($conf, $base_dir);
 
 GetOptions('conf=s'            => \$conf,
            'release=s'         => \$release,
+           'host=s'            => \$host,
+           'user=s'            => \$user,
+           'pass=s'            => \$pass,
+           'port=s'            => \$port,
            'host1=s'           => \$host1,
            'user1=s'           => \$user1,
            'pass1=s'           => \$pass1,
@@ -89,6 +97,10 @@ my $script_opts =
   . "-release '$release' "
   . "-quiet -backup_dir '$dir'";
 
+$script_opts .= "-host1 $host " if $host;
+$script_opts .= "-user1 $user " if $user;
+$script_opts .= "-pass1 $pass " if $pass;
+$script_opts .= "-port1 $port " if $port;
 $script_opts .= "-host1 $host1 " if $host1;
 $script_opts .= "-user1 $user1 " if $user1;
 $script_opts .= "-pass1 $pass1 " if $pass1;
