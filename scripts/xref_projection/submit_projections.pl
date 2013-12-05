@@ -97,10 +97,10 @@ my $script_opts =
   . "-release '$release' "
   . "-quiet -backup_dir '$dir'";
 
-$script_opts .= "-host1 $host " if $host;
-$script_opts .= "-user1 $user " if $user;
-$script_opts .= "-pass1 $pass " if $pass;
-$script_opts .= "-port1 $port " if $port;
+$script_opts .= "-host $host " if $host;
+$script_opts .= "-user $user " if $user;
+$script_opts .= "-pass $pass " if $pass;
+$script_opts .= "-port $port " if $port;
 $script_opts .= "-host1 $host1 " if $host1;
 $script_opts .= "-user1 $user1 " if $user1;
 $script_opts .= "-pass1 $pass1 " if $pass1;
