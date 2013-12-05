@@ -95,7 +95,7 @@ if (! -e $dir) {
 my $script_opts =
     "-conf '$conf' "
   . "-release '$release' "
-  . "-quiet -backup_dir '$dir'";
+  . "-quiet -backup_dir '$dir' ";
 
 $script_opts .= "-host $host " if $host;
 $script_opts .= "-user $user " if $user;
