@@ -82,8 +82,8 @@ sub pipeline_analyses {
          '3->C'  => ['CodingDensity'],
          'C->3'  => ['LongNonCodingDensity'],
          '5->A'  => ['ConstitutiveExonsVega', 'PepStatsVega'],
-         '3->A'  => ['PercentRepeat', 'CodingDensity', 'ShortNonCodingDensity', 'PercentGC'],
-         '2->A'  => ['GeneGC', 'PepStats', 'GeneCount', 'ConstitutiveExons'],
+         '3->A'  => ['PercentRepeat', 'CodingDensity', 'LongNonCodingDensity', 'ShortNonCodingDensity', 'PercentGC'],
+         '2->A'  => ['GeneGC', 'PepStats', 'GeneCount', 'ConstitutiveExons', 'GenomeStats'],
          'A->1'  => ['Notify'], 
         },
       },
@@ -139,6 +139,14 @@ sub pipeline_analyses {
       {
         -logic_name => 'GeneCount',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
+        -max_retry_count  => 3,
+        -hive_capacity    => 100,
+        -rc_name          => 'normal',
+      },
+
+      {
+        -logic_name => 'GenomeStats',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
         -max_retry_count  => 3,
         -hive_capacity    => 100,
         -rc_name          => 'normal',

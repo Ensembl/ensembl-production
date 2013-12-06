@@ -55,6 +55,28 @@ sub get_total {
   return $total;
 }
 
+sub get_ref_length {
+  my ($self) = @_;
+  my $species = $self->param('species');
+  my @slices = @{ Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice')->fetch_all('toplevel') };
+  my $ref_length = 0;
+  foreach my $slice (@slices) {
+    $ref_length += $slice->length();
+  }
+  return $ref_length;
+}
+
+sub get_total_length {
+  my ($self) = @_;
+  my $species = $self->param('species');
+  my @slices = @{ Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice')->fetch_all('seqlevel') };
+  my $total_length = 0;
+  foreach my $slice (@slices) {
+    $total_length += $slice->length();
+  }
+  return $total_length;
+}
+
 sub get_slices {
   my ($self, $species) = @_;
   my @slices;

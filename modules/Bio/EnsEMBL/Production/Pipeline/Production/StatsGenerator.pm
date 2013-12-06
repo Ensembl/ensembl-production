@@ -33,12 +33,23 @@ sub run {
 
   my %attrib_codes = $self->get_attrib_codes();
   $self->delete_old_attrib($dba, %attrib_codes);
+  $self->delete_old_stats($dba, %attrib_codes);
   my %alt_attrib_codes = $self->get_alt_attrib_codes();
   $self->delete_old_attrib($dba, %alt_attrib_codes);
+  $self->delete_old_stats($dba, %alt_attrib_codes);
   my $total = $self->get_total();
   my $sum = 0;
   my $count;
   my %slices_hash;
+  my %stats_hash;
+  my $ref_length = $self->get_ref_length();
+  if ($ref_length) {
+    $stats_hash{ref_length} = $ref_length;
+  }
+  my $total_length = $self->get_total_length();
+  if ($total_length) {
+    $stats_hash{total_length} = $total_length;
+  }
 
   my $all_slices = $self->get_all_slices($species);
 
@@ -52,7 +63,7 @@ sub run {
         if ($count > 0) {
           $self->store_attrib($slice, $count, $ref_code);
         }
-        $sum += $count;
+        $stats_hash{$ref_code} += $count;
       }
     } else {
       my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
@@ -63,6 +74,7 @@ sub run {
           if ($alt_count > 0) {
             $self->store_attrib($slice, $alt_count, $alt_code);
           }
+          $stats_hash{$alt_code} += $alt_count;
         }
       }
     }
@@ -70,6 +82,7 @@ sub run {
       last;
     }
   }
+  $self->store_statistics($species, %stats_hash); 
 }
 
 sub get_slices {
@@ -95,6 +108,19 @@ sub delete_old_attrib {
     AND at.attrib_type_id = sa.attrib_type_id
     AND cs.species_id = ?
     AND at.code = ? };
+  foreach my $code (keys %attrib_codes) {
+    $helper->execute_update(-SQL => $sql, -PARAMS => [$dba->species_id(), $code]);
+  }
+}
+
+sub delete_old_stats {
+  my ($self, $dba, %attrib_codes) = @_;
+  my $helper = $dba->dbc()->sql_helper();
+  my $sql = q{
+    DELETE g
+    FROM genome_statistics g
+    WHERE g.species_id = ?
+    AND statistic = ? };
   foreach my $code (keys %attrib_codes) {
     $helper->execute_update(-SQL => $sql, -PARAMS => [$dba->species_id(), $code]);
   }
@@ -135,6 +161,18 @@ sub get_biotype_group {
   my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
   return \@biotypes;
 }
+
+sub store_statistics {
+  my ($self, $species, %stats_hash) = @_;
+  my $stats;
+  my $genome_container = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'GenomeContainer');
+  foreach my $stats (keys %stats_hash) {
+    $genome_container->store($stats, $stats_hash{$stats}, $stats);
+  }
+}
+
+sub get_ref_length {}
+sub get_total_length {}
 
 
 
