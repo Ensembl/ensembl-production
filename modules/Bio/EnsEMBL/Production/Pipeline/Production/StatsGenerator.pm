@@ -30,6 +30,7 @@ sub run {
   my ($self) = @_;
   my $species    = $self->param('species');
   my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $ta         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
 
   my %attrib_codes = $self->get_attrib_codes();
   $self->delete_old_attrib($dba, %attrib_codes);
@@ -58,6 +59,7 @@ sub run {
            || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
   while (my $slice = shift @all_sorted_slices) {
     if ($slice->is_reference) {
+      $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
       foreach my $ref_code (keys %attrib_codes) {
         $count = $self->get_feature_count($slice, $ref_code, $attrib_codes{$ref_code});
         if ($count > 0) {
@@ -69,6 +71,7 @@ sub run {
       my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
       my $alt_slices = $sa->fetch_by_region_unique($slice->coord_system->name(), $slice->seq_region_name());
       foreach my $alt_slice (@$alt_slices) {
+        $stats_hash{'alt_transcript'} += $ta->count_all_by_Slice($alt_slice);
         foreach my $alt_code (keys %alt_attrib_codes) {
           my $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
           if ($alt_count > 0) {
