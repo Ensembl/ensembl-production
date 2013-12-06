@@ -109,5 +109,4 @@
 597	\N	patch	patch_73_74_g.sql|add_transcript_idx_tise
 598	\N	patch	patch_73_74_h.sql|add_genome
 599	\N	patch	patch_74_75_a.sql|schema_version
-600	\N	patch	patch_74_75_b.sql|transcript_source
 601	\N	patch	patch_74_75_c.sql|add_genome_statistics
