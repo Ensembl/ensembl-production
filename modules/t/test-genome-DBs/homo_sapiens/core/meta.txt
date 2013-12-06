@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	75
+1	\N	schema_version	74
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -181,4 +181,3 @@
 2132	\N	patch	patch_73_74_f.sql|remove_pair_dna_align
 2133	\N	patch	patch_73_74_g.sql|add_transcript_idx_tise
 2137	\N	patch	patch_74_75_c.sql|add_genome_statistics
-2138	\N	patch	patch_74_75_a.sql|schema_version
