@@ -3,6 +3,7 @@ CREATE TABLE `alt_allele` (
   `alt_allele_group_id` int(10) unsigned NOT NULL,
   `gene_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`alt_allele_id`),
+  UNIQUE KEY `gene_idx` (`gene_id`),
   KEY `gene_id` (`gene_id`,`alt_allele_group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
@@ -466,7 +467,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`),
   KEY `species_value_idx` (`species_id`,`meta_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=2140 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2144 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_coord` (
   `table_name` varchar(40) NOT NULL,
@@ -806,6 +807,7 @@ CREATE TABLE `transcript` (
   `seq_region_end` int(10) unsigned NOT NULL,
   `seq_region_strand` tinyint(2) NOT NULL,
   `display_xref_id` int(10) unsigned DEFAULT NULL,
+  `source` varchar(20) NOT NULL DEFAULT 'ensembl',
   `biotype` varchar(40) NOT NULL,
   `status` enum('KNOWN','NOVEL','PUTATIVE','PREDICTED','KNOWN_BY_PROJECTION','UNKNOWN','ANNOTATED') DEFAULT NULL,
   `description` text,

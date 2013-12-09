@@ -110,3 +110,5 @@
 598	\N	patch	patch_73_74_h.sql|add_genome
 599	\N	patch	patch_74_75_a.sql|schema_version
 601	\N	patch	patch_74_75_c.sql|add_genome_statistics
+602	\N	patch	patch_74_75_b.sql|transcript_source
+603	\N	patch	patch_74_75_d.sql|default_transcript_source
