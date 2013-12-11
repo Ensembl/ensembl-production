@@ -244,10 +244,10 @@ key=value pairs. Valid parameters used by Ensembl are:
 Example output
 --------------
 
-MT      Mt_tRNA exon    3230    3304    .       +       .       gene_id "ENSG00000209082"; transcript_id "ENST00000386347"; exon_number "1"; gene_name "MT-TL1"; gene_biotype "Mt_tRNA"; transcript_name "MT-TL1-201"; exon_id "ENSE00002006242";
-MT      protein_coding  exon    3307    4262    .       +       .       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; exon_id "ENSE00001435714";
-MT      protein_coding  CDS     3307    4262    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; protein_id "ENSP00000354687";
-MT      protein_coding  start_codon     3307    3309    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201";
+MT      Mt_tRNA exon    3230    3304    .       +       .       gene_id "ENSG00000209082"; transcript_id "ENST00000386347"; exon_number "1"; gene_name "MT-TL1"; gene_source "ensembl"; gene_biotype "Mt_tRNA"; transcript_name "MT-TL1-201"; transcript_source "ensembl"; exon_id "ENSE00002006242";
+MT      protein_coding  exon    3307    4262    .       +       .       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "ensembl"; exon_id "ENSE00001435714";
+MT      protein_coding  CDS     3307    4262    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "havana"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "havana"; protein_id "ENSP00000354687";
+MT      protein_coding  start_codon     3307    3309    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "ensembl";
 
 README
   
