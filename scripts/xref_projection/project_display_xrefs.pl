@@ -247,16 +247,16 @@ my $ha;
 my $ma;
 my $gdba;
 
-#if ($compara_db) {
-#
-#   $mlssa = $registry->get_adaptor($compara_db, 'compara', 'MethodLinkSpeciesSet');
-#   $ha    = $registry->get_adaptor($compara_db, 'compara', 'Homology');
-#   $ma    = $registry->get_adaptor($compara_db, 'compara', 'Member');
-#   $gdba  = $registry->get_adaptor($compara_db, "compara", "GenomeDB");
-#
-#   die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+if ($compara_db) {
 
-#} else {
+   $mlssa = $registry->get_adaptor($compara_db, 'compara', 'MethodLinkSpeciesSet');
+   $ha    = $registry->get_adaptor($compara_db, 'compara', 'Homology');
+   $ma    = $registry->get_adaptor($compara_db, 'compara', 'Member');
+   $gdba  = $registry->get_adaptor($compara_db, "compara", "GenomeDB");
+
+   die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+
+} else {
 
    $mlssa = @{$registry->get_all_adaptors(-group => "compara", -type => "MethodLinkSpeciesSet")}[0];
    $ha    = @{$registry->get_all_adaptors(-group => "compara", -type => "Homology")}[0];
@@ -265,7 +265,7 @@ my $gdba;
 
    die "Can't connect to Compara database from registry - check registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
-#}
+}
 
 my $from_ga = $registry->get_adaptor($from_species, 'core', 'Gene');
 
