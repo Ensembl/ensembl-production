@@ -23,6 +23,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use Bio::EnsEMBL::Compara::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::DBSQL::GeneAdaptor;
 use Bio::EnsEMBL::DBSQL::OntologyTermAdaptor;
 use Bio::EnsEMBL::Utils::Eprof qw(eprof_start eprof_end eprof_dump);
@@ -206,8 +207,9 @@ if ($host) {
   );
 }
 
+my $compara_db;
 if ($compara_dbname) {
-  my $compara_db = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+  $compara_db = Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new(
               '-host'    => $compara_host,
               '-user'    => $compara_user,
               '-pass'    => $compara_pass,
@@ -220,6 +222,7 @@ if ($compara_dbname) {
 } elsif ($conf) {
   $registry->load_all($conf, 0, 1);
 }
+
 
 #$registry->load_all($conf, 0, 1); # options mean "not verbose" and "don't clear registry"
 
@@ -249,12 +252,12 @@ my $gdba;
 
 if ($compara_db) {
 
-   $mlssa = $registry->get_adaptor($compara_db, 'compara', 'MethodLinkSpeciesSet');
-   $ha    = $registry->get_adaptor($compara_db, 'compara', 'Homology');
-   $ma    = $registry->get_adaptor($compara_db, 'compara', 'Member');
-   $gdba  = $registry->get_adaptor($compara_db, "compara", "GenomeDB");
+   $mlssa = $compara_db->get_adaptor('MethodLinkSpeciesSet');
+   $ha    = $compara_db->get_adaptor('Homology');
+   $ma    = $compara_db->get_adaptor('Member');
+   $gdba  = $compara_db->get_adaptor('GenomeDB');
 
-   die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+   die "Can't connect to Compara database specified by $compara_dbname - check command-line arguments" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
 } else {
 

@@ -109,6 +109,7 @@ $script_opts .= "-host2 $host2 " if $host2;
 $script_opts .= "-user2 $user2 " if $user2;
 $script_opts .= "-pass2 $pass2 " if $pass2;
 $script_opts .= "-port2 $port2 " if $port2;
+$script_opts .= "-compara_dbname $compara_dbname " if $compara_dbname;
 $script_opts .= "-compara_host $compara_host " if $compara_host;
 $script_opts .= "-compara_user $compara_user " if $compara_user;
 $script_opts .= "-compara_pass $compara_pass " if $compara_pass;
