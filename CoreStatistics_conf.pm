@@ -91,6 +91,7 @@ sub pipeline_analyses {
         'ConstitutiveExons',
         'GeneCount',
         'GeneGC',
+        'GenomeStats',
         'MetaCoords',
         'MetaLevels',
       ];
@@ -211,6 +212,14 @@ sub pipeline_analyses {
       -max_retry_count  => 2,
       -hive_capacity    => 10,
       -rc_name => 'normal',
+    },
+
+    {
+      -logic_name => 'GenomeStats',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
+      -max_retry_count  => 3,
+      -hive_capacity    => 10,
+      -rc_name          => 'normal',
     },
 
     {
