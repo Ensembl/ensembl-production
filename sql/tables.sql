@@ -31,13 +31,13 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES 
   (NULL, 'schema_type', 'production'), 
-  (NULL, 'schema_version', 74);
+  (NULL, 'schema_version', 75);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_73_74a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_74_75a.sql|schema version');
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_73_74b.sql|db_display_name_not_null');
+  VALUES (NULL, 'path', 'patch_74_75b.sql|code_longer');
 
 
 -- The 'species' table.
@@ -249,7 +249,7 @@ CREATE TABLE web_data (
 -- Lists the existing attrib_types
 CREATE TABLE master_attrib_type (
   attrib_type_id            SMALLINT(5) unsigned NOT NULL AUTO_INCREMENT,
-  code                      VARCHAR(15) NOT NULL DEFAULT '',
+  code                      VARCHAR(20) NOT NULL DEFAULT '',
   name                      VARCHAR(255) NOT NULL DEFAULT '',
   description               TEXT,
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
