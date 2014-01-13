@@ -32,7 +32,6 @@ sub run {
       }
     }
   }
-#  $self->store_statistics($species, %stats_hash); 
 }
 
 sub get_attrib_codes {
