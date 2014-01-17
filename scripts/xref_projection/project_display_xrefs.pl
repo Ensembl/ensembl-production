@@ -1013,7 +1013,7 @@ sub backup {
   
   foreach my $table (@tables) {
     my $command = "$mysql_binary -h$host -P$port -u$user ";
-    $command .= "-p $pass" if ($pass);
+    $command .= "-p $pass " if ($pass);
     $command .= "-N -e 'select * from $table' $dbname | gzip -c -6 > $backup_dir/$dbname.$table.backup.gz";
     unless (system($command) == 0) {
       print STDERR "Can't dump the original $table table from $dbname for backup\n";
