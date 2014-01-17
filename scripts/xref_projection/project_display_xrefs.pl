@@ -209,6 +209,9 @@ if ($host) {
 
 my $compara_db;
 if ($compara_dbname) {
+  if($registry->get_DBAdaptor('multi', 'compara', 1)) {
+    throw "A Compara DBAdaptor has already been loaded. Are you sure you want to use an alternative compara dbadaptor. Ask core to fix";
+  }
   $compara_db = Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new(
               '-host'    => $compara_host,
               '-user'    => $compara_user,
@@ -216,9 +219,8 @@ if ($compara_dbname) {
               '-port'    => $compara_port,
               '-dbname'  => $compara_dbname,
               '-species' => 'multi',
-              '-dbtype'  => 'compara',
+              '-group'  => 'compara',
   );
-  $registry->add_DBAdaptor($compara_db);
 } elsif ($conf) {
   $registry->load_all($conf, 0, 1);
 }
