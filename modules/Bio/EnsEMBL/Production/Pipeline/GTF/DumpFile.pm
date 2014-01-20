@@ -90,21 +90,20 @@ sub run {
 
   my $path = $self->_generate_file_name();
   $self->info("Dumping GTF to %s", $path);
-  gz_work_with_file($path, 'w', 
-		 sub {
-		   my ($fh) = @_;
-		   my $gtf_serializer = 
-		     Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
+  gz_work_with_file($path, 'w', sub {
+    my ($fh) = @_;
+    my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
 
-		   # filter for 1st portion of human Y
-		   foreach my $slice (@{$self->get_Slices('core', 1)}) { 
-		     foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
-		       foreach my $transcript (@{$gene->get_all_Transcripts()}) {
-			 $gtf_serializer->print_feature($transcript);
-		       }
-		     }
-		   }
-		 });
+    # Print information about the current assembly
+    $gtf_serializer->print_main_header($self->get_DBAdaptor());
+
+    # now get all slices and filter for 1st portion of human Y
+    foreach my $slice (@{$self->get_Slices('core', 1)}) { 
+      foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
+        $gtf_serializer->print_Gene($gene);
+      }
+    }
+  });
 
   $self->info(sprintf "Checking GTF file %s", $path);
   $self->_gene_pred_check($path);
