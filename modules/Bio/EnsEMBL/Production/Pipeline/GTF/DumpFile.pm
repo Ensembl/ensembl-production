@@ -211,10 +211,13 @@ with a '.'
                 starting at 1.
     score     - a floating point value indiciating the score of a feature
     strand    - defined as + (forward) or - (reverse).
-    frame     - one of '0', '1' or '2'. '0' indicates that the first 
-                base of the feature is the first base of a codon, '1' 
-                that the second base is the first base of a codon, and 
-                so on..
+    frame     - one of '0', '1' or '2'. Frame indicates the number of base pairs
+                before you encounter a full codon. '0' indicates the feature 
+                begins with a whole codon. '1' indicates there is an extra
+                base (the 3rd base of the prior codon) at the start of this feature.
+                '2' indicates there are two extra bases (2nd and 3rd base of the 
+                prior exon) before the first codon. All values are given with
+                relation to the 5' end.
     attribute - a semicolon-separated list of tag-value pairs (separated by a space), 
                 providing additional information about each feature. A key can be
                 repeated multiple times.
