@@ -246,6 +246,10 @@ Tags are additional flags used to indicate attibutes of the transcript.
 - CCDS: Flags this transcript as one linked to a CCDS record
 - seleno: Flags this transcript has a Selenocysteine edit. Look for the Selenocysteine
 feature for the position of this on the genome
+- cds_end_NF: the coding region end could not be confirmed
+- cds_start_NF: the coding region start could not be confirmed
+- mRNA_end_NF: the mRNA end could not be confirmed
+- mRNA_start_NF: the mRNA start could not be confirmed.
 
 Comments
 
