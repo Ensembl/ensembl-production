@@ -176,7 +176,7 @@ annotation provided through Ensembl also includes manual annotation
 from HAVANA. In the case of human this is the GENCODE gene set.
 
 GTF provides access to all annotated transcripts which make
-up and Ensembl gene set. Annotation is based on alignments of
+up an Ensembl gene set. Annotation is based on alignments of
 biological evidence (eg. proteins, cDNAs, RNA-seq) to a genome assembly.
 The annotation dumped here is transcribed and translated from the 
 genome assembly and is not the original input sequence data that 
