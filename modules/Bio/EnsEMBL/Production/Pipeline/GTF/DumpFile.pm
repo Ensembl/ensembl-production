@@ -202,8 +202,9 @@ with a '.'
                 without a 'chr' 
     source    - name of the program that generated this feature, or 
                 the data source (database or project name)
-    feature   - feature type name, e.g. transcript, exon, CDS, start_codon.
-                end_codon
+    feature   - feature type name. Current allowed features are
+                {gene, transcript, exon, CDS, Selenocysteine, start_codon,
+                stop_codon and UTR}
     start     - start position of the feature, with sequence numbering 
                 starting at 1.
     end       - end position of the feature, with sequence numbering 
@@ -218,6 +219,31 @@ with a '.'
                 providing additional information about each feature. A key can be
                 repeated multiple times.
 
+Attributes
+
+The following attributes are available. All attributes are semi-colon
+separated pairs of keys and values.
+
+- gene_id: The stable identifier for the gene
+- gene_source: The annotation source for this gene
+- gene_biotype: The biotype of this gene
+- transcript_id: The stable identifier for this transcript
+- transcript_source: The annotation source for this transcript
+- transcript_biotype: The biotype for this transcript
+- exon_id: The stable identifier for this exon
+- exon_number: Position of this exon in the transcript
+- ccds_id: CCDS identifier linked to this transcript
+- protein_id: Stable identifier for this transcript's protein
+- tag: A collection of additional key value tags
+
+Tags
+
+Tags are additional flags used to indicate attibutes of the transcript.
+
+- CCDS: Flags this transcript as one linked to a CCDS record
+- seleno: Flags this transcript has a Selenocysteine edit. Look for the Selenocysteine
+feature for the position of this on the genome
+
 Comments
 
 Lines may be commented out by the addition of a single # character at the start. These
@@ -229,8 +255,11 @@ GTF files can contain meta-data. In the case of experimental meta-data these are
 noted by a #!. Those which are stable are noted by a ##. Meta data is a single key,
 a space and then the value. Current meta data keys are:
 
-* genome-build -  Build identifier of the assembly
-* genome-build-accession - Accession of the assembly
+* genome-build -  Build identifier of the assembly e.g. GRCh37.p11
+* genome-version - Version of this assembly e.g. GRCh37
+* genome-date - The date of this assembly's release e.g. 2009-02
+* genome-build-accession - The accession and source of this accession e.g. NCBI:GCA_000001405.14
+* genebuild-last-updated - The date of the last genebuild update e.g. 2013-09
 
 ------------------
 Example GTF output

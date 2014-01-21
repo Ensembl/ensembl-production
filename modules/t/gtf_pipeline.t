@@ -62,7 +62,7 @@ if(! @ARGV) {
     "$target_dir has GTF, README and CHECKSUM files"
   );
   my $gtf_loc = File::Spec->catfile($target_dir, $gtf_file);
-  is_file_line_count($gtf_loc, 1523, 'Expect 1523 rows in the GTF file');
+  is_file_line_count($gtf_loc, 2078, 'Expect 2078 rows in the GTF file');
 }
 
 done_testing();
