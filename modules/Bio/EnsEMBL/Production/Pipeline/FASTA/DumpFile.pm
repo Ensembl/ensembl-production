@@ -99,7 +99,6 @@ use File::Spec;
 use IO::Compress::Gzip qw/gzip $GzipError/;
 use IO::File;
 use Bio::EnsEMBL::PaddedSlice;
-use Bio::EnsEMBL::Utils::BiotypeMapper;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::Scalar qw/check_ref/;
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
@@ -353,9 +352,7 @@ sub _dump_transcripts {
   }
 
   # work out what biotypes correspond to $transcript_type
-  # my $biotype_mapper = Bio::EnsEMBL::Utils::BiotypeMapper->new();
-  # my $biotypes_list  = $biotype_mapper->group_members($transcript_type);
-  my $biotype_mapper = 
+  my $biotype_manager = 
     $self->get_DBAdaptor('production')->get_biotype_manager();
   my $biotypes_list;
 
@@ -372,7 +369,7 @@ sub _dump_transcripts {
   elsif ($transcript_type eq 'ncrna') { push @biotype_groups, 'snoncoding', 'lnoncoding'; }
   else { throw "Invalid transcript type: $transcript_type"; }
   
-  map { push @{$biotypes_list}, @{ $biotype_mapper->group_members($_)} } 
+  map { push @{$biotypes_list}, @{ $biotype_manager->group_members($_)} } 
     @biotype_groups;
 
   my $dba          = $self->get_DBAdaptor($type);
@@ -393,7 +390,7 @@ sub _dump_transcripts {
         my $transcript_seq = $transcript->seq();
         $self->_create_display_id($transcript, $transcript_seq, $transcript_type);
         $transcript_serializer->print_Seq($transcript_seq);
-        if ($biotype_mapper->is_member_of_group( $transcript, 'coding')) {
+        if ($biotype_manager->is_member_of_group( $transcript, 'coding')) {
           my $translation = $transcript->translation();
           if ($translation) {
             my $translation_seq = $transcript->translate();
