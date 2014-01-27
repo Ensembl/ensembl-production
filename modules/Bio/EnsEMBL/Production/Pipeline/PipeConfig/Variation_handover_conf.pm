@@ -145,7 +145,7 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'default' => { 'LSF' => ''},
+      'default' => { 'LSF' => '-R"select[myens_stag1tok>800 && myens_stag2tok>800] rusage[myens_stag1tok=10:myens_stag2tok=10:duration=10]"'},
       'normal'  => { 'LSF' => '-q normal -M 500 -R"select[myens_stag1tok>800 && myens_stag2tok>800 && mem>500] rusage[myens_stag1tok=10:myens_stag2tok=10:duration=10, mem=500]"'},
       'mem'     => { 'LSF' => '-q normal -M 1000 -R"select[myens_stag1tok>800 && myens_stag2tok>800 && mem>1000] rusage[myens_stag1tok=10:myens_stag2tok=10:duration=10, mem=1000]"'},
     }
