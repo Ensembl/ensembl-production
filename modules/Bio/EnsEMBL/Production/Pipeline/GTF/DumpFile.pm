@@ -90,21 +90,20 @@ sub run {
 
   my $path = $self->_generate_file_name();
   $self->info("Dumping GTF to %s", $path);
-  gz_work_with_file($path, 'w', 
-		 sub {
-		   my ($fh) = @_;
-		   my $gtf_serializer = 
-		     Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
+  gz_work_with_file($path, 'w', sub {
+    my ($fh) = @_;
+    my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
 
-		   # filter for 1st portion of human Y
-		   foreach my $slice (@{$self->get_Slices('core', 1)}) { 
-		     foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
-		       foreach my $transcript (@{$gene->get_all_Transcripts()}) {
-			 $gtf_serializer->print_feature($transcript);
-		       }
-		     }
-		   }
-		 });
+    # Print information about the current assembly
+    $gtf_serializer->print_main_header($self->get_DBAdaptor());
+
+    # now get all slices and filter for 1st portion of human Y
+    foreach my $slice (@{$self->get_Slices('core', 1)}) { 
+      foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
+        $gtf_serializer->print_Gene($gene);
+      }
+    }
+  });
 
   $self->info(sprintf "Checking GTF file %s", $path);
   $self->_gene_pred_check($path);
@@ -172,78 +171,108 @@ This directory includes a summary of the gene annotation information
 and GTF format.
 
 Ensembl provides an automatic gene annotation for $species.
-For some species (including human, mouse, zebrafish and pig), the
+For some species ( human, mouse, zebrafish and pig), the
 annotation provided through Ensembl also includes manual annotation
-from HAVANA.
-These data will be dumped in a number of forms - one of them being 
-GTF files. Our annotation is based on alignments of biological 
-sequence data (eg. proteins, cDNAs) to the genome assembly. 
+from HAVANA. In the case of human this is the GENCODE gene set.
+
+GTF provides access to all annotated transcripts which make
+up an Ensembl gene set. Annotation is based on alignments of
+biological evidence (eg. proteins, cDNAs, RNA-seq) to a genome assembly.
 The annotation dumped here is transcribed and translated from the 
 genome assembly and is not the original input sequence data that 
 we used for alignment. Therefore, the sequences provided by Ensembl 
 may differ from the original input sequence data where the genome 
 assembly is different to the aligned sequence. 
 
-GTF file format dumping provides all the annotated protein coding 
-genes in this release genes's set. Considerably more information 
-is stored in Ensembl: the GTF file just gives a representation which 
-is compatible with existing tools.
-
 --------------------------------
 Definition and supported options
 --------------------------------
 
-The GFF (General Feature Format) format consists of one line per 
-feature, each containing 9 columns of data, plus optional track 
-definition lines. The following documentation is based on the 
-Version 2 specifications. The GTF (General Transfer Format) is 
-identical to GFF version 2.
+The GTF (General Transfer Format) is an extension of GFF version 2 
+and used to represent transcription models. GFF (General Feature Format) 
+consists of one line per feature, each containing 9 columns of data. 
 
 Fields
 
-Fields must be tab-separated. Also, all but the final field in each 
-feature line must contain a value; "empty" columns should be denoted 
+Fields are tab-separated. Also, all but the final field in each 
+feature line must contain a value; "empty" columns are denoted 
 with a '.'
 
     seqname   - name of the chromosome or scaffold; chromosome names 
-                can be given with or without the 'chr' prefix (the 
-                convention in Ensembl is to omit the 'chr' prefix).
+                without a 'chr' 
     source    - name of the program that generated this feature, or 
                 the data source (database or project name)
-    feature   - feature type name, e.g. Gene, Variation, Similarity
+    feature   - feature type name. Current allowed features are
+                {gene, transcript, exon, CDS, Selenocysteine, start_codon,
+                stop_codon and UTR}
     start     - start position of the feature, with sequence numbering 
                 starting at 1.
     end       - end position of the feature, with sequence numbering 
                 starting at 1.
-    score     - a floating point value.
+    score     - a floating point value indiciating the score of a feature
     strand    - defined as + (forward) or - (reverse).
-    frame     - one of '0', '1' or '2'. '0' indicates that the first 
-                base of the feature is the first base of a codon, '1' 
-                that the second base is the first base of a codon, and 
-                so on..
-    attribute - a semicolon-separated list of tag-value pairs, providing 
-                additional information about each feature.
+    frame     - one of '0', '1' or '2'. Frame indicates the number of base pairs
+                before you encounter a full codon. '0' indicates the feature 
+                begins with a whole codon. '1' indicates there is an extra
+                base (the 3rd base of the prior codon) at the start of this feature.
+                '2' indicates there are two extra bases (2nd and 3rd base of the 
+                prior exon) before the first codon. All values are given with
+                relation to the 5' end.
+    attribute - a semicolon-separated list of tag-value pairs (separated by a space), 
+                providing additional information about each feature. A key can be
+                repeated multiple times.
 
-Track lines
+Attributes
 
-Although not part of the formal GFF specification, Ensembl will use 
-track lines to further configure sets of features. Track lines should 
-be placed at the beginning of the list of features they are to affect.
+The following attributes are available. All attributes are semi-colon
+separated pairs of keys and values.
 
-The track line consists of the word 'track' followed by space-separated 
-key=value pairs. Valid parameters used by Ensembl are:
+- gene_id: The stable identifier for the gene
+- gene_source: The annotation source for this gene
+- gene_biotype: The biotype of this gene
+- transcript_id: The stable identifier for this transcript
+- transcript_source: The annotation source for this transcript
+- transcript_biotype: The biotype for this transcript
+- exon_id: The stable identifier for this exon
+- exon_number: Position of this exon in the transcript
+- ccds_id: CCDS identifier linked to this transcript
+- protein_id: Stable identifier for this transcript's protein
+- tag: A collection of additional key value tags
 
-    name        - unique name to identify this track when parsing the 
-                  file
-    description - Label to be displayed under the track in Region in 
-                  Detail
-    priority    - integer defining the order in which to display tracks, 
-                  if multiple tracks are defined.
+Tags
 
---------------
-Example output
---------------
+Tags are additional flags used to indicate attibutes of the transcript.
 
+- CCDS: Flags this transcript as one linked to a CCDS record
+- seleno: Flags this transcript has a Selenocysteine edit. Look for the Selenocysteine
+feature for the position of this on the genome
+- cds_end_NF: the coding region end could not be confirmed
+- cds_start_NF: the coding region start could not be confirmed
+- mRNA_end_NF: the mRNA end could not be confirmed
+- mRNA_start_NF: the mRNA start could not be confirmed.
+
+Comments
+
+Lines may be commented out by the addition of a single # character at the start. These
+lines should be ignored by your parser.
+
+Pragmas/Metadata
+
+GTF files can contain meta-data. In the case of experimental meta-data these are 
+noted by a #!. Those which are stable are noted by a ##. Meta data is a single key,
+a space and then the value. Current meta data keys are:
+
+* genome-build -  Build identifier of the assembly e.g. GRCh37.p11
+* genome-version - Version of this assembly e.g. GRCh37
+* genome-date - The date of this assembly's release e.g. 2009-02
+* genome-build-accession - The accession and source of this accession e.g. NCBI:GCA_000001405.14
+* genebuild-last-updated - The date of the last genebuild update e.g. 2013-09
+
+------------------
+Example GTF output
+------------------
+
+#!genome-build GRCh37
 MT      Mt_tRNA exon    3230    3304    .       +       .       gene_id "ENSG00000209082"; transcript_id "ENST00000386347"; exon_number "1"; gene_name "MT-TL1"; gene_source "ensembl"; gene_biotype "Mt_tRNA"; transcript_name "MT-TL1-201"; transcript_source "ensembl"; exon_id "ENSE00002006242";
 MT      protein_coding  exon    3307    4262    .       +       .       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "ensembl"; exon_id "ENSE00001435714";
 MT      protein_coding  CDS     3307    4262    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "havana"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "havana"; protein_id "ENSP00000354687";
