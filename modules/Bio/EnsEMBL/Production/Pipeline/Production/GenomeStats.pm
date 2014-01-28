@@ -28,7 +28,7 @@ sub run {
     } else {
       $count = $self->get_feature_count($table, $genome_counts{$table});
       if ($count > 0) {
-        $self->store_statistics($species, $table, $count);
+        $self->store_statistics($species, $table, $count, 'struct_var');
       }
     }
   }
