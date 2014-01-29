@@ -20,16 +20,21 @@ package Bio::EnsEMBL::Production::Pipeline::Production::GeneCount;
 
 use strict;
 use warnings;
+use Bio::EnsEMBL::Utils::Scalar qw(assert_ref assert_integer wrap_array);
+
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 
 
 sub get_attrib_codes {
-  my ($self) = @_;
+  my ($self, $has_readthrough) = @_;
   my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'snoncoding_cnt', 'lnoncoding_cnt');
+  if ($has_readthrough) {
+    push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'snoncoding_rcnt', 'lnoncoding_rcnt');
+  }
   my %biotypes;
   foreach my $code (@attrib_codes) {
-    my ($group) = $code =~ /(\w+)\_cnt/;
+    my ($group) = $code =~ /(\w+)\_r?cnt/;
     my $biotypes = $self->get_biotype_group($group);
     $biotypes{$code} = $biotypes;
   }
@@ -37,11 +42,14 @@ sub get_attrib_codes {
 }
 
 sub get_alt_attrib_codes {
-  my ($self) = @_;
+  my ($self, $has_readthrough) = @_;
   my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'snoncoding_acnt', 'lnoncoding_acnt');
+  if ($has_readthrough) {
+    push @alt_attrib_codes, ('coding_racnt', 'pseudogene_racnt', 'snoncoding_racnt', 'lnoncoding_racnt');
+  }
   my %biotypes;
   foreach my $alt_code (@alt_attrib_codes) {
-    my ($group) = $alt_code =~ /(\w+)\_acnt/;
+    my ($group) = $alt_code =~ /(\w+)\_r?acnt/;
     my $biotypes = $self->get_biotype_group($group);
     $biotypes{$alt_code} = $biotypes;
   }
@@ -118,6 +126,19 @@ sub get_all_slices {
 sub get_feature_count {
   my ($self, $slice, $key, $biotypes) = @_;
   my $species = $self->param('species');
+  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $helper = $dba->dbc()->sql_helper();
+  if ($key =~ /_ra?cnt/) {
+    my $slice_id = $slice->get_seq_region_id();
+    my $sql = q{
+       SELECT COUNT(distinct(g.gene_id)) FROM gene g, transcript t, transcript_attrib ta, attrib_type at
+       WHERE g.gene_id=t.gene_id AND t.transcript_id=ta.transcript_id AND ta.attrib_type_id=at.attrib_type_id
+       AND at.code='readthrough_tra' AND g.seq_region_id = ? AND g.biotype in 
+    }; 
+    $sql .= "(" .join(q{,}, map { qq{'${_}'} } @{$biotypes}) . ")" ;
+    my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS=>[$slice_id]);
+    return $count;
+  }
   my $ga = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'gene');
   return $ga->count_all_by_Slice($slice, $biotypes);
 }
