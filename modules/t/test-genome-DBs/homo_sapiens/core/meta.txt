@@ -185,3 +185,5 @@
 2141	\N	patch	patch_74_75_a.sql|schema_version
 2142	\N	patch	patch_74_75_b.sql|transcript_source
 2143	\N	patch	patch_74_75_d.sql|default_transcript_source
+2144	\N	patch	patch_74_75_e.sql|unique_attrib_key
+2145	\N	patch	patch_74_75_f.sql|longer_code
