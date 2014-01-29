@@ -84,7 +84,7 @@ sub jobs {
     };
   }
   my $id = $analysis->dbID();
-  @jobs = @{$aja->generic_fetch("j.analysis_id =$id")};
+  @jobs = @{$aja->fetch_all_by_analysis_id($id)};
   $_->{input} = destringify($_->input_id()) for @jobs;
   @jobs = sort { $a->{input}->{species} cmp $b->{input}->{species} } @jobs;
   my %passed_species = map { $_->{input}->{species}, 1 } grep { $_->status() eq 'DONE' } @jobs;
