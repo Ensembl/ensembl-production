@@ -31,11 +31,18 @@ sub run {
   my $species    = $self->param('species');
   my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
   my $ta         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
+  my $aa         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
 
-  my %attrib_codes = $self->get_attrib_codes();
+  my $has_readthrough = 0;
+  my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
+  if (@readthroughs) {
+    $has_readthrough = 1;
+  }
+
+  my %attrib_codes = $self->get_attrib_codes($has_readthrough);
   $self->delete_old_attrib($dba, %attrib_codes);
   $self->delete_old_stats($dba, %attrib_codes);
-  my %alt_attrib_codes = $self->get_alt_attrib_codes();
+  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
   $self->delete_old_attrib($dba, %alt_attrib_codes);
   $self->delete_old_stats($dba, %alt_attrib_codes);
   my $total = $self->get_total();
@@ -43,6 +50,7 @@ sub run {
   my $count;
   my %slices_hash;
   my %stats_hash;
+  my %stats_attrib;
   my $ref_length = $self->get_ref_length();
   if ($ref_length) {
     $stats_hash{ref_length} = $ref_length;
@@ -60,6 +68,7 @@ sub run {
   while (my $slice = shift @all_sorted_slices) {
     if ($slice->is_reference) {
       $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
+      $stats_attrib{'transcript'} = 'transcript_cnt';
       foreach my $ref_code (keys %attrib_codes) {
         $count = $self->get_feature_count($slice, $ref_code, $attrib_codes{$ref_code});
         if ($count > 0) {
@@ -67,11 +76,14 @@ sub run {
         }
         $stats_hash{$ref_code} += $count;
       }
+    } elsif ($slice->seq_region_name =~ /LRG/) {
+      next;
     } else {
       my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
       my $alt_slices = $sa->fetch_by_region_unique($slice->coord_system->name(), $slice->seq_region_name());
       foreach my $alt_slice (@$alt_slices) {
         $stats_hash{'alt_transcript'} += $ta->count_all_by_Slice($alt_slice);
+        $stats_attrib{'alt_transcript'} = 'transcript_acnt';
         foreach my $alt_code (keys %alt_attrib_codes) {
           my $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
           if ($alt_count > 0) {
@@ -85,7 +97,7 @@ sub run {
       last;
     }
   }
-  $self->store_statistics($species, %stats_hash); 
+  $self->store_statistics($species, \%stats_hash, \%stats_attrib); 
 }
 
 sub get_slices {
@@ -166,11 +178,17 @@ sub get_biotype_group {
 }
 
 sub store_statistics {
-  my ($self, $species, %stats_hash) = @_;
+  my ($self, $species, $stats_hash, $stats_attrib) = @_;
   my $stats;
   my $genome_container = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'GenomeContainer');
-  foreach my $stats (keys %stats_hash) {
-    $genome_container->store($stats, $stats_hash{$stats}, $stats);
+  my $attrib;
+  foreach my $stats (keys %$stats_hash) {
+    if ($stats_attrib->{$stats}) {
+      $attrib = $stats_attrib->{$stats};
+    } else {
+      $attrib = $stats;
+    }
+    $genome_container->store($stats, $stats_hash->{$stats}, $attrib);
   }
 }
 
