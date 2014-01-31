@@ -80,25 +80,21 @@ sub run {
       next;
     }
 
+    my $all = $self->production_flow($dba, 'all');
+    if($all) {
+      push(@dbs, [$self->input_id($dba), $all]);
+    }
+    my $vega = $self->production_flow($dba, 'vega');
+    if ($vega) {
+      push(@dbs, [$self->input_id($dba), $vega]);
+    }
+    my $karyotype = $self->production_flow($dba, 'karyotype');
+    if ($karyotype) {
+      push(@dbs, [$self->input_id($dba), $karyotype]);
+    }
     my $variation = $self->production_flow($dba, 'variation');
     if ($variation) {
       push(@dbs, [$self->input_id($dba), $variation]);
-    }
-
-    my $all = $self->production_flow($dba, 'all');
-    if ($self->param('run_all')) {
-      $all = 2;
-    }
-    if($all) {
-      push(@dbs, [$self->input_id($dba), $all]);
-      my $vega = $self->production_flow($dba, 'vega');
-      if ($vega) {
-        push(@dbs, [$self->input_id($dba), $vega]);
-      }
-      my $karyotype = $self->production_flow($dba, 'karyotype');
-      if ($karyotype) {
-        push(@dbs, [$self->input_id($dba), $karyotype]);
-      }
     }
   }
   $self->param('dbs', \@dbs);
@@ -152,18 +148,42 @@ sub has_vega {
   return $result;
 }
 
+sub has_variation {
+  my ($self, $dba) = @_;
+  my $production_name  = $dba->get_MetaContainer()->get_production_name();
+  my $sql = q{
+     SELECT count(*)
+     FROM db d, species s
+     WHERE db_type = 'variation'
+     AND d.is_current = 1
+     AND s.species_id = d.species_id
+     AND db_name = ?
+     AND db_release = ? };
+  my $prod_dba = $self->get_production_DBAdaptor();
+  my @params = ($production_name, $self->param('release'));
+  my $result = $prod_dba->dbc()->sql_helper()->execute_single_result(-SQL => $sql, -PARAMS => [@params]);
+  $prod_dba->dbc()->disconnect_if_idle();
+  return $result;
+}
+
 
 sub production_flow {
   my ($self, $dba, $class) = @_;
   if($self->is_run($dba, $class)) {
     if ($class =~ 'vega') {
-      return 5;
+      if ($self->has_vega($dba)) {
+        return 5;
+      }
     }
     if ($class =~ 'variation') {
-      return 4;
+      if ($self->has_variation($dba)) {
+        return 4;
+      }
     }
     if ($class =~ 'karyotype') {
-      return 3;
+      if ($self->has_karyotype($dba)) {
+        return 3;
+      }
     }
     if ($class =~ 'all') {
       return 2;
@@ -175,15 +195,10 @@ sub production_flow {
 sub is_run {
   my ($self, $dba, $class) = @_;
   my $production_name  = $dba->get_MetaContainer()->get_production_name();
-
-  if ($class =~ 'karyotype') {
-    return $self->has_karyotype($dba);
+  if ($self->param('run_all')) {
+    return 1;
   }
 
-  if ($class =~ 'vega') {
-    return $self->has_vega($dba);
-  }
-  
   my $sql = <<'SQL';
      SELECT count(*)
      FROM   db_list dl, db d
