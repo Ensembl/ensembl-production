@@ -138,7 +138,7 @@ sub pipeline_analyses {
   return [
     {
       -logic_name => 'ScheduleSpecies',
-      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::EGSpeciesFactory',
+      -module     => 'Bio::EnsEMBL::EGPipeline::Common::EGSpeciesFactory',
       -parameters => {
         species  => $self->o('species'),
         division => $self->o('division'),
