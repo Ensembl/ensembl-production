@@ -53,6 +53,7 @@ sub default_options {
     pipeline_name => 'core_statistics_'.$self->o('ensembl_release'),
     
     species => [],
+    antispecies => [],
     division => [],
     run_all => 0,
     
@@ -141,6 +142,7 @@ sub pipeline_analyses {
       -module     => 'Bio::EnsEMBL::EGPipeline::Common::EGSpeciesFactory',
       -parameters => {
         species  => $self->o('species'),
+        antispecies  => $self->o('antispecies'),
         division => $self->o('division'),
         run_all  => $self->o('run_all'),
       },
