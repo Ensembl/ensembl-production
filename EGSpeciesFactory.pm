@@ -113,8 +113,15 @@ sub process_dba {
 				last;
 			}
 		}
-		$dba->dbc()->disconnect_if_idle();
 	}
+  if ( $result == 1 && @{$self->param('antispecies')} ) {
+    for my $antispecies (@{$self->param('antispecies')}) {
+      if ($dba->species() eq $antispecies) {
+        $result = 0;
+        last;
+      }
+    }
+  }
 	return $result;
 }
 
