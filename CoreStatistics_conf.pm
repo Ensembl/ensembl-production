@@ -67,7 +67,7 @@ sub default_options {
     
     emboss_dir => '/nfs/panda/ensemblgenomes/external/EMBOSS',
     canonical_transcripts_script => $self->o('ensembl_cvs_root_dir').
-     '/ensembl/misc-scripts/canonical_transcripts/set_canonical_transcripts.pl',
+     '/ensembl/misc-scripts/canonical_transcripts/select_canonical_transcripts.pl',
     canonical_transcripts_out_dir => undef,
     meta_coord_dir => undef,
     optimize_tables => 0,
