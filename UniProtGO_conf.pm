@@ -87,8 +87,8 @@ sub pipeline_analyses {
 	{-logic_name => 'LoadUniProtGO',
 	 -module     => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
 	 -parameters => {
-				   uniprot_user   => 'proteomes_prod',
-				   uniprot_pass   => 'pprod',
+				   uniprot_user   => 'spselect',
+				   uniprot_pass   => 'spselect',
 				   uniprot_host   => 'whisky.ebi.ac.uk',
 				   uniprot_port   => 1531,
 				   uniprot_dbname => 'SWPREAD',
