@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	75
+1	\N	schema_version	76
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -187,3 +187,5 @@
 2143	\N	patch	patch_74_75_d.sql|default_transcript_source
 2144	\N	patch	patch_74_75_e.sql|unique_attrib_key
 2145	\N	patch	patch_74_75_f.sql|longer_code
+2146	\N	patch	patch_75_76_a.sql|schema_version
+2147	\N	patch	patch_75_76_b.sql|allow_null_karyotype
