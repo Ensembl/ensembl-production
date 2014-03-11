@@ -210,7 +210,7 @@ if ($host) {
 my $compara_db;
 if ($compara_dbname) {
   if($registry->get_DBAdaptor('multi', 'compara', 1)) {
-    throw "A Compara DBAdaptor has already been loaded. Are you sure you want to use an alternative compara dbadaptor. Ask core to fix";
+    $registry->remove_DBAdaptor('multi', 'compara');
   }
   $compara_db = Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new(
               '-host'    => $compara_host,
@@ -859,7 +859,7 @@ sub check_overwrite_display_xref {
   $to_dbname ||= q{}; #can be empty; this stops warning messages
 
   #Exit early if we had an external name & the species was not zebrafish or pig
-  return 1 if (!$to_gene->external_name() && $to_species ne "zebrafish" && $to_species ne 'pig');
+  return 1 if (!$to_gene->external_name() && $to_species ne "zebrafish" && $to_species ne 'pig' && $to_species ne 'mouse');
 
   #Exit early if it was a RefSeq predicted name & source was a vetted good symbol
   if ($to_dbname eq "RefSeq_mRNA_predicted" || $to_dbname eq "RefSeq_ncRNA_predicted" || $to_dbname eq "RefSeq_peptide_predicted") {
@@ -927,6 +927,10 @@ sub check_overwrite_display_xref {
     if($name =~ /orf/) {
       return 1;
     }
+  }
+  elsif ($to_species eq 'mouse') {
+    my %clone_overwrites  = map { $_ => 1 } qw/Clone_based_vega_gene Clone_based_ensembl_gene/;
+    return 1 if $clone_overwrites{$to_dbname};
   }
   return 0;
 
