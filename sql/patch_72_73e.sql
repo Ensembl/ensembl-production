@@ -19,4 +19,4 @@ ALTER TABLE meta_key MODIFY COLUMN db_type SET('cdna','core','funcgen','otherfea
 
 -- Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_72_73e.sql|new db_types');
+  VALUES (NULL, 'patch', 'patch_72_73e.sql|new db_types');

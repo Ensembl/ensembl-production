@@ -18,4 +18,4 @@ ALTER TABLE biotype ADD COLUMN biotype_group ENUM('coding','pseudogene','snoncod
 
 -- Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_72_73c.sql|biotype group in biotype table');
+  VALUES (NULL, 'patch', 'patch_72_73c.sql|biotype group in biotype table');

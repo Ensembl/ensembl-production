@@ -16,4 +16,4 @@ ALTER TABLE master_attrib_type MODIFY COLUMN code VARCHAR(20) NOT NULL DEFAULT '
 
 -- Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'path', 'patch_74_75b.sql|code_longer');
+  VALUES (NULL, 'patch', 'patch_74_75b.sql|code_longer');

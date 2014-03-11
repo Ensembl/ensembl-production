@@ -12,9 +12,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-ALTER TABLE changelog ADD COLUMN mitochondrion ENUM('Y', 'N', 'changed') NOT NULL DEFAULT 'N';
+# patch_75_76_a.sql
+#
+# Title: Update schema version.
+#
+# Description:
+#   Update schema_version in meta table to 76.
 
+UPDATE meta SET meta_value='76' WHERE meta_key='schema_version';
 
--- Patch identifier
+# Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_72_73d.sql|mitochondrion in changelog');
+  VALUES (NULL, 'patch', 'patch_75_76a.sql|schema_version');
