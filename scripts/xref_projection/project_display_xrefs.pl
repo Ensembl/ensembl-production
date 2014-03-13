@@ -228,13 +228,6 @@ if ($compara_dbname) {
 
 #$registry->load_all($conf, 0, 1); # options mean "not verbose" and "don't clear registry"
 
-if (!$no_backup) {
-  foreach my $to_species (@to_multi) {
-    my $to_ga   = $registry->get_adaptor($to_species, 'core', 'Gene');
-    backup($to_ga, $to_species);
-  }
-}
-
 # only delete names/GO terms if -delete_only has been specified
 if ($delete_only) {
 
@@ -243,6 +236,7 @@ if ($delete_only) {
 
     	my $to_ga  = $registry->get_adaptor($to_species, 'core', 'Gene');
     	my $to_ta  = $registry->get_adaptor($to_species, 'core', 'Transcript');
+        backup($to_ga, $to_species) if (!$no_backup);
     	die("Can't get gene adaptor for $to_species - check database connection details; make sure meta table contains the correct species alias\n") if (!$to_ga);
     	delete_names($to_ga, $to_ta) if ($delete_names);
     	delete_go_terms($to_ga) if ($delete_go_terms);
@@ -293,6 +287,7 @@ foreach my $local_to_species (@to_multi) {
   $to_species = $local_to_species;
   my $to_ga   = $registry->get_adaptor($to_species, 'core', 'Gene');
   my $to_ta   = $registry->get_adaptor($to_species, 'core', 'Transcript');
+  backup($to_ga, $to_species) if (!$no_backup);
   die("Can't get gene adaptor for $to_species - check database connection details; make sure meta table contains the correct species alias\n") if (!$to_ga);
   my $to_dbea = $registry->get_adaptor($to_species, 'core', 'DBEntry');
 

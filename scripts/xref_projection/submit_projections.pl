@@ -82,7 +82,7 @@ if (!$pass2 && $pass1 && $user1 == $user2) { $pass2 = $pass1; }
 die ("Cannot find base directory $base_dir") if (! -e $base_dir);
 
 # create release subdir if necessary
-my $dir = $base_dir. $release;
+my $dir = $base_dir . '/' . $release;
 if (! -e $dir) {
   mkdir $dir;
   print "Created $dir\n";
@@ -346,6 +346,9 @@ foreach my $species (keys %names_1_1) {
     };
 }
 
+# Tables backed up before initial deletion, do not overwrite
+$script_opts .= " -nobackup";
+
 # 1:1
 
 my $last_name; # for waiting in queue
@@ -401,8 +404,6 @@ $last_name = "";
 
 # ----------------------------------------
 # GO terms
-
-$script_opts .= " -nobackup";
 
 print "Deleting projected GO terms\n";
 foreach my $from (keys %go_terms) {
