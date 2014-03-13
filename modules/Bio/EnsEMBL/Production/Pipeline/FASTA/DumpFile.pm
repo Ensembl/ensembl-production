@@ -617,20 +617,8 @@ sub _create_display_id {
       $attributes{gene} = $gene->stable_id();
       $attributes{gene_biotype} = $gene->biotype();
       
-      #If ncRNA then we set type to the logic name and status to gene's biotype (taken from original script)
-      if($type eq 'ncrna') {
-        $decoded_type = lc($object->analysis()->logic_name());
-        $decoded_status = $gene->biotype();
-      }
-      elsif($object->biotype() =~ /pseudogene/i && ! $object->translation()) {
-        $decoded_type = $type;
-        $decoded_status = 'pseudogene';
-      }
-      #Otherwise use type & object's transcript's status
-      else {
-        $decoded_type   = $type;
-        $decoded_status = lc($object->status());
-      }
+      $decoded_type = lc($object->analysis()->logic_name());
+      $decoded_status = lc($object->status());
     }
   }
   #If it's a translation then grab the transcript and gene then set accordingly
