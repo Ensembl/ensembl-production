@@ -228,6 +228,13 @@ if ($compara_dbname) {
 
 #$registry->load_all($conf, 0, 1); # options mean "not verbose" and "don't clear registry"
 
+if (!$no_backup) {
+  foreach my $to_species (@to_multi) {
+    my $to_ga   = $registry->get_adaptor($to_species, 'core', 'Gene');
+    backup($to_ga, $to_species);
+  }
+}
+
 # only delete names/GO terms if -delete_only has been specified
 if ($delete_only) {
 
@@ -299,8 +306,6 @@ foreach my $local_to_species (@to_multi) {
     
     
   write_to_projection_db($to_ga->dbc(), $release, $from_species, $from_ga->dbc(), $to_species) unless ($no_database);
-
-  backup($to_ga, $to_species) if (!$no_backup);
 
   delete_names($to_ga) if ($delete_names);
   delete_go_terms($to_ga) if ($delete_go_terms);
