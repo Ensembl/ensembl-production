@@ -298,9 +298,6 @@ foreach my $local_to_species (@to_multi) {
   %forbidden_terms = get_GOA_forbidden_terms($to_species);
    
   # The forbidden_terms list is used in unwanted_go_term();
-    
-    
-  write_to_projection_db($to_ga->dbc(), $release, $from_species, $from_ga->dbc(), $to_species) unless ($no_database);
 
   delete_names($to_ga) if ($delete_names);
   delete_go_terms($to_ga) if ($delete_go_terms);
