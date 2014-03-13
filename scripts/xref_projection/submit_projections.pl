@@ -150,6 +150,7 @@ $names_1_1{'human'} =  [qw(
     marmoset
     megabat
     microbat
+    mouse
     mouse_lemur
     mustela_putorius_furo
     opossum
@@ -318,6 +319,7 @@ $go_terms{'zebrafish'} = [qw(
     fugu
     lamprey
     lepisosteus_oculatus
+    medaka
     stickleback
     tetraodon
     tilapia
