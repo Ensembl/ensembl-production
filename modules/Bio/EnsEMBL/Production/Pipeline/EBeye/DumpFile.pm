@@ -248,25 +248,28 @@ sub run {
 
   	}
       }
-      foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
-  	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
-  	  $old{'external_identifiers'}{$db}{$K} = 1;
+      if ($translation_id) {
+        foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  	  foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  	    $old{'external_identifiers'}{$db}{$K} = 1;
+          }
   	}
       }
     } else {
       $old{'transcript_stable_ids'}{$transcript_stable_id}   = 1;
       $old{'transcript_ids'}{$transcript_id}                 = 1;
-      $old{'translation_stable_ids'}{$translation_stable_id} = 1;
 
       foreach my $db ( keys %{ $xrefs->{'Transcript'}{$transcript_id} || {} } ) {
   	foreach my $K ( keys %{ $xrefs->{'Transcript'}{$transcript_id}{$db} } ) {
   	  $old{'external_identifiers'}{$db}{$K} = 1;
   	}
       }
-      foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
-  	foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
-  	  $old{'external_identifiers'}{$db}{$K} = 1;
-
+      if ($translation_id) {
+        $old{'translation_stable_ids'}{$translation_stable_id} = 1;
+        foreach my $db ( keys %{ $xrefs->{'Translation'}{$translation_id} || {} } ) {
+  	  foreach my $K ( keys %{ $xrefs->{'Translation'}{$translation_id}{$db} } ) {
+  	    $old{'external_identifiers'}{$db}{$K} = 1;
+          }
   	}
       }
     }
@@ -488,7 +491,6 @@ sub _fetch_xrefs {
 					       ) or die $dbc->db_handle->errstr;
 
     foreach (@$T) {
-      $xrefs{$type}{ $_->[0] }{ $_->[3] }{ $_->[1] } = 1 if $_->[1];
       $xrefs{$type}{ $_->[0] }{ $_->[3] }{ $_->[2] } = 1 if $_->[2];
       $xrefs{$type}{ $_->[0] }{ $_->[3] . "_synonym" }{ $_->[4] } = 1
 	if $_->[4];
