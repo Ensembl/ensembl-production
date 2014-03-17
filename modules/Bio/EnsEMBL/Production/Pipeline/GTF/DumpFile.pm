@@ -61,6 +61,12 @@ use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
 use Bio::EnsEMBL::Utils::IO::GTFSerializer;
 use File::Path qw/rmtree/;
 
+sub param_defaults {
+  return {
+    group => 'core',
+  };
+}
+
 sub fetch_input {
   my ($self) = @_;
     
@@ -95,11 +101,13 @@ sub run {
     my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
 
     # Print information about the current assembly
-    $gtf_serializer->print_main_header($self->get_DBAdaptor());
+    $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
 
     # now get all slices and filter for 1st portion of human Y
-    foreach my $slice (@{$self->get_Slices('core', 1)}) { 
-      foreach my $gene (@{$slice->get_all_Genes(undef, undef, 1)}) {
+    my $slices = $self->get_Slices($self->param('group'), 1);
+    while (my $slice = shift @{$slices}) {
+      my $genes = $slice->get_all_Genes(undef,undef,1); 
+      while (my $gene = shift @{$genes}) {
         $gtf_serializer->print_Gene($gene);
       }
     }
