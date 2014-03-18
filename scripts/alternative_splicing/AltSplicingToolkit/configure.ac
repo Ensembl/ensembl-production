@@ -27,7 +27,7 @@ dnl --------------------------------
 
 dnl Require Autoconf 2.60
 AC_PREREQ([2.60])
-AC_INIT([Ensembl AltSplicingToolkit], [0.5.4], [koscieln@ebi.ac.uk])
+AC_INIT([Ensembl AltSplicingToolkit], [0.6], [koscieln@ebi.ac.uk])
 
 dnl -----------------------------------------------
 dnl Package name and version number (user defined)
@@ -35,6 +35,7 @@ dnl for automake
 dnl -----------------------------------------------
 
 AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 #([1.0 -Wall -Werror foreign])
 
 dnl -----------------------------------------------
@@ -42,7 +43,7 @@ dnl Finding configure Input
 dnl -----------------------------------------------
 
 AC_CONFIG_SRCDIR([src/Main.cpp])
-AC_CONFIG_HEADER([include/config.hpp])
+#AC_CONFIG_HEADER([include/config.hpp])
 
 AC_SUBST(VERSION)
 
@@ -118,7 +119,7 @@ AC_ARG_WITH([boost-include],
             [ql_boost_include_path=""])
 if test [ -n "$ql_boost_include_path/boost" ] ; then
    AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_boost_include_path}"])
-   AC_SUBST([INCLUDES],["${INCLUDES} -I${ql_boost_include_path}"])
+   AC_SUBST([AM_CPPFLAGS],["${AM_CPPFLAGS} -I${ql_boost_include_path}"])
    #AC_SUBST([CXXFLAGS],["${CXXFLAGS} -I${ql_boost_include_path}"])
 fi
 AC_ARG_WITH([boost-lib],

@@ -41,7 +41,7 @@ namespace gff
     genesWithSeveralTranscripts = 0;
 
     this->bCNE = bCNE;
-		this->bRELAX = bRELAX;
+    this->bRELAX = bRELAX;
 
   }
 
