@@ -10,6 +10,8 @@ altSpliceFinder_CPPFLAGS = @CPPFLAGS@ -L@top_srcdir@/src
 # general use to compile individuals objects
 AM_CPPFLAGS = -I@top_srcdir@/src -L@top_srcdir@/src
 
+ARFLAGS = rs
+
 # -------------------------------
 # AltSplicingToolkit library configuration
 # -------------------------------

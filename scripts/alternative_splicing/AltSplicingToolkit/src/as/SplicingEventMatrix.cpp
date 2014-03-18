@@ -670,6 +670,17 @@ namespace as {
      */
 
 
+    /**
+     * Alternative 3' sites 	
+     * A3SS 	
+     * Also called alternatively acceptor sites. Two or more splice sites are recognized at the 5' end of an exon. 
+     * ] Donor (5' site) ----- Acceptor (3' site) <differs!> [
+     * An alternative 3' splice junction (acceptor site) is used, changing the 5' boundary of the downstream exon.
+     * The rules are:
+     *  1. the 5' end of the upstream intron are the same (Unless the constraints are relaxed)
+     *  2. the 3' end of the downstrean exon are the same 
+     */
+
     bool a3ss = 
 			(
 			 f1->getStrand() == 1 &&
@@ -680,13 +691,24 @@ namespace as {
 			 ) ||
 			(
 			 f1->getStrand() == -1 &&
-			 f1->getEnd() == f2->getEnd() && f1->getStart() != f2->getStart() &&
-			 ( t1Index + 1 ) < xSize && ( t2Index + 1 ) < ySize && 
-			 (t1Features[t1Index + 1]->getStart() == t2Features[t2Index + 1]->getStart() ||
-			 (bRELAX == 1 && (overlapMatrix[t1Index + 1][t2Index + 1] & OVERLAP) == OVERLAP))
+			 f1->getEnd() != f2->getEnd() && f1->getStart() == f2->getStart() &&
+			 ( t1Index - 1 ) >= 0 && ( t2Index - 1 ) >= 0 && 
+			 (t1Features[t1Index - 1]->getEnd() == t2Features[t2Index - 1]->getEnd() ||
+			 (bRELAX == 1 && (overlapMatrix[t1Index - 1][t2Index - 1] & OVERLAP) == OVERLAP))
 			 );
 
-			bool a5ss = 
+    /**
+     * Alternative 5' sites 	
+     * A5SS 	
+     * Also called alternative donor sites. Two or more splice sites are recognized at the 3' end of an exon.
+     * ] <differs!> Donor (5' site) ----- Acceptor (3' site) [
+     * An alternative 5' splice junction (donor site) is used, changing the 3' boundary of the upstream exon.
+     * The rules are:
+     *  1. the 3' end of the downstream intron are the same (Unless the constraints are relaxed)
+     *  2. the 5' end of the upstrean exon are the same 
+     */
+
+    bool a5ss = 
 			(
 			 f1->getStrand() == 1 &&
 			 f1->getStart() == f2->getStart() && f1->getEnd() != f2->getEnd() &&
@@ -695,11 +717,13 @@ namespace as {
 			 (bRELAX == 1 && (overlapMatrix[t1Index + 1][t2Index + 1] & OVERLAP) == OVERLAP))
 			 ) ||
 			(f1->getStrand() == -1 &&
-			 f1->getStart() == f2->getStart() && f1->getEnd() != f2->getEnd() &&
-			 ( t1Index - 1 ) >= 0 && ( t2Index - 1 ) >= 0 && 
-			 (t1Features[t1Index - 1]->getEnd() == t2Features[t2Index - 1]->getEnd() ||
-				(bRELAX == 1 && (overlapMatrix[t1Index - 1][t2Index - 1] & OVERLAP) == OVERLAP))
+			 f1->getStart() != f2->getStart() && f1->getEnd() == f2->getEnd() &&
+			 ( t1Index + 1 ) < xSize && ( t2Index + 1 ) < ySize && 
+			 (t1Features[t1Index + 1]->getStart() == t2Features[t2Index + 1]->getStart() ||
+			  (bRELAX == 1 && (overlapMatrix[t1Index + 1][t2Index + 1] & OVERLAP) == OVERLAP))
 			 );
+
+
 
     bool exonIsoform =
       (f1->getStart() != f2->getStart() && f1->getEnd() != f2->getEnd() &&

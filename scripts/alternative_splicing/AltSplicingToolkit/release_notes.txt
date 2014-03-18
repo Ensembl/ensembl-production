@@ -1,5 +1,12 @@
 altSpliceFinder Release Notes - User visible changes.
 
+Release 0.6 (18 December 2013)
+-------------------------------
+
+* Fix bug with computation of A3SS/A5SS on reverse strand
+* Use boost library release 1.55.0 to parse options
+* Use log4cpp version 1.1
+
 Release 0.5.3 (28 January 2011)
 -------------------------------
 

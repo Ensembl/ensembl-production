@@ -1,3 +1,9 @@
+2013-12-18	Gautier Koscielny  <koscieln@ebi.ac.uk>
+
+	Fix bug on A3SS / A5SS events computed on reverse strand
+	Use boost library 1_55_0
+	Use log4cpp 1.1
+	
 2011-01-28  Gautier Koscielny  <koscieln@ebi.ac.uk>
 
 	Use boost library 1_45_0
