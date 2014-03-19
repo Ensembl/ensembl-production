@@ -35,6 +35,7 @@ use JSON;
 # Update if the GOA webservice goes away
 my $goa_webservice = "http://www.ebi.ac.uk/QuickGO/";
 my $goa_params = "GValidate?service=taxon&action=getBlacklist&taxon=";
+my $taxon_params = "GValidate?service=taxon&action=getConstraints";
 my $method_link_type = "ENSEMBL_ORTHOLOGUES";
 
 my %seen;
@@ -278,6 +279,7 @@ my $from_ga = $registry->get_adaptor($from_species, 'core', 'Gene');
 my %projections_by_evidence_type;
 my %projections_by_source;
 my %forbidden_terms;
+my %constrained_terms;
 
 my $from_gene;
 my $to_species;
@@ -296,6 +298,7 @@ foreach my $local_to_species (@to_multi) {
     # This requires both a lookup, and then finding all child-terms on the forbidden list.
    
   %forbidden_terms = get_GOA_forbidden_terms($to_species);
+  %constrained_terms = get_taxon_forbidden_terms($to_species, $gdba);
    
   # The forbidden_terms list is used in unwanted_go_term();
 
@@ -377,7 +380,9 @@ sub get_ontology_terms {
     my $ontology_adaptor = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
     my %terms;
     foreach my $text_term (@starter_terms) {
+       $terms{$text_term} = 1;
         my $ont_term = $ontology_adaptor->fetch_by_accession($text_term);
+        next if (!$ont_term);
         my $term_list = $ontology_adaptor->fetch_all_by_ancestor_term($ont_term);
         foreach my $term (@{$term_list}) {
             $terms{$term->accession} = 1;
@@ -442,6 +447,83 @@ sub get_GOA_forbidden_terms {
     }
     
     return %terms;
+}
+
+sub get_taxon_forbidden_terms {
+    my $species = shift;
+    my $gdba    = shift;
+
+    # Translate species into taxonID
+    my $meta_container = Bio::EnsEMBL::Registry->get_adaptor($species,'core','MetaContainer');
+    my $species_name = $meta_container->single_value_by_key('species.production_name');
+
+    # hit the web service with a request, build up a hash of all forbidden terms for this species
+    my $user_agent = LWP::UserAgent->new();
+    $user_agent->env_proxy;
+    my $response;
+    $response = $user_agent->get($goa_webservice.$taxon_params);
+    # Retry until web service comes back?
+    my $retries = 0;
+    while (! $response->is_success ) {
+        if ($retries > 5) {
+            throw( "Failed to contact GOA webservice 6 times in a row. Dying ungracefully.");
+        }
+
+        warning( "Failed to contact GOA webservice, retrying on ".$goa_webservice.$taxon_params.
+            "\n LWP error was: ".$response->code
+        );
+        $retries++;
+        $response = $user_agent->get($goa_webservice.$taxon_params);
+        sleep(10);
+    }
+
+    my $constraint = from_json($response->content);
+    my @constraint_pairs = @{ $constraint->{'constraints'} };
+
+    my %blacklisted_terms;
+    my @blacklisted_go;
+
+    foreach my $taxon_constraint (@constraint_pairs) {
+      my %constraint_elements = %{$taxon_constraint};
+      # %constraint_elements is ("ruleId" : "GOTAX:0000134","constraint" : "only_in_taxon","taxa" : ["33090"],"goId" : "GO:0009541")
+
+      my $constraint = $constraint_elements{'constraint'};
+      my @taxa = @{$constraint_elements{'taxa'}};
+      my @affected_species;
+      foreach my $taxon (@taxa) {
+        push @affected_species, @{$gdba->fetch_all_by_ancestral_taxon_id($taxon)};
+      }
+      my $found_species = 0;
+      my $is_blacklisted = 0;
+      foreach my $affected_species (@affected_species) {
+        if ($affected_species->name() eq $species_name) {
+          $found_species = 1;
+          last;
+        }
+      }
+      if ($constraint eq 'only_in_taxon') {
+      # If GO term only in taxon, blacklist if species is not in taxon
+        if (!$found_species) {
+          $is_blacklisted = 1;
+        }
+      } elsif ($constraint eq 'never_in_taxon') {
+      # If GO term never in taxon, blacklist if species in taxon
+        if ($found_species) {
+          $is_blacklisted = 1;
+        }
+      } else {
+      # Currently, GO constraints match only_in_taxon or never_in_taxon
+      # We want to be warned if a new constraint type appears
+        throw("unexpected $constraint, please update projection code");
+      }
+
+      if ($is_blacklisted) {
+        push @blacklisted_go, $constraint_elements{'goId'};
+      }
+    }
+
+    my %blacklisted_terms = get_ontology_terms(@blacklisted_go);
+    return %blacklisted_terms;
 }
 
 
@@ -595,6 +677,7 @@ sub project_go_terms {
     }
     # Check GO term against GOA blacklist
     next DBENTRY if (unwanted_go_term($to_translation->stable_id,$dbEntry->primary_id));
+    next DBENTRY if ($constrained_terms{$dbEntry->primary_id});
 
 
     # check that each from GO term isn't already projected
