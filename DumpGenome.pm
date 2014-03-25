@@ -22,44 +22,55 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
 
-use Bio::EnsEMBL::Utils::Exception qw/throw/;
+use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::EGPipeline::Common::Dumper;
+use File::Path qw(make_path);
 
 sub param_defaults {
   my ($self) = @_;
-  return {};
+  
+  return {
+    'repeat_libs' => undef,     # arrayref of logic_names, e.g. ['repeatmask']
+    'soft_mask' => undef,       # 0 or 1, to disable or enable softmasking
+    'genomic_slice_cutoff' => 0, # threshold for the minimum slice length
+  };
+  
 }
 
 sub fetch_input {
   my ($self) = @_;
-  return;
+  my $genome_dir = $self->param_required('genome_dir');
+  
+  if (!-e $genome_dir) {
+    warning "Output directory '$genome_dir' does not exist. I shall create it.";
+    make_path($genome_dir) or throw "Failed to create output directory '$genome_dir'";
+  }
+  
 }
 
 sub run {
   my ($self) = @_;
-
-  # Instanciate a Bio::EnsEMBL::EGPipeline::Common::Dumper, and delegate to it the charge of dumping the reference genome
-
+  my $species = $self->param_required('species');
+  my $genome_file = $self->param('genome_dir') . "/$species.fa"
+  $self->param('genome_file', $genome_file);
+  
+  # Instantiate a Bio::EnsEMBL::EGPipeline::Common::Dumper,
+  # and delegate to it the charge of dumping the genome
   my $dumper = Bio::EnsEMBL::EGPipeline::Common::Dumper->new(
         -REPEAT_LIBS => $self->param('repeat_libs'),
         -SOFT_MASK   => $self->param('soft_mask'),
         -CUTOFF      => $self->param('genomic_slice_cutoff'),
-      );
-
-  my $ref = $self->param('genome_dir') . '/' . $self->param('species') . '.fa';
-
-  warn("Dumping reference genome to $ref\n");
+  );
   
-  $dumper->dump_toplevel($self->core_dba(), $ref);
-
-  $self->dataflow_output_id({'genome_file' => $ref}, 1);
-
-  return;
-} ## end sub run
+  $dumper->dump_toplevel($self->core_dba(), $genome_file);
+  
+}
 
 sub write_output {
   my ($self) = @_;
-  return;
+  
+  $self->dataflow_output_id({'genome_file' => $self->param('genome_file'}, 1);
+  
 }
 
 1;
