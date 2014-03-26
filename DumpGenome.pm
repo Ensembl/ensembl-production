@@ -51,7 +51,7 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   my $species = $self->param_required('species');
-  my $genome_file = $self->param('genome_dir') . "/$species.fa"
+  my $genome_file = $self->param('genome_dir') . "/$species.fa";
   $self->param('genome_file', $genome_file);
   
   # Instantiate a Bio::EnsEMBL::EGPipeline::Common::Dumper,
@@ -69,7 +69,7 @@ sub run {
 sub write_output {
   my ($self) = @_;
   
-  $self->dataflow_output_id({'genome_file' => $self->param('genome_file'}, 1);
+  $self->dataflow_output_id({'genome_file' => $self->param('genome_file')}, 1);
   
 }
 

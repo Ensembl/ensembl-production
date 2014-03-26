@@ -53,7 +53,7 @@ sub get_DBAdaptor {
 sub core_dba {	
   my $self = shift;
 
-  my $dba = get_DBAdaptor('core');
+  my $dba = $self->get_DBAdaptor('core');
   confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 	
   return $dba;
@@ -80,7 +80,7 @@ sub core_dbh {
 sub otherfeatures_dba {	
   my $self = shift;
 
-  my $dba = get_DBAdaptor('otherfeatures');
+  my $dba = $self->get_DBAdaptor('otherfeatures');
   confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 	
   return $dba;

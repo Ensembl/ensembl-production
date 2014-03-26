@@ -39,7 +39,7 @@ package Bio::EnsEMBL::EGPipeline::Common::AnalyzeTables;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::EGPipeline::Common::Base/;
+use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
 
 sub param_defaults {
   my ($self) = @_;

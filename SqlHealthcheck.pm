@@ -41,7 +41,10 @@ package Bio::EnsEMBL::EGPipeline::Common::SqlHealthcheck;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck/;
+use base (
+  'Bio::EnsEMBL::EGPipeline::Common::Base',
+  'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck'
+);
 
 sub param_defaults {
   my ($self) = @_;
@@ -57,7 +60,7 @@ sub fetch_input {
   my $self = shift @_;
   $self->SUPER::fetch_input();
   
-  $self->param('db_conn', $self->get_DBAdaptor($type)->dbc);
+  $self->param('db_conn', $self->get_DBAdaptor($self->param('type'))->dbc);
   
 }
 
