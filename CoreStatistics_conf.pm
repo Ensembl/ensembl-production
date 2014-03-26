@@ -424,7 +424,6 @@ sub pipeline_analyses {
       -max_retry_count  => 2,
       -hive_capacity    => 10,
       -rc_name          => 'normal',
-      -can_be_empty     => 1,
     },
 
     {
