@@ -63,6 +63,10 @@ sub default_options {
     
     # Generic EG-related options.
     email => $self->o('ENV', 'USER').'@ebi.ac.uk',
+    
+    # Don't fall over if someone has the temerity to use 'pass' instead of 'password'
+    pass => $self->o('password'),
+    password => $self->o('pass'),
   }
 }
 
