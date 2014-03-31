@@ -672,6 +672,8 @@ sub _custom_header {
     my $idtype    = $slice->coord_system->name;
     my $location  = $slice->name;
     my $ref       = $slice->assembly_exception_type();
+    # Special case for patches: whole chromosome is padded with N's, so slice will be whole chromosome, not just patch region
+    if ($ref ne 'REF') { $location = $slice->seq_region_Slice->name(); }
     my $header    = sprintf('%s %s:%s %s %s', $id, $dna_type, $idtype, $location, $ref);  
     return $header;
   };
