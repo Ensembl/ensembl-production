@@ -74,12 +74,12 @@ sub get_Slices {
     my $production_name = $self->production_name();
     if($production_name eq 'homo_sapiens') {
       my ($cs) = @{$dba->get_CoordSystem()->fetch_all()};
-      my $expected = 'GRCh37';
+      my $expected = 'GRCh38';
       if($cs->version() ne $expected) {
         throw sprintf(q{Cannot continue as %s's coordinate system %s is not the expected %s }, $production_name, $cs->version(), $expected);
       }
       @slices = grep {
-        if($_->seq_region_name() eq 'Y' && $_->end() < 2649521) {
+        if($_->seq_region_name() eq 'Y' && ($_->end() < 2781480 || $_->start() > 56887902)) {
           $self->info('Filtering small Y slice');
           0;
         }
