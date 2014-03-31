@@ -55,10 +55,10 @@ sub reset_empty_array_param {
                 for a species but also optionally filters for the 
                 first portion of Human Y which is a non-informative region
                 (composed solely of N's). The code will only filter for 
-                GRCh37 forcing the developer to update the test for other 
+                GRCh38 forcing the developer to update the test for other 
                 regions. 
   Returntype  : ArrayRef[Bio::EnsEMBL::Slice] 
-  Exceptions  : Thrown if you are filtering Human but also are not on GRCh37
+  Exceptions  : Thrown if you are filtering Human but also are not on GRCh38
 
 =cut
 
