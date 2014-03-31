@@ -12,7 +12,7 @@
 2263061	52	Havana
 2263061	53	v@somewhere.com
 2263061	123	pseudopolyA not annotated as genomic has mutated from AATAAA -> AATTAA
-2263062	92	chromosome:GRCh37:6:29054084:29055090:1
+2263062	92	chromosome:GRCh38:6:29054084:29055090:1
 2263063	3	XXbac-BPG171B11.2-001
 2263063	4	XXbac-BPG171B11.2-001
 2263063	52	Havana
@@ -36,7 +36,7 @@
 2263066	52	Havana
 2263066	53	v@somewhere.com
 2263066	123	Originally annotated as part of ENCODE based on yale unitary pseudogene prediction which used e.g. MGI:2177519 as evidence. However, difficult to determine whether mouse Olfr134 orthologue has gene synteny nwith human due to the multiple OR duplications (ib2 - 17/04/2013)
-2263067	92	chromosome:GRCh37:6:29141080:29142351:1
+2263067	92	chromosome:GRCh38:6:29141080:29142351:1
 2263068	3	XXbac-BPG171B11.6-001
 2263068	4	XXbac-BPG171B11.6-001
 2263068	52	Havana
@@ -69,7 +69,7 @@
 2263075	52	Havana
 2263075	53	v@somewhere.com
 2263075	123	Originally annotated as part of ENCODE based on yale unitary pseudogene prediction which used MGI:3030057 as evidence. However, the mouse Olfr124 orthologue has multiple equal BLAT hits in human and difficult to determine true gene synteny so doubt this is a unitary_psudogene (ib2 - 18/04/2013)
-2263076	92	chromosome:GRCh37:6:29274467:29275432:1
+2263076	92	chromosome:GRCh38:6:29274467:29275432:1
 2263077	3	XXbac-BPG1H2.2-001
 2263077	4	XXbac-BPG1H2.2-001
 2263077	52	Havana
@@ -84,7 +84,7 @@
 2263080	52	Havana
 2263080	53	v@somewhere.com
 2263080	123	CCDS4658.1
-2263081	92	chromosome:GRCh37:6:29364332:29365400:1
+2263081	92	chromosome:GRCh38:6:29364332:29365400:1
 2263082	3	XXbac-BPG13B8.5-001
 2263082	4	XXbac-BPG13B8.5-001
 2263082	52	Havana
@@ -151,7 +151,7 @@
 2263096	4	XXbac-BPG13B8.9-001
 2263096	52	Havana
 2263096	53	v@somewhere.com
-2263097	92	chromosome:GRCh37:6:29454474:29455733:1
+2263097	92	chromosome:GRCh38:6:29454474:29455733:1
 2263098	3	XXbac-BPG13B8.8-001
 2263098	4	XXbac-BPG13B8.8-001
 2263098	52	Havana
@@ -289,7 +289,7 @@
 2263129	52	Havana
 2263129	53	v@somewhere.com
 2263129	315	Q5VY36.1
-2263130	92	chromosome:GRCh37:6:29555232:29556815:1
+2263130	92	chromosome:GRCh38:6:29555232:29556815:1
 2263131	3	XXbac-BPG126D10.3-001
 2263131	4	XXbac-BPG126D10.3-001
 2263131	52	Havana

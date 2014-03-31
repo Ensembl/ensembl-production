@@ -60,31 +60,31 @@ my $release = Bio::EnsEMBL::ApiVersion->software_version();
 
 if(! @ARGV) {
   my @expected_files = (
-    [[qw/blat dna/], ['30001.Homo_sapiens.GRCh37.2bit']],
+    [[qw/blat dna/], ['30001.Homo_sapiens.GRCh38.2bit']],
     [[qw/fasta homo_sapiens cdna/], [qw/
         CHECKSUMS README
-        Homo_sapiens.GRCh37.release.cdna.all.fa.gz
+        Homo_sapiens.GRCh38.release.cdna.all.fa.gz
     /]],
     [[qw/fasta homo_sapiens dna/], [qw/
         CHECKSUMS README 
-        Homo_sapiens.GRCh37.release.dna.chromosome.6.fa.gz
-        Homo_sapiens.GRCh37.release.dna.chromosome.6.fa.gz
-        Homo_sapiens.GRCh37.release.dna.chromosome.HG480_HG481_PATCH.fa.gz
-        Homo_sapiens.GRCh37.release.dna.chromosome.X.fa.gz
-        Homo_sapiens.GRCh37.release.dna.primary_assembly.fa.gz
-        Homo_sapiens.GRCh37.release.dna.toplevel.fa.gz
+        Homo_sapiens.GRCh38.release.dna.chromosome.6.fa.gz
+        Homo_sapiens.GRCh38.release.dna.chromosome.6.fa.gz
+        Homo_sapiens.GRCh38.release.dna.chromosome.HG480_HG481_PATCH.fa.gz
+        Homo_sapiens.GRCh38.release.dna.chromosome.X.fa.gz
+        Homo_sapiens.GRCh38.release.dna.primary_assembly.fa.gz
+        Homo_sapiens.GRCh38.release.dna.toplevel.fa.gz
     /]],
     [[qw/fasta homo_sapiens ncrna/], [qw/
         CHECKSUMS README
-        Homo_sapiens.GRCh37.release.ncrna.fa.gz
+        Homo_sapiens.GRCh38.release.ncrna.fa.gz
     /]],
     [[qw/fasta homo_sapiens pep/], [qw/
         CHECKSUMS README
-        Homo_sapiens.GRCh37.release.pep.all.fa.gz
+        Homo_sapiens.GRCh38.release.pep.all.fa.gz
     /]],
     [[qw/fasta homo_sapiens cds/], [qw/
         CHECKSUMS README
-        Homo_sapiens.GRCh37.release.cds.all.fa.gz
+        Homo_sapiens.GRCh38.release.cds.all.fa.gz
     /]],
   );
 
