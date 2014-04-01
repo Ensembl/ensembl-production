@@ -23,18 +23,7 @@ use Carp;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
-sub hive_dbh {
-
-  my $self = shift;
-
-  my $dbh = $self->hive_dbc->db_handle();
-  confess('Type error!') unless($dbh->isa('DBI::db'));
-
-  return $dbh;
-}
-
 sub hive_dbc {
-  
   my $self = shift;
 
   my $dbc = $self->dbc();  
@@ -43,18 +32,34 @@ sub hive_dbc {
   return $dbc;
 }
 
-sub core_dbh {
-
+sub hive_dbh {
   my $self = shift;
 
-  my $dbh = $self->core_dbc->db_handle();
+  my $dbh = $self->hive_dbc->db_handle();
   confess('Type error!') unless($dbh->isa('DBI::db'));
 
   return $dbh;
 }
 
-sub core_dbc {
+sub get_DBAdaptor {
+  my ($self, $type) = @_;
+
+  $type ||= 'core';
+  my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
+
+  return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
+}
+
+sub core_dba {	
+  my $self = shift;
+
+  my $dba = $self->get_DBAdaptor('core');
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 	
+  return $dba;
+}
+
+sub core_dbc {
   my $self = shift;
 
   my $dbc = $self->core_dba()->dbc();	
@@ -63,18 +68,25 @@ sub core_dbc {
   return $dbc;
 }
 
-sub otherfeatures_dbh {
-    
+sub core_dbh {
   my $self = shift;
 
-  my $dbh = $self->otherfeatures_dba()->dbc()->db_handle();	
+  my $dbh = $self->core_dbc->db_handle();
   confess('Type error!') unless($dbh->isa('DBI::db'));
 
   return $dbh;
 }
 
+sub otherfeatures_dba {	
+  my $self = shift;
+
+  my $dba = $self->get_DBAdaptor('otherfeatures');
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+	
+  return $dba;
+}
+
 sub otherfeatures_dbc {
-    
   my $self = shift;
 
   my $dbc = $self->otherfeatures_dba()->dbc();	
@@ -83,51 +95,13 @@ sub otherfeatures_dbc {
   return $dbc;
 }
 
-
-sub core_dba {	
-
+sub otherfeatures_dbh {
   my $self = shift;
 
-  my $species  = $self->param('species')  || die "'species' is an obligatory parameter";	
-  my $dba = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Slice')->db();
-  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
-	
-  return $dba;
-}
+  my $dbh = $self->otherfeatures_dba()->dbc()->db_handle();	
+  confess('Type error!') unless($dbh->isa('DBI::db'));
 
-=head2 core_database_string_for_user
-
-	Return the name and location of the database in a human readable way.
-
-=cut
-sub core_database_string_for_user {
-	
-  my $self = shift;
-  return $self->core_dbc->dbname . " on " . $self->core_dbc->host 
-	
-}
-
-sub otherfeatures_dba {	
-
-  my $self = shift;
-
-  my $species  = $self->param('species')  || die "'species' is an obligatory parameter";	
-  my $dba = Bio::EnsEMBL::Registry->get_adaptor($species, 'otherfeatures', 'Slice')->db();
-  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
-	
-  return $dba;
-}
-
-=head2 otherfeatures_database_name
-
-	Return the name of the otherfeatures db
-    
-=cut
-sub otherfeatures_database_name {
-    
-  my $self = shift;
-  return $self->otherfeatures_dbc->dbname;
-	
+  return $dbh;
 }
 
 =head2 hive_database_string_for_user
@@ -136,16 +110,36 @@ sub otherfeatures_database_name {
 
 =cut
 sub hive_database_string_for_user {
-  
   my $self = shift;
   return $self->hive_dbc->dbname . " on " . $self->hive_dbc->host 
   
 }
 
-=head2 mysql_command_line_connect_core_db
+=head2 core_database_string_for_user
+
+	Return the name and location of the database in a human readable way.
+
 =cut
-sub mysql_command_line_connect_core_db {
+sub core_database_string_for_user {
+  my $self = shift;
+  return $self->core_dbc->dbname . " on " . $self->core_dbc->host 
 	
+}
+
+=head2 otherfeatures_database_name
+
+	Return the name of the otherfeatures db
+    
+=cut
+sub otherfeatures_database_name {
+  my $self = shift;
+  return $self->otherfeatures_dbc->dbname;
+	
+}
+
+=head2 mysql_command_line_connect
+=cut
+sub mysql_command_line_connect {
   my $self = shift;
 
   my $cmd = 
@@ -154,6 +148,19 @@ sub mysql_command_line_connect_core_db {
       . " --port ". $self->core_dbc->port
       . " --user ". $self->core_dbc->username
       . " --pass=". $self->core_dbc->password
+  ;
+
+  return $cmd;
+}
+
+=head2 mysql_command_line_connect_core_db
+=cut
+sub mysql_command_line_connect_core_db {
+	
+  my $self = shift;
+
+  my $cmd =
+      $self->mysql_command_line_connect
       . " ". $self->core_dbc->dbname
   ;
 
@@ -173,22 +180,6 @@ sub mysql_command_line_connect_otherfeatures_db {
       . " --user ". $self->otherfeatures_dbc->username
       . " --pass=". $self->otherfeatures_dbc->password
       . " ". $self->otherfeatures_dbc->dbname
-  ;
-
-  return $cmd;
-}
-
-=head2 mysql_command_line_connect
-=cut
-sub mysql_command_line_connect {
-  my $self = shift;
-
-  my $cmd = 
-      "mysql"
-      . " --host ". $self->core_dbc->host
-      . " --port ". $self->core_dbc->port
-      . " --user ". $self->core_dbc->username
-      . " --pass=". $self->core_dbc->password
   ;
 
   return $cmd;
