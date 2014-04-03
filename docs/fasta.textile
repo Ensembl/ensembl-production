@@ -150,7 +150,7 @@ bc. -species human -species cele -species yeast
 |@-skip_ncbiblast@|Boolean|No|Allows the skipping of NCBI Blast index generation|0|*NO*|
 |@-skip_blat_masking@|Boolean|No|Prevents the indexing of masked files (both soft and hard masked) for Blat|1|*NO*|
 |@-skip_wublast_masking@|Boolean|No|Prevents the indexing of masked files (both soft and hard masked) for WUBlast|0|*NO*|
-|@-skip_ncbiblast_masking@|Boolean|No|Prevents the indexing of masked files (both soft and hard masked) for NCBI Blast|1|*NO*|
+|@-skip_ncbiblast_masking@|Boolean|No|Prevents the indexing of masked files (both soft and hard masked) for NCBI Blast|0|*NO*|
 
 
 h2. Example Commands
