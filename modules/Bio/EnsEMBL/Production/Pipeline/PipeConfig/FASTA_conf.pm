@@ -79,7 +79,7 @@ sub default_options {
 
         skip_wublast_masking => 0,
 
-        skip_ncbiblast_masking => 1,
+        skip_ncbiblast_masking => 0,
         
         ### SCP code
         
@@ -160,6 +160,10 @@ sub pipeline_analyses {
       {
         -logic_name => 'DumpGenes',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
+        -parameters => {
+          process_logic_names => $self->o('process_logic_names'),
+          skip_logic_names => $self->o('skip_logic_names'),
+        },
         -flow_into  => {
           2 => ['NcbiBlastPepIndex', 'BlastPepIndex'],
           3 => ['NcbiBlastGeneIndex', 'BlastGeneIndex']
@@ -388,7 +392,7 @@ sub resource_classes {
     my $self = shift;
     return {
       'dump'      => { LSF => '-q long -M1000 -R"select[mem>1000] rusage[mem=1000]"' },
-      'indexing'  => { LSF => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
+      'indexing'  => { LSF => '-q normal -M3000 -R"select[mem>3000] rusage[mem=3000]"' },
     }
 }
 
