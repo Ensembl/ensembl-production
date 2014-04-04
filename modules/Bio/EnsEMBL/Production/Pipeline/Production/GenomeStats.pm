@@ -38,7 +38,7 @@ sub get_attrib_codes {
   my ($self) = @_;
   my %genome_counts = (
     PredictionTranscript => 'core',
-    StructuralVariationFeature => 'variation',
+    StructuralVariation => 'variation',
     
   );
   return %genome_counts;
