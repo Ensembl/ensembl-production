@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::EGPipeline::Common::Dumper;
 use File::Path qw(make_path);
 
@@ -30,7 +29,7 @@ sub param_defaults {
   my ($self) = @_;
   
   return {
-    'header_function'      => undef,  # Custom header function for fasta file
+    'header_function'      => undef,  # Custom header function for fasta file (string, will be 'eval'ed)
     'chunk_factor'         => 1000,   # Rows of sequence data that are buffered
     'line_width'           => 80,     # Width of sequence data in fasta file
     'repeat_libs'          => undef,  # arrayref of logic_names, e.g. ['repeatmask']
@@ -45,8 +44,8 @@ sub fetch_input {
   my $genome_dir = $self->param_required('genome_dir');
   
   if (!-e $genome_dir) {
-    warning "Output directory '$genome_dir' does not exist. I shall create it.";
-    make_path($genome_dir) or throw "Failed to create output directory '$genome_dir'";
+    $self->warning("Output directory '$genome_dir' does not exist. I shall create it.");
+    make_path($genome_dir) or $self->throw("Failed to create output directory '$genome_dir'");
   }
   
 }
@@ -57,12 +56,20 @@ sub run {
   my $genome_file = $self->param('genome_dir') . "/$species.fa";
   $self->param('genome_file', $genome_file);
   
+  my $hf = undef;
+  if ($self->param_is_defined('header_function')) {
+    $hf = eval $self->param('header_function');
+  }
+  
   # Instantiate a Bio::EnsEMBL::EGPipeline::Common::Dumper,
   # and delegate to it the charge of dumping the genome
   my $dumper = Bio::EnsEMBL::EGPipeline::Common::Dumper->new(
-        -REPEAT_LIBS => $self->param('repeat_libs'),
-        -SOFT_MASK   => $self->param('soft_mask'),
-        -CUTOFF      => $self->param('genomic_slice_cutoff'),
+    -HEADER      => $hf,
+    -WIDTH       => $self->param('line_width'),
+    -CHUNK       => $self->param('chunk_factor'),
+    -REPEAT_LIBS => $self->param('repeat_libs'),
+    -SOFT_MASK   => $self->param('soft_mask'),
+    -CUTOFF      => $self->param('genomic_slice_cutoff'),
   );
   
   $dumper->dump_toplevel($self->core_dba(), $genome_file);
