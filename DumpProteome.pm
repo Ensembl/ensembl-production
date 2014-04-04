@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
 
 sub param_defaults {
@@ -30,7 +29,7 @@ sub param_defaults {
   
   return {
     'allow_stop_codons' => 0,       # Include non-translating proteins
-    'header_function'   => undef,  # Custom header function for fasta file
+    'header_function'   => undef,  # Custom header function for fasta file (string, will be 'eval'ed)
     'chunk_factor'      => 1000,    # Rows of sequence data that are buffered
     'line_width'        => 80,      # Width of sequence data in fasta file
     'use_dbID'          => 0,       # Use dbID rather than default stable_id
@@ -43,8 +42,8 @@ sub fetch_input {
   my $proteome_dir = $self->param_required('proteome_dir');
   
   if (!-e $proteome_dir) {
-    warning "Output directory '$proteome_dir' does not exist. I shall create it.";
-    make_path($proteome_dir) or throw "Failed to create output directory '$proteome_dir'";
+    $self->warning("Output directory '$proteome_dir' does not exist. I shall create it.");
+    make_path($proteome_dir) or $self->throw("Failed to create output directory '$proteome_dir'");
   }
   
 }
@@ -64,7 +63,7 @@ sub run {
   my $tra = $dba->get_adaptor("Transcript");
   my $transcripts = $tra->fetch_all_by_biotype('protein_coding');
   
-	open my $fh, '>', $proteome_file or throw "Could not open $proteome_file for writing";
+	open my $fh, '>', $proteome_file or $self->throw("Could not open $proteome_file for writing");
   my $serializer =
     Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
       $fh,
@@ -81,10 +80,10 @@ sub run {
     }
     
     if ($seq_obj->seq() =~ /\*/ && !$self->param('allow_stop_codons')) {
-      warning "Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.";
+      $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.");
     } else {
       if ($seq_obj->seq() =~ /\*/) {
-        warning "Translation for transcript ".$transcript->stable_id." contains stop codons.";
+        $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons.");
       }
       $serializer->print_Seq($seq_obj);
     }
