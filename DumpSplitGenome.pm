@@ -26,7 +26,6 @@ use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
 use IO::File;
 use DBI qw(:sql_types);
 use Carp;
-use String::Numeric qw( is_int );
 
 sub run {
     my $self = shift @_;

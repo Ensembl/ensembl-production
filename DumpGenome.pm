@@ -30,9 +30,12 @@ sub param_defaults {
   my ($self) = @_;
   
   return {
-    'repeat_libs' => undef,     # arrayref of logic_names, e.g. ['repeatmask']
-    'soft_mask' => undef,       # 0 or 1, to disable or enable softmasking
-    'genomic_slice_cutoff' => 0, # threshold for the minimum slice length
+    'header_function'      => undef,  # Custom header function for fasta file
+    'chunk_factor'         => 1000,   # Rows of sequence data that are buffered
+    'line_width'           => 80,     # Width of sequence data in fasta file
+    'repeat_libs'          => undef,  # arrayref of logic_names, e.g. ['repeatmask']
+    'soft_mask'            => undef,  # 0 or 1, to disable or enable softmasking
+    'genomic_slice_cutoff' => 0,      # threshold for the minimum slice length
   };
   
 }
