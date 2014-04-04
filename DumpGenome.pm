@@ -20,7 +20,7 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
+use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::EGPipeline::Common::Dumper;
