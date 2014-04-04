@@ -19,7 +19,7 @@ limitations under the License.
 =head1 Bio::EnsEMBL::EGPipeline::Common::DumpSplitSequence
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::DumpSplitGenome;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpSplitGenome;
 
 use strict;
 use base ('Bio::EnsEMBL::EGPipeline::Common::Base');

@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::DumpGenome;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome;
 
 use strict;
 use warnings;
