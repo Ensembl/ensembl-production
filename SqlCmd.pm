@@ -35,13 +35,13 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::SqlCmd;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd;
 
 use strict;
 use warnings;
 
 use base (
-  'Bio::EnsEMBL::EGPipeline::Common::Base',
+  'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base',
   'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd'
 );
 

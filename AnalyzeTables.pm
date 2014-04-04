@@ -34,12 +34,12 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::AnalyzeTables;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalyzeTables;
 
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
+use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 sub param_defaults {
   my ($self) = @_;

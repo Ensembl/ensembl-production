@@ -36,13 +36,13 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::SqlHealthcheck;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlHealthcheck;
 
 use strict;
 use warnings;
 
 use base (
-  'Bio::EnsEMBL::EGPipeline::Common::Base',
+  'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base',
   'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck'
 );
 

@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::Base;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base;
 
 use strict;
 use Carp;

@@ -19,11 +19,11 @@ limitations under the License.
 =head1 Bio::EnsEMBL::EGPipeline::Common::FastaSplit
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::FastaSplit;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
+use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use Bio::SeqIO;
 use File::Basename qw(dirname fileparse);

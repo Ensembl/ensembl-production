@@ -22,7 +22,7 @@ limitations under the License.
 package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpSplitGenome;
 
 use strict;
-use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
+use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 use IO::File;
 use DBI qw(:sql_types);
 use Carp;

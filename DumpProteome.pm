@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::DumpProteome;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpProteome;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::Base');
+use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;

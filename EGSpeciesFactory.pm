@@ -36,7 +36,7 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::EGSpeciesFactory;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory;
 
 use strict;
 use warnings;
