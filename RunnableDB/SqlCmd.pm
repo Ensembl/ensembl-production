@@ -50,7 +50,7 @@ sub param_defaults {
   
   return {
     %{$self->SUPER::param_defaults},
-    'type' => 'core',
+    'db_type' => 'core',
   };
   
 }
@@ -59,7 +59,12 @@ sub fetch_input {
   my $self = shift @_;
   $self->SUPER::fetch_input();
   
-  $self->param('db_conn', $self->get_DBAdaptor($self->param('type'))->dbc);
+  my $db_type = $self->param('db_type');
+  if ($db_type eq 'hive') {
+    $self->param('db_conn', $self->dbc);
+  } else {
+    $self->param('db_conn', $self->get_DBAdaptor($db_type)->dbc);
+  }
   
 }
 
