@@ -46,7 +46,7 @@ sub param_defaults {
   
   return {
     'optimize_tables' => 0,
-    'types' => ['core'],
+    'db_types' => ['core'],
   };
   
 }
@@ -55,8 +55,8 @@ sub run {
   my ($self) = @_;
   
   my $command = $self->param('optimize_tables') ? 'OPTIMIZE' : 'ANALYZE';
-  foreach my $type (@{$self->param('types')}) {
-    my $dbc = $self->get_DBAdaptor($type)->dbc;
+  foreach my $db_type (@{$self->param('db_types')}) {
+    my $dbc = $self->get_DBAdaptor($db_type)->dbc;
     my $tables = $dbc->db_handle->selectcol_arrayref('SHOW TABLES;');
     map {$dbc->do("$command TABLE $_;")} @$tables;
   }
