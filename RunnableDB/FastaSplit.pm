@@ -87,6 +87,12 @@ sub run {
   my $file_count = 1;
   my $dir_index = 0;
   
+  # Do nothing if there's nothing to do...
+  if (-s $fasta_file == 0) { 
+    $self->input_job->autoflow(0);
+    return;
+  }
+  
   # Need to calculate required degree of subdirectory nesting.
   $self->directory_structure();
   $self->delete_existing_files() if $self->param('delete_existing_files');
