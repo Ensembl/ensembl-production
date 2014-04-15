@@ -42,8 +42,8 @@ use strict;
 use warnings;
 
 use base (
-  'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base',
-  'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck'
+  'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck',
+  'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base'
 );
 
 sub param_defaults {

@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::Common::SqlCmd
+Bio::EnsEMBL::EGPipeline::Common::DatabaseDumper
 
 =head1 DESCRIPTION
 
@@ -35,13 +35,13 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DatabaseDumper;
 
 use strict;
 use warnings;
 
 use base (
-  'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+  'Bio::EnsEMBL::Hive::RunnableDB::DatabaseDumper',
   'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base'
 );
 
@@ -57,14 +57,15 @@ sub param_defaults {
 
 sub fetch_input {
   my $self = shift @_;
-  $self->SUPER::fetch_input();
   
   my $db_type = $self->param('db_type');
   if ($db_type eq 'hive') {
-    $self->param('db_conn', $self->dbc);
+    $self->param('src_db_conn', $self->dbc);
   } else {
-    $self->param('db_conn', $self->get_DBAdaptor($db_type)->dbc);
+    $self->param('src_db_conn', $self->get_DBAdaptor($db_type)->dbc);
   }
+  
+  $self->SUPER::fetch_input();
   
 }
 
