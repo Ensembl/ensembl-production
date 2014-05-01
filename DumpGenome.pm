@@ -35,6 +35,7 @@ sub param_defaults {
     'repeat_libs'          => undef,  # arrayref of logic_names, e.g. ['repeatmask']
     'soft_mask'            => undef,  # 0 or 1, to disable or enable softmasking
     'genomic_slice_cutoff' => 0,      # threshold for the minimum slice length
+    'overwrite'            => 0,
   };
   
 }
@@ -55,6 +56,15 @@ sub run {
   my $species = $self->param_required('species');
   my $genome_file = $self->param('genome_dir') . "/$species.fa";
   $self->param('genome_file', $genome_file);
+  
+  if (-e $genome_file) {
+    if ($self->param('overwrite')) {
+      $self->warning("Genome file '$genome_file' already exists, and will be overwritten.");
+    } else {
+      $self->warning("Genome file '$genome_file' already exists, and won't be overwritten.");
+      return;
+    }
+  }
   
   my $hf = undef;
   if ($self->param_is_defined('header_function')) {

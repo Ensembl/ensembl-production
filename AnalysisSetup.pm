@@ -111,7 +111,6 @@ sub run {
   my $self = shift @_;
   my $species = $self->param_required('species');
   my $logic_name = $self->param_required('logic_name');
-  my $logic_rename = $self->param_required('logic_rename');
   
   my $dba = $self->get_DBAdaptor($self->param('db_type'));
   my $dbh = $dba->dbc->db_handle;
@@ -128,6 +127,7 @@ sub run {
       }
       $aa->remove($analysis);
     } else {
+      my $logic_rename = $self->param_required('logic_rename');
       my $renamed_analysis = $aa->fetch_by_logic_name($logic_rename);
       if (defined $renamed_analysis) {
         $self->throw(
@@ -145,7 +145,8 @@ sub run {
     $self->fetch_description;
   }
   
-  $aa->store($self->create_analysis);
+  my $new_analysis = $self->create_analysis;
+  $aa->store($new_analysis);
   
 }
 
