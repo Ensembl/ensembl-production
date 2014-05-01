@@ -33,6 +33,7 @@ sub param_defaults {
     'chunk_factor'      => 1000,    # Rows of sequence data that are buffered
     'line_width'        => 80,      # Width of sequence data in fasta file
     'use_dbID'          => 0,       # Use dbID rather than default stable_id
+    'overwrite'         => 0,
   };
   
 }
@@ -53,6 +54,15 @@ sub run {
   my $species = $self->param_required('species');
   my $proteome_file = $self->param('proteome_dir') . "/$species.fa";
   $self->param('proteome_file', $proteome_file);
+  
+  if (-e $proteome_file) {
+    if ($self->param('overwrite')) {
+      $self->warning("Proteome file '$proteome_file' already exists, and will be overwritten.");
+    } else {
+      $self->warning("Proteome file '$proteome_file' already exists, and won't be overwritten.");
+      return;
+    }
+  }
   
   my $hf = undef;
   if ($self->param_is_defined('header_function')) {
