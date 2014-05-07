@@ -41,7 +41,7 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisRun;
 use strict;
 use warnings;
 
-use File::Basename qw(dirname);
+use File::Basename qw(dirname fileparse);
 use File::Path qw(make_path remove_tree);
 use File::Spec::Functions qw(catdir);
 
@@ -96,14 +96,10 @@ sub run {
   my $self = shift @_;
   
   my ($runnable, $feature_type) = $self->fetch_runnable();
-  $runnable->queryfile($self->param_required('queryfile'));
   
-  # Results files are generated alongside the input files, with the
-  # analysis name appended for disambiguation. Note that some runnables
-  # will overwrite this default filename.
-  my $resultsfile = $runnable->queryfile.'.'.$self->param('logic_name').'.out';
-  $runnable->resultsfile($resultsfile);
-  $runnable->checkdir(dirname($resultsfile));
+  my $results_dir = $self->set_queryfile($runnable);
+  
+  $runnable->checkdir($results_dir);
   
   $runnable->run_analysis();
   
@@ -155,6 +151,40 @@ sub update_options {
   return;
 }
 
+sub filter_output {
+  my ($self, $runnable) = @_;
+  # Inheriting classes should implement this method if any filtering
+  # is required after parsing, but before saving. The method must update
+  # $runnable->output (an arrayref of features).
+  
+  return;
+}
+
+sub set_queryfile {
+  my ($self, $runnable) = @_;
+  
+  # Result files are typically generated alongside the input files, and
+  # it is often not possible to redirect output elsewhere without editing
+  # the Runnable file. And because the default name is "$queryfile.out",
+  # results might get overwritten when running multiple analyses. So it's
+  # easiest to create a directory per analysis, with a symlink to the seq file.
+  my $queryfile = $self->param_required('queryfile');
+  my ($filename, $dir, undef) = fileparse($queryfile);
+  my $results_dir = catdir($dir, $self->param('logic_name'));
+  my $query_symlink = catdir($results_dir, $filename);
+  
+  if (!-e $results_dir) {
+    make_path($results_dir) or $self->throw("Failed to create directory '$results_dir'");
+  }
+  if (!-e $query_symlink) {
+    symlink($queryfile, $query_symlink) or $self->throw("Failed to create symlink '$query_symlink'");
+  }
+  
+  $runnable->queryfile($query_symlink);
+  
+  return $results_dir;
+}
+
 sub split_results {
   my ($self, $resultsfile, $split_on, $results_match) = @_;
   my %results_files;
@@ -184,15 +214,6 @@ sub split_results {
   return ($results_subdir, \%results_files);
 }
 
-sub filter_output {
-  my ($self, $runnable) = @_;
-  # Inheriting classes should implement this method if any filtering
-  # is required after parsing, but before saving. The method must update
-  # $runnable->output (an arrayref of features).
-  
-  return;
-}
-
 sub save_to_db {
   my ($self, $runnable, $feature_type) = @_;
   
@@ -216,7 +237,7 @@ sub save_to_db {
     }
   }
   
-  return 1;
+  return;
 }
 
 1;
