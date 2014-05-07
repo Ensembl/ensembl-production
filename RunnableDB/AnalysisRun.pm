@@ -200,13 +200,13 @@ sub split_results {
   
   my @results = split(/$split_on/, $results);
   my $header = shift @results;
-  foreach my $results (@results) {
-    next unless $results =~ /^$results_match/gm;
+  foreach my $result (@results) {
+    next unless $result =~ /^$results_match/gm;
     
-    my ($seqname) = $results =~ /^\s*(\S+)/;
+    my ($seqname) = $result =~ /^\s*(\S+)/;
     my $split_resultsfile = "$resultsfile\_split/$seqname";
     open SPLIT_RESULTS, ">$split_resultsfile" or $self->throw("Failed to open $split_resultsfile: ".$!);
-    print SPLIT_RESULTS "$header$split_on$results";
+    print SPLIT_RESULTS "$header$split_on$result";
     close SPLIT_RESULTS;
     $results_files{$seqname} = $split_resultsfile;
   }
