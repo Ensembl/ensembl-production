@@ -61,7 +61,6 @@ sub get_ref_cumulative_exon_length {
     $cigar_line =~ s/(\d+)[MX=D]/$ref_cumulative_exon_length+=$1/eg;
     
     return $ref_cumulative_exon_length;
-
 }
 
 sub get_query_cumulative_exon_length {
