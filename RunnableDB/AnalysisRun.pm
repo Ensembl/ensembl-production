@@ -101,9 +101,18 @@ sub run {
   
   $runnable->checkdir($results_dir);
   
+  # Recommended Hive trick for potentially long-running analyses:
+  # Wrap db disconnects around the code that does the work.
+  # $self->dbc and $self->dbc->disconnect_when_inactive(1);
   $runnable->run_analysis();
+	# $self->dbc and $self->dbc->disconnect_when_inactive(0);
+  $self->dbc and $self->dbc->reconnect_when_lost(1);
   
   $self->update_options($runnable);
+  
+  # Maybe check for results file; if exists fine, if not then either warn
+  # or die (default?), since it may be valid to lack a file, if there are
+  # no results to report.
   
   if ($self->param('split_results')) {
     # Some analyses can be run against a file with multiple sequences; but to
