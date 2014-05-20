@@ -37,6 +37,7 @@ sub param_defaults {
     'out_dir'                 => undef,  # Top-level directory for output
     'max_seqs_per_file'       => 100,    # Maximum number of records in a file
     'max_seq_length_per_file' => undef,  # Maximum sequence length in a file
+    'split_seq_across_files'  => 0,      # Strictly enforce max_seq_length by splitting a chromosome/supercontg across multiple files
     'max_files_per_directory' => 100,    # Maximum number of files in a directory
     'max_dirs_per_directory'  => 100,    # Maximum number of subdirectories
     'delete_existing_files'   => 1,      # Ensure that directories only contains files generated with the latest execution

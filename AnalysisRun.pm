@@ -54,7 +54,7 @@ sub param_defaults {
     'datadir'         => '/nfs/panda/ensemblgenomes/external/data',
     'libdir'          => '/nfs/panda/ensemblgenomes/external/lib',
     'workdir'         => '/tmp',
-    'parameters_hash' => undef,
+    'parameters_hash' => {},
     'split_results'   => 0,
     'split_on'        => '>',
     'results_match'   => '\S',
@@ -80,7 +80,7 @@ sub fetch_input {
     $self->throw("Analysis '$logic_name' does not exist in $species $db_type database");
   }
   
-  if (!$self->param_is_defined('parameters_hash') && $analysis->parameters) {
+  if (!%{$self->param('parameters_hash')} && $analysis->parameters) {
     my $parameters_hash = {'-options' => $analysis->parameters};
     $self->param('parameters_hash', $parameters_hash);
   }
@@ -103,10 +103,9 @@ sub run {
   
   # Recommended Hive trick for potentially long-running analyses:
   # Wrap db disconnects around the code that does the work.
-  # $self->dbc and $self->dbc->disconnect_when_inactive(1);
+  $self->dbc and $self->dbc->disconnect_when_inactive(1);
   $runnable->run_analysis();
-	# $self->dbc and $self->dbc->disconnect_when_inactive(0);
-  $self->dbc and $self->dbc->reconnect_when_lost(1);
+	$self->dbc and $self->dbc->disconnect_when_inactive(0);
   
   $self->update_options($runnable);
   
@@ -232,8 +231,8 @@ sub save_to_db {
   foreach my $feature (@{$runnable->output}) {
     $feature->analysis($self->param('analysis'));
     $feature->slice($runnable->query) if !defined $feature->slice;
-    #print $feature->slice->name.':'.$feature->seq_region_start."\n";
     $runnable->feature_factory->validate($feature);
+    $self->warning(sprintf("Inserting feature: %s", $feature)) if $runnable->query->name eq 'supercontig:GCA_000188075.1:Si_gnG.scaffold41199:1:1134:1';
     
     eval { $adaptor->store($feature); };
     if ($@) {
