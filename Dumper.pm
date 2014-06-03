@@ -67,16 +67,22 @@ sub dump_toplevel {
 	$file_name ||= $dba->species() . '.fa';
 	open my $filehandle, '>', $file_name
 	  or throw "Could not open $file_name for writing";
-	my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new( $filehandle,
-							  $self->{header}, $self->{chunk}, $self->{width} );
-	for my $slice ( @{ $dba->get_SliceAdaptor()->fetch_all('toplevel') } ) {
-	    if ($slice->length() >= $length_cutoff) {
-		# add repeat masking here
-		if(defined $self->{repeat_libs}) {
-			$slice = $slice->get_repeatmasked_seq($self->{repeat_libs}, $self->{soft_mask});
-		}
-		$serializer->print_Seq($slice);
-	    }
+	my $serializer =
+    Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
+      $filehandle,
+      $self->{header},
+      $self->{chunk},
+      $self->{width}
+    );
+  
+  my @slices = @{ $dba->get_SliceAdaptor()->fetch_all('toplevel') };
+	for my $slice ( sort {$b->length <=> $a->length} @slices ) {
+    if ($slice->length() >= $length_cutoff) {
+      if(defined $self->{repeat_libs}) {
+        $slice = $slice->get_repeatmasked_seq($self->{repeat_libs}, $self->{soft_mask});
+      }
+      $serializer->print_Seq($slice);
+    }
 	}
 	$filehandle->close();
 	return $file_name;
