@@ -50,6 +50,8 @@ use base qw(Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base);
 sub param_defaults {
   return {
     'db_type'         => 'core',
+    'querylocation'   => undef,
+    'queryfile'       => undef,
     'bindir'          => '/nfs/panda/ensemblgenomes/external/bin',
     'datadir'         => '/nfs/panda/ensemblgenomes/external/data',
     'libdir'          => '/nfs/panda/ensemblgenomes/external/lib',
@@ -80,14 +82,33 @@ sub fetch_input {
     $self->throw("Analysis '$logic_name' does not exist in $species $db_type database");
   }
   
-  if (!%{$self->param('parameters_hash')} && $analysis->parameters) {
+  if ($self->param_is_defined('parameters_hash') &&
+      !%{$self->param('parameters_hash')} &&
+      $analysis->parameters
+  ) {
     my $parameters_hash = {'-options' => $analysis->parameters};
     $self->param('parameters_hash', $parameters_hash);
   }
   
-  my $queryfile = $self->param_required('queryfile');
-  if (!-e $queryfile) {
-    $self->throw("Query file '$queryfile' does not exist");
+  my $querylocation = $self->param('querylocation');
+  my $queryfile = $self->param('queryfile');
+  if (defined $queryfile) {
+    if (!-e $queryfile) {
+      $self->throw("Query file '$queryfile' does not exist");
+    }
+    if (defined $querylocation) {
+      $self->throw("Cannot explicitly define both querylocation and queryfile parameters");
+    }
+  } else {
+    if (defined $querylocation) {
+      my $dba = $self->get_DBAdaptor($self->param('db_type'));
+      my $slice_adaptor = $dba->get_adaptor('Slice');
+      my ($name, $start, $end) = $querylocation =~ /^(.+)\:(\d+)\-(\d+)/;
+      my $slice = $slice_adaptor->fetch_by_region('toplevel', $name, $start, $end);
+      $self->param('query', $slice);
+    } else {
+      $self->throw("Query location is not defined");
+    }
   }
   
 }
@@ -97,21 +118,23 @@ sub run {
   
   my ($runnable, $feature_type) = $self->fetch_runnable();
   
-  my $results_dir = $self->set_queryfile($runnable);
-  
-  $runnable->checkdir($results_dir);
+  if ($self->param_is_defined('queryfile')) {
+    my $results_dir = $self->set_queryfile($runnable);
+    $runnable->checkdir($results_dir);
+  } elsif ($self->param_is_defined('query')) {
+    $runnable->write_seq_file;
+  } else {
+    $self->throw("Something's gone wrong, have neither query or queryfile!");
+  }
   
   # Recommended Hive trick for potentially long-running analyses:
   # Wrap db disconnects around the code that does the work.
   $self->dbc and $self->dbc->disconnect_when_inactive(1);
   $runnable->run_analysis();
-	$self->dbc and $self->dbc->disconnect_when_inactive(0);
+  $self->dbc and $self->dbc->disconnect_when_inactive(0);
+  $self->dbc->reconnect_when_lost(1);
   
   $self->update_options($runnable);
-  
-  # Maybe check for results file; if exists fine, if not then either warn
-  # or die (default?), since it may be valid to lack a file, if there are
-  # no results to report.
   
   if ($self->param('split_results')) {
     # Some analyses can be run against a file with multiple sequences; but to
@@ -123,7 +146,11 @@ sub run {
       $self->split_results($runnable->resultsfile, $self->param('split_on'), $self->param('results_match'));
     
     foreach my $seq_name (keys %$results_files) {
-      my $slice = $slice_adaptor->fetch_by_region('toplevel', $seq_name);
+      my ($name, $start, $end) = ($seq_name, undef, undef);
+      if ($seq_name =~ /\:\d+\-\d+/) {
+        ($name, $start, $end) = $seq_name =~ /^(.+)\:(\d+)\-(\d+)/;
+      }
+      my $slice = $slice_adaptor->fetch_by_region('toplevel', $name, $start, $end);
       $runnable->query($slice);
       $runnable->parse_results($$results_files{$seq_name});
       $self->filter_output($runnable);
