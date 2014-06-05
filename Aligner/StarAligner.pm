@@ -51,22 +51,24 @@ my $build_map = undef;
 my $star_default_pe = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM > %s';
 my $star_default_se = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM > %s';
 
+# Do not use seedSearchLmax parameter as it can not deal with reads with Ns or ambiguity bases
+
 # Long Reads
 
 # Adviced was:
 # Using STARLong
-# --outFilterMultimapScoreRange 20   --outFilterScoreMinOverLread 0   --outFilterMatchNminOverLread 0.66   --outFilterMismatchNmax 1000   --winAnchorMultimapNmax 200   --seedSearchLmax 30   --seedSearchStartLmax 12   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
+# --outFilterMultimapScoreRange 20   --outFilterScoreMinOverLread 0   --outFilterMatchNminOverLread 0.66   --outFilterMismatchNmax 1000   --winAnchorMultimapNmax 200   --seedSearchStartLmax 12   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
 
-my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchLmax 30 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchLmax 30 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
 
 # Optimized for cross species comparison (ie for sensitivity)
 # but gives very long introns
 
-# --outFilterMismatchNmax 100   --seedSearchLmax 10   --seedSearchStartLmax 10   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
+# --outFilterMismatchNmax 100   --seedSearchStartLmax 10   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
 
-#my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchLmax 10 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-#my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchLmax 10 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+#my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+#my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
 
 my $star_pe = undef;
 my $star_se = undef;
