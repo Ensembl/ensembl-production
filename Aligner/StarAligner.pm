@@ -58,17 +58,19 @@ my $star_default_se = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s -
 # Adviced was:
 # Using STARLong
 # --outFilterMultimapScoreRange 20   --outFilterScoreMinOverLread 0   --outFilterMatchNminOverLread 0.66   --outFilterMismatchNmax 1000   --winAnchorMultimapNmax 200   --seedSearchStartLmax 12   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
+# See
+# https://groups.google.com/forum/#!searchin/rna-star/very$20long$20reads/rna-star/-2mBTPWRCJY/jgDbZjhl3NkJ
 
-my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 20  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
 
 # Optimized for cross species comparison (ie for sensitivity)
 # but gives very long introns
 
-# --outFilterMismatchNmax 100   --seedSearchStartLmax 10   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
+# --outFilterMismatchNmax 100   --seedSearchStartLmax 10   --seedPerReadNmax 100000   --seedPerWindowNmax 1000   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
 
-#my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-#my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMismatchNmax 100 --seedSearchStartLmax 10 --seedPerReadNmax 100000 --seedPerWindowNmax 100 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+#my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMismatchNmax 1000 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+#my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMismatchNmax 1000 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
 
 my $star_pe = undef;
 my $star_se = undef;
@@ -137,7 +139,12 @@ sub pairedend_to_sam {
   my ($self, $refname,$refdir, $sam, $file1, $file2) = @_;
   my $comm = sprintf($star_pe, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $file2, $sam);
   $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute command, $comm";
+  #system($comm) == 0 || throw "Cannot execute command, $comm";
+  my $stderr = qx(bash -c '$comm' 2>&1 1>/dev/null);
+  if ($stderr) {
+      warn("Failed to execute external command, $@, because of $stderr\n");
+      throw "Cannot execute command, $comm";
+  }
   return $sam;
 }
 
@@ -145,7 +152,12 @@ sub single_to_sam {
   my ($self, $refname,$refdir, $sam, $file1) = @_;
   my $comm = sprintf($star_se, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $sam);
   $logger->debug("Executing command, $comm");
-  system($comm) == 0 || throw "Cannot execute command, $comm";
+  #system($comm) == 0 || throw "Cannot execute command, $comm";
+  my $stderr = qx(bash -c '$comm' 2>&1 1>/dev/null);
+  if ($stderr) {
+      warn("Failed to execute external command, $@, because of $stderr\n");
+      throw "Cannot execute command, $comm";
+  }
   return $sam;
 }
 
