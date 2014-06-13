@@ -23,6 +23,7 @@ use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
+use File::Path qw(make_path);
 
 sub param_defaults {
   my ($self) = @_;
