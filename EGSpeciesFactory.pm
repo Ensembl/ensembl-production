@@ -52,6 +52,21 @@ sub param_defaults {
   };
 }
 
+sub fetch_input {
+  my ($self) = @_;
+  my $species = $self->param('species') || [];
+  my $division = $self->param('division') || [];
+  my $run_all = $self->param('run_all') || 0;
+  
+  if ($run_all ne 1) {
+    unless (scalar(@$species) || scalar(@$division)) {
+      $self->throw('You must supply one of the following parameters: species, division, run_all');
+    }
+  }
+  
+  $self->SUPER::fetch_input;
+}
+  
 sub run {
   my ($self) = @_;
   my @dbs;
