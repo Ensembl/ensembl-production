@@ -57,7 +57,6 @@ sub param_defaults {
     'libdir'          => '/nfs/panda/ensemblgenomes/external/lib',
     'workdir'         => '/tmp',
     'parameters_hash' => {},
-    'split_results'   => 0,
     'split_on'        => '>',
     'results_match'   => '\S',
   };
@@ -136,7 +135,7 @@ sub run {
   
   $self->update_options($runnable);
   
-  if ($self->param('split_results')) {
+  if ($self->param_is_defined('queryfile')) {
     # Some analyses can be run against a file with multiple sequences; but to
     # be stored in the database, everything needs a slice. So, partition the
     # results by sequence name, then generate a slice to attach the results to.
