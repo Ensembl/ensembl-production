@@ -61,8 +61,10 @@ my $star_default_se = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s -
 # See
 # https://groups.google.com/forum/#!searchin/rna-star/very$20long$20reads/rna-star/-2mBTPWRCJY/jgDbZjhl3NkJ
 
-my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+# --alignWindowsPerReadNmax 30000 added to accommodate very long reads (>= 5000bp)
+
+my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --alignWindowsPerReadNmax 30000 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
+my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --alignWindowsPerReadNmax 30000 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
 
 # Optimized for cross species comparison (ie for sensitivity)
 # but gives very long introns
@@ -142,8 +144,8 @@ sub pairedend_to_sam {
   #system($comm) == 0 || throw "Cannot execute command, $comm";
   my $stderr = qx(bash -c '$comm' 2>&1 1>/dev/null);
   if ($stderr) {
-      warn("Failed to execute external command, $@, because of $stderr\n");
-      throw "Cannot execute command, $comm";
+      throw("Failed to execute external command, $comm, because of $stderr");
+      #throw "Cannot execute command, $comm";
   }
   return $sam;
 }
