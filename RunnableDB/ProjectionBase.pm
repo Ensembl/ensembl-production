@@ -31,15 +31,14 @@ use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
 
 =cut
 sub fetch_homologies {
-    my $self = shift;
-#    my ($ha, $mlss, $from_species, $log_file, $gdba, $homology_types_allowed, $percent_id_filter) = shift;
-    my $ha   = shift;
-    my $mlss = shift;
+    my $self         = shift;
+    my $ha           = shift;
+    my $mlss         = shift;
     my $from_species = shift;
-    my $data = shift;
-    my $gdba = shift;
+    my $data         = shift;
+    my $gdba         = shift;
     my $homology_types_allowed = shift;
-    my $percent_id_filter = shift;
+    my $percent_id_filter      = shift;
 
     print $data "\t\tFetching Compara homologies...";
     my $from_species_alias = $gdba->fetch_by_registry_name($from_species)->name();
@@ -122,6 +121,10 @@ sub get_taxon_ancestry {
 return (\@ancestors,\@names);
 }
 
+=head2 check_directory
+
+  
+=cut
 sub check_directory {
     my ($self, $dir) = @_;
 
