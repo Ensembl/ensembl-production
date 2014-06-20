@@ -125,7 +125,7 @@ sub hive_meta_table {
 sub beekeeper_extra_cmdline_options {
   my ($self) = @_;
   return 
-      ' -reg_conf ' . $self->o('registry')
+      ' -reg_conf ' . $self->o('registry'),
   ;
 }
 
@@ -167,6 +167,7 @@ sub pipeline_analyses {
        -max_retry_count => 1,
        -rc_name         => 'default',
        -flow_into       => {
+#				             '1' => [ 'GeneNamesProjection' ],
 				             '2->A' => [ 'GeneNamesProjection' ],
 				             'A->1' => [ 'NotifyUser' ],
                            },
@@ -184,8 +185,9 @@ sub pipeline_analyses {
        -max_retry_count => 1,
        -rc_name         => 'default',
        -flow_into       => {
-				             '2->A' => [ 'GOProjection' ],
-				             'A->1' => [ 'NotifyUser' ],
+				             '1' => [ 'GOProjection' ],
+#				             '2->A' => [ 'GOProjection' ],
+#				             'A->1' => [ 'NotifyUser' ],
                            },
     },
 
@@ -194,7 +196,6 @@ sub pipeline_analyses {
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
        -parameters => {
 			'geneName_source'		  => $self->o('geneName_source'),  
-#			'geneDesc_source'		  => $self->o('geneDesc_source'),  
 		    'taxon_filter'			  => $self->o('taxon_filter'),
 		    'from_species'            => $self->o('gn_from_species'),
 		    'compara'                 => $self->o('compara'),
@@ -211,7 +212,6 @@ sub pipeline_analyses {
          -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection',
          -parameters => {
 		    'from_species'            => $self->o('go_from_species'),
-		    #'division'                => $self->o('division'),
    		    'release'                 => $self->o('release'),
    		    'ensemblObj_type'		  => $self->o('ensemblObj_type'),
    		    'goa_webservice'          => $self->o('goa_webservice'),
