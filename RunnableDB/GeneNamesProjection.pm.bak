@@ -151,20 +151,6 @@ sub write_output {
 ######################
 ## internal methods
 ######################
-=pod
-sub check_directory {
-    my ($self,$dir) = @_;
-
-    unless (-e $dir) {
-        print STDERR "$dir doesn't exists. I will try to create it\n" if ($self->debug());
-        print STDERR "mkdir $dir (0755)\n" if ($self->debug());
-        die "Impossible create directory $dir\n" unless (mkdir $dir, 0755 );
-    }
-
-return;
-}
-=cut
-
 sub backup {
     my ($to_ga, $to_species) = @_;
 
@@ -193,90 +179,6 @@ return 0;
 
 
 
-# Fetch the homologies from the Compara database. Returns a hash of arrays:
-# Key = "from" stable ID, value = array of "to" stable IDs
-
-=pod
-sub fetch_homologies {
-    my ($self) = @_;
-    my ($ha, $mlss, $from_species) = @_;
-
-    print $data "\t\tFetching Compara homologies...";
-    my $from_species_alias = $gdba->fetch_by_registry_name($from_species)->name();
-    my %homology_cache;
-    my $count              = 0;
-    my $homologies         = $ha->fetch_all_by_MethodLinkSpeciesSet($mlss);
-
-    foreach my $homology (@{$homologies}) {
-       next if (!homology_type_allowed($homology->description));
-
-       my $members = $homology->get_all_GeneMembers();
-       my @to_stable_ids;
-       my $from_stable_id;
-       my @perc_id; 
-
-       my $mems = $homology->get_all_Members();
- 
-       foreach my $mem (@{$mems}){
-           push @perc_id,$mem->perc_id();
-       }
-       next if (grep {$_ < $percent_id_filter} @perc_id) ;
- 
-       foreach my $member (@{$members}) {
-       	 if ($member->genome_db()->name() eq $from_species_alias) {
-            $from_stable_id = $member->stable_id();
-         }
-         else {
-            push(@to_stable_ids, $member->stable_id());
-         }
-       }
-
-       print STDERR "Warning: can't find stable ID corresponding to 'from' species ($from_species_alias)\n" if (!$from_stable_id);
-       push @{$homology_cache{$from_stable_id}}, @to_stable_ids;
-       $count++;
-   }
-   print $data "\tFetched " . $count . " homologies\n";
-
-return \%homology_cache;
-}
-
-
-sub homology_type_allowed {
-    my $h = shift;
-
-    foreach my $allowed (@$homology_types_allowed) {
-      return 1 if ($h eq $allowed);
-    }
-
-return undef;
-}
-
-sub get_taxon_ancestry{
-    my ($to_taxon_id)= @_;
-
-    my $dba =  Bio::EnsEMBL::DBSQL::DBAdaptor->new(        
-	-user   => 'ensro',
-        -dbname => 'ncbi_taxonomy',
-        -host   => 'mysql-eg-mirror.ebi.ac.uk',
-        -port   => '4205');   
-
-    my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
-    my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
-    my @lineage      = @{$node_adaptor->fetch_ancestors($node)};
-    my @ancestors;
-    my @names;
-    push @ancestors, $to_taxon_id; 
-
-    for my $node (@lineage) {
-       push @ancestors, $node->taxon_id();
-       push @names, $node->names()->{'scientific name'}->[0];
-       #print $data "\t\tNode ".$node->taxon_id()." is ".$node->rank()." ".$node->names()->{'scientific name'}->[0]."\n";
-    }
-
-return (\@ancestors,\@names);
-}
-=cut
-
 sub project_genenames {
     my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene,$ensemblObj_type) = @_;
 
@@ -294,15 +196,19 @@ sub project_genenames {
                && $flag_store_projections==0 
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
-              print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-              print $data "to: ".$to_gene->stable_id()."\t";
-              print $data "GeneName: ".$from_gene->display_xref->display_id()."\t";
-              print $data "DB: ".$from_gene->display_xref->dbname()."\n";
+             print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+             print $data "to: ".$to_gene->stable_id()."\t";
+             print $data "GeneName: ".$from_gene->display_xref->display_id()."\t";
+             print $data "DB: ".$from_gene->display_xref->dbname()."\n";
 
-         ##     $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
-              $to_gene->display_xref($dbEntry);
+	     # Adding projection source information 
+             $dbEntry->info_type("PROJECTION");
+             $dbEntry->info_text("projected from $from_species,".$to_gene->stable_id());
+
+             $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
+             $to_gene->display_xref($dbEntry);
               #$to_gene->add_DBEntry($dbEntry);
-          ##    $to_geneAdaptor->update($to_gene);
+             $to_geneAdaptor->update($to_gene);
           }
       }
    } 
@@ -315,13 +221,14 @@ sub project_genenames {
        my $gene_desc = $from_gene->description();
        $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
 
-        print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-        print $data "to: ".$to_gene->stable_id()."\t";
-        print $data "Gene Description: $gene_desc\n";
-        #print $data "Gene Description: ".$from_gene->description()." ";
+       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+       print $data "to: ".$to_gene->stable_id()."\t";
+       print $data "Gene Description: $gene_desc\n";
+       #print $data "Gene Description: ".$from_gene->description()." ";
  
-        $to_gene->description($from_gene->description);
-        ##$to_geneAdaptor->update($to_gene);
+       $to_gene->description($gene_desc);
+       #$to_gene->description($from_gene->description);
+       $to_geneAdaptor->update($to_gene);
    }    
 }
 
