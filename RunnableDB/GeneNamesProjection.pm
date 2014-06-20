@@ -21,7 +21,6 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
-#use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase');
 
 sub param_defaults {
@@ -47,17 +46,28 @@ sub fetch_input {
     $from_species           = $self->param('from_species');
     $compara                = $self->param('compara');
     $release                = $self->param('release');
+    $self->throw('to_species is obligatory parameter')   unless (defined $to_species);
+    $self->throw('from_species is obligatory parameter') unless (defined $from_species);
+    $self->throw('compara is obligatory parameter')      unless (defined $compara);
+    $self->throw('release is obligatory parameter')       unless (defined $release);
 
     $geneName_source        = $self->param('geneName_source');
     $taxon_filter           = $self->param('taxon_filter');
+    $self->throw('geneName_source is obligatory parameter') unless (defined $release);
+    $self->throw('taxon_filter is obligatory parameter')    unless (defined $taxon_filter);
 
     $method_link_type       = $self->param('method_link_type');
     $homology_types_allowed = $self->param('homology_types_allowed ');
     $percent_id_filter      = $self->param('percent_id_filter');
     $log_file               = $self->param('output_dir');
     $output_dir             = $self->param('output_dir');
- 
-    $self->throw('to_species, from_species, compara, release, geneName_source, taxon_filter, method_link_type, homology_types_allowed, percent_id_filter, log_file, output_dir are obligatory parameters') unless (defined $to_species && defined $from_species && defined $release && defined $compara && defined $geneName_source && defined $taxon_filter && defined $method_link_type && defined $homology_types_allowed && defined $log_file);
+    $self->throw('method_link_type is obligatory parameter')       unless (defined $method_link_type);
+    $self->throw('homology_types_allowed is obligatory parameter') unless (defined $homology_types_allowed);
+    $self->throw('percent_id_filter is obligatory parameter')      unless (defined $percent_id_filter);
+    $self->throw('log_file is obligatory parameter')               unless (defined $log_file);
+    $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
+
+    #$self->throw('to_species, from_species, compara, release, geneName_source, taxon_filter, method_link_type, homology_types_allowed, percent_id_filter, log_file, output_dir are obligatory parameters') unless (defined $to_species && defined $from_species && defined $release && defined $compara && defined $geneName_source && defined $taxon_filter && defined $method_link_type && defined $homology_types_allowed && defined $log_file);
 
 return;
 }
@@ -73,7 +83,6 @@ sub run {
     my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);  
-    #my ($ancestors,$names) = get_taxon_ancestry($to_taxon_id);  
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
     if (!grep (/$taxon_filter/, @$names)){
@@ -86,13 +95,12 @@ sub run {
     my $to_ta     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Transcript');
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
-    #if ($compara) {
+    
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
     $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB');
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
-    #}
 
     $self->check_directory($log_file);
     $log_file  = $log_file."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
@@ -117,7 +125,6 @@ sub run {
 	    
     # Get homologies from compara - comes back as a hash of arrays
     print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    #my $homologies    = fetch_homologies($ha, $mlss, $from_species);
     my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter);
 
     print $data "\n\tProjecting Gene Names & descriptions from $from_species to $to_species\n\n";
@@ -151,20 +158,6 @@ sub write_output {
 ######################
 ## internal methods
 ######################
-=pod
-sub check_directory {
-    my ($self,$dir) = @_;
-
-    unless (-e $dir) {
-        print STDERR "$dir doesn't exists. I will try to create it\n" if ($self->debug());
-        print STDERR "mkdir $dir (0755)\n" if ($self->debug());
-        die "Impossible create directory $dir\n" unless (mkdir $dir, 0755 );
-    }
-
-return;
-}
-=cut
-
 sub backup {
     my ($to_ga, $to_species) = @_;
 
@@ -210,14 +203,17 @@ sub project_genenames {
                && $flag_store_projections==0 
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
-              print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-              print $data "to: ".$to_gene->stable_id()."\t";
-              print $data "GeneName: ".$from_gene->display_xref->display_id()."\t";
-              print $data "DB: ".$from_gene->display_xref->dbname()."\n";
+             print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+             print $data "to: ".$to_gene->stable_id()."\t";
+             print $data "GeneName: ".$from_gene->display_xref->display_id()."\t";
+             print $data "DB: ".$from_gene->display_xref->dbname()."\n";
+
+	     # Adding projection source information 
+             $dbEntry->info_type("PROJECTION");
+             $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
 
              $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
              $to_gene->display_xref($dbEntry);
-              #$to_gene->add_DBEntry($dbEntry);
              $to_geneAdaptor->update($to_gene);
           }
       }
@@ -231,14 +227,12 @@ sub project_genenames {
        my $gene_desc = $from_gene->description();
        $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
 
-        print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-        print $data "to: ".$to_gene->stable_id()."\t";
-        print $data "Gene Description: $gene_desc\n";
-        #print $data "Gene Description: ".$from_gene->description()." ";
+       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+       print $data "to: ".$to_gene->stable_id()."\t";
+       print $data "Gene Description: $gene_desc\n";
  
-        $to_gene->description($gene_desc);
-        #$to_gene->description($from_gene->description);
-        $to_geneAdaptor->update($to_gene);
+       $to_gene->description($gene_desc);
+       $to_geneAdaptor->update($to_gene);
    }    
 }
 
