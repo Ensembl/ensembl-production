@@ -156,6 +156,7 @@ $names_1_1{'human'} =  [qw(
     opossum
     orang_utan
     panda
+    papio_anubis
     pig
     pika
     platypus
@@ -189,6 +190,7 @@ $names_1_many{'zebrafish'} = [qw(
     lamprey
     lepisosteus_oculatus
     medaka
+    poecilia_formosa
     stickleback
     tetraodon
     tilapia
@@ -203,6 +205,7 @@ $names_1_many{'human'} = [qw(
     lamprey
     lepisosteus_oculatus
     medaka
+    poecilia_formosa
     stickleback
     tetraodon
     tilapia
@@ -242,6 +245,7 @@ $go_terms{'human'} = [qw(
     opossum
     orang_utan
     panda
+    papio_anubis
     pig
     pika
     platypus
@@ -290,6 +294,7 @@ $go_terms{'mouse'} = [qw(
     opossum
     orang_utan
     panda
+    papio_anubis
     pig
     pika
     platypus
@@ -320,6 +325,7 @@ $go_terms{'zebrafish'} = [qw(
     lamprey
     lepisosteus_oculatus
     medaka
+    poecilia_formosa
     stickleback
     tetraodon
     tilapia
