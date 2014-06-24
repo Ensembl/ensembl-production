@@ -137,6 +137,101 @@ sub check_directory {
 return;
 }
 
+=head2 backup
+
+  
+=cut
+sub backup {
+    my $self  = shift;
+    my $to_ga = shift; 
+
+    print STDERR "Back up tables 'gene','transcript','xref','object_xref','external_synonym'\n";
+
+    my $helper = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $to_ga->dbc() );
+
+    $helper->execute_update(-SQL => 'drop table if exists gene_preProj_backup');
+    $helper->execute_update(-SQL => 'drop table if exists transcript_preProj_backup');
+    $helper->execute_update(-SQL => 'drop table if exists xref_preProj_backup');
+    $helper->execute_update(-SQL => 'drop table if exists object_xref_preProj_backup');
+    $helper->execute_update(-SQL => 'drop table if exists external_synonym_preProj_backup');
+
+    $helper->execute_update(-SQL => 'create table gene_preProj_backup             like gene');
+    $helper->execute_update(-SQL => 'create table transcript_preProj_backup       like transcript');
+    $helper->execute_update(-SQL => 'create table xref_preProj_backup             like xref');
+    $helper->execute_update(-SQL => 'create table object_xref_preProj_backup      like object_xref');
+    $helper->execute_update(-SQL => 'create table external_synonym_preProj_backup like external_synonym');
+
+    $helper->execute_update(-SQL => 'insert into gene_preProj_backup             select * from gene');
+    $helper->execute_update(-SQL => 'insert into transcript_preProj_backup       select * from transcript');
+    $helper->execute_update(-SQL => 'insert into xref_preProj_backup             select * from xref');
+    $helper->execute_update(-SQL => 'insert into object_xref_preProj_backup      select * from object_xref');
+    $helper->execute_update(-SQL => 'insert into external_synonym_preProj_backup select * from external_synonym');
+
+return 0;
+}
+
+=head2 delete_go_terms
+
+=cut
+sub delete_go_terms {
+    my $self  = shift;
+    my $to_ga = shift;
+
+    print STDERR "Delete existing projected GO terms in core\n";
+
+    my $sql_del_terms = "DELETE x, ox, gx FROM xref x, external_db e, object_xref ox, ontology_xref gx WHERE x.xref_id=ox.xref_id AND x.external_db_id=e.external_db_id AND ox.object_xref_id=gx.object_xref_id AND e.db_name='GO' AND x.info_type='PROJECTION'";
+
+    my $helper = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $to_ga->dbc());
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+    # note don't need to delete synonyms as GO terms don't have any
+    # Also no effect on descriptions or status
+
+return 0;
+}
+
+=head2 print_GOstats
+
+  
+=cut
+sub print_GOstats {
+    my $self   = shift;
+    my $to_ga  = shift;
+    my $data   = shift;
+ 
+    my $total_genes = count_rows($to_ga, "SELECT COUNT(*) FROM gene g");
+    my $count;
+    print $data "\tUnique GO terms total:";
+    print $data &count_rows($to_ga, "SELECT COUNT(DISTINCT(x.dbprimary_acc)) FROM xref x, external_db e WHERE e.external_db_id=x.external_db_id AND e.db_name='GO'");
+    print $data " Unique GO terms from projection:";
+    print $data &count_rows($to_ga, "SELECT COUNT(DISTINCT(x.dbprimary_acc)) FROM xref x, external_db e WHERE e.external_db_id=x.external_db_id AND e.db_name='GO' AND x.info_type='PROJECTION'");
+    print $data "\n\n";
+
+return 0;
+}
+
+=head2 count_rows
+
+  
+=cut
+sub count_rows {
+    my ($adaptor, $sql) = @_;
+
+    my $sth = $adaptor->dbc->prepare($sql);
+    $sth->execute();
+
+return ($sth->fetchrow_array())[0];
+}
+
+
+
+
+
+
+
+
+
+
 
 
 1;
