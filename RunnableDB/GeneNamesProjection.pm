@@ -31,9 +31,9 @@ sub param_defaults {
 
 my ($flag_store_projections, $flag_backup);
 my ($to_species, $from_species, $compara, $release);
-my ($geneName_source, $taxon_filter);
 my ($method_link_type, $homology_types_allowed, $percent_id_filter);
 my ($log_file, $output_dir, $data);
+my ($geneName_source, $taxon_filter);
 my ($mlssa, $ha, $ma, $gdba);
 
 sub fetch_input {
@@ -50,12 +50,7 @@ sub fetch_input {
     $self->throw('from_species is obligatory parameter') unless (defined $from_species);
     $self->throw('compara is obligatory parameter')      unless (defined $compara);
     $self->throw('release is obligatory parameter')       unless (defined $release);
-
-    $geneName_source        = $self->param('geneName_source');
-    $taxon_filter           = $self->param('taxon_filter');
-    $self->throw('geneName_source is obligatory parameter') unless (defined $release);
-    $self->throw('taxon_filter is obligatory parameter')    unless (defined $taxon_filter);
-
+    
     $method_link_type       = $self->param('method_link_type');
     $homology_types_allowed = $self->param('homology_types_allowed ');
     $percent_id_filter      = $self->param('percent_id_filter');
@@ -67,7 +62,10 @@ sub fetch_input {
     $self->throw('log_file is obligatory parameter')               unless (defined $log_file);
     $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
 
-    #$self->throw('to_species, from_species, compara, release, geneName_source, taxon_filter, method_link_type, homology_types_allowed, percent_id_filter, log_file, output_dir are obligatory parameters') unless (defined $to_species && defined $from_species && defined $release && defined $compara && defined $geneName_source && defined $taxon_filter && defined $method_link_type && defined $homology_types_allowed && defined $log_file);
+    $geneName_source        = $self->param('geneName_source');
+    $taxon_filter           = $self->param('taxon_filter');
+    $self->throw('geneName_source is obligatory parameter') unless (defined $release);
+    $self->throw('taxon_filter is obligatory parameter')    unless (defined $taxon_filter);
 
 return;
 }
@@ -115,7 +113,8 @@ sub run {
     print $data "\t\tto_species_common   :$to_species\n";
    
     # Backup tables that will be updated
-    backup($to_ga,$to_species)if($flag_backup==1);
+    $self->backup($to_ga) if($flag_backup==1);
+    #backup($to_ga,$to_species)if($flag_backup==1);
 	    
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
@@ -158,6 +157,8 @@ sub write_output {
 ######################
 ## internal methods
 ######################
+=pod 
+
 sub backup {
     my ($to_ga, $to_species) = @_;
 
@@ -184,7 +185,7 @@ sub backup {
 return 0;
 }
 
-
+=cut
 
 sub project_genenames {
     my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene,$ensemblObj_type) = @_;
@@ -203,10 +204,10 @@ sub project_genenames {
                && $flag_store_projections==0 
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
-             print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-             print $data "to: ".$to_gene->stable_id()."\t";
-             print $data "GeneName: ".$from_gene->display_xref->display_id()."\t";
-             print $data "DB: ".$from_gene->display_xref->dbname()."\n";
+             print $data "\t\tProject from:".$from_gene->stable_id()."\t";
+             print $data "to:".$to_gene->stable_id()."\t";
+             print $data "GeneName:".$from_gene->display_xref->display_id()."\t";
+             print $data "DB:".$from_gene->display_xref->dbname()."\n";
 
 	     # Adding projection source information 
              $dbEntry->info_type("PROJECTION");
