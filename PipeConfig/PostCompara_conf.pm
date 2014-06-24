@@ -65,15 +65,15 @@ sub default_options {
 		# ensembl object type to attach GO projection, default 'Translation', options 'Transcript'
 		ensemblObj_type           => 'Translation', 
 
-        ## GOA webservice parameters
+        # GOA webservice parameters
         goa_webservice   => 'http://www.ebi.ac.uk/QuickGO/',
 		goa_params       => 'GValidate?service=taxon&action=getBlacklist&taxon=',
 
-		## only certain types of homology are considered
+		# only certain types of homology are considered
 		homology_types_allowed => ['ortholog_one2one','apparent_ortholog_one2one'],
 		
-		## only these evidence codes will be considered for GO term projection
-		## See https://www.ebi.ac.uk/panda/jira/browse/EG-974
+		# only these evidence codes will be considered for GO term projection
+		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
 		evidence_codes         => ['IEA','IDA','IC','IGI','IMP','IPI','ISS','NAS','ND','RCA','TAS'],
 		#  IC Inferred by curator
 		#  IDA Inferred from direct assay
@@ -86,6 +86,11 @@ sub default_options {
 		#  ND No biological data available
 		#  RCA Reviewed computational analysis
 		#  TAS Traceable author statement
+
+		# GO Projection flags
+		'flag_go_check'          => '0', #  Off by default. Check if GO term is already assigned, and don't project if it is.
+		'flag_full_stats'        => '1', #  On by default.  Control the printing of full statistics, i.e.:                        			     #    - number of terms per evidence type for projected GO terms
+		'flag_delete_go_terms'   => '0', #  Off by default. Delete projected (info_type='PROJECTION') GO terms in the 'to_species'. 
 
 	## For all pipelines
         ## flags
@@ -185,9 +190,8 @@ sub pipeline_analyses {
        -max_retry_count => 1,
        -rc_name         => 'default',
        -flow_into       => {
-				             '1' => [ 'GOProjection' ],
-#				             '2->A' => [ 'GOProjection' ],
-#				             'A->1' => [ 'NotifyUser' ],
+				             '2->A' => [ 'GOProjection' ],
+				             'A->1' => [ 'NotifyUser' ],
                            },
     },
 
@@ -195,15 +199,16 @@ sub pipeline_analyses {
     {  -logic_name => 'GeneNamesProjection',
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
        -parameters => {
-			'geneName_source'		  => $self->o('geneName_source'),  
-		    'taxon_filter'			  => $self->o('taxon_filter'),
-		    'from_species'            => $self->o('gn_from_species'),
+   		    'from_species'            => $self->o('gn_from_species'),
 		    'compara'                 => $self->o('compara'),
    		    'release'                 => $self->o('release'),
    		    'method_link_type'        => $self->o('gn_method_link_type'),
    		    'homology_types_allowed ' => $self->o('gn_homology_types_allowed'),
             'percent_id_filter'       => $self->o('gn_percent_id_filter'),
             'output_dir'              => $self->o('output_dir'),
+			
+			'geneName_source'		  => $self->o('geneName_source'),  
+		    'taxon_filter'			  => $self->o('taxon_filter'),  
    	   },
        -rc_name       => 'default',
     },
@@ -212,15 +217,17 @@ sub pipeline_analyses {
          -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection',
          -parameters => {
 		    'from_species'            => $self->o('go_from_species'),
+		    'compara'                 => $self->o('compara'),
    		    'release'                 => $self->o('release'),
-   		    'ensemblObj_type'		  => $self->o('ensemblObj_type'),
-   		    'goa_webservice'          => $self->o('goa_webservice'),
-   		    'goa_params'              => $self->o('goa_params'),
    		    'method_link_type'        => $self->o('go_method_link_type'),
    		    'homology_types_allowed ' => $self->o('go_homology_types_allowed'),
-   		    'evidence_codes'		  => $self->o('evidence_codes'),
    		    'percent_id_filter'       => $self->o('go_percent_id_filter'),
             'output_dir'              => $self->o('output_dir'),
+
+   		    'evidence_codes'		  => $self->o('evidence_codes'),
+		    'ensemblObj_type'		  => $self->o('ensemblObj_type'),
+   		    'goa_webservice'          => $self->o('goa_webservice'),
+   		    'goa_params'              => $self->o('goa_params'),
      	 },
 #         -hive_capacity => $self->o('blastp_capacity'),
 #         -batch_size    =>  50, 
@@ -246,6 +253,10 @@ sub pipeline_wide_parameters {
         %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
             'flag_store_projections' => $self->o('flag_store_projections'),
        		'flag_backup'            => $self->o('flag_backup'),
+
+            'flag_go_check'          => $self->o('flag_go_check'),
+            'flag_full_stats'        => $self->o('flag_full_stats'),
+       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
     };
 }
 
