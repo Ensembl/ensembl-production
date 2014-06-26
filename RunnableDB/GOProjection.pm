@@ -377,7 +377,7 @@ sub project_go_terms {
 
       $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
-      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type, 1) if ($flag_store_projections==0);
+      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type, 1) if ($flag_store_projections==1);
 
       print $data "\t\tProject from:".$from_translation->stable_id()."\t";
       print $data "to:".$to_translation->stable_id()."\t";
