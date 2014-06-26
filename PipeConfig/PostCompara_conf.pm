@@ -21,8 +21,9 @@ sub default_options {
 
 	## Flags controlling pipeline to run
 	    # on '1' by default, set to '0' if want to skip this analysis
-    	flag_GO         => '0',     
-    	flag_GeneNames  => '1',     
+    	flag_GeneNames   => '1',     
+    	flag_GO          => '1',     
+    	flag_DBAnalysis  => '0',     
     	
 	## GeneName/Description Projection 
 		# source species 
@@ -92,6 +93,9 @@ sub default_options {
 		'flag_full_stats'        => '1', #  On by default.  Control the printing of full statistics, i.e.:                        			     #    - number of terms per evidence type for projected GO terms
 		'flag_delete_go_terms'   => '0', #  Off by default. Delete projected (info_type='PROJECTION') GO terms in the 'to_species'. 
 
+	## Compara DB Analysis
+
+
 	## For all pipelines
         ## flags
 		'flag_store_projections' => '0', #  Off by default. Control the storing of projections into database. 
@@ -153,11 +157,10 @@ sub pipeline_analyses {
          -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
          -input_ids     => [ {} ], # Needed to create jobs
          -hive_capacity => -1,
-		 -flow_into     => $pipeline_flow,
-#         -flow_into 	=> {
-#			'1' => ['GeneNamesProjectionFactory'],
-#			'2' => ['GOProjectionFactory'],
-#         },
+         -flow_into     => {
+				             '1->A' => ['GeneNamesProjectionFactory', 'GOProjectionFactory'],
+				             'A->1' => [ 'NotifyUser' ],
+                           },
       },
 
     {  -logic_name      => 'GeneNamesProjectionFactory',
@@ -168,13 +171,10 @@ sub pipeline_analyses {
                               division    => $self->o('gn_division'),
                               run_all     => $self->o('gn_run_all'),
                             },
-#       -input_ids       => [ {} ],
        -max_retry_count => 1,
        -rc_name         => 'default',
        -flow_into       => {
-#				             '1' => [ 'GeneNamesProjection' ],
-				             '2->A' => [ 'GeneNamesProjection' ],
-				             'A->1' => [ 'NotifyUser' ],
+				             '2' => [ 'GeneNamesProjection' ],
                            },
     },
        
@@ -186,12 +186,10 @@ sub pipeline_analyses {
                               division    => $self->o('go_division'),
                               run_all     => $self->o('go_run_all'),
                             },
-#       -input_ids       => [ {} ],
        -max_retry_count => 1,
        -rc_name         => 'default',
        -flow_into       => {
-				             '2->A' => [ 'GOProjection' ],
-				             'A->1' => [ 'NotifyUser' ],
+				             '2' => [ 'GOProjection' ],
                            },
     },
 
@@ -234,7 +232,6 @@ sub pipeline_analyses {
           -rc_name       => 'default',
 	  },
 
-
     {  -logic_name => 'NotifyUser',
        -module     => 'Bio::EnsEMBL::EGPipeline::ProjectGeneNames::RunnableDB::NotifyUser',
        -parameters => {
@@ -242,7 +239,8 @@ sub pipeline_analyses {
           	'subject'    => $self->o('pipeline_name').' has finished',
           	'output_dir' => $self->o('output_dir'),
        },
-    }
+    },
+
   ];
 }
 
