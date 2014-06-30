@@ -546,6 +546,7 @@ sub project_display_names {
 
       my $dbname = $dbEntry->dbname();
 
+      return if ($from_gene->status eq 'KNOWN_BY_PROJECTION');
       return if (!($dbname =~ /MGI/ || $dbname =~ /HGNC/ || $dbname =~ /ZFIN_ID/));
 
       # Skip clone names if projecting all sources
