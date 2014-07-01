@@ -72,7 +72,7 @@ sub get_attrib_codes {
   my $sql = q{
     SELECT code, name
     FROM attrib_type
-    WHERE code = 'SNP count' };
+    WHERE code = 'SNPCount' };
   my %attrib_codes = %{ $prod_helper->execute_into_hash(-SQL => $sql) };
   return %attrib_codes;
 }
