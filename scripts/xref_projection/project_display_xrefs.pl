@@ -261,7 +261,7 @@ if ($compara_db) {
    $ma    = $compara_db->get_adaptor('GeneMember');
    $gdba  = $compara_db->get_adaptor('GenomeDB');
 
-   die "Can't connect to Compara database specified by $compara_dbname - check command-line arguments" if (!$mlssa || !$ha || !$ma ||!$gdba);
+   warn "Can't connect to Compara database specified by $compara_dbname - check command-line arguments" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
 } else {
 
@@ -270,9 +270,14 @@ if ($compara_db) {
    $ma    = @{$registry->get_all_adaptors(-group => "compara", -type => "GeneMember")}[0];
    $gdba  = @{$registry->get_all_adaptors(-group => "compara", -type => "GenomeDB")}[0];
 
-   die "Can't connect to Compara database from registry - check registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+   warn "Can't connect to Compara database from registry - check registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
 }
+
+die "Could not find MethodLinkSpeciesSet adaptor" if !$mlssa;
+die "Could not find Homology adaptor" if !$ha;
+die "Could not find GeneMember adaptor" if !$ma;
+die "Could not find GenomeDB adaptor" if !$gdba;
 
 my $from_ga = $registry->get_adaptor($from_species, 'core', 'Gene');
 
