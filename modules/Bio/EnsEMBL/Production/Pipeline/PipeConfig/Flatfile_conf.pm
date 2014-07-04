@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::Flatfile_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 

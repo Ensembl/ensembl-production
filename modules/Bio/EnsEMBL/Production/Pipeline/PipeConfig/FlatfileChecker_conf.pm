@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FlatfileChecker_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 
 sub default_options {
     my ($self) = @_;
