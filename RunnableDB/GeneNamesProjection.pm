@@ -33,7 +33,7 @@ my ($flag_store_projections, $flag_backup);
 my ($to_species, $from_species, $compara, $release);
 my ($method_link_type, $homology_types_allowed, $percent_id_filter);
 my ($log_file, $output_dir, $data);
-my ($geneName_source, $taxon_filter);
+my ($geneName_source, $geneDesc_rules, $taxon_filter);
 my ($mlssa, $ha, $ma, $gdba);
 
 sub fetch_input {
@@ -63,8 +63,10 @@ sub fetch_input {
     $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
 
     $geneName_source        = $self->param('geneName_source');
+    $geneDesc_rules         = $self->param('geneDesc_rules');
     $taxon_filter           = $self->param('taxon_filter');
-    $self->throw('geneName_source is obligatory parameter') unless (defined $release);
+    $self->throw('geneName_source is obligatory parameter') unless (defined $geneName_source);
+    $self->throw('geneDesc_rules is obligatory parameter') unless (defined $geneDesc_rules);
     $self->throw('taxon_filter is obligatory parameter')    unless (defined $taxon_filter);
 
 return;
@@ -93,11 +95,11 @@ sub run {
     my $to_ta     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Transcript');
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
-    
-    $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
-    $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
-    $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB');
+
+    $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
+    $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
+    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');   
+    $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
     $self->check_directory($log_file);
@@ -157,36 +159,6 @@ sub write_output {
 ######################
 ## internal methods
 ######################
-=pod 
-
-sub backup {
-    my ($to_ga, $to_species) = @_;
-
-    my $helper = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $to_ga->dbc() );
-
-    $helper->execute_update(-SQL => 'drop table if exists gene_preProj_backup');
-    $helper->execute_update(-SQL => 'drop table if exists transcript_preProj_backup');
-    $helper->execute_update(-SQL => 'drop table if exists xref_preProj_backup');
-    $helper->execute_update(-SQL => 'drop table if exists object_xref_preProj_backup');
-    $helper->execute_update(-SQL => 'drop table if exists external_synonym_preProj_backup');
-
-    $helper->execute_update(-SQL => 'create table gene_preProj_backup             like gene');
-    $helper->execute_update(-SQL => 'create table transcript_preProj_backup       like transcript');
-    $helper->execute_update(-SQL => 'create table xref_preProj_backup             like xref');
-    $helper->execute_update(-SQL => 'create table object_xref_preProj_backup      like object_xref');
-    $helper->execute_update(-SQL => 'create table external_synonym_preProj_backup like external_synonym');
-    
-    $helper->execute_update(-SQL => 'insert into gene_preProj_backup             select * from gene');
-    $helper->execute_update(-SQL => 'insert into transcript_preProj_backup       select * from transcript');
-    $helper->execute_update(-SQL => 'insert into xref_preProj_backup             select * from xref');
-    $helper->execute_update(-SQL => 'insert into object_xref_preProj_backup      select * from object_xref');
-    $helper->execute_update(-SQL => 'insert into external_synonym_preProj_backup select * from external_synonym');
-
-return 0;
-}
-
-=cut
-
 sub project_genenames {
     my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene,$ensemblObj_type) = @_;
 
@@ -201,7 +173,7 @@ sub project_genenames {
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
           if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_projections==0 
+               && $flag_store_projections==1 
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
              print $data "\t\tProject from:".$from_gene->stable_id()."\t";
@@ -221,11 +193,13 @@ sub project_genenames {
    } 
 
    # Project gene_description to target_gene
+   my $gene_desc = $from_gene->description();
+
    if(defined $from_gene->description() 
        && !defined $to_gene->description()
-       && $flag_store_projections==0)
+       && $flag_store_projections==1 
+       && !grep (/$gene_desc/, @$geneDesc_rules)) 
    {
-       my $gene_desc = $from_gene->description();
        $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
 
        print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
