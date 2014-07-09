@@ -249,6 +249,7 @@ sub _process_bam {
   my @mismatching_lengths;
   foreach my $bam_seq_name (keys %{$bam_info}) {
     if(! exists $toplevel_slices->{$bam_seq_name}) {
+      next if $bam_seq_name =~ /EBV/;
       push(@missing_names, $bam_seq_name);
     } else {
       push(@mismatching_lengths, $bam_seq_name)
@@ -384,6 +385,7 @@ sub _get_toplevel_slice_info {
   if(! exists $self->{toplevel_names}->{$species}) {
     delete $self->{toplevel_names};
     my $has_ucsc_synonyms = $self->_has_ucsc_synonyms($dba);
+    my $has_refseq_synonyms = $self->_has_refseq_synonyms($dba);
     my $core = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $slices = $core->get_SliceAdaptor()->fetch_all('toplevel');
     my %lookup;
@@ -394,6 +396,10 @@ sub _get_toplevel_slice_info {
         my $synonyms = $slice->get_all_synonyms('UCSC');
         $lookup{$_->name()} = $seq_region_len for @{$synonyms};
       }
+      if($has_refseq_synonyms) {
+        my $synonyms = $slice->get_all_synonyms('RefSeq_genomic');
+        $lookup{$_->name()} = $seq_region_len for @{$synonyms};
+      }
     }
     $self->{toplevel_names}->{$species} = \%lookup;
   }
@@ -402,13 +408,23 @@ sub _get_toplevel_slice_info {
 
 #See if there are any UCSC synonyms hanging around. If not then we 
 #do not have to look for them
-sub _has_ucsc_synonyms {
-  my ($self, $dba) = @_;
-  my $ucsc_dbid = $dba->get_DBEntryAdaptor->get_external_db_id('UCSC');
+sub _has_synonyms {
+  my ($self, $dba, $source) = @_;
+  my $source_id = $dba->get_DBEntryAdaptor->get_external_db_id($source);
   return $dba->dbc()->sql_helper()->execute_single_result(
     -SQL => 'select count(*) from seq_region_synonym where external_db_id =?',
-    -PARAMS => [$ucsc_dbid]
+    -PARAMS => [$source_id]
   );
+}
+
+sub _has_ucsc_synonyms {
+  my ($self, $dba) = @_;
+  return $self->_has_synonyms($dba, 'UCSC');
+}
+
+sub _has_refseq_synonyms {
+  my ($self, $dba) = @_;
+  return $self->_has_synonyms($dba, 'RefSeq_genomic');
 }
 
 sub _find_perl_samtools {
