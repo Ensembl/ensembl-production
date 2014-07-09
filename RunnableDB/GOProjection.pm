@@ -29,7 +29,6 @@ use Bio::EnsEMBL::Registry;
 use LWP;
 use JSON;
 use Bio::EnsEMBL::Utils::SqlHelper;
-#use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase');
 
 sub param_defaults {
@@ -139,7 +138,7 @@ sub run {
 
     # Backup tables that will be updated
     $self->backup($to_ga)          if($flag_backup==1);
-    $self->delete_go_terms($to_ga) if($flag_delete_go_terms==0);
+    $self->delete_go_terms($to_ga) if($flag_delete_go_terms==1);
  
     # build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
@@ -159,8 +158,6 @@ sub run {
     my $total_genes   = scalar(keys %$homologies);
 
     foreach my $from_stable_id (keys %$homologies) {
-$i++;
-#last if $i>50;
        my $from_gene  = $from_ga->fetch_by_stable_id($from_stable_id);
        next if (!$from_gene);
        my @to_genes   = @{$homologies->{$from_stable_id}};
