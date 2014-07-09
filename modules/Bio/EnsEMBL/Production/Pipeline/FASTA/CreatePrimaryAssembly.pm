@@ -84,8 +84,8 @@ sub run {
 sub target_file {
   my ($self) = @_;
   # File name format looks like:
-  # <species>.<assembly>.<release>.<sequence type>.<id type>.<id>.fa.gz
-  # e.g. Homo_sapiens.GRCh37.64.dna_rm.toplevel.fa.gz -> Homo_sapiens.GRCh37.64.dna_rm.primary_assembly.fa.gz
+  # <species>.<assembly>.<sequence type>.<id type>.<id>.fa.gz
+  # e.g. Homo_sapiens.GRCh37.dna_rm.toplevel.fa.gz -> Homo_sapiens.GRCh37.dna_rm.primary_assembly.fa.gz
   my $file = $self->param('file');
   $file =~ s/\.toplevel\./.primary_assembly./;
   return $file;

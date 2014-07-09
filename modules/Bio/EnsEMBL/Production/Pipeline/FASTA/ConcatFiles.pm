@@ -151,11 +151,10 @@ sub target_file {
   my ($self) = @_;
   # File name format looks like:
   # <species>.<assembly>.<release>.<sequence type>.<id type>.<id>.fa.gz
-  # e.g. Homo_sapiens.GRCh37.64.dna_rm.toplevel.fa.gz
+  # e.g. Homo_sapiens.GRCh37.dna_rm.toplevel.fa.gz
   my @name_bits;
   push @name_bits, $self->web_name();
   push @name_bits, $self->assembly();
-  push @name_bits, $self->param('release');
   push @name_bits, $self->param('data_type');
   push @name_bits, 'toplevel';
   push @name_bits, 'fa', 'gz';

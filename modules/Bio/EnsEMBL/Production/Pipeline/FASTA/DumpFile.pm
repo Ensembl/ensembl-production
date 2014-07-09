@@ -443,7 +443,6 @@ sub _dump_prediction_transcripts {
       $self->_generate_fasta_serializer( 'cdna', 'abinitio' );
     my ( $abinitio_peptide_filename, $pep_fh, $abinitio_peptide_serializer ) =
       $self->_generate_fasta_serializer( 'pep', 'abinitio' );
-    
     while ( my $transcript = shift @{$transcript_list} ) {
       next unless $self->ok_to_process_logic_name($transcript);
       
@@ -554,14 +553,13 @@ sub _generate_file_name {
   my ( $self, $data_type, $level, $section ) = @_;    #level & section is optional
 
   # File name format looks like:
-  # <species>.<assembly>.<release>.<sequence type>.<id type>.<id>.fa
-  # e.g. Homo_sapiens.GRCh37.64.dna_rm.chromosome.HG905_PATCH.fa
-  #      Homo_sapiens.GRCh37.64.dna.chromosome.20.fa
-  #      Ciona_savignyi.CSAV2.0.65.dna.toplevel.fa
+  # <species>.<assembly>.<sequence type>.<id type>.<id>.fa
+  # e.g. Homo_sapiens.GRCh37.dna_rm.chromosome.HG905_PATCH.fa
+  #      Homo_sapiens.GRCh37.dna.chromosome.20.fa
+  #      Ciona_savignyi.CSAV2.0.dna.toplevel.fa
   my @name_bits;
   push @name_bits, $self->web_name();
   push @name_bits, $self->assembly();
-  push @name_bits, $self->param('release');
   push @name_bits, lc($data_type);
   push @name_bits, $level if $level;
   push @name_bits, $section if $section;
@@ -748,18 +746,18 @@ gz: All files are compacted with GNU Zip for storage efficiency.
 
 EXAMPLES
    The genomic sequence of human chromosome 1:
-     Homo_sapiens.GRCh37.57.dna.chromosome.1.fa.gz
+     Homo_sapiens.GRCh37.dna.chromosome.1.fa.gz
 
    The masked version of the genome sequence on human chromosome 1
    (contains '_rm' or '_sm' in the name):
-     Homo_sapiens.GRCh37.57.dna_rm.chromosome.1.fa.gz
-     Homo_sapiens.GRCh37.57.dna_sm.chromosome.1.fa.gz
+     Homo_sapiens.GRCh37.dna_rm.chromosome.1.fa.gz
+     Homo_sapiens.GRCh37.dna_sm.chromosome.1.fa.gz
 
    Non-chromosomal assembly sequences:
    e.g. mitochondrial genome, sequence contigs not yet mapped on chromosomes
-     Homo_sapiens.GRCh37.57.dna.nonchromosomal.fa.gz
-     Homo_sapiens.GRCh37.57.dna_rm.nonchromosomal.fa.gz
-     Homo_sapiens.GRCh37.57.dna_sm.nonchromosomal.fa.gz
+     Homo_sapiens.GRCh37.dna.nonchromosomal.fa.gz
+     Homo_sapiens.GRCh37.dna_rm.nonchromosomal.fa.gz
+     Homo_sapiens.GRCh37.dna_sm.nonchromosomal.fa.gz
 
 ---------
 TOPLEVEL
@@ -771,11 +769,11 @@ N padded haplotype/patch regions.
 EXAMPLES
 
   Toplevel sequences unmasked:
-    Homo_sapiens.GRCh37.57.dna.toplevel.fa.gz
+    Homo_sapiens.GRCh37.dna.toplevel.fa.gz
   
   Toplevel soft/hard masked sequences:
-    Homo_sapiens.GRCh37.57.dna_sm.toplevel.fa.gz
-    Homo_sapiens.GRCh37.57.dna_rm.toplevel.fa.gz
+    Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
+    Homo_sapiens.GRCh37.dna_rm.toplevel.fa.gz
 
 -----------------
 PRIMARY ASSEMBLY
@@ -787,19 +785,19 @@ where patch and haplotype sequences would confuse analysis.
 EXAMPLES
 
   Primary assembly sequences unmasked:
-    Homo_sapiens.GRCh37.57.dna.primary_assembly.fa.gz
+    Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz
   
   Primary assembly soft/hard masked sequences:
-    Homo_sapiens.GRCh37.57.dna_sm.primary_assembly.fa.gz
-    Homo_sapiens.GRCh37.57.dna_rm.primary_assembly.fa.gz
+    Homo_sapiens.GRCh37.dna_sm.primary_assembly.fa.gz
+    Homo_sapiens.GRCh37.dna_rm.primary_assembly.fa.gz
 
 --------------
 SPECIAL CASES
 --------------
 Some chromosomes have alternate haplotypes which are presented in files with 
 the haplotype sequence only:
-   Homo_sapiens.GRCh37.56.dna_rm.chromosome.HSCHR6_MHC_QBL.fa.gz
-   Homo_sapiens.GRCh37.56.dna_rm.chromosome.HSCHR17_1.fa.gz
+   Homo_sapiens.GRCh37.dna_rm.chromosome.HSCHR6_MHC_QBL.fa.gz
+   Homo_sapiens.GRCh37.dna_rm.chromosome.HSCHR17_1.fa.gz
 
 All alternative assembly and patch regions have their sequence padded 
 with N's to ensure alignment programs can report the correct index
@@ -975,7 +973,7 @@ The files are consistently named following this pattern:
 
 EXAMPLES  (Note: Most species do not have sequences for each different <status>)
   for Human:
-    Homo_sapiens.NCBI37.74.cds.all.fa.gz
+    Homo_sapiens.NCBI37.cds.all.fa.gz
       cds sequences for all transcripts: known, novel and pseudo
 
 Difference between known and novel transcripts
