@@ -21,7 +21,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase');
+use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 
 sub param_defaults {
     return {
