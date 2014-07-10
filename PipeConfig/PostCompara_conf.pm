@@ -15,15 +15,16 @@ sub default_options {
         release  		=> software_version(),
 	    registry        => [],
         compara         => 'plants',
-        pipeline_name   => 'PostCompara_'.$self->o('compara').'_'.$self->o('release'),
+        pipeline_name   => $self->o('ENV','USER').'_PostCompara',
+        #pipeline_name   => 'PostCompara_'.$self->o('compara').'_'.$self->o('release'),
         email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
         output_dir      => '/nfs/nobackup2/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
 	## Flags controlling pipeline to run
 	    # on '1' by default, set to '0' if want to skip this analysis
-    	flag_GeneNames   => '1',     
-    	flag_GO          => '1',     
-    	flag_DBAnalysis  => '0',     
+    	flag_GeneNames    => '0',     
+    	flag_GO           => '0',     
+    	flag_GeneCoverage => '0',     
     	
 	## GeneName/Description Projection 
 		# source species 
@@ -37,7 +38,7 @@ sub default_options {
 
         taxon_filter     => 'eudicotyledons', # i.e Liliopsida,eudicotyledons
 		geneName_source  => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
-		#geneDesc_source  => ['UniProtKB/Swiss-Prot', 'TAIR_LOCUS', 'UniProtKB/TrEMBL'] ,
+		geneDesc_rules   => ['hypothetical'] , 
 
 		gn_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
 		# only certain types of homology are considered
@@ -48,7 +49,7 @@ sub default_options {
 
 	## GO Projection  
 		# source species 
-		go_from_species  => 'arabidopsis_thaliana',,
+		go_from_species  => 'arabidopsis_thaliana',
 
 		# target species
 	    go_species       => ['vitis_vinifera'],
@@ -93,8 +94,8 @@ sub default_options {
 		'flag_full_stats'        => '1', #  On by default.  Control the printing of full statistics, i.e.:                        			     #    - number of terms per evidence type for projected GO terms
 		'flag_delete_go_terms'   => '0', #  Off by default. Delete projected (info_type='PROJECTION') GO terms in the 'to_species'. 
 
-	## Compara DB Analysis
-
+	## Gene Coverage
+		gcov_division    => 'fungi',
 
 	## For all pipelines
         ## flags
@@ -143,14 +144,22 @@ sub pipeline_analyses {
  
  	# Control which pipelines to run
   	my $pipeline_flow;
-  
-  	if ($self->o('flag_GO') && $self->o('flag_GeneNames')) {
+
+  	if ($self->o('flag_GeneNames') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
+    	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GOProjectionFactory', 'GeneCoverageFactory'];
+  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
     	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GOProjectionFactory'];
-  	} elsif ($self->o('flag_GO')) {
-    	$pipeline_flow  = ['GOProjectionFactory'];
+  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
+    	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GeneCoverageFactory'];
+  	} elsif ($self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
+    	$pipeline_flow  = ['GOProjectionFactory', 'GeneCoverageFactory'];
   	} elsif ($self->o('flag_GeneNames')) {
   	    $pipeline_flow  = ['GeneNamesProjectionFactory'];
-  	}
+  	} elsif ($self->o('flag_GO')) {
+    	$pipeline_flow  = ['GOProjectionFactory'];
+  	} elsif ($self->o('flag_GeneCoverage')) {
+    	$pipeline_flow  = ['GeneCoverageFactory'];
+	}  	
  
     return [
       {  -logic_name    => 'backbone_fire_PostCompara',
@@ -158,7 +167,7 @@ sub pipeline_analyses {
          -input_ids     => [ {} ], # Needed to create jobs
          -hive_capacity => -1,
          -flow_into     => {
-				             '1->A' => ['GeneNamesProjectionFactory', 'GOProjectionFactory'],
+							 '1->A' => $pipeline_flow, 
 				             'A->1' => [ 'NotifyUser' ],
                            },
       },
@@ -193,6 +202,16 @@ sub pipeline_analyses {
                            },
     },
 
+    {  -logic_name      => 'GeneCoverageFactory',
+       -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory',
+       -parameters => {
+            'division'              => $self->o('gcov_division'),
+   	   },
+       -flow_into => { 
+						 '2'=> [ 'GeneCoverage' ],
+       				 },
+       -rc_name   => 'default',
+    },
 
     {  -logic_name => 'GeneNamesProjection',
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
@@ -206,7 +225,11 @@ sub pipeline_analyses {
             'output_dir'              => $self->o('output_dir'),
 			
 			'geneName_source'		  => $self->o('geneName_source'),  
+			'geneDesc_rules'		  => $self->o('geneDesc_rules'),
 		    'taxon_filter'			  => $self->o('taxon_filter'),  
+
+            'flag_store_projections' => $self->o('flag_store_projections'),
+       		'flag_backup'            => $self->o('flag_backup'),
    	   },
        -rc_name       => 'default',
     },
@@ -226,11 +249,25 @@ sub pipeline_analyses {
 		    'ensemblObj_type'		  => $self->o('ensemblObj_type'),
    		    'goa_webservice'          => $self->o('goa_webservice'),
    		    'goa_params'              => $self->o('goa_params'),
+
+            'flag_store_projections' => $self->o('flag_store_projections'),
+       		'flag_backup'            => $self->o('flag_backup'),
+            'flag_go_check'          => $self->o('flag_go_check'),
+            'flag_full_stats'        => $self->o('flag_full_stats'),
+       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
      	 },
 #         -hive_capacity => $self->o('blastp_capacity'),
 #         -batch_size    =>  50, 
           -rc_name       => 'default',
-	  },
+	 },
+
+    {  -logic_name => 'GeneCoverage',
+       -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage',
+       -parameters => {
+            'output_dir'              => $self->o('output_dir'),
+   	   },
+       -rc_name       => 'default',
+    },
 
     {  -logic_name => 'NotifyUser',
        -module     => 'Bio::EnsEMBL::EGPipeline::ProjectGeneNames::RunnableDB::NotifyUser',
@@ -241,6 +278,7 @@ sub pipeline_analyses {
        },
     },
 
+
   ];
 }
 
@@ -249,12 +287,12 @@ sub pipeline_wide_parameters {
 
     return {
         %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
-            'flag_store_projections' => $self->o('flag_store_projections'),
-       		'flag_backup'            => $self->o('flag_backup'),
+#            'flag_store_projections' => $self->o('flag_store_projections'),
+#       	 'flag_backup'            => $self->o('flag_backup'),
 
-            'flag_go_check'          => $self->o('flag_go_check'),
-            'flag_full_stats'        => $self->o('flag_full_stats'),
-       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
+#            'flag_go_check'          => $self->o('flag_go_check'),
+#            'flag_full_stats'        => $self->o('flag_full_stats'),
+#       	 'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
     };
 }
 
@@ -267,19 +305,19 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	 => { 'LSF' => '-q production-rh6 -n 4 -M 4000 -R "rusage[mem=4000]"'},
-      'mem'     	 => { 'LSF' => '-q production-rh6 -n 4 -M 12000 -R "rusage[mem=12000]"'},
-      '2Gb_job'      => {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
-      '24Gb_job'     => {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      '250Mb_job'    => {'LSF' => '-q production-rh6 -C0 -M250   -R"select[mem>250]   rusage[mem=250]"' },
-      '500Mb_job'    => {'LSF' => '-q production-rh6 -C0 -M500   -R"select[mem>500]   rusage[mem=500]"' },
-	  '1Gb_job'      => {'LSF' => '-q production-rh6 -C0 -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
-	  '2Gb_job'      => {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
-	  '8Gb_job'      => {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
-	  '24Gb_job'     => {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-	  'msa'          => {'LSF' => '-q production-rh6 -W 24:00' },
-	  'msa_himem'    => {'LSF' => '-q production-rh6 -M 32768 -R "rusage[mem=32768]" -W 24:00' },
-	  'urgent_hcluster'      => {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
+      'default'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 4000 -R "rusage[mem=4000]"'},
+      'mem'     	 	=> {'LSF' => '-q production-rh6 -n 4 -M 12000 -R "rusage[mem=12000]"'},
+      '2Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
+      '24Gb_job'     	=> {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+      '250Mb_job'    	=> {'LSF' => '-q production-rh6 -C0 -M250   -R"select[mem>250]   rusage[mem=250]"' },
+      '500Mb_job'    	=> {'LSF' => '-q production-rh6 -C0 -M500   -R"select[mem>500]   rusage[mem=500]"' },
+	  '1Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
+	  '2Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
+	  '8Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
+	  '24Gb_job'     	=> {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+	  'msa'          	=> {'LSF' => '-q production-rh6 -W 24:00' },
+	  'msa_himem'    	=> {'LSF' => '-q production-rh6 -M 32768 -R "rusage[mem=32768]" -W 24:00' },
+	  'urgent_hcluster' => {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
     }
 }
 
