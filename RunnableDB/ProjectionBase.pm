@@ -21,6 +21,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
+use Bio::EnsEMBL::Attribute;
 use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
 
 =head2 fetch_homologies 
@@ -223,15 +224,162 @@ sub count_rows {
 return ($sth->fetchrow_array())[0];
 }
 
+sub process_cigar_line {
+    my $self    = shift;
+    my $cigars  = shift;
+    my $root_id = shift;
 
+    my $sequence = 0;
+    my (@hits, @misses);
 
+    ## parse cigar strings into hit/miss matrix
+    for my $x (@$cigars) {
+        my ($id, $species, $cigar) = split '\^\^', $x;  
+        my $position = 0;
+ 
+        while (length $cigar > 0) {
+          my ($number, $letter) = ($cigar =~ /^(\d*)(\w)/);
+          $number = 1 if ($number eq ''); 
 
+          for (my $i = 0; $i < $number; $i++) {
+            if ($letter eq 'D') {
+              $misses[$position][$sequence] = 1;
+              $hits  [$position][$sequence] = 0;
+            } else {
+              $hits[$position][$sequence]   = 1;
+              $misses[$position][$sequence] = 0;
+            }
+           $position++;
+         }
+         $cigar =~ s/^\d*\w//;
+      }# while (length 
+      $sequence++;
+    } #for my $x
 
+    my @profile;
+    my $positions = scalar @hits;
 
+    if ($positions == 0) {
+      #print $lastRootId, "\n";
+      print STDERR Dumper @hits,   "\n";
+      print STDERR Dumper @misses, "\n";
+    }
 
+    ## Summing up the hits & misses count on each position
+    ## for all sequences
+    for (my $i = 0; $i < $positions; $i++) {
+        my $hits   = 0;
+        my $misses =0;
+      
+        for my $sequence (@{$hits[$i]}) {
+            if ($hits[$i][$sequence] == 1){ $hits++; } 
+            elsif ($misses[$i][$sequence] == 1){ $misses++; } 
+            else { print STDERR join "*", 
+	           #$lastRootId, 
+	           $positions, scalar @hits, $i, $sequence, $hits[$i][$sequence], $misses[$i][$sequence], "\n";
+                   die; # asusmptions of code are false
+            }
+       } #for my $sequence
+      
+      ## Summarize hits & misses count into consensus profile for each position      
+      if ($hits >= $misses) { $profile[$i] = 1; } 
+      else { $profile[$i] = 0; }
+    } # for (my $i=0
 
+    if (! defined @{$hits[0]}) {
+       print STDERR "Problem for root ID: $root_id\n";
+       print Dumper @hits;
+       print "**\n";
+       print Dumper @misses;
+       die;
+    }
 
+    ## For each sequence derive score
+    for (my $i = 0; $i < scalar @{$hits[0]}; $i++) {
+        my $match = 0; my $unmatched = 0;
+        my $extra = 0; my $wc = 0;
 
+        ## Compare each position hit/miss matrix against the consensus profile
+        for (my $j = 0; $j < scalar @hits; $j ++) {
+          if ($hits[$j][$i] == $profile[$j]) {
+             if ($profile[$j] == 1) { $match++; } 
+             else { $wc++; }
+          } else {
+	     # profile is positive, protein is zero
+             if ($profile[$j] == 1) { $unmatched++; }
+             # profile is negative, protein is positve
+	     else { $extra++; }
+	  }
+        } # for (my $j
+
+      ## Derive scores for each sequence
+      my ($id, $species, $cigar) = split '\^\^', @$cigars[$i];
+      my $score1       = $match / ($match + $extra);
+      # score 2: proportion of true positives, could be 0/0!
+      my $score2;
+      
+      if ($match + $unmatched == 0) {
+      	 print STDERR "Root ID: $root_id has no concensus positives\n";
+      	 $score2 = 0;
+      } else { $score2 = $match / ($match + $unmatched); }
+
+      store_gene_attrib($id, $species, $score1, $score2);
+
+    } # for ( my $i 
+
+return 0;
+}
+
+sub store_gene_attrib {
+    my ($id, $species, $score1, $score2) = @_; 
+
+if($species=~/pombe/){
+
+   my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
+   my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+   my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
+   my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
+   my @attribs;
+
+   my $attrib1 = Bio::EnsEMBL::Attribute->new(
+                -CODE        => 'prot_coverage',
+                -NAME        => 'Protein Coverage',
+                -DESCRIPTION => 'Protein coverage for this gene derived from checkAlignment2.pl script',
+                -VALUE       => $score1);
+
+   my $attrib2 = Bio::EnsEMBL::Attribute->new(
+                -CODE        => 'con_coverage',
+                -NAME        => 'Consensus Coverage',
+                -DESCRIPTION => 'Consensus coverage for this gene derived from checkAlignment2.pl script',
+                -VALUE       => $score2);
+   
+   push @attribs, $attrib1;
+   push @attribs, $attrib2;
+
+   $attrib_adaptor->store_on_Gene($gene, \@attribs);
+   # $gene->add_Attributes($attrib1);
+   # $gene->add_Attributes($attrib2);
+   # my @gene_attributes = @{$gene->get_all_Attributes };
+   print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
+  }
+
+return 0;
+}
+
+sub print_2d {
+	my @array_2d=@_;
+
+        # for the same position of each sequence
+	for(my $i = 0; $i <= $#array_2d; $i++){
+	   print STDERR "i-POSITION:$i\n";	
+
+	   for(my $j = 0; $j <= $#{$array_2d[0]} ; $j++){
+	      print STDERR "j-SEQUENCE COUNT:$j\n";	
+	      print STDERR "$array_2d[$i][$j]\n";
+	   }
+	   print STDERR "\n";
+	}
+}
 
 
 1;
