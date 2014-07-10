@@ -29,7 +29,7 @@ use Bio::EnsEMBL::Registry;
 use LWP;
 use JSON;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase');
+use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 
 sub param_defaults {
     return {
@@ -120,7 +120,8 @@ sub run {
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
+    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
+    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
 
