@@ -887,7 +887,10 @@ Fasta cDNA dumps
 #################
 
 These files hold the cDNA sequences corresponding to Ensembl gene 
-predictions.
+predictions. cDNA consists of transcript sequences for actual and possible
+genes, including pseudogenes, NMD and the like. See the file names 
+explanation below for different subsets of both known and predicted 
+transcripts.
 
 ------------
 FILE NAMES
@@ -955,7 +958,7 @@ Fasta cds dumps
 #################
 
 These files hold the coding sequences corresponding to Ensembl gene 
-predictions.
+predictions. CDS does not contain UTR or intronic sequence.
 
 ------------
 FILE NAMES
