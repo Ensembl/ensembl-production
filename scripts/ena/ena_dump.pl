@@ -37,21 +37,21 @@ my $help;
 my $reg_file;
 
 GetOptions(
-	"gene_file=s" => \$gene_file,
-	"trans_file=s" => \$trans_file,
-	"host=s" => \$host,
-	"port=i" => \$port,
-	"user=s" => \$user,
-	"db_version=i" => \$version,
-	"upload_only!" => \$upload_only,
-	"dump_only!" => \$dump_only,
-	"ftp_user=s" => \$ftp_user,
-	"ftp_pass=s" => \$ftp_pass,
-	"h|help!" => \$help,
-	"reg_file=s" => \$reg_file,
+    "gene_file=s" => \$gene_file,
+    "trans_file=s" => \$trans_file,
+    "host=s" => \$host,
+    "port=i" => \$port,
+    "user=s" => \$user,
+    "db_version=i" => \$version,
+    "upload_only!" => \$upload_only,
+    "dump_only!" => \$dump_only,
+    "ftp_user=s" => \$ftp_user,
+    "ftp_pass=s" => \$ftp_pass,
+    "h|help!" => \$help,
+    "reg_file=s" => \$reg_file,
 );
 
-if ( 
+if (
        ($upload_only && $gene_file && $trans_file && $ftp_user && $ftp_pass)
     || ($dump_only && $host && $user && $port && $gene_file && $trans_file)
     || ($host && $port && $user && $gene_file && $trans_file && $ftp_user && $ftp_pass)
@@ -72,7 +72,7 @@ our ($gene_fh, $transcript_fh);
 
 unless ($upload_only) {
     print "Dumping\n";
-    
+
     if ($reg_file) {
         $reg->load_all($reg_file);
     } else {
@@ -85,21 +85,21 @@ unless ($upload_only) {
               -set_reconnect_when_lost => 1,
         );
     }
-    
+
     $gene_fh = new IO::File "> $gene_file";
     $transcript_fh = new IO::File "> $trans_file";
-    
+
     print $gene_fh "INSDC\tProtein ID\tFeature ID\tDB name\tTaxon\n";
     print $transcript_fh "INSDC\tProtein ID\tFeature ID\tDB name\tTaxon\n";
-    
+
     my @species = @{$reg->get_all_species()};
-    
+
     foreach my $name (@species) {
         dump_features($name);
     }
-    
+
     $gene_fh->close;
-    $transcript_fh->close;    
+    $transcript_fh->close;
 }
 
 unless ($dump_only) {
@@ -116,37 +116,37 @@ unless ($dump_only) {
 
 sub dump_features {
     my $species = shift;
-    
+
     my $meta = $reg->get_adaptor($species,'Core','MetaContainer');
     my $taxon = $meta->get_taxonomy_id();
-    
+
     my $dbea = $reg->get_adaptor($species,'core','DBEntry');
     my $external_dbid = $dbea->get_external_db_id('EMBL',undef,1);
-    
+
     my @db_ids = $dbea->list_gene_ids_by_external_db_id($external_dbid);
-    
+
     my $gene_xrefs = 0;
     my $trans_xrefs = 0;
-    
+
     my $ga = $reg->get_adaptor($species,'core','gene');
     my $change = 0;
-	foreach my $gene_dbID (@db_ids) {
-		my $gene = $ga->fetch_by_dbID($gene_dbID);
-		$change = write_feature($gene,$taxon);
-		$gene_xrefs += $change;
-		if ($change && $gene_xrefs % 1000 == 1) {print "Dumped $gene_xrefs genes\n";}
-	}
+    foreach my $gene_dbID (@db_ids) {
+        my $gene = $ga->fetch_by_dbID($gene_dbID);
+        $change = write_feature($gene,$taxon);
+        $gene_xrefs += $change;
+        if ($change && $gene_xrefs % 1000 == 1) {print "Dumped $gene_xrefs genes\n";}
+    }
 
-    my $ta = $reg->get_adaptor($species,'core','transcript');	
-	@db_ids = $dbea->list_transcript_ids_by_external_db_id($external_dbid);
-	$change = 0;
-	foreach my $tran_dbID (@db_ids) {
-		my $tran = $ta->fetch_by_dbID($tran_dbID);
-		$change = write_feature($tran,$taxon);
-		$trans_xrefs += $change;
-		if ($change && $trans_xrefs % 1000 == 1) {print "Dumped $trans_xrefs transcripts\n";}
-	}
-    
+    my $ta = $reg->get_adaptor($species,'core','transcript');    
+    @db_ids = $dbea->list_transcript_ids_by_external_db_id($external_dbid);
+    $change = 0;
+    foreach my $tran_dbID (@db_ids) {
+        my $tran = $ta->fetch_by_dbID($tran_dbID);
+        $change = write_feature($tran,$taxon);
+        $trans_xrefs += $change;
+        if ($change && $trans_xrefs % 1000 == 1) {print "Dumped $trans_xrefs transcripts\n";}
+    }
+
     printf "%s: Dumped %s Gene Xrefs and %s Transcript Xrefs\n",$species,$gene_xrefs,$trans_xrefs;
 }
 
@@ -158,7 +158,7 @@ sub write_feature {
     elsif (ref($feature) eq 'Bio::EnsEMBL::Transcript') {$fh = $transcript_fh;}
     my $xref_id;
     my $dbes = $feature->get_all_DBLinks('EMBL');
-    
+
     foreach my $xref (@$dbes) {
         printf $fh "%s\t%s\t%s\t%s\n",
                $xref->primary_id,
@@ -181,9 +181,9 @@ sub upload_to_ftp {
 }
 
 sub usage {
-	print <<DOC
-USAGE INSTRUCTIONS	
-	
+    print <<DOC
+USAGE INSTRUCTIONS
+
 Script for extracting all Gene and Transcript cross-links from Ensembl databases that
 derive from the EMBL source. 
 
@@ -216,7 +216,7 @@ HQ896422   ENSGALG00000011510    gallus_gallus_core_71_4   gallus_gallus
 
 and
 
-DQ453506   ENSTBEP00000005515   tupaia_belangeri_core_71_1   37347	
+DQ453506   ENSTBEP00000005515   tupaia_belangeri_core_71_1   37347    
 
 
 DOC
