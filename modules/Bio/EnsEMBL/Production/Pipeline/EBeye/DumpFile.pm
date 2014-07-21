@@ -594,15 +594,15 @@ sub _fetch_orthologs {
     my $orth_species_string = qq/@wanted_ortholog_species/;
 
     # Get orthologs
-    my $sth = $dbc->prepare(qq{SELECT m1.stable_id , m2.stable_id, gdb2.name
-                               FROM genome_db gdb1 JOIN member m1 USING (genome_db_id) 
-                                    JOIN homology_member hm1 USING (member_id)
+    my $sth = $dbc->prepare(qq{SELECT gm1.stable_id, gm2.stable_id, gdb2.name
+                               FROM genome_db gdb1 JOIN gene_member gm1 USING (genome_db_id) 
+                                    JOIN homology_member hm1 USING (gene_member_id)
                                     JOIN homology h USING (homology_id)
                                     JOIN homology_member hm2 USING (homology_id)
-                                    JOIN member m2 ON (hm2.member_id = m2.member_id)
-                                    JOIN genome_db gdb2 on (m2.genome_db_id = gdb2.genome_db_id)
+                                    JOIN gene_member gm2 ON (hm2.gene_member_id = gm2.gene_member_id)
+                                    JOIN genome_db gdb2 on (gm2.genome_db_id = gdb2.genome_db_id)
                                WHERE gdb1.name = "$orth_target_species" 
-                                     AND m2.source_name = "ENSEMBLGENE"
+                                     AND gm2.source_name = "ENSEMBLGENE"
                                      AND gdb2.name IN ("$orth_species_string")
                                      AND h.description in ("ortholog_one2one", 
                                                            "apparent_ortholog_one2one", 
