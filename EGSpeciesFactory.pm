@@ -71,7 +71,9 @@ sub run {
   my ($self) = @_;
   my @dbs;
   foreach my $dba (@{$self->param('dbas')}) {
+  	print $dba->species()."\n";
     if(!$self->process_dba($dba)) {
+  	print "Skipping\n";
       $self->fine('Skipping %s', $dba->species());
       next;
     }
@@ -82,6 +84,7 @@ sub run {
     }
     
     if($all) {
+  	print "All\n";
       my $variation = $self->production_flow($dba, 'variation');
       if ($variation) {
         push(@dbs, [$self->input_id($dba), $variation]);
@@ -96,6 +99,8 @@ sub run {
     }
     
   }
+  	print "End\n";
+  
   $self->param('dbs', \@dbs);
   
   return;
