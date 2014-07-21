@@ -36,6 +36,8 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_75_76a.sql|schema version');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_75_76b.sql|Add grch37_archive web_data type');
 
 
 -- The 'species' table.
@@ -208,7 +210,7 @@ CREATE TABLE analysis_web_data (
 
   db_type                   ENUM('cdna', 'core', 'funcgen',
                                 'otherfeatures', 'rnaseq', 'vega',
-                                'presite', 'sangervega')
+                                'presite', 'sangervega', 'grch37_archive')
                             NOT NULL DEFAULT 'core',
 
   displayable               BOOLEAN NOT NULL DEFAULT true,
