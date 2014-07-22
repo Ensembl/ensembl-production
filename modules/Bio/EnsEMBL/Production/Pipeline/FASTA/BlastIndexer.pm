@@ -147,7 +147,7 @@ sub target_filename {
   if($self->param('type') eq 'genomic') {
     my @split = split(/\./, $file);
     my $rm_date = $self->repeat_mask_date();
-    $split[-4] = $rm_date;
+    splice @split, -3, 0, $rm_date;
     return join(q{.}, @split);
   }
   return $file;
