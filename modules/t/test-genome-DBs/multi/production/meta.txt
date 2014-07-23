@@ -16,3 +16,4 @@
 16	\N	patch	patch_74_75a.sql|schema_version
 22	\N	patch	patch_74_75b.sql|code_longer
 24	\N	patch	patch_75_76a.sql|schema_version
+25	\N	patch	patch_75_76b.sql|Add grch37_archive web_data type

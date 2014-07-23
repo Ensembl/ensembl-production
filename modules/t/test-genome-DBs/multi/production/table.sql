@@ -20,7 +20,7 @@ CREATE TABLE `analysis_web_data` (
   `analysis_description_id` int(10) unsigned NOT NULL,
   `web_data_id` int(10) unsigned DEFAULT NULL,
   `species_id` int(10) unsigned NOT NULL,
-  `db_type` enum('cdna','core','funcgen','otherfeatures','rnaseq','vega','presite','sangervega') NOT NULL DEFAULT 'core',
+  `db_type` enum('cdna','core','funcgen','otherfeatures','rnaseq','vega','presite','sangervega','grch37_archive') NOT NULL DEFAULT 'core',
   `displayable` tinyint(1) NOT NULL DEFAULT '1',
   `created_by` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=26 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
