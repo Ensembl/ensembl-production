@@ -8,6 +8,12 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection
 
 =head1 DESCRIPTION
 
+ Pipeline to project gene display_xref and/or gene description
+ from one species to another by using the homologies derived 
+ from the Compara ProteinTree pipeline. 
+
+ Normally this is used to project from a well annotated species to one which is not.
+
 =head1 MAINTAINER
 
 $Author: ckong $
@@ -75,8 +81,7 @@ return;
 sub run {
     my ($self) = @_;
 
-    # Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    # Bio::EnsEMBL::Registry->disconnect_all();
+    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     # Get taxon ancestry of the target species
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
@@ -98,9 +103,10 @@ sub run {
 
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');   
+#   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
+#   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');   
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
-    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
     $self->check_directory($log_file);
     $log_file  = $log_file."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
@@ -151,16 +157,13 @@ return;
 sub write_output {
     my ($self) = @_;
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    Bio::EnsEMBL::Registry->disconnect_all();
-
 }
 
 ######################
 ## internal methods
 ######################
 sub project_genenames {
-    my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene,$ensemblObj_type) = @_;
+    my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene) = @_;
 
     # Project when 'source gene' has display_xref and 'target gene' has NO display_xref
     if(defined $from_gene->display_xref() 
@@ -173,7 +176,7 @@ sub project_genenames {
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
           if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_projections==1 
+               && $flag_store_projections==1
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
              print $data "\t\tProject from:".$from_gene->stable_id()."\t";
