@@ -14,17 +14,21 @@ sub default_options {
 
         release  		=> software_version(),
 	    registry        => [],
-        compara         => 'plants',
-        pipeline_name   => $self->o('ENV','USER').'_PostCompara',
+	    # division for GO & GeneName projection
+        compara         => 'plants', # protists, fungi, plants, metazoa
+        pipeline_name   => $self->o('ENV','USER').'_PostCompara_'.$self->o('release'),
         #pipeline_name   => 'PostCompara_'.$self->o('compara').'_'.$self->o('release'),
         email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
         output_dir      => '/nfs/nobackup2/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
-	## Flags controlling pipeline to run
-	    # on '1' by default, set to '0' if want to skip this analysis
+	## Flags controlling sub-pipeline to run
+	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '0',     
     	flag_GO           => '0',     
     	flag_GeneCoverage => '0',     
+
+    ## hive_capacity values for some analyses:
+       genecoverage_capacity  =>  '200',
     	
 	## GeneName/Description Projection 
 		# source species 
@@ -36,16 +40,17 @@ sub default_options {
         gn_division 	 => [], # EnsemblMetazoa, EnsemblProtists, EnsemblFungi, EnsemblPlants
 	    gn_run_all       => 0,
 
+        # flowering group of your target species
         taxon_filter     => 'eudicotyledons', # i.e Liliopsida,eudicotyledons
 		geneName_source  => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
 		geneDesc_rules   => ['hypothetical'] , 
 
-		gn_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
 		# only certain types of homology are considered
+		gn_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
 		gn_homology_types_allowed => ['ortholog_one2one'],
 		
         # Percentage identify filter for the homology
-        'gn_percent_id_filter'    => '10',
+        gn_percent_id_filter      => '10',
 
 	## GO Projection  
 		# source species 
@@ -57,12 +62,12 @@ sub default_options {
         go_division 	 => [], # EnsemblMetazoa, EnsemblProtists, EnsemblFungi, EnsemblPlants
 	    go_run_all       => 0,
 
-		go_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
 		# only certain types of homology are considered
-		go_homology_types_allowed => ['ortholog_one2one'],
+		go_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
+		go_homology_types_allowed => ['ortholog_one2one','apparent_ortholog_one2one'],
 		
         # Percentage identify filter for the homology
-        'go_percent_id_filter'    => '10',
+        go_percent_id_filter      => '10',
 
 		# ensembl object type to attach GO projection, default 'Translation', options 'Transcript'
 		ensemblObj_type           => 'Translation', 
@@ -71,9 +76,6 @@ sub default_options {
         goa_webservice   => 'http://www.ebi.ac.uk/QuickGO/',
 		goa_params       => 'GValidate?service=taxon&action=getBlacklist&taxon=',
 
-		# only certain types of homology are considered
-		homology_types_allowed => ['ortholog_one2one','apparent_ortholog_one2one'],
-		
 		# only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
 		evidence_codes         => ['IEA','IDA','IC','IGI','IMP','IPI','ISS','NAS','ND','RCA','TAS'],
@@ -90,17 +92,16 @@ sub default_options {
 		#  TAS Traceable author statement
 
 		# GO Projection flags
-		'flag_go_check'          => '0', #  Off by default. Check if GO term is already assigned, and don't project if it is.
-		'flag_full_stats'        => '1', #  On by default.  Control the printing of full statistics, i.e.:                        			     #    - number of terms per evidence type for projected GO terms
-		'flag_delete_go_terms'   => '0', #  Off by default. Delete projected (info_type='PROJECTION') GO terms in the 'to_species'. 
+		flag_go_check          => '0', #  Off by default. Check if GO term is already assigned, and don't project if it is.
+		flag_full_stats        => '1', #  On by default.  Control the printing of full statistics, i.e.:  #    - number of terms per evidence type for projected GO terms
+		flag_delete_go_terms   => '0', #  Off by default. Delete existing projected (info_type='PROJECTION') GO terms in the target species, before doing projection   
 
 	## Gene Coverage
-		gcov_division    => 'fungi',
+		gcov_division          => 'fungi', # protists, fungi, plants, metazoa
 
 	## For all pipelines
-        ## flags
-		'flag_store_projections' => '0', #  Off by default. Control the storing of projections into database. 
-		'flag_backup'			 => '1', #  On by default. Dumping of table, backup to_species db. 
+		flag_store_projections => '0', #  Off by default. Control the storing of projections into database. 
+		flag_backup			   => '1', #  On by default. Dumping of table, backup to_species db. 
 		
         'pipeline_db' => {  
      	   -host   => $self->o('host'),
@@ -202,14 +203,14 @@ sub pipeline_analyses {
                            },
     },
 
-    {  -logic_name      => 'GeneCoverageFactory',
-       -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory',
-       -parameters => {
-            'division'              => $self->o('gcov_division'),
-   	   },
-       -flow_into => { 
+    {  -logic_name  => 'GeneCoverageFactory',
+       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory',
+       -parameters  => {
+            			    division      => $self->o('gcov_division'),
+   	    		       },
+       -flow_into 	=> { 
 						 '2'=> [ 'GeneCoverage' ],
-       				 },
+       				   },
        -rc_name   => 'default',
     },
 
@@ -228,8 +229,8 @@ sub pipeline_analyses {
 			'geneDesc_rules'		  => $self->o('geneDesc_rules'),
 		    'taxon_filter'			  => $self->o('taxon_filter'),  
 
-            'flag_store_projections' => $self->o('flag_store_projections'),
-       		'flag_backup'            => $self->o('flag_backup'),
+            'flag_store_projections'  => $self->o('flag_store_projections'),
+       		'flag_backup'             => $self->o('flag_backup'),
    	   },
        -rc_name       => 'default',
     },
@@ -264,9 +265,12 @@ sub pipeline_analyses {
     {  -logic_name => 'GeneCoverage',
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage',
        -parameters => {
-            'output_dir'              => $self->o('output_dir'),
-   	   },
+        			   'division'     => $self->o('gcov_division'),
+            		   'output_dir'   => $self->o('output_dir'),
+   	   				  },
+       -batch_size    => 20,
        -rc_name       => 'default',
+       -hive_capacity => $self->o('genecoverage_capacity'),
     },
 
     {  -logic_name => 'NotifyUser',
