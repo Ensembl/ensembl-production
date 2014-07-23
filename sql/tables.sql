@@ -31,13 +31,11 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES 
   (NULL, 'schema_type', 'production'), 
-  (NULL, 'schema_version', 76);
+  (NULL, 'schema_version', 77);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_75_76a.sql|schema version');
-INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_75_76b.sql|Add grch37_archive web_data type');
+  VALUES (NULL, 'patch', 'patch_76_77a.sql|schema version');
 
 
 -- The 'species' table.
