@@ -8,9 +8,6 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory
 
 =head1 DESCRIPTION
 
- This program uses the cigar lines generated from a Compara run to generate 
- consistency metrics for Compara clusters. Specifically, it compares the 
- extent of each protein sequence in the alignment to the extent of the cluster consensus. 
 
 =head1 MAINTAINER
 
@@ -39,27 +36,27 @@ sub fetch_input {
     $division   = $self->param('division');
     $self->throw('division is obligatory parameter') unless (defined $division);
 
-=pod   
+   
     $sql_geneTree = "SELECT distinct(r.root_id) 
-			FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam 
-			WHERE m.seq_member_id = n.seq_member_id 
-			AND gam.seq_member_id = m.seq_member_id 
-			AND r.root_id = n.root_id 
-			AND r.clusterset_id = 'default' 
-			AND gam.gene_align_id = r.gene_align_id 
-			AND g.genome_db_id = m.genome_db_id  limit 2";
-=cut 
+		       FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam 
+		       WHERE m.seq_member_id = n.seq_member_id 
+		       AND gam.seq_member_id = m.seq_member_id 
+		       AND r.root_id         = n.root_id 
+		       AND r.clusterset_id   = 'default' 
+		       AND gam.gene_align_id = r.gene_align_id 
+		       AND g.genome_db_id    = m.genome_db_id
+		       ORDER BY r.root_id";
+=pod 
     $sql_geneTree       = "SELECT distinct(r.root_id) 
- 			 	FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
- 			 	WHERE m.member_id = n.member_id
- 			 	AND gam.member_id = m.member_id
- 			 	AND r.root_id = n.root_id
- 			 	AND r.clusterset_id = 'default'
- 			 	AND gam.gene_align_id = r.gene_align_id
- 			 	AND g.genome_db_id = m.genome_db_id
-                                ORDER BY r.root_id LIMIT 2";
-
-  ## LIMIT for testing ensembl_compara_fungi_22_75 root_id=>37624  394, root_id=>38020 381
+ 			     FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
+ 			     WHERE m.member_id     = n.member_id
+ 			     AND gam.member_id     = m.member_id
+ 			     AND r.root_id         = n.root_id
+ 			     AND r.clusterset_id   = 'default'
+ 			     AND gam.gene_align_id = r.gene_align_id
+ 			     AND g.genome_db_id    = m.genome_db_id
+                             ORDER BY r.root_id";
+=cut
 
 return;
 }
@@ -67,9 +64,7 @@ return;
 sub run {
     my ($self) = @_;
 
-    #my $dba_compara = Bio::EnsEMBL::Registry->get_DBAdaptor("fungi", "compara");
     my $dba_compara = Bio::EnsEMBL::Registry->get_DBAdaptor($division, "compara");
-
     print STDERR "Analysing ".$dba_compara->dbc()->dbname()."\n";
 
     my $helper    = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $dba_compara->dbc() );
