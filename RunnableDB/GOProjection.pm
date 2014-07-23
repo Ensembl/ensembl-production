@@ -90,8 +90,7 @@ return;
 sub run {
     my ($self) = @_;
 
-    #Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    #Bio::EnsEMBL::Registry->disconnect_all();
+    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     # Connection to Oracle DB for taxon constraint 
     my $dsn_goapro = 'DBI:Oracle:host=ora-vm-026.ebi.ac.uk;sid=goapro;port=1531';
@@ -120,10 +119,10 @@ sub run {
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
+    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
     #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
-    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
     $self->check_directory($log_file);
     $log_file  = $log_file."/".$from_species."-".$to_species."_GOTermsProjection_logs.txt";
@@ -185,8 +184,6 @@ return;
 sub write_output {
     my ($self) = @_;
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    Bio::EnsEMBL::Registry->disconnect_all();
 
 }
 
