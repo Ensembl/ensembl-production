@@ -20,3 +20,5 @@
 23	\N	patch	patch_75_76_a.sql|schema_version
 24	\N	patch	patch_75_76_b.sql|drop_domain_sitewise
 25	\N	patch	patch_75_76_c.sql|homoeologues
+26	\N	patch	patch_75_76_d.sql|gene_member_seq_member
+27	\N	patch	patch_75_76_e.sql|genome_db.name

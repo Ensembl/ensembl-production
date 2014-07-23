@@ -116,3 +116,4 @@
 605	\N	patch	patch_74_75_f.sql|longer_code
 606	\N	patch	patch_75_76_a.sql|schema_version
 607	\N	patch	patch_75_76_b.sql|allow_null_karyotype
+608	\N	patch	patch_75_76_c.sql|remove_alternative_splicing
