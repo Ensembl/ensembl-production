@@ -333,7 +333,6 @@ return 0;
 sub store_gene_attrib {
     my ($id, $species, $score1, $score2) = @_; 
 
-#if($species=~/pombe/){
     Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
@@ -359,7 +358,6 @@ sub store_gene_attrib {
 
     $attrib_adaptor->store_on_Gene($gene, \@attribs);
     #print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
-#}
 
 return 0;
 }
