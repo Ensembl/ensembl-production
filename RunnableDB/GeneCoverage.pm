@@ -41,7 +41,6 @@ sub fetch_input {
     $self->throw('root_id is obligatory parameter') unless (defined $root_id);
     $self->throw('division is obligatory parameter') unless (defined $division);
 
-    #$sql_geneTree = "SELECT distinct(r.root_id) 
     $sql_geneTree       = "SELECT r.root_id, cigar_line, n.node_id, m.stable_id, m.taxon_id, g.name
                         FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam 
                         WHERE m.seq_member_id = n.seq_member_id 
@@ -51,7 +50,6 @@ sub fetch_input {
                         AND gam.gene_align_id = r.gene_align_id 
                         AND g.genome_db_id = m.genome_db_id
   			AND r.root_id =?";
-
 =pod
     $sql_geneTree       = "SELECT r.root_id, cigar_line, n.node_id, m.stable_id, m.taxon_id, g.name
  			 	FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
@@ -64,6 +62,7 @@ sub fetch_input {
 				AND r.root_id = ?";
 
 =cut
+
 return;
 }
 
