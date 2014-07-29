@@ -17,7 +17,6 @@ sub default_options {
 	    # division for GO & GeneName projection
         compara         => 'plants', # protists, fungi, plants, metazoa
         pipeline_name   => $self->o('ENV','USER').'_PostCompara_'.$self->o('release'),
-        #pipeline_name   => 'PostCompara_'.$self->o('compara').'_'.$self->o('release'),
         email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
         output_dir      => '/nfs/nobackup2/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
@@ -28,7 +27,9 @@ sub default_options {
     	flag_GeneCoverage => '0',     
 
     ## hive_capacity values for some analyses:
-       genecoverage_capacity  =>  '200',
+       geneNameproj_capacity  =>  '20',
+       goproj_capacity        =>  '20',
+       genecoverage_capacity  =>  '100',
     	
 	## GeneName/Description Projection 
 		# source species 
@@ -102,15 +103,15 @@ sub default_options {
 	## For all pipelines
 		flag_store_projections => '0', #  Off by default. Control the storing of projections into database. 
 		flag_backup			   => '1', #  On by default. Dumping of table, backup to_species db. 
-		
-        'pipeline_db' => {  
-     	   -host   => $self->o('host'),
-           -port   => $self->o('port'),
-           -user   => $self->o('user'),
-           -pass   => $self->o('pass'),
-           -dbname => $self->o('dbname'),
-           -driver => 'mysql',
-      },
+
+       'pipeline_db' => {  
+		     -host   => $self->o('hive_host'),
+        	 -port   => $self->o('hive_port'),
+        	 -user   => $self->o('hive_user'),
+        	 -pass   => $self->o('hive_password'),
+ 	    	 -dbname => $self->o('pipeline_name'),
+        	 -driver => 'mysql',
+      	},
 		
     };
 }
@@ -144,16 +145,21 @@ sub pipeline_analyses {
     my ($self) = @_;
  
  	# Control which pipelines to run
-  	my $pipeline_flow;
+   	my $pipeline_flow;
+    my $pipeline_flow_factory_waitfor;
+
 
   	if ($self->o('flag_GeneNames') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GOProjectionFactory', 'GeneCoverageFactory'];
+		$pipeline_flow_factory_waitfor = ['GeneNamesProjectionFactory', 'GOProjectionFactory'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
     	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GOProjectionFactory'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GeneCoverageFactory'];
+		$pipeline_flow_factory_waitfor = ['GeneNamesProjectionFactory'];
   	} elsif ($self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['GOProjectionFactory', 'GeneCoverageFactory'];
+		$pipeline_flow_factory_waitfor = ['GOProjectionFactory'];
   	} elsif ($self->o('flag_GeneNames')) {
   	    $pipeline_flow  = ['GeneNamesProjectionFactory'];
   	} elsif ($self->o('flag_GO')) {
@@ -211,7 +217,8 @@ sub pipeline_analyses {
        -flow_into 	=> { 
 						 '2'=> [ 'GeneCoverage' ],
        				   },
-       -rc_name   => 'default',
+	   -wait_for        =>  $pipeline_flow_factory_waitfor,
+       -rc_name     => 'default',
     },
 
     {  -logic_name => 'GeneNamesProjection',
@@ -232,7 +239,9 @@ sub pipeline_analyses {
             'flag_store_projections'  => $self->o('flag_store_projections'),
        		'flag_backup'             => $self->o('flag_backup'),
    	   },
+       -batch_size    =>  10, 
        -rc_name       => 'default',
+       -hive_capacity => $self->o('geneNameproj_capacity'),
     },
 
     {  -logic_name => 'GOProjection',
@@ -257,9 +266,9 @@ sub pipeline_analyses {
             'flag_full_stats'        => $self->o('flag_full_stats'),
        		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
      	 },
-#         -hive_capacity => $self->o('blastp_capacity'),
-#         -batch_size    =>  50, 
-          -rc_name       => 'default',
+         -batch_size    =>  10, 
+         -rc_name       => 'default',
+         -hive_capacity => $self->o('goproj_capacity'),
 	 },
 
     {  -logic_name => 'GeneCoverage',
@@ -268,7 +277,7 @@ sub pipeline_analyses {
         			   'division'     => $self->o('gcov_division'),
             		   'output_dir'   => $self->o('output_dir'),
    	   				  },
-       -batch_size    => 20,
+       -batch_size    => 10,
        -rc_name       => 'default',
        -hive_capacity => $self->o('genecoverage_capacity'),
     },
@@ -291,12 +300,6 @@ sub pipeline_wide_parameters {
 
     return {
         %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
-#            'flag_store_projections' => $self->o('flag_store_projections'),
-#       	 'flag_backup'            => $self->o('flag_backup'),
-
-#            'flag_go_check'          => $self->o('flag_go_check'),
-#            'flag_full_stats'        => $self->o('flag_full_stats'),
-#       	 'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
     };
 }
 
