@@ -12,9 +12,9 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage
  consistency metrics for Compara clusters. Specifically, it compares the 
  extent of each protein sequence in the alignment to the extent of the cluster consensus.
 
-=head1 MAINTAINER
+=head1 AUTHOR 
 
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage;
