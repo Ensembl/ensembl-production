@@ -8,10 +8,9 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory
 
 =head1 DESCRIPTION
 
+=head1 AUTHOR 
 
-=head1 MAINTAINER
-
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory;
