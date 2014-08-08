@@ -15,9 +15,9 @@ Bio::EnsEMBL::Pipeline::ProjectGOTerms::RunnableDB::GOProjection
 
  Normally this is used to project GO terms from a well annotated species to one which is not.
 
-=head1 MAINTAINER
+=head1 MAINTAINER/AUTHOR
 
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection;
