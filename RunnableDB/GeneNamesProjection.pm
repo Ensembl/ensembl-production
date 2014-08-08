@@ -14,9 +14,9 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection
 
  Normally this is used to project from a well annotated species to one which is not.
 
-=head1 MAINTAINER
+=head1 AUTHOR 
 
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection;
