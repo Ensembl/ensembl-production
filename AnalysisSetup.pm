@@ -182,8 +182,7 @@ sub fetch_description {
   my $species = $self->param('species'),
   my $db_type = $self->param('db_type'),
   
-  my $dba = $self->get_DBAdaptor('production');
-  my $dbh = $dba->dbc->db_handle();
+  my $dbh = $self->production_dbh();
   my %properties;
   
   # Load generic, non-species-specific, analyses

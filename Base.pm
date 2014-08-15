@@ -104,6 +104,37 @@ sub otherfeatures_dbh {
   return $dbh;
 }
 
+sub production_dba {
+  my $self = shift;
+  
+  my $dba = $self->get_DBAdaptor('production');
+  if (!defined $dba) {
+    my %production_db = eval $self->param('production_db');
+    $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%production_db);
+  }
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+	
+  return $dba;
+}
+
+sub production_dbc {
+  my $self = shift;
+
+  my $dbc = $self->production_dba()->dbc();	
+  confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+  return $dbc;
+}
+
+sub production_dbh {
+  my $self = shift;
+
+  my $dbh = $self->production_dba()->dbc()->db_handle();	
+  confess('Type error!') unless($dbh->isa('DBI::db'));
+
+  return $dbh;
+}
+
 =head2 hive_database_string_for_user
 
   Return the name and location of the database in a human readable way.
