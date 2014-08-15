@@ -57,8 +57,9 @@ sub param_defaults {
     'libdir'          => '/nfs/panda/ensemblgenomes/external/lib',
     'workdir'         => '/tmp',
     'parameters_hash' => {},
-    'split_on'        => '>',
-    'results_match'   => '\S',
+    'results_index'    => 'slice',
+    'parse_filehandle' => 0,
+    'save_object_type' => undef,
   };
 }
 
@@ -115,7 +116,7 @@ sub fetch_input {
 sub run {
   my $self = shift @_;
   
-  my ($runnable, $feature_type) = $self->fetch_runnable();
+  my $runnable = $self->fetch_runnable();
   
   if ($self->param_is_defined('queryfile')) {
     my $results_dir = $self->set_queryfile($runnable);
@@ -124,6 +125,10 @@ sub run {
     $runnable->write_seq_file;
   } else {
     $self->throw("Something's gone wrong, have neither query or queryfile!");
+  }
+  
+  if (!$self->param_is_defined('save_object_type')) {
+    $self->throw("Type of object to save (e.g. 'gene', 'protein_feature') is not defined");
   }
   
   # Recommended Hive trick for potentially long-running analyses:
@@ -136,24 +141,12 @@ sub run {
   $self->update_options($runnable);
   
   if ($self->param_is_defined('queryfile')) {
-    # Some analyses can be run against a file with multiple sequences; but to
-    # be stored in the database, everything needs a slice. So, partition the
-    # results by sequence name, then generate a slice to attach the results to.
-    my $dba = $self->get_DBAdaptor($self->param('db_type'));
-    my $slice_adaptor = $dba->get_adaptor('Slice');
-    my ($results_subdir, $results_files) =
-      $self->split_results($runnable->resultsfile, $self->param('split_on'), $self->param('results_match'));
+    my ($results_subdir, $results_files) = $self->split_results($runnable->resultsfile);
     
-    foreach my $seq_name (keys %$results_files) {
-      my ($name, $start, $end) = ($seq_name, undef, undef);
-      if ($seq_name =~ /\:\d+\-\d+/) {
-        ($name, $start, $end) = $seq_name =~ /^(.+)\:(\d+)\-(\d+)/;
-      }
-      my $slice = $slice_adaptor->fetch_by_region('toplevel', $name, $start, $end);
-      $runnable->query($slice);
-      $runnable->parse_results($$results_files{$seq_name});
-      $self->filter_output($runnable);
-      $self->save_to_db($runnable, $feature_type);
+    foreach my $result_index (keys %$results_files) {
+      $self->set_query($runnable, $result_index);
+      $self->parse_filter_save($runnable, $$results_files{$result_index});
+      
       # Output is cumulative, so need to manually erase the results we've just
       # saved. (Note that calling the runnable's 'output' method will NOT work.
       $runnable->{'output'} = [];
@@ -162,10 +155,7 @@ sub run {
     remove_tree($results_subdir) or $self->throw("Failed to remove directory '$results_subdir'");
     
   } else {
-    # The assumption here is that the runnable has a slice associated with it.
-    $runnable->parse_results();
-    $self->filter_output($runnable);
-    $self->save_to_db($runnable, $feature_type);
+    $self->parse_filter_save($runnable, $runnable->resultsfile);
     
   }
 }
@@ -174,6 +164,12 @@ sub fetch_runnable {
   my $self = shift @_;
   
   $self->throw("Inheriting modules must implement a 'fetch_runnable' method.");  
+}
+
+sub results_by_index {
+  my ($self, $results) = @_;
+  
+  $self->throw("Inheriting modules must implement a 'results_by_index' method.");
 }
 
 sub update_options {
@@ -188,6 +184,15 @@ sub update_options {
 sub filter_output {
   my ($self, $runnable) = @_;
   # Inheriting classes should implement this method if any filtering
+  # is required after parsing, but before saving. The method must update
+  # $runnable->output (an arrayref of features).
+  
+  return;
+}
+
+sub post_processing {
+  my ($self, $runnable) = @_;
+  # Inheriting classes should implement this method if any post-processing
   # is required after parsing, but before saving. The method must update
   # $runnable->output (an arrayref of features).
   
@@ -219,8 +224,55 @@ sub set_queryfile {
   return $results_dir;
 }
 
+sub set_query {
+  my ($self, $runnable, $result_index) = @_;
+  
+  # Some analyses can be run against a file with multiple sequences;
+  # but to be stored in the database, everything needs a slice.
+  my $dba = $self->get_DBAdaptor($self->param('db_type'));
+  
+  if ($self->param('results_index') eq 'translation') {
+    my $translation_adaptor = $dba->get_adaptor('Translation');
+    my $translation = $translation_adaptor->fetch_by_stable_id($result_index);
+    if (!defined($translation)) {
+      $translation = $translation_adaptor->fetch_by_dbID($result_index);
+    }
+    $runnable->{'query'} = $translation;
+    
+  } else {
+    my $slice_adaptor = $dba->get_adaptor('Slice');
+    my ($name, $start, $end) = ($result_index, undef, undef);
+    if ($result_index =~ /\:\d+\-\d+/) {
+      ($name, $start, $end) = $result_index =~ /^(.+)\:(\d+)\-(\d+)/;
+    }
+    my $slice = $slice_adaptor->fetch_by_region('toplevel', $name, $start, $end);
+    $runnable->query($slice);
+    
+  }
+  
+  return;
+}
+
+sub parse_filter_save {
+  my ($self, $runnable, $results_file) = @_;
+  
+  if ($self->param('parse_filehandle')) {
+    open(my $fh, $results_file) or
+      $self->throw("Failed to open $results_file: $!");
+    $runnable->{'output'} = $runnable->parse_results($fh);
+    close($fh);
+  } else {
+    $runnable->{'output'} = $runnable->parse_results($results_file);
+  }
+  $self->filter_output($runnable);
+  $self->post_processing($runnable);
+  $self->save_to_db($runnable);
+  
+  return;
+}
+
 sub split_results {
-  my ($self, $resultsfile, $split_on, $results_match) = @_;
+  my ($self, $resultsfile) = @_;
   my %results_files;
   
   open RESULTS, $resultsfile or $self->throw("Failed to open $resultsfile: ".$!);
@@ -232,15 +284,14 @@ sub split_results {
     make_path($results_subdir) or $self->throw("Failed to create directory '$results_subdir'");
   }
   
-  my @results = split(/$split_on/, $results);
-  my $header = shift @results;
-  foreach my $result (@results) {
-    next unless $result =~ /^$results_match/gm;
+  my %seqnames = $self->results_by_index($results);
     
-    my ($seqname) = $result =~ /^\s*(\S+)/;
+  foreach my $seqname (keys %seqnames) {
+    my $header = $seqnames{$seqname}{'header'};
+    my $result = $seqnames{$seqname}{'result'};
     my $split_resultsfile = "$resultsfile\_split/$seqname";
     open SPLIT_RESULTS, ">$split_resultsfile" or $self->throw("Failed to open $split_resultsfile: ".$!);
-    print SPLIT_RESULTS "$header$split_on$result";
+    print SPLIT_RESULTS "$header$result";
     close SPLIT_RESULTS;
     $results_files{$seqname} = $split_resultsfile;
   }
@@ -249,16 +300,15 @@ sub split_results {
 }
 
 sub save_to_db {
-  my ($self, $runnable, $feature_type) = @_;
+  my ($self, $runnable) = @_;
   
   my $dba = $self->get_DBAdaptor($self->param('db_type'));
-  my $adaptor = $dba->get_adaptor($feature_type);
+  my $adaptor = $dba->get_adaptor($self->param('save_object_type'));
   
   foreach my $feature (@{$runnable->output}) {
     $feature->analysis($self->param('analysis'));
     $feature->slice($runnable->query) if !defined $feature->slice;
     $runnable->feature_factory->validate($feature);
-    $self->warning(sprintf("Inserting feature: %s", $feature)) if $runnable->query->name eq 'supercontig:GCA_000188075.1:Si_gnG.scaffold41199:1:1134:1';
     
     eval { $adaptor->store($feature); };
     if ($@) {
