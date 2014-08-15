@@ -37,7 +37,6 @@ sub param_defaults {
     'out_dir'                 => undef,  # Top-level directory for output
     'max_seqs_per_file'       => 100,    # Maximum number of records in a file
     'max_seq_length_per_file' => undef,  # Maximum sequence length in a file
-    'split_seq_across_files'  => 0,      # Strictly enforce max_seq_length by splitting a chromosome/supercontg across multiple files
     'max_files_per_directory' => 100,    # Maximum number of files in a directory
     'max_dirs_per_directory'  => 100,    # Maximum number of subdirectories
     'delete_existing_files'   => 1,      # Ensure that directories only contains files generated with the latest execution
@@ -118,7 +117,7 @@ sub run {
       $record_count = 1;
       $seq_length = $seq->length;
       
-      if ($file_count >= $max_files) {
+      if (defined($max_files) && $file_count >= $max_files) {
         $dir_index++;
         $file_count = 1;
       } else {
@@ -182,7 +181,13 @@ sub directory_structure {
   my $max_dirs = $self->param('max_dirs_per_directory');
   
   my $files_required = $self->files_required();
-  my $dirs_required = ceil($files_required / $max_files);
+  my $dirs_required = 1;
+  if (defined $max_files && $max_files > 0) {
+    $dirs_required = ceil($files_required / $max_files);
+  }
+  if (!defined $max_dirs || $max_dirs == 0) {
+    $max_dirs = 1;
+  }
   
   my @dirs;
   if ($dirs_required < $max_dirs) {
