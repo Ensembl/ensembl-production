@@ -67,6 +67,22 @@ sub default_options {
     # Don't fall over if someone has the temerity to use 'pass' instead of 'password'
     pass => $self->o('password'),
     password => $self->o('pass'),
+    
+    # Allow a bit of flexibility in the naming of the registry parameter
+    reg_conf => $self->o('registry'),
+    registry => $self->o('reg_conf'),
+    
+    # Access to the prod db is sometimes useful, and since the location/name
+    # doesn't change we might as well have a default.
+    production_db => {
+      -driver => $self->o('hive_driver'),
+      -host   => 'mysql-eg-pan-1.ebi.ac.uk',
+      -port   => 4276,
+      -user   => 'ensro',
+      -pass   => '',
+      -group  => 'production',
+      -dbname => 'ensembl_production',
+    }
   }
 }
 
