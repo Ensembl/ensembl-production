@@ -49,16 +49,17 @@ use base qw(Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base);
 
 sub param_defaults {
   return {
-    'db_type'         => 'core',
-    'querylocation'   => undef,
-    'queryfile'       => undef,
-    'bindir'          => '/nfs/panda/ensemblgenomes/external/bin',
-    'datadir'         => '/nfs/panda/ensemblgenomes/external/data',
-    'libdir'          => '/nfs/panda/ensemblgenomes/external/lib',
-    'workdir'         => '/tmp',
-    'parameters_hash' => {},
+    'db_type'          => 'core',
+    'querylocation'    => undef,
+    'queryfile'        => undef,
+    'bindir'           => '/nfs/panda/ensemblgenomes/external/bin',
+    'datadir'          => '/nfs/panda/ensemblgenomes/external/data',
+    'libdir'           => '/nfs/panda/ensemblgenomes/external/lib',
+    'workdir'          => '/tmp',
+    'parameters_hash'  => {},
     'results_index'    => 'slice',
     'parse_filehandle' => 0,
+    'output_not_set'   => 0,
     'save_object_type' => undef,
   };
 }
@@ -146,10 +147,6 @@ sub run {
     foreach my $result_index (keys %$results_files) {
       $self->set_query($runnable, $result_index);
       $self->parse_filter_save($runnable, $$results_files{$result_index});
-      
-      # Output is cumulative, so need to manually erase the results we've just
-      # saved. (Note that calling the runnable's 'output' method will NOT work.
-      $runnable->{'output'} = [];
     }
     
     remove_tree($results_subdir) or $self->throw("Failed to remove directory '$results_subdir'");
@@ -255,15 +252,28 @@ sub set_query {
 
 sub parse_filter_save {
   my ($self, $runnable, $results_file) = @_;
+      
+  # Output is cumulative, so need to manually delete any results that have
+  # already been saved. (Note that calling the runnable's 'output' method
+  # will NOT work.)
+  $runnable->{'output'} = [];
   
+  my $output;
   if ($self->param('parse_filehandle')) {
     open(my $fh, $results_file) or
       $self->throw("Failed to open $results_file: $!");
-    $runnable->{'output'} = $runnable->parse_results($fh);
+    $output = $runnable->parse_results($fh);
     close($fh);
   } else {
-    $runnable->{'output'} = $runnable->parse_results($results_file);
+    $output = $runnable->parse_results($results_file);
   }
+  
+  # Runnables _should_ set the output value themselves, but sometimes don't.
+  # So if it's not set, assume output is returned by the parsing method.
+  if ($self->param('output_not_set')) {
+    $runnable->output($output);
+  }
+  
   $self->filter_output($runnable);
   $self->post_processing($runnable);
   $self->save_to_db($runnable);
