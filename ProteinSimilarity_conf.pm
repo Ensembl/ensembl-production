@@ -183,6 +183,7 @@ sub pipeline_analyses {
   my $self = shift @_;
   
   my $lc_db = lc($self->o('db'));
+  $lc_db =~ s/\s+/_/g;
   
   my $inital_flow;
   if ($lc_db eq 'uniprot') {
