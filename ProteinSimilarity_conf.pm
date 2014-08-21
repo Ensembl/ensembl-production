@@ -66,10 +66,12 @@ sub default_options {
     
     # Taxonomic level is one of 'fungi', 'invertebrates', 'plants';
     # the UniProt source can be 'sprot' or 'trembl'.
-    uniprot_ftp_uri => 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions',
-    taxonomic_level => 'invertebrates',
-    uniprot_source  => 'sprot',
-    uniprot_dir     => catdir($self->o('pipeline_dir'), 'uniprot'),
+    uniprot_ftp_uri  => 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions',
+    taxonomic_level  => 'invertebrates',
+    uniprot_source   => 'sprot',
+    taxonomic_levels => [$self->o('taxonomic_level')],
+    uniprot_sources  => [$self->o('uniprot_source')],
+    uniprot_dir      => catdir($self->o('pipeline_dir'), 'uniprot'),
     
     # Default is to use ncbi-blast; wu-blast is possible, for backwards
     # compatability, but it is now unsupported and orders of magnitude
@@ -226,8 +228,8 @@ sub pipeline_analyses {
       -max_retry_count => 2,
       -parameters      => {
                             ftp_uri          => $self->o('uniprot_ftp_uri'),
-                            taxonomic_levels => [$self->o('taxonomic_level')],
-                            uniprot_sources  => [$self->o('uniprot_source')],
+                            taxonomic_levels => $self->o('taxonomic_levels'),
+                            uniprot_sources  => $self->o('uniprot_sources'),
                             out_dir          => $self->o('uniprot_dir'),
                           },
       -rc_name         => 'normal',
