@@ -73,9 +73,9 @@ sub default_options {
     exonerate_program  => 'exonerate',
     exonerate_version  => '2.2.0',
 
-    # By default, the pipeline assumes EST data, rather than Trinity rnaseq
-    # or protein data; and that genes should be created based on the alignments.
-    trinity  => 0,
+    # By default, the pipeline assumes EST data, rather than rnaseq or
+    # protein data; and that genes should be created based on the alignments.
+    rnaseq  => 0,
     seq_type => 'dna',
     no_genes => 0,
 
@@ -190,7 +190,7 @@ sub pipeline_analyses {
   my ($self) = @_;
 
   my ($logic_name, $biotype, $runnable);
-  if ($self->o('trinity')) {
+  if ($self->o('rnaseq')) {
     if ($self->o('no_genes')) {
       $logic_name = 'rnaseq_exonerate';
       $runnable   = ['ExonerateAlignFeature'];
