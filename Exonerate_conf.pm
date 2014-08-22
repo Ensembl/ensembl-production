@@ -78,6 +78,11 @@ sub default_options {
     rnaseq  => 0,
     seq_type => 'dna',
     no_genes => 0,
+    
+    # Thresholds for filtering transcripts.
+    coverage       => 90,
+    percent_id     => 97,
+    best_in_genome => 1,
 
     seq_file  => undef,
     seq_files => {},
@@ -189,35 +194,40 @@ sub pipeline_create_commands {
 sub pipeline_analyses {
   my ($self) = @_;
 
-  my ($logic_name, $biotype, $runnable);
+  my ($logic_name, $biotype, $runnable, $post_dump_flow, $dedupe_flow);
   if ($self->o('rnaseq')) {
     if ($self->o('no_genes')) {
-      $logic_name = 'rnaseq_exonerate';
-      $runnable   = ['ExonerateAlignFeature'];
+      $logic_name     = 'rnaseq_exonerate';
     } else {
-      $logic_name = 'trinity_exonerate';
-      $biotype    = 'RNA-Seq_gene';
-      $runnable   = ['ExonerateTranscript'];
+      $logic_name     = 'trinity_exonerate';
+      $biotype        = 'RNA-Seq_gene';
     }
   } elsif ($self->o('seq_type') eq 'dna') {
     if ($self->o('no_genes')) {
-      $logic_name = 'est_exonerate';
-      $runnable   = ['ExonerateAlignFeature'];
+      $logic_name     = 'est_exonerate';
     } else {
-      $logic_name = 'estgene_e2g';
-      $biotype    = 'est';
-      $runnable   = ['ExonerateTranscript'];
+      $logic_name     = 'estgene_e2g';
+      $biotype        = 'est';
     }
   } elsif ($self->o('seq_type') eq 'protein') {
     if ($self->o('no_genes')) {
-      $logic_name = 'protein_exonerate';
-      $runnable   = ['ExonerateAlignFeature'];
+      $logic_name     = 'protein_exonerate';
     } else {
-      $logic_name = 'protein_e2g';
-      $biotype    = 'protein_e2g';
-      $runnable   = ['ExonerateTranscript'];
+      $logic_name     = 'protein_e2g';
+      $biotype        = 'protein_e2g';
     }
   }
+  
+  if ($self->o('no_genes')) {
+    $runnable       = ['ExonerateAlignFeature'];
+    $post_dump_flow = ['MetaCoords'];
+    $dedupe_flow    = [];
+  } else {
+    $runnable       = ['ExonerateTranscript'];
+    $post_dump_flow = ['Deduplicate'];
+    $dedupe_flow    = ['MetaCoords'];
+  }
+  
   
   return [
     {
@@ -413,14 +423,17 @@ sub pipeline_analyses {
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
       -parameters        => {
-                              db_type     => 'otherfeatures',
-                              logic_name  => $logic_name,
-                              biotype     => $biotype,
-                              server_exe  => $self->o('server_exe'),
-                              queryfile   => '#genome_file#',
-                              index_file  => '#genome_file#'.'esi',
-                              seq_file    => '#split_file#',
-                              seq_type    => $self->o('seq_type'),
+                              db_type        => 'otherfeatures',
+                              logic_name     => $logic_name,
+                              biotype        => $biotype,
+                              server_exe     => $self->o('server_exe'),
+                              queryfile      => '#genome_file#',
+                              index_file     => '#genome_file#'.'esi',
+                              seq_file       => '#split_file#',
+                              seq_type       => $self->o('seq_type'),
+                              coverage       => $self->o('coverage'),
+                              percent_id     => $self->o('percent_id'),
+                              best_in_genome => $self->o('best_in_genome'),
                             },
       -rc_name           => 'normal',
     },
@@ -453,7 +466,7 @@ sub pipeline_analyses {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'post_exonerate_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['Deduplicate'],
+      -flow_into         => $post_dump_flow,
     },
 
     {
@@ -462,7 +475,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {},
       -rc_name           => 'normal',
-      -flow_into         => ['MetaCoords'],
+      -flow_into         => $dedupe_flow,
     },
 
     {
@@ -479,10 +492,16 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::Exonerate::EmailExonerateReport',
       -max_retry_count   => 1,
       -parameters        => {
-                              email     => $self->o('email'),
-                              subject   => 'Exonerate pipeline: Report for #species#',
-                              seq_file  => $self->o('seq_file'),
-                              seq_files => $self->o('seq_files'),
+                              email      => $self->o('email'),
+                              subject    => 'Exonerate pipeline: Report for #species#',
+                              db_type    => 'otherfeatures',
+                              logic_name => $logic_name,
+                              seq_file   => $self->o('seq_file'),
+                              seq_files  => $self->o('seq_files'),
+                              seq_type   => $self->o('seq_type'),
+                              no_genes   => $self->o('no_genes'),
+                              coverage   => $self->o('coverage'),
+                              percent_id => $self->o('percent_id'),
                             },
       -rc_name           => 'normal',
     },
