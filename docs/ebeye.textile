@@ -104,14 +104,15 @@ h3. To load use normally:
 
 bc. 
 	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf \
-	-pipeline_db -host=my-db-host -base_path /path/to/dumps -registry reg.pm
+	-pipeline_db -host=my-db-host -base_path /path/to/dumps -registry reg.pm  \
+        -user write_user -password XXX
 
 h3. Run a subset of species (no forcing & supports registry aliases):
 
 bc. 
 	init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf \
 	-pipeline_db -host=my-db-host -species anolis -species celegans -species human \
-	-base_path /path/to/dumps -registry reg.pm
+	-base_path /path/to/dumps -registry reg.pm -user write_user -password XXX
 
 
 h2. Running the Pipeline
