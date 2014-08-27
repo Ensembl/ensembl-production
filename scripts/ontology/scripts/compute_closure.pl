@@ -106,7 +106,8 @@ SELECT DISTINCT child_term_id, parent_term_id, 1, child_term_id, ontology_id
 FROM    relation r,
         relation_type rt
 WHERE rt.name IN (
-    'is_a', 'part_of' -- in both GO and SO
+    'is_a', 'part_of', -- in both GO and SO
+    'output_of', 'has_output', 'results_in_formation_of' -- Used in FYPO as a relationship
     -- THE FOLLOWING ARE REMOVED FOR NOW
     -- 'has_part', 'derives_from', 'member_of' -- in SO only
   )
