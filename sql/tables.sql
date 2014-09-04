@@ -38,6 +38,8 @@ INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_76_77a.sql|schema version');
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_76_77b.sql|add LRG biotype');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_76_77c.sql|add no_group biotype');
 
 
 -- The 'species' table.

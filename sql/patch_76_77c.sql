@@ -12,15 +12,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_76_77b.sql
+# patch_76_77c.sql
 #
-# Title: Add LRG biotype group.
+# Title: Update add no_group biotype.
 #
 # Description:
-#   Add a biotype group for LRGs.
+#   Add a no_group biotype group for unclassified biotypes.
 
-ALTER TABLE biotype MODIFY COLUMN biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','LRG','undefined');
+ALTER TABLE biotype MODIFY COLUMN biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','LRG','undefined', 'no_group');
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_76_77b.sql|add LRG biotype');
+  VALUES (NULL, 'patch', 'patch_76_77c.sql|add no_group biotype');
