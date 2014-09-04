@@ -47,7 +47,7 @@ sub run {
   my $attributes = {};
   while (my $gene = shift @$genes) {
 	my $count = $gene->feature_Slice()->get_base_count->{'%gc'};
-	if ($count > 0) {
+	if ($count >= 0) {
 	  push @{$attributes->{$gene->dbID()}},
 		Bio::EnsEMBL::Attribute->new(-NAME        => $name,
 									 -CODE        => $attrib_code,
