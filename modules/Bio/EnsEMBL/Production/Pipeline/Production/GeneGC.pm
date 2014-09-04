@@ -44,7 +44,7 @@ sub run {
 	  -PARAMS => [$attrib_code])->[0]};
   while (my $gene = shift @$genes) {
 	my $count = $gene->feature_Slice()->get_base_count->{'%gc'};
-	if ($count > 0) {
+	if ($count >= 0) {
 	  $self->store_attrib($aa, $gene, $count, $attrib_code, $name, $description);
 	}
   }
