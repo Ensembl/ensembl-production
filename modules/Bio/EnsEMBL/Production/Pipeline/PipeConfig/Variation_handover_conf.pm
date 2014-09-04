@@ -87,7 +87,7 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SnpCount',
         -max_retry_count  => 2,
         -hive_capacity    => 10,
-        -rc_name          => 'default',
+        -rc_name          => 'normal',
       },
 
       {
