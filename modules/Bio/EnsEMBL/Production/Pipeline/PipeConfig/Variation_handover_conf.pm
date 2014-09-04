@@ -78,7 +78,7 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -flow_into  => {
           'A->1' => ['Notify'],
-          '4->A' => ['SnpDensity', 'SnpCount', 'NonSense'],
+          '4->A' => ['SnpDensity', 'SnpCount', 'NonSense', 'GenomeStats'],
         },
       },
 
@@ -111,6 +111,14 @@ sub pipeline_analyses {
         -max_retry_count  => 2,
         -hive_capacity    => 10,
         -rc_name          => 'default',
+      },
+
+      {
+        -logic_name => 'GenomeStats',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
+        -max_retry_count  => 3,
+        -hive_capacity    => 100,
+        -rc_name          => 'normal',
       },
 
       ####### NOTIFICATION
