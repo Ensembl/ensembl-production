@@ -133,6 +133,7 @@ $names_1_1{'human'} =  [qw(
     cat
     chicken
     chimp
+    chlorocebus_sabaeus
     coelacanth
     cow
     dog
@@ -222,6 +223,7 @@ $go_terms{'human'} = [qw(
     cat
     chicken
     chimp
+    chlorocebus_sabaeus
     cow
     dog
     dolphin
@@ -272,6 +274,7 @@ $go_terms{'mouse'} = [qw(
     cat
     chicken
     chimp
+    chlorocebus_sabaeus
     cow
     dog
     dolphin
