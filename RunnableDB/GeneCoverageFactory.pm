@@ -32,8 +32,8 @@ my ($division, $sql_geneTree);
 sub fetch_input {
     my ($self) = @_;
 
-    $division   = $self->param('division');
-    $self->throw('division is obligatory parameter') unless (defined $division);
+    $division   = $self->param_required('division');
+
   
     $sql_geneTree = "SELECT distinct(r.root_id) 
 		       FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam 
@@ -43,8 +43,9 @@ sub fetch_input {
 		       AND r.clusterset_id   = 'default' 
 		       AND gam.gene_align_id = r.gene_align_id 
 		       AND g.genome_db_id    = m.genome_db_id
-		       ORDER BY r.root_id";
+		       ORDER BY r.root_id ";
 =pod
+
     $sql_geneTree       = "SELECT distinct(r.root_id) 
  			     FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
  			     WHERE m.member_id     = n.member_id
@@ -53,8 +54,7 @@ sub fetch_input {
  			     AND r.clusterset_id   = 'default'
  			     AND gam.gene_align_id = r.gene_align_id
  			     AND g.genome_db_id    = m.genome_db_id
-                             ORDER BY r.root_id";
-
+                             ORDER BY r.root_id ";
 =cut
 
 return;
