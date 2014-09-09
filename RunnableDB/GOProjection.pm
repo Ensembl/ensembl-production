@@ -49,40 +49,27 @@ my ($mlssa, $ha, $ma, $gdba);
 sub fetch_input {
     my ($self) = @_;
 
-    $flag_go_check          = $self->param('flag_go_check');
-    $flag_store_projections = $self->param('flag_store_projections');
-    $flag_full_stats        = $self->param('flag_full_stats');
-    $flag_delete_go_terms   = $self->param('flag_delete_go_terms');
-    $flag_backup            = $self->param('flag_backup');
+    $flag_go_check          = $self->param_required('flag_go_check');
+    $flag_store_projections = $self->param_required('flag_store_projections');
+    $flag_full_stats        = $self->param_required('flag_full_stats');
+    $flag_delete_go_terms   = $self->param_required('flag_delete_go_terms');
+    $flag_backup            = $self->param_required('flag_backup');
 
-    $to_species             = $self->param('species');
-    $from_species           = $self->param('from_species');
-    $compara                = $self->param('compara');
-    $release                = $self->param('release');
-    $self->throw('to_species is obligatory parameter')   unless (defined $to_species);
-    $self->throw('from_species is obligatory parameter') unless (defined $from_species);
-    $self->throw('compara is obligatory parameter')      unless (defined $compara);
-    $self->throw('release is obligatory parameter')      unless (defined $release);
+    $to_species             = $self->param_required('species');
+    $from_species           = $self->param_required('from_species');
+    $compara                = $self->param_required('compara');
+    $release                = $self->param_required('release');
 
-    $method_link_type       = $self->param('method_link_type');
-    $homology_types_allowed = $self->param('homology_types_allowed ');
-    $percent_id_filter      = $self->param('percent_id_filter');
-    $log_file               = $self->param('output_dir');
-    $output_dir             = $self->param('output_dir');
-    $self->throw('method_link_type is obligatory parameter')       unless (defined $method_link_type);
-    $self->throw('homology_types_allowed is obligatory parameter') unless (defined $homology_types_allowed);
-    $self->throw('percent_id_filter is obligatory parameter')      unless (defined $percent_id_filter);
-    $self->throw('log_file is obligatory parameter')               unless (defined $log_file);
-    $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
+    $method_link_type       = $self->param_required('method_link_type');
+    $homology_types_allowed = $self->param_required('homology_types_allowed ');
+    $percent_id_filter      = $self->param_required('percent_id_filter');
+    $log_file               = $self->param_required('output_dir');
+    $output_dir             = $self->param_required('output_dir');
 
-    $ensemblObj_type        = $self->param('ensemblObj_type');
-    $evidence_codes         = $self->param('evidence_codes');
-    $goa_webservice         = $self->param('goa_webservice');
-    $goa_params             = $self->param('goa_params');
-    $self->throw('ensemblObj_type is obligatory parameter') unless (defined $ensemblObj_type); 
-    $self->throw('evidence_codes is obligatory parameter')  unless (defined $evidence_codes); 
-    $self->throw('goa_webservice is obligatory parameter')  unless (defined $goa_webservice); 
-    $self->throw('goa_params is obligatory parameter')      unless (defined $goa_params); 
+    $ensemblObj_type        = $self->param_required('ensemblObj_type');
+    $evidence_codes         = $self->param_required('evidence_codes');
+    $goa_webservice         = $self->param_required('goa_webservice');
+    $goa_params             = $self->param_required('goa_params');
 
 return;
 }
@@ -120,7 +107,6 @@ sub run {
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
     #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
-    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
