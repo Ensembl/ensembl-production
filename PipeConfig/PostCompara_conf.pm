@@ -13,36 +13,36 @@ sub default_options {
         %{ $self->SUPER::default_options() },
 
         release  		=> software_version(),
-	    registry        => [],
+		registry  		=> '',
 	    # division for GO & GeneName projection
-        compara         => 'plants', # protists, fungi, plants, metazoa
+		division_name   => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name   => $self->o('ENV','USER').'_PostCompara_'.$self->o('release'),
         email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
         output_dir      => '/nfs/nobackup2/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
-
+		
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '0',     
     	flag_GO           => '0',     
     	flag_GeneCoverage => '0',     
 
-    ## hive_capacity values for some analyses:
+    ## analysis_capacity values for some analyses:
        geneNameproj_capacity  =>  '20',
        goproj_capacity        =>  '20',
        genecoverage_capacity  =>  '100',
     	
 	## GeneName/Description Projection 
 		# source species 
-		gn_from_species  => 'arabidopsis_thaliana',
+		gn_from_species  => undef, # Eg: 'arabidopsis_thaliana'
 
 		# target species
-	    gn_species       => ['vitis_vinifera'],
+	    gn_species       => [], # Eg: ['vitis_vinifera']
 	    gn_antispecies   => [],
         gn_division 	 => [], # EnsemblMetazoa, EnsemblProtists, EnsemblFungi, EnsemblPlants
 	    gn_run_all       => 0,
 
         # flowering group of your target species
-        taxon_filter     => 'eudicotyledons', # i.e Liliopsida,eudicotyledons
+        taxon_filter     => undef # Eg: 'Liliopsida' OR 'eudicotyledons'
 		geneName_source  => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
 		geneDesc_rules   => ['hypothetical'] , 
 
@@ -55,10 +55,10 @@ sub default_options {
 
 	## GO Projection  
 		# source species 
-		go_from_species  => 'arabidopsis_thaliana',
+		go_from_species  => undef, # Eg: 'arabidopsis_thaliana'
 
 		# target species
-	    go_species       => ['vitis_vinifera'],
+	    go_species       => [], # Eg: ['vitis_vinifera']
 	    go_antispecies   => [],
         go_division 	 => [], # EnsemblMetazoa, EnsemblProtists, EnsemblFungi, EnsemblPlants
 	    go_run_all       => 0,
@@ -98,8 +98,8 @@ sub default_options {
 		flag_delete_go_terms   => '0', #  Off by default. Delete existing projected (info_type='PROJECTION') GO terms in the target species, before doing projection   
 
 	## Gene Coverage
-		gcov_division          => 'fungi', # protists, fungi, plants, metazoa
-
+	    gcov_division          => $self->o('division_name'), 
+	    
 	## For all pipelines
 		flag_store_projections => '0', #  Off by default. Control the storing of projections into database. 
 		flag_backup			   => '1', #  On by default. Dumping of table, backup to_species db. 
@@ -109,7 +109,8 @@ sub default_options {
         	 -port   => $self->o('hive_port'),
         	 -user   => $self->o('hive_user'),
         	 -pass   => $self->o('hive_password'),
- 	    	 -dbname => $self->o('pipeline_name'),
+	         -dbname => $self->o('hive_dbname'),
+ 	    	 #-dbname => $self->o('pipeline_name'),
         	 -driver => 'mysql',
       	},
 		
@@ -134,6 +135,7 @@ sub hive_meta_table {
   };
 }
 
+# override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
   my ($self) = @_;
   return 
@@ -147,7 +149,6 @@ sub pipeline_analyses {
  	# Control which pipelines to run
    	my $pipeline_flow;
     my $pipeline_flow_factory_waitfor;
-
 
   	if ($self->o('flag_GeneNames') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['GeneNamesProjectionFactory', 'GOProjectionFactory', 'GeneCoverageFactory'];
@@ -169,15 +170,15 @@ sub pipeline_analyses {
 	}  	
  
     return [
-      {  -logic_name    => 'backbone_fire_PostCompara',
-         -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-         -input_ids     => [ {} ], # Needed to create jobs
-         -hive_capacity => -1,
-         -flow_into     => {
+    {  -logic_name    => 'backbone_fire_PostCompara',
+       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -input_ids     => [ {} ], # Needed to create jobs
+       -hive_capacity => -1,
+       -flow_into     => {
 							 '1->A' => $pipeline_flow, 
 				             'A->1' => [ 'NotifyUser' ],
                            },
-      },
+    },
 
     {  -logic_name      => 'GeneNamesProjectionFactory',
         -module         => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
@@ -225,7 +226,7 @@ sub pipeline_analyses {
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
        -parameters => {
    		    'from_species'            => $self->o('gn_from_species'),
-		    'compara'                 => $self->o('compara'),
+		    'compara'                 => $self->o('division_name'),
    		    'release'                 => $self->o('release'),
    		    'method_link_type'        => $self->o('gn_method_link_type'),
    		    'homology_types_allowed ' => $self->o('gn_homology_types_allowed'),
@@ -241,14 +242,14 @@ sub pipeline_analyses {
    	   },
        -batch_size    =>  10, 
        -rc_name       => 'default',
-       -hive_capacity => $self->o('geneNameproj_capacity'),
+       -analysis_capacity => $self->o('geneNameproj_capacity'),
     },
 
     {  -logic_name => 'GOProjection',
          -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection',
          -parameters => {
 		    'from_species'            => $self->o('go_from_species'),
-		    'compara'                 => $self->o('compara'),
+		    'compara'                 => $self->o('division_name'),
    		    'release'                 => $self->o('release'),
    		    'method_link_type'        => $self->o('go_method_link_type'),
    		    'homology_types_allowed ' => $self->o('go_homology_types_allowed'),
@@ -268,18 +269,18 @@ sub pipeline_analyses {
      	 },
          -batch_size    =>  10, 
          -rc_name       => 'default',
-         -hive_capacity => $self->o('goproj_capacity'),
+         -analysis_capacity => $self->o('goproj_capacity'),
 	 },
 
     {  -logic_name => 'GeneCoverage',
        -module     => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage',
        -parameters => {
         			   'division'     => $self->o('gcov_division'),
-            		   'output_dir'   => $self->o('output_dir'),
+#            		   'output_dir'   => $self->o('output_dir'),
    	   				  },
-       -batch_size    => 10,
+       -batch_size    => 500,
        -rc_name       => 'default',
-       -hive_capacity => $self->o('genecoverage_capacity'),
+       -analysis_capacity => $self->o('genecoverage_capacity'),
     },
 
     {  -logic_name => 'NotifyUser',
@@ -301,12 +302,6 @@ sub pipeline_wide_parameters {
     return {
         %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
     };
-}
-
-# override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
-    my $self = shift;    
-    return "-reg_conf ".$self->o("registry");
 }
 
 sub resource_classes {
