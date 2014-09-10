@@ -428,7 +428,7 @@ sub pipeline_analyses {
                               biotype        => $biotype,
                               server_exe     => $self->o('server_exe'),
                               queryfile      => '#genome_file#',
-                              index_file     => '#genome_file#'.'esi',
+                              index_file     => '#genome_file#'.'.esi',
                               seq_file       => '#split_file#',
                               seq_type       => $self->o('seq_type'),
                               coverage       => $self->o('coverage'),
