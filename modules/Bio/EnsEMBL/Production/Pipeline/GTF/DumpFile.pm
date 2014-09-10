@@ -236,15 +236,21 @@ The following attributes are available. All attributes are semi-colon
 separated pairs of keys and values.
 
 - gene_id: The stable identifier for the gene
+- gene_version: The stable identifier version for the gene
+- gene_name: The official symbol of this gene
 - gene_source: The annotation source for this gene
 - gene_biotype: The biotype of this gene
 - transcript_id: The stable identifier for this transcript
+- transcript_version: The stable identifier version for this transcript
+- transcript_name: The symbold for this transcript derived from the gene name
 - transcript_source: The annotation source for this transcript
 - transcript_biotype: The biotype for this transcript
 - exon_id: The stable identifier for this exon
+- exon_version: The stable identifier version for this exon
 - exon_number: Position of this exon in the transcript
 - ccds_id: CCDS identifier linked to this transcript
 - protein_id: Stable identifier for this transcript's protein
+- protein_version: Stable identifier version for this transcript's protein
 - tag: A collection of additional key value tags
 
 Tags
@@ -280,11 +286,15 @@ a space and then the value. Current meta data keys are:
 Example GTF output
 ------------------
 
-#!genome-build GRCh37
-MT      Mt_tRNA exon    3230    3304    .       +       .       gene_id "ENSG00000209082"; transcript_id "ENST00000386347"; exon_number "1"; gene_name "MT-TL1"; gene_source "ensembl"; gene_biotype "Mt_tRNA"; transcript_name "MT-TL1-201"; transcript_source "ensembl"; exon_id "ENSE00002006242";
-MT      protein_coding  exon    3307    4262    .       +       .       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "ensembl"; exon_id "ENSE00001435714";
-MT      protein_coding  CDS     3307    4262    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "havana"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "havana"; protein_id "ENSP00000354687";
-MT      protein_coding  start_codon     3307    3309    .       +       0       gene_id "ENSG00000198888"; transcript_id "ENST00000361390"; exon_number "1"; gene_name "MT-ND1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "ensembl";
+#!genome-build GRCh38
+11      ensembl_havana  gene    5422111 5423206 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+11      ensembl_havana  transcript      5422111 5423206 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
+11      ensembl_havana  exon    5422111 5423206 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; exon_number "1"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381"; exon_id "ENSE00001276439"; exon_version "4";
+11      ensembl_havana  CDS     5422201 5423151 .       +       0       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; exon_number "1"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381"; protein_id "ENSP00000300778"; protein_version "4";
+11      ensembl_havana  start_codon     5422201 5422203 .       +       0       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; exon_number "1"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
+11      ensembl_havana  stop_codon      5423152 5423154 .       +       0       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; exon_number "1"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
+11      ensembl_havana  UTR     5422111 5422200 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
+11      ensembl_havana  UTR     5423155 5423206 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
 
 README
   
