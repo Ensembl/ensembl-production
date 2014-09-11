@@ -841,9 +841,9 @@ gz : All files are compacted with GNU Zip for storage efficiency.
 
 EXAMPLES (Note: Most species do not sequences for each different <status>)
  for Human:
-    Homo_sapiens.NCBI36.40.pep.all.fa.gz
+    Homo_sapiens.NCBI36.pep.all.fa.gz
       contains all known and novel peptides
-    Homo_sapiens.NCBI36.40.pep.abinitio.fa.gz
+    Homo_sapiens.NCBI36.pep.abinitio.fa.gz
       contains all abinitio predicted peptide
 
 Difference between known and novel
@@ -911,9 +911,9 @@ The files are consistently named following this pattern:
 
 EXAMPLES  (Note: Most species do not sequences for each different <status>)
   for Human:
-    Homo_sapiens.NCBI36.40.cdna.all.fa.gz
+    Homo_sapiens.NCBI36.cdna.all.fa.gz
       cDNA sequences for all transcripts: known, novel and pseudo
-    Homo_sapiens.NCBI36.40.cdna.abinitio.fa.gz
+    Homo_sapiens.NCBI36.cdna.abinitio.fa.gz
       cDNA sequences for 'ab-initio' prediction transcripts.
 
 Difference between known and novel transcripts
@@ -1029,7 +1029,7 @@ The files are consistently named following this pattern:
 
 EXAMPLES
   for Human:
-    Homo_sapiens.NCBI36.40.ncrna.fa.gz
+    Homo_sapiens.NCBI36.ncrna.fa.gz
       Transcript sequences for all ncRNA gene types.
 
 
