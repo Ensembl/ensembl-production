@@ -709,11 +709,10 @@ Fasta DNA dumps
 FILE NAMES
 ------------
 The files are consistently named following this pattern:
-   <species>.<assembly>.<release>.<sequence type>.<id type>.<id>.fa.gz
+   <species>.<assembly>.<sequence type>.<id type>.<id>.fa.gz
 
 <species>:   The systematic name of the species.
 <assembly>:  The assembly build name.
-<release>:   The release number.
 <sequence type>:
  * 'dna' - unmasked genomic DNA sequences.
   * 'dna_rm' - masked genomic DNA.  Interspersed repeats and low
@@ -824,11 +823,10 @@ These files hold the protein translations of Ensembl gene predictions.
 FILE NAMES
 ------------
 The files are consistently named following this pattern:
-   <species>.<assembly>.<release>.<sequence type>.<status>.fa.gz
+   <species>.<assembly>.<sequence type>.<status>.fa.gz
 
 <species>:       The systematic name of the species.
 <assembly>:      The assembly build name.
-<release>:       The release number.
 <sequence type>: pep for peptide sequences
 <status>
   * 'pep.all' - the super-set of all translations resulting from Ensembl known
@@ -896,11 +894,10 @@ transcripts.
 FILE NAMES
 ------------
 The files are consistently named following this pattern:
-<species>.<assembly>.<release>.<sequence type>.<status>.fa.gz
+<species>.<assembly>.<sequence type>.<status>.fa.gz
 
 <species>: The systematic name of the species.
 <assembly>: The assembly build name.
-<release>: The release number.
 <sequence type>: cdna for cDNA sequences
 <status>
   * 'cdna.all' - the super-set of all transcripts resulting from
@@ -964,11 +961,10 @@ predictions. CDS does not contain UTR or intronic sequence.
 FILE NAMES
 ------------
 The files are consistently named following this pattern:
-<species>.<assembly>.<release>.<sequence type>.<status>.fa.gz
+<species>.<assembly>.<sequence type>.<status>.fa.gz
 
 <species>: The systematic name of the species.
 <assembly>: The assembly build name.
-<release>: The release number.
 <sequence type>: cds for CDS sequences
 <status>
   * 'cds.all' - the super-set of all transcripts coding sequences resulting from
@@ -1025,11 +1021,10 @@ These files hold the transcript sequences corresponding to non-coding RNA genes
 FILE NAMES
 ------------
 The files are consistently named following this pattern:
-<species>.<assembly>.<release>.<sequence type>.fa.gz
+<species>.<assembly>.<sequence type>.fa.gz
 
 <species>: The systematic name of the species.
 <assembly>: The assembly build name.
-<release>: The release number.
 <sequence type>: ncrna for non-coding RNA sequences
 
 EXAMPLES
