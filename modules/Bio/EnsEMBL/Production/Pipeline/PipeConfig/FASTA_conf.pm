@@ -190,6 +190,7 @@ sub pipeline_analyses {
         -module           => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CreatePrimaryAssembly',
         -can_be_empty     => 1,
         -max_retry_count  => 5,
+        -wait_for         => 'DumpDNA' #block until DNA is done
       },
       
       ######## COPY DATA
