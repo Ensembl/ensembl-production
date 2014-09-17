@@ -77,12 +77,8 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -max_retry_count  => 10,
         -flow_into  => {
-         '3->B'  => ['PercentRepeat'],
-         'B->3'  => ['PercentGC'], 
-         '3->C'  => ['CodingDensity'],
-         'C->3'  => ['LongNonCodingDensity'],
          '5->A'  => ['ConstitutiveExonsVega', 'PepStatsVega'],
-         '3->A'  => ['PercentRepeat', 'CodingDensity', 'LongNonCodingDensity', 'ShortNonCodingDensity', 'PercentGC'],
+         '3->A'  => ['PercentRepeat', 'CodingDensity', 'ShortNonCodingDensity'],
          '2->A'  => ['GeneGC', 'PepStats', 'GeneCount', 'ConstitutiveExons', 'GenomeStats'],
          'A->1'  => ['Notify'], 
         },
@@ -199,6 +195,9 @@ sub pipeline_analyses {
         -hive_capacity    => 100,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
+        -flow_into  => {
+         1  => ['LongNonCodingDensity'],
+        },
       },
 
       {
@@ -231,6 +230,9 @@ sub pipeline_analyses {
         -hive_capacity    => 100,
         -rc_name          => 'mem',
         -can_be_empty     => 1,
+        -flow_into  => {
+         1  => ['PercentGC'], 
+        },
       },
 
       ####### NOTIFICATION
