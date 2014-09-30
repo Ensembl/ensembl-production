@@ -142,7 +142,7 @@ sub run {
   }
   
   if ($self->param('production_lookup')) {
-    $self->fetch_description;
+    $self->production_updates;
   }
   
   my $new_analysis = $self->create_analysis;
@@ -175,14 +175,15 @@ sub create_analysis {
   return $analysis;
 }
 
-sub fetch_description {
+sub production_updates {
   my ($self) = @_;
-      
+  
   my $logic_name = $self->param('logic_name');
   my $species = $self->param('species'),
   my $db_type = $self->param('db_type'),
   
-  my $dbh = $self->production_dbh();
+  my $dbc = $self->production_dbc();
+  my $dbh = $dbc->db_handle();
   my %properties;
   
   # Load generic, non-species-specific, analyses
@@ -232,6 +233,23 @@ sub fetch_description {
     if (! $self->param_is_defined($property)) {
       $self->param($property, $properties{$property});
     }      
+  }
+  
+  if ($dbc->user eq 'ensrw') {
+    $sth = $dbh->prepare(
+      'INSERT IGNORE INTO analysis_web_data '.
+        '(analysis_description_id, web_data_id, species_id, db_type, '.
+          'displayable, created_at, modified_at) '.
+      'SELECT '.
+        'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.
+          'ad.default_displayable, NOW(), NOW() '.
+      'FROM analysis_description ad, species s '.
+      'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
+    );
+    
+    $sth->execute($db_type, $logic_name, $species);
+  } else {
+    $self->warning("Insufficient permissions to link $species and $logic_name");
   }
   
 }
