@@ -48,7 +48,8 @@ sub param_defaults {
   
   return {
     %{$self->SUPER::param_defaults},
-    antispecies => []
+    antispecies => [],
+    registry_report => 1,
   };
 }
 
@@ -70,21 +71,18 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   my @dbs;
+  
   foreach my $dba (@{$self->param('dbas')}) {
-  	print $dba->species()."\n";
-    if(!$self->process_dba($dba)) {
-  	print "Skipping\n";
-      $self->fine('Skipping %s', $dba->species());
-      next;
-    }
+    my $process = $self->process_dba($dba);
+    
+    next if !$process;
     
     my $all = $self->production_flow($dba, 'all');
     if ($self->param('run_all')) {
       $all = 2;
     }
     
-    if($all) {
-  	print "All\n";
+    if ($all) {
       my $variation = $self->production_flow($dba, 'variation');
       if ($variation) {
         push(@dbs, [$self->input_id($dba), $variation]);
@@ -99,9 +97,10 @@ sub run {
     }
     
   }
-  	print "End\n";
   
   $self->param('dbs', \@dbs);
+  
+  $self->registry_check();
   
   return;
 }
@@ -153,6 +152,47 @@ sub has_variation {
     return 1;
   } else {
     return 0;
+  }
+}
+
+sub registry_check {
+	my ($self, $registry_report) = @_;
+  
+  my $version_check = Bio::EnsEMBL::Registry->version_check();
+  if (!$version_check) {
+    my $msg = "Software and database versions are different.";
+    print "$msg\n";
+    $self->warning($msg)
+  }
+  
+  if ($self->param('registry_report')) {
+    my $registry_report;
+    my %registry_report;
+    my $dbas = Bio::EnsEMBL::Registry->get_all_DBAdaptors();
+    foreach my $dba (@{$dbas}) {
+      push @{$registry_report{$dba->group()}}, [$dba->dbc->dbname(), $dba->species];
+    }
+    foreach my $group (sort { $a cmp $b } keys %registry_report) {
+      $registry_report .= ucfirst($group)." databases\n";
+      foreach my $db (sort { $$a[0] cmp $$b[0] } @{$registry_report{$group}}) {
+        $registry_report .= "\t".$$db[0]." (".$$db[1].")\n";
+      }
+    }
+    
+    $registry_report .= "\nAnd these databases match the species/division list:\n";
+    my @dbs = @{$self->param('dbs')};
+    my %species;
+    foreach my $db (@dbs) {
+      my $group = $$db[1] == 4 ? "Variation" : "Core/Otherfeatures";
+      $species{$$db[0]{'species'}}{$group} = 1;
+    }
+    foreach my $species (sort { $a cmp $b } keys %species) {
+      my @groups = sort { $a cmp $b } keys %{$species{$species}};
+      $registry_report .= "\t$species (".join(", ", @groups).")\n";
+    }
+    
+    print "Registry report:\n$registry_report\n";
+    $self->warning($registry_report);
   }
 }
 
