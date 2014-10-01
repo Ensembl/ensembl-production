@@ -10,7 +10,7 @@ Bio::EnsEMBL::Pipeline::ProjectGOTerms::RunnableDB::NotifyUser
 
 
 =cut
-package Bio::EnsEMBL::EGPipeline::ProjectGeneNames::RunnableDB::NotifyUser;
+package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::NotifyUser;
 
 use strict;
 use base ('Bio::EnsEMBL::Hive::Process');
