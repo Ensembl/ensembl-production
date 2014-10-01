@@ -26,6 +26,43 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
 use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
 
+=head2 core_dbh 
+
+=cut
+sub core_dbh {
+    my $self = shift;
+
+    my $dbh  = $self->core_dbc->db_handle();
+    confess('Type error!') unless($dbh->isa('DBI::db'));
+
+return $dbh;
+}
+
+=head2 core_dbc 
+
+=cut
+sub core_dbc {
+    my $self = shift;
+
+    my $dbc  = $self->core_dba()->dbc();
+    confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+return $dbc;
+}
+
+=head2 core_dba 
+
+=cut
+sub core_dba {
+    my $self = shift;
+
+    my $species  = $self->param('species')  || die "'species' is an obligatory parameter";
+    my $dba      = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Gene')->db();
+    confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+
+return $dba;
+}
+
 =head2 fetch_homologies 
 
   Fetch the homologies from the Compara database. 
@@ -337,7 +374,7 @@ sub store_gene_attrib {
 
     Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
-    my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
+    my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Gene');
     my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
     my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
@@ -378,7 +415,7 @@ sub store_gene_attrib {
     push @attribs, $attrib2;
 
     $attrib_adaptor->store_on_Gene($gene, \@attribs);
-    print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
+    #print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
 
 return 0;
 }
