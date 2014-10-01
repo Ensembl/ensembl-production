@@ -158,13 +158,6 @@ sub has_variation {
 sub registry_check {
 	my ($self, $registry_report) = @_;
   
-  my $version_check = Bio::EnsEMBL::Registry->version_check();
-  if (!$version_check) {
-    my $msg = "Software and database versions are different.";
-    print "$msg\n";
-    $self->warning($msg)
-  }
-  
   if ($self->param('registry_report')) {
     my $registry_report;
     my %registry_report;
