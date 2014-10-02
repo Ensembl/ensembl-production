@@ -91,6 +91,7 @@ sub run {
     my $to_ga      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Gene');
     my $to_ta      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
     my $to_dbea    = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'DBEntry');
+
     #$from_ga->dbc->disconnect_when_inactive(1);	
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
     
@@ -171,7 +172,6 @@ sub run {
     print $data "\n";
     print $data Dumper %projections_stats;
     close($data);
-#    $self->dataflow_output_id( { 'to_species' => $to_species }, 1 );
 
 return;
 }
@@ -358,8 +358,8 @@ sub project_go_terms {
                -db              => $dbEntry->dbname,
                -db_version      => '',
                -program         => 'GOProjection.pm',
-               -description     => 'The XRef projection pipeline re-implemented by CK based on work by Andy and tweaked by Dan',
-               -display_label   => 'Projected XRef',
+               -description     => 'The Gene Ontology XRef projection pipeline',
+               -display_label   => 'GO projected xrefs',
           );
 
       $projections_stats{'to_be_proj'}++;
