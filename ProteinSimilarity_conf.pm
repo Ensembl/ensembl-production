@@ -287,7 +287,7 @@ sub pipeline_analyses {
       -batch_size      => 10,
       -parameters      => {
                             analyses => $self->o('analyses'),
-                            db       => $lc_db,
+                            lc_db    => $lc_db,
                             blastp   => $self->o('blastp'),
                             blastx   => $self->o('blastx'),
                           },
