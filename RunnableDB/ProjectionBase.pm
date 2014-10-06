@@ -333,35 +333,32 @@ return 0;
 sub store_gene_attrib {
     my ($id, $species, $score1, $score2) = @_; 
 
-if($species=~/pombe/){
+    my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
+    my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+    my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
+    my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
+    my @attribs;
 
-   my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
-   my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
-   my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
-   my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
-   my @attribs;
-
-   my $attrib1 = Bio::EnsEMBL::Attribute->new(
+    my $attrib1 = Bio::EnsEMBL::Attribute->new(
                 -CODE        => 'prot_coverage',
                 -NAME        => 'Protein Coverage',
                 -DESCRIPTION => 'Protein coverage for this gene derived from checkAlignment2.pl script',
                 -VALUE       => $score1);
 
-   my $attrib2 = Bio::EnsEMBL::Attribute->new(
+    my $attrib2 = Bio::EnsEMBL::Attribute->new(
                 -CODE        => 'con_coverage',
                 -NAME        => 'Consensus Coverage',
                 -DESCRIPTION => 'Consensus coverage for this gene derived from checkAlignment2.pl script',
                 -VALUE       => $score2);
    
-   push @attribs, $attrib1;
-   push @attribs, $attrib2;
+    push @attribs, $attrib1;
+    push @attribs, $attrib2;
 
-   $attrib_adaptor->store_on_Gene($gene, \@attribs);
-   # $gene->add_Attributes($attrib1);
-   # $gene->add_Attributes($attrib2);
-   # my @gene_attributes = @{$gene->get_all_Attributes };
-   print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
-  }
+    $attrib_adaptor->store_on_Gene($gene, \@attribs);
+    # $gene->add_Attributes($attrib1);
+    # $gene->add_Attributes($attrib2);
+    # my @gene_attributes = @{$gene->get_all_Attributes };
+    print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
 
 return 0;
 }

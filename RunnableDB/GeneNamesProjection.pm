@@ -8,9 +8,15 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection
 
 =head1 DESCRIPTION
 
-=head1 MAINTAINER
+ Pipeline to project gene display_xref and/or gene description
+ from one species to another by using the homologies derived 
+ from the Compara ProteinTree pipeline. 
 
-$Author: ckong $
+ Normally this is used to project from a well annotated species to one which is not.
+
+=head1 AUTHOR 
+
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection;
@@ -42,32 +48,20 @@ sub fetch_input {
     $flag_store_projections = $self->param('flag_store_projections');
     $flag_backup            = $self->param('flag_backup');
 
-    $to_species             = $self->param('species');
-    $from_species           = $self->param('from_species');
-    $compara                = $self->param('compara');
-    $release                = $self->param('release');
-    $self->throw('to_species is obligatory parameter')   unless (defined $to_species);
-    $self->throw('from_species is obligatory parameter') unless (defined $from_species);
-    $self->throw('compara is obligatory parameter')      unless (defined $compara);
-    $self->throw('release is obligatory parameter')       unless (defined $release);
+    $to_species             = $self->param_required('species');
+    $from_species           = $self->param_required('from_species');
+    $compara                = $self->param_required('compara');
+    $release                = $self->param_required('release');
     
-    $method_link_type       = $self->param('method_link_type');
-    $homology_types_allowed = $self->param('homology_types_allowed ');
-    $percent_id_filter      = $self->param('percent_id_filter');
-    $log_file               = $self->param('output_dir');
-    $output_dir             = $self->param('output_dir');
-    $self->throw('method_link_type is obligatory parameter')       unless (defined $method_link_type);
-    $self->throw('homology_types_allowed is obligatory parameter') unless (defined $homology_types_allowed);
-    $self->throw('percent_id_filter is obligatory parameter')      unless (defined $percent_id_filter);
-    $self->throw('log_file is obligatory parameter')               unless (defined $log_file);
-    $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
+    $method_link_type       = $self->param_required('method_link_type');
+    $homology_types_allowed = $self->param_required('homology_types_allowed ');
+    $percent_id_filter      = $self->param_required('percent_id_filter');
+    $log_file               = $self->param_required('output_dir');
+    $output_dir             = $self->param_required('output_dir');
 
-    $geneName_source        = $self->param('geneName_source');
-    $geneDesc_rules         = $self->param('geneDesc_rules');
-    $taxon_filter           = $self->param('taxon_filter');
-    $self->throw('geneName_source is obligatory parameter') unless (defined $geneName_source);
-    $self->throw('geneDesc_rules is obligatory parameter') unless (defined $geneDesc_rules);
-    $self->throw('taxon_filter is obligatory parameter')    unless (defined $taxon_filter);
+    $geneName_source        = $self->param_required('geneName_source');
+    $geneDesc_rules         = $self->param_required('geneDesc_rules');
+    $taxon_filter           = $self->param_required('taxon_filter');
 
 return;
 }
@@ -75,8 +69,7 @@ return;
 sub run {
     my ($self) = @_;
 
-    # Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    # Bio::EnsEMBL::Registry->disconnect_all();
+    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     # Get taxon ancestry of the target species
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
@@ -98,9 +91,9 @@ sub run {
 
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');   
+#   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
-    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
     $self->check_directory($log_file);
     $log_file  = $log_file."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
@@ -123,7 +116,7 @@ sub run {
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
     my $mlss_id       = $mlss->dbID();
-	    
+ 
     # Get homologies from compara - comes back as a hash of arrays
     print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
     my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter);
@@ -151,16 +144,13 @@ return;
 sub write_output {
     my ($self) = @_;
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    Bio::EnsEMBL::Registry->disconnect_all();
-
 }
 
 ######################
 ## internal methods
 ######################
 sub project_genenames {
-    my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene,$ensemblObj_type) = @_;
+    my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene) = @_;
 
     # Project when 'source gene' has display_xref and 'target gene' has NO display_xref
     if(defined $from_gene->display_xref() 
@@ -173,7 +163,7 @@ sub project_genenames {
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
           if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_projections==1 
+               && $flag_store_projections==1
                && grep (/$from_gene_dbname/, @$geneName_source))
           {
              print $data "\t\tProject from:".$from_gene->stable_id()."\t";

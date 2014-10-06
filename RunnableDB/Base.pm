@@ -1,3 +1,5 @@
+=cut
+
 =pod 
 
 =head1 NAME
@@ -8,9 +10,9 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base
 
 =head1 DESCRIPTION
 
-=head1 MAINTAINER
+=head1 AUTHOR
 
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base; 
@@ -23,6 +25,43 @@ use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
 use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
+
+=head2 core_dbh 
+
+=cut
+sub core_dbh {
+    my $self = shift;
+
+    my $dbh  = $self->core_dbc->db_handle();
+    confess('Type error!') unless($dbh->isa('DBI::db'));
+
+return $dbh;
+}
+
+=head2 core_dbc 
+
+=cut
+sub core_dbc {
+    my $self = shift;
+
+    my $dbc  = $self->core_dba()->dbc();
+    confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+return $dbc;
+}
+
+=head2 core_dba 
+
+=cut
+sub core_dba {
+    my $self = shift;
+
+    my $species  = $self->param('species')  || die "'species' is an obligatory parameter";
+    my $dba      = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Gene')->db();
+    confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+
+return $dba;
+}
 
 =head2 fetch_homologies 
 
@@ -104,7 +143,7 @@ sub get_taxon_ancestry {
         -user   => 'ensro',
         -dbname => 'ncbi_taxonomy',
         -host   => 'mysql-eg-mirror.ebi.ac.uk',
-        -port   => '4205');
+        -port   => '4157');
 
     my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
     my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
@@ -333,35 +372,50 @@ return 0;
 sub store_gene_attrib {
     my ($id, $species, $score1, $score2) = @_; 
 
-if($species=~/pombe/){
+    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
-   my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species  , 'core', 'Gene');
-   my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
-   my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
-   my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
-   my @attribs;
+    my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Gene');
+    my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+    my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
+    my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
+    my $gene_id        = $gene->dbID();    
 
-   my $attrib1 = Bio::EnsEMBL::Attribute->new(
-                -CODE        => 'prot_coverage',
-                -NAME        => 'Protein Coverage',
-                -DESCRIPTION => 'Protein coverage for this gene derived from checkAlignment2.pl script',
+    # Ensure attrib_types exists in core
+    my $attrib_prot    = $attrib_adaptor->fetch_by_code('protein_coverage');
+    my $attrib_cons    = $attrib_adaptor->fetch_by_code('consensus_coverage');
+    my $attrib_prot_id = @$attrib_prot[0];
+    my $attrib_cons_id = @$attrib_cons[0];
+
+    if(!defined @$attrib_cons[1] || !defined @$attrib_prot[1]){
+        die( "\n\tEither 'protein_coverage' or 'consensus_coverage' attrib_type is missing. Please check attrib_type table.\n");
+    }
+
+    # Cleared up gene_attrib table before loading latest data
+    print STDERR "Delete existing 'protein_coverage' & 'consensus_coverage' gene_attrib\n";
+
+    my $sql_clear_tbl = "DELETE from gene_attrib where gene_id=$gene_id AND attrib_type_id IN ($attrib_prot_id, $attrib_cons_id)";
+    my $helper        = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $gene_adaptor->dbc());
+    $helper->execute_update(-SQL => $sql_clear_tbl); 
+
+    my @attribs;
+
+    my $attrib1 = Bio::EnsEMBL::Attribute->new(
+                -CODE        => 'protein_coverage',
+                -NAME        => '',
+                -DESCRIPTION => '',
                 -VALUE       => $score1);
 
-   my $attrib2 = Bio::EnsEMBL::Attribute->new(
-                -CODE        => 'con_coverage',
-                -NAME        => 'Consensus Coverage',
-                -DESCRIPTION => 'Consensus coverage for this gene derived from checkAlignment2.pl script',
+    my $attrib2 = Bio::EnsEMBL::Attribute->new(
+                -CODE        => 'consensus_coverage',
+                -NAME        => '',
+                -DESCRIPTION => '',
                 -VALUE       => $score2);
    
-   push @attribs, $attrib1;
-   push @attribs, $attrib2;
+    push @attribs, $attrib1;
+    push @attribs, $attrib2;
 
-   $attrib_adaptor->store_on_Gene($gene, \@attribs);
-   # $gene->add_Attributes($attrib1);
-   # $gene->add_Attributes($attrib2);
-   # my @gene_attributes = @{$gene->get_all_Attributes };
-   print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
-  }
+    $attrib_adaptor->store_on_Gene($gene, \@attribs);
+    #print STDERR "$id\t$species\tscore1:$score1\tscore2:$score2\n";
 
 return 0;
 }

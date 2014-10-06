@@ -15,9 +15,9 @@ Bio::EnsEMBL::Pipeline::ProjectGOTerms::RunnableDB::GOProjection
 
  Normally this is used to project GO terms from a well annotated species to one which is not.
 
-=head1 MAINTAINER
+=head1 MAINTAINER/AUTHOR
 
-$Author: ckong $
+ckong
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection;
@@ -37,52 +37,39 @@ sub param_defaults {
 	   };
 }
 
-my ($flag_go_check, $flag_store_projections, $flag_full_stats, $flag_delete_go_terms, $flag_backup);
+my ($flag_go_check, $flag_store_projections, $flag_full_stats, $flag_delete_go_terms);
 my ($to_species, $from_species, $compara, $release);
 my ($method_link_type, $homology_types_allowed, $percent_id_filter);
 my ($log_file, $output_dir, $data);
 
-my ($evidence_codes, $ensemblObj_type, $goa_webservice, $goa_params);
+my ($evidence_codes, $ensemblObj_type, $ensemblObj_type_target,$goa_webservice, $goa_params);
 my (%forbidden_terms, %projections_by_evidence_type, %projections_stats);
 my ($mlssa, $ha, $ma, $gdba);
 
 sub fetch_input {
     my ($self) = @_;
 
-    $flag_go_check          = $self->param('flag_go_check');
-    $flag_store_projections = $self->param('flag_store_projections');
-    $flag_full_stats        = $self->param('flag_full_stats');
-    $flag_delete_go_terms   = $self->param('flag_delete_go_terms');
-    $flag_backup            = $self->param('flag_backup');
+    $flag_go_check          = $self->param_required('flag_go_check');
+    $flag_store_projections = $self->param_required('flag_store_projections');
+    $flag_full_stats        = $self->param_required('flag_full_stats');
+    $flag_delete_go_terms   = $self->param_required('flag_delete_go_terms');
 
-    $to_species             = $self->param('species');
-    $from_species           = $self->param('from_species');
-    $compara                = $self->param('compara');
-    $release                = $self->param('release');
-    $self->throw('to_species is obligatory parameter')   unless (defined $to_species);
-    $self->throw('from_species is obligatory parameter') unless (defined $from_species);
-    $self->throw('compara is obligatory parameter')      unless (defined $compara);
-    $self->throw('release is obligatory parameter')      unless (defined $release);
+    $to_species             = $self->param_required('species');
+    $from_species           = $self->param_required('from_species');
+    $compara                = $self->param_required('compara');
+    $release                = $self->param_required('release');
 
-    $method_link_type       = $self->param('method_link_type');
-    $homology_types_allowed = $self->param('homology_types_allowed ');
-    $percent_id_filter      = $self->param('percent_id_filter');
-    $log_file               = $self->param('output_dir');
-    $output_dir             = $self->param('output_dir');
-    $self->throw('method_link_type is obligatory parameter')       unless (defined $method_link_type);
-    $self->throw('homology_types_allowed is obligatory parameter') unless (defined $homology_types_allowed);
-    $self->throw('percent_id_filter is obligatory parameter')      unless (defined $percent_id_filter);
-    $self->throw('log_file is obligatory parameter')               unless (defined $log_file);
-    $self->throw('output_dir is obligatory parameter')             unless (defined $output_dir);
+    $method_link_type       = $self->param_required('method_link_type');
+    $homology_types_allowed = $self->param_required('homology_types_allowed ');
+    $percent_id_filter      = $self->param_required('percent_id_filter');
+    $log_file               = $self->param_required('output_dir');
+    $output_dir             = $self->param_required('output_dir');
 
-    $ensemblObj_type        = $self->param('ensemblObj_type');
-    $evidence_codes         = $self->param('evidence_codes');
-    $goa_webservice         = $self->param('goa_webservice');
-    $goa_params             = $self->param('goa_params');
-    $self->throw('ensemblObj_type is obligatory parameter') unless (defined $ensemblObj_type); 
-    $self->throw('evidence_codes is obligatory parameter')  unless (defined $evidence_codes); 
-    $self->throw('goa_webservice is obligatory parameter')  unless (defined $goa_webservice); 
-    $self->throw('goa_params is obligatory parameter')      unless (defined $goa_params); 
+    $ensemblObj_type        = $self->param_required('ensemblObj_type');
+    $ensemblObj_type_target = $self->param_required('ensemblObj_type_target');
+    $evidence_codes         = $self->param_required('evidence_codes');
+    $goa_webservice         = $self->param_required('goa_webservice');
+    $goa_params             = $self->param_required('goa_params');
 
 return;
 }
@@ -90,8 +77,7 @@ return;
 sub run {
     my ($self) = @_;
 
-    #Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    #Bio::EnsEMBL::Registry->disconnect_all();
+#    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     # Connection to Oracle DB for taxon constraint 
     my $dsn_goapro = 'DBI:Oracle:host=ora-vm-026.ebi.ac.uk;sid=goapro;port=1531';
@@ -99,12 +85,14 @@ sub run {
     my $pass       = 'selectgo';
     my $hDb        = DBI->connect($dsn_goapro, $user, $pass, {PrintError => 1, RaiseError => 1}) or die "Cannot connect to server: " . DBI->errstr;
     my $sql        = "select go.goa_validation.taxon_check_term_taxon(?,?) from dual";
- 
+
     # Creating adaptors
     my $from_ga    = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
     my $to_ga      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Gene');
     my $to_ta      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
     my $to_dbea    = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'DBEntry');
+
+    #$from_ga->dbc->disconnect_when_inactive(1);	
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
     
     # Interrogate GOA web service for forbidden GO terms for the given species.
@@ -117,13 +105,22 @@ sub run {
     my $meta_container   = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)    = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
 
+=pod
+    Bio::EnsEMBL::Registry->load_registry_from_db(
+            -host       => 'mysql-eg-mirror.ebi.ac.uk',
+            -port       => 4157,
+            -user       => 'ensrw',
+            -pass       => 'writ3r',
+            -db_version => '76',
+   );
+=cut
+
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
-    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Member');
+    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
-    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha || !$ma ||!$gdba);
+    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
     $self->check_directory($log_file);
     $log_file  = $log_file."/".$from_species."-".$to_species."_GOTermsProjection_logs.txt";
@@ -137,10 +134,8 @@ sub run {
     print $data "\t\tto_db               :".$to_ga->dbc()->dbname()."\n";
     print $data "\t\tto_species_common   :$to_species\n";
 
-    # Backup tables that will be updated
-    $self->backup($to_ga)          if($flag_backup==1);
     $self->delete_go_terms($to_ga) if($flag_delete_go_terms==1);
- 
+
     # build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
@@ -167,7 +162,7 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
          my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
          next if (!$to_gene);
-         project_go_terms($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id,$ensemblObj_type,$hDb,$sql);
+         project_go_terms($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id,$ensemblObj_type, $ensemblObj_type_target,$hDb,$sql);
          $i++;
        }
     }
@@ -177,7 +172,6 @@ sub run {
     print $data "\n";
     print $data Dumper %projections_stats;
     close($data);
-#    $self->dataflow_output_id( { 'to_species' => $to_species }, 1 );
 
 return;
 }
@@ -185,8 +179,6 @@ return;
 sub write_output {
     my ($self) = @_;
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
-    Bio::EnsEMBL::Registry->disconnect_all();
 
 }
 
@@ -284,7 +276,7 @@ return 0;
 #   + unwanted_go_term {
 #   + go_xref_exists {
 sub project_go_terms {
-    my ($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $hDb, $sql) = @_;
+    my ($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $ensemblObj_type_target, $hDb, $sql) = @_;
 
     # GO xrefs are linked to translations, not genes
     # Project GO terms between the translations of the canonical transcripts of each gene
@@ -359,7 +351,6 @@ sub project_go_terms {
       # These fields are actually 'bugs' in the current XRef schema,
       # so we leave them 'NULL' here...
       $dbEntry->info_type("PROJECTION");
-      #$dbEntry->info_type("NONE");
       $dbEntry->info_text('');
 
       my $analysis = Bio::EnsEMBL::Analysis->
@@ -367,15 +358,15 @@ sub project_go_terms {
                -db              => $dbEntry->dbname,
                -db_version      => '',
                -program         => 'GOProjection.pm',
-               -description     => 'The XRef projection pipeline re-implemented by CK based on work by Andy and tweaked by Dan',
-               -display_label   => 'Projected XRef',
+               -description     => 'The Gene Ontology XRef projection pipeline',
+               -display_label   => 'GO projected xrefs',
           );
 
       $projections_stats{'to_be_proj'}++;
 
       $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
-      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type, 1) if ($flag_store_projections==1);
+      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($flag_store_projections==1);
 
       print $data "\t\tProject from:".$from_translation->stable_id()."\t";
       print $data "to:".$to_translation->stable_id()."\t";
