@@ -24,7 +24,7 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
-use base ('Bio::EnsEMBL::Compara::RunnableDB::BaseRunnable');
+use base ('Bio::EnsEMBL::Hive::Process');
 
 =head2 core_dbh 
 
