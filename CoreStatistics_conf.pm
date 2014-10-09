@@ -306,6 +306,16 @@ sub pipeline_analyses {
       -max_retry_count  => 2,
       -hive_capacity    => 10,
       -rc_name => 'normal',
+      -flow_into => ['CorrectNcoils'],
+    },
+
+    {
+      -logic_name => 'CorrectNcoils',
+      -module     => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::CorrectNcoils',
+      -parameters => {},
+      -max_retry_count  => 0,
+      -hive_capacity    => 10,
+      -rc_name          => 'normal',
     },
 
     {
