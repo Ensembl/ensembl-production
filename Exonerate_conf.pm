@@ -74,10 +74,12 @@ sub default_options {
     exonerate_version  => '2.2.0',
 
     # By default, the pipeline assumes EST data, rather than rnaseq or
-    # protein data; and that genes should be created based on the alignments.
-    rnaseq  => 0,
-    seq_type => 'dna',
-    no_genes => 0,
+    # protein data; that genes should be created based on the alignments;
+    # and that the logic name of the analysis will depend on the data type. 
+    rnaseq     => 0,
+    seq_type   => 'dna',
+    no_genes   => 0,
+    logic_name => undef,
     
     # Thresholds for filtering transcripts.
     coverage       => 90,
@@ -194,29 +196,31 @@ sub pipeline_create_commands {
 sub pipeline_analyses {
   my ($self) = @_;
 
-  my ($logic_name, $biotype, $runnable, $post_dump_flow, $dedupe_flow);
+  my ($analysis_name, $biotype, $runnable, $post_dump_flow, $dedupe_flow);
   if ($self->o('rnaseq')) {
     if ($self->o('no_genes')) {
-      $logic_name     = 'rnaseq_exonerate';
+      $analysis_name = 'rnaseq_exonerate';
     } else {
-      $logic_name     = 'trinity_exonerate';
-      $biotype        = 'RNA-Seq_gene';
+      $analysis_name = 'trinity_exonerate';
+      $biotype       = 'RNA-Seq_gene';
     }
   } elsif ($self->o('seq_type') eq 'dna') {
     if ($self->o('no_genes')) {
-      $logic_name     = 'est_exonerate';
+      $analysis_name = 'est_exonerate';
     } else {
-      $logic_name     = 'estgene_e2g';
-      $biotype        = 'est';
+      $analysis_name = 'estgene_e2g';
+      $biotype       = 'est';
     }
   } elsif ($self->o('seq_type') eq 'protein') {
     if ($self->o('no_genes')) {
-      $logic_name     = 'protein_exonerate';
+      $analysis_name = 'protein_exonerate';
     } else {
-      $logic_name     = 'protein_e2g';
-      $biotype        = 'protein_e2g';
+      $analysis_name = 'protein_e2g';
+      $biotype       = 'protein_e2g';
     }
   }
+  my $logic_name = $self->o('logic_name');
+  $logic_name = $analysis_name unless defined $logic_name;
   
   if ($self->o('no_genes')) {
     $runnable       = ['ExonerateAlignFeature'];
@@ -294,6 +298,7 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        => {
                               exonerate_analyses => $self->o('exonerate_analyses'),
+                              analysis_name      => $analysis_name,
                               logic_name         => $logic_name,
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_exonerate_bkp.sql.gz'),
                             },
