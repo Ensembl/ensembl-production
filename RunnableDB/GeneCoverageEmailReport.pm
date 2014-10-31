@@ -37,15 +37,6 @@ use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport');
 sub fetch_input {
     my ($self) = @_;
 
-=pod
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
-            -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '76',
-   );
-=cut
     my $compara  = $self->param_required('compara');
     my $gdba     = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
     my $all_gdbs = $gdba->fetch_all();
