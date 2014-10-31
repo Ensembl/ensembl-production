@@ -74,6 +74,8 @@ sub run {
        $self->dataflow_output_id( { 'root_id'=> $root_id }, 2 );
     }
 
+    $self->dataflow_output_id(1);
+
 return;
 }
 
