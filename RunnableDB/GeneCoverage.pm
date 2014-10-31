@@ -47,7 +47,7 @@ sub fetch_input {
                         AND r.clusterset_id = 'default' 
                         AND gam.gene_align_id = r.gene_align_id 
                         AND g.genome_db_id = m.genome_db_id
-  			AND r.root_id =?";
+  			AND r.root_id =? ";
 =pod
     $sql_geneTree       = "SELECT r.root_id, cigar_line, n.node_id, m.stable_id, m.taxon_id, g.name
  			 	FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
