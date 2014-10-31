@@ -105,16 +105,6 @@ sub run {
     my $meta_container   = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)    = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
 
-=pod
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
-            -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '76',
-   );
-=cut
-
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
