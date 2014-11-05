@@ -310,7 +310,7 @@ CREATE TABLE master_misc_set (
 -- The 'master_unmapped_reason' table
 -- Lists the existing unmapped_reasons
 CREATE TABLE master_unmapped_reason (
-  unmapped_reason_id        SMALLINT(5) UNSIGNED NOT NULL AUTO_INCREMENT,
+  unmapped_reason_id        INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   summary_description       VARCHAR(255) DEFAULT NULL,
   full_description          VARCHAR(255) DEFAULT NULL,
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
