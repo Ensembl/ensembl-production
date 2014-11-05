@@ -19,3 +19,4 @@
 25	\N	patch	patch_75_76b.sql|Add grch37_archive web_data type
 26	\N	patch	patch_76_77a.sql|schema_version
 27	\N	patch	patch_77_78a.sql|schema_version
+28	\N	patch	patch_77_78b.sql|unmapped_reason
