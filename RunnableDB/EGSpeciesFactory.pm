@@ -73,6 +73,7 @@ sub run {
   my @dbs;
   
   foreach my $dba (@{$self->param('dbas')}) {
+    $dba->dbc->disconnect_when_inactive(1);
     my $process = $self->process_dba($dba);
     
     next if !$process;
@@ -168,7 +169,9 @@ sub registry_check {
     foreach my $group (sort { $a cmp $b } keys %registry_report) {
       $registry_report .= ucfirst($group)." databases\n";
       foreach my $db (sort { $$a[0] cmp $$b[0] } @{$registry_report{$group}}) {
-        $registry_report .= "\t".$$db[0]." (".$$db[1].")\n";
+        if ($$db[0] !~ /bacteria/) {
+          $registry_report .= "\t".$$db[0]." (".$$db[1].")\n";
+        }
       }
     }
     
