@@ -72,6 +72,7 @@ sub default_options {
     server_exe         => catdir($self->o('program_dir'), 'exonerate-server'),
     exonerate_program  => 'exonerate',
     exonerate_version  => '2.2.0',
+    log_file           => '/tmp/exonerate-server.'.$self->o('ENV', 'USER').'.out',
 
     # By default, the pipeline assumes EST data, rather than rnaseq or
     # protein data; that genes should be created based on the alignments;
@@ -432,6 +433,7 @@ sub pipeline_analyses {
                               logic_name     => $logic_name,
                               biotype        => $biotype,
                               server_exe     => $self->o('server_exe'),
+                              log_file       => $self->o('log_file'),
                               queryfile      => '#genome_file#',
                               index_file     => '#genome_file#'.'.esi',
                               seq_file       => '#split_file#',
@@ -452,6 +454,7 @@ sub pipeline_analyses {
                               db_type     => 'otherfeatures',
                               logic_name  => $logic_name,
                               server_exe  => $self->o('server_exe'),
+                              log_file    => $self->o('log_file'),
                               queryfile   => '#genome_file#',
                               index_file  => '#genome_file#'.'.esi',
                               seq_file    => '#split_file#',
