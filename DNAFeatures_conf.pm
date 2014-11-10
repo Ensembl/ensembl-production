@@ -87,6 +87,8 @@ sub default_options {
     repeatmasker_default_lib => '/nfs/panda/ensemblgenomes/external/RepeatMasker/Libraries/RepeatMaskerLib.embl',
     repeatmasker_library     => {},
     repeatmasker_parameters  => '-nolow -s -gccalc',
+    logic_name               => {},
+    always_use_repbase       => 0,
 
     # The ensembl-analysis Dust and TRF modules take a parameters hash which
     # is parsed, rather than requiring explicit command line options.
@@ -280,6 +282,8 @@ sub pipeline_analyses {
                               no_trf               => $self->o('no_trf'),
                               dna_analyses         => $self->o('dna_analyses'),
                               repeatmasker_library => $self->o('repeatmasker_library'),
+                              logic_name           => $self->o('logic_name'),
+                              always_use_repbase   => $self->o('always_use_repbase'),
                               pipeline_dir         => $self->o('pipeline_dir'),
                               db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
@@ -341,7 +345,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => '8Gb_mem',
       -flow_into         => $split_dump_files_flow,
     },
 
@@ -365,10 +369,11 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               repeatmasker_library => $self->o('repeatmasker_library'),
+                              logic_name           => $self->o('logic_name'),
                               queryfile            => $file_name,
                               max_seq_length       => $self->o('max_seq_length'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => '8Gb_mem',
       -flow_into         => ['RepeatMasker'],
     },
 
