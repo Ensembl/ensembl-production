@@ -88,6 +88,7 @@ sub default_options {
     repeatmasker_library     => {},
     repeatmasker_parameters  => '-nolow -s -gccalc',
     logic_name               => {},
+    always_use_repbase       => 0,
 
     # The ensembl-analysis Dust and TRF modules take a parameters hash which
     # is parsed, rather than requiring explicit command line options.
@@ -282,6 +283,7 @@ sub pipeline_analyses {
                               dna_analyses         => $self->o('dna_analyses'),
                               repeatmasker_library => $self->o('repeatmasker_library'),
                               logic_name           => $self->o('logic_name'),
+                              always_use_repbase   => $self->o('always_use_repbase'),
                               pipeline_dir         => $self->o('pipeline_dir'),
                               db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
