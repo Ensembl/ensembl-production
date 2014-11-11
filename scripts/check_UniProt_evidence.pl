@@ -125,10 +125,10 @@ if (-d $log_file_name) {
 else {
     ($output) = $log_file_name =~ /^(.*\/)[^\/]+$/;
 }
-$deleted_file = $output.'delac_all.txt' unless defined $deleted_file;
 
 if (!-e $deleted_file) {
-    open(WF, '>>'.$deleted_file) || die('Could not open deleted file');
+    $deleted_file = $output.'delac_all.txt';
+    open(WF, '>'.$deleted_file) || die('Could not open deleted file');
     for my $wget_cmd (@a_deletedIds) {
         open(IF, "wget $wget_cmd -O - |") || die('Could not get internet file!');
         while(<IF>) {
@@ -246,7 +246,7 @@ for my $dbname (@dbnames) {
     if ($overwrite) {
         $attrib_adaptor->dbc->do('DELETE FROM transcript_attrib where attrib_type_id = '.&ATTRIB_NUM.' AND value NOT LIKE "ENS%"');
     }
-    my $sth = $target_db->dbc->prepare('SELECT distinct(hit_name) FROM protein_align_feature WHERE external_db_id IN ('.(join(',', @a_dbIds)).')');
+    my $sth = $target_db->dbc->prepare('SELECT distinct(paf.hit_name) FROM protein_align_feature paf, analysis a WHERE a.analysis_id = paf.analysis_id AND a.logic_name NOT LIKE "uniprot%" AND paf.external_db_id IN ('.(join(',', @a_dbIds)).')');
     $sth->execute;
     while( my $hit_name = $sth->fetchrow) {
         my %h_written;
