@@ -127,7 +127,7 @@ sub default_options {
       {
         'logic_name'      => 'repeatmask',
         'db'              => 'repbase',
-        'db_version'      => '20130814',
+        'db_version'      => '20140131',
         'db_file'         => $self->o('repeatmasker_default_lib'),
         'program'         => 'RepeatMasker',
         'program_version' => '3.3.0',
