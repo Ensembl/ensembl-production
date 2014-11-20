@@ -83,6 +83,7 @@ sub fetch_input {
   if ($db_type eq 'hive') {
     $self->param('src_db_conn', $self->dbc);
   } else {
+    $self->param('exclude_ehive', 1);
     $self->param('src_db_conn', $self->get_DBAdaptor($db_type)->dbc);
   }
   
