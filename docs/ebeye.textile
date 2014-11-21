@@ -172,3 +172,14 @@ h3. Running
 bc. 
     $ beekeeper.pl -url ${HIVE_URL} -reg_conf ${LOG_DIR}/registry.pm -loop -sleep 5 2>&1 > ${LOG_DIR}/dumps.hive.log  
 
+
+Once the pipeline has finished running, the files should be copied to the EBI farm
+/ebi/ftp/pub/software/ensembl/EBeyeXML/e${RELEASE}
+
+One release day, clear out the previous release from the special watched directory and copy in the new release
+rm /ebi/ftp/pub/software/ensembl/EBeyeXML/ensembl/*
+cp /ebi/ftp/pub/software/ensembl/EBeyeXML/e${RELEASE}/* /ebi/ftp/pub/software/ensembl/EBeyeXML/ensembl/
+
+ES will then pick up the files over-night. Check the file permissions on the release data. If group writes are prohibited, the next person to do the search dumps will be unable to finish this step.
+
+
