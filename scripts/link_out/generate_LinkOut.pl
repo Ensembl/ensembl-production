@@ -25,32 +25,30 @@ sub new_file;
 
 my ( $dbpattern, $out_file, $config_file );
 
-GetOptions( "dbpattern|pattern=s", \$dbpattern,
-	    "out_file=s", \$out_file,
-	    "config_file=s", \$config_file,
-	  );
+GetOptions( "dbpattern|pattern=s", \$dbpattern, "out_file=s", \$out_file,
+            "config_file=s", \$config_file, );
 
-if( !$dbpattern ) {
+if ( !$dbpattern ) {
   usage();
 }
 
-if (!$config_file) {
+if ( !$config_file ) {
   $config_file = "linkOut_config.txt";
 }
 
 open( CFH, "<$config_file" ) or die("Can't open $config_file\n");
 my @hosts;
-while (my $line = <CFH>) {
-    push( @hosts, $line); 
-}  
+while ( my $line = <CFH> ) {
+  push( @hosts, $line );
+}
 close CFH;
 
 #delete the old resource files
-if (-e "resources*") {
-    exec("rm -r resources*");
+if ( -e "resources*" ) {
+  exec("rm -r resources*");
 }
 
-if( !$out_file ) {
+if ( !$out_file ) {
   $out_file = "resources";
 }
 
@@ -80,15 +78,15 @@ foreach my $host_line (@hosts) {
   my $host = $1;
   my $user = $2;
   my $port = $3;
-  
+
   my $dsn = "DBI:mysql:host=$host";
-  if( $port =~ /\d+/) {
+  if ( $port =~ /\d+/ ) {
     $dsn .= ";port=$port";
   }
-  my $db = DBI->connect( $dsn, $user);
-  if (!defined $db) {
+  my $db = DBI->connect( $dsn, $user );
+  if ( !defined $db ) {
     my $message = "Can't connect to host: $host, port: ";
-    if($port =~ /\d+/) {
+    if ( $port =~ /\d+/ ) {
       $message .= $port;
     } else {
       $message .= 'default';
@@ -97,30 +95,34 @@ foreach my $host_line (@hosts) {
     print STDOUT $message;
     next;
   }
-  
-  my @dbnames = map {$_->[0] } @{ $db->selectall_arrayref( "show databases" ) };  
 
-  for my $dbname ( @dbnames ) {
-    if( $dbpattern ) {
-      if( $dbname !~ /$dbpattern/ ) {
-	next;
+  my @dbnames =
+    map { $_->[0] } @{ $db->selectall_arrayref("show databases") };
+
+  for my $dbname (@dbnames) {
+    if ($dbpattern) {
+      if ( $dbname !~ /$dbpattern/ ) {
+        next;
       }
     }
-  
-    $db->do( "use $dbname" );
+
+    $db->do("use $dbname");
     #get nucleotide data
-    my ($entrez_db, $ref_seq_accession,$ensembl_stable_id);
+    my ( $entrez_db, $ref_seq_accession, $ensembl_stable_id );
     my $current_file_no = $number_of_files;
     $entrez_db = "Nucleotide";
-    
-    my $sth  = $db->prepare("SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN transcript on ensembl_id = transcript_id WHERE db_name in ('RefSeq_dna', 'RefSeq_dna_predicted', 'RefSeq_mRNA', 'RefSeq_mRNA_predicted', 'RefSeq_ncRNA', 'RefSeq_ncRNA_predicted') GROUP BY dbprimary_acc,  stable_id");
+
+    my $sth = $db->prepare(
+"SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN transcript on ensembl_id = transcript_id WHERE db_name in ('RefSeq_dna', 'RefSeq_dna_predicted', 'RefSeq_mRNA', 'RefSeq_mRNA_predicted', 'RefSeq_ncRNA', 'RefSeq_ncRNA_predicted') GROUP BY dbprimary_acc,  stable_id"
+    );
     $sth->execute();
     print STDOUT "Writing out nucleotide links for database $dbname\n";
     my $nucleotide_links = 0;
-    while ( ($ref_seq_accession,$ensembl_stable_id) = $sth->fetchrow_array() ) 
+    while ( ( $ref_seq_accession, $ensembl_stable_id ) =
+            $sth->fetchrow_array() )
     {
-	$link_no ++;
-my $link = " <Link>
+      $link_no++;
+      my $link = " <Link>
   <LinkId>$link_no</LinkId>
   <ProviderId>7853</ProviderId>
   <ObjectSelector>
@@ -134,43 +136,47 @@ my $link = " <Link>
     <Rule>$ensembl_stable_id</Rule>
   </ObjectUrl>
  </Link>\n";
-	  {
-	    use bytes;
-	    my $byte_size = length($link);
-	    $file_size += $byte_size;
-	  }
-	  #each file has a limit of 20Mb
-	  if ($file_size >= 19900000) {
-	    $number_of_files ++;
-	    new_file();
-	  }
-	  print FH $link;
-	  $nucleotide_links ++;
-    }
-     
+      {
+        use bytes;
+        my $byte_size = length($link);
+        $file_size += $byte_size;
+      }
+      #each file has a limit of 20Mb
+      if ( $file_size >= 19900000 ) {
+        $number_of_files++;
+        new_file();
+      }
+      print FH $link;
+      $nucleotide_links++;
+    } ## end while ( ( $ref_seq_accession...))
+
     $sth->finish();
-    my $message = "Written out $nucleotide_links nucleotide links for database $dbname";
-    if ($nucleotide_links > 0) {
+    my $message =
+      "Written out $nucleotide_links nucleotide links for database $dbname";
+    if ( $nucleotide_links > 0 ) {
       $message .= " in file(s):\n";
-      for (my $i = $current_file_no; $i <= $number_of_files; $i++) {
-	    $message .= $out_file . "_" . "$i\n";
+      for ( my $i = $current_file_no ; $i <= $number_of_files ; $i++ ) {
+        $message .= $out_file . "_" . "$i\n";
       }
     } else {
       $message .= "\n";
     }
     print STDOUT $message;
-    
+
     #get protein data
     $current_file_no = $number_of_files;
-    $entrez_db = "Protein";
-    $sth  = $db->prepare("SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN translation on ensembl_id = translation_id WHERE db_name in ('RefSeq_peptide', 'RefSeq_peptide_predicted') group by dbprimary_acc,  stable_id");
+    $entrez_db       = "Protein";
+    $sth = $db->prepare(
+"SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN translation on ensembl_id = translation_id WHERE db_name in ('RefSeq_peptide', 'RefSeq_peptide_predicted') group by dbprimary_acc,  stable_id"
+    );
     $sth->execute();
     print STDOUT "Writing out protein links for database $dbname\n";
     my $protein_links = 0;
-    while ( ($ref_seq_accession,$ensembl_stable_id) = $sth->fetchrow_array() ) 
+    while ( ( $ref_seq_accession, $ensembl_stable_id ) =
+            $sth->fetchrow_array() )
     {
-	$link_no ++;
-my $link = " <Link>
+      $link_no++;
+      my $link = " <Link>
   <LinkId>$link_no</LinkId>
   <ProviderId>7853</ProviderId>
   <ObjectSelector>
@@ -184,52 +190,53 @@ my $link = " <Link>
     <Rule>$ensembl_stable_id</Rule>
   </ObjectUrl>
  </Link>\n";
-	{
-	   use bytes;
-	   my $byte_size = length($link);
-	  $file_size += $byte_size;
-	}
-	#each file has a limit of 20Mb
-	if ($file_size >= 19900000) {
-	  $number_of_files ++;
-	  new_file();
-	}
-	print FH $link;
-	$protein_links ++;
-    }
-     
+      {
+        use bytes;
+        my $byte_size = length($link);
+        $file_size += $byte_size;
+      }
+      #each file has a limit of 20Mb
+      if ( $file_size >= 19900000 ) {
+        $number_of_files++;
+        new_file();
+      }
+      print FH $link;
+      $protein_links++;
+    } ## end while ( ( $ref_seq_accession...))
+
     $sth->finish();
-    $message = "Written out $protein_links protein links for database $dbname";
-    if ($protein_links > 0) {
+    $message =
+      "Written out $protein_links protein links for database $dbname";
+    if ( $protein_links > 0 ) {
       $message .= " in file(s):\n";
-      for (my $i = $current_file_no; $i <= $number_of_files; $i++) {
-	    $message .= $out_file . "$i\n";
+      for ( my $i = $current_file_no ; $i <= $number_of_files ; $i++ ) {
+        $message .= $out_file . "$i\n";
       }
     } else {
       $message .= "\n";
     }
     print STDOUT $message;
-  }
+  } ## end for my $dbname (@dbnames)
 
   $db->disconnect();
   print FH "</LinkSet>";
   close FH;
-}
+} ## end foreach my $host_line (@hosts)
+
 sub usage {
   print STDERR <<EOF
 
-             Usage: generate_LinkOut options
-	 	    -dbpattern database name pattern
-		    -out_file output resource file name, default 'resources'
-		    -config_file should contain one or more lines with: host user port(optional), e.g. ens-staging1 ensro
+    Usage: generate_LinkOut options
+      -dbpattern database name pattern
+      -out_file output resource file name, default 'resources'
+      -config_file should contain one or more lines with: host user port(optional), e.g. ens-staging1 ensro
 EOF
-;
+    ;
   exit;
 }
 
-sub new_file
-{
-  if ($number_of_files > 1) {
+sub new_file {
+  if ( $number_of_files > 1 ) {
     print FH "</LinkSet>";
     close FH;
   }
@@ -238,5 +245,3 @@ sub new_file
   print FH $header;
   $file_size = $header_size;
 }
-
-
