@@ -78,7 +78,8 @@ sub run {
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);  
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if (!grep (/$taxon_filter/, @$names)){
+    if (!grep (/$taxon_filter/, @$names) && defined $taxon_filter){
+    #if (!grep (/$taxon_filter/, @$names)){
         die("$taxon_filter is not found in the ancestor list of $to_species\n")
     };
 
@@ -202,4 +203,4 @@ sub project_genenames {
 }
 
 
-1;
+1
