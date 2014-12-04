@@ -186,7 +186,7 @@ sub write_term {
 
   my $statement = "INSERT IGNORE INTO term (ontology_id, subsets, accession, name, definition, is_root, is_obsolete) VALUES (?,?,?,?,?,?,?)";
 
-  my $syn_stmt = "INSERT INTO synonym (term_id, name) VALUES (?,?)";
+  my $syn_stmt = "INSERT INTO synonym (term_id, name, type) VALUES (?,?,?)";
 
   my $alt_stmt = "INSERT INTO alt_id (term_id, accession) VALUES (?,?)";
 
@@ -296,8 +296,9 @@ sub write_term {
         else {
           foreach my $syn (@{$term->{'synonyms'}}) {
             $syn_sth->bind_param(1, $term->{id},  SQL_INTEGER);
-            $syn_sth->bind_param(2, $syn, SQL_VARCHAR);
-    
+            $syn_sth->bind_param(2, $syn->def_as_string(), SQL_VARCHAR);
+	    $syn_sth->bind_param(3, $syn->scope());
+
             $syn_sth->execute();
     
             ++$syn_count;
@@ -739,7 +740,7 @@ foreach my $t (@{$ontology->get_terms()}) {
     }
     my @t_synonyms = $t->synonym_set();
     foreach my $t_synonym (@t_synonyms) {
-      push(@{$term{'synonyms'}}, $t_synonym->def_as_string());
+      push(@{$term{'synonyms'}}, $t_synonym);
     }
 
     $term{'alt_id'} = $t->alt_id();
