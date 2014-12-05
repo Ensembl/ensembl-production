@@ -63,7 +63,7 @@ sub default_options {
     max_files_per_directory => 100,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
-    max_hive_capacity => 100,
+    max_hive_capacity => 10,
 
     program_dir        => '/nfs/panda/ensemblgenomes/external/exonerate-2.2.0-x86_64-Linux/bin',
     exonerate_exe      => catdir($self->o('program_dir'), 'exonerate'),
@@ -366,6 +366,18 @@ sub pipeline_analyses {
                               genome_dir  => catdir($self->o('pipeline_dir'), '#species#'),
                               repeat_libs => ['dust', 'repeatmask', 'repeatmask_customlib'],
                               soft_mask   => 1,
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['DeleteExistingGenomeIndex'],
+    },
+
+    {
+      -logic_name        => 'DeleteExistingGenomeIndex',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 5,
+      -batch_size        => 10,
+      -parameters        => {
+                              cmd => 'rm '.'#genome_file#'.'.es*',
                             },
       -rc_name           => 'normal',
       -flow_into         => ['GenomeIndexPart1'],
