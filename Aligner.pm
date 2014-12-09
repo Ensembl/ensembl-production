@@ -40,7 +40,7 @@ my $sam2bam = "%s view -bS %s > %s";
 # samtools merge out.bam in1.bam in2.bam in3.bam
 my $mergebam = "%s merge %s %s";
 my $sortbam  = "%s sort %s %s";
-my $indexbam = "%s index %s";
+my $indexbam = "%s index %s %s";
 my $statbam  = "%s flagstat %s";
 #samtools mpileup -ugf ${REFERENCE} bwa_sorted.bam | bcftools view -bvcg > bwa_sampe.raw.bcf
 my $pileup = "%s mpileup -uf %s %s | %s view -bvcg - > %s";
@@ -110,9 +110,19 @@ sub sort_bam {
 }
 
 sub index_bam {
-	my ( $self, $in ) = @_;
-	my $comm = sprintf( $indexbam, $self->{samtools}, $in );
-	$logger->debug("Executing $comm");
+	my ( $self, $in, $use_csi ) = @_;
+
+	if (!defined $use_csi || ! $use_csi) {
+	    # Use BAI index format
+	    $index_argument = '-b';
+	}
+	else {
+	    # Use CSI index format
+	    $index_argument = '-c';
+	}
+	
+	my $comm = sprintf( $indexbam, $self->{samtools}, $index_argument, $in );
+	$logger->info("Executing $comm");
 	system($comm) == 0 || throw "Cannot execute $comm";
 	return;
 }
