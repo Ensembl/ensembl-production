@@ -616,7 +616,7 @@ sub _create_display_id {
       $attributes{gene_biotype} = $gene->biotype();
       
       $decoded_type = lc($object->analysis()->logic_name());
-      $decoded_status = lc($object->status());
+      $decoded_status = lc($object->status()) if $object->status();
     }
   }
   #If it's a translation then grab the transcript and gene then set accordingly
@@ -632,7 +632,7 @@ sub _create_display_id {
       transcript_biotype => $transcript->biotype()
     );
     $decoded_type = 'pep';
-    $decoded_status = lc($transcript->status());
+    $decoded_status = lc($transcript->status()) if $transcript->status();
   }
   else {
     throw sprintf( 'Do not understand how to format a display_id for type "%s"',
