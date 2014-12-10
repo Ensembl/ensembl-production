@@ -18,8 +18,7 @@ sub default_options {
 		division_name   => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name   => $self->o('ENV','USER').'_PostCompara_'.$self->o('release'),
         email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
-        #output_dir      => '/nfs/nobackup2/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
-        output_dir      => '/gpfs/nobackup/ensembl_genomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
+        output_dir      => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 		
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
@@ -114,7 +113,7 @@ sub default_options {
 
 		# only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
-		evidence_codes         => ['IEA','IDA','IC','IGI','IMP','IPI','ISS','NAS','ND','RCA','TAS'],
+		evidence_codes         => ['IDA','IC','IGI','IMP','IPI','ISS','NAS','ND','RCA','TAS'],
 		#  IC Inferred by curator
 		#  IDA Inferred from direct assay
 		#  IEA Inferred from electronic annotation
