@@ -73,9 +73,10 @@ sub get_Slices {
   if($filter_human) {
     my $production_name = $self->production_name();
     if($production_name eq 'homo_sapiens') {
-      my ($cs) = @{$dba->get_CoordSystem()->fetch_all()};
+# Coord system with highest rank should always be the one, apart from VEGA databases where it would be the second highest
+      my ($cs, $alternative_cs) = @{$dba->get_CoordSystem()->fetch_all()};
       my $expected = 'GRCh38';
-      if($cs->version() ne $expected) {
+      if($cs->version() ne $expected && $alternative_cs->version() ne $expected) {
         throw sprintf(q{Cannot continue as %s's coordinate system %s is not the expected %s }, $production_name, $cs->version(), $expected);
       }
       @slices = grep {
