@@ -31,5 +31,7 @@ script: "./travisci/harness.sh"
 
 notifications:
   email:
+  recipients:
+      - ensembl-production-git@ebi.ac.uk
     on_success: always
     on_failure: always
