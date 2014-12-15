@@ -252,6 +252,7 @@ separated pairs of keys and values.
 - protein_id: Stable identifier for this transcript's protein
 - protein_version: Stable identifier version for this transcript's protein
 - tag: A collection of additional key value tags
+- transcript_support_level: Ranking to assess how well a transcript is supported (from 1 to 5)
 
 Tags
 
@@ -264,6 +265,7 @@ feature for the position of this on the genome
 - cds_start_NF: the coding region start could not be confirmed
 - mRNA_end_NF: the mRNA end could not be confirmed
 - mRNA_start_NF: the mRNA start could not be confirmed.
+- basic: the transcript is part of the gencode basic geneset
 
 Comments
 
