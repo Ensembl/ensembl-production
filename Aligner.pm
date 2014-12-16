@@ -38,7 +38,7 @@ use Bio::EnsEMBL::Utils::Exception qw(throw warning);
 # samtools view -bS test.sam > test.bam
 my $sam2bam = "%s view -bS %s > %s";
 # samtools merge out.bam in1.bam in2.bam in3.bam
-my $mergebam = "%s merge %s %s";
+my $mergebam = "%s merge -f %s %s";
 my $sortbam  = "%s sort %s %s";
 my $indexbam = "%s index %s %s";
 my $statbam  = "%s flagstat %s";
