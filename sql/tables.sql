@@ -36,6 +36,8 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_78_79a.sql|schema version');
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_78_79b.sql|add_misc_biotype');
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
@@ -126,7 +128,7 @@ CREATE TABLE biotype (
                     NOT NULL DEFAULT 'core',
   attrib_type_id INT(11) DEFAULT NULL,
   description   TEXT,
-  biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','LRG','undefined') DEFAULT NULL,
+  biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined') DEFAULT NULL,
 
   -- Columns for the web interface:
   created_by    INTEGER,
