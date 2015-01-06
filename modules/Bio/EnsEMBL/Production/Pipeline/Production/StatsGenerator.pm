@@ -48,6 +48,7 @@ sub run {
   my $total = $self->get_total();
   my $sum = 0;
   my $count;
+  my $alt_count;
   my %slices_hash;
   my %stats_hash;
   my %stats_attrib;
@@ -76,6 +77,12 @@ sub run {
         }
         $stats_hash{$ref_code} += $count;
       }
+      $count = $self->get_attrib($slice, 'noncoding_cnt_s') + $self->get_attrib($slice, 'noncoding_cnt_l') + $self->get_attrib($slice, 'noncoding_cnt_m');
+      if ($count > 0) {
+        $self->store_attrib($slice, $count, 'noncoding_cnt');
+      }
+      $stats_hash{'noncoding_cnt'} += $count;
+      $stats_attrib{'noncoding_cnt'} = 'noncoding_cnt';
     } elsif ($slice->seq_region_name =~ /LRG/) {
       next;
     } else {
@@ -85,12 +92,18 @@ sub run {
         $stats_hash{'alt_transcript'} += $ta->count_all_by_Slice($alt_slice);
         $stats_attrib{'alt_transcript'} = 'transcript_acnt';
         foreach my $alt_code (keys %alt_attrib_codes) {
-          my $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
+          $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
           if ($alt_count > 0) {
             $self->store_attrib($slice, $alt_count, $alt_code);
           }
           $stats_hash{$alt_code} += $alt_count;
         }
+        $alt_count = $self->get_attrib($slice, 'noncoding_acnt_s') + $self->get_attrib($slice, 'noncoding_acnt_l') + $self->get_attrib($slice, 'noncoding_acnt_m';
+        if ($alt_count > 0) {
+          $self->store_attrib($slice, $alt_count, 'noncoding_acnt');
+        }
+        $stats_hash{'noncoding_acnt'} += $alt_count;
+        $stats_attrib{'noncoding_acnt'} = 'noncoding_acnt';
       }
     }
     if ($sum >= $total) {
@@ -160,6 +173,14 @@ sub store_attrib {
   );
   my @attribs = ($attrib);
   $aa->store_on_Slice($slice, \@attribs);
+}
+
+sub get_attrib {
+  my ($self, $slice, $code) = @_;
+  my $aa          = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
+  my $attributes = $aa->fetch_all_by_Slice($slice, $code);
+  if (@$attributes) { return $attributes->[0]->value; }
+  else { return 0; }
 }
 
 sub get_biotype_group {

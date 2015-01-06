@@ -28,13 +28,14 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 
 sub get_attrib_codes {
   my ($self, $has_readthrough) = @_;
-  my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'snoncoding_cnt', 'lnoncoding_cnt');
+  my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'noncoding_cnt_s', 'noncoding_cnt_l', 'noncoding_cnt_m');
   if ($has_readthrough) {
-    push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'snoncoding_rcnt', 'lnoncoding_rcnt');
+    push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'noncoding_rcnt_s', 'noncoding_rcnt_l', 'noncoding_rcnt_m');
   }
   my %biotypes;
   foreach my $code (@attrib_codes) {
-    my ($group) = $code =~ /(\w+)\_r?cnt/;
+    my ($group, $subgroup) = $code =~ /(\w+)\_r?cnt_?([a-z]?)/;
+    if ($subgroup) { $group = $subgroup . $group; }
     my $biotypes = $self->get_biotype_group($group);
     $biotypes{$code} = $biotypes;
   }
@@ -43,13 +44,14 @@ sub get_attrib_codes {
 
 sub get_alt_attrib_codes {
   my ($self, $has_readthrough) = @_;
-  my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'snoncoding_acnt', 'lnoncoding_acnt');
+  my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'noncoding_acnt_s', 'noncoding_acnt_l', 'noncoding_acnt_m');
   if ($has_readthrough) {
-    push @alt_attrib_codes, ('coding_racnt', 'pseudogene_racnt', 'snoncoding_racnt', 'lnoncoding_racnt');
+    push @alt_attrib_codes, ('coding_racnt', 'pseudogene_racnt', 'noncoding_racnt_s', 'noncoding_racnt_l', 'noncoding_racnt_m');
   }
   my %biotypes;
   foreach my $alt_code (@alt_attrib_codes) {
-    my ($group) = $alt_code =~ /(\w+)\_r?acnt/;
+    my ($group, $subgroup) = $alt_code =~ /(\w+)\_r?acnt_?([a-z]?)/;
+    if ($subgroup) { $group = $subgroup . $group; }
     my $biotypes = $self->get_biotype_group($group);
     $biotypes{$alt_code} = $biotypes;
   }
