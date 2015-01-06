@@ -56,17 +56,24 @@ sub fetch_input {
 sub linkage_type_summary {
     my ($self, $dbh, $ga) = @_;
 
-    my $sql = 'SELECT onx.linkage_type,count(*) as count_of_GO_accession 
-    		FROM xref x 
-    		JOIN object_xref ox USING (xref_id) 
-   		JOIN ontology_xref onx USING (object_xref_id) 
-    		WHERE x.external_db_id=1000 
+    my $sql = 'SELECT onx.linkage_type,count(dbprimary_acc) as count_of_GO_accession 
+                FROM xref x 
+                JOIN object_xref ox USING (xref_id) 
+                JOIN ontology_xref onx USING (object_xref_id) 
+                WHERE x.external_db_id=1000 
                 GROUP BY onx.linkage_type';
+
+#    my $sql = 'SELECT onx.linkage_type,count(*) as count_of_GO_accession 
+#    		FROM xref x 
+#    		JOIN object_xref ox USING (xref_id) 
+#   		JOIN ontology_xref onx USING (object_xref_id) 
+#    		WHERE x.external_db_id=1000 
+#                GROUP BY onx.linkage_type';
 
     my $sth = $dbh->prepare($sql);
     $sth->execute();
     
-    my $title = "Summary of GO terms, by linkage types: (".$ga->dbc()->dbname().")";
+    my $title = "Summary of GO annotations, by linkage types: (".$ga->dbc()->dbname().")";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 
@@ -76,15 +83,17 @@ return $self->format_table($title, $columns, $results);
 sub info_type_summary {
     my ($self, $dbh, $ga) = @_;
 
-    my $sql = 'SELECT info_type, count(dbprimary_acc) as count_of_GO_accession
-                FROM xref  
-		WHERE external_db_id=1000 
-		GROUP BY info_type';
+    my $sql = 'SELECT info_type,count(dbprimary_acc) as count_of_GO_accession 
+                FROM xref x 
+                JOIN object_xref ox USING (xref_id) 
+                JOIN ontology_xref onx USING (object_xref_id) 
+                WHERE x.external_db_id=1000 
+                GROUP BY info_type';
 
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 
-    my $title = "Summary of GO terms, by info types: (".$ga->dbc()->dbname().")";
+    my $title = "Summary of GO annotations, by info types: (".$ga->dbc()->dbname().")";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 
