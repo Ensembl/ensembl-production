@@ -272,6 +272,20 @@ sub project_go_terms {
     # Project GO terms between the translations of the canonical transcripts of each gene
     my ($from_translation,$to_translation);    
 
+    if($ensemblObj_type=~/Translation/ && $ensemblObj_type_target=~/Translation/){
+       $from_translation   = get_canonical_translation($from_gene);
+       $to_translation     = get_canonical_translation($to_gene);
+    }
+    elsif($ensemblObj_type=~/Transcript/ && $ensemblObj_type_target=~/Transcript/){ 
+       # $ensemblObj_type=~/Transcript/ in the case of ncRNA
+       $from_translation   = $from_gene->canonical_transcript();
+       $to_translation     = $to_gene->canonical_transcript();
+    }
+    elsif($ensemblObj_type=~/Transcript/ && $ensemblObj_type_target=~/Translation/){ 
+       $from_translation   = $from_gene->canonical_transcript();
+       $to_translation     = get_canonical_translation($to_gene); 
+    }
+=pod
     if($ensemblObj_type=~/Translation/){ 
        $from_translation   = get_canonical_translation($from_gene);
        $to_translation     = get_canonical_translation($to_gene);
@@ -280,6 +294,8 @@ sub project_go_terms {
        $from_translation   = $from_gene->canonical_transcript();
        $to_translation     = $to_gene->canonical_transcript();
     }
+=cut
+
     return if (!$from_translation || !$to_translation);
 
     my $from_latin_species = ucfirst(Bio::EnsEMBL::Registry->get_alias($from_species));
