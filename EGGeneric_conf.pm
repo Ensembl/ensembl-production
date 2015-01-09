@@ -96,7 +96,7 @@ Description: Interface method that should return a hash of
 sub resource_classes {
   my ($self) = @_;
   return {
-    'default'           => {'LSF' => ''},
+    'default'           => {'LSF' => '-q production-rh6 -M  4000 -R "rusage[mem=4000]"'},
     'normal'            => {'LSF' => '-q production-rh6 -M  4000 -R "rusage[mem=4000]"'},
     '2Gb_mem'           => {'LSF' => '-q production-rh6 -M  2000 -R "rusage[mem=2000]"'},
     '4Gb_mem'           => {'LSF' => '-q production-rh6 -M  4000 -R "rusage[mem=4000]"'},
