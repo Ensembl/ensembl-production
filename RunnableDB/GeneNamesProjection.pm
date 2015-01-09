@@ -27,6 +27,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
+use Bio::EnsEMBL::Compara::DBSQL::DBAdaptor;
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 
 sub param_defaults {
@@ -61,7 +62,7 @@ sub fetch_input {
 
     $geneName_source        = $self->param_required('geneName_source');
     $geneDesc_rules         = $self->param_required('geneDesc_rules');
-    $taxon_filter           = $self->param_required('taxon_filter');
+    $taxon_filter           = $self->param('taxon_filter');
 
 return;
 }
@@ -78,7 +79,7 @@ sub run {
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);  
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if (!grep (/$taxon_filter/, @$names) && defined $taxon_filter){
+    if (defined $taxon_filter && !grep (/$taxon_filter/, @$names)){
     #if (!grep (/$taxon_filter/, @$names)){
         die("$taxon_filter is not found in the ancestor list of $to_species\n")
     };
@@ -90,10 +91,32 @@ sub run {
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
 
-    $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
-    $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
-#   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
-    $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
+#my $dba = Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new
+#(
+#  -host   => 'mysql-eg-prod-3.ebi.ac.uk',
+#  -port   => 4243,
+#  -user   => 'ensrw',
+#  -pass   => 'writ3rp3',
+#  -dbname => 'jallen_ensembl_compara_vb_1502_77',
+#);
+
+my $dba = Bio::EnsEMBL::Compara::DBSQL::DBAdaptor->new
+(
+  -host   => 'mysql-eg-prod-vb.ebi.ac.uk',
+  -port   => 4440,
+  -user   => 'ensrw',
+  -pass   => 'scr1b3vb',
+  -dbname => 'ensembl_compara_vb_1412_77',
+);
+
+    #$mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
+    #$ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
+##   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
+    #$gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
+    
+    $mlssa = $dba->get_adaptor('MethodLinkSpeciesSet'); 
+    $ha    = $dba->get_adaptor('Homology');  
+    $gdba  = $dba->get_adaptor('GenomeDB'); 
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
     $self->check_directory($log_file);
@@ -154,42 +177,42 @@ sub project_genenames {
     my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene) = @_;
 
     # Project when 'source gene' has display_xref and 'target gene' has NO display_xref
-    if(defined $from_gene->display_xref() 
-       && !defined $to_gene->display_xref()){
+    #if(defined $from_gene->display_xref() 
+       #&& !defined $to_gene->display_xref()){
 
-       my $from_gene_dbname     = $from_gene->display_xref->dbname();
-       my $from_gene_display_id = $from_gene->display_xref->display_id();         
+       #my $from_gene_dbname     = $from_gene->display_xref->dbname();
+       #my $from_gene_display_id = $from_gene->display_xref->display_id();         
 
-       # Get all DBEntries for 'source gene' base on the dbname of display_xref  
-       foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
+       ## Get all DBEntries for 'source gene' base on the dbname of display_xref  
+       #foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
-          if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_projections==1
-               && grep (/$from_gene_dbname/, @$geneName_source))
-          {
-             print $data "\t\tProject from:".$from_gene->stable_id()."\t";
-             print $data "to:".$to_gene->stable_id()."\t";
-             print $data "GeneName:".$from_gene->display_xref->display_id()."\t";
-             print $data "DB:".$from_gene->display_xref->dbname()."\n";
+          #if($dbEntry->display_id=~/$from_gene_display_id/  
+               #&& $flag_store_projections==1
+               #&& grep (/$from_gene_dbname/, @$geneName_source))
+          #{
+             #print $data "\t\tProject from:".$from_gene->stable_id()."\t";
+             #print $data "to:".$to_gene->stable_id()."\t";
+             #print $data "GeneName:".$from_gene->display_xref->display_id()."\t";
+             #print $data "DB:".$from_gene->display_xref->dbname()."\n";
 
-	     # Adding projection source information 
-             $dbEntry->info_type("PROJECTION");
-             $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
+	     ## Adding projection source information 
+             #$dbEntry->info_type("PROJECTION");
+             #$dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
 
-             $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
-             $to_gene->display_xref($dbEntry);
-             $to_geneAdaptor->update($to_gene);
-          }
-      }
-   } 
+             #$to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
+             #$to_gene->display_xref($dbEntry);
+             #$to_geneAdaptor->update($to_gene);
+          #}
+      #}
+   #} 
 
    # Project gene_description to target_gene
    my $gene_desc = $from_gene->description();
 
-   if(defined $from_gene->description() 
+   if(defined $from_gene->description()
+       && !defined $to_gene->display_xref()
        && !defined $to_gene->description()
-       && $flag_store_projections==1 
-       && !grep (/$gene_desc/, @$geneDesc_rules)) 
+       && !grep (/\Q$gene_desc\E/, @$geneDesc_rules)) 
    {
        $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
 
@@ -197,8 +220,10 @@ sub project_genenames {
        print $data "to: ".$to_gene->stable_id()."\t";
        print $data "Gene Description: $gene_desc\n";
  
-       $to_gene->description($gene_desc);
-       $to_geneAdaptor->update($to_gene);
+       if ($flag_store_projections==1) {
+        $to_gene->description($gene_desc);
+        $to_geneAdaptor->update($to_gene);
+      }
    }    
 }
 

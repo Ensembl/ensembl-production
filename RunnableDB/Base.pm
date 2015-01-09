@@ -79,6 +79,7 @@ sub fetch_homologies {
     my $gdba         = shift;
     my $homology_types_allowed = shift;
     my $percent_id_filter      = shift;
+    my $percent_cov_filter      = 66;
 
     print $data "\t\tFetching Compara homologies...";
     my $from_species_alias = $gdba->fetch_by_registry_name($from_species)->name();
@@ -89,7 +90,7 @@ sub fetch_homologies {
     foreach my $homology (@{$homologies}) {
        next if (!homology_type_allowed($homology->description, $homology_types_allowed));
 
-       my ($from_stable_id, @to_stable_ids, @perc_id);
+       my ($from_stable_id, @to_stable_ids, @perc_id, @perc_cov);
        my $members = $homology->get_all_GeneMembers();
        my $mems    = $homology->get_all_Members();
    
@@ -98,14 +99,22 @@ sub fetch_homologies {
        }
        next if (grep {$_ < $percent_id_filter} @perc_id) ;
 
+       foreach my $mem (@{$mems}){
+           push @perc_cov,$mem->perc_cov();
+       }
+       next if (grep {$_ < $percent_cov_filter} @perc_cov) ;
+
+       my $from_seen = 0;
        foreach my $member (@{$members}) {
          if ($member->genome_db()->name() eq $from_species_alias) {
             $from_stable_id = $member->stable_id();
+            $from_seen++;
          }
          else {
             push(@to_stable_ids, $member->stable_id());
          }
        }
+        next if $from_seen > 1;
 
        print STDERR "Warning: can't find stable ID corresponding to 'from' species ($from_species_alias)\n" if (!$from_stable_id);
        push @{$homology_cache{$from_stable_id}}, @to_stable_ids;

@@ -270,7 +270,7 @@ sub project_go_terms {
 
     # GO xrefs are linked to translations, not genes
     # Project GO terms between the translations of the canonical transcripts of each gene
-    my ($from_translation,$to_translation);    
+    my ($from_translation,$to_translation,$xref_name);    
 
     if($ensemblObj_type=~/Translation/ && $ensemblObj_type_target=~/Translation/){
        $from_translation   = get_canonical_translation($from_gene);
@@ -289,10 +289,12 @@ sub project_go_terms {
     if($ensemblObj_type=~/Translation/){ 
        $from_translation   = get_canonical_translation($from_gene);
        $to_translation     = get_canonical_translation($to_gene);
+       $xref_name = "GO";
     }    
     else{ # $ensemblObj_type=~/Transcript/ in the case of ncRNA
        $from_translation   = $from_gene->canonical_transcript();
-       $to_translation     = $to_gene->canonical_transcript();
+       $to_translation     = get_canonical_translation($to_gene);
+       $xref_name = "GO_to_gene";
     }
 =cut
 
@@ -301,11 +303,11 @@ sub project_go_terms {
     my $from_latin_species = ucfirst(Bio::EnsEMBL::Registry->get_alias($from_species));
     my $to_go_xrefs        = $to_translation->get_all_DBEntries("GO");
    
-    DBENTRY: foreach my $dbEntry (@{$from_translation->get_all_DBEntries("GO")}) { 
+    DBENTRY: foreach my $dbEntry (@{$from_translation->get_all_DBEntries($xref_name)}) { 
       $projections_stats{'total'}++;
      
       # Check dbEntry dbname
-      next if (!$dbEntry || $dbEntry->dbname() ne "GO" || ref($dbEntry) ne "Bio::EnsEMBL::OntologyXref");
+      next if (!$dbEntry || $dbEntry->dbname() ne $xref_name || ref($dbEntry) ne "Bio::EnsEMBL::OntologyXref");
 
       # Check if dbEntry evidence codes isn't in the whitelist 
       foreach my $et (@{$dbEntry->get_all_linkage_types}){

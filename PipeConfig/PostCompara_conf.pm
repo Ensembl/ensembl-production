@@ -3,7 +3,6 @@ package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf;
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
     my ($self) = @_;
@@ -12,13 +11,11 @@ sub default_options {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
 
-        release  		=> software_version(),
 		registry  		=> '',
 	    # division for GO & GeneName projection
 		division_name   => '', # Eg: protists, fungi, plants, metazoa
-        pipeline_name   => $self->o('ENV','USER').'_PostCompara_'.$self->o('release'),
-        email           => $self->o('ENV', 'USER').'@ebi.ac.uk', 
-        output_dir      => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
+        pipeline_name   => 'PostCompara_'.$self->o('ensembl_release'),
+        output_dir      => '/nfs/nobackup/ensembl_genomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 		
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
@@ -47,11 +44,11 @@ sub default_options {
         # flowering group of your target species
         taxon_filter     => undef, # Eg: 'Liliopsida' OR 'eudicotyledons'
 		geneName_source  => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
-		geneDesc_rules   => ['hypothetical'] , 
+		geneDesc_rules   => ['hypothetical', 'putative'] , 
 
 		# only certain types of homology are considered
 		gn_method_link_type       => 'ENSEMBL_ORTHOLOGUES',
-		gn_homology_types_allowed => ['ortholog_one2one'],
+		gn_homology_types_allowed => ['ortholog_one2one', 'ortholog_one2many'],
 		
         # Percentage identify filter for the homology
         gn_percent_id_filter      => '10',
@@ -77,7 +74,7 @@ sub default_options {
     	delete_existing => 1,
     
 		# Delete rows in tables connected to the existing analysis (via analysis_id)
-    	linked_tables => ['analysis_description'], 
+    	linked_tables => [], 
   	        
 	    # Retrieve analsysis descriptions from the production database;
     	# the supplied registry file will need the relevant server details.
@@ -87,10 +84,10 @@ sub default_options {
         go_dump_tables => ['xref', 'object_xref', 'ontology_xref', 'external_synonym'],
 
 		# source species 
-		go_from_species  => undef, # Eg: 'arabidopsis_thaliana'
+		go_from_species  => 'drosophila_melanogaster', # Eg: 'arabidopsis_thaliana'
 
 		# target species
-	    go_species       => [], # Eg: ['vitis_vinifera']
+	    go_species       => ['drosophila_ananassae','drosophila_erecta','drosophila_grimshawi','drosophila_mojavensis','drosophila_persimilis','drosophila_pseudoobscura','drosophila_sechellia','drosophila_simulans','drosophila_virilis','drosophila_willistoni','drosophila_yakuba'], # Eg: ['vitis_vinifera']
 	    go_antispecies   => [],
         go_division 	 => [], # ['EnsemblMetazoa', 'EnsemblProtists', 'EnsemblFungi', 'EnsemblPlants']
 	    go_run_all       => 0,
@@ -103,7 +100,7 @@ sub default_options {
         go_percent_id_filter      => '10',
 
 		# ensembl object type of source GO annotation, default 'Translation', options 'Transcript'
-		ensemblObj_type           => 'Translation', 
+		ensemblObj_type           => 'Transcript', 
 		# ensembl object type to attach GO projection, default 'Translation', options 'Transcript'
 		ensemblObj_type_target    => 'Translation', 
 
@@ -151,14 +148,14 @@ sub default_options {
 	## For all pipelines
 		flag_store_projections => '0', #  Off by default. Control the storing of projections into database. 
 
-       'pipeline_db' => {  
-		     -host   => $self->o('hive_host'),
-        	 -port   => $self->o('hive_port'),
-        	 -user   => $self->o('hive_user'),
-        	 -pass   => $self->o('hive_password'),
-	         -dbname => $self->o('hive_dbname'),
-        	 -driver => 'mysql',
-      	},
+       #'pipeline_db' => {  
+		   #  -host   => $self->o('hive_host'),
+       # 	 -port   => $self->o('hive_port'),
+       # 	 -user   => $self->o('hive_user'),
+       # 	 -pass   => $self->o('hive_password'),
+	     #    -dbname => $self->o('hive_dbname'),
+       # 	 -driver => 'mysql',
+       #	},
 		
     };
 }
@@ -266,7 +263,7 @@ sub pipeline_analyses {
        -parameters    => {
    		    'from_species'            => $self->o('gn_from_species'),
 		    'compara'                 => $self->o('division_name'),
-   		    'release'                 => $self->o('release'),
+   		    'release'                 => $self->o('ensembl_release'),
    		    'method_link_type'        => $self->o('gn_method_link_type'),
    		    'homology_types_allowed ' => $self->o('gn_homology_types_allowed'),
             'percent_id_filter'       => $self->o('gn_percent_id_filter'),
@@ -359,7 +356,7 @@ sub pipeline_analyses {
        -parameters   => {
 		    'from_species'            => $self->o('go_from_species'),
 		    'compara'                 => $self->o('division_name'),
-   		    'release'                 => $self->o('release'),
+   		    'release'                 => $self->o('ensembl_release'),
    		    'method_link_type'        => $self->o('go_method_link_type'),
    		    'homology_types_allowed ' => $self->o('go_homology_types_allowed'),
    		    'percent_id_filter'       => $self->o('go_percent_id_filter'),
@@ -436,33 +433,5 @@ sub pipeline_analyses {
 
   ];
 }
-
-sub pipeline_wide_parameters {
-    my ($self) = @_;
-
-    return {
-        %{ $self->SUPER::pipeline_wide_parameters() },  # inherit other stuff from the base class
-    };
-}
-
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 4000 -R "rusage[mem=4000] select[gpfs]"'},
-      'mem'     	 	=> {'LSF' => '-q production-rh6 -n 4 -M 12000 -R "rusage[mem=12000] select[gpfs]"'},
-      '2Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000] select[gpfs]"' },
-      '24Gb_job'     	=> {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000] select[gpfs]"' },
-      '250Mb_job'    	=> {'LSF' => '-q production-rh6 -C0 -M250   -R"select[mem>250]   rusage[mem=250] select[gpfs]"' },
-      '500Mb_job'    	=> {'LSF' => '-q production-rh6 -C0 -M500   -R"select[mem>500]   rusage[mem=500] select[gpfs]"' },
-	  '1Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M1000  -R"select[mem>1000]  rusage[mem=1000] select[gpfs]"' },
-	  '2Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M2000  -R"select[mem>2000]  rusage[mem=2000] select[gpfs]"' },
-	  '8Gb_job'      	=> {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000] select[gpfs]"' },
-	  '24Gb_job'     	=> {'LSF' => '-q production-rh6 -C0 -M24000 -R"select[mem>24000] rusage[mem=24000] select[gpfs]"' },
-	  'msa'          	=> {'LSF' => '-q production-rh6 -W 24:00 -R"select[gpfs]"'},
-	  'msa_himem'    	=> {'LSF' => '-q production-rh6 -M 32768 -R"rusage[mem=32768] select[gpfs]" -W 24:00' },
-	  'urgent_hcluster' => {'LSF' => '-q production-rh6 -C0 -M8000  -R"select[mem>8000]  rusage[mem=8000] select[gpfs]"' },
-    }
-}
-
 
 1;
