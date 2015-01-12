@@ -26,9 +26,8 @@ Bio::EnsEMBL::EGPipeline::Common::EGSpeciesFactory
 
 =head1 DESCRIPTION
 
-An extension of the ClassSpeciesFactory code, for use with
-EnsemblGenomes, which uses the production database differently
-and thus needs simpler 'run' and 'is_run' functions.
+Given a division or a list of species, output species names. Optionally
+send output down different pipes if a species has chromosomes or variants.
 
 =head1 Author
 
@@ -41,154 +40,214 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Production::ClassSpeciesFactory/;
+use Data::Dumper;
+
+use base qw/Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base/;
 
 sub param_defaults {
   my ($self) = @_;
   
   return {
-    %{$self->SUPER::param_defaults},
-    antispecies => [],
-    registry_report => 1,
+    species         => [],
+    division        => [],
+    run_all         => 0,
+    antispecies     => [],
+    core_flow       => 2,
+    chromosome_flow => 3,
+    variation_flow  => 4,
+    div_synonyms    =>
+      {
+        'eb'  => 'bacteria',
+        'ef'  => 'fungi',
+        'em'  => 'metazoa',
+        'epl' => 'plants',
+        'epr' => 'protists',
+      },
+    meta_filters    => {},
   };
 }
 
 sub fetch_input {
   my ($self) = @_;
-  my $species = $self->param('species') || [];
-  my $division = $self->param('division') || [];
-  my $run_all = $self->param('run_all') || 0;
+  my @species      = @{$self->param('species')};
+  my @division     = @{$self->param('division')};
+  my $run_all      =   $self->param('run_all');
+  my @antispecies  = @{$self->param('antispecies')};
+  my %meta_filters = %{$self->param('meta_filters')};
   
-  if ($run_all ne 1) {
-    unless (scalar(@$species) || scalar(@$division)) {
-      $self->throw('You must supply one of the following parameters: species, division, run_all');
+  my $all_dbas = Bio::EnsEMBL::Registry->get_all_DBAdaptors(-GROUP => 'core');
+  my %core_dbas;
+  
+  if (!scalar(@$all_dbas)) {
+    $self->throw("No core databases found in the registry; please check your registry parameters.");
+  }
+  
+  if ($run_all) {
+    %core_dbas = map {$_->species => $_} @$all_dbas;
+    $self->warning(scalar(@$all_dbas)." species loaded");
+    
+  } elsif (scalar(@division)) {
+    foreach my $division (@division) {
+      $self->process_division($all_dbas, $division, \%core_dbas);
+    }
+    
+  } elsif (scalar(@species)) {
+    foreach my $species (@species) {
+      $self->process_species($all_dbas, $species, \%core_dbas);
+    }
+    
+  } else {
+    $self->throw('You must supply one of: -species, -division, -run_all');
+    
+  }
+  
+  if (scalar(@antispecies)) {
+    foreach my $antispecies (@antispecies) {
+      delete $core_dbas{$antispecies};
+      $self->warning("$antispecies successfully removed");
     }
   }
   
-  $self->SUPER::fetch_input;
-}
+  if (scalar(keys %meta_filters)) {
+    foreach my $meta_key (keys %meta_filters) {
+      $self->filter_species($meta_key, $meta_filters{$meta_key}, \%core_dbas);
+    }
+  }
   
+  $self->param('core_dbas', \%core_dbas);
+}
+
+sub process_division {
+  my ($self, $all_dbas, $division, $core_dbas) = @_;
+  my $division_count = 0;
+  
+  my %div_synonyms = %{$self->param('div_synonyms')};
+  if (exists $div_synonyms{$division}) {
+    $division = $div_synonyms{$division};
+  }
+  
+  $division = lc($division);
+  $division =~ s/ensembl//;
+  my $div_long = 'Ensembl'.ucfirst($division);
+  
+  foreach my $dba (@$all_dbas) {
+    my $dbname = $dba->dbc->dbname();
+    if ($dbname =~ /$division\_\d+_collection_/) {
+      $$core_dbas{$dba->species()} = $dba;
+      $division_count++
+    
+    } elsif ($dbname !~ /_collection_/) {
+      if ($div_long eq $dba->get_MetaContainer->get_division()) {
+        $$core_dbas{$dba->species()} = $dba;
+        $division_count++
+      }
+      $dba->dbc->disconnect_if_idle();
+    }
+  }
+  
+  $self->warning("$division_count species loaded for $division");
+}
+
+sub process_species {
+  my ($self, $all_dbas, $species, $core_dbas) = @_;
+  
+  foreach my $dba (@$all_dbas) {
+    if ($species eq $dba->species()) {
+      $$core_dbas{$species} = $dba;
+      last;
+    }
+  }
+  
+  if (exists $$core_dbas{$species}) {
+    $self->warning("$species successfully found");
+  } else {
+    $self->throw("Core database not found for '$species'; please check your registry parameters.");
+  }
+}
+
+sub filter_species {
+  my ($self, $meta_key, $meta_value, $core_dbas) = @_;
+  
+  foreach my $species (keys %$core_dbas) {
+    my $core_dba = $$core_dbas{$species};
+    my $meta_values = $core_dba->get_MetaContainer->list_value_by_key($meta_key);
+    unless (exists {map {$_ => 1} @$meta_values}->{$meta_value}) {
+      delete $$core_dbas{$species};
+      $self->warning("$species successfully removed by filter '$meta_key = $meta_value'");
+    }
+  }
+}
+
 sub run {
   my ($self) = @_;
-  my @dbs;
+  my $chromosome_flow = $self->param('chromosome_flow');
+  my $variation_flow  = $self->param('variation_flow');
+  my $core_dbas       = $self->param('core_dbas');
+  my ($chromosome_dbas, $variation_dbas);
   
-  foreach my $dba (@{$self->param('dbas')}) {
-    $dba->dbc->disconnect_when_inactive(1);
-    my $process = $self->process_dba($dba);
-    
-    next if !$process;
-    
-    my $all = $self->production_flow($dba, 'all');
-    if ($self->param('run_all')) {
-      $all = 2;
-    }
-    
-    if ($all) {
-      my $variation = $self->production_flow($dba, 'variation');
-      if ($variation) {
-        push(@dbs, [$self->input_id($dba), $variation]);
-      }
-
-      my $karyotype = $self->production_flow($dba, 'karyotype');
-      if ($karyotype) {
-        push(@dbs, [$self->input_id($dba), $karyotype]);
+  if ($chromosome_flow || $variation_flow) {
+    foreach my $species (keys %$core_dbas) {
+      my $core_dba = $$core_dbas{$species};
+      
+      if ($chromosome_flow) {
+        if ($self->has_chromosome($core_dba)) {
+          $$chromosome_dbas{$species} = $core_dba;
+        }
       }
       
-      push(@dbs, [$self->input_id($dba), $all]);
-    }
-    
-  }
-  
-  $self->param('dbs', \@dbs);
-  
-  $self->registry_check();
-  
-  return;
-}
-
-sub is_run {
-	my ( $self, $dba, $class ) = @_;
-  
-	if ( $class =~ 'karyotype' ) {
-		return $self->has_karyotype($dba);
-	}
-  if ($class =~ 'vega') {
-    return 0;
-  }
-  if ($class =~ 'variation') {
-    return $self->has_variation($dba);
-  }
-	$dba->dbc()->disconnect_if_idle();
-	return 1;
-}
-
-sub process_dba {
-	my ( $self, $dba ) = @_;
-	my $result = $self->SUPER::process_dba($dba);
-	if ( $result == 1 && @{$self->param('division')} ) {
-		$result = 0;
-		for my $division (@{$self->param('division')}) {
-			if($dba->get_MetaContainer()->get_division() eq $division) {
-				$result = 1;
-				last;
-			}
-		}
-	}
-  if ( $result == 1 && @{$self->param('antispecies')} ) {
-    for my $antispecies (@{$self->param('antispecies')}) {
-      if ($dba->species() eq $antispecies) {
-        $result = 0;
-        last;
-      }
-    }
-  }
-	return $result;
-}
-
-sub has_variation {
-	my ( $self, $dba ) = @_;
-	my $production_name = $dba->get_MetaContainer()->get_production_name();
-  my $dbva = Bio::EnsEMBL::Registry->get_DBAdaptor($production_name, 'variation');
-  if ($dbva) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-sub registry_check {
-	my ($self, $registry_report) = @_;
-  
-  if ($self->param('registry_report')) {
-    my $registry_report;
-    my %registry_report;
-    my $dbas = Bio::EnsEMBL::Registry->get_all_DBAdaptors();
-    foreach my $dba (@{$dbas}) {
-      push @{$registry_report{$dba->group()}}, [$dba->dbc->dbname(), $dba->species];
-    }
-    foreach my $group (sort { $a cmp $b } keys %registry_report) {
-      $registry_report .= ucfirst($group)." databases\n";
-      foreach my $db (sort { $$a[0] cmp $$b[0] } @{$registry_report{$group}}) {
-        if ($$db[0] !~ /bacteria/) {
-          $registry_report .= "\t".$$db[0]." (".$$db[1].")\n";
+      if ($variation_flow) {
+        if ($self->has_variation($species)) {
+          $$variation_dbas{$species} = $core_dba;
         }
       }
     }
-    
-    $registry_report .= "\nAnd these databases match the species/division list:\n";
-    my @dbs = @{$self->param('dbs')};
-    my %species;
-    foreach my $db (@dbs) {
-      my $group = $$db[1] == 4 ? "Variation" : "Core/Otherfeatures";
-      $species{$$db[0]{'species'}}{$group} = 1;
-    }
-    foreach my $species (sort { $a cmp $b } keys %species) {
-      my @groups = sort { $a cmp $b } keys %{$species{$species}};
-      $registry_report .= "\t$species (".join(", ", @groups).")\n";
-    }
-    
-    print "Registry report:\n$registry_report\n";
-    $self->warning($registry_report);
+  }
+  
+  $self->param('chromosome_dbas', $chromosome_dbas);
+  $self->param('variation_dbas', $variation_dbas);
+}
+
+sub has_chromosome {
+  my ($self, $dba) = @_;
+  my $helper = $dba->dbc->sql_helper();
+  my $sql = q{
+    SELECT COUNT(*) FROM
+    coord_system cs INNER JOIN
+    seq_region sr USING (coord_system_id) INNER JOIN
+    seq_region_attrib sa USING (seq_region_id) INNER JOIN
+    attrib_type at USING (attrib_type_id)
+    WHERE cs.species_id = ?
+    AND at.code = 'karyotype_rank'
+  };
+  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+  
+  $dba->dbc->disconnect_if_idle();
+  
+  return $count;
+}
+
+sub has_variation {
+	my ($self, $species) = @_;
+  my $dbva = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'variation');
+  return $dbva ? 1 : 0;
+}
+
+sub write_output {
+  my ($self) = @_;
+  my $core_dbas       = $self->param('core_dbas');
+  my $chromosome_dbas = $self->param('chromosome_dbas');
+  my $variation_dbas  = $self->param('variation_dbas');
+  
+  foreach my $species (sort keys %$core_dbas) {
+    $self->dataflow_output_id({'species' => $species}, $self->param('core_flow'));
+  }
+  
+  foreach my $species (sort keys %$chromosome_dbas) {
+    $self->dataflow_output_id({'species' => $species}, $self->param('chromosome_flow'));
+  }
+  
+  foreach my $species (sort keys %$variation_dbas) {
+    $self->dataflow_output_id({'species' => $species}, $self->param('variation_flow'));
   }
 }
 
