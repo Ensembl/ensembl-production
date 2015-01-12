@@ -77,7 +77,7 @@ sub run {
         }
         $stats_hash{$ref_code} += $count;
       }
-      $count = $self->get_attrib($slice, 'noncoding_cnt_s') + $self->get_attrib($slice, 'noncoding_cnt_l') + $self->get_attrib($slice, 'noncoding_cnt_m');
+      $count = $self->get_attrib($slice, 'noncoding_cnt_%');
       if ($count > 0) {
         $self->store_attrib($slice, $count, 'noncoding_cnt');
       }
@@ -98,7 +98,7 @@ sub run {
           }
           $stats_hash{$alt_code} += $alt_count;
         }
-        $alt_count = $self->get_attrib($slice, 'noncoding_acnt_s') + $self->get_attrib($slice, 'noncoding_acnt_l') + $self->get_attrib($slice, 'noncoding_acnt_m';
+        $alt_count = $self->get_attrib($slice, 'noncoding_acnt_%');
         if ($alt_count > 0) {
           $self->store_attrib($slice, $alt_count, 'noncoding_acnt');
         }
@@ -179,8 +179,11 @@ sub get_attrib {
   my ($self, $slice, $code) = @_;
   my $aa          = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
   my $attributes = $aa->fetch_all_by_Slice($slice, $code);
-  if (@$attributes) { return $attributes->[0]->value; }
-  else { return 0; }
+  my $count = 0;
+  foreach my $attribute (@$attributes) {
+    $count += $attribute->value();
+  }
+  return $count;
 }
 
 sub get_biotype_group {
