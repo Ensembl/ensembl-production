@@ -49,19 +49,19 @@ sub fetch_input {
     $flag_backup            = $self->param('flag_backup');
 
     $to_species             = $self->param_required('species');
-    $from_species           = $self->param_required('from_species');
+    $from_species           = $self->param_required('source');
     $compara                = $self->param_required('compara');
     $release                = $self->param_required('release');
     
     $method_link_type       = $self->param_required('method_link_type');
-    $homology_types_allowed = $self->param_required('homology_types_allowed ');
+    $homology_types_allowed = $self->param_required('homology_types_allowed');
     $percent_id_filter      = $self->param_required('percent_id_filter');
     $log_file               = $self->param_required('output_dir');
     $output_dir             = $self->param_required('output_dir');
 
     $geneName_source        = $self->param_required('geneName_source');
     $geneDesc_rules         = $self->param_required('geneDesc_rules');
-    $taxon_filter           = $self->param_required('taxon_filter');
+    $taxon_filter           = $self->param('taxon_filter');
 
 return;
 }
@@ -78,10 +78,9 @@ sub run {
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);  
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if (!grep (/$taxon_filter/, @$names) && defined $taxon_filter){
-    #if (!grep (/$taxon_filter/, @$names)){
-        die("$taxon_filter is not found in the ancestor list of $to_species\n")
-    };
+    if(defined $taxon_filter){
+       die("$taxon_filter is not found in the ancestor list of $to_species\n") if(!grep (/$taxon_filter/, @$names));
+    }
 
     # Creating adaptors
     my $from_ga   = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
@@ -89,6 +88,16 @@ sub run {
     my $to_ta     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Transcript');
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
+
+=pod
+    Bio::EnsEMBL::Registry->load_registry_from_db(
+            -host       => 'mysql-eg-mirror.ebi.ac.uk',
+            -port       => 4157,
+            -user       => 'ensrw',
+            -pass       => 'writ3r',
+            -db_version => '77',
+   );
+=cut
 
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
@@ -108,10 +117,6 @@ sub run {
     print $data "\t\tto_db               :".$to_ga->dbc()->dbname()."\n";
     print $data "\t\tto_species_common   :$to_species\n";
    
-    # Backup tables that will be updated
-    $self->backup($to_ga) if($flag_backup==1);
-    #backup($to_ga,$to_species)if($flag_backup==1);
-	    
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
