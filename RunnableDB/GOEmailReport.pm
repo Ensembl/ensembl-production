@@ -36,17 +36,17 @@ use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport');
 sub fetch_input {
     my ($self) = @_;
 
-    my $email      = $self->param('email')   || die "'email' parameter is obligatory";
-    my $subject    = $self->param('subject') || "An automatic message from your pipeline";
-    my $output_dir = $self->param('output_dir');
-    my $species    = $self->param_required('species');
+    my $email        = $self->param('email')   || die "'email' parameter is obligatory";
+    my $subject      = $self->param('subject') || "An automatic message from your pipeline";
+    my $output_dir   = $self->param('output_dir');
+    my $to_species   = $self->param_required('species');
     my $reports;
 
-    foreach my $s (@$species){
-       my $ga    = Bio::EnsEMBL::Registry->get_adaptor($s, 'core', 'Gene');
+    foreach my $sp (@$to_species){
+       my $ga    = Bio::EnsEMBL::Registry->get_adaptor($sp, 'core', 'Gene');
        my $dbh   = $ga->dbc()->db_handle();
-       $reports .= $self->linkage_type_summary($dbh, $ga);
-       $reports .= $self->info_type_summary($dbh, $ga);
+       $reports .= $self->linkage_type_summary($dbh, $ga, $sp);
+       $reports .= $self->info_type_summary($dbh, $ga, $sp);
     }
     $reports   .= "\n$subject detail log file is available at $output_dir.\n";
 
@@ -54,7 +54,7 @@ sub fetch_input {
 }
 
 sub linkage_type_summary {
-    my ($self, $dbh, $ga) = @_;
+    my ($self, $dbh, $ga, $sp) = @_;
 
     my $sql = 'SELECT onx.linkage_type,count(dbprimary_acc) as count_of_GO_accession 
                 FROM xref x 
@@ -63,25 +63,19 @@ sub linkage_type_summary {
                 WHERE x.external_db_id=1000 
                 GROUP BY onx.linkage_type';
 
-#    my $sql = 'SELECT onx.linkage_type,count(*) as count_of_GO_accession 
-#    		FROM xref x 
-#    		JOIN object_xref ox USING (xref_id) 
-#   		JOIN ontology_xref onx USING (object_xref_id) 
-#    		WHERE x.external_db_id=1000 
-#                GROUP BY onx.linkage_type';
-
     my $sth = $dbh->prepare($sql);
     $sth->execute();
-    
-    my $title = "Summary of GO annotations, by linkage types: (".$ga->dbc()->dbname().")";
-    my $columns = $sth->{NAME};
-    my $results = $sth->fetchall_arrayref();
+
+    my $from_species = $self->param_required('source');   
+    my $title        = "Summary of GO annotations, by linkage types: (projected from $from_species to $sp)";
+    my $columns      = $sth->{NAME};
+    my $results      = $sth->fetchall_arrayref();
 
 return $self->format_table($title, $columns, $results);
 }
 
 sub info_type_summary {
-    my ($self, $dbh, $ga) = @_;
+    my ($self, $dbh, $ga, $sp) = @_;
 
     my $sql = 'SELECT info_type,count(dbprimary_acc) as count_of_GO_accession 
                 FROM xref x 
@@ -93,9 +87,10 @@ sub info_type_summary {
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 
-    my $title = "Summary of GO annotations, by info types: (".$ga->dbc()->dbname().")";
-    my $columns = $sth->{NAME};
-    my $results = $sth->fetchall_arrayref();
+    my $from_species = $self->param_required('source');
+    my $title        = "Summary of GO annotations, by info types: (projected from $from_species to $sp)";
+    my $columns      = $sth->{NAME};
+    my $results      = $sth->fetchall_arrayref();
 
 return $self->format_table($title, $columns, $results);    
 }
