@@ -42,10 +42,10 @@ sub fetch_input {
     my $species    = $self->param_required('species');
     my $reports;
 
-    foreach my $s (@$species){
-       my $ga    = Bio::EnsEMBL::Registry->get_adaptor($s, 'core', 'Gene');
+    foreach my $sp (@$species){
+       my $ga    = Bio::EnsEMBL::Registry->get_adaptor($sp, 'core', 'Gene');
        my $dbh   = $ga->dbc()->db_handle();
-       $reports   .= $self->info_type_summary($dbh, $ga);
+       $reports   .= $self->info_type_summary($dbh, $ga, $sp);
     }
 
     $reports   .= "\n$subject detail log file is available at $output_dir.\n";
@@ -54,7 +54,7 @@ sub fetch_input {
 }
 
 sub info_type_summary {
-    my ($self, $dbh, $ga) = @_;
+    my ($self, $dbh, $ga, $sp) = @_;
 
     my $sql = 'SELECT info_type,count(dbprimary_acc) as count_of_primary_acc 
                 FROM gene g INNER JOIN xref x
@@ -64,7 +64,7 @@ sub info_type_summary {
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 
-    my $title = "Summary of DB primary_acc, by info types: (".$ga->dbc()->dbname().")";
+    my $title = "Summary of DB primary_acc, by info types: ($sp)";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 
