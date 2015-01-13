@@ -55,12 +55,12 @@ sub fetch_input {
     $flag_delete_go_terms   = $self->param_required('flag_delete_go_terms');
 
     $to_species             = $self->param_required('species');
-    $from_species           = $self->param_required('from_species');
+    $from_species           = $self->param_required('source');
     $compara                = $self->param_required('compara');
     $release                = $self->param_required('release');
 
     $method_link_type       = $self->param_required('method_link_type');
-    $homology_types_allowed = $self->param_required('homology_types_allowed ');
+    $homology_types_allowed = $self->param_required('homology_types_allowed');
     $percent_id_filter      = $self->param_required('percent_id_filter');
     $log_file               = $self->param_required('output_dir');
     $output_dir             = $self->param_required('output_dir');
@@ -105,6 +105,15 @@ sub run {
     my $meta_container   = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)    = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
 
+=pod
+    Bio::EnsEMBL::Registry->load_registry_from_db(
+            -host       => 'mysql-eg-mirror.ebi.ac.uk',
+            -port       => 4157,
+            -user       => 'ensrw',
+            -pass       => 'writ3r',
+            -db_version => '77',
+   );
+=cut
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
@@ -227,6 +236,16 @@ return %terms;
 sub get_ontology_terms {
     my @starter_terms    = @_;
 
+=pod
+    Bio::EnsEMBL::Registry->load_registry_from_db(
+            -host       => 'mysql-eg-mirror.ebi.ac.uk',
+            -port       => 4157,
+            -user       => 'ensrw',
+            -pass       => 'writ3r',
+            -db_version => '77',
+   );
+=cut
+
     my %terms;
     my $ontology_adaptor = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
     die "Can't get OntologyTerm Adaptor - check that database exist in the server specified" if (!$ontology_adaptor);
@@ -285,17 +304,7 @@ sub project_go_terms {
        $from_translation   = $from_gene->canonical_transcript();
        $to_translation     = get_canonical_translation($to_gene); 
     }
-=pod
-    if($ensemblObj_type=~/Translation/){ 
-       $from_translation   = get_canonical_translation($from_gene);
-       $to_translation     = get_canonical_translation($to_gene);
-    }    
-    else{ # $ensemblObj_type=~/Transcript/ in the case of ncRNA
-       $from_translation   = $from_gene->canonical_transcript();
-       $to_translation     = $to_gene->canonical_transcript();
-    }
-=cut
-
+    
     return if (!$from_translation || !$to_translation);
 
     my $from_latin_species = ucfirst(Bio::EnsEMBL::Registry->get_alias($from_species));
