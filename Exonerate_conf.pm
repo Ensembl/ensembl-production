@@ -54,6 +54,7 @@ sub default_options {
     antispecies => [],
     division => [],
     run_all => 0,
+    meta_filters => {},
 
     # Parameters for dumping and splitting Fasta DNA query files;
     # the genome file is not split, so that we can use the
@@ -240,11 +241,13 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
-                              species     => $self->o('species'),
-                              antispecies => $self->o('antispecies'),
-                              division    => $self->o('division'),
-                              run_all     => $self->o('run_all'),
-                              db_types    => ['core'],
+                              species         => $self->o('species'),
+                              antispecies     => $self->o('antispecies'),
+                              division        => $self->o('division'),
+                              run_all         => $self->o('run_all'),
+                              meta_filters    => $self->o('meta_filters'),
+                              chromosome_flow => 0,
+                              variation_flow  => 0,
                             },
       -input_ids         => [ {} ],
       -flow_into         => {

@@ -55,6 +55,7 @@ sub default_options {
     antispecies  => [],
     division     => [],
     run_all      => 0,
+    meta_filters => {},
     
     # Parameters for dumping and splitting Fasta query files.
     max_seq_length_per_file => 1000000,
@@ -254,10 +255,13 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count => 1,
       -parameters      => {
-                            species     => $self->o('species'),
-                            antispecies => $self->o('antispecies'),
-                            division    => $self->o('division'),
-                            run_all     => $self->o('run_all'),
+                            species         => $self->o('species'),
+                            antispecies     => $self->o('antispecies'),
+                            division        => $self->o('division'),
+                            run_all         => $self->o('run_all'),
+                            meta_filters    => $self->o('meta_filters'),
+                            chromosome_flow => 0,
+                            variation_flow  => 0,
                           },
       -rc_name         => 'normal',
       -flow_into       => {
