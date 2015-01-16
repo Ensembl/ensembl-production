@@ -246,7 +246,7 @@ for my $dbname (@dbnames) {
     $sth->execute;
     while( my $hit_name = $sth->fetchrow) {
         my %h_written;
-        my $is_protein_obsolete = check_if_obsolete_protein($hit_name, $Uentry_adaptator, $UDBxref_adaptator, $UA_port);
+        my $is_protein_obsolete = check_if_obsolete_protein($hit_name, $Uentry_adaptator, $UA_port);
         if ($is_protein_obsolete == 1) {
             foreach my $transcript (@{$transcript_adaptor->fetch_all_by_transcript_supporting_evidence($hit_name,'protein_align_feature')}) {
                 next unless (exists $h_biotypes{$gene_adaptor->fetch_by_transcript_id($transcript->dbID)->biotype});
@@ -331,7 +331,7 @@ sub connect_and_retrieve_from_db {
 
 #Check if a Uniprot accession has been retired in the delac_sp and delac_tr files.
 sub check_if_obsolete_protein {
-    my ($hit_name, $Uentry_adaptator, $UDBxref_adaptator, $UA_port) = @_;
+    my ($hit_name, $Uentry_adaptator, $UA_port) = @_;
     my ($protein_id) = $hit_name =~ /^([[:alnum:]]+)/;
     return 1 if exists  $h_deleted{$protein_id};
     #The two regex above are used to catch Protein align features wrongly tagged as Uniprot. the line below will be removed as soon as the Genebuild team have resolve this issue.
