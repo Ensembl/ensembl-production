@@ -30,10 +30,10 @@ use Getopt::Long qw( :config no_ignore_case );
 
 sub usage {
   print("Usage:\n");
-  printf( "\t%s\t-h dbhost [-P dbport] \\\n" .
-			"\t%s\t-u dbuser [-p dbpass] \\\n" .
-			"\t%2\$s\t-d dbname [-c config]\n",
-		  $0, ' ' x length($0) );
+  printf( "\t%s\t-h dbhost [-P dbport] \\\n"
+        . "\t%s\t-u dbuser [-p dbpass] \\\n"
+        . "\t%2\$s\t-d dbname [-c config]\n",
+          $0, ' ' x length($0) );
   print("\n");
   printf( "\t%s\t-?\n", $0 );
   print("\n");
@@ -57,16 +57,15 @@ my $config_file = 'closure_config.ini';
 $dbport = '3306';
 
 if ( !GetOptions( 'dbhost|host|h=s' => \$dbhost,
-				  'dbport|port|P=i' => \$dbport,
-				  'dbuser|user|u=s' => \$dbuser,
-				  'dbpass|pass|p=s' => \$dbpass,
-				  'dbname|name|d=s' => \$dbname,
-				  'config|c=s'      => \$config_file,
-				  'help|?'          => sub { usage(); exit }
-	 )                 ||
-	 !defined($dbhost) ||
-	 !defined($dbuser) ||
-	 !defined($dbname) )
+                  'dbport|port|P=i' => \$dbport,
+                  'dbuser|user|u=s' => \$dbuser,
+                  'dbpass|pass|p=s' => \$dbpass,
+                  'dbname|name|d=s' => \$dbname,
+                  'config|c=s'      => \$config_file,
+                  'help|?'          => sub { usage(); exit } )
+     || !defined($dbhost)
+     || !defined($dbuser)
+     || !defined($dbname) )
 {
   usage();
   exit;
@@ -76,13 +75,14 @@ if ( !GetOptions( 'dbhost|host|h=s' => \$dbhost,
 my $default_relations = [ 'is_a', 'part_of' ];
 my $config;
 if ( defined $config_file && -e $config_file ) {
-	$config = new Config::Simple($config_file)->vars();
+  $config = new Config::Simple($config_file)->vars();
 }
+
 my $dsn = sprintf( "DBI:mysql:database=%s;host=%s;port=%s",
-				   $dbname, $dbhost, $dbport );
+                   $dbname, $dbhost, $dbport );
 
 my $dbh = DBI->connect( $dsn, $dbuser, $dbpass,
-						{ 'RaiseError' => 1, 'PrintError' => 1 } );
+                        { 'RaiseError' => 1, 'PrintError' => 1 } );
 
 print "Clearing closure table\n";
 $dbh->do('TRUNCATE TABLE closure');
@@ -90,29 +90,33 @@ $dbh->do('ALTER TABLE closure DISABLE KEYS');
 
 print "Importing intra-ontology parent-child relations\n";
 $dbh->do(
-  q/INSERT INTO closure
-  (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-SELECT  term_id, term_id, 0, NULL, ontology_id
-FROM    term
- WHERE  is_obsolete = 0/ );
+  q/
+   INSERT INTO  closure
+                (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
+        SELECT  term_id, term_id, 0, NULL, ontology_id
+          FROM  term
+         WHERE  is_obsolete = 0/ );
 
 print "Importing inter-ontology parent-child relations\n";
 $dbh->do(
-  q/INSERT IGNORE INTO closure
-  (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-SELECT term_id, term_id, 0, NULL, r.ontology_id
-FROM   term t, relation r
-WHERE  term_id = child_term_id
-AND    t.ontology_id != r.ontology_id
-AND    is_obsolete = 0/ );
+  q/
+   INSERT IGNORE INTO  closure
+                       (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
+               SELECT  term_id, term_id, 0, NULL, r.ontology_id
+                 FROM  term t, relation r
+                WHERE  term_id = child_term_id
+                  AND  t.ontology_id != r.ontology_id
+                  AND  is_obsolete = 0/ );
 
 # hash using ontology_name-namespace with list of possible relations
 print "Importing defined relations\n";
 my $relations = {};
 my $sth = $dbh->prepare(
-  q/select distinct o.name, o.namespace
-from ontology o 
-join relation r using (ontology_id)/ );
+  q/
+   SELECT  distinct o.name, o.namespace
+     FROM  ontology o
+     JOIN  relation r using (ontology_id)/ );
+
 $sth->execute();
 my @row;
 while ( @row = $sth->fetchrow_array ) {
@@ -120,27 +124,26 @@ while ( @row = $sth->fetchrow_array ) {
 }
 $sth->finish();
 
-
 for my $ontology ( keys %{$relations} ) {
   for my $namespace ( keys %{ $relations->{$ontology} } ) {
-	my $rels = $config->{$ontology.'.'.$namespace};
-	if ( !defined $rels ) {
-		$rels = $default_relations;
-	}
-	if ( scalar(@$rels) > 0 ) {
-	  my $rels_join = join ',', map { "'$_'" } @$rels;
-  	print "Importing $ontology.$namespace $rels_join relations\n";
-	  $dbh->do(
-		qq/
-INSERT IGNORE INTO closure
-  (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-SELECT DISTINCT r.child_term_id, r.parent_term_id, 1, r.child_term_id, r.ontology_id
-FROM relation r
-JOIN relation_type rt using (relation_type_id) 
-JOIN ontology o using (ontology_id)
-WHERE rt.name IN ($rels_join)
-AND o.name='$ontology' AND o.namespace='$namespace'/);
-	}
+    my $rels = $config->{ $ontology . '.' . $namespace };
+    if ( !defined $rels ) {
+      $rels = $default_relations;
+    }
+    if ( scalar(@$rels) > 0 ) {
+      my $rels_join = join ',', map { "'$_'" } @$rels;
+      print "Importing $ontology.$namespace $rels_join relations\n";
+      $dbh->do(
+        q/
+         INSERT IGNORE INTO  closure
+                             (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
+            SELECT DISTINCT  r.child_term_id, r.parent_term_id, 1, r.child_term_id, r.ontology_id
+                       FROM  relation r
+                       JOIN  relation_type rt using (relation_type_id) 
+                       JOIN  ontology o using (ontology_id)
+                      WHERE  rt.name IN ($rels_join)
+                        AND  o.name='$ontology' AND o.namespace='$namespace'/ );
+    }
   }
 }
 
@@ -148,25 +151,25 @@ print "Computing closures\n";
 
 my $select_sth = $dbh->prepare(
   q/
-SELECT DISTINCT
-        child.child_term_id,
-        parent.parent_term_id,
-        child.distance + 1,
-        parent.child_term_id,
-        child.ontology_id
-FROM    closure child
-  JOIN  closure parent
-    ON  (parent.child_term_id = child.parent_term_id)
-WHERE   child.distance  = ?
-  AND   parent.distance = 1
-  AND   child.ontology_id = parent.ontology_id/
+   SELECT DISTINCT
+           child.child_term_id,
+           parent.parent_term_id,
+           child.distance + 1,
+           parent.child_term_id,
+           child.ontology_id
+     FROM  closure child
+     JOIN  closure parent
+       ON  (parent.child_term_id = child.parent_term_id)
+    WHERE  child.distance  = ?
+      AND  parent.distance = 1
+      AND  child.ontology_id = parent.ontology_id/
 );
 
 my $insert_sth = $dbh->prepare(
   q/
-REPLACE INTO closure
-  (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-VALUES (?, ?, ?, ?, ?)/ );
+   REPLACE INTO  closure
+                 (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
+         VALUES  (?, ?, ?, ?, ?)/ );
 
 my ($oldsize) = $dbh->selectrow_array('SELECT COUNT(1) FROM closure');
 my $newsize;
@@ -188,8 +191,8 @@ while ( !defined($newsize) || $newsize > $oldsize ) {
 
   $dbh->do('LOCK TABLE closure WRITE');
   while ( my @data = $select_sth->fetchrow_array() ) {
-	$insert_sth->execute(@data);
-	$newsize++;
+    $insert_sth->execute(@data);
+    $newsize++;
   }
   $dbh->do('UNLOCK TABLES');
 }
