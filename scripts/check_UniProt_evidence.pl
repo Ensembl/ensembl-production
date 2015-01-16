@@ -55,11 +55,36 @@ my $parallel;
 my $overwrite;
 my $test;
 my $deleted_file;
+my $uniprot_release;
 
 my @a_dbIds = qw( 2000 2001 2200 2201 2202 2250 );
-my @a_deletedIds = qw(ftp://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/delac_sp.txt
-                      ftp://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/delac_tr.txt);
-my %h_biotypes = ( protein_coding => 1,
+my @a_deletedIds = qw(ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/delac_sp.txt
+                      ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/delac_tr.txt);
+
+# Check that the biotype list below is up to date by running the following MySQL query on the human database:
+#select count(*),t.biotype from protein_align_feature paf,supporting_feature sf,exon e,exon_transcript et,transcript t,analysis a where paf.protein_align_feature_id=sf.feature_id and sf.feature_type='protein_align_feature' and sf.exon_id=e.exon_id and e.exon_id=et.exon_id and et.transcript_id=t.transcript_id and a.analysis_id = paf.analysis_id AND (a.logic_name LIKE "uniprot%havana" OR paf.external_db_id IN (2000,2001,2200,2201,2202,2250) AND a.logic_name NOT LIKE "uniprot%") group by t.biotype;
+my %h_biotypes = ( 
+                   antisense => 1,
+                   IG_C_gene => 1,
+                   IG_C_pseudogene =>1,
+                   IG_V_gene => 1,
+                   IG_V_pseudogene => 1,
+                   lincRNA => 1,
+                   nonsense_mediated_decay => 1,
+                   non_stop_decay => 1,
+                   polymorphic_pseudogene => 1,
+                   processed_transcript => 1,
+                   retained_intron => 1,
+                   sense_intronic => 1,
+                   sense_overlapping => 1,
+                   TEC => 1,
+                   transcribed_unitary_pseudogene => 1, 
+                   translated_processed_pseudogene => 1,
+                   translated_unprocessed_pseudogene => 1,
+                   TR_C_gene => 1,
+                   TR_V_gene => 1,
+                   TR_V_pseudogene => 1,
+                   protein_coding => 1,
                    processed_pseudogene => 1,
                    pseudogene => 1,
                    transcribed_processed_pseudogene => 1,
@@ -67,32 +92,6 @@ my %h_biotypes = ( protein_coding => 1,
                    unitary_pseudogene => 1,
                    unprocessed_pseudogene => 1,
                  );
-# These proteins were renammed before version 7.0 so the DB does not know them but they still exist!!!
-# We don't need this white list anymore as the assembly has been rebuild
-#my %h_whitelist = ( "ALC_XENLA"   => 1,
-#                    "REQU1_XENLA" => 1,
-#                    "APG4B_XENLA" => 1,
-#                    "CATE2_XENLA" => 1,
-#                    "MPIP0_XENLA" => 1,
-#                    "ARGI3_XENLA" => 1,
-#                    "XCAPD_XENLA" => 1,
-#                    "DRD21_XENLA" => 1,
-#                    "DRD22_XENLA" => 1,
-#                    "HNFA2_XENLA" => 1,
-#                    "HNFA1_XENLA" => 1,
-#                    "CLEC1_XENLA" => 1,
-#                    "PPAS_XENLA"  => 1,
-#                    "AG2R_XENLA"  => 1,
-#                    "MYPR1_XENLA" => 1,
-#                    "CBFA_XENLA"  => 1,
-#                    "RX2_XENLA"   => 1,
-#                    "DPOA_XENLA"  => 1,
-#                    "INVS2_XENLA" => 1,
-#                    "PPAR_XENLA"  => 1,
-#                    "XFOG_XENLA"  => 1,
-#                    "LAMA_XENLA"  => 1,
-#                    "PR6A1_XENLA" => 1,
-#                    );
 
 &GetOptions (
         'host=s'         => \$host,
@@ -108,6 +107,7 @@ my %h_biotypes = ( protein_coding => 1,
         'parallel!'      => \$parallel,
         'overwrite!'     => \$overwrite,
         'test!'          => \$test,
+        'uniprot_release' => \$uniprot_release,
         );
 
 &Usage if ($host eq '' or $dbpattern eq '');
@@ -134,6 +134,10 @@ if (!-e $deleted_file) {
         while(<IF>) {
             my $line = $_;
             print WF $line if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
+            if ($line =~/([0-9]{4}_[0-9]{2})/)
+            {
+                $uniprot_release = "uniprot_".$1;
+            }
         }
         close(IF);
     }
@@ -154,6 +158,7 @@ if ($parallel) {
         $cmd .= ' --deleted_file '.$deleted_file;
         $cmd .= ' --write' if defined $write;
         $cmd .= ' --overwrite' if defined $overwrite;
+        $cmd .= ' --uniprot_release '.$uniprot_release;
         if ($test) {
             print STDOUT $dbname, "\n";
             print STDOUT $cmd, "\n";
@@ -174,15 +179,6 @@ if ($parallel) {
 
 my %h_deleted;
 # Getting the list of deleted proteins
-#for my $wget_cmd (@a_deletedIds) {
-#    open(IF, "wget $wget_cmd -O - |") || die('Could not get internet file!');
-#    while(<IF>) {
-#        chomp;
-#        my $line = $_;
-#        $h_deleted{$1} = 1 if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
-#    }
-#    close(IF);
-#}
 open(DF, $deleted_file) || die('Could not get internet file!');
 while(<DF>) {
     chomp;
@@ -204,7 +200,6 @@ my $uniprot_db = new Bio::EnsEMBL::ExternalData::Mole::DBSQL::DBAdaptor(
         );
 
 my $Uentry_adaptator  = $uniprot_db->get_EntryAdaptor;
-my $UDBxref_adaptator = $uniprot_db->get_DBXrefAdaptor;
 
 
 my $attribute = Bio::EnsEMBL::Attribute->new (
@@ -231,8 +226,8 @@ for my $dbname (@dbnames) {
     my $meta_adaptor       = $target_db->get_MetaContainer;
     my $ra_uniprotflagging = $meta_adaptor->list_value_by_key(&META_KEY);
 
-    if (defined $ra_uniprotflagging->[0] and $uniprot_dbname eq $ra_uniprotflagging->[0]) {
-        print STDERR "Your are using the same Uniprot database ($uniprot_dbname) than the last time...\n";
+    if (defined $ra_uniprotflagging->[0] and $uniprot_release eq $ra_uniprotflagging->[0]) {
+        print STDERR "Your are using the same Uniprot database ($uniprot_release) than the last time...\n";
         exit(9) if defined $write;
     }
 
@@ -242,11 +237,12 @@ for my $dbname (@dbnames) {
     my $gene_adaptor       = $target_db->get_GeneAdaptor();
     my $transcript_adaptor = $target_db->get_TranscriptAdaptor;
     my $attrib_adaptor     = $target_db->get_AttributeAdaptor;
-
+    # the Overwrite option will remove all the transcript_attrib data linked to "Evidence for projected transcript removed" code
     if ($overwrite) {
         $attrib_adaptor->dbc->do('DELETE FROM transcript_attrib where attrib_type_id = '.&ATTRIB_NUM.' AND value NOT LIKE "ENS%"');
     }
-    my $sth = $target_db->dbc->prepare('SELECT distinct(paf.hit_name) FROM protein_align_feature paf, analysis a WHERE a.analysis_id = paf.analysis_id AND a.logic_name NOT LIKE "uniprot%" AND paf.external_db_id IN ('.(join(',', @a_dbIds)).')');
+    # Get all the hit name for external_db_id in (2000 2001 2200 2201 2202 2250) and logic name not like uniprot%havana
+    my $sth = $target_db->dbc->prepare('SELECT distinct(paf.hit_name) FROM protein_align_feature paf, analysis a WHERE a.analysis_id = paf.analysis_id AND (a.logic_name LIKE "uniprot%havana" OR paf.external_db_id IN ('.(join(',', @a_dbIds)).') AND a.logic_name NOT LIKE "uniprot%")');
     $sth->execute;
     while( my $hit_name = $sth->fetchrow) {
         my %h_written;
@@ -292,10 +288,10 @@ for my $dbname (@dbnames) {
 
     if (defined $write) {
         if (defined $ra_uniprotflagging->[0]) {
-            $meta_adaptor->update_key_value(&META_KEY, $uniprot_dbname);
+            $meta_adaptor->update_key_value(&META_KEY, $uniprot_release);
         }
         else {
-            $meta_adaptor->store_key_value(&META_KEY, $uniprot_dbname);
+            $meta_adaptor->store_key_value(&META_KEY, $uniprot_release);
         }
     }
 
@@ -333,14 +329,14 @@ sub connect_and_retrieve_from_db {
     return $result;
 }
 
+#Check if a Uniprot accession has been retired in the delac_sp and delac_tr files.
 sub check_if_obsolete_protein {
     my ($hit_name, $Uentry_adaptator, $UDBxref_adaptator, $UA_port) = @_;
     my ($protein_id) = $hit_name =~ /^([[:alnum:]]+)/;
     return 1 if exists  $h_deleted{$protein_id};
-    return 0 if defined $Uentry_adaptator->fetch_by_accession($protein_id);
-    return 0 if defined $Uentry_adaptator->fetch_by_name($hit_name);
-    return 0 if defined $UDBxref_adaptator->fetch_by_secondary_id($hit_name);
-#    return 0 if exists $h_whitelist{$hit_name};
+    #The two regex above are used to catch Protein align features wrongly tagged as Uniprot. the line below will be removed as soon as the Genebuild team have resolve this issue.
+    return 1 if $hit_name=~ /^[A-Z]{3}[0-9]{5}.[0-9]{1}$/;
+    return 1 if $hit_name=~ /^[A-N,R-Z]{1}[0-9]{5}$/;
 # Sometimes the hit name is an old one and have been replace in the current version of Uniprot, so we need to look for the correspondance in the archive
     if ($hit_name =~ /_/) {
         my $archive_prot = connect_and_retrieve_from_db('uniprot_archive', $UA_port, "SELECT accession_version FROM entry WHERE name = '".$hit_name."'");
@@ -349,14 +345,21 @@ sub check_if_obsolete_protein {
             return -1;
         }
         $archive_prot =~ s/\.\d+//;
-        return 0 if defined $Uentry_adaptator->fetch_by_accession($archive_prot);
+        if (defined $Uentry_adaptator->fetch_by_accession($archive_prot))
+        {
+          return 0;
+        }
+        else
+        {
+          return 1;
+        }
     }
-    return 1;
+    return 0;
 }
 
 sub Usage {
     print <<EOF
- $0 --host <host name> --dbpattern <DB name> [--log_file <path to file>] [--write] [--dbhost_ref <host name>] [--dbport_ref <port number>] [--port <int>] [--user <user name>] [--pass <passwd>] [--parallel] [--queue <lsf queue>] [--test]
+ $0 --host <host name> --dbpattern <DB name> [--log_file <path to file>] [--write] [--overwrite] [--dbhost_ref <host name>] [--dbport_ref <port number>] [--port <int>] [--user <user name>] [--pass <passwd>] [--parallel] [--queue <lsf queue>] [--test]
         
         Mandatory
             --host      Name of the host of the target database
@@ -364,13 +367,14 @@ sub Usage {
                         
         Optionnal       
             --write     Write the attributes in the translation_attrib and transcription_attrib tables
+            --overwrite Clean up the transcript_attrib table, remove all the tagged accession except "ENS%"
             --log_file  Name of the log file, all protein name with their linked element would be written here
             --port      Port number
             --user      User name, must be an admin
             --pass      Password
             --parallel  Run one job per database
             --queue     LSF queue, default normal
-            --test      Test the LSF command and which databases will be checked, it won't run the script
+            --test      Test the LSF command and which databases will be checked, it won't run the script 
 EOF
 ;
     exit(1);
