@@ -20,7 +20,6 @@
 use strict;
 use warnings;
 
-use Config::Simple;
 use Data::Dumper;
 
 use DBI;
@@ -74,7 +73,17 @@ if ( !GetOptions( 'dbhost|host|h=s' => \$dbhost,
 # set up relations configuration
 my $default_relations = [ 'is_a', 'part_of' ];
 my $config;
-if ( defined $config_file && -e $config_file ) {
+my $test_eval = eval { require Config::Simple };
+
+if (!$test_eval) {
+  # The user does not have the 'Config::Simple' module.
+  print( STDERR "No Config::Simple module found, "
+          . "continuing without the ini-file.\n" );
+  # If the configuration file *is* an ini-file, we can expect a
+  # load of compilation errors from the next eval...
+} else {
+  # The user has the 'Config::Simple' module installed.  See
+  # if this is an ini-file or not...
   $config = new Config::Simple($config_file)->vars();
 }
 
