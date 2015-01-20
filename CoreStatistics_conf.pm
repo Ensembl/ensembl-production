@@ -56,12 +56,12 @@ sub default_options {
     antispecies => [],
     division => [],
     run_all => 0,
+    meta_filters => {},
     
     release => $self->o('ensembl_release'),
     bin_count => '200',
     max_run => '100',
     
-    long_noncoding_density => 0,
     no_pepstats => 0,
     snp_analyses_only => 0,
     
@@ -100,8 +100,7 @@ sub pipeline_analyses {
                 'SnpCount',
                 'SnpDensity',
               ],
-    'A->2' => ['AnalyzeTables'],
-    '1'    => ['Notify'],
+    'A->1' => ['ScheduleSpeciesAgain'],
   };
   
   if (!$self->o('snp_analyses_only')) {
@@ -120,6 +119,7 @@ sub pipeline_analyses {
         'CodingDensity',
         'PseudogeneDensity',
         'ShortNonCodingDensity',
+        'LongNonCodingDensity',
         'PercentGC',
         'PercentRepeat',
       ];
@@ -131,9 +131,6 @@ sub pipeline_analyses {
       push @{$$flow_into{'2->A'}}, 'PepStats';
     }
   }
-  if ($self->o('long_noncoding_density')) {
-    push @{$$flow_into{'3->A'}}, 'LongNonCodingDensity';
-  }
   
   return [
     {
@@ -144,11 +141,13 @@ sub pipeline_analyses {
         antispecies  => $self->o('antispecies'),
         division => $self->o('division'),
         run_all  => $self->o('run_all'),
+        meta_filters  => $self->o('meta_filters'),
       },
       -input_ids  => [ {} ],
       -max_retry_count => 1,
       -flow_into       => $flow_into,
       -rc_name         => 'normal',
+      -meadow_type     => 'LOCAL',
     },
 
     {
@@ -202,8 +201,8 @@ sub pipeline_analyses {
       -parameters => {
         description => 'Every gene should be included in one of the counts.',
         query =>
-          'SELECT COUNT(*) AS total FROM gene UNION '.
-          'SELECT sum(value) AS total FROM seq_region_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code IN ("coding_cnt", "pseudogene_cnt", "snoncoding_cnt", "lnoncoding_cnt")',
+          'SELECT COUNT(*) AS total FROM gene WHERE biotype <> "transposable_element" UNION '.
+          'SELECT sum(value) AS total FROM seq_region_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code IN ("coding_cnt", "pseudogene_cnt", "noncoding_cnt_s", "noncoding_cnt_l")',
         expected_size => '= 1'
       },
       -max_retry_count  => 2,
@@ -426,6 +425,27 @@ sub pipeline_analyses {
     #},
 
     {
+      -logic_name => 'ScheduleSpeciesAgain',
+      -module     => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -parameters => {
+        species  => $self->o('species'),
+        antispecies  => $self->o('antispecies'),
+        division => $self->o('division'),
+        run_all  => $self->o('run_all'),
+        meta_filters  => $self->o('meta_filters'),
+        chromosome_flow => 0,
+        variation_flow  => 0,
+      },
+      -max_retry_count => 1,
+      -flow_into       => {
+                            '2->A' => ['AnalyzeTables'],
+                            'A->1' => ['Notify'],
+                          },
+      -rc_name         => 'normal',
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
       -logic_name => 'AnalyzeTables',
       -module     => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalyzeTables',
       -parameters => {
@@ -444,7 +464,6 @@ sub pipeline_analyses {
         subject => $self->o('pipeline_name').' has finished',
       },
       -rc_name    => 'normal',
-      -wait_for => ['AnalyzeTables'],
     }
 
   ];
