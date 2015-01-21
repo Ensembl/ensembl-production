@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	78
+2	\N	schema_version	79
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
@@ -20,3 +20,5 @@
 26	\N	patch	patch_76_77a.sql|schema_version
 27	\N	patch	patch_77_78a.sql|schema_version
 28	\N	patch	patch_77_78b.sql|unmapped_reason
+29	\N	patch	patch_78_79a.sql|schema_version
+30	\N	patch	patch_78_79b.sql|add_misc_biotype
