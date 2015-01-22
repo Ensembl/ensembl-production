@@ -46,6 +46,7 @@ sub fetch_input {
        my $ga    = Bio::EnsEMBL::Registry->get_adaptor($sp, 'core', 'Gene');
        my $dbh   = $ga->dbc()->db_handle();
        $reports   .= $self->info_type_summary($dbh, $ga, $sp);
+       $reports   .= $self->geneDesc_summary($dbh, $ga, $sp);
     }
 
     $reports   .= "\n$subject detail log file is available at $output_dir.\n";
@@ -70,5 +71,21 @@ sub info_type_summary {
 
 return $self->format_table($title, $columns, $results);    
 }
+
+sub geneDesc_summary {
+    my ($self, $dbh, $ga, $sp) = @_;
+
+    my $sql = 'SELECT count(*) FROM gene WHERE description rlike "project"';
+
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+
+    my $title = "Count of genes with projected gene description: ($sp)";
+    my $columns = $sth->{NAME};
+    my $results = $sth->fetchall_arrayref();
+
+return $self->format_table($title, $columns, $results);
+}
+
 
 1;
