@@ -159,7 +159,7 @@ foreach my $n (@long_noncoding_density) {
 is($long_noncoding_density, $genome_container->get_lnoncoding_count, "Long non coding density on all reference chromosomes");
 
 # Check long noncoding count for chromosome 6
-my @long_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'lnoncoding_cnt') };
+my @long_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'noncoding_cnt_l') };
 my $long_noncoding_count = 0;
 foreach my $c (@long_noncoding_count) {
    $long_noncoding_count += $c->value;
@@ -167,7 +167,7 @@ foreach my $c (@long_noncoding_count) {
 is($long_noncoding_count, 7, "Long non coding count on chromosome 6");
 
 # Check long noncoding count for all reference chromosomes
-@long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'lnoncoding_cnt') };
+@long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt_l') };
 $long_noncoding_count = 0;
 foreach my $c (@long_noncoding_count) {
    $long_noncoding_count += $c->value;
@@ -175,7 +175,7 @@ foreach my $c (@long_noncoding_count) {
 is($long_noncoding_count, $genome_container->get_lnoncoding_count, "Long non coding count on all reference chromosomes");
 
 # Check long noncoding count for all alternate sequences
-my @long_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'lnoncoding_acnt') };
+my @long_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_acnt_l') };
 my $long_noncoding_acount = 0;
 foreach my $c (@long_noncoding_acount) {
    $long_noncoding_acount += $c->value;
@@ -188,7 +188,7 @@ my $short_noncoding_density = 0;
 foreach my $n (@short_noncoding_density) {
    $short_noncoding_density += $n->density_value;
 }
-is($short_noncoding_density, 2, "ShortNonCoding density on chromosome 6");
+is($short_noncoding_density, 1, "ShortNonCoding density on chromosome 6");
 
 # Check short noncoding density for all chromosomes
 @short_noncoding_density = @{ $dfa->fetch_all('shortnoncodingdensity') };
@@ -199,15 +199,15 @@ foreach my $n (@short_noncoding_density) {
 is($short_noncoding_density, $genome_container->get_snoncoding_count, "Short non coding density on all reference chromosomes");
 
 # Check short noncoding count for chromosome 6
-my @short_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'snoncoding_cnt') };
+my @short_noncoding_count = @{ $aa->fetch_all_by_Slice($slice, 'noncoding_cnt_s') };
 my $short_noncoding_count = 0;
 foreach my $c (@short_noncoding_count) {
    $short_noncoding_count += $c->value;
 }
-is($short_noncoding_count, 2, "Short non coding count on chromosome 6");
+is($short_noncoding_count, 1, "Short non coding count on chromosome 6");
 
 # Check short noncoding count for all reference chromosomes
-@short_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'snoncoding_cnt') };
+@short_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt_s') };
 $short_noncoding_count = 0;
 foreach my $c (@short_noncoding_count) {
    $short_noncoding_count += $c->value;
@@ -215,7 +215,7 @@ foreach my $c (@short_noncoding_count) {
 is($short_noncoding_count, $genome_container->get_snoncoding_count, "Short non coding count on all reference chromosomes");
 
 # Check short noncoding count for all alternate sequences
-my @short_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'snoncoding_acnt') };
+my @short_noncoding_acount = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_acnt_s') };
 my $short_noncoding_acount = 0;
 foreach my $c (@short_noncoding_acount) {
    $short_noncoding_acount += $c->value;

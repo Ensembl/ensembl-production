@@ -32,11 +32,11 @@ my $manager = $production_dba->get_biotype_manager();
 
 # test for the set of groups in the production db
 is_deeply($manager->fetch_all_biotype_groups, 
-	  [ qw/coding pseudogene undefined snoncoding lnoncoding/ ], 
+	  [ qw/coding pseudogene LRG snoncoding undefined lnoncoding mnoncoding / ], 
 	  'fetch all biotype groups');
 
 my @got = sort @{$manager->group_members('lnoncoding')};
-my @expected = sort qw /ambiguous_orf antisense lincRNA non_coding processed_transcript retained_intron ncrna_host 3prime_overlapping_ncrna antisense_RNA sense_intronic sense_overlapping/;
+my @expected = sort qw /ambiguous_orf antisense lincRNA non_coding processed_transcript rRNA retained_intron ncrna_host 3prime_overlapping_ncrna antisense_RNA sense_intronic sense_overlapping ribozyme lncRNA macro_lncRNA antitoxin/;
 is_deeply(\@got, \@expected, 'long non-coding biotype group members');
 throws_ok { $manager->group_members('dummy_group') }
   qr /Invalid biotype group/, 'request for group members with non existant group throws exception';

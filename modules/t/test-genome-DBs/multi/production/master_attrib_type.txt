@@ -1,253 +1,320 @@
-1	embl_acc	European Nucleotide Archive (was EMBL) accession	\N	1	\N	\N	\N	\N
-2	status	Status	\N	1	\N	\N	\N	\N
-3	synonym	Synonym	\N	1	\N	\N	\N	\N
-4	name	Name	Alternative/long name	1	\N	\N	\N	\N
-5	type	Type of feature	\N	1	\N	\N	\N	\N
-6	toplevel	Top Level	Top Level Non-Redundant Sequence Region	1	\N	\N	\N	\N
-7	GeneCount	Gene Count	Total Number of Genes	1	\N	\N	\N	\N
-8	KnownGeneCount	Known Gene Count	Total Number of Known Genes	1	\N	\N	\N	\N
-9	PseudoGeneCount	PseudoGene Count	Total Number of PseudoGenes	1	\N	\N	\N	\N
-10	SNPCount	SNP Count	Total Number of SNPs	1	\N	\N	\N	\N
-11	codon_table	Codon Table	Alternate codon table	1	\N	\N	\N	\N
-12	_selenocysteine	Selenocysteine	\N	1	\N	\N	\N	\N
-13	bacend	bacend	\N	1	\N	\N	\N	\N
-14	htg	htg	High Throughput phase attribute	1	\N	\N	\N	\N
-15	miRNA	Micro RNA	Coordinates of the mature miRNA	1	\N	\N	\N	\N
-16	non_ref	Non Reference	Non Reference Sequence Region	1	\N	\N	\N	\N
-17	sanger_project	Sanger Project name	\N	1	\N	\N	\N	\N
-18	clone_name	Clone name	\N	1	\N	\N	\N	\N
-19	fish	FISH location	\N	1	\N	\N	\N	\N
-21	org	Sequencing centre	\N	1	\N	\N	\N	\N
-22	method	Method	\N	1	\N	\N	\N	\N
-23	superctg	Super contig id	\N	1	\N	\N	\N	\N
-24	inner_start	Max start value	\N	1	\N	\N	\N	\N
-25	inner_end	Min end value	\N	1	\N	\N	\N	\N
-26	state	Current state of clone	\N	1	\N	\N	\N	\N
-27	organisation	Organisation sequencing clone	\N	1	\N	\N	\N	\N
-28	seq_len	Accession length	\N	1	\N	\N	\N	\N
-29	fp_size	FP size	\N	1	\N	\N	\N	\N
-30	BACend_flag	BAC end flags	\N	1	\N	\N	\N	\N
-31	fpc_clone_id	fpc clone	\N	1	\N	\N	\N	\N
-32	KnwnPCCount	protein_coding_KNOWN	Number of Known Protein Coding	1	\N	\N	\N	\N
-33	NovPCCount	protein_coding_NOVEL	Number of Novel Protein Coding	1	\N	\N	\N	\N
-34	NovPTCount	processed_transcript_NOVEL	Number of Novel Processed Transcripts	1	\N	\N	\N	\N
-35	PutPTCount	processed_transcript_PUTATIVE	Number of Putative Processed Transcripts	1	\N	\N	\N	\N
-36	PredPCCount	protein_coding_PREDICTED	Number of Predicted Protein Coding	1	\N	\N	\N	\N
-37	IGGeneCount	IG_gene	Number of IG Genes	1	\N	\N	\N	\N
-38	IGPsGenCount	IG_pseudogene	Number of IG Pseudogenes	1	\N	\N	\N	\N
-39	TotPsCount	total_pseudogene	Total Number of Pseudogenes	1	\N	\N	\N	\N
-42	KnwnPCProgCount	protein_coding_in_progress_KNOWN	Number of Known Protein Coding in progress	1	\N	\N	\N	\N
-43	NovPCProgCount	protein_coding_in_progress_NOVEL	Number of Novel Protein Coding in progress	1	\N	\N	\N	\N
-44	AnnotSeqLength	Annotated sequence length	Annotated Sequence	1	\N	\N	\N	\N
-45	TotCloneNum	Total number of clones	Total Number of Clones	1	\N	\N	\N	\N
-46	NumAnnotClone	Fully annotated clones	Number of Fully Annotated Clones	1	\N	\N	\N	\N
-47	ack	Acknowledgement	Acknowledgement for manual annotation	1	\N	\N	\N	\N
-48	htg_phase	High throughput phase	High throughput genomic sequencing phase	1	\N	\N	\N	\N
-49	description	Description	A general descriptive text attribute	1	\N	\N	\N	\N
-50	chromosome	Chromosome	Chromosomal location for supercontigs that are not assembled	1	\N	\N	\N	\N
-51	nonsense	Nonsense Mutation	Strain specific nonesense mutation	1	\N	\N	\N	\N
-52	author	Author	Group resonsible for Vega annotation	1	\N	\N	\N	\N
-53	author_email	Author email address	Author email address	1	\N	\N	\N	\N
-54	remark	Remark	Annotation remark	1	\N	\N	\N	\N
-55	transcr_class	Transcript class	Transcript class	1	\N	\N	\N	\N
-56	KnwnPTCount	processed_transcript_KNOWN	Number of Known Processed Transcripts	1	\N	\N	\N	\N
-57	ccds	CCDS	CCDS identifier	1	\N	\N	\N	\N
-59	Frameshift	Frameshift	Frameshift modelled as intron	1	\N	\N	\N	\N
-60	PTCount	processed_transcript	Number of Processed Transcripts	1	\N	\N	\N	\N
-61	PredPTCount	processed_transcript_PREDICTED	Number of Predicted Processed Transcripts	1	\N	\N	\N	\N
-62	ncRNA	Structure	RNA secondary structure line	1	\N	\N	\N	\N
-63	skip_clone	skip clone  Skip clone in align_by_clone_identity.pl	\N	1	\N	\N	\N	\N
-64	coding_cnt	Protein coding gene count	Number of protein coding Genes	1	\N	\N	97245	2012-09-12 14:36:24
-65	GeneNo_novCod	novel protein_coding Gene Count	Number of novel protein_coding Genes	1	\N	\N	\N	\N
-66	GeneNo_rRNA	rRNA Gene Count	Number of rRNA Genes	1	\N	\N	\N	\N
-67	pseudogene_cnt	Pseudogene count	Number of pseudogenes	1	\N	\N	97245	2012-07-30 11:55:51
-68	GeneNo_snRNA	snRNA Gene Count	Number of snRNA Genes	1	\N	\N	\N	\N
-69	GeneNo_snoRNA	snoRNA Gene Count	Number of snoRNA Genes	1	\N	\N	\N	\N
-70	GeneNo_miRNA	miRNA Gene Count	Number of miRNA Genes	1	\N	\N	\N	\N
-71	GeneNo_mscRNA	misc_RNA Gene Count	Number of misc_RNA Genes	1	\N	\N	\N	\N
-72	GeneNo_scRNA	scRNA Gene Count	Number of scRNA Genes	1	\N	\N	\N	\N
-73	GeneNo_MTrRNA	Mt_rRNA Gene Count	Number of Mt_rRNA Genes	1	\N	\N	\N	\N
-74	GeneNo_MTtRNA	Mt_tRNA Gene Count	Number of Mt_tRNA Genes	1	\N	\N	\N	\N
-75	GeneNo_RNA_pseu	RNA_pseudogene Gene Count	Number of RNA_pseudogene Genes	1	\N	\N	\N	\N
-76	GeneNo_tRNA	tRNA Gene Count	Number of tRNA Genes	1	\N	\N	\N	\N
-77	GeneNo_rettran	retrotransposed Gene Count	Number of retrotransposed Genes	1	\N	\N	\N	\N
-78	GeneNo_snlRNA	snlRNA Gene Count	Number of snlRNA Genes	1	\N	\N	\N	\N
-79	GeneNo_proc_tr	processed_transcript Gene Count	Number of processed transcript Genes	1	\N	\N	\N	\N
-80	supercontig	SuperContig name	\N	1	\N	\N	\N	\N
-81	well_name	Well plate name	\N	1	\N	\N	\N	\N
-82	bacterial	Bacterial	\N	1	\N	\N	\N	\N
-83	NovelCDSCount	Novel CDS Count	\N	1	\N	\N	\N	\N
-84	NovelTransCount	Novel Transcript Count	\N	1	\N	\N	\N	\N
-85	PutTransCount	Putative Transcript Count	\N	1	\N	\N	\N	\N
-86	PredTransCount	Predicted Transcript Count	\N	1	\N	\N	\N	\N
-87	UnclassPsCount	Unclass Ps count	\N	1	\N	\N	\N	\N
-88	KnwnprogCount	Known prog Count	\N	1	\N	\N	\N	\N
-89	NovCDSprogCount	Novel CDS prog count	\N	1	\N	\N	\N	\N
-90	bacend_well_nam	BACend well name	\N	1	\N	\N	\N	\N
-91	alt_well_name	Alt well name	\N	1	\N	\N	\N	\N
-92	TranscriptEdge	Transcript Edge	\N	1	\N	\N	\N	\N
-93	alt_embl_acc	Alt European Nucleotide Archive (was EMBL) acc	\N	1	\N	\N	\N	\N
-94	alt_org	Alt org	\N	1	\N	\N	\N	\N
-95	intl_clone_name	International Clone Name	\N	1	\N	\N	\N	\N
-96	embl_version	European Nucleotide Archive (was EMBL) Version	\N	1	\N	\N	\N	\N
-97	chr	Chromosome Name	Chromosome Name Contained in the Assembly	1	\N	\N	\N	\N
-98	equiv_asm	Equivalent EnsEMBL assembly	For full chromosomes made from NCBI AGPs	1	\N	\N	\N	\N
-99	GeneNo_ncRNA	ncRNA Gene Count	Number of ncRNA Genes	1	\N	\N	\N	\N
-100	GeneNo_Ig	Ig Gene Count	Number of Ig Genes	1	\N	\N	\N	\N
-109	HitSimilarity	hit similarity	percentage id to parent transcripts	1	\N	\N	\N	\N
-110	HitCoverage	hit coverage	coverage of parent transcripts	1	\N	\N	\N	\N
-111	PropNonGap	proportion non gap	proportion non gap	1	\N	\N	\N	\N
-112	NumStops	number of stops	\N	1	\N	\N	\N	\N
-113	GapExons	gap exons	number of gap exons	1	\N	\N	\N	\N
-114	SourceTran	source transcript	source transcript	1	\N	\N	\N	\N
-115	EndNotFound	end not found	end not found	1	\N	\N	\N	\N
-116	StartNotFound	start not found	start not found	1	\N	\N	\N	\N
-117	Frameshift Fra	Frameshift modelled as intron	\N	1	\N	\N	\N	\N
-118	ensembl_name	Ensembl name	Name of equivalent Ensembl chromosome	1	\N	\N	\N	\N
-119	NoAnnotation	NoAnnotation	Clones without manual annotation	1	\N	\N	\N	\N
-120	hap_contig	Haplotype contig	Contig present on a haplotype	1	\N	\N	\N	\N
-121	annotated	Clone Annotation Status	\N	1	\N	\N	\N	\N
-122	keyword	Clone Keyword	\N	1	\N	\N	\N	\N
-123	hidden_remark	Hidden Remark	\N	1	\N	\N	\N	\N
-124	mRNA_start_NF	mRNA start not found	\N	1	\N	\N	\N	\N
-125	mRNA_end_NF	mRNA end not found	\N	1	\N	\N	\N	\N
-126	cds_start_NF	CDS start not found	\N	1	\N	\N	\N	\N
-127	cds_end_NF	CDS end not found	\N	1	\N	\N	\N	\N
-128	write_access	Write access for Sequence Set	1 for writable , 0 for read-only	1	\N	\N	\N	\N
-129	hidden	Hidden Sequence Set	\N	1	\N	\N	\N	\N
-130	vega_name	Vega name	Vega seq_region.name	1	\N	\N	\N	\N
-131	vega_export_mod	Export mode	E (External), I (Internal) etc	1	\N	\N	\N	\N
-132	vega_release	Vega release	Vega release number	1	\N	\N	\N	\N
-133	atag_CLE	Clone_left_end	Clone_lef_end feature marked in GAP database	1	\N	\N	\N	\N
-134	atag_CRE	Clone_right_end	Clone_right_end feature marked in GAP database	1	\N	\N	\N	\N
-135	atag_Misc	Misc	miscellaneous feature marked in GAP database	1	\N	\N	\N	\N
-136	atag_Unsure	Unsure	region of uncertain DNA sequence marked in GAP database	1	\N	\N	\N	\N
-137	MultAssem	Multiple Assembled seq region	Part of Seq Region is part of more than one assembly	1	\N	\N	\N	\N
-140	wgs	WGS contig	WGS contig integrated into the map	1	\N	\N	\N	\N
-141	bac	AGP clones	tiling path of clones	1	\N	\N	\N	\N
-142	GeneGC	Gene GC	Percentage GC content for this gene	1	\N	\N	\N	\N
-143	TotAssemblyLeng	Finished sequence length	Length of the assembly not counting sequence gaps	1	\N	\N	\N	\N
-144	amino_acid_sub	Amino acid substitution	Some translations have been manually curated for amino acid substitiutions. For example a stop codon may be changed to an amino acid in order to prevent premature truncation, or one amino acid can be substituted for another.	1	\N	\N	\N	\N
-145	_rna_edit	rna_edit	RNA edit	1	\N	\N	\N	\N
-146	kill_reason	Kill Reason	Reason why a transcript has been killed	1	\N	\N	\N	\N
-147	strip_UTR	Strip UTR	Transcript needs bad UTR removing	1	\N	\N	\N	\N
-148	TotAssLength	Finished sequence length	Finished Sequence	1	\N	\N	\N	\N
-149	PsCount	pseudogene	Number of Pseudogenes	1	\N	\N	\N	\N
-152	TotPTCount	total_processed_transcript	Total Number of Processed Transcripts	1	\N	\N	\N	\N
-153	TotPCCount	total_protein_coding	Total Number of Protein Coding	1	\N	\N	\N	\N
-154	NovNcCount	novel_non_coding	Number of Novel Non Coding	1	\N	\N	\N	\N
-155	KnwnPolyPsCount	known_polymorphic	Number of Known Polymorphic Pseudogenes	1	\N	\N	\N	\N
-156	PolyPsCount	polymorphic_pseudogene	Number of Polymorphic Pseudogenes	1	\N	\N	\N	\N
-157	TotIGGeneCount	total_IG_gene	Total Number of IG Genes	1	\N	\N	\N	\N
-158	ProcPsCount	proc_pseudogene	Number of Processed Pseudogenes	1	\N	\N	\N	\N
-159	UnPsCount	unproc_pseudogene	Number of Unprocessed Pseudogenes	1	\N	\N	\N	\N
-160	TPsCount	transcribed_pseudogene	Number of Transcribed Pseudogenes	1	\N	\N	\N	\N
-161	TECCount	TEC	Number of TEC Genes	1	\N	\N	\N	\N
-162	KnwnIGGeneCount	IG_gene_KNOWN	Number of Known IG Genes	1	\N	\N	\N	\N
-163	KnwnIGPsGeCount	IG_pseudogene_KNOWN	Number of Known IG Pseudogenes	1	\N	\N	\N	\N
-164	IsoPoint	Isoelectric point	Pepstats attributes	1	\N	\N	\N	\N
-165	Charge	Charge	Pepstats attributes	1	\N	\N	\N	\N
-166	MolecularWeight	Molecular weight	Pepstats attributes	1	\N	\N	\N	\N
-167	NumResidues	Number of residues	Pepstats attributes	1	\N	\N	\N	\N
-168	AvgResWeight	Ave. residue weight	Pepstats attributes	1	\N	\N	\N	\N
-170	initial_met	Initial methionine	Set first amino acid to methionine	1	\N	\N	\N	\N
-171	NonGapHCov	NonGapHCov	\N	1	\N	\N	\N	\N
-172	otter_support	otter support	Evidence ID that was used as supporting feature for building a gene in Vega	1	\N	\N	\N	\N
-173	enst_link	enst link	Code to link a OTTT with an ENST when they both share the CDS of ENST	1	\N	\N	\N	\N
-174	upstream_ATG	upstream ATG	Alternative ATG found upstream of the defined as start ATG for the transcript	1	\N	\N	\N	\N
-175	TPPsCount	transcribed_processed_pseudogene	Number of Transcribed Processed Pseudogenes	1	\N	\N	\N	\N
-176	TUPsCount	transcribed_unprocessed_pseudogene	Number of Transcribed Unprocessed Pseudogenes	1	\N	\N	\N	\N
-177	UniPsCount	unitary_pseudogene	Number of Unitary Pseudogenes	1	\N	\N	\N	\N
-178	KnwnTECCount	TEC_KNOWN	Number of Known TEC genes	1	\N	\N	\N	\N
-179	TotTECGeneCount	TEC_all	Total number of TEC genes	1	\N	\N	\N	\N
-180	TUyPsCount	transcribed_unitary_pseudogene	Number of Transcribed Unitary Pseudogenes	1	\N	\N	\N	\N
-181	PolyCount	polymorphic	Number of Polymorphic Genes	1	\N	\N	\N	\N
-182	KnwnPolyCount	polymorphic	Number of Known Polymorphic Genes	1	\N	\N	\N	\N
-183	KnwnTRCount	TR_gene_known	Number of Known TR Genes	1	\N	\N	\N	\N
-184	TRGeneCount	TR_gene	Number of TR Genes	1	\N	\N	\N	\N
-185	TRPsCount	TR_pseudo	Number of TR Pseudogenes	1	\N	\N	\N	\N
-186	tp_ott_support	otter protein transcript support	Evidence ID that was used as supporting feature for building a gene in Vega	1	\N	\N	\N	\N
-187	td_ott_support	otter dna transcript support	Evidence ID that was used as supporting feature for building a gene in Vega	1	\N	\N	\N	\N
-188	ep_ott_support	otter protein exon support	Evidence ID that was used as supporting feature for building a gene in Vega	1	\N	\N	\N	\N
-189	ed_ott_support	otter dna exon support	Evidence ID that was used as supporting feature for building a gene in Vega	1	\N	\N	\N	\N
-190	GeneNo_lincRNA	lincRNA Gene Count	Number of lincRNA Genes	1	\N	\N	\N	\N
-191	StopGained	SNP causes stop codon to be gained	This transcript has a variant that causes a stop codon to be gained in at least 10 percent of a HapMap population	1	\N	\N	\N	\N
-192	StopLost	SNP causes stop codon to be lost	This transcript has a variant that causes a stop codon to be lost in at least 10 percent of a HapMap population	1	\N	\N	\N	\N
-193	GeneNo_class_I_	class_I_RNA Gene Count	Number of class_I_RNA Genes	1	\N	\N	\N	\N
-194	GeneNo_SRP_RNA	SRP_RNA Gene Count	Number of SRP_RNA Genes	1	\N	\N	\N	\N
-195	GeneNo_class_II	class_II_RNA Gene Count	Number of class_II_RNA Genes	1	\N	\N	\N	\N
-196	GeneNo_P_RNA	RNase_P_RNA Gene Count	Number of RNase_P_RNA Genes	1	\N	\N	\N	\N
-197	GeneNo_RNase_MR	RNase_MRP_RNA Gene Count	Number of RNase_MRP_RNA Genes	1	\N	\N	\N	\N
-198	lost_frameshift	lost_frameshift	Frameshift on the query sequence is lost in the target sequence	1	\N	\N	\N	\N
-199	AltThreePrime	Alternate three prime end	The position of other possible three prime ends for the transcript	1	\N	\N	\N	\N
-216	GeneInLRG	Gene in LRG	This gene is contained within an LRG region	1	\N	\N	\N	\N
-217	GeneOverlapLRG	Gene overlaps LRG	This gene is partially overlapped by a LRG region (start or end outside LRG)	1	\N	\N	\N	\N
-218	readthrough_tra	readthrough transcript	Havana readthrough transcripts	1	\N	\N	\N	\N
-58	CCDS_PublicNote	CCDS Public Note	Public Note for CCDS identifier, provided by http://www.ncbi.nlm.nih.gov/CCDS	1	\N	\N	\N	\N
-314	LRG	Locus Reference Genomic	Locus Reference Genomic sequence	1	\N	\N	\N	\N
-300	CNE	Constitutive exon	An exon that is always included in the mature mRNA, even in different mRNA isoforms	1	\N	\N	\N	\N
-301	CE	Cassette exon	One exon is spliced out of the primary transcript together with its flanking introns	1	\N	\N	\N	\N
-302	IR	Intron retention	A sequence is spliced out as an intron or remains in the mature mRNA transcript	1	\N	\N	\N	\N
-303	MXE	Mutually exclusive exons	In the simpliest case, one or two consecutive exons are retained but not both	1	\N	\N	\N	\N
-304	A3SS	Alternative 3' sites	Two or more splice sites are recognized at the 5' end of an exon. An alternative 3' splice junction (acceptor site) is used, changing the 5' boundary of the downstream exon	1	\N	\N	\N	\N
-305	A5SS	Alternative 5' sites	Two or more splice sites are recognized at the 3' end of an exon. An alternative 5' splice junction (donor site) is used, changing the 3' boundary of the upstream exon	1	\N	\N	\N	\N
-306	AFE	Alternative first exon	The second exons of each variant have identical boundaries, but the first exons do not overlap	1	\N	\N	\N	\N
-307	ALE	Alternative last exon	Penultimate exons of each splice variant have identical boundaries, but the last exons do not overlap	1	\N	\N	\N	\N
-308	II	Intron isoform	Alternative donor or acceptor splice sites lead to truncation or extension of introns, respectively	1	\N	\N	\N	\N
-309	EI	Exon isoform	Alternative donor or acceptor splice sites leads to truncation or extension of exons, respectively	1	\N	\N	\N	\N
-310	AI	Alternative initiation	Alternative choice of promoters	1	\N	\N	\N	\N
-311	AT	Alternative termination	Alternative choice of polyadenylation sites	1	\N	\N	\N	\N
-312	patch_fix	Assembly Patch Fix	Assembly patch that will, in the next assembly release, replace the corresponding sequence found in the current assembly	1	\N	\N	\N	\N
-313	patch_novel	Assembly Patch Novel	Assembly patch that will, in the next assembly release, be retained as an alternate non-reference sequence in a similar way to haplotypes	1	\N	\N	\N	\N
-315	NoEvidence	Evidence for transcript removed	Supporting evidence for this projected transcript has been removed	1	\N	\N	\N	\N
-316	circular_seq	Circular sequence	Circular chromosome or plasmid molecule	1	\N	\N	\N	\N
-317	external_db	External database	External database to which seq_region name may be linked	1	\N	\N	\N	\N
-318	split_tscript	split_tscript	split_tscript	1	\N	\N	\N	\N
-319	Threep	Three prime end	Alternate three prime end	1	\N	\N	\N	\N
+1	code	name	description	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+2	status	Status	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+3	synonym	Synonym	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+4	name	Name	Alternative/long name	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+5	type	Type of feature	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+6	toplevel	Top Level	Top Level Non-Redundant Sequence Region	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+7	GeneCount	Gene Count	Total Number of Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+8	KnownGeneCount	Known Gene Count	Total Number of Known Genes	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+9	PseudoGeneCount	PseudoGene Count	Total Number of PseudoGenes	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+10	SNPCount	Short Variants	Total Number of SNPs	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+11	codon_table	Codon Table	Alternate codon table	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+12	_selenocysteine	Selenocysteine	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+13	bacend	bacend	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+14	htg	htg	High Throughput phase attribute	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+15	miRNA	Micro RNA	Coordinates of the mature miRNA	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+16	non_ref	Non Reference	Non Reference Sequence Region	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+17	sanger_project	Sanger Project name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+18	clone_name	Clone name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+19	fish	FISH location	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+21	org	Sequencing centre	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+22	method	Method	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+23	superctg	Super contig id	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+24	inner_start	Max start value	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+25	inner_end	Min end value	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+26	state	Current state of clone	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+27	organisation	Organisation sequencing clone	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+28	seq_len	Accession length	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+29	fp_size	FP size	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+30	BACend_flag	BAC end flags	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+31	fpc_clone_id	fpc clone	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+32	KnwnPCCount	protein_coding_KNOWN	Number of Known Protein Coding	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+33	NovPCCount	protein_coding_NOVEL	Number of Novel Protein Coding	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+34	NovPTCount	processed_transcript_NOVEL	Number of Novel Processed Transcripts	0	0	0000-00-00 00:00:00	0	2015-01-15 14:41:41
+35	PutPTCount	processed_transcript_PUTATIVE	Number of Putative Processed Transcripts	0	0	0000-00-00 00:00:00	0	2015-01-15 14:41:41
+36	PredPCCount	protein_coding_PREDICTED	Number of Predicted Protein Coding	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+37	IGGeneCount	IG_gene	Number of IG Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+38	IGPsGenCount	IG_pseudogene	Number of IG Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+39	TotPsCount	total_pseudogene	Total Number of Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+42	KnwnPCProgCount	protein_coding_in_progress_KNOWN	Number of Known Protein Coding in progress	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+43	NovPCProgCount	protein_coding_in_progress_NOVEL	Number of Novel Protein Coding in progress	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+44	AnnotSeqLength	Annotated sequence length	Annotated Sequence	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+45	TotCloneNum	Total number of clones	Total Number of Clones	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+46	NumAnnotClone	Fully annotated clones	Number of Fully Annotated Clones	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+47	ack	Acknowledgement	Acknowledgement for manual annotation	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+48	htg_phase	High throughput phase	High throughput genomic sequencing phase	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+49	description	Description	A general descriptive text attribute	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+50	chromosome	Chromosome	Chromosomal location for supercontigs that are not assembled	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+51	nonsense	Nonsense Mutation	Strain specific nonesense mutation	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+52	author	Author	Group resonsible for Vega annotation	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+53	author_email	Author email address	Author email address	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+54	remark	Remark	Annotation remark	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+55	transcr_class	Transcript class	Transcript class	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+56	KnwnPTCount	processed_transcript_KNOWN	Number of Known Processed Transcripts	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+57	ccds	CCDS	CCDS identifier	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+59	Frameshift	Frameshift	Frameshift modelled as intron	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+60	PTCount	processed_transcript	Number of Processed Transcripts	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+61	PredPTCount	processed_transcript_PREDICTED	Number of Predicted Processed Transcripts	0	0	0000-00-00 00:00:00	0	2015-01-15 14:41:41
+62	ncRNA	Structure	RNA secondary structure line	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+63	skip_clone	skip clone  Skip clone in align_by_clone_identity.pl	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+64	coding_cnt	Coding genes	Number of protein coding Genes	1	0	0000-00-00 00:00:00	97245	2013-12-12 12:40:11
+65	GeneNo_novCod	novel protein_coding Gene Count	Number of novel protein_coding Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+66	GeneNo_rRNA	rRNA Gene Count	Number of rRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+67	pseudogene_cnt	Pseudogenes	Number of pseudogenes	1	0	0000-00-00 00:00:00	97245	2013-12-12 12:41:43
+68	GeneNo_snRNA	snRNA Gene Count	Number of snRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+69	GeneNo_snoRNA	snoRNA Gene Count	Number of snoRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+70	GeneNo_miRNA	miRNA Gene Count	Number of miRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+71	GeneNo_mscRNA	misc_RNA Gene Count	Number of misc_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+72	GeneNo_scRNA	scRNA Gene Count	Number of scRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+73	GeneNo_MTrRNA	Mt_rRNA Gene Count	Number of Mt_rRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+74	GeneNo_MTtRNA	Mt_tRNA Gene Count	Number of Mt_tRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+75	GeneNo_RNA_pseu	RNA_pseudogene Gene Count	Number of RNA_pseudogene Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+76	GeneNo_tRNA	tRNA Gene Count	Number of tRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+77	GeneNo_rettran	retrotransposed Gene Count	Number of retrotransposed Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+78	GeneNo_snlRNA	snlRNA Gene Count	Number of snlRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+79	GeneNo_proc_tr	processed_transcript Gene Count	Number of processed transcript Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+80	supercontig	SuperContig name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+81	well_name	Well plate name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+82	bacterial	Bacterial	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+83	NovelCDSCount	Novel CDS Count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+84	NovelTransCount	Novel Transcript Count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+85	PutTransCount	Putative Transcript Count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+86	PredTransCount	Predicted Transcript Count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+87	UnclassPsCount	Unclass Ps count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+88	KnwnprogCount	Known prog Count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+89	NovCDSprogCount	Novel CDS prog count	NULL	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+90	bacend_well_nam	BACend well name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+91	alt_well_name	Alt well name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+92	TranscriptEdge	Transcript Edge	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+93	alt_embl_acc	Alt European Nucleotide Archive (was EMBL) acc	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+94	alt_org	Alt org	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+95	intl_clone_name	International Clone Name	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+96	embl_version	European Nucleotide Archive (was EMBL) Version	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+97	chr	Chromosome Name	Chromosome Name Contained in the Assembly	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+98	equiv_asm	Equivalent EnsEMBL assembly	For full chromosomes made from NCBI AGPs	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+99	GeneNo_ncRNA	ncRNA Gene Count	Number of ncRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+100	GeneNo_Ig	Ig Gene Count	Number of Ig Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+109	HitSimilarity	hit similarity	percentage id to parent transcripts	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+110	HitCoverage	hit coverage	coverage of parent transcripts	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+111	PropNonGap	proportion non gap	proportion non gap	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+112	NumStops	number of stops	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+113	GapExons	gap exons	number of gap exons	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+114	SourceTran	source transcript	source transcript	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+115	EndNotFound	end not found	end not found	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+116	StartNotFound	start not found	start not found	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+117	Frameshift Fra	Frameshift modelled as intron	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+118	ensembl_name	Ensembl name	Name of equivalent Ensembl chromosome	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+119	NoAnnotation	NoAnnotation	Clones without manual annotation	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+120	hap_contig	Haplotype contig	Contig present on a haplotype	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+121	annotated	Clone Annotation Status	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+122	keyword	Clone Keyword	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+123	hidden_remark	Hidden Remark	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+124	mRNA_start_NF	mRNA start not found	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+125	mRNA_end_NF	mRNA end not found	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+126	cds_start_NF	CDS start not found	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+127	cds_end_NF	CDS end not found	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+128	write_access	Write access for Sequence Set	1 for writable , 0 for read-only	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+129	hidden	Hidden Sequence Set	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+130	vega_name	Vega name	Vega seq_region.name	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+131	vega_export_mod	Export mode	E (External), I (Internal) etc	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+132	vega_release	Vega release	Vega release number	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+133	atag_CLE	Clone_left_end	Clone_lef_end feature marked in GAP database	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+134	atag_CRE	Clone_right_end	Clone_right_end feature marked in GAP database	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+135	atag_Misc	Misc	miscellaneous feature marked in GAP database	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+136	atag_Unsure	Unsure	region of uncertain DNA sequence marked in GAP database	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+137	MultAssem	Multiple Assembled seq region	Part of Seq Region is part of more than one assembly	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+140	wgs	WGS contig	WGS contig integrated into the map	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+141	bac	AGP clones	tiling path of clones	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+142	GeneGC	Gene GC	Percentage GC content for this gene	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+143	TotAssemblyLeng	Finished sequence length	Length of the assembly not counting sequence gaps	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+144	amino_acid_sub	Amino acid substitution	Some translations have been manually curated for amino acid substitiutions. For example a stop codon may be changed to an amino acid in order to prevent premature truncation, or one amino acid can be substituted for another.	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+145	_rna_edit	rna_edit	RNA edit	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+146	kill_reason	Kill Reason	Reason why a transcript has been killed	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+147	strip_UTR	Strip UTR	Transcript needs bad UTR removing	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+148	TotAssLength	Finished sequence length	Finished Sequence	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+149	PsCount	pseudogene	Number of Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+152	TotPTCount	total_processed_transcript	Total Number of Processed Transcripts	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+153	TotPCCount	total_protein_coding	Total Number of Protein Coding	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+154	NovNcCount	novel_non_coding	Number of Novel Non Coding	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+155	KnwnPolyPsCount	known_polymorphic	Number of Known Polymorphic Pseudogenes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+156	PolyPsCount	polymorphic_pseudogene	Number of Polymorphic Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+157	TotIGGeneCount	total_IG_gene	Total Number of IG Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+158	ProcPsCount	proc_pseudogene	Number of Processed Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+159	UnPsCount	unproc_pseudogene	Number of Unprocessed Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+160	TPsCount	transcribed_pseudogene	Number of Transcribed Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+161	TECCount	TEC	Number of TEC Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+162	KnwnIGGeneCount	IG_gene_KNOWN	Number of Known IG Genes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+163	KnwnIGPsGeCount	IG_pseudogene_KNOWN	Number of Known IG Pseudogenes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+164	IsoPoint	Isoelectric point	Pepstats attributes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+165	Charge	Charge	Pepstats attributes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+166	MolecularWeight	Molecular weight	Pepstats attributes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+167	NumResidues	Number of residues	Pepstats attributes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+168	AvgResWeight	Ave. residue weight	Pepstats attributes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+170	initial_met	Initial methionine	Set first amino acid to methionine	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+171	NonGapHCov	NonGapHCov	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+172	otter_support	otter support	Evidence ID that was used as supporting feature for building a gene in Vega	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+173	enst_link	enst link	Code to link a OTTT with an ENST when they both share the CDS of ENST	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+174	upstream_ATG	upstream ATG	Alternative ATG found upstream of the defined as start ATG for the transcript	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+175	TPPsCount	transcribed_processed_pseudogene	Number of Transcribed Processed Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+176	TUPsCount	transcribed_unprocessed_pseudogene	Number of Transcribed Unprocessed Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+177	UniPsCount	unitary_pseudogene	Number of Unitary Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+178	KnwnTECCount	TEC_KNOWN	Number of Known TEC genes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+179	TotTECGeneCount	TEC_all	Total number of TEC genes	0	0	0000-00-00 00:00:00	0	2015-01-16 18:17:16
+180	TUyPsCount	transcribed_unitary_pseudogene	Number of Transcribed Unitary Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+181	PolyCount	polymorphic	Number of Polymorphic Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+182	KnwnPolyCount	polymorphic	Number of Known Polymorphic Genes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+183	KnwnTRCount	TR_gene_known	Number of Known TR Genes	0	0	0000-00-00 00:00:00	0	2015-01-15 14:37:09
+184	TRGeneCount	TR_gene	Number of TR Genes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+185	TRPsCount	TR_pseudo	Number of TR Pseudogenes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+186	tp_ott_support	otter protein transcript support	Evidence ID that was used as supporting feature for building a gene in Vega	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+187	td_ott_support	otter dna transcript support	Evidence ID that was used as supporting feature for building a gene in Vega	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+188	ep_ott_support	otter protein exon support	Evidence ID that was used as supporting feature for building a gene in Vega	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+189	ed_ott_support	otter dna exon support	Evidence ID that was used as supporting feature for building a gene in Vega	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+190	GeneNo_lincRNA	lincRNA Gene Count	Number of lincRNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+191	StopGained	SNP causes stop codon to be gained	This transcript has a variant that causes a stop codon to be gained in at least 10 percent of a HapMap population	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+192	StopLost	SNP causes stop codon to be lost	This transcript has a variant that causes a stop codon to be lost in at least 10 percent of a HapMap population	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+193	GeneNo_class_I_	class_I_RNA Gene Count	Number of class_I_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+194	GeneNo_SRP_RNA	SRP_RNA Gene Count	Number of SRP_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+195	GeneNo_class_II	class_II_RNA Gene Count	Number of class_II_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+196	GeneNo_P_RNA	RNase_P_RNA Gene Count	Number of RNase_P_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+197	GeneNo_RNase_MR	RNase_MRP_RNA Gene Count	Number of RNase_MRP_RNA Genes	0	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+198	lost_frameshift	lost_frameshift	Frameshift on the query sequence is lost in the target sequence	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+199	AltThreePrime	Alternate three prime end	The position of other possible three prime ends for the transcript	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+216	GeneInLRG	Gene in LRG	This gene is contained within an LRG region	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+217	GeneOverlapLRG	Gene overlaps LRG	This gene is partially overlapped by a LRG region (start or end outside LRG)	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+218	readthrough_tra	readthrough transcript	Havana readthrough transcripts	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+58	CCDS_PublicNote	CCDS Public Note	Public Note for CCDS identifier, provided by http://www.ncbi.nlm.nih.gov/CCDS	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+314	LRG	Locus Reference Genomic	Locus Reference Genomic sequence	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+300	CNE	Constitutive exon	An exon that is always included in the mature mRNA, even in different mRNA isoforms	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+301	CE	Cassette exon	One exon is spliced out of the primary transcript together with its flanking introns	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+302	IR	Intron retention	A sequence is spliced out as an intron or remains in the mature mRNA transcript	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+303	MXE	Mutually exclusive exons	In the simpliest case, one or two consecutive exons are retained but not both	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+304	A3SS	Alternative 3' sites	Two or more splice sites are recognized at the 5' end of an exon. An alternative 3' splice junction (acceptor site) is used, changing the 5' boundary of the downstream exon	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+305	A5SS	Alternative 5' sites	Two or more splice sites are recognized at the 3' end of an exon. An alternative 5' splice junction (donor site) is used, changing the 3' boundary of the upstream exon	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+306	AFE	Alternative first exon	The second exons of each variant have identical boundaries, but the first exons do not overlap	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+307	ALE	Alternative last exon	Penultimate exons of each splice variant have identical boundaries, but the last exons do not overlap	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+308	II	Intron isoform	Alternative donor or acceptor splice sites lead to truncation or extension of introns, respectively	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+309	EI	Exon isoform	Alternative donor or acceptor splice sites leads to truncation or extension of exons, respectively	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+310	AI	Alternative initiation	Alternative choice of promoters	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+311	AT	Alternative termination	Alternative choice of polyadenylation sites	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+312	patch_fix	Assembly Patch Fix	Assembly patch that will, in the next assembly release, replace the corresponding sequence found in the current assembly	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+313	patch_novel	Assembly Patch Novel	Assembly patch that will, in the next assembly release, be retained as an alternate non-reference sequence in a similar way to haplotypes	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+315	NoEvidence	Evidence for transcript removed	Supporting evidence for this projected transcript has been removed	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+316	circular_seq	Circular sequence	Circular chromosome or plasmid molecule	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+317	external_db	External database	External database to which seq_region name may be linked	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+318	split_tscript	split_tscript	split_tscript	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+319	Threep	Three prime end	Alternate three prime end	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
 328	_rib_frameshift	Ribosomal Frameshift	Position and magnitude of frameshift	1	0	2011-05-10 10:13:30	0	0000-00-00 00:00:00
-345	vega_ref_chrom	Vega reference chromosome	Haplotypes reference a regular chromosome (indicated in the value of the attribute)	1	\N	\N	\N	\N
-346	PutPCCount	protein_coding_PUTATIVE	Number of Putative Protein Coding	1	\N	\N	\N	\N
-347	proj_alt_seq	Projection altered sequence	Projected sequence differs from original	1	\N	2011-06-27 09:33:51	\N	\N
-320	gene_cluster	Gene cluster	Havana annotated gene cluster	1	9335	2011-07-19 15:58:06	\N	\N
-348	hav_gene_type	Havana gene biotype	Gene biotype assigned by Havana	1	9335	2011-10-11 12:40:23	\N	\N
-349	GeneNo_asense	antisense Gene Count	Number of antisense Genes	1	103537	2011-10-17 10:44:02	\N	\N
-350	GeneNo_sense_in	sense_intronic Gene Count	Number of sense_intronic Genes	1	103537	2011-10-17 10:47:31	\N	\N
-351	GeneNo_amb_orf	ambiguous_orf Gene Count	Number of ambiguous_orf Genes	1	103537	2011-10-17 10:49:00	\N	\N
-352	GeneNo_ret_int	retained_intron Gene Count	Number of retained_intron Genes	1	103537	2011-10-17 10:49:59	\N	\N
-353	noncoding_cnt	Non coding gene count	Number of non coding genes	1	103537	2011-10-17 10:52:17	97245	2012-07-30 15:09:37
-354	GeneNo_ncrna_h	ncrna_host Gene Count	Number of ncrna_host Genes	1	103537	2011-10-17 10:53:12	\N	\N
-355	GeneNo_sens_ov	sense_overlapping Gene Count	Number of sense_overlapping Genes	1	103537	2011-10-17 10:54:08	\N	\N
-356	GeneNo_3prime	3prime_overlapping Gene Count	Number of 3prime_overlapping Genes	1	103537	2011-10-17 10:56:43	\N	\N
-357	GeneNo_tmRNA	tmRNA Gene Count	Number of tmRNA Genes	1	101255	2011-10-24 16:18:33	\N	\N
-358	PHIbase_mutant	PHI-base mutant	PHI-base phenotype of the mutants	1	101255	2012-02-21 13:41:37	\N	\N
-359	GeneNo_ribozyme	ribozyme Gene Count	Number of ribozyme Genes	1	101255	2012-04-04 15:51:06	\N	\N
-360	ncrna_host	ncrna_host	Havana ncrna_host gene	1	97245	2012-05-02 12:39:49	\N	\N
-361	peptide-class	Peptide classification	The classification of the gene or transcript based on alignment to NR (values: TE WH NH)	1	101255	2012-05-24 10:08:58	\N	\N
-362	working-set	Working Gene Set	High-confidence set of genes, composed of evidence-based genes and non-overlapping protein-coding ab initio gene models	1	101255	2012-05-24 10:11:18	\N	\N
-363	filtered-set	Filtered Gene Set v1	Working genes that are screened for TE content and orthology with sorghum and rice.	1	101255	2012-05-24 10:12:08	\N	\N
-364	super-set	Super Working Gene Set	Set of all working gene set loci from both Builds 4a and 5a	1	101255	2012-05-24 10:12:55	\N	\N
-365	projected4a2	Projected by alignment	Temporary (Monday, August 23, 2010)	1	101255	2012-05-24 10:13:23	\N	\N
-366	merged	Merged species	\N	1	\N	\N	\N	\N
-367	karyotype_rank	Rank in the karyotype	For a given seq_region, if it is part of the species karyotype, will indicate its rank	1	97245	2012-07-30 12:02:49	\N	\N
-368	noncoding_acnt	Alternate non coding gene count	Number of non coding genes on alternate sequences	1	97245	2012-11-09 15:35:08	\N	\N
-369	coding_acnt	Alternate protein coding gene count	Number of protein coding genes on alternate sequences	1	97245	2012-11-09 15:35:49	97245	2012-11-29 15:21:55
-370	pseudogene_acnt	Alternate pseudogene count	Number of pseudogenes on alternate sequences	1	97245	2012-11-09 15:36:17	\N	\N
-371	clone_end	Clone end	Side of the contig on which a vector lies (enum:RIGHT, LEFT).	1	101255	2013-02-13 13:51:49	\N	\N
-372	contig_scaffold	Contig Scaffold	Scaffold that contains mutually ordered contigs.	1	101255	2013-02-13 13:53:24	\N	\N
-373	current_version	Current Accession Version	Identifies the most recent version of an accession.	1	101255	2013-02-13 13:54:16	\N	\N
-374	seq_status	Sequence Status	Sequence status.	1	101255	2013-02-13 13:54:56	\N	\N
-375	clone_vector	Vector sequence	A clone-end vector associated with a contig (enum:SP6, T7).	1	101255	2013-02-13 13:55:31	\N	\N
+345	vega_ref_chrom	Vega reference chromosome	Haplotypes reference a regular chromosome (indicated in the value of the attribute)	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+346	PutPCCount	protein_coding_PUTATIVE	Number of Putative Protein Coding	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+347	proj_alt_seq	Projection altered sequence	Projected sequence differs from original	1	0	2011-06-27 09:33:51	0	0000-00-00 00:00:00
+320	gene_cluster	Gene cluster	Havana annotated gene cluster	1	9335	2011-07-19 15:58:06	0	0000-00-00 00:00:00
+348	hav_gene_type	Havana gene biotype	Gene biotype assigned by Havana	1	9335	2011-10-11 12:40:23	0	0000-00-00 00:00:00
+349	GeneNo_antisense	antisense Gene Count	Number of antisense Genes	0	103537	2011-10-17 10:44:02	104957	2014-12-03 14:56:02
+350	GeneNo_sense_in	sense_intronic Gene Count	Number of sense_intronic Genes	0	103537	2011-10-17 10:47:31	0	0000-00-00 00:00:00
+351	GeneNo_amb_orf	ambiguous_orf Gene Count	Number of ambiguous_orf Genes	0	103537	2011-10-17 10:49:00	0	0000-00-00 00:00:00
+352	GeneNo_ret_int	retained_intron Gene Count	Number of retained_intron Genes	0	103537	2011-10-17 10:49:59	0	0000-00-00 00:00:00
+353	noncoding_cnt	Non coding genes	Number of non coding genes	1	103537	2011-10-17 10:52:17	97245	2015-01-16 17:28:36
+354	GeneNo_ncrna_h	ncrna_host Gene Count	Number of ncrna_host Genes	0	103537	2011-10-17 10:53:12	0	0000-00-00 00:00:00
+355	GeneNo_sens_ov	sense_overlapping Gene Count	Number of sense_overlapping Genes	0	103537	2011-10-17 10:54:08	0	0000-00-00 00:00:00
+356	GeneNo_3prime	3prime_overlapping Gene Count	Number of 3prime_overlapping Genes	0	103537	2011-10-17 10:56:43	0	0000-00-00 00:00:00
+357	GeneNo_tmRNA	tmRNA Gene Count	Number of tmRNA Genes	0	101255	2011-10-24 16:18:33	0	0000-00-00 00:00:00
+358	PHIbase_mutant	PHI-base mutant	PHI-base phenotype of the mutants	1	101255	2012-02-21 13:41:37	0	0000-00-00 00:00:00
+359	GeneNo_ribozyme	ribozyme Gene Count	Number of ribozyme Genes	0	101255	2012-04-04 15:51:06	0	0000-00-00 00:00:00
+360	ncrna_host	ncrna_host	Havana ncrna_host gene	1	97245	2012-05-02 12:39:49	0	0000-00-00 00:00:00
+361	peptide-class	Peptide classification	The classification of the gene or transcript based on alignment to NR (values: TE WH NH)	1	101255	2012-05-24 10:08:58	0	0000-00-00 00:00:00
+362	working-set	Working Gene Set	High-confidence set of genes, composed of evidence-based genes and non-overlapping protein-coding ab initio gene models	1	101255	2012-05-24 10:11:18	0	0000-00-00 00:00:00
+363	filtered-set	Filtered Gene Set v1	Working genes that are screened for TE content and orthology with sorghum and rice.	1	101255	2012-05-24 10:12:08	0	0000-00-00 00:00:00
+364	super-set	Super Working Gene Set	Set of all working gene set loci from both Builds 4a and 5a	1	101255	2012-05-24 10:12:55	0	0000-00-00 00:00:00
+365	projected4a2	Projected by alignment	Temporary (Monday, August 23, 2010)	1	101255	2012-05-24 10:13:23	0	0000-00-00 00:00:00
+366	merged	Merged species	NULL	1	0	0000-00-00 00:00:00	0	0000-00-00 00:00:00
+367	karyotype_rank	Rank in the karyotype	For a given seq_region, if it is part of the species karyotype, will indicate its rank	1	97245	2012-07-30 12:02:49	0	0000-00-00 00:00:00
+368	noncoding_acnt	Non coding genes	Number of non coding genes on alternate sequences	1	97245	2012-11-09 15:35:08	97245	2015-01-16 17:29:10
+369	coding_acnt	Coding genes	Number of protein coding genes on alternate sequences	1	97245	2012-11-09 15:35:49	97245	2013-12-12 12:40:59
+370	pseudogene_acnt	Pseudogenes	Number of pseudogenes on alternate sequences	1	97245	2012-11-09 15:36:17	97245	2013-12-12 12:40:44
+371	clone_end	Clone end	Side of the contig on which a vector lies (enum:RIGHT, LEFT).	1	101255	2013-02-13 13:51:49	0	0000-00-00 00:00:00
+372	contig_scaffold	Contig Scaffold	Scaffold that contains mutually ordered contigs.	1	101255	2013-02-13 13:53:24	0	0000-00-00 00:00:00
+373	current_version	Current Accession Version	Identifies the most recent version of an accession.	1	101255	2013-02-13 13:54:16	0	0000-00-00 00:00:00
+374	seq_status	Sequence Status	Sequence status.	1	101255	2013-02-13 13:54:56	0	0000-00-00 00:00:00
+375	clone_vector	Vector sequence	A clone-end vector associated with a contig (enum:SP6, T7).	1	101255	2013-02-13 13:55:31	0	0000-00-00 00:00:00
 376	creation_date	Creation date	Creation date of annotation	1	101255	2013-03-27 15:20:06	101255	2013-03-28 10:21:07
 377	update_date	Update date	Last update date of annotation	1	101255	2013-03-27 15:21:11	101255	2013-03-28 10:20:29
 378	seq_date	Sequence date	Sequence date	1	101255	2013-03-27 15:23:26	101255	2013-03-28 10:19:26
-379	has_stop_codon	Contains stop codon	Translation attribute	1	101255	2013-03-28 10:12:14	\N	\N
-380	havana_cv	Havana CV term	Controlled vocabulary terms from Havana	1	161	2013-04-18 13:55:36	\N	\N
-381	TlPPsCount	translated_processed_pseudogene	Number of Translated Processed Pseudogenes	1	104991	2013-04-18 14:41:42	\N	\N
+379	has_stop_codon	Contains stop codon	Translation attribute	1	101255	2013-03-28 10:12:14	0	0000-00-00 00:00:00
+380	havana_cv	Havana CV term	Controlled vocabulary terms from Havana	1	161	2013-04-18 13:55:36	0	0000-00-00 00:00:00
+381	TlPPsCount	translated_processed_pseudogene	Number of Translated Processed Pseudogenes	1	104991	2013-04-18 14:41:42	0	0000-00-00 00:00:00
 382	NoTransRefError	No translations due to reference error	This gene is believed to include protein coding transcripts, but no transcript has a translation due to a reference assembly error making specifying the translation impossible.	1	104991	2013-04-24 16:23:38	104991	2013-04-24 16:58:42
-383	parent_exon_key	parent_exon_key	The exon key to identify a projected transcript's parent transcript.	1	104957	2013-04-26 12:23:39	\N	\N
-387	snoncoding_acnt	Alternate short non coding gene count	Number of short non coding genes on alternate sequences	1	97245	2013-07-15 12:21:45	97245	2013-07-15 12:34:40
-386	parent_sid	parent_sid	The parent stable ID to identify a projected transcript's parent transcript. For internal statistics use only since this method does not work in all cases.	1	104957	2013-04-29 16:07:10	\N	\N
-388	lnoncoding_acnt	Alternate long non coding gene count	Number of long non coding genes on alternate sequences	1	97245	2013-07-15 12:22:02	97245	2013-07-15 12:34:29
-389	snoncoding_cnt	Short non coding gene count	Number of short non coding genes	1	97245	2013-07-15 12:22:21	97245	2013-07-15 12:35:10
-390	lnoncoding_cnt	Long non coding gene count	Number of long non coding genes	1	97245	2013-07-15 12:22:36	97245	2013-07-15 12:35:19
-391	TlUPsCount	translated_unprocessed_pseudogene	Number of Translated Unprocessed Pseudogenes	1	161	2013-07-25 14:17:07	\N	\N
+383	parent_exon_key	parent_exon_key	The exon key to identify a projected transcript's parent transcript.	1	104957	2013-04-26 12:23:39	0	0000-00-00 00:00:00
+387	noncoding_acnt_s	Small non coding genes	Number of small non coding genes on alternate sequences	1	97245	2013-07-15 12:21:45	97245	2015-01-05 11:52:24
+386	parent_sid	parent_sid	The parent stable ID to identify a projected transcript's parent transcript. For internal statistics use only since this method does not work in all cases.	1	104957	2013-04-29 16:07:10	0	0000-00-00 00:00:00
+388	noncoding_acnt_m	Misc non coding genes	Number of unclassified (miscellaneous) non coding genes on alternate sequences	1	97245	2013-07-15 12:22:02	97245	2015-01-05 16:14:08
+389	noncoding_cnt_s	Small non coding genes	Number of small non coding genes	1	97245	2013-07-15 12:22:21	97245	2015-01-05 11:52:33
+390	noncoding_cnt_l	Long non coding genes	Number of long non coding genes	1	97245	2013-07-15 12:22:36	97245	2015-01-05 11:52:03
+391	TlUPsCount	translated_unprocessed_pseudogene	Number of Translated Unprocessed Pseudogenes	1	161	2013-07-25 14:17:07	0	0000-00-00 00:00:00
+393	AFFYMETRIXCount	AFFYMETRIX Count	Total Number of AFFYMETRIX features	1	101255	2013-09-27 10:33:46	0	0000-00-00 00:00:00
+394	RFLPCount	RFLP Count	Total Number of RFLP features	1	101255	2013-09-27 10:34:11	0	0000-00-00 00:00:00
+395	xref_id	Xref ID	ID of associated database reference	1	101216	2013-10-23 16:02:37	0	0000-00-00 00:00:00
+396	vega_chr_type	Vega chrom type	Type of chromosome - haplotype, other, etc	1	161	2013-10-30 15:55:32	0	0000-00-00 00:00:00
+397	GeneNo_MRP_RNA	MRP_RNA Gene Count	Number of MRP_RNA Genes	0	103726	2013-11-28 10:25:31	0	0000-00-00 00:00:00
+398	genscan	Genscan gene predictions	Number of prediction genes generated by Genscan	1	97245	2013-12-06 10:30:52	97245	2013-12-12 13:05:15
+399	gsc	GSC gene prediction	Number of prediction genes generated by gsc	1	97245	2013-12-06 10:32:30	97245	2013-12-12 13:05:35
+400	snap	Snap gene prediction	Number of prediction genes generated by Snap	1	97245	2013-12-06 10:32:48	97245	2013-12-12 13:05:49
+401	fgenesh	FGENESH gene prediction	Number of prediction genes generated by FGENESH	1	97245	2013-12-06 10:33:51	97245	2013-12-12 13:04:44
+402	genefinder	Genefinder gene prediction	Number of prediction genes generated by Genefinder	1	97245	2013-12-06 10:34:22	97245	2013-12-12 13:05:04
+403	transcript_cnt	Gene transcripts	Number of transcripts	1	97245	2013-12-06 17:14:37	97245	2014-01-27 15:57:27
+404	transcript_acnt	Gene transcripts	Number of transcripts on the alternate sequences	1	97245	2013-12-06 17:15:00	97245	2014-01-27 15:57:37
+405	ref_length	Golden Path Length	Length of the primary assembly	1	97245	2013-12-12 12:54:56	101214	2014-08-29 15:24:04
+406	total_length	Base Pairs	Total length of the assembly	1	97245	2013-12-12 12:55:30	0	0000-00-00 00:00:00
+407	refseq_compare	refseq_compare	This attribute can be applied to both gene and transcript. It is supposed to give an indication of whether the annotation in the ensembl database is matched by annotation that we have imported from refseq. At the gene level, the match is unlikely to be an exact match because all or some of the transcripts may differ. Also, the biotype e.g. coding potential may differ. therefore, matching is a bit fuzzy and is done primarily on genomic location and then also takes gene length and gene name into consideration.	1	5132	2014-01-06 17:12:18	0	0000-00-00 00:00:00
+408	coding_rcnt	Readthrough coding genes	Number of readthrough coding genes	1	97245	2014-01-13 13:22:27	0	0000-00-00 00:00:00
+409	coding_racnt	Readthrough coding genes	Number of readthrough coding genes on alternate sequences	1	97245	2014-01-13 13:23:48	0	0000-00-00 00:00:00
+410	noncoding_racnt_l	Readthrough long non coding genes	Number of readthrough long non coding genes on alternate sequences	1	97245	2014-01-13 13:24:22	97245	2015-01-05 13:26:29
+411	noncoding_racnt_s	Readthrough small non coding genes	Number of readthrough small non coding genes on alternate sequences	1	97245	2014-01-13 13:24:46	97245	2015-01-05 13:26:50
+412	noncoding_rcnt_s	Readthrough small non coding genes	Number of readthrough small non coding genes	1	97245	2014-01-13 13:25:01	97245	2015-01-05 13:26:58
+413	noncoding_rcnt_l	Readthrough long non coding genes	Number of readthrough long non coding genes	1	97245	2014-01-13 13:25:19	97245	2015-01-05 13:26:37
+414	pseudogene_rcnt	Readthrough pseudogenes	Number of readthrough pseudogenes	1	97245	2014-01-13 13:25:53	0	0000-00-00 00:00:00
+415	pseudogene_racnt	Readthrough pseudogenes	Number of readthrough pseudogenes on alternate sequences	1	97245	2014-01-13 13:26:05	0	0000-00-00 00:00:00
+416	gencode_level	GENCODE annotation level	level 1 (verified loci), level 2 (manually annotated loci), level 3 (automatically annotated loci)	1	5132	2014-01-20 15:44:09	97804	2014-03-18 10:48:26
+417	gencode_basic	GENCODE basic annotation	GENCODE Basic is a view provided by UCSC for users. It includes a subset of the GENCODE transcripts. In general, for protein coding genes it will show only the full length models (unless a protein coding genes has no full-length models, in which case other rules apply). For noncoding genes, it will also only show the full-length (mRNA start and end found) models (unless there are no full-length models, in which case other rules apply).	1	5132	2014-01-20 15:46:53	9335	2014-03-28 15:08:13
+418	struct_var	Structural variants	Total Number of structural variants	1	97245	2014-01-28 11:04:11	0	0000-00-00 00:00:00
+419	genblast	GenBlastG gene predictions	Number of prediction genes generated by GenBlastG	1	105967	2014-02-13 16:57:20	0	0000-00-00 00:00:00
+421	vectorbase_adar	VectorBase gene predictions	Number of prediction genes generated with MAKER, by VectorBase.	1	105967	2014-04-22 09:46:29	0	0000-00-00 00:00:00
+420	syn_gene_pairs	Syntenic gene pairs	Syntenic gene relationship from Gramene pipeline	1	101255	2014-03-26 16:43:58	0	0000-00-00 00:00:00
+422	trnascan	tRNAscan-SE predictions	Number of predicted tRNA genes generated by tRNAscan-SE	1	105967	2014-05-07 15:21:44	0	0000-00-00 00:00:00
+423	tgac_pred_supp7	T. turgidum RNA-seq alignments	Number of T. turgidum RNA-seq alignments from Krasileva et al.	1	101255	2014-05-09 12:14:22	0	0000-00-00 00:00:00
+424	tgac_pred_supp17	T. aestivum RNA-seq alignments	Number of T. aestivum RNA-seq alignments from Krasileva et al.	1	101255	2014-05-09 12:14:57	0	0000-00-00 00:00:00
+425	genome_component	Genome Component Name	For polyploid genome, the genome component name the seq_region belongs to.	1	101255	2014-05-21 12:39:09	0	0000-00-00 00:00:00
+426	transcript_whl	RNA-seq transcripts	RNA-seq transcripts from EchinoBase	1	111207	2014-06-11 08:38:16	0	0000-00-00 00:00:00
+427	appris	APPRIS	APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. APPRIS also selects one of the CDS for each gene as the principal isoform. APPRIS defines the principal variant by combining protein structural and functional information and information from the conservation of related species. APPRIS is a joint project between Centro Nacional de Investigaciones Oncologicas and Instituto Nacional de Bioinformatica.  http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long	0	5132	2014-06-26 17:32:18	5132	2014-09-25 10:02:41
+428	TSL	Transcript Support Level	Transcription Support Level (TSL) is a method to highlight the well-supported and poorly-supported transcript models for users. The method relies on the primary data that can support full-length transcript structure and data are provided by UCSC.  The following categories are assigned to each of the evaluated annotations. tsl1 - all splice junctions of the transcript are supported by at least one non-suspect mRNA. tsl2 - the best supporting mRNA is flagged as suspect or the support is from multiple ESTs. tsl3 - the only support is from a single EST. tsl4 - the best supporting EST is flagged as suspect. tsl5 - no single transcript supports the model structure. tslNA - the transcript was not analyzed for one of the following reasons: pseudogene annotation, including transcribed pseudogenes.Human leukocyte antigen (HLA) transcript. Immunoglobin gene transcript.  T-cell receptor transcript. Single-exon transcript (will be included in a future version)	1	5132	2014-08-26 13:40:06	5132	2014-08-26 13:41:12
+429	protein_coverage	Protein Coverage	Protein coverage for this gene derived from geneTree in compara	1	114542	2014-09-01 09:05:27	0	0000-00-00 00:00:00
+430	consensus_coverage	Consensus Coverage	Consensus coverage for this gene derived from geneTree in compara	1	114542	2014-09-01 09:05:59	0	0000-00-00 00:00:00
+431	has_start_codon	Contains start codon	Translation attribute	1	101216	2014-09-04 09:30:52	0	0000-00-00 00:00:00
+432	appris_pi	APPRIS principal isoform	Transcript expected to code for the main functional isoform based on a range of protein features. APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long. Icon is {APPRIS} in green.	1	5132	2014-09-11 14:46:55	5132	2014-09-11 16:34:35
+433	appris_ci	APPRIS candidate principal isoform	APPRIS candidate principal isoform: Where there is no single 'appris_principal' variant the main functional isoform will be translated from one of the 'appris_candidate' genes. APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long. Icon is {APPRIS} in amber.	1	5132	2014-09-11 14:47:41	5132	2014-09-11 16:33:14
+434	appris_ci1	APPRIS candidate principal isoform (longest coding sequence)	APPRIS candidate principal isoform (longest coding sequence): Where there is no single 'appris_principal' variant the main functional isoform will be translated from one of the 'appris_candidate' genes. Where there is no 'appris_candidate_ccd' or 'appris_candidate_longest_ccds' variant, the longest protein of the 'appris_candidate' variants is selected as the primary variant. APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long. Icon is {APPRIS*} in amber.	1	5132	2014-09-11 16:37:21	5132	2014-09-11 16:45:38
+435	appris_ci2	APPRIS candidate principal isoform (longest CCDS)	APPRIS candidate principal isoform (longest CCDS): Where there is no single 'appris_principal' variant the main functional isoform will be translated from one of the 'appris_candidate' genes. When there are several 'appris_candidate' transcripts in CCDS, APPRIS labels the longest CCDS. APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long. Icon is {APPRIS**} in amber.	1	5132	2014-09-11 16:43:42	5132	2014-09-11 16:45:57
+436	appris_ci3	APPRIS candidate principal isoform (CCDS)	APPRIS candidate principal isoform (CCDS): Where there is no single 'appris_principal' variant the main functional isoform will be translated from one of the 'appris_candidate' genes. This 'appris_candidate' transcript is unique in being part of CCDS. APPRIS is a system that deploys a range of computational methods to provide value to the annotations of the human genome. http://appris.bioinfo.cnio.es/ http://nar.oxfordjournals.org/content/41/D1/D110.long. Icon is {APPRIS***} in amber.	1	5132	2014-09-11 16:44:53	5132	2014-09-11 16:46:14
+437	lncRNACount	lncRNA_Count	Number of lncRNAs	1	161	2014-11-13 18:22:51	0	0000-00-00 00:00:00
+438	ncRNACount	ncRNA_Count	Number of ncRNAs	1	161	2014-11-13 18:23:23	0	0000-00-00 00:00:00
+439	UnclassPTCount	UnclassPT_Count	Number of Unclassified Processed Transcripts	1	161	2014-11-13 18:24:11	0	0000-00-00 00:00:00
+440	GeneNo_scaRNA	scaRNA Gene Count	Number of scaRNA Genes	0	104957	2014-12-03 14:27:05	0	0000-00-00 00:00:00
+441	GeneNo_sRNA	sRNA Gene Count	Number of sRNA Genes	0	104957	2014-12-03 14:48:24	0	0000-00-00 00:00:00
+442	GeneNo_CRISPR	CRISPR Gene Count	Number of CRISPR Genes	0	104957	2014-12-03 14:50:00	0	0000-00-00 00:00:00
+443	GeneNo_antitoxin	antitoxin Gene Count	Number of antitoxin Genes	0	104957	2014-12-03 14:56:40	0	0000-00-00 00:00:00
+444	noncoding_cnt_m	Misc non coding genes	Number of unclassified (miscellaneous) non coding genes	1	97245	2015-01-05 16:13:45	0	0000-00-00 00:00:00
+445	noncoding_rcnt_m	Readthrough misc non coding genes	Number of readthrough unclassified (miscellaneous) non coding genes	1	97245	2015-01-05 16:14:49	0	0000-00-00 00:00:00
+446	noncoding_racnt_m	Readthrough misc non coding genes	Number of readthrough unclassified (miscellaneous) non coding genes on alternate sequences	1	97245	2015-01-05 16:15:07	0	0000-00-00 00:00:00
+447	noncoding_acnt_l	Long non coding genes	Number of long non coding genes on alternate sequences	1	97245	2015-01-08 15:17:47	0	0000-00-00 00:00:00
+448	noncoding_racnt	Readthrough non coding genes	Number of readthrough non coding genes on alternate sequences	1	97245	2015-01-08 15:18:11	0	0000-00-00 00:00:00
+449	noncoding_rcnt	Readthrough non coding genes	Number of readthrough non coding genes	1	97245	2015-01-08 15:18:30	0	0000-00-00 00:00:00
+450	rseq_mrna_match	RefSeq model genomic seq to mRNA match	This is a transcript attribute that signifies an exact match between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from (based on a match between the transcript stable id and an accession in the RefSeq mRNA file). An exact match occurs when the underlying genomic sequence of the model can be perfectly aligned to the mRNA sequence post polyA clipping.	1	106182	2015-01-15 09:35:19	106182	2015-01-15 10:58:35
+451	rseq_mrna_mismatch	RefSeq model genomic seq to mRNA mismatch	This is a transcript attribute that signifies a mismatch between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from. A mismatch is deemed to have occurred if the underlying genomic sequence does not have a perfect alignment to the mRNA sequence post polyA clipping. It can also signify that no comparison was possible as the model stable id may not have had a corresponding entry in the RefSeq mRNA file (sometimes happens when accessions are retired or changed). When a mismatch occurs one or several of the following transcript attributes will also be present to provide more detail on the nature of the mismatch: rseq_5p_mismatch, rseq_cds_mismatch, rseq_3p_mismatch, rseq_nctran_mismatch, rseq_no_comparison	1	106182	2015-01-15 09:39:59	106182	2015-01-15 10:59:06
+452	rseq_5p_mismatch	RefSeq model genomic seq (5' UTR) to mRNA mismatch	This is a transcript attribute that signifies a mismatch between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from. Specifically, there is a mismatch in the 5' UTR of the RefSeq model. Information about the mismatch can be found in the value field of the transcript attribute.	1	106182	2015-01-15 09:56:48	0	0000-00-00 00:00:00
+453	rseq_cds_mismatch	RefSeq model genomic seq (CDS) to mRNA mismatch	This is a transcript attribute that signifies a mismatch between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from. Specifically, there is a mismatch in the CDS of the RefSeq model. Information about the mismatch can be found in the value field of the transcript attribute.	1	106182	2015-01-15 10:01:23	0	0000-00-00 00:00:00
+454	rseq_3p_mismatch	RefSeq model genomic seq (3' UTR) to mRNA mismatch	This is a transcript attribute that signifies a mismatch between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from. Specifically, there is a mismatch in the 3' UTR of the RefSeq model. Information about the mismatch can be found in the value field of the transcript attribute.	1	106182	2015-01-15 10:02:00	0	0000-00-00 00:00:00
+455	rseq_nctran_mismatch	RefSeq model genomic seq (non-coding) to mRNA mismatch	This is a transcript attribute that signifies a mismatch between the underlying genomic sequence of the RefSeq transcript with the corresponding RefSeq mRNA sequence the model was built from. This is a comparison between the entire underlying genomic sequence of the RefSeq model to the mRNA in the case of RefSeq models that are non-coding. Information about the mismatch can be found in the value field of the transcript attribute.	1	106182	2015-01-15 10:06:54	0	0000-00-00 00:00:00
+456	rseq_no_comparison	RefSeq model no comparison made to mRNA	This is a transcript attribute that signifies that no alignment was carried out between the underlying genomic sequence of RefSeq model and a corresponding RefSeq mRNA. The reason for this is generally that no corresponding, unversioned accession was found in the RefSeq mRNA file for the transcript stable id. This sometimes happens when accessions are retired or replaced. A second possibility is that the sequences were too long and problematic to align (though this is rare). The value field gives more information about the reason no comparison was possible.	1	106182	2015-01-15 10:12:34	0	0000-00-00 00:00:00
+457	rseq_ens_match_wt	RefSeq model to overlapping Ensembl model whole transcript match	This is a transcript attribute that signifies that for the RefSeq transcript there is an overlapping Ensembl model that is identical across the whole transcript. A whole transcript match is defined as follows: 1) In the case that both models are coding, the transcript, CDS and peptide sequences are all identical and the genomic coordinates of every exon match. 2) In the case that both transcripts are non-coding the transcript sequences and the genomic coordinates of every exon are identical. No comparison is made between a coding and a non-coding transcript. Useful related attributes are: rseq_ens_match_cds and rseq_ens_no_match.	1	106182	2015-01-15 10:22:13	0	0000-00-00 00:00:00
+458	rseq_ens_match_cds	RefSeq model to overlapping Ensembl model CDS match	This is a transcript attribute that signifies that for the RefSeq transcript there is an overlapping Ensembl model that is identical across the CDS region only. A CDS match is defined as follows: the CDS and peptide sequences are identical and the genomic coordinates of every translatable exon match. Useful related attributes are: rseq_ens_match_wt and rseq_ens_no_match.	1	106182	2015-01-15 10:24:50	0	0000-00-00 00:00:00
+459	rseq_ens_no_match	RefSeq model to overlapping Ensembl model no match	This is a transcript attribute that signifies that for the RefSeq transcript there is no overlapping Ensembl model that is identical across either the whole transcript or the CDS. This is caused by differences between the transcript, CDS or peptide sequences or between the exon genomic coordinates. Useful related attributes are: rseq_ens_match_wt and rseq_ens_match_cds.	1	106182	2015-01-15 10:27:41	0	0000-00-00 00:00:00
