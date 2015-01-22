@@ -36,10 +36,11 @@ sub param_defaults {
 }
 
 my ($flag_store_projections, $flag_backup);
+my ($flag_filter, $flag_GeneDesc);
 my ($to_species, $from_species, $compara, $release);
 my ($method_link_type, $homology_types_allowed, $percent_id_filter);
 my ($log_file, $output_dir, $data);
-my ($geneName_source, $geneDesc_rules, $taxon_filter);
+my ($geneName_source, $geneDesc_rules, $geneDesc_rules_target, $taxon_filter);
 my ($mlssa, $ha, $ma, $gdba);
 
 sub fetch_input {
@@ -47,6 +48,8 @@ sub fetch_input {
 
     $flag_store_projections = $self->param('flag_store_projections');
     $flag_backup            = $self->param('flag_backup');
+    $flag_filter            = $self->param('flag_filter');
+    $flag_GeneDesc          = $self->param('flag_GeneDesc');
 
     $to_species             = $self->param_required('species');
     $from_species           = $self->param_required('source');
@@ -61,6 +64,7 @@ sub fetch_input {
 
     $geneName_source        = $self->param_required('geneName_source');
     $geneDesc_rules         = $self->param_required('geneDesc_rules');
+    $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
     $taxon_filter           = $self->param('taxon_filter');
 
 return;
@@ -160,8 +164,9 @@ sub project_genenames {
 
     # Project when 'source gene' has display_xref and 'target gene' has NO display_xref
     if(defined $from_gene->display_xref() 
-       && !defined $to_gene->display_xref()){
-
+       && !defined $to_gene->display_xref()
+       && $flag_GeneDesc==0)
+    {
        my $from_gene_dbname     = $from_gene->display_xref->dbname();
        my $from_gene_display_id = $from_gene->display_xref->display_id();         
 
@@ -189,22 +194,56 @@ sub project_genenames {
    } 
 
    # Project gene_description to target_gene
-   my $gene_desc = $from_gene->description();
+   my $gene_desc       = $from_gene->description();
+   my $gene_desc_trgt  = $to_gene->description(); 
 
-   if(defined $from_gene->description() 
-       && !defined $to_gene->description()
-       && $flag_store_projections==1 
-       && !grep (/$gene_desc/, @$geneDesc_rules)) 
+## May need these changes if regex failed
+# H(+)-ATPase 5 [Source:TAIR;Acc:AT2G24520]
+# catalytics;transferases;[acyl-carrier-protein] S-malonyltransferases;binding [Source:TAIR;Acc:AT2G30200]
+#$gene_desc =~s/.+/REPLACED/g if($gene_desc=~/\.\.\./); 
+#$gene_desc=~s/\+/plus/g;
+#$gene_desc=~ s/\-//g;
+
+# Superoxide dismutase [Cu-Zn] [Source:PGSC_GENE;Acc:PGSC0003DMG400023086]
+# H(+)transporting ATPase [Source:PGSC_GENE;Acc:PGSC0003DMG400004101]
+#$gene_desc_trgt=~ s/\-//g;
+#$gene_desc_trgt=~s/\+/plus/g;
+
+   # Tests for source gene description rules
+   my $test1 = grep {$gene_desc      =~/$_/} @$geneDesc_rules; 
+   my $test2 = grep {$gene_desc_trgt =~/$_/} @$geneDesc_rules_target; 
+
+   # First do source filtering
+   if(defined $from_gene->description()
+      && $flag_store_projections==1
+      && $test1==0)
    {
-       $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
+     # Next do target filtering
+     if(!defined $to_gene->description()
+        && $flag_filter==0)
+     {
+      $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
+      print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+      print $data "to: ".$to_gene->stable_id()."\t";
+      print $data "Gene Description: $gene_desc\n";
+       
+      $to_gene->description($gene_desc);
+      $to_geneAdaptor->update($to_gene);
+     }
+     elsif(defined $to_gene->description()
+           && $test2==1 
+           && $flag_filter==1)
+     {
+      $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
+      print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+      print $data "to: ".$to_gene->stable_id()."\t";
+      print $data "Gene Description: $gene_desc\n";
 
-       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-       print $data "to: ".$to_gene->stable_id()."\t";
-       print $data "Gene Description: $gene_desc\n";
- 
-       $to_gene->description($gene_desc);
-       $to_geneAdaptor->update($to_gene);
-   }    
+     $to_gene->description($gene_desc);
+     $to_geneAdaptor->update($to_gene);
+     }
+   }
+
 }
 
 
