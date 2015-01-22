@@ -46,10 +46,12 @@ sub default_options {
 	 			'run_all'     =>  0, # 1/0
         		# flowering group of your target species
 		        'taxon_filter'    			=> undef, # Eg: 'Liliopsida'/'eudicotyledons'
-				# GeneName source filter
+				# source species GeneName filter
 				'geneName_source' 			=> ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
-				# GeneDescription filter
+				# source species GeneDescription filter
 				'geneDesc_rules'   			=> ['hypothetical'] , 
+				# target species GeneDescription filter
+				'geneDesc_rules_target'   	=> ['Uncharacterized protein','Predicted protein','Gene of unknown'] , 
 		  		# homology types filter
  				'gn_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			    'gn_homology_types_allowed' => ['ortholog_one2one'], 
@@ -57,6 +59,20 @@ sub default_options {
         		'gn_percent_id_filter'      => '10', 
 	 	       }, 
 		},
+
+		#  Off by default. 
+		#   Filtering of target species GeneNames's Source & GeneDescription
+		#   If flag turn 'ON' Configure 'geneDesc_rules_target' parameter
+		#   (See JIRA EG-2676 for details)
+		#   eg. solanum_tuberosum genes with description below SHOULD receive projections
+		#		 "Uncharacterized protein" from UniProt
+		#		 "Predicted protein" from UniProt
+		#		 "Gene of unknown function" from PGSC
+		flag_filter   => '0', 
+		
+		#  Off by default.
+		#   To do only GeneDesc projection. Skip GeneName projection
+		flag_GeneDesc => '0', 
 
         # Tables to dump
         gn_dump_tables => ['gene', 'xref'],
@@ -88,7 +104,7 @@ sub default_options {
 				'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'  
 	 	       }, 
 
-		 # Second pair of source-target if required
+          # Second pair of source-target if required
 		 '2'=>{
 		 	   'source'		 => '',
 		 	   'species'	 => [],
@@ -294,6 +310,8 @@ sub pipeline_analyses {
 				   		    'release'                 => $self->o('release'),
 				            'output_dir'              => $self->o('output_dir'),		
 				            'flag_store_projections'  => $self->o('flag_store_projections'),
+				            'flag_filter'             => $self->o('flag_filter'),
+				            'flag_GeneDesc'           => $self->o('flag_GeneDesc'),
    	   					  },
        -rc_name       => 'default',
        -batch_size    =>  10, 
