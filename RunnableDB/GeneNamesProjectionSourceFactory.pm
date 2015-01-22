@@ -58,6 +58,7 @@ sub write_output {
        my $taxon_filter           = $gn_config->{$pair}->{'taxon_filter'};
        my $geneName_source        = $gn_config->{$pair}->{'geneName_source'};
        my $geneDesc_rules         = $gn_config->{$pair}->{'geneDesc_rules'};
+       my $geneDesc_rules_target  = $gn_config->{$pair}->{'geneDesc_rules_target'};
 
        $self->dataflow_output_id(
 		{'source'      		  => $source, 
@@ -70,7 +71,8 @@ sub write_output {
   		 'percent_id_filter'      => $percent_id_filter,
 		 'taxon_filter'           => $taxon_filter,
 		 'geneName_source'	  => $geneName_source,
-		 'geneDesc_rules'	  => $geneDesc_rules
+		 'geneDesc_rules'	  => $geneDesc_rules,
+		 'geneDesc_rules_target'  => $geneDesc_rules_target
 		},2); 
       }
 return 0;
