@@ -64,7 +64,7 @@ sub default_options {
       -pass   => 'writ3rpan1',
       -dbname => 'uniparc',
     },
-    reload_local_uniparc => 1,
+    reload_local_uniparc => 0,
     
     remote_uniparc_db => {
       -driver => 'Oracle',
@@ -84,7 +84,7 @@ sub default_options {
       -dbname => 'SWPREAD',
     },
     
-    load_uniparc => 1,
+    load_uniparc => 0,
     
     load_uniprot         => 1,
     uniprot_replace_all  => 0,
@@ -103,7 +103,7 @@ sub default_options {
     
     # By default, an email is sent for each species when the pipeline
     # is complete, showing the breakdown of xrefs assigned.
-    email_repeat_report => 1,
+    email_xref_report => 1,
   }
 }
 
@@ -155,7 +155,7 @@ sub pipeline_analyses {
       $load_uniparc_wait = ['ReloadLocalUniparc'],
     }
     
-    if ($self->o('email_repeat_report')) {
+    if ($self->o('email_xref_report')) {
       $load_xrefs_flow = {
         '1->A' => 'LoadUniParc',
         'A->1' => 'EmailXrefReport',
@@ -174,7 +174,7 @@ sub pipeline_analyses {
     }
     
   } elsif ($self->o('load_uniprot')) {
-    if ($self->o('email_repeat_report')) {
+    if ($self->o('email_xref_report')) {
       $load_xrefs_flow = {
         '1->A' => 'LoadUniProt',
         'A->1' => 'EmailXrefReport',
@@ -188,7 +188,7 @@ sub pipeline_analyses {
     }
     
   } elsif (scalar @$transitive_xrefs > 0) {
-    if ($self->o('email_repeat_report')) {
+    if ($self->o('email_xref_report')) {
       $load_xrefs_flow = {
         '1->A' => $transitive_xrefs,
         'A->1' => 'EmailXrefReport',
