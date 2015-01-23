@@ -84,7 +84,7 @@ sub default_options {
       -dbname => 'SWPREAD',
     },
     
-    load_uniparc => 0,
+    load_uniparc => 1,
     
     load_uniprot         => 1,
     uniprot_replace_all  => 0,
