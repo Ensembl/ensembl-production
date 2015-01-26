@@ -170,7 +170,8 @@ sub beekeeper_extra_cmdline_options {
 
   my $options = join(' ',
     $self->SUPER::beekeeper_extra_cmdline_options,
-    "-reg_conf ".$self->o('registry')
+    "-reg_conf ".$self->o('registry'),
+    "-submit_workers_max 10",
   );
   
   return $options;
@@ -380,7 +381,7 @@ sub pipeline_analyses {
       -analysis_capacity => 5,
       -batch_size        => 10,
       -parameters        => {
-                              cmd => 'rm '.'#genome_file#'.'.es*',
+                              cmd => 'rm -f '.'#genome_file#'.'.es*',
                             },
       -rc_name           => 'normal',
       -flow_into         => ['GenomeIndexPart1'],
