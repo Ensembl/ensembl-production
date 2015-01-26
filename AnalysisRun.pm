@@ -132,12 +132,10 @@ sub run {
     $self->throw("Type of object to save (e.g. 'gene', 'protein_feature') is not defined");
   }
   
-  # Recommended Hive trick for potentially long-running analyses:
-  # Wrap db disconnects around the code that does the work.
-  $self->dbc and $self->dbc->disconnect_when_inactive(1);
-  $runnable->run_analysis();
-  $self->dbc and $self->dbc->disconnect_when_inactive(0);
+  # Recommended Hive trick for potentially long-running analyses.
+  $self->dbc && $self->dbc->disconnect_if_idle();
   $self->dbc->reconnect_when_lost(1);
+  $runnable->run_analysis();
   
   $self->update_options($runnable);
   
