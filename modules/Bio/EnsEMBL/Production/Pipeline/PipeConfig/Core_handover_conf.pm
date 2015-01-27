@@ -137,7 +137,7 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
         -max_retry_count  => 3,
         -hive_capacity    => 100,
-        -rc_name          => 'normal',
+        -rc_name          => 'mem',
       },
 
       {
