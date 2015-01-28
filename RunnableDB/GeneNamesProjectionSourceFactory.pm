@@ -32,19 +32,10 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 
-sub fetch_input {
-    my ($self) 	= @_;
-
-    my $gn_config = $self->param_required('gn_config') || die "'gn_config' is an obligatory parameter";
-    $self->param('gn_config', $gn_config);
-
-return 0;
-}
-
 sub write_output {
     my ($self)  = @_;
 
-    my $gn_config = $self->param('gn_config');
+    my $gn_config = $self->param_required('gn_config');
 
     foreach my $pair (keys $gn_config){
        my $source                 = $gn_config->{$pair}->{'source'};
