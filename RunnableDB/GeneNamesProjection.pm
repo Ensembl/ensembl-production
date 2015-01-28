@@ -38,7 +38,7 @@ sub param_defaults {
 my ($flag_store_projections, $flag_backup);
 my ($flag_filter, $flag_GeneDesc);
 my ($to_species, $from_species, $compara, $release);
-my ($method_link_type, $homology_types_allowed, $percent_id_filter);
+my ($method_link_type, $homology_types_allowed, $percent_id_filter, $percent_cov_filter);
 my ($log_file, $output_dir, $data);
 my ($geneName_source, $geneDesc_rules, $geneDesc_rules_target, $taxon_filter);
 my ($mlssa, $ha, $ma, $gdba);
@@ -59,6 +59,7 @@ sub fetch_input {
     $method_link_type       = $self->param_required('method_link_type');
     $homology_types_allowed = $self->param_required('homology_types_allowed');
     $percent_id_filter      = $self->param_required('percent_id_filter');
+    $percent_cov_filter     = $self->param_required('percent_cov_filter');
     $log_file               = $self->param_required('output_dir');
     $output_dir             = $self->param_required('output_dir');
 
@@ -105,7 +106,7 @@ sub run {
 
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
-#   $ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
+    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');   
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
@@ -129,7 +130,7 @@ sub run {
  
     # Get homologies from compara - comes back as a hash of arrays
     print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter);
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter, $percent_cov_filter);
 
     print $data "\n\tProjecting Gene Names & descriptions from $from_species to $to_species\n\n";
 
@@ -197,50 +198,49 @@ sub project_genenames {
    my $gene_desc       = $from_gene->description();
    my $gene_desc_trgt  = $to_gene->description(); 
 
-## May need these changes if regex failed
-# H(+)-ATPase 5 [Source:TAIR;Acc:AT2G24520]
-# catalytics;transferases;[acyl-carrier-protein] S-malonyltransferases;binding [Source:TAIR;Acc:AT2G30200]
-#$gene_desc =~s/.+/REPLACED/g if($gene_desc=~/\.\.\./); 
-#$gene_desc=~s/\+/plus/g;
-#$gene_desc=~ s/\-//g;
-
-# Superoxide dismutase [Cu-Zn] [Source:PGSC_GENE;Acc:PGSC0003DMG400023086]
-# H(+)transporting ATPase [Source:PGSC_GENE;Acc:PGSC0003DMG400004101]
-#$gene_desc_trgt=~ s/\-//g;
-#$gene_desc_trgt=~s/\+/plus/g;
-
-   # Tests for source gene description rules
+   # Tests for source & target gene description rules
    my $test1 = grep {$gene_desc      =~/$_/} @$geneDesc_rules; 
    my $test2 = grep {$gene_desc_trgt =~/$_/} @$geneDesc_rules_target; 
 
    # First do source filtering
    if(defined $from_gene->description()
-      && $flag_store_projections==1
       && $test1==0)
    {
      # Next do target filtering
      if(!defined $to_gene->description()
+        && !defined $to_gene->display_xref()
         && $flag_filter==0)
      {
-      $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
+      my $species_text = ucfirst($from_species);
+      $species_text =~ s/_/ /g;
+      my $source_id = $from_gene->stable_id();
+      $gene_desc =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
       print $data "to: ".$to_gene->stable_id()."\t";
       print $data "Gene Description: $gene_desc\n";
-       
-      $to_gene->description($gene_desc);
-      $to_geneAdaptor->update($to_gene);
+    
+      if($flag_store_projections==1){   
+      	 $to_gene->description($gene_desc);
+         $to_geneAdaptor->update($to_gene);
+      }
      }
      elsif(defined $to_gene->description()
            && $test2==1 
            && $flag_filter==1)
      {
-      $gene_desc    = $gene_desc."(projected from $from_species,".$from_gene->stable_id().")";
+      my $species_text = ucfirst($from_species);
+      $species_text =~ s/_/ /g;
+      my $source_id = $from_gene->stable_id();
+      $gene_desc =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
+      my $t = $to_gene->description();
       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
       print $data "to: ".$to_gene->stable_id()."\t";
       print $data "Gene Description: $gene_desc\n";
 
-     $to_gene->description($gene_desc);
-     $to_geneAdaptor->update($to_gene);
+      if($flag_store_projections==1){   
+         $to_gene->description($gene_desc);
+         $to_geneAdaptor->update($to_gene);
+      }
      }
    }
 
