@@ -55,6 +55,7 @@ sub write_output {
        my $method_link_type       = $gn_config->{$pair}->{'gn_method_link_type'};  
        my $homology_types_allowed = $gn_config->{$pair}->{'gn_homology_types_allowed'};
        my $percent_id_filter      = $gn_config->{$pair}->{'gn_percent_id_filter'};
+       my $percent_cov_filter     = $gn_config->{$pair}->{'gn_percent_cov_filter'};
        my $taxon_filter           = $gn_config->{$pair}->{'taxon_filter'};
        my $geneName_source        = $gn_config->{$pair}->{'geneName_source'};
        my $geneDesc_rules         = $gn_config->{$pair}->{'geneDesc_rules'};
@@ -69,6 +70,7 @@ sub write_output {
 		 'method_link_type' 	  => $method_link_type,
                  'homology_types_allowed' => $homology_types_allowed,
   		 'percent_id_filter'      => $percent_id_filter,
+		 'percent_cov_filter'     => $percent_cov_filter,
 		 'taxon_filter'           => $taxon_filter,
 		 'geneName_source'	  => $geneName_source,
 		 'geneDesc_rules'	  => $geneDesc_rules,
