@@ -35,7 +35,7 @@ sub default_options {
 		{ 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', #  'schizosaccharomyces_pombe'
+	 	  		'source'      => '', # undef, 'schizosaccharomyces_pombe'
 				# target species to project to
 	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
 				# target species to exclude 
@@ -58,6 +58,21 @@ sub default_options {
         		'gn_percent_id_filter'      => '30', 
 				'gn_percent_cov_filter'     => '66',
 	 	       }, 
+		 #'2'=>{
+		 	#   'source'		  => '',
+		 	#   'species'	  => [],
+		 	#   'antispecies'  => [],
+		 	#   'division'     => [],
+		 	#   'run_all'      =>  0,
+		 	#   'taxon_filter' => undef,
+			#   'geneName_source' 		   => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
+  			#   'geneDesc_rules'   		   => ['hypothetical', 'putative', 'unknown protein'] , 
+  			#   'geneDesc_rules_target'     => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown'] , 
+ 			#   'gn_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+			#   'gn_homology_types_allowed' => ['ortholog_one2one'], 
+        	#   'gn_percent_id_filter'      => '30', 
+			#   'gn_percent_cov_filter'     => '66',
+	 	  #	  }, 
 		},
 
 		#  Off by default. 
@@ -86,7 +101,7 @@ sub default_options {
 		{ 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', # 'schizosaccharomyces_pombe'
+	 	  		'source'      => '', # undef, 'schizosaccharomyces_pombe'
 				# target species to project to
 	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
 				# target species to exclude 
@@ -105,18 +120,18 @@ sub default_options {
 				'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'  
 	 	       }, 
 
-		 '2'=>{
-		 	   'source'		 => '',
-		 	   'species'	 => [],
-		 	   'antispecies' => [],
-		 	   'division'    => [],
-		 	   'run_all'     =>  0,
- 			   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			   'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
-        	   'go_percent_id_filter'      => '10', 
-			   'ensemblObj_type'           => 'Translation', 
-			   'ensemblObj_type_target'    => 'Translation',   
-	 		  }, 		 	   
+		 #'2'=>{
+		  #	   'source'		 => '',
+		  #	   'species'	 => [],
+		  #	   'antispecies' => [],
+		  #	   'division'    => [],
+		  #	   'run_all'     =>  0,
+ 		  #	   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+		  #	   'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
+          #	   'go_percent_id_filter'      => '10', 
+		  #	   'ensemblObj_type'           => 'Translation', 
+		  #	   'ensemblObj_type_target'    => 'Translation',   
+	 	 #	  }, 		 	   
     	},
 		
 	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
@@ -321,9 +336,11 @@ sub pipeline_analyses {
     {  -logic_name    => 'GeneNamesEmailReport',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
-          	'email'      => $self->o('email'),
-          	'subject'    => $self->o('gn_subject'),
-          	'output_dir' => $self->o('output_dir'),
+          	'email'      			 => $self->o('email'),
+          	'subject'    			 => $self->o('gn_subject'),
+          	'output_dir' 			 => $self->o('output_dir'),         	
+ 	 	 	'flag_GeneDesc'          => $self->o('flag_GeneDesc'),          	
+            'flag_store_projections' => $self->o('flag_store_projections'),
        },
     },
     
