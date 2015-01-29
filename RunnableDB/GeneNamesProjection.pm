@@ -94,7 +94,7 @@ sub run {
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
 
-=pod
+
     Bio::EnsEMBL::Registry->load_registry_from_db(
             -host       => 'mysql-eg-mirror.ebi.ac.uk',
             -port       => 4157,
@@ -102,7 +102,7 @@ sub run {
             -pass       => 'writ3r',
             -db_version => '77',
    );
-=cut
+
 
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
@@ -202,45 +202,33 @@ sub project_genenames {
    my $test1 = grep {$gene_desc      =~/$_/} @$geneDesc_rules; 
    my $test2 = grep {$gene_desc_trgt =~/$_/} @$geneDesc_rules_target; 
 
-   # First do source filtering
+   # First check source gene has a description and 
+   # passed the description filtering rules
    if(defined $from_gene->description()
       && $test1==0)
    {
-     # Next do target filtering
+     # Then check if target gene 
+     # does not have description OR
+     # its description didn't passed the filtering rules AND
+     # the flag to check for filtering rules is ON
      if(!defined $to_gene->description()
-        && !defined $to_gene->display_xref()
-        && $flag_filter==0)
+	|| ($test2==1 && $flag_filter==1))  
      {
-      my $species_text = ucfirst($from_species);
-      $species_text =~ s/_/ /g;
-      my $source_id = $from_gene->stable_id();
-      $gene_desc =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
-      print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-      print $data "to: ".$to_gene->stable_id()."\t";
-      print $data "Gene Description: $gene_desc\n";
-    
-      if($flag_store_projections==1){   
-      	 $to_gene->description($gene_desc);
-         $to_geneAdaptor->update($to_gene);
-      }
-     }
-     elsif(defined $to_gene->description()
-           && $test2==1 
-           && $flag_filter==1)
-     {
-      my $species_text = ucfirst($from_species);
-      $species_text =~ s/_/ /g;
-      my $source_id = $from_gene->stable_id();
-      $gene_desc =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
-      my $t = $to_gene->description();
-      print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
-      print $data "to: ".$to_gene->stable_id()."\t";
-      print $data "Gene Description: $gene_desc\n";
+       my $species_text = ucfirst($from_species);
+       $species_text    =~ s/_/ /g;
+       my $source_id    = $from_gene->stable_id();
+       $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
 
-      if($flag_store_projections==1){   
-         $to_gene->description($gene_desc);
-         $to_geneAdaptor->update($to_gene);
-      }
+       print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
+       print $data "to: ".$to_gene->stable_id()."\t";
+
+       my $t = $to_gene->description();
+       print $data "Gene Description: $gene_desc\n";
+
+       if($flag_store_projections==1){
+          $to_gene->description($gene_desc);
+          $to_geneAdaptor->update($to_gene);
+       }
      }
    }
 
