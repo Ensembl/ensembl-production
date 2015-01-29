@@ -221,8 +221,6 @@ sub project_genenames {
 
        print $data "\t\tProject from: ".$from_gene->stable_id()."\t";
        print $data "to: ".$to_gene->stable_id()."\t";
-
-       my $t = $to_gene->description();
        print $data "Gene Description: $gene_desc\n";
 
        if($flag_store_projections==1){
