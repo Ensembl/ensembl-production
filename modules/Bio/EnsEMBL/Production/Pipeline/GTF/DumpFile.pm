@@ -67,20 +67,34 @@ sub param_defaults {
   };
 }
 
+my $eg;
+
 sub fetch_input {
   my ($self) = @_;
-    
+  
+  $eg = $self->param('eg');
+
+  if($eg){
+     my $base_path = $self->param('sub_dir');
+     $self->param('base_path', $base_path);
+ 
+     my $release = $self->param('eg_version');    
+     $self->param('release', $release);
+  } 
+  
   throw "Need a species" unless $self->param('species');
   throw "Need a release" unless $self->param('release');
   throw "Need a base_path" unless $self->param('base_path');
 
-  throw "No gtfToGenePred executable given" 
+  if(!$eg){
+   throw "No gtfToGenePred executable given" 
     unless $self->param('gtf_to_genepred');
-  $self->assert_executable($self->param('gtf_to_genepred'));
+   $self->assert_executable($self->param('gtf_to_genepred'));
 
-  throw "No genePredCheck executable given" 
+   throw "No genePredCheck executable given" 
     unless $self->param('gene_pred_check');
-  $self->assert_executable($self->param('gene_pred_check'));
+   $self->assert_executable($self->param('gene_pred_check'));
+  }
 
   return;
 }
@@ -114,7 +128,7 @@ sub run {
   });
 
   $self->info(sprintf "Checking GTF file %s", $path);
-  $self->_gene_pred_check($path);
+  $self->_gene_pred_check($path) unless $eg;
   
   # $self->run_cmd("gzip $path");
 
