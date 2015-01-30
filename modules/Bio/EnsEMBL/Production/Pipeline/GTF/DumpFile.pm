@@ -67,12 +67,11 @@ sub param_defaults {
   };
 }
 
-my $eg;
-
 sub fetch_input {
   my ($self) = @_;
   
-  $eg = $self->param('eg');
+  my $eg = $self->param('eg');
+  $self->param('eg', $eg);
 
   if($eg){
      my $base_path = $self->param('sub_dir');
@@ -101,7 +100,8 @@ sub fetch_input {
 
 sub run {
   my ($self) = @_;
-  
+
+  my $eg   = $self->param('eg');  
   my $root = $self->data_path();
   if(-d $root) {
     $self->info('Directory "%s" already exists; removing', $root);
