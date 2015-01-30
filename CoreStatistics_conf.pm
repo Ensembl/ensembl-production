@@ -202,7 +202,7 @@ sub pipeline_analyses {
         description => 'Every gene should be included in one of the counts.',
         query =>
           'SELECT COUNT(*) AS total FROM gene WHERE biotype <> "transposable_element" UNION '.
-          'SELECT sum(value) AS total FROM seq_region_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code IN ("coding_cnt", "pseudogene_cnt", "noncoding_cnt_s", "noncoding_cnt_l")',
+          'SELECT sum(value) AS total FROM seq_region_attrib INNER JOIN attrib_type USING (attrib_type_id) WHERE code IN ("coding_cnt", "pseudogene_cnt", "noncoding_cnt")',
         expected_size => '= 1'
       },
       -max_retry_count  => 2,
