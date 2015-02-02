@@ -54,6 +54,8 @@ sub default_options {
     antispecies     => [],
     core_flow       => 2,
     meta_filters    => {},
+    
+    sql => [],
   };
 }
 
