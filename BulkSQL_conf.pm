@@ -87,7 +87,6 @@ sub pipeline_analyses {
                        '2' => 'RunSQL',
                       },
       -rc_name     => 'normal',
-      -meadow_type => 'LOCAL',
     },
 
     {
