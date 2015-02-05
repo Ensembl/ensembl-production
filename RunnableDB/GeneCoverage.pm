@@ -31,8 +31,6 @@ sub param_defaults {
 	   };
 }
 
-my ($root_id, $division, $sql_geneTree);
-
 sub fetch_input {
     my ($self) = @_;
 
@@ -48,6 +46,11 @@ sub fetch_input {
                         AND gam.gene_align_id = r.gene_align_id 
                         AND g.genome_db_id = m.genome_db_id
   			AND r.root_id =? ";
+
+    $self->param('root_id', $root_id);
+    $self->param('division', $division);
+    $self->param('sql_geneTree', $sql_geneTree);
+
 =pod
     $sql_geneTree       = "SELECT r.root_id, cigar_line, n.node_id, m.stable_id, m.taxon_id, g.name
  			 	FROM gene_tree_node n, gene_tree_root r, member m, genome_db g, gene_align_member gam
@@ -66,6 +69,10 @@ return;
 
 sub run {
     my ($self) = @_;
+
+    my $division     = $self->param('division'); 
+    my $sql_geneTree = $self->param('sql_geneTree'); 
+    my $root_id      = $self->param('root_id'); 
 
     Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
