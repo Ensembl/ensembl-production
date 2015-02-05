@@ -68,6 +68,10 @@ sub fetch_input {
     $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
     $taxon_filter           = $self->param('taxon_filter');
 
+    my $taxonomy_db 	    = $self->param('taxonomy_db');
+
+    $self->param('taxonomy_db', $taxonomy_db);
+
 return;
 }
 
@@ -77,10 +81,11 @@ sub run {
     Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
 
     # Get taxon ancestry of the target species
+    my $taxonomy_db        = $self->param('taxonomy_db');  
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
     my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
-    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);  
+    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id, $taxonomy_db);  
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
     if(defined $taxon_filter){
@@ -100,7 +105,7 @@ sub run {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '77',
+            -db_version => '78',
    );
 =cut
 
@@ -114,14 +119,11 @@ sub run {
     $log_file  = $log_file."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
 
     # Write projection info metadata
-    open $data,">","$log_file" or die $!;
+    open  $data,">","$log_file" or die $!;
     print $data "\n\tProjection log :\n";
-    print $data "\t\trelease             :$release\n";
-    print $data "\t\tfrom_db             :".$from_ga->dbc()->dbname()."\n";
-    print $data "\t\tfrom_species_common :$from_species\n";
-    print $data "\t\tto_db               :".$to_ga->dbc()->dbname()."\n";
-    print $data "\t\tto_species_common   :$to_species\n";
-   
+    print $data "\t\tsoftware release :$release\n";
+    print $data "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
+ 
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
