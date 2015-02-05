@@ -77,8 +77,6 @@ return;
 sub run {
     my ($self) = @_;
 
-#    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
-
     # Connection to Oracle DB for taxon constraint 
     my $dsn_goapro = 'DBI:Oracle:host=ora-vm-026.ebi.ac.uk;sid=goapro;port=1531';
     my $user       = 'goselect';
@@ -92,7 +90,6 @@ sub run {
     my $to_ta      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
     my $to_dbea    = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'DBEntry');
 
-    #$from_ga->dbc->disconnect_when_inactive(1);	
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
     
     # Interrogate GOA web service for forbidden GO terms for the given species.
@@ -111,9 +108,10 @@ sub run {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '77',
+            -db_version => '78',
    );
 =cut
+
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
@@ -127,11 +125,8 @@ sub run {
 
     # Write projection info metadata
     print $data "\n\tProjection log :\n";
-    print $data "\t\trelease             :$release\n";
-    print $data "\t\tfrom_db             :".$from_ga->dbc()->dbname()."\n";
-    print $data "\t\tfrom_species_common :$from_species\n";
-    print $data "\t\tto_db               :".$to_ga->dbc()->dbname()."\n";
-    print $data "\t\tto_species_common   :$to_species\n";
+    print $data "\t\tsoftware release:$release\n";
+    print $data "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
 
     $self->delete_go_terms($to_ga) if($flag_delete_go_terms==1);
 
@@ -242,7 +237,7 @@ sub get_ontology_terms {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '77',
+            -db_version => '78',
    );
 =cut
 
@@ -383,9 +378,10 @@ sub project_go_terms {
       $to_translation->add_DBEntry($dbEntry);
       $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($flag_store_projections==1);
 
-      print $data "\t\tProject from:".$from_translation->stable_id()."\t";
-      print $data "to:".$to_translation->stable_id()."\t";
-      print $data "GO term:".$dbEntry->display_id()."\n";
+
+      print $data "\t\t Project GO term:".$dbEntry->display_id()."\t";
+      print $data "from:".$from_translation->stable_id()."\t";
+      print $data "to:".$to_translation->stable_id()."\n";
     }
 
 return 0;
