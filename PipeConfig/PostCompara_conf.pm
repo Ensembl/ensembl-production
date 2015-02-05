@@ -35,7 +35,7 @@ sub default_options {
 		{ 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', # undef, 'schizosaccharomyces_pombe'
+	 	  		'source'      => '', # 'schizosaccharomyces_pombe'
 				# target species to project to
 	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
 				# target species to exclude 
@@ -59,14 +59,14 @@ sub default_options {
 				'gn_percent_cov_filter'     => '66',
 	 	       }, 
 		 #'2'=>{
-		 	#   'source'		  => '',
-		 	#   'species'	  => [],
+		 	#   'source'	   => '',
+		 	#   'species'	   => [],
 		 	#   'antispecies'  => [],
 		 	#   'division'     => [],
 		 	#   'run_all'      =>  0,
 		 	#   'taxon_filter' => undef,
-			#   'geneName_source' 		   => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
-  			#   'geneDesc_rules'   		   => ['hypothetical', 'putative', 'unknown protein'] , 
+			#   'geneName_source' 		    => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
+  			#   'geneDesc_rules'   		    => ['hypothetical', 'putative', 'unknown protein'] , 
   			#   'geneDesc_rules_target'     => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown'] , 
  			#   'gn_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			#   'gn_homology_types_allowed' => ['ortholog_one2one'], 
@@ -86,8 +86,8 @@ sub default_options {
 		flag_filter   => '0', 
 		
 		#  Off by default.
-		#   To do only GeneDesc projection. 
-		#   Skip GeneName projection
+		#   Turn on will only do GeneDesc projection
+		#   && skip GeneName projection
 		flag_GeneDesc => '0', 
 
         # Tables to dump
@@ -101,7 +101,7 @@ sub default_options {
 		{ 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', # undef, 'schizosaccharomyces_pombe'
+	 	  		'source'      => '', # 'schizosaccharomyces_pombe'
 				# target species to project to
 	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
 				# target species to exclude 
@@ -163,6 +163,7 @@ sub default_options {
         # GOA webservice parameters
         goa_webservice => 'http://www.ebi.ac.uk/QuickGO/',
 		goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
+						  #GValidate?service=taxon&action=getConstraints&taxon=
 
 		# only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
@@ -202,7 +203,16 @@ sub default_options {
         gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
 	    
 	## For all pipelines
-		flag_store_projections => '1', #  Off by default. Control the storing of projections into database. 
+	   #  Off by default. Control the storing of projections into database. 
+       flag_store_projections => '0', 
+
+    ## Access to the ncbi taxonomy db
+	    'taxonomy_db' =>  {
+     	  -host   => 'mysql-eg-mirror.ebi.ac.uk',
+       	  -port   => '4157',
+       	  -user   => 'ensro',
+       	  -dbname => 'ncbi_taxonomy',      	
+       	},
 
        'pipeline_db' => {  
 		     -host   => $self->o('hive_host'),
@@ -327,6 +337,7 @@ sub pipeline_analyses {
 				            'flag_store_projections'  => $self->o('flag_store_projections'),
 				            'flag_filter'             => $self->o('flag_filter'),
 				            'flag_GeneDesc'           => $self->o('flag_GeneDesc'),
+				            'taxonomy_db'			  => $self->o('taxonomy_db'),
    	   					  },
        -rc_name       => 'default',
        -batch_size    =>  10, 
@@ -431,9 +442,10 @@ sub pipeline_analyses {
     {  -logic_name    => 'GOEmailReport',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOEmailReport',
        -parameters    => {
-          					'email'      => $self->o('email'),
-          					'subject'    => $self->o('go_subject'),
-				          	'output_dir' => $self->o('output_dir'),
+          					'email'      			 => $self->o('email'),
+          					'subject'    			 => $self->o('go_subject'),
+				          	'output_dir' 			 => $self->o('output_dir'),
+				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
         				  },
     },
 
