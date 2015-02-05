@@ -36,18 +36,25 @@ use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport');
 sub fetch_input {
     my ($self) = @_;
 
-    my $email        = $self->param('email')   || die "'email' parameter is obligatory";
-    my $subject      = $self->param('subject') || "An automatic message from your pipeline";
-    my $output_dir   = $self->param('output_dir');
-    my $to_species   = $self->param_required('species');
+    my $email                  = $self->param('email')   || die "'email' parameter is obligatory";
+    my $subject                = $self->param('subject') || "An automatic message from your pipeline";
+    my $output_dir             = $self->param('output_dir');
+    my $flag_store_projections = $self->param_required('flag_store_projections');
+    my $to_species             = $self->param_required('species');
     my $reports;
 
     foreach my $sp (@$to_species){
        my $ga    = Bio::EnsEMBL::Registry->get_adaptor($sp, 'core', 'Gene');
        my $dbh   = $ga->dbc()->db_handle();
+
+       if(!$flag_store_projections){
+          $reports .= "Pipeline was run with a flag to prevent storing anything in the database.\n";
+       }
+       else {
        $reports .= $self->linkage_type_summary($dbh, $ga, $sp);
        $reports .= $self->info_type_summary($dbh, $ga, $sp);
        $reports .= $self->analysis_type_summary($dbh, $ga, $sp); 
+       }
     }
     $reports   .= "\n$subject detail log file is available at $output_dir.\n";
 
