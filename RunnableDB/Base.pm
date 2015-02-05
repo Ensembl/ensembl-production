@@ -121,7 +121,7 @@ sub fetch_homologies {
        push @{$homology_cache{$from_stable_id}}, @to_stable_ids;
        $count++;
    }
-   print $data "\tFetched " . $count . " homologies\n";
+   print $data "\tFetched " . $count . " homologies passing the filtering criteria\n";
 
 return \%homology_cache;
 }
@@ -148,13 +148,9 @@ return undef;
 sub get_taxon_ancestry {
     my $self        = shift;
     my $to_taxon_id = shift;
+    my $taxonomy_db = shift;
 
-    my $dba =  Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-        -user   => 'ensro',
-        -dbname => 'ncbi_taxonomy',
-        -host   => 'mysql-eg-mirror.ebi.ac.uk',
-        -port   => '4157');
-
+    my $dba          = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%$taxonomy_db);
     my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
     my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
     my @lineage      = @{$node_adaptor->fetch_ancestors($node)};
