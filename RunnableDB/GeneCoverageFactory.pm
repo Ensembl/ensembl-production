@@ -27,15 +27,12 @@ sub param_defaults {
 	   };
 }
 
-my ($division, $sql_geneTree);
-
 sub fetch_input {
     my ($self) = @_;
 
-    $division   = $self->param_required('division');
+    my $division     = $self->param_required('division');
 
-  
-    $sql_geneTree = "SELECT distinct(r.root_id) 
+    my $sql_geneTree = "SELECT distinct(r.root_id) 
 		       FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam 
 		       WHERE m.seq_member_id = n.seq_member_id 
 		       AND gam.seq_member_id = m.seq_member_id 
@@ -44,6 +41,10 @@ sub fetch_input {
 		       AND gam.gene_align_id = r.gene_align_id 
 		       AND g.genome_db_id    = m.genome_db_id
 		       ORDER BY r.root_id ";
+
+   $self->param('division', $division);
+   $self->param('sql_geneTree', $sql_geneTree);
+
 =pod
 
     $sql_geneTree       = "SELECT distinct(r.root_id) 
@@ -62,6 +63,9 @@ return;
 
 sub run {
     my ($self) = @_;
+
+    my $division     = $self->param('division');  
+    my $sql_geneTree = $self->param('sql_geneTree');  
 
     my $dba_compara = Bio::EnsEMBL::Registry->get_DBAdaptor($division, "compara");
     print STDERR "Analysing ".$dba_compara->dbc()->dbname()."\n";
