@@ -32,18 +32,20 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 
-my ($core_dbh, $output_dir);
-
 =head2 fetch_input
 
 =cut
 sub fetch_input {
     my ($self) 	= @_;
 
-    $core_dbh   = $self->core_dbh;
-    $output_dir = $self->param_required('output_dir');
-    $output_dir = $output_dir.'/backup';
+    my $core_dbh   = $self->core_dbh;
+    my $output_dir = $self->param_required('output_dir');
+
+    $output_dir    = $output_dir.'/backup';
     $self->check_directory($output_dir);
+
+    $self->param('core_dbh',  $core_dbh);
+    $self->param('output_dir',$output_dir);
 
 return 0;
 }
@@ -79,6 +81,7 @@ sub run {
     my $dbname       = $dbc->dbname();
     my $mysql_binary = 'mysql';
     my $tables       = $self->param_required('dump_tables');
+    my $output_dir   = $self->param('output_dir');  
 
     foreach my $table (@$tables) {
       unless (system("$mysql_binary -h$host -P$port -u$user -p$pass -N -e 'select * from $table' $dbname | gzip -c -6 > $output_dir/$dbname.$table.backup.gz") == 0) {
