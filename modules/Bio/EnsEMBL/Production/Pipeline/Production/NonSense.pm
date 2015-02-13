@@ -128,6 +128,7 @@ sub get_features {
      AND (FIND_IN_SET('stop_lost', tv.consequence_types) 
      OR FIND_IN_SET('stop_gained', tv.consequence_types)) 
      AND a.allele_code_id = ac.allele_code_id
+     AND substring_index(tv.consequence_types, ",", 1) IN ('stop_lost','stop_gained')
      AND a.frequency >= ?
      AND a.count >= ?
      AND vf.source_id = ? };
