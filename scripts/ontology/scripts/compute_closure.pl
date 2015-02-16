@@ -143,7 +143,7 @@ for my $ontology ( keys %{$relations} ) {
       my $rels_join = join ',', map { "'$_'" } @$rels;
       print "Importing $ontology.$namespace $rels_join relations\n";
       $dbh->do(
-        q/
+        qq/
          INSERT IGNORE INTO  closure
                              (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
             SELECT DISTINCT  r.child_term_id, r.parent_term_id, 1, r.child_term_id, r.ontology_id
