@@ -46,11 +46,11 @@ sub default_options {
         		# flowering group of your target species
 		        'taxon_filter'    			=> undef, # Eg: 'Liliopsida'/'eudicotyledons'
 				# source species GeneName filter
-				'geneName_source' 			=> ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
+				'geneName_source' 			=> ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
 				# source species GeneDescription filter
 				'geneDesc_rules'   			=> ['hypothetical', 'putative', 'unknown protein'] , 
 				# target species GeneDescription filter
-				'geneDesc_rules_target'   	=> ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown'] , 
+				'geneDesc_rules_target'   	=> ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		# homology types filter
  				'gn_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			    'gn_homology_types_allowed' => ['ortholog_one2one'], 
