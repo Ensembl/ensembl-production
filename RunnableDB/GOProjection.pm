@@ -30,6 +30,7 @@ use LWP;
 use JSON;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use Bio::EnsEMBL::Utils::Exception qw(throw);
 
 sub param_defaults {
     return {
@@ -134,6 +135,9 @@ sub run {
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
+    if (!defined $mlss) {
+      throw "Failed to fetch mlss for ml, $method_link_type, for pair of species, $from_species, $to_species\n";
+    }
     my $mlss_id       = $mlss->dbID();
     
     # get homologies from compara - comes back as a hash of arrays
