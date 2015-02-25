@@ -340,7 +340,7 @@ sub pipeline_analyses {
 				            'taxonomy_db'			  => $self->o('taxonomy_db'),
    	   					  },
        -rc_name       => 'default',
-       -batch_size    =>  10, 
+       -batch_size    =>  2, 
        -analysis_capacity => $self->o('geneNameproj_capacity'),
     },
 
@@ -434,7 +434,7 @@ sub pipeline_analyses {
 				            'flag_full_stats'        => $self->o('flag_full_stats'),
 				       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
      	 				},
-       -batch_size    =>  10, 
+       -batch_size    =>  1,
        -rc_name       => 'default',
        -analysis_capacity => $self->o('goproj_capacity'),
 	 },
