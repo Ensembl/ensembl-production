@@ -61,7 +61,7 @@ sub default_options {
     
     gff3_feature_types  => ['Gene', 'Transcript', 'RepeatFeature'],
     gff3_per_chromosome => 1,
-    gt_exe              => '/homes/jallen/bin/gt-1.5.1/bin/gt',
+    gt_exe              => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
     gff3_tidy           => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate       => $self->o('gt_exe').' gff3validator',
     gtf_convert         => $self->o('gt_exe').' gff3_to_gtf',
