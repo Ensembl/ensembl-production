@@ -58,7 +58,7 @@ sub default_options {
     dump_types        => [],
     ftp_dir_structure => 1,
     compress_files    => 1,
-    
+
     gff3_feature_types  => ['Gene', 'Transcript', 'RepeatFeature'],
     gff3_per_chromosome => 1,
     gt_exe              => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
@@ -163,6 +163,20 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -rc_name           => 'normal',
       -flow_into         => ['gff3Tidy'],
+    },
+
+    {
+      -logic_name        => 'transcripts',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
+      -parameters        => {
+	                      seqtype           => 'transcripts',
+                              pipeline_dir      => $self->o('pipeline_dir'),
+                              ftp_dir_structure => $self->o('ftp_dir_structure'),
+                            },
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -rc_name           => 'normal',
+#      -flow_into         => ['CompressFile'],
     },
 
     {
