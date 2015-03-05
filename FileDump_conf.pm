@@ -169,7 +169,7 @@ sub pipeline_analyses {
       -logic_name        => 'transcripts',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
       -parameters        => {
-	                      seqtype           => 'transcripts',
+	                      seqtype           => $self->o('seqtype'),
                               pipeline_dir      => $self->o('pipeline_dir'),
                               ftp_dir_structure => $self->o('ftp_dir_structure'),
                             },
