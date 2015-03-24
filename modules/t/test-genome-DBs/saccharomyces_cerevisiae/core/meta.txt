@@ -1,5 +1,5 @@
 1	\N	schema_type	core
-2	\N	schema_version	79
+2	\N	schema_version	80
 3	\N	patch	patch_60_61_a.sql|schema_version
 4	\N	patch	patch_60_61_b.sql|create_seq_region_synonym_table
 5	\N	patch	patch_60_61_c.sql|rejig_object_xref_indexes
@@ -122,3 +122,5 @@
 611	\N	patch	patch_77_78_b.sql|source_column_increase
 612	\N	patch	patch_77_78_c.sql|Change unmapped_reason_id from smallint to int
 613	\N	patch	patch_78_79_a.sql|schema_version
+614	\N	patch	patch_78_79_b.sql|bamcov support
+615	\N	patch	patch_79_80_a.sql|schema_version

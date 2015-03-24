@@ -48,7 +48,7 @@ CREATE TABLE `biotype` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`biotype_id`),
   UNIQUE KEY `name_type_idx` (`name`,`object_type`,`db_type`)
-) ENGINE=MyISAM AUTO_INCREMENT=173 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=204 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `changelog` (
   `changelog_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -108,7 +108,7 @@ CREATE TABLE `master_attrib_type` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`attrib_type_id`),
   UNIQUE KEY `code_idx` (`code`)
-) ENGINE=MyISAM AUTO_INCREMENT=392 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=460 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_external_db` (
   `external_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -165,7 +165,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=31 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,

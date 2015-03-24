@@ -71,13 +71,13 @@ sub default_options {
         ### Indexers
         skip_blat => 0,
 
-        skip_wublast => 0,
+        skip_wublast => 1,
 
         skip_ncbiblast => 0,
 
         skip_blat_masking => 1,
 
-        skip_wublast_masking => 0,
+        skip_wublast_masking => 1,
 
         skip_ncbiblast_masking => 0,
         

@@ -108,6 +108,18 @@ sub run {
     while (my $slice = shift @{$slices}) {
       my $genes = $slice->get_all_Genes(undef,undef,1); 
       while (my $gene = shift @{$genes}) {
+	#
+	# WARNING
+	#  Drosophila melanoganster specific hack.
+	#  Gene FBgn0002781 is a complicated trans-spliced gene.
+	#  For it, one particular exon is annotated on a strand 
+	#  opposite to that of the gene.
+	#
+	#  Skip the annotation process in this case. 
+	#
+	next if $self->param('species') =~ /drosophila/i
+	  and $gene->stable_id eq 'FBgn0002781';
+
         $gtf_serializer->print_Gene($gene);
       }
     }
