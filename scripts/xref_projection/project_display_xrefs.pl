@@ -1017,6 +1017,10 @@ sub check_overwrite_display_xref {
   elsif ($to_species eq 'mouse' || $to_species eq 'rat') {
     my %clone_overwrites  = map { $_ => 1 } qw/Clone_based_vega_gene Clone_based_ensembl_gene/;
     return 1 if $clone_overwrites{$to_dbname};
+    my $to_dbEntry = $to_gene->display_xref();
+    if (!defined $to_dbEntry) {
+      return 1;
+    }
   }
   return 0;
 
