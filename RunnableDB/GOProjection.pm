@@ -109,14 +109,13 @@ sub run {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '78',
+            -db_version => '79',
    );
 =cut
 
     # Get Compara adaptors - use the one specified on the command line
     $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    #$ma    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'SeqMember');
     $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
@@ -135,14 +134,13 @@ sub run {
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
-    if (!defined $mlss) {
-      throw "Failed to fetch mlss for ml, $method_link_type, for pair of species, $from_species, $to_species\n";
-    }
+
+    throw "Failed to fetch mlss for ml, $method_link_type, for pair of species, $from_species, $to_species\n" if(!defined $mlss);
     my $mlss_id       = $mlss->dbID();
     
     # get homologies from compara - comes back as a hash of arrays
     print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter);
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter, '1');
     
     print $data "\n\tProjecting GO Terms from $from_species to $to_species\n";
     print $data "\t\t$to_species, before projection, ";
@@ -241,10 +239,9 @@ sub get_ontology_terms {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '78',
+            -db_version => '79',
    );
 =cut
-
     my %terms;
     my $ontology_adaptor = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
     die "Can't get OntologyTerm Adaptor - check that database exist in the server specified" if (!$ontology_adaptor);
@@ -361,7 +358,6 @@ sub project_go_terms {
           );
 
       $dbEntry->add_linkage_type("IEA", $source_dbEntry);
-
       # These fields are actually 'bugs' in the current XRef schema,
       # so we leave them 'NULL' here...
       $dbEntry->info_type("PROJECTION");
@@ -378,10 +374,11 @@ sub project_go_terms {
 
       $projections_stats{'to_be_proj'}++;
 
+      delete $dbEntry->{associated_xref} if(defined $dbEntry->{associated_xref});
+
       $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
       $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($flag_store_projections==1);
-
 
       print $data "\t\t Project GO term:".$dbEntry->display_id()."\t";
       print $data "from:".$from_translation->stable_id()."\t";
