@@ -80,6 +80,7 @@ sub fetch_homologies {
     my $homology_types_allowed = shift;
     my $percent_id_filter      = shift;
     my $percent_cov_filter     = shift;
+    my $go_flag                = shift;
 
     print $data "\t\tFetching Compara homologies...";
     my $from_species_alias = $gdba->fetch_by_registry_name($from_species)->name();
@@ -99,10 +100,12 @@ sub fetch_homologies {
        }
        next if (grep {$_ < $percent_id_filter} @perc_id) ;
 
-       foreach my $mem (@{$mems}){
- 	  push @perc_cov,$mem->perc_cov();
+       if(!defined $go_flag){
+         foreach my $mem (@{$mems}){
+   	    push @perc_cov,$mem->perc_cov();
+         }
+         next if (grep {$_ < $percent_cov_filter} @perc_cov) ;
        }
-       next if (grep {$_ < $percent_cov_filter} @perc_cov) ;
 
        my $from_seen = 0;
 
