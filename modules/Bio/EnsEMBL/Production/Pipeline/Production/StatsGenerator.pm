@@ -172,6 +172,7 @@ sub store_attrib {
     -DESCRIPTION => $description
   );
   my @attribs = ($attrib);
+  $aa->remove_from_Slice($slice, $code);
   $aa->store_on_Slice($slice, \@attribs);
 }
 
