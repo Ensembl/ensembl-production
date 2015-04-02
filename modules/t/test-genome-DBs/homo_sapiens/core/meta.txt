@@ -197,3 +197,6 @@
 2153	\N	patch	patch_78_79_a.sql|schema_version
 2154	\N	patch	patch_78_79_b.sql|bamcov support
 2155	\N	patch	patch_79_80_a.sql|schema_version
+2156	\N	patch	patch_79_80_b.sql|xref_dbprimary_acc_longer
+2157	\N	patch	patch_79_80_c.sql|seq_region_synonym_longer
+2158	\N	patch	patch_79_80_d.sql|genome_statistics_value_longer

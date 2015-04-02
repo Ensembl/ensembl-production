@@ -124,3 +124,6 @@
 613	\N	patch	patch_78_79_a.sql|schema_version
 614	\N	patch	patch_78_79_b.sql|bamcov support
 615	\N	patch	patch_79_80_a.sql|schema_version
+616	\N	patch	patch_79_80_b.sql|xref_dbprimary_acc_longer
+617	\N	patch	patch_79_80_c.sql|seq_region_synonym_longer
+618	\N	patch	patch_79_80_d.sql|genome_statistics_value_longer

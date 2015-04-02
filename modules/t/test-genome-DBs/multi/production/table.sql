@@ -96,6 +96,31 @@ CREATE TABLE `db` (
   UNIQUE KEY `species_release_idx` (`species_id`,`db_type`,`db_release`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2038 DEFAULT CHARSET=latin1;
 
+CREATE TABLE `master_attrib` (
+  `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `attrib_type_id` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `value` text NOT NULL,
+  `is_current` tinyint(1) NOT NULL DEFAULT '1',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `modified_by` int(11) DEFAULT NULL,
+  `modified_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`attrib_id`),
+  UNIQUE KEY `type_val_idx` (`attrib_type_id`,`value`(80))
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `master_attrib_set` (
+  `attrib_set_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `is_current` tinyint(1) NOT NULL DEFAULT '1',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `modified_by` int(11) DEFAULT NULL,
+  `modified_at` datetime DEFAULT NULL,
+  UNIQUE KEY `set_idx` (`attrib_set_id`,`attrib_id`),
+  KEY `attrib_idx` (`attrib_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 CREATE TABLE `master_attrib_type` (
   `attrib_type_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(20) NOT NULL DEFAULT '',
@@ -165,7 +190,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=35 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -235,6 +260,10 @@ CREATE TABLE `web_data` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`web_data_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=111 DEFAULT CHARSET=latin1;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
 
