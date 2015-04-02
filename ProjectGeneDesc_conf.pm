@@ -124,6 +124,14 @@ sub default_options {
       },
       
     },
+    
+    # Do closest species in first pass, remoter species in second pass.
+    ordering => 
+    {
+      'glossina_morsitans'      => 1,
+      'drosophila_melanogaster' => 2,
+    },
+    
   };
 }
 
@@ -173,14 +181,16 @@ sub pipeline_analyses {
       -input_ids       => [ {} ],
       -parameters      => {
                             config     => $self->o('config'),
+                            ordering   => $self->o('ordering'),
                             output_dir => $self->o('output_dir'),
-                          }, 
+                          },
       -flow_into       => {
-                            '2' => ['TargetFactory'],                        
-                          },  
-      -meadow_type     => 'LOCAL',        
+                            '2->A' => ['TargetFactory'],
+                            'A->3' => ['TargetFactory'],
+                          },
+      -meadow_type     => 'LOCAL',
       -max_retry_count => 1,
-    },    
+    },
     
     {
       -logic_name      => 'TargetFactory',
@@ -202,7 +212,7 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal',
       -max_retry_count => 1,
-    },     
+    },
 
     {
       -logic_name      => 'GeneDescProjection',
@@ -221,9 +231,9 @@ sub pipeline_analyses {
                             replace_target     => $self->o('replace_target'),
                           },
       -rc_name         => 'normal',
-      -batch_size      =>  5, 
+      -batch_size      =>  5,
       -hive_capacity   => 20,
-      -flow_into       => $flow_into,   
+      -flow_into       => $flow_into,
       -max_retry_count => 1,
     },
 
