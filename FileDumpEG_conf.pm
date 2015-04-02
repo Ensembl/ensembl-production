@@ -22,11 +22,11 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf
+Bio::EnsEMBL::EGPipeline::PipeConfig::FileDumpEG_conf
 
 =head1 DESCRIPTION
 
-Dump Fasta and GFF3 files.
+Dump GFF3 files.
 
 =head1 Author
 
@@ -34,7 +34,7 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf;
+package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDumpEG_conf;
 
 use strict;
 use warnings;
@@ -47,7 +47,7 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'ftp_dump_'.$self->o('ensembl_release'),
+    pipeline_name => 'ftp_dump_'.$self->o('eg_release'),
 
     species      => [],
     division     => [],
@@ -55,12 +55,16 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
 
-    dump_types         => [],
+    dump_types         => ['gff3'],
     pipeline_dir       => $self->o('ENV', 'PWD'),
+    eg_toplevel_dir    => catdir($self->o('pipeline_dir'), 'release-'.$self->o('eg_release')),
+    eg_dir_structure   => 1,
+    eg_filename_format => $self->o('eg_dir_structure'),
     compress_files     => 1,
 
-    gff3_per_chromosome   => 0,
-    gff3_include_scaffold => 1,
+    gff3_feature_types    => ['Gene', 'Transcript', 'RepeatFeature'],
+    gff3_per_chromosome   => 1,
+    gff3_include_scaffold => 0,
     gt_exe                => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
     gff3_tidy             => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate         => $self->o('gt_exe').' gff3validator',
@@ -126,74 +130,20 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name        => 'transcripts',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
-      -parameters        => {
-                              data_type    => 'transcripts',
-                              pipeline_dir => $self->o('pipeline_dir'),
-                            },
-      -analysis_capacity => 10,
-      -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
-    },
-
-    {
-      -logic_name        => 'peptides',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
-      -parameters        => {
-                              data_type    => 'peptides',
-                              pipeline_dir => $self->o('pipeline_dir'),
-                            },
-      -analysis_capacity => 10,
-      -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
-    },
-
-    {
-      -logic_name        => 'gff3_genes',
+      -logic_name        => 'gff3',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
-                              data_type        => 'basefeatures',
-                              feature_types    => ['Gene', 'Transcript'],
-                              pipeline_dir     => $self->o('pipeline_dir'),
-                              per_chromosome   => $self->o('gff3_per_chromosome'),
-                              include_scaffold => $self->o('gff3_include_scaffold'),
+                              feature_types      => $self->o('gff3_feature_types'),
+                              pipeline_dir       => $self->o('eg_toplevel_dir'),
+                              eg_dir_structure   => $self->o('eg_dir_structure'),
+                              eg_filename_format => $self->o('eg_filename_format'),
+                              per_chromosome     => $self->o('gff3_per_chromosome'),
+                              include_scaffold   => $self->o('gff3_include_scaffold'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => ['gff3IDPrefix'],
-    },
-
-    {
-      -logic_name        => 'gff3_repeats',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
-      -parameters        => {
-                              data_type        => 'repeatfeatures',
-                              feature_types    => ['RepeatFeature'],
-                              pipeline_dir     => $self->o('pipeline_dir'),
-                              per_chromosome   => $self->o('gff3_per_chromosome'),
-                              include_scaffold => $self->o('gff3_include_scaffold'),
-                            },
-      -analysis_capacity => 10,
-      -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => ['gff3IDPrefix'],
-    },
-
-    {
-      -logic_name        => 'gff3IDPrefix',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -analysis_capacity => 10,
-      -batch_size        => 10,
-      -parameters        => {
-                              cmd => 'perl -i -pe \'s/(ID|Parent)=(chromosome|supercontig|contig|region|gene|transcript):/$1=/g\' #out_file#',
-                            },
       -rc_name           => 'normal',
       -flow_into         => ['gff3Tidy'],
-      -meadow_type       => 'LOCAL',
     },
 
     {
