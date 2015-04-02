@@ -261,6 +261,41 @@ CREATE TABLE master_attrib_type (
   UNIQUE INDEX code_idx (code)
 );
 
+-- The 'master_attrib' table.
+-- Lists the existing variation attrib data
+CREATE TABLE master_attrib (
+  attrib_id           INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  attrib_type_id      SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
+  value               TEXT NOT NULL,
+  is_current          TINYINT(1) NOT NULL DEFAULT '1',
+
+  -- Columns for the web interface:
+  created_by    INTEGER,
+  created_at    DATETIME,
+  modified_by   INTEGER,
+  modified_at   DATETIME,
+
+  PRIMARY KEY (attrib_id),
+  UNIQUE KEY type_val_idx (attrib_type_id, value(80))
+);
+
+-- The 'master_attrib_set' table.
+-- Lists the existing variation attrib_set data
+CREATE TABLE master_attrib_set (
+  attrib_set_id       INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  attrib_id           INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  is_current          TINYINT(1) NOT NULL DEFAULT '1',
+
+  -- Columns for the web interface:
+  created_by    INTEGER,
+  created_at    DATETIME,
+  modified_by   INTEGER,
+  modified_at   DATETIME,
+
+  UNIQUE KEY set_idx (attrib_set_id, attrib_id),
+  KEY attrib_idx (attrib_id)
+);
+
 -- The 'master_external_db' table.
 -- Lists the existing external_dbs
 CREATE TABLE master_external_db (
@@ -451,6 +486,23 @@ SELECT
 FROM    master_attrib_type
 WHERE   is_current = true
 ORDER BY attrib_type_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib AS
+SELECT
+  attrib_id AS attrib_id,
+  attrib_type_id AS attrib_type_id,
+  value AS value
+FROM    master_attrib
+WHERE   is_current = true
+ORDER BY attrib_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib_set AS
+SELECT
+  attrib_set_id AS attrib_set_id,
+  attrib_id AS attrib_id
+FROM    master_attrib_set
+WHERE   is_current = true
+ORDER BY attrib_set_id,attrib_id;
 
 CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW external_db AS
 SELECT
