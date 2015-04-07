@@ -27,6 +27,11 @@ my %master_tables = ( 'attrib_type'     => 1,
                       'external_db'     => 1,
                       'misc_set'        => 1,
                       'unmapped_reason' => 1 );
+
+my %variation_master_tables = ( 'attrib_type'     => 1,
+                                'attrib'          => 1,
+                                'attrib_set'      => 1);
+
 my @tables;
 
 # Master database location:
@@ -43,6 +48,7 @@ my $dbpattern;
 my $core     = 0;
 my $verbose  = 0;
 my $dropbaks = 0;
+my $variation = 0;
 my $dumppath;
 
 # Do command line parsing.
@@ -60,6 +66,7 @@ if ( !GetOptions( 'mhost|mh=s'     => \$mhost,
                   'table|t=s'      => \@tables,
                   'verbose|v!'     => \$verbose,
                   'core=i'         => \$core,
+                  'variation!'     => \$variation,
                   'dropbaks|dB!'   => \$dropbaks,
                   'dumppath|dp=s'  => \$dumppath )
      ||
@@ -73,9 +80,8 @@ if ( !GetOptions( 'mhost|mh=s'     => \$mhost,
 {
   my $indent = ' ' x length($0);
   print <<USAGE_END;
-This script copies tables 'attrib_type', 'external_db', 'misc_set'
-and 'unmapped_reason' from the production database into a user-defined
-database.
+This script copies master tables from the production database 
+into a user-defined database.
 
 Usage:
 
@@ -110,6 +116,8 @@ Usage:
   --core=NN         Preset pattern for Core-like databases in relase NN.
                     Specifying --core=62 is equivalent to using
                     --pattern="(cdna|core|otherfeatures|rnaseq|vega)_62".
+
+  --variation       Flag to use variation master tables rather than core-like ones
 
   -mh / --mhost     Production database server host
                     (optional, default is 'ens-staging1').
@@ -156,8 +164,9 @@ if (@tables) {
       die( sprintf( "Invalid table specified: '%s'\n", $table ) );
     }
   }
-}
-else {
+} elsif ($variation) {
+  @tables = keys(%variation_master_tables);
+} else {
   @tables = keys(%master_tables);
 }
 
@@ -168,6 +177,10 @@ if ($core) {
 
 if ( defined($dbname) && defined($dbpattern) ) {
   die("-d/--database and --pattern/--core are mutually exclusive\n");
+}
+
+if ($core && $variation) {
+  die("--core and --variation are mutually exclude\n");
 }
 
 # Fetch all data from the master database.
