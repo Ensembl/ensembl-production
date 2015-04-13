@@ -374,6 +374,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeatmasker_library => $self->o('repeatmasker_library'),
                               logic_name           => $self->o('logic_name'),
+                              always_use_repbase   => $self->o('always_use_repbase'),
                               queryfile            => $file_name,
                               max_seq_length       => $self->o('max_seq_length'),
                             },
