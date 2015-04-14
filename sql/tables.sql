@@ -264,7 +264,7 @@ CREATE TABLE master_attrib_type (
 -- The 'master_attrib' table.
 -- Lists the existing variation attrib data
 CREATE TABLE master_attrib (
-  attrib_id           INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  attrib_id           INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   attrib_type_id      SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
   value               TEXT NOT NULL,
   is_current          TINYINT(1) NOT NULL DEFAULT '1',
