@@ -291,11 +291,11 @@ sub pipeline_analyses {
                               pipeline_dir         => $self->o('pipeline_dir'),
                               db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
                               'A->1' => ['DeleteRepeatConsensus'],
                             },
-      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -374,6 +374,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeatmasker_library => $self->o('repeatmasker_library'),
                               logic_name           => $self->o('logic_name'),
+                              always_use_repbase   => $self->o('always_use_repbase'),
                               queryfile            => $file_name,
                               max_seq_length       => $self->o('max_seq_length'),
                             },
