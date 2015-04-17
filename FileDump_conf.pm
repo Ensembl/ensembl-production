@@ -47,7 +47,7 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'ftp_dump_'.$self->o('ensembl_release'),
+    pipeline_name => 'file_dump_'.$self->o('ensembl_release'),
 
     species      => [],
     division     => [],
@@ -55,12 +55,13 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
 
-    dump_types         => [],
-    pipeline_dir       => $self->o('ENV', 'PWD'),
-    compress_files     => 1,
+    dump_type      => [],
+    results_dir    => $self->o('ENV', 'PWD'),
+    compress_files => 1,
 
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
+    gff3_logic_name       => [],
     gt_exe                => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
     gff3_tidy             => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate         => $self->o('gt_exe').' gff3validator',
@@ -95,7 +96,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('pipeline_dir'),
+    'mkdir -p '.$self->o('results_dir'),
   ];
 }
 
@@ -120,17 +121,17 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -flow_into         => {
-                              '2' => $self->o('dump_types'),
+                              '2' => $self->o('dump_type'),
                             },
       -meadow_type       => 'LOCAL',
     },
 
     {
-      -logic_name        => 'transcripts',
+      -logic_name        => 'fasta_transcripts',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
       -parameters        => {
-                              data_type    => 'transcripts',
-                              pipeline_dir => $self->o('pipeline_dir'),
+                              data_type   => 'transcripts',
+                              results_dir => $self->o('results_dir'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
@@ -139,11 +140,11 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name        => 'peptides',
+      -logic_name        => 'fasta_peptides',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TranscriptDumper',
       -parameters        => {
-                              data_type    => 'peptides',
-                              pipeline_dir => $self->o('pipeline_dir'),
+                              data_type   => 'peptides',
+                              results_dir => $self->o('results_dir'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
@@ -157,9 +158,10 @@ sub pipeline_analyses {
       -parameters        => {
                               data_type        => 'basefeatures',
                               feature_types    => ['Gene', 'Transcript'],
-                              pipeline_dir     => $self->o('pipeline_dir'),
+                              results_dir      => $self->o('results_dir'),
                               per_chromosome   => $self->o('gff3_per_chromosome'),
                               include_scaffold => $self->o('gff3_include_scaffold'),
+                              logic_name       => $self->o('gff3_logic_name'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
@@ -173,9 +175,10 @@ sub pipeline_analyses {
       -parameters        => {
                               data_type        => 'repeatfeatures',
                               feature_types    => ['RepeatFeature'],
-                              pipeline_dir     => $self->o('pipeline_dir'),
+                              results_dir      => $self->o('results_dir'),
                               per_chromosome   => $self->o('gff3_per_chromosome'),
                               include_scaffold => $self->o('gff3_include_scaffold'),
+                              logic_name       => $self->o('gff3_logic_name'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
