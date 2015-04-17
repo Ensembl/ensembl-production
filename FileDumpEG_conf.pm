@@ -55,6 +55,8 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
 
+    db_type => 'core',
+    
     dump_type          => ['gff3'],
     results_dir        => $self->o('ENV', 'PWD'),
     eg_toplevel_dir    => catdir($self->o('results_dir'), 'release-'.$self->o('eg_release')),
@@ -134,6 +136,7 @@ sub pipeline_analyses {
       -logic_name        => 'gff3',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
+                              db_type            => $self->o('db_type'),
                               feature_types      => $self->o('gff3_feature_types'),
                               results_dir        => $self->o('eg_toplevel_dir'),
                               eg_dir_structure   => $self->o('eg_dir_structure'),

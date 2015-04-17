@@ -59,12 +59,16 @@ sub default_options {
     results_dir    => $self->o('ENV', 'PWD'),
     compress_files => 1,
 
+    gff3_db_type          => 'core',
+    gff3_feature_type     => [],
+    gff3_data_type        => 'features',
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
     gff3_logic_name       => [],
-    gt_exe                => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
-    gff3_tidy             => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
-    gff3_validate         => $self->o('gt_exe').' gff3validator',
+
+    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+    gff3_validate => $self->o('gt_exe').' gff3validator',
 
   };
 }
@@ -153,15 +157,33 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'gff3',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
+      -parameters        => {
+                              db_type          => $self->o('gff3_db_type'),
+                              data_type        => $self->o('gff3_data_type'),
+                              feature_type     => $self->o('gff3_feature_type'),
+                              per_chromosome   => $self->o('gff3_per_chromosome'),
+                              include_scaffold => $self->o('gff3_include_scaffold'),
+                              logic_name       => $self->o('gff3_logic_name'),
+                              results_dir      => $self->o('results_dir'),
+                            },
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -rc_name           => 'normal',
+      -flow_into         => ['gff3IDPrefix'],
+    },
+
+    {
       -logic_name        => 'gff3_genes',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
                               data_type        => 'basefeatures',
-                              feature_types    => ['Gene', 'Transcript'],
-                              results_dir      => $self->o('results_dir'),
+                              feature_type     => ['Gene', 'Transcript'],
                               per_chromosome   => $self->o('gff3_per_chromosome'),
                               include_scaffold => $self->o('gff3_include_scaffold'),
                               logic_name       => $self->o('gff3_logic_name'),
+                              results_dir      => $self->o('results_dir'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
@@ -174,11 +196,11 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
                               data_type        => 'repeatfeatures',
-                              feature_types    => ['RepeatFeature'],
-                              results_dir      => $self->o('results_dir'),
+                              feature_type     => ['RepeatFeature'],
                               per_chromosome   => $self->o('gff3_per_chromosome'),
                               include_scaffold => $self->o('gff3_include_scaffold'),
                               logic_name       => $self->o('gff3_logic_name'),
+                              results_dir      => $self->o('results_dir'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
