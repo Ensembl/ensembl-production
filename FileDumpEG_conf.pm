@@ -56,21 +56,23 @@ sub default_options {
     meta_filters => {},
 
     db_type => 'core',
-    
-    dump_type          => ['gff3'],
+
+    dump_type          => [],
     results_dir        => $self->o('ENV', 'PWD'),
     eg_toplevel_dir    => catdir($self->o('results_dir'), 'release-'.$self->o('eg_release')),
     eg_dir_structure   => 1,
     eg_filename_format => $self->o('eg_dir_structure'),
     compress_files     => 1,
 
-    gff3_feature_types    => ['Gene', 'Transcript', 'RepeatFeature'],
+    gff3_db_type          => 'core',
+    gff3_feature_type     => [],
     gff3_per_chromosome   => 1,
     gff3_include_scaffold => 0,
     gff3_logic_name       => [],
-    gt_exe                => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
-    gff3_tidy             => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
-    gff3_validate         => $self->o('gt_exe').' gff3validator',
+
+    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+    gff3_validate => $self->o('gt_exe').' gff3validator',
 
   };
 }
@@ -136,14 +138,14 @@ sub pipeline_analyses {
       -logic_name        => 'gff3',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
-                              db_type            => $self->o('db_type'),
-                              feature_types      => $self->o('gff3_feature_types'),
-                              results_dir        => $self->o('eg_toplevel_dir'),
-                              eg_dir_structure   => $self->o('eg_dir_structure'),
-                              eg_filename_format => $self->o('eg_filename_format'),
+                              db_type            => $self->o('gff3_db_type'),
+                              feature_type       => $self->o('gff3_feature_type'),
                               per_chromosome     => $self->o('gff3_per_chromosome'),
                               include_scaffold   => $self->o('gff3_include_scaffold'),
                               logic_name         => $self->o('gff3_logic_name'),
+                              results_dir        => $self->o('eg_toplevel_dir'),
+                              eg_dir_structure   => $self->o('eg_dir_structure'),
+                              eg_filename_format => $self->o('eg_filename_format'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
