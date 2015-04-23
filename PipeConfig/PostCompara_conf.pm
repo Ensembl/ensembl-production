@@ -167,7 +167,7 @@ sub default_options {
 
 		# only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
-		evidence_codes => ['IDA','IC','IGI','IMP','IPI','ISS','NAS','ND','RCA','TAS'],
+		evidence_codes => ['IDA','IGI','IMP','IPI'],
 		#  IC Inferred by curator
 		#  IDA Inferred from direct assay
 		#  IEA Inferred from electronic annotation
@@ -284,10 +284,10 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids     => [ {} ], # Needed to create jobs
        -hive_capacity => -1,
-       -flow_into 	=> { 
+       -flow_into 	  => { 
 						 '1'=> $pipeline_flow,
-       				   },
-       -meadow_type => 'LOCAL',
+       				     },
+       -meadow_type   => 'LOCAL',
     },   
 ########################
 ### GeneNamesProjection
@@ -297,7 +297,7 @@ sub pipeline_analyses {
        -flow_into     => {
 							'1' => ['GeneNamesProjectionSourceFactory'] ,
                           },
-       -meadow_type => 'LOCAL',
+       -meadow_type   => 'LOCAL',                          
     },
     
     {  -logic_name    => 'GeneNamesProjectionSourceFactory',
@@ -355,7 +355,7 @@ sub pipeline_analyses {
  	 	 	'flag_GeneDesc'          => $self->o('flag_GeneDesc'),          	
             'flag_store_projections' => $self->o('flag_store_projections'),
        },
-       -meadow_type => 'LOCAL',
+       -meadow_type   => 'LOCAL',
     },
     
 ################
@@ -366,6 +366,7 @@ sub pipeline_analyses {
        -flow_into     => {
 							'1' => ['GOProjectionSourceFactory'] ,
                           },
+       -meadow_type   => 'LOCAL',
     },
     
     {  -logic_name    => 'GOProjectionSourceFactory',
@@ -376,8 +377,7 @@ sub pipeline_analyses {
        -flow_into     => {
 		                    '2->A' => ['GOProjectionTargetFactory'],
 		                    'A->2' => ['GOEmailReport'],		                       
-                          }, 
-       -meadow_type => 'LOCAL',         
+                          },          
     },    
    
     {  -logic_name    => 'GOProjectionTargetFactory',
@@ -451,7 +451,7 @@ sub pipeline_analyses {
 				          	'output_dir' 			 => $self->o('output_dir'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
         				  },
-       -meadow_type => 'LOCAL',
+       -meadow_type   => 'LOCAL',
     },
 
 ################
@@ -463,7 +463,7 @@ sub pipeline_analyses {
 		                       'A->1' => ['GeneCoverageEmailReport'],
                           },
        -hive_capacity => -1,
-       -meadow_type => 'LOCAL',
+       -meadow_type   => 'LOCAL',
     },
 
     {  -logic_name  => 'GeneCoverageFactory',
@@ -496,9 +496,9 @@ sub pipeline_analyses {
           	'output_dir' => $self->o('output_dir'),
 		    'compara'    => $self->o('division_name'),
        },
-       -meadow_type => 'LOCAL',
-    },
-	
+       -meadow_type   => 'LOCAL',
+	},
+
   ];
 }
 
