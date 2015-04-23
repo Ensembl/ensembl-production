@@ -107,7 +107,7 @@ my %h_biotypes = (
         'parallel!'      => \$parallel,
         'overwrite!'     => \$overwrite,
         'test!'          => \$test,
-        'uniprot_release' => \$uniprot_release,
+        'uniprot_release=s' => \$uniprot_release,
         );
 
 &Usage if ($host eq '' or $dbpattern eq '');
@@ -127,7 +127,7 @@ else {
 }
 
 if (!-e $deleted_file) {
-    $deleted_file = $output.'delac_all.txt';
+    $deleted_file = $output.'delac_all_'.$host.'.txt';
     open(WF, '>'.$deleted_file) || die('Could not open deleted file');
     for my $wget_cmd (@a_deletedIds) {
         open(IF, "wget $wget_cmd -O - |") || die('Could not get internet file!');
