@@ -117,14 +117,15 @@ sub run {
   my ($want_species_orthologs, $ortholog_lookup) =
     $self->_fetch_orthologs;
   
-  my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info, $snp_sth, $taxon_id) = 
+  my ($exons, $haplotypes, $alt_alleles, $xrefs, $gene_info, $snp_sth, $taxon_id, $system_name) = 
     ($self->_fetch_exons($dbc),
      $self->_fetch_haplotypes($dbc),
      $self->_fetch_alt_alleles($dbc),
      $self->_fetch_xrefs($dbc),
      $self->_fetch_gene_info($dbc),
      $self->_get_snp_sth,
-     $self->_taxon_id($dbc));
+     $self->_taxon_id($dbc),
+     $self->_system_name($dbc));
 
   my $path = $self->_generate_file_name();
   $self->info("Dumping EBI Search output to %s", $path);
@@ -205,6 +206,7 @@ sub run {
   	      'gene_stable_id'          => $gene_stable_id,
   	      'description'             => $gene_description,
   	      'taxon_id'                => $taxon_id,
+              'system_name'             => $system_name,
   	      'translation_stable_ids'  => {
   					    $translation_stable_id ? ( $translation_stable_id => 1 )
   					    : ()
@@ -332,6 +334,7 @@ sub _write_gene {
   my $haplotype        = $xml_data->{'haplotype'};
   my $alt_allele       = $xml_data->{'alt_allele'};
   my $taxon_id         = $xml_data->{'taxon_id'};
+  my $system_name      = $xml_data->{'system_name'};
   my $exon_count       = scalar keys %$exons;
   my $transcript_count = scalar keys %$transcripts;
   # $description = escapeXML($description);
@@ -404,6 +407,7 @@ sub _write_gene {
   $species =~ s/_/ /g;
   $species = ucfirst($species);
   $writer->startTag('field', 'name' => 'species'); $writer->characters($species); $writer->endTag;
+  $writer->startTag('field', 'name' => 'system_name'); $writer->characters($system_name); $writer->endTag;
   $writer->startTag('field', 'name' => 'featuretype'); $writer->characters('Gene'); $writer->endTag;
   $writer->startTag('field', 'name' => 'source'); $writer->characters($type); $writer->endTag;
   $writer->startTag('field', 'name' => 'transcript_count'); $writer->characters($transcript_count); $writer->endTag;
@@ -455,6 +459,17 @@ sub _taxon_id {
     or die $dbc->db_handle->errstr;
   
   return $taxon_id->[0];
+}
+
+sub _system_name {
+  my ($self, $dbc) = @_;
+
+  my $system_name = $dbc->db_handle->selectrow_arrayref("SELECT meta_value
+                                                      FROM meta
+                                                      WHERE meta_key='species.production_name'")
+    or die $dbc->db_handle->errstr;
+
+  return $system_name->[0];
 }
 
 sub _fetch_gene_info {
