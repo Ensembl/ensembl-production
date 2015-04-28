@@ -56,10 +56,13 @@ my $overwrite;
 my $test;
 my $deleted_file;
 my $uniprot_release;
+my $deleted_files_directory;
 
 my @a_dbIds = qw( 2000 2001 2200 2201 2202 2250 );
-my @a_deletedIds = qw(ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/delac_sp.txt
-                      ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/delac_tr.txt);
+my @a_deletedIds = qw(delac_sp.txt
+                      delac_tr.txt.gz);
+
+my $uniprot_ftp="ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/";
 
 # Check that the biotype list below is up to date by running the following MySQL query on the human database:
 #select count(*),t.biotype from protein_align_feature paf,supporting_feature sf,exon e,exon_transcript et,transcript t,analysis a where paf.protein_align_feature_id=sf.feature_id and sf.feature_type='protein_align_feature' and sf.exon_id=e.exon_id and e.exon_id=et.exon_id and et.transcript_id=t.transcript_id and a.analysis_id = paf.analysis_id AND (a.logic_name LIKE "uniprot%havana" OR paf.external_db_id IN (2000,2001,2200,2201,2202,2250) AND a.logic_name NOT LIKE "uniprot%") group by t.biotype;
@@ -108,6 +111,7 @@ my %h_biotypes = (
         'overwrite!'     => \$overwrite,
         'test!'          => \$test,
         'uniprot_release=s' => \$uniprot_release,
+        'deleted_files_directory=s' => \$deleted_files_directory,
         );
 
 &Usage if ($host eq '' or $dbpattern eq '');
@@ -127,21 +131,35 @@ else {
 }
 
 if (!-e $deleted_file) {
-    $deleted_file = $output.'delac_all_'.$host.'.txt';
-    open(WF, '>'.$deleted_file) || die('Could not open deleted file');
+    $deleted_file = $deleted_files_directory.'delac_all_'.$host.'.txt';
+    #Create an empty deleted file
+    system ("echo ''>$deleted_file");
     for my $wget_cmd (@a_deletedIds) {
-        open(IF, "wget $wget_cmd -O - |") || die('Could not get internet file!');
-        while(<IF>) {
-            my $line = $_;
-            print WF $line if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
-            if ($line =~/([0-9]{4}_[0-9]{2})/)
-            {
-                $uniprot_release = "uniprot_".$1;
-            }
+         # Get the Uniprot retired id files
+        system("wget -O $deleted_files_directory"."$wget_cmd $uniprot_ftp"."$wget_cmd");
+        # If it's the TrEMBL file, extract it.
+        if ($wget_cmd eq "delac_tr.txt.gz")
+        {   
+            system("gunzip -c $deleted_files_directory"."$wget_cmd > $deleted_files_directory"."delac_tr.txt && rm $deleted_files_directory"."$wget_cmd");
+            $wget_cmd="delac_tr.txt";
         }
-        close(IF);
+        # For the small Swissprot file, parse the file to get the uniprot_release.
+        else
+        {
+            open(IF, "$deleted_files_directory"."$wget_cmd") || die('Could not open file $wget_cmd');
+            while(<IF>) {
+                my $line = $_;
+                if ($line =~/([0-9]{4}_[0-9]{2})/)
+                {
+                    $uniprot_release = "uniprot_".$1;
+                    last;
+                }
+            }
+            close(IF);
+        }
+        #Merge files into delac_all_host.txt
+        system("cat $deleted_files_directory"."$wget_cmd >> $deleted_file");
     }
-    close (WF);
 }
 
 if ($parallel) {
@@ -150,7 +168,7 @@ if ($parallel) {
         next if ( $dbname !~ /$dbpattern/ );
         my $cmd = 'bsub -q '.$queue;
         $cmd .= ' '.$params if defined $params;
-        $cmd .=" -M2000 -R'select[mem>2000] rusage[mem=2000]'";
+        $cmd .=" -M4000 -R'select[mem>4000] rusage[mem=4000]'";
         $cmd .= ' -oo '.$log_file_name.'.'.$dbname.'.log'
             .' perl '.$0.' --host '.$host.' --port '.$port.' --user '.$user.' --dbpattern '.$dbname;
         $cmd .= ' --pass '.$pass if ($pass ne '');
@@ -375,6 +393,7 @@ sub Usage {
             --parallel  Run one job per database
             --queue     LSF queue, default normal
             --test      Test the LSF command and which databases will be checked, it won't run the script 
+            --deleted_files_directory   Path to store the Uniprot retired IDs files
 EOF
 ;
     exit(1);
