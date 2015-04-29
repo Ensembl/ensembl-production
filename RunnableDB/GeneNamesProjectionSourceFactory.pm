@@ -35,22 +35,22 @@ use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 sub write_output {
     my ($self)  = @_;
 
-    my $gn_config = $self->param_required('gn_config');
+    my $g_config = $self->param_required('g_config');
 
-    foreach my $pair (keys $gn_config){
-       my $source                 = $gn_config->{$pair}->{'source'};
-       my $species                = $gn_config->{$pair}->{'species'};
-       my $antispecies            = $gn_config->{$pair}->{'antispecies'};
-       my $division               = $gn_config->{$pair}->{'division'};
-       my $run_all                = $gn_config->{$pair}->{'run_all'};       
-       my $method_link_type       = $gn_config->{$pair}->{'gn_method_link_type'};  
-       my $homology_types_allowed = $gn_config->{$pair}->{'gn_homology_types_allowed'};
-       my $percent_id_filter      = $gn_config->{$pair}->{'gn_percent_id_filter'};
-       my $percent_cov_filter     = $gn_config->{$pair}->{'gn_percent_cov_filter'};
-       my $taxon_filter           = $gn_config->{$pair}->{'taxon_filter'};
-       my $geneName_source        = $gn_config->{$pair}->{'geneName_source'};
-       my $geneDesc_rules         = $gn_config->{$pair}->{'geneDesc_rules'};
-       my $geneDesc_rules_target  = $gn_config->{$pair}->{'geneDesc_rules_target'};
+    foreach my $pair (keys $g_config){
+       my $source                 = $g_config->{$pair}->{'source'};
+       my $species                = $g_config->{$pair}->{'species'};
+       my $antispecies            = $g_config->{$pair}->{'antispecies'};
+       my $division               = $g_config->{$pair}->{'division'};
+       my $run_all                = $g_config->{$pair}->{'run_all'};       
+       my $method_link_type       = $g_config->{$pair}->{'method_link_type'};  
+       my $homology_types_allowed = $g_config->{$pair}->{'homology_types_allowed'};
+       my $percent_id_filter      = $g_config->{$pair}->{'percent_id_filter'};
+       my $percent_cov_filter     = $g_config->{$pair}->{'percent_cov_filter'};
+       my $taxon_filter           = $g_config->{$pair}->{'taxon_filter'};
+       my $geneName_source        = $g_config->{$pair}->{'geneName_source'};
+       my $geneDesc_rules         = $g_config->{$pair}->{'geneDesc_rules'};
+       my $geneDesc_rules_target  = $g_config->{$pair}->{'geneDesc_rules_target'};
 
        $self->dataflow_output_id(
 		{'source'      		  => $source, 
