@@ -40,7 +40,8 @@ sub fetch_input {
     my $subject                = $self->param('subject') || "An automatic message from your pipeline";
     my $output_dir             = $self->param('output_dir');
     my $flag_store_projections = $self->param_required('flag_store_projections');
-    my $flag_GeneDesc          = $self->param_required('flag_GeneDesc');
+    my $flag_GeneNames         = $self->param('flag_GeneNames');
+    my $flag_GeneDescr         = $self->param('flag_GeneDescr');
     my $species                = $self->param_required('species');
 
     my $reports;
@@ -53,10 +54,12 @@ sub fetch_input {
 	  $reports .= "Pipeline was run with a flag to prevent storing anything in the database.\n";
        }
        else {
-	 if(!$flag_GeneDesc){
-	    $reports .= $self->info_type_summary($dbh, $sp);
-	 }
-	    $reports .= $self->geneDesc_summary($dbh, $sp);
+         $reports .= $self->info_type_summary($dbh, $sp) if($flag_GeneNames);
+         $reports .= $self->geneDesc_summary($dbh, $sp)  if($flag_GeneDescr);
+	 #if(!$flag_GeneDesc){
+	 #   $reports .= $self->info_type_summary($dbh, $sp);
+	 #}
+	 #   $reports .= $self->geneDesc_summary($dbh, $sp);
       }
    }
 
@@ -76,7 +79,7 @@ sub info_type_summary {
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 
-    my $title = "Summary of DB primary_acc, by info types: ($sp)";
+    my $title   = "Summary of DB primary_acc, by info types: ($sp)";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 
@@ -86,7 +89,6 @@ return $self->format_table($title, $columns, $results);
 sub geneDesc_summary {
     my ($self, $dbh, $sp) = @_;
 
-
     my $sql = 'SELECT count(*) AS Total FROM gene WHERE description rlike "projected" OR description rlike "Projected"';
 
     my $sth = $dbh->prepare($sql);
@@ -94,7 +96,7 @@ sub geneDesc_summary {
 
     my $from_species = $self->param_required('source');
 
-    my $title = "Count of genes with projected gene description: (from $from_species to $sp)";
+    my $title   = "Count of genes with projected gene description: (from $from_species to $sp)";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 
