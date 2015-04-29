@@ -65,6 +65,7 @@ sub default_options {
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
     gff3_logic_name       => [],
+    gff3_out_file_stem    => undef,
 
     gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
@@ -140,7 +141,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 0,
       -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
+      -flow_into         => $flow_into_compress,
     },
 
     {
@@ -153,7 +154,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 0,
       -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
+      -flow_into         => $flow_into_compress,
     },
 
     {
@@ -167,6 +168,7 @@ sub pipeline_analyses {
                               include_scaffold => $self->o('gff3_include_scaffold'),
                               logic_name       => $self->o('gff3_logic_name'),
                               results_dir      => $self->o('results_dir'),
+                              out_file_stem    => $self->o('gff3_out_file_stem'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
