@@ -23,10 +23,10 @@ use Getopt::Long;
 
 sub new_file;
 
-my ( $dbpattern, $out_file, $config_file );
+my ( $dbpattern, $out_file, $config_file, $output_dir );
 
 GetOptions( "dbpattern|pattern=s", \$dbpattern, "out_file=s", \$out_file,
-            "config_file=s", \$config_file, );
+            "config_file=s", \$config_file,"output_dir=s", \$output_dir );
 
 if ( !$dbpattern ) {
   usage();
@@ -34,6 +34,10 @@ if ( !$dbpattern ) {
 
 if ( !$config_file ) {
   $config_file = "linkOut_config.txt";
+}
+if (!$output_dir)
+{
+  $output_dir="./";
 }
 
 open( CFH, "<$config_file" ) or die("Can't open $config_file\n");
@@ -44,8 +48,8 @@ while ( my $line = <CFH> ) {
 close CFH;
 
 #delete the old resource files
-if ( -e "resources*" ) {
-  exec("rm -r resources*");
+if ( -e $output_dir."resources1.xml" ) {
+  exec("rm -r ".$output_dir."resources*");
 }
 
 if ( !$out_file ) {
@@ -229,6 +233,7 @@ sub usage {
     Usage: generate_LinkOut options
       -dbpattern database name pattern
       -out_file output resource file name, default 'resources'
+      -output_dir output directory
       -config_file should contain one or more lines with: host user port(optional), e.g. ens-staging1 ensro
 EOF
     ;
@@ -240,7 +245,7 @@ sub new_file {
     print FH "</LinkSet>";
     close FH;
   }
-  my $file_name = $out_file . $number_of_files . '.xml';
+  my $file_name = $output_dir . $out_file . $number_of_files . '.xml';
   open( FH, ">$file_name" ) or die("Can't open $file_name\n");
   print FH $header;
   $file_size = $header_size;
