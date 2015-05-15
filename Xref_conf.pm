@@ -92,7 +92,6 @@ sub default_options {
     uniprot_descriptions => 0,
     
     load_uniprot_go        => 1,
-    uniprot_go_replace_all => 0,
     
     load_uniprot_xrefs  => 1,
     uniprot_xref_source => ['ArrayExpress', 'EMBL', 'MEROPS', 'PDB'],
@@ -283,7 +282,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
       -parameters      => {
                             uniprot_db         => $self->o('remote_uniprot_db'),
-                            replace_all        => $self->o('uniprot_go_replace_all'),
+                            replace_all        => 1,
                             logic_name         => 'xrefuniprot',
                             module             => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProt*',
                             production_lookup  => $self->o('production_lookup'),
