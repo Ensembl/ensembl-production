@@ -35,35 +35,41 @@ sub param_defaults {
 	   };
 }
 
-my ($flag_store_projections, $flag_backup);
-my ($flag_filter);
-my ($to_species, $from_species, $compara, $release);
-my ($method_link_type, $homology_types_allowed, $percent_id_filter, $percent_cov_filter);
-my ($log_file, $output_dir, $data);
-my ($geneName_source, $taxon_filter);
-my ($mlssa, $ha, $ma, $gdba);
-
 sub fetch_input {
     my ($self) = @_;
 
-    $flag_store_projections = $self->param('flag_store_projections');
-    $flag_backup            = $self->param('flag_backup');
-    $to_species             = $self->param_required('species');
-    $from_species           = $self->param_required('source');
-    $compara                = $self->param_required('compara');
-    $release                = $self->param_required('release');
-    $method_link_type       = $self->param_required('method_link_type');
-    $homology_types_allowed = $self->param_required('homology_types_allowed');
-    $percent_id_filter      = $self->param_required('percent_id_filter');
-    $percent_cov_filter     = $self->param_required('percent_cov_filter');
-    $log_file               = $self->param_required('output_dir');
-    $output_dir             = $self->param_required('output_dir');
-    $geneName_source        = $self->param_required('geneName_source');
-    $taxon_filter           = $self->param('taxon_filter');
-
-    my $taxonomy_db 	    = $self->param('taxonomy_db');
-
+    my $flag_store_proj = $self->param_required('flag_store_projections');
+    my $to_species      = $self->param_required('species');
+    my $from_species    = $self->param_required('source');
+    my $compara         = $self->param_required('compara');
+    my $release         = $self->param_required('release');
+    my $method_link_type       = $self->param_required('method_link_type');
+    my $homology_types_allowed = $self->param_required('homology_types_allowed');
+    my $percent_id_filter      = $self->param_required('percent_id_filter');
+    my $percent_cov_filter     = $self->param_required('percent_cov_filter');
+    my $output_dir             = $self->param_required('output_dir');
+    my $geneName_source        = $self->param_required('geneName_source');
+    my $taxon_filter           = $self->param('taxon_filter');
+    my $taxonomy_db            = $self->param('taxonomy_db');
+   
+    $self->param('flag_store_proj', $flag_store_proj);
+    $self->param('to_species', $to_species);
+    $self->param('from_species', $from_species);
+    $self->param('compara', $compara);
+    $self->param('release', $release);
+    $self->param('method_link_type', $method_link_type);
+    $self->param('homology_types_allowed', $homology_types_allowed);
+    $self->param('percent_id_filter', $percent_id_filter);
+    $self->param('percent_cov_filter', $percent_cov_filter);
+    $self->param('geneName_source', $geneName_source);
+    $self->param('taxon_filter', $taxon_filter);
     $self->param('taxonomy_db', $taxonomy_db);
+
+    $self->check_directory($output_dir);
+    my $log_file  = $output_dir."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
+    open my $log,">","$log_file" or die $!;
+
+    $self->param('log', $log);
 
 return;
 }
@@ -72,6 +78,13 @@ sub run {
     my ($self) = @_;
 
     Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
+
+    my $to_species 	 = $self->param('to_species');
+    my $from_species     = $self->param('from_species');
+    my $compara          = $self->param('compara');
+    my $release          = $self->param('release');
+    my $method_link_type = $self->param('method_link_type');
+    my $taxon_filter     = $self->param('taxon_filter');
 
     # Get taxon ancestry of the target species
     my $taxonomy_db        = $self->param('taxonomy_db');  
@@ -102,19 +115,16 @@ sub run {
    );
 =cut
 
-   $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
-   $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
-   $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
+   my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
+   my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
+   my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
-    $self->check_directory($log_file);
-    $log_file  = $log_file."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
-
     # Write projection info metadata
-    open  $data,">","$log_file" or die $!;
-    print $data "\n\tProjection log :\n";
-    print $data "\t\tsoftware release :$release\n";
-    print $data "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
+    my $log = $self->param('log');
+    print $log "\n\tProjection log :\n";
+    print $log "\t\tsoftware release :$release\n";
+    print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
  
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
@@ -123,10 +133,10 @@ sub run {
     my $mlss_id       = $mlss->dbID();
  
     # Get homologies from compara - comes back as a hash of arrays
-    print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter, $percent_cov_filter);
+    print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
 
-    print $data "\n\tProjecting Gene Names & descriptions from $from_species to $to_species\n\n";
+    print $log "\n\tProjecting Gene Names & descriptions from $from_species to $to_species\n\n";
 
     my $total_genes   = scalar(keys %$homologies);
 
@@ -138,10 +148,10 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
           my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
           next if (!$to_gene);
-          project_genenames($to_ga, $to_dbea, $from_gene, $to_gene);
+          project_genenames($self, $to_ga, $to_dbea, $from_gene, $to_gene, $log);
        }
     }
-    close($data);
+    close($log);
 
 return;
 }
@@ -155,7 +165,11 @@ sub write_output {
 ## internal methods
 ######################
 sub project_genenames {
-    my ($to_geneAdaptor, $to_dbea, $from_gene, $to_gene) = @_;
+    my ($self, $to_geneAdaptor, $to_dbea, $from_gene, $to_gene, $log) = @_;
+
+    my $flag_store_proj  = $self->param('flag_store_proj');
+    my $from_species     = $self->param('from_species');
+    my $geneName_source  = $self->param('geneName_source');
 
     # Project when 'source gene' has display_xref and 
     # 'target gene' has NO display_xref
@@ -167,13 +181,13 @@ sub project_genenames {
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
           if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_projections==1
+               && $flag_store_proj==1
                && grep (/$from_gene_dbname/, @$geneName_source)){
 
-             print $data "\t\tProject from:".$from_gene->stable_id()."\t";
-             print $data "to:".$to_gene->stable_id()."\t";
-             print $data "GeneName:".$from_gene->display_xref->display_id()."\t";
-             print $data "DB:".$from_gene->display_xref->dbname()."\n";
+             print $log "\t\tProject from:".$from_gene->stable_id()."\t";
+             print $log "to:".$to_gene->stable_id()."\t";
+             print $log "GeneName:".$from_gene->display_xref->display_id()."\t";
+             print $log "DB:".$from_gene->display_xref->dbname()."\n";
 
 	     # Adding projection source information 
              $dbEntry->info_type("PROJECTION");
