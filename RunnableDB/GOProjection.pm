@@ -15,7 +15,6 @@ Bio::EnsEMBL::Pipeline::ProjectGOTerms::RunnableDB::GOProjection
 
  Normally this is used to project GO terms from a well annotated species to one which is not.
 
-=head1 MAINTAINER/AUTHOR
 
 ckong
 
@@ -31,6 +30,8 @@ use JSON;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+use File::Path qw(make_path);
+use File::Spec::Functions qw(catdir);
 
 sub param_defaults {
     return {
@@ -38,39 +39,62 @@ sub param_defaults {
 	   };
 }
 
-my ($flag_go_check, $flag_store_projections, $flag_full_stats, $flag_delete_go_terms);
-my ($to_species, $from_species, $compara, $release);
-my ($method_link_type, $homology_types_allowed, $percent_id_filter);
-my ($log_file, $output_dir, $data);
-
-my ($evidence_codes, $ensemblObj_type, $ensemblObj_type_target,$goa_webservice, $goa_params);
-my (%forbidden_terms, %projections_by_evidence_type, %projections_stats);
-my ($mlssa, $ha, $ma, $gdba);
+my (%projections_by_evidence_type, %projections_stats);
 
 sub fetch_input {
     my ($self) = @_;
 
-    $flag_go_check          = $self->param_required('flag_go_check');
-    $flag_store_projections = $self->param_required('flag_store_projections');
-    $flag_full_stats        = $self->param_required('flag_full_stats');
-    $flag_delete_go_terms   = $self->param_required('flag_delete_go_terms');
+    my $flag_go_check     = $self->param_required('flag_go_check');
+    my $flag_store_proj   = $self->param_required('flag_store_projections');
+    my $flag_full_stats   = $self->param_required('flag_full_stats');
+    my $flag_del_go_terms = $self->param_required('flag_delete_go_terms');
+    my $to_species      = $self->param_required('species');
+    my $from_species    = $self->param_required('source');
+    my $compara         = $self->param_required('compara');
+    my $release         = $self->param_required('release');
+    my $outfile         = $self->param_required('output_dir');
+    my $output_dir      = $self->param_required('output_dir');
+    my $method_link_type       = $self->param_required('method_link_type');
+    my $homology_types_allowed = $self->param_required('homology_types_allowed');
+    my $percent_id_filter      = $self->param_required('percent_id_filter');
+    my $ensemblObj_type        = $self->param_required('ensemblObj_type');
+    my $ensemblObj_type_target = $self->param_required('ensemblObj_type_target');
+    my $evidence_codes         = $self->param_required('evidence_codes');
+    my $goa_webservice         = $self->param_required('goa_webservice');
+    my $goa_params             = $self->param_required('goa_params');
+    my $dump_dir	       = $self->param_required('dump_dir');
 
-    $to_species             = $self->param_required('species');
-    $from_species           = $self->param_required('source');
-    $compara                = $self->param_required('compara');
-    $release                = $self->param_required('release');
+    $self->param('flag_go_check', $flag_go_check);
+    $self->param('flag_store_proj', $flag_store_proj);
+    $self->param('flag_full_stats', $flag_full_stats);
+    $self->param('flag_del_go_terms', $flag_del_go_terms);
+    $self->param('to_species', $to_species);
+    $self->param('from_species', $from_species);
+    $self->param('compara', $compara);
+    $self->param('release', $release);
+    $self->param('outfile', $outfile);
+    $self->param('output_dir', $output_dir);
+    $self->param('method_link_type', $method_link_type);
+    $self->param('homology_types_allowed', $homology_types_allowed);
+    $self->param('percent_id_filter', $percent_id_filter);
+    $self->param('ensemblObj_type', $ensemblObj_type);
+    $self->param('ensemblObj_type_target', $ensemblObj_type_target);
+    $self->param('evidence_codes', $evidence_codes);
+    $self->param('goa_webservice', $goa_webservice);
+    $self->param('goa_params', $goa_params);
 
-    $method_link_type       = $self->param_required('method_link_type');
-    $homology_types_allowed = $self->param_required('homology_types_allowed');
-    $percent_id_filter      = $self->param_required('percent_id_filter');
-    $log_file               = $self->param_required('output_dir');
-    $output_dir             = $self->param_required('output_dir');
+    $dump_dir = catdir($dump_dir, $compara, 'goproj');
+    make_path($dump_dir);
+    make_path($outfile);
 
-    $ensemblObj_type        = $self->param_required('ensemblObj_type');
-    $ensemblObj_type_target = $self->param_required('ensemblObj_type_target');
-    $evidence_codes         = $self->param_required('evidence_codes');
-    $goa_webservice         = $self->param_required('goa_webservice');
-    $goa_params             = $self->param_required('goa_params');
+    my $dump_file  = $dump_dir."/".$from_species."-".$to_species."_GOTermsProjection_dump.txt";
+    open my $dump,">","$dump_file" or die $!;
+
+    my $log_file  = $outfile."/".$from_species."-".$to_species."_GOTermsProjection_logs.txt";
+    open my $log,">","$log_file" or die $!;
+
+    $self->param('dump', $dump);
+    $self->param('log', $log);
 
 return;
 }
@@ -86,6 +110,9 @@ sub run {
     my $sql        = "select go.goa_validation.taxon_check_term_taxon(?,?) from dual";
 
     # Creating adaptors
+    my $to_species   = $self->param('to_species');
+    my $from_species = $self->param('from_species');
+
     my $from_ga    = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
     my $to_ga      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Gene');
     my $to_ta      = Bio::EnsEMBL::Registry->get_adaptor($to_species, 'core', 'Transcript');
@@ -96,7 +123,9 @@ sub run {
     # Interrogate GOA web service for forbidden GO terms for the given species.
     # This requires both a lookup, and then finding all child-terms on the forbidden list.
     # The forbidden_terms list is used in unwanted_go_term();
-    %forbidden_terms  = get_GOA_forbidden_terms($to_species);
+    my %forbidden_terms  = get_GOA_forbidden_terms($to_species, $self->param('goa_webservice'), $self->param('goa_params'));
+    my $forbidden_terms  = \%forbidden_terms;
+    $self->param('forbidden_terms', $forbidden_terms);
 
     # Getting ancestry taxon_ids
     my $to_latin_species = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
@@ -114,37 +143,39 @@ sub run {
 =cut
 
     # Get Compara adaptors - use the one specified on the command line
-    $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
-    $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
+    my $compara = $self->param('compara');
+
+    my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
+    my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
+    my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
-    $self->check_directory($log_file);
-    $log_file  = $log_file."/".$from_species."-".$to_species."_GOTermsProjection_logs.txt";
-    open $data,">","$log_file" or die $!;
-
     # Write projection info metadata
-    print $data "\n\tProjection log :\n";
-    print $data "\t\tsoftware release:$release\n";
-    print $data "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
+    my $log = $self->param('log');
+    print $log "\n\tProjection log :\n";
+    print $log "\t\tsoftware release:".$self->param('release')."\n";
+    print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
 
-    $self->delete_go_terms($to_ga) if($flag_delete_go_terms==1);
+    $self->delete_go_terms($to_ga) if($self->param('flag_del_go_terms')==1);
 
     # build Compara GenomeDB objects
-    my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
-    my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
-    my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
+    my $method_link_type = $self->param('method_link_type');
+    my $from_GenomeDB    = $gdba->fetch_by_registry_name($from_species);
+    my $to_GenomeDB      = $gdba->fetch_by_registry_name($to_species);
+    my $mlss             = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
 
     throw "Failed to fetch mlss for ml, $method_link_type, for pair of species, $from_species, $to_species\n" if(!defined $mlss);
     my $mlss_id       = $mlss->dbID();
     
     # get homologies from compara - comes back as a hash of arrays
-    print $data "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $data, $gdba, $homology_types_allowed, $percent_id_filter, '1');
-    
-    print $data "\n\tProjecting GO Terms from $from_species to $to_species\n";
-    print $data "\t\t$to_species, before projection, ";
-    $self->print_GOstats($to_ga, $data);
+    print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('percent_id_filter'), '1');
+   
+    print $log "\n\tProjecting GO Terms from $from_species to $to_species\n";
+    print $log "\t\t$to_species, before projection, "; 
+    print $log "\n\tProjecting GO Terms from $from_species to $to_species\n";
+    print $log "\t\t$to_species, before projection, ";
+    $self->print_GOstats($to_ga, $log);
     
     my $i             = 0;
     my $total_genes   = scalar(keys %$homologies);
@@ -158,17 +189,20 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
          my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
          next if (!$to_gene);
-         project_go_terms($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id,$ensemblObj_type, $ensemblObj_type_target,$hDb,$sql);
+         project_go_terms($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $self->param('ensemblObj_type'), $self->param('ensemblObj_type_target'), $self->param('evidence_codes'), $hDb, $sql, $log, $self->param('dump'));
+
          $i++;
        }
     }
-    print $data "\n\t\t$to_species, after projection, ";
-    $self->print_GOstats($to_ga, $data);
-    print_full_stats() if ($flag_full_stats==1);
-    print $data "\n";
-    print $data Dumper %projections_stats;
-    close($data);
-
+    print $log "\n\t\t$to_species, after projection, ";
+    $self->print_GOstats($to_ga, $log);
+    print_full_stats($log, $self->param('evidence_codes')) if ($self->param('flag_full_stats')==1);
+    print $log "\n";
+    print $log Dumper %projections_stats;
+ 
+    close($log);
+    close($self->param('dump'));
+  
 return;
 }
 
@@ -182,7 +216,7 @@ sub write_output {
 ## internal methods
 ######################
 sub get_GOA_forbidden_terms {
-    my $species = shift;
+    my ($species, $goa_webservice, $goa_params) = @_; #= shift;
 
     my %terms;
     # Translate species name to taxonID
@@ -242,6 +276,7 @@ sub get_ontology_terms {
             -db_version => '79',
    );
 =cut
+
     my %terms;
     my $ontology_adaptor = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
     die "Can't get OntologyTerm Adaptor - check that database exist in the server specified" if (!$ontology_adaptor);
@@ -259,19 +294,20 @@ return %terms;
 }
 
 sub print_full_stats {
-
-    print $data "\n\n\tProjections stats by evidence code:\n";
+    my ($log, $evidence_codes) = @_;
     my $total;
+
+    print $log "\n\n\tProjections stats by evidence code:\n";
 
     foreach my $et (sort keys %projections_by_evidence_type) {
       next if (!grep(/$et/, @$evidence_codes));
 
       if ($et) {
-        print $data "\t\t" .$et. "\t" . $projections_by_evidence_type{$et} . "\n";
+        print $log "\t\t" .$et. "\t" . $projections_by_evidence_type{$et} . "\n";
         $total += $projections_by_evidence_type{$et};
       }
     }
-    print $data "\t\tTotal:\t$total\n";
+    print $log "\t\tTotal:\t$total\n";
 
 return 0;
 }
@@ -281,7 +317,7 @@ return 0;
 #   + unwanted_go_term {
 #   + go_xref_exists {
 sub project_go_terms {
-    my ($to_ga, $to_dbea, $ma, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $ensemblObj_type_target, $hDb, $sql) = @_;
+    my ($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $ensemblObj_type_target, $evidence_codes, $hDb, $sql, $log, $dump) = @_;
 
     # GO xrefs are linked to translations, not genes
     # Project GO terms between the translations of the canonical transcripts of each gene
@@ -319,7 +355,7 @@ sub project_go_terms {
       }
 
       # Check GO term against GOA blacklist
-      next DBENTRY if (unwanted_go_term($to_translation->stable_id,$dbEntry->primary_id));
+      next DBENTRY if (unwanted_go_term($to_translation->stable_id,$dbEntry->primary_id, $self->param('forbidden_terms')));
 
       # Check GO term against taxon constraints
       my $go_term    = $dbEntry->primary_id;   
@@ -332,7 +368,7 @@ sub project_go_terms {
       }
 
       # Check GO term isn't already projected
-      next if ($flag_go_check ==1 && go_xref_exists($dbEntry, $to_go_xrefs));
+      next if ($self->param('flag_go_check') ==1 && go_xref_exists($dbEntry, $to_go_xrefs));
 
       # Force loading of external synonyms for the xref
       $dbEntry->get_all_synonyms();
@@ -378,11 +414,41 @@ sub project_go_terms {
 
       $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
-      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($flag_store_projections==1);
+      $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($self->param('flag_store_proj')==1);
 
-      print $data "\t\t Project GO term:".$dbEntry->display_id()."\t";
-      print $data "from:".$from_translation->stable_id()."\t";
-      print $data "to:".$to_translation->stable_id()."\n";
+      ## go projection dump for GOA team
+      my @dblinks_from = @{$from_translation->get_all_DBLinks('Uniprot/%') }; #Uniprot/SPTREMBL Uniprot/SWISSPROT
+      my @dblinks_to   = @{$to_translation->get_all_DBLinks('Uniprot/%') }; #Uniprot/SPTREMBL Uniprot/SWISSPROT
+
+      my (@uniprot_from, @uniprot_to);
+      my (@uniprot_from_db, @uniprot_to_db);
+
+      foreach my $dblink (@dblinks_from){
+        push @uniprot_from, $dblink->primary_id();	       
+        push @uniprot_from_db, $dblink->dbname();	       
+      }
+
+      foreach my $dblink (@dblinks_to){
+        push @uniprot_to, $dblink->primary_id();
+        push @uniprot_to_db, $dblink->dbname();	       
+      }
+
+      my $uniprot_from    = join ":", @uniprot_from;	       
+      my $uniprot_from_db = join ":", @uniprot_from_db;	       
+      my $uniprot_to      = join ":", @uniprot_to;	       
+      my $uniprot_to_db   = join ":", @uniprot_to_db;	       
+
+      print $dump $go_term."\t";
+      print $dump $from_translation->stable_id()."\t";
+      print $dump $uniprot_from."\t";
+      print $dump $uniprot_from_db."\t";
+      print $dump $to_translation->stable_id()."\t";
+      print $dump $uniprot_to."\t";
+      print $dump $uniprot_to_db."\n";
+      
+      print $log "\t\t Project GO term:".$dbEntry->display_id()."\t";
+      print $log "from:".$from_translation->stable_id()."\t";
+      print $log "to:".$to_translation->stable_id()."\n";
     }
 
 return 0;
@@ -404,10 +470,12 @@ return $canonical_transcript->translation();;
 
 # Perform a hash lookup in %forbidden_terms, defined higher up ()
 sub unwanted_go_term {
-  my ($stable_id,$go_term)= @_;
- 
-  if (exists ($forbidden_terms{$stable_id}) ) {
-     if (exists ( $forbidden_terms{$stable_id}->{$go_term} )) {
+  my ($stable_id, $go_term, $forbidden_terms)= @_;
+
+#  if (exists ($forbidden_terms{$stable_id}) ) {
+#      if (exists ( $forbidden_terms{$stable_id}->{$go_term} )) {
+  if (exists ($$forbidden_terms{$stable_id}) ) {
+     if (exists ( $$forbidden_terms{$stable_id}->{$go_term} )) {
        $projections_stats{'forbidden'}++;
        return 1;
      }
