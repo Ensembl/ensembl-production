@@ -47,7 +47,7 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'ftp_dump_'.$self->o('eg_release'),
+    pipeline_name => 'file_dump_'.$self->o('eg_release'),
 
     species      => [],
     division     => [],
@@ -55,19 +55,24 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
 
-    dump_types         => ['gff3'],
-    pipeline_dir       => $self->o('ENV', 'PWD'),
-    eg_toplevel_dir    => catdir($self->o('pipeline_dir'), 'release-'.$self->o('eg_release')),
+    db_type => 'core',
+
+    dump_type          => [],
+    results_dir        => $self->o('ENV', 'PWD'),
+    eg_toplevel_dir    => catdir($self->o('results_dir'), 'release-'.$self->o('eg_release')),
     eg_dir_structure   => 1,
     eg_filename_format => $self->o('eg_dir_structure'),
     compress_files     => 1,
 
-    gff3_feature_types    => ['Gene', 'Transcript', 'RepeatFeature'],
+    gff3_db_type          => 'core',
+    gff3_feature_type     => [],
     gff3_per_chromosome   => 1,
     gff3_include_scaffold => 0,
-    gt_exe                => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
-    gff3_tidy             => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
-    gff3_validate         => $self->o('gt_exe').' gff3validator',
+    gff3_logic_name       => [],
+
+    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+    gff3_validate => $self->o('gt_exe').' gff3validator',
 
   };
 }
@@ -99,7 +104,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('pipeline_dir'),
+    'mkdir -p '.$self->o('results_dir'),
   ];
 }
 
@@ -124,7 +129,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -flow_into         => {
-                              '2' => $self->o('dump_types'),
+                              '2' => $self->o('dump_type'),
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -133,12 +138,14 @@ sub pipeline_analyses {
       -logic_name        => 'gff3',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
-                              feature_types      => $self->o('gff3_feature_types'),
-                              pipeline_dir       => $self->o('eg_toplevel_dir'),
-                              eg_dir_structure   => $self->o('eg_dir_structure'),
-                              eg_filename_format => $self->o('eg_filename_format'),
+                              db_type            => $self->o('gff3_db_type'),
+                              feature_type       => $self->o('gff3_feature_type'),
                               per_chromosome     => $self->o('gff3_per_chromosome'),
                               include_scaffold   => $self->o('gff3_include_scaffold'),
+                              logic_name         => $self->o('gff3_logic_name'),
+                              results_dir        => $self->o('eg_toplevel_dir'),
+                              eg_dir_structure   => $self->o('eg_dir_structure'),
+                              eg_filename_format => $self->o('eg_filename_format'),
                             },
       -analysis_capacity => 10,
       -max_retry_count   => 0,
