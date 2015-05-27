@@ -136,6 +136,17 @@ sub pipeline_analyses {
 
     {
       -logic_name        => 'gff3',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -parameters        => {},
+      -flow_into         => {
+                              '1->A' => ['gff3Dump'],
+                              'A->1' => ['gff3Readme'],
+                            },
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'gff3Dump',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -parameters        => {
                               db_type            => $self->o('gff3_db_type'),
@@ -190,6 +201,21 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'gff3Readme',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::ReadmeDumper',
+      -parameters        => {
+                              readme_template  => gff_readme(),
+                              results_dir      => $self->o('eg_toplevel_dir'),
+                              eg_dir_structure => $self->o('eg_dir_structure'),
+                              file_type        => 'gff3',
+                              filename         => 'README',
+                            },
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -rc_name           => 'normal',
+    },
+
+    {
       -logic_name        => 'CompressFile',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
@@ -201,6 +227,66 @@ sub pipeline_analyses {
     },
 
   ];
+}
+
+sub gff_readme {
+  return <<README;
+#### README ####
+
+IMPORTANT: Please note you can download correlation data tables, 
+supported by Ensembl, via the highly customisable BioMart data mining tool. 
+See http://DIVISION.ensembl.org/biomart/martview 
+or http://www.ebi.ac.uk/biomart/ for more information. Not available for
+Ensembl Bacteria. 
+
+-----------------------
+GFF FLATFILE DUMPS
+-----------------------
+This directory contains GFF flatfile dumps. All files are compressed
+using GNU Zip.
+
+Ensembl Genomes provides an automatic reannotation of genomic data as well
+as imports of existing genomic data. These data will be dumped in a number 
+of forms - one of them being GFF flat files. As the annotation of this
+form comes from Ensembl Genomes, and not the original sequence entry, 
+the two annotations are likely to be different.
+
+GFF flat file format dumping provides all the sequence features known by 
+Ensembl Genomes, including protein coding genes, ncRNA, repeat features etc. 
+Considerably more information is stored in  Ensembl Genomes: the flat file 
+just gives a representation which is compatible with existing tools.
+
+We are considering other information that should be made dumpable. In 
+general we would prefer people to use database access over flat file 
+access if you want to do something serious with the data.
+
+-----------
+FILE NAMES
+------------
+The files are consistently named following this pattern:
+   <species>.<assembly>.<eg_version>.gff3.gz
+
+<species>:       The systematic name of the species. 
+<assembly>:      The assembly build name.
+<eg_version>: The version of Ensembl Genomes from which the data was exported.
+gff3 : All files in these directories are in GFF3 format
+gz : All files are compacted with GNU Zip for storage efficiency.
+
+e.g. 
+Drosophila_melanogaster.BDGP6.21.gff3.gz
+
+Where the genome has a chromosome-level assembly, individual files are provided
+for each chromosome, named following this pattern:
+   <species>.<assembly>.<eg_version>.chromosome.<chromosome_name>.gff3.gz
+Where the assembly also contains additional non-chromosomal that are not present
+in the chromosomes, these are all available in a file with the pattern:
+   <species>.<assembly>.<eg_version>.non_chromosomal.gff3.gz
+
+e.g. 
+Drosophila_melanogaster.BDGP6.21.74.chromosome.2L.gff3.gz 
+Drosophila_melanogaster.BDGP6.21.nonchromosomal.gff3.gz
+
+README
 }
 
 1;
