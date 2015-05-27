@@ -213,9 +213,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
       -max_retry_count => 1,
     },
-
-# DELETE existing descriptions that match "[Source:Projected"
-
+    
     {
       -logic_name      => 'GeneDescProjection',
       -module          => 'Bio::EnsEMBL::EGPipeline::ProjectGeneDesc::GeneDescProjection',
