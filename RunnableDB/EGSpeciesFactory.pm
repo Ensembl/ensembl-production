@@ -77,7 +77,7 @@ sub fetch_input {
   my $antispecies  = $self->param('antispecies');
   my @antispecies  = (ref($antispecies) eq 'ARRAY') ? @$antispecies : ($antispecies);
   my %meta_filters = %{$self->param('meta_filters')};
-  
+
   my $all_dbas = Bio::EnsEMBL::Registry->get_all_DBAdaptors(-GROUP => 'core');
   my %core_dbas;
   
@@ -135,7 +135,8 @@ sub process_division {
   
   foreach my $dba (@$all_dbas) {
     my $dbname = $dba->dbc->dbname();
-    if ($dbname =~ /$division\_\d+_collection_/) {
+    if ($dbname =~ /$division\_.+_collection_/) {
+    #if ($dbname =~ /$division\_\d+_collection_/) {
       $$core_dbas{$dba->species()} = $dba;
       $division_count++
     
