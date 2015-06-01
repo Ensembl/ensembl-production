@@ -104,6 +104,34 @@ sub get_DBAdaptor {
   return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
 }
 
+sub core_dba {
+  my $self = shift;
+
+  my $dba = $self->get_DBAdaptor('core');
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+
+  return $dba;
+}
+
+sub has_chromosome {
+  my ($self, $dba) = @_;
+  my $helper = $dba->dbc->sql_helper();
+  my $sql = q{
+    SELECT COUNT(*) FROM
+    coord_system cs INNER JOIN
+    seq_region sr USING (coord_system_id) INNER JOIN
+    seq_region_attrib sa USING (seq_region_id) INNER JOIN
+    attrib_type at USING (attrib_type_id)
+    WHERE cs.species_id = ?
+    AND at.code = 'karyotype_rank'
+  };
+  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+
+  $dba->dbc->disconnect_if_idle();
+
+  return $count;
+}
+
 sub cleanup_DBAdaptor {
   my ($self, $type) = @_;
   my $dba = $self->get_DBAdaptor($type);
