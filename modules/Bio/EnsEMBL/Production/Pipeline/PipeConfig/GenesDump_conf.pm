@@ -50,13 +50,21 @@ sub default_options {
       
       pipeline_name => 'geneset_dump_'.$self->o('release'),
       
+      ## GTF specific options
       gtftogenepred_exe => 'gtfToGenePred',
       genepredcheck_exe => 'genePredCheck',
 
-      dump_type         => 'gff3_genes',
-      eg_filename_format => '1',
+      ## GFF3 specific options
+      feature_type     => ['Gene', 'Transcript'],
+      per_chromosome   => 0,
+      include_scaffold => 0,
+      logic_name       => [],
+      db_type          => 'core',
+      out_file_stem    => undef,
+      xrefs            => 0,
 
-      db_type => 'core',
+      ## Dump out files with abinitio predictions as well
+      abinitio         => 1,
 
       email => $self->o('ENV', 'USER').'@sanger.ac.uk',
       
@@ -98,26 +106,30 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
         -parameters => {
           gtf_to_genepred => $self->o('gtftogenepred_exe'),
-          gene_pred_check => $self->o('genepredcheck_exe')
+          gene_pred_check => $self->o('genepredcheck_exe'),
+          abinitio        => $self->o('abinitio')
         },
         -max_retry_count  => 1, 
         -analysis_capacity => 10, 
         -rc_name => 'dump',
-        #-flow_into => 'ChecksumGeneratorGTF',
       },
 
       {
         -logic_name => 'DumpGFF3',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
         -parameters => {
-          dump_type          => $self->o('dump_type'),
-          eg_filename_format => $self->o('eg_filename_format'),
-          db_type            => $self->o('db_type')
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
+          logic_name         => $self->o('logic_name'),
+          db_type            => $self->o('db_type'),
+          abinitio           => $self->o('abinitio'),
+          out_file_stem      => $self->o('out_file_stem'),
+          xrefs              => $self->o('xrefs'),
         },
         -max_retry_count  => 1,
         -analysis_capacity => 10,
         -rc_name => 'dump',
-        #-flow_into => 'ChecksumGeneratorGFF3',
       },
 
       ####### CHECKSUMMING

@@ -27,24 +27,11 @@ use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO::GFFSerializer;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
 use File::Path qw/rmtree/;
+use File::Spec::Functions qw/catdir/;
 use Bio::EnsEMBL::Transcript;
 
 
-my $add_xrefs = 0;#$self->param('xrefs');
-
-sub param_defaults {
-  my ($self) = @_;
-  
-  return {
-    %{$self->SUPER::param_defaults},
-    'feature_type'     => ['Gene', 'Transcript'],
-    'data_type'        => 'basefeatures',
-    'file_type'        => 'gff3',
-    'per_chromosome'   => 0,
-    'include_scaffold' => 1,
-    'logic_name'       => [],
-  };
-}
+my $add_xrefs = 0;
 
 sub fetch_input {
   my ($self) = @_;
@@ -59,17 +46,17 @@ sub fetch_input {
   throw "Need a release" unless $release;
   throw "Need a base_path" unless $base_path;
 
-  my $out_file;
+  my ($out_file, $abinitio_out_file);
   if (defined $out_file_stem) {
     $out_file = catdir($base_path, "$species.$out_file_stem");
+    $abinitio_out_file = catdir($base_path, "$species.$out_file_stem.abinitio") if $self->param('abinitio');
   } else {
     $out_file = $self->_generate_file_name();
+    $abinitio_out_file = $self->_generate_abinitio_file_name() if $self->param('abinitio');
   }
 
   $self->param('out_file', $out_file);
-  $self->param('out_files', [$out_file]);
-  open(my $fh, '>', $out_file) or $self->throw("Cannot open file $out_file: $!");
-  $self->param('out_fh', $fh);
+  $self->param('abinitio_out_file', $abinitio_out_file);
 
   return;
 }
@@ -79,51 +66,46 @@ sub run {
   my $species          = $self->param_required('species');
   my $db_type          = $self->param_required('db_type');
   my $out_file         = $self->param_required('out_file');
-  my $out_fh           = $self->param_required('out_fh');
   my $feature_types    = $self->param_required('feature_type');
   my $per_chromosome   = $self->param_required('per_chromosome');
   my $include_scaffold = $self->param_required('include_scaffold');
   my $logic_names      = $self->param_required('logic_name');
+  my $abinitio_out_file = $self->param('abinitio_out_file');
   
   my $reg = 'Bio::EnsEMBL::Registry';
 
-#  my $sa = $reg->get_adaptor($species, $db_type, 'Slice');
-#  my $slices = $sa->fetch_all('toplevel');
-  
   my $oa = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
   my $dba = $self->core_dba();
+  my $slices = $self->get_Slices($self->param('db_type'), 1);
+
+  my %adaptors;
+  foreach my $feature_type (@$feature_types) {
+    $adaptors{$feature_type} = $reg->get_adaptor($species, $db_type, $feature_type);
+    if ($feature_type eq 'Transcript') {
+      $adaptors{'Exon'} = $reg->get_adaptor($species, $db_type, 'Exon');
+    }
+  }
+  $adaptors{'PredictionTranscript'} = $reg->get_adaptor($species, $db_type, 'PredictionTranscript');
+
+  my %chr;
+  my $has_chromosome = $self->has_chromosome($dba);
 
   my $mc = $dba->get_MetaContainer();
   my $provider = $mc->single_value_by_key('provider.name') || '';
 
-  gz_work_with_file($out_fh, 'w', sub {
+  gz_work_with_file($out_file, 'w', sub {
     my ($fh) = @_;
 
     my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $fh);
   
     $serializer->print_main_header(undef, $dba);
 
-    my %adaptors;
-    foreach my $feature_type (@$feature_types) {
-      $adaptors{$feature_type} = $reg->get_adaptor($species, $db_type, $feature_type);
-      if ($feature_type eq 'Transcript') {
-        $adaptors{'Exon'} = $reg->get_adaptor($species, $db_type, 'Exon');
-      }
-    }
-
-    my %chr;
-    my $has_chromosome = $self->has_chromosome($dba);
-
-    # now get all slices and filter for 1st portion of human Y
-    my $slices = $self->get_Slices($self->param('db_type'), 1);
-    my $count = 0;
-    while (my $slice = shift @{$slices}) {
+    foreach my $slice ( @{$slices}) {
       if ($include_scaffold) {
         $slice->source($provider) if $provider;
         $serializer->print_feature($slice);
       }
       foreach my $feature_type (@$feature_types) {
-$count++; last if $count > 100;
         my $features = $self->fetch_features($feature_type, $adaptors{$feature_type}, $logic_names, $slice);
         $serializer->print_feature_list($features);
   
@@ -132,19 +114,26 @@ $count++; last if $count > 100;
           $chr_serializer->print_feature_list($features);
         }
       }
-      last;
     }
-
-    my $out_files = $self->param('out_files');
-
-    foreach my $slice_name (keys %chr) {
-      close($chr{$slice_name}{'fh'});
-      push @$out_files, $chr{$slice_name}{'file'};
-    }
-
-    $self->param('out_files', $out_files)
 
   });
+
+  if ($self->param('abinitio')) {
+    gz_work_with_file($abinitio_out_file, 'w', sub {
+      my ($abinitio_fh) = @_;
+  
+      my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $abinitio_fh);
+  
+      $serializer->print_main_header(undef, $dba);
+  
+      foreach my $slice ( @{$slices}) {
+        my $features = $self->fetch_features('PredictionTranscript', $adaptors{'PredictionTranscript'}, , $logic_names, $slice);
+        $serializer->print_feature_list($features);
+  
+      }
+  
+    });
+  }
 
   $self->info("Dumping GFF3 README for %s", $self->param('species'));
   $self->_create_README();
@@ -173,8 +162,23 @@ sub fetch_features {
     my $exon_features = $self->exon_features(\@features);
     push @features, @$exon_features;
   }
+
+  if ($feature_type eq 'PredictionTranscript') {
+    my $prediction_exons = $self->prediction_exons(\@features);
+    push @features, @$prediction_exons;
+  }
       
   return \@features;
+}
+
+sub prediction_exons {
+  my ($self, $transcripts) = @_;
+
+  my @prediction_exons;
+  foreach my $transcript(@$transcripts) {
+    push @prediction_exons, @{ $transcript->get_all_Exons() };
+  }
+  return \@prediction_exons;
 }
 
 sub exon_features {
@@ -269,6 +273,25 @@ sub _generate_file_name {
   push @name_bits, $self->assembly();
   push @name_bits, $self->param('release');
   push @name_bits, 'gff3', 'gz';
+
+  my $file_name = join( '.', @name_bits );
+  my $path = $self->data_path();
+
+  return File::Spec->catfile($path, $file_name);
+
+}
+
+sub _generate_abinitio_file_name {
+  my ($self) = @_;
+
+  # File name format looks like:
+  # <species>.<assembly>.<release>.gff3.gz
+  # e.g. Homo_sapiens.GRCh38.81.abinitio.gff3.gz
+  my @name_bits;
+  push @name_bits, $self->web_name();
+  push @name_bits, $self->assembly();
+  push @name_bits, $self->param('release');
+  push @name_bits, 'abinitio', 'gff3', 'gz';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();

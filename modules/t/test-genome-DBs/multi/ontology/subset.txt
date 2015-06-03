@@ -1,0 +1,41 @@
+1	goantislim_grouping	Grouping classes that can be excluded
+2	gocheck_do_not_annotate	Term not to be used for direct annotation
+3	gocheck_do_not_manually_annotate	Term not to be used for direct manual annotation
+4	goslim_aspergillus	Aspergillus GO slim
+5	goslim_candida	Candida GO slim
+6	goslim_generic	Generic GO slim
+7	goslim_goa	GOA and proteome slim
+8	goslim_metagenomics	Metagenomics GO slim
+9	goslim_pir	PIR GO slim
+10	goslim_plant	Plant GO slim
+11	goslim_pombe	Fission yeast GO slim
+12	goslim_synapse	synapse GO slim
+13	goslim_virus	Viral GO slim
+14	goslim_yeast	Yeast GO slim
+15	gosubset_prok	Prokaryotic GO subset
+16	mf_needs_review	Catalytic activity terms in need of attention
+17	termgenie_unvetted	Terms created by TermGenie that do not follow a template and require additional vetting by editors
+18	virus_checked	Viral overhaul terms
+19	DBVAR	database of genomic structural variation
+20	SOFA	SO feature annotation
+21	biosapiens	biosapiens protein feature ontology
+22	abnormal_slim	abnormal slim
+23	attribute_slim	attribute slim
+24	developmental_classification	developmental classification
+25	dubious_grouping	dubious grouping
+26	early_development	early development
+27	efo_slim	efo slim
+28	functional_classification	functional classification
+29	grouping_class	grouping class
+30	hposlim_core	hposlim core
+31	inconsistent_with_fma	inconsistent with fma
+32	loose_concept	loose concept
+33	major_organ	major organ
+34	mpath_slim	mpath slim
+35	organ_slim	organ slim
+36	relational_slim	relational slim
+37	scalar_slim	scalar slim
+38	uberon_slim	uberon slim
+39	value_slim	value slim
+40	vertebrate_core	vertebrate core
+41	vessel_or_tree	vessel or tree

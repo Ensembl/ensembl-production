@@ -102,6 +102,7 @@ sub run {
   my ($self) = @_;
 
   my $eg   = $self->param('eg');  
+  my $abinitio = $self->param('abinitio');
   my $root = $self->data_path();
   if(-d $root) {
     $self->info('Directory "%s" already exists; removing', $root);
@@ -141,8 +142,27 @@ sub run {
 
   $self->info(sprintf "Checking GTF file %s", $path);
   $self->_gene_pred_check($path) unless $eg;
+
+  if ($abinitio) {
+    my $abinitio_path = $self->_generate_abinitio_file_name();
+    $self->info("Dumping abinitio GTF to %s", $path);
+    gz_work_with_file($abinitio_path, 'w', sub {
+      my ($fh) = @_;
+      my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
   
-  # $self->run_cmd("gzip $path");
+      # Print information about the current assembly
+      $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
+  
+      # now get all slices and filter for 1st portion of human Y
+      my $slices = $self->get_Slices($self->param('group'), 1);
+      while (my $slice = shift @{$slices}) {
+        my $predictions = $slice->get_all_PredictionTranscripts(undef,undef,1);
+        while (my $prediction = shift @$predictions) {
+          $gtf_serializer->print_Prediction($prediction);
+        }
+      }
+    });
+  }
 
   $self->info("Dumping GTF README for %s", $self->param('species'));
   $self->_create_README();  
@@ -182,6 +202,25 @@ sub _generate_file_name {
   push @name_bits, $self->assembly();
   push @name_bits, $self->param('release');
   push @name_bits, 'gtf', 'gz';
+
+  my $file_name = join( '.', @name_bits );
+  my $path = $self->data_path();
+
+  return File::Spec->catfile($path, $file_name);
+
+}
+
+sub _generate_abinitio_file_name {
+  my ($self) = @_;
+
+  # File name format looks like:
+  # <species>.<assembly>.<release>.gtf.gz
+  # e.g. Homo_sapiens.GRCh38.81.abinitio.gtf.gz
+  my @name_bits;
+  push @name_bits, $self->web_name();
+  push @name_bits, $self->assembly();
+  push @name_bits, $self->param('release');
+  push @name_bits, 'abinitio', 'gtf', 'gz';
 
   my $file_name = join( '.', @name_bits );
   my $path = $self->data_path();

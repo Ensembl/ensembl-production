@@ -33,10 +33,12 @@ my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
 my $human_dba = $human->get_DBAdaptor('core');
 ok($human_dba, 'Human is available');
 
+my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
+
 my $dir = File::Temp->newdir();
 $dir->unlink_on_destroy(1);
 
-my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::GTF_conf';
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::GenesDump_conf';
 my $options;
 if(@ARGV) {
   $options = join(q{ }, @ARGV);
@@ -51,18 +53,52 @@ $pipeline->run();
 
 if(! @ARGV) {
   my $target_dir = File::Spec->catdir($dir, 'gtf', 'homo_sapiens');
-  #Expcting a file like Homo_sapiens.GRCh37.73.gtf.gz
+  #Expecting a file like Homo_sapiens.GRCh37.73.gtf.gz
   my ($cs) = @{$human_dba->get_CoordSystemAdaptor->fetch_all('toplevel')};
   my $schema = software_version();
   my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
   $gtf_file = ucfirst($gtf_file);
+  my $gtf_abinitio_file = sprintf('%s.%s.%d.abinitio.gtf.gz', $human_dba->species(), $cs->version(), $schema);
+  my $gtf_abinitio_file = ucfirst($gtf_abinitio_file);
   ok_directory_contents(
     $target_dir,
-    [qw/CHECKSUMS README/, $gtf_file],
+    [qw/CHECKSUMS README/, $gtf_file, $gtf_abinitio_file],
     "$target_dir has GTF, README and CHECKSUM files"
   );
+  opendir (DIR, $target_dir);
+  while (my $file = readdir(DIR)) {
+    print "Looking at $file\n";
+  } 
   my $gtf_loc = File::Spec->catfile($target_dir, $gtf_file);
   is_file_line_count($gtf_loc, 2094, 'Expect 2094 rows in the GTF file');
+  my $gtf_abinitio_loc = File::Spec->catfile($target_dir, $gtf_abinitio_file);
+  is_file_line_count($gtf_abinitio_loc, 5, 'Expect 5 rows in the GTF abinitio file');
+
+  $target_dir = File::Spec->catdir($dir, 'gff3', 'homo_sapiens');
+  #Expecting a file like Homo_sapiens.GRCh37.73.gff3.gz
+  ($cs) = @{$human_dba->get_CoordSystemAdaptor->fetch_all('toplevel')};
+  $schema = software_version();
+  my $gff3_file = sprintf('%s.%s.%d.gff3.gz', $human_dba->species(), $cs->version(), $schema);
+  $gff3_file = ucfirst($gff3_file);
+  my $gff3_abinitio_file = sprintf('%s.%s.%d.abinitio.gff3.gz', $human_dba->species(), $cs->version(), $schema);
+  $gff3_abinitio_file = ucfirst($gff3_abinitio_file);
+  ok_directory_contents(
+    $target_dir,
+    [qw/CHECKSUMS README/, $gff3_file, $gff3_abinitio_file],
+    "$target_dir has GFF3, README and CHECKSUM files"
+  );
+  opendir (DIR, $target_dir);
+  while (my $file = readdir(DIR)) {
+    print "Looking at $file\n";
+  }
+  my $gff3_loc = File::Spec->catfile($target_dir, $gff3_file);
+  # Less features in gff3 compared to gtf
+  # Gtf contains dedicated start_codon and stop_codon features
+  # These are included in CDS features in gff3 format
+  is_file_line_count($gff3_loc, 1939, 'Expect 1939 rows in the GFF3 file');
+  my $gff3_abinitio_loc = File::Spec->catfile($target_dir, $gff3_abinitio_file);
+  # One additional line for the GFF3 header compared to GTF
+  is_file_line_count($gff3_abinitio_loc, 6, 'Expect 6 rows in the GFF3 abinitio file');
 }
 
 done_testing();
