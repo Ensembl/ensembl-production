@@ -29,3 +29,4 @@
 35	\N	patch	patch_79_80a.sql|schema_version
 36	\N	patch	patch_79_80c.sql|use_auto_increment_for_the_master_attrib_table
 37	\N	patch	patch_80_81_a.sql|schema_version
+38	\N	patch	patch_80_81_a.sql|schema_version
