@@ -28,8 +28,8 @@ use DBI;
 use Data::Dumper;
 
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
-use Bio::EnsEMBL::ExternalData::Mole::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Attribute;
+use PerlIO::gzip; 
 
 use constant META_KEY    => 'removed_evidence_flag.uniprot_dbversion';
 use constant ATTRIB_CODE => 'NoEvidence';
@@ -37,7 +37,6 @@ use constant ATTRIB_NUM  => 315;
 use constant ATTRIB_NAME => 'Evidence for transcript removed';
 use constant ATTRIB_DESC => 'Supporting evidence for this projected transcript has been removed';
 use constant LSF_QUEUE   => 'normal';
-use constant MOLEDB      => 'cbi5d';
 
 # Connection to the target DB
 my $host      = '';
@@ -76,22 +75,23 @@ my %h_biotypes = (
                    nonsense_mediated_decay => 1,
                    non_stop_decay => 1,
                    polymorphic_pseudogene => 1,
+                   processed_pseudogene => 1,
                    processed_transcript => 1,
+                   protein_coding => 1,
+                   pseudogene => 1,
                    retained_intron => 1,
                    sense_intronic => 1,
                    sense_overlapping => 1,
                    TEC => 1,
+                   transcribed_processed_pseudogene => 1,
                    transcribed_unitary_pseudogene => 1, 
-                   translated_processed_pseudogene => 1,
+                   transcribed_unprocessed_pseudogene => 1,
                    translated_unprocessed_pseudogene => 1,
                    TR_C_gene => 1,
+                   TR_D_gene => 1,
+                   TR_J_gene => 1,
                    TR_V_gene => 1,
                    TR_V_pseudogene => 1,
-                   protein_coding => 1,
-                   processed_pseudogene => 1,
-                   pseudogene => 1,
-                   transcribed_processed_pseudogene => 1,
-                   transcribed_unprocessed_pseudogene => 1,
                    unitary_pseudogene => 1,
                    unprocessed_pseudogene => 1,
                  );
@@ -105,7 +105,7 @@ my %h_biotypes = (
         'log_file=s'     => \$log_file_name,
         'params=s'       => \$params,
         'queue=s'        => \$queue,
-        'deleted_file=s' => \$deleted_file,
+        'deleted_file!' => \$deleted_file,
         'write!'         => \$write,
         'parallel!'      => \$parallel,
         'overwrite!'     => \$overwrite,
@@ -130,21 +130,14 @@ else {
     ($output) = $log_file_name =~ /^(.*\/)[^\/]+$/;
 }
 
-if (!-e $deleted_file) {
-    $deleted_file = $deleted_files_directory.'delac_all_'.$host.'.txt';
-    #Create an empty deleted file
-    system ("echo ''>$deleted_file");
+if (!$deleted_file and !$uniprot_release) {
     for my $wget_cmd (@a_deletedIds) {
-         # Get the Uniprot retired id files
-        system("wget -O $deleted_files_directory"."$wget_cmd $uniprot_ftp"."$wget_cmd");
-        # If it's the TrEMBL file, extract it.
-        if ($wget_cmd eq "delac_tr.txt.gz")
-        {   
-            system("gunzip -c $deleted_files_directory"."$wget_cmd > $deleted_files_directory"."delac_tr.txt && rm $deleted_files_directory"."$wget_cmd");
-            $wget_cmd="delac_tr.txt";
+        if (!$deleted_file){
+          # Get the Uniprot retired id files
+          system("wget -O $deleted_files_directory"."$wget_cmd $uniprot_ftp"."$wget_cmd");
         }
         # For the small Swissprot file, parse the file to get the uniprot_release.
-        else
+        if ($wget_cmd =~ "sp" and !$uniprot_release)
         {
             open(IF, "$deleted_files_directory"."$wget_cmd") || die('Could not open file $wget_cmd');
             while(<IF>) {
@@ -157,9 +150,8 @@ if (!-e $deleted_file) {
             }
             close(IF);
         }
-        #Merge files into delac_all_host.txt
-        system("cat $deleted_files_directory"."$wget_cmd >> $deleted_file");
     }
+    $deleted_file=1;
 }
 
 if ($parallel) {
@@ -173,10 +165,11 @@ if ($parallel) {
             .' perl '.$0.' --host '.$host.' --port '.$port.' --user '.$user.' --dbpattern '.$dbname;
         $cmd .= ' --pass '.$pass if ($pass ne '');
         $cmd .= ' --log_file '.$log_file_name.'.'.$dbname;
-        $cmd .= ' --deleted_file '.$deleted_file;
+        $cmd .= ' --deleted_file' if defined $deleted_file;
         $cmd .= ' --write' if defined $write;
         $cmd .= ' --overwrite' if defined $overwrite;
         $cmd .= ' --uniprot_release '.$uniprot_release;
+        $cmd .= ' --deleted_files_directory '.$deleted_files_directory;
         if ($test) {
             print STDOUT $dbname, "\n";
             print STDOUT $cmd, "\n";
@@ -196,29 +189,34 @@ if ($parallel) {
 }
 
 my %h_deleted;
-# Getting the list of deleted proteins
-open(DF, $deleted_file) || die('Could not get internet file!');
-while(<DF>) {
-    chomp;
-    my $line = $_;
-    $h_deleted{$1} = 1 if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
+
+#Using perlIO library to Get the list of deleted proteins
+foreach my $Uniprot_deleted_files (@a_deletedIds) {
+  my $final_Uniprot_deleted_files = $deleted_files_directory . $Uniprot_deleted_files;
+  eval {
+    eval {
+      open(my $FILE, "<:gzip", $final_Uniprot_deleted_files) or die "Can't open '$final_Uniprot_deleted_files': $!";
+        while (<$FILE>){
+          chomp; 
+          my $line = $_;
+          $h_deleted{$1} = 1 if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
+         }
+        close($FILE);
+    }
+    or do {
+      open(my $FILE, $final_Uniprot_deleted_files)or die "Can't open '$final_Uniprot_deleted_files': $!";
+        while (<$FILE>){
+         chomp; 
+         my $line = $_;
+         $h_deleted{$1} = 1 if ($line =~ /^\s*([A-Z0-9]{6})\s*$/);
+        }
+      close($FILE);
+    };
+  }
+  or do {
+    die "Can't process the $final_Uniprot_deleted_files file, check that the file exist and is not corrupted \n";
+  };
 }
-close(DF);
-
-# Getting the name of the latest Uniprot DB
-my $uniprot_dbname = connect_and_retrieve_from_db('mm_ini', 3306, "SELECT database_name FROM ini WHERE current = 'yes' AND available = 'yes' AND database_category = 'uniprot'");
-my $UA_port = connect_and_retrieve_from_db('mm_ini', 3306, "SELECT port FROM connections WHERE is_active = 'yes' AND db_name = 'uniprot_archive'");
-
-# Retrieving the target protein feature
-my $uniprot_db = new Bio::EnsEMBL::ExternalData::Mole::DBSQL::DBAdaptor(
-        -host    => &MOLEDB,
-        -user    => 'genero',
-        -port    => 3306,
-        -dbname  => $uniprot_dbname
-        );
-
-my $Uentry_adaptator  = $uniprot_db->get_EntryAdaptor;
-
 
 my $attribute = Bio::EnsEMBL::Attribute->new (
         -CODE => &ATTRIB_CODE,
@@ -264,7 +262,7 @@ for my $dbname (@dbnames) {
     $sth->execute;
     while( my $hit_name = $sth->fetchrow) {
         my %h_written;
-        my $is_protein_obsolete = check_if_obsolete_protein($hit_name, $Uentry_adaptator, $UA_port);
+        my $is_protein_obsolete = check_if_obsolete_protein($hit_name);
         if ($is_protein_obsolete == 1) {
             foreach my $transcript (@{$transcript_adaptor->fetch_all_by_transcript_supporting_evidence($hit_name,'protein_align_feature')}) {
                 next unless (exists $h_biotypes{$gene_adaptor->fetch_by_transcript_id($transcript->dbID)->biotype});
@@ -336,41 +334,17 @@ sub check_if_exists {
     return 0;
 }
 
-sub connect_and_retrieve_from_db {
-    my ($db, $port, $query) = @_;
-    my $dbh = DBI->connect('DBI:mysql:database='.$db.';host='.&MOLEDB.';port='.$port, 'genero', undef, {RaiseError => 1, AutoCommit => 0}) || die("Could not connect to the $db on ".&MOLEDB." with port $port!!\n");
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-    my ($result) = $sth->fetchrow_array();
-    $sth->finish();
-    $dbh->disconnect();
-    return $result;
-}
-
 #Check if a Uniprot accession has been retired in the delac_sp and delac_tr files.
 sub check_if_obsolete_protein {
-    my ($hit_name, $Uentry_adaptator, $UA_port) = @_;
+    my ($hit_name) = @_;
     my ($protein_id) = $hit_name =~ /^([[:alnum:]]+)/;
     return 1 if exists  $h_deleted{$protein_id};
     #The two regex above are used to catch Protein align features wrongly tagged as Uniprot. the line below will be removed as soon as the Genebuild team have resolve this issue.
     return 1 if $hit_name=~ /^[A-Z]{3}[0-9]{5}.[0-9]{1}$/;
     return 1 if $hit_name=~ /^[A-N,R-Z]{1}[0-9]{5}$/;
-# Sometimes the hit name is an old one and have been replace in the current version of Uniprot, so we need to look for the correspondance in the archive
+# Sometimes the hit name is an old one and have been replace in the current version of Uniprot.
     if ($hit_name =~ /_/) {
-        my $archive_prot = connect_and_retrieve_from_db('uniprot_archive', $UA_port, "SELECT accession_version FROM entry WHERE name = '".$hit_name."'");
-        if (! defined $archive_prot) {
-            print STDERR "#".$hit_name." was changed before release 7.0 of Uniprot, check if it still exists\n";
-            return -1;
-        }
-        $archive_prot =~ s/\.\d+//;
-        if (defined $Uentry_adaptator->fetch_by_accession($archive_prot))
-        {
-          return 0;
-        }
-        else
-        {
-          return 1;
-        }
+        return 1;
     }
     return 0;
 }
