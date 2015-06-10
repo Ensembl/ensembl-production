@@ -59,7 +59,7 @@ if(! @ARGV) {
   my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
   $gtf_file = ucfirst($gtf_file);
   my $gtf_abinitio_file = sprintf('%s.%s.%d.abinitio.gtf.gz', $human_dba->species(), $cs->version(), $schema);
-  my $gtf_abinitio_file = ucfirst($gtf_abinitio_file);
+  $gtf_abinitio_file = ucfirst($gtf_abinitio_file);
   ok_directory_contents(
     $target_dir,
     [qw/CHECKSUMS README/, $gtf_file, $gtf_abinitio_file],
