@@ -30,11 +30,21 @@ use File::Path qw/rmtree/;
 use File::Spec::Functions qw/catdir/;
 use Bio::EnsEMBL::Transcript;
 
-
 my $add_xrefs = 0;
 
 sub fetch_input {
   my ($self) = @_;
+
+  my $eg = $self->param('eg');
+  $self->param('eg', $eg);
+
+  if($eg){
+     my $base_path = $self->param('sub_dir');
+     $self->param('base_path', $base_path);
+
+     my $release = $self->param('eg_version');
+     $self->param('release', $release);
+  }
 
   my $base_path     = $self->param('base_path');
   my $out_file_stem = $self->param('out_file_stem');
