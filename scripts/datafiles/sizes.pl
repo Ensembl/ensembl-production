@@ -181,8 +181,9 @@ sub _get_core_like_dbs {
 }
 
 sub v {
+  my ($self, $msg, @params) = @_;
   return if $self->opts()->{summary};
-  $self->force_v(@_);
+  $self->force_v($msg, @params);
   return;
 }
 
