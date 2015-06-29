@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+#
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +24,7 @@ use Bio::EnsEMBL::Registry;
 use File::Find;
 use File::Spec;
 use File::Path qw/mkpath/;
+use Bio::EnsEMBL::DBSQL::DataFileAdaptor;  # Required for funcgen
 use Getopt::Long qw/:config no_ignore_case auto_version bundling_override/;
 use Pod::Usage;
 
@@ -53,6 +55,7 @@ sub args {
       username|user|u=s
       password|pass|p=s
       datafile_dir=s
+      schema_type=s
       ftp_dir=s
       no_ftp_table
       verbose 
@@ -119,24 +122,33 @@ sub setup {
   return;
 }
 
+
 sub process {
   my ($self) = @_;
-  my $dbas = $self->_get_core_like_dbs();
-  while (my $dba = shift @{$dbas}) {
-    $self->_process_dba($dba);
+  my $dbas = $self->_get_dbs($self->opts->{schema_type});
+ 
+  foreach my $schema_type(keys %{$dbas}){
+  
+    while (my $dba = shift @{$dbas->{$schema_type}}) {
+      $self->_process_dba($dba, $schema_type);
+    }
   }
-  $self->_process_missing_ftp_links();  
+  
+  $self->_process_missing_ftp_links;
   return;
 }
 
 sub _process_dba {
-  my ($self, $dba) = @_;
+  my ($self, $dba, $schema_type) = @_;
   $self->v('Working with species %s', $dba->species());
-  my $datafiles = $dba->get_DataFileAdaptor()->fetch_all();
+  my $datafiles_method = '_get_'.$schema_type.'_DataFiles';
+  my $datafiles        = $self->$datafiles_method($dba);
+
   if(! @{$datafiles}) {
     $self->v("\tNo datafiles found");
   }
   else {
+
     foreach my $df (@{$datafiles}) {
       next if $df->absolute();
       $self->_process_datafile($df, $self->_target_species_root($df));
@@ -146,6 +158,47 @@ sub _process_dba {
   $dba->dbc()->disconnect_if_idle();
   return;
 }
+
+# Pre-emptive strike here, fake DataFiles objects and adaptor for now
+# And hope that this script doesn't do any DB operations which rely 
+# on the data_files table past this point 
+# Update funcgen schema/API later ENSREGULATION-224
+
+sub _get_funcgen_DataFiles{
+  my ($self, $dba) = @_;
+  my @datafiles;
+  my $df_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($dba);
+  Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $df_adaptor);
+  # Required to prevent adaptor being is lost after returning reference.
+  # Odd scoping/weakening issue?
+
+  my $rs_adaptor = $dba->get_ResultSetAdaptor;
+  my ($cs) = @{$dba->dnadb->get_CoordSystemAdaptor()->fetch_all()};  
+
+  foreach my $rset(@{$rs_adaptor->fetch_all('DISPLAYABLE')}){
+
+    push @datafiles, Bio::EnsEMBL::DataFile->new_fast(
+     {
+      dbID          => undef,
+      coord_system  => $cs,  
+      analysis      => $rset->analysis,
+      name          => $rset->name,  # Would need to trip the suffix to set file_type
+      absolute      => 0,
+      #file_type     => 'BIGWIG',    # This is dependant on feature_class? Set url over-ride instead.
+      url           => $rset->dbfile_path,
+      adaptor       => $df_adaptor,
+     });
+  }
+
+  return \@datafiles;
+}
+
+
+sub _get_core_like_DataFiles{
+  my ($self, $dba) = @_;
+  return $dba->get_DataFileAdaptor->fetch_all;
+}
+
 
 sub _process_missing_ftp_links {
   my ($self) = @_;
@@ -179,6 +232,7 @@ sub _process_datafile {
     }
   }
   my $files = $self->_files($datafile);
+
   foreach my $filepath (@{$files}) {
     my ($file_volume, $file_dir, $name) = File::Spec->splitpath($filepath);
     my $target = File::Spec->catfile($target_dir, $name);
@@ -211,6 +265,7 @@ sub _process_datafile {
   return;
 }
 
+
 # Expected path: base/FILETYPE/SPECIES/TYPE/files
 # e.g. pub/release-66/bam/pan_trogladytes/genebuild/chimp_1.bam
 sub _target_species_root {
@@ -222,15 +277,17 @@ sub _target_species_root {
   return File::Spec->catdir($base, $file_type, $species, $ftp_type);
 }
 
+
 # Expected path: base/data_files/normalpath
 # e.g. pub/release-66/data_files/pan_trogladytes/CHIMP2.14/rnaseq/chimp_1.bam
 sub _target_datafiles_root {
   my ($self, $datafile) = @_;
   my $base = File::Spec->catdir($self->opts()->{ftp_dir}, 'data_files');
-  my $target_location = $datafile->path($base);
+  (my $target_location = $datafile->path($base)) =~ s/funcgen\///;  
   my ($volume, $dir, $file) = File::Spec->splitpath($target_location);
   return $dir;
 }
+
 
 sub _flag_missing_ftp_link {
   my ($self, $datafile) = @_;
@@ -251,10 +308,13 @@ sub _flag_missing_ftp_link {
   return;
 }
 
+# This needs updating for funcgen as the file type does not trnaslate to the path in _target_species_root?
+
 sub _datafile_to_type {
   my ($self, $datafile) = @_;
   return lc($datafile->file_type());
 }
+
 
 sub _dba_to_ftp_type {
   my ($self, $dba) = @_;
@@ -263,19 +323,27 @@ sub _dba_to_ftp_type {
     core => 'genebuild',
     rnaseq => 'genebuild',
     otherfeatures => 'genebuild',
-    
     variation => 'variation',
-    
-    funcgen => 'funcgen',
+    funcgen => '',
   }->{$group};
-  die "No way to convert from $group to a type" unless $type;
+  die "No way to convert from $group to a type" unless defined $type;
   return $type;
 }
 
-sub _get_core_like_dbs {
-  my ($self) = @_;
+
+sub _get_dbs {
+  my ($self, $schema_type) = @_;
   my $dbas = Bio::EnsEMBL::Registry->get_all_DBAdaptors();
-  my @final_dbas;
+  my %final_dbas;
+  my %required_types = (core => 'core_like', funcgen => 'funcgen');  # Merge with _dba_to_ftp_type & make package var?
+
+  if($schema_type){
+    if(! exists $required_types{$schema_type}){
+      die("Cannot _get_dbs schema_type is not supported:\t".$schema_type);
+    }
+    %required_types = ($schema_type => $required_types{$schema_type});
+  }
+
   while(my $dba = shift @{$dbas}) {
     next if $dba->species() eq 'multi';
     next if lc($dba->species()) eq 'ancestral sequences';
@@ -284,15 +352,25 @@ sub _get_core_like_dbs {
     my $type = $dba->get_MetaContainer()->single_value_by_key('schema_type');
     $dba->dbc()->disconnect_if_idle();
     next unless $type;
-    push(@final_dbas, $dba) if $type eq 'core';
+
+    if(exists $required_types{$type}){
+      $final_dbas{$required_types{$type}} ||= [];
+      push @{$final_dbas{$required_types{$type}}}, $dba;
+    }
   }
-  $self->v('Found %d core like database(s)', scalar(@final_dbas));
-  return \@final_dbas;
+
+  foreach my $rtype(values %required_types){
+    $self->v('Found %d '.$rtype.' like database(s)', scalar(@{$final_dbas{$rtype}}));
+  }
+
+  return \%final_dbas;
 }
+
 
 sub _files {
   my ($self, $datafile) = @_;
-  my $source_file = $datafile->path($self->opts()->{datafile_dir});
+
+  (my $source_file = $datafile->path($self->opts()->{datafile_dir})) =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
   my $regex = qr/^$name.*/;
   my @files;
@@ -400,6 +478,11 @@ available.
 
 If flagged the script will not warn about the FTP table and therefore does
 not have any dependencies on the webcode.
+
+=item B<--schema_type>
+
+Restrict schema types to process. Valid values are funcgen or core, which 
+includes all the core like schema types e.g. rnaseq etc
 
 =item B<--verbose>
 
