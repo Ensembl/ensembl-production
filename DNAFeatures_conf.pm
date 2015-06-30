@@ -86,8 +86,8 @@ sub default_options {
     # parameter is added when the program is called within the pipeline.
     repeatmasker_default_lib => '/nfs/panda/ensemblgenomes/external/RepeatMasker/Libraries/RepeatMaskerLib.embl',
     repeatmasker_library     => {},
-    # Supported alignment engine: [crossmatch,ncbi]
-    repeatmasker_parameters  => '-nolow -s -gccalc -engine crossmatch',
+    repeatmasker_engine      => 'crossmatch', # Use ncbi for faster (albeit slightly less sensitive) results
+    repeatmasker_parameters  => '-nolow -s -gccalc -engine '.$self->o('repeatmasker_engine'),
     logic_name               => {},
     always_use_repbase       => 0,
 
