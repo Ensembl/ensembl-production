@@ -130,7 +130,7 @@ else {
     ($output) = $log_file_name =~ /^(.*\/)[^\/]+$/;
 }
 
-if (!$deleted_file and !$uniprot_release) {
+if (!$deleted_file or !$uniprot_release) {
     for my $wget_cmd (@a_deletedIds) {
         if (!$deleted_file){
           # Get the Uniprot retired id files
@@ -351,7 +351,7 @@ sub check_if_obsolete_protein {
 
 sub Usage {
     print <<EOF
- $0 --host <host name> --dbpattern <DB name> [--log_file <path to file>] [--write] [--overwrite] [--dbhost_ref <host name>] [--dbport_ref <port number>] [--port <int>] [--user <user name>] [--pass <passwd>] [--parallel] [--queue <lsf queue>] [--test]
+ $0 --host <host name> --dbpattern <DB name> [--log_file <path to file>] [--write] [--overwrite] [--dbhost_ref <host name>] [--dbport_ref <port number>] [--port <int>] [--user <user name>] [--pass <passwd>] [--parallel] [--queue <lsf queue>] [--test] [--deleted_files_directory <path>] [--deleted_file]
         
         Mandatory
             --host      Name of the host of the target database
@@ -368,6 +368,7 @@ sub Usage {
             --queue     LSF queue, default normal
             --test      Test the LSF command and which databases will be checked, it won't run the script 
             --deleted_files_directory   Path to store the Uniprot retired IDs files
+            --deleted_file   Flag to re-use UniProt retired IDs files   
 EOF
 ;
     exit(1);

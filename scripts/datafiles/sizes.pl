@@ -53,6 +53,7 @@ sub args {
       password|pass|p=s
       datafile_dir|dir=s
       species=s
+      summary
       help
       man
       /
@@ -111,6 +112,7 @@ sub setup {
   );
   $args{-DB_VERSION} = $o->{release};
   $args{-PASS} = $o->{password} if $o->{password};
+  Bio::EnsEMBL::Registry->no_version_check(1);
   my $loaded = Bio::EnsEMBL::Registry->load_registry_from_db(%args);
   $self->v('Loaded %d DBAdaptor(s)', $loaded);
   
@@ -128,7 +130,7 @@ sub process {
     $self->v('Species size is %dGB', $size_in_gb);
   }
   my $total_size_in_gb = $total_size / 1024 / 1024 /1024;
-  $self->v('Total size is %dGB', $total_size_in_gb);
+  $self->force_v('Total size is %dGB', $total_size_in_gb);
   return;
 }
 
@@ -179,6 +181,13 @@ sub _get_core_like_dbs {
 }
 
 sub v {
+  my ($self, $msg, @params) = @_;
+  return if $self->opts()->{summary};
+  $self->force_v($msg, @params);
+  return;
+}
+
+sub force_v {
   my ($self, $msg, @params) = @_;
   print STDOUT sprintf($msg, @params);
   print STDOUT "\n";
@@ -241,6 +250,10 @@ REQUIRED. Source directory which is the intended root of the datafiles.
 =item B<--species>
 
 Specify the tests to run over a single species' set of core databases
+
+=item B<--summary>
+
+Only report the final total
 
 =item B<--help>
 
