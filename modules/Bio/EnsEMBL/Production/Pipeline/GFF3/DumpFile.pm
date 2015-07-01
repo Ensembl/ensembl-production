@@ -76,7 +76,7 @@ sub run {
   my $species          = $self->param_required('species');
   my $db_type          = $self->param_required('db_type');
   my $out_file         = $self->param_required('out_file');
-  my $feature_types    = $self->param_required('feature_type');
+  my $feature_types    = $self->param('feature_type');
   my $per_chromosome   = $self->param_required('per_chromosome');
   my $include_scaffold = $self->param_required('include_scaffold');
   my $logic_names      = $self->param_required('logic_name');
@@ -238,17 +238,25 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   my %summary;
 
   my $parent_gene = $self->get_Gene();
+  my $id = $self->display_id;
+  if ($self->version) { $id .= "." . $self->version; }
 
-  $summary{'seq_region_name'} = $self->seq_region_name;
-  $summary{'source'}          = $parent_gene->source;
-  $summary{'start'}           = $self->seq_region_start;
-  $summary{'end'}             = $self->seq_region_end;
-  $summary{'strand'}          = $self->strand;
-  $summary{'id'}              = $self->display_id;
-  $summary{'Parent'}          = $parent_gene->stable_id;
-  $summary{'biotype'}         = $self->biotype;
-  $summary{'version'}         = $self->version;
-  $summary{'Name'}            = $self->external_name;
+  $summary{'seq_region_name'}          = $self->seq_region_name;
+  $summary{'source'}                   = $parent_gene->source;
+  $summary{'start'}                    = $self->seq_region_start;
+  $summary{'end'}                      = $self->seq_region_end;
+  $summary{'strand'}                   = $self->strand;
+  $summary{'id'}                       = $id;
+  $summary{'Parent'}                   = $parent_gene->stable_id . "." . $parent_gene->version;
+  $summary{'biotype'}                  = $self->biotype;
+  $summary{'version'}                  = $self->version;
+  $summary{'Name'}                     = $self->external_name;
+  my $havana_transcript = $self->havana_transcript();
+  $summary{'havana_transcript'}        = $havana_transcript->display_id() . "." . $havana_transcript->version() if $havana_transcript;
+  $summary{'ccdsid'}                   = $self->ccds->display_id if $self->ccds;
+  $summary{'transcript_id'}            = $id;
+  $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
+  $summary{'tag'}                      = 'basic' if $self->gencode_basic();
 
   # Add xrefs
   if ($add_xrefs) {
