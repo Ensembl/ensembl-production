@@ -239,7 +239,6 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
 
   my $parent_gene = $self->get_Gene();
   my $id = $self->display_id;
-  if ($self->version) { $id .= "." . $self->version; }
 
   $summary{'seq_region_name'}          = $self->seq_region_name;
   $summary{'source'}                   = $parent_gene->source;
@@ -252,7 +251,8 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'version'}                  = $self->version;
   $summary{'Name'}                     = $self->external_name;
   my $havana_transcript = $self->havana_transcript();
-  $summary{'havana_transcript'}        = $havana_transcript->display_id() . "." . $havana_transcript->version() if $havana_transcript;
+  $summary{'havana_transcript'}        = $havana_transcript->display_id() if $havana_transcript;
+  $summary{'havana_version'}           = $havana_transcript->version() if $havana_transcript;
   $summary{'ccdsid'}                   = $self->ccds->display_id if $self->ccds;
   $summary{'transcript_id'}            = $id;
   $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
