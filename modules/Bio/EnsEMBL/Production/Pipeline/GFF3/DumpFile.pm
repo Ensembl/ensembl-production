@@ -347,23 +347,16 @@ from HAVANA.
 In the case of human and mouse, the GTF files found here are equivalent
 to the GENCODE gene set.
 
-GFF3 provides access to all annotated transcripts which make
-up an Ensembl gene set. Annotation is based on alignments of
+GFF3 flat file format dumping provides all the sequence features known by
+Ensembl, including protein coding genes, ncRNA, repeat features etc.
+Annotation is based on alignments of biological evidence (eg. proteins,
+cDNAs, RNA-seq) to a genome assembly. Annotation is based on alignments of
 biological evidence (eg. proteins, cDNAs, RNA-seq) to a genome assembly.
 The annotation dumped here is transcribed and translated from the
 genome assembly and is not the original input sequence data that
 we used for alignment. Therefore, the sequences provided by Ensembl
 may differ from the original input sequence data where the genome
 assembly is different to the aligned sequence.
-
-GFF flat file format dumping provides all the sequence features known by 
-Ensembl, including protein coding genes, ncRNA, repeat features etc. 
-Annotation is based on alignments of biological evidence (eg. proteins,
-cDNAs, RNA-seq) to a genome assembly. The annotation dumped here is 
-transcribed and translated from the genome assembly and is not the
-original input sequence data that we used for alignment. Therefore,
-the sequences provided by Ensembl may differ from the original input
-sequence data where the genome assembly is different to the aligned sequence.
 Considerably more information is stored in Ensembl: the flat file 
 just gives a representation which is compatible with existing tools.
 
