@@ -360,7 +360,8 @@ sub _get_dbs {
   }
 
   foreach my $rtype(values %required_types){
-    $self->v('Found %d '.$rtype.' like database(s)', scalar(@{$final_dbas{$rtype}}));
+    my $num_dbs = (defined $final_dbas{$rtype}) ? scalar(@{$final_dbas{$rtype}}) : 0;   
+    $self->v('Found %d '.$rtype.' like database(s)', $num_dbs);
   }
 
   return \%final_dbas;
