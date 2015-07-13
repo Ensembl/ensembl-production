@@ -30,11 +30,21 @@ use File::Path qw/rmtree/;
 use File::Spec::Functions qw/catdir/;
 use Bio::EnsEMBL::Transcript;
 
-
 my $add_xrefs = 0;
 
 sub fetch_input {
   my ($self) = @_;
+
+  my $eg = $self->param('eg');
+  $self->param('eg', $eg);
+
+  if($eg){
+     my $base_path = $self->param('sub_dir');
+     $self->param('base_path', $base_path);
+
+     my $release = $self->param('eg_version');
+     $self->param('release', $release);
+  }
 
   my $base_path     = $self->param('base_path');
   my $out_file_stem = $self->param('out_file_stem');
@@ -66,7 +76,7 @@ sub run {
   my $species          = $self->param_required('species');
   my $db_type          = $self->param_required('db_type');
   my $out_file         = $self->param_required('out_file');
-  my $feature_types    = $self->param_required('feature_type');
+  my $feature_types    = $self->param('feature_type');
   my $per_chromosome   = $self->param_required('per_chromosome');
   my $include_scaffold = $self->param_required('include_scaffold');
   my $logic_names      = $self->param_required('logic_name');
@@ -228,17 +238,25 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   my %summary;
 
   my $parent_gene = $self->get_Gene();
+  my $id = $self->display_id;
 
-  $summary{'seq_region_name'} = $self->seq_region_name;
-  $summary{'source'}          = $parent_gene->source;
-  $summary{'start'}           = $self->seq_region_start;
-  $summary{'end'}             = $self->seq_region_end;
-  $summary{'strand'}          = $self->strand;
-  $summary{'id'}              = $self->display_id;
-  $summary{'Parent'}          = $parent_gene->stable_id;
-  $summary{'biotype'}         = $self->biotype;
-  $summary{'version'}         = $self->version;
-  $summary{'Name'}            = $self->external_name;
+  $summary{'seq_region_name'}          = $self->seq_region_name;
+  $summary{'source'}                   = $parent_gene->source;
+  $summary{'start'}                    = $self->seq_region_start;
+  $summary{'end'}                      = $self->seq_region_end;
+  $summary{'strand'}                   = $self->strand;
+  $summary{'id'}                       = $id;
+  $summary{'Parent'}                   = $parent_gene->stable_id . "." . $parent_gene->version;
+  $summary{'biotype'}                  = $self->biotype;
+  $summary{'version'}                  = $self->version;
+  $summary{'Name'}                     = $self->external_name;
+  my $havana_transcript = $self->havana_transcript();
+  $summary{'havana_transcript'}        = $havana_transcript->display_id() if $havana_transcript;
+  $summary{'havana_version'}           = $havana_transcript->version() if $havana_transcript;
+  $summary{'ccdsid'}                   = $self->ccds->display_id if $self->ccds;
+  $summary{'transcript_id'}            = $id;
+  $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
+  $summary{'tag'}                      = 'basic' if $self->gencode_basic();
 
   # Add xrefs
   if ($add_xrefs) {
@@ -329,23 +347,16 @@ from HAVANA.
 In the case of human and mouse, the GTF files found here are equivalent
 to the GENCODE gene set.
 
-GFF3 provides access to all annotated transcripts which make
-up an Ensembl gene set. Annotation is based on alignments of
+GFF3 flat file format dumping provides all the sequence features known by
+Ensembl, including protein coding genes, ncRNA, repeat features etc.
+Annotation is based on alignments of biological evidence (eg. proteins,
+cDNAs, RNA-seq) to a genome assembly. Annotation is based on alignments of
 biological evidence (eg. proteins, cDNAs, RNA-seq) to a genome assembly.
 The annotation dumped here is transcribed and translated from the
 genome assembly and is not the original input sequence data that
 we used for alignment. Therefore, the sequences provided by Ensembl
 may differ from the original input sequence data where the genome
 assembly is different to the aligned sequence.
-
-GFF flat file format dumping provides all the sequence features known by 
-Ensembl, including protein coding genes, ncRNA, repeat features etc. 
-Annotation is based on alignments of biological evidence (eg. proteins,
-cDNAs, RNA-seq) to a genome assembly. The annotation dumped here is 
-transcribed and translated from the genome assembly and is not the
-original input sequence data that we used for alignment. Therefore,
-the sequences provided by Ensembl may differ from the original input
-sequence data where the genome assembly is different to the aligned sequence.
 Considerably more information is stored in Ensembl: the flat file 
 just gives a representation which is compatible with existing tools.
 

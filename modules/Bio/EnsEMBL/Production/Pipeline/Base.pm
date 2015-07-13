@@ -141,11 +141,25 @@ sub cleanup_DBAdaptor {
 }
 
 sub get_dir {
-  my ($self, @extras) = @_;
-  my $base_dir = $self->param('base_path');
-  my $dir = File::Spec->catdir($base_dir, @extras);
-  mkpath($dir);
-  return $dir;
+    my ($self, @extras) = @_;
+    my $base_dir = $self->param('base_path');
+    my $dir      = File::Spec->catdir($base_dir, @extras);
+
+    if ($self->param('species')) {
+       my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
+
+       if($mc->is_multispecies()==1){
+         my $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+         my $species       = pop(@extras);
+         push @extras, $collection_db;
+         push @extras, $species; 
+         $dir = File::Spec->catdir($base_dir, @extras); 
+      }
+    }
+
+    mkpath($dir);
+
+return $dir;
 }
 
 sub web_name {
