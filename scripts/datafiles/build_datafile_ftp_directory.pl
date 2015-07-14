@@ -151,7 +151,11 @@ sub _process_dba {
 
     foreach my $df (@{$datafiles}) {
       next if $df->absolute();
-      $self->_process_datafile($df, $self->_target_species_root($df));
+
+      if($schema_type eq 'core_like'){
+        $self->_process_datafile($df, $self->_target_species_root($df));
+      }
+
       $self->_process_datafile($df, $self->_target_datafiles_root($df));
     }
   }
@@ -169,20 +173,18 @@ sub _get_funcgen_DataFiles{
   my @datafiles;
   my $df_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($dba);
   Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $df_adaptor);
-  # Required to prevent adaptor being is lost after returning reference.
-  # Odd scoping/weakening issue?
+  # add_adaptor to prevent adaptor being lost after returning reference (Odd scoping/weakening issue?)
 
   my $rs_adaptor = $dba->get_ResultSetAdaptor;
   my ($cs) = @{$dba->dnadb->get_CoordSystemAdaptor()->fetch_all()};  
 
   foreach my $rset(@{$rs_adaptor->fetch_all('DISPLAYABLE')}){
-
     push @datafiles, Bio::EnsEMBL::DataFile->new_fast(
      {
       dbID          => undef,
       coord_system  => $cs,  
       analysis      => $rset->analysis,
-      name          => $rset->name,  # Would need to trip the suffix to set file_type
+      name          => $rset->name,  # Would need to strip the suffix to set file_type
       absolute      => 0,
       #file_type     => 'BIGWIG',    # This is dependant on feature_class? Set url over-ride instead.
       url           => $rset->dbfile_path,
@@ -220,8 +222,10 @@ sub _process_missing_ftp_links {
   return;
 }
 
+
 sub _process_datafile {
   my ($self, $datafile, $target_dir) = @_;
+
   if(! -d $target_dir) {
     if($self->opts->{dry}) {
       $self->v("\tWould have created directory '%s'", $target_dir);
@@ -236,6 +240,7 @@ sub _process_datafile {
   foreach my $filepath (@{$files}) {
     my ($file_volume, $file_dir, $name) = File::Spec->splitpath($filepath);
     my $target = File::Spec->catfile($target_dir, $name);
+
     if($self->opts()->{dry}) {
       $self->v("\tWould have linked '%s' -> '%s'", $filepath, $target);
       $self->_flag_missing_ftp_link($datafile);
@@ -370,10 +375,11 @@ sub _get_dbs {
 
 sub _files {
   my ($self, $datafile) = @_;
-
   (my $source_file = $datafile->path($self->opts()->{datafile_dir})) =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
-  my $regex = qr/^$name.*/;
+  my $escaped_name = quotemeta($name);
+  my $regex = qr/^$escaped_name.*/;
+
   my @files;
   find(sub {
     push(@files, $File::Find::name) if $_ =~ $regex;
