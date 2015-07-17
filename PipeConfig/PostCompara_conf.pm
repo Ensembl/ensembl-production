@@ -25,6 +25,11 @@ sub default_options {
     	flag_GO           => '0',     
     	flag_GeneCoverage => '0',     
 
+	## Flags controlling dependency between GeneNames & GeneDescr projections
+	    # '0' by default, 
+	    #  set to '1' to ensure GeneDescr starts after GeneNames completed
+    	flag_Dependency   => '0',     
+
     ## analysis_capacity values for some analyses:
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
@@ -280,32 +285,32 @@ sub pipeline_analyses {
     my $pipeline_flow_factory_waitfor;
 
   	if ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GeneNamesProj', 'backbone_fire_GeneDescProj' , 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GeneNamesProjSourceFactory', 'GeneDescProjSourceFactory', 'GOProjSourceFactory'];
+    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj' , 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
+		$pipeline_flow_factory_waitfor = ['GNProjSourceFactory', 'GDProjSourceFactory', 'GOProjSourceFactory'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GeneNamesProj', 'backbone_fire_GeneDescProj', 'backbone_fire_GOProj'];
+    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj', 'backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GeneDescProj', 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GeneDescProjSourceFactory', 'GOProjSourceFactory'];
+    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
+		$pipeline_flow_factory_waitfor = ['GDProjSourceFactory', 'GOProjSourceFactory'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr')) {
-    	$pipeline_flow  = ['backbone_fire_GeneNamesProj', 'backbone_fire_GeneDescProj'];
+    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GeneNamesProj', 'backbone_fire_GOProj'];
+    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GeneNamesProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GeneNamesProjSourceFactory'];
+    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GeneCoverage'];
+		$pipeline_flow_factory_waitfor = ['GNProjSourceFactory'];
   	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GeneDescProj', 'backbone_fire_GOProj'];
+    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GeneDescProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GeneDescProjSourceFactory'];
+    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GeneCoverage'];
+		$pipeline_flow_factory_waitfor = ['GDProjSourceFactory'];
   	} elsif ($self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
 		$pipeline_flow_factory_waitfor = ['GOProjSourceFactory'];
   	} elsif ($self->o('flag_GeneNames')) {
-  	    $pipeline_flow  = ['backbone_fire_GeneNamesProj'];
+  	    $pipeline_flow  = ['backbone_fire_GNProj'];
   	} elsif ($self->o('flag_GeneDescr')) {
-  	    $pipeline_flow  = ['backbone_fire_GeneDescProj'];
+  	    $pipeline_flow  = ['backbone_fire_GDProj'];
   	} elsif ($self->o('flag_GO')) {
     	$pipeline_flow  = ['backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneCoverage')) {
@@ -323,37 +328,37 @@ sub pipeline_analyses {
     },   
 ########################
 ### GeneNamesProjection
-    {  -logic_name    => 'backbone_fire_GeneNamesProj',
+    {  -logic_name    => 'backbone_fire_GNProj',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -hive_capacity => -1,
        -flow_into     => {
-							'1' => ['GeneNamesProjSourceFactory'] ,
+							'1' => ['GNProjSourceFactory'] ,
                           },
        -meadow_type   => 'LOCAL',
     },
     
-    {  -logic_name    => 'GeneNamesProjSourceFactory',
+    {  -logic_name    => 'GNProjSourceFactory',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gn_config'),
                           }, 
        -flow_into     => {
-		                    '2->A' => ['GeneNamesProjTargetFactory'],
-		                    'A->2' => ['GeneNamesEmailReport'],		                       
+		                    '2->A' => ['GNProjTargetFactory'],
+		                    'A->2' => ['GNEmailReport'],		                       
                           },          
     },    
     
-    {  -logic_name      => 'GeneNamesProjTargetFactory',
+    {  -logic_name      => 'GNProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
-							 '2->A'	=> ['GeneNamesDumpTables'],
-				             'A->2' => ['GeneNamesProjection'],
+							 '2->A'	=> ['GNDumpTables'],
+				             'A->2' => ['GNProjection'],
                            },
        -rc_name         => 'default',
     },
 
-    {  -logic_name    => 'GeneNamesDumpTables',
+    {  -logic_name    => 'GNDumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
        -parameters    => {
 		    				'dump_tables' => $self->o('g_dump_tables'),
@@ -362,14 +367,13 @@ sub pipeline_analyses {
        -rc_name       => 'default',
     },     
 
-    {  -logic_name    => 'GeneNamesProjection',
+    {  -logic_name    => 'GNProjection',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
 				   		    'release'                 => $self->o('ensembl_release'),
 				            'output_dir'              => $self->o('output_dir'),		
 				            'flag_store_projections'  => $self->o('flag_store_projections'),
-#				            'flag_filter'             => $self->o('flag_filter'),
 				            'taxonomy_db'			  => $self->o('taxonomy_db'),
    	   					  },
        -rc_name       => 'default',
@@ -377,7 +381,7 @@ sub pipeline_analyses {
        -analysis_capacity => $self->o('geneNameproj_capacity'),
     },
 
-    {  -logic_name    => 'GeneNamesEmailReport',
+    {  -logic_name    => 'GNEmailReport',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
@@ -391,37 +395,37 @@ sub pipeline_analyses {
 
 ########################
 ### GeneDescProjection
-    {  -logic_name    => 'backbone_fire_GeneDescProj',
+    {  -logic_name    => 'backbone_fire_GDProj',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -hive_capacity => -1,
        -flow_into     => {
-							'1' => ['GeneDescProjSourceFactory'] ,
+							'1' => ['GDProjSourceFactory'] ,
                           },
        -meadow_type   => 'LOCAL',
     },
     
-    {  -logic_name    => 'GeneDescProjSourceFactory',
+    {  -logic_name    => 'GDProjSourceFactory',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gd_config'),
                           }, 
        -flow_into     => {
-		                    '2->A' => ['GeneDescProjTargetFactory'],
-		                    'A->2' => ['GeneDescEmailReport'],		                       
+		                    '2->A' => ['GDProjTargetFactory'],
+		                    'A->2' => ['GDEmailReport'],		                       
                           },          
     },    
     
-    {  -logic_name      => 'GeneDescProjTargetFactory',
+    {  -logic_name      => 'GDProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
-							 '2->A'	=> ['GeneDescDumpTables'],
-				             'A->2' => ['GeneDescProjection'],
+							 '2->A'	=> ['GDDumpTables'],
+				             'A->2' => ['GDProjection'],
                            },
        -rc_name         => 'default',
     },
 
-    {  -logic_name    => 'GeneDescDumpTables',
+    {  -logic_name    => 'GDDumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
        -parameters    => {
 		    				'dump_tables' => $self->o('g_dump_tables'),
@@ -430,7 +434,7 @@ sub pipeline_analyses {
        -rc_name       => 'default',
     },     
 
-    {  -logic_name    => 'GeneDescProjection',
+    {  -logic_name    => 'GDProjection',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
@@ -443,9 +447,10 @@ sub pipeline_analyses {
        -rc_name       => 'default',
        -batch_size    =>  2, 
        -analysis_capacity => $self->o('geneNameproj_capacity'),
+       -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],
     },
 
-    {  -logic_name    => 'GeneDescEmailReport',
+    {  -logic_name    => 'GDEmailReport',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
@@ -536,7 +541,6 @@ sub pipeline_analyses {
 				            'flag_go_check'          => $self->o('flag_go_check'),
 				            'flag_full_stats'        => $self->o('flag_full_stats'),
 				       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
-							'dump_dir'				 => $self->o('go_dump_dir'),
      	 				},
        -batch_size    =>  1,
        -rc_name       => 'default',
