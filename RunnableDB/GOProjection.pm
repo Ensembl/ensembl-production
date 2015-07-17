@@ -62,7 +62,6 @@ sub fetch_input {
     my $evidence_codes         = $self->param_required('evidence_codes');
     my $goa_webservice         = $self->param_required('goa_webservice');
     my $goa_params             = $self->param_required('goa_params');
-    my $dump_dir	       = $self->param_required('dump_dir');
 
     $self->param('flag_go_check', $flag_go_check);
     $self->param('flag_store_proj', $flag_store_proj);
@@ -83,17 +82,11 @@ sub fetch_input {
     $self->param('goa_webservice', $goa_webservice);
     $self->param('goa_params', $goa_params);
 
-    $dump_dir = catdir($dump_dir, $compara, 'goproj');
-    make_path($dump_dir);
     make_path($outfile);
-
-    my $dump_file  = $dump_dir."/".$from_species."-".$to_species."_GOTermsProjection_dump.txt";
-    open my $dump,">","$dump_file" or die $!;
 
     my $log_file  = $outfile."/".$from_species."-".$to_species."_GOTermsProjection_logs.txt";
     open my $log,">","$log_file" or die $!;
 
-    $self->param('dump', $dump);
     $self->param('log', $log);
 
 return;
@@ -138,7 +131,7 @@ sub run {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '79',
+            -db_version => '80',
    );
 =cut
 
@@ -189,7 +182,7 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
          my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
          next if (!$to_gene);
-         project_go_terms($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $self->param('ensemblObj_type'), $self->param('ensemblObj_type_target'), $self->param('evidence_codes'), $hDb, $sql, $log, $self->param('dump'));
+         project_go_terms($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $self->param('ensemblObj_type'), $self->param('ensemblObj_type_target'), $self->param('evidence_codes'), $hDb, $sql, $log);
 
          $i++;
        }
@@ -201,7 +194,6 @@ sub run {
     print $log Dumper %projections_stats;
  
     close($log);
-    close($self->param('dump'));
   
 return;
 }
@@ -273,7 +265,7 @@ sub get_ontology_terms {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '79',
+            -db_version => '80',
    );
 =cut
 
@@ -317,7 +309,7 @@ return 0;
 #   + unwanted_go_term {
 #   + go_xref_exists {
 sub project_go_terms {
-    my ($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $ensemblObj_type_target, $evidence_codes, $hDb, $sql, $log, $dump) = @_;
+    my ($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene,$to_taxon_id, $ensemblObj_type, $ensemblObj_type_target, $evidence_codes, $hDb, $sql, $log) = @_;
 
     # GO xrefs are linked to translations, not genes
     # Project GO terms between the translations of the canonical transcripts of each gene
@@ -415,36 +407,6 @@ sub project_go_terms {
       $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
       $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($self->param('flag_store_proj')==1);
-
-      ## go projection dump for GOA team
-      my @dblinks_from = @{$from_translation->get_all_DBLinks('Uniprot/%') }; #Uniprot/SPTREMBL Uniprot/SWISSPROT
-      my @dblinks_to   = @{$to_translation->get_all_DBLinks('Uniprot/%') }; #Uniprot/SPTREMBL Uniprot/SWISSPROT
-
-      my (@uniprot_from, @uniprot_to);
-      my (@uniprot_from_db, @uniprot_to_db);
-
-      foreach my $dblink (@dblinks_from){
-        push @uniprot_from, $dblink->primary_id();	       
-        push @uniprot_from_db, $dblink->dbname();	       
-      }
-
-      foreach my $dblink (@dblinks_to){
-        push @uniprot_to, $dblink->primary_id();
-        push @uniprot_to_db, $dblink->dbname();	       
-      }
-
-      my $uniprot_from    = join ":", @uniprot_from;	       
-      my $uniprot_from_db = join ":", @uniprot_from_db;	       
-      my $uniprot_to      = join ":", @uniprot_to;	       
-      my $uniprot_to_db   = join ":", @uniprot_to_db;	       
-
-      print $dump $go_term."\t";
-      print $dump $from_translation->stable_id()."\t";
-      print $dump $uniprot_from."\t";
-      print $dump $uniprot_from_db."\t";
-      print $dump $to_translation->stable_id()."\t";
-      print $dump $uniprot_to."\t";
-      print $dump $uniprot_to_db."\n";
       
       print $log "\t\t Project GO term:".$dbEntry->display_id()."\t";
       print $log "from:".$from_translation->stable_id()."\t";
