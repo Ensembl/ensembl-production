@@ -116,7 +116,7 @@ sub run {
             -port       => 4157,
             -user       => 'ensrw',
             -pass       => 'writ3r',
-            -db_version => '79',
+            -db_version => '80',
    );
 =cut
     my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
