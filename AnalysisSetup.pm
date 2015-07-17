@@ -147,7 +147,8 @@ sub run {
   
   my $new_analysis = $self->create_analysis;
   $aa->store($new_analysis);
-  
+ 
+  $dba->dbc->disconnect_if_idle(); 
 }
 
 sub create_analysis {
