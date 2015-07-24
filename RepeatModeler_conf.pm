@@ -39,7 +39,7 @@ sub default_options {
     meta_filters => {},
 
     # Parameters for dumping and splitting Fasta DNA files
-    max_seq_length          => 10000000,
+    max_seq_length          => 25000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
     max_seqs_per_file       => undef,
     max_files_per_directory => 50,
