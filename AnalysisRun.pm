@@ -329,6 +329,8 @@ sub save_to_db {
     }
   }
   
+  $adaptor->dbc && $adaptor->dbc->disconnect_if_idle();
+  
   return;
 }
 
