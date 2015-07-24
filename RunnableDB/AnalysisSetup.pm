@@ -43,7 +43,7 @@ an arrayref of the tables which have the relevant analysis_id foreign
 keys (linked_tables).
 
 The script will look up descriptions from the production database, by default;
-this relies on the production server (usually pan-1) being in the registry.
+this relies on the production server (usually pan-prod) being in the registry.
 Lookup parameters will be over-ridden if description parameters are explicitly
 given, or can be set as undefined (production_lookup=0).
 
