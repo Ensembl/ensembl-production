@@ -25,7 +25,7 @@ sub usage {
 
   print <<USAGE_END;
 Usage:
-  $0 --release NN --master master-server --mport master-port \\
+  $0 --release NN --master master-server --mport master-port --mdbname master-database-name\\
   $padding --server server1 --server server2 [...] \\
   $padding --dbport 3306 --dbuser user --dbpass passwd \\
   $padding --dbwuser write_user --dbwpass write_passwd
@@ -43,8 +43,11 @@ where
   --master/-m   The master server where the production database lives
                 (optional, default is 'ens-staging1').
 
-  --mport/-mP   The port ont he master serve to connect to
+  --mport/-mP   The port on the master serve to connect to
                 (optional, default is '3306').
+
+  --mdbname/-md  The production database name on the master server that you want to conenct to
+                (optional, default is 'ensembl_production').
 
   --server/-s   A database server (optional, may occur several times,
                 default is 'ens-staging1', and 'ens-staging2').
@@ -100,6 +103,7 @@ my $release;
 my @servers;
 my $master = 'ens-staging1';
 my $mport  = '3306';
+my $mdbname = 'ensembl_production';
 
 my $dbport = '3306';
 my ( $dbwuser, $dbwpass ) = ( 'ensadmin', undef );
@@ -111,6 +115,7 @@ my $opt_about = 0;
 if ( !GetOptions( 'release|r=i'  => \$release,
                   'master|m=s'   => \$master,
                   'mport|mP=i'   => \$mport,
+                  'mdbname|md=s' => \$mdbname,
                   'server|s=s@'  => \@servers,
                   'dbuser|u=s'   => \$dbuser,
                   'dbpass|p=s'   => \$dbpass,
@@ -144,7 +149,7 @@ my %found_databases;
 
 {
   my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $master, $mport, 'ensembl_production' );
+                     $master, $mport, $mdbname );
   my $dbh = DBI->connect( $dsn, $dbuser, $dbpass,
                           { 'PrintError' => 1, 'RaiseError' => 1 } );
 
@@ -246,7 +251,7 @@ foreach my $server (@servers) {
 } ## end foreach my $server (@servers)
 
 my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $master, $mport, 'ensembl_production' );
+                     $master, $mport, $mdbname );
 my $dbh = DBI->connect( $dsn, $dbwuser, $dbwpass,
                         { 'PrintError' => 1, 'RaiseError' => 1 } );
 
