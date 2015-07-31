@@ -49,6 +49,7 @@ else {
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 ok($pipeline, 'Pipeline has been created '.$module);
 $pipeline->add_fake_binaries('fake_gtf_binaries');
+$pipeline->add_fake_binaries('fake_gff_binaries');
 $pipeline->run();
 
 if(! @ARGV) {
