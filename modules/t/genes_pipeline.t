@@ -95,7 +95,12 @@ if(! @ARGV) {
   # Less features in gff3 compared to gtf
   # Gtf contains dedicated start_codon and stop_codon features
   # These are included in CDS features in gff3 format
-  is_file_line_count($gff3_loc, 1939, 'Expect 1939 rows in the GFF3 file');
+  is_file_line_count($gff3_loc, 2035, 'Expect 2035 rows in the GFF3 file');
+  is_file_line_count($gff3_loc, 2032, 'Expect 2032 region lines', 'sequence-region');
+  is_file_line_count($gff3_loc, 1948, 'Expect 1948 gene lines', 'ID=gene');
+  is_file_line_count($gff3_loc, 1823, 'Expect 1823 transcript lines', 'ID=transcript');
+  is_file_line_count($gff3_loc, 1598, 'Expect 1598 CDS lines', 'ID=CDS');
+  is_file_line_count($gff3_loc, 1089, 'Expect 1089 exon lines', 'exon_id');
   my $gff3_abinitio_loc = File::Spec->catfile($target_dir, $gff3_abinitio_file);
   # One additional line for the GFF3 header compared to GTF
   is_file_line_count($gff3_abinitio_loc, 6, 'Expect 6 rows in the GFF3 abinitio file');

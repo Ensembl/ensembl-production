@@ -53,11 +53,14 @@ sub default_options {
       ## GFF3 specific options
       feature_type     => ['Gene', 'Transcript'],
       per_chromosome   => 0,
-      include_scaffold => 0,
+      include_scaffold => 1,
       logic_name       => [],
       db_type          => 'core',
       out_file_stem    => undef,
       xrefs            => 0,
+      gt_exe        => '/software/ensembl/central/bin/gt',
+      gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+      gff3_validate => $self->o('gt_exe').' gff3validator',
 
       ## Dump out files with abinitio predictions as well
       abinitio         => 1,
@@ -111,8 +114,47 @@ sub pipeline_analyses {
           xrefs              => $self->o('xrefs'),
         },
         -max_retry_count  => 1,
-        -analysis_capacity => 10,
+        -analysis_capacity => 30,
         -rc_name => 'dump',
+        -flow_into         => ['gff3Tidy'],
+      },
+
+
+      ####### DATA TIDY
+
+      {
+        -logic_name        => 'gff3Tidy',
+        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        -analysis_capacity => 10,
+        -batch_size        => 10,
+        -parameters        => {
+                                cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
+                              },
+        -rc_name           => 'dump',
+        -flow_into         => ['gff3Move'],
+      },
+
+      {
+        -logic_name        => 'gff3Move',
+        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        -analysis_capacity => 10,
+        -parameters        => {
+                                cmd => 'mv #out_file#.sorted #out_file#',
+                              },
+        -rc_name           => 'dump',
+        -flow_into         => ['gff3Validate'],
+        -meadow_type       => 'LOCAL',
+      },
+
+      {
+        -logic_name        => 'gff3Validate',
+        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        -analysis_capacity => 10,
+        -batch_size        => 10,
+        -parameters        => {
+                                cmd => $self->o('gff3_validate').' #out_file#',
+                              },
+        -rc_name           => 'dump',
       },
 
       ####### CHECKSUMMING
@@ -120,7 +162,7 @@ sub pipeline_analyses {
       {
         -logic_name => 'ChecksumGeneratorGFF3',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GFF3::ChecksumGenerator',
-        -wait_for   => 'DumpGFF3',
+        -wait_for   => ['gff3Validate', 'DumpGFF3'],
         -hive_capacity => 10,
       },
       
@@ -133,7 +175,7 @@ sub pipeline_analyses {
           email   => $self->o('email'),
           subject => $self->o('pipeline_name').' has finished',
         },
-        -wait_for   => [ qw/ChecksumGeneratorGFF3/ ],
+        -wait_for   => [ qw/ChecksumGeneratorGFF3 gff3Tidy DumpGFF3/ ],
       }
     
     ];
