@@ -246,7 +246,7 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'end'}                      = $self->seq_region_end;
   $summary{'strand'}                   = $self->strand;
   $summary{'id'}                       = $id;
-  $summary{'Parent'}                   = $parent_gene->stable_id . "." . $parent_gene->version;
+  $summary{'Parent'}                   = $parent_gene->stable_id;
   $summary{'biotype'}                  = $self->biotype;
   $summary{'version'}                  = $self->version;
   $summary{'Name'}                     = $self->external_name;
@@ -325,6 +325,15 @@ sub data_path {
     unless $self->param('species');
 
   return $self->get_dir('gff3', $self->param('species'));
+}
+
+sub write_output {
+  my ($self) = @_;
+
+  #foreach my $out_file (@{$self->param('out_files')}) {
+  my $out_file = $self->param('out_file');
+  $self->dataflow_output_id({out_file => $out_file}, 1);
+  #}
 }
 
 sub _create_README {
