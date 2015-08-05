@@ -44,11 +44,12 @@ if(@ARGV) {
   $options = join(q{ }, @ARGV);
 }
 else {
-  $options = '-base_path '.$dir;
+  $options = "-base_path ". $dir . " -gff3_tidy cat -gff3_validate cat";
 }
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 ok($pipeline, 'Pipeline has been created '.$module);
 $pipeline->add_fake_binaries('fake_gtf_binaries');
+#$pipeline->add_fake_binaries('fake_gff_binaries');
 $pipeline->run();
 
 if(! @ARGV) {
@@ -95,7 +96,12 @@ if(! @ARGV) {
   # Less features in gff3 compared to gtf
   # Gtf contains dedicated start_codon and stop_codon features
   # These are included in CDS features in gff3 format
-  is_file_line_count($gff3_loc, 1939, 'Expect 1939 rows in the GFF3 file');
+  is_file_line_count($gff3_loc, 1942, 'Expect 1942 rows in the GFF3 file');
+  is_file_line_count($gff3_loc, 1942, 'Expect 1942 region lines', 'sequence-region');
+  is_file_line_count($gff3_loc, 1855, 'Expect 1855 gene lines', 'ID=gene');
+  is_file_line_count($gff3_loc, 1730, 'Expect 1730 transcript lines', 'ID=transcript');
+  is_file_line_count($gff3_loc, 1505, 'Expect 1505 CDS lines', 'ID=CDS');
+  is_file_line_count($gff3_loc, 996, 'Expect 996 exon lines', 'exon_id');
   my $gff3_abinitio_loc = File::Spec->catfile($target_dir, $gff3_abinitio_file);
   # One additional line for the GFF3 header compared to GTF
   is_file_line_count($gff3_abinitio_loc, 6, 'Expect 6 rows in the GFF3 abinitio file');

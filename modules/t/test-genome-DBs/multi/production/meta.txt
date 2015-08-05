@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	81
+2	\N	schema_version	82
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
@@ -30,3 +30,5 @@
 36	\N	patch	patch_79_80c.sql|use_auto_increment_for_the_master_attrib_table
 37	\N	patch	patch_80_81_a.sql|schema_version
 38	\N	patch	patch_80_81_a.sql|schema_version
+39	\N	patch	patch_80_81_a.sql|schema_version
+40	\N	patch	patch_81_82_a.sql|schema_version

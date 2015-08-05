@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GenesDump_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GFF3_conf;
 
 use strict;
 use warnings;
@@ -48,12 +48,8 @@ sub default_options {
 
       ### Defaults 
       
-      pipeline_name => 'geneset_dump_'.$self->o('release'),
+      pipeline_name => 'gff3_dump_'.$self->o('release'),
       
-      ## GTF specific options
-      gtftogenepred_exe => 'gtfToGenePred',
-      genepredcheck_exe => 'genePredCheck',
-
       ## GFF3 specific options
       feature_type     => ['Gene', 'Transcript'],
       per_chromosome   => 0,
@@ -98,24 +94,11 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -flow_into  => {
           1 => 'Notify',
-          2 => [ qw/DumpGTF DumpGFF3 ChecksumGeneratorGTF ChecksumGeneratorGFF3/ ]
+          2 => [ qw/DumpGFF3 ChecksumGeneratorGFF3/ ]
         },
       },
       
       ######### DUMPING DATA
-
-      {
-        -logic_name => 'DumpGTF',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
-        -parameters => {
-          gtf_to_genepred => $self->o('gtftogenepred_exe'),
-          gene_pred_check => $self->o('genepredcheck_exe'),
-          abinitio        => $self->o('abinitio')
-        },
-        -max_retry_count  => 1, 
-        -analysis_capacity => 10, 
-        -rc_name => 'dump',
-      },
 
       {
         -logic_name => 'DumpGFF3',
@@ -172,20 +155,14 @@ sub pipeline_analyses {
                                 cmd => $self->o('gff3_validate').' #out_file#',
                               },
         -rc_name           => 'dump',
-       },
+      },
 
       ####### CHECKSUMMING
       
       {
         -logic_name => 'ChecksumGeneratorGFF3',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::GFF3::ChecksumGenerator',
-        -wait_for   => ['DumpGFF3', 'gff3Validate'],
-        -hive_capacity => 10,
-      },
-      {
-        -logic_name => 'ChecksumGeneratorGTF',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::GTF::ChecksumGenerator',
-        -wait_for   => 'DumpGTF',
+        -wait_for   => ['gff3Validate', 'DumpGFF3'],
         -hive_capacity => 10,
       },
       
@@ -198,7 +175,7 @@ sub pipeline_analyses {
           email   => $self->o('email'),
           subject => $self->o('pipeline_name').' has finished',
         },
-        -wait_for   => [ qw/ChecksumGeneratorGTF DumpGFF3 gff3Tidy ChecksumGeneratorGFF3/ ],
+        -wait_for   => [ qw/ChecksumGeneratorGFF3 gff3Tidy DumpGFF3/ ],
       }
     
     ];
