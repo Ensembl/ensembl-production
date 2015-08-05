@@ -142,7 +142,9 @@ sub pairedend_to_sam {
   my $comm = sprintf($star_pe, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $file2, $sam);
   $logger->debug("Executing $comm");
   #system($comm) == 0 || throw "Cannot execute command, $comm";
-  my $stderr = qx(bash -c '$comm' 2>&1 1>/dev/null);
+  my $wd = $sam;
+  $wd =~ s/[^\/]+$//;
+  my $stderr = qx(bash -c 'cd $wd && $comm' 2>&1 1>/dev/null);
   if ($stderr) {
       throw("Failed to execute external command, $comm, because of $stderr");
       #throw "Cannot execute command, $comm";
@@ -155,7 +157,9 @@ sub single_to_sam {
   my $comm = sprintf($star_se, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $sam);
   $logger->debug("Executing command, $comm");
   #system($comm) == 0 || throw "Cannot execute command, $comm";
-  my $stderr = qx(bash -c '$comm' 2>&1 1>/dev/null);
+  my $wd = $sam;
+  $wd =~ s/[^\/]+$//;
+  my $stderr = qx(bash -c 'cd $wd && $comm' 2>&1 1>/dev/null);
   if ($stderr) {
       warn("Failed to execute external command, $@, because of $stderr\n");
       throw "Cannot execute command, $comm";
