@@ -139,7 +139,7 @@ sub pipeline_analyses {
                               unique_file_names       => 1,
                             },
       -rc_name           => '8Gb_mem',
-      -flow_into         => ['BuildDatabase'],
+      -flow_into         => {'2' => ['BuildDatabase']},
     },
 
     {
