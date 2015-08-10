@@ -16,111 +16,91 @@ limitations under the License.
 
 =cut
 
-
-=pod
-
-=head1 CONTACT
-
-  Please email comments or questions to the public Ensembl
-  developers list at <dev@ensembl.org>.
-
-  Questions may also be sent to the Ensembl help desk at
-  <helpdesk@ensembl.org>.
- 
-=cut
-
 package Bio::EnsEMBL::EGPipeline::Common::Aligner::BwaAligner;
-use Log::Log4perl qw(:easy);
-use Bio::EnsEMBL::Utils::Argument qw( rearrange );
-use Bio::EnsEMBL::Utils::Exception qw(throw warning);
+
+use strict;
+use warnings;
 use base qw(Bio::EnsEMBL::EGPipeline::Common::Aligner);
 
-# Index the reference fasta file with something like: bwa index -a bwtsw database.fasta
-my $index = "%s index -a bwtsw %s";
-# samtools faidx v61_all.con
-my $faindex = "%s faidx %s";
-# bwa aln database.fasta short_read_1.fastq > aln_sa1.sai
-# bwa aln database.fasta short_read_2.fastq > aln_sa2.sai
-my $aln = "%s aln %s %s > %s";
-# bwa sampe database.fasta aln_sa1.sai aln_sa2.sai read1.fq read2.fq > aln.sam
-my $sampe = "%s sampe %s %s %s %s %s > %s";
-#bwa samse database.fasta aln_sa.sai short_read.fastq > aln.sam
-my $samse = "%s samse %s %s %s > %s";
-
-my $logger = get_logger();
+use Bio::EnsEMBL::Utils::Argument qw(rearrange);
+use Bio::EnsEMBL::Utils::Exception qw(throw);
+use File::Spec::Functions qw(catdir);
 
 sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
-  ($self->{bwa}) = rearrange(['BWA'], @args);
-  $self->{bwa} ||= 'bwa';
+  
+  my $aligner_dir;
+  ( $aligner_dir, $self->{bwa}, $self->{program}, $self->{read_type} ) =
+    rearrange(['ALIGNER_DIR', 'BWA', 'PROGRAM', 'READ_TYPE'], @args);
+  
+  $self->{bwa}       ||= 'bwa';
+  $self->{read_type} ||= 'default';
+  $self->{program}   ||= ($self->{read_type} eq 'long_reads') ? 'mem' : 'aln';
+  
+  $self->{bwa} = catdir($aligner_dir, $self->{bwa});
+  
   return $self;
 }
 
 sub index_file {
   my ($self, $file) = @_;
-  my $comm = sprintf($index, $self->{bwa}, $file);
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute $comm";
-  my $comm = sprintf($faindex, $self->{samtools}, $file);
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute $comm";
-  return;
-}
-
-sub _align_file {
-  my ($self, $ref, $file) = @_;
-  my $output = $file;
-  $output =~ s/.fastq/.sai/;
-  my $comm = sprintf($aln, $self->{bwa}, $ref, $file, $output);
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute $comm";
-  return $output;
+  
+  my $index_cmd = "$self->{bwa} index ";
+  my $index_options = " -a bwtsw ";
+  my $cmd = "$index_cmd $index_options $file";
+  system($cmd) == 0 || throw "Cannot execute $cmd";
+  
+  my $samtools_index_cmd = "$self->{samtools} faidx ";
+  $cmd = "$samtools_index_cmd $file";
+  system($cmd) == 0 || throw "Cannot execute $cmd";
 }
 
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
-  if (defined $file2) {
-	# paired end
-	$logger->info("Aligning single read file $file1");
-	my $aligned_1 = $self->_align_file($ref, $file1);
-	$logger->info("Alignment stored in $aligned_1");
-	$logger->info("Aligning single read file $file2");
-	my $aligned_2 = $self->_align_file($ref, $file2);
-	$logger->info("Alignment stored in $aligned_2");
-	# create sam
-	$logger->info("Creating SAM file $sam");
-	$self->_pairedend_to_sam($ref, $aligned_1, $file1, $aligned_2, $file2, $sam);
-	unlink $aligned_1 if ($self->{cleanup});
-	unlink $aligned_2 if ($self->{cleanup});
+  
+  if ($self->{program} eq 'aln') {
+    if (defined $file2) {
+      my $aligned1 = $self->sai_file($ref, $file1);
+      my $aligned2 = $self->sai_file($ref, $file2);
+      $sam = $self->align_file($ref, $sam, "$file1 $file2", "$aligned1 $aligned2", 'sampe');
+      unlink $aligned1 if $self->{cleanup};
+      unlink $aligned2 if $self->{cleanup};
+    } else {
+      my $aligned1 = $self->sai_file($ref, $file1);
+      $sam = $self->align_file($ref, $sam, $file1, $aligned1, 'samse');
+      unlink $aligned1 if $self->{cleanup};
+    }
   } else {
-	          # single
-	          # align concatenate file
-	$logger->info("Aligning single read file $file1");
-	my $aligned = $self->_align_file($ref, $file1);
-	$logger->info("Alignment stored in $aligned");
-	# create sam
-	$logger->info("Creating SAM file $sam");
-	$self->_single_to_sam($ref, $aligned, $file1, $sam);
-	unlink $aligned if ($self->{cleanup});
+    if (defined $file2) {
+      $sam = $self->align_file($ref, $sam, "$file1 $file2", '', $self->{program});
+    } else {
+      $sam = $self->align_file($ref, $sam, $file1, '', $self->{program});
+    }
   }
+  
   return $sam;
-} ## end sub align
-
-sub _pairedend_to_sam {
-  my ($self, $ref, $file1_aln, $file1_fastq, $file2_aln, $file2_fastq, $output) = @_;
-  my $comm = sprintf($sampe, $self->{bwa}, $ref, $file1_aln, $file2_aln, $file1_fastq, $file2_fastq, $output);
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute $comm";
-  return $output;
 }
 
-sub _single_to_sam {
-  my ($self, $ref, $file1_aln, $file1_fastq, $output) = @_;
-  my $comm = sprintf($samse, $self->{bwa}, $ref, $file1_aln, $file1_fastq, $output);
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute $comm";
-  return $output;
+sub sai_file {
+  my ($self, $ref, $file)  = @_;
+  
+  my $sai_file = "$file.sai";
+  my $align_cmd = "$self->{bwa} $self->{program} ";
+  my $cmd = "$align_cmd $ref $file > $sai_file";
+  system($cmd) == 0 || throw "Cannot execute $cmd";
+  
+  return $sai_file;
+}
+
+sub align_file {
+  my ($self, $ref, $sam, $files, $aligneds, $program) = @_;
+  
+  my $sam_cmd = "$self->{bwa} $program ";
+  my $cmd = "$sam_cmd $ref $aligneds $files > $sam";
+  system($cmd) == 0 || throw "Cannot execute $cmd";
+  
+  return $sam;
 }
 
 1;
