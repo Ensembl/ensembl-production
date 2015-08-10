@@ -142,7 +142,7 @@ sub write_output {
   my ($self) = @_;
   
   foreach my $split_file (@{$self->param('split_files')}) {
-    $self->dataflow_output_id({'split_file' => $split_file}, 1);
+    $self->dataflow_output_id({'split_file' => $split_file}, 2);
   }
   
 }
