@@ -32,8 +32,9 @@ sub param_defaults {
     'header_function'      => undef,  # Custom header function for fasta file (string, will be 'eval'ed)
     'chunk_factor'         => 1000,   # Rows of sequence data that are buffered
     'line_width'           => 80,     # Width of sequence data in fasta file
-    'repeat_libs'          => undef,  # arrayref of logic_names, e.g. ['repeatmask']
-    'soft_mask'            => undef,  # 0 or 1, to disable or enable softmasking
+    'repeat_mask'          => 0,      # 0 or 1, to disable or enable repeat masking
+    'repeat_libs'          => [],     # arrayref of logic_names, e.g. ['repeatmask']
+    'soft_mask'            => 1,      # 0 or 1, to disable or enable softmasking
     'genomic_slice_cutoff' => 0,      # threshold for the minimum slice length
     'overwrite'            => 0,
   };
@@ -69,6 +70,13 @@ sub run {
   my $hf = undef;
   if ($self->param_is_defined('header_function')) {
     $hf = eval $self->param('header_function');
+  }
+  
+  if ($self->param('repeat_mask')) {
+    if (! defined $self->param('repeat_libs') || scalar(@{$self->param('repeat_libs')}) == 0) {
+      my $repeat_libs = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
+      $self->param('repeat_libs', $repeat_libs);
+    }
   }
   
   # Instantiate a Bio::EnsEMBL::EGPipeline::Common::Dumper,
