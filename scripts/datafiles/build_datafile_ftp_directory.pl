@@ -288,7 +288,8 @@ sub _target_species_root {
 sub _target_datafiles_root {
   my ($self, $datafile) = @_;
   my $base = File::Spec->catdir($self->opts()->{ftp_dir}, 'data_files');
-  (my $target_location = $datafile->path($base)) =~ s/funcgen\///;  
+  my $target_location = $datafile->path($base);
+  $target_location =~ s/funcgen\///;  
   my ($volume, $dir, $file) = File::Spec->splitpath($target_location);
   return $dir;
 }
@@ -375,7 +376,8 @@ sub _get_dbs {
 
 sub _files {
   my ($self, $datafile) = @_;
-  (my $source_file = $datafile->path($self->opts()->{datafile_dir})) =~ s/funcgen\///;   
+  my $source_file = $datafile->path($self->opts->{datafile_dir})
+  $source_file =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
   my $escaped_name = quotemeta($name);
   my $regex = qr/^$escaped_name.*/;
