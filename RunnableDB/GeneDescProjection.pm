@@ -130,12 +130,14 @@ sub run {
     print $log "\t\tsoftware release :$release\n";
     print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
  
+    #Clean up projected descriptions
+
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
     my $mlss_id       = $mlss->dbID();
- 
+
     # Get homologies from compara - comes back as a hash of arrays
     print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
     my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
@@ -200,6 +202,11 @@ sub project_genedesc {
         my $source_id    = $from_gene->stable_id();
         $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
 
+        if ($from_gene->display_xref->dbname() =~ /MGI/ || $from_gene->display_xref->dbname() =~ /HGNC/ || $from_gene->display_xref->dbname() =~ /ZFIN_ID/)
+        {
+          $gene_desc=$from_gene->description();
+        }
+
         print $log "\t\tProject from: ".$from_gene->stable_id()."\t";
         print $log "to: ".$to_gene->stable_id()."\t";
         print $log "Gene Description: $gene_desc\n";
@@ -212,6 +219,5 @@ sub project_genedesc {
     }
 
 }
-
 
 1
