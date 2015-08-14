@@ -47,7 +47,6 @@ sub fetch_input {
     my $flag_go_check     = $self->param_required('flag_go_check');
     my $flag_store_proj   = $self->param_required('flag_store_projections');
     my $flag_full_stats   = $self->param_required('flag_full_stats');
-    my $flag_del_go_terms = $self->param_required('flag_delete_go_terms');
     my $to_species      = $self->param_required('species');
     my $from_species    = $self->param_required('source');
     my $compara         = $self->param_required('compara');
@@ -66,7 +65,6 @@ sub fetch_input {
     $self->param('flag_go_check', $flag_go_check);
     $self->param('flag_store_proj', $flag_store_proj);
     $self->param('flag_full_stats', $flag_full_stats);
-    $self->param('flag_del_go_terms', $flag_del_go_terms);
     $self->param('to_species', $to_species);
     $self->param('from_species', $from_species);
     $self->param('compara', $compara);
@@ -149,7 +147,6 @@ sub run {
     print $log "\t\tsoftware release:".$self->param('release')."\n";
     print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
 
-    $self->delete_go_terms($to_ga) if($self->param('flag_del_go_terms')==1);
 
     # build Compara GenomeDB objects
     my $method_link_type = $self->param('method_link_type');

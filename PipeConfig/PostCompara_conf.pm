@@ -112,7 +112,16 @@ sub default_options {
 		#		 "Predicted protein" from UniProt
 		#		 "Gene of unknown function" from PGSC
 		flag_filter   => '0', 
-		
+		             #  Off by default.
+                #  Setting projected transcript statuses to NOVEL
+                #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
+                #  Deleting projected xrefs, object_xrefs and synonyms
+                #  before doing projection
+                flag_delete_gene_names   => '0',
+                #  Off by default.
+                #  Setting descriptions that were projected to NULL
+                #  before doing projection
+                flag_delete_gene_descriptions   => '0',
         # Tables to dump for GeneNames & GeneDescription projections subpipeline
         g_dump_tables => ['gene', 'xref'],
         
@@ -363,6 +372,7 @@ sub pipeline_analyses {
        -parameters    => {
 		    				'dump_tables' => $self->o('g_dump_tables'),
             				'output_dir'  => $self->o('output_dir'),
+                                        'flag_delete_gene_names'   => $self->o('flag_delete_gene_names'),
         				  },
        -rc_name       => 'default',
     },     
@@ -430,6 +440,7 @@ sub pipeline_analyses {
        -parameters    => {
 		    				'dump_tables' => $self->o('g_dump_tables'),
             				'output_dir'  => $self->o('output_dir'),
+                                        'flag_delete_gene_descriptions'   => $self->o('flag_delete_gene_descriptions'),
         				  },
        -rc_name       => 'default',
     },     
@@ -511,6 +522,7 @@ sub pipeline_analyses {
        -parameters    => {
 		    				'dump_tables' => $self->o('go_dump_tables'),
             				'output_dir'  => $self->o('output_dir'),
+                                        'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
         				  },
        -rc_name       => 'default',
     },     
@@ -540,7 +552,6 @@ sub pipeline_analyses {
 				            'flag_store_projections' => $self->o('flag_store_projections'),
 				            'flag_go_check'          => $self->o('flag_go_check'),
 				            'flag_full_stats'        => $self->o('flag_full_stats'),
-				       		'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
      	 				},
        -batch_size    =>  1,
        -rc_name       => 'default',

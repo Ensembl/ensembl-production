@@ -191,6 +191,56 @@ sub delete_go_terms {
 return 0;
 }
 
+=head2 delete_gene_names
+
+=cut
+sub delete_gene_names {
+    my $self  = shift;
+    my $to_ga = shift;
+
+    print STDERR "Setting projected transcript statuses to NOVEL\n";
+
+    my $sql_del_terms = "UPDATE gene g, xref x, transcript t SET t.display_xref_id = NULL, t.description = NULL, t.status='NOVEL' WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION' AND g.gene_id = t.gene_id";
+
+    my $helper = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $to_ga->dbc());
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+    print STDERR "Setting gene display_xrefs that were projected to NULL and status to NOVEL\n\n";
+
+    $sql_del_terms = "UPDATE gene g, xref x SET g.display_xref_id = NULL, g.status='NOVEL' WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION'";
+
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+    print STDERR "Deleting projected xrefs, object_xrefs and synonyms\n";
+
+    $sql_del_terms = "DELETE es FROM xref x, external_synonym es WHERE x.xref_id=es.xref_id AND x.info_type='PROJECTION'";
+
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+    $sql_del_terms="DELETE x, ox FROM xref x, object_xref ox, external_db e WHERE x.xref_id=ox.xref_id AND x.external_db_id=e.external_db_id AND x.info_type='PROJECTION' AND e.db_name!='GO'";
+
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+return 0;
+}
+
+=head2 delete_gene_desc
+
+=cut
+sub delete_gene_desc {
+    my $self  = shift;
+    my $to_ga = shift;
+
+    print STDERR "Setting descriptions that were projected to NULL \n";
+
+    my $sql_del_terms = "UPDATE gene g, xref x SET g.description=NULL WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION'";
+    
+    my $helper = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $to_ga->dbc());
+    $helper->execute_update(-SQL => $sql_del_terms);
+
+return 0;
+}
+
 =head2 print_GOstats
 
   
