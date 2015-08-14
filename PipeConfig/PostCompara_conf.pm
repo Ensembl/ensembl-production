@@ -16,20 +16,21 @@ sub default_options {
 	    # division for GO & GeneName projection
 		division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_PostCompara_'.$self->o('ensembl_release'),
-        output_dir        => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
-		
+        output_dir      => '/lustre/scratch109/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
+	email => 'maurel@ebi.ac.uk',	
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
-    	flag_GeneNames    => '0',
-    	flag_GeneDescr    => '0',
-    	flag_GO           => '0',     
+    	flag_GeneNames    => '1',
+    	flag_GeneDescr    => '1',
+    	flag_GO           => '1',     
     	flag_GeneCoverage => '0',     
 
-	## Flags controlling dependency between GeneNames & GeneDescr projections
-	    # '0' by default, 
-	    #  set to '1' to ensure GeneDescr starts after GeneNames completed
-    	flag_Dependency   => '0',     
+    ## Flags controlling dependency between GeneNames & GeneDescr projections
+        # '0' by default, 
+        #  set to '1' to ensure GeneDescr starts after GeneNames completed
+        flag_Dependency   => '1',     
 
+    
     ## analysis_capacity values for some analyses:
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
@@ -40,9 +41,9 @@ sub default_options {
 	 	gn_config => { 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', # 'schizosaccharomyces_pombe'
+	 	  		'source'      => 'homo_sapiens', # 'schizosaccharomyces_pombe'
 				# target species to project to
-	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
+	 			'species'     => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','latimeria_chalumnae','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','nomascus_leucogenys','gorilla_gorilla','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','mus_musculus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','xenopus_tropicalis','taeniopygia_guttata'], # ['puccinia graminis', 'aspergillus_nidulans']
 	 			# target species to exclude 
 	 			'antispecies' => [],
 	 			# target species division to project to
@@ -51,38 +52,86 @@ sub default_options {
         		# flowering group of your target species
 		        'taxon_filter'    		 => undef, # Eg: 'Liliopsida'/'eudicotyledons'
 				# source species GeneName filter
-				'geneName_source' 		 => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
+                                'geneName_source'               =>['HGNC','HGNC_trans_name'],
 		  		# homology types filter
  				'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			    'homology_types_allowed' => ['ortholog_one2one'], 
+			    'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
 		        # homology percentage identity filter 
-        		'percent_id_filter'      => '30', 
-				'percent_cov_filter'     => '66',
+        		'percent_id_filter'      => '0', 
+				'percent_cov_filter'     => '0',
 	 	       }, 
-		 #'2'=>{
-		 	#   'source'	   => '',
-		 	#   'species'	   => [],
-		 	#   'antispecies'  => [],
-		 	#   'division'     => [],
-		 	#   'run_all'      =>  0,
-		 	#   'taxon_filter' => undef,
-			#   'geneName_source' 		    => ['UniProtKB/Swiss-Prot', 'TAIR_SYMBOL'],
-  			#   'geneDesc_rules'   		    => ['hypothetical', 'putative', 'unknown protein'] , 
-  			#   'geneDesc_rules_target'     => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown'] , 
- 			#   'gn_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			#   'gn_homology_types_allowed' => ['ortholog_one2one'], 
-        	#   'gn_percent_id_filter'      => '30', 
-			#   'gn_percent_cov_filter'     => '66',
-	 	  #	  }, 
+                  '2'=>{
+                                # source species to project from
+                                'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['dipodomys_ordii','mustela_putorius_furo','rattus_norvegicus'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                        # flowering group of your target species
+                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # source species GeneName filter
+                                'geneName_source'                => ['MGI', 'MGI_trans_name'],
+                                # homology types filter
+                                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                        # homology percentage identity filter
+                        'percent_id_filter'      => '0',
+                                'percent_cov_filter'     => '0',
+                       },
+                  '3'=>{
+                                # source species to project from
+                                'source'      => 'danio_rerio', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','latimeria_chalumnae','xiphophorus_maculatus'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                        # flowering group of your target species
+                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # source species GeneName filter
+                                'geneName_source'                => ['ZFIN_ID','ZFIN_ID_trans_name'],
+                                # homology types filter
+                                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                        # homology percentage identity filter
+                        'percent_id_filter'      => '0',
+                                'percent_cov_filter'     => '0',
+                       },
+                  '4'=>{
+                                # source species to project from
+                                'source'      => 'homo_sapiens', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','xiphophorus_maculatus','danio_rerio'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                        # flowering group of your target species
+                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # source species GeneName filter
+                                'geneName_source'                =>['HGNC','HGNC_trans_name'],
+                                # homology types filter
+                                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                        # homology percentage identity filter
+                        'percent_id_filter'      => '0',
+                                'percent_cov_filter'     => '0',
+                       },
 		},
 
 	## GeneDescription Projection 
  	    gd_config => { 
 	 	   '1'=>{
  	 	  		 # source species to project from 
-	 	  		 'source'      => '', # 'schizosaccharomyces_pombe'
+	 	  		 'source'      => 'homo_sapiens', # 'schizosaccharomyces_pombe'
 				 # target species to project to
-	 			 'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
+	 			 'species'     => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','latimeria_chalumnae','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','nomascus_leucogenys','gorilla_gorilla','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','mus_musculus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','xenopus_tropicalis','taeniopygia_guttata'], # ['puccinia graminis', 'aspergillus_nidulans']
 	 			 # target species to exclude 
 	 			 'antispecies' => [],
 	 			 # target species division to project to
@@ -91,16 +140,87 @@ sub default_options {
         		 # flowering group of your target species
 		         'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
 				 # source species GeneDescription filter
-				 'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'] , 
+                                 'geneDesc_rules'         => [],
 				 # target species GeneDescription filter
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
  				 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			     'homology_types_allowed' => ['ortholog_one2one'], 
+			     'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
 		         # homology percentage identity filter 
-        		 'percent_id_filter'      => '30', 
-				 'percent_cov_filter'     => '66',
+        		 'percent_id_filter'      => '0', 
+				 'percent_cov_filter'     => '0',
 	 	        }, 
+
+                     '2'=>{
+                                 # source species to project from
+                                 'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
+                                 # target species to project to
+                                 'species'     => ['dipodomys_ordii','mustela_putorius_furo','rattus_norvegicus'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                 # target species to exclude
+                                 'antispecies' => [],
+                                 # target species division to project to
+                                 'division'    => [],
+                                 'run_all'     =>  0, # 1/0
+                         # flowering group of your target species
+                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneDescription filter
+                                 'geneDesc_rules'         => [],
+                                 # target species GeneDescription filter
+                                 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
+                                 # homology types filter
+                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                         # homology percentage identity filter
+                         'percent_id_filter'      => '0',
+                                 'percent_cov_filter'     => '0',
+                        },
+                   '3'=>{
+                                 # source species to project from
+                                 'source'      => 'danio_rerio', # 'schizosaccharomyces_pombe'
+                                 # target species to project to
+                                 'species'     => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','latimeria_chalumnae','xiphophorus_maculatus'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                 # target species to exclude
+                                 'antispecies' => [],
+                                 # target species division to project to
+                                 'division'    => [],
+                                 'run_all'     =>  0, # 1/0
+                         # flowering group of your target species
+                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneDescription filter
+                                'geneDesc_rules'         => [],
+                                 # target species GeneDescription filter
+                                 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
+                                 # homology types filter
+                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                         # homology percentage identity filter
+                         'percent_id_filter'      => '0',
+                                 'percent_cov_filter'     => '0',
+                        },
+                   '4'=>{
+                                 # source species to project from
+                                 'source'      => 'homo_sapiens', # 'schizosaccharomyces_pombe'
+                                 # target species to project to
+                                 'species'     => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','xiphophorus_maculatus','danio_rerio'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                 # target species to exclude
+                                 'antispecies' => [],
+                                 # target species division to project to
+                                 'division'    => [],
+                                 'run_all'     =>  0, # 1/0
+                         # flowering group of your target species
+                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneDescription filter
+                                 'geneDesc_rules'         => [],
+                                 # target species GeneDescription filter
+                                 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
+                                 # homology types filter
+                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                         # homology percentage identity filter
+                         'percent_id_filter'      => '0',
+                                 'percent_cov_filter'     => '0',
+                        },
+
 	    },
 
 		#  Off by default. 
@@ -112,16 +232,16 @@ sub default_options {
 		#		 "Predicted protein" from UniProt
 		#		 "Gene of unknown function" from PGSC
 		flag_filter   => '0', 
-		             #  Off by default.
+	        #  Off by default.
                 #  Setting projected transcript statuses to NOVEL
                 #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
                 #  Deleting projected xrefs, object_xrefs and synonyms
                 #  before doing projection
-                flag_delete_gene_names   => '0',
+                flag_delete_gene_names   => '1',	
                 #  Off by default.
                 #  Setting descriptions that were projected to NULL
                 #  before doing projection
-                flag_delete_gene_descriptions   => '0',
+                flag_delete_gene_descriptions   => '1',
         # Tables to dump for GeneNames & GeneDescription projections subpipeline
         g_dump_tables => ['gene', 'xref'],
         
@@ -134,9 +254,9 @@ sub default_options {
 		{ 
 	 	  '1'=>{
 	 	  		# source species to project from 
-	 	  		'source'      => '', # 'schizosaccharomyces_pombe'
+	 	  		'source'      => 'homo_sapiens', # 'schizosaccharomyces_pombe'
 				# target species to project to
-	 			'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
+	 			'species'     => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','dipodomys_ordii','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','nomascus_leucogenys','gorilla_gorilla','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','mus_musculus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','rattus_norvegicus','taeniopygia_guttata'], # ['puccinia graminis', 'aspergillus_nidulans']
 				# target species to exclude 
 	 			'antispecies' => [],
 	 			# target species division to project to
@@ -146,42 +266,109 @@ sub default_options {
  				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			    'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
 		        # homology percentage identity filter 
-        		'go_percent_id_filter'      => '10', 
+                            'go_percent_id_filter'      => '0',
 				# object type of GO annotation (source)
 				'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
 				# object type to attach GO projection (target)
 				'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'  
 	 	       }, 
-
-		 #'2'=>{
-		  #	   'source'		 => '',
-		  #	   'species'	 => [],
-		  #	   'antispecies' => [],
-		  #	   'division'    => [],
-		  #	   'run_all'     =>  0,
- 		  #	   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-		  #	   'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
-          #	   'go_percent_id_filter'      => '10', 
-		  #	   'ensemblObj_type'           => 'Translation', 
-		  #	   'ensemblObj_type_target'    => 'Translation',   
-	 	 #	  }, 		 	   
-    	},
+                  '2'=>{
+                                # source species to project from
+                                'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','dipodomys_ordii','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','gorilla_gorilla','homo_sapiens','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','rattus_norvegicus','taeniopygia_guttata'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                                # homology types filter
+                                'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                        # homology percentage identity filter
+                        'go_percent_id_filter'      => '0',
+                                # object type of GO annotation (source)
+                                'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
+                                # object type to attach GO projection (target)
+                                'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'
+                       },
+                  '3'=>{
+                                # source species to project from
+                                'source'      => 'danio_rerio', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','latimeria_chalumnae','xiphophorus_maculatus','xenopus_tropicalis'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                                # homology types filter
+              'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                        # homology percentage identity filter
+                        'go_percent_id_filter'      => '0',
+                                # object type of GO annotation (source)
+                                'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
+                                # object type to attach GO projection (target)
+                                'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'
+                       },
+                  '4'=>{
+                                # source species to project from
+                                'source'      => 'rattus_norvegicus', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['homo_sapiens','mus_musculus'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                                # homology types filter
+              'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                        # homology percentage identity filter
+                        'go_percent_id_filter'      => '0',
+                                # object type of GO annotation (source)
+                                'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
+                                # object type to attach GO projection (target)
+                                'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'
+                       },
+                  '5'=>{
+                                # source species to project from
+                                'source'      => 'xenopus_tropicalis', # 'schizosaccharomyces_pombe'
+                                # target species to project to
+                                'species'     => ['danio_rerio'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                # target species to exclude
+                                'antispecies' => [],
+                                # target species division to project to
+                                'division'    => [],
+                                'run_all'     =>  0, # 1/0
+                                # homology types filter
+                                'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                        # homology percentage identity filter
+                        'go_percent_id_filter'      => '0',
+                                # object type of GO annotation (source)
+                                'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
+                                # object type to attach GO projection (target)
+                                'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'
+                  },
+            },                  
 		
 	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
 	    # update analysis & analysis_description table
-		required_analysis =>
-    	[
-      		{
-        	 'logic_name'    => 'go_projection',
-        	 'db'            => 'GO',
-        	 'db_version'    => undef,
-      		},     	
-		],
-
+#		required_analysis =>
+#   	[
+#     		{
+#       	 'logic_name'    => 'go_projection',
+#       	 'db'            => 'GO',
+#       	 'db_version'    => undef,
+#     		},     	
+#		],
+                required_analysis =>[],
     	# Remove existing analyses; 
     	# On '1' by default, if =0 then existing analyses will remain, 
 		#  with the logic_name suffixed by '_bkp'.
-    	delete_existing => 1,
+    	delete_existing => 0,
     
 		# Delete rows in tables connected to the existing analysis (via analysis_id)
     	linked_tables => [], 
@@ -196,11 +383,11 @@ sub default_options {
         # GOA webservice parameters
         goa_webservice => 'http://www.ebi.ac.uk/QuickGO/',
 		goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
-						  #GValidate?service=taxon&action=getConstraints&taxon=
-
-		# only these evidence codes will be considered for GO term projection
+                 taxon_params     => 'GValidate?service=taxon&action=getConstraints',
+	
+                # only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
-		evidence_codes => ['IDA','IGI','IMP','IPI'],
+                evidence_codes => ['IDA', 'IEP', 'IGI', 'IMP', 'IPI', 'EXP'],
 		#  IC Inferred by curator
 		#  IDA Inferred from direct assay
 		#  IEA Inferred from electronic annotation
@@ -237,12 +424,12 @@ sub default_options {
 	    
 	## For all pipelines
 	   #  Off by default. Control the storing of projections into database. 
-       flag_store_projections => '0', 
+       flag_store_projections => '1', 
 
     ## Access to the ncbi taxonomy db
 	    'taxonomy_db' =>  {
-     	  	  -host   => 'mysql-eg-mirror.ebi.ac.uk',
-       	  	  -port   => '4157',
+     	  	  -host   => 'ens-livemirror',
+       	  	  -port   => '3306',
        	  	  -user   => 'ensro',
        	  	  -dbname => 'ncbi_taxonomy',      	
        	},
@@ -280,10 +467,8 @@ sub hive_meta_table {
 
 # override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
-  my ($self) = @_;
-  return 
-      ' -reg_conf ' . $self->o('registry'),
-  ;
+    my $self = shift;
+    return "-reg_conf ".$self->o("registry");
 }
 
 sub pipeline_analyses {
@@ -294,33 +479,33 @@ sub pipeline_analyses {
     my $pipeline_flow_factory_waitfor;
 
   	if ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj' , 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GNProjSourceFactory', 'GDProjSourceFactory', 'GOProjSourceFactory'];
-  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj', 'backbone_fire_GOProj'];
-  	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GDProjSourceFactory', 'GOProjSourceFactory'];
+        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj' , 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
+        $pipeline_flow_factory_waitfor = ['GNProjSourceFactory', 'GDProjSourceFactory', 'GOProjSourceFactory'];
+        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO')) {
+        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj', 'backbone_fire_GOProj'];
+        } elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
+        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
+        $pipeline_flow_factory_waitfor = ['GDProjSourceFactory', 'GOProjSourceFactory'];
   	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr')) {
-    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj'];
-  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GOProj'];
-  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GNProjSourceFactory'];
+        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj'];  
+        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
+        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GOProj'];
+        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
+        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GeneCoverage'];
+        $pipeline_flow_factory_waitfor = ['GNProjSourceFactory'];
   	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj'];
+        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GDProjSourceFactory'];
+        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GeneCoverage'];
+        $pipeline_flow_factory_waitfor = ['GDProjSourceFactory'];
   	} elsif ($self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-		$pipeline_flow_factory_waitfor = ['GOProjSourceFactory'];
+	$pipeline_flow_factory_waitfor = ['GOProjSourceFactory'];
   	} elsif ($self->o('flag_GeneNames')) {
-  	    $pipeline_flow  = ['backbone_fire_GNProj'];
-  	} elsif ($self->o('flag_GeneDescr')) {
-  	    $pipeline_flow  = ['backbone_fire_GDProj'];
-  	} elsif ($self->o('flag_GO')) {
+        $pipeline_flow  = ['backbone_fire_GNProj'];
+        } elsif ($self->o('flag_GeneDescr')) {
+        $pipeline_flow  = ['backbone_fire_GDProj'];
+        } elsif ($self->o('flag_GO')) {
     	$pipeline_flow  = ['backbone_fire_GOProj'];
   	} elsif ($self->o('flag_GeneCoverage')) {
     	$pipeline_flow  = ['backbone_fire_GeneCoverage'];
@@ -336,33 +521,33 @@ sub pipeline_analyses {
        				   },
     },   
 ########################
-### GeneNamesProjection
-    {  -logic_name    => 'backbone_fire_GNProj',
-       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+### GeneNamesProjection 
+    { -logic_name    => 'backbone_fire_GNProj',
+      -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -hive_capacity => -1,
        -flow_into     => {
-							'1' => ['GNProjSourceFactory'] ,
+                                                         '1' => ['GNProjSourceFactory'] ,
                           },
        -meadow_type   => 'LOCAL',
     },
-    
+
     {  -logic_name    => 'GNProjSourceFactory',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gn_config'),
                           }, 
        -flow_into     => {
-		                    '2->A' => ['GNProjTargetFactory'],
-		                    'A->1' => ['GNEmailReport'],		                       
+                              '2->A' => ['GNProjTargetFactory'],
+                              'A->1' => ['GNEmailReport'],
                           },          
-    },    
+    },  
     
     {  -logic_name      => 'GNProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
-							 '2->A'	=> ['GNDumpTables'],
-				             'A->2' => ['GNProjection'],
+                      '2->A'=> ['GNDumpTables'],
+                      'A->2' => ['GNProjection'],
                            },
        -rc_name         => 'default',
     },
@@ -374,7 +559,7 @@ sub pipeline_analyses {
             				'output_dir'  => $self->o('output_dir'),
                                         'flag_delete_gene_names'   => $self->o('flag_delete_gene_names'),
         				  },
-       -rc_name       => 'default',
+       -rc_name       => '1Gb_job',
     },     
 
     {  -logic_name    => 'GNProjection',
@@ -390,7 +575,6 @@ sub pipeline_analyses {
        -batch_size    =>  2, 
        -analysis_capacity => $self->o('geneNameproj_capacity'),
     },
-
     {  -logic_name    => 'GNEmailReport',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
@@ -400,19 +584,20 @@ sub pipeline_analyses {
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneNames'         => $self->o('flag_GeneNames'),
        },
-      -flow_into     => {
+       -flow_into     => {
          1 => ['GNProjSourceFactory']
        },
        -meadow_type   => 'LOCAL',
     },
 
 ########################
-### GeneDescProjection
+### GeneDescProjection       
     {  -logic_name    => 'backbone_fire_GDProj',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -hive_capacity => -1,
        -flow_into     => {
-							'1' => ['GDProjSourceFactory'] ,
+         '1' => ['GDProjSourceFactory'] ,
+
                           },
        -meadow_type   => 'LOCAL',
     },
@@ -423,21 +608,24 @@ sub pipeline_analyses {
 							g_config  => $self->o('gd_config'),
                           }, 
        -flow_into     => {
-		                    '2->A' => ['GDProjTargetFactory'],
-		                    'A->1' => ['GDEmailReport'],		                       
+                             '2->A' => ['GDProjTargetFactory'],
+                             'A->1' => ['GDEmailReport'],                       
+
                           },          
-    },    
+    },
     
     {  -logic_name      => 'GDProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
-							 '2->A'	=> ['GDDumpTables'],
-				             'A->2' => ['GDProjection'],
+                      '2->A'=> ['GDDumpTables'],
+                      'A->2' => ['GDProjection'],
                            },
        -rc_name         => 'default',
     },
-
+      
+      
+    
     {  -logic_name    => 'GDDumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
        -parameters    => {
@@ -445,7 +633,8 @@ sub pipeline_analyses {
             				'output_dir'  => $self->o('output_dir'),
                                         'flag_delete_gene_descriptions'   => $self->o('flag_delete_gene_descriptions'),
         				  },
-       -rc_name       => 'default',
+       -rc_name       => '1Gb_job',
+       -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],
     },     
 
     {  -logic_name    => 'GDProjection',
@@ -461,7 +650,6 @@ sub pipeline_analyses {
        -rc_name       => 'default',
        -batch_size    =>  2, 
        -analysis_capacity => $self->o('geneNameproj_capacity'),
-       -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],
     },
 
     {  -logic_name    => 'GDEmailReport',
@@ -473,7 +661,7 @@ sub pipeline_analyses {
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneDescr'         => $self->o('flag_GeneDescr'),
        },
-       -flow_into     => {
+        -flow_into     => {
          1 => ['GDProjSourceFactory']
        },
        -meadow_type   => 'LOCAL',
@@ -530,7 +718,7 @@ sub pipeline_analyses {
             				'output_dir'  => $self->o('output_dir'),
                                         'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
         				  },
-       -rc_name       => 'default',
+       -rc_name       => '2Gb_job',
     },     
 
     { -logic_name     => 'GOAnalysisSetup',
@@ -555,6 +743,7 @@ sub pipeline_analyses {
 				   		    'evidence_codes'		 => $self->o('evidence_codes'),
 				   		    'goa_webservice'         => $self->o('goa_webservice'),
 				   		    'goa_params'             => $self->o('goa_params'),
+                                                    'taxon_params'           => $self->o('taxon_params'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),
 				            'flag_go_check'          => $self->o('flag_go_check'),
 				            'flag_full_stats'        => $self->o('flag_full_stats'),
@@ -572,7 +761,7 @@ sub pipeline_analyses {
 				          	'output_dir' 			 => $self->o('output_dir'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
         				  },
-         -flow_into     => {
+        -flow_into     => {
          1 => ['GOProjSourceFactory']
          },
 	  -meadow_type    => 'LOCAL',
@@ -624,6 +813,22 @@ sub pipeline_analyses {
 	},
 
   ];
+}
+sub resource_classes {
+    my $self = shift;
+    return {
+      'normal'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
+      'mem'                     => {'LSF' => '-q normal -M1000 -R"select[mem>1000] rusage[mem=1000]"'},
+      '2Gb_job'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
+      '24Gb_job'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+      '250Mb_job'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
+      '500Mb_job'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
+          '1Gb_job'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
+          '2Gb_job'             => {'LSF' => '-q normal -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
+          '8Gb_job'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
+          '24Gb_job'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+          'urgent_hcluster' => {'LSF' => '-q yesterday' },
+    }
 }
 
 1;
