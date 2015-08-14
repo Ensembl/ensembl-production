@@ -68,7 +68,7 @@ sub default_options {
     no_file_splitting => 0,
     
     # Default hive capacity is quite low; values >100 are not recommended.
-    max_hive_capacity => 25,
+    max_hive_capacity => 100,
 
     program_dir      => '/nfs/panda/ensemblgenomes/external/bin',
     dust_exe         => catdir($self->o('program_dir'), 'dustmasker'),
@@ -79,17 +79,18 @@ sub default_options {
     no_repeatmasker => 0,
     no_trf          => 0,
 
-    # By default, run RepeatMasker with repbase library, exclude low-complexity
-    # annotations, and use slower (and more sensitive) search. By explicitly
-    # turning on the GC calculations, the results are made consistent
-    # regardless of the number of sequences in the input file. A species
-    # parameter is added when the program is called within the pipeline.
+    # By default, run RepeatMasker with repbase library and exclude
+    # low-complexity annotations. By explicitly turning on the GC calculations,
+    # the results are made consistent regardless of the number of sequences in 
+    # the input file. For repbase a species parameter is added when the program 
+    # is called within the pipeline. The sensitivity of the search, including
+    # which engine is used, is also added within the pipeline.
+    always_use_repbase       => 0,
     repeatmasker_default_lib => '/nfs/panda/ensemblgenomes/external/RepeatMasker/Libraries/RepeatMaskerLib.embl',
     repeatmasker_library     => {},
-    repeatmasker_engine      => 'crossmatch', # Use ncbi for faster (albeit slightly less sensitive) results
-    repeatmasker_parameters  => '-nolow -s -gccalc -engine '.$self->o('repeatmasker_engine'),
-    logic_name               => {},
-    always_use_repbase       => 0,
+    repeatmasker_sensitivity => {},
+    repeatmasker_logic_name  => {},
+    repeatmasker_parameters  => ' -nolow -gccalc ',
 
     # The ensembl-analysis Dust and TRF modules take a parameters hash which
     # is parsed, rather than requiring explicit command line options.
@@ -225,11 +226,11 @@ sub pipeline_analyses {
   my ($dump_genome_flow, $split_dump_files_flow, $file_name);
   if ($self->o('no_file_splitting')) {
     $dump_genome_flow = $programs;
-    $split_dump_files_flow = [];
+    $split_dump_files_flow = {'2' => []};
     $file_name = '#genome_file#';
   } else {
     $dump_genome_flow = ['SplitDumpFiles'];
-    $split_dump_files_flow = $programs;
+    $split_dump_files_flow = {'2' => $programs};
     $file_name = '#split_file#';
   }
 
@@ -285,9 +286,11 @@ sub pipeline_analyses {
                               no_repeatmasker      => $self->o('no_repeatmasker'),
                               no_trf               => $self->o('no_trf'),
                               dna_analyses         => $self->o('dna_analyses'),
-                              repeatmasker_library => $self->o('repeatmasker_library'),
-                              logic_name           => $self->o('logic_name'),
+                              max_seq_length       => $self->o('max_seq_length'),
                               always_use_repbase   => $self->o('always_use_repbase'),
+                              rm_library           => $self->o('repeatmasker_library'),
+                              rm_sensitivity       => $self->o('repeatmasker_sensitivity'),
+                              rm_logic_name        => $self->o('repeatmasker_logic_name'),
                               pipeline_dir         => $self->o('pipeline_dir'),
                               db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
@@ -372,11 +375,11 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::RepeatMaskerFactory',
       -max_retry_count   => 1,
       -parameters        => {
-                              repeatmasker_library => $self->o('repeatmasker_library'),
-                              logic_name           => $self->o('logic_name'),
-                              always_use_repbase   => $self->o('always_use_repbase'),
-                              queryfile            => $file_name,
-                              max_seq_length       => $self->o('max_seq_length'),
+                              always_use_repbase => $self->o('always_use_repbase'),
+                              rm_library         => $self->o('repeatmasker_library'),
+                              rm_logic_name      => $self->o('repeatmasker_logic_name'),
+                              queryfile          => $file_name,
+                              max_seq_length     => $self->o('max_seq_length'),
                             },
       -rc_name           => '8Gb_mem',
       -flow_into         => ['RepeatMasker'],

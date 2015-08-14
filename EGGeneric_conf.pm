@@ -76,8 +76,8 @@ sub default_options {
     # doesn't change we might as well have a default.
     production_db => {
       -driver => $self->o('hive_driver'),
-      -host   => 'ens-staging1',
-      -port   => 3306,
+      -host   => 'mysql-eg-pan-prod.ebi.ac.uk',
+      -port   => 4276,
       -user   => 'ensro',
       -pass   => '',
       -group  => 'production',
