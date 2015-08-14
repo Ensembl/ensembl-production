@@ -353,7 +353,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GNProjTargetFactory'],
-		                    'A->2' => ['GNEmailReport'],		                       
+		                    'A->1' => ['GNEmailReport'],		                       
                           },          
     },    
     
@@ -400,6 +400,9 @@ sub pipeline_analyses {
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneNames'         => $self->o('flag_GeneNames'),
        },
+      -flow_into     => {
+         1 => ['GNProjSourceFactory']
+       },
        -meadow_type   => 'LOCAL',
     },
 
@@ -421,7 +424,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GDProjTargetFactory'],
-		                    'A->2' => ['GDEmailReport'],		                       
+		                    'A->1' => ['GDEmailReport'],		                       
                           },          
     },    
     
@@ -470,6 +473,9 @@ sub pipeline_analyses {
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneDescr'         => $self->o('flag_GeneDescr'),
        },
+       -flow_into     => {
+         1 => ['GDProjSourceFactory']
+       },
        -meadow_type   => 'LOCAL',
     },
     
@@ -491,7 +497,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GOProjTargetFactory'],
-		                    'A->2' => ['GOEmailReport'],		                       
+		                    'A->1' => ['GOEmailReport'],		                       
                           },          
     },    
    
@@ -566,6 +572,9 @@ sub pipeline_analyses {
 				          	'output_dir' 			 => $self->o('output_dir'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
         				  },
+         -flow_into     => {
+         1 => ['GOProjSourceFactory']
+         },
 	  -meadow_type    => 'LOCAL',
     },
 
