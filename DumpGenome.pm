@@ -148,6 +148,13 @@ sub header_function {
         return $slice->seq_region_name.' '.$slice->name;
       };
     
+  } elsif ($header_style eq 'name_and_type_and_location') {
+    $header_function = 
+      sub {
+        my $slice = shift;
+        return $slice->seq_region_name.' dna:'.$slice->coord_system_name.' '.$slice->name;
+      };
+    
   }
   
   return $header_function;
