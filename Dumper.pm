@@ -56,13 +56,12 @@ sub new {
 	return $self;
 }
 
-sub dump_toplevel {
-	my ( $self, $dba, $file_name ) = @_;
-
+sub dump {
+	my ( $self, $dba, $file_name, $dump_level ) = @_;
+  $dump_level = 'toplevel' unless $dump_level;
+  
 	# Default is 0, ie no length cutoff
 	my $length_cutoff = $self->{cutoff} || 0;
-	
-	warn("Using $length_cutoff bp as a cutoff\n");
 	
 	$file_name ||= $dba->species() . '.fa';
 	open my $filehandle, '>', $file_name
@@ -75,7 +74,7 @@ sub dump_toplevel {
       $self->{width}
     );
   
-  my @slices = @{ $dba->get_SliceAdaptor()->fetch_all('toplevel') };
+  my @slices = @{ $dba->get_SliceAdaptor()->fetch_all($dump_level) };
 	for my $slice ( sort {$b->length <=> $a->length} @slices ) {
     if ($slice->length() >= $length_cutoff) {
       if(defined $self->{repeat_libs}) {
@@ -86,6 +85,12 @@ sub dump_toplevel {
 	}
 	$filehandle->close();
 	return $file_name;
+}
+
+sub dump_toplevel {
+	my ( $self, $dba, $file_name ) = @_;
+
+  $self->dump($dba, $file_name, 'toplevel');
 }
 
 1;

@@ -235,5 +235,41 @@ sub mysqldump_command_line_connect_core_db {
   return $cmd;
 }
 
+sub has_chromosomes {
+  my ($self, $dba) = @_;
+  my $helper = $dba->dbc->sql_helper();
+  my $sql = q{
+    SELECT COUNT(*) FROM
+    coord_system cs INNER JOIN
+    seq_region sr USING (coord_system_id) INNER JOIN
+    seq_region_attrib sa USING (seq_region_id) INNER JOIN
+    attrib_type at USING (attrib_type_id)
+    WHERE cs.species_id = ?
+    AND at.code = 'karyotype_rank'
+  };
+  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+  
+  $dba->dbc->disconnect_if_idle();
+  
+  return $count;
+}
+
+sub has_genes {
+  my ($self, $dba) = @_;
+  my $helper = $dba->dbc->sql_helper();
+  my $sql = q{
+    SELECT COUNT(*) FROM
+    coord_system cs INNER JOIN
+    seq_region sr USING (coord_system_id) INNER JOIN
+    gene g USING (seq_region_id)
+    WHERE cs.species_id = ?
+  };
+  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+  
+  $dba->dbc->disconnect_if_idle();
+  
+  return $count;
+}
+
 1;
 
