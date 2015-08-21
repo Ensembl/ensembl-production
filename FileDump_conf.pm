@@ -204,7 +204,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeat_masking => 'soft',
                               overwrite      => 1,
-                              header_style   => 'name_and_location',
+                              header_style   => 'name_and_type_and_location',
                               escape_branch  => -1,
                             },
       -rc_name           => 'normal',
@@ -223,7 +223,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeat_masking => 'soft',
                               overwrite      => 1,
-                              header_style   => 'name_and_location',
+                              header_style   => 'name_and_type_and_location',
                             },
       -rc_name           => '16Gb_mem',
       -flow_into         => ['PostProcessing'],
@@ -238,7 +238,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeat_masking => 'soft',
                               overwrite      => 1,
-                              header_style   => 'name_and_location',
+                              header_style   => 'name_and_type_and_location',
                               escape_branch  => -1,
                             },
       -rc_name           => 'normal',
@@ -257,7 +257,7 @@ sub pipeline_analyses {
       -parameters        => {
                               repeat_masking => 'soft',
                               overwrite      => 1,
-                              header_style   => 'name_and_location',
+                              header_style   => 'name_and_type_and_location',
                             },
       -rc_name           => '16Gb_mem',
       -flow_into         => ['PostProcessing'],
