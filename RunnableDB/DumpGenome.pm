@@ -22,83 +22,142 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-use Bio::EnsEMBL::EGPipeline::Common::Dumper;
+use Bio::EnsEMBL::Utils::IO::FASTASerializer;
+
 use File::Path qw(make_path);
+use File::Spec::Functions qw(catdir);
 
 sub param_defaults {
   my ($self) = @_;
   
   return {
-    'header_function'      => undef,  # Custom header function for fasta file (string, will be 'eval'ed)
-    'chunk_factor'         => 1000,   # Rows of sequence data that are buffered
-    'line_width'           => 80,     # Width of sequence data in fasta file
-    'repeat_mask'          => 0,      # 0 or 1, to disable or enable repeat masking
-    'repeat_libs'          => [],     # arrayref of logic_names, e.g. ['repeatmask']
-    'soft_mask'            => 1,      # 0 or 1, to disable or enable softmasking
-    'genomic_slice_cutoff' => 0,      # threshold for the minimum slice length
-    'overwrite'            => 0,
+    'overwrite'        => 0,
+    'header_style'     => 'default',
+    'chunk_factor'     => 1000,
+    'line_width'       => 80,
+    'dump_level'       => 'toplevel',
+    'min_slice_length' => 0,
+    'repeat_masking'   => 'soft',
+    'repeat_libs'      => [],
   };
-  
 }
 
 sub fetch_input {
   my ($self) = @_;
-  my $genome_dir = $self->param_required('genome_dir');
   
-  if (!-e $genome_dir) {
-    $self->warning("Output directory '$genome_dir' does not exist. I shall create it.");
-    make_path($genome_dir) or $self->throw("Failed to create output directory '$genome_dir'");
+  my $genome_file = $self->param('genome_file');
+  my $genome_dir  = $self->param('genome_dir');
+  my $species     = $self->param('species');
+  
+  if (!defined $genome_file) {
+    if (!defined $genome_dir) {
+      $self->throw("A path or filename is required");
+    } else {
+      if (!-e $genome_dir) {
+        $self->warning("Output directory '$genome_dir' does not exist. I shall create it.");
+        make_path($genome_dir) or $self->throw("Failed to create output directory '$genome_dir'");
+      }
+      $genome_file = catdir($genome_dir, "$species.fa");
+      $self->param('genome_file', $genome_file);
+    }
   }
-  
-}
-
-sub run {
-  my ($self) = @_;
-  my $species = $self->param_required('species');
-  my $genome_file = $self->param('genome_dir') . "/$species.fa";
-  $self->param('genome_file', $genome_file);
   
   if (-e $genome_file) {
     if ($self->param('overwrite')) {
       $self->warning("Genome file '$genome_file' already exists, and will be overwritten.");
     } else {
       $self->warning("Genome file '$genome_file' already exists, and won't be overwritten.");
-      return;
+      $self->param('skip_dump', 1);
     }
   }
+}
+
+sub run {
+  my ($self) = @_;
   
-  my $hf = undef;
-  if ($self->param_is_defined('header_function')) {
-    $hf = eval $self->param('header_function');
-  }
+  return if $self->param('skip_dump');
   
-  if ($self->param('repeat_mask')) {
-    if (! defined $self->param('repeat_libs') || scalar(@{$self->param('repeat_libs')}) == 0) {
-      my $repeat_libs = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
+  my $genome_file      = $self->param('genome_file');
+  my $header_style     = $self->param('header_style');
+  my $chunk_factor     = $self->param('chunk_factor');
+  my $line_width       = $self->param('line_width');
+  my $dump_level       = $self->param('dump_level');
+  my $min_slice_length = $self->param('min_slice_length');
+  my $repeat_masking   = $self->param('repeat_masking');
+  my $repeat_libs      = $self->param('repeat_libs');
+  
+  if ($repeat_masking =~ /soft|hard/i) {
+    if (! defined $repeat_libs || scalar(@$repeat_libs) == 0) {
+      $repeat_libs = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
       $self->param('repeat_libs', $repeat_libs);
     }
   }
   
-  # Instantiate a Bio::EnsEMBL::EGPipeline::Common::Dumper,
-  # and delegate to it the charge of dumping the genome
-  my $dumper = Bio::EnsEMBL::EGPipeline::Common::Dumper->new(
-    -HEADER      => $hf,
-    -WIDTH       => $self->param('line_width'),
-    -CHUNK       => $self->param('chunk_factor'),
-    -REPEAT_LIBS => $self->param('repeat_libs'),
-    -SOFT_MASK   => $self->param('soft_mask'),
-    -CUTOFF      => $self->param('genomic_slice_cutoff'),
+  my $header_function = $self->header_function($header_style);
+      
+  open(my $fh, '>', $genome_file) or $self->throw("Cannot open file $genome_file: $!");
+  my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
+    $fh,
+    $header_function,
+    $chunk_factor,
+    $line_width,
   );
   
-  $dumper->dump_toplevel($self->core_dba(), $genome_file);
+  my $dba = $self->core_dba();
+  my $sa = $dba->get_adaptor('Slice');
+  my $slices = $sa->fetch_all($dump_level);
   
+	foreach my $slice (sort { $b->length <=> $a->length } @$slices) {
+    if ($slice->length() < $min_slice_length) {
+      last;
+    }
+    
+    if ($repeat_masking =~ /soft|hard/i) {
+      my $soft_mask = ($repeat_masking =~ /soft/i);
+      $slice = $slice->get_repeatmasked_seq($repeat_libs, $soft_mask);
+    }
+    
+    $serializer->print_Seq($slice);
+	}
+  
+  close($fh);
 }
 
 sub write_output {
   my ($self) = @_;
   
   $self->dataflow_output_id({'genome_file' => $self->param('genome_file')}, 1);
+}
+
+sub header_function {
+  my ($self, $header_style, $slice) = @_;
   
+  my $header_function;
+  
+  if ($header_style eq 'name') {
+    $header_function = 
+      sub {
+        my $slice = shift;
+        return $slice->seq_region_name;
+      };
+    
+  } elsif ($header_style eq 'name_and_location') {
+    $header_function = 
+      sub {
+        my $slice = shift;
+        return $slice->seq_region_name.' '.$slice->name;
+      };
+    
+  } elsif ($header_style eq 'name_and_type_and_location') {
+    $header_function = 
+      sub {
+        my $slice = shift;
+        return $slice->seq_region_name.' dna:'.$slice->coord_system_name.' '.$slice->name;
+      };
+    
+  }
+  
+  return $header_function;
 }
 
 1;
