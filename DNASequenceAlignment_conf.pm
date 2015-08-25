@@ -38,18 +38,24 @@ sub default_options {
     meta_filters => {},
 
     # This pipeline can align data from one or more files, or direct
-    # from ENA (with some tweaking it could use data from both sources,
-    # but it'd be confusing; better to run the pipeline twice, in that case).
-    mode          => 'file',
-    seq_file      => [],
-    species_file  => {},
+    # from ENA; it _could_ use data from both sources, but you're liable
+    # to get in a muddle if you do that, so it's not recommended.
+    file          => [],
+    file_species  => {},
     study         => [],
-    species_study => {},
+    study_species => {},
     merge_level   => 'sample',
+    
+    # RNA-seq options
+    ini_type      => 'rnaseq_align',
     bigwig        => 0,
     vcf           => 0,
     use_csi       => 0,
     clean_up      => 1,
+    
+    # EST/cDNA options
+    reformat_header => 1,
+    trim_est        => 1,
 
     # Can put results into a core or otherfeatures database, although the
     # default is not to, since a BAM file is usually enough. Also, loading
@@ -65,10 +71,9 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # Parameters for repeatmasking the genome files.
-    repeat_mask         => 1,
-    soft_mask           => 1,
-    repeat_libs         => [],
-    min_scaffold_length => 0,
+    repeat_masking   => 'soft',
+    repeat_libs      => [],
+    min_slice_length => 0,
 
     # Aligner options.
     aligner    => 'star',
@@ -78,6 +83,25 @@ sub default_options {
 
     logic_name => $self->o('data_type').'_'.$self->o('aligner'),
 
+    program_dir        => '/nfs/panda/ensemblgenomes/external/exonerate-2.2.0-x86_64-Linux/bin',
+    exonerate_exe      => catdir($self->o('program_dir'), 'exonerate'),
+    exonerate_program  => 'exonerate',
+    exonerate_version  => '2.2.0',
+    # Thresholds for filtering transcripts.
+    coverage       => 90,
+    percent_id     => 97,
+    best_in_genome => 1,
+      {
+        'logic_name'      => 'est_exonerate',
+        'program'         => $self->o('exonerate_program'),
+        'program_version' => $self->o('exonerate_version'),
+        'program_file'    => $self->o('exonerate_exe'),
+        'parameters'      => '--model affine:local --softmasktarget TRUE --bestn 1',
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateAlignFeature',
+        'linked_tables'   => ['dna_align_feature'],
+      },
+      
+    
     # STAR_2.4.2a was tested on one species, and it used more memory than the
     # default (STAR_2.3.1z), and had less coverage. But if you want to test
     # it, set the following path for STAR:
@@ -90,11 +114,13 @@ sub default_options {
     #gsnap_dir    => '/nfs/panda/ensemblgenomes/external/gmap-gsnap-2015-07-23/bin',
     #star_dir     => '/nfs/panda/ensemblgenomes/external/STAR',
     star_dir     => '/nfs/panda/ensemblgenomes/external/STAR_2.4.2a.Linux_x86_64',
-    
+
     samtools_dir  => '/nfs/panda/ensemblgenomes/external/samtools',
     bedtools_dir  => '/nfs/panda/ensemblgenomes/external/bedtools/bin',
     ucscutils_dir => '/nfs/panda/ensemblgenomes/external/ucsc_utils',
-    
+
+    trimest_exe => '/nfs/panda/ensemblgenomes/external/EMBOSS/bin/trimest',
+
     # Remove existing alignments; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
     delete_existing => 1,
@@ -162,11 +188,6 @@ sub pipeline_analyses {
 
   my $load_db_analyses = [];
   my $species_factory_flow = { '2' => ['DumpGenome'] };
-  my $merge_bam_set_flow = ['EmailBamReport'];
-  
-  if ($self->o('bigwig')) {
-    $merge_bam_set_flow = ['CreateBigWig'];
-  }
   
   if ($self->o('load_db')) {
     $load_db_analyses = $self->load_db_analyses($aligner_class);
@@ -183,15 +204,8 @@ sub pipeline_analyses {
       };
     }
     
-    push @$merge_bam_set_flow, 'LoadAlignments';
+    #push @$merge_bam_flow, 'LoadAlignments';
   }
-
-  my $index_genome_flow_1 = ['SeqFileFactory'];
-  if ($self->o('mode') eq 'study') {
-    $index_genome_flow_1 = ['FindRuns'];
-  }
-
-  
 
   return [
     {
@@ -211,27 +225,28 @@ sub pipeline_analyses {
       -flow_into         => $species_factory_flow,
       -meadow_type       => 'LOCAL',
     },
-    
+
     @$load_db_analyses,
-    
+
     {
       -logic_name        => 'DumpGenome',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::DumpGenome',
       -analysis_capacity => 5,
       -batch_size        => 2,
       -max_retry_count   => 1,
       -parameters        => {
-                              genome_dir           => catdir($self->o('pipeline_dir'), '#species#'),
-                              repeat_mask          => $self->o('repeat_mask'),
-                              soft_mask            => $self->o('soft_mask'),
-                              repeat_libs          => $self->o('repeat_libs'),
-                              genomic_slice_cutoff => $self->o('min_scaffold_length'),
+                              genome_dir       => catdir($self->o('pipeline_dir'), '#species#'),
+                              repeat_masking   => $self->o('repeat_masking'),
+                              repeat_libs      => $self->o('repeat_libs'),
+                              min_slice_length => $self->o('min_slice_length'),
+                              bigwig           => $self->o('bigwig'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '1->A' => ['SequenceLengths'],
-                              'A->1' => ['IndexGenome'],
-                            }
+                              '3' => ['IndexGenome'],
+                              '4' => ['SequenceLengths'],
+                            },
+      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -239,12 +254,14 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::SequenceLengths',
       -analysis_capacity => 5,
       -batch_size        => 2,
+      -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
                               fasta_file  => '#genome_file#',
                               length_file => '#genome_file#'.'.lengths.txt',
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['IndexGenome'],
     },
 
     {
@@ -264,8 +281,9 @@ sub pipeline_analyses {
       -rc_name           => '16Gb_threads',
       -flow_into         => {
                               '-1' => ['IndexGenome_HighMem'],
-                               '1' => $index_genome_flow_1,
+                               '1' => ['SequenceFactory'],
                             },
+      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -284,28 +302,36 @@ sub pipeline_analyses {
                             },
       -rc_name           => '32Gb_threads',
       -flow_into         => {
-                              '1' => $index_genome_flow_1,
+                              '1' => ['SequenceFactory'],
                             },
     },
 
     {
-      -logic_name        => 'SeqFileFactory',
-      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::SeqFileFactory',
-      -can_be_empty      => 1,
+      -logic_name        => 'SequenceFactory',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::SequenceFactory',
       -max_retry_count   => 1,
       -parameters        => {
-                              seq_file     => $self->o('seq_file'),
-                              species_file => $self->o('species_file'),
-                              merge_level  => $self->o('merge_level'),
+                              file            => $self->o('file'),
+                              file_species    => $self->o('file_species'),
+                              study           => $self->o('study'),
+                              study_species   => $self->o('study_species'),
+                              merge_level     => $self->o('merge_level'),
+                              data_type       => $self->o('data_type'),
+                              reformat_header => $self->o('reformat_header'),
+                              trim_est        => $self->o('trim_est'),
+                              trimest_exe     => $self->o('trimest_exe'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['SplitSeqFile'],
+      -flow_into         => {
+                              '3' => ['SplitSeqFile'],
+                              '4' => ['SRASeqFile'],
+                            },
       -meadow_type       => 'LOCAL',
     },
 
     {
       -logic_name        => 'SplitSeqFile',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::SplitSeqFile',
       -analysis_capacity => 5,
       -batch_size        => 4,
       -can_be_empty      => 1,
@@ -321,24 +347,23 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['AlignSequence'],
-                              'A->1' => ['MergeBamSet'],
+                              'A->1' => ['MergeBam'],
                             },
     },
 
     {
-      -logic_name        => 'FindRuns',
-      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::FindRuns',
+      -logic_name        => 'SRASeqFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::SRASeqFile',
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
-                              study         => $self->o('study'),
-                              species_study => $self->o('species_study'),
-                              merge_level   => $self->o('merge_level'),
+                              work_directory => catdir($self->o('pipeline_dir'), '#species#'),
+                              merge_level    => $self->o('merge_level'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['AlignSequence'],
-                              'A->1' => ['MergeBamSet'],
+                              'A->1' => ['MergeBam'],
                             },
     },
 
@@ -348,8 +373,6 @@ sub pipeline_analyses {
       -analysis_capacity => 25,
       -max_retry_count   => 1,
       -parameters        => {
-                              work_directory => catdir($self->o('pipeline_dir'), '#species#'),
-                              mode           => $self->o('mode'),
                               aligner_class  => $aligner_class,
                               aligner_dir    => $aligner_dir,
                               samtools_dir   => $self->o('samtools_dir'),
@@ -361,7 +384,10 @@ sub pipeline_analyses {
       -rc_name           => '16Gb_threads',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
-                               '1' => { ':////accu?merge={bam_file}' => {'merge' => '#merge_id#'} },
+                               '1' => {
+                                        ':////accu?merge={bam_file}' => {'merge' => '#merge_id#'},
+                                        ':////accu?study_id=[]'      => ['#study_id#'],
+                                      },
                             },
     },
 
@@ -372,8 +398,6 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
-                              work_directory => catdir($self->o('pipeline_dir'), '#species#'),
-                              mode           => $self->o('mode'),
                               aligner_class  => $aligner_class,
                               aligner_dir    => $aligner_dir,
                               samtools_dir   => $self->o('samtools_dir'),
@@ -383,35 +407,54 @@ sub pipeline_analyses {
                             },
       -rc_name           => '32Gb_threads',
       -flow_into         => {
-                               '1' => { ':////accu?merge={bam_file}' => {'merge' => '#merge_id#'} },
+                               '1' => {
+                                        ':////accu?merge={bam_file}' => {'merge' => '#merge_id#'},
+                                        ':////accu?study_id=[]'      => ['#study_id#'],
+                                      },
                             },
     },
 
     {
-      -logic_name        => 'MergeBamSet',
-      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::MergeBamSet',
+      -logic_name        => 'ExonerateAlignFeature',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Exonerate::ExonerateAlignFeature',
+      -analysis_capacity => $self->o('max_exonerate_jobs'),
+      -max_retry_count   => 1,
+      -parameters        => {
+                              db_type     => 'otherfeatures',
+                              logic_name  => $logic_name,
+                              queryfile   => '#genome_file#',
+                              daemon_file => '#genome_file#'.'.daemon',
+                              seq_file    => '#split_file#',
+                              seq_type    => $self->o('seq_type'),
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
+      -logic_name        => 'MergeBam',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::MergeBam',
       -max_retry_count   => 1,
       -parameters        => {
                               merge          => '#merge#',
-                              samtools_dir   => $self->o('samtools_dir'),
+                              study_id       => '#study_id#',
                               work_directory => catdir($self->o('pipeline_dir'), '#species#'),
-                              mode           => $self->o('mode'),
-                              seq_file       => $self->o('seq_file'),
-                              species_file   => $self->o('species_file'),
-                              study          => $self->o('study'),
-                              species_study  => $self->o('species_study'),
-                              merge_level    => $self->o('merge_level'),
+                              samtools_dir   => $self->o('samtools_dir'),
                               vcf            => $self->o('vcf'),
                               use_csi        => $self->o('use_csi'),
                               clean_up       => $self->o('clean_up'),
+                              bigwig         => $self->o('bigwig'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => $merge_bam_set_flow,
+      -flow_into         => {
+                              '3' => ['WriteIniFile'],
+                              '4' => ['CreateBigWig'],
+                            },
     },
-    
+
     {
       -logic_name        => 'CreateBigWig',
       -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::CreateBigWig',
+      -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
                               bedtools_dir  => $self->o('bedtools_dir'),
@@ -420,9 +463,21 @@ sub pipeline_analyses {
                               clean_up      => $self->o('clean_up'),
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['WriteIniFile'],
+    },
+
+    {
+      -logic_name        => 'WriteIniFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::WriteIniFile',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              work_directory => catdir($self->o('pipeline_dir'), '#species#'),
+                              ini_type       => $self->o('ini_type'),
+                            },
+      -rc_name           => 'normal',
       -flow_into         => ['EmailBamReport'],
     },
-    
+
     {
       -logic_name        => 'EmailBamReport',
       -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::EmailBamReport',
@@ -535,7 +590,8 @@ sub load_db_analyses {
                             },
       -meadow_type       => 'LOCAL',
     },
-{
+
+    {
       -logic_name        => 'LoadAlignments',
       -module            => 'Bio::EnsEMBL::EGPipeline::DNASequenceAlignment::LoadAlignments',
       -analysis_capacity => 25,
@@ -593,9 +649,8 @@ sub load_db_analyses {
                               email        => $self->o('email'),
                               subject      => 'DNA Alignment pipeline: Report for #species#',
                               db_type      => $self->o('db_type'),
-                              mode         => $self->o('mode'),
-                              seq_file     => $self->o('seq_file'),
-                              species_file => $self->o('species_file'),
+                              file         => $self->o('file'),
+                              file_species => $self->o('file_species'),
                               aligner      => $self->o('aligner'),
                               data_type    => $self->o('data_type'),
                               logic_name   => $self->o('logic_name'),
