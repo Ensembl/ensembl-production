@@ -172,8 +172,25 @@ sub pipeline_analyses {
                $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
       },
       -rc_name           => '4Gb_mem_10_cores',
+      -flow_into         => {
+                              '-1' => ['RepeatModeler_HighMem'],
+                            },
     },
-    
+
+    {
+      -logic_name        => 'RepeatModeler_HighMem',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 25,
+      -max_retry_count   => 0,
+      -parameters        =>
+      {
+        cmd => 'RM_DB=$(basename #split_file#); '.
+               'cd '.$self->o('results_dir').'/$RM_DB; '.
+               $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
+      },
+      -rc_name           => '8Gb_mem_10_cores',
+    },
+
     {
       -logic_name        => 'MergeResults',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
@@ -193,7 +210,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 4000 -n 10 -R "span[hosts=1]" "rusage[mem=4000,tmp=4000]"'},
+    '4Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 4000 -n 10 -R "rusage[mem=4000,tmp=4000]"'},
+    '8Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000]"'},
   }
 }
 
