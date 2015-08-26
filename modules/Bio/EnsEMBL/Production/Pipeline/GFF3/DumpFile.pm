@@ -101,7 +101,8 @@ sub run {
   my $has_chromosome = $self->has_chromosome($dba);
 
   my $mc = $dba->get_MetaContainer();
-  my $provider = $mc->single_value_by_key('provider.name') || '';
+  my $providers = $mc->list_value_by_key('provider.name') || '';
+  my $provider = join(" and ", @$providers);
 
   gz_work_with_file($out_file, 'w', sub {
     my ($fh) = @_;
