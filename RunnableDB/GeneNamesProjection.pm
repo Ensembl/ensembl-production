@@ -77,8 +77,6 @@ return;
 sub run {
     my ($self) = @_;
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
-
     my $to_species 	 = $self->param('to_species');
     my $from_species     = $self->param('from_species');
     my $compara          = $self->param('compara');
@@ -97,7 +95,6 @@ sub run {
     if(defined $taxon_filter){
        die("$taxon_filter is not found in the ancestor list of $to_species\n") if(!grep (/$taxon_filter/, @$names));
     }
-
     # Creating adaptors
     my $from_ga   = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
     my $to_ga     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Gene');
@@ -156,6 +153,15 @@ sub run {
        }
     close($log);
 
+#Disconnecting from the registry
+$meta_container->dbc->disconnect_if_idle();
+$from_ga->dbc->disconnect_if_idle();
+$to_ga->dbc->disconnect_if_idle();
+$to_ta->dbc->disconnect_if_idle();
+$to_dbea->dbc->disconnect_if_idle();
+$mlssa->dbc->disconnect_if_idle();
+$ha->dbc->disconnect_if_idle();
+$gdba->dbc->disconnect_if_idle();
 return;
 }
 

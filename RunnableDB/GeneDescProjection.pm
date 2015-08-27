@@ -89,8 +89,6 @@ sub run {
     my $method_link_type = $self->param('method_link_type');
     my $taxon_filter     = $self->param('taxon_filter');
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
-
     # Get taxon ancestry of the target species
     my $taxonomy_db        = $self->param('taxonomy_db');  
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
@@ -158,7 +156,15 @@ sub run {
        }
     }
     close($log);
-
+#Disconnecting from the registry
+$meta_container->dbc->disconnect_if_idle();
+$from_ga->dbc->disconnect_if_idle();
+$to_ga->dbc->disconnect_if_idle();
+$to_ta->dbc->disconnect_if_idle();
+$to_dbea->dbc->disconnect_if_idle();
+$mlssa->dbc->disconnect_if_idle();
+$ha->dbc->disconnect_if_idle();
+$gdba->dbc->disconnect_if_idle();
 return;
 }
 
@@ -197,14 +203,16 @@ sub project_genedesc {
       # the flag to check for filtering rules is ON
       if(!defined $to_gene->description() || ($test2==1 && $flag_filter==1))  
       {
-        my $species_text = ucfirst($from_species);
-        $species_text    =~ s/_/ /g;
-        my $source_id    = $from_gene->stable_id();
-        $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
-
         if ($from_gene->display_xref->dbname() =~ /MGI/ || $from_gene->display_xref->dbname() =~ /HGNC/ || $from_gene->display_xref->dbname() =~ /ZFIN_ID/)
         {
-          $gene_desc=$from_gene->description();
+          my $gene_desc=$from_gene->description();
+        }
+        else
+        {
+          my $species_text = ucfirst($from_species);
+          $species_text    =~ s/_/ /g;
+          my $source_id    = $from_gene->stable_id();
+          $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
         }
 
         print $log "\t\tProject from: ".$from_gene->stable_id()."\t";

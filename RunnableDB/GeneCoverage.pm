@@ -74,8 +74,6 @@ sub run {
     my $sql_geneTree = $self->param('sql_geneTree'); 
     my $root_id      = $self->param('root_id'); 
 
-    Bio::EnsEMBL::Registry->set_disconnect_when_inactive(1);
-
     my $dba_compara = Bio::EnsEMBL::Registry->get_DBAdaptor($division, "compara");
     my $helper      = Bio::EnsEMBL::Utils::SqlHelper->new( -DB_CONNECTION => $dba_compara->dbc() );
     my $array_ref   = $helper->execute(-SQL => $sql_geneTree, -PARAMS => [$root_id]);       
@@ -86,7 +84,8 @@ sub run {
        push @cigars, join '^^', $stable_id, $name, $cigar_line;
     }
     $self->process_cigar_line(\@cigars, $root_id);
-
+#Disconnecting from the registry
+$dba_compara->dbc->disconnect_if_idle();
 return;
 }
 
