@@ -817,7 +817,7 @@ sub pipeline_analyses {
 sub resource_classes {
     my $self = shift;
     return {
-      'normal'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
+      'default'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
       'mem'                     => {'LSF' => '-q normal -M1000 -R"select[mem>1000] rusage[mem=1000]"'},
       '2Gb_job'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
       '24Gb_job'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
