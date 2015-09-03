@@ -160,7 +160,7 @@ if ($parallel) {
         next if ( $dbname !~ /$dbpattern/ );
         my $cmd = 'bsub -q '.$queue;
         $cmd .= ' '.$params if defined $params;
-        $cmd .=" -M4000 -R'select[mem>4000] rusage[mem=4000]'";
+        $cmd .=" -M5000 -R'select[mem>5000] rusage[mem=5000]'";
         $cmd .= ' -oo '.$log_file_name.'.'.$dbname.'.log'
             .' perl '.$0.' --host '.$host.' --port '.$port.' --user '.$user.' --dbpattern '.$dbname;
         $cmd .= ' --pass '.$pass if ($pass ne '');
