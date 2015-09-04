@@ -71,9 +71,9 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # Parameters for repeatmasking the genome files.
-    repeat_masking   => 'soft',
-    repeat_libs      => [],
-    min_slice_length => 0,
+    repeat_masking     => 'soft',
+    repeat_logic_names => [],
+    min_slice_length   => 0,
 
     # Aligner options.
     aligner    => 'star',
@@ -235,11 +235,11 @@ sub pipeline_analyses {
       -batch_size        => 2,
       -max_retry_count   => 1,
       -parameters        => {
-                              genome_dir       => catdir($self->o('pipeline_dir'), '#species#'),
-                              repeat_masking   => $self->o('repeat_masking'),
-                              repeat_libs      => $self->o('repeat_libs'),
-                              min_slice_length => $self->o('min_slice_length'),
-                              bigwig           => $self->o('bigwig'),
+                              genome_dir         => catdir($self->o('pipeline_dir'), '#species#'),
+                              repeat_masking     => $self->o('repeat_masking'),
+                              repeat_logic_names => $self->o('repeat_logic_names'),
+                              min_slice_length   => $self->o('min_slice_length'),
+                              bigwig             => $self->o('bigwig'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
