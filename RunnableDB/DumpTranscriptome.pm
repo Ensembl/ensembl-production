@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpProteome;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpTranscriptome;
 
 use strict;
 use warnings;
@@ -35,7 +35,6 @@ sub param_defaults {
     'header_style'      => 'default',
     'chunk_factor'      => 1000,
     'line_width'        => 80,
-    'allow_stop_codons' => 0,
   };
   
 }
@@ -43,28 +42,28 @@ sub param_defaults {
 sub fetch_input {
   my ($self) = @_;
   
-  my $proteome_file = $self->param('proteome_file');
-  my $proteome_dir  = $self->param('proteome_dir');
-  my $species       = $self->param('species');
+  my $transcriptome_file = $self->param('transcriptome_file');
+  my $transcriptome_dir  = $self->param('transcriptome_dir');
+  my $species            = $self->param('species');
   
-  if (!defined $proteome_file) {
-    if (!defined $proteome_dir) {
+  if (!defined $transcriptome_file) {
+    if (!defined $transcriptome_dir) {
       $self->throw("A path or filename is required");
     } else {
-      if (!-e $proteome_dir) {
-        $self->warning("Output directory '$proteome_dir' does not exist. I shall create it.");
-        make_path($proteome_dir) or $self->throw("Failed to create output directory '$proteome_dir'");
+      if (!-e $transcriptome_dir) {
+        $self->warning("Output directory '$transcriptome_dir' does not exist. I shall create it.");
+        make_path($transcriptome_dir) or $self->throw("Failed to create output directory '$transcriptome_dir'");
       }
-      $proteome_file = catdir($proteome_dir, "$species.fa");
-      $self->param('proteome_file', $proteome_file);
+      $transcriptome_file = catdir($transcriptome_dir, "$species.fa");
+      $self->param('transcriptome_file', $transcriptome_file);
     }
   }
   
-  if (-e $proteome_file) {
+  if (-e $transcriptome_file) {
     if ($self->param('overwrite')) {
-      $self->warning("Proteome file '$proteome_file' already exists, and will be overwritten.");
+      $self->warning("Transcriptome file '$transcriptome_file' already exists, and will be overwritten.");
     } else {
-      $self->warning("Proteome file '$proteome_file' already exists, and won't be overwritten.");
+      $self->warning("Transcriptome file '$transcriptome_file' already exists, and won't be overwritten.");
       $self->param('skip_dump', 1);
     }
   }
@@ -75,13 +74,13 @@ sub run {
   
   return if $self->param('skip_dump');
   
-  my $proteome_file     = $self->param('proteome_file');
-  my $header_style      = $self->param('header_style');
-  my $chunk_factor      = $self->param('chunk_factor');
-  my $line_width        = $self->param('line_width');
-  my $allow_stop_codons = $self->param('allow_stop_codons');
+  my $transcriptome_file = $self->param('transcriptome_file');
+  my $header_style       = $self->param('header_style');
+  my $use_dbID           = $self->param('use_dbID');
+  my $chunk_factor       = $self->param('chunk_factor');
+  my $line_width         = $self->param('line_width');
   
-  open(my $fh, '>', $proteome_file) or $self->throw("Cannot open file $proteome_file: $!");
+  open(my $fh, '>', $transcriptome_file) or $self->throw("Cannot open file $transcriptome_file: $!");
   my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
     $fh,
     undef,
@@ -91,23 +90,16 @@ sub run {
   
   my $dba = $self->core_dba();
   my $tra = $dba->get_adaptor('Transcript');
-  my $transcripts = $tra->fetch_all_by_biotype('protein_coding');
+  my $transcripts = $tra->fetch_all();
   
   foreach my $transcript (sort { $a->stable_id cmp $b->stable_id } @{$transcripts}) {
-    my $seq_obj = $transcript->translate();
+    my $seq_obj = $transcript->seq();
     
     if ($header_style ne 'default') {
       $seq_obj->display_id($self->header($header_style, $transcript));
     }
     
-    if ($seq_obj->seq() =~ /\*/ && !$allow_stop_codons) {
-      $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.");
-    } else {
-      if ($seq_obj->seq() =~ /\*/) {
-        $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons.");
-      }
-      $serializer->print_Seq($seq_obj);
-    }
+    $serializer->print_Seq($seq_obj);
 	}
   
   close($fh);
@@ -116,28 +108,27 @@ sub run {
 sub write_output {
   my ($self) = @_;
   
-  $self->dataflow_output_id({'proteome_file' => $self->param('proteome_file')}, 1);
+  $self->dataflow_output_id({'transcriptome_file' => $self->param('transcriptome_file')}, 1);
 }
 
 sub header {
   my ($self, $header_style, $transcript) = @_;
   
-  my $translation = $transcript->translation;
-  my $header = $translation->stable_id;
+  my $header = $transcript->stable_id;
   
   if ($header_style eq 'dbID') {
-    $header = $translation->dbID;
+    $header = $transcript->dbID;
     
   } elsif ($header_style eq 'extended') {
     my $gene = $transcript->get_Gene;
-    my $id = $translation->stable_id;
+    my $id = $transcript->stable_id;
     my $desc = $gene->description ? $gene->description : 'no description';
     $desc =~ s/\s*\[Source.+$//;
     
     my $location = join(':',
       $transcript->seq_region_name,
-      $translation->genomic_start,
-      $translation->genomic_end,
+      $transcript->seq_region_start,
+      $transcript->seq_region_end,
       $transcript->strand,
     );
     
@@ -145,7 +136,7 @@ sub header {
       "$id \"$desc\"",
       $transcript->biotype,
       $location,
-      'gene:'.$gene->stable_id
+      'gene:'.$gene->stable_id,
     );
     
   }
