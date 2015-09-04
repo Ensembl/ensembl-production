@@ -31,14 +31,14 @@ sub param_defaults {
   my ($self) = @_;
   
   return {
-    'overwrite'        => 0,
-    'header_style'     => 'default',
-    'chunk_factor'     => 1000,
-    'line_width'       => 80,
-    'dump_level'       => 'toplevel',
-    'min_slice_length' => 0,
-    'repeat_masking'   => 'soft',
-    'repeat_libs'      => [],
+    'overwrite'          => 0,
+    'header_style'       => 'default',
+    'chunk_factor'       => 1000,
+    'line_width'         => 80,
+    'dump_level'         => 'toplevel',
+    'min_slice_length'   => 0,
+    'repeat_masking'     => undef,
+    'repeat_logic_names' => [],
   };
 }
 
@@ -77,19 +77,19 @@ sub run {
   
   return if $self->param('skip_dump');
   
-  my $genome_file      = $self->param('genome_file');
-  my $header_style     = $self->param('header_style');
-  my $chunk_factor     = $self->param('chunk_factor');
-  my $line_width       = $self->param('line_width');
-  my $dump_level       = $self->param('dump_level');
-  my $min_slice_length = $self->param('min_slice_length');
-  my $repeat_masking   = $self->param('repeat_masking');
-  my $repeat_libs      = $self->param('repeat_libs');
+  my $genome_file        = $self->param('genome_file');
+  my $header_style       = $self->param('header_style');
+  my $chunk_factor       = $self->param('chunk_factor');
+  my $line_width         = $self->param('line_width');
+  my $dump_level         = $self->param('dump_level');
+  my $min_slice_length   = $self->param('min_slice_length');
+  my $repeat_masking     = $self->param('repeat_masking');
+  my $repeat_logic_names = $self->param('repeat_logic_names');
   
   if ($repeat_masking =~ /soft|hard/i) {
-    if (! defined $repeat_libs || scalar(@$repeat_libs) == 0) {
-      $repeat_libs = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
-      $self->param('repeat_libs', $repeat_libs);
+    if (! defined $repeat_logic_names || scalar(@$repeat_logic_names) == 0) {
+      $repeat_logic_names = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
+      $self->param('repeat_logic_names', $repeat_logic_names);
     }
   }
   
@@ -114,7 +114,7 @@ sub run {
     
     if ($repeat_masking =~ /soft|hard/i) {
       my $soft_mask = ($repeat_masking =~ /soft/i);
-      $slice = $slice->get_repeatmasked_seq($repeat_libs, $soft_mask);
+      $slice = $slice->get_repeatmasked_seq($repeat_logic_names, $soft_mask);
     }
     
     $serializer->print_Seq($slice);
