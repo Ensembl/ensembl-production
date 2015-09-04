@@ -58,7 +58,7 @@ sub default_options {
     
     local_uniparc_db => {
       -driver => 'mysql',
-      -host   => 'mysql-eg-pan-1.ebi.ac.uk',
+      -host   => 'mysql-eg-pan-prod.ebi.ac.uk',
       -port   => 4276,
       -user   => 'ensrw',
       -pass   => 'writ3rpan1',
