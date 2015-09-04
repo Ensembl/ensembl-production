@@ -44,6 +44,7 @@ sub default_options {
     max_seqs_per_file       => undef,
     max_files_per_directory => 50,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
+    min_slice_length        => 5000,
     
     # Program paths
     repeatmodeler_dir => '/nfs/panda/ensemblgenomes/external/RepeatModeler',
@@ -116,7 +117,8 @@ sub pipeline_analyses {
       -analysis_capacity => 5,
       -max_retry_count   => 1,
       -parameters        => {
-                              genome_dir => catdir($self->o('results_dir'), '#species#'),
+                              genome_dir       => catdir($self->o('results_dir'), '#species#'),
+                              min_slice_length => $self->o('min_slice_length'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
@@ -171,7 +173,7 @@ sub pipeline_analyses {
                'cd '.$self->o('results_dir').'/$RM_DB; '.
                $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
       },
-      -rc_name           => '4Gb_mem_10_cores',
+      -rc_name           => '8Gb_mem_10_cores',
       -flow_into         => {
                               '-1' => ['RepeatModeler_HighMem'],
                             },
@@ -188,7 +190,7 @@ sub pipeline_analyses {
                'cd '.$self->o('results_dir').'/$RM_DB; '.
                $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
       },
-      -rc_name           => '8Gb_mem_10_cores',
+      -rc_name           => '16Gb_mem_10_cores',
     },
 
     {
@@ -210,8 +212,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 4000 -n 10 -R "rusage[mem=4000,tmp=4000]"'},
     '8Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000]"'},
+    '16Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 16000 -n 10 -R "rusage[mem=16000,tmp=4000]"'},
   }
 }
 
