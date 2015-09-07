@@ -109,53 +109,53 @@ sub run {
     rmtree($root);
   }
 
+  my $slices = $self->get_Slices($self->param('group'), 1);
+
   my $path = $self->_generate_file_name();
   $self->info("Dumping GTF to %s", $path);
-  gz_work_with_file($path, 'w', sub {
-    my ($fh) = @_;
-    my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
-
-    # Print information about the current assembly
-    $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
-
-    # now get all slices and filter for 1st portion of human Y
-    my $slices = $self->get_Slices($self->param('group'), 1);
-    while (my $slice = shift @{$slices}) {
-      my $genes = $slice->get_all_Genes(undef,undef,1); 
-      while (my $gene = shift @{$genes}) {
-        $gtf_serializer->print_Gene($gene);
-      }
-    }
-  });
+  $self->print_to_file($slices, $path, 'Gene');
 
   $self->info(sprintf "Checking GTF file %s", $path);
   $self->_gene_pred_check($path) unless $eg;
 
+  $self->info("Dumping GTF README for %s", $self->param('species'));
+  $self->_create_README();
+
   if ($abinitio) {
     my $abinitio_path = $self->_generate_abinitio_file_name();
     $self->info("Dumping abinitio GTF to %s", $path);
-    gz_work_with_file($abinitio_path, 'w', sub {
-      my ($fh) = @_;
-      my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
-  
-      # Print information about the current assembly
-      $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
-  
-      # now get all slices and filter for 1st portion of human Y
-      my $slices = $self->get_Slices($self->param('group'), 1);
-      while (my $slice = shift @{$slices}) {
-        my $predictions = $slice->get_all_PredictionTranscripts(undef,undef,1);
-        while (my $prediction = shift @$predictions) {
-          $gtf_serializer->print_Prediction($prediction);
-        }
-      }
-    });
+    $self->print_to_file($slices, $abinitio_path, 'PredictionTranscript');
   }
 
-  $self->info("Dumping GTF README for %s", $self->param('species'));
-  $self->_create_README();  
-  
   return;
+}
+
+
+sub print_to_file {
+  my ($self, $slices, $file, $feature) = @_;
+  my $dba = $self->core_dba;
+
+  my $fetch_method = 'get_all_Genes';
+  my $print_method = 'print_Gene';
+  if ($feature eq 'Prediction') {
+    $fetch_method = 'get_all_PredictionTranscripts';
+    $print_method = 'print_Prediction';
+  }
+
+  gz_work_with_file($file, 'w', sub {
+    my ($fh) = @_;
+    my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
+  
+    # Print information about the current assembly
+    $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
+  
+    while (my $slice = shift @{$slices}) {
+      my $features = $slice->$fetch_method(undef, undef, 1);
+      while (my $feature = shift @$features) {
+        $gtf_serializer->$print_method($feature);
+      }
+    }
+  });
 }
 
 sub _gene_pred_check {
