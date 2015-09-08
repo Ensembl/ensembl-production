@@ -63,7 +63,7 @@ sub default_options {
       out_file_stem    => undef,
       xrefs            => 0,
       gt_exe        => '/software/ensembl/central/bin/gt',
-      gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+      gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids -gzip -o',
       gff3_validate => $self->o('gt_exe').' gff3validator',
 
       ## Dump out files with abinitio predictions as well
@@ -145,7 +145,7 @@ sub pipeline_analyses {
         -analysis_capacity => 10,
         -batch_size        => 10,
         -parameters        => {
-                                cmd => $self->o('gff3_tidy').' -gzip -o #out_file#.sorted.gz #out_file#',
+                                cmd => $self->o('gff3_tidy').' #out_file#.sorted.gz #out_file#',
                               },
         -rc_name           => 'dump',
         -flow_into         => ['gff3Move'],

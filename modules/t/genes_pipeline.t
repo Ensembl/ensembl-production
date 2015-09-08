@@ -44,7 +44,7 @@ if(@ARGV) {
   $options = join(q{ }, @ARGV);
 }
 else {
-  $options = "-base_path ". $dir . " -gff3_tidy cat -gff3_validate cat";
+  $options = "-base_path ". $dir . " -gff3_tidy 'cat >' -gff3_validate echo";
 }
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 ok($pipeline, 'Pipeline has been created '.$module);
