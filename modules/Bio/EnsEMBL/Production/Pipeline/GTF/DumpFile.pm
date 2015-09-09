@@ -111,28 +111,72 @@ sub run {
 
   my $slices = $self->get_Slices($self->param('group'), 1);
 
-  my $path = $self->_generate_file_name();
-  $self->info("Dumping GTF to %s", $path);
-  $self->print_to_file($slices, $path, 'Gene');
+  my $out_file = $self->_generate_file_name();
+  my $chr_out_file = $out_file;
+  $chr_out_file =~ s/\.gtf/\.chr\.gtf/;
+  my $alt_out_file = $out_file;
+  $alt_out_file =~ s/\.gtf/\.chr_patch_hapl_scaff\.gtf/;
+  my $tmp_out_file = $out_file . "_tmp";
+  my $tmp_alt_out_file = $alt_out_file . "_tmp";
 
-  $self->info(sprintf "Checking GTF file %s", $path);
-  $self->_gene_pred_check($path) unless $eg;
+  my (@chroms, @scaff, @alt);
+
+  foreach my $slice (@$slices) {
+    if ($slice->is_reference) {
+      if ($slice->is_chromosome) {
+        push @chroms, $slice;
+      }
+      else {
+        push @scaff, $slice;
+      }
+    } else {
+      push @alt, $slice;
+    }
+  }
+
+  $self->info("Dumping GTF to %s", $out_file);
+  my $unzipped_out_file;
+  if (scalar(@chroms) > 0) {
+    $self->print_to_file(\@chroms, $chr_out_file, 'Gene', 1);
+    $self->print_to_file(\@scaff, $tmp_out_file, 'Gene');
+    system("cat $chr_out_file $tmp_out_file > $out_file");
+    # To avoid multistream issues, we need to unzip then rezip the output file
+    $unzipped_out_file = $out_file;
+    $unzipped_out_file =~ s/\.gz$//;
+    system("gunzip $out_file");
+    system("gzip $unzipped_out_file");
+    system("rm $tmp_out_file");
+  } else {
+    $self->print_to_file(\@scaff, $out_file, 'Gene', 1);
+  }
+  if (scalar(@alt) > 0) {
+    $self->print_to_file(\@alt, $tmp_alt_out_file, 'Gene');
+    system("cat $out_file $tmp_alt_out_file > $alt_out_file");
+    # To avoid multistream issues, we need to unzip then rezip the output file
+    $unzipped_out_file = $alt_out_file;
+    $unzipped_out_file =~ s/\.gz$//;
+    system("gunzip $alt_out_file");
+    system("gzip $unzipped_out_file");
+    system("rm $tmp_alt_out_file");
+  }
+
+  $self->info(sprintf "Checking GTF file %s", $out_file);
+  $self->_gene_pred_check($out_file) unless $eg;
 
   $self->info("Dumping GTF README for %s", $self->param('species'));
   $self->_create_README();
 
   if ($abinitio) {
     my $abinitio_path = $self->_generate_abinitio_file_name();
-    $self->info("Dumping abinitio GTF to %s", $path);
-    $self->print_to_file($slices, $abinitio_path, 'PredictionTranscript');
+    $self->info("Dumping abinitio GTF to %s", $abinitio_path);
+    $self->print_to_file($slices, $abinitio_path, 'PredictionTranscript', 1);
   }
 
-  return;
 }
 
 
 sub print_to_file {
-  my ($self, $slices, $file, $feature) = @_;
+  my ($self, $slices, $file, $feature, $include_header) = @_;
   my $dba = $self->core_dba;
 
   my $fetch_method = 'get_all_Genes';
@@ -147,7 +191,7 @@ sub print_to_file {
     my $gtf_serializer = Bio::EnsEMBL::Utils::IO::GTFSerializer->new($fh);
   
     # Print information about the current assembly
-    $gtf_serializer->print_main_header($self->get_DBAdaptor('core'));
+    $gtf_serializer->print_main_header($self->get_DBAdaptor('core')) if $include_header;
   
     while (my $slice = shift @{$slices}) {
       my $features = $slice->$fetch_method(undef, undef, 1);

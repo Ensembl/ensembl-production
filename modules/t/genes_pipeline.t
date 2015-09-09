@@ -59,6 +59,7 @@ if(! @ARGV) {
   my $schema = software_version();
   my $gtf_file = sprintf('%s.%s.%d.gtf.gz', $human_dba->species(), $cs->version(), $schema);
   $gtf_file = ucfirst($gtf_file);
+  $gtf_file =~ s/\.gtf/\.chr_patch_hapl_scaff\.gtf/;
   my $gtf_abinitio_file = sprintf('%s.%s.%d.abinitio.gtf.gz', $human_dba->species(), $cs->version(), $schema);
   $gtf_abinitio_file = ucfirst($gtf_abinitio_file);
   ok_directory_contents(
@@ -81,6 +82,10 @@ if(! @ARGV) {
   $schema = software_version();
   my $gff3_file = sprintf('%s.%s.%d.gff3.gz', $human_dba->species(), $cs->version(), $schema);
   $gff3_file = ucfirst($gff3_file);
+  my $chr_gff3_file = $gff3_file;
+  $chr_gff3_file =~ s/\.gff3/\.chr\.gff3/;
+  my $alt_gff3_file = $gff3_file;
+  $alt_gff3_file =~ s/\.gff3/\.chr_patch_hapl_scaff\.gff3/;
   my $gff3_abinitio_file = sprintf('%s.%s.%d.abinitio.gff3.gz', $human_dba->species(), $cs->version(), $schema);
   $gff3_abinitio_file = ucfirst($gff3_abinitio_file);
   ok_directory_contents(
@@ -93,18 +98,22 @@ if(! @ARGV) {
     print "Looking at $file\n";
   }
   my $gff3_loc = File::Spec->catfile($target_dir, $gff3_file);
+  my $chr_gff3_loc = File::Spec->catfile($target_dir, $chr_gff3_file);
+  my $alt_gff3_loc = File::Spec->catfile($target_dir, $alt_gff3_file);
   # Less features in gff3 compared to gtf
   # Gtf contains dedicated start_codon and stop_codon features
   # These are included in CDS features in gff3 format
-  is_file_line_count($gff3_loc, 1942, 'Expect 1942 rows in the GFF3 file');
-  is_file_line_count($gff3_loc, 3, 'Expect 3 region lines', 'chromosome');
-  is_file_line_count($gff3_loc, 87, 'Expect 87 gene lines', 'ID=gene');
-  is_file_line_count($gff3_loc, 212, 'Expect 212 transcript lines', 'ID=transcript');
-  is_file_line_count($gff3_loc, 437, 'Expect 437 CDS lines', 'ID=CDS');
-  is_file_line_count($gff3_loc, 946, 'Expect 946 exon lines', 'exon_id');
+  is_file_line_count($gff3_loc, 1932, "Expect 1932 rows in the $gff3_loc file");
+  is_file_line_count($chr_gff3_loc, 1932, "Expect 1932 rows in $chr_gff3_loc file");
+  is_file_line_count($alt_gff3_loc, 1942, "Expect 1942 rows in $alt_gff3_loc file");
+  is_file_line_count($alt_gff3_loc, 3, 'Expect 3 region lines', 'chromosome');
+  is_file_line_count($alt_gff3_loc, 87, 'Expect 87 gene lines', 'ID=gene');
+  is_file_line_count($alt_gff3_loc, 212, 'Expect 212 transcript lines', 'ID=transcript');
+  is_file_line_count($alt_gff3_loc, 437, 'Expect 437 CDS lines', 'ID=CDS');
+  is_file_line_count($alt_gff3_loc, 946, 'Expect 946 exon lines', 'exon_id');
   my $gff3_abinitio_loc = File::Spec->catfile($target_dir, $gff3_abinitio_file);
   # One additional line for the GFF3 header compared to GTF
-  is_file_line_count($gff3_abinitio_loc, 6, 'Expect 6 rows in the GFF3 abinitio file');
+  is_file_line_count($gff3_abinitio_loc, 9, 'Expect 9 rows in the GFF3 abinitio file');
 }
 
 done_testing();

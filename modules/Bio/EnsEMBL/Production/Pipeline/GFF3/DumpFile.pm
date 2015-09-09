@@ -78,14 +78,10 @@ sub run {
   my $out_file         = $self->param_required('out_file');
   my $feature_types    = $self->param('feature_type');
   my $per_chromosome   = $self->param_required('per_chromosome');
-  my $include_scaffold = $self->param_required('include_scaffold');
-  my $logic_names      = $self->param_required('logic_name');
   my $abinitio_out_file = $self->param('abinitio_out_file');
   
   my $reg = 'Bio::EnsEMBL::Registry';
 
-  my $oa = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
-  my $dba = $self->core_dba();
   my $slices = $self->get_Slices($self->param('db_type'), 1);
 
   my %adaptors;
@@ -97,58 +93,116 @@ sub run {
   }
   $adaptors{'PredictionTranscript'} = $reg->get_adaptor($species, $db_type, 'PredictionTranscript');
 
-  my %chr;
-  my $has_chromosome = $self->has_chromosome($dba);
+  my $out_files;
+
+  my $chr_out_file = $out_file;
+  $chr_out_file =~ s/\.gff3/\.chr\.gff3/;
+  my $alt_out_file = $out_file;
+  $alt_out_file =~ s/\.gff3/\.chr_patch_hapl_scaff\.gff3/;
+  my $tmp_out_file = $out_file . "_tmp";
+  my $tmp_alt_out_file = $alt_out_file . "_tmp";
+
+  my (@chroms, @scaff, @alt);
+
+  foreach my $slice (@$slices) {
+    if ($slice->is_reference) {
+      if ($slice->is_chromosome) {
+        if ($per_chromosome) {
+          my $slice_name = 'chromosome.' . $slice->seq_region_name;
+          my $chr_file = $out_file;
+          $chr_file =~ s/([^\.]+)$/$slice_name.$1/;
+          $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
+          push @$out_files, $chr_file;
+        }
+        push @chroms, $slice;
+      }
+      else {
+        if ($per_chromosome) {
+          my $slice_name = 'nonchromosomal';
+          my $chr_file = $out_file;
+          $chr_file =~ s/([^\.]+)$/$slice_name.$1/;
+          $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
+          push @$out_files, $chr_file;
+        }
+        push @scaff, $slice;
+      }
+    } else {
+      push @alt, $slice;
+    }
+  }
+
+  my $unzipped_out_file;
+  if (scalar(@chroms) > 0 ){
+    $self->print_to_file(\@chroms, $chr_out_file, $feature_types, \%adaptors, 1);
+    $self->print_to_file(\@scaff, $tmp_out_file, $feature_types, \%adaptors);
+    system("cat $chr_out_file $tmp_out_file > $out_file");
+    # To avoid multistream issues, we need to unzip then rezip the output file
+    $unzipped_out_file = $out_file;
+    $unzipped_out_file =~ s/\.gz$//;
+    system("gunzip $out_file");
+    system("gzip $unzipped_out_file");
+    system("rm $tmp_out_file");
+    push @$out_files, $chr_out_file;
+    push @$out_files, $out_file;
+  } else {
+    $self->print_to_file(\@scaff, $out_file, $feature_types, \%adaptors, 1);
+    push @$out_files, $out_file;
+  }
+  if (scalar(@alt) > 0) {
+    $self->print_to_file(\@alt, $tmp_alt_out_file, $feature_types, \%adaptors);
+    system("cat $out_file $tmp_alt_out_file > $alt_out_file");
+    # To avoid multistream issues, we need to unzip then rezip the output file
+    $unzipped_out_file = $alt_out_file;
+    $unzipped_out_file =~ s/\.gz$//;
+    system("gunzip $alt_out_file");
+    system("gzip $unzipped_out_file");
+    system("rm $tmp_alt_out_file");
+    push @$out_files, $alt_out_file;
+  }
+
+  if ($self->param('abinitio')) {
+    $self->print_to_file($slices, $abinitio_out_file, ['PredictionTranscript'], \%adaptors, 1);
+    push @$out_files, $abinitio_out_file;
+  }
+
+  $self->param('out_files', $out_files);
+
+  $self->info("Dumping GFF3 README for %s", $self->param('species'));
+  $self->_create_README();
+
+}
+
+sub print_to_file {
+  my ($self, $slices, $file, $feature_types, $adaptors, $include_header) = @_;
+  my $dba = $self->core_dba;
+  my $include_scaffold = $self->param_required('include_scaffold');
+  my $logic_names = $self->param_required('logic_name');
+
+  my $reg = 'Bio::EnsEMBL::Registry';
+  my $oa = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
 
   my $mc = $dba->get_MetaContainer();
   my $providers = $mc->list_value_by_key('provider.name') || '';
   my $provider = join(" and ", @$providers);
 
-  gz_work_with_file($out_file, 'w', sub {
+  gz_work_with_file($file, 'w', sub {
     my ($fh) = @_;
 
     my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $fh);
-  
-    $serializer->print_main_header(undef, $dba);
 
-    foreach my $slice ( @{$slices}) {
+    $serializer->print_main_header(undef, $dba) if $include_header;
+
+    foreach my $slice(@$slices) {
       if ($include_scaffold) {
         $slice->source($provider) if $provider;
         $serializer->print_feature($slice);
       }
       foreach my $feature_type (@$feature_types) {
-        my $features = $self->fetch_features($feature_type, $adaptors{$feature_type}, $logic_names, $slice);
+        my $features = $self->fetch_features($feature_type, $adaptors->{$feature_type}, $logic_names, $slice);
         $serializer->print_feature_list($features);
-  
-        if ($per_chromosome && $has_chromosome) {
-          my $chr_serializer = $self->chr_serializer($out_file, $oa, $slice, \%chr);
-          $chr_serializer->print_feature_list($features);
-        }
       }
     }
-
   });
-
-  if ($self->param('abinitio')) {
-    gz_work_with_file($abinitio_out_file, 'w', sub {
-      my ($abinitio_fh) = @_;
-  
-      my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $abinitio_fh);
-  
-      $serializer->print_main_header(undef, $dba);
-  
-      foreach my $slice ( @{$slices}) {
-        my $features = $self->fetch_features('PredictionTranscript', $adaptors{'PredictionTranscript'}, , $logic_names, $slice);
-        $serializer->print_feature_list($features);
-  
-      }
-  
-    });
-  }
-
-  $self->info("Dumping GFF3 README for %s", $self->param('species'));
-  $self->_create_README();
-  
 }
 
 sub fetch_features {
@@ -207,31 +261,6 @@ sub exon_features {
   }
   
   return [@exon_features, @cds_features, @utr_features];
-}
-
-sub chr_serializer {
-  my ($self, $out_file, $oa, $slice, $chr) = @_;
-  
-  my $slice_name;
-  if ($slice->karyotype_rank > 0) {
-    $slice_name = 'chromosome.'.$slice->seq_region_name;
-  } else {
-    $slice_name = 'nonchromosomal';
-  }
-    
-  unless (exists $$chr{$slice_name}) {
-    (my $chr_file = $out_file) =~ s/([^\.]+)$/$slice_name.$1/;
-    open(my $chr_fh, '>', $chr_file) or $self->throw("Cannot open file $chr_file: $!");
-    
-    my $chr_serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $chr_fh);
-    $chr_serializer->print_main_header([$slice]);
-    
-    $$chr{$slice_name}{'fh'} = $chr_fh;
-    $$chr{$slice_name}{'file'} = $chr_file;
-    $$chr{$slice_name}{'serializer'} = $chr_serializer;
-  }
-  
-  return $$chr{$slice_name}{'serializer'};
 }
 
 sub Bio::EnsEMBL::Transcript::summary_as_hash {
@@ -331,10 +360,9 @@ sub data_path {
 sub write_output {
   my ($self) = @_;
 
-  #foreach my $out_file (@{$self->param('out_files')}) {
-  my $out_file = $self->param('out_file');
-  $self->dataflow_output_id({out_file => $out_file}, 1);
-  #}
+  foreach my $out_file (@{$self->param('out_files')}) {
+    $self->dataflow_output_id({out_file => $out_file}, 1);
+  }
 }
 
 sub _create_README {
