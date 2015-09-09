@@ -97,11 +97,11 @@ if(! @ARGV) {
   # Gtf contains dedicated start_codon and stop_codon features
   # These are included in CDS features in gff3 format
   is_file_line_count($gff3_loc, 1942, 'Expect 1942 rows in the GFF3 file');
-  is_file_line_count($gff3_loc, 1942, 'Expect 1942 region lines', 'sequence-region');
-  is_file_line_count($gff3_loc, 1855, 'Expect 1855 gene lines', 'ID=gene');
-  is_file_line_count($gff3_loc, 1730, 'Expect 1730 transcript lines', 'ID=transcript');
-  is_file_line_count($gff3_loc, 1505, 'Expect 1505 CDS lines', 'ID=CDS');
-  is_file_line_count($gff3_loc, 996, 'Expect 996 exon lines', 'exon_id');
+  is_file_line_count($gff3_loc, 3, 'Expect 3 region lines', 'chromosome');
+  is_file_line_count($gff3_loc, 87, 'Expect 87 gene lines', 'ID=gene');
+  is_file_line_count($gff3_loc, 212, 'Expect 212 transcript lines', 'ID=transcript');
+  is_file_line_count($gff3_loc, 437, 'Expect 437 CDS lines', 'ID=CDS');
+  is_file_line_count($gff3_loc, 946, 'Expect 946 exon lines', 'exon_id');
   my $gff3_abinitio_loc = File::Spec->catfile($target_dir, $gff3_abinitio_file);
   # One additional line for the GFF3 header compared to GTF
   is_file_line_count($gff3_abinitio_loc, 6, 'Expect 6 rows in the GFF3 abinitio file');
