@@ -181,7 +181,7 @@ sub print_to_file {
 
   my $fetch_method = 'get_all_Genes';
   my $print_method = 'print_Gene';
-  if ($feature eq 'Prediction') {
+  if ($feature eq 'PredictionTranscript') {
     $fetch_method = 'get_all_PredictionTranscripts';
     $print_method = 'print_Prediction';
   }
