@@ -376,7 +376,7 @@ sub _get_dbs {
 
 sub _files {
   my ($self, $datafile) = @_;
-  my $source_file = $datafile->path($self->opts->{datafile_dir})
+  my $source_file = $datafile->path($self->opts->{datafile_dir});
   $source_file =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
   my $escaped_name = quotemeta($name);
