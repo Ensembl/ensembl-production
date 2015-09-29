@@ -226,11 +226,11 @@ sub pipeline_analyses {
   my ($dump_genome_flow, $split_dump_files_flow, $file_name);
   if ($self->o('no_file_splitting')) {
     $dump_genome_flow = $programs;
-    $split_dump_files_flow = [];
+    $split_dump_files_flow = {'2' => []};
     $file_name = '#genome_file#';
   } else {
     $dump_genome_flow = ['SplitDumpFiles'];
-    $split_dump_files_flow = $programs;
+    $split_dump_files_flow = {'2' => $programs};
     $file_name = '#split_file#';
   }
 
