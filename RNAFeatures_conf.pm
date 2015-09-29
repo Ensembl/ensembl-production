@@ -65,27 +65,24 @@ sub default_options {
     max_hive_capacity => 100,
 
     run_cmscan   => 1,
-    run_trnascan => 0, # Not yet implemented
+    run_trnascan => 1,
 
-    program_dir => '/nfs/panda/ensemblgenomes/external/bin',
-    cmscan_exe  => catdir($self->o('program_dir'), 'cmscan'),
+    program_dir  => '/nfs/panda/ensemblgenomes/external/bin',
+    cmscan_exe   => catdir($self->o('program_dir'), 'cmscan'),
 
-    rfam_version          => 12,
-    rfam_cm_file          => catdir('/nfs/panda/ensemblgenomes/external/Rfam', $self->o('rfam_version'), 'Rfam.cm'),
-    rfam_logic_name       => 'cmscan_rfam_'.$self->o('rfam_version'),
-    cmscan_cm_file        => {},
-    cmscan_logic_name     => {},
-    cmscan_cpu            => 1,
-    cmscan_db_name        => {},
-    cmscan_heuristics     => 'default',
-    cmscan_threshold      => 0.001, # 0.000001 is probably needed to weed out FPs; but keep it low, since we can always filter on evalue in the resultant table anyway...
-    cmscan_recreate_index => 0,
-    cmscan_parameters     => '',
+    cmscan_cm_file    => {},
+    cmscan_logic_name => {},
+    cmscan_db_name    => {},
+    cmscan_cpu        => 1,
+    cmscan_param_hash =>
+    {
+      cpu            => $self->o('cmscan_cpu'),
+      heuristics     => 'default',
+      threshold      => 0.001, # 0.000001 is probably needed to weed out FPs; but keep it low, since we can always filter on evalue in the resultant table anyway...
+      recreate_index => 0,
+    },
+    cmscan_parameters => '',
 
-    # For tRNA, the generic cmscan approach with Rfam CMs produces too many
-    # false positives for comfort, so tRNASCAN-SE remains the tool of choice,
-    # even though that also tends to have a lot of false positives.
-    
     # The rRNA predictions via cmscan are OK; RNAMMER (formerly used for rRNA)
     # has a similar algorithm to cmscan, so doesn't produce very different
     # results. However, cmscan annotates RNA genes that are out of the relevant
@@ -93,16 +90,34 @@ sub default_options {
     # like SSU_rRNA_eukarya (RF01960) that they both get annotated in the same
     # places, as do bacterial and archaeal genes. Need to implement some
     # taxonomic filtering here...
-    
+
     # The blacklist consists of Rfam models that generate an excess of
     # alignments. They are all miRNA precursors which resemble repeat features,
     # so it's not clear if asking Rfam to tweak the covariance models would
     # help much. They tend to be taxonomically restricted (e.g to rice or
     # primate species), so that would be a good way to filter. Rfam have yet
     # to respond to my query about the best way to address taxonomic filtering.
-    rfam_trna      => 0,
-    rfam_rrna      => 1,
-    rfam_blacklist => [], # ['RF00885', 'RF00886', ],
+    rfam_version    => 12,
+    rfam_dir        => '/nfs/panda/ensemblgenomes/external/Rfam',
+    rfam_cm_file    => catdir($self->o('rfam_dir'), $self->o('rfam_version'), 'Rfam.cm'),
+    rfam_logic_name => 'cmscan_rfam_'.$self->o('rfam_version'),
+    rfam_db_name    => 'RFAM',
+    rfam_trna       => 0,
+    rfam_rrna       => 1,
+    rfam_blacklist  => [], # ['RF00885', 'RF00886', ],
+
+    # For tRNA, the generic cmscan approach with Rfam CMs produces too many
+    # false positives for comfort, so tRNASCAN-SE remains the tool of choice,
+    # even though that also tends to have a lot of false positives.
+    trnascan_dir        => '/nfs/panda/ensemblgenomes/external/tRNAscan-SE-1.3.1/bin',
+    trnascan_exe        => catdir($self->o('trnascan_dir'), 'tRNAscan-SE'),
+    trnascan_logic_name => 'trnascan',
+    trnascan_param_hash =>
+    {
+      db_name => 'TRNASCAN_SE',
+      pseudo  => 0,
+    },
+    trnascan_parameters => '',
 
     analyses =>
     [
@@ -127,6 +142,15 @@ sub default_options {
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::CMScan',
         'linked_tables'   => ['dna_align_feature'],
       },
+      {
+        'logic_name'      => $self->o('trnascan_logic_name'),
+        'program'         => 'tRNAscan-SE',
+        'program_version' => '1.3.1',
+        'program_file'    => $self->o('trnascan_exe'),
+        'parameters'      => $self->o('trnascan_parameters'),
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::tRNAscan',
+        'linked_tables'   => ['dna_align_feature'],
+      },
     ],
 
     # Remove existing DNA features; if => 0 then existing analyses
@@ -139,7 +163,7 @@ sub default_options {
 
     # By default, an email is sent for each species when the pipeline
     # is complete, showing a summary of the RNA annotation.
-    email_cmscan_report => 1,
+    email_rna_report => 1,
   };
 }
 
@@ -176,6 +200,11 @@ sub pipeline_create_commands {
 
 sub pipeline_analyses {
   my ($self) = @_;
+
+  my $flow_to_email = [];
+  if ($self->o('email_rna_report')) {
+    $flow_to_email = ['EmailRNAReport'];
+  }
 
   return [
     {
@@ -220,11 +249,15 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -batch_size        => 10,
       -parameters        => {
-                              analyses          => $self->o('analyses'),
-                              cmscan_cm_file    => $self->o('cmscan_cm_file'),
-                              cmscan_logic_name => $self->o('cmscan_logic_name'),
-                              pipeline_dir      => $self->o('pipeline_dir'),
-                              db_backup_file    => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              analyses            => $self->o('analyses'),
+                              run_cmscan          => $self->o('run_cmscan'),
+                              run_trnascan        => $self->o('run_trnascan'),
+                              rfam_logic_name     => $self->o('rfam_logic_name'),
+                              trnascan_logic_name => $self->o('trnascan_logic_name'),
+                              cmscan_cm_file      => $self->o('cmscan_cm_file'),
+                              cmscan_logic_name   => $self->o('cmscan_logic_name'),
+                              pipeline_dir        => $self->o('pipeline_dir'),
+                              db_backup_file      => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
@@ -254,22 +287,25 @@ sub pipeline_analyses {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['SplitDumpFiles'],
+      -flow_into         => ['SplitDumpFile'],
     },
 
-    { # Change this to an inheriting local module than fans out to cmscan etc
-      -logic_name        => 'SplitDumpFiles',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+    {
+      -logic_name        => 'SplitDumpFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::SplitDumpFile',
       -parameters        => {
                               fasta_file              => '#genome_file#',
                               max_seq_length_per_file => $self->o('max_seq_length_per_file'),
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                              run_cmscan              => $self->o('run_cmscan'),
+                              run_trnascan            => $self->o('run_trnascan'),
                             },
       -rc_name           => '8Gb_mem',
       -flow_into         => {
-                              '2' => ['CMScanFactory'],
+                              '3' => ['CMScanFactory'],
+                              '4' => ['tRNAscan'],
                             },
     },
 
@@ -279,17 +315,13 @@ sub pipeline_analyses {
       -batch_size        => 100,
       -max_retry_count   => 1,
       -parameters        => {
-                              rfam_cm_file          => $self->o('rfam_cm_file'),
-                              rfam_logic_name       => $self->o('rfam_logic_name'),
-                              cmscan_cm_file        => $self->o('cmscan_cm_file'),
-                              cmscan_logic_name     => $self->o('cmscan_logic_name'),
-                              cmscan_cpu            => $self->o('cmscan_cpu'),
-                              cmscan_db_name        => $self->o('cmscan_db_name'),
-                              cmscan_heuristics     => $self->o('cmscan_heuristics'),
-                              cmscan_threshold      => $self->o('cmscan_threshold'),
-                              cmscan_recreate_index => $self->o('cmscan_recreate_index'),
-                              queryfile             => '#split_file#',
-                              max_seq_length        => $self->o('max_seq_length'),
+                              rfam_cm_file      => $self->o('rfam_cm_file'),
+                              rfam_logic_name   => $self->o('rfam_logic_name'),
+                              cmscan_cm_file    => $self->o('cmscan_cm_file'),
+                              cmscan_logic_name => $self->o('cmscan_logic_name'),
+                              cmscan_db_name    => $self->o('cmscan_db_name'),
+                              parameters_hash   => $self->o('cmscan_param_hash'),
+                              max_seq_length    => $self->o('max_seq_length'),
                             },
       -rc_name           => '8Gb_mem',
       -flow_into         => {
@@ -328,12 +360,25 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'tRNAscan',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::tRNAscan',
+      -hive_capacity     => $self->o('max_hive_capacity'),
+      -max_retry_count   => 1,
+      -parameters        => {
+                              trnascan_dir    => $self->o('trnascan_dir'),
+                              logic_name      => $self->o('trnascan_logic_name'),
+                              parameters_hash => $self->o('trnascan_param_hash'),
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
       -logic_name        => 'MetaCoords',
       -module            => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::MetaCoords',
       -max_retry_count   => 1,
       -parameters        => {},
       -rc_name           => 'normal',
-      -flow_into         => ['EmailRNAReport'],
+      -flow_into         => $flow_to_email,
     },
 
     {
