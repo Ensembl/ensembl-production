@@ -109,6 +109,7 @@ sub default_options {
                     'glossina_pallidipes',
                     'glossina_palpalis',
                     'musca_domestica',
+                    'stomoxys_calcitrans',
                    ],
       },
       
@@ -122,6 +123,7 @@ sub default_options {
                     'glossina_pallidipes',
                     'glossina_palpalis',
                     'musca_domestica',
+                    'stomoxys_calcitrans',
                    ],
       },
       
