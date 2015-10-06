@@ -169,9 +169,13 @@ my $select_sth = $dbh->prepare(
      FROM  closure child
      JOIN  closure parent
        ON  (parent.child_term_id = child.parent_term_id)
+     JOIN  ontology co
+       ON  (child.ontology_id=co.ontology_id)
+     JOIN  ontology po
+       ON  (parent.ontology_id=po.ontology_id)
     WHERE  child.distance  = ?
       AND  parent.distance = 1
-      AND  child.ontology_id = parent.ontology_id/
+      AND  co.name = po.name/
 );
 
 my $insert_sth = $dbh->prepare(
