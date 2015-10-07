@@ -112,13 +112,14 @@ sub run {
 
 =pod
     Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
+            -host       => 'mysql-eg-staging-1.ebi.ac.uk',
+            -port       => 4160,
             -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '80',
+            -pass       => 'scr1b3s1',
+            -db_version => '82',
    );
 =cut
+
     my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
     my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
