@@ -353,7 +353,8 @@ sub pipeline_analyses {
        -max_retry_count => 1,
        -flow_into       => {
 							 '2->A'	=> ['GNDumpTables'],
-				             'A->2' => ['GNProjection'],
+				             'A->2' => ['GNTblCleanup'],
+				             #'A->2' => ['GNProjection'],
                            },
        -rc_name         => 'default',
     },
@@ -366,6 +367,16 @@ sub pipeline_analyses {
         				  },
        -rc_name       => 'default',
     },     
+
+    { -logic_name     => 'GNTblCleanup',
+      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
+      -parameters     => {
+		    				'flag_GeneNames' => $self->o('flag_GeneNames'),
+		    				'flag_GeneDescr' => $self->o('flag_GeneDescr'),
+        				  },
+      -rc_name        => 'default',
+      -flow_into      => ['GNProjection'],
+    },
 
     {  -logic_name    => 'GNProjection',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
@@ -420,7 +431,8 @@ sub pipeline_analyses {
        -max_retry_count => 1,
        -flow_into       => {
 							 '2->A'	=> ['GDDumpTables'],
-				             'A->2' => ['GDProjection'],
+							 'A->2'	=> ['GDTblCleanup']						
+				             #'A->2' => ['GDProjection'],
                            },
        -rc_name         => 'default',
     },
@@ -433,6 +445,16 @@ sub pipeline_analyses {
         				  },
        -rc_name       => 'default',
     },     
+
+    { -logic_name     => 'GDTblCleanup',
+      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
+      -parameters     => {
+		    				'flag_GeneNames' => $self->o('flag_GeneNames'),
+		    				'flag_GeneDescr' => $self->o('flag_GeneDescr'),
+        				  },
+      -rc_name        => 'default',
+      -flow_into      => ['GDProjection'],
+    },
 
     {  -logic_name    => 'GDProjection',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection',
