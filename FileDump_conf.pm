@@ -138,6 +138,10 @@ sub default_options {
       },
     },
     
+    drupal_species => {
+      'Anopheles culicifacies' => 'Anopheles culicifacies A',
+    },
+    
   };
 }
 
@@ -211,6 +215,7 @@ sub pipeline_analyses {
                               release_date          => $self->o('release_date'),
                               drupal_desc           => $self->o('drupal_desc'),
                               drupal_desc_exception => $self->o('drupal_desc_exception'),
+                              drupal_species        => $self->o('drupal_species'),
                               gene_dumps            => $self->o('gene_dumps'),
                             },
       -rc_name           => 'normal',
