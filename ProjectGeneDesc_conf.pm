@@ -67,7 +67,7 @@ sub default_options {
     homology_types     => ['ortholog_one2one', 'ortholog_one2many'],
     percent_id_filter  => 30,
     percent_cov_filter => 66,
-    ignore_source      => ['hypothetical', 'putative'],
+    ignore_source      => ['hypothetical', 'putative', 'Projected'],
     replace_target     => ['Uncharacterized protein', 'Predicted protein'],
     # Default parameters: end
 
