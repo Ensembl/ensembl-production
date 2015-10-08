@@ -43,6 +43,7 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::CoreStatistics_conf;
 use strict;
 use warnings;
 
+use Bio::EnsEMBL::Hive::Version 2.3;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
 
 sub default_options {
