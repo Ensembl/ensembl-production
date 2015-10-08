@@ -312,6 +312,7 @@ sub save_to_db {
   
   my $dba = $self->get_DBAdaptor($self->param('db_type'));
   my $adaptor = $dba->get_adaptor($self->param('save_object_type'));
+  $adaptor->dbc->reconnect_when_lost(1);
   
   foreach my $feature (@{$runnable->output}) {
     $feature->analysis($self->param('analysis'));

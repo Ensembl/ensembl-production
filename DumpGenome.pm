@@ -86,7 +86,7 @@ sub run {
   my $repeat_masking     = $self->param('repeat_masking');
   my $repeat_logic_names = $self->param('repeat_logic_names');
   
-  if ($repeat_masking =~ /soft|hard/i) {
+  if ($repeat_masking && $repeat_masking =~ /soft|hard/i) {
     if (! defined $repeat_logic_names || scalar(@$repeat_logic_names) == 0) {
       $repeat_logic_names = $self->core_dba->get_MetaContainer->list_value_by_key('repeat.analysis');
       $self->param('repeat_logic_names', $repeat_logic_names);
@@ -112,7 +112,7 @@ sub run {
       last;
     }
     
-    if ($repeat_masking =~ /soft|hard/i) {
+    if ($repeat_masking && $repeat_masking =~ /soft|hard/i) {
       my $soft_mask = ($repeat_masking =~ /soft/i);
       $slice = $slice->get_repeatmasked_seq($repeat_logic_names, $soft_mask);
     }

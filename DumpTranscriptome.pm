@@ -122,7 +122,7 @@ sub header {
   } elsif ($header_style eq 'extended') {
     my $gene = $transcript->get_Gene;
     my $id = $transcript->stable_id;
-    my $desc = $gene->description ? $gene->description : 'no description';
+    my $desc = $gene->description ? $gene->description : ' ';
     $desc =~ s/\s*\[Source.+$//;
     
     my $location = join(':',
@@ -133,7 +133,7 @@ sub header {
     );
     
     $header = join('|',
-      "$id \"$desc\"",
+      "$id $desc",
       $transcript->biotype,
       $location,
       'gene:'.$gene->stable_id,
