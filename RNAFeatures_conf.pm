@@ -385,6 +385,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'EmailRNAReport',
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::EmailRNAReport',
+      -max_retry_count   => 1,
       -parameters        => {
                               email             => $self->o('email'),
                               subject           => 'RNA features pipeline: cmscan report for #species#',
