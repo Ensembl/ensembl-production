@@ -39,6 +39,7 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf;
 use strict;
 use warnings;
 
+use Bio::EnsEMBL::Hive::Version 2.3;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
 use File::Spec::Functions qw(catdir);
 
@@ -112,6 +113,36 @@ sub default_options {
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
 
+    # For the Drupal nodes, each file type has a standard description.
+    # The module that creates the file substitutes values for the text in caps.
+    drupal_file  => catdir($self->o('results_dir'), 'drupal_load.csv'),
+    staging_dir  => 'sites/default/files/ftp/staging',
+    release_date => undef,
+
+    drupal_desc => {
+      'fasta_toplevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly, softmasked using RepeatMasker, Dust, and TRF.',
+      'fasta_seqlevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly.',
+      'agp_assembly'      => 'AGP (v2.0) file relating <MAPPING> for the <SPECIES> <STRAIN> strain, <ASSEMBLY> assembly.',
+      'fasta_transcripts' => '<STRAIN> strain transcript sequences, <GENESET> geneset.',
+      'fasta_peptides'    => '<STRAIN> strain peptide sequences, <GENESET> geneset.',
+      'gtf_genes'         => '<STRAIN> strain <GENESET> geneset in GTF (v2.2) format.',
+      'gff3_genes'        => '<STRAIN> strain <GENESET> geneset in GFF3 format.',
+      'gff3_repeats'      => '<STRAIN> strain <ASSEMBLY> repeat features (RepeatMasker, Dust, TRF) in GFF3 format.',
+    },
+    
+    drupal_desc_exception => {
+      'fasta_toplevel' => {
+        'Musca domestica' => '<STRAIN> strain genomic <TOPLEVEL> sequences, <ASSEMBLY> assembly, softmasked using WindowMasker, Dust, and TRF.',
+      },
+      'gff3_repeats' => {
+        'Musca domestica' => '<STRAIN> strain <GENESET> repeat features (WindowMasker, Dust, TRF) in GFF3 format.',
+      },
+    },
+    
+    drupal_species => {
+      'Anopheles culicifacies' => 'Anopheles culicifacies A',
+    },
+    
   };
 }
 
@@ -162,6 +193,35 @@ sub pipeline_analyses {
     $self->post_processing_analyses($self->o('checksum'), $self->o('compress'));
   
   return [
+    {
+      -logic_name        => 'FileDump',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 0,
+      -parameters        => {},
+      -flow_into         => {
+                              '1->A' => ['SpeciesFactory'],
+                              'A->1' => ['WriteDrupalFile'],
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+    
+    {
+      -logic_name        => 'WriteDrupalFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              results_dir           => $self->o('results_dir'),
+                              drupal_file           => $self->o('drupal_file'),
+                              staging_dir           => $self->o('staging_dir'),
+                              release_date          => $self->o('release_date'),
+                              drupal_desc           => $self->o('drupal_desc'),
+                              drupal_desc_exception => $self->o('drupal_desc_exception'),
+                              drupal_species        => $self->o('drupal_species'),
+                              gene_dumps            => $self->o('gene_dumps'),
+                            },
+      -rc_name           => 'normal',
+    },
+
     {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
@@ -546,7 +606,7 @@ sub post_processing_analyses {
         -batch_size        => 10,
         -max_retry_count   => 0,
         -parameters        => {
-                                cmd => 'gzip -f #out_file#',
+                                cmd => 'gzip -n -f #out_file#',
                               },
         -rc_name           => 'normal',
         -flow_into         => $checksum ? ['MD5Checksum'] : [],
