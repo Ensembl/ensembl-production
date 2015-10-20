@@ -200,7 +200,15 @@ sub run {
     print $log Dumper %projections_stats;
  
     close($log);
-  
+
+    #Disconnecting from the registry
+    $from_ga->dbc->disconnect_if_idle();
+    $to_ga->dbc->disconnect_if_idle();
+    $to_ta->dbc->disconnect_if_idle();
+    $to_dbea->dbc->disconnect_if_idle();
+    $mlssa->dbc->disconnect_if_idle();
+    $ha->dbc->disconnect_if_idle();
+    $gdba->dbc->disconnect_if_idle(); 
 return;
 }
 
@@ -259,6 +267,7 @@ sub get_GOA_forbidden_terms {
        }
        # and return the list
    }
+   $meta_container->dbc->disconnect_if_idle();  
 return %terms;
 }
 
@@ -418,7 +427,7 @@ sub project_go_terms {
     return if (!$from_translation || !$to_translation);
 
     my $from_latin_species = ucfirst(Bio::EnsEMBL::Registry->get_alias($from_species));
-    my $to_go_xrefs        = $to_translation->get_all_DBEntries("GO");
+    my $to_go_xrefs        = $to_translation->get_all_DBEntries("GO") if $self->param('flag_go_check') ==1;
    
     DBENTRY: foreach my $dbEntry (@{$from_translation->get_all_DBEntries("GO")}) { 
       
