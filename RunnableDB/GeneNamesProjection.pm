@@ -104,14 +104,13 @@ sub run {
 
 =pod
     Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
+            -host       => 'mysql-eg-staging-1.ebi.ac.uk',
+            -port       => 4160,
             -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '80',
+            -pass       => 'scr1b3s1',
+            -db_version => '82',
    );
 =cut
-
    my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
    my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
    my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 
@@ -153,15 +152,15 @@ sub run {
        }
     close($log);
 
-#Disconnecting from the registry
-$meta_container->dbc->disconnect_if_idle();
-$from_ga->dbc->disconnect_if_idle();
-$to_ga->dbc->disconnect_if_idle();
-$to_ta->dbc->disconnect_if_idle();
-$to_dbea->dbc->disconnect_if_idle();
-$mlssa->dbc->disconnect_if_idle();
-$ha->dbc->disconnect_if_idle();
-$gdba->dbc->disconnect_if_idle();
+    #Disconnecting from the registry
+    $meta_container->dbc->disconnect_if_idle();
+    $from_ga->dbc->disconnect_if_idle();
+    $to_ga->dbc->disconnect_if_idle();
+    $to_ta->dbc->disconnect_if_idle();
+    $to_dbea->dbc->disconnect_if_idle();
+    $mlssa->dbc->disconnect_if_idle();
+    $ha->dbc->disconnect_if_idle();
+    $gdba->dbc->disconnect_if_idle();
 return;
 }
 
@@ -219,81 +218,82 @@ sub project_genenames {
                $dbEntry->display_id($existing . $tuple_txt);
                $info_txt .= $tuple_txt;
              }
-
-	     # Adding projection source information 
-             $dbEntry->info_type("PROJECTION");
-#$dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
-            $dbEntry->info_text($info_txt);
-###EG
-#       $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
-#            $to_gene->display_xref($dbEntry);
-#            $to_geneAdaptor->update($to_gene);
-###      
-         ###Ensembl
-            # Add the xref to the "to" gene, or transcript or translation depending on what the
-      # other xrefs from this dbname as assigned to (see build_db_to_type)
-      # Note that if type is not found, it means that we're dealing with a db that has no
-      # xrefs in the target database, e.g. MarkerSymbol in mus_musculus -> rattus_norvegicus
-      # In this case just assign to genes
-
-      my @to_transcripts = @{$to_gene->get_all_Transcripts};
-      my $to_transcript = $to_transcripts[0];
       
-      # Force loading of external synonyms for the xref
-      $dbEntry->get_all_synonyms();
+          if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+          # Adding projection source information
+          $dbEntry->info_type("PROJECTION");
+          $dbEntry->info_text($info_txt);
+          ###Ensembl species
+          # Add the xref to the "to" gene, or transcript or translation depending on what the
+          # other xrefs from this dbname as assigned to (see build_db_to_type)
+          # Note that if type is not found, it means that we're dealing with a db that has no
+          # xrefs in the target database, e.g. MarkerSymbol in mus_musculus -> rattus_norvegicus
+          # In this case just assign to genes
 
-      my $dbname = $dbEntry->dbname();
+          my @to_transcripts = @{$to_gene->get_all_Transcripts};
+          my $to_transcript = $to_transcripts[0];
+      
+          # Force loading of external synonyms for the xref
+          $dbEntry->get_all_synonyms();
 
-      my $type = $db_to_type{$dbname};
+          my $dbname = $dbEntry->dbname();
 
-      if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
-        $to_gene->add_DBEntry($dbEntry);
-        $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
-      } 
-      elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
-        $to_transcript->add_DBEntry($dbEntry);
-        $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
-      } 
-      elsif ($type eq "Translation") {
-        my $to_translation = $to_transcript->translation();
-        return if (!$to_translation);
-        $to_translation->add_DBEntry($dbEntry);
-        $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
-      } 
-      else {
-        warn("Can't deal with xrefs assigned to $type (dbname=" . $dbEntry->dbname . ")\n");
-        return;
+          my $type = $db_to_type{$dbname};
+
+          if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
+            $to_gene->add_DBEntry($dbEntry);
+            $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
+          } 
+          elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
+            $to_transcript->add_DBEntry($dbEntry);
+            $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
+          } 
+          elsif ($type eq "Translation") {
+            my $to_translation = $to_transcript->translation();
+            return if (!$to_translation);
+            $to_translation->add_DBEntry($dbEntry);
+            $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
+          } 
+          else {
+            warn("Can't deal with xrefs assigned to $type (dbname=" . $dbEntry->dbname . ")\n");
+            return;
+          }
+
+          # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
+          # also set the status of the gene's transcripts
+          $to_gene->status("KNOWN_BY_PROJECTION");
+          $to_gene->display_xref($dbEntry);
+          foreach my $transcript (@to_transcripts) {
+            $transcript->status("KNOWN_BY_PROJECTION");
+          }
+
+          #Now assign names to the transcripts; 
+          overwrite_transcript_display_xrefs($to_gene, $dbEntry, $info_txt);
+          foreach my $transcript (@to_transcripts) {
+            my $display = $transcript->display_xref();
+            next unless $display;
+              $transcript->add_DBEntry($display);
+              $to_dbea->store($display, $transcript->dbID(), 'Transcript', 1);
+          }
+
+          # update the gene so that the display_xref_id is set and the
+          # transcript to set the status & display xref if applicable
+          $to_geneAdaptor->update($to_gene);
+          foreach my $transcript (@to_transcripts) {
+            $to_transcriptAdaptor->update($transcript);
+          }
+       }
+       else {
+         $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
+         $dbEntry->info_text($info_txt);
+
+         $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
+         $to_gene->display_xref($dbEntry);
+         $to_geneAdaptor->update($to_gene);
+       }
       }
-
-      # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
-      # also set the status of the gene's transcripts
-      $to_gene->status("KNOWN_BY_PROJECTION");
-      $to_gene->display_xref($dbEntry);
-      foreach my $transcript (@to_transcripts) {
-        $transcript->status("KNOWN_BY_PROJECTION");
-      }
-
-      #Now assign names to the transcripts; 
-        overwrite_transcript_display_xrefs($to_gene, $dbEntry, $info_txt);
-        foreach my $transcript (@to_transcripts) {
-          my $display = $transcript->display_xref();
-          next unless $display;
-            $transcript->add_DBEntry($display);
-            $to_dbea->store($display, $transcript->dbID(), 'Transcript', 1);
-        }
-
-      # update the gene so that the display_xref_id is set and the
-      # transcript to set the status & display xref if applicable
-      $to_geneAdaptor->update($to_gene);
-      foreach my $transcript (@to_transcripts) {
-        $to_transcriptAdaptor->update($transcript);
-      }
-
-
-         }
-      }
-   } 
-
+    }
+  } 
 }
 
 # ----------------------------------------------------------------------
