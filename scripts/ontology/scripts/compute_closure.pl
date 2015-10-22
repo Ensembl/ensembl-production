@@ -198,7 +198,7 @@ while ( !defined($newsize) || $newsize > $oldsize ) {
   $oldsize = $newsize || $oldsize;
   $newsize = $oldsize;
 
-  $dbh->do('LOCK TABLES closure AS child READ, closure AS parent READ');
+  $dbh->do('LOCK TABLES closure AS child READ, closure AS parent READ, ontology as co READ, ontology as po READ');
 
   $select_sth->execute( ++$distance );
 
