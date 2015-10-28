@@ -195,8 +195,12 @@ sub default_options {
 
         # GOA webservice parameters
         goa_webservice => 'http://www.ebi.ac.uk/QuickGO/',
-		goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
+	goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
 						  #GValidate?service=taxon&action=getConstraints&taxon=
+        # Taxon param in case Oracle database doen't work
+        taxon_params     => 'GValidate?service=taxon&action=getConstraints',
+
+                # only these evidence codes will be considered for GO term projection
 
 		# only these evidence codes will be considered for GO term projection
 		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
@@ -549,6 +553,7 @@ sub pipeline_analyses {
 				   		    'evidence_codes'		 => $self->o('evidence_codes'),
 				   		    'goa_webservice'         => $self->o('goa_webservice'),
 				   		    'goa_params'             => $self->o('goa_params'),
+                                            'taxon_params'           => $self->o('taxon_params'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),
 				            'flag_go_check'          => $self->o('flag_go_check'),
 				            'flag_full_stats'        => $self->o('flag_full_stats'),
