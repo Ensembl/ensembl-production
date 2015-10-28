@@ -1,4 +1,4 @@
-package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf;
+package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf;
 
 use strict;
 use warnings;
