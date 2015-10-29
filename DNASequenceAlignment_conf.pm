@@ -92,15 +92,15 @@ sub default_options {
     coverage       => 90,
     percent_id     => 97,
     best_in_genome => 1,
-      {
-        'logic_name'      => 'est_exonerate',
-        'program'         => $self->o('exonerate_program'),
-        'program_version' => $self->o('exonerate_version'),
-        'program_file'    => $self->o('exonerate_exe'),
-        'parameters'      => '--model affine:local --softmasktarget TRUE --bestn 1',
-        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateAlignFeature',
-        'linked_tables'   => ['dna_align_feature'],
-      },
+    #  {
+    #    'logic_name'      => 'est_exonerate',
+    #    'program'         => $self->o('exonerate_program'),
+    #    'program_version' => $self->o('exonerate_version'),
+    #    'program_file'    => $self->o('exonerate_exe'),
+    #    'parameters'      => '--model affine:local --softmasktarget TRUE --bestn 1',
+    #    'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateAlignFeature',
+    #    'linked_tables'   => ['dna_align_feature'],
+    #  },
       
     
     # STAR_2.4.2a was tested on one species, and it used more memory than the
@@ -415,21 +415,21 @@ sub pipeline_analyses {
                             },
     },
 
-    {
-      -logic_name        => 'ExonerateAlignFeature',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Exonerate::ExonerateAlignFeature',
-      -analysis_capacity => $self->o('max_exonerate_jobs'),
-      -max_retry_count   => 1,
-      -parameters        => {
-                              db_type     => 'otherfeatures',
-                              logic_name  => $logic_name,
-                              queryfile   => '#genome_file#',
-                              daemon_file => '#genome_file#'.'.daemon',
-                              seq_file    => '#split_file#',
-                              seq_type    => $self->o('seq_type'),
-                            },
-      -rc_name           => 'normal',
-    },
+    #{
+    #  -logic_name        => 'ExonerateAlignFeature',
+    #  -module            => 'Bio::EnsEMBL::EGPipeline::Exonerate::ExonerateAlignFeature',
+    #  -analysis_capacity => #$self->o('max_exonerate_jobs'),
+    #  -max_retry_count   => 1,
+    #  -parameters        => {
+    #                          db_type     => 'otherfeatures',
+    #                          #logic_name  => $logic_name,
+    #                          queryfile   => '#genome_file#',
+    #                          daemon_file => '#genome_file#'.'.daemon',
+    #                          seq_file    => '#split_file#',
+    #                          #seq_type    => $self->o('seq_type'),
+    #                        },
+    #  -rc_name           => 'normal',
+    #},
 
     {
       -logic_name        => 'MergeBam',
