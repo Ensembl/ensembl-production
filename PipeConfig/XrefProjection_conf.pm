@@ -12,9 +12,9 @@ sub default_options {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
         
-		registry  	      => '',
-	    # division for GO & GeneName projection
-		division_name     => '', # Eg: protists, fungi, plants, metazoa
+	registry  	      => '',
+	# division for GO & GeneName projection
+	division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_PostCompara_'.$self->o('ensembl_release'),
         output_dir      => '/lustre/scratch109/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 	email => 'maurel@ebi.ac.uk',	
