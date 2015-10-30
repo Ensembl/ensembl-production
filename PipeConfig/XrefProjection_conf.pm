@@ -12,7 +12,6 @@ sub default_options {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
         
-	registry  	      => '',
 	# division for GO & GeneName projection
 	division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_PostCompara_'.$self->o('ensembl_release'),
@@ -467,8 +466,9 @@ sub hive_meta_table {
 
 # override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
-    my $self = shift;
-    return "-reg_conf ".$self->o("registry");
+ my ($self) = @_;
+ my $opts = '-reg_conf '.$self->o('registry');
+ return $opts;
 }
 
 sub pipeline_analyses {
