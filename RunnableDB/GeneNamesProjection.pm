@@ -353,7 +353,6 @@ sub check_overwrite_display_xref {
       }
       else{
               return 1;
-         }
       }
     }
   }
