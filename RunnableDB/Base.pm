@@ -90,6 +90,7 @@ sub fetch_homologies {
 
     foreach my $homology (@{$homologies}) {
        next if (!homology_type_allowed($homology->description, $homology_types_allowed));
+       next if $homology->is_tree_compliant() !=1;
 
        my ($from_stable_id, @to_stable_ids, @perc_id, @perc_cov);
        my $members = $homology->get_all_GeneMembers();
