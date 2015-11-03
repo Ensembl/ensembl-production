@@ -36,6 +36,12 @@ sub default_options {
         goProj_capacity        =>  '20',
         geneCoverage_capacity  =>  '100',
 
+       ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
+       ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
+       ## This flag should be enabled for EG and disable for e! species.
+
+        is_tree_compliant => '1',
+
 	## GeneName Projection 
 	 	gn_config => { 
 	 	  '1'=>{

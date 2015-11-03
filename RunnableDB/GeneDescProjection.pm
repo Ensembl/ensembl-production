@@ -54,6 +54,7 @@ sub fetch_input {
     my $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
     my $taxon_filter           = $self->param('taxon_filter');
     my $taxonomy_db            = $self->param('taxonomy_db');
+    my $is_tree_compliant      = $self->param('is_tree_compliant');
 
     $self->param('flag_store_proj', $flag_store_proj);
     $self->param('flag_filter', $flag_filter);    
@@ -69,6 +70,7 @@ sub fetch_input {
     $self->param('geneDesc_rules_target', $geneDesc_rules_target);
     $self->param('taxon_filter', $taxon_filter);
     $self->param('taxonomy_db', $taxonomy_db);
+    $self->param('is_tree_compliant', $is_tree_compliant);
 
     $self->check_directory($output_dir);
     my $log_file  = $output_dir."/".$from_species."-".$to_species."_GeneDescProjection_logs.txt";
@@ -139,7 +141,7 @@ sub run {
 
     # Get homologies from compara - comes back as a hash of arrays
     print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('is_tree_compliant'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
 
     print $log "\n\tProjecting Gene Descriptions from $from_species to $to_species\n\n";
 

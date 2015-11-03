@@ -62,6 +62,7 @@ sub fetch_input {
     my $goa_webservice         = $self->param_required('goa_webservice');
     my $goa_params             = $self->param_required('goa_params');
     my $taxon_params           = $self->param_required('taxon_params');
+    my $is_tree_compliant     = $self->param_required('is_tree_compliant');
 
     $self->param('flag_go_check', $flag_go_check);
     $self->param('flag_store_proj', $flag_store_proj);
@@ -81,6 +82,7 @@ sub fetch_input {
     $self->param('goa_webservice', $goa_webservice);
     $self->param('goa_params', $goa_params);
     $self->param('taxon_params', $taxon_params);
+    $self->param('is_tree_compliant', $is_tree_compliant);
 
     make_path($outfile);
 
@@ -176,7 +178,7 @@ sub run {
     
     # get homologies from compara - comes back as a hash of arrays
     print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('percent_id_filter'), '1');
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('is_tree_compliant'), $self->param('percent_id_filter'), '1');
    
     print $log "\n\tProjecting GO Terms from $from_species to $to_species\n";
     print $log "\t\t$to_species, before projection, "; 

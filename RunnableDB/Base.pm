@@ -78,6 +78,7 @@ sub fetch_homologies {
     my $data         = shift;
     my $gdba         = shift;
     my $homology_types_allowed = shift;
+    my $is_tree_compliant     = shift;
     my $percent_id_filter      = shift;
     my $percent_cov_filter     = shift;
     my $go_flag                = shift;
@@ -90,8 +91,9 @@ sub fetch_homologies {
 
     foreach my $homology (@{$homologies}) {
        next if (!homology_type_allowed($homology->description, $homology_types_allowed));
-       next if $homology->is_tree_compliant() !=1;
-
+       if ($is_tree_compliant == 1){
+         next if $homology->is_tree_compliant() !=1;
+       }
        my ($from_stable_id, @to_stable_ids, @perc_id, @perc_cov);
        my $members = $homology->get_all_GeneMembers();
        my $mems    = $homology->get_all_Members();
