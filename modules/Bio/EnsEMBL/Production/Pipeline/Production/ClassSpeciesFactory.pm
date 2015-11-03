@@ -208,6 +208,7 @@ sub is_run {
      SELECT species_id 
      FROM   changelog c, changelog_species cs 
      WHERE  c.changelog_id = cs.changelog_id 
+     AND    c.is_current = 1
      AND    release_id = ?
      AND    status not in ('cancelled', 'postponed') 
 SQL
