@@ -209,7 +209,7 @@ sub project_genenames {
              print $log "DB:".$from_gene->display_xref->dbname()."\n";
 
              # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
-             my $info_txt = "from $from_species  gene " . $from_gene->stable_id();
+             my $info_txt = "from $from_species gene " . $from_gene->stable_id();
 
              # modify the display_id to have " (1 of 3)" etc if this is a one-to-many ortholog
              my $tuple_txt = "";
