@@ -14,7 +14,7 @@ sub default_options {
         
 	# division for GO & GeneName projection
 	division_name     => '', # Eg: protists, fungi, plants, metazoa
-        pipeline_name     => '_XrefProjections_'.$self->o('ensembl_release'),
+        pipeline_name     => $self->o('ENV','USER').'_XrefProjections_'.$self->o('ensembl_release'),
         output_dir      => '/lustre/scratch109/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 	email => 'maurel@ebi.ac.uk',	
 	## Flags controlling sub-pipeline to run
