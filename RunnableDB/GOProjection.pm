@@ -495,6 +495,15 @@ sub project_go_terms {
       # so we leave them 'NULL' here...
       $dbEntry->info_type("PROJECTION");
       $dbEntry->info_text('');
+      my $analysis = Bio::EnsEMBL::Analysis->
+          new( -logic_name      => 'go_projection',
+               -db              => $dbEntry->dbname,
+               -db_version      => '',
+               -program         => 'GOProjection.pm',
+               -description     => 'The Gene Ontology XRef projection pipeline',
+               -display_label   => 'GO projected xrefs',
+          );
+      $dbEntry->analysis($analysis);
       }
       # For e! databases 
       else{
@@ -504,20 +513,9 @@ sub project_go_terms {
       $dbEntry->info_text($txt);
       }
 
-      my $analysis = Bio::EnsEMBL::Analysis->
-          new( -logic_name      => 'go_projection',
-               -db              => $dbEntry->dbname,
-               -db_version      => '',
-               -program         => 'GOProjection.pm',
-               -description     => 'The Gene Ontology XRef projection pipeline',
-               -display_label   => 'GO projected xrefs',
-          );
-
       $projections_stats{'to_be_proj'}++;
 
       delete $dbEntry->{associated_xref} if(defined $dbEntry->{associated_xref});
-
-      $dbEntry->analysis($analysis);
       $to_translation->add_DBEntry($dbEntry);
       $to_dbea->store($dbEntry, $to_translation->dbID(), $ensemblObj_type_target, 1) if ($self->param('flag_store_proj')==1);
       
