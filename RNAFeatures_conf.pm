@@ -45,6 +45,7 @@ use File::Spec::Functions qw(catdir);
 
 sub default_options {
   my ($self) = @_;
+  
   return {
     %{$self->SUPER::default_options},
 
@@ -68,50 +69,65 @@ sub default_options {
     run_cmscan   => 1,
     run_trnascan => 1,
 
-    program_dir  => '/nfs/panda/ensemblgenomes/external/bin',
-    cmscan_exe   => catdir($self->o('program_dir'), 'cmscan'),
+    program_dir => '/nfs/panda/ensemblgenomes/external',
+    cmscan_exe  => catdir($self->o('program_dir'), 'bin', 'cmscan'),
 
     cmscan_cm_file    => {},
     cmscan_logic_name => {},
     cmscan_db_name    => {},
-    cmscan_cpu        => 1,
+    cmscan_cpu        => 3,
+    cmscan_heuristics => 'default',
+    cmscan_threshold  => 0.001,
     cmscan_param_hash =>
     {
       cpu            => $self->o('cmscan_cpu'),
-      heuristics     => 'default',
-      threshold      => 0.001, # 0.000001 is probably needed to weed out FPs; but keep it low, since we can always filter on evalue in the resultant table anyway...
-      recreate_index => 0,
+      heuristics     => $self->o('cmscan_heuristics'),
+      threshold      => $self->o('cmscan_threshold'),
     },
     cmscan_parameters => '',
 
-    # The rRNA predictions via cmscan are OK; RNAMMER (formerly used for rRNA)
-    # has a similar algorithm to cmscan, so doesn't produce very different
-    # results. However, cmscan annotates RNA genes that are out of the relevant
-    # taxonomic range; eg SSU_rRNA_microsporidia (RF02542) looks sufficiently
-    # like SSU_rRNA_eukarya (RF01960) that they both get annotated in the same
-    # places, as do bacterial and archaeal genes. Need to implement some
-    # taxonomic filtering here...
+    # The blacklist is a foolproof method of excluding Rfam models that
+    # you do not want to annotate, perhaps because they generate an excess of
+    # alignments. The taxonomic filtering tries to address this, but there may
+    # be a small number of models that slip past that filter, but which are
+    # nonetheless inappropriate. (An alternative is to ratchet up the strictness
+    # of the taxonomic filter, but you may then start excluding appropriate
+    # models...)
+    # In addition, some rRNA models are clade-specific, but have nonetheless
+    # been aligned across the entire tree of life; so those are in the
+    # blacklist by default.
+    rfam_version        => 12,
+    rfam_dir            => catdir($self->o('program_dir'), 'Rfam', $self->o('rfam_version')),
+    rfam_cm_file        => catdir($self->o('rfam_dir'), 'Rfam.cm'),
+    rfam_logic_name     => 'cmscan_rfam_'.$self->o('rfam_version'),
+    rfam_db_name        => 'RFAM',
+    rfam_rrna           => 1,
+    rfam_trna           => 0,
+    rfam_blacklist      => {
+                            'Archaea' =>
+                              ['RF00002', 'RF00177', 'RF01960', 'RF02541', 'RF02542', 'RF02543', ],
+                            'Bacteria' =>
+                              ['RF00002', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
+                            'Eukaryota' =>
+                              ['RF00177', 'RF01118', 'RF01959', 'RF02540', 'RF02541', 'RF02542', ],
+                            },
+    rfam_whitelist      => {
+                            'EnsemblProtists' =>
+                              ['RF00028', 'RF00029', ],
+                            },
+    rfam_taxonomy_file  => catdir($self->o('rfam_dir'), 'taxonomic_levels.txt'),
+    taxonomic_filtering => 1,
+    taxonomic_strict    => 0,
+    taxonomic_levels    => [],
+    taxonomic_threshold => 0.02,
 
-    # The blacklist consists of Rfam models that generate an excess of
-    # alignments. They are all miRNA precursors which resemble repeat features,
-    # so it's not clear if asking Rfam to tweak the covariance models would
-    # help much. They tend to be taxonomically restricted (e.g to rice or
-    # primate species), so that would be a good way to filter. Rfam have yet
-    # to respond to my query about the best way to address taxonomic filtering.
-    rfam_version    => 12,
-    rfam_dir        => '/nfs/panda/ensemblgenomes/external/Rfam',
-    rfam_cm_file    => catdir($self->o('rfam_dir'), $self->o('rfam_version'), 'Rfam.cm'),
-    rfam_logic_name => 'cmscan_rfam_'.$self->o('rfam_version'),
-    rfam_db_name    => 'RFAM',
-    rfam_trna       => 0,
-    rfam_rrna       => 1,
-    rfam_blacklist  => [], # ['RF00885', 'RF00886', ],
-
-    # For tRNA, the generic cmscan approach with Rfam CMs produces too many
-    # false positives for comfort, so tRNASCAN-SE remains the tool of choice,
-    # even though that also tends to have a lot of false positives.
-    trnascan_dir        => '/nfs/panda/ensemblgenomes/external/tRNAscan-SE-1.3.1/bin',
-    trnascan_exe        => catdir($self->o('trnascan_dir'), 'tRNAscan-SE'),
+    # There's not much to choose between cmscan and tRNASCAN-SE in terms of
+    # annotating tRNA genes, (for some species both produce lots of false
+    # positives). If you use tRNASCAN-SE, however, you do have the option of
+    # including pseudogenes, and you get info about the anticodon in the
+    # gene description.
+    trnascan_dir        => catdir($self->o('program_dir'), 'tRNAscan-SE-1.3.1', 'bin'),
+    trnascan_exe        => catdir($self->o('program_dir'), 'bin', 'tRNAscan-SE'),
     trnascan_logic_name => 'trnascan',
     trnascan_param_hash =>
     {
@@ -124,6 +140,18 @@ sub default_options {
     [
       {
         'logic_name'      => $self->o('rfam_logic_name'),
+        'db'              => 'Rfam',
+        'db_version'      => $self->o('rfam_version'),
+        'db_file'         => $self->o('rfam_cm_file'),
+        'program'         => 'Infernal',
+        'program_version' => '1.1',
+        'program_file'    => $self->o('cmscan_exe'),
+        'parameters'      => $self->o('cmscan_parameters'),
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::CMScan',
+        'linked_tables'   => ['dna_align_feature'],
+      },
+      {
+        'logic_name'      => $self->o('rfam_logic_name').'_strict',
         'db'              => 'Rfam',
         'db_version'      => $self->o('rfam_version'),
         'db_file'         => $self->o('rfam_cm_file'),
@@ -201,6 +229,11 @@ sub pipeline_create_commands {
 
 sub pipeline_analyses {
   my ($self) = @_;
+  
+  my $rfam_logic_name = $self->o('rfam_logic_name');
+  if ($self->o('taxonomic_filtering') && $self->o('taxonomic_strict')) {
+    $rfam_logic_name .= '_strict';
+  }
 
   my $flow_to_email = [];
   if ($self->o('email_rna_report')) {
@@ -253,7 +286,7 @@ sub pipeline_analyses {
                               analyses            => $self->o('analyses'),
                               run_cmscan          => $self->o('run_cmscan'),
                               run_trnascan        => $self->o('run_trnascan'),
-                              rfam_logic_name     => $self->o('rfam_logic_name'),
+                              rfam_logic_name     => $rfam_logic_name,
                               trnascan_logic_name => $self->o('trnascan_logic_name'),
                               cmscan_cm_file      => $self->o('cmscan_cm_file'),
                               cmscan_logic_name   => $self->o('cmscan_logic_name'),
@@ -288,6 +321,29 @@ sub pipeline_analyses {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['TaxonomicFilter'],
+    },
+
+    {
+      -logic_name        => 'TaxonomicFilter',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::TaxonomicFilter',
+      -batch_size        => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              rfam_cm_file        => $self->o('rfam_cm_file'),
+                              filtered_cm_file    => catdir($self->o('pipeline_dir'), '#species#', 'Rfam.filtered.cm'),
+                              rfam_logic_name     => $rfam_logic_name,
+                              rfam_rrna           => $self->o('rfam_rrna'),
+                              rfam_trna           => $self->o('rfam_trna'),
+                              rfam_blacklist      => $self->o('rfam_blacklist'),
+                              rfam_whitelist      => $self->o('rfam_whitelist'),
+                              rfam_taxonomy_file  => $self->o('rfam_taxonomy_file'),
+                              taxonomic_filtering => $self->o('taxonomic_filtering'),
+                              taxonomic_strict    => $self->o('taxonomic_strict'),
+                              taxonomic_levels    => $self->o('taxonomic_levels'),
+                              taxonomic_threshold => $self->o('taxonomic_threshold'),
+                            },
+      -rc_name           => '4Gb_mem',
       -flow_into         => ['SplitDumpFile'],
     },
 
@@ -316,8 +372,8 @@ sub pipeline_analyses {
       -batch_size        => 100,
       -max_retry_count   => 1,
       -parameters        => {
-                              rfam_cm_file      => $self->o('rfam_cm_file'),
-                              rfam_logic_name   => $self->o('rfam_logic_name'),
+                              rfam_cm_file      => catdir($self->o('pipeline_dir'), '#species#', 'Rfam.filtered.cm'),
+                              rfam_logic_name   => $rfam_logic_name,
                               cmscan_cm_file    => $self->o('cmscan_cm_file'),
                               cmscan_logic_name => $self->o('cmscan_logic_name'),
                               cmscan_db_name    => $self->o('cmscan_db_name'),
@@ -335,11 +391,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::CMScan',
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
-      -parameters        => {
-                              rfam_trna      => $self->o('rfam_trna'),
-                              rfam_rrna      => $self->o('rfam_rrna'),
-                              rfam_blacklist => $self->o('rfam_blacklist'),
-                            },
+      -parameters        => {},
       -rc_name           => 'cmscan_4Gb_mem',
       -flow_into         => {
                               '-1' => ['CMScan_HighMem'],
@@ -352,11 +404,7 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 0,
-      -parameters        => {
-                              rfam_trna      => $self->o('rfam_trna'),
-                              rfam_rrna      => $self->o('rfam_rrna'),
-                              rfam_blacklist => $self->o('rfam_blacklist'),
-                            },
+      -parameters        => {},
       -rc_name           => 'cmscan_8Gb_mem',
     },
 
@@ -391,7 +439,7 @@ sub pipeline_analyses {
                               subject           => 'RNA features pipeline: cmscan report for #species#',
                               run_cmscan        => $self->o('run_cmscan'),
                               run_trnascan      => $self->o('run_trnascan'),
-                              rfam_logic_name   => $self->o('rfam_logic_name'),
+                              rfam_logic_name   => $rfam_logic_name,
                               cmscan_cm_file    => $self->o('cmscan_cm_file'),
                               cmscan_logic_name => $self->o('cmscan_logic_name'),
                             },
