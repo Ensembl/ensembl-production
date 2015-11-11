@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf
+Bio::EnsEMBL::EGPipeline::PipeConfig::FileDumpGFF_conf
 
 =head1 DESCRIPTION
 
@@ -34,7 +34,7 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf;
+package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDumpGFF_conf;
 
 use strict;
 use warnings;
@@ -64,7 +64,7 @@ sub default_options {
     gff3_per_chromosome     => 0,
     gff3_include_scaffold   => 1,
     gff3_logic_name         => [],
-    gff3_remove_id_prefix   => 1,
+    gff3_remove_id_prefix   => 0,
     gff3_relabel_transcript => 1,
     gff3_remove_separators  => 0,
     gff3_out_file_stem      => undef,
