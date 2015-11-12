@@ -60,7 +60,7 @@ sub default_options {
     # Parameters for dumping and splitting Fasta DNA files...
     max_seq_length          => 10000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
-    max_seqs_per_file       => undef,
+    max_seqs_per_file       => 1000,
     max_files_per_directory => 50,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
@@ -95,7 +95,7 @@ sub default_options {
     # models...)
     # In addition, some rRNA models are clade-specific, but have nonetheless
     # been aligned across the entire tree of life; so those are in the
-    # blacklist by default.
+    # blacklist by default. Ditto the U3 and SRP clans.
     rfam_version        => 12,
     rfam_dir            => catdir($self->o('program_dir'), 'Rfam', $self->o('rfam_version')),
     rfam_cm_file        => catdir($self->o('rfam_dir'), 'Rfam.cm'),
@@ -105,11 +105,19 @@ sub default_options {
     rfam_trna           => 0,
     rfam_blacklist      => {
                             'Archaea' =>
-                              ['RF00002', 'RF00177', 'RF01960', 'RF02541', 'RF02542', 'RF02543', ],
+                              ['RF00002', 'RF00169', 'RF00177', 'RF01854', 'RF01960', 'RF02541', 'RF02542', 'RF02543', ],
                             'Bacteria' =>
-                              ['RF00002', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
+                              ['RF00002', 'RF01857', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
                             'Eukaryota' =>
-                              ['RF00177', 'RF01118', 'RF01959', 'RF02540', 'RF02541', 'RF02542', ],
+                              ['RF00177', 'RF01118', 'RF00169', 'RF01854', 'RF01857', 'RF01959', 'RF02540', 'RF02541', 'RF02542', ],
+                            'Fungi' =>
+                              ['RF00012', 'RF00017', 'RF01847', 'RF01848', 'RF01855', 'RF01856', ],
+                            'Metazoa' =>
+                              ['RF01502', 'RF01675', 'RF01846', 'RF01847', 'RF01848', 'RF01849', 'F01855', 'RF01856', ],
+                            'Viridiplantae' =>
+                              ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01848', 'RF01856', ],
+                            'EnsemblProtists' =>
+                              ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01847', 'RF01855', ],
                             },
     rfam_whitelist      => {
                             'EnsemblProtists' =>
