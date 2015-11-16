@@ -40,85 +40,34 @@ use strict;
 use warnings;
 
 use Bio::EnsEMBL::Hive::Version 2.3;
-use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
-use File::Spec::Functions qw(catdir);
+use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf');
 
 sub default_options {
   my ($self) = @_;
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'file_dump_'.$self->o('ensembl_release'),
-
-    species      => [],
-    division     => [],
-    run_all      => 0,
-    antispecies  => [],
-    meta_filters => {},
-
-    results_dir    => $self->o('ENV', 'PWD'),
+    eg_dir_structure   => 0,
+    eg_filename_format => $self->o('eg_dir_structure'),
 
     gff3_db_type            => 'core',
     gff3_feature_type       => [],
     gff3_data_type          => 'features',
-    gff3_per_chromosome     => 0,
-    gff3_include_scaffold   => 1,
     gff3_logic_name         => [],
     gff3_remove_id_prefix   => 0,
     gff3_relabel_transcript => 1,
     gff3_remove_separators  => 0,
     gff3_out_file_stem      => undef,
 
-    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
-    gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
-    gff3_validate => $self->o('gt_exe').' gff3validator',
-
-  };
-}
-
-# Force an automatic loading of the registry in all workers.
-sub beekeeper_extra_cmdline_options {
-  my ($self) = @_;
-
-  my $options = join(' ',
-    $self->SUPER::beekeeper_extra_cmdline_options,
-    "-reg_conf ".$self->o('registry')
-  );
-
-  return $options;
-}
-
-# Ensures that species output parameter gets propagated implicitly.
-sub hive_meta_table {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack'  => 1,
-  };
-}
-
-sub pipeline_create_commands {
-  my ($self) = @_;
-
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('results_dir'),
-  ];
-}
-
-sub pipeline_wide_parameters {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::pipeline_wide_parameters},
-    results_dir    => $self->o('results_dir'),
   };
 }
 
 sub pipeline_analyses {
   my ($self) = @_;
-
+  
+  my ($post_processing_flow, $post_processing_analyses) =
+    $self->post_processing_analyses($self->o('checksum'), $self->o('compress'));
+  
   return [
     {
       -logic_name        => 'SpeciesFactory',
@@ -143,6 +92,8 @@ sub pipeline_analyses {
     {
       -logic_name        => 'gff3',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
       -parameters        => {
                               db_type            => $self->o('gff3_db_type'),
                               data_type          => $self->o('gff3_data_type'),
@@ -154,11 +105,42 @@ sub pipeline_analyses {
                               relabel_transcript => $self->o('gff3_relabel_transcript'),
                               remove_separators  => $self->o('gff3_remove_separators'),
                               out_file_stem      => $self->o('gff3_out_file_stem'),
+                              eg_dir_structure   => $self->o('eg_dir_structure'),
+                              eg_filename_format => $self->o('eg_filename_format'),
+                              escape_branch      => -1,
                             },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1'   => ['gff3_himem'],
+                              '1->A' => ['gff3Tidy'],
+                              'A->1' => ['PostProcessing'],
+                            },
+    },
+
+    {
+      -logic_name        => 'gff3_himem',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -analysis_capacity => 10,
       -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => ['gff3Tidy'],
+      -parameters        => {
+                              db_type            => $self->o('gff3_db_type'),
+                              data_type          => $self->o('gff3_data_type'),
+                              feature_type       => $self->o('gff3_feature_type'),
+                              per_chromosome     => $self->o('gff3_per_chromosome'),
+                              include_scaffold   => $self->o('gff3_include_scaffold'),
+                              logic_name         => $self->o('gff3_logic_name'),
+                              remove_id_prefix   => $self->o('gff3_remove_id_prefix'),
+                              relabel_transcript => $self->o('gff3_relabel_transcript'),
+                              remove_separators  => $self->o('gff3_remove_separators'),
+                              out_file_stem      => $self->o('gff3_out_file_stem'),
+                              eg_dir_structure   => $self->o('eg_dir_structure'),
+                              eg_filename_format => $self->o('eg_filename_format'),
+                            },
+      -rc_name           => '16Gb_mem',
+      -flow_into         => {
+                              '1->A' => ['gff3Tidy'],
+                              'A->1' => ['PostProcessing'],
+                            },
     },
 
     {
@@ -166,6 +148,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
       -batch_size        => 10,
+      -max_retry_count   => 0,
       -parameters        => {
                               cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
                             },
@@ -177,10 +160,10 @@ sub pipeline_analyses {
       -logic_name        => 'gff3Move',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
+      -max_retry_count   => 0,
       -parameters        => {
                               cmd => 'mv #out_file#.sorted #out_file#',
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['gff3Validate'],
       -meadow_type       => 'LOCAL',
     },
@@ -190,11 +173,23 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
       -batch_size        => 10,
+      -max_retry_count   => 0,
       -parameters        => {
                               cmd => $self->o('gff3_validate').' #out_file#',
                             },
       -rc_name           => 'normal',
     },
+
+    {
+      -logic_name        => 'PostProcessing',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 0,
+      -parameters        => {},
+      -flow_into         => $post_processing_flow,
+      -meadow_type       => 'LOCAL',
+    },
+
+    @$post_processing_analyses,
 
   ];
 }
