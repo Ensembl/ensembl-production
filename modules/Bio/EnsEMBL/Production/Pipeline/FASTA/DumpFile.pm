@@ -609,10 +609,10 @@ sub _create_display_id {
     }
     #Must be a real "transcript"
     else {
-      $stable_id = $object->stable_id();
+      $stable_id = $object->stable_id() . "." . $object->version();
       $location  = $object->feature_Slice()->name();
       my $gene = $object->get_Gene();
-      $attributes{gene} = $gene->stable_id();
+      $attributes{gene} = $gene->stable_id() . "." . $gene->version();
       $attributes{gene_biotype} = $gene->biotype();
       
       $decoded_type = lc($object->analysis()->logic_name());
@@ -623,12 +623,12 @@ sub _create_display_id {
   elsif(check_ref($object, 'Bio::EnsEMBL::Translation')) {
     my $transcript = $object->transcript();
     my $gene = $transcript->get_Gene();
-    $stable_id = $object->stable_id();
+    $stable_id = $object->stable_id() . "." . $object->version();
     $location  = $transcript->feature_Slice()->name();
     %attributes = (
-      gene => $gene->stable_id(),
+      gene => $gene->stable_id() . "." . $gene->version(),
       gene_biotype => $gene->biotype(),
-      transcript => $transcript->stable_id(),
+      transcript => $transcript->stable_id() . "." . $transcript->version(),
       transcript_biotype => $transcript->biotype()
     );
     $decoded_type = 'pep';
