@@ -121,6 +121,7 @@ sub pipeline_analyses {
       -logic_name        => 'gff3_himem',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
       -analysis_capacity => 10,
+      -can_be_empty      => 1,
       -max_retry_count   => 0,
       -parameters        => {
                               db_type            => $self->o('gff3_db_type'),
