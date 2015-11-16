@@ -54,11 +54,13 @@ package Bio::EnsEMBL::Production::Pipeline::FASTA::CreatePrimaryAssembly;
 use strict;
 use warnings;
 use base qw/Bio::EnsEMBL::Production::Pipeline::FASTA::Base/;
-use Bio::EnsEMBL::Utils::IO qw/gz_work_with_file/;
+
+use File::Spec;
+use File::stat;
 
 sub fetch_input {
   my ($self) = @_;
-  foreach my $key (qw/species file/) {
+  foreach my $key (qw/data_type file/) {
     $self->throw("Cannot find the required parameter $key") unless $self->param($key);
   }
   return;
@@ -68,16 +70,41 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   if($self->has_non_refs()) {
-    my $source = $self->param('file');
-    my $target = $self->target_file();
-    $self->info('Decompressing to %s', $target);
-    gz_work_with_file($target, 'w', sub {
-      my ($trg_fh) = @_;
-      $self->filter_fasta_for_nonref($source, $trg_fh);
-      return;      
-    });
+    my @file_list = @{$self->get_dna_files()};
+    my $count = scalar(@file_list);
+    my $running_total_size = 0;
+
+    if($count) {
+      my $target_file = $self->target_file();
+      $self->info("Concatting type %s with %d file(s) into %s", $self->param('data_type'), $count, $target_file);
+  
+      if(-f $target_file) {
+        $self->info("Target already exists. Removing");
+        unlink $target_file or $self->throw("Could not remove $target_file: $!");
+      }
+  
+      $self->info('Running concat');
+      foreach my $file (@file_list) {
+        $self->fine('Processing %s', $file);
+        $running_total_size += stat($file)->size;
+        system("cat $file >> $target_file")
+          and $self->throw( sprintf('Cannot concat %s into %s. RC %d', $file, $target_file, ($?>>8)));
+      }
+  
+      $self->info("Catted files together");
+  
+      my $catted_size = stat($target_file)->size;
+  
+      if($running_total_size != $catted_size) {
+        $self->throw(sprintf('The total size of the files catted together should be %d but was in fact %d. Failing as we expect the catted size to be the same', $running_total_size, $catted_size));
+      }
+  
+      $self->param('target_file', $target_file);
+    }
+    else {
+      $self->throw("Cannot continue as we found no files to concat");
+    }
   }
-  $self->cleanup_DBAdaptor();
   return;
 }
 
@@ -89,6 +116,30 @@ sub target_file {
   my $file = $self->param('file');
   $file =~ s/\.toplevel\./.primary_assembly./;
   return $file;
+}
+
+sub file_pattern {
+  my ($self,$type) = @_;
+   my %regexes = (
+    dna => qr/.+\.dna\..+\.fa\.gz$/,
+    dna_rm => qr/.+\.dna_rm\..+\.fa\.gz$/,
+    dna_sm => qr/.+\.dna_sm\..+\.fa\.gz$/,
+  );
+  return $regexes{$type};
+}
+
+sub get_dna_files {
+  my ($self) = @_;
+  my $path = $self->fasta_path('dna');
+  my $data_type = $self->param('data_type');
+
+  my $regex = $self->file_pattern($data_type);
+  my $filter = sub {
+    my ($filename) = @_;
+    return ($filename =~ $regex && $filename !~ /\.toplevel\./ && $filename !~ /\.alt\./) ? 1 : 0;
+  };
+  my $files = $self->find_files($path, $filter);
+  return [ sort @{$files} ];
 }
 
 1;

@@ -127,7 +127,7 @@ sub write_output {
   my ($self) = @_;
   my $file = $self->param('target_file');
   if($file) {
-    $self->dataflow_output_id({ file => $file, species => $self->param('species') }, 1);
+    $self->dataflow_output_id({ file => $file, species => $self->param('species'), data_type => $self->param('data_type') }, 1);
   }
   return;
 }

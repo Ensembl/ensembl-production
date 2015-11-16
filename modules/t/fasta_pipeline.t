@@ -69,7 +69,6 @@ if(! @ARGV) {
         CHECKSUMS README 
         Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
         Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
-        Homo_sapiens.GRCh38.dna.chromosome.HG480_HG481_PATCH.fa.gz
         Homo_sapiens.GRCh38.dna.chromosome.X.fa.gz
         Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
         Homo_sapiens.GRCh38.dna.toplevel.fa.gz

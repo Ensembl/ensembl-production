@@ -219,13 +219,14 @@ sub run_type {
 sub _dump_dna {
   my ($self,$type) = @_;
   
-  my @chromosomes;
-  my @non_chromosomes;
+  my (@chromosomes, @non_chromosomes, @alt);
   my $filter_human = 1;
   foreach my $s (@{$self->get_Slices($type, $filter_human)}) {
     my $chr = $s->is_chromosome();
+    my $ref = $s->is_reference();
     push(@chromosomes, $s) if $chr;
-    push(@non_chromosomes, $s) if ! $chr;
+    push(@non_chromosomes, $s) if ! $chr and $ref;
+    push(@alt, $s) if ! $ref;
   }
   
   ############ NON CHROMOSOME WORK
@@ -246,6 +247,26 @@ sub _dump_dna {
     $self->tidy_file_handle( $rm_non_specific_fh, $rm_non_specific_file );
     $self->tidy_file_handle( $hard_mask_fh, $hard_mask_file);
     $self->info('Dumped non-chromosomes');
+  }
+
+  ############ ALTERNATE SEQUENCE WORK
+  $self->info('Processing %d alternate sequence(s)', scalar(@alt));
+  if(@alt) {
+    my ( $alt_file, $alt_fh, $alt_serializer ) =
+      $self->_generate_fasta_serializer( 'dna', 'alt' );
+    my ( $rm_alt_file, $rm_alt_fh, $alt_rm_serializer ) =
+      $self->_generate_fasta_serializer( 'dna_sm', 'alt' );
+    foreach my $s (@alt) {
+      $self->_dump_slice($s, $alt_serializer, $alt_rm_serializer);
+    }
+    #Quick close of the SM FH to flush all data out to disk; skip gzipping & leave that to the next call
+    $self->tidy_file_handle($rm_alt_fh, $rm_alt_file, 1);
+    my ($alt_hard_mask_fh, $alt_hard_mask_file) = $self->_convert_softmask_to_hardmask($rm_alt_file, $rm_alt_fh);
+
+    $self->tidy_file_handle( $alt_fh, $alt_file );
+    $self->tidy_file_handle( $rm_alt_fh, $rm_alt_file );
+    $self->tidy_file_handle( $alt_hard_mask_fh, $alt_hard_mask_file);
+    $self->info('Dumped alternate sequences');
   }
 
   ############ CHROMOSOME WORK 
