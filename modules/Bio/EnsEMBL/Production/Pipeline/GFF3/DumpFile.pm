@@ -523,7 +523,7 @@ a space and then the value. Current meta data keys are:
 
 * genome-build -  Build identifier of the assembly e.g. GRCh37.p11
 * genome-version - Version of this assembly e.g. GRCh37
-* genome-date - The date of this assembly's release e.g. 2009-02
+* genome-date - The date of the release of this assembly e.g. 2009-02
 * genome-build-accession - The accession and source of this accession e.g. NCBI:GCA_000001405.14
 * genebuild-last-updated - The date of the last genebuild update e.g. 2013-09
 
@@ -554,6 +554,18 @@ GL476399        ensembl five_prime_UTR  2596494 2596498 .       +       .       
 GL476399        ensembl three_prime_UTR 2601045 2601138 .       +       .       Parent=transcript:ENSPMAT00000010026
 
 README
+
+  if ($species eq 'Homo sapiens') {
+    $readme .= "
+--------------------------------------
+Locus Reference Genomic Sequence (LRG)
+--------------------------------------
+This is a manually curated project that contains stable and un-versioned reference sequences designed specifically for reporting sequence variants with clinical implications.
+The sequences of each locus (also called LRG) are chosen in collaboration with research and diagnostic laboratories, LSDB (locus specific database) curators and mutation consortia with expertise in the region of interest.
+LRG website: http://www.lrg-sequence.org
+LRG data are freely available in several formats (FASTA, BED, XML, Tabulated) at this address: http://www.lrg-sequence.org/downloads
+    ";
+  }
 
   my $path = File::Spec->catfile($self->data_path(), 'README');
   work_with_file($path, 'w', sub {

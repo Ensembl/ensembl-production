@@ -424,6 +424,18 @@ Example GTF output
 11      ensembl_havana  UTR     5423155 5423206 .       +       .       gene_id "ENSG00000167360"; gene_version "4"; transcript_id "ENST00000300778"; transcript_version "4"; gene_name "OR51Q1"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR51Q1-001"; transcript_source "ensembl_havana"; transcript_biotype "protein_coding"; tag "CCDS"; ccds_id "CCDS31381";
 
 README
+
+  if ($species eq 'Homo sapiens') {
+    $readme .= "
+--------------------------------------
+Locus Reference Genomic Sequence (LRG)
+--------------------------------------
+This is a manually curated project that contains stable and un-versioned reference sequences designed specifically for reporting sequence variants with clinical implications.
+The sequences of each locus (also called LRG) are chosen in collaboration with research and diagnostic laboratories, LSDB (locus specific database) curators and mutation consortia with expertise in the region of interest.
+LRG website: http://www.lrg-sequence.org
+LRG data are freely available in several formats (FASTA, BED, XML, Tabulated) at this address: http://www.lrg-sequence.org/downloads
+    ";
+  }
   
   my $path = File::Spec->catfile($self->data_path(), 'README');
   work_with_file($path, 'w', sub {
