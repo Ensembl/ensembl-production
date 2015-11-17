@@ -5,11 +5,16 @@ perl:
 
 env:
   - COVERALLS=true  DB=mysql
+  
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - unzip
+    - sendmail
 
 before_install:
-    - sudo apt-get -y update
-    - sudo apt-get -y install unzip
-    - sudo apt-get -y install sendmail
     - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-test.git
     - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl.git
     - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-hive.git
@@ -17,8 +22,6 @@ before_install:
     - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-orm.git
     - wget https://github.com/bioperl/bioperl-live/archive/bioperl-release-1-2-3.zip
     - unzip bioperl-release-1-2-3.zip
-    - echo -e "[server]\nwait_timeout=28000" | sudo tee -a /etc/mysql/my.cnf
-    - sudo service mysql restart
 
 
 install:
