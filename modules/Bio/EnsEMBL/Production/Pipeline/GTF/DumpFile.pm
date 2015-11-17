@@ -136,7 +136,7 @@ sub run {
 
   $self->info("Dumping GTF to %s", $out_file);
   my $unzipped_out_file;
-  if (scalar(@chroms) > 0) {
+  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms)) {
     $self->print_to_file(\@chroms, $chr_out_file, 'Gene', 1);
     $self->print_to_file(\@scaff, $tmp_out_file, 'Gene');
     system("cat $chr_out_file $tmp_out_file > $out_file");
@@ -146,6 +146,9 @@ sub run {
     system("gunzip $out_file");
     system("gzip $unzipped_out_file");
     system("rm $tmp_out_file");
+  } elsif (scalar(@chroms) > 0) {
+    # If species has only chromosomes, dump only one file
+    $self->print_to_file(\@chroms, $out_file, 'Gene', 1);
   } else {
     $self->print_to_file(\@scaff, $out_file, 'Gene', 1);
   }

@@ -132,7 +132,7 @@ sub run {
   }
 
   my $unzipped_out_file;
-  if (scalar(@chroms) > 0 ){
+  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms)) {
     $self->print_to_file(\@chroms, $chr_out_file, $feature_types, \%adaptors, 1);
     $self->print_to_file(\@scaff, $tmp_out_file, $feature_types, \%adaptors);
     system("cat $chr_out_file $tmp_out_file > $out_file");
@@ -144,7 +144,12 @@ sub run {
     system("rm $tmp_out_file");
     push @$out_files, $chr_out_file;
     push @$out_files, $out_file;
+  } elsif (scalar(@chroms) > 0) {
+    # If species has only chromosomes, dump only one file
+    $self->print_to_file(\@chroms, $out_file, $feature_types, \%adaptors, 1);
+    push @$out_files, $out_file;
   } else {
+    # If species has only scaffolds, dump only one file
     $self->print_to_file(\@scaff, $out_file, $feature_types, \%adaptors, 1);
     push @$out_files, $out_file;
   }
