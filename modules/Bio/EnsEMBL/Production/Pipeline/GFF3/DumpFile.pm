@@ -117,13 +117,6 @@ sub run {
         push @chroms, $slice;
       }
       else {
-        if ($per_chromosome) {
-          my $slice_name = '.nonchromosomal';
-          my $chr_file = $out_file;
-          $chr_file =~ s/\.gff3/$slice_name\.gff3/; 
-          $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
-          push @$out_files, $chr_file;
-        }
         push @scaff, $slice;
       }
     } else {
