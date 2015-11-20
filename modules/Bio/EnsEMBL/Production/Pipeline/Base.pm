@@ -14,14 +14,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=cut
+=head1 NAME
 
+ Bio::EnsEMBL::Production::Pipeline::Base;
+
+=head1 DESCRIPTION
+
+
+=head1 MAINTAINER
+
+ ckong@ebi.ac.uk 
+
+=cut
 package Bio::EnsEMBL::Production::Pipeline::Base;
 
 use strict;
 use warnings;
 use base qw/Bio::EnsEMBL::Hive::Process/;
-
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Scalar qw/check_ref/;
@@ -29,21 +38,124 @@ use File::Find;
 use File::Spec;
 use File::Path qw/mkpath/;
 use POSIX qw/strftime/;
+use Carp;
+
+sub hive_dbc {
+  my $self = shift;
+  my $dbc  = $self->dbc();
+  confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+return $dbc;
+}
+
+sub hive_dbh {
+  my $self = shift;
+  my $dbh  = $self->hive_dbc->db_handle();
+  confess('Type error!') unless($dbh->isa('DBI::db'));
+
+return $dbh;
+}
+
+sub get_DBAdaptor {
+  my ($self, $type) = @_;
+  $type ||= 'core';
+  my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
+
+return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
+}
+
+sub core_dba {
+  my $self = shift;
+  my $dba  = $self->get_DBAdaptor('core');
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+
+return $dba;
+}
+
+sub core_dbc {
+  my $self = shift;
+  my $dbc  = $self->core_dba()->dbc();
+  confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+return $dbc;
+}
+
+sub core_dbh {
+  my $self = shift;
+  my $dbh  = $self->core_dbc->db_handle();
+  confess('Type error!') unless($dbh->isa('DBI::db'));
+
+return $dbh;
+}
+
+sub production_dba {
+  my $self = shift;
+  my $dba  = $self->get_DBAdaptor('production');
+  if (!defined $dba) {
+    my %production_db = %{$self->param('production_db')};
+    $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%production_db);
+  }
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+
+return $dba;
+}
+
+sub production_dbc {
+  my $self = shift;
+  my $dbc  = $self->production_dba()->dbc();
+  confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+return $dbc;
+}
+
+sub production_dbh {
+  my $self = shift;
+  my $dbh  = $self->production_dba()->dbc()->db_handle();
+  confess('Type error!') unless($dbh->isa('DBI::db'));
+
+return $dbh;
+}
+
+sub has_chromosomes {
+  my ($self, $dba) = @_;
+
+  my $helper = $dba->dbc->sql_helper();
+  my $sql = q{
+    SELECT COUNT(*) FROM
+    coord_system cs INNER JOIN
+    seq_region sr USING (coord_system_id) INNER JOIN
+    seq_region_attrib sa USING (seq_region_id) INNER JOIN
+    attrib_type at USING (attrib_type_id)
+    WHERE cs.species_id = ?
+    AND at.code = 'karyotype_rank'
+  };
+  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+
+  $dba->dbc->disconnect_if_idle();
+
+return $count;
+}
+
+###
+### 
 
 # Takes in a key, checks if the current $self->param() was an empty array
 # and replaces it with the value from $self->param_defaults()
 sub reset_empty_array_param {
   my ($self, $key) = @_;
+
   my $param_defaults = $self->param_defaults();
-  my $current = $self->param($key); 
-  my $replacement = $self->param_defaults()->{$key};
+  my $current        = $self->param($key); 
+  my $replacement    = $self->param_defaults()->{$key};
+
   if(check_ref($current, 'ARRAY') && check_ref($replacement, 'ARRAY')) {
     if(! @{$current}) {
       $self->fine('Restting param %s because the given array was empty', $key);
       $self->param($key, $replacement);
     }
   }
-  return;
+
+return;
 }
 
 =head2 get_Slices
@@ -61,24 +173,26 @@ sub reset_empty_array_param {
   Exceptions  : Thrown if you are filtering Human but also are not on GRCh38
 
 =cut
-
 sub get_Slices {
   my ($self, $type, $filter_human) = @_;
-  my $dba = $self->get_DBAdaptor($type);
+
+  my $dba    = $self->get_DBAdaptor($type);
   throw "Cannot get a DB adaptor" unless $dba;
-  
-  my $sa = $dba->get_SliceAdaptor();
+  my $sa     = $dba->get_SliceAdaptor();
   my @slices = @{$sa->fetch_all('toplevel', undef, 1, undef, undef)};
   
   if($filter_human) {
     my $production_name = $self->production_name();
+
     if($production_name eq 'homo_sapiens') {
-# Coord system with highest rank should always be the one, apart from VEGA databases where it would be the second highest
+      # Coord system with highest rank should always be the one, apart from VEGA databases where it would be the second highest
       my ($cs, $alternative_cs) = @{$dba->get_CoordSystem()->fetch_all()};
       my $expected = 'GRCh38';
+
       if($cs->version() ne $expected && $alternative_cs->version() ne $expected) {
         throw sprintf(q{Cannot continue as %s's coordinate system %s is not the expected %s }, $production_name, $cs->version(), $expected);
       }
+
       @slices = grep {
         if($_->seq_region_name() eq 'Y' && ($_->end() < 2781480 || $_->start() > 56887902)) {
           $self->info('Filtering small Y slice');
@@ -87,49 +201,11 @@ sub get_Slices {
         else {
           1;
         }
-      } @slices;
+     } @slices;
     }
   }
   
-  return [ sort { $b->length() <=> $a->length() } @slices ];
-}
-
-# Registry is loaded by Hive (see beekeeper_extra_cmdline_options() in conf)
-sub get_DBAdaptor {
-  my ($self, $type) = @_;
-
-  $type ||= 'core';
-  my $species = ($type eq 'production')?'multi':$self->param('species');
-
-  return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
-}
-
-sub core_dba {
-  my $self = shift;
-
-  my $dba = $self->get_DBAdaptor('core');
-  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
-
-  return $dba;
-}
-
-sub has_chromosome {
-  my ($self, $dba) = @_;
-  my $helper = $dba->dbc->sql_helper();
-  my $sql = q{
-    SELECT COUNT(*) FROM
-    coord_system cs INNER JOIN
-    seq_region sr USING (coord_system_id) INNER JOIN
-    seq_region_attrib sa USING (seq_region_id) INNER JOIN
-    attrib_type at USING (attrib_type_id)
-    WHERE cs.species_id = ?
-    AND at.code = 'karyotype_rank'
-  };
-  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
-
-  $dba->dbc->disconnect_if_idle();
-
-  return $count;
+return [ sort { $b->length() <=> $a->length() } @slices ];
 }
 
 sub cleanup_DBAdaptor {
@@ -137,57 +213,60 @@ sub cleanup_DBAdaptor {
   my $dba = $self->get_DBAdaptor($type);
   $dba->clear_caches;
   $dba->dbc->disconnect_if_idle;
-  return;
+return;
 }
 
 sub get_dir {
-    my ($self, @extras) = @_;
-    my $base_dir = $self->param('base_path');
-    my $dir      = File::Spec->catdir($base_dir, @extras);
+  my ($self, @extras) = @_;
 
-    if ($self->param('species')) {
-       my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
+  my $base_dir = $self->param('base_path');
+  my $dir      = File::Spec->catdir($base_dir, @extras);
 
-       if($mc->is_multispecies()==1){
-         my $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
-         my $species       = pop(@extras);
-         push @extras, $collection_db;
-         push @extras, $species; 
-         $dir = File::Spec->catdir($base_dir, @extras); 
-      }
-    }
+  if ($self->param('species')) {
+     my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
 
-    mkpath($dir);
+     if($mc->is_multispecies()==1){
+        my $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+        my $species       = pop(@extras);
+        push @extras, $collection_db;
+        push @extras, $species; 
+        $dir = File::Spec->catdir($base_dir, @extras); 
+     }
+  }
+  mkpath($dir);
 
 return $dir;
 }
 
 sub web_name {
   my ($self) = @_;
-#  my $mc = $self->get_DBAdaptor()->get_MetaContainer();
-#  my $name = $mc->single_value_by_key('species.url'); # change back
-  my $name = ucfirst($self->production_name());
-  return $name;
+  my $name   = ucfirst($self->production_name());
+
+return $name;
 }
 
 sub scientific_name {
   my ($self) = @_;
-  my $dba = $self->get_DBAdaptor();
-  my $mc = $dba->get_MetaContainer();
-  my $name = $mc->get_scientific_name();
+  my $dba    = $self->get_DBAdaptor();
+  my $mc     = $dba->get_MetaContainer();
+  my $name   = $mc->get_scientific_name();
   $dba->dbc()->disconnect_if_idle();
-  return $name;
+
+return $name;
 }
 
 sub assembly {
   my ($self) = @_;
-  my $dba = $self->get_DBAdaptor();
-  return $dba->get_CoordSystemAdaptor()->fetch_all()->[0]->version();
+  my $dba    = $self->get_DBAdaptor();
+
+return $dba->get_CoordSystemAdaptor()->fetch_all()->[0]->version();
 }
 
 sub production_name {
   my ($self, $name) = @_;
+
   my $dba;
+
   if($name) {
     $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($name, 'core');
   }
@@ -197,16 +276,17 @@ sub production_name {
   my $mc = $dba->get_MetaContainer();
   my $prod = $mc->get_production_name();
   $dba->dbc()->disconnect_if_idle();
-  return $prod;
+
+return $prod;
 }
 
 # Closes file handle, and deletes the file stub if no data was written to
 # the file handle (using tell). We can also only close a file handle and unlink
 # the data if it was open otherwise we just ignore it 
 # Returns success if we managed to delete the file
-
 sub tidy_file_handle {
   my ($self, $fh, $path) = @_;
+
   if($fh->opened()) {
     my $unlink = ($fh->tell() == 0) ? 1 : 0;
     $fh->close();
@@ -215,11 +295,13 @@ sub tidy_file_handle {
       return 1;
     }
   } 
-  return 0;
+
+return 0;
 }
 
 sub info {
   my ($self, $msg, @params) = @_;
+
   if ($self->debug() > 1) {
     my $formatted_msg;
     if(scalar(@params)) {
@@ -230,13 +312,16 @@ sub info {
     }
     printf STDERR "INFO [%s]: %s %s\n", $self->_memory_consumption(), strftime('%c',localtime()), $formatted_msg;
   }
-  return
+
+return
 }
 
 sub fine {
   my ($self, $msg, @params) = @_;
+
   if ($self->debug() > 2) {
     my $formatted_msg;
+
     if(scalar(@params)) {
       $formatted_msg = sprintf($msg, @params);
     } 
@@ -245,81 +330,92 @@ sub fine {
     }
     printf STDERR "FINE [%s]: %s %s\n", $self->_memory_consumption(), strftime('%c',localtime()), $formatted_msg;
   }
-  return
+
+return
 }
 
 sub _memory_consumption {
-  my ($self) = @_;
+  my ($self)  = @_;
   my $content = `ps -o rss $$ | grep -v RSS`;
   return q{?MB} if $? >> 8 != 0;
-  $content =~ s/\s+//g;
-  my $mem = $content/1024;
-  return sprintf('%.2fMB', $mem);
+  $content    =~ s/\s+//g;
+  my $mem     = $content/1024;
+  
+return sprintf('%.2fMB', $mem);
 }
 
 sub find_files {
   my ($self, $dir, $boolean_callback) = @_;
+
   $self->throw("Cannot find path $dir") unless -d $dir;
   my @files;
+
   find(sub {
     my $path = $File::Find::name;
     if($boolean_callback->($_)) {
       push(@files, $path);
     }
   }, $dir);
-  return \@files;
+
+return \@files;
 }
 
 sub unlink_all_files {
   my ($self, $dir) = @_;
+
   $self->info('Removing files from the directory %s', $dir);
   #Delete anything which is a file & not the current or higher directory
   my $boolean_callback = sub {
     return ( $_[0] =~ /^\.\.?$/) ? 0 : 1;
   };
   my $files = $self->find_files($dir, $boolean_callback);
+
   foreach my $file (@{$files}) {
     $self->fine('Unlinking %s', $file);
     unlink $file;
   }
+
   $self->info('Removed %d file(s)', scalar(@{$files}));
-  return;
+
+return;
 }
 
 sub assert_executable {
   my ($self, $exe) = @_;
+
   if(! -x $exe) {
     my $output = `which $exe 2>&1`;
     chomp $output;
     my $rc = $? >> 8;
+
     if($rc != 0) {
-      my $possible_location = `locate -l 1 $exe 2>&1`;
-      my $loc_rc = $? >> 8;
-      if($loc_rc != 0) {
-        my $msg = 'Cannot find the executable "%s" after trying "which" and "locate -l 1". Please ensure it is on your PATH or use an absolute location and try again';
+       my $possible_location = `locate -l 1 $exe 2>&1`;
+       my $loc_rc = $? >> 8;
+
+       if($loc_rc != 0) {
+         my $msg = 'Cannot find the executable "%s" after trying "which" and "locate -l 1". Please ensure it is on your PATH or use an absolute location and try again';
         $self->throw(sprintf($msg, $exe));
-      }
+       }
     }
   }
-  return 1;
+
+return 1;
 }
 
-# Runs the given command and returns a list of exit code and output
 sub run_cmd {
   my ($self, $cmd) = @_;
   $self->info('About to run "%s"', $cmd);
   my $output = `$cmd 2>&1`;
-  my $rc = $? >> 8;
+  my $rc     = $? >> 8;
   $self->throw("Cannot run program '$cmd'. Return code was ${rc}. Program output was $output") if $rc;
-  return ($rc, $output);
+
+return ($rc, $output);
 }
 
-## Production database adaptor
 sub get_production_DBAdaptor {
   my ($self) = @_;
-  return Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'production');
+
+return Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'production');
 }
-
-
 
 1;
