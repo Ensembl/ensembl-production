@@ -202,11 +202,12 @@ sub run {
   $self->param('variation_dbas', $variation_dbas);
 }
 
-=pod
+
 sub has_chromosome {
   my ($self, $dba) = @_;
+
   my $helper = $dba->dbc->sql_helper();
-  my $sql = q{
+  my $sql    = q{
     SELECT COUNT(*) FROM
     coord_system cs INNER JOIN
     seq_region sr USING (coord_system_id) INNER JOIN
@@ -215,13 +216,12 @@ sub has_chromosome {
     WHERE cs.species_id = ?
     AND at.code = 'karyotype_rank'
   };
-  my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
+  my $count  = $helper->execute_single_result(-SQL => $sql, -PARAMS => [$dba->species_id()]);
   
   $dba->dbc->disconnect_if_idle();
   
-  return $count;
+return $count;
 }
-=cut
 
 sub has_variation {
 	my ($self, $species) = @_;
