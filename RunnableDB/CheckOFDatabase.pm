@@ -31,17 +31,21 @@ sub run {
   my $species = $self->param_required('species');
   
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'otherfeatures');
-  eval {
-    $dba->dbc->connect();
-  };
-  if ($@) {
-    if ($@ =~ /Unknown database/) {
-      $self->param('db_exists', 0);
+  if (defined $dba) {
+    eval {
+      $dba->dbc->connect();
+    };
+    if ($@) {
+      if ($@ =~ /Unknown database/) {
+        $self->param('db_exists', 0);
+      } else {
+        $self->throw($@);
+      }
     } else {
-      $self->throw($@);
+      $self->param('db_exists', 1);
     }
   } else {
-    $self->param('db_exists', 1);
+    $self->param('db_exists', 0);
   }
 }
 
