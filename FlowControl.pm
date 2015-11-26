@@ -16,44 +16,25 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::CheckOFDatabase;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FlowControl;
 
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-sub param_defaults {
-  return {};
-}
-
-sub run {
-  my ($self) = @_;
-  my $species = $self->param_required('species');
-  
-  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'otherfeatures');
-  eval {
-    $dba->dbc->connect();
-  };
-  if ($@) {
-    if ($@ =~ /Unknown database/) {
-      $self->param('db_exists', 0);
-    } else {
-      $self->throw($@);
-    }
-  } else {
-    $self->param('db_exists', 1);
-  }
-}
-
 sub write_output {
   my ($self) = @_;
   
-  if ($self->param('db_exists')) {
-    $self->dataflow_output_id({'db_exists' => 1}, 2);
-  } else {
-    $self->dataflow_output_id({'db_exists' => 0}, 3);
+  my $control_value = $self->param_required('control_value');
+  my $control_flow = $self->param_required('control_flow');
+  my $output_ids = $self->param('output_ids') || {};
+  my $flow = $self->param('default_flow') || 1;
+  
+  if (exists $$control_flow{$control_value}) {
+    $flow = $$control_flow{$control_value};
   }
+  
+  $self->dataflow_output_id($output_ids, $flow);
 }
 
 1;
-
