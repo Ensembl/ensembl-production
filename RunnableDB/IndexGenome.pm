@@ -74,7 +74,7 @@ sub run {
     }
   }
   
-  #$self->param('aligner_object')->index_file($genome_file);
+  $self->param('aligner_object')->index_file($genome_file);
 }
 
 1;
