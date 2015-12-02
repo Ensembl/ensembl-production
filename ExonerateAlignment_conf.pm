@@ -160,7 +160,7 @@ sub default_options {
         'program'         => $self->o('exonerate_program'),
         'program_version' => $self->o('exonerate_version'),
         'program_file'    => $self->o('exonerate_exe'),
-        'parameters'      => '--model affine:local --softmasktarget TRUE --bestn 1',
+        'parameters'      => '--model protein2dna --softmasktarget TRUE --bestn 1',
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateAlignFeature',
         'linked_tables'   => ['dna_align_feature'],
       },
@@ -223,6 +223,12 @@ sub pipeline_analyses {
   my $data_type  = $self->o('data_type');
   my $logic_name = $self->o('logic_name');
 
+  if ($self->o('use_exonerate_server')) {
+    if ($data_type eq 'protein') {
+      die "exonerate-server cannot be used with data_type '$data_type'";
+    }
+  }
+      
   my $analysis_name;
   if ($make_genes) {
     $analysis_name = "$data_type\_e2g";
@@ -297,10 +303,11 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::Exonerate::AnalysisFactory',
       -max_retry_count   => 0,
       -parameters        => {
-                              exonerate_analyses => $self->o('exonerate_analyses'),
-                              analysis_name      => $analysis_name,
-                              logic_name         => $logic_name,
-                              db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_exonerate_bkp.sql.gz'),
+                              exonerate_analyses   => $self->o('exonerate_analyses'),
+                              analysis_name        => $analysis_name,
+                              logic_name           => $logic_name,
+                              db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_exonerate_bkp.sql.gz'),
+                              use_exonerate_server => $self->o('use_exonerate_server'),
                             },
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
@@ -564,16 +571,17 @@ sub exonerate_analysis {
       -analysis_capacity => $analysis_capacity,
       -max_retry_count   => 1,
       -parameters        => {
-                              db_type        => 'otherfeatures',
-                              logic_name     => $logic_name,
-                              biotype        => $biotype,
-                              queryfile      => '#genome_file#',
-                              server_file    => '#genome_file#'.'.server',
-                              seq_file       => '#split_file#',
-                              seq_type       => $seq_type,
-                              coverage       => $self->o('coverage'),
-                              percent_id     => $self->o('percent_id'),
-                              best_in_genome => $self->o('best_in_genome'),
+                              db_type              => 'otherfeatures',
+                              logic_name           => $logic_name,
+                              biotype              => $biotype,
+                              use_exonerate_server => $self->o('use_exonerate_server'),
+                              queryfile            => '#genome_file#',
+                              server_file          => '#genome_file#'.'.server',
+                              seq_file             => '#split_file#',
+                              seq_type             => $seq_type,
+                              coverage             => $self->o('coverage'),
+                              percent_id           => $self->o('percent_id'),
+                              best_in_genome       => $self->o('best_in_genome'),
                             },
       -rc_name           => 'normal',
     };
@@ -586,12 +594,13 @@ sub exonerate_analysis {
       -analysis_capacity => $analysis_capacity,
       -max_retry_count   => 1,
       -parameters        => {
-                              db_type     => 'otherfeatures',
-                              logic_name  => $logic_name,
-                              queryfile   => '#genome_file#',
-                              server_file => '#genome_file#'.'.server',
-                              seq_file    => '#split_file#',
-                              seq_type    => $seq_type,
+                              db_type              => 'otherfeatures',
+                              logic_name           => $logic_name,
+                              use_exonerate_server => $self->o('use_exonerate_server'),
+                              queryfile            => '#genome_file#',
+                              server_file          => '#genome_file#'.'.server',
+                              seq_file             => '#split_file#',
+                              seq_type             => $seq_type,
                             },
       -rc_name           => 'normal',
     };
