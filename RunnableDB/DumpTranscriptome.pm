@@ -125,6 +125,12 @@ sub header {
     my $desc = $gene->description ? $gene->description : ' ';
     $desc =~ s/\s*\[Source.+$//;
     
+    my $xref = $gene->display_xref;
+    if (defined $xref) {
+      my $name = $xref->display_id;
+      $desc = "$name: $desc";
+    }
+    
     my $location = join(':',
       $transcript->seq_region_name,
       $transcript->seq_region_start,
