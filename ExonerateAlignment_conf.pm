@@ -116,6 +116,16 @@ sub default_options {
       },
       
       {
+        'logic_name'      => 'cdna_e2g',
+        'program'         => $self->o('exonerate_program'),
+        'program_version' => $self->o('exonerate_version'),
+        'program_file'    => $self->o('exonerate_exe'),
+        'parameters'      => '--model cdna2genome --forwardcoordinates FALSE --softmasktarget TRUE --exhaustive FALSE --score 300 --saturatethreshold 10 --dnahspthreshold 60 --dnawordlen 12 --fsmmemory 2048 --bestn 10 --maxintron 2500 --intronpenalty -25',
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateTranscript',
+        'linked_tables'   => ['dna_align_feature', 'gene', 'transcript'],
+      },
+      
+      {
         'logic_name'      => 'rnaseq_e2g',
         'program'         => $self->o('exonerate_program'),
         'program_version' => $self->o('exonerate_version'),
@@ -137,6 +147,16 @@ sub default_options {
       
       {
         'logic_name'      => 'est_exonerate',
+        'program'         => $self->o('exonerate_program'),
+        'program_version' => $self->o('exonerate_version'),
+        'program_file'    => $self->o('exonerate_exe'),
+        'parameters'      => '--model affine:local --softmasktarget TRUE --bestn 1',
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateAlignFeature',
+        'linked_tables'   => ['dna_align_feature'],
+      },
+      
+      {
+        'logic_name'      => 'cdna_exonerate',
         'program'         => $self->o('exonerate_program'),
         'program_version' => $self->o('exonerate_version'),
         'program_file'    => $self->o('exonerate_exe'),
@@ -237,6 +257,8 @@ sub pipeline_analyses {
   }
   $logic_name = $analysis_name unless defined $logic_name;
   
+  my $dir = $self->o('pipeline_dir');
+  
   return [
     {
       -logic_name        => 'SpeciesFactory',
@@ -282,7 +304,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               db_type     => 'otherfeatures',
-                              output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_exonerate_bkp.sql.gz'),
+                              output_file => catdir($dir, '#species#', 'pre_exonerate_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
     },
@@ -306,7 +328,7 @@ sub pipeline_analyses {
                               exonerate_analyses   => $self->o('exonerate_analyses'),
                               analysis_name        => $analysis_name,
                               logic_name           => $logic_name,
-                              db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_exonerate_bkp.sql.gz'),
+                              db_backup_file       => catdir($dir, '#species#', 'pre_exonerate_bkp.sql.gz'),
                               use_exonerate_server => $self->o('use_exonerate_server'),
                             },
       -flow_into         => {
@@ -369,7 +391,7 @@ sub pipeline_analyses {
       -analysis_capacity => 5,
       -batch_size        => 2,
       -parameters        => {
-                              genome_dir         => catdir($self->o('pipeline_dir'), '#species#'),
+                              genome_dir         => catdir($dir, '#species#'),
                               repeat_masking     => $self->o('repeat_masking'),
                               repeat_logic_names => $self->o('repeat_logic_names'),
                               min_slice_length   => $self->o('min_slice_length'),
@@ -408,9 +430,15 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => 
                             {
-                              cmd => 'rm -f '.'#genome_file#'.'.es*; '.
-                              $self->o('fasta2esd_exe').' '.'#genome_file#'.' '.'#genome_file#'.'.esd; '.
-                              $self->o('esd2esi_exe').' '.'#genome_file#'.'.esd '.'#genome_file#'.'.esi',
+                              cmd =>
+                              'rm -f '.catdir($dir, '#species#', '#out_subdir#', 'index.es*').'; '.
+                              'mkdir -p '.catdir($dir, '#species#', '#out_subdir#').'; '.
+                              $self->o('fasta2esd_exe').' '.
+                                '#genome_file#'.' '.
+                                catdir($dir, '#species#', '#out_subdir#', 'index.esd').'; '.
+                              $self->o('esd2esi_exe').' '.
+                                catdir($dir, '#species#', '#out_subdir#', 'index.esd').' '.
+                                catdir($dir, '#species#', '#out_subdir#', 'index.esi'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
@@ -424,9 +452,9 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -parameters        => {
                               server_exe      => $self->o('server_exe'),
-                              index_file      => '#genome_file#'.'.esi',
+                              index_file      => catdir($dir, '#species#', '#out_subdir#', 'index.esi'),
                               log_file        => $self->o('log_file'),
-                              server_file     => '#genome_file#'.'.server',
+                              server_file     => catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                               max_connections => $max_exonerate_jobs,
                             },
       -rc_name           => 'server',
@@ -437,7 +465,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::Exonerate::VerifyServer',
       -can_be_empty      => 1,
       -parameters        => {
-                              server_file => '#genome_file#'.'.server',
+                              server_file => catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['SplitSeqFile'],
@@ -454,7 +482,7 @@ sub pipeline_analyses {
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                              out_dir                 => catdir($self->o('pipeline_dir'), '#species#', 'seqs'),
+                              out_dir                 => catdir($dir, '#species#', '#out_subdir#'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
@@ -469,7 +497,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -can_be_empty      => 1,
       -parameters        => {
-                              cmd => 'rm '.'#genome_file#'.'.server',
+                              cmd => 'rm '.catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                             },
       -rc_name           => 'normal',
       -wait_for          => ['ExonerateAnalysis'],
@@ -483,7 +511,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               db_type     => 'otherfeatures',
-                              output_file => catdir($self->o('pipeline_dir'), '#species#', 'post_exonerate_bkp.sql.gz'),
+                              output_file => catdir($dir, '#species#', 'post_exonerate_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['MakeGenesFlowControl'],
@@ -561,6 +589,8 @@ sub exonerate_analysis {
     $biotype  = 'protein_e2g';
   }
   
+  my $dir = $self->o('pipeline_dir');
+  
   my $exonerate_analysis;
   
   if ($make_genes) {
@@ -576,7 +606,7 @@ sub exonerate_analysis {
                               biotype              => $biotype,
                               use_exonerate_server => $self->o('use_exonerate_server'),
                               queryfile            => '#genome_file#',
-                              server_file          => '#genome_file#'.'.server',
+                              server_file          => catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                               seq_file             => '#split_file#',
                               seq_type             => $seq_type,
                               coverage             => $self->o('coverage'),
@@ -598,7 +628,7 @@ sub exonerate_analysis {
                               logic_name           => $logic_name,
                               use_exonerate_server => $self->o('use_exonerate_server'),
                               queryfile            => '#genome_file#',
-                              server_file          => '#genome_file#'.'.server',
+                              server_file          => catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                               seq_file             => '#split_file#',
                               seq_type             => $seq_type,
                             },
@@ -624,7 +654,7 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'server' => {'LSF' => '-q production-rh6 -n ' . ($max_exonerate_jobs + 1) . ' -R "span[hosts=1]" -M 4000 -R "rusage[mem=4000]"'},,
+    'server' => {'LSF' => '-q production-rh6 -n ' . ($max_exonerate_jobs + 1) . ' -R "span[hosts=1]" -M 8000 -R "rusage[mem=8000]"'},,
   }
 }
 
