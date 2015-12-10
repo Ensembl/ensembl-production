@@ -121,8 +121,8 @@ sub align {
 sub align_file {
   my ($self, $name, $path, $sam, $files) = @_;
   
-  my $sam_cmd = $self->{star};
-  my $sam_options =
+  my $star_cmd = $self->{star};
+  my $star_options =
     " --genomeDir $path ".
     " --runThreadN $self->{threads} ".
     " --alignIntronMax $self->{max_intron_size} ".
@@ -130,14 +130,14 @@ sub align_file {
     " --outStd SAM ";
   
   if ($self->{read_type} eq 'long_reads') {
-    $sam_cmd .= 'long';
-    $sam_options .= $self->{long_read_options};
+    $star_cmd .= 'long';
+    $star_options .= $self->{long_read_options};
   } elsif ($self->{read_type} eq 'cross_species') {
-    $sam_cmd .= 'long';
-    $sam_options .= $self->{cross_species_options};
+    $star_cmd .= 'long';
+    $star_options .= $self->{cross_species_options};
   }
   
-  my $cmd = "$sam_cmd $sam_options > $sam";
+  my $cmd = "$star_cmd $star_options > $sam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
   
   return $sam;

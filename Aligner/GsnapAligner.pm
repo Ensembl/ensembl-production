@@ -40,7 +40,7 @@ sub new {
   $self->{kmer}       ||= 15;
   $self->{threads}    ||= 1;
   
-  $self->{gmap_build} = catdir($aligner_dir, $self->{gmap_build
+  $self->{gmap_build} = catdir($aligner_dir, $self->{gmap_build});
   $self->{gsnap}      = catdir($aligner_dir, $self->{gsnap});
   
   return $self;
