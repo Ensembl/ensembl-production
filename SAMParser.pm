@@ -120,12 +120,6 @@ sub parse_sam {
         }
       }
       
-      # If the sequence is reverse-complemented, a bitwise flag will be set.
-      my $seq_strand = 1;
-      if ($flag & (1 << 4)) {
-        $seq_strand = -1;
-      }
-      
       # Detect hit start and stop, then remove from the cigar line
       # so that we don't double-count the values.
       my $hit_start = 1;
@@ -146,6 +140,13 @@ sub parse_sam {
       my $hit_end = length($seq) + ($clip_h_start || 0) + ($clip_h_end || 0);
       $hit_end -= $clip_h_end || 0;
       $hit_end -= $clip_s_end || 0;
+      
+      # If the sequence is reverse-complemented, a bitwise flag will be set.
+      my $seq_strand = 1;
+      my $hit_strand = 1;
+      if ($flag & (1 << 4)) {
+        $hit_strand = -1;
+      }
       
       $cigar_line =~ s/\d+[SH]//g;
       
@@ -168,7 +169,7 @@ sub parse_sam {
         'seq_strand' => $seq_strand,
         'hit_start'  => $hit_start,
         'hit_end'    => $hit_end,
-        'hit_strand' => 1,
+        'hit_strand' => $hit_strand,
         'read_name'  => $read_name,
         'cigar_line' => $cigar_line,
         'score'      => $score,
