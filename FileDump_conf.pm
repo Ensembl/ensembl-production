@@ -197,6 +197,7 @@ sub pipeline_analyses {
       -logic_name        => 'FileDump',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 0,
+      -input_ids         => [ {} ],
       -parameters        => {},
       -flow_into         => {
                               '1->A' => ['SpeciesFactory'],
@@ -226,7 +227,6 @@ sub pipeline_analyses {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count   => 1,
-      -input_ids         => [ {} ],
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
