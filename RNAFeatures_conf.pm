@@ -118,6 +118,8 @@ sub default_options {
                               ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01848', 'RF01856', ],
                             'EnsemblProtists' =>
                               ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01847', 'RF01855', ],
+                            'Ensembl' =>
+                              ['RF01358', 'RF01376', ],
                             },
     rfam_whitelist      => {
                             'EnsemblProtists' =>
