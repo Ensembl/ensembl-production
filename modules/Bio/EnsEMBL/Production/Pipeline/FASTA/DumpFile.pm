@@ -635,8 +635,10 @@ sub _create_display_id {
       my $gene = $object->get_Gene();
       $attributes{gene} = $gene->stable_id() . "." . $gene->version();
       $attributes{gene_biotype} = $gene->biotype();
+      $attributes{gene_symbol} = $gene->display_xref->display_id if $gene->display_xref;
+      $attributes{description} = $gene->description if $gene->description;
       
-      $decoded_type = lc($object->analysis()->logic_name());
+      $decoded_type = $type;
       $decoded_status = lc($object->status()) if $object->status();
     }
   }
@@ -650,10 +652,12 @@ sub _create_display_id {
       gene => $gene->stable_id() . "." . $gene->version(),
       gene_biotype => $gene->biotype(),
       transcript => $transcript->stable_id() . "." . $transcript->version(),
-      transcript_biotype => $transcript->biotype()
+      transcript_biotype => $transcript->biotype(),
     );
-    $decoded_type = 'pep';
+    $decoded_type = $type;
     $decoded_status = lc($transcript->status()) if $transcript->status();
+    $attributes{gene_symbol} = $gene->display_xref->display_id if $gene->display_xref;
+    $attributes{description} = $gene->description if $gene->description;
   }
   else {
     throw sprintf( 'Do not understand how to format a display_id for type "%s"',
@@ -663,7 +667,7 @@ sub _create_display_id {
   my $attr_str = join(q{ }, 
     map { $_.':'.$attributes{$_} } 
     grep { exists $attributes{$_} } 
-    qw/gene transcript gene_biotype transcript_biotype/);
+    qw/gene transcript gene_biotype transcript_biotype gene_symbol description/);
 
   my $format = '%s %s:%s %s %s';
   
