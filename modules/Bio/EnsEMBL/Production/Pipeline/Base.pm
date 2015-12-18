@@ -208,6 +208,28 @@ sub get_Slices {
 return [ sort { $b->length() <=> $a->length() } @slices ];
 }
 
+=head2 get_chromosome_name
+
+  Example     : my $chromosome_name = $self->get_chromosome_name();
+  Description : Basic get_chromosome_name method to return the name
+                used for the toplevel coordinate system
+                Usually chromosome, but can be group for stickleback for example
+  Returntype  : String or undef
+
+=cut
+sub get_chromosome_name {
+  my ($self) = @_;
+
+  my $dba    = $self->get_DBAdaptor('core');
+  throw "Cannot get a DB adaptor" unless $dba;
+  my $sa     = $dba->get_SliceAdaptor();
+  if (scalar(@{$sa->fetch_all_karyotype()}) == 0) { return; }
+  my $csa    = $dba->get_CoordSystemAdaptor();
+  my $cs     = $csa->fetch_by_rank(1);
+
+  return $cs->name();
+}
+
 sub cleanup_DBAdaptor {
   my ($self, $type) = @_;
   my $dba = $self->get_DBAdaptor($type);

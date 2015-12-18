@@ -271,13 +271,14 @@ sub _dump_dna {
 
   ############ CHROMOSOME WORK 
   $self->info('Processing %d chromosome(s)', scalar(@chromosomes));
+  my $chromosome_name = $self->get_chromosome_name();
   foreach my $s (@chromosomes) {
     my ( $chromo_file_name, $chromo_fh, $chromo_serializer ) =
-      $self->_generate_fasta_serializer( 'dna', 'chromosome',
+      $self->_generate_fasta_serializer( 'dna', $chromosome_name,
       $s->seq_region_name(), undef);
     # repeat masked data too
     my ( $rm_chromo_file_name, $rm_chromo_fh, $rm_chromo_serializer ) =
-      $self->_generate_fasta_serializer( 'dna_sm', 'chromosome',
+      $self->_generate_fasta_serializer( 'dna_sm', $chromosome_name,
       $s->seq_region_name(), undef);
     
     $self->_dump_slice($s, $chromo_serializer, $rm_chromo_serializer);
