@@ -337,9 +337,68 @@ sub pipeline_analyses {
 	}  	
  
     return [
+########################
+### DumpingCleaning
+
+    {  -logic_name      => 'DumpingCleaning',
+       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -input_ids     => [ {} ], # Needed to create jobs
+       -flow_into       => {                 '1->A' => ['DumpingCleaningSetup'],
+                                             'A->1' => ['backbone_fire_PostCompara'],
+                                          },
+       -meadow_type   => 'LOCAL',
+    },
+
+    { -logic_name     => 'DumpingCleaningSetup',
+      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpingCleaningSetup',
+      -parameters     => {
+                                                'g_config'  => $self->o('gn_config'),
+                                                'gd_config'  => $self->o('gd_config'),
+                                                'go_config'  => $self->o('go_config'),
+                                                'flag_GeneNames' => $self->o('flag_GeneNames'),
+                                                'flag_GeneDescr' => $self->o('flag_GeneDescr'),
+                                                'flag_GO'        => $self->o('flag_GO'),
+                                                'flag_delete_gene_names' => $self->o('flag_delete_gene_names'),
+                                                'flag_delete_gene_descriptions' => $self->o('flag_delete_gene_descriptions'),
+                                                'flag_delete_go_terms'        => $self->o('flag_delete_go_terms'),
+                                                'output_dir'  => $self->o('output_dir'),
+                                                'g_dump_tables' => $self->o('g_dump_tables'),
+                                                'go_dump_tables' => $self->o('go_dump_tables'),
+                                          },
+      -rc_name        => 'default',
+      -flow_into       => {
+                                             '2->A' => ['SpeciesFactory'],
+                                             'A->1' => ['Iterator'],
+                                          },
+    },
+    {
+      -logic_name      => 'Iterator',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -flow_into       => {                 '1' => ['DumpingCleaningSetup'],
+                                          },
+      -meadow_type   => 'LOCAL',
+    },
+    {  -logic_name      => 'SpeciesFactory',
+       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+       -max_retry_count => 1,
+       -flow_into       => {
+                                             '3->A' => ['DumpTables'],
+                                             'A->3' => ['TblCleanup'],
+                                          },
+       -rc_name         => 'default',
+    },
+
+    {  -logic_name    => 'DumpTables',
+       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
+       -rc_name       => '2Gb_job',
+    },
+
+    { -logic_name     => 'TblCleanup',
+      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
+      -rc_name        => 'default',
+    },
     {  -logic_name    => 'backbone_fire_PostCompara',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids     => [ {} ], # Needed to create jobs
        -hive_capacity => -1,
        -flow_into 	=> { 
 						 '1'=> $pipeline_flow,
@@ -370,32 +429,8 @@ sub pipeline_analyses {
     {  -logic_name      => 'GNProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
-       -flow_into       => {
-							 '2->A'	=> ['GNDumpTables'],
-				             'A->2' => ['GNTblCleanup'],
-				             #'A->2' => ['GNProjection'],
-                           },
+       -flow_into      => ['GNProjection'],
        -rc_name         => 'default',
-    },
-
-    {  -logic_name    => 'GNDumpTables',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -parameters    => {
-		    				'dump_tables' => $self->o('g_dump_tables'),
-            				'output_dir'  => $self->o('output_dir'),
-                                        'flag_delete_gene_names'   => $self->o('flag_delete_gene_names'),
-        				  },
-       -rc_name       => 'default',
-    },     
-
-    { -logic_name     => 'GNTblCleanup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
-      -parameters     => {
-		    				'flag_GeneNames' => $self->o('flag_GeneNames'),
-		    				'flag_GeneDescr' => $self->o('flag_GeneDescr'),
-        				  },
-      -rc_name        => 'default',
-      -flow_into      => ['GNProjection'],
     },
 
     {  -logic_name    => 'GNProjection',
@@ -421,6 +456,9 @@ sub pipeline_analyses {
           	'output_dir' 			 => $self->o('output_dir'),         	
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneNames'         => $self->o('flag_GeneNames'),
+       },
+       -flow_into     => {
+                                 1 => ['GNProjSourceFactory']
        },
        -meadow_type   => 'LOCAL',
     },
@@ -450,32 +488,8 @@ sub pipeline_analyses {
     {  -logic_name      => 'GDProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
-       -flow_into       => {
-							 '2->A'	=> ['GDDumpTables'],
-							 'A->2'	=> ['GDTblCleanup']						
-				             #'A->2' => ['GDProjection'],
-                           },
+       -flow_into      => ['GDProjection'],
        -rc_name         => 'default',
-    },
-
-    {  -logic_name    => 'GDDumpTables',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -parameters    => {
-		    				'dump_tables' => $self->o('g_dump_tables'),
-            				'output_dir'  => $self->o('output_dir'),
-                                        'flag_delete_gene_descriptions'   => $self->o('flag_delete_gene_descriptions'),
-        				  },
-       -rc_name       => 'default',
-    },     
-
-    { -logic_name     => 'GDTblCleanup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
-      -parameters     => {
-		    				'flag_GeneNames' => $self->o('flag_GeneNames'),
-		    				'flag_GeneDescr' => $self->o('flag_GeneDescr'),
-        				  },
-      -rc_name        => 'default',
-      -flow_into      => ['GDProjection'],
     },
 
     {  -logic_name    => 'GDProjection',
@@ -504,6 +518,9 @@ sub pipeline_analyses {
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneDescr'         => $self->o('flag_GeneDescr'),
        },
+       -flow_into     => {
+         1 => ['GDProjSourceFactory']
+       },
        -meadow_type   => 'LOCAL',
     },
     
@@ -525,7 +542,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GOProjTargetFactory'],
-		                    'A->2' => ['GOEmailReport'],		                       
+		                    'A->1' => ['GOEmailReport'],		                       
                           },          
     },    
    
@@ -533,8 +550,7 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into     => {  
-		                    '2->A' => ['GODumpTables'],		                       
-		                    'A->2' => ['GOAnalysisSetupFactory'],
+		                    '1' => ['GOAnalysisSetupFactory'],
        					  },
        -rc_name       => 'default',
     },
@@ -546,20 +562,10 @@ sub pipeline_analyses {
                           },
       -flow_into      => {
                       	 	'2->A' => ['GOAnalysisSetup'],
-                       	 	'A->1' => ['GOProjection'],
+                       	 	'A->2' => ['GOProjection'],
                           },
       -rc_name        => 'default',
     },
-
-    {  -logic_name    => 'GODumpTables',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -parameters    => {
-		    				'dump_tables' => $self->o('go_dump_tables'),
-            				'output_dir'  => $self->o('output_dir'),
-                                        'flag_delete_go_terms'   => $self->o('flag_delete_go_terms'),
-        				  },
-       -rc_name       => 'default',
-    },     
 
     { -logic_name     => 'GOAnalysisSetup',
       -module         => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
@@ -579,15 +585,15 @@ sub pipeline_analyses {
        -parameters    => {
 						    'compara'                => $self->o('division_name'),
 				   		    'release'                => $self->o('ensembl_release'),
-				            'output_dir'             => $self->o('output_dir'),
+				                    'output_dir'             => $self->o('output_dir'),
 				   		    'evidence_codes'		 => $self->o('evidence_codes'),
 				   		    'goa_webservice'         => $self->o('goa_webservice'),
 				   		    'goa_params'             => $self->o('goa_params'),
-                                            'taxon_params'           => $self->o('taxon_params'),
-				            'flag_store_projections' => $self->o('flag_store_projections'),
-				            'flag_go_check'          => $self->o('flag_go_check'),
-				            'flag_full_stats'        => $self->o('flag_full_stats'),
-                                            'is_tree_compliant'      => $self->o('is_tree_compliant'),
+                                                    'taxon_params'           => $self->o('taxon_params'),
+				                    'flag_store_projections' => $self->o('flag_store_projections'),
+				                    'flag_go_check'          => $self->o('flag_go_check'),
+				                    'flag_full_stats'        => $self->o('flag_full_stats'),
+                                                    'is_tree_compliant'      => $self->o('is_tree_compliant'),
      	 				},
        -batch_size    =>  1,
        -rc_name       => 'default',
@@ -602,7 +608,10 @@ sub pipeline_analyses {
 				          	'output_dir' 			 => $self->o('output_dir'),
 				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
         				  },
-	  -meadow_type    => 'LOCAL',
+       -flow_into     => {
+                                  1 => ['GOProjSourceFactory']
+             },
+       -meadow_type    => 'LOCAL',
     },
 
 ################

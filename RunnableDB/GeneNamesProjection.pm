@@ -182,16 +182,19 @@ sub project_genenames {
     my $to_species       = $self->param('to_species');
     my $geneName_source  = $self->param('geneName_source');
 
-    
-    # Project when 'source gene' has display_xref and 
-    # 'target gene' has NO display_xref
+    # Decide if a gene name should be overwritten
+    # Criteria: overwrite if:
+    #    - no existing display_xref
+    # or
+    #    - existing display_xref is RefSeq_*_predicted
+    #      AND from_gene is from "best" source external db,
+    #      e.g. HGNC in homo_sapiens, MGI in mus_musculus
 
-    if(defined $from_gene->display_xref() && !defined $to_gene->display_xref() or defined $from_gene->display_xref() && check_overwrite_display_xref($from_gene, $to_gene, $from_species, $to_species)) {
+    if(defined $from_gene->display_xref() && check_overwrite_display_xref($from_gene, $to_gene, $from_species, $to_species)) {
        my $from_gene_dbname     = $from_gene->display_xref->dbname();
        my $from_gene_display_id = $from_gene->display_xref->display_id();         
 
        return if ($from_gene->status eq 'KNOWN_BY_PROJECTION');
-       return if (!($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/));
 
        # Skip clone names if projecting all sources
        return if (lc($from_gene_dbname) =~ /clone/);
@@ -199,9 +202,7 @@ sub project_genenames {
        # Get all DBEntries for 'source gene' base on the dbname of display_xref  
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
-          if($dbEntry->display_id=~/$from_gene_display_id/  
-               && $flag_store_proj==1
-               && grep (/$from_gene_dbname/, @$geneName_source)){
+          if($dbEntry->display_id=~/$from_gene_display_id/  && $flag_store_proj==1 && grep (/$from_gene_dbname/, @$geneName_source)){
 
              print $log "\t\tProject from:".$from_gene->stable_id()."\t";
              print $log "to:".$to_gene->stable_id()."\t";
@@ -221,81 +222,81 @@ sub project_genenames {
                $info_txt .= $tuple_txt;
              }
       
-          if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
-          # Adding projection source information
-          $dbEntry->info_type("PROJECTION");
-          $dbEntry->info_text($info_txt);
-          ###Ensembl species
-          # Add the xref to the "to" gene, or transcript or translation depending on what the
-          # other xrefs from this dbname as assigned to (see build_db_to_type)
-          # Note that if type is not found, it means that we're dealing with a db that has no
-          # xrefs in the target database, e.g. MarkerSymbol in mus_musculus -> rattus_norvegicus
-          # In this case just assign to genes
+             if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+             # Adding projection source information
+             $dbEntry->info_type("PROJECTION");
+             $dbEntry->info_text($info_txt);
+             ###Ensembl species
+             # Add the xref to the "to" gene, or transcript or translation depending on what the
+             # other xrefs from this dbname as assigned to (see build_db_to_type)
+             # Note that if type is not found, it means that we're dealing with a db that has no
+             # xrefs in the target database, e.g. MarkerSymbol in mus_musculus -> rattus_norvegicus
+             # In this case just assign to genes
 
-          my @to_transcripts = @{$to_gene->get_all_Transcripts};
-          my $to_transcript = $to_transcripts[0];
+             my @to_transcripts = @{$to_gene->get_all_Transcripts};
+             my $to_transcript = $to_transcripts[0];
       
-          # Force loading of external synonyms for the xref
-          $dbEntry->get_all_synonyms();
+             # Force loading of external synonyms for the xref
+             $dbEntry->get_all_synonyms();
 
-          my $dbname = $dbEntry->dbname();
+             my $dbname = $dbEntry->dbname();
 
-          my $type = $db_to_type{$dbname};
+             my $type = $db_to_type{$dbname};
 
-          if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
-            $to_gene->add_DBEntry($dbEntry);
-            $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
-          } 
-          elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
-            $to_transcript->add_DBEntry($dbEntry);
-            $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
-          } 
-          elsif ($type eq "Translation") {
-            my $to_translation = $to_transcript->translation();
-            return if (!$to_translation);
-            $to_translation->add_DBEntry($dbEntry);
-            $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
-          } 
-          else {
-            warn("Can't deal with xrefs assigned to $type (dbname=" . $dbEntry->dbname . ")\n");
-            return;
-          }
+            if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
+              $to_gene->add_DBEntry($dbEntry);
+              $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
+            }
+            elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
+              $to_transcript->add_DBEntry($dbEntry);
+              $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
+            }
+            elsif ($type eq "Translation") {
+              my $to_translation = $to_transcript->translation();
+              return if (!$to_translation);
+              $to_translation->add_DBEntry($dbEntry);
+              $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
+            }
+            else {
+              warn("Can't deal with xrefs assigned to $type (dbname=" . $dbEntry->dbname . ")\n");
+              return;
+            }
 
-          # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
-          # also set the status of the gene's transcripts
-          $to_gene->status("KNOWN_BY_PROJECTION");
-          $to_gene->display_xref($dbEntry);
-          foreach my $transcript (@to_transcripts) {
-            $transcript->status("KNOWN_BY_PROJECTION");
-          }
+            # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
+            # also set the status of the gene's transcripts
+            $to_gene->status("KNOWN_BY_PROJECTION");
+            $to_gene->display_xref($dbEntry);
+            foreach my $transcript (@to_transcripts) {
+              $transcript->status("KNOWN_BY_PROJECTION");
+            }
 
-          #Now assign names to the transcripts; 
-          overwrite_transcript_display_xrefs($to_gene, $dbEntry, $info_txt);
-          foreach my $transcript (@to_transcripts) {
-            my $display = $transcript->display_xref();
-            next unless $display;
+            #Now assign names to the transcripts;
+            overwrite_transcript_display_xrefs($to_gene, $dbEntry, $info_txt);
+            foreach my $transcript (@to_transcripts) {
+              my $display = $transcript->display_xref();
+              next unless $display;
               $transcript->add_DBEntry($display);
               $to_dbea->store($display, $transcript->dbID(), 'Transcript', 1);
-          }
+            }
 
-          # update the gene so that the display_xref_id is set and the
-          # transcript to set the status & display xref if applicable
-          $to_geneAdaptor->update($to_gene);
-          foreach my $transcript (@to_transcripts) {
-            $to_transcriptAdaptor->update($transcript);
-          }
-       }
-       else {
-         $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
-         $dbEntry->info_text($info_txt);
+            # update the gene so that the display_xref_id is set and the
+            # transcript to set the status & display xref if applicable
+            $to_geneAdaptor->update($to_gene);
+            foreach my $transcript (@to_transcripts) {
+              $to_transcriptAdaptor->update($transcript);
+            }
+            }
+            else {
+              $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
+              $dbEntry->info_text($info_txt);
 
-         $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
-         $to_gene->display_xref($dbEntry);
-         $to_geneAdaptor->update($to_gene);
-       }
+              $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
+              $to_gene->display_xref($dbEntry);
+              $to_geneAdaptor->update($to_gene);
+            }
+         }
       }
-    }
-  } 
+   }
 }
 
 # ----------------------------------------------------------------------
@@ -316,7 +317,7 @@ sub check_overwrite_display_xref {
   my $to_dbname = $to_gene->display_xref->dbname();
   $to_dbname ||= q{}; #can be empty; this stops warning messages
 
-  #Exit early if we had an external name & the species was not danio_rerio or sus_scrofa
+  #Exit early if we had an external name & the species was not danio_rerio, sus_scrofa or mouse
   return 1 if (!$to_gene->external_name() && $to_species ne "danio_rerio" && $to_species ne 'sus_scrofa' && $to_species ne 'mus_musculus');
 
   #Exit early if it was a RefSeq predicted name & source was a vetted good symbol
