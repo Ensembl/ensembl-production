@@ -198,7 +198,7 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
          my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
          next if (!$to_gene);
-         project_go_terms($self, $from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene, $self->param('ensemblObj_type'), $self->param('ensemblObj_type_target'), $self->param('evidence_codes'), $log, $hDb, $sql, $to_taxon_id, $constrained_terms);
+         $self->project_go_terms($from_species, $compara, $to_ga, $to_dbea, $from_gene, $to_gene, $self->param('ensemblObj_type'), $self->param('ensemblObj_type_target'), $self->param('evidence_codes'), $log, $hDb, $sql, $to_taxon_id, $constrained_terms);
          $i++;
        }
     }

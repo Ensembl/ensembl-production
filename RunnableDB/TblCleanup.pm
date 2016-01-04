@@ -64,9 +64,9 @@ sub run {
     my $flag_delete_gene_descriptions = $self->param('flag_delete_gene_descriptions');
     my $flag_delete_go_terms = $self->param('flag_delete_go_terms');
 
-    delete_gene_names($helper) if($flag_delete_gene_names==1);
-    delete_gene_desk($helper) if($flag_delete_gene_descriptions==1);
-    delete_go_terms($helper) if($flag_delete_go_terms==1);
+    $self->delete_gene_names($helper) if($flag_delete_gene_names==1);
+    $self->delete_gene_desc($helper) if($flag_delete_gene_descriptions==1);
+    $self->delete_go_terms($helper) if($flag_delete_go_terms==1);
     
     $self->core_dbc()->disconnect_if_idle();
     

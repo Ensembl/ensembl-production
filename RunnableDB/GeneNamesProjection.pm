@@ -146,12 +146,12 @@ sub run {
        next if (!$from_gene);
        my $gene_nbr=1;
        foreach my $to_stable_id (@to_genes) {
-          my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
-          next if (!$to_gene);
-          project_genenames($self, $to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, $gene_nbr, scalar(@to_genes),  %db_to_type);
-          }
-          $gene_nbr++;
-       }
+            my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
+            next if (!$to_gene);
+            $self->project_genenames($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, $gene_nbr, scalar(@to_genes),  %db_to_type);
+        }
+        $gene_nbr++;
+    }
     close($log);
 
     #Disconnecting from the registry
