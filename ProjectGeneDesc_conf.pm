@@ -74,6 +74,14 @@ sub default_options {
 
     config => 
     {
+      'aedes_aegypti' =>
+      {
+        source  => 'aedes_aegypti',
+        species => [
+                    'aedes_albopictus',
+                   ],
+      },
+      
       'anopheles_gambiae' =>
       {
         source  => 'anopheles_gambiae',
