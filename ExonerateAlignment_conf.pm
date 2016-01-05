@@ -77,6 +77,7 @@ sub default_options {
     exonerate_version => '2.2.0',
 
     use_exonerate_server => 1,
+    server_memory        => 8000,
     max_exonerate_jobs   => undef,
     exonerate_2_4_dir    => catdir($self->o('program_dir'), 'exonerate-2.4.0-fork/bin'),
     fasta2esd_exe        => catdir($self->o('exonerate_2_4_dir'), 'fasta2esd'),
@@ -120,7 +121,7 @@ sub default_options {
         'program'         => $self->o('exonerate_program'),
         'program_version' => $self->o('exonerate_version'),
         'program_file'    => $self->o('exonerate_exe'),
-        'parameters'      => '--model cdna2genome --forwardcoordinates FALSE --softmasktarget TRUE --exhaustive FALSE --score 300 --saturatethreshold 10 --dnahspthreshold 60 --dnawordlen 12 --fsmmemory 2048 --bestn 10 --maxintron 2500 --intronpenalty -25',
+        'parameters'      => '--model est2genome --forwardcoordinates FALSE --softmasktarget TRUE --exhaustive FALSE --score 300 --saturatethreshold 10 --dnahspthreshold 60 --dnawordlen 12 --fsmmemory 2048 --bestn 10 --maxintron 2500 --intronpenalty -25',
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateTranscript',
         'linked_tables'   => ['dna_align_feature', 'gene', 'transcript'],
       },
@@ -130,7 +131,7 @@ sub default_options {
         'program'         => $self->o('exonerate_program'),
         'program_version' => $self->o('exonerate_version'),
         'program_file'    => $self->o('exonerate_exe'),
-        'parameters'      => '--model cdna2genome --forwardcoordinates FALSE --softmasktarget TRUE --exhaustive FALSE --score 300 --saturatethreshold 10 --dnahspthreshold 60 --dnawordlen 12 --fsmmemory 2048 --bestn 10 --maxintron 2500 --intronpenalty -25',
+        'parameters'      => '--model est2genome --forwardcoordinates FALSE --softmasktarget TRUE --exhaustive FALSE --score 300 --saturatethreshold 10 --dnahspthreshold 60 --dnawordlen 12 --fsmmemory 2048 --bestn 10 --maxintron 2500 --intronpenalty -25',
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::ExonerateTranscript',
         'linked_tables'   => ['dna_align_feature', 'gene', 'transcript'],
       },
@@ -425,7 +426,6 @@ sub pipeline_analyses {
       -logic_name        => 'IndexGenome',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 5,
-      -batch_size        => 2,
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => 
@@ -450,6 +450,7 @@ sub pipeline_analyses {
       -logic_name        => 'StartServer',
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::Exonerate::StartServer',
       -can_be_empty      => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               server_exe      => $self->o('server_exe'),
                               index_file      => catdir($dir, '#species#', '#out_subdir#', 'index.esi'),
@@ -464,6 +465,7 @@ sub pipeline_analyses {
       -logic_name        => 'VerifyServer',
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::Exonerate::VerifyServer',
       -can_be_empty      => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               server_file => catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                             },
@@ -496,6 +498,7 @@ sub pipeline_analyses {
       -logic_name        => 'StopServer',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -can_be_empty      => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               cmd => 'rm '.catdir($dir, '#species#', '#out_subdir#', 'index.server'),
                             },
@@ -581,6 +584,9 @@ sub exonerate_analysis {
   if ($self->o('data_type') eq 'est') {
     $seq_type = 'dna';
     $biotype  = 'est';
+  } elsif ($self->o('data_type') eq 'cdna') {
+    $seq_type = 'dna';
+    $biotype  = 'cdna';
   } elsif ($self->o('data_type') eq 'rnaseq') {
     $seq_type = 'dna';
     $biotype  = 'RNA-Seq_gene';
@@ -643,6 +649,7 @@ sub exonerate_analysis {
 sub resource_classes {
   my ($self) = @_;
   
+  my $server_memory = $self->o('server_memory');
   my $max_exonerate_jobs = $self->o('max_exonerate_jobs');
   if (!defined $max_exonerate_jobs) {
     if ($self->o('use_exonerate_server')) {
@@ -654,7 +661,7 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'server' => {'LSF' => '-q production-rh6 -n ' . ($max_exonerate_jobs + 1) . ' -R "span[hosts=1]" -M 8000 -R "rusage[mem=8000]"'},,
+    'server' => {'LSF' => '-q production-rh6 -n ' . ($max_exonerate_jobs + 1) . ' -R "span[hosts=1]" -M ' . $server_memory . ' -R "rusage[mem=' . $server_memory . ']"'},,
   }
 }
 
