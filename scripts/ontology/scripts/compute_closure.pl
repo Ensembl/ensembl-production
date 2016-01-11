@@ -109,7 +109,7 @@ $dbh->do(
 print "Importing inter-ontology parent-child relations\n";
 my $rels_join_xaspect = join ',', map { "'$_'" } @$default_relations;
 $dbh->do(
-  q/
+  qq/
    INSERT IGNORE INTO  closure
                        (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
                SELECT  term_id, term_id, 0, NULL, r.ontology_id
