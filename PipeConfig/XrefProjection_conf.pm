@@ -563,8 +563,8 @@ sub pipeline_analyses {
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
-                                             '3->A' => ['DumpTables'],
-                                             'A->3' => ['TblCleanup'],
+                                             '2->A' => ['DumpTables'],
+                                             'A->2' => ['TblCleanup'],
                                           },
        -rc_name         => 'default',
     },
@@ -612,7 +612,9 @@ sub pipeline_analyses {
     {  -logic_name      => 'GNProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
-       -flow_into      => ['GNProjection'],
+       -flow_into      => {
+                              2 => ['GNProjection']
+                          },
        -rc_name         => 'default',
     },
 
@@ -672,7 +674,9 @@ sub pipeline_analyses {
     {  -logic_name      => 'GDProjTargetFactory',
        -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
-       -flow_into      => ['GDProjection'],
+       -flow_into      => {
+                               2 => ['GDProjection']
+                          },
        -rc_name         => 'default',
     },
 
@@ -734,7 +738,7 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
        -max_retry_count => 1,
        -flow_into     => {  
-		                    '1' =>  ['GOAnalysisSetupFactory'],
+		                    '2' =>  ['GOAnalysisSetupFactory'],
        					  },
        -rc_name       => 'default',
     },
@@ -746,7 +750,7 @@ sub pipeline_analyses {
                           },
       -flow_into      => {
                       	 	'2->A' => ['GOAnalysisSetup'],
-                       	 	'A->2' => ['GOProjection'],
+                                'A->1' => ['GOProjection'],
                           },
       -rc_name        => 'default',
     },

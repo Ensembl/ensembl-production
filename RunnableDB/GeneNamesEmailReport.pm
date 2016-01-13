@@ -103,5 +103,19 @@ sub geneDesc_summary {
 return $self->format_table($title, $columns, $results);
 }
 
+sub write_output {
+    my $self = shift @_;
+
+    my $projection_list = $self->param('projection_list');
+
+    if (keys $projection_list){
+      1;
+    }
+    else
+    {
+      $self->input_job->autoflow(0);
+    }
+}
+
 
 1;

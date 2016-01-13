@@ -80,8 +80,10 @@ sub run {
 		 'ensemblObj_type_target' => $ensemblObj_type_target 
 		},2); 
         # If division is defined, we do not need to run the projection sequentially 
-        if ($division){
-          1;
+        if (@{$division}){
+          $self->dataflow_output_id({'projection_list'    => {},
+                                 'species'                => $species,
+                                 'source'                 => $source},1);
         }
         else{
           # Making sure that the projection hash is not empty
@@ -90,17 +92,9 @@ sub run {
                                  'species'                => $species,
                                  'source'                 => $source},1);
           }
-          else
-          {
-            $self->dataflow_output_id({},1);
-          }
           last;
         }
       }
-    }
-    else {
-      $self->dataflow_output_id({},2);
-      $self->dataflow_output_id({},1);
     }
 return 0;
 }
