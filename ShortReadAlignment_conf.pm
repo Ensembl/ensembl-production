@@ -28,6 +28,7 @@ use File::Spec::Functions qw(catdir);
 # To-do list:
 # Work out how to stop STAR from filtering short reads in EST-mode.
 # For STAR report its statistics rather than the less meaningful BAM stats.
+# Allow runs to be specified instead of studies
 
 sub default_options {
   my ($self) = @_;
