@@ -446,7 +446,7 @@ sub project_go_terms {
       my $match_et = 0;
       foreach my $et (@{$dbEntry->get_all_linkage_types}){
         $projections_stats{'missing_ec'}++ if(!grep(/$et/,@$evidence_codes));
-        if (grep(/$et/, @evidence_codes)) {
+        if (grep(/$et/, @$evidence_codes)) {
           $match_et = 1;
           last;
         }
