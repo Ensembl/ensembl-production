@@ -440,12 +440,18 @@ sub project_go_terms {
      
       # Check dbEntry dbname
       next if (!$dbEntry || $dbEntry->dbname() ne "GO" || ref($dbEntry) ne "Bio::EnsEMBL::OntologyXref");
-      
+
+      # Keep the whole dbEntry if at least one of the evidence codes matches the whitelist
       # Check if dbEntry evidence codes isn't in the whitelist 
+      my $match_et = 0;
       foreach my $et (@{$dbEntry->get_all_linkage_types}){
         $projections_stats{'missing_ec'}++ if(!grep(/$et/,@$evidence_codes));
-        next DBENTRY if (!grep(/$et/, @$evidence_codes));
+        if (grep(/$et/, @evidence_codes)) {
+          $match_et = 1;
+          last;
+        }
       }
+      next DBENTRY if !$match_et;
       # Check GO term against GOA blacklist
       next DBENTRY if (unwanted_go_term($to_translation->stable_id,$dbEntry->primary_id, $self->param('forbidden_terms')));
       # Check GO term against taxon constraints
