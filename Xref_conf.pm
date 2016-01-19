@@ -53,6 +53,7 @@ sub default_options {
     run_all      => 0,
     antispecies  => [],
     meta_filters => {},
+    db_type      => 'core',
     
     oracle_home => '/sw/arch/dbtools/oracle/product/11.1.0.6.2/client',
     
@@ -91,7 +92,7 @@ sub default_options {
     uniprot_gene_names   => 0,
     uniprot_descriptions => 0,
     
-    load_uniprot_go        => 1,
+    load_uniprot_go => 1,
     
     load_uniprot_xrefs  => 1,
     uniprot_xref_source => ['ArrayExpress', 'EMBL', 'MEROPS', 'PDB'],
@@ -242,6 +243,7 @@ sub pipeline_analyses {
       -logic_name      => 'LoadUniParc',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniParc',
       -parameters      => {
+                            db_type            => $self->o('db_type'),
                             uniparc_db         => $self->o('local_uniparc_db'),
                             logic_name         => 'xrefchecksum',
                             module             => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniParc',
@@ -260,6 +262,7 @@ sub pipeline_analyses {
       -logic_name      => 'LoadUniProt',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProt',
       -parameters      => {
+                            db_type            => $self->o('db_type'),
                             uniparc_db         => $self->o('remote_uniparc_db'),
                             uniprot_db         => $self->o('remote_uniprot_db'),
                             replace_all        => $self->o('uniprot_replace_all'),
@@ -281,6 +284,7 @@ sub pipeline_analyses {
       -logic_name      => 'LoadUniProtGO',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
       -parameters      => {
+                            db_type            => $self->o('db_type'),
                             uniprot_db         => $self->o('remote_uniprot_db'),
                             replace_all        => 1,
                             logic_name         => 'xrefuniprot',
@@ -298,6 +302,7 @@ sub pipeline_analyses {
       -logic_name      => 'LoadUniProtXrefs',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtXrefs',
       -parameters      => {
+                            db_type            => $self->o('db_type'),
                             uniprot_db         => $self->o('remote_uniprot_db'),
                             xref_source        => $self->o('uniprot_xref_source'),
                             logic_name         => 'xrefuniprot',
@@ -317,6 +322,7 @@ sub pipeline_analyses {
       -parameters      => {
                             email              => $self->o('email'),
                             subject            => 'Xref pipeline report for #species#',
+                            db_type            => $self->o('db_type'),
                             load_uniparc       => $self->o('load_uniparc'),
                             load_uniprot       => $self->o('load_uniprot'),
                             load_uniprot_go    => $self->o('load_uniprot_go'),
