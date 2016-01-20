@@ -54,15 +54,15 @@ sub default_options {
 	 			# target species division to project to
 	 			'division'    => [], 
 	 			'run_all'     =>  0, # 1/0
-        		# flowering group of your target species
-		        'taxon_filter'    		 => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # flowering group of your target species
+		                'taxon_filter'    		 => undef, # Eg: 'Liliopsida'/'eudicotyledons'
 				# source species GeneName filter
                                 'geneName_source'               =>['HGNC','HGNC_trans_name'],
 		  		# homology types filter
  				'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			    'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
-		        # homology percentage identity filter 
-        		'percent_id_filter'      => '0', 
+			        'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+		                # homology percentage identity filter
+                                'percent_id_filter'      => '0',
 				'percent_cov_filter'     => '0',
 	 	       }, 
                   '2'=>{
@@ -75,15 +75,15 @@ sub default_options {
                                 # target species division to project to
                                 'division'    => [],
                                 'run_all'     =>  0, # 1/0
-                        # flowering group of your target species
-                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # flowering group of your target species
+                                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                 # source species GeneName filter
                                 'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
-                        # homology percentage identity filter
-                        'percent_id_filter'      => '0',
+                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                                # homology percentage identity filter
+                                'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
                        },
                   '3'=>{
@@ -96,15 +96,15 @@ sub default_options {
                                 # target species division to project to
                                 'division'    => [],
                                 'run_all'     =>  0, # 1/0
-                        # flowering group of your target species
-                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # flowering group of your target species
+                                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                 # source species GeneName filter
                                 'geneName_source'                => ['ZFIN_ID','ZFIN_ID_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
-                        # homology percentage identity filter
-                        'percent_id_filter'      => '0',
+                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                # homology percentage identity filter
+                                'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
                        },
                   '4'=>{
@@ -117,15 +117,15 @@ sub default_options {
                                 # target species division to project to
                                 'division'    => [],
                                 'run_all'     =>  0, # 1/0
-                        # flowering group of your target species
-                        'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                # flowering group of your target species
+                                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                 # source species GeneName filter
                                 'geneName_source'                =>['HGNC','HGNC_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
-                        # homology percentage identity filter
-                        'percent_id_filter'      => '0',
+                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                # homology percentage identity filter
+                                'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
                        },
 		},
@@ -142,8 +142,10 @@ sub default_options {
 	 			 # target species division to project to
 	 			 'division'    => [], 
 	 			 'run_all'     =>  0, # 1/0
-        		 # flowering group of your target species
-		         'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # flowering group of your target species
+		                 'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneName filter for GeneDescription
+                                 'geneName_source'                =>['HGNC','HGNC_trans_name'],
 				 # source species GeneDescription filter
                                  'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
 				 # target species GeneDescription filter
@@ -166,17 +168,19 @@ sub default_options {
                                  # target species division to project to
                                  'division'    => [],
                                  'run_all'     =>  0, # 1/0
-                         # flowering group of your target species
-                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # flowering group of your target species
+                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneName filter for GeneDescription
+                                 'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                  # source species GeneDescription filter
                                  'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
-                         # homology percentage identity filter
-                         'percent_id_filter'      => '0',
+                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                                 # homology percentage identity filter
+                                 'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
                         },
                    '3'=>{
@@ -189,17 +193,19 @@ sub default_options {
                                  # target species division to project to
                                  'division'    => [],
                                  'run_all'     =>  0, # 1/0
-                         # flowering group of your target species
-                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # flowering group of your target species
+                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneName filter for GeneDescription
+                                 'geneName_source'                => ['ZFIN_ID','ZFIN_ID_trans_name'],
                                  # source species GeneDescription filter
-                                'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
+                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
-                         # homology percentage identity filter
-                         'percent_id_filter'      => '0',
+                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                 # homology percentage identity filter
+                                 'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
                         },
                    '4'=>{
@@ -212,17 +218,19 @@ sub default_options {
                                  # target species division to project to
                                  'division'    => [],
                                  'run_all'     =>  0, # 1/0
-                         # flowering group of your target species
-                         'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # flowering group of your target species
+                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneName filter for GeneDescription
+                                 'geneName_source'                =>['HGNC','HGNC_trans_name'],
                                  # source species GeneDescription filter
                                  'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                             'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
-                         # homology percentage identity filter
-                         'percent_id_filter'      => '0',
+                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                 # homology percentage identity filter
+                                 'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
                         },
 

@@ -94,8 +94,10 @@ sub default_options {
 	 			 # target species division to project to
 	 			 'division'    => [], 
 	 			 'run_all'     =>  0, # 1/0
-        		 # flowering group of your target species
-		         'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+        		         # flowering group of your target species
+		                 'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # source species GeneName filter for GeneDescription
+                                 'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
 				 # source species GeneDescription filter
 				 'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'] , 
 				 # target species GeneDescription filter
