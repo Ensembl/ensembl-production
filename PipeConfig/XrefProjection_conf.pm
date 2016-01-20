@@ -145,7 +145,7 @@ sub default_options {
         		 # flowering group of your target species
 		         'taxon_filter'    		  => undef, # Eg: 'Liliopsida'/'eudicotyledons'
 				 # source species GeneDescription filter
-                                 'geneDesc_rules'         => [],
+                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
 				 # target species GeneDescription filter
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
@@ -169,7 +169,7 @@ sub default_options {
                          # flowering group of your target species
                          'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                  # source species GeneDescription filter
-                                 'geneDesc_rules'         => [],
+                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
@@ -192,7 +192,7 @@ sub default_options {
                          # flowering group of your target species
                          'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                  # source species GeneDescription filter
-                                'geneDesc_rules'         => [],
+                                'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
@@ -215,7 +215,7 @@ sub default_options {
                          # flowering group of your target species
                          'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                  # source species GeneDescription filter
-                                 'geneDesc_rules'         => [],
+                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
@@ -248,7 +248,7 @@ sub default_options {
                 #  before doing projection
                 flag_delete_gene_descriptions   => '1',
         # Tables to dump for GeneNames & GeneDescription projections subpipeline
-        g_dump_tables => ['gene', 'xref'],
+        g_dump_tables => ['gene', 'xref','transcript'],
         
  	    # Email Report subject
         gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
