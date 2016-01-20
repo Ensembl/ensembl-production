@@ -16,7 +16,7 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection
 
 =head1 AUTHOR 
 
-ckong
+ckong and maurel
 
 =cut
 package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection;
@@ -50,6 +50,7 @@ sub fetch_input {
     my $percent_id_filter      = $self->param_required('percent_id_filter');
     my $percent_cov_filter     = $self->param_required('percent_cov_filter');
     my $output_dir             = $self->param_required('output_dir');
+    my $geneName_source        = $self->param_required('geneName_source');
     my $geneDesc_rules         = $self->param_required('geneDesc_rules');
     my $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
     my $taxon_filter           = $self->param('taxon_filter');
@@ -66,6 +67,7 @@ sub fetch_input {
     $self->param('homology_types_allowed', $homology_types_allowed);
     $self->param('percent_id_filter', $percent_id_filter);
     $self->param('percent_cov_filter', $percent_cov_filter);
+    $self->param('geneName_source', $geneName_source);
     $self->param('geneDesc_rules', $geneDesc_rules);
     $self->param('geneDesc_rules_target', $geneDesc_rules_target);
     $self->param('taxon_filter', $taxon_filter);
@@ -183,6 +185,7 @@ sub project_genedesc {
     my $flag_store_proj        = $self->param('flag_store_proj'); 
     my $flag_filter            = $self->param('flag_filter'); 
     my $from_species           = $self->param('from_species');
+    my $geneName_source        = $self->param('geneName_source');
     my $geneDesc_rules         = $self->param('geneDesc_rules');
     my $geneDesc_rules_target  = $self->param('geneDesc_rules_target');
 
@@ -194,9 +197,9 @@ sub project_genedesc {
     my $test1 = grep {$gene_desc      =~/$_/} @$geneDesc_rules; 
     my $test2 = grep {$gene_desc_trgt =~/$_/} @$geneDesc_rules_target; 
 
-    # First check source gene has a description and 
+    # First check source gene has a description, a display xref and
     # passed the source gene description filtering rules
-    if(defined $from_gene->description() && $test1==0)
+    if(defined $from_gene->description() && defined $from_gene->display_xref() && $test1==0)
     {
       # Then check if target gene 
       # does not have description OR
@@ -204,25 +207,27 @@ sub project_genedesc {
       # the flag to check for filtering rules is ON
       if(!defined $to_gene->description() || ($test2==1 && $flag_filter==1))  
       {
-        if ($from_gene->display_xref->dbname() =~ /MGI/ || $from_gene->display_xref->dbname() =~ /HGNC/ || $from_gene->display_xref->dbname() =~ /ZFIN_ID/)
-        {
-          my $gene_desc=$from_gene->description();
-        }
-        else
-        {
-          my $species_text = ucfirst($from_species);
-          $species_text    =~ s/_/ /g;
-          my $source_id    = $from_gene->stable_id();
-          $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
-        }
+        # Finally check if the from gene dbname is in the allowed gene name source
+        # This is to avoid projecting things that are not part of the allowed gene name source
+        if (grep (/$from_gene->display_xref->dbname()/, @$geneName_source)) {
+          if ($from_gene->display_xref->dbname() =~ /MGI/ || $from_gene->display_xref->dbname() =~ /HGNC/ || $from_gene->display_xref->dbname() =~ /ZFIN_ID/) {
+            my $gene_desc=$from_gene->description();
+          }
+          else {
+            my $species_text = ucfirst($from_species);
+            $species_text    =~ s/_/ /g;
+            my $source_id    = $from_gene->stable_id();
+            $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
+          }
 
-        print $log "\t\tProject from: ".$from_gene->stable_id()."\t";
-        print $log "to: ".$to_gene->stable_id()."\t";
-        print $log "Gene Description: $gene_desc\n";
+          print $log "\t\tProject from: ".$from_gene->stable_id()."\t";
+          print $log "to: ".$to_gene->stable_id()."\t";
+          print $log "Gene Description: $gene_desc\n";
 
-        if($flag_store_proj==1){
-           $to_gene->description($gene_desc);
-           $to_geneAdaptor->update($to_gene);
+          if($flag_store_proj==1){
+             $to_gene->description($gene_desc);
+             $to_geneAdaptor->update($to_gene);
+          }
         }
       }
     }
