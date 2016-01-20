@@ -139,10 +139,12 @@ sub default_options {
     },
     
     # Do closest species in first pass, remoter species in second pass.
-    ordering => 
+    flow => 
     {
-      'glossina_morsitans'      => 1,
-      'drosophila_melanogaster' => 2,
+      'aedes_aegypti'           => 2,
+      'anopheles_gambiae'       => 2,
+      'glossina_morsitans'      => 2,
+      'drosophila_melanogaster' => 3,
     },
     
   };
@@ -194,7 +196,7 @@ sub pipeline_analyses {
       -input_ids       => [ {} ],
       -parameters      => {
                             config     => $self->o('config'),
-                            ordering   => $self->o('ordering'),
+                            flow       => $self->o('flow'),
                             output_dir => $self->o('output_dir'),
                           },
       -flow_into       => {
