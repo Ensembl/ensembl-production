@@ -49,10 +49,9 @@ sub default_options {
     %{$self->SUPER::default_options},
     
     pipeline_name => 'gene_description_'.$self->o('ensembl_release'),
-    output_dir    => catdir('/nfs/nobackup/ensemblgenomes', $self->o('ENV', 'USER'), $self->o('pipeline_name')),
+    output_dir    => catdir('/nfs/panda/ensemblgenomes/vectorbase/desc_projection', $self->o('pipeline_name')),
     backup_tables => ['gene'],
     store_data    => 1,
-    email_report  => 1,
     
     # Default parameters: start
     # Any of these parameters can be redefined in the sub-hash(es) of the 'config' hash
@@ -184,11 +183,6 @@ sub pipeline_create_commands {
 sub pipeline_analyses {
   my ($self) = @_;
   
-  my $flow_into = [];
-  if ($self->o('email_report')) {
-    push @$flow_into, 'EmailReport';
-  }
-  
   return [
     {
       -logic_name      => 'SourceFactory',
@@ -203,19 +197,20 @@ sub pipeline_analyses {
                             '2->A' => ['TargetFactory'],
                             'A->3' => ['TargetFactory'],
                           },
-      -meadow_type     => 'LOCAL',
       -max_retry_count => 1,
+      -meadow_type     => 'LOCAL',
     },
     
     {
       -logic_name      => 'TargetFactory',
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -flow_into       => {
-                            '2->A' => ['BackupTables'],
-                            'A->2' => ['GeneDescProjection'],
+                            '2'    => ['BackupTables'],
+                            '2->A' => ['GeneDescProjection'],
+                            'A->1' => ['EmailReport'],
                            },
-      -meadow_type     => 'LOCAL',
       -max_retry_count => 1,
+      -meadow_type     => 'LOCAL',
     },
     
     {
@@ -225,8 +220,8 @@ sub pipeline_analyses {
                             table_list  => $self->o('backup_tables'),
                             output_file => catdir('#projection_dir#', '#species#', 'backup.sql.gz'),
                           },
-      -rc_name         => 'normal',
       -max_retry_count => 1,
+      -rc_name         => 'normal',
     },
     
     {
@@ -245,24 +240,27 @@ sub pipeline_analyses {
                             ignore_source      => $self->o('ignore_source'),
                             replace_target     => $self->o('replace_target'),
                           },
-      -rc_name         => 'normal',
       -batch_size      =>  5,
       -hive_capacity   => 20,
-      -flow_into       => $flow_into,
+      -flow_into       => {
+                            1 => [ ':////accu?summary=[]' ],
+                          },
       -max_retry_count => 1,
+      -rc_name         => 'normal',
+      -wait_for        => ['BackupTables'],
     },
 
     {
       -logic_name      => 'EmailReport',
       -module          => 'Bio::EnsEMBL::EGPipeline::ProjectGeneDesc::EmailReport',
       -parameters      => {
-                            email      => $self->o('email'),
-                            subject    => 'Projection of gene descriptions from #source# to #species#',
-                            log_file   => catdir('#projection_dir#', '#species#', 'log.txt'),
-                            store_data => $self->o('store_data'),
+                            email          => $self->o('email'),
+                            subject        => 'Projection of gene descriptions from #source#',
+                            projection_dir => '#projection_dir#',
+                            store_data     => $self->o('store_data'),
                           },
-      -rc_name         => 'normal',
       -max_retry_count => 1,
+      -rc_name         => 'normal',
     },
     
 
