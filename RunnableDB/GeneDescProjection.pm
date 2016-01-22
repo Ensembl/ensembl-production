@@ -209,8 +209,9 @@ sub project_genedesc {
       {
         # Finally check if the from gene dbname is in the allowed gene name source
         # This is to avoid projecting things that are not part of the allowed gene name source
-        if (grep (/$from_gene->display_xref->dbname()/, @$geneName_source)) {
-          if ($from_gene->display_xref->dbname() =~ /MGI/ || $from_gene->display_xref->dbname() =~ /HGNC/ || $from_gene->display_xref->dbname() =~ /ZFIN_ID/) {
+        my $from_gene_dbname = $from_gene->display_xref->dbname();
+        if (grep (/$from_gene_dbname/, @$geneName_source)) {
+          if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
             my $gene_desc=$from_gene->description();
           }
           else {
