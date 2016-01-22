@@ -2,7 +2,7 @@ package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
