@@ -212,12 +212,12 @@ sub project_genenames {
              # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
              my $info_txt = "from $from_species gene " . $from_gene->stable_id();
 
-             # modify the display_id to have " (1 of 3)" etc if this is a one-to-many ortholog
+             # modify the display_id to have "(1 to many)" if this is a one-to-many ortholog
              my $tuple_txt = "";
              if ($total_gene_number > 1) {
-               $tuple_txt = " ($gene_number of $total_gene_number)";
+               $tuple_txt = " (1 to many)";
                my $existing = $dbEntry->display_id();
-               $existing =~ s/ \(\d+ of \d+\)//;
+               $existing =~ s/ \(1 to many\)//;
                $dbEntry->display_id($existing . $tuple_txt);
                $info_txt .= $tuple_txt;
              }
@@ -314,7 +314,7 @@ sub check_overwrite_display_xref {
   my ($from_gene, $to_gene, $from_species, $to_species) = @_;
   
   my $from_dbname= $from_gene->display_xref->dbname();
-  my $to_dbname = $to_gene->display_xref->dbname();
+  my $to_dbname = $to_gene->display_xref->dbname() if ($to_gene->display_xref());
   $to_dbname ||= q{}; #can be empty; this stops warning messages
 
   #Exit early if we had an external name & the species was not danio_rerio, sus_scrofa or mouse
