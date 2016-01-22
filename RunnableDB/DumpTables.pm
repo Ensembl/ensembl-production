@@ -82,22 +82,22 @@ sub run {
     my $user         = $dbc->username();
     my $pass         = $dbc->password();
     my $dbname       = $dbc->dbname();
-    my $mysql_binary = 'mysql';
+    my $mysql_binary = 'mysqldump';
     my $tables       = $self->param_required('dump_tables');
     my $output_dir   = $self->param('output_dir'); 
     my @tables_backed_up;
 
     #Checking if all the table for a given species has already been backed up
     foreach my $table (@$tables) {
-      if (-e $output_dir."/".$dbname.".".$table.".backup.gz"){
+      if (-e $output_dir."/".$dbname.".".$table.".sql.gz"){
         1;
       }
       else {
-        unless (system("$mysql_binary -h$host -P$port -u$user -p$pass -N -e 'select * from $table' $dbname | gzip -c -6 > $output_dir/$dbname.$table.backup.gz") == 0) {
+        unless (system("$mysql_binary -h$host -P$port -u$user -p$pass $dbname $table | gzip -c -6 > $output_dir/$dbname.$table.sql.gz") == 0) {
           print STDERR "Can't dump the original $table table from $dbname for backup\n";
           exit 1;
        } else {
-          print "Original $table table backed up in $dbname.$table.backup\n";
+          print "Original $table table backed up in $dbname.$table.sql\n";
        }
       }
     }
