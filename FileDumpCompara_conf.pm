@@ -53,8 +53,8 @@ sub default_options {
     results_dir => $self->o('ENV', 'PWD'),
     checksum    => 1,
     compress    => 1,
-    
-    dump_types => {
+
+    tree_dump_types => {
        '3' => ['gene_trees_newick'],
        '4' => ['gene_alignments_cdna'],
        '5' => ['gene_alignments_aa'],
@@ -62,6 +62,13 @@ sub default_options {
        '7' => ['gene_trees_aa_xml'],
        '8' => ['homologs_xml'],
     },
+
+    pairwise_dump_types => {
+       '3' => ['pairwise_alignments_maf'],
+    },
+
+    maf_file_per_chr => 1,
+    maf_file_per_scaffold => 0,
 
     # All dumps are run by default, but can be switched off.
     skip_dumps => [],
@@ -140,7 +147,7 @@ sub pipeline_analyses {
       -input_ids         => [ {} ],
       -parameters        => {},
       -flow_into         => {
-                              '1' => ['TreeFactory'],
+                              '1' => ['TreeFactory', 'PairwiseAlignmentFactory'],
                               #'1->A' => ['TreeFactory'],
                               #'A->1' => ['WriteDrupalFile'],
                             },
@@ -166,7 +173,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TreeFactory',
       -max_retry_count   => 0,
       -parameters        => {
-                              dump_types       => $self->o('dump_types'),
+                              dump_types       => $self->o('tree_dump_types'),
                               skip_dumps       => $self->o('skip_dumps'),
                               files_per_subdir => $self->o('files_per_subdir'),
                             },
@@ -183,6 +190,20 @@ sub pipeline_analyses {
                               'G->1' => ['PostProcessing'],
                               '8->H' => ['homologs_xml'],
                               'H->1' => ['PostProcessing'],
+                            },
+    },
+
+    {
+      -logic_name        => 'PairwiseAlignmentFactory',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::PairwiseAlignmentFactory',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              dump_types       => $self->o('pairwise_dump_types'),
+                              skip_dumps       => $self->o('skip_dumps'),
+                              files_per_subdir => $self->o('files_per_subdir'),
+                            },
+      -flow_into         => {
+                              '3' => ['pairwise_alignments_maf'],
                             },
     },
 
@@ -255,8 +276,25 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              homolog_format => 'xml',
+                              release_date   => $self->o('release_date'),
                             },
       -rc_name           => 'normal',
+    },
+
+    {
+      -logic_name        => 'pairwise_alignments_maf',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::MAFDumper',
+      -analysis_capacity => 10,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              release_date      => $self->o('release_date'),
+                              file_per_chr      => $self->o('maf_file_per_chr'),
+                              file_per_scaffold => $self->o('maf_file_per_scaffold'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['PostProcessing'],
     },
 
     {
