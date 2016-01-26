@@ -56,10 +56,6 @@ sub fetch_input {
        else {
          $reports .= $self->info_type_summary($dbh, $sp) if($flag_GeneNames);
          $reports .= $self->geneDesc_summary($dbh, $sp)  if($flag_GeneDescr);
-	 #if(!$flag_GeneDesc){
-	 #   $reports .= $self->info_type_summary($dbh, $sp);
-	 #}
-	 #   $reports .= $self->geneDesc_summary($dbh, $sp);
       }
    }
 
@@ -89,7 +85,7 @@ return $self->format_table($title, $columns, $results);
 sub geneDesc_summary {
     my ($self, $dbh, $sp) = @_;
 
-    my $sql = 'SELECT count(*) AS Total FROM gene WHERE description rlike "projected" OR description rlike "Projected"';
+    my $sql = 'SELECT count(*) from gene where status="KNOWN_BY_PROJECTION" and description is not null';
 
     my $sth = $dbh->prepare($sql);
     $sth->execute();
