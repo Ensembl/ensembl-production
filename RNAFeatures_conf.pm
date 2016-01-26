@@ -26,7 +26,7 @@ Bio::EnsEMBL::EGPipeline::PipeConfig::RNAFeatures_conf
 =head1 DESCRIPTION
 
 Configuration for running the RNA Features pipeline, which
-primarily adds RNA genes to a core database.
+aligns RNA features against a genome and adds them to a core database.
 
 =head1 Author
 
