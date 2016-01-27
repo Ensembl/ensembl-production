@@ -20,10 +20,10 @@ sub default_options {
 		
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
-    	flag_GeneNames    => '0',
-    	flag_GeneDescr    => '0',
-    	flag_GO           => '0',     
-    	flag_GeneCoverage => '0',     
+        flag_GeneNames    => '0',
+        flag_GeneDescr    => '0',
+        flag_GO           => '0',
+        flag_GeneCoverage => '0',
 
 	## Flags controlling dependency between GeneNames & GeneDescr projections
 	    # '0' by default, 
@@ -392,7 +392,6 @@ sub pipeline_analyses {
 
     {  -logic_name    => 'DumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -rc_name       => '2Gb_job',
     },
 
     { -logic_name     => 'TblCleanup',
@@ -485,7 +484,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GDProjTargetFactory'],
-		                    'A->2' => ['GDEmailReport'],		                       
+		                    'A->1' => ['GDEmailReport'],
                           },          
     },    
     
