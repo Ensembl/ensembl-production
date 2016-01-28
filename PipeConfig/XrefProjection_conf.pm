@@ -147,7 +147,7 @@ sub default_options {
                                  # source species GeneName filter for GeneDescription
                                  'geneName_source'                =>['HGNC','HGNC_trans_name'],
 				 # source species GeneDescription filter
-                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
+                                 'geneDesc_rules'         => [],
 				 # target species GeneDescription filter
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
@@ -173,7 +173,7 @@ sub default_options {
                                  # source species GeneName filter for GeneDescription
                                  'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                  # source species GeneDescription filter
-                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
+                                 'geneDesc_rules'         => [],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
@@ -198,7 +198,7 @@ sub default_options {
                                  # source species GeneName filter for GeneDescription
                                  'geneName_source'                => ['ZFIN_ID','ZFIN_ID_trans_name'],
                                  # source species GeneDescription filter
-                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
+                                 'geneDesc_rules'         => [],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
@@ -223,7 +223,7 @@ sub default_options {
                                  # source species GeneName filter for GeneDescription
                                  'geneName_source'                =>['HGNC','HGNC_trans_name'],
                                  # source species GeneDescription filter
-                                 'geneDesc_rules'         => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
+                                 'geneDesc_rules'         => [],
                                  # target species GeneDescription filter
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
