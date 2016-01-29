@@ -505,8 +505,11 @@ sub modify_analyses {
 
 sub resource_classes {
   my ($self) = @_;
-  
-  my $threads = $self->o('threads');
+ 
+  # Dirty: because the value is not yet substituted here, we can't just add 1
+  # So here I used an expression to be evaluated by bash during the command-line execution
+  # Not sure if there is a better way around the substitution...
+  my $threads = '$( expr ' . $self->o('threads') . ' + 1 )';
   
   my $aligner                   = $self->o('aligner');
   my $index_memory_default      = $self->o('index_memory_default');
@@ -521,11 +524,11 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -R "span[hosts=1]" -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000]"'},
-    'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -R "span[hosts=1]" -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000]"'},
-    'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -R "span[hosts=1]" -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000]"'},
-    'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -R "span[hosts=1]" -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000]"'},
-  }
+    'index_default' => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000]"'},
+    'index_himem'   => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000]"'},
+    'align_default' => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000]"'},
+    'align_himem'   => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000]"'},
+  };
 }
 
 1;
