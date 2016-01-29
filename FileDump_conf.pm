@@ -115,7 +115,7 @@ sub default_options {
 
     # For the Drupal nodes, each file type has a standard description.
     # The module that creates the file substitutes values for the text in caps.
-    drupal_file  => catdir($self->o('results_dir'), 'drupal_load.csv'),
+    drupal_file  => catdir($self->o('ENV', 'PWD'), 'drupal_load.csv'),
     staging_dir  => 'sites/default/files/ftp/staging',
     release_date => undef,
 
