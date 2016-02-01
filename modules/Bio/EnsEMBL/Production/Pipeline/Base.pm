@@ -248,7 +248,8 @@ sub get_dir {
      my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
 
      if($mc->is_multispecies()==1){
-        my $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+        my $collection_db;
+        $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
         my $species       = pop(@extras);
         push @extras, $collection_db;
         push @extras, $species; 
