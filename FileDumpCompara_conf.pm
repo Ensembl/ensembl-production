@@ -52,9 +52,8 @@ sub default_options {
 
     compara => 'multi',
 
-    results_dir => $self->o('ENV', 'PWD'),
-    checksum    => 1,
-    compress    => 1,
+    base_dir    => $self->o('ENV', 'PWD'),
+    results_dir => catdir($self->o('base_dir'), $self->o('pipeline_name')),
 
     tree_dump_types => {
        '3' => ['gene_trees_newick'],
@@ -97,9 +96,16 @@ sub default_options {
     newick_stats    => '/nfs/panda/ensemblgenomes/external/newick-utils-1.6/bin/nw_stats',
     mafValidator    => '/nfs/panda/ensemblgenomes/external/mafTools/bin/mafValidator.py',
 
+    # Need to refer to last release's checksums, to see what has changed.
+    checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums/compara',
+
+    # For generating scp commands to get the necessary files to ND
+    nd_login => $self->o('ENV', 'USER').'@www.vectorbase.org',
+
     # For the Drupal nodes, each file type has a standard description.
     # The module that creates the file substitutes values for the text in caps.
-    drupal_file  => catdir($self->o('ENV', 'PWD'), 'drupal_load_compara.csv'),
+    drupal_file  => $self->o('results_dir').'.csv',
+    copy_file    => $self->o('results_dir').'.sh',
     staging_dir  => 'sites/default/files/ftp/staging',
     release_date => undef,
 
@@ -157,10 +163,7 @@ sub pipeline_wide_parameters {
 
 sub pipeline_analyses {
   my ($self) = @_;
-  
-  my ($post_processing_flow, $post_processing_analyses) =
-    $self->post_processing_analyses($self->o('checksum'), $self->o('compress'));
-  
+
   return [
     {
       -logic_name        => 'FileDump',
@@ -170,18 +173,31 @@ sub pipeline_analyses {
       -parameters        => {},
       -flow_into         => {
                               '1->A' => ['TreeFactory', 'PairwiseAlignmentFactory'],
-                              'A->1' => ['WriteDrupalFile'],
+                              'A->1' => ['CheckSumChecking'],
                             },
       -meadow_type       => 'LOCAL',
     },
-    
+
+    {
+      -logic_name        => 'CheckSumChecking',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::CheckSumChecking',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              checksum_dir => $self->o('checksum_dir'),
+                              release_date => $self->o('release_date'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['WriteDrupalFile'],
+    },
+
     {
       -logic_name        => 'WriteDrupalFile',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
       -max_retry_count   => 1,
       -parameters        => {
-                              results_dir   => $self->o('results_dir'),
+                              nd_login      => $self->o('nd_login'),
                               drupal_file   => $self->o('drupal_file'),
+                              copy_file     => $self->o('copy_file'),
                               staging_dir   => $self->o('staging_dir'),
                               release_date  => $self->o('release_date'),
                               drupal_desc   => $self->o('drupal_desc'),
@@ -430,64 +446,34 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'cd #out_dir#; tar -cf #sub_dir#.tar #sub_dir# --remove-files',
                             },
-      -flow_into         => $post_processing_flow,
+      -flow_into         => ['CompressFile'],
     },
 
-    @$post_processing_analyses,
+    {
+      -logic_name        => 'CompressFile',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => 'cd #out_dir#; gzip -n -f #sub_dir#.tar',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['MD5Checksum'],
+    },
 
+    {
+      -logic_name        => 'MD5Checksum',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => 'cd #out_dir#; OUT_FILE=#sub_dir#.tar.gz; md5sum $OUT_FILE > $OUT_FILE.md5; ',
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+      
   ];
-}
-
-sub post_processing_analyses {
-  my ($self, $checksum, $compress) = @_;
-  
-  my $flow = [];
-  my $analyses = [];
-  
-  if ($compress) {
-    $flow = ['CompressFile'];
-    
-    push @$analyses,
-      {
-        -logic_name        => 'CompressFile',
-        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -analysis_capacity => 10,
-        -batch_size        => 10,
-        -max_retry_count   => 0,
-        -parameters        => {
-                                cmd => 'cd #out_dir#; gzip -n -f #sub_dir#.tar',
-                              },
-        -rc_name           => 'normal',
-        -flow_into         => $checksum ? ['MD5Checksum'] : [],
-      }
-    ;
-  }
-  
-  if ($checksum) {
-    my $cmd = 'cd #out_dir#; ';    
-    if ($compress) {
-      $cmd .= 'OUT_FILE=#sub_dir#.tar.gz; ';
-    } else {
-      $flow = ['MD5Checksum'];
-      $cmd .= 'OUT_FILE=#sub_dir#.tar; ';
-    }
-    $cmd .= 'md5sum $OUT_FILE > $OUT_FILE.md5; ';
-    
-    push @$analyses,
-      {
-        -logic_name        => 'MD5Checksum',
-        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -analysis_capacity => 10,
-        -max_retry_count   => 0,
-        -parameters        => {
-                                cmd => $cmd,
-                              },
-        -meadow_type       => 'LOCAL',
-      }
-    ;
-  }
-  
-  return ($flow, $analyses);
 }
 
 1;
