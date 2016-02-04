@@ -56,14 +56,6 @@ sub hive_dbh {
 return $dbh;
 }
 
-sub get_DBAdaptor {
-  my ($self, $type) = @_;
-  $type ||= 'core';
-  my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
-
-return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
-}
-
 sub core_dba {
   my $self = shift;
   my $dba  = $self->get_DBAdaptor('core');
@@ -116,6 +108,22 @@ sub production_dbh {
 return $dbh;
 }
 
+sub get_DBAdaptor {
+  my ($self, $type) = @_;
+  $type ||= 'core';
+  my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
+
+return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
+}
+
+# Called from GFF3/DumpFile.pm  
+sub build_base_directory {
+  my ($self, @extras) = @_;
+  my @dirs = ($self->param('base_path'), $self->division());
+
+return File::Spec->catdir(@dirs);
+}
+
 sub has_chromosomes {
   my ($self, $dba) = @_;
 
@@ -134,6 +142,16 @@ sub has_chromosomes {
   $dba->dbc->disconnect_if_idle();
 
 return $count;
+}
+
+sub division {
+  my ($self) = @_;
+  my $dba        = $self->get_DBAdaptor();
+  my ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+  return if ! $division;
+  $division =~ s/^Ensembl//;
+
+return lc($division);
 }
 
 ###
@@ -256,6 +274,7 @@ sub get_dir {
         $dir = File::Spec->catdir($base_dir, @extras); 
      }
   }
+
   mkpath($dir);
 
 return $dir;
