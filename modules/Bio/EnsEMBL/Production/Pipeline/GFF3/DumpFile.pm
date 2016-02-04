@@ -40,6 +40,7 @@ sub fetch_input {
 
   if($eg){
      my $base_path = $self->param('sub_dir');
+     #my $base_path  = $self->build_base_directory();
      $self->param('base_path', $base_path);
 
      my $release = $self->param('eg_version');
