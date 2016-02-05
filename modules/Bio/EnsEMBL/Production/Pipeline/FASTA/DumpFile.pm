@@ -372,10 +372,16 @@ sub _dump_transcripts {
     ( $cds_filename, $cds_fh, $cds_serializer ) =
       $self->_generate_fasta_serializer( 'cds', 'all' );
   }
-
+  
   # work out what biotypes correspond to $transcript_type
-  my $biotype_manager = 
-    $self->get_DBAdaptor('production')->get_biotype_manager();
+  my $pdba = $self->get_DBAdaptor('production');
+
+  unless(defined $pdba){
+    my %prod_db = %{$self->param_required('prod_db')};
+    $pdba       = Bio::EnsEMBL::Production::DBSQL::DBAdaptor->new(%prod_db);
+  }
+
+  my $biotype_manager = $pdba->get_biotype_manager();
   my $biotypes_list;
 
   my @biotype_groups;
