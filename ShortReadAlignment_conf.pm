@@ -50,6 +50,7 @@ sub default_options {
     seq_file_species => {},
     study            => [],
     study_species    => {},
+    taxids           => {},
     merge_level      => 'sample',
     
     # RNA-seq options
@@ -340,6 +341,7 @@ sub alignment_analyses {
                               seq_file_species => $self->o('seq_file_species'),
                               study            => $self->o('study'),
                               study_species    => $self->o('study_species'),
+                              taxids           => $self->o('taxids'),
                               merge_level      => $self->o('merge_level'),
                               data_type        => $self->o('data_type'),
                             },
