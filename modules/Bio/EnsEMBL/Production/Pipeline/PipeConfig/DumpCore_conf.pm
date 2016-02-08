@@ -69,6 +69,7 @@ sub default_options {
 	   'f_dump_embl'    => 0,
    	   'f_dump_genbank' => 0,
    	   'f_dump_fasta'   => 0,
+   	   'f_dump_chain'   => 0,
    	   'f_dump_tsv'     => 0,
 
 	   ## dump_gtf parameters, e! specific
@@ -96,6 +97,10 @@ sub default_options {
        'process_logic_names' => [],
        'skip_logic_names'    => [],
 
+       ## dump_chain parameters
+       'compress' 	 => 1,
+	   'ucsc' 		 => 1,
+
        'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries',
     
        'pipeline_db' => {  
@@ -107,7 +112,7 @@ sub default_options {
           -driver => 'mysql',
        },
 
-       'production_db'  =>  {
+       'prod_db'  =>  {
           -host     => 'mysql-eg-pan-prod.ebi.ac.uk',
           -port     => '4276',
           -user     => 'ensro',
@@ -153,10 +158,9 @@ sub pipeline_wide_parameters {
 		    'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
             'base_path'     => $self->o('ftp_dir'),
             'release'       => $self->o('release'),
-			'production_db'	=> $self->o('production_db'),
-
-			# 'eg' flag, 
+   			'prod_db' 		=> $self->o('prod_db'),
 			'eg'			=> $self->o('eg'),
+
             # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm 
             # needs to be change , maybe removing the need to eg flag
             'eg_version'    => $self->o('release'),
@@ -189,7 +193,7 @@ sub pipeline_analyses {
     elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gtf', 	'dump_gff3', 'dump_genbank', 'dump_fasta']; } 
     elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gtf', 	'dump_embl', 'dump_genbank', 'dump_fasta']; } 
     elsif ($self->o('f_dump_gff') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta']; } 
-        
+
     elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3')    && $self->o('f_dump_embl'))    { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl']; } 
   	elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3')    && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_genbank']; }
   	elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3')    && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_fasta']; }
@@ -199,7 +203,7 @@ sub pipeline_analyses {
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl')    && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank']; } 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl')    && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_fasta']; } 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gff3', 'dump_genbank', 'dump_fasta']; } 
-  	elsif ($self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_embl', 'dump_genbank', 'dump_fasta']; } 
+  	elsif ($self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_embl', 'dump_genbank', 'dump_fasta']; }        
 
     elsif ($self->o('f_dump_gtf')  	  && $self->o('f_dump_gff3'))    { $pipeline_flow  = ['dump_gtf', 'dump_gff3']; } 
   	elsif ($self->o('f_dump_gtf')  	  && $self->o('f_dump_embl'))    { $pipeline_flow  = ['dump_gtf', 'dump_embl']; } 
@@ -226,10 +230,9 @@ sub pipeline_analyses {
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
        -meadow_type    => 'LOCAL',
-   	   -flow_into      => { '1' => ['job_factory'] },
-#   	   -flow_into      => { '1->A' => ['job_factory'] },
-#		                    'A->1' => ['checksum_generator'],		                       
-#						  }
+   	   -flow_into      => { '1->A' => ['job_factory'],
+		                    'A->1' => ['checksum_generator'],		                       
+						  }
      },   
 
 	 { -logic_name     => 'job_factory',
@@ -244,19 +247,31 @@ sub pipeline_analyses {
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
       -flow_into       => {
-#							'2'    => 'dump_uniprot_tsv',
-		                    '2->A' => $pipeline_flow,
-		                    'A->1' => ['email_report'],		                       
+		                    '2' => $pipeline_flow,
+#		                    '2->A' => $pipeline_flow,
+#		                    'A->1' => ['email_report'],		                       
                           },        
 			             #   '2'    => ['build_dir_chain','build_dir_gff3', 'build_dir_gtf', 'dump_embl', 'dump_genbank', 'dump_tsv', 'dump_ena_tsv'], 
                          #   '2->A' => [ @$dna_analyses_names_default, 'dump_peptide', 'dump_cdna', 'dump_ncrna'],
                          #      'A->2' => ['convert_fasta'],
     },
 
-    { -logic_name => 'checksum_generator',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator',
-      -hive_capacity => 10,
-	  # parameter	{ dir => '#dir#'}} },
+### GENERATE CHECKSUM      
+    {  -logic_name => 'checksum_generator',
+       -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
+       -wait_for   => $pipeline_flow,
+       -hive_capacity => 10,
+    },
+
+    {  -logic_name    => 'email_report',
+  	   -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -parameters    => {
+#          	'email'      			 => $self->o('email'),
+#          	'subject'    			 => $self->o('subject'),
+       },
+       -hive_capacity  => -1,
+       -rc_name 	   => 'default',       
+       -meadow_type    => 'LOCAL',
     },
 
 ### GTF
@@ -499,6 +514,17 @@ sub pipeline_analyses {
       -wait_for         => 'dump_fasta' 
     },
         
+### ASSEMBLY CHAIN Dumps	
+	{ -logic_name       => 'dump_chain',
+	  -module           => 'Bio::EnsEMBL::Production::Pipeline::Chainfile::DumpFile',
+	  -parameters       => {  
+		  compress 	 => $self->o('compress'),
+		  ucsc 		 => $self->o('ucsc'),
+	   },
+	  -hive_capacity  => 50,
+	  -rc_name        => 'default',
+	}, 
+
 ### TSV XREF Dumps
 	{ -logic_name    => 'dump_uniprot_tsv',
 	  -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpTsv',
@@ -506,20 +532,6 @@ sub pipeline_analyses {
 	  -rc_name       => 'default', 
 	 },
 
-
-####
-#####
-    {  -logic_name    => 'email_report',
-  	   -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-#       -module        => 'EGExt::FTP::Test::RunnableDB::AssertFTPEmailReport',
-       -parameters    => {
-#          	'email'      			 => $self->o('email'),
-#          	'subject'    			 => $self->o('subject'),
-       },
-       -hive_capacity  => -1,
-       -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
-    },
 
 
     ];
