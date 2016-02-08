@@ -67,6 +67,14 @@ sub param_defaults {
 sub fetch_input {
   my $self = shift @_;
   
+  if (defined $self->param('escape_branch') and 
+      $self->input_job->retry_count >= $self->input_job->analysis->max_retry_count) 
+  {
+    $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
+    $self->input_job->autoflow(0);
+    $self->complete_early("Failure probably due to memory limit, retrying with a higher limit.");
+  }
+  
   my $species = $self->param_required('species');
   my $logic_name = $self->param_required('logic_name');
   
