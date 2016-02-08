@@ -107,29 +107,30 @@ sub default_options {
                             'Archaea' =>
                               ['RF00002', 'RF00169', 'RF00177', 'RF01854', 'RF01960', 'RF02541', 'RF02542', 'RF02543', ],
                             'Bacteria' =>
-                              ['RF00002', 'RF01857', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
+                              ['RF00002', 'RF00882', 'RF01857', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
                             'Eukaryota' =>
                               ['RF00177', 'RF01118', 'RF00169', 'RF01854', 'RF01857', 'RF01959', 'RF02540', 'RF02541', 'RF02542', ],
                             'Fungi' =>
-                              ['RF00012', 'RF00017', 'RF01847', 'RF01848', 'RF01855', 'RF01856', ],
+                              ['RF00012', 'RF00017', 'RF00059', 'RF01847', 'RF01848', 'RF01855', 'RF01856', 'RF02514', ],
                             'Metazoa' =>
-                              ['RF01502', 'RF01675', 'RF01846', 'RF01847', 'RF01848', 'RF01849', 'F01855', 'RF01856', ],
+                              ['RF00882', 'RF00906', 'RF01502', 'RF01675', 'RF01846', 'RF01847', 'RF01848', 'RF01849', 'RF01855', 'RF01856', 'RF02032', ],
                             'Viridiplantae' =>
-                              ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01848', 'RF01856', ],
+                              ['RF00012', 'RF00017', 'RF01118', 'RF01502', 'RF01846', 'RF01848', 'RF01856', ],
                             'EnsemblProtists' =>
-                              ['RF00012', 'RF00017', 'RF01502', 'RF01846', 'RF01847', 'RF01855', ],
+                              ['RF00012', 'RF00017', 'RF01118', 'RF01502', 'RF01846', 'RF01847', 'RF01855', ],
                             'Ensembl' =>
                               ['RF01358', 'RF01376', ],
                             },
     rfam_whitelist      => {
                             'EnsemblProtists' =>
-                              ['RF00028', 'RF00029', ],
+                              ['RF00029', ],
                             },
     rfam_taxonomy_file  => catdir($self->o('rfam_dir'), 'taxonomic_levels.txt'),
     taxonomic_filtering => 1,
-    taxonomic_strict    => 0,
+    taxonomic_lca       => 0,
     taxonomic_levels    => [],
     taxonomic_threshold => 0.02,
+    taxonomic_minimum   => 50,
 
     # There's not much to choose between cmscan and tRNASCAN-SE in terms of
     # annotating tRNA genes, (for some species both produce lots of false
@@ -161,7 +162,7 @@ sub default_options {
         'linked_tables'   => ['dna_align_feature'],
       },
       {
-        'logic_name'      => $self->o('rfam_logic_name').'_strict',
+        'logic_name'      => $self->o('rfam_logic_name').'_lca',
         'db'              => 'Rfam',
         'db_version'      => $self->o('rfam_version'),
         'db_file'         => $self->o('rfam_cm_file'),
@@ -241,8 +242,8 @@ sub pipeline_analyses {
   my ($self) = @_;
   
   my $rfam_logic_name = $self->o('rfam_logic_name');
-  if ($self->o('taxonomic_filtering') && $self->o('taxonomic_strict')) {
-    $rfam_logic_name .= '_strict';
+  if ($self->o('taxonomic_filtering') && $self->o('taxonomic_lca')) {
+    $rfam_logic_name .= '_lca';
   }
 
   my $flow_to_email = [];
@@ -349,9 +350,10 @@ sub pipeline_analyses {
                               rfam_whitelist      => $self->o('rfam_whitelist'),
                               rfam_taxonomy_file  => $self->o('rfam_taxonomy_file'),
                               taxonomic_filtering => $self->o('taxonomic_filtering'),
-                              taxonomic_strict    => $self->o('taxonomic_strict'),
+                              taxonomic_lca       => $self->o('taxonomic_lca'),
                               taxonomic_levels    => $self->o('taxonomic_levels'),
                               taxonomic_threshold => $self->o('taxonomic_threshold'),
+                              taxonomic_minimum   => $self->o('taxonomic_minimum'),
                             },
       -rc_name           => '4Gb_mem',
       -flow_into         => ['SplitDumpFile'],
@@ -401,7 +403,9 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::CMScan',
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
-      -parameters        => {},
+      -parameters        => {
+                              escape_branch => -1,
+                            },
       -rc_name           => 'cmscan_4Gb_mem',
       -flow_into         => {
                               '-1' => ['CMScan_HighMem'],
