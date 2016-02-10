@@ -133,7 +133,18 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  
+ 
+  my $eg = $self->param('eg');
+  $self->param('eg', $eg);
+
+  if($eg){
+     my $base_path  = $self->build_base_directory();
+     $self->param('base_path', $base_path);
+     
+     my $release = $self->param('eg_version');
+     $self->param('release', $release);
+  }
+ 
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type_list') };
   $self->param('sequence_types', \%sequence_types);
   

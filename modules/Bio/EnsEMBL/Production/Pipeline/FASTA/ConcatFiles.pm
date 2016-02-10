@@ -79,7 +79,19 @@ sub fetch_input {
   foreach my $key (qw/data_type species release base_path/) {
     $self->throw("Cannot find the required parameter $key") unless $self->param($key);
   }
-  return;
+
+  my $eg = $self->param('eg');
+  $self->param('eg', $eg);
+
+  if($eg){
+     my $base_path  = $self->build_base_directory();
+     $self->param('base_path', $base_path);
+
+     my $release = $self->param('eg_version');
+     $self->param('release', $release);
+  }
+  
+return;
 }
 
 # sticks ends of files together into one big file.
