@@ -47,7 +47,7 @@ sub default_options {
 
      	## Set to '1' for eg! run 
         #   default => OFF (0)
-  	    'eg' => 0,
+  	    'eg' => 1,
 
         # hive_capacity values for analysis
 	    'getOrthologs_capacity'  => '50',
@@ -56,47 +56,75 @@ sub default_options {
         #  only one of those should be defined if used 
 	 	'species_config' => 
 		{ 
-          '1' => {	# compara database to get orthologs from
-                   	#  'plants', 'protists', 'fungi', 'metazoa', 'multi'
-          		   	'compara'  => 'multi',   
-                   	# source species to project from
- 				   	'source'   => 'homo_sapiens', 
-                   	# target species to project to (DEFAULT: undef)
-                   	'target'   => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','dipodomys_ordii','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','nomascus_leucogenys','gorilla_gorilla','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','mus_musculus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','rattus_norvegicus','taeniopygia_guttata'],
-                   	# target species to exclude in projection
-                   	'exclude'  => undef, 
-				   	#	
-  				   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 },   
+          'EPl_1' => {	# compara database to get orthologs from
+                   		#  'plants', 'protists', 'fungi', 'metazoa', 'multi'
+	          		   	'compara'  => 'plants',   
+    	               	# source species to project from
+ 					   	'source'   => 'arabidopsis_thaliana', 
+            	       	# target species to project to (DEFAULT: undef)
+						'target'   => undef,
+                   		# target species to exclude in projection
+	                   	'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
+					   	#	
+  					   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+            	     },   
 
-          '2' => {	'compara'  => 'multi',   
- 				   	'source'   => 'mus_musculus', 
-				   	'target'   => ['vicugna_pacos','anolis_carolinensis','dasypus_novemcinctus','otolemur_garnettii','felis_catus','gallus_gallus','pan_troglodytes','chlorocebus_sabaeus','dipodomys_ordii','bos_taurus','canis_familiaris','tursiops_truncatus','anas_platyrhynchos','loxodonta_africana','ficedula_albicollis','gorilla_gorilla','homo_sapiens','sorex_araneus','cavia_porcellus','equus_caballus','procavia_capensis','macaca_mulatta','callithrix_jacchus','pteropus_vampyrus','myotis_lucifugus','microcebus_murinus','mustela_putorius_furo','monodelphis_domestica','pongo_abelii','ailuropoda_melanoleuca','papio_anubis','sus_scrofa','ochotona_princeps','ornithorhynchus_anatinus','pelodiscus_sinensis','oryctolagus_cuniculus','ovis_aries','choloepus_hoffmanni','ictidomys_tridecemlineatus','tarsius_syrichta','sarcophilus_harrisii','echinops_telfairi','tupaia_belangeri','meleagris_gallopavo','macropus_eugenii','erinaceus_europaeus','rattus_norvegicus','taeniopygia_guttata'],
-                   	'exclude'  => undef, 
-  				   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 },   
+          'EPl_2' => { 'compara'  => 'plants',   
+ 					   'source'   => 'oryza_sativa', 
+					   'target'   => undef,
+                   	   'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
+  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	 },   
 
-          '3' => {	'compara'  => 'multi',   
- 				   	'source'   => 'danio_rerio', 
-				   	'target'   => ['astyanax_mexicanus','gadus_morhua','takifugu_rubripes','petromyzon_marinus','lepisosteus_oculatus','oryzias_latipes','poecilia_formosa','gasterosteus_aculeatus','tetraodon_nigroviridis','oreochromis_niloticus','latimeria_chalumnae','xiphophorus_maculatus','xenopus_tropicalis'], 
-                   	'exclude'  => undef, 
-  				   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 },   
+          'EPl_3' => { 'compara'  => 'plants',   
+ 				   	   'source'   => 'solanum_lycopersicum', 
+					   'target'   => undef,
+                   	   'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
+  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	 },   
 
-          '4' => {	'compara'  => 'multi',   
- 				   	'source'   => 'rattus_norvegicus', 
-					'target'   => ['homo_sapiens','mus_musculus'],
-                   	'exclude'  => undef, 
-  				   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 },   
+          'EPl_4' => { 'compara'  => 'plants',   
+ 				   	   'source'   => 'solanum_tuberosum', 
+					   'target'   => undef,
+                   	   'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
+  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	 },   
 
-          '5' => {	'compara'  => 'multi',   
- 				   	'source'   => 'xenopus_tropicalis', 
-					'target'   => ['danio_rerio'],
-                   	'exclude'  => undef, 
-  				   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one', 'ortholog_one2many'],
-                 },   
+		  # dictyostelium_discoideum to all amoebozoa
+          'EPr_1' => { 'compara'  => 'protists',   
+ 				   	   'source'   => 'dictyostelium_discoideum', 
+					   'target'   => ['polysphondylium_pallidum_pn500', 'entamoeba_nuttalli_p19', 'entamoeba_invadens_ip1', 'entamoeba_histolytica_ku27', 'entamoeba_histolytica_hm_3_imss', 'entamoeba_histolytica_hm_1_imss_b', 'entamoeba_histolytica_hm_1_imss_a', 'entamoeba_histolytica', 'entamoeba_dispar_saw760', 'dictyostelium_purpureum', 'dictyostelium_fasciculatum', 'acanthamoeba_castellanii_str_neff'],
+                   	   'exclude'  => undef, 
+  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	 },   
 
+          'EF_1' => { 'compara'  => 'fungi',   
+ 				   	  'source'   => 'schizosaccharomyces_pombe', 
+					  'target'   => undef,
+                   	  'exclude'  => ['saccharomyces_cerevisiae'], 
+  				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	},   
+
+          'EF_2' => { 'compara'  => 'fungi',   
+ 				   	  'source'   => 'saccharomyces_cerevisiae', 
+					  'target'   => undef,
+                   	  'exclude'  => ['schizosaccharomyces_pombe'], 
+  				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	},   
+
+          'EM_1' => { 'compara'  => 'metazoa',   
+ 				   	  'source'   => 'caenorhabditis_elegans', 
+					  'target'   => undef,
+                   	  'exclude'  => undef, 
+  				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	},   
+
+          'EM_1' => { 'compara'  => 'metazoa',   
+ 				   	  'source'   => 'drosophila_melanogaster', 
+					  'target'   => undef,
+                   	  'exclude'  => undef, 
+  				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
+                 	},   
 
     	},
 
