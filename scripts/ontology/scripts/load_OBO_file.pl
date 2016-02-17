@@ -16,9 +16,6 @@
 
 use strict;
 use warnings;
-#TODO Do we need this?
-#use FindBin;
-#use lib "$FindBin::Bin/../../../../ONTO-PERL-1.31/lib";
 
 use DBI qw( :sql_types );
 use Getopt::Long qw( :config no_ignore_case );
