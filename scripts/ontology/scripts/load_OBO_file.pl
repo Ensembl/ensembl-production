@@ -16,9 +16,6 @@
 
 use strict;
 use warnings;
-#TODO Do we need this?
-use FindBin;
-use lib "$FindBin::Bin/../../../../ONTO-PERL-1.31/lib";
 
 use DBI qw( :sql_types );
 use Getopt::Long qw( :config no_ignore_case );
@@ -141,6 +138,7 @@ sub write_subset {
 
   foreach my $subset_name (sort(keys(%{$subsets}))) {
     my $subset = $subsets->{$subset_name};
+    $subset->{'name'} =~ s/:/_/g;
 
     if (!(defined($subset->{'name'}) && defined($subset->{'definition'}))) {
       print "Null value encountered: subset name " . $subset->{'name'} . " subset definition " . $subset->{'definition'} . "\n";
@@ -218,6 +216,7 @@ sub write_term {
 
     if (exists($term->{'subsets'})) {
       $term_subsets = join(',', map { $subsets->{$_}{'name'} } @{$term->{'subsets'}});
+      $term_subsets =~ s/:/_/g;
     }
 
     if (!defined($term->{'name'})) {

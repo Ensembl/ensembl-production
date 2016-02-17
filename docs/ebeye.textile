@@ -11,26 +11,31 @@ This is the way we retrieve the database connections to work with. The registry 
 Here is an example of a registry file used for the first run of the pipeline (Ensembl v72). Note the use of the Registry object within a registry file and the scoping of the package. If you omit the *-db_version* parameter and only use HEAD checkouts of Ensembl then this will automatically select the latest version of the API. Any change to version here must be reflected in the configuration file.
 
 bc. 
-	package Reg;
-	use Bio::EnsEMBL::Registry;
-	Bio::EnsEMBL::Registry->no_version_check(1);
-	Bio::EnsEMBL::Registry->no_cache_warnings(1);
-	{
-	  my $version = $ENV{RELEASE};
-	  my $user = 'ensro';
-	  my $host = 'ensdb-5-g-07';
-	  my $port = 5307;
-	  Bio::EnsEMBL::Registry->load_registry_from_multiple_dbs(
-	    {
-	      -host => $host,
-	      -port => $port,
-	      -db_version => $version,
-	      -user => "user",
-	      -NO_CACHE => 1,
-	    }
-	  );
-	}
-	1;
+    package Reg;
+    use Bio::EnsEMBL::Registry;
+    Bio::EnsEMBL::Registry->no_version_check(1);
+    Bio::EnsEMBL::Registry->no_cache_warnings(1);
+    {
+      my $version = 82;
+      Bio::EnsEMBL::Registry->load_registry_from_multiple_dbs(
+      {
+        -host => "ens-staging1",
+     	-port => 3306,
+     	-user => "ensro",
+     	-verbose => 0,
+     	-db_version => $version,
+      },
+      {
+        -host => "ens-staging2",
+        -port => 3306,
+         -user => "ensro",
+         -verbose => 0,
+         -db_version => $version,
+      },
+     );
+    }
+    1;
+
 
 You give the registry to the *init_pipeline.pl* script via the *-registry* option
 
@@ -58,6 +63,7 @@ h3. PERL5LIB
 
 * ensembl-production
 * ensembl
+* ensembl-compara
 * ensembl-hive
 * bioperl
 
@@ -148,22 +154,22 @@ h3. Set up
 
 bc. 
     $ export RELEASE=72
-    $ export ENSEMBL_CVS_ROOT_DIR=$HOME/src
+    $ export ENSEMBL_GIT_ROOT_DIR=$HOME/src
     $ export ENSADMIN_PSW=wibble
-    $ export LOG_DIR=${ENSEMBL_CVS_ROOT_DIR}/ensembl-personal/${USER}/pipelines/${RELEASE}/ebeye
+    $ export LOG_DIR=${ENSEMBL_GIT_ROOT_DIR}/ensembl-personal/${USER}/pipelines/${RELEASE}/ebeye
     $ export DUMPS_DIR=/lustre/scratch109/ensembl/${USER}/${RELEASE}
-    $ export PATH=$ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts:/path/to/xml:$PATH
-    $ cd $ENSEMBL_CVS_ROOT_DIR/ensembl-hive
-    $ cvs -q up -dPA
-    $ cvs -q up -dP -r stable
+    $ export PATH=$ENSEMBL_GIT_ROOT_DIR/ensembl-hive/scripts:/path/to/xml:$PATH
+    $ cd $ENSEMBL_GIT_ROOT_DIR/ensembl-hive
+    $ git checkout HEAD
+    $ git pull
     $ mkdir -p $DUMPS_DIR
 
 h3. Pipeline Init
 
 bc. 
     $ cd $ENSEMBL_CVS_ROOT_DIR/ensembl
-    $ init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf \
-      -pipeline_db -host=ens-production -base_path ${DUMPS_DIR} -registry ${LOG_DIR}/registry.pm
+    $ init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf -pipeline_db \
+       -host=ens-production -base_path ${DUMPS_DIR} -registry ${LOG_DIR}/registry.pm --password wibble --user ensadmin
     $ export HIVE_URL=mysql://username:password@ens-production:3306/${USER}_ebeye_dump_${RELEASE}
     $ beekeeper.pl -url $HIVE_URL -sync
 

@@ -35,8 +35,6 @@ use strict;
 use warnings;
 
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
-#use base qw/EGExt::FTP::PipeConfig::Base_conf
-#			EGExt::FTP::PipeConfig::Compara::DumpComparaBase_conf/;
    
 sub default_options {
 	my ($self) = @_;
@@ -59,7 +57,7 @@ sub default_options {
 	  
 	   ## Set to '1' for eg! run 
        #   default => OFF (0)
-       #   affect: gff3
+       #   affect: gff3, gtf
 	   'eg' 		 => 0,
 
 	   ## Set to '0' to skip dump format(s)
@@ -67,25 +65,30 @@ sub default_options {
 	   #  'tsv'   - ena & uniprot
 	   #  'fasta' - cdna, cds, dna, ncrna, pep
    	   'f_dump_gtf'     => 0,
-	   'f_dump_gff3'    => 1,
-	   'f_dump_embl'    => 1,
-   	   'f_dump_genbank' => 1,
+	   'f_dump_gff3'    => 0,
+	   'f_dump_embl'    => 0,
+   	   'f_dump_genbank' => 0,
    	   'f_dump_tsv'     => 0,
    	   'f_dump_fasta'   => 0,
 
-	   ## gtf parameters
+	   ## gtf parameters, e! specific
 	   'gtftogenepred_exe' => 'gtfToGenePred',
        'genepredcheck_exe' => 'genePredCheck',
 
        ## gff3 parameters
-       'gt_exe'        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
-       'gff3_tidy'     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
-       'gff3_validate' => $self->o('gt_exe').' gff3validator',
-	   'logic_name'    => [],
-	   'db_type'	   => 'core',
-       'out_file_stem' => undef,
-       'xrefs'         => 0,
-       'abinitio'      => 1,
+       'gt_exe'          => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+       'gff3_tidy'       => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
+       'gff3_validate'   => $self->o('gt_exe').' gff3validator',
+
+       'feature_type'    => ['Gene', 'Transcript', 'RepeatFeature', 'SimpleFeature'],
+       'per_chromosome'  => 1,
+       'include_scaffold'=> 1,
+	   'logic_name'      => [],
+	   'db_type'	     => 'core',
+       'out_file_stem'   => undef,
+       'xrefs'           => 0,
+       'abinitio'        => 1,
+=pod
        # e! specific
        'e_feature_type'     => ['Gene', 'Transcript'],
        'e_per_chromosome'   => 0,
@@ -94,7 +97,7 @@ sub default_options {
        'eg_feature_type'    => ['Gene', 'Transcript', 'RepeatFeature', 'SimpleFeature'],
        'eg_per_chromosome'  => 1,
        'eg_include_scaffold'=> 0,
-	
+=cut	
 
        'pipeline_db' => {  
  	      -host   => $self->o('hive_host'),
@@ -151,11 +154,13 @@ sub pipeline_wide_parameters {
 		    'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
             'base_path'     => $self->o('output_dir'),
             'release'       => $self->o('release'),
+
+			# 'eg' flag, 
+			'eg'			=> $self->o('eg'),
             # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm 
             # needs to be change , maybe removing the need to eg flag
             'eg_version'    => $self->o('release'),
             'sub_dir'       => $self->o('output_dir'),
-            
     };
 }
 
@@ -179,13 +184,14 @@ sub pipeline_analyses {
   	if ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank')) {
     	$pipeline_flow  = ['dump_gtf', 'predump_gff3', 'dump_embl', 'dump_genbank'];
     } 
-      elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl'))    { $pipeline_flow  = ['dump_gtf', 'predump_gff3', 'dump_embl']; } 
-  	  elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'predump_gff3', 'dump_genbank']; }
-  	  elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank']; } 
+      elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_embl'))    { $pipeline_flow  = ['dump_gtf', 'predump_gff3', 'dump_embl']; } 
+  	  elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'predump_gff3', 'dump_genbank']; }
+  	  elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_embl') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank']; } 
+  	  elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['predump_gff3', 'dump_embl', 'dump_genbank']; } 
 
-  	  elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3'))     { $pipeline_flow  = ['dump_gtf', 'predump_gff3']; } 
-  	  elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl'))     { $pipeline_flow  = ['dump_gtf', 'dump_embl']; } 
-  	  elsif ($self->o('f_dump_gtf') && $self->o('f_dump_genbank'))  { $pipeline_flow  = ['dump_gtf', 'dump_genbank']; } 
+  	  elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3'))    { $pipeline_flow  = ['dump_gtf', 'predump_gff3']; } 
+  	  elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_embl'))    { $pipeline_flow  = ['dump_gtf', 'dump_embl']; } 
+  	  elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'dump_genbank']; } 
   	  elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl'))    { $pipeline_flow  = ['predump_gff3', 'dump_embl']; } 
   	  elsif ($self->o('f_dump_gff3') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['predump_gff3', 'dump_genbank']; }
   	  elsif ($self->o('f_dump_embl') && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_embl', 'dump_genbank']; }
@@ -208,7 +214,7 @@ sub pipeline_analyses {
      },   
 
 	 { -logic_name     => 'job_factory',
-       -module         => 'Bio::EnsEMBL::Production::Pipeline::RunnableDB::BaseSpeciesFactory',
+       -module         => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -parameters     => {
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
@@ -295,7 +301,6 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-							eg => $self->o('eg'),
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe')						
                           },
@@ -307,7 +312,6 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf_32GB',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-							eg => $self->o('eg'),
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe')						
                           },
@@ -319,7 +323,6 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf_64GB',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-							eg => $self->o('eg'),
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe')						
                           },
@@ -331,7 +334,6 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf_128GB',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-							eg => $self->o('eg'),
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe')						
                           },
@@ -351,11 +353,14 @@ sub pipeline_analyses {
      { -logic_name     => 'dump_eg_gff3',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('eg_feature_type'),
-          per_chromosome     => $self->o('eg_per_chromosome'),
-          include_scaffold   => $self->o('eg_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
+	      abinitio           => $self->o('abinitio'),
+	      out_file_stem      => $self->o('out_file_stem'),
+	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
        -rc_name 	   => 'default',       
@@ -368,11 +373,14 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_eg_gff3_32GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('eg_feature_type'),
-          per_chromosome     => $self->o('eg_per_chromosome'),
-          include_scaffold   => $self->o('eg_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
+    	  abinitio           => $self->o('abinitio'),
+	      out_file_stem      => $self->o('out_file_stem'),
+	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
   	   -rc_name        => '32GB',
@@ -382,11 +390,14 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_eg_gff3_64GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('eg_feature_type'),
-          per_chromosome     => $self->o('eg_per_chromosome'),
-          include_scaffold   => $self->o('eg_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
+    	  abinitio           => $self->o('abinitio'),
+	      out_file_stem      => $self->o('out_file_stem'),
+	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
   	   -rc_name        => '64GB',
@@ -396,11 +407,14 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_eg_gff3_128GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('eg_feature_type'),
-          per_chromosome     => $self->o('eg_per_chromosome'),
-          include_scaffold   => $self->o('eg_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
+	      abinitio           => $self->o('abinitio'),
+	      out_file_stem      => $self->o('out_file_stem'),
+	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
   	   -rc_name        => '128GB',
@@ -409,9 +423,9 @@ sub pipeline_analyses {
      { -logic_name     => 'dump_e_gff3',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('e_feature_type'),
-          per_chromosome     => $self->o('e_per_chromosome'),
-          include_scaffold   => $self->o('e_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
           abinitio           => $self->o('abinitio'),
@@ -429,9 +443,9 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_e_gff3_32GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('e_feature_type'),
-          per_chromosome     => $self->o('e_per_chromosome'),
-          include_scaffold   => $self->o('e_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
           abinitio           => $self->o('abinitio'),
@@ -446,9 +460,9 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_e_gff3_64GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('e_feature_type'),
-          per_chromosome     => $self->o('e_per_chromosome'),
-          include_scaffold   => $self->o('e_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
           abinitio           => $self->o('abinitio'),
@@ -463,9 +477,9 @@ sub pipeline_analyses {
 	 { -logic_name     => 'dump_e_gff3_128GB',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile',
        -parameters     => {
-          feature_type       => $self->o('e_feature_type'),
-          per_chromosome     => $self->o('e_per_chromosome'),
-          include_scaffold   => $self->o('e_include_scaffold'),
+          feature_type       => $self->o('feature_type'),
+          per_chromosome     => $self->o('per_chromosome'),
+          include_scaffold   => $self->o('include_scaffold'),
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
           abinitio           => $self->o('abinitio'),
