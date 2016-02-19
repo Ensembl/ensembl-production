@@ -201,9 +201,13 @@ sub default_options {
     # the supplied registry file will need the relevant server details.
     production_lookup => 1,
 
-    # By default, an email is sent for each species when the pipeline
-    # is complete, showing a summary of the RNA annotation.
-    email_rna_report => 1,
+    # An email is sent summarising the alignments for all species,
+    # and plots are produced with evalue cut-offs, each with a different colour. 
+    evalue_levels =>  {
+                        '1e-3' => 'forestgreen',
+                        '1e-6' => 'darkorange',
+                        '1e-9' => 'firebrick',
+                      },
   };
 }
 
@@ -246,14 +250,23 @@ sub pipeline_analyses {
     $rfam_logic_name .= '_lca';
   }
 
-  my $flow_to_email = [];
-  if ($self->o('email_rna_report')) {
-    $flow_to_email = ['EmailRNAReport'];
-  }
-
   return [
     {
-      -logic_name        => 'SpeciesFactory',
+      -logic_name        => 'RNAFeatures',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 1,
+      -parameters        => {
+                            },
+      -input_ids         => [ {} ],
+      -flow_into         => {
+                              '1->A' => ['SpeciesFactory_Features'],
+                              'A->1' => ['SpeciesFactory_Report'],
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'SpeciesFactory_Features',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
@@ -265,7 +278,6 @@ sub pipeline_analyses {
                               chromosome_flow => 0,
                               variation_flow  => 0,
                             },
-      -input_ids         => [ {} ],
       -flow_into         => {
                               '2->A' => ['BackupDatabase'],
                               'A->2' => ['MetaCoords'],
@@ -441,7 +453,71 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {},
       -rc_name           => 'normal',
-      -flow_into         => $flow_to_email,
+    },
+
+    {
+      -logic_name        => 'SpeciesFactory_Report',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              species         => $self->o('species'),
+                              antispecies     => $self->o('antispecies'),
+                              division        => $self->o('division'),
+                              run_all         => $self->o('run_all'),
+                              meta_filters    => $self->o('meta_filters'),
+                              chromosome_flow => 0,
+                              variation_flow  => 0,
+                            },
+      -flow_into         => {
+                              '2->A' => ['FetchAlignments'],
+                              'A->1' => ['SummariseAlignments'],
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'FetchAlignments',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::FetchAlignments',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              run_cmscan          => $self->o('run_cmscan'),
+                              run_trnascan        => $self->o('run_trnascan'),
+                              rfam_logic_name     => $rfam_logic_name,
+                              trnascan_logic_name => $self->o('trnascan_logic_name'),
+                              cmscan_cm_file      => $self->o('cmscan_cm_file'),
+                              cmscan_logic_name   => $self->o('cmscan_logic_name'),
+                              alignment_dir       => catdir($self->o('pipeline_dir'), '#species#'),
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
+      -logic_name        => 'SummariseAlignments',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::SummariseAlignments',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              run_cmscan     => $self->o('run_cmscan'),
+                              run_trnascan   => $self->o('run_trnascan'),
+                              pipeline_dir   => $self->o('pipeline_dir'),
+                              evalue_levels  => $self->o('evalue_levels'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2->A' => ['SummaryPlots'],
+                              'A->1' => ['EmailRNAReport'],
+                            },
+    },
+
+    {
+      -logic_name        => 'SummaryPlots',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
+                              cmd => 'R_LIBS=$R_LIBS:#scripts_dir#/R_lib;'.
+                                     'Rscript #scripts_dir#/summary_plots.r -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
+                            },
+      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -449,16 +525,15 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::EmailRNAReport',
       -max_retry_count   => 1,
       -parameters        => {
-                              email             => $self->o('email'),
-                              subject           => 'RNA features pipeline: cmscan report for #species#',
-                              run_cmscan        => $self->o('run_cmscan'),
-                              run_trnascan      => $self->o('run_trnascan'),
-                              rfam_logic_name   => $rfam_logic_name,
-                              cmscan_cm_file    => $self->o('cmscan_cm_file'),
-                              cmscan_logic_name => $self->o('cmscan_logic_name'),
+                              email         => $self->o('email'),
+                              subject       => 'RNA features pipeline report',
+                              run_cmscan    => $self->o('run_cmscan'),
+                              run_trnascan  => $self->o('run_trnascan'),
+                              pipeline_dir  => $self->o('pipeline_dir'),
+                              evalue_levels => $self->o('evalue_levels'),
                             },
       -rc_name           => 'normal',
-    }
+    },
 
   ];
 }
