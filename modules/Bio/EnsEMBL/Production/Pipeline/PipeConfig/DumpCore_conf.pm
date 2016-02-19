@@ -56,8 +56,8 @@ sub default_options {
 	  
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
-       #  affect: dump_gtf
-	   'eg' 		 => 0,
+       #  affect: dump_gtf, job_factory/job_factory_intentions
+	   'eg' => 0,
 
 	   ## Set to '0' to skip dump format(s)
        #  default => OFF (0)
@@ -103,7 +103,7 @@ sub default_options {
        'compress' 	 => 1,
 	   'ucsc' 		 => 1,
 
-       'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries',
+#       'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries',
     
        'pipeline_db' => {  
  	      -host   => $self->o('hive_host'),
@@ -152,7 +152,8 @@ sub beekeeper_extra_cmdline_options {
   ;
 }
 
-# these parameter values are visible to all analyses, can be overridden by parameters{} and input_id{}
+# these parameter values are visible to all analyses, 
+# can be overridden by parameters{} and input_id{}
 sub pipeline_wide_parameters {  
     my ($self) = @_;
     return {
@@ -187,10 +188,17 @@ sub pipeline_analyses {
     
    	my $pipeline_flow;
    	
-   	#5
+   	#6 dump types
   	if ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta') && $self->o('f_dump_chain')) {
-    	$pipeline_flow  = ['dump_chain','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta', 'dump_chain']; 
+    	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta', 'dump_chain']; 
     } 
+    #5 dump types (6 combinations) 	
+    elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_embl')    && $self->o('f_dump_genbank') && $self->o('f_dump_fasta')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta']; } 
+    elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_embl')    && $self->o('f_dump_genbank') && $self->o('f_dump_chain')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_chain']; } 
+    elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_embl')    && $self->o('f_dump_fasta')   && $self->o('f_dump_chain')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta', 'dump_chain']; } 
+    elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta')   && $self->o('f_dump_chain')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_genbank', 'dump_fasta', 'dump_chain']; } 
+    elsif ($self->o('f_dump_gtf')  && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta')   && $self->o('f_dump_chain')) { $pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank', 'dump_fasta', 'dump_chain']; } 
+    elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta')   && $self->o('f_dump_chain')) { $pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta', 'dump_chain']; } 
     #4 dump types (15 combinations? I got only 13) 	
     elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3')    && $self->o('f_dump_embl')    && $self->o('f_dump_genbank')) { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank']; } 
     elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3')    && $self->o('f_dump_embl')    && $self->o('f_dump_fasta'))   { $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta']; } 
@@ -257,7 +265,8 @@ sub pipeline_analyses {
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
        -meadow_type    => 'LOCAL',
-   	   -flow_into      => { '1->A' => ['job_factory'],
+  	   -flow_into      => { '1->A' => ['job_factory'],
+#       -flow_into      => { '1->A' => [$self->o('eg') ? 'job_factory' : 'job_factory_intentions'] },
 		                    'A->1' => ['checksum_generator'],		                       
 						  }
      },   
@@ -269,19 +278,18 @@ sub pipeline_analyses {
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
                              run_all     => $self->o('run_all'),
-                           },
+                          },
 	  -hive_capacity   => -1,
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
-      -flow_into       => {
-		                    '2' => $pipeline_flow,
-#		                    '2->A' => $pipeline_flow,
-#		                    'A->1' => ['email_report'],		                       
-                          },        
-			             #   '2'    => ['build_dir_chain','build_dir_gff3', 'build_dir_gtf', 'dump_embl', 'dump_genbank', 'dump_tsv', 'dump_ena_tsv'], 
-                         #   '2->A' => [ @$dna_analyses_names_default, 'dump_peptide', 'dump_cdna', 'dump_ncrna'],
-                         #      'A->2' => ['convert_fasta'],
+#      -flow_into      => { '2' => [$self->o('eg') ? $pipeline_flow : ()] },
+     -flow_into       => { '2' => $pipeline_flow, },        
     },
+
+#    { -logic_name => 'job_factory_intentions',
+#      -module     => 'Bio::EnsEMBL::Production::Pipeline::ReuseBaseSpeciesFactory',
+#      -flow_into  => { '2' => [$self->o('eg') ? () : $pipeline_flow] },
+#    },
 
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
