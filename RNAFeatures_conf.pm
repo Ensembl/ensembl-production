@@ -478,6 +478,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'FetchAlignments',
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::FetchAlignments',
+      -batch_size        => 100,
       -max_retry_count   => 1,
       -parameters        => {
                               run_cmscan          => $self->o('run_cmscan'),
@@ -501,11 +502,11 @@ sub pipeline_analyses {
                               pipeline_dir   => $self->o('pipeline_dir'),
                               evalue_levels  => $self->o('evalue_levels'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['SummaryPlots'],
                               'A->1' => ['EmailRNAReport'],
                             },
+      -meadow_type       => 'LOCAL',
     },
 
     {
