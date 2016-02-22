@@ -265,9 +265,10 @@ sub pipeline_analyses {
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
        -meadow_type    => 'LOCAL',
-  	   -flow_into      => { '1->A' => ['job_factory'],
+  	   -flow_into      => { '1' => ['job_factory'],
+#  	   -flow_into      => { '1->A' => ['job_factory'],
 #       -flow_into      => { '1->A' => [$self->o('eg') ? 'job_factory' : 'job_factory_intentions'] },
-		                    'A->1' => ['checksum_generator'],		                       
+#		                    'A->1' => ['checksum_generator'],		                       
 						  }
      },   
 
@@ -282,8 +283,8 @@ sub pipeline_analyses {
 	  -hive_capacity   => -1,
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
+      -flow_into       => { '2' => $pipeline_flow, },        
 #      -flow_into      => { '2' => [$self->o('eg') ? $pipeline_flow : ()] },
-     -flow_into       => { '2' => $pipeline_flow, },        
     },
 
 #    { -logic_name => 'job_factory_intentions',
@@ -294,7 +295,7 @@ sub pipeline_analyses {
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
-       -wait_for   => $pipeline_flow,
+#       -wait_for   => $pipeline_flow,
        -hive_capacity => 10,
     },
 
