@@ -515,8 +515,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
-                              cmd => 'R_LIBS=$R_LIBS:#scripts_dir#/R_lib;'.
-                                     'Rscript #scripts_dir#/summary_plots.r -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
+                              cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
                             },
       -meadow_type       => 'LOCAL',
     },
