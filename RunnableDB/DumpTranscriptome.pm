@@ -35,6 +35,7 @@ sub param_defaults {
     'header_style'      => 'default',
     'chunk_factor'      => 1000,
     'line_width'        => 80,
+    'file_varname'      => 'transcriptome_file',
   };
   
 }
@@ -107,8 +108,9 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $file_varname = $self->param_required('file_varname');
   
-  $self->dataflow_output_id({'transcriptome_file' => $self->param('transcriptome_file')}, 1);
+  $self->dataflow_output_id({$file_varname => $self->param('transcriptome_file')}, 1);
 }
 
 sub header {
