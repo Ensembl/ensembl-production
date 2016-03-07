@@ -171,8 +171,7 @@ if (@tables) {
 }
 
 if ($core) {
-  $dbpattern =
-    sprintf( '(cdna|core|otherfeatures|rnaseq|vega)_%d', $core );
+  $dbpattern = sprintf( '(cdna|core|otherfeatures|rnaseq|vega)_%d', $core );
 }
 
 if ( defined($dbname) && defined($dbpattern) ) {
@@ -186,17 +185,11 @@ if ($core && $variation) {
 # Fetch all data from the master database.
 my %data;
 {
-  my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $mhost, $mport, $mdbname );
-  my $dbh = DBI->connect( $dsn, $muser, $mpass,
-                          { 'PrintError' => 1, 'RaiseError' => 1 } );
+  my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',$mhost, $mport, $mdbname );
+  my $dbh = DBI->connect( $dsn, $muser, $mpass,{ 'PrintError' => 1, 'RaiseError' => 1 } );
 
   foreach my $table (@tables) {
-    my $sth = $dbh->prepare(
-                   sprintf( 'SELECT * FROM %s',
-                     $dbh->quote_identifier( undef, $mdbname, $table ) )
-    );
-
+    my $sth = $dbh->prepare(sprintf( 'SELECT * FROM %s',$dbh->quote_identifier( undef, $mdbname, $table ) ));
     $sth->execute();
 
     while ( my $row = $sth->fetchrow_arrayref() ) {
@@ -210,22 +203,19 @@ my %data;
 # Put all data into the specified database.
 {
   my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d', $host, $port );
-  my $dbh = DBI->connect( $dsn, $user, $pass,
-                          { 'PrintError' => 1, 'RaiseError' => 1 } );
+  my $dbh = DBI->connect( $dsn, $user, $pass, { 'PrintError' => 1, 'RaiseError' => 1 } );
 
   my $sth;
   if ( defined($dbname) ) {
     $sth = $dbh->prepare('SHOW DATABASES LIKE ?');
     $sth->bind_param( 1, $dbname, SQL_VARCHAR );
-  }
-  else {
+  } else {
     $sth = $dbh->prepare('SHOW DATABASES');
   }
 
   $sth->execute();
-
   $sth->bind_col( 1, \$dbname );
-
+# iterate over all DBs
   while ( $sth->fetch() ) {
     if ( defined($dbpattern) && $dbname !~ /$dbpattern/ ) { next }
 
@@ -239,190 +229,51 @@ my %data;
     foreach my $table ( keys(%data) ) {
       printf( "==> %s: ", $table );
 
-      my $full_table_name =
-        $dbh->quote_identifier( undef, $dbname, $table );
-      my $full_table_name_bak =
-        $dbh->quote_identifier( undef, $dbname, $table . '_bak' );
+      my $full_table_name = $dbh->quote_identifier( undef, $dbname, $table );
+      my $full_table_name_bak = $dbh->quote_identifier( undef, $dbname, $table . '_bak' );
       my $key_name = $table . '_id';
 
       if ( defined($dumppath) ) {
-        # Backup the table on file.
-        my $filename = sprintf( "%s/%s.%s.%s.sql",
-                                $dumppath, $dbname,
-                                $table,    $timestamp );
-
-        if ( -e $filename ) {
-          die( sprintf( "File '%s' already exists.", $filename ) );
-        }
-
-        printf( "Backing up table %s on file.\n", $table );
-        printf( "--> %s\n",                       $filename );
-
-        if (system( "mysqldump",
-                    "--host=$host",
-                    "--port=$port",
-                    "--user=$user", (
-                      defined($pass) ? "--password=$pass" : "--skip-opt"
-                    ),
-                    "--result-file=$filename",
-                    "--skip-opt",
-                    "$dbname",
-                    "$table" ) )
-        {
-          die("mysqldump failed: $?");
-        }
-      } ## end if ( defined($dumppath...))
-
-      $dbh->do(
-           sprintf( 'DROP TABLE IF EXISTS %s', $full_table_name_bak ) );
-
+        backup_table($dumppath,$dbname,$table,$timestamp);
+      }
+      
+      $dbh->do(sprintf( 'DROP TABLE IF EXISTS %s', $full_table_name_bak ) );
       # Make a backup of any existing data.
-      $dbh->do( sprintf( 'CREATE TABLE %s LIKE %s',
-                         $full_table_name_bak, $full_table_name ) );
-      $dbh->do( sprintf( 'INSERT INTO %s SELECT * FROM %s',
-                         $full_table_name_bak, $full_table_name ) );
+      $dbh->do( sprintf( 'CREATE TABLE %s LIKE %s',$full_table_name_bak, $full_table_name ) );
+      $dbh->do( sprintf( 'INSERT INTO %s SELECT * FROM %s',$full_table_name_bak, $full_table_name ) );
+      push( @backup_tables, $full_table_name_bak );
 
       if ($table eq 'external_db') {
-
-        my %external_db;
-        my $sth = $dbh->prepare( sprintf(
-          'SELECT * FROM %s', $full_table_name) );
-        $sth->execute();
-
-        while ( my $row = $sth->fetchrow_arrayref() ) {
-          my $external_db_id = $row->[0];
-          push ( @{ $external_db{$external_db_id} }, @{$row} );
-        }
-
-
-        foreach my $row ( @{ $data{$table} } ) {
-          my $colinfo_sth =
-            $dbh->column_info( undef, $dbname, $table, '%' );
-          my $colinfo =
-            $colinfo_sth->fetchall_hashref( ['ORDINAL_POSITION'] );
-          my $numcols = scalar( keys( %{$colinfo} ) );
-          my $external_db_id = $row->[0];
-
-          if (!$external_db{$external_db_id}) {
-            my $insert_statement = sprintf(
-              'INSERT INTO %s (%s) VALUES (%s)',
-              $full_table_name,
-              join( ', ',
-                    map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
-              join(
-                ', ',
-                map {
-                  $dbh->quote( $row->[ $_ - 1 ],
-                               $colinfo->{$_}{'DATA_TYPE'} )
-                } ( 1 .. $numcols ) ) );
-            if ($verbose) {
-              printf( STDERR "EXECUTING: %s\n", $insert_statement );
-            }
-            $dbh->do($insert_statement);
-          } else {
-            my @data = @{ $external_db{$external_db_id} };
-            for (my $i = 1; $i < $numcols; $i++) {
-              if (defined $row->[$i]) {
-                if ($data[$i] ne $row->[$i]) {
-                  push (@updates, $external_db_id);
-                  my $update_statement = sprintf(
-                    "UPDATE %s SET %s = '%s' WHERE external_db_id = %s",
-                    $full_table_name, $colinfo->{$i+1}{'COLUMN_NAME'}, $row->[$i], $external_db_id);
-                  if ($verbose) {
-                    printf( STDERR "EXECUTING: %s\n", $update_statement );
-                  }
-                  $dbh->do($update_statement);
-                }
-              }
-            }
-          }
-          delete $external_db{$external_db_id};
-        }
-        foreach my $k (keys %external_db) {
-          my $delete_statement = sprintf(
-            "DELETE FROM %s WHERE external_db_id = %s", $full_table_name, $k);
-          if ($verbose) {
-            printf( STDERR "EXECUTING: %s\n", $delete_statement );
-          }
-          $dbh->do($delete_statement);
-        }
-
+        my @stuff = update_external_db($dbh, $full_table_name, \%data);
+        push @updates, @stuff;
       } else {
-
         # Truncate (empty) the table before inserting new data into it.
         $dbh->do( sprintf( 'TRUNCATE TABLE %s', $full_table_name ) );
 
         # Get column information.
-        my $colinfo_sth =
-          $dbh->column_info( undef, $dbname, $table, '%' );
-        my $colinfo =
-          $colinfo_sth->fetchall_hashref( ['ORDINAL_POSITION'] );
-
+        my $colinfo_sth = $dbh->column_info( undef, $dbname, $table, '%' );
+        my $colinfo = $colinfo_sth->fetchall_hashref( ['ORDINAL_POSITION'] );
         my $numcols = scalar( keys( %{$colinfo} ) );
 
-        # For each row read from the master table,
-        # issue an INSERT statement.
+        # INSERT a copy of each row read from the master table,
         foreach my $row ( @{ $data{$table} } ) {
-          my $insert_statement = sprintf(
-            'INSERT INTO %s (%s) VALUES (%s)',
+          my $insert_statement = sprintf('INSERT INTO %s (%s) VALUES (%s)',
             $full_table_name,
-            join( ', ',
-                  map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
-            join(
-              ', ',
-              map {
-                $dbh->quote( $row->[ $_ - 1 ],
-                             $colinfo->{$_}{'DATA_TYPE'} )
-              } ( 1 .. $numcols ) ) );
-
-          if ($verbose) {
-            printf( STDERR "EXECUTING: %s\n", $insert_statement );
-          }
+            join( ', ', map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
+            join( ', ', map { $dbh->quote( $row->[ $_ - 1 ], $colinfo->{$_}{'DATA_TYPE'} ) } ( 1 .. $numcols ) ) 
+          );
+          printf( STDERR "EXECUTING: %s\n", $insert_statement ) if ($verbose);
+          
           $dbh->do($insert_statement);
         }
       }
 
       print("<inserted data>");
-
-      {
-        my $statement = sprintf( 'SELECT %s ' . 'FROM %s ' .
-                                   'LEFT JOIN %s t USING (%s) ' .
-                                   'WHERE t.%s IS NULL ' .
-                                   'ORDER BY %s',
-                                 $key_name,
-                                 $full_table_name,
-                                 $full_table_name_bak,
-                                 $key_name,
-                                 $key_name,
-                                 $key_name );
-
-        my $sth2 = $dbh->prepare($statement);
-
-        if ($verbose) {
-          printf( STDERR "EXECUTING: %s\n", $statement );
-        }
-        $sth2->execute();
-
-        my $key;
-        $sth2->bind_col( 1, \$key );
-
-        my @keys;
-        while ( $sth2->fetch() ) {
-          push( @keys, $key );
-        }
-
-        if (@keys) {
-          print("\n");
-          print("New data inserted:\n");
-          printf( "SELECT * FROM %s WHERE %s_id IN (%s);\n",
-                  $table, $table, join( ',', @keys ) );
-          print("\n");
-        }
-        print("\n");
-      }
+      diff_tables($dbh, $table, $key_name, $full_table_name, $full_table_name_bak);
 
       print("<updated data>");
-
+      diff_tables($dbh, $table, $key_name, $full_table_name_bak, $full_table_name);
+      
       {
         if (@updates) {
           print("\n");
@@ -434,46 +285,6 @@ my %data;
         print("\n");
       }
 
-      {
-        my $statement = sprintf( 'SELECT %s ' . 'FROM %s ' .
-                                   'LEFT JOIN %s t USING (%s) ' .
-                                   'WHERE t.%s IS NULL ' .
-                                   'ORDER BY %s',
-                                 $key_name,
-                                 $full_table_name_bak,
-                                 $full_table_name,
-                                 $key_name,
-                                 $key_name,
-                                 $key_name );
-
-        my $sth2 = $dbh->prepare($statement);
-
-        if ($verbose) {
-          printf( STDERR "EXECUTING: %s\n", $statement );
-        }
-        $sth2->execute();
-
-        my $key;
-        $sth2->bind_col( 1, \$key );
-
-        my @keys;
-        while ( $sth2->fetch() ) {
-          push( @keys, $key );
-        }
-
-        if (@keys) {
-          print("\n");
-          print( '-' x 40, "\n" );
-          print("!! Old data deleted:\n");
-          printf( "SELECT * FROM %s WHERE %s_id IN (%s);\n",
-                  $table . '_bak',
-                  $table, join( ',', @keys ) );
-          print( '-' x 40, "\n" );
-          print("\n");
-        }
-      }
-
-      push( @backup_tables, $full_table_name_bak );
     } ## end foreach my $table ( keys(%data...))
     continue {
       print("\n");
@@ -503,4 +314,103 @@ if ( !$dropbaks ) {
   print <<MSG2_END
 Each table has also been backed up to a table with "_bak" appended to its name.
 MSG2_END
+}
+
+sub diff_tables {
+  my ($dbh,$table,$key,$table1,$table2) = @_;
+  my $statement = sprintf( 'SELECT %s FROM %s ' .
+                             'LEFT JOIN %s t USING (%s) ' .
+                             'WHERE t.%s IS NULL ' .
+                             'ORDER BY %s',
+                           $key,
+                           $table1,
+                           $table2,
+                           $key,
+                           $key,
+                           $key );
+
+  printf( STDERR "EXECUTING: %s\n", $statement ) if $verbose;
+  my $sth = $dbh->prepare($statement);
+  $sth->execute();
+  $sth->bind_col( 1, \$key);
+  my @keys;
+  while ($sth->fetch()) { push( @keys, $key ) };
+
+  if (@keys) {
+    print("\n");
+    print("Data found in $table1 that is not in $table2\n");
+    printf( "SELECT * FROM %s WHERE %s_id IN (%s);\n",$table1, $table, join( ',', @keys ) );
+    print("\n");
+  }
+}
+
+sub backup_table {
+  my ($dumppath,$dbname,$table,$timestamp) = @_;
+  my $filename = sprintf( "%s/%s.%s.%s.sql",$dumppath,$dbname,$table,$timestamp );
+
+  if ( -e $filename ) {
+    die( sprintf( "File '%s' already exists.", $filename ) );
+  }
+
+    printf( "Backing up table %s on file.\n", $table );
+    printf( "--> %s\n",                       $filename );
+
+    if (system( "mysqldump","--host=$host","--port=$port","--user=$user", 
+                (defined($pass) ? "--password=$pass" : "--skip-opt"), "--result-file=$filename", 
+                "--skip-opt","$dbname","$table" ) ) {
+      die("mysqldump failed: $?");
+    }
+}
+
+sub update_external_db {
+  my ($dbh,$full_table_name,$original) = @_;
+  my %external_db;
+  my $sth = $dbh->prepare( sprintf('SELECT * FROM %s', $full_table_name) );
+  $sth->execute();
+
+  while ( my $row = $sth->fetchrow_arrayref() ) {
+    my $external_db_id = $row->[0];
+    push @{ $external_db{$external_db_id} }, @{$row} ;
+  }
+  my @updates;
+
+  foreach my $master_row ( @{ $original->{'external_db'} } ) {
+    my $colinfo = $dbh->column_info( undef, $dbname, 'external_db', '%' )->fetchall_hashref( ['ORDINAL_POSITION'] );
+    # $colinfo is 1-based
+    my $numcols = scalar keys %{$colinfo};
+    my $master_external_db_id = $master_row->[0];
+    if (! exists $external_db{$master_external_db_id}) {
+      my $insert_statement = sprintf('INSERT INTO %s (%s) VALUES (%s)',
+        $full_table_name,
+        join( ', ', map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
+        join( ', ', map { $dbh->quote( $master_row->[ $_ - 1 ], $colinfo->{$_}{'DATA_TYPE'} ) } ( 1 .. $numcols ) ) );
+      
+      printf( STDERR "EXECUTING: %s\n", $insert_statement ) if ($verbose);
+      $dbh->do($insert_statement);
+    } else {
+      my @target_db_content = @{ $external_db{$master_external_db_id} };
+      for (my $i = 1; $i < $numcols; $i++) {
+        # omit implictly identical db_id column by starting at 1
+        next if ($colinfo->{$i+1}{'COLUMN_NAME'} eq 'db_release'); # don't touch species-specific releases of data sources
+        if (defined $master_row->[$i] && ($target_db_content[$i] ne $master_row->[$i]) ) {
+          push (@updates, $master_external_db_id);
+          my $update_statement = sprintf("UPDATE %s SET %s = '%s' WHERE external_db_id = %s",
+            $full_table_name, $colinfo->{$i+1}{'COLUMN_NAME'}, $master_row->[$i], $master_external_db_id);
+
+          printf( STDERR "EXECUTING: %s\n", $update_statement ) if ($verbose);
+          $dbh->do($update_statement);
+        }
+      }
+    }
+    delete $external_db{$master_external_db_id};
+  }
+  # delete any remaining keys that are not found in the master table
+  foreach my $k (keys %external_db) {
+    my $delete_statement = sprintf("DELETE FROM %s WHERE external_db_id = %s", $full_table_name, $k);
+    if ($verbose) {
+      printf( STDERR "EXECUTING: %s\n", $delete_statement );
+    }
+    $dbh->do($delete_statement);
+  }
+  return @updates;
 }

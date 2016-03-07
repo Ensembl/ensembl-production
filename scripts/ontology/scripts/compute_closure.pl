@@ -110,15 +110,21 @@ print "Importing inter-ontology parent-child relations\n";
 my $rels_join_xaspect = join ',', map { "'$_'" } @$default_relations;
 $dbh->do(
   qq/
-   INSERT IGNORE INTO  closure
+  INSERT IGNORE INTO  closure
                        (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-               SELECT  term_id, term_id, 0, NULL, r.ontology_id
-                 FROM  term t, relation r, relation_type rt
-                WHERE  term_id = child_term_id
-                  AND  r.relation_type_id=rt.relation_type_id
-                  AND  rt.name IN ($rels_join_xaspect)
-                  AND  t.ontology_id != r.ontology_id
-                  AND  is_obsolete = 0/ );
+     SELECT DISTINCT
+       r.child_term_id, r.parent_term_id, 0, NULL, r.ontology_id
+     FROM
+            term c
+       JOIN ontology o ON (c.ontology_id=o.ontology_id)
+       JOIN relation r ON (c.term_id=r.child_term_id)
+       JOIN relation_type rt ON (r.relation_type_id=rt.relation_type_id)
+       JOIN term p ON (r.parent_term_id=p.term_id)
+     WHERE
+           c.ontology_id!=p.ontology_id
+       AND rt.name IN ($rels_join_xaspect)
+       AND c.is_obsolete=0
+       AND p.is_obsolete=0/ );
 
 # hash using ontology_name-namespace with list of possible relations
 print "Importing defined relations\n";
@@ -149,12 +155,20 @@ for my $ontology ( keys %{$relations} ) {
         qq/
          INSERT IGNORE INTO  closure
                              (child_term_id, parent_term_id, distance, subparent_term_id, ontology_id)
-            SELECT DISTINCT  r.child_term_id, r.parent_term_id, 1, r.child_term_id, r.ontology_id
-                       FROM  relation r
-                       JOIN  relation_type rt using (relation_type_id) 
-                       JOIN  ontology o using (ontology_id)
-                      WHERE  rt.name IN ($rels_join)
-                        AND  o.name='$ontology' AND o.namespace='$namespace'/ );
+            SELECT DISTINCT
+             r.child_term_id, r.parent_term_id, 1, r.child_term_id, r.ontology_id
+           FROM
+                  term c
+             JOIN ontology o ON (c.ontology_id=o.ontology_id)
+             JOIN relation r ON (c.term_id=r.child_term_id)
+             JOIN relation_type rt ON (r.relation_type_id=rt.relation_type_id)
+             JOIN term p ON (r.parent_term_id=p.term_id)
+           WHERE
+                 c.ontology_id=p.ontology_id
+             AND rt.name IN ($rels_join)
+             AND c.is_obsolete=0
+             AND p.is_obsolete=0
+             AND  o.name='$ontology' AND o.namespace='$namespace'/ );
     }
   }
 }
