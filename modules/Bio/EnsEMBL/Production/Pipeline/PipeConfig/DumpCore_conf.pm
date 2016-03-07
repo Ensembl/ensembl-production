@@ -315,8 +315,9 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe')						
-                          },
+					        gene_pred_check => $self->o('genepredcheck_exe'),						
+				   	        abinitio        => $self->o('abinitio'),      
+                    },
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
   	  -flow_into      => { '-1' => 'dump_gtf_32GB', }, 
@@ -326,7 +327,8 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe')						
+					        gene_pred_check => $self->o('genepredcheck_exe'),
+				   	        abinitio        => $self->o('abinitio'),						
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '32GB',
@@ -337,7 +339,8 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe')						
+					        gene_pred_check => $self->o('genepredcheck_exe'),
+				   	        abinitio        => $self->o('abinitio'),						
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '64GB',
@@ -348,7 +351,8 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe')						
+					        gene_pred_check => $self->o('genepredcheck_exe'),
+				   	        abinitio        => $self->o('abinitio'),						
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '128GB',
