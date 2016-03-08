@@ -444,6 +444,7 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db_type     => 'prot',
+                            proteome_source   => $self->o('proteome_source'),
                             logic_name_prefix => $self->o('logic_name_prefix'),
                           },
       -rc_name         => 'normal',
