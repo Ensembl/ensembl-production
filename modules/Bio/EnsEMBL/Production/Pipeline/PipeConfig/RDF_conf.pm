@@ -32,16 +32,16 @@ and at least 100 GB of scratch space.
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::RDF_conf;
 use strict;
 use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
+use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
   my $self = shift;
   return {
     %{ $self->SUPER::default_options() },
     xref => 1,
-    config_file => 'xref_LOD_mapping.json',
-    pipeline_name => 'rdf_dump',
-    registry => 'Reg',
-    base_path => '',
+    config_file => 'VersioningService/conf/xref_LOD_mapping.json',
+    release => software_version(),
+    pipeline_name => 'rdf_dump_'.$self->o('release'),
     species => [],
   }
 }
