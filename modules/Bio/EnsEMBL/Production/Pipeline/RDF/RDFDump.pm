@@ -35,6 +35,7 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
 use IO::File;
+use File::Path qw/mkpath/;
 
 sub fetch_input {
     my $self = shift;
@@ -52,11 +53,13 @@ sub run {
     my $production_name = $self->production_name;
     my $path = $self->param('base_path');
     unless (defined $path && $path ne '') { $path = $self->get_dir($release) };
-    my $target_file = $path.'/'.$species.".ttl";
-    my $main_fh = IO::File->new($target_file,'w') || die "$! $target_file";
-    my $xref_file = $path.'/'.$species."_xrefs.ttl";
+    # Create species specific path
+    mkpath($path.'/'.$species);
+    my $target_file = $path.'/'.$species.'/'.$species.".ttl";
+    my $main_fh = IO::File->new($target_file,"w") || die "$! $target_file";
+    my $xref_file = $path.'/'.$species.'/'.$species."_xrefs.ttl";
     my $xref_fh;
-    $xref_fh = IO::File->new($xref_file, 'w') if $self->param('xref');
+    $xref_fh = IO::File->new($xref_file,"w") if $self->param('xref');
     my $dba = $self->get_DBAdaptor; 
     my $compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('Multi', 'compara');
     # Configure bulk extractor to go all the way down to protein features.
@@ -95,14 +98,14 @@ sub run {
     }
 
     # Add a graph file for Virtuoso loading.
-    my $graph_path = $self->param('base_path');
+    my $graph_path = $self->param('base_path')."/".$species;
     unless ($graph_path) { $graph_path = $self->get_dir($release) };
     
     $triple_converter->create_virtuoso_file(sprintf("%s/%s.graph",$graph_path,$production_name));
     $triple_converter->create_virtuoso_file(sprintf("%s/%s_xrefs.graph",$graph_path,$production_name));
-    my @files_to validate = ($target_file);
+    my @files_to_validate = ($target_file);
     if ($self->param('xref')) { push @files_to_validate, $xref_file }
-    $self->param('validate_me') = \@files_to_validate;
+    $self->param('validate_me', \@files_to_validate);
     $main_fh->close;
     $xref_fh->close if defined $xref_fh;
 }
@@ -112,11 +115,8 @@ sub write_output {  # store and dataflow
     my $self = shift;
     my $files = $self->param('validate_me');
     while (my $file = shift @$files) {
-        $self->dataflow_output_id($file,2);
+        $self->dataflow_output_id({filename => $file},2);
     }
 }
-
-
-
 
 1;
