@@ -433,7 +433,7 @@ sub _dump_transcripts {
           my $translation = $transcript->translation();
           if ($translation) {
             my $translation_seq = $transcript->translate();
-            $self->_create_display_id($translation, $translation_seq, $transcript_type);
+            $self->_create_display_id($translation, $translation_seq, 'pep');
             $peptide_serializer->print_Seq($translation_seq);
             my $cds_seq = Bio::Seq->new(-seq => $transcript->translateable_seq(), moltype => 'dna', alphabet => 'dna', id => $transcript->display_id());
             $self->_create_display_id($transcript, $cds_seq, 'cds');
