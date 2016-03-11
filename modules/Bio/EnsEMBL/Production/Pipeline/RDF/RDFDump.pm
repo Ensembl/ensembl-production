@@ -35,13 +35,23 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
 use IO::File;
-use File::Path qw/mkpath/;
+use File::Spec::Functions qw/catdir/;
 
 sub fetch_input {
     my $self = shift;
     $self->param_required('species');   # just make sure it has been passed
     $self->param_required('config_file');
     $self->param_required('release');
+    my $eg = $self->param('eg');
+    $self->param('eg', $eg);
+
+    if($eg){
+      my $base_path = $self->param('base_path');
+      $self->param('base_path', $base_path);
+      my $release = $self->param('eg_version');
+      $self->param('release', $release);
+    }
+
 }
 
 
@@ -51,13 +61,11 @@ sub run {
     my $config_file = $self->param('config_file'); # config required for mapping Ensembl things to RDF (xref_LOD_mapping.json)
     my $release = $self->param('release');
     my $production_name = $self->production_name;
-    my $path = $self->param('base_path');
+    my $path = $self->data_path();
     unless (defined $path && $path ne '') { $path = $self->get_dir($release) };
-    # Create species specific path
-    mkpath($path.'/'.$species);
-    my $target_file = $path.'/'.$species.'/'.$species.".ttl";
+    my $target_file = catdir($path, $species.".ttl");
     my $main_fh = IO::File->new($target_file,"w") || die "$! $target_file";
-    my $xref_file = $path.'/'.$species.'/'.$species."_xrefs.ttl";
+    my $xref_file = catdir($path, $species."_xrefs.ttl");
     my $xref_fh;
     $xref_fh = IO::File->new($xref_file,"w") if $self->param('xref');
     my $dba = $self->get_DBAdaptor; 
@@ -98,11 +106,20 @@ sub run {
     }
 
     # Add a graph file for Virtuoso loading.
-    my $graph_path = $self->param('base_path')."/".$species;
+    my $graph_path = $path;
+    $self->param('dir', $graph_path);
     unless ($graph_path) { $graph_path = $self->get_dir($release) };
     
     $triple_converter->create_virtuoso_file(sprintf("%s/%s.graph",$graph_path,$production_name));
     $triple_converter->create_virtuoso_file(sprintf("%s/%s_xrefs.graph",$graph_path,$production_name));
+
+    #compress the files
+    system("gzip $target_file");
+    $target_file=$target_file.'.gz';
+    system("gzip $xref_file");
+    $xref_file=$xref_file.'.gz';
+
+    # Create list of files to validate
     my @files_to_validate = ($target_file);
     if ($self->param('xref')) { push @files_to_validate, $xref_file }
     $self->param('validate_me', \@files_to_validate);
@@ -114,9 +131,19 @@ sub run {
 sub write_output {  # store and dataflow
     my $self = shift;
     my $files = $self->param('validate_me');
+    my $dir = $self->param('dir');
     while (my $file = shift @$files) {
         $self->dataflow_output_id({filename => $file},2);
     }
+    $self->dataflow_output_id({dir => $dir},3);
 }
 
+sub data_path {
+  my ($self) = @_;
+
+  $self->throw("No 'species' parameter specified")
+    unless $self->param('species');
+
+  return $self->get_dir('rdf', $self->param('species'));
+}
 1;
