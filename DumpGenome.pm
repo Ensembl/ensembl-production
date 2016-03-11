@@ -39,6 +39,7 @@ sub param_defaults {
     'min_slice_length'   => 0,
     'repeat_masking'     => undef,
     'repeat_logic_names' => [],
+    'file_varname'       => 'genome_file',
   };
 }
 
@@ -125,8 +126,9 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $file_varname = $self->param_required('file_varname');
   
-  $self->dataflow_output_id({'genome_file' => $self->param('genome_file')}, 1);
+  $self->dataflow_output_id({$file_varname => $self->param('genome_file')}, 1);
 }
 
 sub header_function {

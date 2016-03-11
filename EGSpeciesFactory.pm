@@ -64,6 +64,7 @@ sub param_defaults {
         'epr' => 'protists',
       },
     meta_filters    => {},
+    species_varname => 'species',
   };
 }
 
@@ -241,17 +242,18 @@ sub write_output {
   my $core_dbas       = $self->param('core_dbas');
   my $chromosome_dbas = $self->param('chromosome_dbas');
   my $variation_dbas  = $self->param('variation_dbas');
+  my $species_varname = $self->param_required('species_varname');
   
   foreach my $species (sort keys %$core_dbas) {
-    $self->dataflow_output_id({'species' => $species}, $self->param('core_flow'));
+    $self->dataflow_output_id({$species_varname => $species}, $self->param('core_flow'));
   }
   
   foreach my $species (sort keys %$chromosome_dbas) {
-    $self->dataflow_output_id({'species' => $species}, $self->param('chromosome_flow'));
+    $self->dataflow_output_id({$species_varname => $species}, $self->param('chromosome_flow'));
   }
   
   foreach my $species (sort keys %$variation_dbas) {
-    $self->dataflow_output_id({'species' => $species}, $self->param('variation_flow'));
+    $self->dataflow_output_id({$species_varname => $species}, $self->param('variation_flow'));
   }
 }
 
