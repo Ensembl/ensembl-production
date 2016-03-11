@@ -42,6 +42,7 @@ sub param_defaults {
     'delete_existing_files'   => 1,      # Ensure that directories only contains files generated with the latest execution
     'unique_file_names'       => 0,      # Ensure that output file names are unique across all directories?
     'delete_original_file'    => 0,      # After splitting, delete original fasta file?
+    'file_varname'            => 'split_file',
   };
   
 }
@@ -140,9 +141,10 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $file_varname = $self->param_required('file_varname');
   
   foreach my $split_file (@{$self->param('split_files')}) {
-    $self->dataflow_output_id({'split_file' => $split_file}, 2);
+    $self->dataflow_output_id({$file_varname => $split_file}, 2);
   }
   
 }

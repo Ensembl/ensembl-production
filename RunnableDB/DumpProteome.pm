@@ -36,6 +36,7 @@ sub param_defaults {
     'chunk_factor'      => 1000,
     'line_width'        => 80,
     'allow_stop_codons' => 0,
+    'file_varname'      => 'proteome_file',
   };
   
 }
@@ -115,8 +116,9 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $file_varname = $self->param_required('file_varname');
   
-  $self->dataflow_output_id({'proteome_file' => $self->param('proteome_file')}, 1);
+  $self->dataflow_output_id({$file_varname => $self->param('proteome_file')}, 1);
 }
 
 sub header {
