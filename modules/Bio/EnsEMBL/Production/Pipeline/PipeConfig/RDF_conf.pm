@@ -43,6 +43,12 @@ sub default_options {
     release => software_version(),
     pipeline_name => 'rdf_dump_'.$self->o('release'),
     species => [],
+    division => [],
+    antispecies =>[],
+    run_all => 0, #always run every species
+    ## Set to '1' for eg! run
+    #   default => OFF (0)
+    'eg'  => 0,
   }
 }
 
@@ -50,7 +56,13 @@ sub pipeline_wide_parameters {
   my $self = shift;
   return {
     %{ $self->SUPER::pipeline_wide_parameters() },
-    base_path => $self->o('base_path')
+    base_path => $self->o('base_path'),
+    # 'eg' flag,
+    'eg'      => $self->o('eg'),
+    # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm
+    # needs to be change , maybe removing the need to eg flag
+    'eg_version'    => $self->o('release'),
+    'sub_dir'       => $self->o('base_path'),
   }
 }
 
@@ -58,10 +70,13 @@ sub pipeline_analyses {
   my $self = shift;
   return [ {
     -logic_name => 'ScheduleSpecies',
-    -module     => 'Bio::EnsEMBL::Production::Pipeline::SpeciesFactory',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
     -input_ids => [{}], # required for automatic seeding
     -parameters => {
-      species => $self->o('species'),
+       species     => $self->o('species'),
+       antispecies => $self->o('antispecies'),
+       division    => $self->o('division'),
+       run_all     => $self->o('run_all'),
     },
     -flow_into => {
       2 => ['DumpRDF']
@@ -80,8 +95,14 @@ sub pipeline_analyses {
     # Validate both output files
     -flow_into => {
       2 => ['ValidateRDF'],
-      3 => ['ValidateRDF']
+      3 => ['ChecksumGenerator'],
     }
+  },
+  {
+    -logic_name => 'ChecksumGenerator',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator',
+    -wait_for   => [ qw/DumpRDF/ ],
+    -analysis_capacity => 10,
   },
   {
     -logic_name => 'ValidateRDF',
