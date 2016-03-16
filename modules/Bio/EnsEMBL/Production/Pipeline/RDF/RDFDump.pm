@@ -28,6 +28,7 @@ limitations under the License.
 package Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump;
 
 use strict;
+use warnings;
 
 use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
 use Bio::EnsEMBL::RDF::EnsemblToTripleConverter;
