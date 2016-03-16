@@ -581,6 +581,9 @@ sub exonerate_analysis {
   if ($self->o('data_type') eq 'est') {
     $seq_type = 'dna';
     $biotype  = 'est';
+  } elsif ($self->o('data_type') eq 'cdna') {
+    $seq_type = 'dna';
+    $biotype  = 'cdna';
   } elsif ($self->o('data_type') eq 'rnaseq') {
     $seq_type = 'dna';
     $biotype  = 'RNA-Seq_gene';

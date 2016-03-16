@@ -64,10 +64,7 @@ sub default_options {
 
 sub pipeline_analyses {
   my ($self) = @_;
-  
-  my ($post_processing_flow, $post_processing_analyses) =
-    $self->post_processing_analyses($self->o('checksum'), $self->o('compress'));
-  
+
   return [
     {
       -logic_name        => 'SpeciesFactory',
@@ -111,9 +108,8 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '-1'   => ['gff3_himem'],
-                              '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
+                              '-1' => ['gff3_himem'],
+                               '1' => ['gff3Tidy'],
                             },
     },
 
@@ -138,10 +134,7 @@ sub pipeline_analyses {
                               eg_filename_format => $self->o('eg_filename_format'),
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => {
-                              '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
-                            },
+      -flow_into         => ['gff3Tidy'],
     },
 
     {
@@ -180,17 +173,6 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
     },
-
-    {
-      -logic_name        => 'PostProcessing',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count   => 0,
-      -parameters        => {},
-      -flow_into         => $post_processing_flow,
-      -meadow_type       => 'LOCAL',
-    },
-
-    @$post_processing_analyses,
 
   ];
 }

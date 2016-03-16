@@ -50,11 +50,12 @@ sub default_options {
 
     pipeline_name => 'file_dump_compara_'.$self->o('ensembl_release'),
 
-    results_dir => $self->o('ENV', 'PWD'),
-    checksum    => 1,
-    compress    => 1,
-    
-    dump_types => {
+    compara => 'multi',
+
+    base_dir    => $self->o('ENV', 'PWD'),
+    results_dir => catdir($self->o('base_dir'), $self->o('pipeline_name')),
+
+    tree_dump_types => {
        '3' => ['gene_trees_newick'],
        '4' => ['gene_alignments_cdna'],
        '5' => ['gene_alignments_aa'],
@@ -63,25 +64,59 @@ sub default_options {
        '8' => ['homologs_xml'],
     },
 
+    pairwise_dump_types => {
+       '3' => ['wg_alignments_maf'],
+    },
+
+    dump_names => {
+      'gene_trees_newick'    => 'GENE-TREES-NEWICK',
+      'gene_alignments_cdna' => 'GENE-ALIGN-TRANSCRIPTS',
+      'gene_alignments_aa'   => 'GENE-ALIGN-PEPTIDES',
+      'gene_trees_cdna_xml'  => 'GENE-TREES-TRANSCRIPTS',
+      'gene_trees_aa_xml'    => 'GENE-TREES-PEPTIDES',
+      'homologs_xml'         => 'HOMOLOGS',
+      'wg_alignments_maf'    => 'WG-ALIGN',
+    },
+
+    maf_file_per_chr => 1,
+    maf_file_per_scaffold => 0,
+
     # All dumps are run by default, but can be switched off.
     skip_dumps => [],
 
     # Maximum number of files in each sub-directory.
     files_per_subdir => 500,
 
+    # Use external programs to validate output files. Note that we use
+    # a slightly customised orthoxml schema, that allows the file to
+    # only contain paralogs.
+    xmllint         => 'xmllint',
+    orthoxml_schema => '/nfs/panda/ensemblgenomes/external/xml_schema/orthoxml.paralogs.xsd',
+    phyloxml_schema => '/nfs/panda/ensemblgenomes/external/xml_schema/phyloxml.xsd',
+    newick_stats    => '/nfs/panda/ensemblgenomes/external/newick-utils-1.6/bin/nw_stats',
+    mafValidator    => '/nfs/panda/ensemblgenomes/external/mafTools/bin/mafValidator.py',
+
+    # Need to refer to last release's checksums, to see what has changed.
+    checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums/compara',
+
+    # For generating scp commands to get the necessary files to ND
+    nd_login => $self->o('ENV', 'USER').'@www.vectorbase.org',
+
     # For the Drupal nodes, each file type has a standard description.
     # The module that creates the file substitutes values for the text in caps.
-    drupal_file  => catdir($self->o('results_dir'), 'drupal_load_compara.csv'),
+    drupal_file  => $self->o('results_dir').'.csv',
+    copy_file    => $self->o('results_dir').'.sh',
     staging_dir  => 'sites/default/files/ftp/staging',
     release_date => undef,
 
     drupal_desc => {
-      'gene_trees_newick'    => '',
-      'gene_alignments_cdna' => '',
-      'gene_alignments_aa'   => '',
-      'gene_trees_cdna_xml'  => '',
-      'gene_trees_aa_xml'    => '',
-      'homologs_xml'         => '',
+      'GENE-TREES-NEWICK'      => 'Gene trees in Newick (a.k.a. New Hampshire) format.',
+      'GENE-ALIGN-TRANSCRIPTS' => 'Alignments of transcript sequences, used to infer gene trees.',
+      'GENE-ALIGN-PEPTIDES'    => 'Alignments of peptide sequences, used to infer gene trees.',
+      'GENE-TREES-TRANSCRIPTS' => 'Gene trees in PhyloXML format, containing transcript alignments.',
+      'GENE-TREES-PEPTIDES'    => 'Gene trees in PhyloXML format, containing peptide alignments.',
+      'HOMOLOGS'               => 'Homologs in OrthoXML format.',
+      'WG-ALIGN'               => 'Pairwise whole genome alignment between <SPECIES1> and <SPECIES2>, in MAF format.',
     },
   };
 }
@@ -128,10 +163,7 @@ sub pipeline_wide_parameters {
 
 sub pipeline_analyses {
   my ($self) = @_;
-  
-  my ($post_processing_flow, $post_processing_analyses) =
-    $self->post_processing_analyses($self->o('checksum'), $self->o('compress'));
-  
+
   return [
     {
       -logic_name        => 'FileDump',
@@ -140,36 +172,53 @@ sub pipeline_analyses {
       -input_ids         => [ {} ],
       -parameters        => {},
       -flow_into         => {
-                              '1' => ['TreeFactory'],
-                              #'1->A' => ['TreeFactory'],
-                              #'A->1' => ['WriteDrupalFile'],
+                              '1->A' => ['TreeFactory', 'PairwiseAlignmentFactory'],
+                              'A->1' => ['CheckSumChecking'],
                             },
       -meadow_type       => 'LOCAL',
     },
-    
-    #{
-    #  -logic_name        => 'WriteDrupalFile',
-    #  -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
-    #  -max_retry_count   => 1,
-    #  -parameters        => {
-    #                          results_dir           => $self->o('results_dir'),
-    #                          drupal_file           => $self->o('drupal_file'),
-    #                          staging_dir           => $self->o('staging_dir'),
-    #                          release_date          => $self->o('release_date'),
-    #                          drupal_desc           => $self->o('drupal_desc'),
-    #                        },
-    #  -rc_name           => 'normal',
-    #},
+
+    {
+      -logic_name        => 'CheckSumChecking',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::CheckSumChecking',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              checksum_dir => $self->o('checksum_dir'),
+                              release_date => $self->o('release_date'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['WriteDrupalFile'],
+    },
+
+    {
+      -logic_name        => 'WriteDrupalFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              nd_login      => $self->o('nd_login'),
+                              drupal_file   => $self->o('drupal_file'),
+                              copy_file     => $self->o('copy_file'),
+                              staging_dir   => $self->o('staging_dir'),
+                              release_date  => $self->o('release_date'),
+                              drupal_desc   => $self->o('drupal_desc'),
+                              compara_files => 1,
+                            },
+      -rc_name           => 'normal',
+    },
 
     {
       -logic_name        => 'TreeFactory',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TreeFactory',
       -max_retry_count   => 0,
       -parameters        => {
-                              dump_types       => $self->o('dump_types'),
+                              compara          => $self->o('compara'),
+                              dump_types       => $self->o('tree_dump_types'),
+                              dump_names       => $self->o('dump_names'),
                               skip_dumps       => $self->o('skip_dumps'),
                               files_per_subdir => $self->o('files_per_subdir'),
+                              release_date     => $self->o('release_date'),
                             },
+      -rc_name           => 'normal',
       -flow_into         => {
                               '3->C' => ['gene_trees_newick'],
                               'C->1' => ['PostProcessing'],
@@ -187,13 +236,48 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'PairwiseAlignmentFactory',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::PairwiseAlignmentFactory',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              compara          => $self->o('compara'),
+                              dump_types       => $self->o('pairwise_dump_types'),
+                              dump_names       => $self->o('dump_names'),
+                              skip_dumps       => $self->o('skip_dumps'),
+                              files_per_subdir => $self->o('files_per_subdir'),
+                              release_date     => $self->o('release_date'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '3' => ['wg_alignments_maf'],
+                            },
+    },
+
+    {
       -logic_name        => 'gene_trees_newick',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::TreeDumper',
       -analysis_capacity => 10,
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara     => $self->o('compara'),
                               tree_format => 'newick',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => ['ValidateNewick'],
+                            },
+    },
+
+    {
+      -logic_name        => 'ValidateNewick',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 500,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => $self->o('newick_stats').' #out_file#',
                             },
       -rc_name           => 'normal',
     },
@@ -205,6 +289,7 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara  => $self->o('compara'),
                               seq_type => 'cdna',
                             },
       -rc_name           => 'normal',
@@ -217,6 +302,7 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara  => $self->o('compara'),
                               seq_type => 'aa',
                             },
       -rc_name           => 'normal',
@@ -229,10 +315,14 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara     => $self->o('compara'),
                               tree_format => 'xml',
                               seq_type    => 'cdna',
                             },
       -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => ['ValidatePhyloxml'],
+                            },
     },
 
     {
@@ -242,8 +332,25 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara     => $self->o('compara'),
                               tree_format => 'xml',
                               seq_type    => 'aa',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => ['ValidatePhyloxml'],
+                            },
+    },
+
+    {
+      -logic_name        => 'ValidatePhyloxml',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 500,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => $self->o('xmllint').' --noout --schema '.$self->o('phyloxml_schema').' #out_file#',
                             },
       -rc_name           => 'normal',
     },
@@ -255,6 +362,78 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
+                              compara        => $self->o('compara'),
+                              homolog_format => 'xml',
+                              release_date   => $self->o('release_date'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => ['ValidateOrthoxml'],
+                            },
+    },
+
+    {
+      -logic_name        => 'ValidateOrthoxml',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 500,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => $self->o('xmllint').' --noout --schema '.$self->o('orthoxml_schema').' #out_file#',
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
+      -logic_name        => 'wg_alignments_maf',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::MAFDumper',
+      -analysis_capacity => 10,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              compara           => $self->o('compara'),
+                              release_date      => $self->o('release_date'),
+                              file_per_chr      => $self->o('maf_file_per_chr'),
+                              file_per_scaffold => $self->o('maf_file_per_scaffold'),
+                              escape_branch     => -1,
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1'    => ['wg_alignments_maf_himem'],
+                               '2->A' => ['ValidateMAF'],
+                               'A->1' => ['PostProcessing'],
+                            },
+    },
+
+    {
+      -logic_name        => 'wg_alignments_maf_himem',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::MAFDumper',
+      -analysis_capacity => 10,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              compara           => $self->o('compara'),
+                              release_date      => $self->o('release_date'),
+                              file_per_chr      => $self->o('maf_file_per_chr'),
+                              file_per_scaffold => $self->o('maf_file_per_scaffold'),
+                            },
+      -rc_name           => '16Gb_mem',
+      -flow_into         => {
+                               '2->A' => ['ValidateMAF'],
+                               'A->1' => ['PostProcessing'],
+                            },
+    },
+
+    {
+      -logic_name        => 'ValidateMAF',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'python '.$self->o('mafValidator').' --ignoreDuplicate --maf #out_file#',
                             },
       -rc_name           => 'normal',
     },
@@ -265,66 +444,36 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 0,
       -parameters        => {
-                              cmd => 'tar -cf #out_dir#.tar #out_dir#',
+                              cmd => 'cd #out_dir#; tar -cf #sub_dir#.tar #sub_dir# --remove-files',
                             },
-      -flow_into         => $post_processing_flow,
+      -flow_into         => ['CompressFile'],
     },
 
-    @$post_processing_analyses,
+    {
+      -logic_name        => 'CompressFile',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => 'cd #out_dir#; gzip -n -f #sub_dir#.tar',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['MD5Checksum'],
+    },
 
+    {
+      -logic_name        => 'MD5Checksum',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => 'cd #out_dir#; OUT_FILE=#sub_dir#.tar.gz; md5sum $OUT_FILE > $OUT_FILE.md5; ',
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+      
   ];
-}
-
-sub post_processing_analyses {
-  my ($self, $checksum, $compress) = @_;
-  
-  my $flow = [];
-  my $analyses = [];
-  
-  if ($compress) {
-    $flow = ['CompressFile'];
-    
-    push @$analyses,
-      {
-        -logic_name        => 'CompressFile',
-        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -analysis_capacity => 10,
-        -batch_size        => 10,
-        -max_retry_count   => 0,
-        -parameters        => {
-                                cmd => 'gzip -n -f #out_dir#.tar',
-                              },
-        -rc_name           => 'normal',
-        -flow_into         => $checksum ? ['MD5Checksum'] : [],
-      }
-    ;
-  }
-  
-  if ($checksum) {
-    my $cmd = 'cd $(dirname #out_dir#.tar); ';    
-    if ($compress) {
-      $cmd .= 'OUT_FILE=$(basename #out_dir#.tar.gz); ';
-    } else {
-      $flow = ['MD5Checksum'];
-      $cmd .= 'OUT_FILE=$(basename #out_dir#.tar); ';
-    }
-    $cmd .= 'md5sum $OUT_FILE > $OUT_FILE.md5; ';
-    
-    push @$analyses,
-      {
-        -logic_name        => 'MD5Checksum',
-        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -analysis_capacity => 10,
-        -max_retry_count   => 0,
-        -parameters        => {
-                                cmd => $cmd,
-                              },
-        -meadow_type       => 'LOCAL',
-      }
-    ;
-  }
-  
-  return ($flow, $analyses);
 }
 
 1;
