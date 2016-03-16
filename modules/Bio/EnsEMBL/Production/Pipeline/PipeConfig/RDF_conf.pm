@@ -106,13 +106,12 @@ sub pipeline_analyses {
   },
   {
     -logic_name => 'ValidateRDF',
-    -module => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-    -parameters => {
-      cmd => '#validator# --validate #filename#',
-      validator => 'turtle',
-    },
+    -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF',
     -rc_name => 'verify',
-
+    # All the jobs can fail since it's a validation step
+    -failed_job_tolerance => 100,
+    # Only retry to run the job once
+    -max_retry_count => 1,
   }];
 }
 
