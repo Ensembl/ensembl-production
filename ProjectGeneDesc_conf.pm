@@ -205,8 +205,7 @@ sub pipeline_analyses {
       -logic_name      => 'TargetFactory',
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -flow_into       => {
-                            '2'    => ['BackupTables'],
-                            '2->A' => ['GeneDescProjection'],
+                            '2->A' => ['BackupTables'],
                             'A->1' => ['EmailReport'],
                            },
       -max_retry_count => 1,
@@ -222,6 +221,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -rc_name         => 'normal',
+      -flow_into       => ['GeneDescProjection'],
     },
 
     {
@@ -247,7 +247,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -rc_name         => 'normal',
-      -wait_for        => ['BackupTables'],
     },
 
     {
