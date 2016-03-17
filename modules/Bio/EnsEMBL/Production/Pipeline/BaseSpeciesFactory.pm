@@ -229,19 +229,19 @@ return $dbva ? 1 : 0;
 
 sub write_output {
     my ($self) = @_;
-    my $check_intentions = $self->param('check_intentions'); 
+    my $check_intentions = $self->param('check_intentions');
     my $core_dbas        = $self->param('core_dbas');
     my $chromosome_dbas  = $self->param('chromosome_dbas');
     my $variation_dbas   = $self->param('variation_dbas');
      
     foreach my $species (sort keys %$core_dbas) {
-       my $requires_new_dna = $self->requires_new_dna($species) if(defined $check_intentions);
+       my $requires_new_dna = $self->requires_new_dna($species) if($check_intentions==1);
 
        if($requires_new_dna){
-          $self->dataflow_output_id({'species' => $species, 'requires_new_dna' => '1'}, $self->param('core_flow'));
+          $self->dataflow_output_id({'species' => $species, 'requires_new_dna' => '1', 'check_intentions' => $check_intentions}, $self->param('core_flow'));
        }
        else{ 
-          $self->dataflow_output_id({'species' => $species, 'requires_new_dna' => '0'}, $self->param('core_flow'));
+          $self->dataflow_output_id({'species' => $species, 'requires_new_dna' => '0', 'check_intentions' => $check_intentions}, $self->param('core_flow'));
        }
     }
   
