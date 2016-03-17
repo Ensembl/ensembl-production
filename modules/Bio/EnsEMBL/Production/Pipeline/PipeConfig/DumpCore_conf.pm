@@ -53,10 +53,13 @@ sub default_options {
 	   'antispecies' => [],
        'division' 	 => [], 
 	   'run_all'     => 0,	
-	  
+	   # Set to '0' to skip intentions checking during dataflow of jobs
+       # default => OFF (0)
+       'check_intentions' => 0,
+
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
-       #  affect: dump_gtf, job_factory/job_factory_intentions
+       #  affect: dump_gtf
 	   'eg' => 0,
 
 	   ## Set to '0' to skip dump format(s)
@@ -72,6 +75,9 @@ sub default_options {
    	   'f_dump_chain'   => 0,
    	   #
    	   'f_dump_tsv'     => 0,
+
+	   ## dump_gff3 & dump_gtf parameter
+       'abinitio'        => 1,
 
 	   ## dump_gtf parameters, e! specific
 	   'gtftogenepred_exe' => 'gtfToGenePred',
@@ -89,7 +95,6 @@ sub default_options {
 	   'db_type'	     => 'core',
        'out_file_stem'   => undef,
        'xrefs'           => 0,
-       'abinitio'        => 1,
 
 	   ## dump_fasta parameters
        # types to emit
@@ -265,16 +270,15 @@ sub pipeline_analyses {
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
        -meadow_type    => 'LOCAL',
-  	   -flow_into      => { '1' => ['job_factory'],
-#  	   -flow_into      => { '1->A' => ['job_factory'],
-#       -flow_into      => { '1->A' => [$self->o('eg') ? 'job_factory' : 'job_factory_intentions'] },
-#		                    'A->1' => ['checksum_generator'],		                       
-						  }
+       -flow_into      => {'1->A' => ['job_factory'],
+                           'A->1' => ['checksum_generator'],
+                          }		                       
      },   
 
 	 { -logic_name     => 'job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -parameters     => {
+						     check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
@@ -284,18 +288,12 @@ sub pipeline_analyses {
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
       -flow_into       => { '2' => $pipeline_flow, },        
-#      -flow_into      => { '2' => [$self->o('eg') ? $pipeline_flow : ()] },
     },
-
-#    { -logic_name => 'job_factory_intentions',
-#      -module     => 'Bio::EnsEMBL::Production::Pipeline::ReuseBaseSpeciesFactory',
-#      -flow_into  => { '2' => [$self->o('eg') ? () : $pipeline_flow] },
-#    },
 
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
-#       -wait_for   => $pipeline_flow,
+       -wait_for   => $pipeline_flow,
        -hive_capacity => 10,
     },
 
@@ -316,8 +314,8 @@ sub pipeline_analyses {
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),						
-				   	        abinitio        => $self->o('abinitio'),      
-                    },
+				   	        abinitio        => $self->o('abinitio'),
+                          },
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
   	  -flow_into      => { '-1' => 'dump_gtf_32GB', }, 
@@ -327,8 +325,8 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe'),
-				   	        abinitio        => $self->o('abinitio'),						
+					        gene_pred_check => $self->o('genepredcheck_exe'),						
+   		        	        abinitio        => $self->o('abinitio'),
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '32GB',
@@ -340,7 +338,7 @@ sub pipeline_analyses {
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),
-				   	        abinitio        => $self->o('abinitio'),						
+					        abinitio        => $self->o('abinitio'),						
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '64GB',
@@ -352,7 +350,7 @@ sub pipeline_analyses {
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),
-				   	        abinitio        => $self->o('abinitio'),						
+   		        	        abinitio        => $self->o('abinitio'),					
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '128GB',
@@ -393,7 +391,9 @@ sub pipeline_analyses {
         },
 	   -hive_capacity  => 50, 
   	   -rc_name        => '32GB',
-   	   -flow_into      => { '-1' => 'dump_gff3_64GB', }, 
+   	   -flow_into      => { '-1' => 'dump_gff3_64GB',
+  							'1'  => 'tidy_gff3',
+   	    				  }, 
 	 },	
 
 	 { -logic_name     => 'dump_gff3_64GB',
@@ -410,7 +410,9 @@ sub pipeline_analyses {
         },
 	   -hive_capacity  => 50, 
   	   -rc_name        => '64GB',
-   	   -flow_into      => { '-1' => 'dump_gff3_128GB', }, 
+   	   -flow_into      => { '-1' => 'dump_gff3_128GB', 
+   							'1'  => 'tidy_gff3',	
+   	   					  }, 
 	 },	
 
 	 { -logic_name     => 'dump_gff3_128GB',
@@ -426,7 +428,7 @@ sub pipeline_analyses {
 	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
-  	   -rc_name        => '128GB',
+  	   -rc_name        => '128GB', 	   
 	 },	
 
 ### GFF3:post-processing
