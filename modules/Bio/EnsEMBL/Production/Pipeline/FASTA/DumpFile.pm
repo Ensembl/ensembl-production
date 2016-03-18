@@ -416,7 +416,7 @@ sub _dump_transcripts {
   # list
   #
   if ($transcript_type eq 'cdna') { push @biotype_groups, 'coding', 'pseudogene'; } 
-  elsif ($transcript_type eq 'ncrna') { push @biotype_groups, 'snoncoding', 'lnoncoding'; }
+  elsif ($transcript_type eq 'ncrna') { push @biotype_groups, 'snoncoding', 'lnoncoding', 'mnoncoding'; }
   else { throw "Invalid transcript type: $transcript_type"; }
   
   map { push @{$biotypes_list}, @{ $biotype_manager->group_members($_)} } 
