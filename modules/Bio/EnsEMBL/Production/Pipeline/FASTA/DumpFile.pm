@@ -146,8 +146,14 @@ sub fetch_input {
   }
  
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type_list') };
+  # Skip dna dumps if 
+  # 'check_intentions' flag is 1
+  # AND 'requires_new_dna' is 0
+  if($self->param('check_intentions')==1 && $self->param('requires_new_dna')==0){ 
+     delete $sequence_types{'dna'};
+  }
   $self->param('sequence_types', \%sequence_types);
-  
+ 
   my $dba = $self->get_DBAdaptor();
   my $analyses = $dba->get_MetaContainer()->list_value_by_key('repeat.analysis');
   $self->param('analyses', $analyses);
@@ -183,6 +189,11 @@ sub run {
 sub write_output {
   my ($self) = @_;
   my $dataflows = $self->param('dataflows');
+
+  # If no jobs created for the output channel 1, hive will invoke autoflow by default. 
+  # This will mess up the pipeline and must be turn off
+  $self->input_job->autoflow(0);
+
   foreach my $flow (@{$dataflows}) {
     $self->dataflow_output_id(@{$flow});
   }
@@ -205,7 +216,7 @@ sub run_type {
     $self->_dump_dna($type);
     $self->_create_README('dna');
   }
-  
+
   if ( $sequence_types->{cdna} ) { #includes peptides whether you like it or not
     $self->info( "Starting cdna dump for " . $species );
     my ($transcripts, $peptide) = $self->_dump_transcripts('cdna', $type);
