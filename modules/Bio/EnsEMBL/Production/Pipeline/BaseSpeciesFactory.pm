@@ -267,10 +267,10 @@ sub has_variation {
 }
 
 sub write_output {
-  my ($self)           = @_;
-  my $check_intentions = $self->param('check_intentions');
+  my ($self) = @_;
+  my $check_intentions = $self->param('check_intentions') || 0;
   my $core_dbas        = $self->param('core_dbas');
-  my $compara_dbas    = $self->param('compara_dbas');
+  my $compara_dbas     = $self->param('compara_dbas');
   my $chromosome_dbas  = $self->param('chromosome_dbas');
   my $variation_dbas   = $self->param('variation_dbas');
 
@@ -336,7 +336,6 @@ SQL
     $prod_dba->dbc()->sql_helper()
     ->execute_single_result( -SQL => $sql, -PARAMS => $params );
   $prod_dba->dbc()->disconnect_if_idle();
-
 
   return $result;
 }
