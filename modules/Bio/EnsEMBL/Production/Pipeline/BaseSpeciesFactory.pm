@@ -44,21 +44,22 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
 sub param_defaults {
   my ($self) = @_;
 
-  return {
-    species         => [],
-    division        => [],
-    run_all         => 0,
-    antispecies     => [],
-    core_flow       => 2,
-    chromosome_flow => 3,
-    variation_flow  => 4,
-
-    div_synonyms => { 'eb'  => 'bacteria',
-                      'ef'  => 'fungi',
-                      'em'  => 'metazoa',
-                      'epl' => 'plants',
-                      'epr' => 'protists', },
-    meta_filters => {}, };
+  return { species         => [],
+           division        => [],
+           run_all         => 0,
+           antispecies     => [],
+           core_flow       => 2,
+           chromosome_flow => 3,
+           variation_flow  => 4,
+           compara_flow    => 5,
+           div_synonyms    => {
+                             'eb'  => 'bacteria',
+                             'ef'  => 'fungi',
+                             'em'  => 'metazoa',
+                             'epl' => 'plants',
+                             'epr' => 'protists',
+                             'e'   => 'ensembl' },
+           meta_filters => {}, };
 }
 
 sub fetch_input {
@@ -76,7 +77,10 @@ sub fetch_input {
 
   my $all_dbas =
     Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'core' );
+  my $all_compara_dbas =
+    Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'compara' );
   my %core_dbas;
+  my %compara_dbas;
 
   if ( !scalar(@$all_dbas) ) {
     $self->throw(
@@ -87,11 +91,13 @@ sub fetch_input {
   if ($run_all) {
     %core_dbas = map { $_->species => $_ } @$all_dbas;
     delete $core_dbas{'Ancestral sequences'};
+    %compara_dbas = map { $_->species => $_ } @$all_compara_dbas;
     $self->warning( scalar( keys %core_dbas ) . " species loaded" );
   }
   elsif ( scalar(@division) ) {
     foreach my $division (@division) {
-      $self->process_division( $all_dbas, $division, \%core_dbas );
+      $self->process_division( $all_dbas, $all_compara_dbas, $division,
+                               \%core_dbas, \%compara_dbas );
     }
   }
   elsif ( scalar(@species) ) {
@@ -118,11 +124,14 @@ sub fetch_input {
     }
   }
 
-  $self->param( 'core_dbas', \%core_dbas );
+  $self->param( 'core_dbas',    \%core_dbas );
+  $self->param( 'compara_dbas', \%compara_dbas );
 } ## end sub fetch_input
 
 sub process_division {
-  my ( $self, $all_dbas, $division, $core_dbas ) = @_;
+  my ( $self, $all_dbas, $all_compara_dbas, $division, $core_dbas,
+       $compara_dbas )
+    = @_;
   my $division_count = 0;
 
   my %div_synonyms = %{ $self->param('div_synonyms') };
@@ -150,6 +159,20 @@ sub process_division {
     }
   }
   $self->warning("$division_count species loaded for $division");
+
+  foreach my $dba (@$all_compara_dbas) {
+    my $compara_div = $dba->species();
+    if ( $compara_div eq 'multi' ) {
+      $compara_div = 'ensembl';
+    }
+    if ( $compara_div eq $division ) {
+      $$compara_dbas{$compara_div} = $dba;
+      $self->warning("Added compara for $division");
+    }
+  }
+
+  return;
+
 } ## end sub process_division
 
 sub process_species {
@@ -247,6 +270,7 @@ sub write_output {
   my ($self)           = @_;
   my $check_intentions = $self->param('check_intentions');
   my $core_dbas        = $self->param('core_dbas');
+  my $compara_dbas    = $self->param('compara_dbas');
   my $chromosome_dbas  = $self->param('chromosome_dbas');
   my $variation_dbas   = $self->param('variation_dbas');
 
@@ -281,6 +305,14 @@ sub write_output {
     $self->dataflow_output_id( { 'species' => $species },
                                $self->param('variation_flow') );
   }
+
+  foreach my $species ( sort keys %$compara_dbas ) {
+    $self->dataflow_output_id( { 'species' => $species },
+                               $self->param('compara_flow') );
+  }
+
+  return;
+
 } ## end sub write_output
 
 sub requires_new_dna {
@@ -304,6 +336,7 @@ SQL
     $prod_dba->dbc()->sql_helper()
     ->execute_single_result( -SQL => $sql, -PARAMS => $params );
   $prod_dba->dbc()->disconnect_if_idle();
+
 
   return $result;
 }
