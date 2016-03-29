@@ -1,3 +1,40 @@
+=head1 LICENSE
+
+Copyright [1999-2016] EMBL-European Bioinformatics Institute
+and Wellcome Trust Sanger Institute
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
+
+
+=pod
+
+=head1 NAME
+
+Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf
+
+=head1 DESCRIPTION
+
+Configuration for running the Post Compara pipeline, which
+run the Gene name, description and GO projections as well as Gene coverage.
+
+=head1 Author
+
+Thomas Maurel
+
+=cut
+
 package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf;
 
 use strict;
@@ -22,7 +59,7 @@ sub default_options {
     	flag_GeneNames    => '1',
     	flag_GeneDescr    => '1',
     	flag_GO           => '1',     
-    	flag_GeneCoverage => '0',     
+    	flag_GeneCoverage => '0',
 
     ## Flags controlling dependency between GeneNames & GeneDescr projections
         # '0' by default, 
@@ -250,7 +287,7 @@ sub default_options {
                 #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
                 #  Deleting projected xrefs, object_xrefs and synonyms
                 #  before doing projection
-                flag_delete_gene_names   => '1',	
+                flag_delete_gene_names   => '1',
                 #  Off by default.
                 #  Setting descriptions that were projected to NULL
                 #  before doing projection
@@ -413,8 +450,6 @@ sub default_options {
 		#  RCA Reviewed computational analysis
 		#  TAS Traceable author statement
 	
-		# Email Report subject
-        go_subject       	   => $self->o('pipeline_name').' subpipeline GOProjection has finished',
 
 		# GO Projection flags
 		#  Off by default. 
@@ -427,17 +462,13 @@ sub default_options {
 		#  On by default. 
 		#  Delete existing projected (info_type='PROJECTION') GO terms in the target species, 
 		#  before doing projection   
-		flag_delete_go_terms   => '1', 
+		flag_delete_go_terms   => '1',
 
-	## Gene Coverage
-	    gcov_division          => $self->o('division_name'), 
-	
-		# Email Report subject
-        gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
+
 	    
 	## For all pipelines
 	   #  Off by default. Control the storing of projections into database. 
-       flag_store_projections => '1', 
+       flag_store_projections => '1',
 
     ## Access to the ncbi taxonomy db
 	    'taxonomy_db' =>  {
@@ -459,404 +490,7 @@ sub default_options {
     };
 }
 
-sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-      # inheriting database and hive tables' creation
-      @{$self->SUPER::pipeline_create_commands},
-      'mkdir -p '.$self->o('output_dir'),
-    ];
-}
 
-# Ensures output parameters gets propagated implicitly
-sub hive_meta_table {
-  my ($self) = @_;
-  
-  return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack'  => 1,
-  };
-}
-
-# override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
- my ($self) = @_;
- my $opts = '-reg_conf '.$self->o('registry');
- return $opts;
-}
-
-sub pipeline_analyses {
-    my ($self) = @_;
- 
- 	# Control which pipelines to run
-   	my $pipeline_flow;
-    my $pipeline_flow_factory_waitfor;
-
-  	if ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj' , 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-        $pipeline_flow_factory_waitfor = ['GNProjSourceFactory', 'GDProjSourceFactory', 'GOProjSourceFactory'];
-        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj', 'backbone_fire_GOProj'];
-        } elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-        $pipeline_flow_factory_waitfor = ['GDProjSourceFactory', 'GOProjSourceFactory'];
-  	} elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneDescr')) {
-        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GDProj'];  
-        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GO')) {
-        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GOProj'];
-        } elsif ($self->o('flag_GeneNames') && $self->o('flag_GeneCoverage')) {
-        $pipeline_flow  = ['backbone_fire_GNProj', 'backbone_fire_GeneCoverage'];
-        $pipeline_flow_factory_waitfor = ['GNProjSourceFactory'];
-  	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GO')) {
-        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GOProj'];
-  	} elsif ($self->o('flag_GeneDescr') && $self->o('flag_GeneCoverage')) {
-        $pipeline_flow  = ['backbone_fire_GDProj', 'backbone_fire_GeneCoverage'];
-        $pipeline_flow_factory_waitfor = ['GDProjSourceFactory'];
-  	} elsif ($self->o('flag_GO') && $self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GOProj', 'backbone_fire_GeneCoverage'];
-	$pipeline_flow_factory_waitfor = ['GOProjSourceFactory'];
-  	} elsif ($self->o('flag_GeneNames')) {
-        $pipeline_flow  = ['backbone_fire_GNProj'];
-        } elsif ($self->o('flag_GeneDescr')) {
-        $pipeline_flow  = ['backbone_fire_GDProj'];
-        } elsif ($self->o('flag_GO')) {
-    	$pipeline_flow  = ['backbone_fire_GOProj'];
-  	} elsif ($self->o('flag_GeneCoverage')) {
-    	$pipeline_flow  = ['backbone_fire_GeneCoverage'];
-	}  	
- 
-    return [
-########################
-### DumpingCleaning
-
-    {  -logic_name      => 'DumpingCleaning',
-       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids     => [ {} ], # Needed to create jobs
-       -flow_into       => {                 '1->A' => ['DumpingCleaningSetup'],
-                                             'A->1' => ['backbone_fire_PostCompara'],
-                                          },
-       -meadow_type   => 'LOCAL',
-    },
-
-    { -logic_name     => 'DumpingCleaningSetup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpingCleaningSetup',
-      -parameters     => {
-                                                'g_config'  => $self->o('gn_config'),
-                                                'gd_config'  => $self->o('gd_config'),
-                                                'go_config'  => $self->o('go_config'),
-                                                'flag_GeneNames' => $self->o('flag_GeneNames'),
-                                                'flag_GeneDescr' => $self->o('flag_GeneDescr'),
-                                                'flag_GO'        => $self->o('flag_GO'),
-                                                'flag_delete_gene_names' => $self->o('flag_delete_gene_names'),
-                                                'flag_delete_gene_descriptions' => $self->o('flag_delete_gene_descriptions'),
-                                                'flag_delete_go_terms'        => $self->o('flag_delete_go_terms'),
-                                                'output_dir'  => $self->o('output_dir'),
-                                                'g_dump_tables' => $self->o('g_dump_tables'),
-                                                'go_dump_tables' => $self->o('go_dump_tables'),
-                                          },
-      -rc_name        => 'default',
-      -flow_into       => {
-                                             '2->A' => ['SpeciesFactory'],
-                                             'A->1' => ['Iterator'],
-                                          },
-    },
-    {
-      -logic_name      => 'Iterator',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into       => {                 '1' => ['DumpingCleaningSetup'],
-                                          },
-      -meadow_type   => 'LOCAL',
-    },
-    {  -logic_name      => 'SpeciesFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
-       -max_retry_count => 1,
-       -flow_into       => {
-                                             '2->A' => ['DumpTables'],
-                                             'A->2' => ['TblCleanup'],
-                                          },
-       -rc_name         => 'default',
-    },
-
-    {  -logic_name    => 'DumpTables',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -rc_name       => '2Gb_job',
-    },
-
-    { -logic_name     => 'TblCleanup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
-      -rc_name        => 'default',
-    },
-
-    {  -logic_name    => 'backbone_fire_PostCompara',
-       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -hive_capacity => -1,
-       -flow_into 	=> { 
-						 '1'=> $pipeline_flow,
-       				   },
-       
-    },   
-########################
-### GeneNamesProjection 
-    {  -logic_name    => 'backbone_fire_GNProj',
-       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -hive_capacity => -1,
-       -flow_into     => {
-                                                         '1' => ['GNProjSourceFactory'] ,
-                          },
-       -meadow_type   => 'LOCAL',
-    },
-
-    {  -logic_name    => 'GNProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
-       -parameters    => {
-							g_config  => $self->o('gn_config'),
-                          }, 
-       -flow_into     => {
-                               '2->A' => ['GNProjTargetFactory'],
-                               'A->1' => ['GNEmailReport'],
-                          },          
-    },  
-    
-    {  -logic_name      => 'GNProjTargetFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
-       -max_retry_count => 1,
-       -flow_into      => {
-                              2 => ['GNProjection']
-                          },
-       -rc_name         => 'default',
-    },
-
-    {  -logic_name    => 'GNProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
-       -parameters    => {
-						    'compara'                 => $self->o('division_name'),
-				   		    'release'                 => $self->o('ensembl_release'),
-				            'output_dir'              => $self->o('output_dir'),		
-				            'flag_store_projections'  => $self->o('flag_store_projections'),
-				            'taxonomy_db'			  => $self->o('taxonomy_db'),
-                                            'is_tree_compliant'       => $self->o('is_tree_compliant'),
-   	   					  },
-       -rc_name       => 'default',
-       -batch_size    =>  2, 
-       -analysis_capacity => $self->o('geneNameproj_capacity'),
-    },
-
-    {  -logic_name    => 'GNEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
-       -parameters    => {
-          	'email'      			 => $self->o('email'),
-          	'subject'    			 => $self->o('gn_subject'),
-          	'output_dir' 			 => $self->o('output_dir'),         	
-            'flag_store_projections' => $self->o('flag_store_projections'),
-            'flag_GeneNames'         => $self->o('flag_GeneNames'),
-       },
-       -flow_into     => {
-                                 1 => ['GNProjSourceFactory']
-       },
-       -meadow_type   => 'LOCAL',
-    },
-
-########################
-### GeneDescProjection       
-    {  -logic_name    => 'backbone_fire_GDProj',
-       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -hive_capacity => -1,
-       -flow_into     => {
-                             '1' => ['GDProjSourceFactory'] ,
-
-                          },
-       -meadow_type   => 'LOCAL',
-    },
-    
-    {  -logic_name    => 'GDProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
-       -parameters    => {
-							g_config  => $self->o('gd_config'),
-                          }, 
-       -flow_into     => {
-                              '2->A' => ['GDProjTargetFactory'],
-                              'A->1' => ['GDEmailReport'],
-                          },          
-    },
-    
-    {  -logic_name      => 'GDProjTargetFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
-       -max_retry_count => 1,
-       -flow_into      => {
-                               2 => ['GDProjection']
-                          },
-       -rc_name         => 'default',
-    },
-
-    {  -logic_name    => 'GDProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection',
-       -parameters    => {
-						    'compara'                 => $self->o('division_name'),
-				   		    'release'                 => $self->o('ensembl_release'),
-				            'output_dir'              => $self->o('output_dir'),		
-				            'flag_store_projections'  => $self->o('flag_store_projections'),
-				            'flag_filter'             => $self->o('flag_filter'),
-				            'taxonomy_db'			  => $self->o('taxonomy_db'),
-                                            'is_tree_compliant'       => $self->o('is_tree_compliant'),
-   	   					  },
-       -rc_name       => 'default',
-       -batch_size    =>  2, 
-       -analysis_capacity => $self->o('geneNameproj_capacity'),
-       -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],
-    },
-
-    {  -logic_name    => 'GDEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
-       -parameters    => {
-          	'email'      			 => $self->o('email'),
-          	'subject'    			 => $self->o('gd_subject'),
-          	'output_dir' 			 => $self->o('output_dir'),         	
-            'flag_store_projections' => $self->o('flag_store_projections'),
-            'flag_GeneDescr'         => $self->o('flag_GeneDescr'),
-       },
-       -flow_into     => {
-         1 => ['GDProjSourceFactory']
-       },
-       -meadow_type   => 'LOCAL',
-    },
-    
-################
-### GOProjection
-    {  -logic_name    => 'backbone_fire_GOProj',
-       -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -hive_capacity => -1,
-       -flow_into     => {
-							'1' => ['GOProjSourceFactory'] ,
-                          },
-       -meadow_type   => 'LOCAL',
-    },
-    
-    {  -logic_name    => 'GOProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory',
-       -parameters    => {
-							go_config  => $self->o('go_config'),
-                          }, 
-       -flow_into     => {
-                                   '2->A' => ['GOProjTargetFactory'],
-                                   'A->1' => ['GOEmailReport'],
-                          },          
-    },    
-   
-    {  -logic_name    => 'GOProjTargetFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
-       -max_retry_count => 1,
-       -flow_into     => {  
-		                    '2' =>  ['GOAnalysisSetupFactory'],
-       					  },
-       -rc_name       => 'default',
-    },
-
-    { -logic_name     => 'GOAnalysisSetupFactory',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::AnalysisSetupFactory',
-      -parameters     => {
-							required_analysis  => $self->o('required_analysis'),
-                          },
-      -flow_into      => {
-                      	 	'2->A' => ['GOAnalysisSetup'],
-                                'A->1' => ['GOProjection'],
-                          },
-      -rc_name        => 'default',
-    },
-
-    { -logic_name     => 'GOAnalysisSetup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
-      -max_retry_count => 0,
-      -parameters     => {
-                            db_backup_required => 0,
-                            delete_existing    => $self->o('delete_existing'),
-							linked_tables      => $self->o('linked_tables'),
-                            production_lookup  => $self->o('production_lookup'),
-                            production_db      => $self->o('production_db'),
-                          },
-      -rc_name        => 'default',
-    },
-
-    {  -logic_name    => 'GOProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection',
-       -parameters    => {
-						    'compara'                => $self->o('division_name'),
-				   		    'release'                => $self->o('ensembl_release'),
-				                    'output_dir'             => $self->o('output_dir'),
-				   		    'evidence_codes'		 => $self->o('evidence_codes'),
-				   		    'goa_webservice'         => $self->o('goa_webservice'),
-				   		    'goa_params'             => $self->o('goa_params'),
-                                                    'taxon_params'           => $self->o('taxon_params'),
-				                    'flag_store_projections' => $self->o('flag_store_projections'),
-				                    'flag_go_check'          => $self->o('flag_go_check'),
-				                    'flag_full_stats'        => $self->o('flag_full_stats'),
-                                                    'is_tree_compliant'       => $self->o('is_tree_compliant'),
-     	 				},
-       -batch_size    =>  1,
-       -rc_name       => 'default',
-       -analysis_capacity => $self->o('goProj_capacity'),
-	 },
-
-    {  -logic_name    => 'GOEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOEmailReport',
-       -parameters    => {
-          					'email'      			 => $self->o('email'),
-          					'subject'    			 => $self->o('go_subject'),
-				          	'output_dir' 			 => $self->o('output_dir'),
-				            'flag_store_projections' => $self->o('flag_store_projections'),				          	
-        				  },
-        -flow_into     => {
-                                  1 => ['GOProjSourceFactory']
-        },
-	-meadow_type    => 'LOCAL',
-    },
-
-################
-### GeneCoverage
-    {  -logic_name  => 'backbone_fire_GeneCoverage',
-       -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -flow_into   => {
-		                       '1->A' => ['GeneCoverageFactory'],
-		                       'A->1' => ['GeneCoverageEmailReport'],
-                          },
-       -hive_capacity => -1,
-       -meadow_type   => 'LOCAL',
-    },
-
-    {  -logic_name  => 'GeneCoverageFactory',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory',
-       -parameters  => {
-            			    division      => $self->o('gcov_division'),
-   	    		       },
-       -flow_into 	=> { 
-						 '2'=> [ 'GeneCoverage' ],
-      				   },
-	   -wait_for    =>  $pipeline_flow_factory_waitfor,
-       -rc_name     => 'default',
-    },
-
-    {  -logic_name  => 'GeneCoverage',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage',
-       -parameters  => {
-        			   'division'     => $self->o('gcov_division'),
-   	   				  },
-       -batch_size  => 100,
-       -rc_name     => 'default',
-       -analysis_capacity => $self->o('geneCoverage_capacity'),
-    },
-
-    {  -logic_name  => 'GeneCoverageEmailReport',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageEmailReport',
-       -parameters  => {
-          	'email'      => $self->o('email'),
-          	'subject'    => $self->o('gcov_subject'),
-          	'output_dir' => $self->o('output_dir'),
-		    'compara'    => $self->o('division_name'),
-       },
-       -meadow_type      => 'LOCAL',
-	},
-
-  ];
-}
 sub resource_classes {
     my $self = shift;
     return {
@@ -866,11 +500,10 @@ sub resource_classes {
       '24Gb_job'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
       '250Mb_job'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
       '500Mb_job'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
-          '1Gb_job'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
-          '2Gb_job'             => {'LSF' => '-q normal -M2000  -R"select[mem>2000]  rusage[mem=2000]"' },
-          '8Gb_job'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
-          '24Gb_job'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-          'urgent_hcluster' => {'LSF' => '-q yesterday' },
+      '1Gb_job'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
+      '8Gb_job'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
+      '24Gb_job'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+      'urgent_hcluster' => {'LSF' => '-q yesterday' },
     }
 }
 

@@ -1,3 +1,40 @@
+=head1 LICENSE
+
+Copyright [1999-2016] EMBL-European Bioinformatics Institute
+and Wellcome Trust Sanger Institute
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
+
+
+=pod
+
+=head1 NAME
+
+Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf
+
+=head1 DESCRIPTION
+
+Configuration for running the Post Compara pipeline, which
+run the Gene name, description and GO projections as well as Gene coverage.
+
+=head1 Author
+
+ckong
+
+=cut
+
 package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf;
 
 use strict;
@@ -392,11 +429,11 @@ sub pipeline_analyses {
 
     {  -logic_name    => 'DumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
+       -rc_name       => '2Gb_job',
     },
 
     { -logic_name     => 'TblCleanup',
       -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
-      -rc_name        => 'default',
     },
     {  -logic_name    => 'backbone_fire_PostCompara',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
