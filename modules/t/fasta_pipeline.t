@@ -22,7 +22,7 @@ use warnings;
 use Test::More;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Test::RunPipeline;
-use Bio::EnsEMBL::Test::TestUtils qw/ok_directory_contents/;
+use Bio::EnsEMBL::Test::TestUtils qw/ok_directory_contents compare_file_line is_file_line_count/;
 use Bio::EnsEMBL::ApiVersion;
 use File::Temp;
 
@@ -68,7 +68,6 @@ if(! @ARGV) {
     [[qw/fasta homo_sapiens dna/], [qw/
         CHECKSUMS README 
         Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
-        Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz
         Homo_sapiens.GRCh38.dna.chromosome.X.fa.gz
         Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
         Homo_sapiens.GRCh38.dna.toplevel.fa.gz
@@ -93,6 +92,20 @@ if(! @ARGV) {
     my $target_dir = File::Spec->catdir($dir, @{$sub_dirs});
     ok_directory_contents($target_dir, $files, "Checking that $target_dir has all required dump files");
   }
+
+  my $sub_dir = $dir . "/fasta/homo_sapiens/";
+  my $dna_file = File::Spec->catdir($sub_dir . "/dna/", 'Homo_sapiens.GRCh38.dna.chromosome.6.fa.gz');
+  compare_file_line($dna_file, 1, '>6 dna:chromosome chromosome:GRCh38:6:1:171115067:1 REF', "DNA header is consistent");
+  is_file_line_count($dna_file, 2851919, "Expect 2851919 lines in dna file");
+  my $ncrna_file = File::Spec->catdir($sub_dir . "/ncrna/", 'Homo_sapiens.GRCh38.ncrna.fa.gz');
+  compare_file_line($ncrna_file, 1, '>ENST00000364460.1 ncrna:known chromosome:GRCh38:6:29550026:29550109:1 gene:ENSG00000201330.1 gene_biotype:snoRNA transcript_biotype:snoRNA gene_symbol:SNORD32B description:small nucleolar RNA, C/D box 32B [Source:HGNC Symbol;Acc:32719]', "ncRNA header is consistent");
+  is_file_line_count($ncrna_file, 668, "Expect 668 lines in ncrna file");
+  my $pep_file = File::Spec->catdir($sub_dir . "/pep/", 'Homo_sapiens.GRCh38.pep.all.fa.gz');
+  compare_file_line($pep_file, 1, '>ENSP00000475351.1 pep:known chromosome:GRCh38:6:29385057:29386003:1 gene:ENSG00000251608.1 transcript:ENST00000514827.1 gene_biotype:polymorphic_pseudogene transcript_biotype:polymorphic_pseudogene gene_symbol:OR12D1P description:olfactory receptor, family 12, subfamily D, member 1 pseudogene [Source:HGNC Symbol;Acc:8177]', "pep header is consistent");
+  is_file_line_count($pep_file, 564, "Expect 564 lines in pep file");
+  my $cdna_file = File::Spec->catdir($sub_dir . "/cdna/", 'Homo_sapiens.GRCh38.cdna.all.fa.gz');
+  compare_file_line($cdna_file, 1, '>ENST00000514827.1 cdna:known chromosome:GRCh38:6:29385057:29386003:1 gene:ENSG00000251608.1 gene_biotype:polymorphic_pseudogene transcript_biotype:polymorphic_pseudogene gene_symbol:OR12D1P description:olfactory receptor, family 12, subfamily D, member 1 pseudogene [Source:HGNC Symbol;Acc:8177]', "cDNA header is consistent");
+  is_file_line_count($cdna_file, 4282, "Expect 4282 lines in cdna file");
 }
 
 done_testing();
