@@ -82,7 +82,7 @@ sub run {
     my $core_dba  = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     confess('Type error!') unless($core_dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 
-    my $chain_path = $self->data_path();
+    my $chain_path = $self->get_data_path('assembly_chain');
     my $prod_name  = $core_dba->get_MetaContainer->get_production_name();
     $prod_name   //= $core_dba->species();
     my $liftovers  = get_liftover_mappings($core_dba);
@@ -117,13 +117,6 @@ sub write_output {
 ############
 #SUBROUTINES
 ############
-sub data_path {
-  my ($self) = @_;
-  $self->throw("No 'species' parameter specified")
-  unless $self->param('species');
-
-return $self->get_dir('assembly_chain', $self->param('species'));
-}
 
 # Parse mapping keys like 
 # # chromosome:WBcel235#chromosome:WBcel215
