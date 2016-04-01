@@ -80,10 +80,11 @@ sub _write_tsv {
     my ($self) = @_;
 
     my $out_file  = $self->_generate_file_name();
+    my $header    = $self->_build_headers();   
+
     open my $fh, '>', $out_file or die "cannot open $out_file for writing!";
-    
-    my $header = "gene_stable_id\ttranscript_stable_id\tprotein_stable_id\txref\tdb_name\tinfo_type\tsource_identity\txref_identity\tlinkage_type\n";
-    print $fh $header;
+    print $fh join ("\t", @$header);
+    print $fh "\n";
 
     my $slices = $self->get_Slices($self->param('db_type'), 1);
     $self->info('Working with %s toplevel slices', scalar(@$slices));
@@ -130,6 +131,15 @@ sub _write_tsv {
   `gzip $unzip_out_file`;
 
 return;
+}
+
+sub _build_headers {
+    my ($self) = @_;
+
+    return [qw(
+      gene_stable_id transcript_stable_id protein_stable_id xref
+      db_name info_type source_identity xref_identity linkage_type
+  )];
 }
 
 sub _create_README {
