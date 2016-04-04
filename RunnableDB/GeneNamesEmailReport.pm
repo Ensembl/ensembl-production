@@ -104,7 +104,7 @@ sub write_output {
 
     my $projection_list = $self->param('projection_list');
 
-    if (keys $projection_list){
+    if (keys %{$projection_list}){
       1;
     }
     else
