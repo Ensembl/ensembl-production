@@ -460,7 +460,7 @@ sub pipeline_analyses {
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GNProjTargetFactory'],
-		                    'A->2' => ['GNEmailReport'],		                       
+		                    'A->1' => ['GNEmailReport'],
                           },          
     },    
     
