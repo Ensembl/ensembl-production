@@ -181,6 +181,7 @@ sub project_genenames {
     my $from_species     = $self->param('from_species');
     my $to_species       = $self->param('to_species');
     my $geneName_source  = $self->param('geneName_source');
+    my $compara          = $self->param('compara');
 
     # Decide if a gene name should be overwritten
     # Criteria: overwrite if:
@@ -221,8 +222,8 @@ sub project_genenames {
                $dbEntry->display_id($existing . $tuple_txt);
                $info_txt .= $tuple_txt;
              }
-      
-             if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+#if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+             if ($compara eq "Multi"){
              # Adding projection source information
              $dbEntry->info_type("PROJECTION");
              $dbEntry->info_text($info_txt);
