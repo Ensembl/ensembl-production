@@ -92,7 +92,7 @@ sub run {
         1;
       }
       else {
-        unless (system("set -o pipefail; $mysql_binary -h$host -P$port -u$user -p$pass $dbname $table | gzip -c -6 > $output_dir/$dbname.$table.sql.gz") == 0) {
+        unless (system("$mysql_binary -h$host -P$port -u$user -p$pass $dbname $table | gzip -c -6 > $output_dir/$dbname.$table.sql.gz") == 0) {
           $self->warning("Can't dump the original $table table from $dbname for backup because $!\n");
           exit 1;
        } else {
