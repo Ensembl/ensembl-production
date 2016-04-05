@@ -66,7 +66,12 @@ sub default_options {
         #  set to '1' to ensure GeneDescr starts after GeneNames completed
         flag_Dependency   => '1',     
 
-    
+    ## Flag controlling the way the projections will run
+        # If the parallel flag is on, all the projections will run at the same time
+        # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
+        # Default value is 1
+        parallel_GeneNames_projections => '0',
+        parallel_GO_projections       => '0',
     ## analysis_capacity values for some analyses:
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
@@ -97,7 +102,7 @@ sub default_options {
                                 'geneName_source'               =>['HGNC','HGNC_trans_name'],
 		  		# homology types filter
  				'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			        'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+			        'homology_types_allowed' => ['ortholog_one2one'],
 		                # homology percentage identity filter
                                 'percent_id_filter'      => '0',
 				'percent_cov_filter'     => '0',
@@ -118,7 +123,7 @@ sub default_options {
                                 'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                                'homology_types_allowed' => ['ortholog_one2one'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
@@ -139,7 +144,7 @@ sub default_options {
                                 'geneName_source'                => ['ZFIN_ID','ZFIN_ID_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
@@ -160,7 +165,7 @@ sub default_options {
                                 'geneName_source'                =>['HGNC','HGNC_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '0',
                                 'percent_cov_filter'     => '0',
@@ -189,7 +194,7 @@ sub default_options {
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
  				 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			     'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
+			     'homology_types_allowed' => ['ortholog_one2one'],
 		         # homology percentage identity filter 
         		 'percent_id_filter'      => '0', 
 				 'percent_cov_filter'     => '0',
@@ -215,7 +220,7 @@ sub default_options {
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                                 'homology_types_allowed' => ['ortholog_one2one'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
@@ -240,7 +245,7 @@ sub default_options {
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
@@ -265,7 +270,7 @@ sub default_options {
                                  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                                  # homology types filter
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                                 'homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one','ortholog_one2many','apparent_ortholog_one2many'],
+                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '0',
                                  'percent_cov_filter'     => '0',
@@ -314,7 +319,7 @@ sub default_options {
 	 			'run_all'     =>  0, # 1/0
 		  		# homology types filter
  				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			    'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
+			    'go_homology_types_allowed' => ['ortholog_one2one'],
 		        # homology percentage identity filter 
                             'go_percent_id_filter'      => '0',
 				# object type of GO annotation (source)
@@ -334,7 +339,7 @@ sub default_options {
                                 'run_all'     =>  0, # 1/0
                                 # homology types filter
                                 'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                            'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
                         'go_percent_id_filter'      => '0',
                                 # object type of GO annotation (source)
@@ -354,7 +359,7 @@ sub default_options {
                                 'run_all'     =>  0, # 1/0
                                 # homology types filter
               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                            'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
                         'go_percent_id_filter'      => '0',
                                 # object type of GO annotation (source)
@@ -374,7 +379,7 @@ sub default_options {
                                 'run_all'     =>  0, # 1/0
                                 # homology types filter
               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                            'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
                         'go_percent_id_filter'      => '0',
                                 # object type of GO annotation (source)
@@ -394,7 +399,7 @@ sub default_options {
                                 'run_all'     =>  0, # 1/0
                                 # homology types filter
                                 'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'],
+                            'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
                         'go_percent_id_filter'      => '0',
                                 # object type of GO annotation (source)
@@ -496,13 +501,13 @@ sub resource_classes {
     return {
       'default'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
       'mem'                     => {'LSF' => '-q normal -M1000 -R"select[mem>1000] rusage[mem=1000]"'},
-      '2Gb_job'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
-      '24Gb_job'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      '250Mb_job'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
-      '500Mb_job'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
-      '1Gb_job'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
-      '8Gb_job'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
-      '24Gb_job'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+      '2Gb_mem'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
+      '24Gb_mem'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
+      '250Mb_mem'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
+      '500Mb_mem'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
+      '1Gb_mem'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
+      '8Gb_mem'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
+      '24Gb_mem'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
       'urgent_hcluster' => {'LSF' => '-q yesterday' },
     }
 }

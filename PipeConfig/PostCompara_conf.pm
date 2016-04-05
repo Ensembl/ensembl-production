@@ -49,7 +49,6 @@ sub default_options {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
         
-		registry  	      => '',
 	    # division for GO & GeneName projection
 		division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_PostCompara_'.$self->o('ensembl_release'),
@@ -72,6 +71,14 @@ sub default_options {
         geneDescproj_capacity  =>  '20',
         goProj_capacity        =>  '20',
         geneCoverage_capacity  =>  '100',
+
+    ## Flag controlling the way the projections will run
+       # If the parallel flag is on, all the projections will run at the same time
+       # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
+       # Default value is 1
+
+        parallel_GeneNames_projections => '1',
+        parallel_GO_projections       => '1',
 
        ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
        ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
@@ -97,7 +104,7 @@ sub default_options {
 				'geneName_source' 		 => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
 		  		# homology types filter
  				'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			    'homology_types_allowed' => ['ortholog_one2one'], 
+			    'homology_types_allowed' => ['ortholog_one2one'],
 		        # homology percentage identity filter 
         		'percent_id_filter'      => '30', 
 				'percent_cov_filter'     => '66',
@@ -141,7 +148,7 @@ sub default_options {
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
  				 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			     'homology_types_allowed' => ['ortholog_one2one'], 
+			     'homology_types_allowed' => ['ortholog_one2one'],
 		         # homology percentage identity filter 
         		 'percent_id_filter'      => '30', 
 				 'percent_cov_filter'     => '66',
@@ -189,7 +196,7 @@ sub default_options {
 	 			'run_all'     =>  0, # 1/0
 		  		# homology types filter
  				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			    'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
+			    'go_homology_types_allowed' => ['ortholog_one2one'],
 		        # homology percentage identity filter 
         		'go_percent_id_filter'      => '10', 
 				# object type of GO annotation (source)
@@ -205,7 +212,7 @@ sub default_options {
 		  #	   'division'    => [],
 		  #	   'run_all'     =>  0,
  		  #	   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-		  #	   'go_homology_types_allowed' => ['ortholog_one2one','apparent_ortholog_one2one'], 
+		  #	   'go_homology_types_allowed' => ['ortholog_one2one'],
           #	   'go_percent_id_filter'      => '10', 
 		  #	   'ensemblObj_type'           => 'Translation', 
 		  #	   'ensemblObj_type_target'    => 'Translation',   
@@ -429,7 +436,7 @@ sub pipeline_analyses {
 
     {  -logic_name    => 'DumpTables',
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
-       -rc_name       => '2Gb_job',
+       -rc_name       => '2Gb_mem',
     },
 
     { -logic_name     => 'TblCleanup',
@@ -457,6 +464,7 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gn_config'),
+                                                        parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GNProjTargetFactory'],
@@ -518,6 +526,7 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gd_config'),
+                                                        parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GDProjTargetFactory'],
@@ -581,6 +590,7 @@ sub pipeline_analyses {
        -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory',
        -parameters    => {
 							go_config  => $self->o('go_config'),
+                                                        parallel_GO_projections => $self->o('parallel_GO_projections'),
                           }, 
        -flow_into     => {
 		                    '2->A' => ['GOProjTargetFactory'],
