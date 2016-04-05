@@ -20,8 +20,8 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFact
 
 =head1 DESCRIPTION
 
-This analysis take the GeneNames or GeneDescription projection hash in, if division is set, the pipeline will dataflow all the Gene Name or description projections.
-If division is not defined then the pipeline will dataflow each projections sequentially to avoid projecting dependant species at the same time.
+This analysis take the GeneNames or GeneDescription projection hash in, if parallel_GeneNames_projections is set, the pipeline will dataflow all the Gene Name or description projections.
+If parallel_GeneNames_projections is not defined then the pipeline will dataflow each projections sequentially to avoid projecting dependant species at the same time.
 
 =head1 AUTHOR
 
@@ -40,6 +40,7 @@ sub run {
     my $self = shift @_;
     my $projection_list = $self->param('projection_list');
     my $g_config = $self->param_required('g_config') || die "'g_config' is an obligatory parameter";
+    my $parallel_GeneNames_projections = $self->param('parallel_GeneNames_projections');
     my $final_projection_list;
 
     if ($projection_list)
@@ -85,12 +86,13 @@ sub run {
 		 'geneDesc_rules'	  => $geneDesc_rules,
 		 'geneDesc_rules_target'  => $geneDesc_rules_target
 		},2);
-                # If division is defined, we do not need to run the projection sequentially
-          if (@{$division}){
+                # If parallel_GeneNames_projections is defined, we run all the projections at the same time in parallel
+          if ($parallel_GeneNames_projections){
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
                                  'source'                 => $source},1);
           }
+          # else, we run the projections sequentially, one set of projection at the time
           else{
           # Making sure that the projection hash is not empty
           if (keys $final_projection_list){

@@ -21,8 +21,8 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory;
 =head1 DESCRIPTION
 
 
-This analysis take the GO projection hash in, if division is set, the pipeline will dataflow all the GO projections.
-If division is not defined then the pipeline will dataflow each projections sequentially to avoid projecting dependant species at the same time.
+This analysis take the GO projection hash in, if parallel_GO_projections is set, the pipeline will dataflow all the GO projections.
+If parallel_GO_projections is not defined then the pipeline will dataflow each projections sequentially to avoid projecting dependant species at the same time.
 
 =head1 AUTHOR
 
@@ -41,6 +41,7 @@ sub run {
 
     my $go_config = $self->param_required('go_config') || die "'go_config' is an obligatory parameter";
     my $projection_list = $self->param('projection_list');
+    my $parallel_GO_projections = $self->param('parallel_GO_projections');
     my $final_projection_list;
 
     if ($projection_list)
@@ -79,12 +80,13 @@ sub run {
 		 'ensemblObj_type'        => $ensemblObj_type,
 		 'ensemblObj_type_target' => $ensemblObj_type_target 
 		},2); 
-        # If division is defined, we do not need to run the projection sequentially 
-        if (@{$division}){
+        # If parallel_GO_projections is defined, we run all the projections at the same time in parallel
+        if ($parallel_GO_projections){
           $self->dataflow_output_id({'projection_list'    => {},
                                  'species'                => $species,
                                  'source'                 => $source},1);
         }
+        # else, we run the projections sequentially, one set of projection at the time
         else{
           # Making sure that the projection hash is not empty
           if (keys $final_projection_list){
