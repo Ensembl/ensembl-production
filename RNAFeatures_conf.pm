@@ -510,14 +510,15 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name        => 'SummaryPlots',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
-                              cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
-                            },
-      -meadow_type       => 'LOCAL',
+      -logic_name           => 'SummaryPlots',
+      -module               => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -failed_job_tolerance => 100,
+      -max_retry_count      => 1,
+      -parameters           => {
+                                 scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
+                                 cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
+                               },
+      -meadow_type          => 'LOCAL',
     },
 
     {
@@ -543,8 +544,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000]" -R "span[hosts=1]"'},
-    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000]" -R "span[hosts=1]"'},
+    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000], span[hosts=1]"'},
+    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000], span[hosts=1]"'},
   }
 }
 
