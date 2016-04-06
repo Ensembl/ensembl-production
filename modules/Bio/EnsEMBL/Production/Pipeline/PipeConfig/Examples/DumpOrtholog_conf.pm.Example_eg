@@ -119,7 +119,7 @@ sub default_options {
   				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	},   
 
-          'EM_1' => { 'compara'  => 'metazoa',   
+          'EM_2' => { 'compara'  => 'metazoa',   
  				   	  'source'   => 'drosophila_melanogaster', 
 					  'target'   => undef,
                    	  'exclude'  => undef, 
