@@ -79,9 +79,8 @@ sub run {
     $interpro_cmd .= qq($interproscan_exe $options $input_option $output_option);
     
     if (! -e $outfile_xml) {
-      $self->dbc and $self->dbc->disconnect_when_inactive(1);
+      $self->dbc and $self->dbc->disconnect_if_idle();
       system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
-      $self->dbc and $self->dbc->disconnect_when_inactive(0);
     }
   }
   
