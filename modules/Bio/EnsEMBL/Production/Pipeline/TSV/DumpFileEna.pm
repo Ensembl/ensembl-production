@@ -192,10 +192,10 @@ sub _get_cds {
 return $cds2acc;
 }
 
-sub find_contig {
+sub _find_contig {
     my ( $self, $ta, $contig_ids, $transcript_id ) = @_;
 
-    $self->logger()->debug( "Finding missing contig for " . $transcript_id );
+    $self->info( "Finding missing contig for " . $transcript_id );
     my $transcript        = $ta->fetch_by_stable_id($transcript_id);
     my $transcript_contig = $transcript->transform('seqlevel');
 
@@ -203,7 +203,7 @@ sub find_contig {
 	my $contig_name = $transcript_contig->slice()->seq_region_name();
 
 	if ( exists $contig_ids->{$contig_name} ) {
-	  $self->logger()->debug("Found contig " . $contig_name . " for " . $transcript_id );
+	  $self->info("Found contig " . $contig_name . " for " . $transcript_id );
 	  return $contig_name;
 	}
     }
