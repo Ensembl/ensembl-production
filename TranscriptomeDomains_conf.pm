@@ -29,7 +29,7 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'transcriptome_domains_'.$self->o('ensembl_release'),
+    pipeline_name => 'transcriptome_domains',
     
     transcriptome_file => [],
     
