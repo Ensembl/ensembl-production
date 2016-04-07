@@ -112,6 +112,10 @@ sub production_dba {
     my %production_db = %{$self->param('production_db')};
     $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%production_db);
   }
+  if (!defined $dba) {
+    my %production_db = %{$self->param('prod_db')};
+    $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%production_db);
+  }
   confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 	
   return $dba;
