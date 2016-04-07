@@ -82,21 +82,18 @@ sub run {
   my $line_width        = $self->param('line_width');
   my $allow_stop_codons = $self->param('allow_stop_codons');
   
-  # Use the ensembl_production database
-  # to retrieve the biotypes associated to the coding group
+  # Use the ensembl_production database to retrieve the biotypes
+  # associated with the coding group, if possible.
   my $biotypes;
   my $biotype_groups = ['coding'];
-  # work out what biotypes correspond to $transcript_type
   my $pdba = $self->get_DBAdaptor('production');
 
-  unless(defined $pdba){
-    my %prod_db = %{$self->param_required('prod_db')};
-    $pdba       = Bio::EnsEMBL::Production::DBSQL::DBAdaptor->new(%prod_db);
+  if (defined $pdba) {
+    my $biotype_manager = $pdba->get_biotype_manager();
+    map { push @{$biotypes}, @{ $biotype_manager->group_members($_)} } @{$biotype_groups};
+  } else {
+    push @{$biotypes}, 'protein_coding';
   }
-
-  my $biotype_manager = $pdba->get_biotype_manager();
-
-  map { push @{$biotypes}, @{ $biotype_manager->group_members($_)} } @{$biotype_groups};
 
   open(my $fh, '>', $proteome_file) or $self->throw("Cannot open file $proteome_file: $!");
   my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
