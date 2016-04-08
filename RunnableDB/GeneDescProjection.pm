@@ -188,6 +188,7 @@ sub project_genedesc {
     my $geneName_source        = $self->param('geneName_source');
     my $geneDesc_rules         = $self->param('geneDesc_rules');
     my $geneDesc_rules_target  = $self->param('geneDesc_rules_target');
+    my $compara                = $self->param('compara');
 
     my $gene_desc      = $from_gene->description();
     my $gene_desc_trgt = $to_gene->description(); 
@@ -211,9 +212,11 @@ sub project_genedesc {
         # This is to avoid projecting things that are not part of the allowed gene name source
         my $from_gene_dbname = $from_gene->display_xref->dbname();
         if (grep (/$from_gene_dbname/, @$geneName_source)) {
-          if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+          # For e! species, project source description
+          if ($compara eq "Multi"){
             my $gene_desc=$from_gene->description();
           }
+          # For EG species, create a new description
           else {
             my $species_text = ucfirst($from_species);
             $species_text    =~ s/_/ /g;
