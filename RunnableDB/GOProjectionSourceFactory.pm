@@ -94,6 +94,12 @@ sub run {
                                  'species'                => $species,
                                  'source'                 => $source},1);
           }
+          # If we only run one set of projection then behave like parallel projections
+          else{
+            $self->dataflow_output_id({'projection_list'    => {},
+                                 'species'                => $species,
+                                 'source'                 => $source},1);
+          }
           last;
         }
       }
