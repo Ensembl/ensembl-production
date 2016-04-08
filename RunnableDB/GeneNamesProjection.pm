@@ -222,7 +222,7 @@ sub project_genenames {
                $dbEntry->display_id($existing . $tuple_txt);
                $info_txt .= $tuple_txt;
              }
-#if ($from_gene_dbname =~ /MGI/ || $from_gene_dbname =~ /HGNC/ || $from_gene_dbname =~ /ZFIN_ID/) {
+             # For the Ensembl species, logic for Gene and Transcript
              if ($compara eq "Multi"){
              # Adding projection source information
              $dbEntry->info_type("PROJECTION");
@@ -287,9 +287,10 @@ sub project_genenames {
               $to_transcriptAdaptor->update($transcript);
             }
             }
+            # For EG species
             else {
+              $dbEntry->info_type("PROJECTION");
               $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
-              $dbEntry->info_text($info_txt);
 
               $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
               $to_gene->display_xref($dbEntry);
