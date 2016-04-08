@@ -213,8 +213,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '8Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000], span[hosts=1]"'},
-    '16Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 16000 -n 10 -R "rusage[mem=16000,tmp=4000], span[hosts=1]"'},
+    '8Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000] span[hosts=1]"'},
+    '16Gb_mem_10_cores' => {'LSF' => '-q production-rh6 -M 16000 -n 10 -R "rusage[mem=16000,tmp=4000] span[hosts=1]"'},
   }
 }
 

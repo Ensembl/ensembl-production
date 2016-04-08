@@ -544,8 +544,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000], span[hosts=1]"'},
-    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000], span[hosts=1]"'},
+    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000] span[hosts=1]"'},
+    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000] span[hosts=1]"'},
   }
 }
 
