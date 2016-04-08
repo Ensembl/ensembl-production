@@ -43,7 +43,6 @@ sub fetch_input {
     my $flag_GeneNames         = $self->param('flag_GeneNames');
     my $flag_GeneDescr         = $self->param('flag_GeneDescr');
     my $species                = $self->param_required('species');
-
     my $reports;
 
     foreach my $sp (@$species){
@@ -85,7 +84,7 @@ return $self->format_table($title, $columns, $results);
 sub geneDesc_summary {
     my ($self, $dbh, $sp) = @_;
 
-    my $sql = 'SELECT count(*) from gene where status="KNOWN_BY_PROJECTION" and description is not null';
+    my $sql = 'SELECT count(*) FROM gene LEFT JOIN xref ON display_xref_id = xref_id LEFT JOIN external_db USING(external_db_id) WHERE xref.info_type = "PROJECTION" and gene.description is not null';
 
     my $sth = $dbh->prepare($sql);
     $sth->execute();
