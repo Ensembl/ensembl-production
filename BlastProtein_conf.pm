@@ -58,7 +58,7 @@ sub default_options {
     # Parameters for dumping and splitting Fasta query files.
     max_seq_length          => 10000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
-    max_seqs_per_file       => undef,
+    max_seqs_per_file       => 500,
     max_files_per_directory => 100,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
@@ -122,8 +122,10 @@ sub default_options {
     blastp   => 1,
     blastx   => 1,
     
-    # For blastx results, filter so that only best hit per seq_region gets saved.
-    unique_hits => 1,
+    # Filter so that only best X hits get saved.
+    filter_top_x => 1,
+    blastp_top_x => 1,
+    blastx_top_x => 10,
     
     # Generate a GFF file for loading into, e.g., WebApollo
     create_gff    => 0,
@@ -535,7 +537,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastPFactory'],
-                            'A->1' => ['UniqueBlastPHits'],
+                            'A->1' => ['FilterBlastPHits'],
                           },
     },
 
@@ -550,7 +552,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastXFactory'],
-                            'A->1' => ['UniqueBlastXHits'],
+                            'A->1' => ['FilterBlastXHits'],
                           },
     },
 
@@ -727,26 +729,28 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'UniqueBlastPHits',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::UniqueHits',
+      -logic_name      => 'FilterBlastPHits',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
                             db_type     => 'core',
-                            unique_hits => $self->o('unique_hits'),
-                            logic_name  => '#logic_name_prefix#_blastx',
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastp_top_x => $self->o('blastp_top_x'),
+                            logic_name  => '#logic_name_prefix#_blastp',
                           },
       -rc_name         => 'normal',
     },
 
     {
-      -logic_name      => 'UniqueBlastXHits',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::UniqueHits',
+      -logic_name      => 'FilterBlastXHits',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
                             db_type     => 'otherfeatures',
-                            unique_hits => $self->o('unique_hits'),
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastx_top_x => $self->o('blastx_top_x'),
                             logic_name  => '#logic_name_prefix#_blastx',
                             create_gff  => $self->o('create_gff'),
                           },
@@ -771,8 +775,22 @@ sub pipeline_analyses {
                               out_file_stem     => '#logic_name_prefix#_blastx.gff3',
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['GFF3Validate'],
+      -flow_into         => ['GFF3Tidy'],
     },
+
+    {
+      -logic_name        => 'GFF3Tidy',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -analysis_capacity => 10,
+      -can_be_empty      => 1,
+      -batch_size        => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['GFF3Validate'],
+    }
 
     {
       -logic_name        => 'GFF3Validate',
@@ -782,9 +800,8 @@ sub pipeline_analyses {
       -batch_size        => 10,
       -max_retry_count   => 0,
       -parameters        => {
-                              cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted; '.
-                                      'mv #out_file#.sorted #out_file#; '.
-                                      $self->o('gff3_validate').' #out_file#',
+                              cmd => 'mv #out_file#.sorted #out_file#; '.
+                                     $self->o('gff3_validate').' #out_file#',
                             },
       -rc_name           => 'normal',
     }
@@ -799,9 +816,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
-    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
-    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
+    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
+    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
   }
 }
 
