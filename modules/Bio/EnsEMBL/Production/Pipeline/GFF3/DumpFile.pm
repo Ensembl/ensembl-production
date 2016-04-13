@@ -104,12 +104,13 @@ sub run {
   my $tmp_alt_out_file = $alt_out_file . "_tmp";
 
   my (@chroms, @scaff, @alt);
+  my $chromosome_name = $self->get_chromosome_name();
 
   foreach my $slice (@$slices) {
     if ($slice->is_reference) {
       if ($slice->is_chromosome) {
         if ($per_chromosome) {
-          my $slice_name = '.chromosome.' . $slice->seq_region_name;
+          my $slice_name = $chromosome_name . $slice->seq_region_name;
           my $chr_file = $out_file;
           $chr_file =~ s/\.gff3/$slice_name\.gff3/;
           $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
