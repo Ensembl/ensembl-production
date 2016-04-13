@@ -65,8 +65,9 @@ sub default_options {
     max_hive_capacity => 100,
     
     # Source for proteomes can be one of: 'file', 'database', 'uniprot'
-    proteome_source   => 'file',
-    logic_name_prefix => $self->o('proteome_source'),
+    proteome_source    => 'file',
+    logic_name_prefix  => $self->o('proteome_source'),
+    source_label       => 'Protein alignments',
     
     # This parameter should only be specified if proteome_source = 'file'
     db_fasta_file => undef,
@@ -137,6 +138,10 @@ sub default_options {
     [
       {
         'logic_name'    => 'blastp',
+        'display_label' => $self->o('source_label'),
+        'description'   => 'Peptide sequences aligned to the proteome with <em>blastp</em>.',
+        'displayable'   => 1,
+        'web_data'      => '{"type" => "protein"}',
         'db'            => $self->o('proteome_source'),
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
@@ -148,6 +153,10 @@ sub default_options {
       
       {                 
         'logic_name'    => 'blastx',
+        'display_label' => $self->o('source_label'),
+        'description'   => 'Peptide sequences aligned to the genome with <em>blastx</em>.',
+        'displayable'   => 1,
+        'web_data'      => '{"type" => "protein"}',
         'db'            => $self->o('proteome_source'),
         'program'       => 'blastx',
         'program_file'  => $self->o('blastx_exe'),
@@ -165,7 +174,7 @@ sub default_options {
 
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.
-    production_lookup => 0,
+    production_lookup => 1,
 
   };
 }
@@ -479,9 +488,12 @@ sub pipeline_analyses {
       -max_retry_count => 0,
       -batch_size      => 10,
       -parameters      => {
-                            analyses => $self->o('analyses'),
-                            blastp   => $self->o('blastp'),
-                            blastx   => $self->o('blastx'),
+                            analyses     => $self->o('analyses'),
+                            blastp       => $self->o('blastp'),
+                            blastx       => $self->o('blastx'),
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastp_top_x => $self->o('blastp_top_x'),
+                            blastx_top_x => $self->o('blastx_top_x'),
                           },
       -rc_name         => 'normal',
       -flow_into       => {
@@ -756,55 +768,67 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal',
       -flow_into       => {
-                            '2' => ['GFF3Dump'],
+                            '2->A' => ['GFF3Dump'],
+                            'A->2' => ['JSONDescription'],
                           },
     },
 
     {
-      -logic_name        => 'GFF3Dump',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
-      -analysis_capacity => 10,
-      -can_be_empty      => 1,
-      -max_retry_count   => 1,
-      -parameters        => {
-                              db_type           => 'otherfeatures',
-                              feature_type      => ['ProteinAlignFeature'],
-                              include_scaffold  => 0,
-                              remove_separators => 1,
-                              results_dir       => $self->o('pipeline_dir'),
-                              out_file_stem     => '#logic_name_prefix#_blastx.gff3',
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => ['GFF3Tidy'],
+      -logic_name      => 'GFF3Dump',
+      -module          => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
+      -can_be_empty    => 1,
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type           => 'otherfeatures',
+                            feature_type      => ['ProteinAlignFeature'],
+                            include_scaffold  => 0,
+                            remove_separators => 1,
+                            results_dir       => $self->o('pipeline_dir'),
+                            out_file_stem     => '#logic_name_prefix#_blastx.gff3',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['GFF3Tidy'],
     },
 
     {
-      -logic_name        => 'GFF3Tidy',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -analysis_capacity => 10,
-      -can_be_empty      => 1,
-      -batch_size        => 10,
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => ['GFF3Validate'],
-    }
+      -logic_name      => 'GFF3Tidy',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['GFF3Validate'],
+    },
 
     {
-      -logic_name        => 'GFF3Validate',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -analysis_capacity => 10,
-      -can_be_empty      => 1,
-      -batch_size        => 10,
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => 'mv #out_file#.sorted #out_file#; '.
-                                     $self->o('gff3_validate').' #out_file#',
-                            },
-      -rc_name           => 'normal',
-    }
+      -logic_name      => 'GFF3Validate',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            cmd => 'mv #out_file#.sorted #out_file#; '.
+                                   $self->o('gff3_validate').' #out_file#',
+                          },
+      -rc_name         => 'normal',
+    },
+
+    {
+      -logic_name      => 'JSONDescription',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::JSONDescription',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            db_type     => 'otherfeatures',
+                            logic_name  => '#logic_name_prefix#_blastx',
+                            results_dir => $self->o('pipeline_dir'),
+                          },
+      -rc_name         => 'normal',
+    },
 
   ];
 }
