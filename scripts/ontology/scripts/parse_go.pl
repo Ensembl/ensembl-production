@@ -55,7 +55,6 @@ my $t_adaptor;
 my %adaptor_hash;
 my %dbe_adaptor_hash;
 my %t_adaptor_hash;
-my $translation;
 my $translations;
 my %translation_hash;
 my %species_missed;
@@ -151,6 +150,7 @@ while (my $line = <GPAD> ) {
   # If GOA provide a tgt_protein, this is the direct mapping to Ensembl feature
   # This becomes our object for the new xref
   } elsif (defined $tgt_protein) {
+    my $translation;
     if ($translation_hash{$tgt_protein}) {
       $translation = $translation_hash{$tgt_protein};
     } else {
@@ -168,11 +168,15 @@ while (my $line = <GPAD> ) {
   } elsif (defined $tgt_transcript) {
     my @tgt_transcripts = split(",", $tgt_transcript);
     foreach my $transcript (@tgt_transcripts) {
+      my $translation;
       if ($translation_hash{$transcript}) {
         $translation = $translation_hash{$transcript};
       } else {
         my $translation_transcript = $t_adaptor->fetch_by_stable_id($transcript);
-        $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript);
+        if (defined $translation_transcript) {
+          $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript);
+          $translation_hash{$transcript} = $translation;
+        }
       }
       if (defined $translation) {
         $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1, $uniprot_xrefs->[0]);
