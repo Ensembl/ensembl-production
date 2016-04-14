@@ -47,11 +47,11 @@ sub default_options {
     # from ENA; it _could_ use data from both sources, but you're liable
     # to get in a muddle if you do that, so it's not recommended.
     seq_file         => [],
-    seq_file_species => {},
+    seq_file_pair    => [],
+    run              => [],
     study            => [],
-    study_species    => {},
-    taxids           => {},
-    merge_level      => 'sample',
+    merge_level      => 'run',
+    tax_id_restrict  => 1,
     
     # RNA-seq options
     ini_type      => 'rnaseq_align',
@@ -338,17 +338,17 @@ sub alignment_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               seq_file         => $self->o('seq_file'),
-                              seq_file_species => $self->o('seq_file_species'),
+                              seq_file_pair    => $self->o('seq_file_pair'),
+                              run              => $self->o('run'),
                               study            => $self->o('study'),
-                              study_species    => $self->o('study_species'),
-                              taxids           => $self->o('taxids'),
                               merge_level      => $self->o('merge_level'),
                               data_type        => $self->o('data_type'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
                               '3' => ['SplitSeqFile'],
-                              '4' => ['SRASeqFile'],
+                              '4' => ['PairSeqFile'],
+                              '5' => ['SRASeqFile'],
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -376,13 +376,26 @@ sub alignment_analyses {
     },
 
     {
+      -logic_name        => 'PairSeqFile',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -can_be_empty      => 1,
+      -parameters        => {},
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '1->A' => ['AlignSequence'],
+                              'A->1' => ['MergeBam'],
+                            },
+    },
+
+    {
       -logic_name        => 'SRASeqFile',
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SRASeqFile',
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
-                              work_directory => catdir($dir, '#species#'),
-                              merge_level    => $self->o('merge_level'),
+                              work_directory  => catdir($dir, '#species#'),
+                              merge_level     => $self->o('merge_level'),
+                              tax_id_restrict => $self->o('tax_id_restrict'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
@@ -477,8 +490,8 @@ sub alignment_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               work_directory => catdir($dir, '#species#'),
+                              run            => $self->o('run'),
                               study          => $self->o('study'),
-                              study_species  => $self->o('study_species'),
                               merge_level    => $self->o('merge_level'),
                               ini_type       => $self->o('ini_type'),
                               bigwig         => $self->o('bigwig'),
@@ -507,12 +520,8 @@ sub modify_analyses {
 
 sub resource_classes {
   my ($self) = @_;
- 
-  # Dirty: because the value is not yet substituted here, we can't just add 1
-  # So here I used an expression to be evaluated by bash during the command-line execution
-  # Not sure if there is a better way around the substitution...
-  my $threads = '$( expr ' . $self->o('threads') . ' + 1 )';
   
+  my $threads                   = $self->o('threads');
   my $aligner                   = $self->o('aligner');
   my $index_memory_default      = $self->o('index_memory_default');
   my $index_memory_high_default = $self->o('index_memory_high_default');
@@ -526,11 +535,11 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'index_default' => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000]"'},
-    'index_himem'   => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000]"'},
-    'align_default' => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000]"'},
-    'align_himem'   => {'LSF' => '-q production-rh6 -n '. $threads .' -R "span[hosts=1]" -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000]"'},
-  };
+    'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000] span[hosts=1]"'},
+    'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000] span[hosts=1]"'},
+    'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000] span[hosts=1]"'},
+    'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000] span[hosts=1]"'},
+  }
 }
 
 1;
