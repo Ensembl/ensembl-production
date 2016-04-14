@@ -1117,8 +1117,8 @@ http://www.ebi.ac.uk/biomart/ for more information.
 README
 
   my ( $self, $data_type ) = @_;
-  my $base_path = $self->fasta_path();
-  my $path      = File::Spec->catfile( $base_path, $data_type, 'README' );
+  my $base_path = $self->fasta_path($data_type);
+  my $path      = File::Spec->catfile( $base_path, 'README' );
   my $accession = $self->assembly_accession();
   my $txt       = $text{$data_type};
   throw "Cannot find README text for type $data_type" unless $txt;
