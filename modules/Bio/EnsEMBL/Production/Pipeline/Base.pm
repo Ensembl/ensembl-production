@@ -155,11 +155,13 @@ sub get_dir {
        my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
 
        if($mc->is_multispecies()==1){
-          my $collection_db;
+         my $collection_db;
          $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+         my $fasta_type    = pop(@extras) if($extras[0] eq 'fasta');
          my $species       = pop(@extras);
          push @extras, $collection_db;
          push @extras, $species;
+         push @extras, $fasta_type if(defined $fasta_type);
          $dir = File::Spec->catdir($base_dir, @extras);
        }
     }
