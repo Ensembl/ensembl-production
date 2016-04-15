@@ -98,7 +98,6 @@ sub default_options {
         wublast_exe => 'xdformat',
         ncbiblast_exe => 'makeblastdb',
         blat_exe => 'faToTwoBit',
-        port_offset => 30000,
         
         email => $self->o('ENV', 'USER').'@sanger.ac.uk',
     };
@@ -252,21 +251,6 @@ sub pipeline_analyses {
           port_offset => $self->o('port_offset'), 
           program => $self->o('blat_exe'),
           'index' => 'dna',
-          skip => $self->o('skip_blat'),
-          index_masked_files => $self->o('skip_blat_masking'),
-        },
-        -can_be_empty => 1,
-        -hive_capacity => 5,
-        -rc_name => 'indexing',
-      },
-      
-      {
-        -logic_name => 'BlatSmDNAIndex',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::BlatIndexer',
-        -parameters => {
-          port_offset => $self->o('port_offset'), 
-          program => $self->o('blat_exe'),
-          'index' => 'dna_sm',
           skip => $self->o('skip_blat'),
           index_masked_files => $self->o('skip_blat_masking'),
         },
