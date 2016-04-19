@@ -56,6 +56,14 @@ sub index_file {
   system($cmd) == 0 || throw "Cannot execute $cmd";
 }
 
+sub index_exists {
+  my ($self, $file) = @_;
+  
+  my $exists = -e "$file.sa" ? 1 : 0;
+  
+  return $exists;
+}
+
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
   

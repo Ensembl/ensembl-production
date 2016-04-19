@@ -29,6 +29,7 @@ sub param_defaults {
     'samtools_dir' => '/nfs/panda/ensemblgenomes/external/samtools',
     'threads'      => 4,
     'memory_mode'  => 'default',
+    'overwrite'    => 1,
   };
 }
 
@@ -55,26 +56,34 @@ sub fetch_input {
     -threads      => $threads,
     -memory_mode  => $memory_mode,
   );
-  $self->param('aligner_object',$aligner_object);
+  $self->param('aligner_object', $aligner_object);
 }
 
 sub run {
   my ($self) = @_;
   my $genome_file = $self->param_required('genome_file');
   my $memory_mode = $self->param_required('memory_mode');
+  my $overwrite   = $self->param_required('overwrite');
   
-  if ($memory_mode eq 'default' && defined $self->param('escape_branch')) {
-    my $sequence_count = qx/cat $genome_file | grep -c ">"/;
-    chomp($sequence_count);
-    
-    if ($sequence_count > 50000) {
-      $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
-      $self->input_job->autoflow(0);
-      $self->complete_early("Too many sequences ($sequence_count) for default memory settings, retrying with a higher limit.");
+  my $index_exists = $self->param('aligner_object')->index_exists($genome_file);
+  
+  if ($overwrite || ! $index_exists) {
+    if ($memory_mode eq 'default' && defined $self->param('escape_branch')) {
+      my $sequence_count = qx/cat $genome_file | grep -c ">"/;
+      chomp($sequence_count);
+      
+      if ($sequence_count > 50000) {
+        $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
+        $self->input_job->autoflow(0);
+        $self->complete_early("Too many sequences ($sequence_count) for default memory settings, retrying with a higher limit.");
+      }
     }
+    
+    $self->param('aligner_object')->index_file($genome_file);
+    
+  } else {
+    $self->warning("Index for file '$genome_file' already exists, and won't be overwritten.");
   }
-  
-  $self->param('aligner_object')->index_file($genome_file);
 }
 
 1;

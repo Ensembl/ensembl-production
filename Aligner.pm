@@ -49,6 +49,10 @@ sub index_file {
 	throw "index_file unimplemented";
 }
 
+sub index_exists {
+	throw "index_exists unimplemented";
+}
+
 sub align {
 	throw "align unimplemented";
 }
