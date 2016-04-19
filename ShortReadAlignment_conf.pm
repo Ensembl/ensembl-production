@@ -21,14 +21,16 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::ShortReadAlignment_conf;
 use strict;
 use warnings;
 
-use Bio::EnsEMBL::Hive::Version 2.3;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use File::Spec::Functions qw(catdir);
 
 # To-do list:
 # Work out how to stop STAR from filtering short reads in EST-mode.
 # For STAR report its statistics rather than the less meaningful BAM stats.
-# Allow runs to be specified instead of studies
 
 sub default_options {
   my ($self) = @_;
@@ -42,6 +44,10 @@ sub default_options {
     division => [],
     run_all => 0,
     meta_filters => {},
+
+    # Calculating genome indexes is time-consuming, so it may be useful
+    # to store them separately (semi-permanently).
+    index_dir => catdir($self->o('pipeline_dir'), 'index'),
 
     # This pipeline can align data from one or more files, or direct
     # from ENA; it _could_ use data from both sources, but you're liable
@@ -169,7 +175,18 @@ sub pipeline_create_commands {
   return [
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.catdir($self->o('pipeline_dir'), $self->o('aligner')),
+    'mkdir -p '.catdir($self->o('results_dir'), $self->o('aligner')),
+    $self->db_cmd("CREATE TABLE merge_bam (merge_id varchar(255) NOT NULL, bam_file varchar(255) NOT NULL)"),
   ];
+}
+
+sub pipeline_wide_parameters {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    'bigwig' => $self->o('bigwig'),
+  };
 }
 
 sub pipeline_analyses {
@@ -219,7 +236,9 @@ sub alignment_analyses {
       $self->o('read_type')
     );
   
-  my $dir = catdir($self->o('pipeline_dir'), $self->o('aligner'));
+  my $pipeline_dir = catdir($self->o('pipeline_dir'), $self->o('aligner'));
+  my $results_dir  = catdir($self->o('results_dir'), $self->o('aligner'));
+  my $index_dir    = catdir($self->o('index_dir'), $self->o('aligner'));
   
   return
   [
@@ -250,29 +269,18 @@ sub alignment_analyses {
       -batch_size        => 2,
       -max_retry_count   => 1,
       -parameters        => {
-                              genome_dir         => catdir($dir, '#species#'),
+                              genome_dir         => catdir($index_dir, '#species#'),
                               repeat_masking     => $self->o('repeat_masking'),
                               repeat_logic_names => $self->o('repeat_logic_names'),
                               min_slice_length   => $self->o('min_slice_length'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['BigWigFlowControl'],
-    },
-
-    {
-      -logic_name        => 'BigWigFlowControl',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FlowControl',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              control_value => $self->o('bigwig'),
-                              control_flow  => { '0' => '1', '1' => '2', },
-                            },
-      -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => ['IndexGenome'],
-                              '2' => ['SequenceLengths'],
+                              '1' => WHEN('#bigwig#' =>
+                                       ['SequenceLengths'],
+                                     ELSE
+                                       ['IndexGenome']),
                             },
-      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -302,6 +310,7 @@ sub alignment_analyses {
                               samtools_dir  => $self->o('samtools_dir'),
                               threads       => $self->o('threads'),
                               memory_mode   => 'default',
+                              overwrite     => 0,
                               escape_branch => -1,
                             },
       -rc_name           => 'index_default',
@@ -309,7 +318,6 @@ sub alignment_analyses {
                               '-1' => ['IndexGenome_HighMem'],
                                '1' => ['SequenceFactory'],
                             },
-      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -337,53 +345,46 @@ sub alignment_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SequenceFactory',
       -max_retry_count   => 1,
       -parameters        => {
-                              seq_file         => $self->o('seq_file'),
-                              seq_file_pair    => $self->o('seq_file_pair'),
-                              run              => $self->o('run'),
-                              study            => $self->o('study'),
-                              merge_level      => $self->o('merge_level'),
-                              data_type        => $self->o('data_type'),
+                              seq_file        => $self->o('seq_file'),
+                              seq_file_pair   => $self->o('seq_file_pair'),
+                              run             => $self->o('run'),
+                              study           => $self->o('study'),
+                              merge_level     => $self->o('merge_level'),
+                              tax_id_restrict => $self->o('tax_id_restrict'),
+                              data_type       => $self->o('data_type'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '3' => ['SplitSeqFile'],
-                              '4' => ['PairSeqFile'],
-                              '5' => ['SRASeqFile'],
-                            },
-      -meadow_type       => 'LOCAL',
-    },
-
-    {
-      -logic_name        => 'SplitSeqFile',
-      -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SplitSeqFile',
-      -analysis_capacity => 5,
-      -batch_size        => 4,
-      -can_be_empty      => 1,
-      -max_retry_count   => 1,
-      -parameters        => {
-                              max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-                              max_seqs_per_file       => $self->o('max_seqs_per_file'),
-                              max_files_per_directory => $self->o('max_files_per_directory'),
-                              max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                              out_dir                 => catdir($dir, '#species#', 'seqs'),
-                              delete_existing_files   => 0,
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => {
-                              '2->A' => ['AlignSequence'],
+                              '2->A' => ['SeqFile'],
+                              '3->B' => ['PairedSeqFile'],
+                              '4->C' => ['SRASeqFile'],
+                              '5->D' => ['SplitSeqFile'],
                               'A->1' => ['MergeBam'],
+                              'B->1' => ['MergeBam'],
+                              'C->1' => ['MergeBam'],
+                              'D->1' => ['MergeBam'],
                             },
     },
 
     {
-      -logic_name        => 'PairSeqFile',
+      -logic_name        => 'SeqFile',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -can_be_empty      => 1,
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '1->A' => ['AlignSequence'],
-                              'A->1' => ['MergeBam'],
+                              '1' => ['AlignSequence'],
+                            },
+    },
+
+    {
+      -logic_name        => 'PairedSeqFile',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -can_be_empty      => 1,
+      -parameters        => {},
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '1' => ['AlignSequence'],
                             },
     },
 
@@ -393,14 +394,33 @@ sub alignment_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
-                              work_directory  => catdir($dir, '#species#'),
-                              merge_level     => $self->o('merge_level'),
-                              tax_id_restrict => $self->o('tax_id_restrict'),
+                              work_dir => catdir($pipeline_dir, '#species#'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2->A' => ['AlignSequence'],
-                              'A->1' => ['MergeBam'],
+                              '2' => ['AlignSequence'],
+                            },
+    },
+
+    {
+      -logic_name        => 'SplitSeqFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+      -analysis_capacity => 5,
+      -batch_size        => 4,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                              max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                              max_files_per_directory => $self->o('max_files_per_directory'),
+                              max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                              out_dir                 => catdir($pipeline_dir, '#species#', 'seqs'),
+                              delete_existing_files   => 0,
+                              file_varname            => 'seq_file_1',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => ['AlignSequence'],
                             },
     },
 
@@ -421,9 +441,7 @@ sub alignment_analyses {
       -rc_name           => 'align_default',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
-                               '1' => {
-                                        ':////accu?merge_ids={bam_file}' => {'merge_ids' => '#merge_id#'},
-                                      },
+                               '1' => [ ':////merge_bam' ],
                             },
     },
 
@@ -443,9 +461,7 @@ sub alignment_analyses {
                             },
       -rc_name           => 'align_himem',
       -flow_into         => {
-                               '1' => {
-                                        ':////accu?merge_ids={bam_file}' => {'merge_ids' => '#merge_id#'},
-                                      },
+                               '1' => [ ':////merge_bam' ],
                             },
     },
 
@@ -454,18 +470,18 @@ sub alignment_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::MergeBam',
       -max_retry_count   => 1,
       -parameters        => {
-                              merge_ids      => '#merge_ids#',
-                              work_directory => catdir($dir, '#species#'),
-                              samtools_dir   => $self->o('samtools_dir'),
-                              vcf            => $self->o('vcf'),
-                              use_csi        => $self->o('use_csi'),
-                              clean_up       => $self->o('clean_up'),
-                              bigwig         => $self->o('bigwig'),
+                              results_dir  => catdir($results_dir, '#species#'),
+                              samtools_dir => $self->o('samtools_dir'),
+                              vcf          => $self->o('vcf'),
+                              use_csi      => $self->o('use_csi'),
+                              clean_up     => $self->o('clean_up'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '3' => ['WriteIniFile'],
-                              '4' => ['CreateBigWig'],
+                              '1' => WHEN('#bigwig#' =>
+                                       ['WriteIniFile'],
+                                     ELSE
+                                       ['CreateBigWig']),
                             },
     },
 
@@ -489,12 +505,9 @@ sub alignment_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::WriteIniFile',
       -max_retry_count   => 1,
       -parameters        => {
-                              work_directory => catdir($dir, '#species#'),
-                              run            => $self->o('run'),
-                              study          => $self->o('study'),
-                              merge_level    => $self->o('merge_level'),
-                              ini_type       => $self->o('ini_type'),
-                              bigwig         => $self->o('bigwig'),
+                              results_dir => catdir($results_dir, '#species#'),
+                              merge_level => $self->o('merge_level'),
+                              ini_type    => $self->o('ini_type'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
