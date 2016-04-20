@@ -106,8 +106,9 @@ sub fetch_input {
     }
   }
   else {
-    $self->throw(
-               'You must supply one of: -species, -division, -run_all');
+    $self->warning("Supply one of: -species, -division, -run_all OR you can seed jobs later");
+    #$self->throw(
+    #           'You must supply one of: -species, -division, -run_all');
   }
 
   if ( scalar(@antispecies) ) {
