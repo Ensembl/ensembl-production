@@ -20,6 +20,7 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
+ This modules split a single fasta file into multiple chunks
 
 =head1 MAINTAINER/AUTHOR
 
@@ -30,7 +31,6 @@ package Bio::EnsEMBL::Production::Pipeline::InterProScan::FastaSplit;
 
 use strict;
 use warnings;
-#use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 use Bio::SeqIO;
 use File::Basename qw(dirname fileparse);
 use File::Path qw(make_path remove_tree);
