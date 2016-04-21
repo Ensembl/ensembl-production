@@ -55,38 +55,6 @@ sub post_cleanup {
 return;
 } 
 
-sub hive_dbh {
-    my $self = shift;
-    my $dbh  = $self->hive_dbc->db_handle();
-    confess('Type error!') unless($dbh->isa('DBI::db'));
-
-return $dbh;
-}
-
-sub hive_dbc {
-    my $self = shift;
-    my $dbc  = $self->dbc();  
-    confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
-
-return $dbc;
-}
-
-sub core_dbh {
-    my $self = shift;
-    my $dbh  = $self->core_dbc->db_handle();
-    confess('Type error!') unless($dbh->isa('DBI::db'));
-
-return $dbh;
-}
-
-sub core_dbc {
-    my $self = shift;
-    my $dbc  = $self->core_dba()->dbc();	
-    confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
-
-return $dbc;
-}
-
 sub core_dba {	
     my $self    = shift;
     my $species = $self->param('species')  || die "'species' is an obligatory parameter";	
