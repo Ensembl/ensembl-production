@@ -44,6 +44,7 @@ sub default_options {
 	   ## General parameters
        'registry'      => $self->o('registry'),   
        'release'       => $self->o('release'),
+       'eg_version'    => $self->o('release'),
        'pipeline_name' => $self->o('hive_db'),       
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),     
@@ -162,7 +163,7 @@ sub beekeeper_extra_cmdline_options {
 sub pipeline_wide_parameters {  
     my ($self) = @_;
     return {
-            %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
+            %{$self->SUPER::pipeline_wide_parameters},  # here we inherit anything from the base class
 		    'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
             'base_path'     => $self->o('ftp_dir'),
             'release'       => $self->o('release'),
@@ -171,7 +172,7 @@ sub pipeline_wide_parameters {
 
             # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm 
             # needs to be change , maybe removing the need to eg flag
-            'eg_version'    => $self->o('release'),
+            'eg_version'    => $self->o('eg_version'),
             'sub_dir'       => $self->o('ftp_dir'),
                         
     };
@@ -358,7 +359,7 @@ sub pipeline_analyses {
 
 	 { -logic_name     => 'job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
-       -parameters     => {
+      -parameters     => {
 						     check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
