@@ -255,8 +255,7 @@ sub pipeline_analyses {
         -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
         -parameters    => { cmd => 'mkdir -p ' . $self->o('ftpdir_vep'), },
         -input_ids      => [{}],
-        #-flow_into     => { '1' => [ $vep_div ne 'bacteria' ? 'copy_tmp_to_ftp' : 'copy_tmp_to_ftp_bacteria'] },
-        -flow_into     => { '1' => [ 'copy_tmp_to_ftp'] },
+        -flow_into     => { '1' => [ $self->o('vep_div') ne 'bacteria' ? 'copy_tmp_to_ftp' : 'copy_tmp_to_ftp_bacteria'] },
         -hive_capacity => -1,
         -meadow_type   => 'LOCAL',
       },
@@ -282,6 +281,16 @@ sub pipeline_analyses {
 		 -wait_for      => ['dump_vep', 'convert_fasta'],				
       },    
 
+      { -logic_name    => 'copy_tmp_to_ftp_bacteria',
+	    -module        => 'Bio::EnsEMBL::Production::Pipeline::VEP::CopyTmpFtpDir',
+        -parameters    => {
+                    		 tempdir_vep => $self->o('tempdir_vep'),
+                    		 ftpdir_vep  => $self->o('ftpdir_vep'),                   		     
+               		       },
+         -hive_capacity => -1,
+		 -wait_for      => ['dump_vep', 'convert_fasta'],				
+      },           
+
       { -logic_name     => 'dump_vep',
         -module         => 'Bio::EnsEMBL::Variation::Pipeline::DumpVEP::DumpVEP',
         -parameters     => {
@@ -295,17 +304,7 @@ sub pipeline_analyses {
 		-priority       => 1,
 	    -hive_capacity  => 50, 
   	    -rc_name        => '32GB',
-      },
-      
-#       { -logic_name    => 'copy_tmp_to_ftp_bacteria',
-#	     -module        => 'EGExt::FTP::RunnableDB::CopyTmpFtpDir',
-#         -parameters    => {
-#                    		 temp_vep_file_dir => $self->o('temp_vep_file_dir'),
-#                    		 ftp_vep_file_dir  => $self->o('ftp_vep_file_dir'),
-#               		       },
-#         -hive_capacity => -1,
-#		 -wait_for      => ['dump_vep', 'convert_fasta'],				
-#      },           
+      },     
 
     ];
 }
