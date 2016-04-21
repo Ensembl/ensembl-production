@@ -20,6 +20,7 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
+
 =head1 MAINTAINER/AUTHOR
 
  ckong@ebi.ac.uk
@@ -91,6 +92,7 @@ return;
 
     See http://www.ebi.ac.uk/seqdb/confluence/display/EnsGen/Run+InterProScan+pipeline#RunInterProScanpipeline-Renamingofanalysisnames
     for details.
+
 =cut
 sub rename_analysis_from_i5_to_eg_nomenclature {
     my $self        = shift;
@@ -138,6 +140,7 @@ return $parsed_line;
 =head insert_xref
 
   Insert into 'xref' table   
+
 =cut
 sub insert_xref {
     my $self  = shift;
@@ -173,6 +176,7 @@ sub insert_xref {
 =head xref_exists
  
   Check if an interpro xref exists  
+
 =cut
 sub xref_exists {
     my $self           = shift;
@@ -192,6 +196,7 @@ return @$array_ref>0;
 
   Fetches the external_db_id for the external database name given. Will 
   confess, if there is not exactly one.
+
 =cut
 sub fetch_external_db_id {
     my $self             = shift;
@@ -264,6 +269,7 @@ return $protein_feature;
 =head parse_interproscan_line
   
   Parse a line of the InterProScan tab separated value output to a hash.
+
 =cut
 sub parse_interproscan_line {
     my $self = shift;
@@ -376,6 +382,7 @@ return $converted;
 
   This method removes the named undef values and replaces them with proper 
   undef values.
+
 =cut
 sub set_undefined_values {
     my $self   = shift;
@@ -399,6 +406,7 @@ return;
 =head validate_parsed_line
 
   Insert any by line checks of the tsv file in here.
+
 =cut
 sub validate_parsed_line {
     my $self   = shift;
@@ -436,6 +444,7 @@ return;
 =head line_is_forgiveable_error
 
    A bug in InterProScan beta, should never happen now
+
 =cut
 sub line_is_forgiveable_error {
     my $self         = shift;
@@ -457,6 +466,7 @@ return;
 =head get_location
 
   Get protein match's location types 
+
 =cut
 sub get_location {
     my $self    = shift;
@@ -481,6 +491,7 @@ return $loc;
 =head get_go_string
 
   Get go annotation 
+
 =cut
 sub get_go_string {
     my $self         = shift;
@@ -509,6 +520,7 @@ return $go_str;
 =head get_pathway_string
 
   Get pathway annotation 
+    
 =cut
 sub get_pathway_string {
     my $self          = shift;
@@ -532,6 +544,7 @@ return $pathway_str;
 =head print_tsv 
 
   Printing xml parsing to tsv format 
+
 =cut
 sub print_tsv {
     my $self  = shift;
@@ -551,6 +564,7 @@ return 0;
 =head store_domain
 
   Storing protein feature 
+
 =cut
 sub store_domain {
     my $self        = shift;
@@ -567,6 +581,7 @@ sub store_domain {
 =head store_interpro_and_xref
 
   Storing protein interpro xref
+
 =cut
 sub store_interpro_and_xref {
     my $self  = shift;
@@ -617,6 +632,7 @@ sub store_interpro_and_xref {
 =head store_pathway_xref
 
   Storing protein pathway xref
+
 =cut
 sub store_pathway_xref {
     my $self  = shift;
