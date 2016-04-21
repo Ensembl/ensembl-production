@@ -84,8 +84,6 @@ sub run {
     my $interpro_cmd  = qq($interproscan_exe $extra_options $input_option $output_option);
  
     #$self->dbc->disconnect_when_inactive(1);
-
-print "CMD\n$interpro_cmd\n";
  
     $self->run_cmd(
       $interpro_cmd, 
