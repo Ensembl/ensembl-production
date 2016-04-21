@@ -43,8 +43,7 @@ given, or can be set as undefined (production_lookup=0).
 
 =head1 MAINTAINER/AUTHOR
 
- jallen@ebi.ac.uk
- ckong@ebi.ac.uk
+ jallen@ebi.ac.uk, ckong@ebi.ac.uk
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::InterProScan::AnalysisSetup;
