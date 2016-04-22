@@ -404,7 +404,12 @@ sub pipeline_analyses {
       -input_ids       => [ {} ],
       -max_retry_count => 1,
       -rc_name         => 'default',
-      -flow_into       => { '2' => ['backup_tables', 'load_InterPro_xrefs', 'analysis_setup_factory', 'cleanup_prot_feat'], },
+      -flow_into       => { 
+                            '2->A' => ['analysis_setup_factory'],
+                            'A->2' => ['cleanup_prot_feat'],
+                               '2' => ['backup_tables', 'load_InterPro_xrefs'], 
+                            #'2' => ['backup_tables', 'load_InterPro_xrefs', 'analysis_setup_factory', 'cleanup_prot_feat'], 
+                          },
     },
 
     { -logic_name      => 'backup_tables',
