@@ -23,7 +23,6 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-use File::Basename;
 use File::Spec::Functions qw(catdir);
 use Path::Tiny qw(path);
 
@@ -34,9 +33,9 @@ sub run {
   my $outfile_xml    = $self->param_required('outfile_xml');
   my $outfile_tsv    = $self->param_required('outfile_tsv');
   
-  my $basename = fileparse($fasta_file);
-  my $xml_file  = catdir($results_dir, "$basename.xml");
-  my $tsv_file  = catdir($results_dir, "$basename.tsv");
+  my $basename = path($fasta_file)->basename('.fa','.fasta');
+  my $xml_file  = catdir($results_dir, "$basename.interpro.xml");
+  my $tsv_file  = catdir($results_dir, "$basename.interpro.tsv");
   
   $self->merge_xml($xml_file, $outfile_xml);
   $self->merge_tsv($tsv_file, $outfile_tsv);

@@ -36,8 +36,8 @@ sub param_defaults {
 
 sub run {
   my ($self) = @_;
-  my $xml_file        = $self->param_required('xml_file');
-  my $tsv_file        = $self->param_required('tsv_file');
+  my $xml_file = $self->param_required('xml_file');
+  my $tsv_file = $self->param_required('tsv_file');
   
   (my $solr_file = $tsv_file) =~ s/(tsv)$/solr/;
   $self->param('solr_file', $solr_file);
@@ -185,7 +185,7 @@ sub write_solr {
     push @annotation, "  \"InterPro_ID_ss\": { \"set\" : [ $interpro_ids ] },";
     push @annotation, "  \"InterPro_ID_ss_urls\": { \"set\" : [ $interpro_urls ] },";
     push @annotation, "  \"GO_terms_txt\": { \"set\" : [ $go_terms ] },";
-    push @annotation, "  \"pathways_txt\": { \"set\" : [ $pathways ] },";
+    push @annotation, "  \"pathways_txt\": { \"set\" : [ $pathways ] }";
     push @annotation, ' }';
     
     my $annotation = join("\n", @annotation);
