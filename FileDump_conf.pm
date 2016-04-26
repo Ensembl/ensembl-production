@@ -115,16 +115,21 @@ sub default_options {
     # Need to refer to last release's checksums, to see what has changed.
     checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums',
 
-    # For generating scp commands to get the necessary files to ND
-    nd_login => $self->o('ENV', 'USER').'@www.vectorbase.org',
+    # To get the download files to ND we need to generate a CSV file for
+    # bulk creation of the Drupal nodes, and two sets of shell commands for
+    # transferring data, one to be run at EBI, one at ND.
+    drupal_file      => $self->o('results_dir').'.csv',
+    manual_file      => $self->o('results_dir').'.txt',
+    sh_ebi_file      => $self->o('results_dir').'.ebi.sh',
+    sh_nd_file       => $self->o('results_dir').'.nd.sh',
+    staging_dir      => 'sites/default/files/ftp/staging',
+    nd_login         => $self->o('ENV', 'USER').'@www.vectorbase.org',
+    nd_downloads_dir => '/data/sites/drupal-pre/downloads',
+    nd_staging_dir   => '/data/sites/drupal-pre/staging',
+    release_date     => undef,
 
     # For the Drupal nodes, each file type has a standard description.
     # The module that creates the file substitutes values for the text in caps.
-    drupal_file  => $self->o('results_dir').'.csv',
-    copy_file    => $self->o('results_dir').'.sh',
-    staging_dir  => 'sites/default/files/ftp/staging',
-    release_date => undef,
-
     drupal_desc => {
       'fasta_toplevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly, softmasked using RepeatMasker, Dust, and TRF.',
       'fasta_seqlevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly.',
@@ -226,10 +231,14 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
       -max_retry_count   => 1,
       -parameters        => {
-                              nd_login              => $self->o('nd_login'),
                               drupal_file           => $self->o('drupal_file'),
-                              copy_file             => $self->o('copy_file'),
+                              manual_file           => $self->o('manual_file'),
+                              sh_ebi_file           => $self->o('sh_ebi_file'),
+                              sh_nd_file            => $self->o('sh_nd_file'),
                               staging_dir           => $self->o('staging_dir'),
+                              nd_login              => $self->o('nd_login'),
+                              nd_downloads_dir      => $self->o('nd_downloads_dir'),
+                              nd_staging_dir        => $self->o('nd_staging_dir'),
                               release_date          => $self->o('release_date'),
                               drupal_desc           => $self->o('drupal_desc'),
                               drupal_desc_exception => $self->o('drupal_desc_exception'),
