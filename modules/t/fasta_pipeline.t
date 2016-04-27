@@ -60,7 +60,7 @@ my $release = Bio::EnsEMBL::ApiVersion->software_version();
 
 if(! @ARGV) {
   my @expected_files = (
-    [[qw/blat dna/], ['30001.Homo_sapiens.GRCh38.2bit']],
+    [[qw/blat dna/], ['Homo_sapiens.GRCh38.2bit']],
     [[qw/fasta homo_sapiens cdna/], [qw/
         CHECKSUMS README
         Homo_sapiens.GRCh38.cdna.all.fa.gz

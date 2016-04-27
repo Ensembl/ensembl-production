@@ -248,7 +248,6 @@ sub pipeline_analyses {
         -logic_name => 'BlatDNAIndex',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::BlatIndexer',
         -parameters => {
-          port_offset => $self->o('port_offset'), 
           program => $self->o('blat_exe'),
           'index' => 'dna',
           skip => $self->o('skip_blat'),
