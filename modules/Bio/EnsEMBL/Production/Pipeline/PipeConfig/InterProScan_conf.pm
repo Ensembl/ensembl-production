@@ -395,7 +395,6 @@ sub pipeline_analyses {
     { -logic_name      => 'job_factory',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -parameters      => {
-                    # Comment out the parameters , to support jobs seeding
                             species     => $self->o('species'),
                             antispecies => $self->o('antispecies'),
                             division    => $self->o('division'),
@@ -408,7 +407,6 @@ sub pipeline_analyses {
                             '2->A' => ['analysis_setup_factory'],
                             'A->2' => ['cleanup_prot_feat'],
                                '2' => ['backup_tables', 'load_InterPro_xrefs'], 
-                            #'2' => ['backup_tables', 'load_InterPro_xrefs', 'analysis_setup_factory', 'cleanup_prot_feat'], 
                           },
     },
 
@@ -440,7 +438,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name      => 'analysis_setup',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::COMMON::AnalysisSetup',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -hive_capacity   => 50,
       -batch_size      => 20,
       -max_retry_count => 0,
@@ -490,7 +488,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name 	   => 'dump_proteome',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::COMMON::DumpProteome',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
       -parameters 	   => {
                        		proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                        		header_style => 'dbID',
@@ -502,7 +500,7 @@ sub pipeline_analyses {
 
     ## start: Seg Analysis 
     { -logic_name 	   => 'split_fasta',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::COMMON::FastaSplit',    
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',    
       -parameters 	   => {
                        		fasta_file              => '#proteome_file#',
                        		max_seqs_per_file       => $self->o('max_seqs_per_file'),
@@ -549,7 +547,7 @@ sub pipeline_analyses {
 
     ## start: InterproScan Analysis 
     { -logic_name      => 'split_md5_fasta',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::COMMON::FastaSplit',    
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',    
       -parameters      => {
                             fasta_file              => '#checksum_file#',
                        		max_seqs_per_file       => $self->o('max_seqs_per_file'),
@@ -562,7 +560,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name 	   => 'split_no_md5_fasta',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::COMMON::FastaSplit',    
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',    
       -parameters 	   => {
                        		fasta_file              => '#nochecksum_file#',
                        		max_seqs_per_file       => $self->o('max_seqs_per_file'),
