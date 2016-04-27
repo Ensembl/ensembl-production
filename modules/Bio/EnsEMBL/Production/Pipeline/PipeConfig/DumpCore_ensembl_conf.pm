@@ -44,20 +44,21 @@ sub default_options {
 
        ## Indexing parameters
        'skip_blat'              => 0,
-       'skip_wublast'           => 1,
        'skip_ncbiblast'         => 0,
        'skip_blat_masking'      => 1,
-       'skip_wublast_masking'   => 1,
        'skip_ncbiblast_masking' => 0,
 
-       'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
-        # Produce databases for BLAST in XDF (eXtended Database Format) from
-        # one or more input files in FASTA format;
-       'wublast_exe'   => $self->o('exe_dir').'wublast/xdformat', 
+#'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
+       'gt_exe'       => '/software/ensembl/central/bin/gt',
         # create BLAST databases, version 2.2.27+
-       'ncbiblast_exe' => $self->o('exe_dir').'ncbi-blast/makeblastdb', 
+#'ncbiblast_exe' => $self->o('exe_dir').'ncbi-blast/makeblastdb',
+       'ncbiblast_exe' => 'makeblastdb',
         # convert DNA from fasta to 2bit format
-       'blat_exe' => $self->o('exe_dir').'faToTwoBit',
+#'blat_exe' => $self->o('exe_dir').'faToTwoBit',
+       'blat_exe' => 'faToTwoBit',
+       # Set to '0' to skip intentions checking during dataflow of jobs
+       # default => ON (1)
+       'check_intentions' => 1,
 	};
 }
 
@@ -74,18 +75,17 @@ sub pipeline_analyses {
        @$super_analyses,
 
        ### INDEXING
-      { -logic_name => 'index_wublastDNA',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::WuBlastIndexer',
+      { -logic_name => 'index_BlatDNAIndex',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::BlatIndexer',
         -parameters => {
-                            molecule           => 'dna', 
-                            type               => 'genomic', 
-                            program            => $self->o('wublast_exe'), 
-                            skip               => $self->o('skip_wublast'),
-                            index_masked_files => $self->o('skip_wublast_masking'),
-                        },
-        -hive_capacity => 10,
-        -can_be_empty  => 1,
-        -rc_name 	   => 'default',     
+          program => $self->o('blat_exe'),
+          'index' => 'dna',
+          skip => $self->o('skip_blat'),
+          index_masked_files => $self->o('skip_blat_masking'),
+        },
+        -can_be_empty => 1,
+        -hive_capacity => 5,
+        -rc_name => 'default',
       },
 
       { -logic_name => 'index_ncbiblastDNA',
@@ -134,12 +134,19 @@ sub tweak_analyses {
     my $analyses_by_name = shift;
 
     ## Extend this section to redefine portion some analysis
-    $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA index_wublastDNA primary_assembly/] };   
+    $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/] };
     $analyses_by_name->{'dump_fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
-    #$analyses_by_name->{'job_factory'}->{'-parameters'}{'division'} = 'TESTING2';
-    #$analyses_by_name->{'job_factory'}->{'-module'} = 'Bio::EnsEMBL::Hive::RunnableDB::Dummy';
-    #$analyses_by_name->{'mcoffee'}->{'-rc_name'} = '8Gb_job';
-    #$analyses_by_name->{'mcoffee'}->{'-parameters'}{'cmd_max_runtime'} = 82800;
+}
+
+sub resource_classes {
+    my $self = shift;
+    return {
+      'default'                 => {'LSF' => '-q normal -M3500 -R"select[mem>3500] rusage[mem=3500]"'},
+      '32GB'        => {'LSF' => '-q normal -M32000 -R"select[mem>32000] rusage[mem=32000]"' },
+      '64GB'        => {'LSF' => '-q normal -M64000 -R"select[mem>64000] rusage[mem=64000]"' },
+      '128GB'        => {'LSF' => '-q normal -M128000 -R"select[mem>128000] rusage[mem=128000]"' },
+      '256GB'        => {'LSF' => '-q normal -M256000 -R"select[mem>256000] rusage[mem=256000]"' },
+    }
 }
 
 1;
