@@ -86,8 +86,11 @@ sub run {
   # associated with the coding group, if possible.
   my $biotypes;
   my $biotype_groups = ['coding'];
-  my $pdba = $self->get_DBAdaptor('production');
-
+  my $pdba;
+  # Check if the production database is in the registry
+  eval{
+    $pdba = $self->get_DBAdaptor('production');
+  };
   if (defined $pdba) {
     my $biotype_manager = $pdba->get_biotype_manager();
     map { push @{$biotypes}, @{ $biotype_manager->group_members($_)} } @{$biotype_groups};
