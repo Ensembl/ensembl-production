@@ -92,7 +92,11 @@ sub run {
     # associated with the coding group, if possible.
     my $biotypes;
     my $biotype_groups = ['coding'];
-    my $pdba = $self->get_DBAdaptor('production');
+    my $pdba;
+    # Check if the production database is in the config file
+    eval{
+      $pdba = $self->get_DBAdaptor('production');
+    };
 
     if (defined $pdba) {
       my $biotype_manager = $pdba->get_biotype_manager();
