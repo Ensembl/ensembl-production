@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::COMMON::DumpProteome;
+ Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome;
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ limitations under the License.
  jallen@ebi.ac.uk, ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::COMMON::DumpProteome;
+package Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome;
 
 use strict;
 use warnings;

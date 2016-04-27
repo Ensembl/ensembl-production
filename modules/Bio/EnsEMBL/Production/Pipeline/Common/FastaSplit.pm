@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::COMMON::FastaSplit;
+ Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit;
 
 =head1 DESCRIPTION
 
@@ -27,7 +27,7 @@ limitations under the License.
  jallen@ebi.ac.uk, ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::COMMON::FastaSplit; 
+package Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit; 
 
 use strict;
 use warnings;

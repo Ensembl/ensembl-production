@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::InterProScan::COMMON::AnalysisSetup;
+ Bio::EnsEMBL::Production::Pipeline::InterProScan::Common::AnalysisSetup;
 
 =head1 DESCRIPTION
 
@@ -46,7 +46,7 @@ given, or can be set as undefined (production_lookup=0).
  jallen@ebi.ac.uk, ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::COMMON::AnalysisSetup;
+package Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup;
 
 use strict;
 use warnings;
