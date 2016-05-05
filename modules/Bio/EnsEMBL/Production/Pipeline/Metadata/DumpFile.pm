@@ -40,15 +40,10 @@ names and their size, sorted in karyotype order.
 =back
 
 The script is responsible for creating the filenames of these target
-files, taking data from the database and the formatting of the FASTA
-headers. It is also responsible for the creation of README files pertaining
-to the type of dumps produced. The final files are all Gzipped at normal
-levels of compression.
+files, taking data from the database and the formatting of metadata files.
 
-B<N.B.> This code will remove any files already found in the target directory
-on its first run as it assumes all data will be dumped in the one process. It
-is selective of its directory meaning a rerun of DNA dumps will not cause
-the protein/cdna files to be removed.
+Currently the only metadata file created is a list of karyotypes of an species,
+if it exists along with the chromosome size.
 
 Allowed parameters are:
 
@@ -60,9 +55,6 @@ Allowed parameters are:
 
 =item base_path - The base of the dumps
 
-=item overwrite_files - If the same file name is generated we will overwrite 
-                        the into that file rather than appending
-
 =back
 
 =cut
@@ -71,6 +63,8 @@ package Bio::EnsEMBL::Production::Pipeline::Metadata::DumpFile;
 
 use strict;
 use warnings;
+
+use base qw(Bio::EnsEMBL::Production::Pipeline::Metadata::Base);
 
 use File::Spec;
 use File::stat;
@@ -83,7 +77,6 @@ sub param_defaults {
   my ($self) = @_;
   return {
     #user configurable
-    overwrite_files => 0,
     
   };
 }
@@ -92,7 +85,6 @@ sub fetch_input {
   my ($self) = @_;
  
   my $eg = $self->param('eg');
-  $self->param('eg', $eg);
 
   if($eg){
      my $base_path  = $self->build_base_directory();
@@ -102,15 +94,14 @@ sub fetch_input {
      $self->param('release', $release);
   }
 
+  # Ensure the needed parameters have been given
   my $base_path     = $self->param('base_path');
   my $species       = $self->param('species');
   my $release       = $self->param('release');  
 
   throw "Need a species" unless $species;
   throw "Need a release" unless $release;
-  throw "Need a base_path" unless $base_path;
-
-  
+  throw "Need a base_path" unless $base_path;  
 
   return;
 }
@@ -120,40 +111,46 @@ sub run {
 
   my $species = $self->param('species');
 
-  my $dba = $self->get_DBAdaptor($species, 'core', 'slice');
+  # Try to fetch a slice adaptor for the species, sanity checking before we begin
+  my $dba = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
   if(! $dba) {
-      $self->info("Cannot continue with %s as we cannot find a DBAdaptor", $type);
-      next;
+      $self->info("Cannot continue as we cannot find a core:slice DBAdaptor for %s", $species);
+      return;
   }
 
-  $self->_make_karyotype_file();
+  # Create the karyotype file for the species
+  $self->_make_karyotype_file($species);
 
   return;
 }
 
 sub _make_karyotype_file {
   my $self = shift;
+  my $species = shift;
 
-  my $dba = $self->get_DBAdaptor($species, 'core', 'slice');
-  if(! $dba) {
-      $self->info("Cannot continue with %s as we cannot find a DBAdaptor", $type);
-      next;
+  my $slice_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
+  if(! $slice_adaptor) {
+      $self->info("Cannot continue as we cannot find a core:slice DBAdaptor for %s", $species);
+      return;
   }
 
   $self->info( "Starting karyotype dump for " . $species );
 
-  my $slices = $dba->fetch_all_karyotype();
+  # Try to get karyotypes for the species
+  my $slices = $slice_adaptor->fetch_all_karyotype();
 
   # If we don't have any slices (ie. chromosomes), don't make the file
   return unless($slices);
 
+  # Create the filename we're going to save the karyotypes to
   my $file = $self->_generate_file_name('karyotype');
 
   work_with_file($file, 'w', sub {
       my ($fh) = @_;
 
+      # They're returned in order, so cycle through and print them
       foreach my $slice (@{$slices}) {
-	  print $fh $slice->chr_name . "\t" . $slice->length . "\n";
+	  print $fh $slice->seq_region_name . "\t" . $slice->length . "\n";
       }
   });
 
@@ -161,7 +158,7 @@ sub _make_karyotype_file {
 
 sub _generate_file_name {
   my $self = shift;
-  my @name_bits = @_
+  my @name_bits = @_;
 
   # File name format looks like:
   # <species>.[<extabits>.]<assembly>.<release>.txt
@@ -176,15 +173,6 @@ sub _generate_file_name {
 
   return File::Spec->catfile($path, $file_name);
 
-}
-
-sub data_path {
-  my ($self) = @_;
-
-  $self->throw("No 'species' parameter specified")
-    unless $self->param('species');
-
-  return $self->get_dir('txt', $self->param('species'));
 }
 
 1;
