@@ -47,7 +47,7 @@ sub run {
   # If there is any error
   if ($validator_output)
   {
-    $self->throw("The file contains the following error: $validator_output");
+    $self->warning("The file contains the following error: $validator_output");
   }
   return;
 }
