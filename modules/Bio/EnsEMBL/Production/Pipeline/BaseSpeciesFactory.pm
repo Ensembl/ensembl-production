@@ -276,21 +276,31 @@ sub write_output {
   my $variation_dbas   = $self->param('variation_dbas');
 
   foreach my $species ( sort keys %$core_dbas ) {
-    my $requires_new_dna = $self->requires_new_dna($species)
-      if ( $check_intentions == 1 );
-
-    if ($requires_new_dna) {
-      $self->dataflow_output_id( {
+    # If check_intention is turned on, then check the production database
+    # and decide if data need to be re-dumped.
+    if ( $check_intentions == 1 ) {
+      my $requires_new_dna = $self->requires_new_dna($species);
+      if ($requires_new_dna) {
+        $self->dataflow_output_id( {
                                  'species'          => $species,
                                  'requires_new_dna' => '1',
                                  'check_intentions' => $check_intentions
                                },
                                $self->param('core_flow') );
-    }
-    else {
-      $self->dataflow_output_id( {
+      }
+      else {
+        $self->dataflow_output_id( {
                                  'species'          => $species,
                                  'requires_new_dna' => '0',
+                                 'check_intentions' => $check_intentions
+                               },
+                               $self->param('core_flow') );
+      }
+    }
+    else {
+        $self->dataflow_output_id( {
+                                 'species'          => $species,
+                                 'requires_new_dna' => '1',
                                  'check_intentions' => $check_intentions
                                },
                                $self->param('core_flow') );
