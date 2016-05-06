@@ -31,7 +31,6 @@ use strict;
 use warnings;
 use File::Spec;
 use Data::Dumper;
-use Bio::EnsEMBL::Hive::Version 2.3;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf');     
    
@@ -141,7 +140,7 @@ sub tweak_analyses {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'                 => {'LSF' => '-q normal -M3500 -R"select[mem>3500] rusage[mem=3500]"'},
+      'default'                 => {'LSF' => '-q normal -M5000 -R"select[mem>5000] rusage[mem=5000]"'},
       '32GB'        => {'LSF' => '-q normal -M32000 -R"select[mem>32000] rusage[mem=32000]"' },
       '64GB'        => {'LSF' => '-q normal -M64000 -R"select[mem>64000] rusage[mem=64000]"' },
       '128GB'        => {'LSF' => '-q normal -M128000 -R"select[mem>128000] rusage[mem=128000]"' },

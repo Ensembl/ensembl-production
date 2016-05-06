@@ -31,7 +31,6 @@ use strict;
 use warnings;
 use File::Spec;
 use Data::Dumper;
-use Bio::EnsEMBL::Hive::Version 2.3;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf');     
    
