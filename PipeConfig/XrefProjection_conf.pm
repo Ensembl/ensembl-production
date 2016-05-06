@@ -103,9 +103,9 @@ sub default_options {
 		  		# homology types filter
  				'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			        'homology_types_allowed' => ['ortholog_one2one'],
-		                # homology percentage identity filter
-                                'percent_id_filter'      => '0',
-				'percent_cov_filter'     => '0',
+                                # homology percentage identity filter
+                                'percent_id_filter'      => '30',
+                                'percent_cov_filter'     => '60',
 	 	       }, 
                   '2'=>{
                                 # source species to project from
@@ -125,8 +125,8 @@ sub default_options {
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                 'homology_types_allowed' => ['ortholog_one2one'],
                                 # homology percentage identity filter
-                                'percent_id_filter'      => '0',
-                                'percent_cov_filter'     => '0',
+                                'percent_id_filter'      => '30',
+                                'percent_cov_filter'     => '60',
                        },
                   '3'=>{
                                 # source species to project from
@@ -146,8 +146,8 @@ sub default_options {
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
-                                'percent_id_filter'      => '0',
-                                'percent_cov_filter'     => '0',
+                                'percent_id_filter'      => '30',
+                                'percent_cov_filter'     => '60',
                        },
                   '4'=>{
                                 # source species to project from
@@ -167,8 +167,8 @@ sub default_options {
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
-                                'percent_id_filter'      => '0',
-                                'percent_cov_filter'     => '0',
+                                'percent_id_filter'      => '30',
+                                'percent_cov_filter'     => '60',
                        },
 		},
 
@@ -194,10 +194,10 @@ sub default_options {
 				 'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
 		  		 # homology types filter
  				 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			     'homology_types_allowed' => ['ortholog_one2one'],
-		         # homology percentage identity filter 
-        		 'percent_id_filter'      => '0', 
-				 'percent_cov_filter'     => '0',
+			         'homology_types_allowed' => ['ortholog_one2one'],
+                                 # homology percentage identity filter
+                                 'percent_id_filter'      => '30',
+				 'percent_cov_filter'     => '60',
 	 	        }, 
 
                      '2'=>{
@@ -222,8 +222,8 @@ sub default_options {
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                  'homology_types_allowed' => ['ortholog_one2one'],
                                  # homology percentage identity filter
-                                 'percent_id_filter'      => '0',
-                                 'percent_cov_filter'     => '0',
+                                 'percent_id_filter'      => '30',
+                                 'percent_cov_filter'     => '60',
                         },
                    '3'=>{
                                  # source species to project from
@@ -247,8 +247,8 @@ sub default_options {
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                  'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
-                                 'percent_id_filter'      => '0',
-                                 'percent_cov_filter'     => '0',
+                                 'percent_id_filter'      => '30',
+                                 'percent_cov_filter'     => '60',
                         },
                    '4'=>{
                                  # source species to project from
@@ -272,8 +272,8 @@ sub default_options {
                                  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                  'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
-                                 'percent_id_filter'      => '0',
-                                 'percent_cov_filter'     => '0',
+                                 'percent_id_filter'      => '30',
+                                 'percent_cov_filter'     => '60',
                         },
 
 	    },
@@ -321,7 +321,7 @@ sub default_options {
  				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			    'go_homology_types_allowed' => ['ortholog_one2one'],
 		        # homology percentage identity filter 
-                            'go_percent_id_filter'      => '0',
+                            'go_percent_id_filter'      => '30',
 				# object type of GO annotation (source)
 				'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
 				# object type to attach GO projection (target)
@@ -341,7 +341,7 @@ sub default_options {
                                 'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                             'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
-                        'go_percent_id_filter'      => '0',
+                        'go_percent_id_filter'      => '30',
                                 # object type of GO annotation (source)
                                 'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
                                 # object type to attach GO projection (target)
@@ -361,7 +361,7 @@ sub default_options {
               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                             'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
-                        'go_percent_id_filter'      => '0',
+                        'go_percent_id_filter'      => '30',
                                 # object type of GO annotation (source)
                                 'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
                                 # object type to attach GO projection (target)
@@ -381,7 +381,7 @@ sub default_options {
               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                             'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
-                        'go_percent_id_filter'      => '0',
+                        'go_percent_id_filter'      => '30',
                                 # object type of GO annotation (source)
                                 'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
                                 # object type to attach GO projection (target)
@@ -401,7 +401,7 @@ sub default_options {
                                 'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                             'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
-                        'go_percent_id_filter'      => '0',
+                        'go_percent_id_filter'      => '30',
                                 # object type of GO annotation (source)
                                 'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
                                 # object type to attach GO projection (target)
