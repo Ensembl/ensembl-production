@@ -31,8 +31,9 @@ use strict;
 use warnings;
 use File::Spec;
 use Data::Dumper;
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::Version 2.4;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
    
 sub default_options {
@@ -101,11 +102,15 @@ sub default_options {
 
 	   ## dump_fasta parameters
        # types to emit
-       'dna_sequence_type_list'  => ['dna', 'ncrna'],
-       'pep_sequence_type_list'  => ['cdna'],
+       'dna_sequence_type_list'  => ['dna'],
+       'pep_sequence_type_list'  => ['cdna', 'ncrna'],
        # Do/Don't process these logic names
        'process_logic_names' => [],
        'skip_logic_names'    => [],
+       # Previous release FASTA DNA files location
+       # Previous release number
+       'prev_rel_dir' => '/warehouse/ens_ftp_arch_03/',
+       'previous_release' => (software_version() - 1),
 
        ## dump_chain parameters
        #  default => ON (1)
@@ -410,7 +415,7 @@ sub pipeline_analyses {
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
-       -wait_for   => $pipeline_flow,
+       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
        -hive_capacity => 10,
     },
 
@@ -656,17 +661,44 @@ sub pipeline_analyses {
     },
 
     { -logic_name  => 'dump_fasta_dna',
+      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -parameters  => {
+       },
+      -can_be_empty    => 1,
+      -flow_into       => {
+                            1 => WHEN(
+                        '#requires_new_dna# >= 1' => 'dump_dna',
+                        ELSE 'copy_dna',
+                    )},
+      -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -rc_name         => 'default',
+    },
+
+    { -logic_name  => 'dump_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
       -parameters  => {
             sequence_type_list  => $self->o('dna_sequence_type_list'),
-          	process_logic_names => $self->o('process_logic_names'),
-          	skip_logic_names    => $self->o('skip_logic_names'),
+            process_logic_names => $self->o('process_logic_names'),
+            skip_logic_names    => $self->o('skip_logic_names'),
        },
       -can_be_empty    => 1,
       -flow_into       => { 1 => 'concat_fasta' },
       -max_retry_count => 1,
       -hive_capacity   => 10,
       -rc_name         => 'default',
+    },
+
+    {
+      -logic_name => 'copy_dna',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
+      -can_be_empty => 1,
+      -hive_capacity => 5,
+      -parameters => {
+        ftp_dir => $self->o('prev_rel_dir'),
+        release => $self->o('release'),
+        previous_release => $self->o('previous_release'),
+      },
     },
     
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 
@@ -683,7 +715,7 @@ sub pipeline_analyses {
       -module           => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CreatePrimaryAssembly',
       -can_be_empty     => 1,
       -max_retry_count  => 5,
-      -wait_for         => 'dump_fasta_dna' 
+      -wait_for         => 'dump_dna'
     },
         
 ### ASSEMBLY CHAIN	
