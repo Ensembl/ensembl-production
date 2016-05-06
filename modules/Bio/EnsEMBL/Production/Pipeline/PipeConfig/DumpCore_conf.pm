@@ -77,7 +77,7 @@ sub default_options {
    	   'f_dump_chain'   	=> 1,
    	   'f_dump_tsv_uniprot' => 1,
    	   'f_dump_tsv_ena'     => 1,
-           'f_dump_rdf'         => 1,
+       'f_dump_rdf'         => 1,
 
 	   ## dump_gff3 & dump_gtf parameter
        'abinitio'        => 1,
@@ -204,7 +204,7 @@ sub pipeline_analyses {
    	#8 dump types (10 combinations)    
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf']; }
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena']; }
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf']; }
@@ -230,11 +230,11 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_tsv_uniprot', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_tsv_ena', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena'];}
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain')  && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain')  && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
     	 # 4 pairs, DROP pep & chain, pep & tsv, pep & tsv_ena, pep & rdf
    	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -243,7 +243,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
 	    # 5 pairs, DROP dna & pep, dna & chain, dna & tsv, dna & tsv_ena, dna & rdf
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -254,7 +254,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
     	# 6 pairs, DROP genbank & dna, genbank & pep, genbank & chain, genbank & tsv, genbank & tsv_ena & genbank & rdf
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -267,7 +267,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
 	    # 7 pairs, DROP embl & genbank, embl & dna, embl & pep, embl & chain, embl & tsv, embl& ena, embl&rdf
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -282,7 +282,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
     	# 8 pairs, DROP gff & embl, gff & genbank, gff & dna, gff & pep, gff & chain, gff & tsv, gff & tsv_ena, gff & rdf
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -299,7 +299,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
    	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gtf', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
     	# 9 pairs, DROP gtf & gff, gtf & embl, gtf & genbank, gtf & dna, gtf & pep, gtf & chain, gtf & tsv, gtf & tsv_ena, gtf & rdf
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_rdf')) {
@@ -318,7 +318,7 @@ sub pipeline_analyses {
     	$pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_ena', 'dump_rdf'];} 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf')) {
     	$pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_rdf'];} 
-        elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
+    elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena')) {
         $pipeline_flow  = ['dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena'];}
    	#2 dump types ( 45 combinations)    
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_gff3')) 	     		{ $pipeline_flow  = ['dump_gtf', 'dump_gff3'];} 
@@ -329,7 +329,7 @@ sub pipeline_analyses {
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_chain')) 	     		{ $pipeline_flow  = ['dump_gtf', 'dump_chain'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_tsv_uniprot')) 		{ $pipeline_flow  = ['dump_gtf', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_gtf') && $self->o('f_dump_tsv_ena'))     		{ $pipeline_flow  = ['dump_gtf', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_gtf') && $self->o('f_dump_rdf'))                    { $pipeline_flow  = ['dump_gtf', 'dump_rdf'];}
+    elsif ($self->o('f_dump_gtf') && $self->o('f_dump_rdf'))                { $pipeline_flow  = ['dump_gtf', 'dump_rdf'];}
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_embl')) 	     		{ $pipeline_flow  = ['dump_gff3', 'dump_embl'];} 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_genbank'))    		{ $pipeline_flow  = ['dump_gff3', 'dump_genbank'];} 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_fasta_dna'))  		{ $pipeline_flow  = ['dump_gff3', 'dump_fasta_dna'];} 
@@ -337,35 +337,35 @@ sub pipeline_analyses {
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_chain'))  	 		{ $pipeline_flow  = ['dump_gff3', 'dump_chain'];} 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_tsv_uniprot'))		{ $pipeline_flow  = ['dump_gff3', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_gff3') && $self->o('f_dump_tsv_ena'))    		{ $pipeline_flow  = ['dump_gff3', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_gff3') && $self->o('f_dump_rdf'))                   { $pipeline_flow  = ['dump_gff3', 'dump_rdf'];}
+    elsif ($self->o('f_dump_gff3') && $self->o('f_dump_rdf'))               { $pipeline_flow  = ['dump_gff3', 'dump_rdf'];}
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_genbank'))    		{ $pipeline_flow  = ['dump_embl', 'dump_genbank'];} 
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_fasta_dna'))  		{ $pipeline_flow  = ['dump_embl', 'dump_fasta_dna'];} 
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_fasta_pep'))  		{ $pipeline_flow  = ['dump_embl', 'dump_fasta_pep'];} 
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_chain'))  	 		{ $pipeline_flow  = ['dump_embl', 'dump_chain'];} 
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_tsv_uniprot'))		{ $pipeline_flow  = ['dump_embl', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_embl') && $self->o('f_dump_tsv_ena'))    		{ $pipeline_flow  = ['dump_embl', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_embl') && $self->o('f_dump_rdf'))                   { $pipeline_flow  = ['dump_embl', 'dump_rdf'];}
+    elsif ($self->o('f_dump_embl') && $self->o('f_dump_rdf'))               { $pipeline_flow  = ['dump_embl', 'dump_rdf'];}
   	elsif ($self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna'))  	{ $pipeline_flow  = ['dump_genbank', 'dump_fasta_dna'];} 
   	elsif ($self->o('f_dump_genbank') && $self->o('f_dump_fasta_pep'))  	{ $pipeline_flow  = ['dump_genbank', 'dump_fasta_pep'];} 
   	elsif ($self->o('f_dump_genbank') && $self->o('f_dump_chain'))      	{ $pipeline_flow  = ['dump_genbank', 'dump_chain'];} 
   	elsif ($self->o('f_dump_genbank') && $self->o('f_dump_tsv_uniprot'))	{ $pipeline_flow  = ['dump_genbank', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_genbank') && $self->o('f_dump_tsv_ena'))    	{ $pipeline_flow  = ['dump_genbank', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_genbank') && $self->o('f_dump_rdf'))        { $pipeline_flow  = ['dump_genbank', 'dump_rdf'];}
+    elsif ($self->o('f_dump_genbank') && $self->o('f_dump_rdf'))            { $pipeline_flow  = ['dump_genbank', 'dump_rdf'];}
   	elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep'))  	{ $pipeline_flow  = ['dump_fasta_dna', 'dump_fasta_pep'];} 
   	elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_chain'))  		{ $pipeline_flow  = ['dump_fasta_dna', 'dump_chain'];} 
   	elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_tsv_uniprot'))  { $pipeline_flow  = ['dump_fasta_dna', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_tsv_ena'))  	{ $pipeline_flow  = ['dump_fasta_dna', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_rdf'))      { $pipeline_flow  = ['dump_fasta_dna', 'dump_rdf'];}
+    elsif ($self->o('f_dump_fasta_dna') && $self->o('f_dump_rdf'))          { $pipeline_flow  = ['dump_fasta_dna', 'dump_rdf'];}
   	elsif ($self->o('f_dump_fasta_pep') && $self->o('f_dump_chain'))      	{ $pipeline_flow  = ['dump_fasta_pep', 'dump_chain'];} 
   	elsif ($self->o('f_dump_fasta_pep') && $self->o('f_dump_tsv_uniprot'))  { $pipeline_flow  = ['dump_fasta_pep', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_fasta_pep') && $self->o('f_dump_tsv_ena'))      { $pipeline_flow  = ['dump_fasta_pep', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_fasta_pep') && $self->o('f_dump_rdf'))      { $pipeline_flow  = ['dump_fasta_pep', 'dump_rdf'];}
+    elsif ($self->o('f_dump_fasta_pep') && $self->o('f_dump_rdf'))          { $pipeline_flow  = ['dump_fasta_pep', 'dump_rdf'];}
   	elsif ($self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot'))		{ $pipeline_flow  = ['dump_chain', 'dump_tsv_uniprot'];} 
   	elsif ($self->o('f_dump_chain') && $self->o('f_dump_tsv_ena'))			{ $pipeline_flow  = ['dump_chain', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_chain') && $self->o('f_dump_rdf'))                  { $pipeline_flow  = ['dump_chain', 'dump_rdf'];}
+    elsif ($self->o('f_dump_chain') && $self->o('f_dump_rdf'))              { $pipeline_flow  = ['dump_chain', 'dump_rdf'];}
   	elsif ($self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena'))    { $pipeline_flow  = ['dump_tsv_uniprot', 'dump_tsv_ena'];} 
-        elsif ($self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf'))    { $pipeline_flow  = ['dump_tsv_uniprot', 'dump_rdf'];}
-        elsif ($self->o('f_dump_rdf') && $self->o('f_dump_tsv_ena'))        { $pipeline_flow = ['dump_rdf', 'dump_tsv_ena'];} 
+    elsif ($self->o('f_dump_tsv_uniprot') && $self->o('f_dump_rdf'))        { $pipeline_flow  = ['dump_tsv_uniprot', 'dump_rdf'];}
+    elsif ($self->o('f_dump_rdf') && $self->o('f_dump_tsv_ena'))            { $pipeline_flow = ['dump_rdf', 'dump_tsv_ena'];} 
         
     #1 dump type  
     elsif ($self->o('f_dump_gtf'))     	 	{ $pipeline_flow  = ['dump_gtf']; } 
@@ -377,7 +377,7 @@ sub pipeline_analyses {
     elsif ($self->o('f_dump_chain'))   	 	{ $pipeline_flow  = ['dump_chain']; }    
     elsif ($self->o('f_dump_tsv_uniprot'))  { $pipeline_flow  = ['dump_tsv_uniprot']; }    
     elsif ($self->o('f_dump_tsv_ena'))   	{ $pipeline_flow  = ['dump_tsv_ena']; }    
-    elsif ($self->o('f_dump_rdf'))              { $pipeline_flow  = ['dump_rdf'];}
+    elsif ($self->o('f_dump_rdf'))          { $pipeline_flow  = ['dump_rdf'];}
         
     return [
      { -logic_name     => 'backbone_fire_pipeline',
