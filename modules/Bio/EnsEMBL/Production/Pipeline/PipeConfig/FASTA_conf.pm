@@ -180,7 +180,7 @@ sub pipeline_analyses {
         -can_be_empty => 1,
         -max_retry_count => 5,
         -flow_into  => {
-          1 => [qw/NcbiBlastDNAIndex BlastDNAIndex BlatDNAIndex BlatSmDNAIndex PrimaryAssembly/]
+          1 => [qw/NcbiBlastDNAIndex BlastDNAIndex BlatDNAIndex PrimaryAssembly/]
         },
       },
       
