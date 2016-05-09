@@ -36,6 +36,13 @@ sub default_options {
     trimest_exe     => '/nfs/panda/ensemblgenomes/external/EMBOSS/bin/trimest',
     insdc_ids       => 1,
 
+    # Remove existing alignments; if => 0 then existing analyses
+    # and their features will remain, with the logic_name suffixed by '_bkp'.
+    delete_existing => 1,
+
+    # Retrieve analysis descriptions from the production database;
+    # the supplied registry file will need the relevant server details.
+    production_lookup => 1,
   };
 }
 

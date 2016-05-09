@@ -137,13 +137,6 @@ sub default_options {
     bedtools_dir  => '/nfs/panda/ensemblgenomes/external/bedtools/bin',
     ucscutils_dir => '/nfs/panda/ensemblgenomes/external/ucsc_utils',
 
-    # Remove existing alignments; if => 0 then existing analyses
-    # and their features will remain, with the logic_name suffixed by '_bkp'.
-    delete_existing => 1,
-
-    # Retrieve analysis descriptions from the production database;
-    # the supplied registry file will need the relevant server details.
-    production_lookup => 1,
   };
 }
 
