@@ -166,21 +166,21 @@ sub pipeline_analyses {
     },   
  
     {  -logic_name    => 'SourceFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::SourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
        -parameters    => { 'species_config'  => $self->o('species_config'), }, 
        -flow_into     => { '2' => ['MLSSJobFactory'], },          
        -rc_name       => 'default',
     },    
  
     {  -logic_name    => 'MLSSJobFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::MLSSJobFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory',
        -parameters    => { 'method_link_type' => $self->o('method_link_type'), },
        -flow_into     => { '2' => ['GetOrthologs'], },
        -rc_name       => 'default',
     },
   
     {  -logic_name    => 'GetOrthologs',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'eg' 			   => $self->o('eg'),
        						'output_dir'       => $self->o('output_dir'),
 							'method_link_type' => $self->o('method_link_type'),
@@ -192,7 +192,7 @@ sub pipeline_analyses {
 	 },
 	 
     {  -logic_name    => 'GetOrthologs_16GB',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },
@@ -203,7 +203,7 @@ sub pipeline_analyses {
 	 },
 
     {  -logic_name    => 'GetOrthologs_32GB',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },
