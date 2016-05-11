@@ -33,7 +33,6 @@ use File::Spec;
 use Data::Dumper;
 use Bio::EnsEMBL::Hive::Version 2.4;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
    
 sub default_options {
@@ -415,7 +414,7 @@ sub pipeline_analyses {
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
-       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
+       -wait_for   => $pipeline_flow,
        -hive_capacity => 10,
     },
 
