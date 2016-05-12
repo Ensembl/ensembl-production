@@ -213,12 +213,12 @@ sub project_genenames {
              # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
              my $info_txt = "from $from_species gene " . $from_gene->stable_id();
 
-             # modify the display_id to have "(1 to many)" if this is a one-to-many ortholog
+             # modify the display_id to have "(1 of many)" if this is a one-to-many ortholog
              my $tuple_txt = "";
              if ($total_gene_number > 1) {
-               $tuple_txt = " (1 to many)";
+               $tuple_txt = " (1 of many)";
                my $existing = $dbEntry->display_id();
-               $existing =~ s/ \(1 to many\)//;
+               $existing =~ s/ \(1 of many\)//;
                $dbEntry->display_id($existing . $tuple_txt);
                $info_txt .= $tuple_txt;
              }
