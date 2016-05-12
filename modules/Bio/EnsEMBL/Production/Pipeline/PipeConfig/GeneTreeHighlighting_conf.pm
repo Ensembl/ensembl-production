@@ -51,10 +51,6 @@ sub default_options {
 	## 'job_factory' parameters
     'division'      => [], 
 
-    ## flag
-    'f_go'          => 1,
-	'f_interpro'    => 1,
-       
     # hive_capacity values for analysis
 	'highlighting_capacity'  => '50',
 
@@ -121,13 +117,6 @@ sub resource_classes {
 sub pipeline_analyses {
     my ($self) = @_;
 
-    my $pipeline_flow;
-   
-    if ($self->o('f_go') && $self->o('f_interpro')) { $pipeline_flow  = ['highlight_go', 'highlight_interpro']; }
-    elsif ($self->o('f_go'))         				{ $pipeline_flow  = ['highlight_go']; }    
-    elsif ($self->o('f_interpro'))   				{ $pipeline_flow  = ['highlight_interpro']; }    
-
-####    
     return [
     {  -logic_name => 'backbone_fire_GeneTreeHighlighting',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
@@ -143,18 +132,20 @@ sub pipeline_analyses {
       -hive_capacity   => -1,
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
-      -flow_into       => { '2' => $pipeline_flow, },        
+      -flow_into      => {'2->A' => ['highlight_go'],
+                          'A->2' => ['highlight_interpro'],
+                         }		                       
     },	   
 
     { -logic_name     => 'highlight_go',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
-      -hive_capacity  => 20,
+      -hive_capacity  => 10,
       -rc_name 	      => 'default',     
     },   
 
     { -logic_name     => 'highlight_interpro',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
-      -hive_capacity  => 20,
+      -hive_capacity  => 10,
       -rc_name 	      => 'default',     
     },       	 	 
   ];
