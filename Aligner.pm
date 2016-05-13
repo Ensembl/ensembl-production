@@ -23,7 +23,9 @@ use warnings;
 
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use File::Spec::Functions qw(catdir);
+use IPC::Cmd qw(run);
 
 sub new {
 	my ( $class, @args ) = @_;
@@ -45,6 +47,21 @@ sub new {
 	return $self;
 }
 
+sub version {
+  my ($self) = @_;
+  
+  my $cmd = $self->{bowtie2} . ' --version';
+  my ($success, $error, $buffer) = run(command => $cmd);
+  my $buffer_str = join "", @$buffer;
+  
+  if ($success) {
+    $buffer_str =~ /version\s+(\S+)/m;
+    return $1;
+  } else {
+    $self->throw("Command '$cmd' failed, $error: $buffer_str");
+  }
+}
+
 sub index_file {
 	throw "index_file unimplemented";
 }
@@ -55,6 +72,24 @@ sub index_exists {
 
 sub align {
 	throw "align unimplemented";
+}
+
+sub index_cmds {
+	my ($self, $cmd) = @_;
+  
+  if (defined $cmd) {
+    push @{$self->{index_cmds}}, $cmd;
+  }
+  return $self->{index_cmds};
+}
+
+sub align_cmds {
+	my ($self, $cmd) = @_;
+  
+  if (defined $cmd) {
+    push @{$self->{align_cmds}}, $cmd;
+  }
+  return $self->{align_cmds};
 }
 
 sub sam_to_bam {
@@ -68,6 +103,7 @@ sub sam_to_bam {
 	}
   my $cmd = "$self->{samtools} view -bS $sam > $bam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
 	return $bam;
 }
@@ -78,6 +114,7 @@ sub merge_bam {
   my $bam = join( ' ', @$bams );
   my $cmd = "$self->{samtools} merge -f $out $bam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
 	return $out;
 }
@@ -93,6 +130,7 @@ sub sort_bam {
 	}
   my $cmd = "$self->{samtools} sort $bam $out_prefix";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
 	return "$out_prefix.bam";
 }
@@ -109,6 +147,7 @@ sub index_bam {
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
 }
 
 sub get_bam_stats {
@@ -141,6 +180,7 @@ sub pileup_bam {
   # Is the '-' required?
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
 	return $bcf;
 }
@@ -157,6 +197,7 @@ sub bcf2vcf {
   
   my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
 	return $vcf;
 }

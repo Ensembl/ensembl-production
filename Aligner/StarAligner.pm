@@ -24,6 +24,7 @@ use base qw(Bio::EnsEMBL::EGPipeline::Common::Aligner);
 
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use File::Basename;
 use File::Spec::Functions qw(catdir);
 
@@ -74,6 +75,24 @@ sub new {
   return $self;
 }
 
+sub version {
+  my ($self) = @_;
+  
+  # STAR can't report it's own version (<sigh>), so we have to hope that,
+  # the directory has the default name, and extract it from there.
+  my $version;
+  
+  my (undef, $dir, undef) = fileparse($self->{star});
+  $dir =~ s!/$!!;
+  if (-l $dir) {
+    ($version) = readlink($dir) =~ /STAR_([0-9a-z\.]+)\.[^\/]+$/;
+  } else {
+    ($version) = $dir =~ /STAR_([0-9a-z\.]+)\.[^\/]+$/;
+  }
+  
+  return $version || 'unknown';
+}
+
 sub index_file {
   my ($self, $file) = @_;
   
@@ -102,6 +121,7 @@ sub index_file {
   
   my $cmd = "$index_cmd $index_options";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->index_cmds($cmd);
 }
 
 sub index_exists {
@@ -149,6 +169,7 @@ sub align_file {
   
   my $cmd = "$star_cmd $star_options > $sam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
   return $sam;
 }

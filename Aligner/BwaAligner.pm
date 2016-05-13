@@ -24,7 +24,9 @@ use base qw(Bio::EnsEMBL::EGPipeline::Common::Aligner);
 
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use File::Spec::Functions qw(catdir);
+use IPC::Cmd qw(run);
 
 sub new {
   my ($class, @args) = @_;
@@ -43,6 +45,20 @@ sub new {
   return $self;
 }
 
+sub version {
+  my ($self) = @_;
+  
+  my $cmd = $self->{bwa};
+  my (undef, $error, $buffer) = run(command => $cmd);
+  my $buffer_str = join "", @$buffer;
+  
+  if ($buffer_str =~ /Version:\s+(\S+)/m) {
+    return $1;
+  } else {
+    $self->throw("Command '$cmd' failed, $error: $buffer_str");
+  }
+}
+
 sub index_file {
   my ($self, $file) = @_;
   
@@ -50,10 +66,12 @@ sub index_file {
   my $index_options = " -a bwtsw ";
   my $cmd = "$index_cmd $index_options $file";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->index_cmds($cmd);
   
   my $samtools_index_cmd = "$self->{samtools} faidx ";
   $cmd = "$samtools_index_cmd $file";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->index_cmds($cmd);
 }
 
 sub index_exists {
@@ -97,6 +115,7 @@ sub sai_file {
   my $align_cmd = "$self->{bwa} $self->{program} ";
   my $cmd = "$align_cmd $ref $file > $sai_file";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
   return $sai_file;
 }
@@ -107,6 +126,7 @@ sub align_file {
   my $sam_cmd = "$self->{bwa} $program ";
   my $cmd = "$sam_cmd $ref $aligneds $files > $sam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
   return $sam;
 }

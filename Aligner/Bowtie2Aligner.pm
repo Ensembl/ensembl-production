@@ -24,6 +24,7 @@ use base qw(Bio::EnsEMBL::EGPipeline::Common::Aligner);
 
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use File::Basename;
 use File::Spec::Functions qw(catdir);
 
@@ -52,6 +53,7 @@ sub index_file {
   (my $index_name = $file) =~ s/\.\w+$//;
   my $cmd = "$index_cmd $file $index_name";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->index_cmds($cmd);
 }
 
 sub index_exists {
@@ -90,6 +92,7 @@ sub align_file {
   my $sam_options = " -x $index_name $format --local -p $self->{threads} ";
   my $cmd = "$sam_cmd $sam_options $files > $sam";
   system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->align_cmds($cmd);
   
   return $sam;
 }
