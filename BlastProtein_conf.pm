@@ -40,6 +40,9 @@ use strict;
 use warnings;
 
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -338,7 +341,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => [ ':////split_proteome' ],
+                              '2' => [ '?table_name=split_proteome' ],
                             }
     },
 
@@ -368,7 +371,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => [ ':////split_genome' ],
+                              '2' => [ '?table_name=split_genome' ],
                             }
     },
 
@@ -587,6 +590,7 @@ sub pipeline_analyses {
       -logic_name      => 'BlastXFactory',
       -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
       -can_be_empty    => 1,
+      -hive_capacity   => $self->o('max_hive_capacity'),
       -max_retry_count => 1,
       -parameters      => {
                             max_seq_length => $self->o('max_seq_length'),
