@@ -57,6 +57,7 @@ sub default_options {
     run              => [],
     study            => [],
     merge_level      => 'run',
+    merge_id         => undef,
     tax_id_restrict  => 1,
     
     # RNA-seq options
@@ -164,12 +165,26 @@ sub hive_meta_table {
 
 sub pipeline_create_commands {
   my ($self) = @_;
+  
+  my $merge_bam_table =
+    'CREATE TABLE merge_bam ('.
+      'merge_id varchar(255) NOT NULL, '.
+      'bam_file varchar(255) NOT NULL) ';
+  
+  my $align_cmds_table =
+    'CREATE TABLE align_cmds ('.
+      'auto_id INT AUTO_INCREMENT PRIMARY KEY, '.
+      'merge_id varchar(255) NOT NULL, '.
+      'run_id varchar(255) NULL, '.
+      'cmds text NOT NULL, '.
+      'version varchar(255) NULL)';
 
   return [
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.catdir($self->o('pipeline_dir'), $self->o('aligner')),
     'mkdir -p '.catdir($self->o('results_dir'), $self->o('aligner')),
-    $self->db_cmd("CREATE TABLE merge_bam (merge_id varchar(255) NOT NULL, bam_file varchar(255) NOT NULL)"),
+    $self->db_cmd($merge_bam_table),
+    $self->db_cmd($align_cmds_table),
   ];
 }
 
@@ -343,6 +358,7 @@ sub alignment_analyses {
                               run             => $self->o('run'),
                               study           => $self->o('study'),
                               merge_level     => $self->o('merge_level'),
+                              merge_id        => $self->o('merge_id'),
                               tax_id_restrict => $self->o('tax_id_restrict'),
                               data_type       => $self->o('data_type'),
                             },
@@ -434,7 +450,7 @@ sub alignment_analyses {
       -rc_name           => 'align_default',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
-                               '1' => [ ':////merge_bam' ],
+                               '1' => ['?table_name=merge_bam', '?table_name=align_cmds'],
                             },
     },
 
@@ -454,7 +470,7 @@ sub alignment_analyses {
                             },
       -rc_name           => 'align_himem',
       -flow_into         => {
-                               '1' => [ ':////merge_bam' ],
+                               '1' => ['?table_name=merge_bam', '?table_name=align_cmds'],
                             },
     },
 
@@ -471,10 +487,14 @@ sub alignment_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => WHEN('#bigwig#' =>
-                                       ['WriteIniFile'],
+                              '2' => ['?table_name=align_cmds',
+                                     
+                                     WHEN('#bigwig#' =>
+                                       ['CreateBigWig'],
                                      ELSE
-                                       ['CreateBigWig']),
+                                       ['WriteIniFile']),
+                                     
+                                     ],
                             },
     },
 
@@ -490,7 +510,7 @@ sub alignment_analyses {
                               clean_up      => $self->o('clean_up'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['WriteIniFile'],
+      -flow_into         => ['WriteIniFile', '?table_name=align_cmds'],
     },
 
     {
@@ -501,6 +521,19 @@ sub alignment_analyses {
                               results_dir => catdir($results_dir, '#species#'),
                               merge_level => $self->o('merge_level'),
                               ini_type    => $self->o('ini_type'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['WriteCmdFile'],
+    },
+
+    {
+      -logic_name        => 'WriteCmdFile',
+      -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::WriteCmdFile',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              aligner     => $self->o('aligner'),
+                              results_dir => catdir($results_dir, '#species#'),
+                              merge_level => $self->o('merge_level'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
