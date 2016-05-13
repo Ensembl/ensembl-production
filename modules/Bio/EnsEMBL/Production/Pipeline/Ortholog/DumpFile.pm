@@ -105,10 +105,6 @@ sub run {
     my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
     my $datestring  = localtime();
 
-print $to_meta->get_production_name()."\t";
-print $to_meta->get_default_assembly()."\n";
-
-
     my $division = 'Ensembl';
     if ($from_meta->get_division()) {
       $division = $from_meta->get_division() ; 
