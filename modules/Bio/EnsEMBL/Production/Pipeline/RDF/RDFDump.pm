@@ -47,7 +47,7 @@ sub fetch_input {
     $self->param('eg', $eg);
 
     if($eg){
-      my $base_path = $self->param('base_path');
+      my $base_path  = $self->build_base_directory();
       $self->param('base_path', $base_path);
       my $release = $self->param('eg_version');
       $self->param('release', $release);
@@ -70,7 +70,10 @@ sub run {
     my $xref_fh;
     $xref_fh = IO::File->new($xref_file,"w") if $self->param('xref');
     my $dba = $self->get_DBAdaptor; 
-    my $compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('Multi', 'compara');
+
+    my $division = 'Multi';
+    $division    = $self->division() if ($self->param('eg'));
+    my $compara_dba = Bio::EnsEMBL::Registry->get_adaptor($division, 'compara', 'GenomeDB');
     # Configure bulk extractor to go all the way down to protein features.
     # Can also be told to stop at transcript level as well as others.
     my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
