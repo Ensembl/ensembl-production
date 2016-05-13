@@ -86,4 +86,11 @@ sub run {
   }
 }
 
+sub write_output {
+  my ($self) = @_;
+  
+  my $index_cmds = $self->param('aligner_object')->index_cmds;
+  $self->dataflow_output_id({ 'index_cmds' => $index_cmds }, 1);
+}
+
 1;
