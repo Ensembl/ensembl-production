@@ -52,6 +52,10 @@ sub default_options {
         # hive_capacity values for analysis
 	    'getOrthologs_capacity'  => '50',
 
+        # orthologs cutoff
+        'perc_id'  => '30',
+        'perc_cov' => '30',
+
         # 'target' & 'exclude' are mutually exclusive
         #  only one of those should be defined if used 
 	 	'species_config' => 
@@ -154,6 +158,18 @@ sub beekeeper_extra_cmdline_options {
       ' -reg_conf ' . $self->o('registry'),
   ;
 }
+
+# these parameter values are visible to all analyses, 
+# can be overridden by parameters{} and input_id{}
+sub pipeline_wide_parameters {  
+    my ($self) = @_;
+    return {
+            %{$self->SUPER::pipeline_wide_parameters},  # here we inherit anything from the base class
+            'perc_id'  => $self->o('perc_id'),
+            'perc_cov' => $self->o('perc_cov'),
+    };
+}
+
 
 sub pipeline_analyses {
     my ($self) = @_;
