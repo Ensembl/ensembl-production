@@ -123,6 +123,9 @@ sub run {
 
     $self->warning("Retrieving $homologies_ct homologies of method link type $ml_type for mlss_id $mlss_id\n");
 
+    my $perc_id  = $self->param_required('perc_id');
+    my $perc_cov = $self->param_required('perc_cov');
+
     foreach my $homology (@{$homologies}) {
        if($self->param('eg')){ next unless $homology->is_tree_compliant()==1; }
 
@@ -134,6 +137,10 @@ sub run {
        my $from_perc_id     = $from_member->perc_id();
        my $from_perc_cov    = $from_member->perc_cov();
        my $from_gene        = $from_member->get_Transcript->get_Gene();
+
+       # Filter for perc_id & perc_cov on 'from' member
+       next if ($from_perc_id  < $perc_id);
+       next if ($from_perc_cov < $perc_cov);
 
        ## Fully qualified identifiers with annotation source
        ## Havana genes are merged, so source is Ensembl
@@ -156,6 +163,10 @@ sub run {
           my $to_perc_cov    = $to_member->perc_cov();
           my $to_gene        = $to_member->get_Transcript->get_Gene();
 
+          # Filter for perc_id & perc_cov on 'to' member
+          next if ($to_perc_id  < $perc_id);
+          next if ($to_perc_cov < $perc_cov);
+
           ## Fully qualified identifiers with annotation source
           ## Havana genes are merged, so source is Ensembl
           my $to_mod_identifier = $to_gene->source();
@@ -170,24 +181,24 @@ sub run {
           my $to_identifier = $to_mod_identifier . ":" . $to_gene->stable_id;
 
           if (scalar(@$from_uniprot) == 0 && scalar(@$to_uniprot) == 0) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t$from_perc_id\t$from_perc_cov\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t$to_perc_id\t$to_perc_cov\t" .$homology->description."\n";
+             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
           } elsif (scalar(@$from_uniprot) == 0) {
             foreach my $to_xref (@$to_uniprot) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t$from_perc_id\t$from_perc_cov\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t$to_perc_id\t$to_perc_cov\t" .$homology->description."\n";
+             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
             }
          } elsif (scalar(@$to_uniprot) == 0) {
             foreach my $from_xref (@$from_uniprot) {
-               print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t$from_perc_id\t$from_perc_cov\t";
-               print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t$to_perc_id\t$to_perc_cov\t" .$homology->description."\n";
+               print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+               print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
             }
          }
          else {
            foreach my $to_xref (@$to_uniprot) {
               foreach my $from_xref (@$from_uniprot) {
-                 print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t$from_perc_id\t$from_perc_cov\t";
-                 print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t$to_perc_id\t$to_perc_cov\t" .$homology->description."\n";
+                 print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+                 print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
               }
            }
         } 
