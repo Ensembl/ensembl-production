@@ -21,6 +21,8 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base;
 use strict;
 use Carp;
 
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
+
 use base ('Bio::EnsEMBL::Hive::Process');
 
 sub hive_dbc {
@@ -45,7 +47,7 @@ sub get_DBAdaptor {
   my ($self, $type) = @_;
 
   $type ||= 'core';
-  my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
+  my $species = ($type =~ /^(production|taxonomy)$/) ? 'multi' : $self->param_required('species');
 
   return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
 }
@@ -134,6 +136,41 @@ sub production_dbh {
   my $self = shift;
 
   my $dbh = $self->production_dba()->dbc()->db_handle();	
+  confess('Type error!') unless($dbh->isa('DBI::db'));
+
+  return $dbh;
+}
+
+sub taxonomy_dba {
+  my $self = shift;
+  
+  my $dba = $self->get_DBAdaptor('taxonomy');
+  if (!defined $dba) {
+    my %taxonomy_db = %{$self->param('taxonomy_db')};
+    $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
+  }
+  if (!defined $dba) {
+    my %taxonomy_db = %{$self->param('tax_db')};
+    $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
+  }
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+	
+  return $dba;
+}
+
+sub taxonomy_dbc {
+  my $self = shift;
+
+  my $dbc = $self->taxonomy_dba()->dbc();	
+  confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+
+  return $dbc;
+}
+
+sub taxonomy_dbh {
+  my $self = shift;
+
+  my $dbh = $self->taxonomy_dba()->dbc()->db_handle();	
   confess('Type error!') unless($dbh->isa('DBI::db'));
 
   return $dbh;
