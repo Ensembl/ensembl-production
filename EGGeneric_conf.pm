@@ -82,7 +82,17 @@ sub default_options {
       -pass   => '',
       -group  => 'production',
       -dbname => 'ensembl_production',
-    }
+    },
+    
+    # Ditto the taxonomy db.
+    taxonomy_db => {
+      -driver => $self->o('hive_driver'),
+      -host   => 'mysql-eg-pan-prod.ebi.ac.uk',
+      -port   => 4276,
+      -user   => 'ensro',
+      -pass   => '',
+      -dbname => 'ncbi_taxonomy',
+    },
   }
 }
 
