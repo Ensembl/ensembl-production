@@ -54,7 +54,6 @@ sub write_output {
     my $cmd = '~/bin/copy_and_patch_db.sh '.$from_staging." ".$to_staging." ".$db;
     $self->warning("Running $cmd"); 
 
-=pod
     system($cmd);
 
     my $execution_failed = $? == -1;
@@ -72,7 +71,6 @@ sub write_output {
     my $program_completed_successfully = $exit_value == 0;
     $self->throw("exited with value $exit_value") if (!$program_completed_successfully);
 
-=cut
     $self->dbc()->disconnect_if_idle(); 
 
 return 0;
