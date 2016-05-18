@@ -1,5 +1,5 @@
 1	schema_type	ontology	\N
-2	schema_version	84	\N
+2	schema_version	85	\N
 3	patch	patch_79_80_a.sql|schema_version	\N
 4	OBO_file_date	GO.obo/18:03:2015 17:12	\N
 5	OBO_load_date	GO.obo/Thu Mar 19 13:49:08 2015	\N
@@ -11,3 +11,6 @@
 11	patch	patch_81_82_a.sql|schema_version	\N
 12	patch	patch_82_83_a.sql|schema_version	\N
 13	patch	patch_83_84_a.sql|schema_version	\N
+14	patch	patch_84_85_a.sql|schema_version	\N
+15	patch	patch_84_85_b.sql|confident_relationship	\N
+16	patch	patch_84_85_c.sql| add synonym dbxref	\N
