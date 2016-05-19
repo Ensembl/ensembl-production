@@ -37,3 +37,4 @@ notifications:
   email:
     on_success: always
     on_failure: always
+  slack: genomes-ebi:3tC192q2z4I0tGE9TJel5OCN
