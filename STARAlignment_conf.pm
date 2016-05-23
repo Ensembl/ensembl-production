@@ -36,6 +36,8 @@ sub default_options {
     trimest_exe     => '/nfs/panda/ensemblgenomes/external/EMBOSS/bin/trimest',
     insdc_ids       => 1,
 
+    logic_name => $self->o('data_type').'_'.$self->o('aligner'),
+    
     # Remove existing alignments; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
     delete_existing => 1,
