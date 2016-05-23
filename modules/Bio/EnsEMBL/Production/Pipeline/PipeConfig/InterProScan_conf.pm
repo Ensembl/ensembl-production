@@ -57,6 +57,7 @@ sub default_options {
     'antispecies'   => [],
     'division'      => [],
     'run_all'       => 0,
+    'meta_filters'  => {},
 
     ## 'load_md5' parameters
     #   A file with md5 sums of translations that are in the lookup service.
@@ -395,10 +396,11 @@ sub pipeline_analyses {
     { -logic_name      => 'job_factory',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -parameters      => {
-                            species     => $self->o('species'),
-                            antispecies => $self->o('antispecies'),
-                            division    => $self->o('division'),
-                            run_all     => $self->o('run_all'),
+                            species      => $self->o('species'),
+                            antispecies  => $self->o('antispecies'),
+                            division     => $self->o('division'),
+                            run_all      => $self->o('run_all'),
+ 			    meta_filters => $self->o('meta_filters'),
                           },
       -input_ids       => [ {} ],
       -max_retry_count => 1,
