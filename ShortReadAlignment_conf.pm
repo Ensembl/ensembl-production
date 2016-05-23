@@ -79,12 +79,10 @@ sub default_options {
     min_slice_length   => 0,
 
     # Aligner options.
-    aligner    => 'star',
+    aligner    => 'bwa',
     threads    => 4,
     data_type  => 'rnaseq',
     read_type  => 'default',
-
-    logic_name => $self->o('data_type').'_'.$self->o('aligner'),
 
     # Some of the aligners have newer versions, but it's not a given that
     # these will be better than the version we've used up till now. So the
