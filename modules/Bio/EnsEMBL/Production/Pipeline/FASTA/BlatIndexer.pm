@@ -34,9 +34,7 @@ Bio::EnsEMBL::Production::Pipeline::FASTA::BlastIndexer
 =head1 DESCRIPTION
 
 Creates 2bit file of the given GZipped file. The resulting index
-is created under the parameter location I<base_path> in blat/index. The filename
-is prefixed with the port number of the blat server this file should be
-run on.
+is created under the parameter location I<base_path> in blat/index.
 
 The module also performs filtering of non-reference sequence regions
 and can filter the redundant Y chromosome piece for human (as 2bit does
@@ -50,9 +48,6 @@ Allowed parameters are:
 
 =item program - The location of the faToTwoBit program
 
-=item port_offset - Value to add onto the species_id from the website DB
-                    to name the file correctly
-
 =item base_path - The base of the dumps
 
 =item index     - The type of file to index; supported values are empty, 
@@ -64,10 +59,6 @@ Allowed parameters are:
 =item index_masked_files - If set to false then we will skip processing every masked file name
 
 =back
-
-The registry should also have a DBAdaptor for the website schema 
-registered under the species B<multi> and the group B<web> for species_id to
-Blat port number. 
 
 =cut
 
@@ -82,14 +73,12 @@ use File::Spec;
 use File::stat;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::Registry;
 
 sub param_defaults {
   my ($self) = @_;
   return {
     %{$self->SUPER::param_defaults()},
     program => 'faToTwoBit',
-    port_offset => 30000,
     'index' => 'dna', #or dna_rm and dna_sm
   };
 }
@@ -169,13 +158,12 @@ sub decompress {
   return $target;
 }
 
-#Filename like 30061.Homo_sapiens.GRCh37.2bit
+#Filename like Homo_sapiens.GRCh37.2bit
 sub target_filename {
   my ($self) = @_;
-  my $port = $self->blat_port();
   my $name = $self->web_name();
   my $assembly = $self->assembly();
-  return join(q{.}, $port, $name, $assembly, '2bit');
+  return join(q{.}, $name, $assembly, '2bit');
 }
 
 sub target_file {
@@ -189,16 +177,6 @@ sub target_file {
 sub target_dir {
   my ($self) = @_;
   return $self->get_dir('blat', $self->param('index'));
-}
-
-sub blat_port {
-  my ($self) = @_;
-  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'web');
-  my $id = $dba->dbc()->sql_helper()->execute_single_result(
-    -SQL => 'select species_id from species where name =?',
-    -PARAMS => [$self->web_name()]
-  );
-  return $id + $self->param('port_offset');
 }
 
 1;

@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile;
+Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile;
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile;
 ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile;
+package Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile;
 
 use strict;
 use warnings;
@@ -35,7 +35,7 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catdir);
-use base ('Bio::EnsEMBL::Hive::Process');
+use base('Bio::EnsEMBL::Production::Pipeline::Base');
 
 sub param_defaults {
     return {
@@ -101,7 +101,6 @@ sub run {
     my $ml_type  = $self->param('ml_type');
     my $from_gdb = $gdba->fetch_by_registry_name($from_sp);
     my $to_gdb   = $gdba->fetch_by_registry_name($to_sp);
-
     my $output_dir  = $self->param('output_dir');
     my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
     my $datestring  = localtime();
@@ -124,6 +123,9 @@ sub run {
 
     $self->warning("Retrieving $homologies_ct homologies of method link type $ml_type for mlss_id $mlss_id\n");
 
+    my $perc_id  = $self->param_required('perc_id');
+    my $perc_cov = $self->param_required('perc_cov');
+
     foreach my $homology (@{$homologies}) {
        if($self->param('eg')){ next unless $homology->is_tree_compliant()==1; }
 
@@ -133,7 +135,12 @@ sub run {
        # 'from' member
        my $from_member      = $homology->get_Member_by_GenomeDB($from_gdb)->[0];
        my $from_perc_id     = $from_member->perc_id();
+       my $from_perc_cov    = $from_member->perc_cov();
        my $from_gene        = $from_member->get_Transcript->get_Gene();
+
+       # Filter for perc_id & perc_cov on 'from' member
+       next if ($from_perc_id  < $perc_id);
+       next if ($from_perc_cov < $perc_cov);
 
        ## Fully qualified identifiers with annotation source
        ## Havana genes are merged, so source is Ensembl
@@ -153,7 +160,12 @@ sub run {
 
        foreach my $to_member (@$to_members) {
           my $to_perc_id     = $to_member->perc_id();
+          my $to_perc_cov    = $to_member->perc_cov();
           my $to_gene        = $to_member->get_Transcript->get_Gene();
+
+          # Filter for perc_id & perc_cov on 'to' member
+          next if ($to_perc_id  < $perc_id);
+          next if ($to_perc_cov < $perc_cov);
 
           ## Fully qualified identifiers with annotation source
           ## Havana genes are merged, so source is Ensembl
@@ -162,7 +174,6 @@ sub run {
           my $to_stable_id   = $to_mod_identifier . ":" . $to_member->stable_id();
           my $to_translation = $to_member->get_Translation();
 
-
           next if (!$to_translation);
           my $to_uniprot     = get_uniprot($to_translation);
 
@@ -170,24 +181,24 @@ sub run {
           my $to_identifier = $to_mod_identifier . ":" . $to_gene->stable_id;
 
           if (scalar(@$from_uniprot) == 0 && scalar(@$to_uniprot) == 0) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t$from_perc_id\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t$to_perc_id\t" .$homology->description."\n";
+             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
           } elsif (scalar(@$from_uniprot) == 0) {
             foreach my $to_xref (@$to_uniprot) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t$from_perc_id\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t$to_perc_id\t" .$homology->description."\n";
+             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
             }
          } elsif (scalar(@$to_uniprot) == 0) {
             foreach my $from_xref (@$from_uniprot) {
-               print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t$from_perc_id\t";
-               print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t$to_perc_id\t" .$homology->description."\n";
+               print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+               print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
             }
          }
          else {
            foreach my $to_xref (@$to_uniprot) {
               foreach my $from_xref (@$from_uniprot) {
-                 print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t$from_perc_id\t";
-                 print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t$to_perc_id\t" .$homology->description."\n";
+                 print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+                 print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
               }
            }
         } 
@@ -196,7 +207,7 @@ sub run {
    }
    close FILE;
 
-   $self->dbc->disconnect_if_idle(); 
+   $self->hive_dbc->disconnect_if_idle();
    $from_meta->dbc->disconnect_if_idle();
    $to_meta->dbc->disconnect_if_idle();
    $mlssa->dbc->disconnect_if_idle();

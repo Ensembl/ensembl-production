@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::MLSSJobFactory;
+Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory;
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::MLSSJobFactory;
 ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::MLSSJobFactory;
+package Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory;
 
 use strict;
 use warnings;

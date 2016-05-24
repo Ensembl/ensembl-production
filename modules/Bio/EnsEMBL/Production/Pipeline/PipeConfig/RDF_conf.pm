@@ -32,17 +32,23 @@ and at least 100 GB of scratch space.
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::RDF_conf;
 use strict;
 use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
+use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
   my $self = shift;
   return {
     %{ $self->SUPER::default_options() },
     xref => 1,
-    config_file => 'xref_LOD_mapping.json',
-    pipeline_name => 'rdf_dump',
-    registry => 'Reg',
-    base_path => '',
+    config_file => 'VersioningService/conf/xref_LOD_mapping.json',
+    release => software_version(),
+    pipeline_name => 'rdf_dump_'.$self->o('release'),
     species => [],
+    division => [],
+    antispecies =>[],
+    run_all => 0, #always run every species
+    ## Set to '1' for eg! run
+    #   default => OFF (0)
+    'eg'  => 0,
   }
 }
 
@@ -50,7 +56,13 @@ sub pipeline_wide_parameters {
   my $self = shift;
   return {
     %{ $self->SUPER::pipeline_wide_parameters() },
-    base_path => $self->o('base_path')
+    base_path => $self->o('base_path'),
+    # 'eg' flag,
+    'eg'      => $self->o('eg'),
+    # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm
+    # needs to be change , maybe removing the need to eg flag
+    'eg_version'    => $self->o('release'),
+    'sub_dir'       => $self->o('base_path'),
   }
 }
 
@@ -58,10 +70,13 @@ sub pipeline_analyses {
   my $self = shift;
   return [ {
     -logic_name => 'ScheduleSpecies',
-    -module     => 'Bio::EnsEMBL::Production::Pipeline::SpeciesFactory',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
     -input_ids => [{}], # required for automatic seeding
     -parameters => {
-      species => $self->o('species'),
+       species     => $self->o('species'),
+       antispecies => $self->o('antispecies'),
+       division    => $self->o('division'),
+       run_all     => $self->o('run_all'),
     },
     -flow_into => {
       2 => ['DumpRDF']
@@ -80,18 +95,23 @@ sub pipeline_analyses {
     # Validate both output files
     -flow_into => {
       2 => ['ValidateRDF'],
-      3 => ['ValidateRDF']
+      3 => ['ChecksumGenerator'],
     }
   },
   {
+    -logic_name => 'ChecksumGenerator',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator',
+    -wait_for   => [ qw/DumpRDF/ ],
+    -analysis_capacity => 10,
+  },
+  {
     -logic_name => 'ValidateRDF',
-    -module => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-    -parameters => {
-      cmd => '#validator# --validate #filename#',
-      validator => 'turtle',
-    },
+    -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF',
     -rc_name => 'verify',
-
+    # All the jobs can fail since it's a validation step
+    -failed_job_tolerance => 100,
+    # Only retry to run the job once
+    -max_retry_count => 1,
   }];
 }
 

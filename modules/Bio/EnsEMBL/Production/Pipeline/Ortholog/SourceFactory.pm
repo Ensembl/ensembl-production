@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::SourceFactory
+Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::SourceFactory
 ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::SourceFactory;
+package Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory;
 
 use strict;
 use Data::Dumper;

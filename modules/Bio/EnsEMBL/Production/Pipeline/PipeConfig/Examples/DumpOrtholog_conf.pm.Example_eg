@@ -52,10 +52,15 @@ sub default_options {
         # hive_capacity values for analysis
 	    'getOrthologs_capacity'  => '50',
 
+        # orthologs cutoff
+        'perc_id'  => '30',
+        'perc_cov' => '30',
+
         # 'target' & 'exclude' are mutually exclusive
         #  only one of those should be defined if used 
 	 	'species_config' => 
 		{ 
+		  # Plants
           'EPl_1' => {	# compara database to get orthologs from
                    		#  'plants', 'protists', 'fungi', 'metazoa', 'multi'
 	          		   	'compara'  => 'plants',   
@@ -65,7 +70,6 @@ sub default_options {
 						'target'   => undef,
                    		# target species to exclude in projection
 	                   	'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
-					   	#	
   					   	'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
             	     },   
 
@@ -76,28 +80,15 @@ sub default_options {
   				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	 },   
 
-          'EPl_3' => { 'compara'  => 'plants',   
- 				   	   'source'   => 'solanum_lycopersicum', 
-					   'target'   => undef,
-                   	   'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
-  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 	 },   
-
-          'EPl_4' => { 'compara'  => 'plants',   
- 				   	   'source'   => 'solanum_tuberosum', 
-					   'target'   => undef,
-                   	   'exclude'  => ['caenorhabditis_elegans', 'drosophila_melanogaster', 'homo_sapiens', 'ciona_savignyi'], 
-  				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
-                 	 },   
-
-		  # dictyostelium_discoideum to all amoebozoa
+		  # Protists, dictyostelium_discoideum to all amoebozoa
           'EPr_1' => { 'compara'  => 'protists',   
- 				   	   'source'   => '', 
+ 				   	   'source'   => 'dictyostelium_discoideum', 
 					   'target'   => ['polysphondylium_pallidum_pn500', 'entamoeba_nuttalli_p19', 'entamoeba_invadens_ip1', 'entamoeba_histolytica_ku27', 'entamoeba_histolytica_hm_3_imss', 'entamoeba_histolytica_hm_1_imss_b', 'entamoeba_histolytica_hm_1_imss_a', 'entamoeba_histolytica', 'entamoeba_dispar_saw760', 'dictyostelium_purpureum', 'dictyostelium_fasciculatum', 'acanthamoeba_castellanii_str_neff'],
                    	   'exclude'  => undef, 
   				   	   'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	 },   
 
+          # Fungi
           'EF_1' => { 'compara'  => 'fungi',   
  				   	  'source'   => 'schizosaccharomyces_pombe', 
 					  'target'   => undef,
@@ -112,16 +103,17 @@ sub default_options {
   				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	},   
 
+          # Metazoa
           'EM_1' => { 'compara'  => 'metazoa',   
  				   	  'source'   => 'caenorhabditis_elegans', 
-					  'target'   => undef,
+					  'target'   => ['caenorhabditis_brenneri', 'caenorhabditis_briggsae', 'caenorhabditis_japonica', 'caenorhabditis_remanei', 'pristionchus_pacificus', 'brugia_malayi', 'onchocerca_volvulus', 'strongyloides_ratti', 'loa_loa', 'trichinella_spiralis'],
                    	  'exclude'  => undef, 
   				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	},   
 
-          'EM_1' => { 'compara'  => 'metazoa',   
+          'EM_2' => { 'compara'  => 'metazoa',   
  				   	  'source'   => 'drosophila_melanogaster', 
-					  'target'   => undef,
+					  'target'   => ['drosophila_ananassae', 'drosophila_erecta', 'drosophila_grimshawi', 'drosophila_mojavensis','drosophila_persimilis' ,'drosophila_pseudoobscura', 'drosophila_sechellia', 'drosophila_simulans', 'drosophila_virilis', 'drosophila_willistoni', 'drosophila_yakuba'],
                    	  'exclude'  => undef, 
   				   	  'homology_types' => ['ortholog_one2one','apparent_ortholog_one2one'],		       
                  	},   
@@ -167,6 +159,18 @@ sub beekeeper_extra_cmdline_options {
   ;
 }
 
+# these parameter values are visible to all analyses, 
+# can be overridden by parameters{} and input_id{}
+sub pipeline_wide_parameters {  
+    my ($self) = @_;
+    return {
+            %{$self->SUPER::pipeline_wide_parameters},  # here we inherit anything from the base class
+            'perc_id'  => $self->o('perc_id'),
+            'perc_cov' => $self->o('perc_cov'),
+    };
+}
+
+
 sub pipeline_analyses {
     my ($self) = @_;
  
@@ -178,21 +182,21 @@ sub pipeline_analyses {
     },   
  
     {  -logic_name    => 'SourceFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::SourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
        -parameters    => { 'species_config'  => $self->o('species_config'), }, 
        -flow_into     => { '2' => ['MLSSJobFactory'], },          
        -rc_name       => 'default',
     },    
  
     {  -logic_name    => 'MLSSJobFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::MLSSJobFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory',
        -parameters    => { 'method_link_type' => $self->o('method_link_type'), },
        -flow_into     => { '2' => ['GetOrthologs'], },
        -rc_name       => 'default',
     },
   
     {  -logic_name    => 'GetOrthologs',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'eg' 			   => $self->o('eg'),
        						'output_dir'       => $self->o('output_dir'),
 							'method_link_type' => $self->o('method_link_type'),
@@ -204,7 +208,7 @@ sub pipeline_analyses {
 	 },
 	 
     {  -logic_name    => 'GetOrthologs_16GB',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },
@@ -215,7 +219,7 @@ sub pipeline_analyses {
 	 },
 
     {  -logic_name    => 'GetOrthologs_32GB',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::ORTHOLOG::DumpFile',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
        -parameters    => {	'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },

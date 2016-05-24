@@ -118,7 +118,7 @@ return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
 }
 
 # Called from 
-#  GFF3|Chainfile/DumpFile.pm  
+#  GTF, GFF3, TSV, Chainfile/DumpFile.pm  
 sub build_base_directory {
     my ($self, @extras) = @_;
     my @dirs = ($self->param('base_path'), $self->division());
@@ -136,6 +136,16 @@ sub division {
 return lc($division);
 }
 
+# New function to replace data_path, in TSV & ChainFile/DumpFile.pm
+sub get_data_path {
+    my ($self, $format) = @_;
+
+    $self->throw("No 'species' parameter specified")
+    unless $self->param('species');
+
+return $self->get_dir($format, $self->param('species'));
+}
+
 sub get_dir {
     my ($self, @extras) = @_;
     my $base_dir = $self->param('base_path');
@@ -145,11 +155,13 @@ sub get_dir {
        my $mc       = $self->get_DBAdaptor()->get_MetaContainer();
 
        if($mc->is_multispecies()==1){
-          my $collection_db;
+         my $collection_db;
          $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+         my $fasta_type    = pop(@extras) if($extras[0] eq 'fasta');
          my $species       = pop(@extras);
          push @extras, $collection_db;
          push @extras, $species;
+         push @extras, $fasta_type if(defined $fasta_type);
          $dir = File::Spec->catdir($base_dir, @extras);
        }
     }
@@ -178,6 +190,59 @@ sub has_chromosomes {
 return $count;
 }
 
+# Called from 
+#  TSV/DumpFile.pm  
+
+=head2 get_Slices
+
+        Arg[1]      : String type of DB to use (defaults to core)
+        Arg[2]      : Boolean should we filter the slices if it is human
+  Example     : my $slices = $self->get_Slices('core', 1);
+  Description : Basic get_Slices() method to return all distinct slices
+                for a species but also optionally filters for the 
+                first portion of Human Y which is a non-informative region
+                (composed solely of N's). The code will only filter for 
+                GRCh38 forcing the developer to update the test for other 
+                regions. 
+  Returntype  : ArrayRef[Bio::EnsEMBL::Slice] 
+  Exceptions  : Thrown if you are filtering Human but also are not on GRCh38
+
+=cut
+sub get_Slices {
+    my ($self, $type, $filter_human) = @_;
+
+    my $dba    = $self->get_DBAdaptor($type);
+    throw "Cannot get a DB adaptor" unless $dba;
+    my $sa     = $dba->get_SliceAdaptor();
+    my @slices = @{$sa->fetch_all('toplevel', undef, 1, undef, undef)};
+
+    if($filter_human) {
+       my $production_name = $self->production_name();
+
+       if($production_name eq 'homo_sapiens') {
+       # Coord system with highest rank should always be the one, apart from VEGA databases where it would be the second highest
+       my ($cs, $alternative_cs) = @{$dba->get_CoordSystem()->fetch_all()};
+       my $expected = 'GRCh38';
+
+       if($cs->version() ne $expected && $alternative_cs->version() ne $expected) {
+          throw sprintf(q{Cannot continue as %s's coordinate system %s is not the expected %s }, $production_name, $cs->version(), $expected);
+       }
+
+       @slices = grep {
+         if($_->seq_region_name() eq 'Y' && ($_->end() < 2781480 || $_->start() > 56887902)) {
+           $self->info('Filtering small Y slice');
+           0;
+         }
+         else {
+           1;
+         }
+      } @slices;
+    }
+   }
+
+return [ sort { $b->length() <=> $a->length() } @slices ];
+}
+
 
 #####
 
@@ -198,56 +263,6 @@ sub reset_empty_array_param {
   }
 
 return;
-}
-
-=head2 get_Slices
-
-	Arg[1]      : String type of DB to use (defaults to core)
-	Arg[2]      : Boolean should we filter the slices if it is human
-  Example     : my $slices = $self->get_Slices('core', 1);
-  Description : Basic get_Slices() method to return all distinct slices
-                for a species but also optionally filters for the 
-                first portion of Human Y which is a non-informative region
-                (composed solely of N's). The code will only filter for 
-                GRCh38 forcing the developer to update the test for other 
-                regions. 
-  Returntype  : ArrayRef[Bio::EnsEMBL::Slice] 
-  Exceptions  : Thrown if you are filtering Human but also are not on GRCh38
-
-=cut
-sub get_Slices {
-  my ($self, $type, $filter_human) = @_;
-
-  my $dba    = $self->get_DBAdaptor($type);
-  throw "Cannot get a DB adaptor" unless $dba;
-  my $sa     = $dba->get_SliceAdaptor();
-  my @slices = @{$sa->fetch_all('toplevel', undef, 1, undef, undef)};
-  
-  if($filter_human) {
-    my $production_name = $self->production_name();
-
-    if($production_name eq 'homo_sapiens') {
-      # Coord system with highest rank should always be the one, apart from VEGA databases where it would be the second highest
-      my ($cs, $alternative_cs) = @{$dba->get_CoordSystem()->fetch_all()};
-      my $expected = 'GRCh38';
-
-      if($cs->version() ne $expected && $alternative_cs->version() ne $expected) {
-        throw sprintf(q{Cannot continue as %s's coordinate system %s is not the expected %s }, $production_name, $cs->version(), $expected);
-      }
-
-      @slices = grep {
-        if($_->seq_region_name() eq 'Y' && ($_->end() < 2781480 || $_->start() > 56887902)) {
-          $self->info('Filtering small Y slice');
-          0;
-        }
-        else {
-          1;
-        }
-     } @slices;
-    }
-  }
-  
-return [ sort { $b->length() <=> $a->length() } @slices ];
 }
 
 =head2 get_chromosome_name
