@@ -72,8 +72,10 @@ sub remodel_genome {
     $new_gene->{genome_display} = $genome->{organism}{display_name};
     $new_gene->{taxon_id}       = $genome->{organism}{taxonomy_id};
     $new_gene->{lineage}        = $genome->{organism}{lineage};
-    for my $go ( @{ $new_gene->{GO_expanded} } ) {
-      $genome_gos->{$go} = 1;
+    for my $go ( @{ $new_gene->{GO} } ) {
+      for my $gop (@{$go->{parents}}) {
+        $genome_gos->{$gop} = 1;
+      }
     }
     push @$new_genes, $new_gene;
   }
