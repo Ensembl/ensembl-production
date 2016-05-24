@@ -93,7 +93,6 @@ sub remodel_gene {
     qw/id name description biotype seq_region_name start end strand coord_system homologues/
   );
   $self->collate_xrefs( $gene, $new_gene );
-  my $protein_feature_xrefs = {};
   # process transcripts
   for my $transcript ( @{ $gene->{transcripts} } ) {
     my $new_transcript = $self->copy_hash( $transcript,
@@ -104,19 +103,8 @@ sub remodel_gene {
       my $new_translation =
         $self->copy_hash( $translation, qw/id coding_start coding_end/ );
       $self->collate_xrefs( $translation, $new_translation );
-           # process protein features
-      for my $protein_feature ( @{ $translation->{protein_features} } ) {
-        push @{ $new_translation->{protein_features} }, $protein_feature;
-        if ( defined $protein_feature->{dbname} ) {
-          push @{ $protein_feature_xrefs->{ $protein_feature->{dbname} } },
-            $protein_feature->{name};
-        }
-        if ( defined $protein_feature->{interpro_ac} ) {
-          push @{ $protein_feature_xrefs->{Interpro} },
-            $protein_feature->{interpro_ac};
-        }
-      }
-      $self->merge_xrefs($new_transcript, $new_translation);
+      $self->collate_protein_features( $translation, $new_translation );
+      $self->merge_xrefs( $new_transcript, $new_translation );
       $self->make_xrefs_unique($new_translation);
       push @{ $new_transcript->{translations} }, $new_translation;
     }
@@ -127,24 +115,10 @@ sub remodel_gene {
       push @{ $new_transcript->{exons} }, $new_exon;
     }
     push @{ $new_gene->{transcripts} }, $new_transcript;
-      $self->merge_xrefs($new_gene, $new_transcript);
+    # copy xrefs from transcript to gene
+    $self->merge_xrefs( $new_gene, $new_transcript );
     $self->make_xrefs_unique($new_transcript);
   } ## end for my $transcript ( @{...})
-    # process main "named" xrefs
-    #  for my $dbname ( keys %{ $self->{key_xrefs} } ) {
-    #    if ( defined $new_gene->{$dbname} ) {
-    #      my $key = process_key($dbname);
-    #      $new_gene->{$key} = $self->make_xrefs_unique( $new_gene->{$dbname} );
-    #    }
-    #  }
-    #  # process protein features
-    #  for my $dbname ( keys %{$protein_feature_xrefs} ) {
-    #    if ( defined $protein_feature_xrefs->{$dbname} ) {
-    #      my $key = process_key($dbname);
-    #      $new_gene->{$key} =
-    #        $self->make_xrefs_unique( $protein_feature_xrefs->{$dbname} );
-    #    }
-    #  }
   $self->make_xrefs_unique($new_gene);
 
   if ( !defined $new_gene->{homologues} ) {
@@ -160,13 +134,28 @@ sub remodel_gene {
 sub copy_hash {
   my $self = shift;
   my $src  = shift;
-  my $tgt  = {};
-  for my $key (@_) {
-    # TODO consider a deep copy?
-    $tgt->{$key} = $src->{$key};
+  return undef unless defined $src && ref($src) eq 'HASH';
+  my @keys = @_;
+  if ( scalar(@keys) == 0 ) {
+    @keys = keys %$src;
+  }
+  my $tgt = {};
+  for my $key (@keys) {
+    my $val = $src->{$key};
+    if ( defined $val ) {
+      if ( ref( $val eq 'HASH' ) ) {
+        $tgt->{$key} = $self->copy_hash($val);
+      }
+      elsif ( ref( $val eq 'ARRAY' ) ) {
+        $tgt->{$key} = map { $_ } @$val;
+      }
+      else {
+        $tgt->{$key} = $val;
+      }
+    }
   }
   return $tgt;
-}
+} ## end sub copy_hash
 
 sub make_xrefs_unique {
   my ( $self, $obj ) = @_;
@@ -175,45 +164,122 @@ sub make_xrefs_unique {
       $obj->{$dbname} = [ keys( %{ $obj->{$dbname} } ) ];
     }
   }
+  for my $dbname ( keys %{ $self->{protein_features} } ) {
+    if ( defined $obj->{$dbname} ) {
+      $obj->{$dbname} = [ keys( %{ $obj->{$dbname} } ) ];
+    }
+  }
   return;
 }
 
-#sub make_xrefs_unique {
-#  my ( $self, $xrefs ) = @_;
-#  my %w = map { $_ => 1 } @{$xrefs};
-#  return [ keys %w ];
-#}
+sub collate_protein_features {
+  my ( $self, $obj, $newobj ) = @_;
+  for my $pf ( @{ $obj->{protein_features} } ) {
+    if ( defined $pf->{dbname} ) {
+      $self->{protein_features}{ $pf->{dbname} } = 1;
+      $newobj->{ $pf->{dbname} }->{ $pf->{name} }++;
+    }
+    if ( defined $pf->{interpro_ac} ) {
+      $self->{protein_features}{Interpro} = 1;
+      $newobj->{Interpro}->{ $pf->{interpro_ac} }++;
+    }
+  }
+  if ( $self->{retain_xrefs} ) {
+    $newobj->{protein_features} =
+      [ map { $self->copy_hash($_) } @{ $obj->{protein_features} } ];
+  }
+  return;
+}
 
 sub collate_xrefs {
   my ( $self, $obj, $new_obj ) = @_;
   for my $xref ( @{ $obj->{xrefs} } ) {
     if ( defined $xref->{linkage_types} || defined $xref->{associated_xrefs} ) {
-      $self->{annotations}{ $xref->{dbname} } = 1;
 
-    }
+      my $expanded_terms = $self->expand_term( $xref->{primary_id} );
+
+      $self->{annotations}{ $xref->{dbname} } = 1;
+      my $anns = $new_obj->{ $xref->{dbname} };
+      if ( !defined $anns ) {
+        $anns = [];
+        $new_obj->{ $xref->{dbname} } = $anns;
+      }
+      my $evidence = [];
+      for my $lt ( @{ $xref->{linkage_types} } ) {
+        push $evidence, $lt->{evidence};
+      }
+      # add associated xrefs
+      if ( defined $xref->{associated_xrefs} &&
+           scalar( @{ $xref->{associated_xrefs} } ) > 0 )
+      {
+        for my $ass ( @{ $xref->{associated_xrefs} } ) {
+          my $ann = { term => $xref->{primary_id} };
+          if ( defined $evidence && scalar(@$evidence) > 0 ) {
+            $ann->{evidence} = [ map { $_ } @$evidence ];
+          }
+          if ( defined $expanded_terms && scalar(@$expanded_terms) > 0 ) {
+            $ann->{parents} = [ map { $_ } @$expanded_terms ];
+          }
+          while ( my ( $k, $v ) = each %$ass ) {
+            $ann->{$k} = $v->{primary_id};
+          }
+          push @$anns, $ann;
+        }
+      }
+      else {
+        my $ann = { term => $xref->{primary_id} };
+        if ( defined $evidence && scalar(@$evidence) > 0 ) {
+          $ann->{evidence} = [ map { $_ } @$evidence ];
+        }
+        if ( defined $expanded_terms && scalar(@$expanded_terms) > 0 ) {
+          $ann->{parents} = [ map { $_ } @$expanded_terms ];
+        }
+        push @$anns, $ann;
+      }
+    } ## end if ( defined $xref->{linkage_types...})
     else {
       $self->{xrefs}{ $xref->{dbname} } = 1;
       $new_obj->{ $xref->{dbname} }->{ $xref->{primary_id} }++;
     }
+  } ## end for my $xref ( @{ $obj->...})
+  if ( $self->{retain_xrefs} ) {
+    $new_obj->{xrefs} = [ map { $self->copy_hash($_) } @{ $obj->{xrefs} } ];
   }
   return;
-}
+} ## end sub collate_xrefs
 
 sub merge_xrefs {
   my ( $self, $obj, $subobj ) = @_;
   # merge from subobj onto obj
+  # merge xrefs
   for my $dbname ( keys %{ $self->{xrefs} } ) {
-    print Dumper($subobj->{$dbname});    
     if ( defined $subobj->{$dbname} ) {
-      for my $key (keys %{ $subobj->{$dbname}}) {
-      $obj->{$dbname}->{$key}++;        
+      for my $key ( keys %{ $subobj->{$dbname} } ) {
+        $obj->{$dbname}->{$key}++;
       }
-#      $obj->{$dbname} = [ keys( %{ $obj->{$dbname} } ) ];
+    }
+  }
+  # merge protein features
+  for my $dbname ( keys %{ $self->{protein_features} } ) {
+    if ( defined $subobj->{$dbname} ) {
+      for my $key ( keys %{ $subobj->{$dbname} } ) {
+        $obj->{$dbname}->{$key}++;
+      }
+    }
+  }
+  # append annotations
+  for my $dbname ( keys %{ $self->{annotations} } ) {
+    if ( defined $subobj->{$dbname} ) {
+      if ( !defined $obj->{$dbname} ) {
+        $obj->{$dbname} = [];
+      }
+      for my $ann ( @{ $subobj->{$dbname} } ) {
+        push $obj->{$dbname}, $self->copy_hash($ann);
+      }
     }
   }
   return;
-}
-
+} ## end sub merge_xrefs
 
 #sub key_for_annotation {
 #  my ($annotation) = @_;
@@ -225,52 +291,12 @@ sub merge_xrefs {
 #  my ( $self, $obj ) = @_;
 #  return;
 #}
-#
-#sub merge_xrefs {
-#  my ( $self, $obj, $subobj ) = @_;
-#  # merge from subobj onto obj
-#  return;
-#}
-#
-#sub add_xrefs {
-#  my ( $self, $obj, $subobj, $xrefs ) = @_;
-#  my $key_xrefs = {};
-#  for my $xref ( @{$xrefs} ) {
-#    # create query specific indices as required
-#    if ( defined $self->{key_xrefs}{ $xref->{dbname} } ) {
-#      my $key = process_key( $xref->{dbname} );
-#      $key_xrefs->{$key}->{ $xref->{primary_id} } = 1;
-#      if ( defined $xref->{linkage_types} ) {
-#        # store expanded values separately
-#        my $exp_key = $key . '_expanded';
-#        for my $v ( @{ $self->expand_term( $xref->{primary_id} ) } ) {
-#          $key_xrefs->{$exp_key}->{$v} = 1;
-#        }
-#      }
-#      if ( defined $xref->{associated_xrefs} ) {
-#        for my $ass_xref ( @{ $xref->{associated_xrefs} } ) {
-#          my $ann = {};
-#          while ( my ( $k, $v ) = each %$ass_xref ) {
-#            $ann->{$k} = $v->{primary_id};
-#          }
-#          push @{ $obj->{annotations} }, $ann;
-#        }
-#      }
-#    }
-#  }
-#  if ( defined $self->{retain_xrefs} && $self->{retain_xrefs} == 1 ) {
-#    $subobj->{xrefs} = $xrefs;
-#  }
-#  while ( my ( $dbname, $accs ) = each %$key_xrefs ) {
-#    for my $id ( keys %$accs ) {
-#      push @{ $obj->{$dbname} }, $id;
-#    }
-#  }
-#  return;
-#} ## end sub add_xrefs
 
 sub expand_term {
   my ( $self, $term ) = @_;
+  if ( !defined $self->{onto_dba} ) {
+    return [$term];
+  }
   my $terms = $self->{term_parents}->{$term};
   if ( !defined $terms ) {
     $terms = $self->{onto_dba}->dbc()->sql_helper()->execute_simple(
@@ -279,6 +305,7 @@ join closure c on (t.term_id=c.child_term_id)
 join term p on (p.term_id=c.parent_term_id)
 where t.ontology_id=p.ontology_id and t.accession=?/,
       -PARAMS => [$term] );
+    push @{$terms}, $term;
     $self->{term_parents}->{$term} = $terms;
   }
   return $terms;
