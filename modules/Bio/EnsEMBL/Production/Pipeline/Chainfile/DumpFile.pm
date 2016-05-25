@@ -101,6 +101,9 @@ sub run {
       $self->info('Working with %s to %s', $asm_cs, $cmp_cs);
       $self->info('Fetching mappings');
       my $asm_to_cmp_mappings = get_assembly_mappings($self, $core_dba, $asm_cs, $cmp_cs);
+
+      # If there is no assembly_mappings between coord versions 
+      next unless scalar(@$asm_to_cmp_mappings > 0);
       write_mappings($self, $chain_path, $asm_cs, $cmp_cs, $prod_name, $asm_to_cmp_mappings, $core_dba);
 
       $self->info('Fetching reverse mappings');
