@@ -87,17 +87,19 @@ sub run {
     my $chunk_factor      = $self->param('chunk_factor');
     my $line_width        = $self->param('line_width');
     my $allow_stop_codons = $self->param('allow_stop_codons');
+    my $production_lookup = $self->param('production_lookup');
+    my $production_db     = $self->param('production_db');
   
     # Use the ensembl_production database to retrieve the biotypes
     # associated with the coding group, if possible.
     my $biotypes;
     my $biotype_groups = ['coding'];
     my $pdba;
-    # Check if the production database is in the config file
-    eval{
+    # Check if the production lookup flag is turned on
+    # If it is then connect to the production database
+    if ($production_lookup){
       $pdba = $self->get_DBAdaptor('production');
-    };
-
+    }
     if (defined $pdba) {
       my $biotype_manager = $pdba->get_biotype_manager();
       map { push @{$biotypes}, @{ $biotype_manager->group_members($_)} } @{$biotype_groups};
