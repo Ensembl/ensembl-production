@@ -37,13 +37,20 @@ sub _generate_file_name {
     # File name format looks like:
     # <species>.<assembly>.<release>.<dbname>.tsv.gz
     # e.g. Arabidopsis_thaliana.TAIR10.31.uniprot.tsv.gz
+    my ($web_name, $assembly, $release, $type);
     my @name_bits;
-    push @name_bits, $self->web_name();
-    push @name_bits, $self->assembly();
-    push @name_bits, $self->param('release');
-    push @name_bits, $self->param('type');
+ 
+    $web_name = $self->web_name();
+    $assembly = $self->assembly();
+    $assembly =~ s/\/|\s/\_/g;  #replace forward slash & whitespaces 
+    $release  = $self->param('release');
+    $type     = $self->param('type'); 
+  
+    push @name_bits, $web_name;
+    push @name_bits, $assembly;
+    push @name_bits, $release;
+    push @name_bits, $type;    
     push @name_bits, 'tsv';
-    #push @name_bits, 'tsv', 'gz';
 
     my $file_name = join( '.', @name_bits );
     my $data_path = $self->get_data_path('tsv');
