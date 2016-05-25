@@ -88,6 +88,8 @@ sub default_options {
 
     #   Retrieve analsysis descriptions from the production database;
     #   the supplied registry file will need the relevant server details.
+    #   The Production database is also used to retrieve the list of
+    #   coding biotypes in DumpProteome.
     'production_lookup' => 1,
 
     ## 'prepipeline_checks' parameters
@@ -495,6 +497,8 @@ sub pipeline_analyses {
                        		proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                        		header_style => 'dbID',
                        		overwrite    => $self->o('overwrite'),
+                                production_lookup  => $self->o('production_lookup'),
+                                production_db      => $self->o('production_db'),
                      	  },
       -rc_name    	   => 'default',
       -flow_into  	   => $flow_dump_proteome,
