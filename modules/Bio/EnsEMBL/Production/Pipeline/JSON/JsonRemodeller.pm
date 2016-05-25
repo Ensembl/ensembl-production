@@ -68,7 +68,7 @@ sub remodel_genome {
   my $genome_gos = {};
   for my $gene ( @{ $genome->{genes} } ) {
     my $new_gene = $self->remodel_gene($gene);
-    $new_gene->{genome}         = $genome->{name};
+    $new_gene->{genome}         = $genome->{organism}{name};
     $new_gene->{genome_display} = $genome->{organism}{display_name};
     $new_gene->{taxon_id}       = $genome->{organism}{taxonomy_id};
     $new_gene->{lineage}        = $genome->{organism}{lineage};
