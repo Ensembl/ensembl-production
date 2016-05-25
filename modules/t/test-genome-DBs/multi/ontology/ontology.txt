@@ -1,16 +1,16 @@
-1	GO	biological_process
-2	GO	cellular_component
-3	GO	molecular_function
-5	SO	sequence
-6	EFO	BrendaTissueOBO
-7	EFO	EFO
-8	EFO	biological_process
-9	EFO	cell
-10	EFO	cellular_component
-11	EFO	human_phenotype
-12	EFO	mouse_pathology.ontology
-13	EFO	ncbi_taxonomy
-14	EFO	plant_anatomy
-15	EFO	quality
-16	EFO	uberon
-17	EFO	uberon/phenoscape-anatomy
+1	GO	biological_process	NULL
+2	GO	cellular_component	NULL
+3	GO	molecular_function	NULL
+5	SO	sequence	NULL
+6	EFO	BrendaTissueOBO	NULL
+7	EFO	EFO	NULL
+8	EFO	biological_process	NULL
+9	EFO	cell	NULL
+10	EFO	cellular_component	NULL
+11	EFO	human_phenotype	NULL
+12	EFO	mouse_pathology.ontology	NULL
+13	EFO	ncbi_taxonomy	NULL
+14	EFO	plant_anatomy	NULL
+15	EFO	quality	NULL
+16	EFO	uberon	NULL
+17	EFO	uberon/phenoscape-anatomy	NULL

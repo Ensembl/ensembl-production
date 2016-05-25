@@ -49,6 +49,7 @@ sub default_options {
        'pipeline_name' => $self->o('hive_db'),       
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
+       'dumps'     => [],
 
 	   ## 'job_factory' parameters
 	   'species'     => [], 
@@ -64,22 +65,9 @@ sub default_options {
        #  affect: dump_gtf
 	   'eg' => 0,
 
-	   ## Set to '0' to skip dump format(s)
-       #  default => OFF (0)
 	   #  'fasta' - cdna, cds, dna, ncrna, pep
 	   #  'chain' - assembly chain files
 	   #  'tsv'   - ena & uniprot
-   	   'f_dump_gtf'     	=> 1,
-	   'f_dump_gff3'    	=> 1,
-	   'f_dump_embl'    	=> 1,
-   	   'f_dump_genbank' 	=> 1,
-   	   'f_dump_fasta_dna' 	=> 1,
-   	   'f_dump_fasta_pep'   => 1,
-   	   'f_dump_chain'   	=> 1,
-   	   'f_dump_tsv_uniprot' => 1,
-   	   'f_dump_tsv_ena'     => 1,
-   	   'f_dump_tsv_metadata'=> 1,
-       'f_dump_rdf'         => 1,
 
 	   ## dump_gff3 & dump_gtf parameter
        'abinitio'        => 1,
@@ -203,23 +191,18 @@ sub pipeline_analyses {
     my ($self) = @_;
     
    	my $pipeline_flow;
-   	
-   	#10 dump types (1 combinations)
-  	if ($self->o('f_dump_gtf') && $self->o('f_dump_gff3') && $self->o('f_dump_embl') && $self->o('f_dump_genbank') && $self->o('f_dump_fasta_dna') && $self->o('f_dump_fasta_pep') && $self->o('f_dump_chain') && $self->o('f_dump_tsv_uniprot') && $self->o('f_dump_tsv_ena') && $self->o('f_dump_tsv_metadata') && $self->o('f_dump_rdf')) {
-    	$pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_rdf'];} 
-        
-    #1 dump type  
-    elsif ($self->o('f_dump_gtf'))     	 	{ $pipeline_flow  = ['dump_gtf']; } 
-    elsif ($self->o('f_dump_gff3'))    	 	{ $pipeline_flow  = ['dump_gff3']; } 
-    elsif ($self->o('f_dump_embl'))    	 	{ $pipeline_flow  = ['dump_embl']; } 
-    elsif ($self->o('f_dump_genbank')) 	 	{ $pipeline_flow  = ['dump_genbank']; }
-    elsif ($self->o('f_dump_fasta_dna')) 	{ $pipeline_flow  = ['dump_fasta_dna']; }
-    elsif ($self->o('f_dump_fasta_pep')) 	{ $pipeline_flow  = ['dump_fasta_pep']; }
-    elsif ($self->o('f_dump_chain'))   	 	{ $pipeline_flow  = ['dump_chain']; }    
-    elsif ($self->o('f_dump_tsv_uniprot'))  { $pipeline_flow  = ['dump_tsv_uniprot']; }    
-    elsif ($self->o('f_dump_tsv_ena'))   	{ $pipeline_flow  = ['dump_tsv_ena']; }    
-    elsif ($self->o('f_dump_tsv_metadata')) { $pipeline_flow  = ['dump_tsv_metadata']; }    
-    elsif ($self->o('f_dump_rdf'))          { $pipeline_flow  = ['dump_rdf'];}
+        # Getting list of dumps from argument
+        my $dumps = $self->o('dumps');
+        # Checking if the list of dumps is an array
+        my @dumps = ( ref($dumps) eq 'ARRAY' ) ? @$dumps : ($dumps);
+        #Pipeline_flow will contain the dumps from the dumps list
+        if (scalar @dumps) {
+          $pipeline_flow  = $dumps;
+        }
+        # Else, we run all the dumps
+        else {
+          $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_rdf'];
+        }
         
     return [
      { -logic_name     => 'backbone_fire_pipeline',

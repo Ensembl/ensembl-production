@@ -14,3 +14,4 @@
 14	patch	patch_84_85_a.sql|schema_version	\N
 15	patch	patch_84_85_b.sql|confident_relationship	\N
 16	patch	patch_84_85_c.sql| add synonym dbxref	\N
+17	patch	patch_84_85_d.sql| add ontology data-version	\N
