@@ -57,11 +57,11 @@ USAGE
 #-----------------------------------------------------------------------
 
 sub write_ontology {
-  my ($dbh, $namespaces) = @_;
+  my ($dbh, $namespaces, $data_version) = @_;
 
   print("Writing to 'ontology' table...\n");
 
-  my $statement = "INSERT INTO ontology (name, namespace) VALUES (?,?)";
+  my $statement = "INSERT INTO ontology (name, namespace, data_version) VALUES (?,?,?)";
 
   my $sth = $dbh->prepare($statement);
 
@@ -79,6 +79,7 @@ sub write_ontology {
 
     $sth->bind_param(1, $ontology,  SQL_VARCHAR);
     $sth->bind_param(2, $namespace, SQL_VARCHAR);
+    $sth->bind_param(3, $data_version, SQL_VARCHAR);
 
     $sth->execute();
 
@@ -763,7 +764,8 @@ foreach my $rel_type (@{$ontology->get_relationship_types()}) {
 
 print("Finished reading OBO file, now writing to database...\n");
 
-my $unknown_onto_id = write_ontology($dbh, \%namespaces);
+
+my $unknown_onto_id = write_ontology($dbh, \%namespaces, $ontology->data_version() );
 write_subset($dbh, \%subsets);
 write_term($dbh, \%terms, \%subsets, \%namespaces, $unknown_onto_id);
 write_relation_type($dbh, \%relation_types);
