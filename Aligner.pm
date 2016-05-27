@@ -32,13 +32,16 @@ sub new {
 	my $self = bless( {}, ref($class) || $class );
   my ($samtools_dir, $bcftools_dir);
   
-	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup} ) =
-	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP' ], @args );
+	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads}, $self->{merge_sort_memory} ) =
+	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS', 'MERGE_SORT_MEMORY' ], @args );
   
 	$self->{samtools} ||= 'samtools';
 	$self->{bcftools} ||= 'bcftools';
 	$self->{vcfutils} ||= 'vcfutils.pl';
   $self->{cleanup}  ||= 1;
+  $self->{merge_sort_memory} ||= '16000';
+  $self->{merge_sort_memory} .= 'M';
+  $self->{threads} ||= 4;
   
   $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
 	$self->{bcftools} = catdir($bcftools_dir, $self->{bcftools}) if defined $bcftools_dir;
@@ -128,7 +131,9 @@ sub sort_bam {
       $out_prefix = "$bam.sorted";
     }
 	}
-  my $cmd = "$self->{samtools} sort $bam $out_prefix";
+  my $threads = $self->{threads};
+  my $memory  = $self->{merge_sort_memory};
+  my $cmd = "$self->{samtools} sort -\@ $threads -m $memory $bam $out_prefix";
   system($cmd) == 0 || throw "Cannot execute $cmd";
   $self->align_cmds($cmd);
   
