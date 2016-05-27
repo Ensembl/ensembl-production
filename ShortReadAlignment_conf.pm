@@ -135,7 +135,9 @@ sub default_options {
     samtools_dir  => '/nfs/panda/ensemblgenomes/external/samtools',
     bedtools_dir  => '/nfs/panda/ensemblgenomes/external/bedtools/bin',
     ucscutils_dir => '/nfs/panda/ensemblgenomes/external/ucsc_utils',
-
+    
+    # 4GB per thread for samtools sort
+    merge_sort_memory => 16000,
   };
 }
 
@@ -483,7 +485,7 @@ sub alignment_analyses {
                               use_csi      => $self->o('use_csi'),
                               clean_up     => $self->o('clean_up'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'merge_sort',
       -flow_into         => {
                               '2' => ['?table_name=align_cmds',
                                      
@@ -565,17 +567,19 @@ sub resource_classes {
   my $align_memory_default      = $self->o('align_memory_default');
   my $align_memory_high_default = $self->o('align_memory_high_default');
   
-  my $index_mem   = $self->o('index_memory')      || $$index_memory_default{$aligner};
-  my $index_himem = $self->o('index_memory_high') || $$index_memory_high_default{$aligner};
-  my $align_mem   = $self->o('align_memory')      || $$align_memory_default{$aligner};
-  my $align_himem = $self->o('align_memory_high') || $$align_memory_high_default{$aligner};
+  my $index_mem      = $self->o('index_memory')      || $$index_memory_default{$aligner};
+  my $index_himem    = $self->o('index_memory_high') || $$index_memory_high_default{$aligner};
+  my $align_mem      = $self->o('align_memory')      || $$align_memory_default{$aligner};
+  my $align_himem    = $self->o('align_memory_high') || $$align_memory_high_default{$aligner};
+  my $merge_sort_mem = $self->o('merge_sort_memory');
   
   return {
     %{$self->SUPER::resource_classes},
-    'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000] span[hosts=1]"'},
-    'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000] span[hosts=1]"'},
-    'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000] span[hosts=1]"'},
-    'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000] span[hosts=1]"'},
+    'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_mem.     ' -R "rusage[mem='.$index_mem.     ',tmp=16000] span[hosts=1]"'},
+    'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem.   ' -R "rusage[mem='.$index_himem.   ',tmp=16000] span[hosts=1]"'},
+    'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.     ' -R "rusage[mem='.$align_mem.     ',tmp=16000] span[hosts=1]"'},
+    'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem.   ' -R "rusage[mem='.$align_himem.   ',tmp=16000] span[hosts=1]"'},
+    'merge_sort'    => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$merge_sort_mem.' -R "rusage[mem='.$merge_sort_mem.',tmp=16000] span[hosts=1]"'},
   }
 }
 
