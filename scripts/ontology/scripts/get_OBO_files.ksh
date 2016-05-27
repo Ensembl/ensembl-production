@@ -20,6 +20,9 @@ wget -O GO.obo "http://www.geneontology.org/ontology/obo_format_1_2/gene_ontolog
 # SO    - Sequence Ontology
 wget -O SO.obo "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-xp-simple.obo"
 
+# HPO   - HPO Ontology
+wget -O HPO.obo "http://purl.obolibrary.org/obo/hp.obo"
+
 # EFO   - Experimental Factor Ontology
 wget -O EFO.obo "http://svn.code.sf.net/p/efo/code/trunk/src/efoinobo/efo.obo"
 
