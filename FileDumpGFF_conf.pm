@@ -131,7 +131,7 @@ sub pipeline_analyses {
                               remove_id_prefix   => $self->o('gff3_remove_id_prefix'),
                               relabel_transcript => $self->o('gff3_relabel_transcript'),
                               remove_separators  => $self->o('gff3_remove_separators'),
-                              out_file_stem      => $self->o('gff3_out_file_stem'),
+                              out_file_stem      => $self->o('out_file_stem'),
                               eg_dir_structure   => $self->o('eg_dir_structure'),
                               eg_filename_format => $self->o('eg_filename_format'),
                             },
