@@ -32,15 +32,13 @@ sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
   
-  my $aligner_dir;
-  ( $aligner_dir, $self->{bwa}, $self->{program}, $self->{read_type} ) =
-    rearrange(['ALIGNER_DIR', 'BWA', 'PROGRAM', 'READ_TYPE'], @args);
+  $self->{index_program} = 'bwa';
+  $self->{align_program} = 'bwa';
   
-  $self->{bwa}       ||= 'bwa';
-  $self->{read_type} ||= 'default';
-  $self->{program}   ||= ($self->{read_type} eq 'long_reads') ? 'mem' : 'aln';
-  
-  $self->{bwa} = catdir($aligner_dir, $self->{bwa});
+  if ($self->{aligner_dir}) {
+    $self->{index_program} = catdir($self->{aligner_dir}, $self->{index_program});
+    $self->{align_program} = catdir($self->{aligner_dir}, $self->{align_program});
+  }
   
   return $self;
 }
@@ -62,16 +60,16 @@ sub version {
 sub index_file {
   my ($self, $file) = @_;
   
-  my $index_cmd = "$self->{bwa} index ";
-  my $index_options = " -a bwtsw ";
-  my $cmd = "$index_cmd $index_options $file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->index_cmds($cmd);
+  my $index_cmd  = "$self->{index_program} index ";
+  $index_cmd    .= " -a bwtsw ";
+  $index_cmd    .= " $file ";
+  
+  $self->run_cmd($index_cmd, 'index');
   
   my $samtools_index_cmd = "$self->{samtools} faidx ";
-  $cmd = "$samtools_index_cmd $file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->index_cmds($cmd);
+  $samtools_index_cmd   .= " $file ";
+  
+  $self->run_cmd($samtools_index_cmd, 'index');
 }
 
 sub index_exists {
@@ -85,23 +83,23 @@ sub index_exists {
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
   
-  if ($self->{program} eq 'aln') {
+  if ($self->{run_mode} eq 'long_reads') {
     if (defined $file2) {
-      my $aligned1 = $self->sai_file($ref, $file1);
-      my $aligned2 = $self->sai_file($ref, $file2);
+      $sam = $self->align_file($ref, $sam, "$file1 $file2", '', 'mem');
+    } else {
+      $sam = $self->align_file($ref, $sam, $file1, '', 'mem');
+    }
+  } else {
+    if (defined $file2) {
+      my $aligned1 = $self->sai_file($ref, $file1, 'aln');
+      my $aligned2 = $self->sai_file($ref, $file2, 'aln');
       $sam = $self->align_file($ref, $sam, "$file1 $file2", "$aligned1 $aligned2", 'sampe');
       unlink $aligned1 if $self->{cleanup};
       unlink $aligned2 if $self->{cleanup};
     } else {
-      my $aligned1 = $self->sai_file($ref, $file1);
+      my $aligned1 = $self->sai_file($ref, $file1, 'aln');
       $sam = $self->align_file($ref, $sam, $file1, $aligned1, 'samse');
       unlink $aligned1 if $self->{cleanup};
-    }
-  } else {
-    if (defined $file2) {
-      $sam = $self->align_file($ref, $sam, "$file1 $file2", '', $self->{program});
-    } else {
-      $sam = $self->align_file($ref, $sam, $file1, '', $self->{program});
     }
   }
   
@@ -109,13 +107,13 @@ sub align {
 }
 
 sub sai_file {
-  my ($self, $ref, $file)  = @_;
+  my ($self, $ref, $file, $program)  = @_;
   
-  my $sai_file = "$file.sai";
-  my $align_cmd = "$self->{bwa} $self->{program} ";
-  my $cmd = "$align_cmd $ref $file > $sai_file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->align_cmds($cmd);
+  my $sai_file  = "$file.sai";
+  my $align_cmd = "$self->{align_program} $program ";
+  $align_cmd   .= " $ref $file > $sai_file ";
+  
+  $self->run_cmd($align_cmd, 'align');
   
   return $sai_file;
 }
@@ -123,10 +121,10 @@ sub sai_file {
 sub align_file {
   my ($self, $ref, $sam, $files, $aligneds, $program) = @_;
   
-  my $sam_cmd = "$self->{bwa} $program ";
-  my $cmd = "$sam_cmd $ref $aligneds $files > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->align_cmds($cmd);
+  my $align_cmd = "$self->{align_program} $program ";
+  $align_cmd   .= " $ref $aligneds $files > $sam";
+  
+  $self->run_cmd($align_cmd, 'align');
   
   return $sam;
 }

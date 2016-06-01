@@ -30,19 +30,37 @@ use IPC::Cmd qw(run);
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-  my ($samtools_dir, $bcftools_dir);
   
-	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup} ) =
-	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP' ], @args );
+	(
+    $self->{samtools_dir}, $self->{samtools},
+    $self->{bcftools_dir}, $self->{bcftools}, $self->{vcfutils},
+    $self->{aligner_dir},
+    $self->{threads}, $self->{run_mode}, $self->{cleanup},
+  ) =
+  rearrange(
+    [
+      'SAMTOOLS_DIR', 'SAMTOOLS',
+      'BCFTOOLS_DIR', 'BCFTOOLS', 'VCFUTILS',
+      'ALIGNER_DIR',
+      'THREADS', 'RUN_MODE', 'DO_NOT_RUN', 'CLEANUP',
+    ], @args
+  );
   
-	$self->{samtools} ||= 'samtools';
-	$self->{bcftools} ||= 'bcftools';
-	$self->{vcfutils} ||= 'vcfutils.pl';
-  $self->{cleanup}  ||= 1;
+	$self->{samtools}   ||= 'samtools';
+	$self->{bcftools}   ||= 'bcftools';
+	$self->{vcfutils}   ||= 'vcfutils.pl';
+  $self->{threads}    ||= 1;
+  $self->{run_mode}   ||= 'default';
+  $self->{do_not_run} ||= 0;
+  $self->{cleanup}    ||= 1;
   
-  $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
-	$self->{bcftools} = catdir($bcftools_dir, $self->{bcftools}) if defined $bcftools_dir;
-	$self->{vcfutils} = catdir($bcftools_dir, $self->{vcfutils}) if defined $bcftools_dir;
+  if ($self->{samtools_dir}) {
+    $self->{samtools} = catdir($self->{samtools_dir}, $self->{samtools});
+  }
+  if ($self->{bcftools_dir}) {
+    $self->{bcftools} = catdir($self->{bcftools_dir}, $self->{bcftools});
+    $self->{vcfutils} = catdir($self->{bcftools_dir}, $self->{vcfutils});
+  }
   
 	return $self;
 }
@@ -50,7 +68,7 @@ sub new {
 sub version {
   my ($self) = @_;
   
-  my $cmd = $self->{bowtie2} . ' --version';
+  my $cmd = $self->{align_program} . ' --version';
   my ($success, $error, $buffer) = run(command => $cmd);
   my $buffer_str = join "", @$buffer;
   
@@ -58,7 +76,7 @@ sub version {
     $buffer_str =~ /version\s+(\S+)/m;
     return $1;
   } else {
-    $self->throw("Command '$cmd' failed, $error: $buffer_str");
+    throw("Command '$cmd' failed, $error: $buffer_str");
   }
 }
 
@@ -72,6 +90,20 @@ sub index_exists {
 
 sub align {
 	throw "align unimplemented";
+}
+
+sub run_cmd {
+  my ($self, $cmd, $cmd_type) = @_;
+  
+  if (! $self->{do_not_run}) {
+    system($cmd) == 0 || throw "Cannot execute $cmd: $@";
+  }
+  
+  if ($cmd_type eq 'align') {
+    $self->align_cmds($cmd);
+  } elsif ($cmd_type eq 'index') {
+    $self->index_cmds($cmd);
+  }
 }
 
 sub index_cmds {

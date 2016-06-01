@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::Aligner::Bowtie2Aligner;
+package Bio::EnsEMBL::EGPipeline::Common::Aligner::HISAT2Aligner;
 
 use strict;
 use warnings;
@@ -32,13 +32,27 @@ sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
   
-  $self->{index_program} = 'bowtie2-build';
-  $self->{align_program} = 'bowtie2';
+  (
+    $self->{max_intron_length},
+    $self->{gtf_file}
+  ) =
+  rearrange(
+    [
+      'MAX_INTRON_LENGTH', 'GTF_FILE'
+    ], @args
+  );
   
-  if ($self->{run_mode} eq 'local') {
-    $self->{align_params} = ' --local ';
+  $self->{index_program} = 'hisat2-build';
+  $self->{align_program} = 'hisat2';
+  
+  if ($self->{run_mode} eq 'lenient') {
+    $self->{align_params} = ''; # Lenient params TBD
   } else {
     $self->{align_params} = '';
+  }
+  
+  if ($self->{max_intron_length}) {
+    $self->{align_params} .= " --max-intronlen $self->{max_intron_length} ";
   }
   
   if ($self->{aligner_dir}) {
@@ -52,26 +66,54 @@ sub new {
 sub index_file {
   my ($self, $file) = @_;
   
-  my $index_cmd = $self->{index_program};
-  (my $index_name = $file) =~ s/\.\w+$//;
-  my $cmd = "$index_cmd $file $index_name";
+  my $index_cmd  = $self->{index_program};
+  my $index_name = $self->index_name($file);
   
-  $self->run_cmd($cmd, 'index');
+  my $gtf_file = $self->{gtf_file};
+  if ($gtf_file) {
+    my $ss_file    = "$gtf_file.ss";
+    my $exon_file  = "$gtf_file.exon";
+    my $aligner_dir = $self->{aligner_dir};
+    
+    my $ss_cmd   = "python $aligner_dir/hisat2_extract_splice_sites.py $gtf_file > $ss_file";
+    my $exon_cmd = "python $aligner_dir/hisat2_extract_exons.py $gtf_file > $exon_file";
+    
+    system($ss_cmd)   == 0 || throw "Cannot execute $ss_cmd: $@";
+    system($exon_cmd) == 0 || throw "Cannot execute $exon_cmd: $@";
+    $self->index_cmds($ss_cmd);
+    $self->index_cmds($exon_cmd);
+    
+    $index_cmd .= " --ss $ss_file --exon $exon_file ";
+  }
+  
+  $index_cmd .= "$file $index_name";
+  
+  $self->run_cmd($index_cmd, 'index');
 }
 
 sub index_exists {
   my ($self, $file) = @_;
   
-  (my $index_name = $file) =~ s/\.\w+$//;
-  my $exists = -e "$index_name.1.bt2" ? 1 : 0;
+  my $index_name = $self->index_name($file);
+  my $exists = -e "$index_name.1.ht2" ? 1 : 0;
   
   return $exists;
+}
+
+sub index_name {
+  my ($self, $file) = @_;
+  
+  (my $index_name = $file) =~ s/\.\w+$//;
+  if ($self->{gtf_file}) {
+    $index_name .= '_tran';
+  }
+  return $index_name;
 }
 
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
   
-  (my $index_name = $ref) =~ s/\.\w+$//;
+  my $index_name = $self->index_name($ref);
   if (defined $file2) {
    	$sam = $self->align_file($index_name, $sam, " -1 $file1 -2 $file2 ");
   } else {
