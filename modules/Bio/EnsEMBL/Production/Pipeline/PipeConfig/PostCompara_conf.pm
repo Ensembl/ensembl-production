@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
 
 =head1 DESCRIPTION
 
@@ -35,11 +35,11 @@ ckong
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
@@ -396,7 +396,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name     => 'DumpingCleaningSetup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpingCleaningSetup',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::DumpingCleaningSetup',
       -parameters     => {
                                                 'g_config'  => $self->o('gn_config'),
                                                 'gd_config'  => $self->o('gd_config'),
@@ -425,7 +425,7 @@ sub pipeline_analyses {
       -meadow_type   => 'LOCAL',
     },
     {  -logic_name      => 'SpeciesFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+       -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -max_retry_count => 1,
        -flow_into       => {
                                              '2->A' => ['DumpTables'],
@@ -435,12 +435,12 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'DumpTables',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::DumpTables',
        -rc_name       => '2Gb_mem',
     },
 
     { -logic_name     => 'TblCleanup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::TblCleanup',
     },
     {  -logic_name    => 'backbone_fire_PostCompara',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
@@ -461,7 +461,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GNProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gn_config'),
                                                         parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
@@ -473,7 +473,7 @@ sub pipeline_analyses {
     },    
     
     {  -logic_name      => 'GNProjTargetFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+       -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -max_retry_count => 1,
        -flow_into      => {
                               2 => ['GNProjection']
@@ -482,7 +482,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GNProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
 				   		    'release'                 => $self->o('ensembl_release'),
@@ -497,7 +497,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GNEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
           	'subject'    			 => $self->o('gn_subject'),
@@ -523,7 +523,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GDProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gd_config'),
                                                         parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
@@ -535,7 +535,7 @@ sub pipeline_analyses {
     },    
     
     {  -logic_name      => 'GDProjTargetFactory',
-       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+       -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -max_retry_count => 1,
        -flow_into      => {
                                2 => ['GDProjection']
@@ -544,7 +544,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GDProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneDescProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneDescProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
 				   		    'release'                 => $self->o('ensembl_release'),
@@ -561,7 +561,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GDEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
           	'subject'    			 => $self->o('gd_subject'),
@@ -587,7 +587,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GOProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOProjectionSourceFactory',
        -parameters    => {
 							go_config  => $self->o('go_config'),
                                                         parallel_GO_projections => $self->o('parallel_GO_projections'),
@@ -599,7 +599,7 @@ sub pipeline_analyses {
     },    
    
     {  -logic_name    => 'GOProjTargetFactory',
-       -module        => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
        -max_retry_count => 1,
        -flow_into     => {  
 		                    '2' => ['GOAnalysisSetupFactory'],
@@ -608,7 +608,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name     => 'GOAnalysisSetupFactory',
-      -module         => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::AnalysisSetupFactory',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::AnalysisSetupFactory',
       -parameters     => {
 							required_analysis  => $self->o('required_analysis'),
                           },
@@ -620,7 +620,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name     => 'GOAnalysisSetup',
-      -module         => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count => 0,
       -parameters     => {
                             db_backup_required => 0,
@@ -633,7 +633,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GOProjection',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOProjection',
        -parameters    => {
 						    'compara'                => $self->o('division_name'),
 				   		    'release'                => $self->o('ensembl_release'),
@@ -653,7 +653,7 @@ sub pipeline_analyses {
 	 },
 
     {  -logic_name    => 'GOEmailReport',
-       -module        => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOEmailReport',
        -parameters    => {
           					'email'      			 => $self->o('email'),
           					'subject'    			 => $self->o('go_subject'),
@@ -679,7 +679,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverageFactory',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverageFactory',
        -parameters  => {
             			    division      => $self->o('gcov_division'),
    	    		       },
@@ -691,7 +691,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverage',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverage',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverage',
        -parameters  => {
         			   'division'     => $self->o('gcov_division'),
    	   				  },
@@ -701,7 +701,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverageEmailReport',
-       -module      => 'Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageEmailReport',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverageEmailReport',
        -parameters  => {
           	'email'      => $self->o('email'),
           	'subject'    => $self->o('gcov_subject'),

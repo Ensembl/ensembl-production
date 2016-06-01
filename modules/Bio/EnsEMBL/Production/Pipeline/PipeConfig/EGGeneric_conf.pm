@@ -38,7 +38,7 @@ Description: Interface method that should return a hash of
              
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf;
 
 use strict;
 use warnings;

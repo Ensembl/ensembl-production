@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_conf
 
 =head1 DESCRIPTION
 
@@ -35,11 +35,11 @@ Thomas Maurel
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::XrefProjection_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PostCompara_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {

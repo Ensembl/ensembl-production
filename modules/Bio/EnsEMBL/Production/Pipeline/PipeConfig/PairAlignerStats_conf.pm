@@ -52,7 +52,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::PairAlignerStats_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PairAlignerStats_conf;
 
 use strict;
 use warnings;
