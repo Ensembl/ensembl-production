@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory
+Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageFactory
 
 =cut
 
@@ -13,13 +13,13 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory
 ckong
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneCoverageFactory;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageFactory;
 
 use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub param_defaults {
     return {

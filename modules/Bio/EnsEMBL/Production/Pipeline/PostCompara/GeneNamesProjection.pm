@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection
+Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection
 
 =cut
 
@@ -19,7 +19,7 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection
 ckong
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjection;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection;
 
 use strict;
 use warnings;
@@ -27,7 +27,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub param_defaults {
     return {

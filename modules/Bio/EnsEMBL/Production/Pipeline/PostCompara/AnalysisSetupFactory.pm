@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::AnalysisSetupFactory;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::AnalysisSetupFactory;
 
 =head1 DESCRIPTION
 
@@ -25,12 +25,12 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::AnalysisSetupFactory;
 ckong
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::AnalysisSetupFactory;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::AnalysisSetupFactory;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub fetch_input {
     my ($self) 	= @_;

@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables;
 
 =head1 DESCRIPTION
 
@@ -28,12 +28,12 @@ The analysis checks the $output_dir first to make sure we don't overwrite backup
 ckong and maurel
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpTables; 
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 =head2 fetch_input
 

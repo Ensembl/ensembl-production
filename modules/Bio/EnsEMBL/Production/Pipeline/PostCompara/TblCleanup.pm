@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::TblCleanup;
 
 =head1 DESCRIPTION
 
@@ -25,12 +25,12 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup;
 ckong 
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::TblCleanup;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::TblCleanup;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 use Bio::EnsEMBL::Utils::SqlHelper;
 
 sub fetch_input {

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase
+Bio::EnsEMBL::Production::Pipeline::PostCompara::ProjectionBase
 
 =cut
 
@@ -13,7 +13,7 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase
 $Author: ckong $
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::ProjectionBase; 
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::ProjectionBase;
 
 use strict;
 use warnings;

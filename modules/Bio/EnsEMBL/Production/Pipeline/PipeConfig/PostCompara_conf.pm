@@ -396,7 +396,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name     => 'DumpingCleaningSetup',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::DumpingCleaningSetup',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpingCleaningSetup',
       -parameters     => {
                                                 'g_config'  => $self->o('gn_config'),
                                                 'gd_config'  => $self->o('gd_config'),
@@ -435,12 +435,12 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'DumpTables',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::DumpTables',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables',
        -rc_name       => '2Gb_mem',
     },
 
     { -logic_name     => 'TblCleanup',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::TblCleanup',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::TblCleanup',
     },
     {  -logic_name    => 'backbone_fire_PostCompara',
        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
@@ -461,7 +461,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GNProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gn_config'),
                                                         parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
@@ -482,7 +482,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GNProjection',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
 				   		    'release'                 => $self->o('ensembl_release'),
@@ -497,7 +497,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GNEmailReport',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
           	'subject'    			 => $self->o('gn_subject'),
@@ -523,7 +523,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GDProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory',
        -parameters    => {
 							g_config  => $self->o('gd_config'),
                                                         parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
@@ -544,7 +544,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GDProjection',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneDescProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneDescProjection',
        -parameters    => {
 						    'compara'                 => $self->o('division_name'),
 				   		    'release'                 => $self->o('ensembl_release'),
@@ -561,7 +561,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GDEmailReport',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneNamesEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesEmailReport',
        -parameters    => {
           	'email'      			 => $self->o('email'),
           	'subject'    			 => $self->o('gd_subject'),
@@ -587,7 +587,7 @@ sub pipeline_analyses {
     },
     
     {  -logic_name    => 'GOProjSourceFactory',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOProjectionSourceFactory',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GOProjectionSourceFactory',
        -parameters    => {
 							go_config  => $self->o('go_config'),
                                                         parallel_GO_projections => $self->o('parallel_GO_projections'),
@@ -608,7 +608,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name     => 'GOAnalysisSetupFactory',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::AnalysisSetupFactory',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::AnalysisSetupFactory',
       -parameters     => {
 							required_analysis  => $self->o('required_analysis'),
                           },
@@ -633,7 +633,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name    => 'GOProjection',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOProjection',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GOProjection',
        -parameters    => {
 						    'compara'                => $self->o('division_name'),
 				   		    'release'                => $self->o('ensembl_release'),
@@ -653,7 +653,7 @@ sub pipeline_analyses {
 	 },
 
     {  -logic_name    => 'GOEmailReport',
-       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GOEmailReport',
+       -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GOEmailReport',
        -parameters    => {
           					'email'      			 => $self->o('email'),
           					'subject'    			 => $self->o('go_subject'),
@@ -679,7 +679,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverageFactory',
-       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverageFactory',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageFactory',
        -parameters  => {
             			    division      => $self->o('gcov_division'),
    	    		       },
@@ -691,7 +691,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverage',
-       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverage',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverage',
        -parameters  => {
         			   'division'     => $self->o('gcov_division'),
    	   				  },
@@ -701,7 +701,7 @@ sub pipeline_analyses {
     },
 
     {  -logic_name  => 'GeneCoverageEmailReport',
-       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::RunnableDB::GeneCoverageEmailReport',
+       -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageEmailReport',
        -parameters  => {
           	'email'      => $self->o('email'),
           	'subject'    => $self->o('gcov_subject'),
