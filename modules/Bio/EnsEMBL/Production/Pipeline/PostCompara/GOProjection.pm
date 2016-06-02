@@ -19,7 +19,7 @@ Bio::EnsEMBL::Pipeline::ProjectGOTerms::RunnableDB::GOProjection
 ckong
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjection;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::GOProjection;
 
 use strict;
 use warnings;
@@ -28,7 +28,7 @@ use Bio::EnsEMBL::Registry;
 use LWP;
 use JSON;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catdir);

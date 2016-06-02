@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::RestoreBackups;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::RestoreBackups;
 
 =head1 DESCRIPTION
 
@@ -27,12 +27,12 @@ Module to automatically restore backups
 Thomas Maurel
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::RestoreBackups;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::RestoreBackups;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 use Bio::EnsEMBL::Utils::SqlHelper;
 
 

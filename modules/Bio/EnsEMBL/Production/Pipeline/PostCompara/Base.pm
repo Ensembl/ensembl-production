@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base
+Bio::EnsEMBL::Production::Pipeline::PostCompara::Base
 
 =cut
 
@@ -15,7 +15,7 @@ Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base
 ckong
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base; 
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::Base;
 
 use strict;
 use warnings;

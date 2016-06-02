@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory;
 
 =head1 DESCRIPTION
 
@@ -28,12 +28,12 @@ If parallel_GeneNames_projections is not defined then the pipeline will dataflow
 ckong and maurel
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GeneNamesProjectionSourceFactory;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub run {
     my ($self)  = @_;

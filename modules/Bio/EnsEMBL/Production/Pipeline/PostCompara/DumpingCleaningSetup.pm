@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpingCleaningSetup;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpingCleaningSetup;
 
 =head1 DESCRIPTION
 
@@ -28,12 +28,12 @@ This analysis is design to run sequentially, backing and cleaning one projection
 maurel
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::DumpingCleaningSetup;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpingCleaningSetup;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub run {
     my ($self)  = @_;

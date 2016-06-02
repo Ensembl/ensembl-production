@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory;
+Bio::EnsEMBL::Production::Pipeline::PostCompara::GOProjectionSourceFactory;
 
 =head1 DESCRIPTION
 
@@ -29,12 +29,12 @@ If parallel_GO_projections is not defined then the pipeline will dataflow each p
 ckong and maurel
 
 =cut
-package Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::GOProjectionSourceFactory;
+package Bio::EnsEMBL::Production::Pipeline::PostCompara::GOProjectionSourceFactory;
 
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base ('Bio::EnsEMBL::EGPipeline::PostCompara::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub run {
     my ($self)  = @_;
