@@ -52,7 +52,7 @@ sub default_options {
        'tempdir_vep'         => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/temp_dir/release-'.$self->o('release').'/'.$self->o('vep_division'),     
        'vep_div'             => $self->o('vep_division'),
 
-   	   'f_dump_vep' 	 => 0,
+   	   'f_dump_vep' 	     => 0,
 	};
 }
 
@@ -152,6 +152,10 @@ sub tweak_analyses {
     my $self = shift;
     my $analyses_by_name = shift;
     my $pipeline_flow    = shift;
+
+    ## Removed unused dataflow
+    $analyses_by_name->{'dump_dna'}->{'-flow_into'} = { };
+    $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
 
     ## Extend this section to add 'convert_fasta' analysis if fasta dump is done
     if ($self->o('f_dump_vep')){
