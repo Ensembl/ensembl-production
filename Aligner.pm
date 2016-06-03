@@ -39,9 +39,8 @@ sub new {
 	$self->{bcftools} ||= 'bcftools';
 	$self->{vcfutils} ||= 'vcfutils.pl';
   $self->{cleanup}  ||= 1;
-  $self->{merge_sort_memory} ||= '16000';
-  $self->{merge_sort_memory} .= 'M';
-  $self->{threads} ||= 4;
+  $self->{sort_memory} ||= '16000';
+  $self->{dummy} //= 0;
   
   $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
 	$self->{bcftools} = catdir($bcftools_dir, $self->{bcftools}) if defined $bcftools_dir;
@@ -105,7 +104,7 @@ sub sam_to_bam {
     }
 	}
   my $cmd = "$self->{samtools} view -bS $sam > $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
   
 	return $bam;
@@ -116,7 +115,7 @@ sub merge_bam {
   
   my $bam = join( ' ', @$bams );
   my $cmd = "$self->{samtools} merge -f $out $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
   
 	return $out;
@@ -131,10 +130,9 @@ sub sort_bam {
       $out_prefix = "$bam.sorted";
     }
 	}
-  my $threads = $self->{threads};
-  my $memory  = $self->{merge_sort_memory};
-  my $cmd = "$self->{samtools} sort -\@ $threads -m $memory $bam $out_prefix";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  my $memory  = $self->{sort_memory} . 'M';
+  my $cmd = "$self->{samtools} sort -m $memory $bam $out_prefix";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
   
 	return "$out_prefix.bam";
@@ -151,7 +149,7 @@ sub index_bam {
 	}
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
 }
 
@@ -184,7 +182,7 @@ sub pileup_bam {
 	}
   # Is the '-' required?
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
   
 	return $bcf;
@@ -201,10 +199,31 @@ sub bcf2vcf {
 	}
   
   my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->_execute($cmd);
   $self->align_cmds($cmd);
   
 	return $vcf;
+}
+
+sub dummy {
+  my $self = shift;
+  my ($dummy) = @_;
+  
+  if (defined $dummy) {
+    $self->{dummy} = $dummy;
+  }
+  
+  return $self->{dummy};
+}
+
+sub _execute {
+  my $self = shift;
+  my ($cmd) = @_;
+  
+  if (not $self->{dummy}) {
+    system($cmd) == 0 || throw "Cannot execute $cmd";
+  }
+  return $cmd;
 }
 
 1;
