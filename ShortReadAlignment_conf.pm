@@ -137,7 +137,7 @@ sub default_options {
     ucscutils_dir => '/nfs/panda/ensemblgenomes/external/ucsc_utils',
     
     # 4GB per thread for samtools sort
-    merge_sort_memory => 16000,
+    sort_memory => 4000,
   };
 }
 
@@ -484,6 +484,7 @@ sub alignment_analyses {
                               vcf          => $self->o('vcf'),
                               use_csi      => $self->o('use_csi'),
                               clean_up     => $self->o('clean_up'),
+                              sort_memory  => $self->o('sort_memory'),
                             },
       -rc_name           => 'merge_sort',
       -flow_into         => {
@@ -571,7 +572,8 @@ sub resource_classes {
   my $index_himem    = $self->o('index_memory_high') || $$index_memory_high_default{$aligner};
   my $align_mem      = $self->o('align_memory')      || $$align_memory_default{$aligner};
   my $align_himem    = $self->o('align_memory_high') || $$align_memory_high_default{$aligner};
-  my $merge_sort_mem = $self->o('merge_sort_memory');
+  my $merge_sort_mem = $self->o('sort_memory') * 1.25;  # Samtools sort is more greedy than we ask
+  my $merge_sort_threads = 1;  # Looks like more is counterproductive...
   
   return {
     %{$self->SUPER::resource_classes},
@@ -579,7 +581,7 @@ sub resource_classes {
     'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem.   ' -R "rusage[mem='.$index_himem.   ',tmp=16000] span[hosts=1]"'},
     'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.     ' -R "rusage[mem='.$align_mem.     ',tmp=16000] span[hosts=1]"'},
     'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem.   ' -R "rusage[mem='.$align_himem.   ',tmp=16000] span[hosts=1]"'},
-    'merge_sort'    => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$merge_sort_mem.' -R "rusage[mem='.$merge_sort_mem.',tmp=16000] span[hosts=1]"'},
+    'merge_sort'    => {'LSF' => '-q production-rh6 -n '. ($merge_sort_threads + 1) .' -M '.$merge_sort_mem.' -R "rusage[mem='.$merge_sort_mem.',tmp=16000] span[hosts=1]"'},
   }
 }
 
