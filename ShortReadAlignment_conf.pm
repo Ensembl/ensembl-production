@@ -510,7 +510,7 @@ sub alignment_analyses {
                               length_file   => '#genome_file#'.'.lengths.txt',
                               clean_up      => $self->o('clean_up'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => '8Gb_mem',
       -flow_into         => ['WriteIniFile', '?table_name=align_cmds'],
     },
 
