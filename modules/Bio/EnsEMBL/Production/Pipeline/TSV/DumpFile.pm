@@ -130,6 +130,8 @@ sub _write_tsv {
   my $unzip_out_file = $out_file;
   `gzip $unzip_out_file`;
 
+  if (-e $unzip_out_file) { `rm $unzip_out_file`; }
+
 return;
 }
 
