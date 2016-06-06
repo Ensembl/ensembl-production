@@ -154,7 +154,7 @@ sub tweak_analyses {
     my $pipeline_flow    = shift;
 
     ## Removed unused dataflow
-    $analyses_by_name->{'dump_dna'}->{'-flow_into'} = { };
+    $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
 
     ## Extend this section to add 'convert_fasta' analysis if fasta dump is done
