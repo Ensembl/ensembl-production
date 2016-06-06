@@ -70,7 +70,7 @@ sub index_file {
   
   my $samtools_index_cmd = "$self->{samtools} faidx ";
   $cmd = "$samtools_index_cmd $file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->index_cmds($cmd);
 }
 
@@ -114,7 +114,7 @@ sub sai_file {
   my $sai_file = "$file.sai";
   my $align_cmd = "$self->{bwa} $self->{program} ";
   my $cmd = "$align_cmd $ref $file > $sai_file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
   return $sai_file;
@@ -125,7 +125,7 @@ sub align_file {
   
   my $sam_cmd = "$self->{bwa} $program ";
   my $cmd = "$sam_cmd $ref $aligneds $files > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
   return $sam;

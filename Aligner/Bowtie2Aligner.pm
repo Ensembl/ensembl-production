@@ -52,7 +52,7 @@ sub index_file {
   my $index_cmd = $self->{bowtie2_build};
   (my $index_name = $file) =~ s/\.\w+$//;
   my $cmd = "$index_cmd $file $index_name";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->index_cmds($cmd);
 }
 
@@ -91,7 +91,7 @@ sub align_file {
   my $sam_cmd = $self->{bowtie2};
   my $sam_options = " -x $index_name $format --local -p $self->{threads} ";
   my $cmd = "$sam_cmd $sam_options $files > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
   return $sam;

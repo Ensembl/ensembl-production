@@ -120,7 +120,7 @@ sub index_file {
   }
   
   my $cmd = "$index_cmd $index_options";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->index_cmds($cmd);
 }
 
@@ -168,7 +168,7 @@ sub align_file {
   }
   
   my $cmd = "$star_cmd $star_options > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
   return $sam;

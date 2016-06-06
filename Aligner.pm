@@ -104,7 +104,7 @@ sub sam_to_bam {
     }
 	}
   my $cmd = "$self->{samtools} view -bS $sam > $bam";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
 	return $bam;
@@ -115,7 +115,7 @@ sub merge_bam {
   
   my $bam = join( ' ', @$bams );
   my $cmd = "$self->{samtools} merge -f $out $bam";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
 	return $out;
@@ -132,7 +132,7 @@ sub sort_bam {
 	}
   my $memory  = $self->{sort_memory} . 'M';
   my $cmd = "$self->{samtools} sort -m $memory $bam $out_prefix";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
 	return "$out_prefix.bam";
@@ -149,7 +149,7 @@ sub index_bam {
 	}
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
 }
 
@@ -182,7 +182,7 @@ sub pileup_bam {
 	}
   # Is the '-' required?
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
 	return $bcf;
@@ -199,7 +199,7 @@ sub bcf2vcf {
 	}
   
   my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
-  $self->_execute($cmd);
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
 	return $vcf;
@@ -216,12 +216,16 @@ sub dummy {
   return $self->{dummy};
 }
 
-sub _execute {
+sub execute {
   my $self = shift;
   my ($cmd) = @_;
   
   if (not $self->{dummy}) {
+    warn "Execute $cmd";
     system($cmd) == 0 || throw "Cannot execute $cmd";
+  }
+  else {
+    warn "Fake $cmd";
   }
   return $cmd;
 }

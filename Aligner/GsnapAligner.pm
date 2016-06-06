@@ -54,7 +54,7 @@ sub index_file {
   my ($name, $path, undef) = fileparse($file, qr/\.[^.]*/);
   my $index_options = " -D $path -d $name -k $self->{kmer}";
   my $cmd = "$index_cmd $index_options $file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->index_cmds($cmd);
 }
 
@@ -87,7 +87,7 @@ sub align_file {
   my $sam_cmd = $self->{gsnap};
   my $sam_options = " -D $path -d $name -N 1 -t $self->{threads} -A sam ";
   my $cmd = "$sam_cmd $sam_options $files > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->execute($cmd);
   $self->align_cmds($cmd);
   
   return $sam;
