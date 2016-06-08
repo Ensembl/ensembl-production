@@ -85,6 +85,7 @@ for my $dba_args ( @{ $cli_helper->get_dba_args_for_opts($opts) } ) {
     else {
       $updater->update_controlled_tables($dbc);
     }
+    $dbc->disconnect_if_idle();
     $processed_dbnames->{$dbname} = 1;
   }
 }
