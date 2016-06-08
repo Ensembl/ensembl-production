@@ -221,7 +221,7 @@ sub update_controlled_table {
                  ( map { $mdata->{$row_id}{$_} } @{ $tables->{$table}{cols} } ),
                  $row_id ] );
             $logger->info(
-                    "Updated data for id $row_id (" . $mdata->{$row_id}{label} .
+                    "Updated data for id $row_id (" . $mdata->{$row_id}{$tables->{$table}{label}} .
                       ")" );
           }
         }
@@ -235,7 +235,7 @@ sub update_controlled_table {
           $helper->execute_update( -SQL    => get_delete($table),
                                    -PARAMS => [$row_id] );
           $logger->info(
-              "Deleted data for id $row_id (" . $data->{$row_id}{label} . ")" );
+              "Deleted data for id $row_id (" . $data->{$row_id}{$tables->{$table}{label}} . ")" );
         }
       }
     }
