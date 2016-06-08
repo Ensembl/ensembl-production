@@ -175,7 +175,7 @@ sub update_controlled_table {
   $logger->info( "Updating $table for " . $dbc->dbname() );
 
   if ( $table eq 'analysis_description' ) {
-    return update_analysis_description(@_);
+    return $self->update_analysis_description($dbc);
   }
   elsif ( defined $tables->{$table} ) {
     my $helper = $dbc->sql_helper();
@@ -281,11 +281,19 @@ sub get_generic_analyses {
 }
 
 sub update_analysis_description {
-  my ( $self, $dbc ) = @_;
+  my ( $self, $dbc, $species, $type, $logic_names ) = @_;
 
-  my $dbname = $dbc->dbname();
+  if(defined $logic_names) {
+    $logic_names = {map { $_ => 1 } @$logic_names};
+  } else {
+    $logic_names = {};
+  }
 
-  my ( $species, $type ) = ( $dbname =~ m/^([^_]+_[^_]+)_([^_]+)/ );
+  throw "species and type are both required" if ( ($species && !$type) || (!$species && $type) );
+
+  my $dbname = $dbc->dbname();  
+
+  ( $species, $type ) = ( $dbname =~ m/^([^_]+_[^_]+)_([^_]+)/ );
 
   throw "Could not determine species and type from $dbname"
     unless ( $species && $type );
@@ -313,6 +321,7 @@ sub update_analysis_description {
 
   $logger->info("Updating analyses");
   while ( my ( $logic_name, $analysis ) = each %{$analysis_types} ) {
+     if (scalar(keys %$logic_names) == 0 || exists $logic_names->{$logic_name}) {
     $logger->debug("Updating $logic_name");
     if ( defined $analysis->{web_data} ) {
       $analysis->{web_data} = eval( $analysis->{web_data} );
@@ -324,6 +333,7 @@ sub update_analysis_description {
        WHERE logic_name=?/,
       -PARAMS => [ $analysis->{description}, $analysis->{display_label},
                    $analysis->{web_data},    $analysis->{displayable} ] );
+  }
   }
   $logger->info( "Completed updating analysis_description for " . $dbname );
   return;
