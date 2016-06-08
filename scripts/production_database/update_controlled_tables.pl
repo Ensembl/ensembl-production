@@ -76,7 +76,6 @@ for my $dba_args ( @{ $cli_helper->get_dba_args_for_opts($opts) } ) {
   my $dbname = $dba_args->{-DBNAME};
   if ( !defined $processed_dbnames->{$dbname} ) {
     $logger->info( "Processing " . $dbname );
-    print Dumper($dba_args);
     my $dbc = Bio::EnsEMBL::DBSQL::DBConnection->new(%{$dba_args});
     if ( scalar( @{ $opts->{tables}} > 0 ) ) {
       for my $table ( @{ $opts->{tables} } ) {
