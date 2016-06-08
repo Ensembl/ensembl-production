@@ -50,6 +50,7 @@ my $optsd = [ @{ $cli_helper->get_dba_opts() },
               'tables:s@' ];
 my $opts = $cli_helper->process_args( $optsd, \&pod2usage );
 $opts->{tables} ||= [];
+$opts->{mdbname} ||= 'ensembl_production';
 
 if ( $opts->{verbose} ) {
   Log::Log4perl->easy_init($DEBUG);
