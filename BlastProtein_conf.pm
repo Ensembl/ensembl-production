@@ -71,6 +71,7 @@ sub default_options {
     proteome_source    => 'file',
     logic_name_prefix  => $self->o('proteome_source'),
     source_label       => 'Protein alignments',
+    is_canonical       => 1,
     
     # This parameter should only be specified if proteome_source = 'file'
     db_fasta_file => undef,
@@ -115,7 +116,7 @@ sub default_options {
     # blast_parameters => '-W 3 -B 100000 -V 100000 -hspmax=0 -lcmask -wordmask=seg',
     
     # For parsing the output.
-    output_regex     => '^\s*(\w+)',
+    output_regex     => '^\s*([\w\-]+)',
     pvalue_threshold => 0.01,
     filter_prune     => 1,
     filter_min_score => 200,
@@ -430,6 +431,7 @@ sub pipeline_analyses {
       -parameters        => {
                               species      => '#source_species#',
                               proteome_dir => catdir($self->o('pipeline_dir'), 'proteomes'),
+                              is_canonical => $self->o('is_canonical'),
                               file_varname => 'db_fasta_file',
                             },
       -rc_name           => 'normal',
@@ -787,7 +789,7 @@ sub pipeline_analyses {
                             feature_type      => ['ProteinAlignFeature'],
                             include_scaffold  => 0,
                             remove_separators => 1,
-                            results_dir       => $self->o('pipeline_dir'),
+                            results_dir       => catdir($self->o('pipeline_dir'), '#species#'),
                             out_file_stem     => '#logic_name_prefix#_blastx.gff3',
                           },
       -rc_name         => 'normal',
@@ -829,7 +831,7 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type     => 'otherfeatures',
                             logic_name  => '#logic_name_prefix#_blastx',
-                            results_dir => $self->o('pipeline_dir'),
+                            results_dir => catdir($self->o('pipeline_dir'), '#species#'),
                           },
       -rc_name         => 'normal',
     },
