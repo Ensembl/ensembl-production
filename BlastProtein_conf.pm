@@ -40,6 +40,9 @@ use strict;
 use warnings;
 
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -58,15 +61,17 @@ sub default_options {
     # Parameters for dumping and splitting Fasta query files.
     max_seq_length          => 10000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
-    max_seqs_per_file       => undef,
+    max_seqs_per_file       => 500,
     max_files_per_directory => 100,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     max_hive_capacity => 100,
     
     # Source for proteomes can be one of: 'file', 'database', 'uniprot'
-    proteome_source   => 'file',
-    logic_name_prefix => $self->o('proteome_source'),
+    proteome_source    => 'file',
+    logic_name_prefix  => $self->o('proteome_source'),
+    source_label       => 'Protein alignments',
+    is_canonical       => 1,
     
     # This parameter should only be specified if proteome_source = 'file'
     db_fasta_file => undef,
@@ -111,7 +116,7 @@ sub default_options {
     # blast_parameters => '-W 3 -B 100000 -V 100000 -hspmax=0 -lcmask -wordmask=seg',
     
     # For parsing the output.
-    output_regex     => '^\s*(\w+)',
+    output_regex     => '^\s*([\w\-]+)',
     pvalue_threshold => 0.01,
     filter_prune     => 1,
     filter_min_score => 200,
@@ -122,8 +127,10 @@ sub default_options {
     blastp   => 1,
     blastx   => 1,
     
-    # For blastx results, filter so that only best hit per seq_region gets saved.
-    unique_hits => 1,
+    # Filter so that only best X hits get saved.
+    filter_top_x => 1,
+    blastp_top_x => 1,
+    blastx_top_x => 10,
     
     # Generate a GFF file for loading into, e.g., WebApollo
     create_gff    => 0,
@@ -135,6 +142,10 @@ sub default_options {
     [
       {
         'logic_name'    => 'blastp',
+        'display_label' => $self->o('source_label'),
+        'description'   => 'Peptide sequences aligned to the proteome with <em>blastp</em>.',
+        'displayable'   => 1,
+        'web_data'      => '{"type" => "protein"}',
         'db'            => $self->o('proteome_source'),
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
@@ -146,6 +157,10 @@ sub default_options {
       
       {                 
         'logic_name'    => 'blastx',
+        'display_label' => $self->o('source_label'),
+        'description'   => 'Peptide sequences aligned to the genome with <em>blastx</em>.',
+        'displayable'   => 1,
+        'web_data'      => '{"type" => "protein"}',
         'db'            => $self->o('proteome_source'),
         'program'       => 'blastx',
         'program_file'  => $self->o('blastx_exe'),
@@ -163,7 +178,7 @@ sub default_options {
 
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.
-    production_lookup => 0,
+    production_lookup => 1,
 
   };
 }
@@ -327,7 +342,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => [ ':////split_proteome' ],
+                              '2' => [ '?table_name=split_proteome' ],
                             }
     },
 
@@ -357,7 +372,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => [ ':////split_genome' ],
+                              '2' => [ '?table_name=split_genome' ],
                             }
     },
 
@@ -416,6 +431,7 @@ sub pipeline_analyses {
       -parameters        => {
                               species      => '#source_species#',
                               proteome_dir => catdir($self->o('pipeline_dir'), 'proteomes'),
+                              is_canonical => $self->o('is_canonical'),
                               file_varname => 'db_fasta_file',
                             },
       -rc_name           => 'normal',
@@ -477,9 +493,12 @@ sub pipeline_analyses {
       -max_retry_count => 0,
       -batch_size      => 10,
       -parameters      => {
-                            analyses => $self->o('analyses'),
-                            blastp   => $self->o('blastp'),
-                            blastx   => $self->o('blastx'),
+                            analyses     => $self->o('analyses'),
+                            blastp       => $self->o('blastp'),
+                            blastx       => $self->o('blastx'),
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastp_top_x => $self->o('blastp_top_x'),
+                            blastx_top_x => $self->o('blastx_top_x'),
                           },
       -rc_name         => 'normal',
       -flow_into       => {
@@ -535,7 +554,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastPFactory'],
-                            'A->1' => ['UniqueBlastPHits'],
+                            'A->1' => ['FilterBlastPHits'],
                           },
     },
 
@@ -550,7 +569,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastXFactory'],
-                            'A->1' => ['UniqueBlastXHits'],
+                            'A->1' => ['FilterBlastXHits'],
                           },
     },
 
@@ -573,6 +592,7 @@ sub pipeline_analyses {
       -logic_name      => 'BlastXFactory',
       -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
       -can_be_empty    => 1,
+      -hive_capacity   => $self->o('max_hive_capacity'),
       -max_retry_count => 1,
       -parameters      => {
                             max_seq_length => $self->o('max_seq_length'),
@@ -727,67 +747,94 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'UniqueBlastPHits',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::UniqueHits',
+      -logic_name      => 'FilterBlastPHits',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
                             db_type     => 'core',
-                            unique_hits => $self->o('unique_hits'),
-                            logic_name  => '#logic_name_prefix#_blastx',
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastp_top_x => $self->o('blastp_top_x'),
+                            logic_name  => '#logic_name_prefix#_blastp',
                           },
       -rc_name         => 'normal',
     },
 
     {
-      -logic_name      => 'UniqueBlastXHits',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::UniqueHits',
+      -logic_name      => 'FilterBlastXHits',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
                             db_type     => 'otherfeatures',
-                            unique_hits => $self->o('unique_hits'),
+                            filter_top_x => $self->o('filter_top_x'),
+                            blastx_top_x => $self->o('blastx_top_x'),
                             logic_name  => '#logic_name_prefix#_blastx',
                             create_gff  => $self->o('create_gff'),
                           },
       -rc_name         => 'normal',
       -flow_into       => {
-                            '2' => ['GFF3Dump'],
+                            '2->A' => ['GFF3Dump'],
+                            'A->2' => ['JSONDescription'],
                           },
     },
 
     {
-      -logic_name        => 'GFF3Dump',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
-      -analysis_capacity => 10,
-      -can_be_empty      => 1,
-      -max_retry_count   => 1,
-      -parameters        => {
-                              db_type           => 'otherfeatures',
-                              feature_type      => ['ProteinAlignFeature'],
-                              include_scaffold  => 0,
-                              remove_separators => 1,
-                              results_dir       => $self->o('pipeline_dir'),
-                              out_file_stem     => '#logic_name_prefix#_blastx.gff3',
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => ['GFF3Validate'],
+      -logic_name      => 'GFF3Dump',
+      -module          => 'Bio::EnsEMBL::EGPipeline::FileDump::GFF3Dumper',
+      -can_be_empty    => 1,
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type           => 'otherfeatures',
+                            feature_type      => ['ProteinAlignFeature'],
+                            include_scaffold  => 0,
+                            remove_separators => 1,
+                            results_dir       => catdir($self->o('pipeline_dir'), '#species#'),
+                            out_file_stem     => '#logic_name_prefix#_blastx.gff3',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['GFF3Tidy'],
     },
 
     {
-      -logic_name        => 'GFF3Validate',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -analysis_capacity => 10,
-      -can_be_empty      => 1,
-      -batch_size        => 10,
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted; '.
-                                      'mv #out_file#.sorted #out_file#; '.
-                                      $self->o('gff3_validate').' #out_file#',
-                            },
-      -rc_name           => 'normal',
-    }
+      -logic_name      => 'GFF3Tidy',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['GFF3Validate'],
+    },
+
+    {
+      -logic_name      => 'GFF3Validate',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            cmd => 'mv #out_file#.sorted #out_file#; '.
+                                   $self->o('gff3_validate').' #out_file#',
+                          },
+      -rc_name         => 'normal',
+    },
+
+    {
+      -logic_name      => 'JSONDescription',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::JSONDescription',
+      -can_be_empty    => 1,
+      -batch_size      => 10,
+      -max_retry_count => 0,
+      -parameters      => {
+                            db_type     => 'otherfeatures',
+                            logic_name  => '#logic_name_prefix#_blastx',
+                            results_dir => catdir($self->o('pipeline_dir'), '#species#'),
+                          },
+      -rc_name         => 'normal',
+    },
 
   ];
 }
@@ -799,9 +846,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
-    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
-    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -R "span[hosts=1]" -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
+    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
+    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
   }
 }
 

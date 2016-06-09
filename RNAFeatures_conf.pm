@@ -96,7 +96,7 @@ sub default_options {
     # In addition, some rRNA models are clade-specific, but have nonetheless
     # been aligned across the entire tree of life; so those are in the
     # blacklist by default. Ditto the U3 and SRP clans.
-    rfam_version        => 12,
+    rfam_version        => '12.1',
     rfam_dir            => catdir($self->o('program_dir'), 'Rfam', $self->o('rfam_version')),
     rfam_cm_file        => catdir($self->o('rfam_dir'), 'Rfam.cm'),
     rfam_logic_name     => 'cmscan_rfam_'.$self->o('rfam_version'),
@@ -105,19 +105,19 @@ sub default_options {
     rfam_trna           => 0,
     rfam_blacklist      => {
                             'Archaea' =>
-                              ['RF00002', 'RF00169', 'RF00177', 'RF01854', 'RF01960', 'RF02541', 'RF02542', 'RF02543', ],
+                              ['RF00002', 'RF00177', 'RF01118', 'RF01854', 'RF01960', 'RF02514', 'RF02541', 'RF02542', 'RF02543', ],
                             'Bacteria' =>
-                              ['RF00002', 'RF00882', 'RF01857', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
+                              ['RF00002', 'RF00882', 'RF01959', 'RF01960', 'RF02540', 'RF02542', 'RF02543', ],
                             'Eukaryota' =>
-                              ['RF00177', 'RF01118', 'RF00169', 'RF01854', 'RF01857', 'RF01959', 'RF02540', 'RF02541', 'RF02542', ],
+                              ['RF00177', 'RF01118', 'RF00169', 'RF01959', 'RF02514', 'RF02540', 'RF02541', 'RF02542', ],
                             'Fungi' =>
-                              ['RF00012', 'RF00017', 'RF00059', 'RF01847', 'RF01848', 'RF01855', 'RF01856', 'RF02514', ],
+                              ['RF00012', 'RF00017', 'RF01848', ],
                             'Metazoa' =>
-                              ['RF00882', 'RF00906', 'RF01502', 'RF01675', 'RF01846', 'RF01847', 'RF01848', 'RF01849', 'RF01855', 'RF01856', 'RF02032', ],
+                              ['RF00882', 'RF00906', 'RF01675', 'RF01846', 'RF01848', 'RF01849', 'RF01856', 'RF02032', ],
                             'Viridiplantae' =>
-                              ['RF00012', 'RF00017', 'RF01118', 'RF01502', 'RF01846', 'RF01848', 'RF01856', ],
+                              ['RF00012', 'RF00017', 'RF01856', ],
                             'EnsemblProtists' =>
-                              ['RF00012', 'RF00017', 'RF01118', 'RF01502', 'RF01846', 'RF01847', 'RF01855', ],
+                              ['RF00012', 'RF00017', 'RF01855', ],
                             'Ensembl' =>
                               ['RF01358', 'RF01376', ],
                             },
@@ -510,14 +510,15 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name        => 'SummaryPlots',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
-                              cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
-                            },
-      -meadow_type       => 'LOCAL',
+      -logic_name           => 'SummaryPlots',
+      -module               => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -failed_job_tolerance => 100,
+      -max_retry_count      => 1,
+      -parameters           => {
+                                 scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
+                                 cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
+                               },
+      -meadow_type          => 'LOCAL',
     },
 
     {
@@ -543,8 +544,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000]" -R "span[hosts=1]"'},
-    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000]" -R "span[hosts=1]"'},
+    'cmscan_4Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 4000 -R "rusage[mem=4000] span[hosts=1]"'},
+    'cmscan_8Gb_mem' => {'LSF' => '-q production-rh6 -n '.$self->o('cmscan_cpu').' -M 8000 -R "rusage[mem=8000] span[hosts=1]"'},
   }
 }
 

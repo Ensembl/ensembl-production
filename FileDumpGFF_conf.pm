@@ -47,8 +47,11 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
+    pipeline_name => 'file_dump_gff_'.$self->o('ensembl_release'),
+    
     eg_dir_structure   => 0,
     eg_filename_format => $self->o('eg_dir_structure'),
+    out_file_stem      => undef,
 
     gff3_db_type            => 'core',
     gff3_feature_type       => [],
@@ -57,7 +60,6 @@ sub default_options {
     gff3_remove_id_prefix   => 0,
     gff3_relabel_transcript => 1,
     gff3_remove_separators  => 0,
-    gff3_out_file_stem      => undef,
 
   };
 }
@@ -101,9 +103,9 @@ sub pipeline_analyses {
                               remove_id_prefix   => $self->o('gff3_remove_id_prefix'),
                               relabel_transcript => $self->o('gff3_relabel_transcript'),
                               remove_separators  => $self->o('gff3_remove_separators'),
-                              out_file_stem      => $self->o('gff3_out_file_stem'),
                               eg_dir_structure   => $self->o('eg_dir_structure'),
                               eg_filename_format => $self->o('eg_filename_format'),
+                              out_file_stem      => $self->o('out_file_stem'),
                               escape_branch      => -1,
                             },
       -rc_name           => 'normal',
@@ -129,7 +131,7 @@ sub pipeline_analyses {
                               remove_id_prefix   => $self->o('gff3_remove_id_prefix'),
                               relabel_transcript => $self->o('gff3_relabel_transcript'),
                               remove_separators  => $self->o('gff3_remove_separators'),
-                              out_file_stem      => $self->o('gff3_out_file_stem'),
+                              out_file_stem      => $self->o('out_file_stem'),
                               eg_dir_structure   => $self->o('eg_dir_structure'),
                               eg_filename_format => $self->o('eg_filename_format'),
                             },

@@ -99,16 +99,21 @@ sub default_options {
     # Need to refer to last release's checksums, to see what has changed.
     checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums/compara',
 
-    # For generating scp commands to get the necessary files to ND
-    nd_login => $self->o('ENV', 'USER').'@www.vectorbase.org',
+    # To get the download files to ND we need to generate a CSV file for
+    # bulk creation of the Drupal nodes, and two sets of shell commands for
+    # transferring data, one to be run at EBI, one at ND.
+    drupal_file      => $self->o('results_dir').'.csv',
+    manual_file      => $self->o('results_dir').'.txt',
+    sh_ebi_file      => $self->o('results_dir').'.ebi.sh',
+    sh_nd_file       => $self->o('results_dir').'.nd.sh',
+    staging_dir      => 'sites/default/files/ftp/staging',
+    nd_login         => $self->o('ENV', 'USER').'@www.vectorbase.org',
+    nd_downloads_dir => '/data/sites/drupal-pre/downloads',
+    nd_staging_dir   => '/data/sites/drupal-pre/staging',
+    release_date     => undef,
 
     # For the Drupal nodes, each file type has a standard description.
     # The module that creates the file substitutes values for the text in caps.
-    drupal_file  => $self->o('results_dir').'.csv',
-    copy_file    => $self->o('results_dir').'.sh',
-    staging_dir  => 'sites/default/files/ftp/staging',
-    release_date => undef,
-
     drupal_desc => {
       'GENE-TREES-NEWICK'      => 'Gene trees in Newick (a.k.a. New Hampshire) format.',
       'GENE-ALIGN-TRANSCRIPTS' => 'Alignments of transcript sequences, used to infer gene trees.',
@@ -118,6 +123,9 @@ sub default_options {
       'HOMOLOGS'               => 'Homologs in OrthoXML format.',
       'WG-ALIGN'               => 'Pairwise whole genome alignment between <SPECIES1> and <SPECIES2>, in MAF format.',
     },
+    
+    # Skip checksumming for files which don't require it.
+    'skip_file_match' => ['WG-ALIGN'],
   };
 }
 
@@ -183,8 +191,9 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::CheckSumChecking',
       -max_retry_count   => 1,
       -parameters        => {
-                              checksum_dir => $self->o('checksum_dir'),
-                              release_date => $self->o('release_date'),
+                              checksum_dir    => $self->o('checksum_dir'),
+                              release_date    => $self->o('release_date'),
+                              skip_file_match => $self->o('skip_file_match'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['WriteDrupalFile'],
@@ -195,13 +204,17 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
       -max_retry_count   => 1,
       -parameters        => {
-                              nd_login      => $self->o('nd_login'),
-                              drupal_file   => $self->o('drupal_file'),
-                              copy_file     => $self->o('copy_file'),
-                              staging_dir   => $self->o('staging_dir'),
-                              release_date  => $self->o('release_date'),
-                              drupal_desc   => $self->o('drupal_desc'),
-                              compara_files => 1,
+                              drupal_file      => $self->o('drupal_file'),
+                              manual_file      => $self->o('manual_file'),
+                              sh_ebi_file      => $self->o('sh_ebi_file'),
+                              sh_nd_file       => $self->o('sh_nd_file'),
+                              staging_dir      => $self->o('staging_dir'),
+                              nd_login         => $self->o('nd_login'),
+                              nd_downloads_dir => $self->o('nd_downloads_dir'),
+                              nd_staging_dir   => $self->o('nd_staging_dir'),
+                              release_date     => $self->o('release_date'),
+                              drupal_desc      => $self->o('drupal_desc'),
+                              compara_files    => 1,
                             },
       -rc_name           => 'normal',
     },
@@ -246,6 +259,7 @@ sub pipeline_analyses {
                               skip_dumps       => $self->o('skip_dumps'),
                               files_per_subdir => $self->o('files_per_subdir'),
                               release_date     => $self->o('release_date'),
+                              ensembl_release  => $self->o('ensembl_release'),
                             },
       -rc_name           => 'normal',
       -flow_into         => {
