@@ -137,7 +137,6 @@ sub process_division {
   foreach my $dba (@$all_dbas) {
     my $dbname = $dba->dbc->dbname();
     if ($dbname =~ /$division\_.+_collection_/) {
-    #if ($dbname =~ /$division\_\d+_collection_/) {
       $$core_dbas{$dba->species()} = $dba;
       $division_count++
     
