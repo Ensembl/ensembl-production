@@ -116,7 +116,7 @@ sub default_options {
     # blast_parameters => '-W 3 -B 100000 -V 100000 -hspmax=0 -lcmask -wordmask=seg',
     
     # For parsing the output.
-    output_regex     => '^\s*([\w\-]+)',
+    output_regex     => '^\s*(\w+)',
     pvalue_threshold => 0.01,
     filter_prune     => 1,
     filter_min_score => 200,
