@@ -316,7 +316,7 @@ sub get_update {
 
 sub get_delete {
   my ($table) = @_;
-  return ' DELETE FROM ' . $table . ' WHERE ' . $tables->{row_id} . ' = ?';
+  return ' DELETE FROM ' . $table . ' WHERE ' . $tables->{$table}{row_id} . ' = ?';
 }
 
 sub get_prod_analysis_types {
