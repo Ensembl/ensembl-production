@@ -81,20 +81,13 @@ sub write_json {
                                             -LOAD_EXONS => 1,
                                             -LOAD_XREFS => 1 );
 
-  # get compara
+  # work out compara division
   my $division = $self->division();
   if ( !defined $division || $division eq '' ) {
     $division = 'ensembl';
   }
   if ( $division eq 'bacteria' ) {
     $division = 'pan_homology';
-  }
-  my $compara = $self->get_DBAdaptor( $division, 'compara' );
-  if ( defined $compara ) {
-    $self->info( "Adding " . $compara->species() . " compara" );
-    $exporter->add_compara( $self->production_name(), $genes,
-                            $compara );
-    $compara->dbc()->disconnect_if_idle();
   }
   # get genome
   my $genome_dba =
@@ -128,6 +121,14 @@ sub write_json {
 
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
+  # add compara
+  my $compara = $self->get_DBAdaptor( $division, 'compara' );
+  if ( defined $compara ) {
+    $self->info( "Adding " . $compara->species() . " compara" );
+    $exporter->add_compara( $self->production_name(),
+                            $genome->{genes}, $compara );
+    $compara->dbc()->disconnect_if_idle();
+  }
   # remodel
   my $remodeller = $self->param('remodeller');
   if ( defined $remodeller ) {
