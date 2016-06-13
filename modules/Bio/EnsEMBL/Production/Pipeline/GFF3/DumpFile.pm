@@ -39,8 +39,7 @@ sub fetch_input {
   $self->param('eg', $eg);
 
   if($eg){
-     my $base_path = $self->param('sub_dir');
-     #my $base_path  = $self->build_base_directory();
+     my $base_path  = $self->build_base_directory();
      $self->param('base_path', $base_path);
 
      my $release = $self->param('eg_version');
@@ -174,6 +173,7 @@ sub run {
 
 sub print_to_file {
   my ($self, $slices, $file, $feature_types, $adaptors, $include_header) = @_;
+
   my $dba = $self->core_dba;
   my $include_scaffold = $self->param_required('include_scaffold');
   my $logic_names = $self->param_required('logic_name');
