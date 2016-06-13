@@ -16,7 +16,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Hive::PipeConfig::InterProScanSeg_conf
+ Bio::EnsEMBL::Hive::PipeConfig::InterProScan_conf
 
 =head1 DESCRIPTION
 
@@ -106,9 +106,9 @@ sub default_options {
 
     ## 'meta_table_update' parameters
     #   Information to update 'meta' table
-    'interproscan_version' => '5.18-57.0',
-    'interproscan_date'    => '14-Apr-2016',
-    'interpro_version'     => '57',
+    'interproscan_version' => '5.19-58.0',
+    'interproscan_date'    => '9-June-2016',
+    'interpro_version'     => '58',
 
     ## 'split_fasta' & 'split_md5_fasta' & 'split_no_md5_fasta'  parameters
     #   Parameters for dumping and splitting Fasta protein files:
@@ -128,8 +128,8 @@ sub default_options {
     'seg_logic_name' => 'seg',
 
     ## 'run_InterProScan_lookup' & 'run_InterProScan_nolookup' & 'run_InterProScan_local' parameters
-    # Release 14 April 2016, InterProScan 5:version 5.18-57 using InterPro version 57.0 data
-   	'interproscan_exe' => '/nfs/panda/ensemblgenomes/development/InterProScan/interproscan-5.18-57.0/interproscan.sh',
+    # Release 9 June 2016, InterProScan 5:version 5.19-58 using InterPro version 58.0 data
+	'interproscan_exe' => '/nfs/panda/ensemblgenomes/development/InterProScan/interproscan-5.19-58.0/interproscan.sh',
 
     # Unused applications:
     # SignalP-GRAM_POSITIVE-4.0 SignalP-GRAM_NEGATIVE-4.0
@@ -181,8 +181,8 @@ sub default_options {
     'validating_parser' => 1,
 
     ## 'load_InterPro2Go' parameters
-    #   Release 9 Jan 2016 (http://www.geneontology.org/external2go/interpro2go)
-    'interpro2go' =>  '/nfs/panda/ensemblgenomes/development/InterProScan/interpro2go/2016_Jan_9/interpro2go',
+    #   Release 4 June 2016 (http://www.geneontology.org/external2go/interpro2go)
+    'interpro2go' =>  '/nfs/panda/ensemblgenomes/development/InterProScan/interpro2go/2016_June_4/interpro2go',
 
     #   Check if GO annotation exists from other sources before loading
     #   default => OFF (0)
@@ -210,6 +210,11 @@ sub default_options {
     'required_analysis' =>
     [
       {
+        'logic_name'    => 'ccd',
+        'db'            => 'CCD',
+        'db_version'    => '3.14',
+      },
+      {
         'logic_name'    => 'blastprodom',
         'db'            => 'ProDom',
         'db_version'    => '2006.1',
@@ -222,7 +227,7 @@ sub default_options {
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '201511.02',
+        'db_version'    => '201605.11',
       },
       {
         'logic_name'    => 'hmmpanther',
