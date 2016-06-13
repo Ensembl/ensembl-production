@@ -36,17 +36,22 @@ sub fetch_input {
 
   $self->param( 'dba', $self->core_dba() );
 
-  my $tax_dba  = Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
-  my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "ontology" );
+  my $tax_dba =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
+  my $onto_dba =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "ontology" );
   $self->param( 'metadata_dba',
-                Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "metadata" ) );
-
-  $self->param( 'remodeller',
-                Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller->new(
-                                                      -taxonomy_dba => $tax_dba,
-                                                      -ontology_dba => $onto_dba
+                Bio::EnsEMBL::Registry->get_DBAdaptor(
+                                                     "multi", "metadata"
                 ) );
-  $self->param('base_path', $self->build_base_directory());
+
+  $self->param(
+          'remodeller',
+          Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller->new(
+                                              -taxonomy_dba => $tax_dba,
+                                              -ontology_dba => $onto_dba
+          ) );
+  $self->param( 'base_path', $self->build_base_directory() );
   return;
 }
 
@@ -64,16 +69,17 @@ sub run {
 }
 
 sub write_json {
-  my ($self)     = @_;
+  my ($self) = @_;
   $self->build_base_directory();
-  my $sub_dir    = $self->get_data_path('json');
-  $self->info( "Processing " . $self->production_name() . " into $sub_dir" );
+  my $sub_dir = $self->get_data_path('json');
+  $self->info(
+          "Processing " . $self->production_name() . " into $sub_dir" );
   my $dba = $self->core_dba();
   my $exporter =
     Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
-                                                    -LEVEL => 'protein_feature',
-                                                    -LOAD_EXONS => 1,
-                                                    -LOAD_XREFS => 1 );
+                                            -LEVEL => 'protein_feature',
+                                            -LOAD_EXONS => 1,
+                                            -LOAD_XREFS => 1 );
 
   # get compara
   my $division = $self->division();
@@ -86,35 +92,39 @@ sub write_json {
   my $compara = $self->get_DBAdaptor( $division, 'compara' );
   if ( defined $compara ) {
     $self->info( "Adding " . $compara->species() . " compara" );
-    #$exporter->add_compara($self->production_name(), $genes, $compara);
+    $exporter->add_compara( $self->production_name(), $genes,
+                            $compara );
     $compara->dbc()->disconnect_if_idle();
   }
   # get genome
-  my $genome_dba = $self->param('metadata_dba')->get_GenomeInfoAdaptor();
+  my $genome_dba =
+    $self->param('metadata_dba')->get_GenomeInfoAdaptor();
   if ( $division ne 'ensembl' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
-  die "Could not find genome " . $self->production_name() if !defined $md;
+  die "Could not find genome " . $self->production_name()
+    if !defined $md;
 
-  my $genome = { id           => $md->name(),
-                 dbname       => $md->dbname(),
-                 species_id   => $md->species_id(),
-                 division     => $md->division(),
-                 genebuild    => $md->genebuild(),
-                 is_reference => $md->is_reference() == 1 ? "true" : "false",
-                 organism     => {
-                              name                => $md->name(),
-                              display_name        => $md->display_name(),
-                              scientific_name     => $md->scientific_name(),
-                              strain              => $md->strain(),
-                              serotype            => $md->serotype(),
-                              taxonomy_id         => $md->taxonomy_id(),
-                              species_taxonomy_id => $md->species_taxonomy_id(),
-                              aliases             => $md->aliases() },
-                 assembly => { name      => $md->assembly_name(),
-                               accession => $md->assembly_accession(),
-                               level     => $md->assembly_level() } };
+  my $genome = {
+            id           => $md->name(),
+            dbname       => $md->dbname(),
+            species_id   => $md->species_id(),
+            division     => $md->division(),
+            genebuild    => $md->genebuild(),
+            is_reference => $md->is_reference() == 1 ? "true" : "false",
+            organism     => {
+                      name                => $md->name(),
+                      display_name        => $md->display_name(),
+                      scientific_name     => $md->scientific_name(),
+                      strain              => $md->strain(),
+                      serotype            => $md->serotype(),
+                      taxonomy_id         => $md->taxonomy_id(),
+                      species_taxonomy_id => $md->species_taxonomy_id(),
+                      aliases             => $md->aliases() },
+            assembly => { name      => $md->assembly_name(),
+                          accession => $md->assembly_accession(),
+                          level     => $md->assembly_level() } };
 
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
@@ -126,7 +136,8 @@ sub write_json {
     $remodeller->disconnect();
   }
   $dba->dbc()->disconnect_if_idle();
-  my $json_file_path = $sub_dir . '/' . $self->production_name() . '.json';
+  my $json_file_path =
+    $sub_dir . '/' . $self->production_name() . '.json';
   $self->info("Writing to $json_file_path");
   open my $json_file, '>', $json_file_path or
     throw "Could not open $json_file_path for writing";
