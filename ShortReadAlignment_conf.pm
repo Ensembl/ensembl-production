@@ -83,7 +83,7 @@ sub default_options {
     threads    => 4,
     data_type  => 'rnaseq',
     run_mode   => 'default',
-    max_intron => 0,
+    max_intron => 1,
     use_gtf    => 0,
 
     # Some of the aligners have newer versions, but it's not a given that
