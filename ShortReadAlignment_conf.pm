@@ -82,22 +82,18 @@ sub default_options {
     aligner    => 'bwa',
     threads    => 4,
     data_type  => 'rnaseq',
-    read_type  => 'default',
+    run_mode   => 'default',
+    max_intron => 1,
+    use_gtf    => 0,
 
     # Some of the aligners have newer versions, but it's not a given that
-    # these will be better than the version we've used up till now. So the
-    # latter is the default, but you can experiment with the latest versions
-    # by commenting/uncommenting below.
-    bowtie2_dir  => '/nfs/panda/ensemblgenomes/external/bowtie2-2.2.6',
-    
+    # these will be better than the version we've used up till now.
+    bowtie2_dir  => '/nfs/panda/ensemblgenomes/external/bowtie2',
     bwa_dir      => '/nfs/panda/ensemblgenomes/external/bwa',
-    #bwa_dir      => '/nfs/panda/ensemblgenomes/external/bwa0.7.12_x64-Linux',
-    
     gsnap_dir    => '/nfs/panda/ensemblgenomes/external/gmap-gsnap/bin',
-    #gsnap_dir    => '/nfs/panda/ensemblgenomes/external/gmap-gsnap-2015-11-20/bin',
-    
+    hisat2_dir   => '/nfs/panda/ensemblgenomes/external/hisat2',
     star_dir     => '/nfs/panda/ensemblgenomes/external/STAR',
-    #star_dir     => '/nfs/panda/ensemblgenomes/external/STAR_2.4.2a.Linux_x86_64',
+    tophat2_dir  => '/nfs/panda/ensemblgenomes/external/tophat2',
 
     # Different aligners have different memory requirements; unless explicitly
     # over-ridden, use defaults, which should work on a genome that isn't too
@@ -111,25 +107,33 @@ sub default_options {
       'bowtie2' =>  8000,
       'bwa'     => 16000,
       'gsnap'   => 16000,
+      'hisat2'  => 32000,
       'star'    => 32000,
+      'tophat2' =>  8000,
     },
     index_memory_high_default => {
       'bowtie2' => 16000,
       'bwa'     => 32000,
       'gsnap'   => 32000,
+      'hisat2'  => 64000,
       'star'    => 64000,
+      'tophat2' => 16000,
     },
     align_memory_default => {
       'bowtie2' =>  8000,
       'bwa'     => 32000,
       'gsnap'   => 32000,
+      'hisat2'  =>  8000,
       'star'    => 16000,
+      'tophat2' =>  8000,
     },
     align_memory_high_default => {
       'bowtie2' => 16000,
       'bwa'     => 64000,
       'gsnap'   => 64000,
+      'hisat2'  => 16000,
       'star'    => 32000,
+      'tophat2' => 16000,
     },
     samtobam_memory => 16000,
 
@@ -191,7 +195,8 @@ sub pipeline_wide_parameters {
 
   return {
     %{$self->SUPER::pipeline_wide_parameters},
-    'bigwig' => $self->o('bigwig'),
+    'bigwig'  => $self->o('bigwig'),
+    'use_gtf' => $self->o('use_gtf'),
   };
 }
 
@@ -207,14 +212,16 @@ sub pipeline_analyses {
 }
 
 sub aligner_parameters {
-  my ($self, $aligner, $data_type, $read_type) = @_;
+  my ($self, $aligner, $data_type) = @_;
   
   my %aligner_classes =
   (
     'bowtie2' => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::Bowtie2Aligner',
     'bwa'     => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::BwaAligner',
     'gsnap'   => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::GsnapAligner',
+    'hisat2'  => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::HISAT2Aligner',
     'star'    => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::StarAligner',
+    'tophat2' => 'Bio::EnsEMBL::EGPipeline::Common::Aligner::TopHat2Aligner',
   );
   my $aligner_class = $aligner_classes{$aligner};
   
@@ -223,23 +230,22 @@ sub aligner_parameters {
     'bowtie2' => $self->o('bowtie2_dir'),
     'bwa'     => $self->o('bwa_dir'),
     'gsnap'   => $self->o('gsnap_dir'),
+    'hisat2'  => $self->o('hisat2_dir'),
     'star'    => $self->o('star_dir'),
+    'tophat2' => $self->o('tophat2_dir'),
   );
   my $aligner_dir = $aligner_dirs{$aligner};
   
-  $read_type = 'long_reads' if $data_type !~ /rna_?seq/i;
-  
-  return ($aligner_class, $aligner_dir, $read_type);
+  return ($aligner_class, $aligner_dir);
 }
 
 sub alignment_analyses {
   my ($self) = @_;
   
-  my ($aligner_class, $aligner_dir, $read_type) =
+  my ($aligner_class, $aligner_dir) =
     $self->aligner_parameters(
       $self->o('aligner'),
-      $self->o('data_type'),
-      $self->o('read_type')
+      $self->o('data_type')
     );
   
   my $pipeline_dir = catdir($self->o('pipeline_dir'), $self->o('aligner'));
@@ -263,9 +269,28 @@ sub alignment_analyses {
                             },
       -input_ids         => [ {} ],
       -flow_into         => {
-                              '2' => ['DumpGenome'],
+                              '2' => WHEN('#use_gtf#' =>
+                                       ['DumpGTF'],
+                                     ELSE
+                                       ['DumpGenome']),
                             },
       -meadow_type       => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'DumpGTF',
+      -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::DumpGTF',
+      -analysis_capacity => 10,
+      -can_be_empty      => 1,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              results_dir  => catdir($index_dir, '#species#'),
+                              file_varname => 'gtf_file',
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                               '1' => ['DumpGenome'],
+                            },
     },
 
     {
@@ -441,7 +466,8 @@ sub alignment_analyses {
                               aligner_dir    => $aligner_dir,
                               samtools_dir   => $self->o('samtools_dir'),
                               threads        => $self->o('threads'),
-                              read_type      => $read_type,
+                              run_mode       => $self->o('run_mode'),
+                              max_intron     => $self->o('max_intron'),
                               escape_branch  => -1,
                             },
       -rc_name           => 'align_default',
@@ -462,7 +488,8 @@ sub alignment_analyses {
                               aligner_dir    => $aligner_dir,
                               samtools_dir   => $self->o('samtools_dir'),
                               threads        => $self->o('threads'),
-                              read_type      => $read_type,
+                              run_mode       => $self->o('run_mode'),
+                              max_intron     => $self->o('max_intron'),
                             },
       -rc_name           => 'align_himem',
       -flow_into         => {
