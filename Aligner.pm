@@ -35,7 +35,7 @@ sub new {
     $self->{samtools_dir}, $self->{samtools},
     $self->{bcftools_dir}, $self->{bcftools}, $self->{vcfutils},
     $self->{aligner_dir},
-    $self->{threads}, $self->{run_mode}, $self->{cleanup},
+    $self->{threads}, $self->{run_mode}, $self->{do_not_run}, $self->{cleanup},
   ) =
   rearrange(
     [
