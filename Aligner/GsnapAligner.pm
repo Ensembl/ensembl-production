@@ -32,17 +32,16 @@ sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
   
-  my $aligner_dir;
-  ($aligner_dir, $self->{gmap_build}, $self->{gsnap}, $self->{kmer}, $self->{threads}) =
-    rearrange(['ALIGNER_DIR', 'GMAP_BUILD', 'GSNAP', 'KMER', 'THREADS'], @args);
+  ($self->{kmer}) = rearrange(['KMER'], @args);
+  $self->{kmer} ||= 15;
   
-  $self->{gmap_build} ||= 'gmap_build';
-  $self->{gsnap}      ||= 'gsnap';
-  $self->{kmer}       ||= 15;
-  $self->{threads}    ||= 1;
+  $self->{index_program} = 'gmap_build';
+  $self->{align_program} = 'gsnap';
   
-  $self->{gmap_build} = catdir($aligner_dir, $self->{gmap_build});
-  $self->{gsnap}      = catdir($aligner_dir, $self->{gsnap});
+  if ($self->{aligner_dir}) {
+    $self->{index_program} = catdir($self->{aligner_dir}, $self->{index_program});
+    $self->{align_program} = catdir($self->{aligner_dir}, $self->{align_program});
+  }
   
   return $self;
 }
@@ -50,12 +49,13 @@ sub new {
 sub index_file {
   my ($self, $file) = @_;
   
-  my $index_cmd = $self->{gmap_build};
   my ($name, $path, undef) = fileparse($file, qr/\.[^.]*/);
-  my $index_options = " -D $path -d $name -k $self->{kmer}";
-  my $cmd = "$index_cmd $index_options $file";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->index_cmds($cmd);
+  
+  my $index_cmd  = $self->{index_program};
+  $index_cmd    .= " -D $path -d $name -k $self->{kmer} ";
+  $index_cmd    .= " $file ";
+  
+  $self->run_cmd($index_cmd, 'index');
 }
 
 sub index_exists {
@@ -84,11 +84,11 @@ sub align {
 sub align_file {
   my ($self, $name, $path, $sam, $files) = @_;
   
-  my $sam_cmd = $self->{gsnap};
-  my $sam_options = " -D $path -d $name -N 1 -t $self->{threads} -A sam ";
-  my $cmd = "$sam_cmd $sam_options $files > $sam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
-  $self->align_cmds($cmd);
+  my $align_cmd = $self->{align_program};
+  $align_cmd   .= " -D $path -d $name -N 1 -t $self->{threads} -A sam ";
+  $align_cmd   .= " $files > $sam ";
+  
+  $self->run_cmd($align_cmd, 'align');
   
   return $sam;
 }

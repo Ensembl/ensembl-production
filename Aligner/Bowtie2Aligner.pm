@@ -52,11 +52,11 @@ sub new {
 sub index_file {
   my ($self, $file) = @_;
   
-  my $index_cmd = $self->{index_program};
   (my $index_name = $file) =~ s/\.\w+$//;
-  my $cmd = "$index_cmd $file $index_name";
   
-  $self->run_cmd($cmd, 'index');
+  my $index_cmd = "$self->{index_program} $file $index_name";
+  
+  $self->run_cmd($index_cmd, 'index');
 }
 
 sub index_exists {
