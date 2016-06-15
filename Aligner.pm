@@ -32,14 +32,15 @@ sub new {
 	my $self = bless( {}, ref($class) || $class );
   my ($samtools_dir, $bcftools_dir);
   
-	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads} ) =
-	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS' ], @args );
+	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads}, $self->{memory} ) =
+	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS', 'MEMORY' ], @args );
   
 	$self->{samtools} ||= 'samtools';
 	$self->{bcftools} ||= 'bcftools';
 	$self->{vcfutils} ||= 'vcfutils.pl';
   $self->{cleanup}  ||= 1;
   $self->{threads}  ||= 1;
+  $self->{memory}  ||= 16000;
   $self->{dummy} //= 0;
   
   $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
@@ -98,15 +99,27 @@ sub sam_to_bam {
 	my ($self, $sam, $bam) = @_;
   
 	if (! defined $bam) {
-		($bam = $sam) =~ s/\.sam/\.bam/;
+		($bam = $sam) =~ s/\.sam$/\.bam/;
     if ($bam eq $sam) {
       $bam = "$sam.bam";
     }
 	}
+  # First part: conversion from SAM to BAM
   my $convert_cmd = "$self->{samtools} view -bS $sam";
+  
+  # Second part: sorting the BAM
   my $threads = $self->{threads};
-  my $sort_cmd = "$self->{samtools} sort -@ $threads -o $bam -O 'bam' -T $bam.sorting -";
+  # Calculate the correct memory per thread
+  my $mem = $self->{memory} / $threads;
+  # Samtools sort is too greedy: we give it less
+  $mem *= 0.8;
+  my $mem_limit = $mem . 'M';
+  # Final sort command
+  my $sort_cmd = "$self->{samtools} sort -@ $threads -m $mem_limit -o $bam -O 'bam' -T $bam.sorting -";
+  
+  # Pipe both commands
   my $cmd = "$convert_cmd | $sort_cmd";
+  
   $self->execute($cmd);
   $self->align_cmds($cmd);
   
