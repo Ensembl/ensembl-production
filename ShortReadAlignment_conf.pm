@@ -599,8 +599,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'index_default' => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000] span[hosts=1]"'},
-    'index_himem'   => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000] span[hosts=1]"'},
+    'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_mem.' -R "rusage[mem='.$index_mem.',tmp=16000] span[hosts=1]"'},
+    'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem.' -R "rusage[mem='.$index_himem.',tmp=16000] span[hosts=1]"'},
     'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.' -R "rusage[mem='.$align_mem.',tmp=16000] span[hosts=1]"'},
     'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem.' -R "rusage[mem='.$align_himem.',tmp=16000] span[hosts=1]"'},
   }
