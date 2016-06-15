@@ -131,6 +131,7 @@ sub default_options {
       'gsnap'   => 64000,
       'star'    => 32000,
     },
+    samtobam_memory => 16000,
 
     samtools_dir  => '/nfs/panda/ensemblgenomes/external/samtools',
     bedtools_dir  => '/nfs/panda/ensemblgenomes/external/bedtools/bin',
@@ -441,13 +442,12 @@ sub alignment_analyses {
                               samtools_dir   => $self->o('samtools_dir'),
                               threads        => $self->o('threads'),
                               read_type      => $read_type,
-                              clean_up       => $self->o('clean_up'),
                               escape_branch  => -1,
                             },
       -rc_name           => 'align_default',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
-                               '1' => ['?table_name=merge_bam', '?table_name=align_cmds'],
+                               '1' => ['SamToBam', '?table_name=align_cmds'],
                             },
     },
 
@@ -463,9 +463,25 @@ sub alignment_analyses {
                               samtools_dir   => $self->o('samtools_dir'),
                               threads        => $self->o('threads'),
                               read_type      => $read_type,
-                              clean_up       => $self->o('clean_up'),
                             },
       -rc_name           => 'align_himem',
+      -flow_into         => {
+                               '1' => ['SamToBam', '?table_name=align_cmds'],
+                            },
+    },
+
+    {
+      -logic_name        => 'SamToBam',
+      -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SamToBam',
+      -analysis_capacity => 25,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              samtools_dir   => $self->o('samtools_dir'),
+                              threads        => $self->o('threads'),
+                              memory         => $self->o('samtobam_memory'),
+                              clean_up       => $self->o('clean_up'),
+                            },
+      -rc_name           => 'samtobam_mem',
       -flow_into         => {
                                '1' => ['?table_name=merge_bam', '?table_name=align_cmds'],
                             },
@@ -573,13 +589,17 @@ sub resource_classes {
   # Large estimate of the memory based of the number of cpus used
   my $merge_mem      = $threads * 32;
   
+  # Estimate the memory used by the samtools sort
+  my $samtobam_mem = $self->o('samtobam_memory');
+  
   return {
     %{$self->SUPER::resource_classes},
     'index_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_mem.   ' -R "rusage[mem='.$index_mem.   ',tmp=16000] span[hosts=1]"'},
     'index_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$index_himem. ' -R "rusage[mem='.$index_himem. ',tmp=16000] span[hosts=1]"'},
     'align_default' => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_mem.   ' -R "rusage[mem='.$align_mem.   ',tmp=16000] span[hosts=1]"'},
     'align_himem'   => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$align_himem. ' -R "rusage[mem='.$align_himem. ',tmp=16000] span[hosts=1]"'},
-    'merge_mem'     => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$merge_mem.   ' -R "rusage[mem='.$merge_himem. ',tmp=16000] span[hosts=1]"'},
+    'samtobam_mem'  => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$samtobam_mem.' -R "rusage[mem='.$samtobam_mem.',tmp=16000] span[hosts=1]"'},
+    'merge_mem'     => {'LSF' => '-q production-rh6 -n '. ($threads + 1) .' -M '.$merge_mem.   ' -R "rusage[mem='.$merge_mem. ',tmp=16000] span[hosts=1]"'},
   }
 }
 
