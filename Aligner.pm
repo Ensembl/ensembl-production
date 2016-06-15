@@ -32,14 +32,14 @@ sub new {
 	my $self = bless( {}, ref($class) || $class );
   my ($samtools_dir, $bcftools_dir);
   
-	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads}, $self->{merge_sort_memory} ) =
-	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS', 'MERGE_SORT_MEMORY' ], @args );
+	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads} ) =
+	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS' ], @args );
   
 	$self->{samtools} ||= 'samtools';
 	$self->{bcftools} ||= 'bcftools';
 	$self->{vcfutils} ||= 'vcfutils.pl';
   $self->{cleanup}  ||= 1;
-  $self->{sort_memory} ||= '16000';
+  $self->{threads}  ||= 1;
   $self->{dummy} //= 0;
   
   $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
@@ -103,7 +103,10 @@ sub sam_to_bam {
       $bam = "$sam.bam";
     }
 	}
-  my $cmd = "$self->{samtools} view -bS $sam > $bam";
+  my $convert_cmd = "$self->{samtools} view -bS $sam";
+  my $threads = $self->{threads};
+  my $sort_cmd = "$self->{samtools} sort -@ $threads -o $bam -O 'bam' -T $bam.sorting -";
+  my $cmd = "$convert_cmd | $sort_cmd";
   $self->execute($cmd);
   $self->align_cmds($cmd);
   
@@ -114,7 +117,8 @@ sub merge_bam {
 	my ($self, $bams, $out) = @_;
   
   my $bam = join( ' ', @$bams );
-  my $cmd = "$self->{samtools} merge -f $out $bam";
+  my $threads = $self->{threads};
+  my $cmd = "$self->{samtools} merge -@ $threads -f $out $bam";
   $self->execute($cmd);
   $self->align_cmds($cmd);
   
@@ -130,8 +134,7 @@ sub sort_bam {
       $out_prefix = "$bam.sorted";
     }
 	}
-  my $memory  = $self->{sort_memory} . 'M';
-  my $cmd = "$self->{samtools} sort -m $memory $bam $out_prefix";
+  my $cmd = "$self->{samtools} sort $bam $out_prefix";
   $self->execute($cmd);
   $self->align_cmds($cmd);
   
