@@ -32,26 +32,51 @@ sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
   
-  my $aligner_dir;
-  ($aligner_dir, $self->{star}, $self->{max_intron_size}, $self->{threads}, $self->{read_type}, $self->{memory_mode}) =
-    rearrange(['ALIGNER_DIR', 'STAR', 'MAX_INTRON_LENGTH', 'THREADS', 'READ_TYPE', 'MEMORY_MODE'], @args);
+  (
+    $self->{max_intron_length},
+    $self->{index_mode},
+  ) =
+  rearrange(
+    [
+      'MAX_INTRON_LENGTH',
+      'INDEX_MODE'
+    ], @args
+  );
   
-  $self->{star}            ||= 'STAR';
-  $self->{threads}         ||= 1;
-  $self->{max_intron_size} ||= 25000;
-  $self->{memory_mode}     ||= 'default';
-  $self->{read_type}       ||= 'default';
-
-  $self->{star} = catdir($aligner_dir, $self->{star});
+  $self->{index_program} = 'STAR';
+  $self->{align_program} = 'STAR';
+  
+  $self->{index_mode} ||= 'default';
   
   # Make memory limit very large as we want the LSF to kill the job if too
   # much memory is required rather than being killed quietly by STAR.
-  $self->{RAM_limit} ||= '66000000000';
+  $self->{RAM_limit} = '66000000000';
+  
+  if ($self->{run_mode} eq 'long_reads') {
+    $self->{align_program} .= 'long';
+    $self->{align_params}   = $self->long_read_options;
+  } elsif ($self->{run_mode} eq 'cross_species') {
+    $self->{align_program} .= 'long';
+    $self->{align_params}   = $self->cross_species_options;
+  } else {
+    $self->{align_params} = '';
+  }
+  
+  if ($self->{max_intron_length}) {
+    $self->{align_params} .= " --alignIntronMax $self->{max_intron_length} ";
+  }
+    
+  return $self;
+}
+
+sub long_read_options {
+  my ($self) = @_;
   
   # These options were advised for long reads, see: 
   # https://groups.google.com/forum/#!searchin/rna-star/very$20long$20reads/rna-star/-2mBTPWRCJY/jgDbZjhl3NkJ
   # (Do not use seedSearchLmax parameter as it can not deal with reads with Ns or ambiguity bases.)
-  $self->{long_read_options} =
+  
+  return 
     " --alignTranscriptsPerReadNmax 100000 ".
     " --alignTranscriptsPerWindowNmax 10000 ".
     " --alignWindowsPerReadNmax 30000 ".
@@ -63,26 +88,27 @@ sub new {
     " --seedPerWindowNmax 1000 ".
     " --seedSearchStartLmax 12 ".
     " --winAnchorMultimapNmax 200 ";
+}
+
+sub cross_species_options {
+  my ($self) = @_;
   
-  $self->{cross_species_options} =
+  return 
     " --alignTranscriptsPerReadNmax 100000 ".
     " --alignTranscriptsPerWindowNmax 10000 ".
     " --outFilterMismatchNmax 1000 ".
     " --seedPerReadNmax 100000 ".
     " --seedPerWindowNmax 1000 ".
     " --seedSearchStartLmax 20 ";
-  
-  return $self;
 }
-
 sub version {
   my ($self) = @_;
   
-  # STAR can't report it's own version (<sigh>), so we have to hope that,
+  # STAR can't report it's own version (<sigh>), so we have to hope that
   # the directory has the default name, and extract it from there.
   my $version;
   
-  my (undef, $dir, undef) = fileparse($self->{star});
+  my (undef, $dir, undef) = fileparse($self->{align_program});
   $dir =~ s!/$!!;
   if (-l $dir) {
     ($version) = readlink($dir) =~ /STAR_([0-9a-z\.]+)\.[^\/]+$/;
@@ -96,8 +122,8 @@ sub version {
 sub index_file {
   my ($self, $file) = @_;
   
-  my $index_cmd = $self->{star};
   my (undef, $path, undef) = fileparse($file, qr/\.[^.]*/);
+  
   my $index_options =
     " --runMode genomeGenerate ".
     " --genomeDir $path ".
@@ -105,7 +131,7 @@ sub index_file {
     " --runThreadN $self->{threads} ".
     " --limitGenomeGenerateRAM $self->{RAM_limit} ";
   
-  if ($self->{memory_mode} eq "himem") {
+  if ($self->{index_mode} eq "himem") {
     my $size = -s $file;
     my $genomeSAindexNbases = ( log($size)/log(2) )/2 - 1;
     
@@ -119,9 +145,10 @@ sub index_file {
       " --genomeChrBinNbits $genomeChrBinNbits";
   }
   
-  my $cmd = "$index_cmd $index_options";
-  $self->execute($cmd);
-  $self->index_cmds($cmd);
+  my $index_cmd = $self->{index_program};
+  $index_cmd   .= " $index_options";
+  
+  $self->run_cmd($index_cmd, 'index');
 }
 
 sub index_exists {
@@ -151,25 +178,18 @@ sub align {
 sub align_file {
   my ($self, $name, $path, $sam, $files) = @_;
   
-  my $star_cmd = $self->{star};
-  my $star_options =
+  my $align_options =
     " --genomeDir $path ".
     " --runThreadN $self->{threads} ".
-    " --alignIntronMax $self->{max_intron_size} ".
     " --readFilesIn $files ".
     " --outStd SAM ";
+    
+  my $align_cmd = $self->{align_program};
+  $align_cmd   .= " $align_options ";
+  $align_cmd   .= " $self->{align_params} ";
+  $align_cmd   .= "  > $sam ";
   
-  if ($self->{read_type} eq 'long_reads') {
-    $star_cmd .= 'long';
-    $star_options .= $self->{long_read_options};
-  } elsif ($self->{read_type} eq 'cross_species') {
-    $star_cmd .= 'long';
-    $star_options .= $self->{cross_species_options};
-  }
-  
-  my $cmd = "$star_cmd $star_options > $sam";
-  $self->execute($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($align_cmd, 'align');
   
   return $sam;
 }

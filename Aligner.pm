@@ -30,22 +30,37 @@ use IPC::Cmd qw(run);
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-  my ($samtools_dir, $bcftools_dir);
   
-	( $samtools_dir, $self->{samtools}, $bcftools_dir, $self->{bcftools}, $self->{cleanup}, $self->{threads}, $self->{memory} ) =
-	  rearrange( [ 'SAMTOOLS_DIR', 'SAMTOOLS', 'BCFTOOLS_DIR', 'BCFTOOLS', 'CLEANUP', 'THREADS', 'MEMORY' ], @args );
+	(
+    $self->{samtools_dir}, $self->{samtools},
+    $self->{bcftools_dir}, $self->{bcftools}, $self->{vcfutils},
+    $self->{aligner_dir},
+    $self->{threads}, $self->{memory}, $self->{run_mode}, $self->{do_not_run}, $self->{cleanup},
+  ) =
+  rearrange(
+    [
+      'SAMTOOLS_DIR', 'SAMTOOLS',
+      'BCFTOOLS_DIR', 'BCFTOOLS', 'VCFUTILS',
+      'ALIGNER_DIR',
+      'THREADS', 'MEMORY', 'RUN_MODE', 'DO_NOT_RUN', 'CLEANUP',
+    ], @args
+  );
   
-	$self->{samtools} ||= 'samtools';
-	$self->{bcftools} ||= 'bcftools';
-	$self->{vcfutils} ||= 'vcfutils.pl';
-  $self->{cleanup}  ||= 1;
-  $self->{threads}  ||= 1;
-  $self->{memory}  ||= 16000;
-  $self->{dummy} //= 0;
+	$self->{samtools}   ||= 'samtools';
+	$self->{bcftools}   ||= 'bcftools';
+	$self->{vcfutils}   ||= 'vcfutils.pl';
+  $self->{threads}    ||= 1;
+  $self->{run_mode}   ||= 'default';
+  $self->{do_not_run} ||= 0;
+  $self->{cleanup}    ||= 1;
   
-  $self->{samtools} = catdir($samtools_dir, $self->{samtools}) if defined $samtools_dir;
-	$self->{bcftools} = catdir($bcftools_dir, $self->{bcftools}) if defined $bcftools_dir;
-	$self->{vcfutils} = catdir($bcftools_dir, $self->{vcfutils}) if defined $bcftools_dir;
+  if ($self->{samtools_dir}) {
+    $self->{samtools} = catdir($self->{samtools_dir}, $self->{samtools});
+  }
+  if ($self->{bcftools_dir}) {
+    $self->{bcftools} = catdir($self->{bcftools_dir}, $self->{bcftools});
+    $self->{vcfutils} = catdir($self->{bcftools_dir}, $self->{vcfutils});
+  }
   
 	return $self;
 }
@@ -53,7 +68,7 @@ sub new {
 sub version {
   my ($self) = @_;
   
-  my $cmd = $self->{bowtie2} . ' --version';
+  my $cmd = $self->{align_program} . ' --version';
   my ($success, $error, $buffer) = run(command => $cmd);
   my $buffer_str = join "", @$buffer;
   
@@ -61,7 +76,7 @@ sub version {
     $buffer_str =~ /version\s+(\S+)/m;
     return $1;
   } else {
-    $self->throw("Command '$cmd' failed, $error: $buffer_str");
+    throw("Command '$cmd' failed, $error: $buffer_str");
   }
 }
 
@@ -75,6 +90,20 @@ sub index_exists {
 
 sub align {
 	throw "align unimplemented";
+}
+
+sub run_cmd {
+  my ($self, $cmd, $cmd_type) = @_;
+  
+  if (! $self->{do_not_run}) {
+    system($cmd) == 0 || throw "Cannot execute $cmd: $@";
+  }
+  
+  if ($cmd_type eq 'align') {
+    $self->align_cmds($cmd);
+  } elsif ($cmd_type eq 'index') {
+    $self->index_cmds($cmd);
+  }
 }
 
 sub index_cmds {
@@ -120,7 +149,7 @@ sub sam_to_bam {
   # Pipe both commands
   my $cmd = "$convert_cmd | $sort_cmd";
   
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $bam;
@@ -132,7 +161,7 @@ sub merge_bam {
   my $bam = join( ' ', @$bams );
   my $threads = $self->{threads};
   my $cmd = "$self->{samtools} merge -@ $threads -f $out $bam";
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $out;
@@ -148,7 +177,7 @@ sub sort_bam {
     }
 	}
   my $cmd = "$self->{samtools} sort $bam $out_prefix";
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return "$out_prefix.bam";
@@ -165,7 +194,7 @@ sub index_bam {
 	}
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
 }
 
@@ -198,7 +227,7 @@ sub pileup_bam {
 	}
   # Is the '-' required?
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $bcf;
@@ -215,7 +244,7 @@ sub bcf2vcf {
 	}
   
   my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
-  $self->execute($cmd);
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $vcf;
@@ -226,24 +255,10 @@ sub dummy {
   my ($dummy) = @_;
   
   if (defined $dummy) {
-    $self->{dummy} = $dummy;
+    $self->{do_not_run} = $dummy;
   }
   
-  return $self->{dummy};
-}
-
-sub execute {
-  my $self = shift;
-  my ($cmd) = @_;
-  
-  if (not $self->{dummy}) {
-    warn "Execute $cmd";
-    system($cmd) == 0 || throw "Cannot execute $cmd";
-  }
-  else {
-    warn "Fake $cmd";
-  }
-  return $cmd;
+  return $self->{do_not_run};
 }
 
 1;

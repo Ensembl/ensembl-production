@@ -35,6 +35,7 @@ sub param_defaults {
     'header_style'      => 'default',
     'chunk_factor'      => 1000,
     'line_width'        => 80,
+    'is_canonical'      => undef,
     'file_varname'      => 'transcriptome_file',
   };
   
@@ -80,6 +81,7 @@ sub run {
   my $use_dbID           = $self->param('use_dbID');
   my $chunk_factor       = $self->param('chunk_factor');
   my $line_width         = $self->param('line_width');
+  my $is_canonical       = $self->param('is_canonical');
   
   open(my $fh, '>', $transcriptome_file) or $self->throw("Cannot open file $transcriptome_file: $!");
   my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
@@ -94,6 +96,9 @@ sub run {
   my $transcripts = $tra->fetch_all();
   
   foreach my $transcript (sort { $a->stable_id cmp $b->stable_id } @{$transcripts}) {
+    if (defined $is_canonical) {
+      next if $is_canonical != $transcript->is_canonical;
+    }
     my $seq_obj = $transcript->seq();
     
     if ($header_style ne 'default') {
