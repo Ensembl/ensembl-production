@@ -116,7 +116,7 @@ sub default_options {
     # blast_parameters => '-W 3 -B 100000 -V 100000 -hspmax=0 -lcmask -wordmask=seg',
     
     # For parsing the output.
-    output_regex     => '^\s*([\w\-]+)',
+    output_regex     => '^\s*(\w+)',
     pvalue_threshold => 0.01,
     filter_prune     => 1,
     filter_min_score => 200,
@@ -137,6 +137,7 @@ sub default_options {
     gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
+    gff_source    => undef,
     
     analyses =>
     [
@@ -151,6 +152,7 @@ sub default_options {
         'program_file'  => $self->o('blastp_exe'),
         'parameters'    => $self->o('blast_parameters'),
         'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'gff_source'    => $self->o('gff_source'),
         'linked_tables' => ['protein_feature'],
         'db_type'       => 'core',
       },
@@ -166,6 +168,7 @@ sub default_options {
         'program_file'  => $self->o('blastx_exe'),
         'parameters'    => $self->o('blast_parameters'),
         'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'gff_source'    => $self->o('gff_source'),
         'linked_tables' => ['protein_align_feature'],
         'db_type'       => 'otherfeatures',
       },
