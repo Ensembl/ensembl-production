@@ -72,7 +72,7 @@ sub fetch_input {
     # Query to get mapping of interpro accession to ensembl translation,
     # 'GROUP BY' to remove duplicates of interpro_ac and translation_id
     # that supports collection species
-    my $sql_get_ipr_tid = 'SELECT i.interpro_ac, pf.hit_name, pf.translation_id FROM interpro i 
+    my $sql_get_ipr_tid = 'SELECT i.interpro_ac, pf.hit_name, pf.translation_id, tf.transcript_id FROM interpro i 
 			 JOIN protein_feature pf ON (hit_name=id) 
 			 JOIN translation tl USING (translation_id) 
 			 JOIN transcript tf USING (transcript_id) 
@@ -140,11 +140,11 @@ sub run {
     
     # Parse into hash interpro2GO the 'interpro2go' file=> http://www.geneontology.org/external2go/interpro2go
     my $interpro2go = $self->parse_interpro2go( $file, \%interpro_xrefs );
-    my ($interpro_ac, $domain, $translation);
+    my ($interpro_ac, $domain, $translation, $transcript);
 
     # $sth_clear_table->execute($ipr_ext_dbid, $go_ext_dbid);
     $sth_get_ipr_tid->execute($self->core_dba()->species_id());
-    $sth_get_ipr_tid->bind_columns(\$interpro_ac, \$domain, \$translation);
+    $sth_get_ipr_tid->bind_columns(\$interpro_ac, \$domain, \$translation, \$transcript);
 
     while ($sth_get_ipr_tid->fetch()) {
         # If flag_check_annot_exists is 'ON'
@@ -204,7 +204,13 @@ sub run {
 	       $go_dbentry->analysis($analysis);
 
    	       # Finally add you annotation term to the ensembl object,
-	       $dbea->store( $go_dbentry, $translation, 'Translation', 1 );		    
+   	       if($species =~/aspergillus_nidulans/){
+		   $dbea->store( $go_dbentry, $transcript, 'Transcript', 1 ); 
+               } else {
+		   $dbea->store( $go_dbentry, $translation, 'Translation', 1 ); 
+	       }
+	       #$dbea->store( $go_dbentry, $translation, 'Translation', 1 );		    
+		    
   	} #  foreach my $go_string (@go_string){		
      }
   }
