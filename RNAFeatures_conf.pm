@@ -113,7 +113,7 @@ sub default_options {
                             'Fungi' =>
                               ['RF00012', 'RF00017', 'RF01848', ],
                             'Metazoa' =>
-                              ['RF00882', 'RF00906', 'RF01675', 'RF01846', 'RF01848', 'RF01849', 'RF01856', 'RF02032', ],
+                              ['RF00882', 'RF00906', 'RF01582', 'RF01675', 'RF01846', 'RF01848', 'RF01849', 'RF01856', 'RF02032', ],
                             'Viridiplantae' =>
                               ['RF00012', 'RF00017', 'RF01856', ],
                             'EnsemblProtists' =>
@@ -139,7 +139,7 @@ sub default_options {
     # gene description.
     trnascan_dir        => catdir($self->o('program_dir'), 'tRNAscan-SE-1.3.1', 'bin'),
     trnascan_exe        => catdir($self->o('program_dir'), 'bin', 'tRNAscan-SE'),
-    trnascan_logic_name => 'trnascan',
+    trnascan_logic_name => 'trnascan_align',
     trnascan_param_hash =>
     {
       db_name => 'TRNASCAN_SE',
