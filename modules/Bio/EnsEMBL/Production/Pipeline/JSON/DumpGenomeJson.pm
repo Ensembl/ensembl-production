@@ -82,17 +82,17 @@ sub write_json {
                                             -LOAD_XREFS => 1 );
 
   # work out compara division
-  my $division = $self->division();
-  if ( !defined $division || $division eq '' ) {
-    $division = 'ensembl';
+  my $compara_name = $self->division();
+  if ( !defined $compara_name || $compara_name eq '' ) {
+    $compara_name = 'ensembl';
   }
-  if ( $division eq 'bacteria' ) {
-    $division = 'pan_homology';
+  if ( $compara_name eq 'bacteria' ) {
+    $compara_name = 'pan_homology';
   }
   # get genome
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ( $division ne 'ensembl' ) {
+  if ( $compara_name ne 'ensembl' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
@@ -122,7 +122,13 @@ sub write_json {
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
   # add compara
-  my $compara = $self->get_DBAdaptor( $division, 'compara' );
+  $self->info("Trying to find compara for '$compara_name'");
+  print "Looking for $compara_name\n";
+  my $compara =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' );
+  if ( !defined $compara ) {
+    die "No compara!\n";
+  }
   if ( defined $compara ) {
     $self->info( "Adding " . $compara->species() . " compara" );
     $exporter->add_compara( $self->production_name(),
