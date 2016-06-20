@@ -473,7 +473,8 @@ sub alignment_analyses {
       -rc_name           => 'align_default',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
-                               '1' => ['SamToBam', '?table_name=align_cmds'],
+                               '1' => ['SamToBam'],
+                               '2' => ['?table_name=align_cmds'],
                             },
     },
 
@@ -493,7 +494,8 @@ sub alignment_analyses {
                             },
       -rc_name           => 'align_himem',
       -flow_into         => {
-                               '1' => ['SamToBam', '?table_name=align_cmds'],
+                               '1' => ['SamToBam'],
+                               '2' => ['?table_name=align_cmds'],
                             },
     },
 
