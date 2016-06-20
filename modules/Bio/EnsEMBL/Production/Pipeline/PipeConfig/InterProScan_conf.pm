@@ -486,7 +486,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name      => 'meta_table_update',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::InterProScan::MetaTblUpdate',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::InterProScan::UpdateMetaTbl',
       -hive_capacity   => 50,
       -parameters      => {
                             interproscan_version => $self->o('interproscan_version'),
