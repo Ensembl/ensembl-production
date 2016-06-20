@@ -96,6 +96,31 @@ CREATE TABLE `db` (
   UNIQUE KEY `species_release_idx` (`species_id`,`db_type`,`db_release`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2038 DEFAULT CHARSET=latin1;
 
+CREATE TABLE `division` (
+  `division_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  `shortname` varchar(4) NOT NULL,
+  PRIMARY KEY (`division_id`),
+  UNIQUE KEY `name_idx` (`name`),
+  UNIQUE KEY `shortname_idx` (`shortname`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `division_db` (
+  `division_id` int(10) DEFAULT NULL,
+  `db_name` varchar(64) NOT NULL,
+  `db_type` enum('COMPARA','GENE_MART','SEQ_MART','SNP_MART','FEATURES_MART','ONTOLOGY_MART','ONTOLOGY','TAXONOMY','ANCESTRAL','WEBSITE','INFO') NOT NULL,
+  `is_current` tinyint(1) NOT NULL DEFAULT '1',
+  `update_type` enum('NEW_GENOME','NEW_ASSEMBLY','NEW_GENEBUILD','PATCHED','OTHER') DEFAULT 'PATCHED',
+  `release_status` enum('NOT_READY','COMPARA_READY','WEB_READY') DEFAULT 'NOT_READY',
+  UNIQUE KEY `division_db_idx` (`division_id`,`db_name`,`is_current`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `division_species` (
+  `division_id` int(10) DEFAULT NULL,
+  `species_id` int(10) DEFAULT NULL,
+  UNIQUE KEY `division_species_idx` (`division_id`,`species_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 CREATE TABLE `master_attrib` (
   `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
   `attrib_type_id` smallint(5) unsigned NOT NULL DEFAULT '0',
@@ -190,7 +215,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=47 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,

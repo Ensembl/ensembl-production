@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	84
+1	\N	schema_version	85
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -208,3 +208,7 @@
 2164	\N	patch	patch_83_84_a.sql|schema_version
 2165	\N	patch	patch_83_84_b.sql|xref.version_default
 2166	\N	patch	patch_83_84_c.sql|protein_feature_unique
+2167	\N	patch	patch_83_84_d.sql|longer_synonym
+2168	\N	patch	patch_83_84_e.sql|nullable_versions
+2169	\N	patch	patch_84_85_a.sql|schema_version
+2170	\N	patch	patch_84_85_b.sql|remove_duplicated_key
