@@ -27,6 +27,12 @@ use Data::Dumper;
 use Log::Log4perl qw/get_logger/;
 use List::MoreUtils qw/natatime/;
 
+my $skip_xrefs = {
+		  'Interpro'=>1,
+		  'GO'=>1,
+		  'HAMAP'=>1
+		 };
+
 sub new {
   my ( $class, @args ) = @_;
   my $self = bless( {}, ref($class) || $class );
@@ -177,7 +183,7 @@ sub make_xrefs_unique {
 sub collate_protein_features {
   my ( $self, $obj, $newobj ) = @_;
   for my $pf ( @{ $obj->{protein_features} } ) {
-    if ( defined $pf->{dbname} ) {
+    if ( defined $pf->{dbname} && $pf->{dbname} ne '' ) {
       $self->{protein_features}{ $pf->{dbname} } = 1;
       $newobj->{ $pf->{dbname} }->{ $pf->{name} }++;
     }
@@ -240,8 +246,10 @@ sub collate_xrefs {
       }
     } ## end if ( defined $xref->{linkage_types...})
     else {
-      $self->{xrefs}{ $xref->{dbname} } = 1;
-      $new_obj->{ $xref->{dbname} }->{ $xref->{primary_id} }++;
+      if(!defined $skip_xrefs->{$xref->{dbname}}) {
+	$self->{xrefs}{ $xref->{dbname} } = 1;
+	$new_obj->{ $xref->{dbname} }->{ $xref->{primary_id} }++;
+      }
     }
   } ## end for my $xref ( @{ $obj->...})
   if ( $self->{retain_xrefs} ) {
