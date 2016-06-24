@@ -317,7 +317,7 @@ sub expand_taxon {
   my ( $self, $taxon ) = @_;
   my $taxons = [];
   if ( defined $self->{tax_dba} ) {
-    my $taxons = $self->{taxon_parents}->{$taxon};
+    $taxons = $self->{taxon_parents}->{$taxon};
     if ( !defined $taxons ) {
       $taxons = $self->{tax_dba}->dbc()->sql_helper()->execute_simple(
         -SQL => q/select n.taxon_id from ncbi_taxa_node n
