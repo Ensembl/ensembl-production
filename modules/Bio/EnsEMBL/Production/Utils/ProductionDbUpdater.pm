@@ -89,7 +89,7 @@ my $tables = {
 
   misc_set => { label    => 'code',
                 cols     => [qw/misc_set_id code name description max_length/],
-                all_coki => [qw/misc_set_id code name description max_length/],
+                all_cols => [qw/misc_set_id code name description max_length/],
                 row_id   => 'misc_set_id' },
 
   unmapped_reason => {
