@@ -27,20 +27,17 @@ use Data::Dumper;
 use Log::Log4perl qw/get_logger/;
 use List::MoreUtils qw/natatime/;
 
-my $skip_xrefs = {
-		  'Interpro'=>1,
-		  'GO'=>1,
-		  'HAMAP'=>1
-		 };
+my $skip_xrefs = { 'Interpro' => 1, 'GO' => 1, 'HAMAP' => 1 };
 
 sub new {
   my ( $class, @args ) = @_;
   my $self = bless( {}, ref($class) || $class );
   $self->{log} = get_logger();
-  my ( $tax_dba, $onto_dba, $key_xrefs, $retain_xrefs, $variation_dba ) =
-    rearrange(
-           [qw/taxonomy_dba ontology_dba key_xrefs retain_xrefs variation_dba/],
-           @args );
+  my ( $tax_dba, $onto_dba, $key_xrefs, $retain_xrefs, $variation_dba )
+    = rearrange( [
+      qw/taxonomy_dba ontology_dba key_xrefs retain_xrefs variation_dba/
+    ],
+    @args );
   $self->{tax_dba} = $tax_dba;
   if ( !defined $self->{tax_dba} ) {
     $self->log()->warn("No taxonomy DBA defined");
@@ -79,14 +76,14 @@ sub remodel_genome {
     $new_gene->{taxon_id}       = $genome->{organism}{taxonomy_id};
     $new_gene->{lineage}        = $genome->{organism}{lineage};
     for my $go ( @{ $new_gene->{GO} } ) {
-      for my $gop (@{$go->{parents}}) {
+      for my $gop ( @{ $go->{parents} } ) {
         $genome_gos->{$gop} = 1;
       }
     }
     push @$new_genes, $new_gene;
   }
-  $genome->{genes} = $new_genes;
-  $genome->{GO}    = [ keys %$genome_gos ];
+  $genome->{genes}     = $new_genes;
+  $genome->{GO_genome} = [ keys %$genome_gos ];
   return;
 }
 
@@ -103,13 +100,16 @@ sub remodel_gene {
   $self->collate_xrefs( $gene, $new_gene );
   # process transcripts
   for my $transcript ( @{ $gene->{transcripts} } ) {
-    my $new_transcript = $self->copy_hash( $transcript,
-             qw/id name description biotype seq_region_name start end strand/ );
+    my $new_transcript =
+      $self->copy_hash(
+        $transcript,
+        qw/id name description biotype seq_region_name start end strand/
+      );
     $self->collate_xrefs( $transcript, $new_transcript );
     # process translations
     for my $translation ( @{ $transcript->{translations} } ) {
-      my $new_translation =
-        $self->copy_hash( $translation, qw/id coding_start coding_end/ );
+      my $new_translation = $self->copy_hash( $translation,
+                                       qw/id coding_start coding_end/ );
       $self->collate_xrefs( $translation, $new_translation );
       $self->collate_protein_features( $translation, $new_translation );
       $self->merge_xrefs( $new_transcript, $new_translation );
@@ -118,8 +118,11 @@ sub remodel_gene {
     }
     # process exons
     for my $exon ( @{ $transcript->{exons} } ) {
-      my $new_exon = $self->copy_hash( $exon,
-             qw/id name description biotype seq_region_name start end strand/ );
+      my $new_exon =
+        $self->copy_hash(
+        $exon,
+        qw/id name description biotype seq_region_name start end strand/
+        );
       push @{ $new_transcript->{exons} }, $new_exon;
     }
     push @{ $new_gene->{transcripts} }, $new_transcript;
@@ -202,7 +205,9 @@ sub collate_protein_features {
 sub collate_xrefs {
   my ( $self, $obj, $new_obj ) = @_;
   for my $xref ( @{ $obj->{xrefs} } ) {
-    if ( defined $xref->{linkage_types} || defined $xref->{associated_xrefs} ) {
+    if ( defined $xref->{linkage_types} ||
+         defined $xref->{associated_xrefs} )
+    {
 
       my $expanded_terms = $self->expand_term( $xref->{primary_id} );
 
@@ -225,7 +230,8 @@ sub collate_xrefs {
           if ( defined $evidence && scalar(@$evidence) > 0 ) {
             $ann->{evidence} = [ map { $_ } @$evidence ];
           }
-          if ( defined $expanded_terms && scalar(@$expanded_terms) > 0 ) {
+          if ( defined $expanded_terms && scalar(@$expanded_terms) > 0 )
+          {
             $ann->{parents} = [ map { $_ } @$expanded_terms ];
           }
           while ( my ( $k, $v ) = each %$ass ) {
@@ -246,14 +252,15 @@ sub collate_xrefs {
       }
     } ## end if ( defined $xref->{linkage_types...})
     else {
-      if(!defined $skip_xrefs->{$xref->{dbname}}) {
-	$self->{xrefs}{ $xref->{dbname} } = 1;
-	$new_obj->{ $xref->{dbname} }->{ $xref->{primary_id} }++;
+      if ( !defined $skip_xrefs->{ $xref->{dbname} } ) {
+        $self->{xrefs}{ $xref->{dbname} } = 1;
+        $new_obj->{ $xref->{dbname} }->{ $xref->{primary_id} }++;
       }
     }
   } ## end for my $xref ( @{ $obj->...})
   if ( $self->{retain_xrefs} ) {
-    $new_obj->{xrefs} = [ map { $self->copy_hash($_) } @{ $obj->{xrefs} } ];
+    $new_obj->{xrefs} =
+      [ map { $self->copy_hash($_) } @{ $obj->{xrefs} } ];
   }
   return;
 } ## end sub collate_xrefs
@@ -367,14 +374,16 @@ sub add_variation {
     }
   }
   my $variation_helper = $self->{variation_dba}->dbc()->sql_helper();
-  $self->_process_transcripts( $variation_helper, $transcript_docs, $block,
-                               $updated_genes, $genes_by_transcript );
-  $self->_process_phenotypes( $variation_helper, $genes_by_id, $updated_genes,
-                              1000 );
+  $self->_process_transcripts( $variation_helper, $transcript_docs,
+                               $block,            $updated_genes,
+                               $genes_by_transcript );
+  $self->_process_phenotypes( $variation_helper, $genes_by_id,
+                              $updated_genes, 1000 );
   # iterate over blocks of names using natatime
 
   for my $gene ( values %$updated_genes ) {
-    $gene->{consequence_types} = [ keys %{ $gene->{consequence_types} } ];
+    $gene->{consequence_types} =
+      [ keys %{ $gene->{consequence_types} } ];
     $gene->{clinical_significance} =
       [ keys %{ $gene->{clinical_significance} } ];
     for my $transcript ( @{ $gene->{transcripts} } ) {
@@ -398,20 +407,22 @@ join variation_feature vf using (variation_feature_id)
 where tv.feature_stable_id in /;
 
 sub _process_transcripts {
-  my ( $self, $variation_helper, $transcript_docs, $block, $updated_genes,
-       $genes_by_transcript )
+  my ( $self, $variation_helper, $transcript_docs, $block,
+       $updated_genes, $genes_by_transcript )
     = @_;
   # iterate over blocks of names using natatime
   my $it     = natatime( $block, keys %$transcript_docs );
   my $total  = 0;
   my $transT = 0;
   $self->log()
-    ->info( "Found " . scalar( keys %$transcript_docs ) . " transcripts" );
+    ->info(
+         "Found " . scalar( keys %$transcript_docs ) . " transcripts" );
   while ( my @ids = $it->() ) {
     # bulk query by ID
     $transT += scalar(@ids);
     $self->log()->info("Processing $transT transcripts");
-    my $sql = $variation_sql . '(' . join( ',', map { "'$_'" } @ids ) . ')';
+    my $sql =
+      $variation_sql . '(' . join( ',', map { "'$_'" } @ids ) . ')';
     my $n = 0;
     $variation_helper->execute_no_return(
       -SQL          => $sql,
@@ -425,14 +436,18 @@ sub _process_transcripts {
         if ( defined $row->{clinical_significance} ) {
           $row->{clinical_significance} =
             [ split ',', $row->{clinical_significance} ];
-          for my $clinical_significance ( @{ $row->{clinical_significances} } )
+          for my $clinical_significance (
+                                   @{ $row->{clinical_significances} } )
           {
-            $gene->{clinical_significances}->{$clinical_significance}       = 1;
-            $transcript->{clinical_significances}->{$clinical_significance} = 1;
+            $gene->{clinical_significances}->{$clinical_significance} =
+              1;
+            $transcript->{clinical_significances}
+              ->{$clinical_significance} = 1;
           }
         }
         if ( defined $row->{consequence_types} ) {
-          $row->{consequence_types} = [ split ',', $row->{consequence_types} ];
+          $row->{consequence_types} =
+            [ split ',', $row->{consequence_types} ];
           for my $consequence_type ( @{ $row->{consequence_types} } ) {
             $gene->{consequence_types}->{$consequence_type}       = 1;
             $transcript->{consequence_types}->{$consequence_type} = 1;
@@ -453,13 +468,15 @@ where pf.object_id in
 /;
 
 sub _process_phenotypes {
-  my ( $self, $variation_helper, $genes_by_id, $updated_genes, $block ) = @_;
+  my ( $self, $variation_helper, $genes_by_id, $updated_genes, $block )
+    = @_;
   my $it = natatime( $block, keys %$genes_by_id );
   # process phenotypes for genes
   my $total = 0;
   while ( my @ids = $it->() ) {
     # bulk query by ID
-    my $sql = $phenotype_sql . '(' . join( ',', map { "'$_'" } @ids ) . ')';
+    my $sql =
+      $phenotype_sql . '(' . join( ',', map { "'$_'" } @ids ) . ')';
     my $n = 0;
     $variation_helper->execute_no_return(
       -SQL          => $sql,
@@ -484,8 +501,8 @@ sub find_genome_name {
   my ( $self, $genome ) = @_;
   my $name = $self->{genome_names}->{$genome};
   if ( !defined $name ) {
-    my $meta =
-      Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core', 'MetaContainer' );
+    my $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
+                                                    'MetaContainer' );
     if ( !defined $meta ) {
       throw "Cannot find genome $genome";
     }
