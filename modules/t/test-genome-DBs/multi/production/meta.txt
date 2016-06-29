@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	82
+2	\N	schema_version	85
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
@@ -33,3 +33,8 @@
 39	\N	patch	patch_80_81_a.sql|schema_version
 40	\N	patch	patch_81_82_a.sql|schema_version
 41	\N	patch	patch_81_82_a.sql|schema_version
+42	\N	patch	patch_82_83_a.sql|schema_version
+43	\N	patch	patch_83_84_a.sql|schema_version
+44	\N	patch	patch_83_84b.sql|division_tables
+45	\N	patch	patch_84_85_a.sql|schema_version
+46	\N	patch	patch_84_85_a.sql|schema_version
