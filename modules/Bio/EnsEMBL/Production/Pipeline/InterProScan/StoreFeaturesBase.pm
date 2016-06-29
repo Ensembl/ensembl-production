@@ -640,6 +640,7 @@ sub store_pathway_xref {
 
     my $parsed_line = $param->{parsed_line};
     my $dbea        = $param->{dbea};
+    my $pathway_db  = $param->{required_externalDb};
 
     # Ensure there is interpro accession for this feature
     # and there are Pathway annotation(s) for this accession
@@ -672,6 +673,7 @@ sub store_pathway_xref {
        $db =~ s/^KEGG$/KEGG_Enzyme/;
 
        next unless $pathway_string=~/\s+/;
+       next if(!grep (/$db/, @$pathway_db));
 
        my $pathway_dbentry;
        # Get existing xref to avoid duplicate interpro_xref
