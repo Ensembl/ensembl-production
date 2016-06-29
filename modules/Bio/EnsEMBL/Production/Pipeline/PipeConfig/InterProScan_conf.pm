@@ -210,8 +210,8 @@ sub default_options {
     'required_analysis' =>
     [
       {
-        'logic_name'    => 'ccd',
-        'db'            => 'CCD',
+        'logic_name'    => 'cdd',
+        'db'            => 'CDD',
         'db_version'    => '3.14',
       },
       {
@@ -634,7 +634,9 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::InterProScan::StoreFeatures',    
       -hive_capacity   => 50,
       -max_retry_count => 10,
-      -parameters      => { },
+      -parameters      => {
+                            required_externalDb => $self->o('required_externalDb'),
+                          },
       -wait_for        => ['load_InterPro_xrefs'],
       -rc_name         => 'default',
     },
