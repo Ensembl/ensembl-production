@@ -174,6 +174,7 @@ sub write_output {
 
     my $xml_file = $self->param_required('xml_file');
     my $tsv_file = $self->param_required('tsv_file');
+    my $required_externalDb = $self->param_required('required_externalDb');
 
     $self->validating_parser($self->param('validating_parser'));
     $self->get_logger->info("Storing protein features & interpro xref from: $tsv_file");
@@ -208,7 +209,8 @@ sub write_output {
          # Storing Pathway xref into  
          $self->store_pathway_xref({
            %{$self->{store_pathway_xref_params}},
-           parsed_line => $parsed_line
+           parsed_line => $parsed_line,
+           required_externalDb => $required_externalDb            
          });
 
    }
