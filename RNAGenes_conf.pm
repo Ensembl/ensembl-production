@@ -65,6 +65,11 @@ sub default_options {
     source_logic_name => 'cmscan_rfam_'.$self->o('rfam_version'),
     target_logic_name => 'rfam_'.$self->o('rfam_version').'_gene',
     analysis_module   => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::GeneFilter',
+
+    # Config for genes
+    gene_source      => undef,
+    external_db_name => 'RFAM',
+    stable_id_type   => 'eg',
     
     # Remove existing genes; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
@@ -204,7 +209,7 @@ sub pipeline_analyses {
       -parameters        => {
                               db_backup_required => 1,
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
-                              logic_name   	     => $self->o('target_logic_name'), 
+                              logic_name         => $self->o('target_logic_name'), 
                               module             => $self->o('analysis_module'), 
                               delete_existing    => $self->o('delete_existing'),
                               production_lookup  => $self->o('production_lookup'),
@@ -223,6 +228,9 @@ sub pipeline_analyses {
       -parameters        => {
                               source_logic_name => $self->o('source_logic_name'),
                               target_logic_name => $self->o('target_logic_name'),
+                              gene_source       => $self->o('gene_source'),
+                              external_db_name  => $self->o('external_db_name'),
+                              stable_id_type    => $self->o('stable_id_type'),
                               evalue_threshold  => $self->o('evalue_threshold'),
                               truncated         => $self->o('truncated'),
                               nonsignificant    => $self->o('nonsignificant'),
