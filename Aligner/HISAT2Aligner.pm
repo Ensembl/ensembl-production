@@ -86,6 +86,7 @@ sub index_file {
     $index_cmd .= " --ss $ss_file --exon $exon_file ";
   }
   
+  $index_cmd .= " -p $self->{threads}";
   $index_cmd .= " $file $index_name";
   
   $self->run_cmd($index_cmd, 'index');
