@@ -204,7 +204,7 @@ sub run {
 	       $go_dbentry->analysis($analysis);
 
    	       # Finally add you annotation term to the ensembl object,
-   	       if($species =~/aspergillus_nidulans/){
+   	       if($species eq 'aspergillus_nidulans'){
 		   $dbea->store( $go_dbentry, $transcript, 'Transcript', 1 ); 
                } else {
 		   $dbea->store( $go_dbentry, $translation, 'Translation', 1 ); 
