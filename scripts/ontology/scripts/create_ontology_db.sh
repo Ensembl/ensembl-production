@@ -2,7 +2,7 @@
 
 function msg {
     d=$(date +"[%Y/%m/%d %H:%M:%S]")
-    echo "[$d] $@"
+    echo "$d $@"
 }
 
 srv=$1
@@ -34,11 +34,11 @@ msg "Reading OBO files from $dir"
 for file in *.obo; do 
     ontology=${file/.obo/}
     msg "Loading $file as $ontology"
-    perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details scripts) --name $dbname --file $file --ontology $ontology    
+    perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details script) --name $dbname --file $file --ontology $ontology    
 done
 
 msg "Computing closures"
-perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/compute_closure.pl $($srv details scripts) --name $dbname --config $BASE_DIR/ensembl-production/scripts/ontology/scripts/closure_config.ini
+perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/compute_closure.pl $($srv details script) --name $dbname --config $BASE_DIR/ensembl-production/scripts/ontology/scripts/closure_config.ini
 msg "Adding subset maps"
-perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/add_subset_maps.pl $($srv details scripts) --name $dbname
+perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/add_subset_maps.pl $($srv details script) --name $dbname
 
