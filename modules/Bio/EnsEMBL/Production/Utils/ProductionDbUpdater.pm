@@ -111,7 +111,7 @@ sub update_controlled_tables {
     @tables = qw/attrib_type attrib attrib_set/;
   }
   else {
-    $logger->warning( "Do not know how to process database " . $dbc->dbname );
+    $logger->warn( "Do not know how to process database " . $dbc->dbname );
   }
   for my $table (@tables) {
     $self->update_controlled_table( $dbc, $table );
