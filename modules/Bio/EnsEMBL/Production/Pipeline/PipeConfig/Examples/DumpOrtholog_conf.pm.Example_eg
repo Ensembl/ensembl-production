@@ -42,7 +42,7 @@ sub default_options {
         %{ $self->SUPER::default_options() },      
 
         'registry'         => '',   
-        'pipeline_name'    => $self->o('hive_db'),       
+        'pipeline_name'    => $self->o('hive_dbname'),       
         'output_dir'       => '/nfs/ftp/pub/databases/ensembl/projections/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
 
@@ -126,7 +126,7 @@ sub default_options {
         	 -port   => $self->o('hive_port'),
         	 -user   => $self->o('hive_user'),
         	 -pass   => $self->o('hive_password'),
-	         -dbname => $self->o('hive_db'),
+	         -dbname => $self->o('hive_dbname'),
         	 -driver => 'mysql',
       	},
 		
