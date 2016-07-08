@@ -165,7 +165,7 @@ UniProtKB accessions with reports as to the % identity of the hit where
 applicable. Dumps contain all Ensembl exeternal database names which started
 with UniProt so duplication of hits is possible.
 
-File are named Species.assembly.uniprot.tsv.gz
+File are named Species.assembly.release.uniprot.tsv.gz
 
 README
 
