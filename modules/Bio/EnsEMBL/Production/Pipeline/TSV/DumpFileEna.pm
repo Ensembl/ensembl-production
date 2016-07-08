@@ -229,7 +229,7 @@ Stable ID to ENA Ac
 Provides mappings from Gene, Transcript and Translation stable identifiers to 
 ENA accessions.
 
-File are named Species.assembly.ena.tsv.gz
+File are named Species.assembly.release.ena.tsv.gz
 
 README
 
