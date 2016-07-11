@@ -154,7 +154,7 @@ sub default_options {
 	 	  '1'=>{
 	 	  	   'source'      => 'schizosaccharomyces_pombe', # 'schizosaccharomyces_pombe'
 	 		   'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
-	 		   'antispecies' => ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe'],
+	 		   'antispecies' => ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 'aspergilus_nidulans'],
 	 		   'division'    => ['fungi'], 
 	 		   'run_all'     =>  0, # 1/0
  			   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
@@ -167,7 +167,7 @@ sub default_options {
 		 '2'=>{
 		  	   'source'	 => 'saccharomyces_cerevisiae',
 		  	   'species'	 => [],
-		  	   'antispecies' => ['schizosaccharomyces_pombe', 'saccharomyces_cerevisiae'],
+		  	   'antispecies' => ['schizosaccharomyces_pombe', 'saccharomyces_cerevisiae', 'aspergilus_nidulans'],
 		  	   'division'    => ['fungi'],
 		  	   'run_all'     =>  0,
  		  	   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
@@ -175,7 +175,36 @@ sub default_options {
           	           'go_percent_id_filter'      => '10', 
 		  	   'ensemblObj_type'           => 'Translation', 
 		  	   'ensemblObj_type_target'    => 'Translation',   
-	 	 	  }, 		 	   
+	 	 	  }, 
+
+                  '3'=>{
+                           'source'      => 'schizosaccharomyces_pombe', 
+                           'species'     => ['aspergillus_nidulans'], 
+                           'antispecies' => [],
+                           'division'    => [],
+                           'run_all'     =>  0, 
+                           'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                           'go_homology_types_allowed' => ['ortholog_one2one'],
+                           'go_percent_id_filter'      => '10',
+                           'ensemblObj_type'           => 'Transcript', 
+                           'ensemblObj_type_target'    => 'Transcript', 
+                       },
+
+                  '4'=>{
+                           'source'      => 'saccharomyces_cerevisiae', 
+                           'species'     => ['aspergillus_nidulans'], 
+                           'antispecies' => [],
+                           'division'    => [],
+                           'run_all'     =>  0, 
+                           'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                           'go_homology_types_allowed' => ['ortholog_one2one'],
+                           'go_percent_id_filter'      => '10',
+                           'ensemblObj_type'           => 'Translation', 
+                           'ensemblObj_type_target'    => 'Transcript', 
+                       },
+
+
+		 	   
     	},
 		
 	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
