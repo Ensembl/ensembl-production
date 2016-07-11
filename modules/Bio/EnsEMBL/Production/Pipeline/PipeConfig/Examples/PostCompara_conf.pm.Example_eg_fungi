@@ -161,7 +161,7 @@ sub default_options {
 			   'go_homology_types_allowed' => ['ortholog_one2one'],
         		   'go_percent_id_filter'      => '10', 
 			   'ensemblObj_type'           => 'Transcript', # 'Translation'/'Transcript'
-			   'ensemblObj_type_target'    => 'Transcript', # 'Translation'/'Transcript'  
+			   'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'  
 	 	       }, 
 
 		 '2'=>{
