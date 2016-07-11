@@ -1,7 +1,6 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,10 +46,10 @@ sub default_options {
        'registry'      => $self->o('registry'),   
        'release'       => $self->o('release'),
        'eg_version'    => $self->o('release'),
-       'pipeline_name' => $self->o('hive_db'),       
+       'pipeline_name' => $self->o('hive_dbname'),       
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
-       'dumps'     => [],
+       'dumps'     	   => [],
 
 	   ## 'job_factory' parameters
 	   'species'     => [], 
@@ -115,7 +114,7 @@ sub default_options {
        	  -port   => $self->o('hive_port'),
           -user   => $self->o('hive_user'),
           -pass   => $self->o('hive_password'),
-	      -dbname => $self->o('hive_db'),
+	      -dbname => $self->o('hive_dbname'),
           -driver => 'mysql',
        },
 
@@ -202,7 +201,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_rdf'];
+          $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
         }
         
     return [
@@ -578,11 +577,36 @@ sub pipeline_analyses {
         },
 ### TSV XREF
     { -logic_name    => 'dump_tsv_uniprot',
-      -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFile',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileXref',
+      -parameters => {
+                 external_db => 'UniProt%',
+                 type => 'uniprot',
+         },
       -hive_capacity => 50,
       -rc_name       => 'default', 
     },
  
+    { -logic_name    => 'dump_tsv_refseq',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileXref',
+      -parameters => {
+                 external_db => 'RefSeq%',
+                 type => 'refseq',
+         },
+      -hive_capacity => 50,
+      -rc_name       => 'default', 
+    },
+
+    { -logic_name    => 'dump_tsv_entrez',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileXref',
+      -parameters => {
+                 external_db => 'Entrez%',
+                 type => 'entrez',
+         },
+      -hive_capacity => 50,
+      -rc_name       => 'default', 
+    },
+
+    
     { -logic_name    => 'dump_tsv_ena',
       -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileEna',
       -hive_capacity => 50,
