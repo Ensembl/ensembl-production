@@ -428,6 +428,10 @@ sub project_go_terms {
        $from_translation   = $from_gene->canonical_transcript();
        $to_translation     = get_canonical_translation($to_gene); 
     }
+    elsif($ensemblObj_type=~/Translation/ && $ensemblObj_type_target=~/Transcript/){
+       $from_translation   = get_canonical_translation($from_gene);
+       $to_translation     = $to_gene->canonical_transcript();
+    }
 
     return if (!$from_translation || !$to_translation);
 
