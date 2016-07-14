@@ -11,12 +11,14 @@ my $user = 'ensro';
 my $pass = '';
 my $port = 3306;
 my $file;
-my $version = '82';
+my $version = '85';
+my $delete;
 
 &GetOptions(
-  'dbuser:s'   => \$user,
-  'dbpass:s'   => \$pass,
-  'dbport:n'   => \$port,
+  'dbuser|user:s'   => \$user,
+  'dbpass|pass:s'   => \$pass,
+  'dbport|port:n'   => \$port,
+  'delete!'    => \$delete,
   'file:s'     => \$file
 );
 
@@ -24,29 +26,24 @@ my $registry = "Bio::EnsEMBL::Registry";
 
 $registry->load_registry_from_multiple_dbs(
   {
-    -host => 'ens-staging1',
+    -host => 'ensembldb.ensembl.org',
     -user => $user,
     -pass => $pass,
     -port => $port,
-    -db_version => $version
-  },
-  {
-    -host => 'ens-staging2',
-    -user => $user,
-    -pass => $pass,
-    -port => $port,
-    -db_version => $version
-  },
-  {
-    -host => 'mysql-eg-publicsql.ebi.ac.uk',
-    -user => $user,
-    -pass => $pass,
-    -port => '4157',
     -db_version => $version
   },
 );
 
 open ( GPAD, $file ) || die " cant read $file \n" ;
+
+if ($delete) {
+  my $sql = "DELETE x, ox, gx FROM xref x, external_db e, object_xref ox, ontology_xref gx WHERE x.xref_id=ox.xref_id AND x.external_db_id=e.external_db_id AND ox.object_xref_id=gx.object_xref_id AND e.db_name='GO'";
+  foreach my $core_db (@{ $registry->get_all_DBAdaptors(-group => 'core') } ){
+    my $sth = $core_db->dbc->prepare($sql);
+    $sth->execute();
+    $sth->finish();
+  }
+}
 
 
 my $tl_adaptor;
@@ -55,6 +52,7 @@ my $t_adaptor;
 my %adaptor_hash;
 my %dbe_adaptor_hash;
 my %t_adaptor_hash;
+my $translation;
 my $translations;
 my %translation_hash;
 my %species_missed;
@@ -76,6 +74,7 @@ while (my $line = <GPAD> ) {
   if ($line=~/^!/){
         next;
   }
+  chomp $line;
 
   my ( $db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $taxon_id, $date, $assigned_by, $annotation_extension, $annotation_properties) = split /\t/,$line ;
 
@@ -101,17 +100,17 @@ while (my $line = <GPAD> ) {
   }
   if ($adaptor_hash{$tgt_species}) {
     # If the file lists a species not in the current registry, skip it
-    if ($adaptor_hash{$tgt_species} eq 'undefined') {
+    if ($adaptor_hash{$tgt_species} eq 'undefined') { 
       print STDERR "Could not find $tgt_species in registry\n";
-      next;
+      next; 
     }
     $tl_adaptor = $adaptor_hash{$tgt_species};
     $dbe_adaptor = $dbe_adaptor_hash{$tgt_species};
     $t_adaptor = $t_adaptor_hash{$tgt_species};
   } else {
-    if (!$registry->get_alias($tgt_species)) { 
+    if (!$registry->get_alias($tgt_species)) {
       $adaptor_hash{$tgt_species} = 'undefined';
-      next; 
+      next;
     }
     $tl_adaptor = $registry->get_adaptor($tgt_species, 'core', 'Translation');
     $dbe_adaptor = $registry->get_adaptor($tgt_species, 'core', 'DBEntry');
@@ -150,7 +149,6 @@ while (my $line = <GPAD> ) {
   # If GOA provide a tgt_protein, this is the direct mapping to Ensembl feature
   # This becomes our object for the new xref
   } elsif (defined $tgt_protein) {
-    my $translation;
     if ($translation_hash{$tgt_protein}) {
       $translation = $translation_hash{$tgt_protein};
     } else {
@@ -168,15 +166,11 @@ while (my $line = <GPAD> ) {
   } elsif (defined $tgt_transcript) {
     my @tgt_transcripts = split(",", $tgt_transcript);
     foreach my $transcript (@tgt_transcripts) {
-      my $translation;
       if ($translation_hash{$transcript}) {
         $translation = $translation_hash{$transcript};
       } else {
         my $translation_transcript = $t_adaptor->fetch_by_stable_id($transcript);
-        if (defined $translation_transcript) {
-          $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript);
-          $translation_hash{$transcript} = $translation;
-        }
+        $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript);
       }
       if (defined $translation) {
         $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1, $uniprot_xrefs->[0]);
