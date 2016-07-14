@@ -283,9 +283,10 @@ sub get_chromosome_name {
   my $sa     = $dba->get_SliceAdaptor();
   if (scalar(@{$sa->fetch_all_karyotype()}) == 0) { return; }
   my $csa    = $dba->get_CoordSystemAdaptor();
-  my $cs     = $csa->fetch_by_rank(1);
+  # List returned is in rank order, first one will be smallest rank
+  my $cs     = $csa->fetch_all();
 
-  return $cs->name();
+  return $cs->[0]->name();
 }
 
 sub cleanup_DBAdaptor {
