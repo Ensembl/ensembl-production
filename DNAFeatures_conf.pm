@@ -124,7 +124,7 @@ sub default_options {
         'program_file'    => $self->o('dust_exe'),
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::DustMasker',
         'gff_source'      => 'dust',
-        'gff_feature'     => 'repeat_region',
+        'gff_feature'     => 'low_complexity_region',
         'linked_tables'   => ['repeat_feature'],
       },
       {
