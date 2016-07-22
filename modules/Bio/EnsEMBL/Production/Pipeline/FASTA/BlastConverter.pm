@@ -96,7 +96,8 @@ sub _convert {
     my $file_name   = $self->_get_file_name($dir, $type, $subtype);
     my $source_dir  = $self->fasta_path($dir);
     my $source_file = File::Spec->catdir($source_dir, $file_name).q{.gz};
-    my @target_dirs = ($self->param('blast_path'), $self->param('directory_name'), $self->division());    
+    my $species     = $self->_species_dir();
+    my @target_dirs = ($self->param('blast_path'), $self->param('directory_name'), $self->division(), $species);    
     my $target_dir  = File::Spec->catdir(@target_dirs);
     mkpath($target_dir);
 
@@ -131,6 +132,25 @@ sub _get_file_name {
     my $file_name = join( '.', @name_bits );
 
 return $file_name;
+}
+
+sub _species_dir {
+   my ($self) = @_;
+
+   my @sp_dir;
+   my $mc      = $self->get_DBAdaptor()->get_MetaContainer();
+   my $species = $mc->get_production_name();
+   push @sp_dir, $species;
+
+   if($mc->is_multispecies()==1){
+      my $collection_db;
+      $collection_db = $1 if($mc->dbc->dbname()=~/(.+)\_core/);
+      my $sp    = pop(@sp_dir);
+      push @sp_dir, $collection_db;
+      push @sp_dir, $sp;
+   }
+
+return File::Spec->catdir(@sp_dir);
 }
 
 1;
