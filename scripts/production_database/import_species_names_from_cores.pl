@@ -67,7 +67,7 @@ sub defaults {
   my $o = $self->{opts};
 
   # Master database location:
-  $o->{mhost} = 'ens-staging1' unless $o->{mhost};
+  $o->{mhost} = 'ens-staging3' unless $o->{mhost};
   $o->{mport} = 3306 unless $o->{mport};
   
   # User database location (default values):

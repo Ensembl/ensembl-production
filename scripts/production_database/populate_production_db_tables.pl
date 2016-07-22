@@ -36,7 +36,7 @@ my %variation_master_tables = ( 'attrib_type'     => 1,
 my @tables;
 
 # Master database location:
-my ( $mhost, $mport ) = ( 'ens-staging1', '3306' );
+my ( $mhost, $mport ) = ( 'ens-staging3', '3306' );
 my ( $muser, $mpass ) = ( 'ensro',        undef );
 my $mdbname = 'ensembl_production';
 

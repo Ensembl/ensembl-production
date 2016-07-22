@@ -102,7 +102,7 @@ ABOUT_END
 
 my $release;
 my @servers;
-my $master = 'ens-staging1';
+my $master = 'ens-staging3';
 my $mport  = '3306';
 my $mdbname = 'ensembl_production';
 
