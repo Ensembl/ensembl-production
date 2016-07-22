@@ -95,15 +95,15 @@ sub fetch_input {
     %compara_dbas = map { $_->species => $_ } @$all_compara_dbas;
     $self->warning( scalar( keys %core_dbas ) . " species loaded" );
   }
+  elsif ( scalar(@species) ) {
+    foreach my $species (@species) {
+      $self->process_species( $all_dbas, $species, \%core_dbas );
+    }
+  }
   elsif ( scalar(@division) ) {
     foreach my $division (@division) {
       $self->process_division( $all_dbas, $all_compara_dbas, $division,
                                \%core_dbas, \%compara_dbas );
-    }
-  }
-  elsif ( scalar(@species) ) {
-    foreach my $species (@species) {
-      $self->process_species( $all_dbas, $species, \%core_dbas );
     }
   }
   else {
