@@ -49,7 +49,7 @@ sub args {
   my $opts = {
 
     # Master database location:
-    mhost     => 'ens-staging3',
+    mhost     => 'ens-staging1',
     mport     => 3306,
     muser     => 'ensro',
     mdatabase => 'ensembl_production',

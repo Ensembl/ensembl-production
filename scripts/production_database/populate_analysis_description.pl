@@ -26,7 +26,7 @@ use POSIX;
 my $timestamp = strftime( "%Y%m%d-%H%M%S", localtime() );
 
 # Master database location:
-my ( $mhost, $mport ) = ( 'ens-staging3', '3306' );
+my ( $mhost, $mport ) = ( 'ens-staging1', '3306' );
 my ( $muser, $mpass ) = ( 'ensro',        undef );
 my $mdbname = 'ensembl_production';
 
