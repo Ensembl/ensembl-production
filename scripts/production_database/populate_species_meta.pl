@@ -170,6 +170,7 @@ sub _query_production {
         $hash{'species.url'}              = $row->[ $i++ ];
         $hash{'species.taxonomy_id'}      = $row->[ $i++ ];
         $hash{'species.stable_id_prefix'} = $row->[ $i++ ];
+        $hash{'species.division'} = $row->[ $i++ ];
         return;
       }
     );
@@ -184,7 +185,7 @@ sub _production {
     
   my $taxon = $self->_db_to_taxon($db);
   
-  my $sql = 'select common_name, web_name, scientific_name, production_name, url_name, taxon, species_prefix from species where taxon =?';
+  my $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where taxon =?';
   my $hash_ref = $self->_query_production($sql,$taxon);
   
   if (!exists $hash_ref->{'species.production_name'}) {
@@ -193,7 +194,7 @@ sub _production {
       # regex chops tail end off core-like databases. This must be extended if new naming schemes are used.                               
       $db_name =~ s/_(core|otherfeatures|vega|rnaseq|cdna)_.+?_.+?$//;
       warning ("Guessed db_name: ".$db_name);
-      $sql = 'select common_name, web_name, scientific_name, production_name, url_name, taxon, species_prefix from species where db_name = ?';
+      $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where taxon =?';
       $hash_ref = $self->_query_production($sql,$db_name);
       # Update $taxon to reflect new guessed id
       $taxon = $hash_ref->{'species.taxonomy_id'};
