@@ -170,7 +170,7 @@ Stable ID to $type Ac
 Provides mappings from Gene, Transcript and Translation stable identifiers to 
 $type accessions with reports as to the % identity of the hit where 
 applicable. Dumps contain all Ensembl exeternal database names which started
-with UniProt so duplication of hits is possible.
+with $type so duplication of hits is possible.
 
 File are named Species.assembly.release.$type.tsv.gz
 
