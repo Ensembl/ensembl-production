@@ -168,8 +168,8 @@ sub _query_production {
         $hash{'species.scientific_name'}  = $row->[ $i++ ];
         $hash{'species.production_name'}  = $row->[ $i++ ];
         $hash{'species.url'}              = $row->[ $i++ ];
-        $hash{'species.taxonomy_id'}      = $row->[ $i++ ];
         $hash{'species.stable_id_prefix'} = $row->[ $i++ ];
+        $hash{'species.division'} = $row->[ $i++ ];
         return;
       }
     );
@@ -183,9 +183,9 @@ sub _production {
   my $h     = $dbc->sql_helper();
     
   my $taxon = $self->_db_to_taxon($db);
-  
-  my $sql = 'select common_name, web_name, scientific_name, production_name, url_name, taxon, species_prefix from species where taxon =?';
-  my $hash_ref = $self->_query_production($sql,$taxon);
+  my $production_name = $self->_db_to_production_name($db);
+  my $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where production_name =?';
+  my $hash_ref = $self->_query_production($sql,$production_name);
   
   if (!exists $hash_ref->{'species.production_name'}) {
       warning("Failed to find original taxon id for $db. Attempting to obtain by DB name instead");
@@ -193,7 +193,7 @@ sub _production {
       # regex chops tail end off core-like databases. This must be extended if new naming schemes are used.                               
       $db_name =~ s/_(core|otherfeatures|vega|rnaseq|cdna)_.+?_.+?$//;
       warning ("Guessed db_name: ".$db_name);
-      $sql = 'select common_name, web_name, scientific_name, production_name, url_name, taxon, species_prefix from species where db_name = ?';
+      $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where taxon =?';
       $hash_ref = $self->_query_production($sql,$db_name);
       # Update $taxon to reflect new guessed id
       $taxon = $hash_ref->{'species.taxonomy_id'};
@@ -204,8 +204,8 @@ sub _production {
   
   
   $hash_ref->{'species.alias'} = $h->execute_simple(
-    -SQL => 'select sa.alias from species_alias sa join species s using (species_id) where s.taxon =?',
-    -PARAMS => [$taxon],
+    -SQL => 'select sa.alias from species_alias sa join species s using (species_id) where sa.is_current = 1 and s.production_name =?',
+    -PARAMS => [$hash_ref->{'species.production_name'}],
   );
   return $hash_ref;
 }
@@ -340,6 +340,24 @@ sub _remove_backup {
   return;
 }
 
+sub _db_to_production_name {
+  my ( $self, $db ) = @_;
+
+  #Look at cache
+  my $production_name = $self->{_db_to_production_name}->{$db};
+  return $production_name if $production_name;
+
+  #Try DB first
+  $production_name =
+    $self->_core_dba($db)->get_MetaContainer()
+    ->single_value_by_key('species.production_name');
+  if ( !$production_name ) {
+    die
+"Cannot discover the production_name for the database $db. Populate meta with 'species.production_name'";
+  }
+  $self->{_db_to_production_name}->{$db} = $production_name;
+  return $production_name;
+}
 sub _db_to_taxon {
   my ( $self, $db ) = @_;
 

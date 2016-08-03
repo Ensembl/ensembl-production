@@ -221,7 +221,7 @@ foreach my $server (@servers) {
 
       my ( $species_name, $db_type, $db_assembly, $db_suffix ) =
         ( $database =~
-/^([a-z]+_){2,3}([0-9a-z]+)_(?:[0-9]+_)?[0-9]+_([0-9a-z]+?)([a-z]?)$/ );
+/^([0-9a-z]+_){2,3}([0-9a-z]+)_(?:[0-9]+_)?[0-9]+_([0-9a-z]+?)([a-z]?)$/ );
 
       if (    !defined($db_type)
            || !defined($db_assembly)

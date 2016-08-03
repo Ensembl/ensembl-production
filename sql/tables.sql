@@ -49,7 +49,7 @@ CREATE TABLE species (
   production_name VARCHAR(255) NOT NULL, -- Name that production processes use
   url_name        VARCHAR(255) NOT NULL DEFAULT '', -- Name that is used in URLs
   taxon           VARCHAR(8) NOT NULL,
-  species_prefix  VARCHAR(7) NOT NULL,
+  species_prefix  VARCHAR(20) NOT NULL,
   is_current      BOOLEAN NOT NULL DEFAULT true,
   attrib_type_id  SMALLINT(5) UNSIGNED DEFAULT NULL,
 
@@ -62,8 +62,7 @@ CREATE TABLE species (
   PRIMARY KEY (species_id),
   UNIQUE INDEX db_name_idx (db_name),
   UNIQUE INDEX production_name_idx (production_name),
-  UNIQUE INDEX species_prefix_idx (species_prefix),
-  UNIQUE INDEX taxon_idx (taxon)
+  UNIQUE INDEX species_prefix_idx (species_prefix)
 );
 
 -- The 'species_alias' table
