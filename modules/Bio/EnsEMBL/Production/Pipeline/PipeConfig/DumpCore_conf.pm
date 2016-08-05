@@ -548,7 +548,19 @@ sub pipeline_analyses {
 	   },
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
+  	  -flow_into      => { '-1' => 'dump_chain_32GB', }, 
 	}, 
+
+	{ -logic_name       => 'dump_chain_32GB',
+	  -module           => 'Bio::EnsEMBL::Production::Pipeline::Chainfile::DumpFile',
+	  -parameters       => {  
+		  compress 	 => $self->o('compress'),
+		  ucsc 		 => $self->o('ucsc'),
+	   },
+	  -hive_capacity  => 50,
+	  -rc_name        => '32GB',
+	}, 
+
 ### RDF dumps
         {
          -logic_name => 'dump_rdf',
