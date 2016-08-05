@@ -168,6 +168,7 @@ sub _query_production {
         $hash{'species.scientific_name'}  = $row->[ $i++ ];
         $hash{'species.production_name'}  = $row->[ $i++ ];
         $hash{'species.url'}              = $row->[ $i++ ];
+        $hash{'species.taxonomy_id'}      = $row->[ $i++ ];
         $hash{'species.stable_id_prefix'} = $row->[ $i++ ];
         $hash{'species.division'} = $row->[ $i++ ];
         return;
@@ -184,7 +185,7 @@ sub _production {
     
   my $taxon = $self->_db_to_taxon($db);
   my $production_name = $self->_db_to_production_name($db);
-  my $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where production_name =?';
+  my $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where production_name =?';
   my $hash_ref = $self->_query_production($sql,$production_name);
   
   if (!exists $hash_ref->{'species.production_name'}) {
