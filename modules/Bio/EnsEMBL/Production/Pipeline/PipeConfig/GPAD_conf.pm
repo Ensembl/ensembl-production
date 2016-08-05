@@ -45,7 +45,7 @@ sub default_options {
 	## General parameters
     'registry'      => $self->o('registry'),   
     'release'       => $self->o('release'),
-    'pipeline_name' => $self->o('hive_db'),       
+    'pipeline_name' => $self->o('hive_dbname'),       
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
     'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
@@ -55,7 +55,7 @@ sub default_options {
 	## Email Report subject
     'email_subject'       	   => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
-    ## Remove existing projected GO annotations
+    ## Remove existing GO annotations
     # on '1' by default
     'delete_existing' => 1,
 
@@ -73,7 +73,7 @@ sub default_options {
       	 -port   => $self->o('hive_port'),
       	 -user   => $self->o('hive_user'),
        	 -pass   => $self->o('hive_password'),
-	     -dbname => $self->o('hive_db'),
+	     -dbname => $self->o('hive_dbname'),
       	 -driver => 'mysql',
      },
 		
@@ -137,7 +137,6 @@ sub pipeline_analyses {
     {  -logic_name => 'backbone_fire_GPADLoad',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids  => [ {} ] , 
-#       -flow_into  => { '1' => ['process_gpad_directory'], }
        -flow_into  => {
 		                 '1->A' => ['process_gpad_directory'],
 		                 'A->1' => ['email_notification'],		                       
