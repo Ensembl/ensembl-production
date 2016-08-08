@@ -60,10 +60,8 @@ sub fetch_input {
 		      AND x.info_type="PROJECTION" 
 		      OR  x.info_type="DEPENDENT"';
 
-    # Delete by analysis.logic_name='go_projection'
-    # this is to cater for eg! cores, 
-    # whereby e! cores didn't has a specific analysis.logic_name 
-    # defined for 'go_projection' 
+    # Delete by analysis.logic_name='go_projection' & 'interpro2go'
+    # interpro2go annotations should be superceded by GOA annotation
     my $sql_delete_2 = 'DELETE x,ox,onx  FROM xref x 
                       JOIN object_xref ox USING (xref_id) 
                       JOIN ontology_xref onx USING (object_xref_id) 
@@ -73,8 +71,9 @@ sub fetch_input {
                       JOIN seq_region s USING (seq_region_id) 
                       JOIN coord_system c USING (coord_system_id) 
                       WHERE x.external_db_id=1000 
-		      AND a.logic_name="go_projection" 
-                      AND c.species_id=?';
+                      AND c.species_id=?
+		      AND a.logic_name="go_projection"
+		      OR a.logic_name="interpro2go"';	 
 
     $self->param('sql_delete_1', $sql_delete_1);
     $self->param('sql_delete_2', $sql_delete_2);
@@ -87,10 +86,13 @@ sub run {
 
     my $reg  = 'Bio::EnsEMBL::Registry';
 
-    my $species;
+    # Parse filename to get $target_species
+    my $file    = $self->param_required('gpad_file');
+    my $species = $1 if($file=~/annotations_Ensembl.+\-(.+)\.gpa/);
+
     # Remove existing projected GO annotations from GOA 
     if ($self->param_required('delete_existing')) {
-        $species = 'puccinia_graminis';
+        #$species = 'puccinia_graminis';
         my $dba          = $reg->get_DBAdaptor($species, "core");         
         my $sql_delete_1 = $self->param_required('sql_delete_1');
         my $sql_delete_2 = $self->param_required('sql_delete_2');
@@ -105,14 +107,14 @@ sub run {
 
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
-    my $file = $self->param_required('gpad_file'); 
+#    my $file = $self->param_required('gpad_file'); 
 
     open(FILE, $file) or die "Could not open '$file' for reading : $!";
 
     while (<FILE>) {
       chomp $_;
       next if $_ =~ /^!/;
-# UniProtKB       A0A060MZW1      involved_in     GO:0042254      GO_REF:0000002  ECO:0000256     InterPro:IPR001790|InterPro:IPR030670           20160716        InterPro                go_evidence=IEA|tgt_species=entamoeba_histolytica
+      # UniProtKB       A0A060MZW1      involved_in     GO:0042254      GO_REF:0000002  ECO:0000256     InterPro:IPR001790|InterPro:IPR030670           20160716        InterPro                go_evidence=IEA|tgt_species=entamoeba_histolytica
       my ($db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $taxon_id, $date, $assigned_by, $annotation_extension, $annotation_properties) = split /\t/,$_ ;
       # Parse annotation information
       # $go_evidence and $tgt_species should always be populated
@@ -121,9 +123,10 @@ sub run {
       my ($tgt_protein, $tgt_transcript);
       $tgt_gene    =~ s/tgt_gene=\w+:// if $tgt_gene;
       $tgt_species =~ s/tgt_species=// if $tgt_species;
-########
-next unless $tgt_species=~/$species/;
-#######
+
+      # target species should always be the same as production name in the GOA file
+      next unless $tgt_species=~/$species/;
+
       $go_evidence =~ s/go_evidence=// if $go_evidence;
  
       # If the tgt_feature field is populated, it could be tgt_protein or tgt_transcript
@@ -173,8 +176,6 @@ next unless $tgt_species=~/$species/;
     }
 
     my $info_type = 'DIRECT';
-    #my $info_type = 'DEPENDENT';
-    #if ($src_species) { $info_type = 'PROJECTION' ; }
 
     # Create new GO dbentry object
     my $go_xref = Bio::EnsEMBL::OntologyXref->new(
