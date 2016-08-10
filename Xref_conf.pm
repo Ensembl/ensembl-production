@@ -95,7 +95,7 @@ sub default_options {
     load_uniprot_go => 1,
     
     load_uniprot_xrefs  => 1,
-    uniprot_xref_source => ['ArrayExpress', 'EMBL', 'MEROPS', 'PDB'],
+    uniprot_xref_source => ['ArrayExpress', 'ChEMBL', 'EMBL', 'MEROPS', 'PDB'],
     
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.

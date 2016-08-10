@@ -70,7 +70,8 @@ sub default_options {
     # linked_tables    => ['protein_feature'],
     # db_type          => 'core',
     
-    analysis_groups => {
+    analysis_groups =>
+    {
       anophelinae => [
         'aalbimanus',
         'aarabiensis',
@@ -128,6 +129,51 @@ sub default_options {
       phthiraptera => [
         'phumanus',
         ],
+    },
+    
+    id_prefixes =>
+    {
+      'aalbimanus'        => 'AALB',
+      'aarabiensis'       => 'AARA',
+      'aatroparvus'       => 'AATE',
+      'achristyi'         => 'ACHR',
+      'acoluzzii'         => 'ACOM',
+      'aculicifacies'     => 'ACUA',
+      'adarlingi'         => 'ADAC',
+      'adirus'            => 'ADIR',
+      'aepiroticus'       => 'AEPI',
+      'afarauti'          => 'AFAF',
+      'afunestus'         => 'AFUN',
+      'agambiae'          => 'AGAP',
+      'amaculatus'        => 'AMAM',
+      'amelas'            => 'AMEC',
+      'amerus'            => 'AMEM',
+      'aminimus'          => 'AMIN',
+      'aquadriannulatus'  => 'AQUA',
+      'asinensisc'        => 'ASIC',
+      'asinensis'         => 'ASIS',
+      'astephensii'       => 'ASTEI',
+      'astephensi'        => 'ASTE',
+      'dmelanogaster'     => 'FB',
+      'gausteni'          => 'GAUT',
+      'gbrevipalpis'      => 'GBRI',
+      'gfuscipes'         => 'GFUI',
+      'gmorsitans'        => 'GMOY',
+      'gpallidipes'       => 'GPAI',
+      'gpalpalis'         => 'GPPI',
+      'mdomestica'        => 'MDOA',
+      'scalcitrans'       => 'SCAU',
+      'iscapularis'       => 'ISCW',
+      'sscabiei'          => 'SSCA',
+      'aaegypti'          => 'AAEL',
+      'aalbopictus'       => 'AALF',
+      'cquinquefasciatus' => 'CPIJ',
+      'bglabrata'         => 'BGLB',
+      'clectularius'      => 'CLEC',
+      'rprolixus'         => 'RPRC',
+      'llongipalpis'      => 'LLOJ',
+      'ppapatasi'         => 'PPAI',
+      'phumanus'          => 'PHUM',
     },
     
     analyses =>
@@ -215,8 +261,41 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal',
       -flow_into       => {
-                            '1' => ['AnalysisSetupFactory'],
+                            '1->A' => ['AnalysisUnmergeFactory'],
+                            'A->1' => ['AnalysisSetupFactory'],
                           },
+    },
+
+    {
+      -logic_name      => 'AnalysisUnmergeFactory',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::AnalysisUnmergeFactory',
+      -max_retry_count => 0,
+      -batch_size      => 10,
+      -parameters      => {
+                            program          => $self->o('program'),
+                            external_db_name => $self->o('external_db_name'),
+                            analysis_groups  => $self->o('analysis_groups'),
+                            id_prefixes      => $self->o('id_prefixes'),
+                            linked_tables    => $self->o('linked_tables'),
+                            db_type          => $self->o('db_type'),
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => {
+                            '2' => ['AnalysisUnmerge'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'AnalysisUnmerge',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              db_type => $self->o('db_type'),
+                            },
+      -rc_name           => 'normal',
     },
 
     {
