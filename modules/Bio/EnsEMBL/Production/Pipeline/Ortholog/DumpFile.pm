@@ -101,15 +101,22 @@ sub run {
     my $ml_type  = $self->param('ml_type');
     my $from_gdb = $gdba->fetch_by_registry_name($from_sp);
     my $to_gdb   = $gdba->fetch_by_registry_name($to_sp);
-    my $output_dir  = $self->param('output_dir');
-    my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
-    my $datestring  = localtime();
 
+    # Build the output directory & filename
+    my $datestring  = localtime();
+    my $output_dir  = $self->param('output_dir');
+    #my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
     my $division = 'Ensembl';
-    if ($from_meta->get_division()) {
-      $division = $from_meta->get_division() ; 
+    $division    = $from_meta->get_division() if ($from_meta->get_division());
+    $output_dir  = File::Spec->catdir($output_dir, lc($division));
+
+    if (!-e $output_dir) {
+       $self->warning("Output directory '$output_dir' does not exist. I shall create it.");
+       make_path($output_dir) or $self->throw("Failed to create output directory '$output_dir'");
     }
-    
+    my $output_file = "/orthologs-$from_prod_sp-$to_prod_sp.tsv";
+    $output_file    = File::Spec->catdir($output_dir, $output_file);
+
     open FILE , ">$output_file" or die "couldn't open file " . $output_file . " $!";
     print FILE "## " . $datestring . "\n";
     print FILE "## orthologs from $from_prod_sp to $to_prod_sp\n";
