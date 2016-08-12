@@ -1,0 +1,580 @@
+=head1 LICENSE
+
+Copyright [1999-2014] EMBL-European Bioinformatics Institute
+and Wellcome Trust Sanger Institute
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
+
+
+=pod
+
+=head1 NAME
+Bio::EnsEMBL::EGPipeline::PipeConfig::AlignmentXref_conf
+
+=head1 DESCRIPTION
+
+Align sequence data in order to generate cross-references (aka identity xrefs).
+
+=head1 Author
+
+James Allen
+
+=cut
+
+package Bio::EnsEMBL::EGPipeline::PipeConfig::AlignmentXref_conf;
+
+use strict;
+use warnings;
+
+use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
+use File::Spec::Functions qw(catdir);
+
+sub default_options {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::default_options},
+
+    pipeline_name => 'alignment_xref_'.$self->o('ensembl_release'),
+
+    species => [],
+    antispecies => [],
+    division => [],
+    run_all => 0,
+    meta_filters => {},
+    
+    # Parameters for dumping and splitting Fasta query files.
+    max_seq_length          => 10000000,
+    max_seq_length_per_file => $self->o('max_seq_length'),
+    max_seqs_per_file       => 500,
+    max_files_per_directory => 100,
+    max_dirs_per_directory  => $self->o('max_files_per_directory'),
+    
+    max_hive_capacity => 100,
+    
+    # By default, create xrefs from both reviewed and unreviewed UniProt sets.
+    uniprot_reviewed   => 1,
+    uniprot_unreviewed => 1,
+    
+    # Default logic_names for the analyses.
+    uniprot_reviewed_logic_name   => 'xref_sprot_blastp',
+    uniprot_unreviewed_logic_name => 'xref_trembl_blastp',
+    
+    # External DB parameters are effectively constant and should not be altered.
+    uniprot_reviewed_external_db   => 'Uniprot/SWISSPROT',
+    uniprot_unreviewed_external_db => 'Uniprot/SPTREMBL',
+    
+    # Align a particular species, rather than one matching the core db species.
+    source_species => undef,
+    
+    # Parameters for fetching and saving UniProt data.
+    uniprot_ebi_path => '/ebi/ftp/pub/databases/uniprot/current_release/knowledgebase/complete',
+    uniprot_ftp_uri  => 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete',
+    uniprot_dir      => catdir($self->o('pipeline_dir'), 'uniprot'),
+    
+    # In order to not process more data than necessary, the UniProt taxonomic
+    # division, e.g. 'fungi', 'invertebrates', 'plants', is mandatory.
+    # uniprot_tax_level => undef,
+    
+    # Blast parameters
+    blast_type       => 'ncbi',
+    blast_dir        => '/nfs/panda/ensemblgenomes/external/ncbi-blast-2+',
+    makeblastdb_exe  => catdir($self->o('blast_dir'), 'bin/makeblastdb'),
+    blastp_exe       => catdir($self->o('blast_dir'), 'bin/blastp'),
+    blast_matrix     => undef,
+    blast_threads    => 3,
+    blast_parameters => '-word_size 3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
+    
+    # For parsing the output.
+    output_regex     => '^\s*(\w+)',
+    pvalue_threshold => 0.01,
+    filter_prune     => 1,
+    filter_min_score => 200,
+    
+    # Specify blast_db if you don't want it in the directory alongside db_file.
+    blast_db => undef,
+    
+    # Analyses to associate with the object_xref.
+    analyses =>
+    [
+      {
+        'logic_name'    => $self->o('uniprot_reviewed_logic_name'),
+        'display_label' => 'UniProt reviewed proteins',
+        'description'   => 'Cross references to UniProt Swiss-Prot (reviewed) proteins, determined by alignment against the proteome with <em>blastp</em>.',
+        'displayable'   => 1,
+        'db'            => 'sprot',
+        'program'       => 'blastp',
+        'program_file'  => $self->o('blastp_exe'),
+        'parameters'    => $self->o('blast_parameters'),
+        'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'db_type'       => 'core',
+      },
+      
+      {
+        'logic_name'    => $self->o('uniprot_unreviewed_logic_name'),
+        'display_label' => 'UniProt unreviewed proteins',
+        'description'   => 'Cross references to UniProt TrEMBL (unreviewed) proteins, determined by alignment against the proteome with <em>blastp</em>.',
+        'displayable'   => 1,
+        'db'            => 'trembl',
+        'program'       => 'blastp',
+        'program_file'  => $self->o('blastp_exe'),
+        'parameters'    => $self->o('blast_parameters'),
+        'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'db_type'       => 'core',
+      },
+    ],
+    
+    # Retrieve analysis descriptions from the production database;
+    # the supplied registry file will need the relevant server details.
+    production_lookup => 1,
+  }
+
+}
+
+sub beekeeper_extra_cmdline_options {
+  my ($self) = @_;
+
+  my $options = join(' ',
+    $self->SUPER::beekeeper_extra_cmdline_options,
+    "-reg_conf ".$self->o('registry')
+  );
+
+  return $options;
+}
+
+sub hive_meta_table {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::hive_meta_table},
+    'hive_use_param_stack'  => 1,
+  };
+}
+
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('pipeline_dir'),
+    $self->db_cmd("CREATE TABLE split_proteome (species varchar(100) NOT NULL, split_file varchar(255) NOT NULL)"),
+  ];
+}
+
+
+sub pipeline_wide_parameters {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    'uniprot_reviewed'   => $self->o('uniprot_reviewed'),
+    'uniprot_unreviewed' => $self->o('uniprot_unreviewed'),
+  };
+}
+
+sub pipeline_analyses {
+  my ($self) = @_;
+
+  return [
+    {
+      -logic_name      => 'InitialisePipeline',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -input_ids       => [{}],
+      -flow_into       => {
+                            '1->A' => ['SpeciesFactoryForDumping'],
+                            'A->1' => ['InitialiseAlignment'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name      => 'SpeciesFactoryForDumping',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            species         => $self->o('species'),
+                            antispecies     => $self->o('antispecies'),
+                            division        => $self->o('division'),
+                            run_all         => $self->o('run_all'),
+                            meta_filters    => $self->o('meta_filters'),
+                            chromosome_flow => 0,
+                            variation_flow  => 0,
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => {
+                            '2->A' => ['BackupCoreDatabase'],
+                            'A->2' => ['DumpProteome'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name      => 'BackupCoreDatabase',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DatabaseDumper',
+      -max_retry_count => 1,
+      -parameters      => {
+                            output_file => catdir($self->o('pipeline_dir'), '#species#', 'core_bkp.sql.gz'),
+                            table_list  => ['analysis', 'analysis_description', 'identity_xref', 'object_xref', 'xref'],
+                          },
+      -rc_name         => 'normal',
+    },
+
+    {
+      -logic_name        => 'DumpProteome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpProteome',
+      -analysis_capacity => 5,
+      -parameters        => {
+                              proteome_dir => catdir($self->o('pipeline_dir'), '#species#', 'proteome'),
+                              use_dbID     => 1,
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['SplitProteome'],
+    },
+
+    {
+      -logic_name        => 'SplitProteome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+      -analysis_capacity => 5,
+      -parameters        => {
+                              fasta_file              => '#proteome_file#',
+                              max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                              max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                              max_files_per_directory => $self->o('max_files_per_directory'),
+                              max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '2' => [ '?table_name=split_proteome' ],
+                            }
+    },
+
+    {
+      -logic_name      => 'InitialiseAlignment',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => ['InitialiseUniprotReviewed', 'InitialiseUniprotUnreviewed'],
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name      => 'InitialiseUniprotReviewed',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1' => WHEN('#uniprot_reviewed#' => ['FetchUniprotReviewed']),
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'InitialiseUniprotUnreviewed',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1' => WHEN('#uniprot_unreviewed#' => ['FetchUniprotUnreviewed']),
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'FetchUniprotReviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::FetchUniprot',
+      -max_retry_count => 2,
+      -parameters      => {
+                            ebi_path    => $self->o('uniprot_ebi_path'),
+                            ftp_uri     => $self->o('uniprot_ftp_uri'),
+                            data_source => 'sprot',
+                            out_dir     => $self->o('uniprot_dir'),
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['ConfigureUniprotReviewed'],
+    },
+
+    {
+      -logic_name      => 'ConfigureUniprotReviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ConfigureSource',
+      -max_retry_count => 1,
+      -parameters      => {
+                            logic_name  => $self->o('uniprot_reviewed_logic_name'),
+                            external_db => $self->o('uniprot_reviewed_external_db'),
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['SpeciesFactoryForLoading'],
+    },
+    
+    {
+      -logic_name      => 'FetchUniprotUnreviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::FetchUniprot',
+      -max_retry_count => 2,
+      -parameters      => {
+                            ebi_path    => $self->o('uniprot_ebi_path'),
+                            ftp_uri     => $self->o('uniprot_ftp_uri'),
+                            data_source => 'trembl',
+                            out_dir     => $self->o('uniprot_dir'),
+                          },
+      -rc_name         => '32Gb_mem_4Gb_tmp',
+      -flow_into       => ['ConfigureUniprotUnreviewed'],
+    },
+
+    {
+      -logic_name      => 'ConfigureUniprotUnreviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ConfigureSource',
+      -max_retry_count => 1,
+      -parameters      => {
+                            logic_name  => $self->o('uniprot_unreviewed_logic_name'),
+                            external_db => $self->o('uniprot_unreviewed_external_db'),
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['SpeciesFactoryForLoading'],
+    },
+    
+    {
+      -logic_name      => 'SpeciesFactoryForLoading',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            species         => $self->o('species'),
+                            antispecies     => $self->o('antispecies'),
+                            division        => $self->o('division'),
+                            run_all         => $self->o('run_all'),
+                            meta_filters    => $self->o('meta_filters'),
+                            chromosome_flow => 0,
+                            variation_flow  => 0,
+                          },
+      -flow_into       => {
+                            '2->A' => ['AnalysisSetupFactory'],
+                            'A->2' => ['ExtractSpeciesUniprot'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+
+    {
+      -logic_name      => 'AnalysisSetupFactory',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::AnalysisSetupFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            analyses => $self->o('analyses'),
+                          },
+      -meadow_type     => 'LOCAL',
+      -flow_into       => {
+                            '2' => ['AnalysisSetup'],
+                          },
+    },
+    
+    {
+      -logic_name      => 'AnalysisSetup',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -max_retry_count => 0,
+      -batch_size      => 10,
+      -parameters      => {
+                            db_backup_required => 1,
+                            db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'core_bkp.sql.gz'),
+                            delete_existing    => 1,
+                            production_lookup  => $self->o('production_lookup'),
+                            production_db      => $self->o('production_db'),
+                          },
+      -meadow_type     => 'LOCAL',
+      -flow_into       => ['DeleteIdentityXrefs'],
+    },
+    
+    {
+      -logic_name      => 'DeleteIdentityXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::DeleteIdentityXrefs',
+      -max_retry_count => 1,
+      -parameters      => {},
+      -rc_name         => 'normal',
+    },
+    
+    {
+      -logic_name      => 'ExtractSpeciesUniprot',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ExtractSpeciesUniprot',
+      -max_retry_count => 1,
+      -parameters      => {
+                            uniprot_species => $self->o('source_species'),
+                            file_varname    => 'db_fasta_file',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['CreateBlastDB'],
+    },
+
+    {
+      -logic_name      => 'CreateBlastDB',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::CreateBlastDB',
+      -max_retry_count => 2,
+      -parameters      => {
+                            makeblastdb_exe   => $self->o('makeblastdb_exe'),
+                            blast_db          => $self->o('blast_db'),
+                            blast_db_type     => 'prot',
+                            proteome_source   => 'various',
+                            logic_name_prefix => 'various',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['FetchProteomeFiles'],
+    },
+
+    {
+      -logic_name      => 'FetchProteomeFiles',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchSplitFiles',
+      -max_retry_count => 1,
+      -parameters      => {
+                            seq_type => 'proteome',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => {
+                            '2->A' => ['BlastPFactory'],
+                            'A->1' => ['FilterBlastPHits'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastPFactory',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            max_seq_length => $self->o('max_seq_length'),
+                            queryfile      => '#split_file#',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => {
+                            '2' => ['BlastP'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastP',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            blast_type       => $self->o('blast_type'),
+                            blast_matrix     => $self->o('blast_matrix'),
+                            output_regex     => $self->o('output_regex'),
+                            query_type       => 'pep',
+                            database_type    => 'pep',
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                            escape_branch    => -1,
+                          },
+      -rc_name         => '8GB_threads',
+      -flow_into       => {
+                            '-1' => ['BlastP_HighMem'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastP_HighMem',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            blast_type       => $self->o('blast_type'),
+                            blast_matrix     => $self->o('blast_matrix'),
+                            output_regex     => $self->o('output_regex'),
+                            query_type       => 'pep',
+                            database_type    => 'pep',
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                            escape_branch    => -1,
+                          },
+      -rc_name         => '16GB_threads',
+      -flow_into       => {
+                            '-1' => ['BlastP_HigherMem'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastP_HigherMem',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            blast_type       => $self->o('blast_type'),
+                            blast_matrix     => $self->o('blast_matrix'),
+                            output_regex     => $self->o('output_regex'),
+                            query_type       => 'pep',
+                            database_type    => 'pep',
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                          },
+      -rc_name         => '32GB_threads',
+    },
+
+    {
+      -logic_name      => 'FilterBlastPHits',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type     => 'core',
+                            filter_top_x => 1,
+                            blastp_top_x => 1,
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['addXref'],
+    },
+
+    {
+      -logic_name        => 'addXref',
+      -module            => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::addXref',
+      -max_retry_count   => 1,
+      -parameters        => {
+
+
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['EmailReport'],
+
+    },
+
+    {
+      -logic_name        => 'EmailReport',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              email   => $self->o('email'),
+                              subject => 'Alignment Xref pipeline has completed',
+                              text    => 'The Alignment Xref pipeline has completed.',
+                            },
+      -rc_name           => 'normal',
+    },
+
+  ];
+
+}
+
+sub resource_classes {
+  my ($self) = @_;
+  
+  my $blast_threads = $self->o('blast_threads');
+
+  return {
+    %{$self->SUPER::resource_classes},
+    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
+    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
+  }
+}
+
+1;
