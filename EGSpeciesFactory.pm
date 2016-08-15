@@ -187,9 +187,10 @@ sub run {
   my $chromosome_flow = $self->param('chromosome_flow');
   my $variation_flow  = $self->param('variation_flow');
   my $core_dbas       = $self->param('core_dbas');
-  my ($chromosome_dbas, $variation_dbas);
+  my $regulation_flow    = $self->param('regulation_flow')
+  my ($chromosome_dbas, $variation_dbas, $regulation_dbas);
   
-  if ($chromosome_flow || $variation_flow) {
+  if ($chromosome_flow || $variation_flow || $regulation_flow) {
     foreach my $species (keys %$core_dbas) {
       my $core_dba = $$core_dbas{$species};
       
@@ -204,11 +205,17 @@ sub run {
           $$variation_dbas{$species} = $core_dba;
         }
       }
+      if ($regulation_flow) {
+        if ($self->has_regulation($species)) {
+          $$regulation_dbas{$species} = $core_dba;
+        }
+      }
     }
   }
   
   $self->param('chromosome_dbas', $chromosome_dbas);
   $self->param('variation_dbas', $variation_dbas);
+  $self->param('regulation_dbas', $regulation_dbas);
 }
 
 sub has_chromosome {
@@ -236,11 +243,18 @@ sub has_variation {
   return $dbva ? 1 : 0;
 }
 
+sub has_regulation {
+  my ($self, $species) = @_;
+  my $dbva = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
+  return $dbva ? 1 : 0;
+}
+
 sub write_output {
   my ($self) = @_;
   my $core_dbas       = $self->param('core_dbas');
   my $chromosome_dbas = $self->param('chromosome_dbas');
   my $variation_dbas  = $self->param('variation_dbas');
+  my $regulation_dbas = $self->param('regulation_dbas')
   my $species_varname = $self->param_required('species_varname');
   
   foreach my $species (sort keys %$core_dbas) {
@@ -254,6 +268,11 @@ sub write_output {
   foreach my $species (sort keys %$variation_dbas) {
     $self->dataflow_output_id({$species_varname => $species}, $self->param('variation_flow'));
   }
+
+  foreach my $species (sort keys %$regulation_dbas) {
+    $self->dataflow_output_id({$species_varname => $species}, $self->param('regulation_flow'));
+  }
+
 }
 
 1;
