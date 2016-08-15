@@ -187,7 +187,7 @@ sub run {
   my $chromosome_flow = $self->param('chromosome_flow');
   my $variation_flow  = $self->param('variation_flow');
   my $core_dbas       = $self->param('core_dbas');
-  my $regulation_flow    = $self->param('regulation_flow')
+  my $regulation_flow    = $self->param('regulation_flow');
   my ($chromosome_dbas, $variation_dbas, $regulation_dbas);
   
   if ($chromosome_flow || $variation_flow || $regulation_flow) {
@@ -254,7 +254,7 @@ sub write_output {
   my $core_dbas       = $self->param('core_dbas');
   my $chromosome_dbas = $self->param('chromosome_dbas');
   my $variation_dbas  = $self->param('variation_dbas');
-  my $regulation_dbas = $self->param('regulation_dbas')
+  my $regulation_dbas = $self->param('regulation_dbas');
   my $species_varname = $self->param_required('species_varname');
   
   foreach my $species (sort keys %$core_dbas) {
