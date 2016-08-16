@@ -55,6 +55,7 @@ sub param_defaults {
     core_flow       => 2,
     chromosome_flow => 3,
     variation_flow  => 4,
+    regulation_flow => 5,
     div_synonyms    =>
       {
         'eb'  => 'bacteria',
