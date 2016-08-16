@@ -37,6 +37,9 @@ sub default_options {
         
         ### Optional overrides        
         species => [],
+
+        ### Allow pipeline to run on species without declarations. Use it with -species parameter
+        force => 0,
         
         release => software_version(),
 
@@ -73,7 +76,8 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::ClassSpeciesFactory',
         -parameters => {
           species => $self->o('species'),
-          run_all => $self->o('run_all')
+          run_all => $self->o('run_all'),
+          force => $self->o('force'),
         },
         -input_ids  => [ {} ],
         -max_retry_count  => 10,
