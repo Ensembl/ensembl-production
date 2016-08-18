@@ -53,6 +53,7 @@ sub param_defaults {
            chromosome_flow => 3,
            variation_flow  => 4,
            compara_flow    => 5,
+           regulation_flow => 6,
            div_synonyms    => {
                              'eb'  => 'bacteria',
                              'ef'  => 'fungi',
@@ -216,10 +217,11 @@ sub run {
   my ($self)          = @_;
   my $chromosome_flow = $self->param('chromosome_flow');
   my $variation_flow  = $self->param('variation_flow');
+  my $regulation_flow    = $self->param('regulation_flow');
   my $core_dbas       = $self->param('core_dbas');
-  my ( $chromosome_dbas, $variation_dbas );
+  my ( $chromosome_dbas, $variation_dbas, $regulation_dbas );
 
-  if ( $chromosome_flow || $variation_flow ) {
+  if ( $chromosome_flow || $variation_flow || $regulation_flow) {
     foreach my $species ( keys %$core_dbas ) {
       my $core_dba = $$core_dbas{$species};
 
@@ -234,10 +236,16 @@ sub run {
           $$variation_dbas{$species} = $core_dba;
         }
       }
+      if ($regulation_flow) {
+        if ($self->has_regulation($species)) {
+          $$regulation_dbas{$species} = $core_dba;
+        }
+      }
     }
   }
   $self->param( 'chromosome_dbas', $chromosome_dbas );
   $self->param( 'variation_dbas',  $variation_dbas );
+  $self->param( 'regulation_dbas', $regulation_dbas );
 } ## end sub run
 
 sub has_chromosome {
@@ -268,6 +276,12 @@ sub has_variation {
   return $dbva ? 1 : 0;
 }
 
+sub has_regulation {
+  my ($self, $species) = @_;
+  my $dbva = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
+  return $dbva ? 1 : 0;
+}
+
 sub write_output {
   my ($self) = @_;
   my $check_intentions = $self->param('check_intentions') || 0;
@@ -275,6 +289,7 @@ sub write_output {
   my $compara_dbas     = $self->param('compara_dbas');
   my $chromosome_dbas  = $self->param('chromosome_dbas');
   my $variation_dbas   = $self->param('variation_dbas');
+  my $regulation_dbas   = $self->param('regulation_dbas');
 
   foreach my $species ( sort keys %$core_dbas ) {
     # If check_intention is turned on, then check the production database
@@ -321,6 +336,11 @@ sub write_output {
   foreach my $species ( sort keys %$compara_dbas ) {
     $self->dataflow_output_id( { 'species' => $species },
                                $self->param('compara_flow') );
+  }
+
+  foreach my $species ( sort keys %$regulation_dbas ) {
+    $self->dataflow_output_id( { 'species' => $species },
+                               $self->param('regulation_flow') );
   }
 
   return;

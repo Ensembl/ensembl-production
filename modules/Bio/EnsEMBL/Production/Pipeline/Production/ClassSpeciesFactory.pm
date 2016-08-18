@@ -77,7 +77,7 @@ sub run {
   my @dbs;
   foreach my $dba (@{$self->param('dbas')}) {
     if(!$self->process_dba($dba)) {
-      $self->fine('Skipping %s', $dba->species());
+      $self->warning("Skipping ".$dba->species());
       next;
     }
 
@@ -85,17 +85,29 @@ sub run {
     if($all) {
       push(@dbs, [$self->input_id($dba), $all]);
     }
+    else {
+      $self->warning("Species ".$dba->species()." has not been declared. Skipping it.. Declare it or run pipeline with force parameter");
+    }
     my $vega = $self->production_flow($dba, 'vega');
     if ($vega) {
       push(@dbs, [$self->input_id($dba), $vega]);
+    }
+    else {
+      $self->warning("Species ".$dba->species()." has no vega database");
     }
     my $karyotype = $self->production_flow($dba, 'karyotype');
     if ($karyotype) {
       push(@dbs, [$self->input_id($dba), $karyotype]);
     }
+    else {
+      $self->warning("Species ".$dba->species()." has no karyotype");
+    }
     my $variation = $self->production_flow($dba, 'variation');
     if ($variation) {
       push(@dbs, [$self->input_id($dba), $variation]);
+    }
+    else {
+      $self->warning("Species ".$dba->species()." has no variation database");
     }
   }
   $self->param('dbs', \@dbs);
@@ -196,7 +208,7 @@ sub production_flow {
 sub is_run {
   my ($self, $dba, $class) = @_;
   my $production_name  = $dba->get_MetaContainer()->get_production_name();
-  if ($self->param('run_all')) {
+  if ($self->param('run_all') or $self->param('force')) {
     return 1;
   }
 

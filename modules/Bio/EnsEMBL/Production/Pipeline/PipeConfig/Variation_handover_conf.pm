@@ -38,6 +38,9 @@ sub default_options {
         ### Optional overrides        
         species => [],
         
+        ### Allow pipeline to run on species without declarations. Use it with -species parameter
+        force => 0,
+
         release => software_version(),
 
         run_all => 0,
@@ -74,7 +77,8 @@ sub pipeline_analyses {
         -parameters => {
           species => $self->o('species'),
           run_all => $self->o('run_all'),
-          max_run => $self->o('max_run')
+          max_run => $self->o('max_run'),
+          force   => $self->o('force'),
         },
         -input_ids  => [ {} ],
         -flow_into  => {
