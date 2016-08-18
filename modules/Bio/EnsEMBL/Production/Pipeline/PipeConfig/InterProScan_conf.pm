@@ -680,9 +680,9 @@ sub resource_classes {
   my ($self) = @_;
 
   return {
-#    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4 -R "select[gpfs]"' },
-    'default' 			   => {'LSF' => '-q production-rh6' },
-    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4' },
+#    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -R "select[gpfs]"' },
+    'default' 			   => {'LSF' => '-q production-rh7' },
+    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4' },
   };
 }
 
