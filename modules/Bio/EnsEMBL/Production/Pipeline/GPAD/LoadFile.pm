@@ -42,7 +42,6 @@ sub param_defaults {
     };
 }
 
-
 sub fetch_input {
     my ($self) = @_;
 
@@ -88,11 +87,12 @@ sub run {
 
     # Parse filename to get $target_species
     my $file    = $self->param_required('gpad_file');
-    my $species = $1 if($file=~/annotations_Ensembl.+\-(.+)\.gpa/);
+    my $species = $1 if($file=~/annotations_Ensembl.+\-(.+)\.gpa/)
+#    my $species;
 
     # Remove existing projected GO annotations from GOA 
     if ($self->param_required('delete_existing')) {
-        #$species = 'puccinia_graminis';
+#       $species = 'brachypodium_distachyon';
         my $dba          = $reg->get_DBAdaptor($species, "core");         
         my $sql_delete_1 = $self->param_required('sql_delete_1');
         my $sql_delete_2 = $self->param_required('sql_delete_2');
@@ -107,7 +107,6 @@ sub run {
 
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
-#    my $file = $self->param_required('gpad_file'); 
 
     open(FILE, $file) or die "Could not open '$file' for reading : $!";
 
@@ -191,27 +190,17 @@ sub run {
    # Retrieve existing or create new analysis object
    my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species , "core", "analysis" );
    my $analysis; 
-   $analysis = $analysis_adaptor->fetch_by_logic_name('go_projection');
+   $analysis = $analysis_adaptor->fetch_by_logic_name('goa_import');
    
-   # Update to existing analysis object
-   # to reflect import from GOA  
-   if(defined $analysis){
-     $analysis->description('Gene Ontology xrefs projection data from GOA');
-     $analysis->display_label('GO projected xrefs from GOA');
-     $analysis_adaptor->update($analysis);
-   }
-
    if(!defined $analysis){
-   #my $analysis = Bio::EnsEMBL::Analysis->
      $analysis = Bio::EnsEMBL::Analysis->
-        new( -logic_name      => 'go_projection',
+        new( -logic_name      => 'goa_import',
              -db              => 'GO',
              -db_version      => '',
-             -program         => 'go_projection',
-             -description     => 'Gene Ontology xrefs projection data from GOA',
-             -display_label   => 'GO projected xrefs from GOA',
+             -program         => 'goa_import',
+             -description     => 'Gene Ontology xrefs  data from GOA',
+             -display_label   => 'GO xrefs from GOA',
           );
-
    }
    $go_xref->analysis($analysis);
 
@@ -226,7 +215,7 @@ sub run {
       $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id);
 
       foreach my $translation (@$translations) {
-        $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1, $uniprot_xrefs->[0]);
+        $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1);
         $species_added_via_xref{$tgt_species}++;
       }
       # If GOA provide a tgt_protein, this is the direct mapping to Ensembl feature
@@ -240,7 +229,7 @@ sub run {
       }
     
       if (defined $translation) {
-      	$dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1, $uniprot_xrefs->[0]);
+      	$dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1);
       	$species_added_via_tgt{$tgt_species}++;
       } else {
       	$species_missed{$tgt_species}++;
@@ -259,7 +248,7 @@ sub run {
         }
 
        if (defined $translation) {
-          $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1, $uniprot_xrefs->[0]);
+          $dbe_adaptor->store($go_xref, $translation->dbID, 'Translation', 1);
           $species_added_via_tgt{$tgt_species}++;
        } else {
           $species_missed{$tgt_species}++;
@@ -267,11 +256,6 @@ sub run {
      }
   }
 
-  # Disconnects from the database if 
-  # there are no currently active statement handles. 
-  $tl_adaptor->dbc->disconnect_if_idle();
-  $dbe_adaptor->dbc->disconnect_if_idle();
-  $t_adaptor->dbc->disconnect_if_idle();
   }# while FILE
 
 
