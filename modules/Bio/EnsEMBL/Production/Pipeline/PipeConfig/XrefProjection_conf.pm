@@ -53,7 +53,7 @@ sub default_options {
 	division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_XrefProjections_'.$self->o('ensembl_release'),
         output_dir      => '/lustre/scratch109/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
-	email => 'maurel@ebi.ac.uk',	
+	email => $self->o('ENV', 'USER').'@sanger.ac.uk',
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '1',
