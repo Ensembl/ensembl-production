@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
 use base ('Bio::EnsEMBL::Hive::Process');
