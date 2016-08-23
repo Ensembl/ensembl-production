@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
 use base ('Bio::EnsEMBL::Hive::Process');
@@ -156,7 +156,7 @@ sub get_taxon_ancestry {
     my $taxonomy_db = shift;
 
     my $dba          = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%$taxonomy_db);
-    my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
+    my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($dba);
     my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
     my @lineage      = @{$node_adaptor->fetch_ancestors($node)};
     my @ancestors;
