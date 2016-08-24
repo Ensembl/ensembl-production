@@ -122,7 +122,11 @@ sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
             %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
+            # Assuming that the hive for pipeline eg IPS is on the same
+            # server as the hive for reading queues and seed jobs 
+            'pipeline_db'     => $self->o('pipeline_db'), 
 		    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
+            'ensembl_version' => $self->o('ensembl_version'),
 		    'output_dir'      => $self->o('output_dir'), 
 #            'delete_existing' => $self->o('delete_existing'),		    
     };
@@ -153,9 +157,9 @@ sub pipeline_analyses {
     },   
 
     { -logic_name    => 'queue_factory',
-      -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::Queue::QueueFactory',
       -parameters    => {
-						    'queue_config'  => $self->o('queue_config'),
+						   'queue_config'  => $self->o('queue_config'),
                         }, 
       -hive_capacity => 10,
       -rc_name 	     => 'default',     
