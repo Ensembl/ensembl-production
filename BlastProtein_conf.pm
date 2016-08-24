@@ -253,6 +253,7 @@ sub pipeline_analyses {
                             run_all         => $self->o('run_all'),
                             meta_filters    => $self->o('meta_filters'),
                             chromosome_flow => 0,
+                            regulation_flow => 0,
                             variation_flow  => 0,
                           },
       -rc_name         => 'normal',
