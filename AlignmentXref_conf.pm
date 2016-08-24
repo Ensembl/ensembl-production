@@ -72,25 +72,31 @@ sub default_options {
     uniprot_reviewed   => 1,
     uniprot_unreviewed => 1,
     
+    # Can also create xrefs from RefSeq peptides.
+    refseq_peptide => 0,
+    
     # Default logic_names for the analyses.
     uniprot_reviewed_logic_name   => 'xref_sprot_blastp',
     uniprot_unreviewed_logic_name => 'xref_trembl_blastp',
+    refseq_peptide_logic_name     => 'xref_refseq_blastp',
     
     # External DB parameters are effectively constant and should not be altered.
     uniprot_reviewed_external_db   => 'Uniprot/SWISSPROT',
     uniprot_unreviewed_external_db => 'Uniprot/SPTREMBL',
+    refseq_peptide_external_db     => 'RefSeq_peptide',
     
     # Align a particular species, rather than one matching the core db species.
     source_species => undef,
     
     # Parameters for fetching and saving UniProt data.
-    uniprot_ebi_path => '/ebi/ftp/pub/databases/uniprot/current_release/knowledgebase/complete',
-    uniprot_ftp_uri  => 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete',
+    uniprot_ebi_path => '/ebi/ftp/pub/databases/uniprot/current_release/knowledgebase',
+    uniprot_ftp_uri  => 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase',
     uniprot_dir      => catdir($self->o('pipeline_dir'), 'uniprot'),
     
-    # In order to not process more data than necessary, the UniProt taxonomic
-    # division, e.g. 'fungi', 'invertebrates', 'plants', is mandatory.
-    # uniprot_tax_level => undef,
+    # Parameters for fetching and saving RefSeq data.
+    refseq_ebi_path  => '/nfs/panda/ensemblgenomes/external/refseq',
+    refseq_ftp_uri   => 'ftp://ftp.ncbi.nlm.nih.gov/refseq/release',
+    refseq_dir       => catdir($self->o('pipeline_dir'), 'refseq'),
     
     # Blast parameters
     blast_type       => 'ncbi',
@@ -132,6 +138,19 @@ sub default_options {
         'description'   => 'Cross references to UniProt TrEMBL (unreviewed) proteins, determined by alignment against the proteome with <em>blastp</em>.',
         'displayable'   => 1,
         'db'            => 'trembl',
+        'program'       => 'blastp',
+        'program_file'  => $self->o('blastp_exe'),
+        'parameters'    => $self->o('blast_parameters'),
+        'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'db_type'       => 'core',
+      },
+      
+      {
+        'logic_name'    => $self->o('refseq_peptide_logic_name'),
+        'display_label' => 'RefSeq peptides',
+        'description'   => 'Cross references to RefSeq peptide sequences, determined by alignment against the proteome with <em>blastp</em>.',
+        'displayable'   => 1,
+        'db'            => 'refseq_peptide',
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
         'parameters'    => $self->o('blast_parameters'),
@@ -185,6 +204,7 @@ sub pipeline_wide_parameters {
     %{$self->SUPER::pipeline_wide_parameters},
     'uniprot_reviewed'   => $self->o('uniprot_reviewed'),
     'uniprot_unreviewed' => $self->o('uniprot_unreviewed'),
+    'refseq_peptide'     => $self->o('refseq_peptide'),
   };
 }
 
@@ -269,7 +289,11 @@ sub pipeline_analyses {
       -logic_name      => 'InitialiseAlignment',
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
-      -flow_into       => ['InitialiseUniprotReviewed', 'InitialiseUniprotUnreviewed'],
+      -flow_into       => [
+                            'InitialiseUniprotReviewed',
+                            'InitialiseUniprotUnreviewed',
+                            'InitialiseRefSeqPeptide',
+                          ],
       -meadow_type     => 'LOCAL',
     },
 
@@ -294,14 +318,25 @@ sub pipeline_analyses {
     },
     
     {
+      -logic_name      => 'InitialiseRefSeqPeptide',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1' => WHEN('#refseq_peptide#' => ['FetchRefSeqPeptide']),
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
       -logic_name      => 'FetchUniprotReviewed',
-      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::FetchUniprot',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchUniprot',
       -max_retry_count => 2,
       -parameters      => {
-                            ebi_path    => $self->o('uniprot_ebi_path'),
-                            ftp_uri     => $self->o('uniprot_ftp_uri'),
-                            data_source => 'sprot',
-                            out_dir     => $self->o('uniprot_dir'),
+                            ebi_path     => $self->o('uniprot_ebi_path'),
+                            ftp_uri      => $self->o('uniprot_ftp_uri'),
+                            data_source  => 'sprot',
+                            out_dir      => $self->o('uniprot_dir'),
+                            file_varname => 'fasta_file',
                           },
       -rc_name         => 'normal',
       -flow_into       => ['ConfigureUniprotReviewed'],
@@ -321,13 +356,14 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'FetchUniprotUnreviewed',
-      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::FetchUniprot',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchUniprot',
       -max_retry_count => 2,
       -parameters      => {
-                            ebi_path    => $self->o('uniprot_ebi_path'),
-                            ftp_uri     => $self->o('uniprot_ftp_uri'),
-                            data_source => 'trembl',
-                            out_dir     => $self->o('uniprot_dir'),
+                            ebi_path     => $self->o('uniprot_ebi_path'),
+                            ftp_uri      => $self->o('uniprot_ftp_uri'),
+                            data_source  => 'trembl',
+                            out_dir      => $self->o('uniprot_dir'),
+                            file_varname => 'fasta_file',
                           },
       -rc_name         => '32Gb_mem_4Gb_tmp',
       -flow_into       => ['ConfigureUniprotUnreviewed'],
@@ -340,6 +376,34 @@ sub pipeline_analyses {
       -parameters      => {
                             logic_name  => $self->o('uniprot_unreviewed_logic_name'),
                             external_db => $self->o('uniprot_unreviewed_external_db'),
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['SpeciesFactoryForLoading'],
+    },
+    
+    {
+      -logic_name      => 'FetchRefSeqPeptide',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchRefSeq',
+      -max_retry_count => 2,
+      -parameters      => {
+                            ebi_path        => $self->o('refseq_ebi_path'),
+                            ftp_uri         => $self->o('refseq_ftp_uri'),
+                            taxonomic_level => $self->o('refseq_tax_level'),
+                            data_type       => 'protein',
+                            out_dir         => $self->o('refseq_dir'),
+                            file_varname    => 'fasta_file',
+                          },
+      -rc_name         => '32Gb_mem_4Gb_tmp',
+      -flow_into       => ['ConfigureRefSeqPeptide'],
+    },
+
+    {
+      -logic_name      => 'ConfigureRefSeqPeptide',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ConfigureSource',
+      -max_retry_count => 1,
+      -parameters      => {
+                            logic_name  => $self->o('refseq_peptide_logic_name'),
+                            external_db => $self->o('refseq_peptide_external_db'),
                           },
       -rc_name         => 'normal',
       -flow_into       => ['SpeciesFactoryForLoading'],
@@ -360,7 +424,7 @@ sub pipeline_analyses {
                           },
       -flow_into       => {
                             '2->A' => ['AnalysisSetupFactory'],
-                            'A->2' => ['ExtractSpeciesUniprot'],
+                            'A->2' => ['ExtractSpeciesFactory'],
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -401,14 +465,37 @@ sub pipeline_analyses {
       -parameters      => {},
       -rc_name         => 'normal',
     },
-    
+
+    {
+      -logic_name      => 'ExtractSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ExtractSpeciesFactory',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '2' => ['ExtractSpeciesUniprot'],
+                            '3' => ['ExtractSpeciesRefSeq'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+
     {
       -logic_name      => 'ExtractSpeciesUniprot',
-      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeaturesXref::ExtractSpeciesUniprot',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpeciesUniprot',
       -max_retry_count => 1,
       -parameters      => {
-                            uniprot_species => $self->o('source_species'),
-                            file_varname    => 'db_fasta_file',
+                            source_species => $self->o('source_species'),
+                            file_varname   => 'db_fasta_file',
+                          },
+      -rc_name         => 'normal',
+      -flow_into       => ['CreateBlastDB'],
+    },
+
+    {
+      -logic_name      => 'ExtractSpeciesRefSeq',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpeciesRefSeq',
+      -max_retry_count => 1,
+      -parameters      => {
+                            source_species => $self->o('source_species'),
+                            file_varname   => 'db_fasta_file',
                           },
       -rc_name         => 'normal',
       -flow_into       => ['CreateBlastDB'],
