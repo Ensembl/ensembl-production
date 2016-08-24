@@ -56,10 +56,7 @@ sub fetch_input {
     my $queue       = $self->param_required('queue');
     my $id          = $self->param_required('id');
 
-    my $pipeline = $ENV{USER}."_InterProScan_86_Seed"; 
-    my $IPS_hive = "mysql://ensrw:scr1b3d1\@mysql-eg-devel-1.ebi.ac.uk:4126/$pipeline";
-
-my $logger = get_logger();
+    my $logger = get_logger();
     $logger->info("Connecting to $queue_host:$queue_port\n");
     my $stomp = Net::STOMP::Client->new(host => $queue_host, port => $queue_port);
     my $peer  = $stomp->peer();
@@ -69,8 +66,6 @@ my $logger = get_logger();
     $logger->info("speaking STOMP %s with server %s\n",$stomp->version(), $stomp->server() || "UNKNOWN");
     $logger->info("session %s started\n", $stomp->session());
  
-    $self->param('pipeline', $pipeline);
-    $self->param('IPS_hive', $IPS_hive);
     $self->param('queue', $queue);    
     $self->param('id', $id);    
     $self->param('stomp', $stomp);
@@ -81,13 +76,11 @@ return 0;
 sub run {
     my ($self) = @_;
 
-    my $pipeline = $self->param_required('pipeline');
-    my $IPS_hive = $self->param_required('IPS_hive');
     my $queue    = $self->param_required('queue');
     my $id       = $self->param_required('id');
     my $stomp    = $self->param_required('stomp');
 
-my $logger = get_logger();
+    my $logger   = get_logger();
     $logger->info("Subscribing to $queue");
 
     $stomp->subscribe(
@@ -98,38 +91,36 @@ my $logger = get_logger();
     ); 
 
     while (my $frame = $stomp->wait_for_frames()) {
-	  $logger->info("Ack:".$frame->body());
-    	  $stomp->ack(id=>$id, frame=>$frame);
-    	  $logger->info("Processing ".$frame->body());
+      $logger->info("Ack:".$frame->body());
+      $stomp->ack(id=>$id, frame=>$frame);
+      $logger->info("Processing ".$frame->body());
 
-	  my $json        = JSON->new->utf8;
-    	  my $json_text   = $frame->body();
-    	  my $perl_scalar = $json->decode($json_text);
+      my $json        = JSON->new->utf8;
+      my $json_text   = $frame->body();
+      my $perl_scalar = $json->decode($json_text);
 
-          # Parse JSON message
-	  for my $item( @{$perl_scalar->{items}} ){
-       	      my $db_name   = $item->{db_name};
-       	      my $db_type   = $item->{db_type}; 
-       	      my $prod_name = $item->{production_name};
-       	      my $division  = $item->{division};
-      	      my $event     = $item->{event};
+      # Parse JSON message
+      for my $item( @{$perl_scalar->{items}} ){
+          my $db_name      = $item->{db_name};
+          my $db_type      = $item->{db_type}; 
+          my $sp_prod_name = $item->{production_name};
+          my $division     = $item->{division};
+          my $event        = $item->{event};
 
-              # Seed jobs for InterProScan pipeline if genebuild change
-              if($queue=~/q_InterProScan/){
-  	  	  my $cmd = "seed_pipeline.pl -url $IPS_hive -logic_name job_factory -input_id \'{\"species\" => [\"$prod_name\"]}\'";
-          	  `$cmd`;
-       	      }
-          };
+          # Construct pipeline hive url
+          # and seed job 
+          my $cmd = construct_cmd($self, $queue, $division, $sp_prod_name);	      
+          `$cmd`;
+     };
 
-         if($frame->body() eq 'quit') {
-            $self->info("Couldn't process ".$frame->body());
-        	$stomp->nack(id=>$id, frame=>$frame);
-            last;
-         } 
+     if($frame->body() eq 'quit') {
+        $self->info("Couldn't process ".$frame->body());
+      	$stomp->nack(id=>$id, frame=>$frame);
+        last;
+     } 
 
-         $logger->info("All done");
-         $logger->info("Waiting for messages");       
-
+     $logger->info("All done");
+     $logger->info("Waiting for messages");       
     }
    
     # Unsubscribe from queue 
@@ -146,5 +137,39 @@ sub write_output {
 
 return 0;
 }
+
+#############
+##SUBROUTINES
+#############
+sub construct_cmd {
+    my ($self, $queue, $division, $sp_prod_name) = @_;
+
+    # Assume the pipeline hive e.g. InterProScan, FTP dump
+    # run on the same host as 'ReadQueues' hive
+    my $pipeline_db     = $self->param_required('pipeline_db');
+    my $pipeline_host   = $pipeline_db->{'-host'};
+    my $pipeline_port   = $pipeline_db->{'-port'};
+    my $pipeline_user   = $pipeline_db->{'-user'};
+    my $pipeline_pass   = $pipeline_db->{'-pass'};
+    my $ensembl_version = $self->param_required('ensembl_version');
+
+    my $hive_url;
+
+    if($queue=~/InterProScan/){
+        my $pipeline = $ENV{USER}."_InterProScan_".$ensembl_version."_Seed";
+        $hive_url    = "mysql://".$pipeline_user.":".$pipeline_pass."\@".$pipeline_host.":".$pipeline_port."/".$pipeline;
+    }
+    elsif($queue=~/FTP/){ # TBA more specific to FTP_assembly FTP_genebuild & FTP_annotation
+        my $pipeline = $ENV{USER}."_ftpDataDump_32_".$ensembl_version."_".$division."_Seed";
+        $pipeline = 'ensgen_ftpDataDump_32_85_EnsemblMetazoa_Seed';
+        $hive_url    = "mysql://".$pipeline_user.":".$pipeline_pass."\@".$pipeline_host.":".$pipeline_port."/".$pipeline;
+    }
+
+    # Construct command to seed jobs for pipelines 
+    my $cmd = "seed_pipeline.pl -url $hive_url -logic_name job_factory -input_id \'{\"species\" => [\"$sp_prod_name\"]}\'";
+
+return $cmd;
+}
+
 
 1;
