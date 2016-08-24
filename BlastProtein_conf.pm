@@ -464,6 +464,7 @@ sub pipeline_analyses {
                             taxonomic_level => $self->o('uniprot_tax_level'),
                             data_source     => $self->o('uniprot_source'),
                             out_dir         => $self->o('uniprot_dir'),
+                            file_varname    => 'db_fasta_file',
                           },
       -rc_name         => 'normal',
       -flow_into       => ['CreateBlastDB'],
@@ -480,6 +481,7 @@ sub pipeline_analyses {
                             taxonomic_level => $self->o('uniprot_tax_level'),
                             data_source     => $self->o('uniprot_source'),
                             out_dir         => $self->o('uniprot_dir'),
+                            file_varname    => 'db_fasta_file',
                           },
       -rc_name         => '32Gb_mem_4Gb_tmp',
       -flow_into       => ['CreateBlastDB'],
@@ -491,6 +493,7 @@ sub pipeline_analyses {
       -max_retry_count => 2,
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
+                            blast_db          => $self->o('blast_db'),
                             blast_db_type     => 'prot',
                             proteome_source   => $self->o('proteome_source'),
                             logic_name_prefix => $self->o('logic_name_prefix'),
