@@ -80,6 +80,7 @@ sub pipeline_analyses {
                               run_all         => $self->o('run_all'),
                               meta_filters    => $self->o('meta_filters'),
                               chromosome_flow => 0,
+                              regulation_flow => 0,
                               variation_flow  => 0,
                             },
       -flow_into         => {
@@ -96,7 +97,7 @@ sub pipeline_analyses {
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['EmailReport'],
     },
     
@@ -109,7 +110,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'Protein features pipeline: report for #species#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
     
   ];

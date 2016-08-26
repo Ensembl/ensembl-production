@@ -43,15 +43,16 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_dir      => '/nfs/panda/ensemblgenomes/development/InterProScan',
-    interproscan_version  => 'interproscan-5.17-56.0',
-    interproscan_exe      => catdir(
+    interproscan_dir     => '/nfs/panda/ensemblgenomes/development/InterProScan',
+    interproscan_version => '5.19-58.0',
+    interproscan_exe     => catdir(
                                $self->o('interproscan_dir'),
                                $self->o('interproscan_version'),
                                'interproscan.sh'
-                             ),
+                            ),
     interpro_applications =>
     [
+      'CDD',
       'Gene3D',
       'Hamap',
       'PANTHER',
@@ -147,7 +148,7 @@ sub pipeline_analyses {
                               interproscan_exe          => $self->o('interproscan_exe'),
                               interproscan_applications => $self->o('interpro_applications'),
                             },
-      -rc_name           => '4GB_4CPU',
+      -rc_name           => '4GB_4CPU-rh7',
       -flow_into         => {
                               1 => [
                                     ':////accu?outfile_xml=[]',
@@ -163,7 +164,7 @@ sub pipeline_analyses {
       -parameters        => {
                               results_dir    => $self->o('results_dir'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['GenerateSolr'],
     },
     
@@ -175,7 +176,7 @@ sub pipeline_analyses {
                               interproscan_version => $self->o('interproscan_version'),
                               pathway_sources      => $self->o('pathway_sources'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['EmailReport'],
     },
     
@@ -187,7 +188,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'InterProScan transcriptome annotation',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
     
   ];
@@ -198,7 +199,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4GB_4CPU' => {'LSF' => '-q production-rh6 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000] span[hosts=1]"'},
+    '4GB_4CPU-rh7' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000] span[hosts=1]"'},
   }
 }
 
