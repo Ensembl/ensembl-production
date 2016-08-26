@@ -80,6 +80,7 @@ sub pipeline_analyses {
                        run_all         => $self->o('run_all'),
                        core_flow       => $self->o('core_flow'),
                        chromosome_flow => 0,
+                       regulation_flow => 0,
                        variation_flow  => 0,
                        meta_filters    => $self->o('meta_filters'),
                       },

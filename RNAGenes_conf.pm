@@ -68,7 +68,6 @@ sub default_options {
 
     # Config for genes
     gene_source      => undef,
-    external_db_name => 'RFAM',
     stable_id_type   => 'eg',
     
     # Remove existing genes; if => 0 then existing analyses
@@ -161,6 +160,7 @@ sub pipeline_analyses {
                               run_all         => $self->o('run_all'),
                               meta_filters    => $self->o('meta_filters'),
                               chromosome_flow => 0,
+                              regulation_flow => 0,
                               variation_flow  => 0,
                             },
       -input_ids         => [ {} ],
@@ -229,7 +229,6 @@ sub pipeline_analyses {
                               source_logic_name => $self->o('source_logic_name'),
                               target_logic_name => $self->o('target_logic_name'),
                               gene_source       => $self->o('gene_source'),
-                              external_db_name  => $self->o('external_db_name'),
                               stable_id_type    => $self->o('stable_id_type'),
                               evalue_threshold  => $self->o('evalue_threshold'),
                               truncated         => $self->o('truncated'),
