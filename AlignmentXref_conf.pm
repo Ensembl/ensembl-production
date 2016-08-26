@@ -97,6 +97,7 @@ sub default_options {
     refseq_ebi_path  => '/nfs/panda/ensemblgenomes/external/refseq',
     refseq_ftp_uri   => 'ftp://ftp.ncbi.nlm.nih.gov/refseq/release',
     refseq_dir       => catdir($self->o('pipeline_dir'), 'refseq'),
+    refseq_tax_level => undef,
     
     # Blast parameters
     blast_type       => 'ncbi',
