@@ -276,6 +276,22 @@ sub mysqldump_command_line_connect_core_db {
   return $cmd;
 }
 
+sub mysqlimport_command_line {
+  my ($self, $dbc) = @_;
+  
+  my $cmd = 
+    "mysqlimport"
+    . " --local"
+    . " --host ". $dbc->host
+    . " --port ". $dbc->port
+    . " --user ". $dbc->username
+    . " --pass=". $dbc->password
+    . " ". $dbc->dbname
+  ;
+
+  return $cmd;
+}
+
 sub has_chromosomes {
   my ($self, $dba) = @_;
   my $helper = $dba->dbc->sql_helper();
