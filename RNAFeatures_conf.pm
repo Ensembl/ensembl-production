@@ -140,11 +140,8 @@ sub default_options {
     trnascan_dir        => catdir($self->o('program_dir'), 'tRNAscan-SE-1.3.1', 'bin'),
     trnascan_exe        => catdir($self->o('program_dir'), 'bin', 'tRNAscan-SE'),
     trnascan_logic_name => 'trnascan_align',
-    trnascan_param_hash =>
-    {
-      db_name => 'TRNASCAN_SE',
-      pseudo  => 0,
-    },
+    trnascan_db_name    => 'TRNASCAN_SE',
+    trnascan_db_pseudo  => 0,
     trnascan_parameters => '',
 
     analyses =>
@@ -418,6 +415,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               escape_branch => -1,
+                              db_name       => $self->o('rfam_db_name'),
                             },
       -rc_name           => 'cmscan_4Gb_mem',
       -flow_into         => {
@@ -431,7 +429,9 @@ sub pipeline_analyses {
       -can_be_empty      => 1,
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 0,
-      -parameters        => {},
+      -parameters        => {
+                              db_name => $self->o('rfam_db_name'),
+                            },
       -rc_name           => 'cmscan_8Gb_mem',
     },
 
@@ -441,9 +441,10 @@ sub pipeline_analyses {
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
       -parameters        => {
-                              trnascan_dir    => $self->o('trnascan_dir'),
-                              logic_name      => $self->o('trnascan_logic_name'),
-                              parameters_hash => $self->o('trnascan_param_hash'),
+                              trnascan_dir => $self->o('trnascan_dir'),
+                              logic_name   => $self->o('trnascan_logic_name'),
+                              db_name      => $self->o('trnascan_db_name'),
+                              pseudo       => $self->o('trnascan_pseudo'),
                             },
       -rc_name           => 'normal',
     },
@@ -512,15 +513,14 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name           => 'SummaryPlots',
-      -module               => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -failed_job_tolerance => 100,
-      -max_retry_count      => 1,
-      -parameters           => {
-                                 scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
-                                 cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
-                               },
-      -meadow_type          => 'LOCAL',
+      -logic_name        => 'SummaryPlots',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              scripts_dir => catdir($self->o('eg_pipelines_dir'), 'scripts', 'rna_features'),
+                              cmd => 'Rscript #scripts_dir#/summary_plots.r -l #scripts_dir#/R_lib -i #cmscanfile# -e #evalue# -b #biotypesfile# -d #distinctfile# -c #plotcolour#',
+                            },
+      -meadow_type       => 'LOCAL',
     },
 
     {
