@@ -123,6 +123,24 @@ sub resource_classes {
     '16Gb_mem_16Gb_tmp' => {'LSF' => '-q production-rh6 -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
     '24Gb_mem_4Gb_tmp'  => {'LSF' => '-q production-rh6 -M 24000 -R "rusage[mem=24000,tmp=4000]"'},
     '32Gb_mem_4Gb_tmp'  => {'LSF' => '-q production-rh6 -M 32000 -R "rusage[mem=32000,tmp=4000]"'},
+    
+    'default-rh7'           => {'LSF' => '-q production-rh7 -M  4000 -R "rusage[mem=4000]"'},
+    'normal-rh7'            => {'LSF' => '-q production-rh7 -M  4000 -R "rusage[mem=4000]"'},
+    '2Gb_mem-rh7'           => {'LSF' => '-q production-rh7 -M  2000 -R "rusage[mem=2000]"'},
+    '4Gb_mem-rh7'           => {'LSF' => '-q production-rh7 -M  4000 -R "rusage[mem=4000]"'},
+    '8Gb_mem-rh7'           => {'LSF' => '-q production-rh7 -M  8000 -R "rusage[mem=8000]"'},
+    '12Gb_mem-rh7'          => {'LSF' => '-q production-rh7 -M 12000 -R "rusage[mem=12000]"'},
+    '16Gb_mem-rh7'          => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"'},
+    '24Gb_mem-rh7'          => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000]"'},
+    '32Gb_mem-rh7'          => {'LSF' => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"'},
+    '2Gb_mem_4Gb_tmp-rh7'   => {'LSF' => '-q production-rh7 -M  2000 -R "rusage[mem=2000,tmp=4000]"'},
+    '4Gb_mem_4Gb_tmp-rh7'   => {'LSF' => '-q production-rh7 -M  4000 -R "rusage[mem=4000,tmp=4000]"'},
+    '8Gb_mem_4Gb_tmp-rh7'   => {'LSF' => '-q production-rh7 -M  8000 -R "rusage[mem=8000,tmp=4000]"'},
+    '12Gb_mem_4Gb_tmp-rh7'  => {'LSF' => '-q production-rh7 -M 12000 -R "rusage[mem=12000,tmp=4000]"'},
+    '16Gb_mem_4Gb_tmp-rh7'  => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,tmp=4000]"'},
+    '16Gb_mem_16Gb_tmp-rh7' => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '24Gb_mem_4Gb_tmp-rh7'  => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000,tmp=4000]"'},
+    '32Gb_mem_4Gb_tmp-rh7'  => {'LSF' => '-q production-rh7 -M 32000 -R "rusage[mem=32000,tmp=4000]"'},
   }
 }
 
