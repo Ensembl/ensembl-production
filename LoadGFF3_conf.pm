@@ -79,11 +79,6 @@ sub default_options {
     # This should ideally be something less generic, e.g. RefSeq_genomic.
     synonym_external_db => 'ensembl_internal_synonym',
     
-    # When adding xrefs, an external_db is required.
-    xref_gene_external_db        => undef, # e.g. RefSeq_gene_name
-    xref_transcript_external_db  => undef, # e.g. RefSeq_mRNA
-    xref_translation_external_db => undef, # e.g. RefSeq_peptide
-    
     # Remove existing genes; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
     delete_existing => 1,
@@ -125,10 +120,15 @@ sub default_options {
     # thrown, unless 'types_complete' = 0.
     types_complete => 1,
     
-    # By default, load the GFF3 "ID" fields as stable_ids, and "Name" fields,
-    # if they exist, as xrefs. Can load them as stable IDs instead, with the
-    # value 'stable_id'. Any other value and the "Name" fields are ignored.
-    use_name_field => 'xref',
+    # By default, load the GFF3 "ID" fields as stable_ids, and ignore "Name"
+    # fields. If they exist, can load them as stable IDs instead, with the
+    # value 'stable_id'; or load them as xrefs by setting to 'xref'.
+    use_name_field => undef,
+    
+    # When adding "Name" fields as xrefs, external_dbs are required.
+    xref_gene_external_db        => undef, # e.g. RefSeq_gene_name
+    xref_transcript_external_db  => undef, # e.g. RefSeq_mRNA
+    xref_translation_external_db => undef, # e.g. RefSeq_peptide
     
     # If there are polypeptide rows in the GFF3, defined by 'Derives_from'
     # relationships, those will be used to determine the translation

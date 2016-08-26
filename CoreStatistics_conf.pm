@@ -126,6 +126,7 @@ sub pipeline_analyses {
                             antispecies     => $self->o('antispecies'),
                             meta_filters    => $self->o('meta_filters'),
                             chromosome_flow => 0,
+                            regulation_flow => 0,
                             variation_flow  => 0,
                           },
       -max_retry_count => 1,
