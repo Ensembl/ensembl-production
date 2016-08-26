@@ -52,6 +52,8 @@ sub run {
 sub write_output {
   my ($self) = @_;
   
+  $self->dataflow_output_id({'db_exists' => $self->param('db_exists')}, 1);
+  
   if ($self->param('db_exists')) {
     $self->dataflow_output_id({'db_exists' => 1}, 2);
   } else {
