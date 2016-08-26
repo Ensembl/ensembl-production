@@ -30,7 +30,6 @@ use File::Path qw(make_path);
 
 sub fetch_input {
   my ($self) = @_;
-  
   my $fasta_file = $self->param_required('fasta_file');
   my $out_dir    = $self->param('out_dir');
   
@@ -51,9 +50,9 @@ sub fetch_input {
 
 sub run {
   my ($self) = @_;
-  
-  my $fasta_file = $self->param_required('fasta_file');
-  my $out_dir    = $self->param('out_dir');
+  my $fasta_file     = $self->param_required('fasta_file');
+  my $out_dir        = $self->param('out_dir');
+  my $checksum_table = $self->param_required('checksum_table');
   
   my ($basename, undef, undef) = fileparse($fasta_file, qr/\.[^.]*/);
   my $checksum_dir   = "$out_dir/checksum";
@@ -76,7 +75,7 @@ sub run {
   my $checksum   = Bio::SeqIO->new(-format => 'Fasta', -file => ">$checksum_file");
   my $nochecksum = Bio::SeqIO->new(-format => 'Fasta', -file => ">$nochecksum_file");
   
-  my $sth = $self->hive_dbh->prepare("select 1 from checksum where md5sum=? limit 1;")
+  my $sth = $self->hive_dbh->prepare("select 1 from $checksum_table where md5sum=? limit 1;")
     or self->throw("Hive DB connection error: ".$self->hive_dbh->errstr);
   
   while (my $seq = $all->next_seq) {

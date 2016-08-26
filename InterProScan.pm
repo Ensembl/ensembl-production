@@ -74,9 +74,7 @@ sub run {
       $options .= "--disable-precalc ";
     }
     
-    my $interpro_cmd = 'export JAVA_HOME="/nfs/panda/ensemblgenomes/external/jdk1.8";';
-    $interpro_cmd .= 'export PATH="$JAVA_HOME/bin:$PATH";';
-    $interpro_cmd .= qq($interproscan_exe $options $input_option $output_option);
+    my $interpro_cmd = qq($interproscan_exe $options $input_option $output_option);
     
     if (! -e $outfile_xml) {
       $self->dbc and $self->dbc->disconnect_if_idle();
