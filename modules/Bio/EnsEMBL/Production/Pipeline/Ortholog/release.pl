@@ -94,7 +94,6 @@ sub run {
     if(leaf_directory($contents)) {
       print STDERR "Directory is a leaf; generating timestamp\n";
       my $timestamp = getLoggingTime();
-      #my $dir2 = $1 if($dir =~/(ensembl\w.+)$/);      
       $dir = $1 if($dir =~/(ensembl\w.+)$/);      
       print $fh "$dir\t$timestamp\n";
     }
