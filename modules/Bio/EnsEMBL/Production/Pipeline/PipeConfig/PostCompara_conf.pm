@@ -97,6 +97,7 @@ sub default_options {
 	 			'antispecies' => [],
 	 			# target species division to project to
 	 			'division'    => [], 
+                                'project_all' => '0',
 	 			'run_all'     =>  0, # 1/0
         		# flowering group of your target species
 		        'taxon_filter'    		 => undef, # Eg: 'Liliopsida'/'eudicotyledons'
@@ -488,6 +489,7 @@ sub pipeline_analyses {
 				   		    'release'                 => $self->o('ensembl_release'),
 				            'output_dir'              => $self->o('output_dir'),		
 				            'flag_store_projections'  => $self->o('flag_store_projections'),
+                                            'project_all'             => $self->o('project_all'),
 				            'taxonomy_db'			  => $self->o('taxonomy_db'),
                                             'is_tree_compliant'       => $self->o('is_tree_compliant'),
    	   					  },

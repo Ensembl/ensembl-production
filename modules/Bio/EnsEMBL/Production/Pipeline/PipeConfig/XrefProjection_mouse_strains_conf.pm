@@ -96,6 +96,7 @@ sub default_options {
                                 'antispecies' => [],
                                 # target species division to project to
                                 'division'    => [],
+                                'project_all' => '1',
                                 'run_all'     =>  0, # 1/0
                                 # flowering group of your target species
                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
