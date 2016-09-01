@@ -253,12 +253,12 @@ sub pipeline_analyses {
 
     {
       -logic_name        => 'EmailRNAGenesReport',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::EmailRNAGenesReport',
       -max_retry_count   => 1,
       -parameters        => {
-                              email   => $self->o('email'),
-                              subject => 'RNA genes pipeline has completed',
-                              text    => 'The RNA genes pipeline has completed.',
+                              email      => $self->o('email'),
+                              subject    => 'RNA genes pipeline has completed',
+                              logic_name => $self->o('target_logic_name'),
                             },
       -rc_name           => 'normal',
     },
