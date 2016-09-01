@@ -31,7 +31,7 @@ package Bio::EnsEMBL::Production::Pipeline::PostCompara::GOEmailReport;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EmailReport');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::EmailReport');
 
 sub fetch_input {
     my ($self) = @_;
