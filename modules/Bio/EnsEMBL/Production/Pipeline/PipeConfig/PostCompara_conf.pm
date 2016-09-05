@@ -506,6 +506,7 @@ sub pipeline_analyses {
           	'output_dir' 			 => $self->o('output_dir'),         	
             'flag_store_projections' => $self->o('flag_store_projections'),
             'flag_GeneNames'         => $self->o('flag_GeneNames'),
+            'project_all'            => $self->o('project_all'),
        },
        -flow_into     => {
                                  1 => ['GNProjSourceFactory']
