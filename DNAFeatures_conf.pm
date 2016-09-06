@@ -271,7 +271,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '1->A' => ['DNAAnalysisFactory'],
                               'A->1' => ['DumpGenome'],
@@ -296,7 +296,7 @@ sub pipeline_analyses {
                               pipeline_dir         => $self->o('pipeline_dir'),
                               db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
                               'A->1' => ['DeleteRepeatConsensus'],
@@ -340,7 +340,7 @@ sub pipeline_analyses {
       -parameters        => {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => $dump_genome_flow,
     },
 
@@ -354,7 +354,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => '8Gb_mem',
+      -rc_name           => '8Gb_mem-rh7',
       -flow_into         => $split_dump_files_flow,
     },
 
@@ -369,7 +369,7 @@ sub pipeline_analyses {
                               queryfile       => $file_name,
                               parameters_hash => $self->o('dust_parameters_hash'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -383,7 +383,7 @@ sub pipeline_analyses {
                               queryfile          => $file_name,
                               max_seq_length     => $self->o('max_seq_length'),
                             },
-      -rc_name           => '8Gb_mem',
+      -rc_name           => '8Gb_mem-rh7',
       -flow_into         => ['RepeatMasker'],
     },
 
@@ -393,7 +393,7 @@ sub pipeline_analyses {
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -407,14 +407,14 @@ sub pipeline_analyses {
                               queryfile       => $file_name,
                               parameters_hash => $self->o('trf_parameters_hash'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
       -logic_name        => 'UpdateMetadata',
       -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::UpdateMetadata',
       -parameters        => {},
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => $update_metadata_flow,
     },
 
@@ -425,7 +425,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'DNA features pipeline: Repeat report for #species#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     }
 
   ];
