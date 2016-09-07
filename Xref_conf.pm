@@ -41,6 +41,9 @@ use warnings;
 
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
 
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 sub default_options {
   my ($self) = @_;
   return {
@@ -54,9 +57,9 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
     db_type      => 'core',
-    
+
     oracle_home => '/sw/arch/dbtools/oracle/product/11.1.0.6.2/client',
-    
+
     local_uniparc_db => {
       -driver => 'mysql',
       -host   => 'mysql-eg-pan-prod.ebi.ac.uk',
@@ -66,7 +69,7 @@ sub default_options {
       -dbname => 'uniparc',
     },
     reload_local_uniparc => 0,
-    
+
     remote_uniparc_db => {
       -driver => 'Oracle',
       -host   => 'ora-vm-004.ebi.ac.uk',
@@ -75,7 +78,7 @@ sub default_options {
       -pass   => 'uniparc',
       -dbname => 'UAPRO',
     },
-    
+
     remote_uniprot_db => {
       -driver => 'Oracle',
       -host   => 'ora-dlvm5-026.ebi.ac.uk',
@@ -84,23 +87,21 @@ sub default_options {
       -pass   => 'spselect',
       -dbname => 'SWPREAD',
     },
-    
-    load_uniparc => 1,
-    
+
     load_uniprot         => 1,
     uniprot_replace_all  => 0,
     uniprot_gene_names   => 0,
     uniprot_descriptions => 0,
-    
+
     load_uniprot_go => 1,
-    
+
     load_uniprot_xrefs  => 1,
     uniprot_xref_source => ['ArrayExpress', 'ChEMBL', 'EMBL', 'MEROPS', 'PDB'],
-    
+
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.
     production_lookup => 1,
-    
+
     # By default, an email is sent for each species when the pipeline
     # is complete, showing the breakdown of xrefs assigned.
     email_xref_report => 1,
@@ -115,7 +116,7 @@ sub beekeeper_extra_cmdline_options {
     $self->SUPER::beekeeper_extra_cmdline_options,
     "-reg_conf ".$self->o('registry')
   );
-  
+
   return $options;
 }
 
@@ -129,75 +130,21 @@ sub hive_meta_table {
   };
 }
 
+sub pipeline_wide_parameters {
+ my ($self) = @_;
+
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'reload_local_uniparc' => $self->o('reload_local_uniparc'),
+   'load_uniprot'         => $self->o('load_uniprot'),
+   'load_uniprot_go'      => $self->o('load_uniprot_go'),
+   'load_uniprot_xrefs'   => $self->o('load_uniprot_xrefs'),
+   'email_xref_report'    => $self->o('email_xref_report'),
+ };
+}
+
 sub pipeline_analyses {
   my ($self) = @_;
-
-  my $transitive_xrefs = [];
-  if ($self->o('load_uniprot_go')) {
-    push @$transitive_xrefs, 'LoadUniProtGO';
-  }
-  if ($self->o('load_uniprot_xrefs')) {
-    push @$transitive_xrefs, 'LoadUniProtXrefs';
-  }
-  
-  my $species_factory_flow = {'2' => 'LoadXrefs'};
-  my $load_xrefs_flow;
-  my $load_uniparc_flow;
-  my $load_uniprot_flow;
-  my $load_uniparc_wait = [];
-  
-  if ($self->o('load_uniparc')) {
-    if ($self->o('reload_local_uniparc')) {
-      $species_factory_flow = {
-        '1' => 'ReloadLocalUniparc',
-        '2' => 'LoadXrefs',
-      };
-      $load_uniparc_wait = ['ReloadLocalUniparc'],
-    }
-    
-    if ($self->o('email_xref_report')) {
-      $load_xrefs_flow = {
-        '1->A' => 'LoadUniParc',
-        'A->1' => 'EmailXrefReport',
-      };
-    } else {
-      $load_xrefs_flow = ['LoadUniParc'];
-    }
-    
-    if ($self->o('load_uniprot')) {
-      $load_uniparc_flow = ['LoadUniProt'];
-      if (scalar @$transitive_xrefs > 0) {
-        $load_uniprot_flow = $transitive_xrefs;
-      }
-    } elsif (scalar @$transitive_xrefs > 0) {
-      $load_uniparc_flow = $transitive_xrefs;
-    }
-    
-  } elsif ($self->o('load_uniprot')) {
-    if ($self->o('email_xref_report')) {
-      $load_xrefs_flow = {
-        '1->A' => 'LoadUniProt',
-        'A->1' => 'EmailXrefReport',
-      };
-    } else {
-      $load_xrefs_flow = ['LoadUniProt'];
-    }
-    
-    if (scalar @$transitive_xrefs > 0) {
-      $load_uniprot_flow = $transitive_xrefs;
-    }
-    
-  } elsif (scalar @$transitive_xrefs > 0) {
-    if ($self->o('email_xref_report')) {
-      $load_xrefs_flow = {
-        '1->A' => $transitive_xrefs,
-        'A->1' => 'EmailXrefReport',
-      };
-    } else {
-      $load_xrefs_flow = $transitive_xrefs;
-    }
-    
-  }
 
   return [
     {
@@ -215,19 +162,17 @@ sub pipeline_analyses {
                           },
       -input_ids       => [ {} ],
       -max_retry_count => 1,
-      -flow_into       => $species_factory_flow,
-      -meadow_type     => 'LOCAL',
-    },
-
-    {
-      -logic_name      => 'LoadXrefs',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -parameters      => {
-                            oracle_home => $self->o('oracle_home'),
+      -flow_into       => {
+                            '2->A' =>
+                              WHEN('#reload_local_uniparc#' =>
+                                ['ReloadLocalUniparc'],
+                              ELSE
+                                ['LoadUniParc']),
+                            'A->2' =>
+                              WHEN('#email_xref_report#' =>
+                                ['EmailXrefReport']),
                           },
-      -max_retry_count => 0,
       -meadow_type     => 'LOCAL',
-      -flow_into       => $load_xrefs_flow,
     },
 
     {
@@ -237,7 +182,8 @@ sub pipeline_analyses {
                             uniparc_db => $self->o('local_uniparc_db'),
                           },
       -max_retry_count => 1,
-      -rc_name         => '4Gb_mem_4Gb_tmp',
+      -rc_name         => '4Gb_mem_4Gb_tmp-rh7',
+      -flow_into       => ['LoadUniParc'],
     },
 
     {
@@ -254,9 +200,8 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
-      -wait_for        => $load_uniparc_wait,
-      -flow_into       => $load_uniparc_flow,
+      -rc_name         => 'normal-rh7',
+      -flow_into       => WHEN('#load_uniprot#' => ['LoadUniProt']),
     },
 
     {
@@ -277,8 +222,12 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
-      -flow_into       => $load_uniprot_flow,
+      -rc_name         => 'normal-rh7',
+      -flow_into       => WHEN('#load_uniprot#' => ['LoadUniProt']),
+      -flow_into       => [
+                            WHEN('#load_uniprot_go#'    => ['LoadUniProtGO']),
+                            WHEN('#load_uniprot_xrefs#' => ['LoadUniProtXrefs']),
+                          ],
     },
 
     {
@@ -296,7 +245,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -314,7 +263,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -324,13 +273,12 @@ sub pipeline_analyses {
                             email              => $self->o('email'),
                             subject            => 'Xref pipeline report for #species#',
                             db_type            => $self->o('db_type'),
-                            load_uniparc       => $self->o('load_uniparc'),
                             load_uniprot       => $self->o('load_uniprot'),
                             load_uniprot_go    => $self->o('load_uniprot_go'),
                             load_uniprot_xrefs => $self->o('load_uniprot_xrefs'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
  ];
