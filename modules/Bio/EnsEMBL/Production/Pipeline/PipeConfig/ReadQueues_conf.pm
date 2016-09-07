@@ -50,12 +50,11 @@ sub default_options {
     'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
     ## Messaging Queue Server
-    'queue_host'  => 'ebi-007.ebi.ac.uk',#$self->o('queue_host'),
-    'queue_port'  => '61613',#$self->o('queue_port'),
-    
-###    
+    'queue_host'  => 'ebi-007.ebi.ac.uk',
+    'queue_port'  => '61613',
+     
 	## Email Report subject
-    'email_subject'       	   => $self->o('pipeline_name').' GPAD loading pipeline has finished',
+    'email_subject'       	   => $self->o('pipeline_name').' pipeline has finished',
 
     ## Remove existing GO annotations
     # on '1' by default
@@ -65,9 +64,9 @@ sub default_options {
     ## hive_capacity values for analysis
 #    'gpad_capacity'  => '50',
 
+ 	 # physical queue name to read from
 	 'queue_config' => { 
 	 	  '1'=>{
-	 	  		# physical queue name 
 	 	  		'queue'  => 'q_InterProScan', 
 	 			'id'     => 'queue1', 
 	 	       }, 
@@ -135,11 +134,11 @@ sub pipeline_wide_parameters {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	=> {'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+      'default'  	=> {'LSF' => '-q production-rh6 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+      '32GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 32000  -R "rusage[mem=32000]"'},
+      '64GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 64000  -R "rusage[mem=64000]"'},
+      '128GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 128000 -R "rusage[mem=128000]"'},
+      '256GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 256000 -R "rusage[mem=256000]"'},
 	}
 }
 
