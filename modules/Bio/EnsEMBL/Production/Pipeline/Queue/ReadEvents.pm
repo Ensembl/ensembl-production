@@ -160,15 +160,24 @@ sub construct_cmd {
         $hive_url    = "mysql://".$pipeline_user.":".$pipeline_pass."\@".$pipeline_host.":".$pipeline_port."/".$pipeline;
     }
     elsif($queue=~/FTP/){ # TBA more specific to FTP_assembly FTP_genebuild & FTP_annotation
-        my $pipeline = $ENV{USER}."_ftpDataDump_32_".$ensembl_version."_".$division."_Seed";
-        $pipeline = 'ensgen_ftpDataDump_32_85_EnsemblMetazoa_Seed';
-        $hive_url    = "mysql://".$pipeline_user.":".$pipeline_pass."\@".$pipeline_host.":".$pipeline_port."/".$pipeline;
+#        my $pipeline = $ENV{USER}."_ftpDataDump_32_".$ensembl_version."_".$division."_Seed";
+#        $pipeline = 'ensgen_ftpDataDump_32_85_EnsemblMetazoa_Seed';
+#        $hive_url    = "mysql://".$pipeline_user.":".$pipeline_pass."\@".$pipeline_host.":".$pipeline_port."/".$pipeline;
     }
 
     # Construct command to seed jobs for pipelines 
-    my $cmd = "seed_pipeline.pl -url $hive_url -logic_name job_factory -input_id \'{\"species\" => [\"$sp_prod_name\"]}\'";
+    my $timestamp = getLoggingTime();
+    #my $cmd = "seed_pipeline.pl -url $hive_url -logic_name job_factory -input_id \'{\"species\" => [\"$sp_prod_name\"]}\'";
+    my $cmd = "seed_pipeline.pl -url $hive_url -logic_name job_factory -input_id \'{\"species\" => [\"$sp_prod_name\"], \"timestamp\" => [\"$timestamp\"]}\'";
 
 return $cmd;
+}
+
+sub getLoggingTime {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    my $nice_timestamp = sprintf ( "%04d/%02d/%02d %02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec);
+
+return $nice_timestamp;
 }
 
 
