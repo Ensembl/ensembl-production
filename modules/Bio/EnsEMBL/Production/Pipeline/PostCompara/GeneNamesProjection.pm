@@ -207,6 +207,8 @@ sub project_genenames {
 
          my $type = $source_db_to_type->{$dbname};
 
+         $dbEntry->info_type("PROJECTION");
+
          print $log "\t\tProject from:".$from_gene->stable_id()."\t";
          print $log "to:".$to_gene->stable_id()."\t";
          print $log "Xref:".$dbEntry->display_id()."\t";
