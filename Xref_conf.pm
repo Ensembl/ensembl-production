@@ -68,7 +68,6 @@ sub default_options {
       -pass   => 'writ3rpan1',
       -dbname => 'uniparc',
     },
-    reload_local_uniparc => 0,
 
     remote_uniparc_db => {
       -driver => 'Oracle',
@@ -135,7 +134,6 @@ sub pipeline_wide_parameters {
 
  return {
    %{$self->SUPER::pipeline_wide_parameters},
-   'reload_local_uniparc' => $self->o('reload_local_uniparc'),
    'load_uniprot'         => $self->o('load_uniprot'),
    'load_uniprot_go'      => $self->o('load_uniprot_go'),
    'load_uniprot_xrefs'   => $self->o('load_uniprot_xrefs'),
@@ -163,21 +161,15 @@ sub pipeline_analyses {
       -input_ids       => [ {} ],
       -max_retry_count => 1,
       -flow_into       => {
-                            '2->A' =>
-                              WHEN('#reload_local_uniparc#' =>
-                                ['ReloadLocalUniparc'],
-                              ELSE
-                                ['LoadUniParc']),
-                            'A->2' =>
-                              WHEN('#email_xref_report#' =>
-                                ['EmailXrefReport']),
+                            '2->A' => ['ImportUniparc'],
+                            'A->2' => WHEN('#email_xref_report#' => ['EmailXrefReport']),
                           },
       -meadow_type     => 'LOCAL',
     },
 
     {
-      -logic_name      => 'ReloadLocalUniparc',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ReloadLocalUniParc',
+      -logic_name      => 'ImportUniparc',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ImportUniparc',
       -parameters      => {
                             uniparc_db => $self->o('local_uniparc_db'),
                           },
