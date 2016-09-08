@@ -642,7 +642,6 @@ sub _create_display_id {
   my $stable_id;
   my $location;
   my $decoded_type;
-  my $decoded_status;
   my %attributes;
   
   if(check_ref( $object, 'Bio::EnsEMBL::Transcript')) {
@@ -653,7 +652,6 @@ sub _create_display_id {
       $stable_id = $object->stable_id();
       $location  = $object->feature_Slice()->name();
       $decoded_type = $type;
-      $decoded_status = lc($object->analysis()->logic_name());
       if($type eq 'pep') {
         $attributes{transcript} = $stable_id;
       }
@@ -669,7 +667,6 @@ sub _create_display_id {
       $attributes{description} = $gene->description if $gene->description;
       
       $decoded_type = $type;
-      $decoded_status = lc($object->status()) if $object->status();
     }
   }
   #If it's a translation then grab the transcript and gene then set accordingly
@@ -685,7 +682,6 @@ sub _create_display_id {
       transcript_biotype => $transcript->biotype(),
     );
     $decoded_type = $type;
-    $decoded_status = lc($transcript->status()) if $transcript->status();
     $attributes{gene_symbol} = $gene->display_xref->display_id if $gene->display_xref;
     $attributes{description} = $gene->description if $gene->description;
   }
@@ -699,9 +695,9 @@ sub _create_display_id {
     grep { exists $attributes{$_} } 
     qw/gene transcript gene_biotype transcript_biotype gene_symbol description/);
 
-  my $format = '%s %s:%s %s %s';
+  my $format = '%s %s %s %s';
   
-  my $id = sprintf( $format, $stable_id, $decoded_type, $decoded_status, $location, $attr_str);
+  my $id = sprintf( $format, $stable_id, $decoded_type, $location, $attr_str);
   $seq->display_id($id);
 
   return;
