@@ -197,7 +197,6 @@ sub pipeline_create_commands {
   ];
 }
 
-
 sub pipeline_wide_parameters {
   my ($self) = @_;
 
@@ -292,43 +291,13 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
       -flow_into       => [
-                            'InitialiseUniprotReviewed',
-                            'InitialiseUniprotUnreviewed',
-                            'InitialiseRefSeqPeptide',
+                            WHEN('#uniprot_reviewed#'   => ['FetchUniprotReviewed']),
+                            WHEN('#uniprot_unreviewed#' => ['FetchUniprotUnreviewed']),
+                            WHEN('#refseq_peptide#'     => ['FetchRefSeqPeptide']),
                           ],
       -meadow_type     => 'LOCAL',
     },
 
-    {
-      -logic_name      => 'InitialiseUniprotReviewed',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 0,
-      -flow_into       => {
-                            '1' => WHEN('#uniprot_reviewed#' => ['FetchUniprotReviewed']),
-                          },
-      -meadow_type     => 'LOCAL',
-    },
-    
-    {
-      -logic_name      => 'InitialiseUniprotUnreviewed',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 0,
-      -flow_into       => {
-                            '1' => WHEN('#uniprot_unreviewed#' => ['FetchUniprotUnreviewed']),
-                          },
-      -meadow_type     => 'LOCAL',
-    },
-    
-    {
-      -logic_name      => 'InitialiseRefSeqPeptide',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 0,
-      -flow_into       => {
-                            '1' => WHEN('#refseq_peptide#' => ['FetchRefSeqPeptide']),
-                          },
-      -meadow_type     => 'LOCAL',
-    },
-    
     {
       -logic_name      => 'FetchUniprotReviewed',
       -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchUniprot',
