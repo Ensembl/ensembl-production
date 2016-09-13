@@ -46,20 +46,11 @@ sub fetch_input {
 
     my $division = $self->division();
     my $gdba     = Bio::EnsEMBL::Registry->get_adaptor($division, 'compara', 'GenomeDB');
+    my $odba     = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
 
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
-            -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '84',
-   );
-
-   my $odba     = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
-
-   die "Can't get GenomeDB Adaptor for $division - check that database exist in the server specified" if (!$gdba);
-   die "Can't get OntologyTerm Adaptor - check that database exist in the server specified" if (!$odba);
-   confess('Not a OntologyTermAdaptor object, type error!') unless($odba->isa('Bio::EnsEMBL::DBSQL::OntologyTermAdaptor'));
+    die "Can't get GenomeDB Adaptor for $division - check that database exist in the server specified" if (!$gdba);
+    die "Can't get OntologyTerm Adaptor - check that database exist in the server specified" if (!$odba);
+    confess('Not a OntologyTermAdaptor object, type error!') unless($odba->isa('Bio::EnsEMBL::DBSQL::OntologyTermAdaptor'));
 
    my $db_name = 'Interpro';
 
