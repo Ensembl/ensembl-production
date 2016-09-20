@@ -43,8 +43,9 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
+    my $compara_division = $self->param('compara_division');
 
-    my $division = $self->division();
+    my $division = $compara_division || $self->division();
     my $gdba     = Bio::EnsEMBL::Registry->get_adaptor($division, 'compara', 'GenomeDB');
     my $odba     = Bio::EnsEMBL::Registry->get_adaptor('Multi','Ontology','OntologyTerm');
 
@@ -59,10 +60,10 @@ sub fetch_input {
 	join protein_feature pf on (pf.hit_name=i.id)
 	join translation t using (translation_id)
 	join transcript tc using (transcript_id)
-	join gene g using (gene_id) 
-	join seq_region s on (g.seq_region_id=s.seq_region_id) 
-	join coord_system c using (coord_system_id)  
-	where c.species_id=?/; 
+	join gene g using (gene_id)
+	join seq_region s on (g.seq_region_id=s.seq_region_id)
+	join coord_system c using (coord_system_id)
+	where c.species_id=?/;
 
    $self->param('db_name', $db_name);
    $self->param('gdba', $gdba);
@@ -74,7 +75,7 @@ return 0;
 
 sub run {
     my ($self)  = @_;
-    my $species       = $self->param_required('species'); 
+    my $species       = $self->param_required('species');
     my $db_name       = $self->param_required('db_name');
     my $gdba          = $self->param_required('gdba');
     my $odba          = $self->param_required('odba');
@@ -84,16 +85,16 @@ sub run {
     my $xref_adaptor = Bio::EnsEMBL::Compara::DBSQL::XrefAssociationAdaptor->new($dbc);
     my @genome_dbs   = grep { $_->name() ne 'ancestral_sequences' } @{$gdba->fetch_all()};
     @genome_dbs      = grep { $_->name() eq $species } @genome_dbs if(defined $species);
-    
+
     for my $genome_db (@genome_dbs) {
       my $core_dba = $genome_db->db_adaptor();
       $self->info("Processing " . $core_dba->species() . "\n");
       $self->info("Cleaning up member_xref for " . $core_dba->species() . "\n");
 
       $dbc->sql_helper()->execute_update(
-      	-SQL=>q/delete mx.* from member_xref mx 
-      	join external_db e using (external_db_id) 
-   	join gene_member m using (gene_member_id) 
+      	-SQL=>q/delete mx.* from member_xref mx
+      	join external_db e using (external_db_id)
+   	join gene_member m using (gene_member_id)
 	join genome_db g using (genome_db_id) where e.db_name=? and g.name=?/,
 	-PARAMS=>[$db_name, $core_dba->species()]);
 
