@@ -143,7 +143,7 @@ sub pipeline_analyses {
 
     { -logic_name     => 'highlight_go',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
-      -hive_capacity  => 10,
+      -hive_capacity   => $self->o('highlighting_capacity'),
       -parameters      => {
                             compara_division => $self->o('compara_division'),
                           },
@@ -152,7 +152,7 @@ sub pipeline_analyses {
 
     { -logic_name     => 'highlight_interpro',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
-      -hive_capacity  => 10,
+      -hive_capacity   => $self->o('highlighting_capacity'),
       -parameters      => {
                             compara_division => $self->o('compara_division'),
                           },
