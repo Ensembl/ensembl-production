@@ -21,9 +21,9 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR 
+=head1 AUTHOR
 
- ckong@ebi.ac.uk 
+ ckong@ebi.ac.uk
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneTreeHighlighting_conf;
@@ -33,29 +33,32 @@ use warnings;
 use File::Spec;
 use Bio::EnsEMBL::Hive::Version 2.3;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 sub default_options {
     my ($self) = @_;
 
     return {
         # inherit other stuff from the base class
-        %{ $self->SUPER::default_options() },      
+        %{ $self->SUPER::default_options() },
 
 	## General parameters
-    'registry'      => $self->o('registry'),   
+    'registry'      => $self->o('registry'),
     'release'       => $self->o('release'),
-    'pipeline_name' => $self->o('hive_db'),       
+    'pipeline_name' => $self->o('hive_db'),
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
+    'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
 	## 'job_factory' parameters
-    'division'      => [], 
+    'division'      => [],
+
+    ## Allow division of compara database to be explicitly specified
+    'compara_division' => undef,
 
     # hive_capacity values for analysis
 	'highlighting_capacity'  => '50',
 
-    'pipeline_db' => {  
+    'pipeline_db' => {
 	   	 -host   => $self->o('hive_host'),
       	 -port   => $self->o('hive_port'),
       	 -user   => $self->o('hive_user'),
@@ -63,7 +66,7 @@ sub default_options {
 	     -dbname => $self->o('hive_db'),
       	 -driver => 'mysql',
      },
-		
+
     };
 }
 
@@ -79,7 +82,7 @@ sub pipeline_create_commands {
 # Ensures output parameters gets propagated implicitly
 sub hive_meta_table {
   my ($self) = @_;
-  
+
   return {
     %{$self->SUPER::hive_meta_table},
     'hive_use_param_stack'  => 1,
@@ -89,14 +92,14 @@ sub hive_meta_table {
 # override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
   my ($self) = @_;
-  return 
+  return
       ' -reg_conf ' . $self->o('registry'),
   ;
 }
 
-# these parameter values are visible to all analyses, 
+# these parameter values are visible to all analyses,
 # can be overridden by parameters{} and input_id{}
-sub pipeline_wide_parameters {  
+sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
             %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
@@ -121,9 +124,9 @@ sub pipeline_analyses {
     return [
     {  -logic_name => 'backbone_fire_GeneTreeHighlighting',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids  => [ {} ] , 
+       -input_ids  => [ {} ] ,
        -flow_into  => { '1' => ['job_factory'], }
-    },   
+    },
 
     { -logic_name  => 'job_factory',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
@@ -131,24 +134,30 @@ sub pipeline_analyses {
                         division    => $self->o('division'),
                       },
       -hive_capacity   => -1,
-      -rc_name 	       => 'default',     
+      -rc_name 	       => 'default',
       -max_retry_count => 1,
       -flow_into      => {'2->A' => ['highlight_go'],
                           'A->2' => ['highlight_interpro'],
-                         }		                       
-    },	   
+                         }
+    },
 
     { -logic_name     => 'highlight_go',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
-      -hive_capacity  => 10,
-      -rc_name 	      => 'default',     
-    },   
+      -hive_capacity   => $self->o('highlighting_capacity'),
+      -parameters      => {
+                            compara_division => $self->o('compara_division'),
+                          },
+      -rc_name 	      => 'default',
+    },
 
     { -logic_name     => 'highlight_interpro',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
-      -hive_capacity  => 10,
-      -rc_name 	      => 'default',     
-    },       	 	 
+      -hive_capacity   => $self->o('highlighting_capacity'),
+      -parameters      => {
+                            compara_division => $self->o('compara_division'),
+                          },
+      -rc_name 	      => 'default',
+    },
   ];
 }
 
