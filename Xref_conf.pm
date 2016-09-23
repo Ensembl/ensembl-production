@@ -132,6 +132,9 @@ sub default_options {
     # By default, an email is sent for each species when the pipeline
     # is complete, showing the breakdown of xrefs assigned.
     email_xref_report => 1,
+    
+    # Default capacity is low, to limit strain on our db servers and UniProt's.
+    hive_capacity => 10,
   }
 }
 
@@ -161,8 +164,8 @@ sub pipeline_create_commands {
   return [
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('pipeline_dir'),
-    $self->db_cmd("CREATE TABLE gene_descriptions (db_name varchar(100) NOT NULL, total int NOT NULL, timing varchar(10))"),
-    $self->db_cmd("CREATE TABLE gene_names (db_name varchar(100) NOT NULL, total int NOT NULL, timing varchar(10))"),
+    $self->db_cmd("CREATE TABLE gene_descriptions (species varchar(100) NOT NULL, db_name varchar(100) NOT NULL, total int NOT NULL, timing varchar(10))"),
+    $self->db_cmd("CREATE TABLE gene_names (species varchar(100) NOT NULL, db_name varchar(100) NOT NULL, total int NOT NULL, timing varchar(10))"),
   ];
 }
 
@@ -185,6 +188,28 @@ sub pipeline_analyses {
 
   return [
     {
+      -logic_name      => 'InitialisePipeline',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -input_ids       => [ {} ],
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1->A' => ['ImportUniParc'],
+                            'A->1' => ['SpeciesFactory'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'ImportUniParc',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ImportUniParc',
+      -parameters      => {
+                            uniparc_db => $self->o('local_uniparc_db'),
+                          },
+      -max_retry_count => 1,
+      -rc_name         => '4Gb_mem_4Gb_tmp-rh7',
+    },
+
+    {
       -logic_name      => 'SpeciesFactory',
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -parameters      => {
@@ -197,15 +222,25 @@ sub pipeline_analyses {
                             regulation_flow => 0,
                             variation_flow  => 0,
                           },
-      -input_ids       => [ {} ],
       -max_retry_count => 1,
       -flow_into       => {
-                            '2->A' => ['BackupTables'],
+                            '2->A' => ['RunPipeline'],
                             'A->2' => ['FinishingTouches'],
                           },
       -meadow_type     => 'LOCAL',
     },
 
+    {
+      -logic_name      => 'RunPipeline',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1->A' => WHEN('#email_xref_report#' => ['NamesAndDescriptionsBefore']),
+                            'A->1' => ['BackupTables'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
     {
       -logic_name        => 'BackupTables',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DatabaseDumper',
@@ -226,21 +261,7 @@ sub pipeline_analyses {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => {
-                              '1->A' => WHEN('#email_xref_report#' => ['NamesAndDescriptionsBefore']),
-                              'A->1' => ['ImportUniParc'],
-                            },
-    },
-
-    {
-      -logic_name      => 'ImportUniParc',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ImportUniParc',
-      -parameters      => {
-                            uniparc_db => $self->o('local_uniparc_db'),
-                          },
-      -max_retry_count => 1,
-      -rc_name         => '4Gb_mem_4Gb_tmp-rh7',
-      -flow_into       => ['SetupUniParc'],
+      -flow_into         => ['SetupUniParc']
     },
 
     {
@@ -273,7 +294,7 @@ sub pipeline_analyses {
                             external_db => $self->o('uniparc_external_db'),
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => $self->o('hive_capacity'),
       -rc_name         => 'normal-rh7',
       -flow_into       => WHEN('#load_uniprot#' => ['SetupUniProt']),
     },
@@ -314,7 +335,7 @@ sub pipeline_analyses {
                             external_dbs          => $self->o('uniprot_external_dbs'),
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => $self->o('hive_capacity'),
       -rc_name         => 'normal-rh7',
       -flow_into       => [
                             WHEN('#load_uniprot_go#'    => ['SetupUniProtGO']),
@@ -354,7 +375,7 @@ sub pipeline_analyses {
                             uniprot_external_dbs => $self->o('uniprot_external_dbs'),
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => $self->o('hive_capacity'),
       -rc_name         => 'normal-rh7',
     },
 
@@ -390,7 +411,7 @@ sub pipeline_analyses {
                             uniprot_external_dbs => $self->o('uniprot_external_dbs'),
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => $self->o('hive_capacity'),
       -rc_name         => 'normal-rh7',
     },
 
