@@ -70,18 +70,21 @@ sub default_options {
     uniprot_reviewed   => 1,
     uniprot_unreviewed => 1,
 
-    # Can also create xrefs from RefSeq peptides.
+    # Can also create xrefs from RefSeq peptides and DNA.
     refseq_peptide => 0,
+    refseq_nuc     => 0,
 
     # Default logic_names for the analyses.
     uniprot_reviewed_logic_name   => 'xref_sprot_blastp',
     uniprot_unreviewed_logic_name => 'xref_trembl_blastp',
     refseq_peptide_logic_name     => 'xref_refseq_blastp',
+    refseq_nuc_logic_name         => 'xref_refseq_blastn',
 
     # External DB parameters are effectively constant and should not be altered.
     uniprot_reviewed_external_db   => 'Uniprot/SWISSPROT',
     uniprot_unreviewed_external_db => 'Uniprot/SPTREMBL',
     refseq_peptide_external_db     => 'RefSeq_peptide',
+    refseq_nuc_external_db         => 'RefSeq_dna',
 
     # Align a particular species, rather than one matching the core db species.
     source_species => undef,
@@ -98,13 +101,13 @@ sub default_options {
     refseq_tax_level => undef,
 
     # Blast parameters
-    blast_type       => 'ncbi',
-    blast_dir        => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
-    makeblastdb_exe  => catdir($self->o('blast_dir'), 'makeblastdb'),
-    blastp_exe       => catdir($self->o('blast_dir'), 'blastp'),
-    blast_matrix     => undef,
-    blast_threads    => 3,
-    blast_parameters => '-word_size 3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
+    blast_dir         => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
+    makeblastdb_exe   => catdir($self->o('blast_dir'), 'makeblastdb'),
+    blastn_exe        => catdir($self->o('blast_dir'), 'blastn'),
+    blastp_exe        => catdir($self->o('blast_dir'), 'blastp'),
+    blast_threads     => 3,
+    blastn_parameters => '-word_size 11 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
+    blastp_parameters => '-word_size  3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
 
     # For parsing the output.
     output_regex     => '^\s*(\w+)',
@@ -126,7 +129,7 @@ sub default_options {
         'db'            => 'sprot',
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
-        'parameters'    => $self->o('blast_parameters'),
+        'parameters'    => $self->o('blastp_parameters'),
         'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
         'db_type'       => 'core',
       },
@@ -139,7 +142,7 @@ sub default_options {
         'db'            => 'trembl',
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
-        'parameters'    => $self->o('blast_parameters'),
+        'parameters'    => $self->o('blastp_parameters'),
         'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
         'db_type'       => 'core',
       },
@@ -152,7 +155,20 @@ sub default_options {
         'db'            => 'refseq_peptide',
         'program'       => 'blastp',
         'program_file'  => $self->o('blastp_exe'),
-        'parameters'    => $self->o('blast_parameters'),
+        'parameters'    => $self->o('blastp_parameters'),
+        'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
+        'db_type'       => 'core',
+      },
+
+      {
+        'logic_name'    => $self->o('refseq_nuc_logic_name'),
+        'display_label' => 'RefSeq transcripts',
+        'description'   => 'Cross references to RefSeq nucleotide sequences, determined by alignment against the transcriptome with <em>blastx</em>.',
+        'displayable'   => 1,
+        'db'            => 'refseq_nuc',
+        'program'       => 'blastn',
+        'program_file'  => $self->o('blastn_exe'),
+        'parameters'    => $self->o('blastn_parameters'),
         'module'        => 'Bio::EnsEMBL::Analysis::Runnable::BlastEG',
         'db_type'       => 'core',
       },
@@ -191,7 +207,8 @@ sub pipeline_create_commands {
   return [
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('pipeline_dir'),
-    $self->db_cmd("CREATE TABLE split_proteome (species varchar(100) NOT NULL, split_file varchar(255) NOT NULL)"),
+    $self->db_cmd("CREATE TABLE split_proteome      (species varchar(100) NOT NULL, split_file varchar(255) NOT NULL)"),
+    $self->db_cmd("CREATE TABLE split_transcriptome (species varchar(100) NOT NULL, split_file varchar(255) NOT NULL)"),
   ];
 }
 
@@ -203,6 +220,7 @@ sub pipeline_wide_parameters {
     'uniprot_reviewed'   => $self->o('uniprot_reviewed'),
     'uniprot_unreviewed' => $self->o('uniprot_unreviewed'),
     'refseq_peptide'     => $self->o('refseq_peptide'),
+    'refseq_nuc'         => $self->o('refseq_nuc'),
   };
 }
 
@@ -217,7 +235,7 @@ sub pipeline_analyses {
       -input_ids       => [{}],
       -flow_into       => {
                             '1->A' => ['SpeciesFactoryForDumping'],
-                            'A->1' => ['InitialiseAlignment'],
+                            'A->1' => ['RunAlignment'],
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -239,7 +257,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['BackupCoreDatabase'],
-                            'A->2' => ['DumpProteome'],
+                            'A->2' => ['DumpSequence'],
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -253,6 +271,23 @@ sub pipeline_analyses {
                             table_list  => ['analysis', 'analysis_description', 'identity_xref', 'object_xref', 'xref'],
                           },
       -rc_name         => 'normal-rh7',
+    },
+
+    {
+      -logic_name      => 'DumpSequence',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => [
+                            WHEN('#uniprot_reviewed# || '.
+                                 '#uniprot_unreviewed# || '.
+                                 '#refseq_peptide#' =>
+                              ['DumpProteome']
+                            ),
+                            WHEN('#refseq_nuc#' =>
+                              ['DumpTranscriptome']
+                            ),
+                          ],
+      -meadow_type     => 'LOCAL',
     },
 
     {
@@ -285,30 +320,45 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'InitialiseAlignment',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 0,
-      -flow_into       => [
-                            WHEN('#uniprot_reviewed#'   => ['FetchUniprotReviewed']),
-                            WHEN('#uniprot_unreviewed#' => ['FetchUniprotUnreviewed']),
-                            WHEN('#refseq_peptide#'     => ['FetchRefSeqPeptide']),
-                          ],
-      -meadow_type     => 'LOCAL',
+      -logic_name        => 'DumpTranscriptome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpTranscriptome',
+      -analysis_capacity => 5,
+      -parameters        => {
+                              transcriptome_dir => catdir($self->o('pipeline_dir'), '#species#', 'transcriptome'),
+                              use_dbID          => 1,
+                            },
+      -rc_name           => 'normal-rh7',
+      -flow_into         => ['SplitTranscriptome'],
     },
 
     {
-      -logic_name      => 'FetchUniprotReviewed',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchUniprot',
-      -max_retry_count => 2,
-      -parameters      => {
-                            ebi_path     => $self->o('uniprot_ebi_path'),
-                            ftp_uri      => $self->o('uniprot_ftp_uri'),
-                            data_source  => 'sprot',
-                            out_dir      => $self->o('uniprot_dir'),
-                            file_varname => 'fasta_file',
-                          },
-      -rc_name         => 'normal-rh7',
-      -flow_into       => ['ConfigureUniprotReviewed'],
+      -logic_name        => 'SplitTranscriptome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+      -analysis_capacity => 5,
+      -parameters        => {
+                              fasta_file              => '#transcriptome_file#',
+                              max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                              max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                              max_files_per_directory => $self->o('max_files_per_directory'),
+                              max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                            },
+      -rc_name           => 'normal-rh7',
+      -flow_into         => {
+                              '2' => [ '?table_name=split_transcriptome' ],
+                            }
+    },
+
+    {
+      -logic_name      => 'RunAlignment',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => [
+                            WHEN('#uniprot_reviewed#'   => ['ConfigureUniprotReviewed']),
+                            WHEN('#uniprot_unreviewed#' => ['ConfigureUniprotUnreviewed']),
+                            WHEN('#refseq_peptide#'     => ['ConfigureRefSeqPeptide']),
+                            WHEN('#refseq_nuc#'         => ['ConfigureRefSeqNucleotide']),
+                          ],
+      -meadow_type     => 'LOCAL',
     },
 
     {
@@ -319,8 +369,36 @@ sub pipeline_analyses {
                             logic_name  => $self->o('uniprot_reviewed_logic_name'),
                             external_db => $self->o('uniprot_reviewed_external_db'),
                           },
+      -flow_into       => ['FetchUniprotReviewed'],
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'FetchUniprotReviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchUniprot',
+      -max_retry_count => 2,
+      -parameters      => {
+                            ebi_path     => $self->o('uniprot_ebi_path'),
+                            ftp_uri      => $self->o('uniprot_ftp_uri'),
+                            data_source  => 'sprot',
+                            data_type    => '#database_type#',
+                            out_dir      => $self->o('uniprot_dir'),
+                            file_varname => 'fasta_file',
+                          },
       -rc_name         => 'normal-rh7',
       -flow_into       => ['SpeciesFactoryForLoading'],
+    },
+    
+    {
+      -logic_name      => 'ConfigureUniprotUnreviewed',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ConfigureSource',
+      -max_retry_count => 1,
+      -parameters      => {
+                            logic_name  => $self->o('uniprot_unreviewed_logic_name'),
+                            external_db => $self->o('uniprot_unreviewed_external_db'),
+                          },
+      -rc_name         => 'normal-rh7',
+      -flow_into       => ['FetchUniprotUnreviewed'],
     },
 
     {
@@ -331,41 +409,14 @@ sub pipeline_analyses {
                             ebi_path     => $self->o('uniprot_ebi_path'),
                             ftp_uri      => $self->o('uniprot_ftp_uri'),
                             data_source  => 'trembl',
+                            data_type    => '#database_type#',
                             out_dir      => $self->o('uniprot_dir'),
                             file_varname => 'fasta_file',
                           },
       -rc_name         => '32Gb_mem_4Gb_tmp-rh7',
-      -flow_into       => ['ConfigureUniprotUnreviewed'],
-    },
-
-    {
-      -logic_name      => 'ConfigureUniprotUnreviewed',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ConfigureSource',
-      -max_retry_count => 1,
-      -parameters      => {
-                            logic_name  => $self->o('uniprot_unreviewed_logic_name'),
-                            external_db => $self->o('uniprot_unreviewed_external_db'),
-                          },
-      -rc_name         => 'normal-rh7',
       -flow_into       => ['SpeciesFactoryForLoading'],
     },
-
-    {
-      -logic_name      => 'FetchRefSeqPeptide',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchRefSeq',
-      -max_retry_count => 2,
-      -parameters      => {
-                            ebi_path        => $self->o('refseq_ebi_path'),
-                            ftp_uri         => $self->o('refseq_ftp_uri'),
-                            taxonomic_level => $self->o('refseq_tax_level'),
-                            data_type       => 'protein',
-                            out_dir         => $self->o('refseq_dir'),
-                            file_varname    => 'fasta_file',
-                          },
-      -rc_name         => '32Gb_mem_4Gb_tmp-rh7',
-      -flow_into       => ['ConfigureRefSeqPeptide'],
-    },
-
+    
     {
       -logic_name      => 'ConfigureRefSeqPeptide',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ConfigureSource',
@@ -375,6 +426,34 @@ sub pipeline_analyses {
                             external_db => $self->o('refseq_peptide_external_db'),
                           },
       -rc_name         => 'normal-rh7',
+      -flow_into       => ['FetchRefSeq'],
+    },
+
+    {
+      -logic_name      => 'ConfigureRefSeqNucleotide',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ConfigureSource',
+      -max_retry_count => 1,
+      -parameters      => {
+                            logic_name  => $self->o('refseq_nuc_logic_name'),
+                            external_db => $self->o('refseq_nuc_external_db'),
+                          },
+      -rc_name         => 'normal-rh7',
+      -flow_into       => ['FetchRefSeq'],
+    },
+
+    {
+      -logic_name      => 'FetchRefSeq',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchRefSeq',
+      -max_retry_count => 2,
+      -parameters      => {
+                            ebi_path        => $self->o('refseq_ebi_path'),
+                            ftp_uri         => $self->o('refseq_ftp_uri'),
+                            taxonomic_level => $self->o('refseq_tax_level'),
+                            data_type       => '#database_type#',
+                            out_dir         => $self->o('refseq_dir'),
+                            file_varname    => 'fasta_file',
+                          },
+      -rc_name         => '32Gb_mem_4Gb_tmp-rh7',
       -flow_into       => ['SpeciesFactoryForLoading'],
     },
 
@@ -389,11 +468,12 @@ sub pipeline_analyses {
                             run_all         => $self->o('run_all'),
                             meta_filters    => $self->o('meta_filters'),
                             chromosome_flow => 0,
+                            regulation_flow => 0,
                             variation_flow  => 0,
                           },
       -flow_into       => {
                             '2->A' => ['AnalysisSetupFactory'],
-                            'A->2' => ['ExtractSpeciesFactory'],
+                            'A->2' => ['ExtractSpecies'],
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -442,37 +522,15 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal-rh7',
     },
-
+    
     {
-      -logic_name      => 'ExtractSpeciesFactory',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ExtractSpeciesFactory',
-      -max_retry_count => 0,
-      -flow_into       => {
-                            '2' => ['ExtractSpeciesUniprot'],
-                            '3' => ['ExtractSpeciesRefSeq'],
-                          },
-      -meadow_type     => 'LOCAL',
-    },
-
-    {
-      -logic_name      => 'ExtractSpeciesUniprot',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpeciesUniprot',
+      -logic_name      => 'ExtractSpecies',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpecies',
       -max_retry_count => 1,
       -parameters      => {
                             source_species => $self->o('source_species'),
                             file_varname   => 'db_fasta_file',
-                          },
-      -rc_name         => 'normal-rh7',
-      -flow_into       => ['CreateBlastDB'],
-    },
-
-    {
-      -logic_name      => 'ExtractSpeciesRefSeq',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpeciesRefSeq',
-      -max_retry_count => 1,
-      -parameters      => {
-                            source_species => $self->o('source_species'),
-                            file_varname   => 'db_fasta_file',
+                            data_type      => '#database_type#',
                           },
       -rc_name         => 'normal-rh7',
       -flow_into       => ['CreateBlastDB'],
@@ -485,12 +543,18 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db          => $self->o('blast_db'),
-                            blast_db_type     => 'prot',
+                            blast_db_type     => '#database_type#',
                             proteome_source   => 'various',
                             logic_name_prefix => 'various',
                           },
       -rc_name         => 'normal-rh7',
-      -flow_into       => ['FetchProteomeFiles'],
+      -flow_into       => [
+                            WHEN('#query_type# eq "pep"' =>
+                              ['FetchProteomeFiles'],
+                            ELSE
+                              ['FetchTranscriptomeFiles']
+                            ),
+                          ],
     },
 
     {
@@ -503,7 +567,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['BlastPFactory'],
-                            'A->1' => ['FilterBlastPHits'],
+                            'A->1' => ['FilterBlastHits'],
                           },
     },
 
@@ -528,11 +592,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
                             output_regex     => $self->o('output_regex'),
-                            query_type       => 'pep',
-                            database_type    => 'pep',
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
@@ -551,11 +611,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
                             output_regex     => $self->o('output_regex'),
-                            query_type       => 'pep',
-                            database_type    => 'pep',
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
@@ -574,11 +630,88 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
                             output_regex     => $self->o('output_regex'),
-                            query_type       => 'pep',
-                            database_type    => 'pep',
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                          },
+      -rc_name         => '32GB_threads-rh7',
+    },
+    
+    {
+      -logic_name      => 'FetchTranscriptomeFiles',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchSplitFiles',
+      -max_retry_count => 1,
+      -parameters      => {
+                            seq_type => 'transcriptome',
+                          },
+      -rc_name         => 'normal-rh7',
+      -flow_into       => {
+                            '2->A' => ['BlastNFactory'],
+                            'A->1' => ['FilterBlastHits'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastNFactory',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            max_seq_length => $self->o('max_seq_length'),
+                            queryfile      => '#split_file#',
+                          },
+      -rc_name         => 'normal-rh7',
+      -flow_into       => {
+                            '2' => ['BlastN'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastN',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            output_regex     => $self->o('output_regex'),
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                            escape_branch    => -1,
+                          },
+      -rc_name         => '8GB_threads-rh7',
+      -flow_into       => {
+                            '-1' => ['BlastN_HighMem'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastN_HighMem',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            output_regex     => $self->o('output_regex'),
+                            pvalue_threshold => $self->o('pvalue_threshold'),
+                            filter_prune     => $self->o('filter_prune'),
+                            filter_min_score => $self->o('filter_min_score'),
+                            escape_branch    => -1,
+                          },
+      -rc_name         => '16GB_threads-rh7',
+      -flow_into       => {
+                            '-1' => ['BlastN_HigherMem'],
+                          },
+    },
+
+    {
+      -logic_name      => 'BlastN_HigherMem',
+      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::Blast',
+      -hive_capacity   => $self->o('max_hive_capacity'),
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_type          => 'core',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
@@ -587,13 +720,12 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'FilterBlastPHits',
+      -logic_name      => 'FilterBlastHits',
       -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::FilterHits',
       -max_retry_count => 1,
       -parameters      => {
-                            db_type     => 'core',
+                            db_type      => 'core',
                             filter_top_x => 1,
-                            blastp_top_x => 1,
                           },
       -rc_name         => 'normal-rh7',
       -flow_into       => ['LoadAlignmentXref'],
@@ -617,7 +749,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               email   => $self->o('email'),
-                              subject => 'Alignment Xref pipeline has completed for #species# with #external_db#',
+                              subject => 'Alignment Xref pipeline report for #species# with #external_db#',
                             },
       -rc_name           => 'normal-rh7',
     },
