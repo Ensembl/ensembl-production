@@ -478,7 +478,7 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db          => $self->o('blast_db'),
-                            blast_db_type     => 'pep',
+                            database_type     => 'pep',
                             proteome_source   => $self->o('proteome_source'),
                             logic_name_prefix => $self->o('logic_name_prefix'),
                           },
@@ -696,7 +696,7 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            query_type       => 'nuc',
+                            query_type       => 'dna',
                             database_type    => 'pep',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
@@ -719,7 +719,7 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            query_type       => 'nuc',
+                            query_type       => 'dna',
                             database_type    => 'pep',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
@@ -742,7 +742,7 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            query_type       => 'nuc',
+                            query_type       => 'dna',
                             database_type    => 'pep',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),

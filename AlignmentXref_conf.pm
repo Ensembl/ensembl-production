@@ -72,19 +72,19 @@ sub default_options {
 
     # Can also create xrefs from RefSeq peptides and DNA.
     refseq_peptide => 0,
-    refseq_nuc     => 0,
+    refseq_dna     => 0,
 
     # Default logic_names for the analyses.
     uniprot_reviewed_logic_name   => 'xref_sprot_blastp',
     uniprot_unreviewed_logic_name => 'xref_trembl_blastp',
     refseq_peptide_logic_name     => 'xref_refseq_blastp',
-    refseq_nuc_logic_name         => 'xref_refseq_blastn',
+    refseq_dna_logic_name         => 'xref_refseq_blastn',
 
     # External DB parameters are effectively constant and should not be altered.
     uniprot_reviewed_external_db   => 'Uniprot/SWISSPROT',
     uniprot_unreviewed_external_db => 'Uniprot/SPTREMBL',
     refseq_peptide_external_db     => 'RefSeq_peptide',
-    refseq_nuc_external_db         => 'RefSeq_dna',
+    refseq_dna_external_db         => 'RefSeq_dna',
 
     # Align a particular species, rather than one matching the core db species.
     source_species => undef,
@@ -161,11 +161,11 @@ sub default_options {
       },
 
       {
-        'logic_name'    => $self->o('refseq_nuc_logic_name'),
+        'logic_name'    => $self->o('refseq_dna_logic_name'),
         'display_label' => 'RefSeq transcripts',
         'description'   => 'Cross references to RefSeq nucleotide sequences, determined by alignment against the transcriptome with <em>blastx</em>.',
         'displayable'   => 1,
-        'db'            => 'refseq_nuc',
+        'db'            => 'refseq_dna',
         'program'       => 'blastn',
         'program_file'  => $self->o('blastn_exe'),
         'parameters'    => $self->o('blastn_parameters'),
@@ -220,7 +220,7 @@ sub pipeline_wide_parameters {
     'uniprot_reviewed'   => $self->o('uniprot_reviewed'),
     'uniprot_unreviewed' => $self->o('uniprot_unreviewed'),
     'refseq_peptide'     => $self->o('refseq_peptide'),
-    'refseq_nuc'         => $self->o('refseq_nuc'),
+    'refseq_dna'         => $self->o('refseq_dna'),
   };
 }
 
@@ -283,7 +283,7 @@ sub pipeline_analyses {
                                  '#refseq_peptide#' =>
                               ['DumpProteome']
                             ),
-                            WHEN('#refseq_nuc#' =>
+                            WHEN('#refseq_dna#' =>
                               ['DumpTranscriptome']
                             ),
                           ],
@@ -356,7 +356,7 @@ sub pipeline_analyses {
                             WHEN('#uniprot_reviewed#'   => ['ConfigureUniprotReviewed']),
                             WHEN('#uniprot_unreviewed#' => ['ConfigureUniprotUnreviewed']),
                             WHEN('#refseq_peptide#'     => ['ConfigureRefSeqPeptide']),
-                            WHEN('#refseq_nuc#'         => ['ConfigureRefSeqNucleotide']),
+                            WHEN('#refseq_dna#'         => ['ConfigureRefSeqNucleotide']),
                           ],
       -meadow_type     => 'LOCAL',
     },
@@ -434,8 +434,8 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::ConfigureSource',
       -max_retry_count => 1,
       -parameters      => {
-                            logic_name  => $self->o('refseq_nuc_logic_name'),
-                            external_db => $self->o('refseq_nuc_external_db'),
+                            logic_name  => $self->o('refseq_dna_logic_name'),
+                            external_db => $self->o('refseq_dna_external_db'),
                           },
       -rc_name         => 'normal-rh7',
       -flow_into       => ['FetchRefSeq'],
@@ -543,7 +543,6 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db          => $self->o('blast_db'),
-                            blast_db_type     => '#database_type#',
                             proteome_source   => 'various',
                             logic_name_prefix => 'various',
                           },
@@ -566,22 +565,8 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal-rh7',
       -flow_into       => {
-                            '2->A' => ['BlastPFactory'],
+                            '2->A' => ['BlastP'],
                             'A->1' => ['FilterBlastHits'],
-                          },
-    },
-
-    {
-      -logic_name      => 'BlastPFactory',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
-      -max_retry_count => 1,
-      -parameters      => {
-                            max_seq_length => $self->o('max_seq_length'),
-                            queryfile      => '#split_file#',
-                          },
-      -rc_name         => 'normal-rh7',
-      -flow_into       => {
-                            '2' => ['BlastP'],
                           },
     },
 
@@ -592,6 +577,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
@@ -611,6 +597,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
@@ -630,6 +617,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
@@ -647,22 +635,8 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal-rh7',
       -flow_into       => {
-                            '2->A' => ['BlastNFactory'],
+                            '2->A' => ['BlastN'],
                             'A->1' => ['FilterBlastHits'],
-                          },
-    },
-
-    {
-      -logic_name      => 'BlastNFactory',
-      -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::BlastFactory',
-      -max_retry_count => 1,
-      -parameters      => {
-                            max_seq_length => $self->o('max_seq_length'),
-                            queryfile      => '#split_file#',
-                          },
-      -rc_name         => 'normal-rh7',
-      -flow_into       => {
-                            '2' => ['BlastN'],
                           },
     },
 
@@ -673,6 +647,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
@@ -692,6 +667,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
@@ -711,6 +687,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             db_type          => 'core',
+                            queryfile        => '#split_file#',
                             output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
