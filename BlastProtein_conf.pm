@@ -128,7 +128,6 @@ sub default_options {
     blastx   => 1,
     
     # Filter so that only best X hits get saved.
-    filter_top_x => 1,
     blastp_top_x => 1,
     blastx_top_x => 10,
     
@@ -495,7 +494,7 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db          => $self->o('blast_db'),
-                            blast_db_type     => 'prot',
+                            blast_db_type     => 'pep',
                             proteome_source   => $self->o('proteome_source'),
                             logic_name_prefix => $self->o('logic_name_prefix'),
                           },
@@ -532,7 +531,6 @@ sub pipeline_analyses {
                             analyses     => $self->o('analyses'),
                             blastp       => $self->o('blastp'),
                             blastx       => $self->o('blastx'),
-                            filter_top_x => $self->o('filter_top_x'),
                             blastp_top_x => $self->o('blastp_top_x'),
                             blastx_top_x => $self->o('blastx_top_x'),
                           },
@@ -788,10 +786,9 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
-                            db_type     => 'core',
-                            filter_top_x => $self->o('filter_top_x'),
-                            blastp_top_x => $self->o('blastp_top_x'),
-                            logic_name  => '#logic_name_prefix#_blastp',
+                            db_type      => 'core',
+                            filter_top_x => $self->o('blastp_top_x'),
+                            logic_name   => '#logic_name_prefix#_blastp',
                           },
       -rc_name         => 'normal',
     },
@@ -802,11 +799,10 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
-                            db_type     => 'otherfeatures',
-                            filter_top_x => $self->o('filter_top_x'),
-                            blastx_top_x => $self->o('blastx_top_x'),
-                            logic_name  => '#logic_name_prefix#_blastx',
-                            create_gff  => $self->o('create_gff'),
+                            db_type      => 'otherfeatures',
+                            filter_top_x => $self->o('blastx_top_x'),
+                            logic_name   => '#logic_name_prefix#_blastx',
+                            create_gff   => $self->o('create_gff'),
                           },
       -rc_name         => 'normal',
       -flow_into       => {
