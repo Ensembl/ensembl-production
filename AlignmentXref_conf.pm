@@ -106,7 +106,7 @@ sub default_options {
     blastn_exe        => catdir($self->o('blast_dir'), 'blastn'),
     blastp_exe        => catdir($self->o('blast_dir'), 'blastp'),
     blast_threads     => 3,
-    blastn_parameters => '-word_size 11 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
+    blastn_parameters => '-word_size 11 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -num_threads '.$self->o('blast_threads'),
     blastp_parameters => '-word_size  3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
 
     # For parsing the output.
