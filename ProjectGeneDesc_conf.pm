@@ -49,11 +49,9 @@ sub default_options {
     %{$self->SUPER::default_options},
     
     pipeline_name => 'gene_description_'.$self->o('ensembl_release'),
-    output_dir    => catdir('/nfs/panda/ensemblgenomes/vectorbase/desc_projection', $self->o('pipeline_name')),
     backup_tables => ['gene'],
     store_data    => 1,
     
-    # Default parameters: start
     # Any of these parameters can be redefined in the sub-hash(es) of the 'config' hash
     source             => undef,
     species            => [],
@@ -69,83 +67,11 @@ sub default_options {
     percent_cov_filter => 66,
     ignore_source      => ['hypothetical', 'putative', 'Projected'],
     replace_target     => ['Uncharacterized protein', 'Predicted protein'],
-    # Default parameters: end
 
-    config => 
-    {
-      'aedes_aegypti' =>
-      {
-        source  => 'aedes_aegypti',
-        species => [
-                    'aedes_albopictus',
-                   ],
-      },
-      
-      'anopheles_gambiae' =>
-      {
-        source  => 'anopheles_gambiae',
-        species => [
-                    'anopheles_albimanus',
-                    'anopheles_arabiensis',
-                    'anopheles_atroparvus',
-                    'anopheles_christyi',
-                    'anopheles_coluzzii',
-                    'anopheles_culicifacies',
-                    'anopheles_darlingi',
-                    'anopheles_dirus',
-                    'anopheles_epiroticus',
-                    'anopheles_farauti',
-                    'anopheles_funestus',
-                    'anopheles_maculatus',
-                    'anopheles_melas',
-                    'anopheles_merus',
-                    'anopheles_minimus',
-                    'anopheles_quadriannulatus',
-                    'anopheles_sinensis',
-                    'anopheles_stephensi',
-                   ],
-      },
-      
-      'drosophila_melanogaster' =>
-      {
-        source  => 'drosophila_melanogaster',
-        species => [
-                    'glossina_austeni',
-                    'glossina_brevipalpis',
-                    'glossina_fuscipes',
-                    'glossina_morsitans',
-                    'glossina_pallidipes',
-                    'glossina_palpalis',
-                    'musca_domestica',
-                    'stomoxys_calcitrans',
-                   ],
-      },
-      
-      'glossina_morsitans' =>
-      {
-        source  => 'glossina_morsitans',
-        species => [
-                    'glossina_austeni',
-                    'glossina_brevipalpis',
-                    'glossina_fuscipes',
-                    'glossina_pallidipes',
-                    'glossina_palpalis',
-                    'musca_domestica',
-                    'stomoxys_calcitrans',
-                   ],
-      },
-      
-    },
-    
-    # Do closest species in first pass, remoter species in second pass.
-    flow => 
-    {
-      'aedes_aegypti'           => 2,
-      'anopheles_gambiae'       => 2,
-      'glossina_morsitans'      => 2,
-      'drosophila_melanogaster' => 3,
-    },
-    
+    # config and flow should be defined in an inheriting class,
+    # for an example see ProjectGeneDescVB_conf.pm.
+    config => {},
+    flow => {},
   };
 }
 
@@ -220,7 +146,7 @@ sub pipeline_analyses {
                             output_file => catdir('#projection_dir#', '#species#', 'backup.sql.gz'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['GeneDescProjection'],
     },
     
@@ -246,7 +172,7 @@ sub pipeline_analyses {
                             1 => [ ':////accu?summary=[]' ],
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -259,7 +185,7 @@ sub pipeline_analyses {
                             store_data     => $self->o('store_data'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
     
 
