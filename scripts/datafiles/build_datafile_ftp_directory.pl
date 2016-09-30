@@ -164,33 +164,71 @@ sub _process_dba {
   return;
 }
 
-# Pre-emptive strike here, fake DataFiles objects and adaptor for now
-# And hope that this script doesn't do any DB operations which rely 
-# on the data_files table past this point 
-# Update funcgen schema/API later ENSREGULATION-224
-
-sub _get_funcgen_DataFiles{
+sub _get_funcgen_DataFiles {
   my ($self, $dba) = @_;
+  
+  my $species = $dba->species;
+
+  my $segmentation_file_adaptor = $dba->get_SegmentationFileAdaptor;
+  my $result_set_adaptor        = $dba->get_ResultSetAdaptor;
+  my $coord_system_adaptor      = $dba->dnadb->get_CoordSystemAdaptor;
+
+  my @datafiles_fast_constructor_arguments;
+
+  if ($species eq 'homo_sapiens') {
+  
+    my $crispr_adaptor = $dba->get_CrisprSitesFileAdaptor;
+    my $crispr_file    = $crispr_adaptor->fetch_file;
+
+    push @datafiles_fast_constructor_arguments, {
+        analysis      => $crispr_file->get_Analysis,
+        name          => $crispr_file->name,
+        file_type     => $crispr_file->file_type,
+        url           => $crispr_file->file,
+    };
+  }
+
+  my $all_segmentation_files = $segmentation_file_adaptor->fetch_all;
+
+  foreach my $current_segmentation_file (@$all_segmentation_files) {
+    push @datafiles_fast_constructor_arguments, {
+      analysis      => $current_segmentation_file->get_Analysis,
+      name          => $current_segmentation_file->name,
+      file_type     => $current_segmentation_file->file_type,
+      url           => $current_segmentation_file->file,
+    };
+  }
+
+  my $all_result_sets = $result_set_adaptor->fetch_all;
+
+  RESULT_SET:
+  foreach my $current_result_set (@$all_result_sets) {
+
+    # We don't have bigwigs for all results sets, e.g.: technical replicates.
+    next if (! defined $current_result_set->dbfile_path);
+
+    push @datafiles_fast_constructor_arguments, {
+      analysis      => $current_result_set->analysis,
+      name          => $current_result_set->name,
+      file_type     => 'BIGWIG',
+      url           => $current_result_set->dbfile_path,
+    };
+  }
+
   my @datafiles;
-  my $df_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($dba);
-  Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $df_adaptor);
-  # add_adaptor to prevent adaptor being lost after returning reference (Odd scoping/weakening issue?)
+  my $all_coord_systems = $coord_system_adaptor->fetch_all;
+  use Bio::EnsEMBL::DBSQL::DataFileAdaptor;
+  my $data_file_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($result_set_adaptor->db);
+  Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $data_file_adaptor);
 
-  my $rs_adaptor = $dba->get_ResultSetAdaptor;
-  my ($cs) = @{$dba->dnadb->get_CoordSystemAdaptor()->fetch_all()};  
+  foreach my $current_datafile_fast_constructor_argument (@datafiles_fast_constructor_arguments) {
 
-  foreach my $rset(@{$rs_adaptor->fetch_all('DISPLAYABLE')}){
-    push @datafiles, Bio::EnsEMBL::DataFile->new_fast(
-     {
-      dbID          => undef,
-      coord_system  => $cs,  
-      analysis      => $rset->analysis,
-      name          => $rset->name,  # Would need to strip the suffix to set file_type
-      absolute      => 0,
-      #file_type     => 'BIGWIG',    # This is dependant on feature_class? Set url over-ride instead.
-      url           => $rset->dbfile_path,
-      adaptor       => $df_adaptor,
-     });
+    $current_datafile_fast_constructor_argument->{dbID}         = undef;
+    $current_datafile_fast_constructor_argument->{coord_system} = $all_coord_systems->[0];
+    $current_datafile_fast_constructor_argument->{adaptor}      = $data_file_adaptor;
+    
+    use Bio::EnsEMBL::DataFile;
+    push @datafiles, Bio::EnsEMBL::DataFile->new_fast($current_datafile_fast_constructor_argument);
   }
 
   return \@datafiles;
