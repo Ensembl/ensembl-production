@@ -74,7 +74,7 @@ sub default_options {
 
     ## 'cleanup_prot_feature' parameters
     #   Species exclusion list for Interpro2Go if the analysis is turn 'ON'
-    'exclusion'  => [],
+    'exclusion'  => ['schizosaccharomyces_pombe'],
 
     ## 'analysis_setup' parameters
     #   Remove existing analyses;
@@ -106,9 +106,9 @@ sub default_options {
 
     ## 'meta_table_update' parameters
     #   Information to update 'meta' table
-    'interproscan_version' => '5.19-58.0',
-    'interproscan_date'    => '9-June-2016',
-    'interpro_version'     => '58',
+    'interproscan_version' => '5.20-59.0',
+    'interproscan_date'    => '15-Sept-2016',
+    'interpro_version'     => '59',
 
     ## 'split_fasta' & 'split_md5_fasta' & 'split_no_md5_fasta'  parameters
     #   Parameters for dumping and splitting Fasta protein files:
@@ -128,8 +128,8 @@ sub default_options {
     'seg_logic_name' => 'seg',
 
     ## 'run_InterProScan_lookup' & 'run_InterProScan_nolookup' & 'run_InterProScan_local' parameters
-    # Release 9 June 2016, InterProScan 5:version 5.19-58 using InterPro version 58.0 data
-	'interproscan_exe' => '/nfs/panda/ensemblgenomes/development/InterProScan/interproscan-5.19-58.0/interproscan.sh',
+    # Release 15 Sept 2016, InterProScan 5:version 5.20-59 using InterPro version 59.0 data
+	'interproscan_exe' => '/nfs/panda/ensemblgenomes/development/InterProScan/interproscan-5.20-59.0/interproscan.sh',
 
     # Unused applications:
     # SignalP-GRAM_POSITIVE-4.0 SignalP-GRAM_NEGATIVE-4.0
@@ -181,8 +181,8 @@ sub default_options {
     'validating_parser' => 1,
 
     ## 'load_InterPro2Go' parameters
-    #   Release 4 June 2016 (http://www.geneontology.org/external2go/interpro2go)
-    'interpro2go' =>  '/nfs/panda/ensemblgenomes/development/InterProScan/interpro2go/2016_June_4/interpro2go',
+    #   Release 17 Sept 2016 (http://www.geneontology.org/external2go/interpro2go)
+    'interpro2go' =>  '/nfs/panda/ensemblgenomes/development/InterProScan/interpro2go/2016_Sept_17/interpro2go',
 
     #   Check if GO annotation exists from other sources before loading
     #   default => OFF (0)
@@ -209,6 +209,11 @@ sub default_options {
     #  from the protein_feature tables and replaced by the results of the i5 runs.
     'required_analysis' =>
     [
+      {
+        'logic_name'    => 'sfld',
+        'db'            => 'SFLD',
+        'db_version'    => '1',
+      },
       {
         'logic_name'    => 'cdd',
         'db'            => 'CDD',
@@ -237,7 +242,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '29.0',
+        'db_version'    => '30.0',
       },
       {
         'logic_name'    => 'pfscan',
@@ -681,8 +686,8 @@ sub resource_classes {
 
   return {
 #    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -R "select[gpfs]"' },
-    'default' 			   => {'LSF' => '-q production-rh7' },
-    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4' },
+    'default' 			   => {'LSF' => '-q production-rh6' },
+    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4' },
   };
 }
 
