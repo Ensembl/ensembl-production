@@ -94,7 +94,7 @@ sub run {
     if(leaf_directory($contents)) {
       print STDERR "Directory is a leaf; generating timestamp\n";
       my $timestamp = getLoggingTime();
-      $dir = $1 if($dir =~/(ensembl\w.+)$/);      
+      $dir = $1 if($dir =~/(ensembl\w*)$/);      
       print $fh "$dir\t$timestamp\n";
     }
   }
@@ -165,11 +165,11 @@ release.pl
 
 =head1 SYNOPSIS
 
-  ./release.pl -directory /nfs/ftp/pub/databases/ensembl/projections/<division>
+  ./release.pl -directory /nfs/ftp/pub/databases/ensembl/projections
 
-  ./release.pl -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections/<division>
+  ./release.pl -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
   
-  ./release.pl -replace -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections/<division>
+  ./release.pl -replace -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
     
 =head1 DESCRIPTION
 
