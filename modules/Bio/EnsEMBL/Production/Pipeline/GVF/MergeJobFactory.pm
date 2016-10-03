@@ -37,6 +37,7 @@ package Bio::EnsEMBL::Production::Pipeline::GVF::MergeJobFactory;
 use strict;
 use Carp;
 use Data::Dumper;
+use Log::Log4perl qw/:easy/;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
 #use base ('EGVar::FTP::RunnableDB::GVF::Base');
 
