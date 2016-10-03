@@ -43,7 +43,6 @@ sub default_options {
 
         'registry'         => '',   
         'pipeline_name'    => $self->o('hive_dbname'),       
-        #'output_dir'       => '/nfs/ftp/pub/databases/ensembl/projections/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
         'output_dir'       => '/nfs/ftp/pub/databases/ensembl/projections/',     
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
 
@@ -56,7 +55,7 @@ sub default_options {
 
         # orthologs cutoff
         'perc_id'  => '30',
-        'perc_cov' => '30',
+        'perc_cov' => '66',
 
         # 'target' & 'exclude' are mutually exclusive
         #  only one of those should be defined if used 
