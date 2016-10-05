@@ -20,16 +20,23 @@ use strict;
 use warnings;
 
 use Exporter qw/import/;
-our @EXPORT_OK = qw(apply_patch find_missing_patches);
-
+our @EXPORT_OK = qw(apply_patch find_missing_patches list_patch_files);
 use File::Slurp qw/read_file/;
 use File::Basename;
-
+use Carp;
 use Log::Log4perl qw/get_logger/;
 
 my $logger = get_logger();
 
-sub find_patches {
+sub list_patch_files {
+  my ($patch_dir) = @_;
+  opendir(my $dh, $patch_dir) || die "can't opendir $patch_dir: $!";
+  my @patch_files = map {$patch_dir."/".$_} grep { /patch.*.sql/ } readdir($dh);
+  closedir $dh;
+  return \@patch_files;
+}
+
+sub find_db_patches {
   my ($dbh, $db_name) = @_;
   # read patches from meta into a hash
   my $existing_patches = {};
@@ -54,7 +61,7 @@ sub find_missing_patches {
     $all_patches = [grep {m/patch_${last_release}_${release}_[a-z]+.sql/} @$all_patches];
   }
   # read patches from meta into a hash
-  my $existing_patches = find_patches($dbh, $db_name);
+  my $existing_patches = find_db_patches($dbh, $db_name);
   my $missing_patches = [];
   for my $patch (@{$all_patches}) {
     my $patch_file = basename($patch);
@@ -69,12 +76,12 @@ sub apply_patch {
   my ($dbh, $db_name, $patch_file) = @_;
   $logger->info("Applying $patch_file to $db_name");
   my $lines = join ' ', grep {$_ !~ m/^#/ && $_ !~ m/^--/} read_file($patch_file);
-  $dbh->do("use $db_name");
+  $dbh->do("use $db_name") || croak "Cannot use $db_name";
   for my $line (split ';', $lines) {
     $line =~ s/^\s*(.*)\s*$/$1/sg;
     next unless defined $line && $line ne '';
     $logger->debug("Applying $line");
-    $dbh->do($line);
+    $dbh->do($line) || croak "Could not apply SQL $line on $db_name";
   }
   return;
 }
