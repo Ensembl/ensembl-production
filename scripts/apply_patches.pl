@@ -58,6 +58,7 @@ $logger->debug("Patching databases to v$opts->{version}");
 my $available_patches={};
 my $patch_dirs = {
 		  core => "$opts->{basedir}/ensembl/sql",
+		  otherfeatures => "$opts->{basedir}/ensembl/sql",
 		  variation => "$opts->{basedir}/ensembl-variation/sql",
 		  funcgen => "$opts->{basedir}/ensembl-funcgen/sql",
 		  compara => "$opts->{basedir}/ensembl-compara/sql",
@@ -96,19 +97,42 @@ while (my $row =$sth->fetchrow_arrayref()) {
 }
 $sth->finish();
 
+my $patchN = 0;
+my $dbN = 0;
 for my $database (@{$available_databases}) {
   $logger->debug("Considering $database");
-  if($database =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/) {
-    my $type = $1;
+  my $type = get_type($database);
+  if(defined $type) {
     my $patches = $available_patches->{$type};
     if(!defined $patches) {
       $logger->warn("Cannot patch database $database of type $type");
     } else {
       $logger->debug("Checking patches for $type db $database");
       my $missing_patches = find_missing_patches($dbh, $database, $patches, $opts->{version});
+      if(scalar(@$missing_patches)>0) {
+	$dbN++;
+      }
       for my $missing_patch (@$missing_patches) {
-	apply_patch($dbh, $database, $missing_patch);
+	$patchN++;
+	eval {
+	  apply_patch($dbh, $database, $missing_patch);
+	};
+	if($@) {
+	  $logger->warn("Could not apply patch $missing_patch to $database: ".$@);
+	}
       }
     }
   }
+}
+$logger->info("Completed appying $patchN patch(es) to $dbN database(s)");
+
+sub get_type {
+  my ($dbname) = @_;
+  my $type;
+  if($dbname =~ m/ensembl_compara_.*/) {
+    $type = 'compara';
+  } elsif($dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/) {
+    $type = $1;
+  }
+  return $type;
 }
