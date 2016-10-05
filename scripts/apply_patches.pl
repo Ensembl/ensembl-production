@@ -62,6 +62,7 @@ my $patch_dirs = {
 		  variation => "$opts->{basedir}/ensembl-variation/sql",
 		  funcgen => "$opts->{basedir}/ensembl-funcgen/sql",
 		  compara => "$opts->{basedir}/ensembl-compara/sql",
+		  ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql"
 		 };
 while(my ($type,$dir) = each %$patch_dirs) {
   $logger->info("Retrieving $type patches from $dir");
