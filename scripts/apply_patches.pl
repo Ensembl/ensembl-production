@@ -114,12 +114,7 @@ for my $database (@{$available_databases}) {
       }
       for my $missing_patch (@$missing_patches) {
 	$patchN++;
-	eval {
-	  apply_patch($dbh, $database, $missing_patch);
-	};
-	if($@) {
-	  $logger->warn("Could not apply patch $missing_patch to $database: ".$@);
-	}
+	apply_patch($dbh, $database, $missing_patch);
       }
     }
   }
