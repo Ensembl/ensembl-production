@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS gvf_merge (
             },
 	    },
 
-     { -logic_name     => 'backbone_fire_pipeline',
+     { -logic_name     => 'backbone_fire_pipeline_variation_dump',
   	   -module         => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids      => [ {} ], 
        -parameters     => {},
