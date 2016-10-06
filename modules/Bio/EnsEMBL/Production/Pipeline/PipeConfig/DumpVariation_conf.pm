@@ -73,7 +73,6 @@ sub default_options {
 		    'vcf',
 		),
 
-#ftpDataDump_86_Protists_variation/temp_dir/release-33/protists/gvf/phytophthora_infestans
 	   'temp_gvf_file_dir' => File::Spec->catfile(
 		    $self->o('temp_dir'),
 		    $self->directory_name_for_compara($self->o('division')),
@@ -84,11 +83,6 @@ sub default_options {
 		    $self->o('ensembl_cvs_root_dir'),
 		    '/ensembl-variation/scripts/misc/gvf2vcf.pl'
 		),
-
-	   ## Set to '1' for eg! run 
-       #  default => OFF (0)
-       #  affect: dump_gtf
-	   'eg' => 0,
 
        'pipeline_db' => {  
  	      -host   => $self->o('hive_host'),
