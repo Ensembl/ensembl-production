@@ -35,14 +35,14 @@ sub new {
     $self->{samtools_dir}, $self->{samtools},
     $self->{bcftools_dir}, $self->{bcftools}, $self->{vcfutils},
     $self->{aligner_dir},
-    $self->{threads}, $self->{run_mode}, $self->{do_not_run}, $self->{cleanup},
+    $self->{threads}, $self->{memory}, $self->{run_mode}, $self->{do_not_run}, $self->{cleanup},
   ) =
   rearrange(
     [
       'SAMTOOLS_DIR', 'SAMTOOLS',
       'BCFTOOLS_DIR', 'BCFTOOLS', 'VCFUTILS',
       'ALIGNER_DIR',
-      'THREADS', 'RUN_MODE', 'DO_NOT_RUN', 'CLEANUP',
+      'THREADS', 'MEMORY', 'RUN_MODE', 'DO_NOT_RUN', 'CLEANUP',
     ], @args
   );
   
@@ -128,13 +128,28 @@ sub sam_to_bam {
 	my ($self, $sam, $bam) = @_;
   
 	if (! defined $bam) {
-		($bam = $sam) =~ s/\.sam/\.bam/;
+		($bam = $sam) =~ s/\.sam$/\.bam/;
     if ($bam eq $sam) {
       $bam = "$sam.bam";
     }
 	}
-  my $cmd = "$self->{samtools} view -bS $sam > $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  # First part: conversion from SAM to BAM
+  my $convert_cmd = "$self->{samtools} view -bS $sam";
+  
+  # Second part: sorting the BAM
+  my $threads = $self->{threads};
+  # Calculate the correct memory per thread
+  my $mem = $self->{memory} / $threads;
+  # Samtools sort is too greedy: we give it less
+  $mem *= 0.8;
+  my $mem_limit = $mem . 'M';
+  # Final sort command
+  my $sort_cmd = "$self->{samtools} sort -@ $threads -m $mem_limit -o $bam -O 'bam' -T $bam.sorting -";
+  
+  # Pipe both commands
+  my $cmd = "$convert_cmd | $sort_cmd";
+  
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $bam;
@@ -144,8 +159,9 @@ sub merge_bam {
 	my ($self, $bams, $out) = @_;
   
   my $bam = join( ' ', @$bams );
-  my $cmd = "$self->{samtools} merge -f $out $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  my $threads = $self->{threads};
+  my $cmd = "$self->{samtools} merge -@ $threads -f $out $bam";
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $out;
@@ -161,7 +177,7 @@ sub sort_bam {
     }
 	}
   my $cmd = "$self->{samtools} sort $bam $out_prefix";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return "$out_prefix.bam";
@@ -178,7 +194,7 @@ sub index_bam {
 	}
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
 }
 
@@ -211,7 +227,7 @@ sub pileup_bam {
 	}
   # Is the '-' required?
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $bcf;
@@ -228,10 +244,21 @@ sub bcf2vcf {
 	}
   
   my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
-  system($cmd) == 0 || throw "Cannot execute $cmd";
+  $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   
 	return $vcf;
+}
+
+sub dummy {
+  my $self = shift;
+  my ($dummy) = @_;
+  
+  if (defined $dummy) {
+    $self->{do_not_run} = $dummy;
+  }
+  
+  return $self->{do_not_run};
 }
 
 1;
