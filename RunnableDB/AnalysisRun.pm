@@ -242,6 +242,14 @@ sub set_query {
     }
     $runnable->{'query'} = $translation;
     
+  } elsif ($self->param('results_index') eq 'transcript') {
+    my $transcript_adaptor = $dba->get_adaptor('Transcript');
+    my $transcript = $transcript_adaptor->fetch_by_stable_id($result_index);
+    if (!defined($transcript)) {
+      $transcript = $transcript_adaptor->fetch_by_dbID($result_index);
+    }
+    $runnable->query($transcript->feature_Slice) if defined $transcript;
+    
   } else {
     my $slice_adaptor = $dba->get_adaptor('Slice');
     my ($name, $start, $end) = ($result_index, undef, undef);
