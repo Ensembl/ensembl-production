@@ -286,8 +286,9 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'LoadUniParc',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniParc',
+      -logic_name      => 'SetupUniProt',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -max_retry_count => 0,
       -parameters      => {
                             uniparc_db  => $self->o('local_uniparc_db'),
                             logic_name  => $self->o('checksum_logic_name'),
@@ -365,8 +366,9 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'LoadUniProtGO',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
+      -logic_name      => 'SetupUniProtGO',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -max_retry_count => 0,
       -parameters      => {
                             uniprot_db           => $self->o('remote_uniprot_db'),
                             replace_all          => $self->o('replace_all'),
@@ -401,8 +403,9 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'LoadUniProtXrefs',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtXrefs',
+      -logic_name      => 'SetupUniProtXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -max_retry_count => 0,
       -parameters      => {
                             uniprot_db           => $self->o('remote_uniprot_db'),
                             replace_all          => $self->o('replace_all'),
