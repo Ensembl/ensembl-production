@@ -215,7 +215,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=47 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=51 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -247,7 +247,7 @@ CREATE TABLE `species` (
   `production_name` varchar(255) NOT NULL,
   `url_name` varchar(255) NOT NULL DEFAULT '',
   `taxon` varchar(8) NOT NULL,
-  `species_prefix` varchar(7) NOT NULL,
+  `species_prefix` varchar(20) NOT NULL,
   `is_current` tinyint(1) NOT NULL DEFAULT '1',
   `created_by` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
@@ -257,8 +257,7 @@ CREATE TABLE `species` (
   PRIMARY KEY (`species_id`),
   UNIQUE KEY `db_name_idx` (`db_name`),
   UNIQUE KEY `production_name_idx` (`production_name`),
-  UNIQUE KEY `species_prefix_idx` (`species_prefix`),
-  UNIQUE KEY `taxon_idx` (`taxon`)
+  UNIQUE KEY `species_prefix_idx` (`species_prefix`)
 ) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `species_alias` (

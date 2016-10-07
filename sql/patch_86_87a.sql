@@ -13,7 +13,11 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+<<<<<<< HEAD
+# patch_86_87a.sql
+=======
 # patch_86_87_a.sql
+>>>>>>> master
 #
 # Title: Update schema version.
 #
@@ -24,5 +28,9 @@ UPDATE meta SET meta_value='87' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
+<<<<<<< HEAD
+  VALUES (NULL, 'patch', 'patch_86_87a.sql|schema_version');
+=======
   VALUES (NULL, 'patch', 'patch_86_87_a.sql|schema_version');
 
+>>>>>>> master
