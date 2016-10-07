@@ -46,7 +46,7 @@ sub new {
 sub version {
   my ($self) = @_;
   
-  my $cmd = $self->{bwa};
+  my $cmd = $self->{align_program};
   my (undef, $error, $buffer) = run(command => $cmd);
   my $buffer_str = join "", @$buffer;
   
