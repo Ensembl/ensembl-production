@@ -56,11 +56,13 @@ sub run {
   
   my $command = $self->param('optimize_tables') ? 'OPTIMIZE' : 'ANALYZE';
   foreach my $db_type (@{$self->param('db_types')}) {
-    my $dbc = $self->get_DBAdaptor($db_type)->dbc;
-    my $tables = $dbc->db_handle->selectcol_arrayref('SHOW TABLES;');
-    map {$dbc->do("$command TABLE $_;")} @$tables;
+    my $dba = $self->get_DBAdaptor($db_type);
+    if (defined $dba) {
+      my $tables = $dba->dbc->db_handle->selectcol_arrayref('SHOW TABLES;');
+      map {$dba->dbc->do("$command TABLE $_;")} @$tables;
+      $dba->dbc->disconnect_if_idle();
+    }
   }
-  
 }
 
 1;
