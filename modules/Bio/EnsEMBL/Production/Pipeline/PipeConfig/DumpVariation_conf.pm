@@ -73,7 +73,6 @@ sub default_options {
 		    'vcf',
 		),
 
-#ftpDataDump_86_Protists_variation/temp_dir/release-33/protists/gvf/phytophthora_infestans
 	   'temp_gvf_file_dir' => File::Spec->catfile(
 		    $self->o('temp_dir'),
 		    $self->directory_name_for_compara($self->o('division')),
@@ -84,11 +83,6 @@ sub default_options {
 		    $self->o('ensembl_cvs_root_dir'),
 		    '/ensembl-variation/scripts/misc/gvf2vcf.pl'
 		),
-
-	   ## Set to '1' for eg! run 
-       #  default => OFF (0)
-       #  affect: dump_gtf
-	   'eg' => 0,
 
        'pipeline_db' => {  
  	      -host   => $self->o('hive_host'),
@@ -150,12 +144,10 @@ sub pipeline_analyses {
 
 	return
 	[
-	    {  -logic_name => 'gvf_Setup',
+	    {  -logic_name => 'GVF_setup',
 		   -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-		   -parameters => {},
-		   -input_ids => [
-			{
-				 sql => [
+           -parameters => {
+                'sql'   => [
 				    qq~
 CREATE TABLE IF NOT EXISTS gvf_species (
 	species_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -192,22 +184,23 @@ CREATE TABLE IF NOT EXISTS gvf_merge (
 	PRIMARY KEY (merge_id)
 );
 				    ~
-				 ]
-			}
-		    ],
+                ],
+            },
 	    },
 
-     { -logic_name     => 'backbone_fire_pipeline',
+     { -logic_name     => 'backbone_fire_pipeline_variation_dump',
   	   -module         => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids      => [ {} ], 
        -parameters     => {},
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
        -meadow_type    => 'LOCAL',
-       -flow_into      => {'1' => [ 'gvf_job_factory' ], },		                       
+       -flow_into      => {'1->A' => ['GVF_setup'],
+                           'A->1' => ['GVF_job_factory'],
+                          }		                       
      },   
 
-	 { -logic_name     => 'gvf_job_factory',
+	 { -logic_name     => 'GVF_job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -parameters     => {
                              species     => $self->o('species'),
@@ -218,14 +211,13 @@ CREATE TABLE IF NOT EXISTS gvf_merge (
 	  -hive_capacity   => -1,
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
-      -flow_into       => { '4' => 'gvf_create_seqregion_batches', },    
-      -wait_for        => [ 'gvf_Setup' ],
+      -flow_into       => { '4' => ['GVF_create_seqregion_batches', 'VCF_readme'],},    
     },
 
-    { -logic_name => 'gvf_create_seqregion_batches',
+    { -logic_name => 'GVF_create_seqregion_batches',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::GVF::JobForEachSeqRegion',	   
 	  -flow_into  => {
- 		 2 => 'gvf_dumpbatch',
+ 		 2 => 'GVF_dumpbatch',
 		 3 => [ ":////gvf_species" ],
 		 4 => [ ":////gvf_merge"   ],
 	  },
@@ -242,49 +234,80 @@ CREATE TABLE IF NOT EXISTS gvf_merge (
 	},
 
 
-    { -logic_name => 'gvf_dumpbatch',
+    { -logic_name => 'GVF_dumpbatch',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::GVF::DumpGVFBatch',	   
       # Seems to provide a reasonable trade off between
 	  -hive_capacity => 30,
-	  -wait_for      => [ 'gvf_job_factory'],
+	  -wait_for      => [ 'GVF_job_factory'],
       -parameters => {
 		dump_gvf_script  => $self->o('ensembl_cvs_root_dir') . '/ensembl-variation/scripts/export/dump_gvf.pl',
-#		ftp_gvf_file_dir => $self->o('ftp_gvf_file_dir'),
-#		registry         => $self->o('registry'),
-#		temp_dir         => $self->o('temp_gvf_file_dir'),
        },
 	 -rc_name => 'default',
 	 -flow_into => {
 # The URL ':////gvf_file' only works with the old parser, please start using the new syntax as the old parser will soon be deprecated
 		2 => [ ":////gvf_file" ],
-		3 => 'gvf_merge_job_factory',
+		3 => 'GVF_merge_job_factory',
 	 },
    },
 
-   { -logic_name => 'gvf_start_merge_job_factory',
+   { -logic_name => 'GVF_start_merge_job_factory',
      -module     => 'Bio::EnsEMBL::Production::Pipeline::GVF::StartMergeJobFactory',	   
-     -flow_into  => { 2 => 'gvf_merge_job_factory', },
+     -flow_into  => { 2 => 'GVF_merge_job_factory', },
      -input_ids  => [ {} ],
-	 -wait_for   => [ 'gvf_dumpbatch' ],
+	 -wait_for   => [ 'GVF_dumpbatch' ],
    },
 
-
-   { -logic_name     => 'gvf_merge_job_factory',
-     -module     => 'Bio::EnsEMBL::Production::Pipeline::GVF::MergeJobFactory',	   
-#	 -module        => 'EGVar::FTP::RunnableDB::GVF::MergeJobFactory',
+   { -logic_name    => 'GVF_merge_job_factory',
+     -module        => 'Bio::EnsEMBL::Production::Pipeline::GVF::MergeJobFactory',	   
      -hive_capacity => 1,
-	 -rc_name => 'default',
-	 -flow_into => { },#		2 => $division . '_gvf_MergePartialGVF',
+	 -rc_name       => 'default',
+	 -flow_into     => { 2 => 'GVF_merge_partial_gvf'},
 	   # Try to let one worker get all the jobs. Multiple job
 	   # factories might create competing merge jobs, though
 	   # unlikely. This could be prevented by having jobs from 
 	   # this analysis locking the gvf_file table.
-    -batch_size => 10000,
-    -parameters => { division => $self->o('division'), },
+     -batch_size    => 10000,
+     -parameters    => { division => $self->o('division'), },
    },
 
+   { -logic_name    => 'GVF_merge_partial_gvf',
+     -module        => 'Bio::EnsEMBL::Production::Pipeline::GVF::MergePartialGVF',	   
+     -hive_capacity => 5,
+	 -rc_name       => 'default',
+	 -flow_into     => {
+			2 => 'GVF_tidy',
+			3 => 'convert_GVF2VCF',
+	   },
+	 -parameters    => { },
+   },
 
+   { -logic_name    => 'GVF_tidy',
+     -module        => 'Bio::EnsEMBL::Production::Pipeline::GVF::Tidy',	   
+	 -hive_capacity => 1,
+	 -rc_name => 'default',
+	 -flow_into => {},
+	 -parameters => {
+			tidy_gvf_dump_script => $self->o('ensembl_cvs_root_dir') . '/ensembl-variation/scripts/export/tidy_gvf_dumps.pl',
+	   },
+   },
 
+   { -logic_name    => 'convert_GVF2VCF',
+     -module        => 'Bio::EnsEMBL::Production::Pipeline::GVF::ConvertGVFToVCF',	   
+	 -hive_capacity => 5,
+	 -rc_name => 'default',
+	 -parameters => {
+		ensembl_gvf2vcf_script => $self->o('ensembl_gvf2vcf_script'),
+		registry               => $self->o('registry'),
+	   },
+   },
+
+   { -logic_name    => 'VCF_readme',
+     -module        => 'Bio::EnsEMBL::Production::Pipeline::GVF::Readme',	   
+     -hive_capacity => 5,
+	 -rc_name       => 'default',
+	 -parameters    => { },
+	 -wait_for      => [ 'convert_GVF2VCF' ],
+   },
 	];
 }
 
