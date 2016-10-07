@@ -110,7 +110,7 @@ sub default_options {
     blastp_parameters => '-word_size  3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
 
     # For parsing the output.
-    output_regex     => '^\s*(\w+)',
+    output_regex     => '^\s*(\S+)',
     pvalue_threshold => 0.01,
     filter_prune     => 1,
     filter_min_score => 200,
@@ -380,7 +380,7 @@ sub pipeline_analyses {
       -parameters      => {
                             ebi_path     => $self->o('uniprot_ebi_path'),
                             ftp_uri      => $self->o('uniprot_ftp_uri'),
-                            data_source  => 'sprot',
+                            uniprot_db  => 'sprot',
                             data_type    => '#database_type#',
                             out_dir      => $self->o('uniprot_dir'),
                             file_varname => 'fasta_file',
@@ -408,7 +408,7 @@ sub pipeline_analyses {
       -parameters      => {
                             ebi_path     => $self->o('uniprot_ebi_path'),
                             ftp_uri      => $self->o('uniprot_ftp_uri'),
-                            data_source  => 'trembl',
+                            uniprot_db   => 'trembl',
                             data_type    => '#database_type#',
                             out_dir      => $self->o('uniprot_dir'),
                             file_varname => 'fasta_file',
