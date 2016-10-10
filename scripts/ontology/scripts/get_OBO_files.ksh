@@ -37,6 +37,12 @@ wget -O $dir/HPO.obo "http://purl.obolibrary.org/obo/hp.obo"
 # EFO   - Experimental Factor Ontology
 wget -O $dir/EFO.obo "http://svn.code.sf.net/p/efo/code/trunk/src/efoinobo/efo.obo"
 
+#MP
+wget -O $dir/MP.obo "http://www.berkeleybop.org/ontologies/mp.obo"
+
+#CMO
+wget -O $dir/CMO.obo "ftp://ftp.rgd.mcw.edu/pub/ontology/clinical_measurement/clinical_measurement.obo"
+
 exit
 
 # ----------------------------------------------------------------------

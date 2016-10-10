@@ -21,3 +21,6 @@ wget "http://www.brenda-enzymes.info/ontology/tissue/tree/update/update_files/Br
 wget "http://www.berkeleybop.org/ontologies/obo-all/bfo/bfo.obo" -O BFO.obo
 wget "https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo" -O UO.obo
 wget "https://raw.githubusercontent.com/evidenceontology/evidenceontology/master/eco.obo" -O ECO.obo
+wget "http://www.berkeleybop.org/ontologies/mp.obo" -O MP.obo
+wget "ftp://ftp.rgd.mcw.edu/pub/ontology/clinical_measurement/clinical_measurement.obo" -O CMO.obo
+wget "http://purl.obolibrary.org/obo/hp.obo" -O HPO.obo
