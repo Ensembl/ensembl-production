@@ -112,16 +112,6 @@ sub run {
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
 
-=pod
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-staging-1.ebi.ac.uk',
-            -port       => 4160,
-            -user       => 'ensrw',
-            -pass       => 'scr1b3s1',
-            -db_version => '82',
-   );
-=cut
-
     my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
     my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
     my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 

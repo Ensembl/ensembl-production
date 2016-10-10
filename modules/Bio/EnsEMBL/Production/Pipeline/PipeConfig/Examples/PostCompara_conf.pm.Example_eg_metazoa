@@ -76,20 +76,26 @@ sub default_options {
        # If the parallel flag is on, all the projections will run at the same time
        # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
        # Default value is 1
+
         parallel_GeneNames_projections => '1',
-        parallel_GO_projections       => '1',
+        parallel_GO_projections        => '1',
 
        ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
        ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
        ## This flag should be enabled for EG and disable for e! species.
+
         is_tree_compliant => '1',
 
 	## GeneName Projection 
 	 	gn_config => { 
+	 	  '1'=>{
+	 	       }, 
 		},
 
 	## GeneDescription Projection 
- 	       gd_config => { 
+ 	    gd_config => { 
+	 	   '1'=>{
+	 	        }, 
 	    },
 
 		#  Off by default. 
@@ -101,16 +107,19 @@ sub default_options {
 		#		 "Predicted protein" from UniProt
 		#		 "Gene of unknown function" from PGSC
 		flag_filter   => '0', 
-		             #  Off by default.
-                #  Setting projected transcript statuses to NOVEL
-                #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
-                #  Deleting projected xrefs, object_xrefs and synonyms
-                #  before doing projection
-                flag_delete_gene_names   => '0',
-                #  Off by default.
-                #  Setting descriptions that were projected to NULL
-                #  before doing projection
-                flag_delete_gene_descriptions   => '0',
+
+        #  Off by default.
+        #  Setting projected transcript statuses to NOVEL
+        #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
+        #  Deleting projected xrefs, object_xrefs and synonyms
+        #  before doing projection
+        flag_delete_gene_names   => '0',
+
+        #  Off by default.
+        #  Setting descriptions that were projected to NULL
+        #  before doing projection
+        flag_delete_gene_descriptions   => '0',
+
         # Tables to dump for GeneNames & GeneDescription projections subpipeline
         g_dump_tables => ['gene', 'xref'],
         
@@ -122,56 +131,30 @@ sub default_options {
 	 	go_config => 
 		{ 
 	 	  '1'=>{
-	 	  	   'source'      => 'schizosaccharomyces_pombe', # 'schizosaccharomyces_pombe'
-	 		   'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
-	 		   'antispecies' => ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 'aspergilus_nidulans'],
-	 		   'division'    => ['fungi'], 
-	 		   'run_all'     =>  0, # 1/0
- 			   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			   'go_homology_types_allowed' => ['ortholog_one2one'],
-        	   'go_percent_id_filter'      => '10', 
-			   'ensemblObj_type'           => 'Transcript', # 'Translation'/'Transcript'
-			   'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'  
+                'source'  => 'drosophila_melanogaster', 
+                'species' => ['drosophila_ananassae', 'drosophila_erecta', 'drosophila_grimshawi', 'drosophila_mojavensis','drosophila_persimilis' ,'drosophila_pseudoobscura', 'drosophila_sechellia', 'drosophila_simulans', 'drosophila_virilis', 'drosophila_willistoni', 'drosophila_yakuba'],
+	 			'antispecies' => [],
+	 			'division'    => [], 
+	 			'run_all'     =>  0, # 1/0
+ 				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+			    'go_homology_types_allowed' => ['ortholog_one2one'],
+        		'go_percent_id_filter'      => '10', 
+				'ensemblObj_type'           => 'Translation', 
+				'ensemblObj_type_target'    => 'Translation', 
 	 	       }, 
 
-		 '2'=>{
-		  	   'source'	 => 'saccharomyces_cerevisiae',
-		  	   'species'	 => [],
-		  	   'antispecies' => ['schizosaccharomyces_pombe', 'saccharomyces_cerevisiae', 'aspergilus_nidulans'],
-		  	   'division'    => ['fungi'],
-		  	   'run_all'     =>  0,
- 		  	   'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-		  	   'go_homology_types_allowed' => ['ortholog_one2one'],
-          	   'go_percent_id_filter'      => '10', 
-		  	   'ensemblObj_type'           => 'Translation', 
-		  	   'ensemblObj_type_target'    => 'Translation',   
-	 	 	  }, 
-
-         '3'=>{
-               'source'      => 'schizosaccharomyces_pombe', 
-               'species'     => ['aspergillus_nidulans'], 
-               'antispecies' => [],
-               'division'    => [],
-               'run_all'     =>  0, 
-               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-               'go_homology_types_allowed' => ['ortholog_one2one'],
-               'go_percent_id_filter'      => '10',
-               'ensemblObj_type'           => 'Transcript', 
-               'ensemblObj_type_target'    => 'Transcript', 
-               },
-
-         '4'=>{
-               'source'      => 'saccharomyces_cerevisiae', 
-               'species'     => ['aspergillus_nidulans'], 
-               'antispecies' => [],
-               'division'    => [],
-               'run_all'     =>  0, 
-               'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-               'go_homology_types_allowed' => ['ortholog_one2one'],
-               'go_percent_id_filter'      => '10',
-               'ensemblObj_type'           => 'Translation', 
-               'ensemblObj_type_target'    => 'Transcript', 
-               },		
+	 	  '2'=>{
+                'source'  => 'caenorhabditis_elegans',
+	            'species' => ['caenorhabditis_brenneri', 'caenorhabditis_briggsae', 'caenorhabditis_japonica', 'caenorhabditis_remanei', 'pristionchus_pacificus', 'brugia_malayi', 'onchocerca_volvulus', 'strongyloides_ratti', 'loa_loa', 'trichinella_spiralis'],
+	 			'antispecies' => [],
+	 			'division'    => [], 
+	 			'run_all'     =>  0, # 1/0
+				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+			    'go_homology_types_allowed' => ['ortholog_one2one'],
+        		'go_percent_id_filter'      => '10', 
+				'ensemblObj_type'           => 'Translation', 
+				'ensemblObj_type_target'    => 'Translation', 
+	 	       }, 
     	},
 		
 	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
@@ -202,7 +185,7 @@ sub default_options {
 
         # GOA webservice parameters
         goa_webservice => 'http://www.ebi.ac.uk/QuickGO/',
-	goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
+	    goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
 						  #GValidate?service=taxon&action=getConstraints&taxon=
         # Taxon param in case Oracle database doen't work
         taxon_params     => 'GValidate?service=taxon&action=getConstraints',
@@ -231,10 +214,12 @@ sub default_options {
 		#  Off by default. 
 		#  Check if GO term is already assigned, and don't project if it is.
 		flag_go_check          => '0', 
+
 		#  On by default.  
 		#  Control the printing of full statistics, i.e.:  
 		#   - number of terms per evidence type for projected GO terms
 		flag_full_stats        => '1', 
+
 		#  On by default. 
 		#  Delete existing projected (info_type='PROJECTION') GO terms in the target species, 
 		#  before doing projection   

@@ -16,9 +16,12 @@ limitations under the License.
 
 =head1 NAME
 
-TBA
+${ensembl_cvs_root_dir}/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Ortholog/release.pl
 
 =head1 DESCRIPTION
+
+Run this script post DumpOrthologs pipeline to create
+a release.txt timestamp file  
 
 =head1 AUTHOR
 
@@ -91,8 +94,7 @@ sub run {
     if(leaf_directory($contents)) {
       print STDERR "Directory is a leaf; generating timestamp\n";
       my $timestamp = getLoggingTime();
-      #my $dir2 = $1 if($dir =~/(ensembl\w.+)$/);      
-      $dir = $1 if($dir =~/(ensembl\w.+)$/);      
+      $dir = $1 if($dir =~/(ensembl\w*)$/);      
       print $fh "$dir\t$timestamp\n";
     }
   }
@@ -163,11 +165,11 @@ release.pl
 
 =head1 SYNOPSIS
 
-  ./release.pl -directory /nfs/ftp/pub/databases/ensembl/projections/<user>/workspace/<ortholog_dump_directory>
+  ./release.pl -directory /nfs/ftp/pub/databases/ensembl/projections
 
-  ./release.pl -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections/<user>/workspace/<ortholog_dump_directory>
+  ./release.pl -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
   
-  ./release.pl -replace -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections/<user>/workspace/<ortholog_dump_directory>
+  ./release.pl -replace -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
     
 =head1 DESCRIPTION
 

@@ -28,7 +28,6 @@ limitations under the License.
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::Common::EmailReport;
-#package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport;
 
 use strict;
 use warnings;

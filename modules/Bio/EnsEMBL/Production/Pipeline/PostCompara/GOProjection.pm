@@ -139,15 +139,6 @@ sub run {
        $meta_container   = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
        ($to_taxon_id)    = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
     }
-=pod
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-mirror.ebi.ac.uk',
-            -port       => 4157,
-            -user       => 'ensrw',
-            -pass       => 'writ3r',
-            -db_version => '80',
-   );
-=cut
 
     my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
@@ -171,6 +162,11 @@ sub run {
     my $method_link_type = $self->param('method_link_type');
     my $from_GenomeDB    = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB      = $gdba->fetch_by_registry_name($to_species);
+  
+    # skip projection if the target 
+    # species is not in compara
+    return if(!defined $to_GenomeDB);
+
     my $mlss             = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
 
     throw "Failed to fetch mlss for ml, $method_link_type, for pair of species, $from_species, $to_species\n" if(!defined $mlss);

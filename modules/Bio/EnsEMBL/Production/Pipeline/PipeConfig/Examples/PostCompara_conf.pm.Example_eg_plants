@@ -57,7 +57,7 @@ sub default_options {
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
         flag_GeneNames    => '0',
-        flag_GeneDescr    => '0',
+        flag_GeneDescr    => '1',
         flag_GO           => '1',
         flag_GeneCoverage => '0',
 
@@ -83,7 +83,6 @@ sub default_options {
        ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
        ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
        ## This flag should be enabled for EG and disable for e! species.
-
         is_tree_compliant => '1',
 
 	## GeneName Projection 
@@ -95,6 +94,25 @@ sub default_options {
 	## GeneDescription Projection 
  	    gd_config => { 
 	 	   '1'=>{
+ 	 	  		  'source'          => 'arabidopsis_thaliana', 
+	 			  'species'         => [], 
+	 			  'antispecies'     => ['arabidopsis_thaliana'],
+ 	 			  'division'        => ['plants'], 
+ 			      'run_all'         =>  0, # 1/0
+        		  # flowering group of your target species
+		          'taxon_filter'    => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                  # source species GeneName filter for GeneDescription
+                  'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
+				  # source species GeneDescription filter
+				  'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'] , 
+				  # target species GeneDescription filter
+				  'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
+		  		  # homology types filter
+ 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+			      'homology_types_allowed' => ['ortholog_one2one'],
+		          # homology percentage identity filter 
+        		  'percent_id_filter'      => '30', 
+				  'percent_cov_filter'     => '66',
 	 	        }, 
 	    },
 

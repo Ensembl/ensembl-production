@@ -141,6 +141,8 @@ sub run {
 
        # 'from' member
        my $from_member      = $homology->get_Member_by_GenomeDB($from_gdb)->[0];
+       # A temporary fix when get_Transcript() returned undef
+       next if (!defined $from_member->get_Transcript());
        my $from_perc_id     = $from_member->perc_id();
        my $from_perc_cov    = $from_member->perc_cov();
        my $from_gene        = $from_member->get_Transcript->get_Gene();
@@ -166,6 +168,8 @@ sub run {
        my $to_members        = $homology->get_Member_by_GenomeDB($to_gdb);
 
        foreach my $to_member (@$to_members) {
+	  # A temporary fix when get_Transcript() returned undef
+	  next if (!defined $to_member->get_Transcript());
           my $to_perc_id     = $to_member->perc_id();
           my $to_perc_cov    = $to_member->perc_cov();
           my $to_gene        = $to_member->get_Transcript->get_Gene();
