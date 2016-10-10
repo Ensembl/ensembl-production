@@ -106,7 +106,7 @@ sub default_options {
                                 'homology_types_allowed' => ['ortholog_one2one'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '30',
-                                'percent_cov_filter'     => '60',
+                                'percent_cov_filter'     => '66',
                        },
 		},
 
@@ -135,7 +135,7 @@ sub default_options {
                                  'homology_types_allowed' => ['ortholog_one2one'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '30',
-                                 'percent_cov_filter'     => '60',
+                                 'percent_cov_filter'     => '66',
                         },
 	    },
 
