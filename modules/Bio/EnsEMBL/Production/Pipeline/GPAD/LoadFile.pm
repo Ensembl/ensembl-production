@@ -87,7 +87,7 @@ sub run {
 
     # Parse filename to get $target_species
     my $file    = $self->param_required('gpad_file');
-    my $species = $1 if($file=~/annotations_ensembl-(.+)\.gpa/);
+    my $species = $1 if($file=~/annotations_ensembl.*\-(.+)\.gpa/);
 
     # Remove existing projected GO annotations from GOA 
     if ($self->param_required('delete_existing')) {
