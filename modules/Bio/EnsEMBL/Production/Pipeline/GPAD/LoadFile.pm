@@ -87,12 +87,10 @@ sub run {
 
     # Parse filename to get $target_species
     my $file    = $self->param_required('gpad_file');
-    my $species = $1 if($file=~/annotations_Ensembl.+\-(.+)\.gpa/)
-#    my $species;
+    my $species = $1 if($file=~/annotations_ensembl-(.+)\.gpa/);
 
     # Remove existing projected GO annotations from GOA 
     if ($self->param_required('delete_existing')) {
-#       $species = 'brachypodium_distachyon';
         my $dba          = $reg->get_DBAdaptor($species, "core");         
         my $sql_delete_1 = $self->param_required('sql_delete_1');
         my $sql_delete_2 = $self->param_required('sql_delete_2');
@@ -109,6 +107,15 @@ sub run {
     my $gos  = $self->fetch_ontology($odba);
 
     open(FILE, $file) or die "Could not open '$file' for reading : $!";
+
+    my (%adaptor_hash, %dbe_adaptor_hash, %t_adaptor_hash );
+    my ($tl_adaptor, $dbe_adaptor, $t_adaptor);
+    my ($translation, $translations);
+    my (%translation_hash, %species_missed, %species_added);
+    # When no stable_id or not found in db, try corresponding direct xref
+    my %species_added_via_xref;
+    # When GO mapped to Ensembl stable_id, add as direct xref
+    my %species_added_via_tgt;
 
     while (<FILE>) {
       chomp $_;
@@ -142,16 +149,6 @@ sub run {
          }
       }
 
-     my (%adaptor_hash, %dbe_adaptor_hash, %t_adaptor_hash );
-     my ($tl_adaptor, $dbe_adaptor, $t_adaptor);
-     my ($translation, $translations);
-     my (%translation_hash, %species_missed, %species_added);
-     # When no stable_id or not found in db, try corresponding direct xref
-     my %species_added_via_xref;
-     # When GO mapped to Ensembl stable_id, add as direct xref
-     my %species_added_via_tgt;
-     my %ontology_definition;
-
      if ($adaptor_hash{$tgt_species}) {
         # If the file lists a species not in the current registry, skip it
         if ($adaptor_hash{$tgt_species} eq 'undefined') { 
@@ -175,22 +172,27 @@ sub run {
     }
 
     my $info_type = 'DIRECT';
+    my $info_text = $assigned_by;
+    if ($assigned_by eq 'Ensembl' and defined $src_protein) {
+      $src_protein =~ s/src_protein=\w+://;
+      $src_species =~ s/src_species=//;
+      $info_text   = "from $src_species translation $src_protein";
+    }
 
     # Create new GO dbentry object
     my $go_xref = Bio::EnsEMBL::OntologyXref->new(
     	-primary_id  => $go_id,
 	-display_id  => $go_id,
-	-info_text   => $go_ref,
+	-info_text   => $info_text,
     	-info_type   => $info_type,
-    	-description => $$gos{$go_id},#$ontology_definition{$go_id},
+    	-description => $$gos{$go_id},
     	-linkage_annotation => $go_evidence,
     	-dbname      => 'GO'
    ); 
 
    # Retrieve existing or create new analysis object
    my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species , "core", "analysis" );
-   my $analysis; 
-   $analysis = $analysis_adaptor->fetch_by_logic_name('goa_import');
+   my $analysis = $analysis_adaptor->fetch_by_logic_name('goa_import');
    
    if(!defined $analysis){
      $analysis = Bio::EnsEMBL::Analysis->
@@ -244,7 +246,8 @@ sub run {
           $translation = $translation_hash{$transcript};
         } else {
           my $translation_transcript = $t_adaptor->fetch_by_stable_id($transcript);
-          $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript);
+          # Some stable ids might be deprecated, hence $translation_transcript is not always defined
+          $translation = $tl_adaptor->fetch_by_Transcript($translation_transcript) if $translation_transcript;
         }
 
        if (defined $translation) {
