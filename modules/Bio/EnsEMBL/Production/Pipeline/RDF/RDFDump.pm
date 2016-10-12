@@ -114,9 +114,9 @@ sub run {
     my $graph_path = $path;
     $self->param('dir', $graph_path);
     unless ($graph_path) { $graph_path = $self->get_dir($release) };
-    
-    $triple_converter->create_virtuoso_file(sprintf("%s/%s.graph",$graph_path,$production_name));
-    $triple_converter->create_virtuoso_file(sprintf("%s/%s_xrefs.graph",$graph_path,$production_name));
+    # Graph files need to be named exactly the same as the underlying data for Virtuoso to correctly namespace the data
+    $triple_converter->create_virtuoso_file(sprintf("%s/%s.ttl.gz.graph",$graph_path,$production_name));
+    $triple_converter->create_virtuoso_file(sprintf("%s/%s_xrefs.ttl.gz.graph",$graph_path,$production_name));
 
     #compress the files
     system("gzip $target_file");
