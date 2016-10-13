@@ -201,7 +201,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
+          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
         }
         
     return [
@@ -229,7 +229,7 @@ sub pipeline_analyses {
 	  -hive_capacity   => -1,
       -rc_name 	       => 'default',     
       -max_retry_count => 1,
-      -flow_into       => { '2' => $pipeline_flow, },        
+      -flow_into       => { '2' => $pipeline_flow, },    
     },
 
 ### GENERATE CHECKSUM      
@@ -371,7 +371,10 @@ sub pipeline_analyses {
 	      xrefs              => $self->o('xrefs'),        
         },
 	   -hive_capacity  => 50, 
-  	   -rc_name        => '128GB', 	   
+  	   -rc_name        => '128GB', 	  
+   	   -flow_into      => { 
+   						    '1'  => 'tidy_gff3',	
+   	   					  },   	    
 	 },	
 
 ### GFF3:post-processing
@@ -562,31 +565,52 @@ sub pipeline_analyses {
 	}, 
 
 ### RDF dumps
-        {
-         -logic_name => 'dump_rdf',
-         -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
-         -parameters => {
-                 xref => $self->o('xref'),
-                 release => $self->o('ensembl_release'),
-                 config_file => $self->o('config_file'),
-         },
-         -analysis_capacity => 4,
-         -rc_name => '32GB',
-         # Validate both output files
-         -flow_into => {
-                 2 => ['validate_rdf'],
-         }
-         },
+    { -logic_name => 'dump_rdf',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
+      -parameters => {
+          xref => $self->o('xref'),
+          release => $self->o('ensembl_release'),
+          config_file => $self->o('config_file'),
+       },
+      -analysis_capacity => 4,
+      -rc_name => '32GB',
+      # Validate both output files
+      -flow_into => { 2 => ['validate_rdf'], }
+    },
 ### RDF dumps checks
-        {
-         -logic_name => 'validate_rdf',
-         -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF',
-         -rc_name => 'default',
-         # All the jobs can fail since it's a validation step
-         -failed_job_tolerance => 100,
-         # Only retry to run the job once
-        -max_retry_count => 1,
-        },
+    { -logic_name => 'validate_rdf',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF',
+      -rc_name => 'default',
+      # All the jobs can fail since it's a validation step
+      -failed_job_tolerance => 100,
+      # Only retry to run the job once
+      -max_retry_count => 1,
+    },
+
+### JSON dumps
+    { -logic_name => 'dump_json',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
+      -parameters => {},
+      -hive_capacity => 50,
+      -rc_name       => 'default', 
+      -flow_into     => { -1 => 'dump_json_32GB', }, 
+     },
+
+    { -logic_name => 'dump_json_32GB',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
+      -parameters => {},
+      -hive_capacity => 50,
+      -rc_name       => '32GB', 
+      -flow_into     => { -1 => 'dump_json_64GB', }, 
+     },
+
+    { -logic_name => 'dump_json_64GB',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
+      -parameters => {},
+      -hive_capacity => 50,
+      -rc_name       => '64GB', 
+     },
+        
 ### TSV XREF
     { -logic_name    => 'dump_tsv_uniprot',
       -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileXref',
