@@ -32,17 +32,30 @@ $srv $dbname< $BASE_DIR/ensembl/misc-scripts/ontology/sql/tables.sql
 
 cd $dir
 msg "Reading OBO files from $dir"
-for file in *.obo; do 
+for file in `ls -S *.obo`; do
     ontology=${file/.obo/}
     msg "Loading $file as $ontology"
-    perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details script) --name $dbname --file $file --ontology $ontology    
+    perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details script) --name $dbname --file $file --ontology $ontology || {
+        msg "Failed to load OBO file $file"
+        exit 1
+    }
 done
 cd -
-
+msg "Delete unknown ontology"
+perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details script) --name $dbname -delete_unknown || {
+        msg "Failed to remove unknown ontology"
+        exit 1
+    }
 msg "Computing closures"
-perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/compute_closure.pl $($srv details script) --name $dbname --config $BASE_DIR/ensembl-production/scripts/ontology/scripts/closure_config.ini
+perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/compute_closure.pl $($srv details script) --name $dbname --config $BASE_DIR/ensembl-production/scripts/ontology/scripts/closure_config.ini || {
+        msg "Failed to compute closure"
+        exit 1
+    }
 msg "Adding subset maps"
-perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/add_subset_maps.pl $($srv details script) --name $dbname
+perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/add_subset_maps.pl $($srv details script) --name $dbname || {
+        msg "Failed to add subset maps"
+        exit 1
+    }
 msg "Building database $dbname complete"
 
 if ! [ -z "$mart" ]; then

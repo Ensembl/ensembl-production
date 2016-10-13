@@ -105,7 +105,7 @@ sub default_options {
 			        'homology_types_allowed' => ['ortholog_one2one'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '30',
-                                'percent_cov_filter'     => '60',
+                                'percent_cov_filter'     => '66',
 	 	       }, 
                   '2'=>{
                                 # source species to project from
@@ -126,7 +126,7 @@ sub default_options {
                                 'homology_types_allowed' => ['ortholog_one2one'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '30',
-                                'percent_cov_filter'     => '60',
+                                'percent_cov_filter'     => '66',
                        },
                   '3'=>{
                                 # source species to project from
@@ -147,7 +147,7 @@ sub default_options {
                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '30',
-                                'percent_cov_filter'     => '60',
+                                'percent_cov_filter'     => '66',
                        },
                   '4'=>{
                                 # source species to project from
@@ -168,7 +168,7 @@ sub default_options {
                                 'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                 # homology percentage identity filter
                                 'percent_id_filter'      => '30',
-                                'percent_cov_filter'     => '60',
+                                'percent_cov_filter'     => '66',
                        },
 		},
 
@@ -197,7 +197,7 @@ sub default_options {
 			         'homology_types_allowed' => ['ortholog_one2one'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '30',
-				 'percent_cov_filter'     => '60',
+				 'percent_cov_filter'     => '66',
 	 	        }, 
 
                      '2'=>{
@@ -223,7 +223,7 @@ sub default_options {
                                  'homology_types_allowed' => ['ortholog_one2one'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '30',
-                                 'percent_cov_filter'     => '60',
+                                 'percent_cov_filter'     => '66',
                         },
                    '3'=>{
                                  # source species to project from
@@ -248,7 +248,7 @@ sub default_options {
                                  'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '30',
-                                 'percent_cov_filter'     => '60',
+                                 'percent_cov_filter'     => '66',
                         },
                    '4'=>{
                                  # source species to project from
@@ -273,7 +273,7 @@ sub default_options {
                                  'homology_types_allowed' => ['ortholog_one2one','ortholog_one2many'],
                                  # homology percentage identity filter
                                  'percent_id_filter'      => '30',
-                                 'percent_cov_filter'     => '60',
+                                 'percent_cov_filter'     => '66',
                         },
 
 	    },

@@ -55,7 +55,11 @@ sub default_options {
 
         # orthologs cutoff
         'perc_id'  => '30',
+<<<<<<< HEAD
+        'perc_cov' => '66',
+=======
         'perc_cov' => '60',
+>>>>>>> a767e702ae75e08b742640ecb9003be2a8a60907
 
         # 'target' & 'exclude' are mutually exclusive
         #  only one of those should be defined if used 
@@ -193,7 +197,8 @@ sub pipeline_analyses {
 	 
     {  -logic_name    => 'GetOrthologs_16GB',
        -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-       -parameters    => {	'output_dir'             => $self->o('output_dir'),
+       -parameters    => {	'eg'                       => $self->o('eg'),
+                         'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },
        -batch_size    =>  1,
@@ -204,7 +209,7 @@ sub pipeline_analyses {
 
     {  -logic_name    => 'GetOrthologs_32GB',
        -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-       -parameters    => {	'output_dir'             => $self->o('output_dir'),
+       -parameters    => {	'eg'                       => $self->o('eg'),  'output_dir'             => $self->o('output_dir'),
 							'method_link_type'       => $self->o('method_link_type'),
     	 				 },
        -batch_size    =>  1,
