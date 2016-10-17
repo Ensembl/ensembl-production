@@ -91,8 +91,8 @@ sub pipeline_analyses {
         },
         -input_ids  => [ {} ],
         -flow_into  => {
-          1 => 'Notify',
-          2 => ['DumpTypeFactory'],
+          'A->1' => 'DumpReleaseNotes',
+          '2->A' => ['DumpTypeFactory'],
         },
       },
       
@@ -105,10 +105,7 @@ sub pipeline_analyses {
           types => $self->o('types'),
         },
         -flow_into  => {
-          2 => { 'DumpEBeyeSearch' => { species => "#species#", type => "#type#" },
-                 'ChecksumGenerator' => {},
-		 'DumpReleaseNotes' => {}
-          },
+          2 => { 'DumpEBeyeSearch' => { species => "#species#", type => "#type#" } },
         },
       },
       
@@ -126,7 +123,7 @@ sub pipeline_analyses {
       {
         -logic_name => 'DumpReleaseNotes',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::DumpReleaseNotesFile',
-        -wait_for   => [ qw/DumpEBeyeSearch/ ],
+        -flow_into => 'ChecksumGenerator',
         -analysis_capacity => 10, 
       },
       
@@ -135,7 +132,7 @@ sub pipeline_analyses {
       {
         -logic_name => 'ChecksumGenerator',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::EBeye::ChecksumGenerator',
-        -wait_for   => [ qw/DumpReleaseNotes/ ],
+        -flow_into => 'Notify',
         -analysis_capacity => 10, 
       },
       
@@ -149,7 +146,6 @@ sub pipeline_analyses {
           subject => $self->o('pipeline_name').' has finished',
           text    => 'Your pipeline has finished. Please consult the hive output'
         },
-        -wait_for   => ['ChecksumGenerator'],
       }
     
     ];
