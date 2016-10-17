@@ -48,6 +48,8 @@ sub default_options {
        'skip_blat_masking'      => 1,
        'skip_ncbiblast_masking' => 0,
 
+       'division'    => 'Ensembl',
+
 #'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
        'gt_exe'       => '/software/ensembl/central/bin/gt',
         # create BLAST databases, version 2.2.27+
