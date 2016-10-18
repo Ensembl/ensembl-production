@@ -58,7 +58,7 @@ sub default_options {
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '1',
     	flag_GeneDescr    => '1',
-    	flag_GO           => '1',     
+    	flag_GO           => '0',     
     	flag_GeneCoverage => '0',
 
     ## Flags controlling dependency between GeneNames & GeneDescr projections
