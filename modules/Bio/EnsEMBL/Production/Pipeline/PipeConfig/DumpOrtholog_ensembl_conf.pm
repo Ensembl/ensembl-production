@@ -26,13 +26,13 @@ limitations under the License.
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_ensembl_conf;
 
 use strict;
 use warnings;
 use Bio::EnsEMBL::Hive::Version 2.3;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf');     
 
 sub default_options {
     my ($self) = @_;
@@ -55,11 +55,7 @@ sub default_options {
 
         # orthologs cutoff
         'perc_id'  => '30',
-<<<<<<< HEAD
         'perc_cov' => '66',
-=======
-        'perc_cov' => '60',
->>>>>>> a767e702ae75e08b742640ecb9003be2a8a60907
 
         # 'target' & 'exclude' are mutually exclusive
         #  only one of those should be defined if used 
