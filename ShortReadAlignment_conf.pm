@@ -138,6 +138,7 @@ sub default_options {
 
     samtools_dir  => '/nfs/panda/ensemblgenomes/external/samtools',
     bedtools_dir  => '/nfs/panda/ensemblgenomes/external/bedtools/bin',
+    bcftools_dir  => '/nfs/panda/ensemblgenomes/external/bcftools-1.2/bin',
     ucscutils_dir => '/nfs/panda/ensemblgenomes/external/ucsc_utils',
 
   };
@@ -505,7 +506,9 @@ sub alignment_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               results_dir  => catdir($results_dir, '#species#'),
+                              fasta_file   => '#genome_file#',
                               samtools_dir => $self->o('samtools_dir'),
+                              bcftools_dir => $self->o('bcftools_dir'),
                               vcf          => $self->o('vcf'),
                               use_csi      => $self->o('use_csi'),
                               clean_up     => $self->o('clean_up'),
