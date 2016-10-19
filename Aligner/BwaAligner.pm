@@ -122,6 +122,7 @@ sub align_file {
   my ($self, $ref, $sam, $files, $aligneds, $program) = @_;
   
   my $align_cmd = "$self->{align_program} $program ";
+  $align_cmd   .= " -v 2 ";
   $align_cmd   .= " $ref $aligneds $files > $sam";
   
   $self->run_cmd($align_cmd, 'align');

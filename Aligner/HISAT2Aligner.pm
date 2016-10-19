@@ -83,10 +83,10 @@ sub index_file {
     $self->index_cmds($ss_cmd);
     $self->index_cmds($exon_cmd);
     
-    $index_cmd .= " --ss $ss_file --exon $exon_file ";
+    $index_cmd .= " --quiet --ss $ss_file --exon $exon_file ";
   }
   
-  $index_cmd .= "$file $index_name";
+  $index_cmd .= " $file $index_name";
   
   $self->run_cmd($index_cmd, 'index');
 }
@@ -129,6 +129,7 @@ sub align_file {
   my $format = $files =~ /fastq/ ? ' -q ' : ' -f ';
   
   my $align_cmd = $self->{align_program};
+  $align_cmd   .= " --quiet ";
   $align_cmd   .= " -x $index_name ";
   $align_cmd   .= " -p $self->{threads} ";
   $align_cmd   .= " $self->{align_params} ";
