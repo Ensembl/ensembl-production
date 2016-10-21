@@ -359,7 +359,7 @@ sub get_latest_schema_build {
 sub get_previous_dbname {
     my ($dbh, $dbname, $release) = @_;
     my $previous_dbname;
-    $dbname =~ /(^([a-z]+_){2,3}[a-z]+_)/;
+    $dbname =~ /(^([a-z]+_){2,3}[a-z0-9]+_)/;
     if (!$1) { throw("Database name $dbname is not in the right format"); }
     my $previous_release_name = $1 . (--$release);
     my $previous_sth = $dbh->prepare("show databases like \'%$previous_release_name%\'");
