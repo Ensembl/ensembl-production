@@ -44,7 +44,7 @@ sub run {
 
     # Flowing 1 job per *.gpa file
     while (my $file = readdir(DIR)) {
-         next unless ($file =~ m/gpa$/);
+         next unless ($file =~ m/^annotations_ensembl.*gpa$/);
          $file = $dir."/".$file;
          $self->dataflow_output_id( { 'gpad_file' => $file }, 2); 
     }
