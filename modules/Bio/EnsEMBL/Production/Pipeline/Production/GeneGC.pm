@@ -34,8 +34,8 @@ sub run {
 
   my $genes = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'gene')->fetch_all();
   my $aa = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
-
-  my $prod_helper = $self->get_production_DBAdaptor()->dbc()->sql_helper();
+  my $prod_dba = $self->get_production_DBAdaptor();
+  my $prod_helper = $prod_dba->dbc()->sql_helper();
   my ($name, $description) = @{
 	$prod_helper->execute(
 	  -SQL => q{
@@ -49,6 +49,10 @@ sub run {
 	  $self->store_attrib($aa, $gene, $count, $attrib_code, $name, $description);
 	}
   }
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $aa->dbc->disconnect_if_idle();
+  $prod_dba->dbc()->disconnect_if_idle();
 } ## end sub run
 
 sub delete_old_attrib {

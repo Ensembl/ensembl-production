@@ -32,6 +32,8 @@ sub run {
       }
     }
   }
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
 }
 
 sub get_attrib_codes {

@@ -78,6 +78,9 @@ sub run {
   if (scalar(@features) > 0) {
 	$dfa->store(@features);
   }
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $dfa->dbc->disconnect_if_idle();
   return;
 } ## end sub run
 
@@ -175,6 +178,7 @@ sub check_analysis {
 	$analysis->created($support->date());
 	$aa->update($analysis);
   }
+  $aa->dbc()->disconnect_if_idle();
 }
 
 ## Creates a new analysis object using the associated information from the production database
@@ -193,12 +197,14 @@ sub get_analysis {
 											-display_label => $display_label,
 											-description   => $description,
 											-displayable   => 1);
+  $prod_dba->dbc()->disconnect_if_idle();
   return $analysis;
 }
 
 sub get_biotype_group {
   my ($self, $group) = @_;
-  my $helper   = $self->get_production_DBAdaptor()->dbc()->sql_helper();
+  my $prod_dba = $self->get_production_DBAdaptor();
+  my $helper = $prod_dba->dbc()->sql_helper();
   my $sql      = q{
      SELECT name
      FROM biotype

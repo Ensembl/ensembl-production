@@ -56,6 +56,9 @@ sub run {
       }
     }
   }
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $dbva->dbc->disconnect_if_idle();
 }
 
 sub store_attribute {
@@ -82,6 +85,7 @@ sub store_attribute {
   if ($transcript) {
     $aa->store_on_Transcript($transcript, \@attribs);
   }
+  $prod_dba->dbc()->disconnect_if_idle();
 }
 
 

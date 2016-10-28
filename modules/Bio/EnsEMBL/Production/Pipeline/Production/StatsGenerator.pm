@@ -111,7 +111,11 @@ sub run {
       last;
     }
   }
-  $self->store_statistics($species, \%stats_hash, \%stats_attrib); 
+  $self->store_statistics($species, \%stats_hash, \%stats_attrib);
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $ta->dbc->disconnect_if_idle();
+  $aa->dbc->disconnect_if_idle();
 }
 
 sub get_slices {
@@ -175,6 +179,7 @@ sub store_attrib {
   my @attribs = ($attrib);
   $aa->remove_from_Slice($slice, $code);
   $aa->store_on_Slice($slice, \@attribs);
+  $prod_dba->dbc()->disconnect_if_idle();
 }
 
 sub get_attrib {
@@ -200,6 +205,7 @@ sub get_biotype_group {
      AND biotype_group = ?
      AND db_type like '%core%' };
   my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
+  $prod_dba->dbc()->disconnect_if_idle();
   return \@biotypes;
 }
 

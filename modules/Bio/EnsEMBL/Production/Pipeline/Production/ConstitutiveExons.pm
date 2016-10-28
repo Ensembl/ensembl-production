@@ -99,6 +99,8 @@ sub run {
 											   -PARAMS => [$is_constitutive, $exon->dbID()]);
 	}
   } ## end while (my $gene = shift(@gene_list...))
+  #Disconnecting from the registry
+  $ga->dbc->disconnect_if_idle();
   return;
 } ## end sub run
 

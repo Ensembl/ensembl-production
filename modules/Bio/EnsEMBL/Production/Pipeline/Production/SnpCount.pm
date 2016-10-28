@@ -35,6 +35,7 @@ sub get_feature_count {
      WHERE seq_region_id = ? };
   my @params = [$slice->get_seq_region_id];
   my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => @params);
+  $variation_adaptor->dbc()->disconnect_if_idle();
   return $count;
 }
 
@@ -46,6 +47,7 @@ sub get_total {
   my $sql = q{
      SELECT count(*) FROM variation_feature };
   my $count = $helper->execute_single_result(-SQL => $sql);
+  $variation_adaptor->dbc()->disconnect_if_idle();
   return $count;
 }
 
@@ -62,6 +64,8 @@ sub get_slices {
   foreach my $id(@ids) {
     push @slices, $sa->fetch_by_seq_region_id($id);
   }
+  $dba->dbc()->disconnect_if_idle();
+  $sa->dbc()->disconnect_if_idle();
   return \@slices;
 }
 
@@ -75,6 +79,7 @@ sub get_attrib_codes {
     FROM attrib_type
     WHERE code = 'SNPCount' };
   my %attrib_codes = %{ $prod_helper->execute_into_hash(-SQL => $sql) };
+  $prod_dba->dbc()->disconnect_if_idle();
   return %attrib_codes;
 }
 

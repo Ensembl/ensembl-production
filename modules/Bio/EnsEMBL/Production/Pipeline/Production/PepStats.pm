@@ -31,8 +31,9 @@ sub run {
   my $species = $self->param('species');
   my $dbtype  = $self->param('dbtype');
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, $dbtype);
+  my $core_dba;
   if ($dbtype =~ 'vega' || $dbtype =~ 'otherf') {
-	my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+	$core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
 	$dba->dnadb($core_dba);
   }
   my $helper = $dba->dbc()->sql_helper();
@@ -49,11 +50,16 @@ sub run {
   foreach my $translation (keys %$results) {
 	$self->store_attrib($attrib_types, $translation, $results->{$translation});
   }
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $core_dba->dbc->disconnect_if_idle()
+  if ($dbtype =~ 'vega' || $dbtype =~ 'otherf');
 }
 
 sub get_attrib_types {
   my ($self)       = @_;
-  my $prod_helper  = $self->get_production_DBAdaptor()->dbc()->sql_helper();
+  my $prod_dba = $self->get_production_DBAdaptor();
+  my $prod_helper = $prod_dba->dbc()->sql_helper();
   my $attrib_types = {};
   for my $row (
 	@{$prod_helper->execute(
@@ -65,6 +71,7 @@ sub get_attrib_types {
 	$attrib_types->{$row->[0]} = {name        => $row->[1],
 								  description => $row->[2]};
   }
+  $prod_dba->dbc()->disconnect_if_idle();
   return $attrib_types;
 }
 
@@ -141,6 +148,7 @@ sub get_attrib_codes {
     FROM attrib_type
     WHERE description = 'Pepstats attributes' };
   my @attrib_codes = @{$prod_helper->execute_simple(-SQL => $sql)};
+  $prod_dba->dbc()->disconnect_if_idle();
   return @attrib_codes;
 }
 

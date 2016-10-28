@@ -107,6 +107,8 @@ join coord_system cs using (coord_system_id)
   foreach my $id(@ids) {
     push @slices, $sa->fetch_by_seq_region_id($id);
   }
+  $dba->dbc()->disconnect_if_idle();
+  $sa->dbc()->disconnect_if_idle();
   return \@slices;
 }
 
@@ -122,6 +124,8 @@ sub get_all_slices {
   foreach my $id(@ids) {
     push @slices, $sa->fetch_by_seq_region_id($id);
   }
+  $dba->dbc()->disconnect_if_idle();
+  $sa->dbc()->disconnect_if_idle();
   return \@slices;
 }
 

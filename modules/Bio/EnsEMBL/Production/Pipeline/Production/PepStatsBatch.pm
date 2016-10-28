@@ -31,8 +31,9 @@ sub run {
   my $species = $self->param('species');
   my $dbtype  = $self->param('dbtype');
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, $dbtype);
+  my $core_dba;
   if ($dbtype =~ 'vega' || $dbtype =~ 'otherf') {
-	my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+	$core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
 	$dba->dnadb($core_dba);
   }
   my $log    = get_logger();
@@ -51,6 +52,10 @@ sub run {
   $log->info("Storing attribs");
   $self->store_attribs($dba, $results);
   $log->info("Completed");
+  #Disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  $core_dba->dbc->disconnect_if_idle()
+  if ($dbtype =~ 'vega' || $dbtype =~ 'otherf');
 } ## end sub run
 
 sub store_attribs {
