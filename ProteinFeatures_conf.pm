@@ -44,7 +44,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.19-58.0',
+    interproscan_version => '5.20-59.0',
     interproscan_dir     => '/nfs/panda/ensemblgenomes/development/InterProScan',
     interproscan_exe     => catdir(
                                $self->o('interproscan_dir'),
@@ -57,7 +57,7 @@ sub default_options {
     md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
     
     # Transitive GO annotation
-    interpro2go_file => catdir($self->o('interproscan_dir'), 'interpro2go/2016_June_4/interpro2go'),
+    interpro2go_file => catdir($self->o('interproscan_dir'), 'interpro2go/2016_Sept_17/interpro2go'),
     
     analyses =>
     [
