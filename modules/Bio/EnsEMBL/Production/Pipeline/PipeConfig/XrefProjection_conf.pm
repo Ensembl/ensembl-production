@@ -467,7 +467,7 @@ sub default_options {
 		#  On by default. 
 		#  Delete existing projected (info_type='PROJECTION') GO terms in the target species, 
 		#  before doing projection   
-		flag_delete_go_terms   => '1',
+		flag_delete_go_terms   => '0',
 
 
 	    
