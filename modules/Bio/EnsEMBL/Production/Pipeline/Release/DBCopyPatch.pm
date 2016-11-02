@@ -1,3 +1,4 @@
+
 =head1 LICENSE
 
 Copyright [2009-2016] EMBL-European Bioinformatics Institute
@@ -25,6 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::Release::DBCopyPatch;
 ckong@ebi.ac.uk
 
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::Release::DBCopyPatch;
 
 use strict;
@@ -33,50 +35,51 @@ use Bio::EnsEMBL::Registry;
 use base('Bio::EnsEMBL::Production::Pipeline::Base');
 
 sub fetch_input {
-    my ($self) 	= @_;
+  my ($self) = @_;
 
-return 0;
+  return 0;
 }
 
 sub run {
-    my ($self) = @_;
+  my ($self) = @_;
 
-return 0;
+  return 0;
 }
 
 sub write_output {
-    my ($self)  = @_;
+  my ($self) = @_;
 
-    my $db           = $self->param_required('db');
-    my $from_staging = $self->param_required('from_staging');
-    my $to_staging   = $self->param_required('to_staging');
+  my $db           = $self->param_required('db');
+  my $from_staging = $self->param_required('from_staging');
+  my $to_staging   = $self->param_required('to_staging');
+  my $base_dir     = $self->param_required('base_dir');
 
-    my $cmd = '~/bin/copy_and_patch_db.sh '.$from_staging." ".$to_staging." ".$db;
-    $self->warning("Running $cmd"); 
+  my $cmd =
+    $base_dir . '/scripts/copy_and_patch_db.sh ' .
+    $from_staging . " " . $to_staging . " " . $db;
+  $self->warning("Running $cmd");
 
-    system($cmd);
+  system($cmd);
 
-    my $execution_failed = $? == -1;
-    $self->throw("Could not execute command:\n$cmd\n") if ($execution_failed);
+  my $execution_failed = $? == -1;
+  $self->throw("Could not execute command:\n$cmd\n")
+    if ($execution_failed);
 
-    my $program_died = $? & 127;
-    $self->throw(
-      sprintf (
-        "Child died with signal %d, %s coredump\n",
-        ($? & 127), ($? & 128) ? 'with' : 'without'
-      )
-    ) if ($program_died);
+  my $program_died = $? & 127;
+  $self->throw( sprintf( "Child died with signal %d, %s coredump\n",
+                         ( $? & 127 ),
+                         ( $? & 128 ) ? 'with' : 'without' )
+  ) if ($program_died);
 
-    my $exit_value = $? >> 8;
-    my $program_completed_successfully = $exit_value == 0;
-    $self->throw("exited with value $exit_value") if (!$program_completed_successfully);
+  my $exit_value                     = $? >> 8;
+  my $program_completed_successfully = $exit_value == 0;
+  $self->throw("exited with value $exit_value")
+    if ( !$program_completed_successfully );
 
-    $self->dbc()->disconnect_if_idle(); 
+  $self->dbc()->disconnect_if_idle();
 
-return 0;
-}
-
+  return 0;
+} ## end sub write_output
 
 1;
-
 
