@@ -27,8 +27,7 @@ sub default_options {
     'by_species'  => 1,    #i.e others
     'by_division' => 1,    #i.e compara, marts, info, ontology
 
-    'division' => [ 'EG', 'EPl', 'EPr', 'EM', 'EF' ]
-    ,                      # EB, EG, EPl, EPr, EM, EF
+    'division'     => undef,    # EB, EG, EPl, EPr, EM, EF
     'from_staging' => '',       # server to copy from
     'to_staging'   => '',       # server to copy to
     'base_dir'     => getcwd,
@@ -131,9 +130,10 @@ sub pipeline_analyses {
     { -logic_name => 'division_factory',
       -module =>
         'Bio::EnsEMBL::Production::Pipeline::Release::DivisionFactory',
-      -parameters => { 'division' => $self->o('division'),
-                       'prod_db'  => $self->o('prod_db'),
-                       'user'     => $self->o('user'), },
+      -parameters => { 'division' => $self->o('division') ||
+                         [ 'EG', 'EPl', 'EPr', 'EM', 'EF' ],
+                       'prod_db' => $self->o('prod_db'),
+                       'user'    => $self->o('user'), },
       -rc_name   => 'default',
       -flow_into => { '2' => $pipeline_flow, }, },
 

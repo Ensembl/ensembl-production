@@ -1,3 +1,4 @@
+
 =head1 LICENSE
 
 Copyright [2009-2016] EMBL-European Bioinformatics Institute
@@ -25,7 +26,8 @@ Bio::EnsEMBL::Production::Pipeline::Release::DivisionFactory;
 ckong@ebi.ac.uk
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::Release::DivisionFactory; 
+
+package Bio::EnsEMBL::Production::Pipeline::Release::DivisionFactory;
 
 use strict;
 use Data::Dumper;
@@ -33,37 +35,37 @@ use Bio::EnsEMBL::Registry;
 use base('Bio::EnsEMBL::Production::Pipeline::Base');
 
 sub fetch_input {
-    my ($self) 	= @_;
+  my ($self) = @_;
 
-    die "'become ensgen' before running the DB copy and patch pipeline." unless ($ENV{USER}=~/ensgen/);
-
-return 0;
+  return 0;
 }
 
 sub run {
-    my ($self) = @_;
+  my ($self) = @_;
 
-return 0;
+  return 0;
 }
 
 sub write_output {
-    my ($self)  = @_;
+  my ($self) = @_;
 
-    my $division = $self->param_required('division');
+  my $division = $self->param_required('division');
 
-    foreach my $div (@$division){
+  if ( ref($division) ne 'ARRAY' ) {
+    $division = [$division];
+  }
 
-    	$self->dataflow_output_id( {
-		'division' => $div,
-		'prod_db'  => $self->param_required('prod_db'),
-               },2);
+  foreach my $div (@$division) {
 
-    }
+    $self->dataflow_output_id( { 'division' => $div,
+                                 'prod_db' =>
+                                   $self->param_required('prod_db'), },
+                               2 );
 
-return 0;
+  }
+
+  return 0;
 }
 
-
 1;
-
 
