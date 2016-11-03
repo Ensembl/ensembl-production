@@ -122,7 +122,7 @@ sub pipeline_analyses {
         -logic_name => 'GenomeStats',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
         -max_retry_count  => 3,
-        -hive_capacity    => 100,
+        -hive_capacity    => 10,
         -rc_name          => 'normal',
       },
 
