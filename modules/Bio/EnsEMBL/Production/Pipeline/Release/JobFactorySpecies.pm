@@ -1,3 +1,4 @@
+
 =head1 LICENSE
 
 Copyright [2009-2016] EMBL-European Bioinformatics Institute
@@ -25,6 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::Release::JobFactorySpecies;
 ckong@ebi.ac.uk
 
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::Release::JobFactorySpecies;
 
 use strict;
@@ -35,47 +37,47 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use base('Bio::EnsEMBL::Production::Pipeline::Base');
 
 sub fetch_input {
-    my ($self) 	= @_;
+  my ($self) = @_;
 
-return 0;
+  return 0;
 }
 
 sub run {
-    my ($self) = @_;
+  my ($self) = @_;
 
-return 0;
+  return 0;
 }
 
 sub write_output {
-    my ($self)  = @_;
+  my ($self) = @_;
 
-    my $sql_get_dbs  = q/SELECT CONCAT(species.db_name,"_",db.db_type,"_",db.db_release,"_",db.db_assembly)
+  my $sql_get_dbs =
+q/SELECT CONCAT(species.db_name,"_",db.db_type,"_",db.db_release,"_",db.db_assembly)
                         FROM division 
                         JOIN division_species USING (division_id) 
                         JOIN species USING (species_id)
                         JOIN db USING (species_id) 
                         WHERE division.shortname=? 
-                        AND db.is_current=1/;
+                        AND db.is_current=1 order by db_type,db_name/;
 
-    my $division     = $self->param_required('division'),
-    my %prod_db      = %{$self->param_required('prod_db')};
-    my $dba          = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%prod_db);
-    # confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
-    my $sql_helper   = $dba->dbc()->sql_helper();
+  my $division  = $self->param_required('division'),
+    my %prod_db = %{ $self->param_required('prod_db') };
+  my $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%prod_db);
+# confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+  my $sql_helper = $dba->dbc()->sql_helper();
 
-    $sql_helper->execute_no_return(
-          -SQL      => $sql_get_dbs,
-          -PARAMS   => [$division],
-          -CALLBACK => sub {
-                my ($db ) = @{ shift @_ };
- 		
-	        $self->dataflow_output_id({ 'db' => $db },2) if ($db=~/^.+/);
-          }
-     );
+  $sql_helper->execute_no_return(
+    -SQL      => $sql_get_dbs,
+    -PARAMS   => [$division],
+    -CALLBACK => sub {
+      my ($db) = @{ shift @_ };
 
-return 0;
-}
+      $self->dataflow_output_id( { 'db' => $db }, 2 )
+        if ( $db =~ /^.+/ );
+    } );
+
+  return 0;
+} ## end sub write_output
 
 1;
-
 
