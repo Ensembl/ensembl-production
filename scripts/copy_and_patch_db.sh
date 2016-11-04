@@ -56,10 +56,9 @@ else
         exit 8;
     }
     if [[ "$new_db" =~ .*_funcgen_* ]]; then
-	cd $ENSEMBL_ROOT_DIR/ensembl-funcgen/scripts/release
 	species=$(echo $new_db | sed -e 's/\(.*\)_funcgen.*/\1/')
 	data_version=$(echo $new_db | sed -e 's/.*_funcgen_\([0-9]*_[0-9]*\)_[0-9]*/\1/')
-	perl update_DB_for_release.pl \
+	perl $ENSEMBL_ROOT_DIR/ensembl-funcgen/scripts/release/update_DB_for_release.pl \
 	    $($tgt --details script) \
 	    $($tgt --details script_dnadb_) \
 	    -dbname $new_db \
