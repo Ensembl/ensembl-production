@@ -41,22 +41,15 @@ sub fetch_input {
 }
 
 sub run {
-  my ($self) = @_;
-
-  return 0;
-}
-
-sub write_output {
-  my ($self) = @_;
-
+  my ($self)       = @_;
   my $db           = $self->param_required('db');
   my $from_staging = $self->param_required('from_staging');
   my $to_staging   = $self->param_required('to_staging');
   my $base_dir     = $self->param_required('base_dir');
 
   my $cmd =
-    $base_dir . '/scripts/copy_and_patch_db.sh ' .
-    $from_staging . " " . $to_staging . " " . $db;
+    $base_dir . '/scripts/copy_and_patch_db.sh ' . $from_staging . " " .
+    $to_staging . " " . $db;
   $self->warning("Running $cmd");
 
   system($cmd);
@@ -79,7 +72,13 @@ sub write_output {
   $self->dbc()->disconnect_if_idle();
 
   return 0;
-} ## end sub write_output
+} ## end sub run
+
+sub write_output {
+  my ($self) = @_;
+
+  return 0;
+}
 
 1;
 
