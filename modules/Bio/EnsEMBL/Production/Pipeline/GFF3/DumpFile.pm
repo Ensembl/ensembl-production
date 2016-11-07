@@ -271,7 +271,7 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   my $id = $self->display_id;
 
   $summary{'seq_region_name'}          = $self->seq_region_name;
-  $summary{'source'}                   = $parent_gene->source;
+  $summary{'source'}                   = $self->source;
   $summary{'start'}                    = $self->seq_region_start;
   $summary{'end'}                      = $self->seq_region_end;
   $summary{'strand'}                   = $self->strand;
