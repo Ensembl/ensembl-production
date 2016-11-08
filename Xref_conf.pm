@@ -87,10 +87,11 @@ sub default_options {
     },
 
     replace_all           => 0,
-    description_source    => [],
-    overwrite_description => 0,
     gene_name_source      => [],
     overwrite_gene_name   => 0,
+    description_source    => [],
+    overwrite_description => 0,
+    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*'],
 
     load_uniprot        => 1,
     load_uniprot_go     => 1,
@@ -286,8 +287,8 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'SetupUniProt',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -logic_name      => 'LoadUniParc',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniParc',
       -max_retry_count => 0,
       -parameters      => {
                             uniparc_db  => $self->o('local_uniparc_db'),
@@ -328,10 +329,11 @@ sub pipeline_analyses {
                             uniparc_db            => $self->o('remote_uniparc_db'),
                             uniprot_db            => $self->o('remote_uniprot_db'),
                             replace_all           => $self->o('replace_all'),
-                            description_source    => $self->o('description_source'),
-                            overwrite_description => $self->o('overwrite_description'),
                             gene_name_source      => $self->o('gene_name_source'),
                             overwrite_gene_name   => $self->o('overwrite_gene_name'),
+                            description_source    => $self->o('description_source'),
+                            overwrite_description => $self->o('overwrite_description'),
+                            description_blacklist => $self->o('description_blacklist'),
                             logic_name            => $self->o('uniparc_transitive_logic_name'),
                             external_dbs          => $self->o('uniprot_external_dbs'),
                           },
@@ -366,8 +368,8 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'SetupUniProtGO',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -logic_name      => 'LoadUniProtGO',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
       -max_retry_count => 0,
       -parameters      => {
                             uniprot_db           => $self->o('remote_uniprot_db'),
@@ -403,8 +405,8 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'SetupUniProtXrefs',
-      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -logic_name      => 'LoadUniProtXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtXrefs',
       -max_retry_count => 0,
       -parameters      => {
                             uniprot_db           => $self->o('remote_uniprot_db'),
@@ -513,10 +515,10 @@ sub pipeline_analyses {
                             uniprot_go_external_db        => $self->o('uniprot_go_external_db'),
                             uniprot_xref_external_dbs     => $self->o('uniprot_xref_external_dbs'),
                             replace_all                   => $self->o('replace_all'),
-                            description_source            => $self->o('description_source'),
-                            overwrite_description         => $self->o('overwrite_description'),
                             gene_name_source              => $self->o('gene_name_source'),
                             overwrite_gene_name           => $self->o('overwrite_gene_name'),
+                            description_source            => $self->o('description_source'),
+                            overwrite_description         => $self->o('overwrite_description'),
                           },
       -max_retry_count => 1,
       -rc_name         => 'normal-rh7',
