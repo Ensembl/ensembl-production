@@ -4,6 +4,10 @@ script_dir=$(dirname $0)
 src=$1
 tgt=$2
 db=$3
+if [ -z "$TMP_DIR" ]; then
+    TMP_DIR=/nfs/nobackup/ensemblgenomes/$USER/dbcopy
+    mkdir -p $TMP_DIR
+fi
 
 if [ -z "$src" ] || [ -z "$tgt" ] || [ -z "$db" ]; then
     echo "Usage: $0 <src> <tgt> <db>" 1>&2
@@ -28,7 +32,7 @@ if [ -z "$new_db" ]; then
 fi
 
 echo "Dumping $src $db"
-($src mysqldump --max_allowed_packet=512M --lock-tables=false $db | gzip -c > /tmp/$db.sql.gz) || {
+($src mysqldump --max_allowed_packet=512M --lock-tables=false $db | gzip -c > $TMP_DIR/$db.sql.gz) || {
     echo "Failed to dump $src $db" 2>&1
     exit 5;
 }
@@ -41,11 +45,11 @@ $tgt -e "create database if not exists $new_db" || {
     echo "Failed to create $tgt $new_db" 2>&1
     exit 6;
 }
-(zcat /tmp/$db.sql.gz| $tgt $new_db) ||  {
+(zcat $TMP_DIR/$db.sql.gz| $tgt $new_db) ||  {
     echo "Failed to load $tgt $new_db" 2>&1
     exit 7;
 }
-rm -f /tmp/$db.sql.gz
+rm -f $TMP_DIR/$db.sql.gz
 
 if [[ "$new_db" =~ .*_mart_.* ]]; then
     echo "Skipping patching mart $tgt $new_db"
