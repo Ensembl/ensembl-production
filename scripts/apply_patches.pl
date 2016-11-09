@@ -44,7 +44,7 @@ my $logger = get_logger;
 
 if ( !defined $opts->{host} || !defined $opts->{basedir} ) {
   croak
-"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -base_dir <ensembl dir>";
+"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -basedir <ensembl dir>";
 }
 
 $opts->{version} ||= software_version;
@@ -91,8 +91,8 @@ while ( my $row = $sth->fetchrow_arrayref() ) {
   next unless defined $row;
   my $dbname = $row->[0];
   if ( $dbname =~ m/$opts->{pattern}/ &&
-       $dbname ne 'test' &&
-       $dbname ne 'mysql' &&
+       $dbname ne 'test'               &&
+       $dbname ne 'mysql'              &&
        $dbname ne 'performance_schema' &&
        $dbname ne 'information_schema' )
   {
@@ -107,8 +107,7 @@ for my $database ( @{$available_databases} ) {
   $logger->debug("Considering $database");
   my $type = get_type($database);
   eval {
-    if ( defined $type )
-    {
+    if ( defined $type ) {
       my $patches = $available_patches->{$type};
       if ( !defined $patches ) {
         $logger->warn("Cannot patch database $database of type $type");
