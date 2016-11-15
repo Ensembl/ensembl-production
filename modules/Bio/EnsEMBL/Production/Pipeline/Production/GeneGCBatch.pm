@@ -27,15 +27,9 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::GeneGC/;
 # modified version of GeneGC that uses the faster store_batch_on_Gene method from AttributeAdaptor
 sub run {
   my ($self) = @_;
-  my $species = $self->param('species');
-  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
-
+  
   my $attrib_code = 'GeneGC';
-  $self->delete_old_attrib($dba, $attrib_code);
-
-  my $genes = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'gene')->fetch_all();
-  my $aa = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
-  my $prod_dba = $self->get_production_DBAdaptor();
+    my $prod_dba = $self->get_production_DBAdaptor();
   my $prod_helper = $prod_dba->dbc()->sql_helper();
   my ($name, $description) = @{
 	$prod_helper->execute(
@@ -44,6 +38,14 @@ sub run {
     FROM attrib_type
     WHERE code = ? },
 	  -PARAMS => [$attrib_code])->[0]};
+  $prod_dba->dbc()->disconnect_if_idle();
+  
+  my $species = $self->param('species');
+  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  $self->delete_old_attrib($dba, $attrib_code);
+
+  my $genes = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'gene')->fetch_all();
+  my $aa = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
 
   my $attributes = {};
   while (my $gene = shift @$genes) {
@@ -57,11 +59,8 @@ sub run {
 	}
   }
   $aa->store_batch_on_Gene($attributes);
-  #Disconnecting from the registry
+  # Disconnecting from the database
   $dba->dbc->disconnect_if_idle();
-  $genes->dbc->disconnect_if_idle();
-  $aa->dbc->disconnect_if_idle();
-  $prod_dba->dbc()->disconnect_if_idle();
 } ## end sub run
 
 sub delete_old_attrib {
