@@ -9,6 +9,7 @@ addons:
     packages:
     - unzip
     - sendmail
+    - graphviz
 before_install:
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-test.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl.git
