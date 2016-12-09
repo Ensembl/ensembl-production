@@ -83,17 +83,20 @@ sub default_options {
     
     # Gap type 'scaffold' is assumed unless otherwise specified.
     agp_gap_type => {
-      'anopheles_gambiae' => 'contig',
+      'anopheles_albimanus' => 'contig',
+      'anopheles_gambiae'   => 'contig',
     },
 
     # Linkage is assumed unless otherwise specified.
     agp_linkage => {
-      'anopheles_gambiae' => 'no',
+      'anopheles_albimanus' => 'no',
+      'anopheles_gambiae'   => 'no',
     },
     
     # Linkage evidence 'paired-ends' is assumed unless otherwise specified.
     agp_evidence => {
       'aedes_aegypti'          => 'unspecified',
+      'anopheles_albimanus'    => 'na',
       'anopheles_darlingi'     => 'unspecified',
       'anopheles_gambiae'      => 'na',
       'anopheles_gambiaeS'     => 'unspecified',
