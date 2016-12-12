@@ -66,6 +66,21 @@ sub new {
   return $self;
 }
 
+sub version {
+  my ($self) = @_;
+  
+  my $cmd = $self->{align_program} . ' --version';
+  my ($success, $error, $buffer) = run(command => $cmd);
+  my $buffer_str = join "", @$buffer;
+  
+  if ($success) {
+    $buffer_str =~ /\s+v(\S+)/m;
+    return $1;
+  } else {
+    throw("Command '$cmd' failed, $error: $buffer_str");
+  }
+}
+
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
   
@@ -82,28 +97,12 @@ sub align {
 sub align_file {
   my ($self, $index_name, $sam, $files) = @_;
   
-  my $format = $files =~ /fastq/ ? ' -q ' : ' -f ';
-  
-  my $align_cmd = $self->{align_program};
-  $align_cmd   .= " -x $index_name ";
-  $align_cmd   .= " -p $self->{threads} ";
-  $align_cmd   .= " $self->{align_params} ";
-  $align_cmd   .= " $format ";
-  $align_cmd   .= " $files > $sam ";
-  
-  $self->run_cmd($align_cmd, 'align');
-  
-  return $sam;
-}
-
-sub align_file {
-  my ($self, $index_name, $sam, $files) = @_;
-  
   my (undef, $dir, undef) = fileparse($sam);
   my $output_dir = "$sam\_out";
   mkdir $output_dir unless -e $output_dir;
   
   my $align_cmd = $self->{align_program};
+  $align_cmd   .= " --quiet ";
   $align_cmd   .= " -o $output_dir ";
   $align_cmd   .= " --no-convert-bam  ";
   $align_cmd   .= " -p $self->{threads} ";

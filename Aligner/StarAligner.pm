@@ -65,7 +65,12 @@ sub new {
   if ($self->{max_intron_length}) {
     $self->{align_params} .= " --alignIntronMax $self->{max_intron_length} ";
   }
-    
+   
+  if ($self->{aligner_dir}) {
+    $self->{index_program} = catdir($self->{aligner_dir}, $self->{index_program});
+    $self->{align_program} = catdir($self->{aligner_dir}, $self->{align_program});
+  }
+  
   return $self;
 }
 

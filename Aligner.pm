@@ -208,42 +208,17 @@ sub get_bam_stats {
 }
 
 sub generate_vcf {
-	my ($self, $bam, $ref) = @_;
-  
-	my $bcf = $self->pileup_bam($bam, $ref);
-	my $vcf = $self->bcf2vcf($bcf);
-  
-	return $vcf;
-}
-
-sub pileup_bam {
-	my ($self, $bam, $ref, $bcf) = @_;
-  
-	if (! defined $bcf) {
-		($bcf = $bam) =~ s/\.bam/\.bcf/;
-    if ($bcf eq $bam) {
-      $bcf = "$bam.bcf";
-    }
-	}
-  # Is the '-' required?
-  my $cmd = "$self->{samtools} mpileup -uf $ref $bam | $self->{bcftools} view -bvcg - > $bcf";
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
-  
-	return $bcf;
-}
-
-sub bcf2vcf {
-	my ($self, $bcf, $vcf) = @_;
+	my ($self, $ref, $bam, $vcf) = @_;
   
 	if (! defined $vcf) {
-		($vcf = $bcf) =~ s/\.bcf/\.vcf/;
-    if ($vcf eq $bcf) {
-      $vcf = "$bcf.vcf";
+		($vcf = $bam) =~ s/\.bam/\.vcf/;
+    if ($vcf eq $bam) {
+      $vcf = "$bam.vcf";
     }
 	}
-  
-  my $cmd = "$self->{bcftools} view  $bcf | $self->{vcfutils} varFilter -D100 > $vcf";
+  my $cmd = "$self->{samtools} mpileup -uf $ref $bam";
+  $cmd   .= " | ";
+  $cmd   .= "$self->{bcftools} call -mv -o $vcf";
   $self->run_cmd($cmd);
   $self->align_cmds($cmd);
   

@@ -54,7 +54,7 @@ sub index_file {
   
   (my $index_name = $file) =~ s/\.\w+$//;
   
-  my $index_cmd = "$self->{index_program} $file $index_name";
+  my $index_cmd = "$self->{index_program} --quiet $file $index_name ";
   
   $self->run_cmd($index_cmd, 'index');
 }
@@ -87,6 +87,7 @@ sub align_file {
   my $format = $files =~ /fastq/ ? ' -q ' : ' -f ';
   
   my $align_cmd = $self->{align_program};
+  $align_cmd   .= " --quiet ";
   $align_cmd   .= " -x $index_name ";
   $align_cmd   .= " -p $self->{threads} ";
   $align_cmd   .= " $self->{align_params} ";
