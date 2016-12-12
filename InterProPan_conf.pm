@@ -115,7 +115,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             1 => [ ':////accu?filename=[]' ],
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -127,7 +127,7 @@ sub pipeline_analyses {
                             unique_file => $self->o('unique_file'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['SpeciesForInsert'],
     },
 
@@ -160,7 +160,7 @@ sub pipeline_analyses {
                             output_file => catdir($self->o('pipeline_dir'), 'backup', '#species#.xref.sql'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['DeleteXrefs'],
     },
 
@@ -175,7 +175,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['LoadXrefs'],
     },
 
@@ -194,7 +194,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
   ];
