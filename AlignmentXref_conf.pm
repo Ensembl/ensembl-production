@@ -86,6 +86,10 @@ sub default_options {
     refseq_peptide_external_db     => 'RefSeq_peptide',
     refseq_dna_external_db         => 'RefSeq_dna',
 
+    # Some sources have descriptions which are either uninformative or
+    # potentially misleading. The array elements are matched in their entirety.
+    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*'],
+    
     # Align a particular species, rather than one matching the core db species.
     source_species => undef,
 
@@ -713,7 +717,8 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::Xref::LoadAlignmentXref',
       -max_retry_count   => 1,
       -parameters        => {
-                              fasta_file => '#db_fasta_file#',
+                              fasta_file            => '#db_fasta_file#',
+                              description_blacklist => $self->o('description_blacklist'),
                             },
       -rc_name           => 'normal-rh7',
       -flow_into         => ['EmailReport'],
