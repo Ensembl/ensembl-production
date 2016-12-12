@@ -50,6 +50,7 @@ sub new {
 	$self->{bcftools}   ||= 'bcftools';
 	$self->{vcfutils}   ||= 'vcfutils.pl';
   $self->{threads}    ||= 1;
+  $self->{memory}     ||= 8000;
   $self->{run_mode}   ||= 'default';
   $self->{do_not_run} ||= 0;
   $self->{cleanup}    ||= 1;
@@ -149,8 +150,7 @@ sub sam_to_bam {
   # Pipe both commands
   my $cmd = "$convert_cmd | $sort_cmd";
   
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($cmd, 'align');
   
 	return $bam;
 }
@@ -161,8 +161,7 @@ sub merge_bam {
   my $bam = join( ' ', @$bams );
   my $threads = $self->{threads};
   my $cmd = "$self->{samtools} merge -@ $threads -f $out $bam";
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($cmd, 'align');
   
 	return $out;
 }
@@ -177,8 +176,7 @@ sub sort_bam {
     }
 	}
   my $cmd = "$self->{samtools} sort $bam $out_prefix";
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($cmd, 'align');
   
 	return "$out_prefix.bam";
 }
@@ -194,8 +192,7 @@ sub index_bam {
 	}
 	
   my $cmd = "$self->{samtools} index $index_options $bam";
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($cmd, 'align');
 }
 
 sub get_bam_stats {
@@ -219,8 +216,7 @@ sub generate_vcf {
   my $cmd = "$self->{samtools} mpileup -uf $ref $bam";
   $cmd   .= " | ";
   $cmd   .= "$self->{bcftools} call -mv -o $vcf";
-  $self->run_cmd($cmd);
-  $self->align_cmds($cmd);
+  $self->run_cmd($cmd, 'align');
   
 	return $vcf;
 }
