@@ -90,11 +90,14 @@ sub default_options {
     # Use external programs to validate output files. Note that we use
     # a slightly customised orthoxml schema, that allows the file to
     # only contain paralogs.
-    xmllint         => 'xmllint',
-    orthoxml_schema => '/nfs/panda/ensemblgenomes/external/xml_schema/orthoxml.paralogs.xsd',
-    phyloxml_schema => '/nfs/panda/ensemblgenomes/external/xml_schema/phyloxml.xsd',
-    newick_stats    => '/nfs/panda/ensemblgenomes/external/newick-utils-1.6/bin/nw_stats',
+    sofware_dir     => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
+    newick_stats    => catdir($self->o('sofware_dir'), 'nw_stats'),
     mafValidator    => '/nfs/panda/ensemblgenomes/external/mafTools/bin/mafValidator.py',
+    
+    xmllint         => 'xmllint',
+    schema_dir      => '/nfs/panda/ensemblgenomes/external/xml_schema',
+    orthoxml_schema => catdir($self->o('schema_dir'), 'orthoxml.paralogs.xsd'),
+    phyloxml_schema => catdir($self->o('schema_dir'), 'phyloxml.xsd'),
 
     # Need to refer to last release's checksums, to see what has changed.
     checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums/compara',
@@ -195,7 +198,7 @@ sub pipeline_analyses {
                               release_date    => $self->o('release_date'),
                               skip_file_match => $self->o('skip_file_match'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['WriteDrupalFile'],
     },
 
@@ -216,7 +219,7 @@ sub pipeline_analyses {
                               drupal_desc      => $self->o('drupal_desc'),
                               compara_files    => 1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -231,7 +234,7 @@ sub pipeline_analyses {
                               files_per_subdir => $self->o('files_per_subdir'),
                               release_date     => $self->o('release_date'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '3->C' => ['gene_trees_newick'],
                               'C->1' => ['PostProcessing'],
@@ -261,7 +264,7 @@ sub pipeline_analyses {
                               release_date     => $self->o('release_date'),
                               ensembl_release  => $self->o('ensembl_release'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '3' => ['wg_alignments_maf'],
                             },
@@ -277,7 +280,7 @@ sub pipeline_analyses {
                               compara     => $self->o('compara'),
                               tree_format => 'newick',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => ['ValidateNewick'],
                             },
@@ -293,7 +296,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('newick_stats').' #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -306,7 +309,7 @@ sub pipeline_analyses {
                               compara  => $self->o('compara'),
                               seq_type => 'cdna',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -319,7 +322,7 @@ sub pipeline_analyses {
                               compara  => $self->o('compara'),
                               seq_type => 'aa',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -333,7 +336,7 @@ sub pipeline_analyses {
                               tree_format => 'xml',
                               seq_type    => 'cdna',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => ['ValidatePhyloxml'],
                             },
@@ -350,7 +353,7 @@ sub pipeline_analyses {
                               tree_format => 'xml',
                               seq_type    => 'aa',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => ['ValidatePhyloxml'],
                             },
@@ -366,7 +369,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('xmllint').' --noout --schema '.$self->o('phyloxml_schema').' #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -380,7 +383,7 @@ sub pipeline_analyses {
                               homolog_format => 'xml',
                               release_date   => $self->o('release_date'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => ['ValidateOrthoxml'],
                             },
@@ -396,7 +399,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('xmllint').' --noout --schema '.$self->o('orthoxml_schema').' #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -412,7 +415,7 @@ sub pipeline_analyses {
                               file_per_scaffold => $self->o('maf_file_per_scaffold'),
                               escape_branch     => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1'    => ['wg_alignments_maf_himem'],
                                '2->A' => ['ValidateMAF'],
@@ -432,7 +435,7 @@ sub pipeline_analyses {
                               file_per_chr      => $self->o('maf_file_per_chr'),
                               file_per_scaffold => $self->o('maf_file_per_scaffold'),
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => {
                                '2->A' => ['ValidateMAF'],
                                'A->1' => ['PostProcessing'],
@@ -449,7 +452,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'python '.$self->o('mafValidator').' --ignoreDuplicate --maf #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -460,6 +463,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'cd #out_dir#; tar -cf #sub_dir#.tar #sub_dir# --remove-files',
                             },
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['CompressFile'],
     },
 
@@ -472,7 +476,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'cd #out_dir#; gzip -n -f #sub_dir#.tar',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['MD5Checksum'],
     },
 
