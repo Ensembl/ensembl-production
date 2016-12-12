@@ -38,19 +38,27 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
-          'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base',
-          );
+use base 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base';
 
-sub fetch_input {
+use Email::Sender::Simple;
+use Email::Simple;
+
+sub run {
   my ($self) = @_;
-  # To send an email, three parameters are required, 'email', 'subject',
-  # and 'text'. For 'email', you can pass in the default address, which
-  # is set to '$USER@ebi.ac.uk', if your conf file inherits from
-  # EGGeneric_conf.pm. You will need to pass in the other parameters
-  # as well, or set them by overriding this method.
+  my $email   = $self->param_required('email');
+  my $subject = $self->param_required('subject');
+  my $text    = $self->param_required('text');
   
-  return;
+  my $msg = Email::Simple->create(
+    header => [
+      From    => $email,
+      To      => $email,
+      Subject => $subject,
+    ],
+    body => $text,
+  );
+  
+  Email::Sender::Simple->send($msg);
 }
 
 # Present data in a nice table, like what mySQL does.
@@ -64,8 +72,10 @@ sub format_table {
   
   foreach (@$results) {
     for (my $i=0; $i < scalar(@$_); $i++) {
-      my $len = length($$_[$i]) + 2;
-      $lengths[$i] = $len if $len > $lengths[$i];
+      if (defined $$_[$i]) {
+        my $len = length($$_[$i]) + 2;
+        $lengths[$i] = $len if $len > $lengths[$i];
+      }
     } 
   }
   
@@ -82,7 +92,7 @@ sub format_table {
   
   foreach (@$results) {
     for (my $i=0; $i < scalar(@lengths); $i++) {
-      my $value = $$_[$i];
+      my $value = $$_[$i] || '';
       my $padding = $lengths[$i] - length($value) - 2;
       $table .= '| '.$value.(' ' x $padding).' ';
     }
