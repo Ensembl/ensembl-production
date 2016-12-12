@@ -39,7 +39,9 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::DNAFeatures_conf;
 use strict;
 use warnings;
 
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
 use File::Spec::Functions qw(catdir);
 
@@ -56,29 +58,30 @@ sub default_options {
     run_all => 0,
     meta_filters => {},
 
-    # Parameters for dumping and splitting Fasta DNA files...
+    # Parameters for dumping and splitting Fasta DNA files.
     max_seq_length          => 1000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
     max_seqs_per_file       => undef,
     max_files_per_directory => 50,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
-    # ...or for skipping splitting files entirely. If this option
-    # is switched on then dust and trf will be run against a single
-    # genome file, and repeatmasker will chunk on-the-fly.
-    no_file_splitting => 0,
+    # Dust and TRF can handle large files; this size should mean
+    # that jobs take a few minutes.
+    dust_trf_max_seq_length    => 100000000,
+    dust_trf_max_seqs_per_file => 10000,
     
-    # Default hive capacity is quite low; values >100 are not recommended.
+    # Values >100 are not recommended, because you tend to overload
+    # the mysql server with connections.
     max_hive_capacity => 100,
 
-    program_dir      => '/nfs/panda/ensemblgenomes/external/bin',
+    program_dir      => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
     dust_exe         => catdir($self->o('program_dir'), 'dustmasker'),
-    repeatmasker_exe => catdir($self->o('program_dir'), 'RepeatMasker'),
     trf_exe          => catdir($self->o('program_dir'), 'trf'),
+    repeatmasker_exe => catdir($self->o('program_dir'), 'RepeatMasker'),
 
-    no_dust         => 0,
-    no_repeatmasker => 0,
-    no_trf          => 0,
+    dust         => 1,
+    trf          => 1,
+    repeatmasker => 1,
 
     # By default, run RepeatMasker with repbase library and exclude
     # low-complexity annotations. By explicitly turning on the GC calculations,
@@ -87,11 +90,11 @@ sub default_options {
     # is called within the pipeline. The sensitivity of the search, including
     # which engine is used, is also added within the pipeline.
     always_use_repbase       => 0,
-    repeatmasker_default_lib => '/nfs/panda/ensemblgenomes/external/RepeatMasker/Libraries/RepeatMaskerLib.embl',
     repeatmasker_library     => {},
     repeatmasker_sensitivity => {},
     repeatmasker_logic_name  => {},
     repeatmasker_parameters  => ' -nolow -gccalc ',
+    repeatmasker_cache       => catdir($self->o('pipeline_dir'), 'cache'),
 
     # The ensembl-analysis Dust and TRF modules take a parameters hash which
     # is parsed, rather than requiring explicit command line options.
@@ -128,10 +131,18 @@ sub default_options {
         'linked_tables'   => ['repeat_feature'],
       },
       {
-        'logic_name'      => 'repeatmask',
+        'logic_name'      => 'trf',
+        'program'         => 'trf',
+        'program_version' => '4.0',
+        'program_file'    => $self->o('trf_exe'),
+        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::TRF',
+        'gff_source'      => 'trf',
+        'gff_feature'     => 'tandem_repeat',
+        'linked_tables'   => ['repeat_feature'],
+      },
+      {
+        'logic_name'      => 'repeatmask_repbase',
         'db'              => 'repbase',
-        'db_version'      => '20150416',
-        'db_file'         => $self->o('repeatmasker_default_lib'),
         'program'         => 'RepeatMasker',
         'program_version' => '4.0.5',
         'program_file'    => $self->o('repeatmasker_exe'),
@@ -153,16 +164,6 @@ sub default_options {
         'gff_feature'     => 'repeat_region',
         'linked_tables'   => ['repeat_feature'],
       },
-      {
-        'logic_name'      => 'trf',
-        'program'         => 'trf',
-        'program_version' => '4.0',
-        'program_file'    => $self->o('trf_exe'),
-        'module'          => 'Bio::EnsEMBL::Analysis::Runnable::TRF',
-        'gff_source'      => 'trf',
-        'gff_feature'     => 'tandem_repeat',
-        'linked_tables'   => ['repeat_feature'],
-      },
     ],
 
     # Remove existing DNA features; if => 0 then existing analyses
@@ -175,7 +176,7 @@ sub default_options {
 
     # By default, an email is sent for each species when the pipeline
     # is complete, showing the breakdown of repeat coverage.
-    email_repeat_report => 1,
+    email_report => 1,
   };
 }
 
@@ -206,39 +207,24 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('pipeline_dir'),
+    'mkdir -p '.$self->o('repeatmasker_cache'),
   ];
+}
+
+sub pipeline_wide_parameters {
+ my ($self) = @_;
+ 
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'dust'         => $self->o('dust'),
+   'trf'          => $self->o('trf'),
+   'repeatmasker' => $self->o('repeatmasker'),
+   'email_report' => $self->o('email_report'),
+ };
 }
 
 sub pipeline_analyses {
   my ($self) = @_;
-
-  my $programs = [];
-  if (!$self->o('no_dust')) {
-    push @$programs, 'Dust';
-  }
-  if (!$self->o('no_repeatmasker')) {
-    push @$programs, 'RepeatMaskerFactory';
-  }
-  if (!$self->o('no_trf')) {
-    push @$programs, 'TRF';
-  }
-
-  my ($dump_genome_flow, $split_dump_files_flow, $file_name);
-  if ($self->o('no_file_splitting')) {
-    $dump_genome_flow = $programs;
-    $split_dump_files_flow = {'2' => []};
-    $file_name = '#genome_file#';
-  } else {
-    $dump_genome_flow = ['SplitDumpFiles'];
-    $split_dump_files_flow = {'2' => $programs};
-    $file_name = '#split_file#';
-  }
-
-  my $update_metadata_flow = [];
-  if ($self->o('email_repeat_report')) {
-    push @$update_metadata_flow, 'EmailRepeatReport';
-  }
 
   return [
     {
@@ -284,17 +270,17 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -batch_size        => 10,
       -parameters        => {
-                              no_dust              => $self->o('no_dust'),
-                              no_repeatmasker      => $self->o('no_repeatmasker'),
-                              no_trf               => $self->o('no_trf'),
-                              dna_analyses         => $self->o('dna_analyses'),
-                              max_seq_length       => $self->o('max_seq_length'),
-                              always_use_repbase   => $self->o('always_use_repbase'),
-                              rm_library           => $self->o('repeatmasker_library'),
-                              rm_sensitivity       => $self->o('repeatmasker_sensitivity'),
-                              rm_logic_name        => $self->o('repeatmasker_logic_name'),
-                              pipeline_dir         => $self->o('pipeline_dir'),
-                              db_backup_file       => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              dust               => $self->o('dust'),
+                              trf                => $self->o('trf'),
+                              repeatmasker       => $self->o('repeatmasker'),
+                              dna_analyses       => $self->o('dna_analyses'),
+                              max_seq_length     => $self->o('max_seq_length'),
+                              always_use_repbase => $self->o('always_use_repbase'),
+                              rm_library         => $self->o('repeatmasker_library'),
+                              rm_sensitivity     => $self->o('repeatmasker_sensitivity'),
+                              rm_logic_name      => $self->o('repeatmasker_logic_name'),
+                              pipeline_dir       => $self->o('pipeline_dir'),
+                              db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal-rh7',
       -flow_into         => {
@@ -341,11 +327,35 @@ sub pipeline_analyses {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
       -rc_name           => 'normal-rh7',
-      -flow_into         => $dump_genome_flow,
+      -flow_into         => [
+                              WHEN('#dust# || #trf#' => ['SplitDumpFiles_1']),
+                              WHEN('#repeatmasker#'  => ['SplitDumpFiles_2']),
+                            ],
     },
 
     {
-      -logic_name        => 'SplitDumpFiles',
+      -logic_name        => 'SplitDumpFiles_1',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
+      -parameters        => {
+                              fasta_file              => '#genome_file#',
+                              max_seq_length_per_file => $self->o('dust_trf_max_seq_length'),
+                              max_seqs_per_file       => $self->o('dust_trf_max_seqs_per_file'),
+                              max_files_per_directory => $self->o('max_files_per_directory'),
+                              max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                              out_dir                 => catdir($self->o('pipeline_dir'), '#species#', 'dust_trf'),
+                              file_varname            => 'queryfile',
+                            },
+      -rc_name           => '8Gb_mem-rh7',
+      -flow_into         => {
+                              '2' => [
+                                WHEN('#dust#' => ['Dust']),
+                                WHEN('#trf#'  => ['TRF']),
+                              ],
+                            },
+    },
+
+    {
+      -logic_name        => 'SplitDumpFiles_2',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FastaSplit',
       -parameters        => {
                               fasta_file              => '#genome_file#',
@@ -353,9 +363,13 @@ sub pipeline_analyses {
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                              out_dir                 => catdir($self->o('pipeline_dir'), '#species#', 'repeatmasker'),
+                              file_varname            => 'queryfile',
                             },
       -rc_name           => '8Gb_mem-rh7',
-      -flow_into         => $split_dump_files_flow,
+      -flow_into         => {
+                              '2' => ['RepeatMaskerFactory'],
+                            },
     },
 
     {
@@ -366,8 +380,20 @@ sub pipeline_analyses {
       -batch_size        => 100,
       -parameters        => {
                               logic_name      => 'dust',
-                              queryfile       => $file_name,
                               parameters_hash => $self->o('dust_parameters_hash'),
+                            },
+      -rc_name           => 'normal-rh7',
+    },
+    
+    {
+      -logic_name        => 'TRF',
+      -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::TRF',
+      -hive_capacity     => $self->o('max_hive_capacity'),
+      -max_retry_count   => 1,
+      -batch_size        => 10,
+      -parameters        => {
+                              logic_name      => 'trf',
+                              parameters_hash => $self->o('trf_parameters_hash'),
                             },
       -rc_name           => 'normal-rh7',
     },
@@ -380,7 +406,6 @@ sub pipeline_analyses {
                               always_use_repbase => $self->o('always_use_repbase'),
                               rm_library         => $self->o('repeatmasker_library'),
                               rm_logic_name      => $self->o('repeatmasker_logic_name'),
-                              queryfile          => $file_name,
                               max_seq_length     => $self->o('max_seq_length'),
                             },
       -rc_name           => '8Gb_mem-rh7',
@@ -392,20 +417,8 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::RepeatMasker',
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
-      -parameters        => {},
-      -rc_name           => 'normal-rh7',
-    },
-
-    {
-      -logic_name        => 'TRF',
-      -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::TRF',
-      -hive_capacity     => $self->o('max_hive_capacity'),
-      -max_retry_count   => 1,
-      -batch_size        => 10,
       -parameters        => {
-                              logic_name      => 'trf',
-                              queryfile       => $file_name,
-                              parameters_hash => $self->o('trf_parameters_hash'),
+                              repeatmasker_cache => $self->o('repeatmasker_cache'),
                             },
       -rc_name           => 'normal-rh7',
     },
@@ -415,7 +428,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::UpdateMetadata',
       -parameters        => {},
       -rc_name           => 'normal-rh7',
-      -flow_into         => $update_metadata_flow,
+      -flow_into         => WHEN('#email_report#' => ['EmailRepeatReport']),
     },
 
     {
