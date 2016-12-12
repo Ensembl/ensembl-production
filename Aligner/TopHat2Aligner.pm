@@ -102,7 +102,6 @@ sub align_file {
   mkdir $output_dir unless -e $output_dir;
   
   my $align_cmd = $self->{align_program};
-  $align_cmd   .= " --quiet ";
   $align_cmd   .= " -o $output_dir ";
   $align_cmd   .= " --no-convert-bam  ";
   $align_cmd   .= " -p $self->{threads} ";
