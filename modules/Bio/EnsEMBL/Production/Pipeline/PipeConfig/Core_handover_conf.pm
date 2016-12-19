@@ -275,8 +275,8 @@ sub resource_classes {
     my $self = shift;
     return {
       'default' => { 'LSF' => ''},
-      'normal'  => { 'LSF' => '-q normal -M 500 -R"select[mem>500] rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q normal -M 2000 -R"select[mem>2000] rusage[mem=2000]"'},
+      'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
     }
 }
 

@@ -159,8 +159,8 @@ sub resource_classes {
     my $self = shift;
     return {
       %{$self->SUPER::resource_classes()},
-      dump => { 'LSF' => '-q normal -M1500 -R"select[mem>1500] rusage[mem=1500]"'},
-      check => { 'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
+      dump => { 'LSF' => '-q production-rh7 -M 1500 -R "rusage[mem=1500]"'},
+      check => { 'LSF' => '--q production-rh7 -M 500 -R "rusage[mem=500]"'},
     }
 }
 

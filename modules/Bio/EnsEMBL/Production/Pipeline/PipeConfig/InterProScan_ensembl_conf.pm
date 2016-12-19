@@ -67,15 +67,5 @@ sub default_options {
   };
 }
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-#    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4 -R "select[gpfs]"' },
-    'default' 			   => {'LSF' => '-q production-rh6' },
-    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4' },
-  };
-}
-
 1;
 

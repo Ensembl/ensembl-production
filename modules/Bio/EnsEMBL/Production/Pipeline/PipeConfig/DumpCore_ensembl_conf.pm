@@ -143,16 +143,6 @@ sub tweak_analyses {
     $analyses_by_name->{'dump_fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
 }
 
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'                 => {'LSF' => '-q normal -M5000 -R"select[mem>5000] rusage[mem=5000]"'},
-      '32GB'        => {'LSF' => '-q normal -M32000 -R"select[mem>32000] rusage[mem=32000]"' },
-      '64GB'        => {'LSF' => '-q normal -M64000 -R"select[mem>64000] rusage[mem=64000]"' },
-      '128GB'        => {'LSF' => '-q normal -M128000 -R"select[mem>128000] rusage[mem=128000]"' },
-      '256GB'        => {'LSF' => '-q normal -M256000 -R"select[mem>256000] rusage[mem=256000]"' },
-    }
-}
 
 1;
 

@@ -376,8 +376,8 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'dump'      => { LSF => '-q long -M1000 -R"select[mem>1000] rusage[mem=1000]"' },
-      'indexing'  => { LSF => '-q normal -M3000 -R"select[mem>3000] rusage[mem=3000]"' },
+      'dump'      => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
+      'indexing'  => { LSF => '-q production-rh7 -M 3000 -R "rusage[mem=3000]"' },
     }
 }
 

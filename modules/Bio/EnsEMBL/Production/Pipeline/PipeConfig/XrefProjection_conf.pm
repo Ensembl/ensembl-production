@@ -499,16 +499,15 @@ sub default_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
-      'mem'                     => {'LSF' => '-q normal -M1000 -R"select[mem>1000] rusage[mem=1000]"'},
-      '2Gb_mem'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
-      '24Gb_mem'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      '250Mb_mem'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
-      '500Mb_mem'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
-      '1Gb_mem'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
-      '8Gb_mem'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
-      '24Gb_mem'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      'urgent_hcluster' => {'LSF' => '-q yesterday' },
+      'default'                 => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
+      'mem'                     => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"'},
+      '2Gb_mem'         => {'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"' },
+      '24Gb_mem'        => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000]"' },
+      '250Mb_mem'       => {'LSF' => '-q production-rh7 -M 250 -R "rusage[mem=250]"' },
+      '500Mb_mem'       => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"' },
+      '1Gb_mem'             => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
+      '8Gb_mem'             => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"' },
+      'urgent_hcluster' => {'LSF' => '-q production-rh7' },
     }
 }
 
