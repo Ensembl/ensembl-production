@@ -44,7 +44,7 @@ my $logger = get_logger;
 
 if ( !defined $opts->{host} || !defined $opts->{basedir} ) {
   croak
-"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -base_dir <ensembl dir>";
+"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -basedir <ensembl dir>";
 }
 
 $opts->{version} ||= software_version;
@@ -137,6 +137,9 @@ sub get_type {
   my $type;
   if ( $dbname =~ m/ensembl_compara_.*/ ) {
     $type = 'compara';
+  }
+  elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
+    $type = 'ontology';
   }
   elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/ ) {
     $type = $1;
