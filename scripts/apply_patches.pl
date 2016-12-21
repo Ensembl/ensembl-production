@@ -62,7 +62,8 @@ my $patch_dirs = {
         variation     => "$opts->{basedir}/ensembl-variation/sql",
         funcgen       => "$opts->{basedir}/ensembl-funcgen/sql",
         compara       => "$opts->{basedir}/ensembl-compara/sql",
-        ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql"
+        ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql",
+        production => "$opts->{basedir}/ensembl-production/sql"
 };
 while ( my ( $type, $dir ) = each %$patch_dirs ) {
   $logger->info("Retrieving $type patches from $dir");
@@ -137,6 +138,9 @@ sub get_type {
   my $type;
   if ( $dbname =~ m/ensembl_compara_.*/ ) {
     $type = 'compara';
+  }
+  elsif ( $dbname =~ m/ensembl_production_.*/ ) {
+    $type = 'production';
   }
   elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
     $type = 'ontology';
