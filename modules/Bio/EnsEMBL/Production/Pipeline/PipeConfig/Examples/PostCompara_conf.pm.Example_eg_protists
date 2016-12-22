@@ -162,7 +162,8 @@ sub default_options {
 	 			'run_all'     =>  0, # 1/0
  				'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
 			    'go_homology_types_allowed' => ['ortholog_one2one'],
-        		'go_percent_id_filter'      => '10', 
+        		            'go_percent_id_filter'      => '30', 
+            'go_cov_filter'     => '66', 
 				'ensemblObj_type'           => 'Translation', 
 				'ensemblObj_type_target'    => 'Translation', 
 	 	       }, 

@@ -183,6 +183,7 @@ sub default_options {
                             'go_homology_types_allowed' => ['ortholog_one2one'],
                         # homology percentage identity filter
                         'go_percent_id_filter'      => '30',
+                        'go_cov_filter'     => '66',
                                 # object type of GO annotation (source)
                                 'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
                                 # object type to attach GO projection (target)

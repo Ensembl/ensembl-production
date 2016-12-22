@@ -63,6 +63,7 @@ sub run {
          my $method_link_type       = $final_projection_list->{$pair}->{'go_method_link_type'};  
          my $homology_types_allowed = $final_projection_list->{$pair}->{'go_homology_types_allowed'};
          my $percent_id_filter      = $final_projection_list->{$pair}->{'go_percent_id_filter'};
+         my $percent_cov_filter     = $final_projection_list->{$pair}->{'go_cov_filter'};
          my $ensemblObj_type        = $final_projection_list->{$pair}->{'ensemblObj_type'};
          my $ensemblObj_type_target = $final_projection_list->{$pair}->{'ensemblObj_type_target'};
         # Remove source/target species from the hash
@@ -77,6 +78,7 @@ sub run {
 		 'method_link_type' 	  => $method_link_type,
                  'homology_types_allowed' => $homology_types_allowed,
   		 'percent_id_filter'      => $percent_id_filter,
+       'percent_cov_filter'   => $percent_cov_filter,
 		 'ensemblObj_type'        => $ensemblObj_type,
 		 'ensemblObj_type_target' => $ensemblObj_type_target 
 		},2); 
