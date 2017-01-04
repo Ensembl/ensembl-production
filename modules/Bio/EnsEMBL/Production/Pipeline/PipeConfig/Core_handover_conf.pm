@@ -53,7 +53,7 @@ sub default_options {
         
         pipeline_name => 'core_handover_update_'.$self->o('release'),
         
-        email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+        email => $self->o('ENV', 'USER').'@ebi.ac.uk',
     };
 }
 

@@ -54,7 +54,7 @@ sub default_options {
       gtftogenepred_exe => 'gtfToGenePred',
       genepredcheck_exe => 'genePredCheck',
 
-      email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+      email => $self->o('ENV', 'USER').'@ebi.ac.uk',
       
     };
 }

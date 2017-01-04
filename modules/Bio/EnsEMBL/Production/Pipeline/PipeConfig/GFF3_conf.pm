@@ -66,7 +66,7 @@ sub default_options {
       ## Dump out files with abinitio predictions as well
       abinitio         => 1,
 
-      email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+      email => $self->o('ENV', 'USER').'@ebi.ac.uk',
       
     };
 }

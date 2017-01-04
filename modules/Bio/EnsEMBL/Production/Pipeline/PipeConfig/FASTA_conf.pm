@@ -100,7 +100,7 @@ sub default_options {
         ncbiblast_exe => 'makeblastdb',
         blat_exe => 'faToTwoBit',
         
-        email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+        email => $self->o('ENV', 'USER').'@ebi.ac.uk',
     };
 }
 

@@ -49,7 +49,7 @@ sub default_options {
       
       pipeline_name => 'flatfile_dump_'.$self->o('release'),
       
-      email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+      email => $self->o('ENV', 'USER').'@ebi.ac.uk',
       
     };
 }
