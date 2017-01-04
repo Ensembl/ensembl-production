@@ -37,7 +37,7 @@ use constant ATTRIB_CODE => 'NoEvidence';
 use constant ATTRIB_NUM  => 315;
 use constant ATTRIB_NAME => 'Evidence for transcript removed';
 use constant ATTRIB_DESC => 'Supporting evidence for this projected transcript has been removed';
-use constant LSF_QUEUE   => 'normal';
+use constant LSF_QUEUE   => 'production-rh7';
 
 # Connection to the target DB
 my $host      = '';
@@ -161,7 +161,7 @@ if ($parallel) {
         next if ( $dbname !~ /$dbpattern/ );
         my $cmd = 'bsub -q '.$queue;
         $cmd .= ' '.$params if defined $params;
-        $cmd .=" -M5000 -R'select[mem>5000] rusage[mem=5000]'";
+        $cmd .=" -M 5000 -R 'rusage[mem=5000]'";
         $cmd .= ' -oo '.$log_file_name.'.'.$dbname.'.log'
             .' perl '.$0.' --host '.$host.' --port '.$port.' --user '.$user.' --dbpattern '.$dbname;
         $cmd .= ' --pass '.$pass if ($pass ne '');
