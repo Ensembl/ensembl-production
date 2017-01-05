@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES 
   (NULL, 'schema_type', 'production'), 
-  (NULL, 'schema_version', 87);
+  (NULL, 'schema_version', 88);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_86_87a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_87_88a.sql|schema version');
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
