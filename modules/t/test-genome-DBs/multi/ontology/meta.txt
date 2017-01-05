@@ -1,5 +1,5 @@
 1	schema_type	ontology	\N
-2	schema_version	87	\N
+2	schema_version	88	\N
 3	patch	patch_79_80_a.sql|schema_version	\N
 4	OBO_file_date	GO.obo/18:03:2015 17:12	\N
 5	OBO_load_date	GO.obo/Thu Mar 19 13:49:08 2015	\N
@@ -17,3 +17,7 @@
 17	patch	patch_84_85_d.sql| add ontology data-version	\N
 18	patch	patch_85_86_a.sql|schema_version	\N
 19	patch	patch_86_87_a.sql|schema_version	\N
+20	patch	patch_86_87_b.sql|longer_dbxref	\N
+21	patch	patch_86_87_c.sql|make_table_utf8	\N
+22	patch	patch_86_87_d.sql|default_value_confident_relationship	\N
+23	patch	patch_87_88_a.sql|schema_version	\N
