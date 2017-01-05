@@ -58,7 +58,7 @@ sub find_missing_patches {
   my ($dbh, $db_name, $all_patches, $release) = @_;
   if(defined $release) {
     my $last_release = $release - 1;
-    $all_patches = [grep {m/patch_${last_release}_${release}_[a-z]+.sql/} @$all_patches];
+    $all_patches = [grep {m/patch_${last_release}_${release}_*[a-z]+.sql/} @$all_patches];
   }
   # read patches from meta into a hash
   my $existing_patches = find_db_patches($dbh, $db_name);

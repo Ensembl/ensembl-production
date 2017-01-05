@@ -139,7 +139,7 @@ sub get_type {
   if ( $dbname =~ m/ensembl_compara_.*/ ) {
     $type = 'compara';
   }
-  elsif ( $dbname =~ m/ensembl_production_.*/ ) {
+  elsif ( $dbname =~ m/ensembl_production.*/ ) {
     $type = 'production';
   }
   elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
