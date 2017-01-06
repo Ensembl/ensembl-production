@@ -36,7 +36,7 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_87_88a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_87_88_a.sql|schema version');
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
