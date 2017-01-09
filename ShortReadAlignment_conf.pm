@@ -424,6 +424,7 @@ sub alignment_analyses {
     {
       -logic_name        => 'SRASeqFile',
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SRASeqFile',
+      -analysis_capacity => 8,
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
