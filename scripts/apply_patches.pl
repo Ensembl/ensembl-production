@@ -145,6 +145,15 @@ sub get_type {
   elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
     $type = 'ontology';
   }
+  elsif ($dbname =~ m/master_schema_[0-9]+/ ) {
+    $type = 'core';
+  }
+  elsif ($dbname =~ m/master_schema_variation_[0-9]+/ ) {
+    $type = 'variation';
+  }
+  elsif ($dbname =~ m/master_schema_funcgen_[0-9]+/ ) {
+    $type = 'funcgen';
+  }
   elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/ ) {
     $type = $1;
   }
