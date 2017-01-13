@@ -351,19 +351,4 @@ sub save_to_db {
   return;
 }
 
-sub fetch_external_db_id {
-  my ($self, $db_name) = @_;
-  
-  my $sql = 'SELECT external_db_id FROM external_db WHERE db_name = ?';
-  
-  my $dba = $self->get_DBAdaptor($self->param('db_type'));
-  my $dbh = $dba->dbc->db_handle;
-  my $sth = $dbh->prepare($sql);
-  $sth->execute($db_name);
-  
-  my ($external_db_id) = $sth->fetchrow_array;
-  
-  return $external_db_id;
-}
-
 1;
