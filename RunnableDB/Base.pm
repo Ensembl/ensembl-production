@@ -176,6 +176,21 @@ sub taxonomy_dbh {
   return $dbh;
 }
 
+sub fetch_external_db_id {
+  my ($self, $db_name, $type) = @_;
+  
+  my $sql = 'SELECT external_db_id FROM external_db WHERE db_name = ?';
+  
+  my $dba = $self->get_DBAdaptor($type);
+  my $dbh = $dba->dbc->db_handle;
+  my $sth = $dbh->prepare($sql);
+  $sth->execute($db_name);
+  
+  my ($external_db_id) = $sth->fetchrow_array;
+  
+  return $external_db_id;
+}
+
 =head2 hive_database_string_for_user
 
   Return the name and location of the database in a human readable way.
@@ -329,4 +344,3 @@ sub has_genes {
 }
 
 1;
-
