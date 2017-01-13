@@ -70,6 +70,7 @@ sub default_options {
 
     run_cmscan   => 1,
     run_trnascan => 1,
+    load_mirbase => 1,
 
     program_dir => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
     cmscan_exe  => catdir($self->o('program_dir'), 'cmscan'),
@@ -143,6 +144,13 @@ sub default_options {
     trnascan_threshold  => 20,
     trnascan_parameters => '',
 
+    # The annotation from mirBase isn't always available, but if it is,
+    # it's useful to load, since it's the definitive source for miRNA.
+    mirbase_logic_name => 'mirbase',
+    mirbase_db_name    => 'miRBase',
+    mirbase_version    => '21',
+    mirbase_file       => {},
+
     analyses =>
     [
       {
@@ -185,6 +193,13 @@ sub default_options {
         'program_file'    => $self->o('trnascan_exe'),
         'parameters'      => $self->o('trnascan_parameters'),
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::tRNAscan',
+        'linked_tables'   => ['dna_align_feature'],
+      },
+      {
+        'logic_name'      => $self->o('mirbase_logic_name'),
+        'db'              => $self->o('mirbase_db_name'),
+        'db_version'      => $self->o('mirbase_version'),
+        'module'          => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::miRBase',
         'linked_tables'   => ['dna_align_feature'],
       },
     ],
@@ -243,7 +258,9 @@ sub pipeline_wide_parameters {
  
  return {
    %{$self->SUPER::pipeline_wide_parameters},
-   'run_cmscan' => $self->o('run_cmscan'),
+   'run_cmscan'   => $self->o('run_cmscan'),
+   'run_trnascan' => $self->o('run_trnascan'),
+   'load_mirbase' => $self->o('load_mirbase'),
  };
 }
 
@@ -313,12 +330,12 @@ sub pipeline_analyses {
       -batch_size        => 10,
       -parameters        => {
                               analyses            => $self->o('analyses'),
-                              run_cmscan          => $self->o('run_cmscan'),
-                              run_trnascan        => $self->o('run_trnascan'),
                               rfam_logic_name     => $rfam_logic_name,
-                              trnascan_logic_name => $self->o('trnascan_logic_name'),
-                              cmscan_cm_file      => $self->o('cmscan_cm_file'),
                               cmscan_logic_name   => $self->o('cmscan_logic_name'),
+                              cmscan_cm_file      => $self->o('cmscan_cm_file'),
+                              trnascan_logic_name => $self->o('trnascan_logic_name'),
+                              mirbase_logic_name  => $self->o('mirbase_logic_name'),
+                              mirbase_files       => $self->o('mirbase_file'),
                               pipeline_dir        => $self->o('pipeline_dir'),
                               db_backup_file      => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
@@ -351,10 +368,11 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => WHEN('#run_cmscan#' =>
-                                      ['TaxonomicFilter'],
-                                     ELSE
-                                      ['SplitDumpFile']),
+                              '1' => WHEN(
+                                      '#run_cmscan#'                     => ['TaxonomicFilter'],
+                                      '!#run_cmscan# and #run_trnascan#' => ['SplitDumpFile'],
+                                      '#load_mirbase#'                   => ['miRBase'],
+                                     ),
                             },
     },
 
@@ -406,8 +424,6 @@ sub pipeline_analyses {
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                              run_cmscan              => $self->o('run_cmscan'),
-                              run_trnascan            => $self->o('run_trnascan'),
                             },
       -rc_name           => '8Gb_mem',
       -flow_into         => {
@@ -478,6 +494,18 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'miRBase',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::miRBase',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              logic_name => $self->o('mirbase_logic_name'),
+                              db_name    => $self->o('mirbase_db_name'),
+                              files      => $self->o('mirbase_file'),
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
       -logic_name        => 'MetaCoords',
       -module            => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::MetaCoords',
       -max_retry_count   => 1,
@@ -512,12 +540,11 @@ sub pipeline_analyses {
       -batch_size        => 100,
       -max_retry_count   => 1,
       -parameters        => {
-                              run_cmscan          => $self->o('run_cmscan'),
-                              run_trnascan        => $self->o('run_trnascan'),
                               rfam_logic_name     => $rfam_logic_name,
-                              trnascan_logic_name => $self->o('trnascan_logic_name'),
                               cmscan_cm_file      => $self->o('cmscan_cm_file'),
                               cmscan_logic_name   => $self->o('cmscan_logic_name'),
+                              trnascan_logic_name => $self->o('trnascan_logic_name'),
+                              mirbase_logic_name  => $self->o('mirbase_logic_name'),
                               alignment_dir       => catdir($self->o('pipeline_dir'), '#species#'),
                             },
       -rc_name           => 'normal',
@@ -528,10 +555,8 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::SummariseAlignments',
       -max_retry_count   => 1,
       -parameters        => {
-                              run_cmscan     => $self->o('run_cmscan'),
-                              run_trnascan   => $self->o('run_trnascan'),
-                              pipeline_dir   => $self->o('pipeline_dir'),
-                              evalue_levels  => $self->o('evalue_levels'),
+                              pipeline_dir  => $self->o('pipeline_dir'),
+                              evalue_levels => $self->o('evalue_levels'),
                             },
       -flow_into         => {
                               '2->A' => ['SummaryPlots'],
@@ -558,14 +583,10 @@ sub pipeline_analyses {
       -parameters        => {
                               email              => $self->o('email'),
                               subject            => 'RNA features pipeline report',
-                              run_cmscan         => $self->o('run_cmscan'),
-                              run_trnascan       => $self->o('run_trnascan'),
                               cmscan_threshold   => $self->o('cmscan_threshold'),
                               trnascan_threshold => $self->o('trnascan_threshold'),
                               pipeline_dir       => $self->o('pipeline_dir'),
                               evalue_levels      => $self->o('evalue_levels'),
-                              cmscan_threshold   => $self->o('cmscan_threshold'),
-                              trnascan_threshold => $self->o('trnascan_threshold'),
                             },
       -rc_name           => 'normal',
     },
