@@ -179,7 +179,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '1' => WHEN('#delete_existing#' =>
                                       ['DeleteGenes'],
@@ -196,7 +196,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('target_logic_name'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['AnalysisSetup'],
 
     },
@@ -238,7 +238,7 @@ sub pipeline_analyses {
                               within_exon       => $self->o('within_exon'),
                               id_db             => $self->o('id_db'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
 
     },
 
@@ -247,7 +247,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::MetaCoords',
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['EmailRNAGenesReport'],
     },
 
@@ -260,7 +260,7 @@ sub pipeline_analyses {
                               subject    => 'RNA genes pipeline has completed',
                               logic_name => $self->o('target_logic_name'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
   ];

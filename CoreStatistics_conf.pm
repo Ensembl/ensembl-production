@@ -65,7 +65,7 @@ sub default_options {
     
     no_pepstats => 0,
     
-    emboss_dir => '/nfs/panda/ensemblgenomes/external/EMBOSS',
+    emboss_dir => '/nfs/software/ensembl/RHEL7/linuxbrew',
     canonical_transcripts_script => $self->o('ensembl_cvs_root_dir').
      '/ensembl/misc-scripts/canonical_transcripts/select_canonical_transcripts.pl',
     canonical_transcripts_out_dir => undef,

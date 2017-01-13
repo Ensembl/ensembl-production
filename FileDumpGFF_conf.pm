@@ -109,7 +109,7 @@ sub pipeline_analyses {
                               out_file_stem      => $self->o('out_file_stem'),
                               escape_branch      => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['gff3_himem'],
                                '1' => ['gff3Tidy'],
@@ -136,7 +136,7 @@ sub pipeline_analyses {
                               eg_dir_structure   => $self->o('eg_dir_structure'),
                               eg_filename_format => $self->o('eg_filename_format'),
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['gff3Tidy'],
     },
 
@@ -149,7 +149,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['gff3Move'],
     },
 
@@ -174,7 +174,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('gff3_validate').' #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
   ];

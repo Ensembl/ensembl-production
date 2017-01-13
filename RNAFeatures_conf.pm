@@ -71,8 +71,8 @@ sub default_options {
     run_cmscan   => 1,
     run_trnascan => 1,
 
-    program_dir => '/nfs/panda/ensemblgenomes/external',
-    cmscan_exe  => catdir($self->o('program_dir'), 'bin', 'cmscan'),
+    program_dir => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
+    cmscan_exe  => catdir($self->o('program_dir'), 'cmscan'),
 
     cmscan_cm_file    => {},
     cmscan_logic_name => {},
@@ -96,7 +96,7 @@ sub default_options {
     # of the taxonomic filter, but you may then start excluding appropriate
     # models...)
     rfam_version        => '12.1',
-    rfam_dir            => catdir($self->o('program_dir'), 'Rfam', $self->o('rfam_version')),
+    rfam_dir            => catdir('/nfs/panda/ensemblgenomes/external/Rfam', $self->o('rfam_version')),
     rfam_cm_file        => catdir($self->o('rfam_dir'), 'Rfam.cm'),
     rfam_logic_name     => 'cmscan_rfam_'.$self->o('rfam_version'),
     rfam_db_name        => 'RFAM',
@@ -131,16 +131,16 @@ sub default_options {
     taxonomic_threshold => 0.02,
     taxonomic_minimum   => 50,
 
-    # There's not much to choose between cmscan and tRNASCAN-SE in terms of
+    # There's not much to choose between cmscan and tRNAscan-SE in terms of
     # annotating tRNA genes, (for some species both produce lots of false
-    # positives). If you use tRNASCAN-SE, however, you do have the option of
+    # positives). If you use tRNAscan-SE, however, you do have the option of
     # including pseudogenes, and you get info about the anticodon in the
     # gene description.
-    trnascan_dir        => catdir($self->o('program_dir'), 'tRNAscan-SE-1.3.1', 'bin'),
-    trnascan_exe        => catdir($self->o('program_dir'), 'bin', 'tRNAscan-SE'),
+    trnascan_exe        => catdir($self->o('program_dir'), 'tRNAscan-SE'),
     trnascan_logic_name => 'trnascan_align',
     trnascan_db_name    => 'TRNASCAN_SE',
     trnascan_pseudo     => 0,
+    trnascan_threshold  => 20,
     trnascan_parameters => '',
 
     analyses =>
@@ -181,7 +181,7 @@ sub default_options {
       {
         'logic_name'      => $self->o('trnascan_logic_name'),
         'program'         => 'tRNAscan-SE',
-        'program_version' => '1.3.1',
+        'program_version' => '1.23',
         'program_file'    => $self->o('trnascan_exe'),
         'parameters'      => $self->o('trnascan_parameters'),
         'module'          => 'Bio::EnsEMBL::Analysis::Runnable::tRNAscan',
@@ -469,10 +469,10 @@ sub pipeline_analyses {
       -hive_capacity     => $self->o('max_hive_capacity'),
       -max_retry_count   => 1,
       -parameters        => {
-                              trnascan_dir => $self->o('trnascan_dir'),
                               logic_name   => $self->o('trnascan_logic_name'),
                               db_name      => $self->o('trnascan_db_name'),
                               pseudo       => $self->o('trnascan_pseudo'),
+                              threshold    => $self->o('trnascan_threshold'),
                             },
       -rc_name           => 'normal',
     },
@@ -556,12 +556,16 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::EmailRNAReport',
       -max_retry_count   => 1,
       -parameters        => {
-                              email         => $self->o('email'),
-                              subject       => 'RNA features pipeline report',
-                              run_cmscan    => $self->o('run_cmscan'),
-                              run_trnascan  => $self->o('run_trnascan'),
-                              pipeline_dir  => $self->o('pipeline_dir'),
-                              evalue_levels => $self->o('evalue_levels'),
+                              email              => $self->o('email'),
+                              subject            => 'RNA features pipeline report',
+                              run_cmscan         => $self->o('run_cmscan'),
+                              run_trnascan       => $self->o('run_trnascan'),
+                              cmscan_threshold   => $self->o('cmscan_threshold'),
+                              trnascan_threshold => $self->o('trnascan_threshold'),
+                              pipeline_dir       => $self->o('pipeline_dir'),
+                              evalue_levels      => $self->o('evalue_levels'),
+                              cmscan_threshold   => $self->o('cmscan_threshold'),
+                              trnascan_threshold => $self->o('trnascan_threshold'),
                             },
       -rc_name           => 'normal',
     },

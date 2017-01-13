@@ -149,7 +149,7 @@ sub pipeline_analyses {
       -rc_name         => 'normal-rh7',
       -flow_into       => ['GeneDescProjection'],
     },
-
+    
     {
       -logic_name      => 'GeneDescProjection',
       -module          => 'Bio::EnsEMBL::EGPipeline::ProjectGeneDesc::GeneDescProjection',

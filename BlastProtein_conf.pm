@@ -53,11 +53,11 @@ sub default_options {
     
     pipeline_name => 'blast_protein_'.$self->o('ensembl_release'),
     
-    species      => [],
-    antispecies  => [],
-    division     => [],
-    run_all      => 0,
-    meta_filters => {},
+    target_species      => [],
+    target_antispecies  => [],
+    target_division     => [],
+    target_run_all      => 0,
+    target_meta_filters => {},
     
     # Parameters for dumping and splitting Fasta query files.
     max_seq_length          => 10000000,
@@ -92,28 +92,12 @@ sub default_options {
     uniprot_source    => 'sprot',
     uniprot_dir       => catdir($self->o('pipeline_dir'), 'uniprot'),
     
-    # Default is to use ncbi-blast; wu-blast is possible, for backwards
-    # compatability, but it is now unsupported and orders of magnitude
-    # slower than ncbi-blast. Setting BLASTMAT is irrelevant for ncbi-blast,
-    # but the Ensembl code requires it to be set as an environment variable,
-    # pointing to a directory that exists.
-    blast_type       => 'ncbi',
-    blast_dir        => '/nfs/panda/ensemblgenomes/external/ncbi-blast-2+',
+    blast_dir        => '/nfs/software/ensembl/RHEL7/linuxbrew',
     makeblastdb_exe  => catdir($self->o('blast_dir'), 'bin/makeblastdb'),
     blastp_exe       => catdir($self->o('blast_dir'), 'bin/blastp'),
     blastx_exe       => catdir($self->o('blast_dir'), 'bin/blastx'),
-    blast_matrix     => undef,
     blast_threads    => 3,
     blast_parameters => '-word_size 3 -num_alignments 100000 -num_descriptions 100000 -lcase_masking -seg yes -num_threads '.$self->o('blast_threads'),
-    
-    # For wu-blast, set the following  parameters instead of the above.
-    # blast_type       => 'wu',
-    # blast_dir        => '/nfs/panda/ensemblgenomes/external/wublast',
-    # makeblastdb_exe  => catdir($self->o('blast_dir'), 'wu-formatdb'),
-    # blastp_exe       => catdir($self->o('blast_dir'), 'blastp'),
-    # blastx_exe       => catdir($self->o('blast_dir'), 'blastx'),
-    # blast_matrix     => catdir($self->o('blast_dir'), 'matrix'),
-    # blast_parameters => '-W 3 -B 100000 -V 100000 -hspmax=0 -lcmask -wordmask=seg',
     
     # For parsing the output.
     output_regex     => '^\s*(\w+)',
@@ -128,7 +112,6 @@ sub default_options {
     blastx   => 1,
     
     # Filter so that only best X hits get saved.
-    filter_top_x => 1,
     blastp_top_x => 1,
     blastx_top_x => 10,
     
@@ -247,16 +230,16 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count => 1,
       -parameters      => {
-                            species         => $self->o('species'),
-                            antispecies     => $self->o('antispecies'),
-                            division        => $self->o('division'),
-                            run_all         => $self->o('run_all'),
-                            meta_filters    => $self->o('meta_filters'),
+                            species         => $self->o('target_species'),
+                            antispecies     => $self->o('target_antispecies'),
+                            division        => $self->o('target_division'),
+                            run_all         => $self->o('target_run_all'),
+                            meta_filters    => $self->o('target_meta_filters'),
                             chromosome_flow => 0,
                             regulation_flow => 0,
                             variation_flow  => 0,
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['TargetDatabase'],
                           },
@@ -271,7 +254,7 @@ sub pipeline_analyses {
                             blastp => $self->o('blastp'),
                             blastx => $self->o('blastx'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['BackupCoreDatabase'],
                             'A->2' => ['DumpProteome'],
@@ -289,7 +272,7 @@ sub pipeline_analyses {
       -parameters      => {
                             output_file => catdir($self->o('pipeline_dir'), '#species#', 'core_bkp.sql.gz'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -298,7 +281,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {},
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['BackupOFDatabase'],
                             '3' => ['CreateOFDatabase'],
@@ -315,7 +298,7 @@ sub pipeline_analyses {
                             db_type     => 'otherfeatures',
                             output_file => catdir($self->o('pipeline_dir'), '#species#', 'of_bkp.sql.gz'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -324,7 +307,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {},
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['BackupOFDatabase'],
     },
 
@@ -337,7 +320,7 @@ sub pipeline_analyses {
                               proteome_dir => catdir($self->o('pipeline_dir'), '#species#', 'proteome'),
                               use_dbID     => 1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['SplitProteome'],
     },
 
@@ -353,7 +336,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => [ '?table_name=split_proteome' ],
                             }
@@ -367,7 +350,7 @@ sub pipeline_analyses {
       -parameters        => {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#', 'genome'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['SplitGenome'],
     },
 
@@ -383,7 +366,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '2' => [ '?table_name=split_genome' ],
                             }
@@ -432,7 +415,7 @@ sub pipeline_analyses {
                             variation_flow  => 0,
                             species_varname => 'source_species',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['FetchDatabase'],
                           },
@@ -450,7 +433,7 @@ sub pipeline_analyses {
                               is_canonical => $self->o('is_canonical'),
                               file_varname => 'db_fasta_file',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['CreateBlastDB'],
     },
 
@@ -467,7 +450,7 @@ sub pipeline_analyses {
                             out_dir         => $self->o('uniprot_dir'),
                             file_varname    => 'db_fasta_file',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['CreateBlastDB'],
     },
 
@@ -495,11 +478,11 @@ sub pipeline_analyses {
       -parameters      => {
                             makeblastdb_exe   => $self->o('makeblastdb_exe'),
                             blast_db          => $self->o('blast_db'),
-                            blast_db_type     => 'prot',
+                            database_type     => 'pep',
                             proteome_source   => $self->o('proteome_source'),
                             logic_name_prefix => $self->o('logic_name_prefix'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['TargetSpeciesFactory'],
     },
 
@@ -508,15 +491,15 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count => 1,
       -parameters      => {
-                            species         => $self->o('species'),
-                            antispecies     => $self->o('antispecies'),
-                            division        => $self->o('division'),
-                            run_all         => $self->o('run_all'),
-                            meta_filters    => $self->o('meta_filters'),
+                            species         => $self->o('target_species'),
+                            antispecies     => $self->o('target_antispecies'),
+                            division        => $self->o('target_division'),
+                            run_all         => $self->o('target_run_all'),
+                            meta_filters    => $self->o('target_meta_filters'),
                             chromosome_flow => 0,
                             variation_flow  => 0,
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['AnalysisFactory'],
                           },
@@ -532,11 +515,10 @@ sub pipeline_analyses {
                             analyses     => $self->o('analyses'),
                             blastp       => $self->o('blastp'),
                             blastx       => $self->o('blastx'),
-                            filter_top_x => $self->o('filter_top_x'),
                             blastp_top_x => $self->o('blastp_top_x'),
                             blastx_top_x => $self->o('blastx_top_x'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['AnalysisSetupCore'],
                             'A->4' => ['FetchProteomeFiles'],
@@ -587,7 +569,7 @@ sub pipeline_analyses {
       -parameters      => {
                             seq_type => 'proteome',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['BlastPFactory'],
                             'A->1' => ['FilterBlastPHits'],
@@ -602,7 +584,7 @@ sub pipeline_analyses {
       -parameters      => {
                             seq_type => 'genome',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['BlastXFactory'],
                             'A->1' => ['FilterBlastXHits'],
@@ -618,7 +600,7 @@ sub pipeline_analyses {
                             max_seq_length => $self->o('max_seq_length'),
                             queryfile      => '#split_file#',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['BlastP'],
                           },
@@ -634,7 +616,7 @@ sub pipeline_analyses {
                             max_seq_length => $self->o('max_seq_length'),
                             queryfile      => '#split_file#',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2' => ['BlastX'],
                           },
@@ -649,17 +631,15 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'core',
                             logic_name       => '#logic_name_prefix#_blastp',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'pep',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '8GB_threads',
+      -rc_name         => '8GB_threads-rh7',
       -flow_into       => {
                             '-1' => ['BlastP_HighMem'],
                           },
@@ -674,17 +654,15 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'core',
                             logic_name       => '#logic_name_prefix#_blastp',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'pep',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '16GB_threads',
+      -rc_name         => '16GB_threads-rh7',
       -flow_into       => {
                             '-1' => ['BlastP_HigherMem'],
                           },
@@ -699,16 +677,14 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'core',
                             logic_name       => '#logic_name_prefix#_blastp',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'pep',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                           },
-      -rc_name         => '32GB_threads',
+      -rc_name         => '32GB_threads-rh7',
     },
 
     {
@@ -720,17 +696,15 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'dna',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '8GB_threads',
+      -rc_name         => '8GB_threads-rh7',
       -flow_into       => {
                             '-1' => ['BlastX_HighMem'],
                           },
@@ -745,17 +719,15 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'dna',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '16GB_threads',
+      -rc_name         => '16GB_threads-rh7',
       -flow_into       => {
                             '-1' => ['BlastX_HigherMem'],
                           },
@@ -770,16 +742,14 @@ sub pipeline_analyses {
       -parameters      => {
                             db_type          => 'otherfeatures',
                             logic_name       => '#logic_name_prefix#_blastx',
-                            blast_type       => $self->o('blast_type'),
-                            blast_matrix     => $self->o('blast_matrix'),
-                            output_regex     => $self->o('output_regex'),
                             query_type       => 'dna',
                             database_type    => 'pep',
+                            output_regex     => $self->o('output_regex'),
                             pvalue_threshold => $self->o('pvalue_threshold'),
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                           },
-      -rc_name         => '32GB_threads',
+      -rc_name         => '32GB_threads-rh7',
     },
 
     {
@@ -788,12 +758,11 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
-                            db_type     => 'core',
-                            filter_top_x => $self->o('filter_top_x'),
-                            blastp_top_x => $self->o('blastp_top_x'),
-                            logic_name  => '#logic_name_prefix#_blastp',
+                            db_type      => 'core',
+                            filter_top_x => $self->o('blastp_top_x'),
+                            logic_name   => '#logic_name_prefix#_blastp',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -802,13 +771,12 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -parameters      => {
-                            db_type     => 'otherfeatures',
-                            filter_top_x => $self->o('filter_top_x'),
-                            blastx_top_x => $self->o('blastx_top_x'),
-                            logic_name  => '#logic_name_prefix#_blastx',
-                            create_gff  => $self->o('create_gff'),
+                            db_type      => 'otherfeatures',
+                            filter_top_x => $self->o('blastx_top_x'),
+                            logic_name   => '#logic_name_prefix#_blastx',
+                            create_gff   => $self->o('create_gff'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => {
                             '2->A' => ['GFF3Dump'],
                             'A->2' => ['JSONDescription'],
@@ -829,7 +797,7 @@ sub pipeline_analyses {
                             results_dir        => catdir($self->o('pipeline_dir'), '#species#'),
                             out_file_stem      => '#logic_name_prefix#_blastx.gff3',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['GFF3Tidy'],
     },
 
@@ -842,7 +810,7 @@ sub pipeline_analyses {
       -parameters      => {
                             cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
       -flow_into       => ['GFF3Validate'],
     },
 
@@ -856,7 +824,7 @@ sub pipeline_analyses {
                             cmd => 'mv #out_file#.sorted #out_file#; '.
                                    $self->o('gff3_validate').' #out_file#',
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
     {
@@ -870,7 +838,7 @@ sub pipeline_analyses {
                             logic_name  => '#logic_name_prefix#_blastx',
                             results_dir => catdir($self->o('pipeline_dir'), '#species#'),
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
   ];
@@ -883,9 +851,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    '8GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
-    '16GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
-    '32GB_threads' => {'LSF' => '-q production-rh6 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
+    '8GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
+    '16GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '32GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
   }
 }
 

@@ -40,15 +40,15 @@ sub default_options {
     meta_filters => {},
 
     # Parameters for dumping and splitting Fasta DNA files
-    max_seq_length          => 25000000,
+    max_seq_length          => 100000000,
     max_seq_length_per_file => $self->o('max_seq_length'),
-    max_seqs_per_file       => undef,
+    max_seqs_per_file       => 10000,
     max_files_per_directory => 50,
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     min_slice_length        => 5000,
     
     # Program paths
-    repeatmodeler_dir => '/nfs/panda/ensemblgenomes/external/RepeatModeler',
+    repeatmodeler_dir => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
     builddatabase_exe => catdir($self->o('repeatmodeler_dir'), 'BuildDatabase'),
     repeatmodeler_exe => catdir($self->o('repeatmodeler_dir'), 'RepeatModeler'),
     
@@ -201,7 +201,7 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        =>
       {
-        cmd => 'cat '.$self->o('results_dir').'/*/RM_*/consensi.fa.classified > '.$self->o('results_dir').'/#species#.rm.lib',
+        cmd => 'cat '.$self->o('results_dir').'/#species#*/RM_*/consensi.fa.classified > '.$self->o('results_dir').'/#species#.rm.lib',
       },
       -rc_name           => 'normal-rh7',
     },

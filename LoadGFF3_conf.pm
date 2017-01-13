@@ -56,7 +56,10 @@ sub default_options {
     gff3_tidy_file => $self->o('gff3_file').'.tidied',
     fasta_file     => catdir($self->o('pipeline_dir'), $self->o('species').'.fa'),
     
-    # Attempt to correct incomplete transcripts and/or invalid translations.
+    # Attempt to correct transcripts with invalid translations.
+    fix_models => 1,
+    
+    # Where fixes fail, apply seq-edits where possible.
     apply_seq_edits => 1,
     
     # If loading data from NCBI, their homology- and transcriptome-based
@@ -187,6 +190,7 @@ sub pipeline_wide_parameters {
    'logic_name'      => $self->o('logic_name'),
    'fasta_file'      => $self->o('fasta_file'),
    'delete_existing' => $self->o('delete_existing'),
+   'fix_models'      => $self->o('fix_models'),
    'apply_seq_edits' => $self->o('apply_seq_edits'),
  };
 }
@@ -205,7 +209,7 @@ sub pipeline_analyses {
                                      $self->o('gff3_tidy_file'),
                             },
       -input_ids         => [ {} ],
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['GFF3Validate'],
     },
 
@@ -217,7 +221,7 @@ sub pipeline_analyses {
                               cmd => $self->o('gff3_validate').' '.
                                      $self->o('gff3_tidy_file'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '1' => WHEN('-e #fasta_file#' =>
                                       ['FastaTidy'],
@@ -234,7 +238,7 @@ sub pipeline_analyses {
                               cmd => $self->o('fasta_tidy').' '.
                                      $self->o('fasta_file'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['BackupDatabase'],
     },
 
@@ -246,7 +250,7 @@ sub pipeline_analyses {
                               genome_file  => $self->o('fasta_file'),
                               header_style => 'name',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['BackupDatabase'],
     },
 
@@ -257,7 +261,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), $self->o('species'), 'pre_gff3_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '1' => WHEN('#delete_existing#' =>
                                       ['DeleteGenes'],
@@ -271,7 +275,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::LoadGFF3::DeleteGenes',
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['AnalysisSetup'],
     },
 
@@ -298,7 +302,7 @@ sub pipeline_analyses {
       -parameters        => {
                               synonym_external_db => $self->o('synonym_external_db'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['LoadGFF3'],
     },
 
@@ -326,7 +330,23 @@ sub pipeline_analyses {
                               xref_translation_external_db => $self->o('xref_translation_external_db'),
                               
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
+      -flow_into         => {
+                              '1' => WHEN('#fix_models#' =>
+                                      ['FixModels'],
+                                     ELSE
+                                      ['EmailReport']),
+                            },
+    },
+
+    {
+      -logic_name        => 'FixModels',
+      -module            => 'Bio::EnsEMBL::EGPipeline::LoadGFF3::FixModels',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              protein_fasta_file => $self->o('protein_fasta_file'),
+                            },
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '1' => WHEN('#apply_seq_edits#' =>
                                       ['ApplySeqEdits'],
@@ -343,7 +363,7 @@ sub pipeline_analyses {
                               genbank_file       => $self->o('genbank_file'),
                               protein_fasta_file => $self->o('protein_fasta_file'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['EmailReport'],
     },
 
@@ -356,7 +376,7 @@ sub pipeline_analyses {
                               subject            => 'GFF3 Loading pipeline has completed for #species#',
                               protein_fasta_file => $self->o('protein_fasta_file'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
   ];

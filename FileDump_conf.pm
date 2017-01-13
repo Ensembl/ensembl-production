@@ -83,17 +83,20 @@ sub default_options {
     
     # Gap type 'scaffold' is assumed unless otherwise specified.
     agp_gap_type => {
-      'anopheles_gambiae' => 'contig',
+      'anopheles_albimanus' => 'contig',
+      'anopheles_gambiae'   => 'contig',
     },
 
     # Linkage is assumed unless otherwise specified.
     agp_linkage => {
-      'anopheles_gambiae' => 'no',
+      'anopheles_albimanus' => 'no',
+      'anopheles_gambiae'   => 'no',
     },
     
     # Linkage evidence 'paired-ends' is assumed unless otherwise specified.
     agp_evidence => {
       'aedes_aegypti'          => 'unspecified',
+      'anopheles_albimanus'    => 'na',
       'anopheles_darlingi'     => 'unspecified',
       'anopheles_gambiae'      => 'na',
       'anopheles_gambiaeS'     => 'unspecified',
@@ -107,8 +110,8 @@ sub default_options {
 
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
-
-    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    
+    gt_exe        => '/nfs/software/ensembl/RHEL7/linuxbrew/bin/gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
 
@@ -222,7 +225,7 @@ sub pipeline_analyses {
                               checksum_dir  => $self->o('checksum_dir'),
                               release_date  => $self->o('release_date'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['WriteDrupalFile'],
     },
 
@@ -245,7 +248,7 @@ sub pipeline_analyses {
                               drupal_species        => $self->o('drupal_species'),
                               gene_dumps            => $self->o('gene_dumps'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -293,7 +296,7 @@ sub pipeline_analyses {
                               header_style   => 'name_and_type_and_location',
                               escape_branch  => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['fasta_toplevel_himem'],
                                '1' => ['PostProcessing'],
@@ -311,7 +314,7 @@ sub pipeline_analyses {
                               overwrite      => 1,
                               header_style   => 'name_and_type_and_location',
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -327,7 +330,7 @@ sub pipeline_analyses {
                               header_style   => 'name_and_type_and_location',
                               escape_branch  => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['fasta_seqlevel_himem'],
                                '1' => ['PostProcessing'],
@@ -345,7 +348,7 @@ sub pipeline_analyses {
                               overwrite      => 1,
                               header_style   => 'name_and_type_and_location',
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -361,7 +364,7 @@ sub pipeline_analyses {
                               agp_evidence  => $self->o('agp_evidence'),
                               escape_branch => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['agp_assembly_himem'],
                                '1' => ['PostProcessing'],
@@ -379,7 +382,7 @@ sub pipeline_analyses {
                               agp_linkage  => $self->o('agp_linkage'),
                               agp_evidence => $self->o('agp_evidence'),
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -393,7 +396,7 @@ sub pipeline_analyses {
                               header_style  => 'extended',
                               escape_branch => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['fasta_transcripts_himem'],
                                '1' => ['PostProcessing'],
@@ -409,7 +412,7 @@ sub pipeline_analyses {
       -parameters        => {
                               header_style => 'extended',
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -423,7 +426,7 @@ sub pipeline_analyses {
                               header_style  => 'extended',
                               escape_branch => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['fasta_peptides_himem'],
                                '1' => ['PostProcessing'],
@@ -439,7 +442,7 @@ sub pipeline_analyses {
       -parameters        => {
                               header_style => 'extended',
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -453,7 +456,7 @@ sub pipeline_analyses {
                               data_type     => 'basefeatures',
                               escape_branch => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1' => ['gtf_genes_himem'],
                                '1' => ['PostProcessing'],
@@ -469,7 +472,7 @@ sub pipeline_analyses {
       -parameters        => {
                               data_type => 'basefeatures',
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => ['PostProcessing'],
     },
 
@@ -488,7 +491,7 @@ sub pipeline_analyses {
                               relabel_transcript => 1,
                               escape_branch      => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1'   => ['gff3_genes_himem'],
                               '1->A' => ['gff3Tidy'],
@@ -510,7 +513,7 @@ sub pipeline_analyses {
                               remove_id_prefix   => 1,
                               relabel_transcript => 1,
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => {
                               '1->A' => ['gff3Tidy'],
                               'A->1' => ['PostProcessing'],
@@ -532,7 +535,7 @@ sub pipeline_analyses {
                               remove_separators => 1,
                               escape_branch     => -1,
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => {
                               '-1'   => ['gff3_repeats_himem'],
                               '1->A' => ['gff3Tidy'],
@@ -554,7 +557,7 @@ sub pipeline_analyses {
                               remove_id_prefix  => 1,
                               remove_separators => 1,
                             },
-      -rc_name           => '16Gb_mem',
+      -rc_name           => '16Gb_mem-rh7',
       -flow_into         => {
                               '1->A' => ['gff3Tidy'],
                               'A->1' => ['PostProcessing'],
@@ -571,7 +574,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('gff3_tidy').' #out_file# > #out_file#.sorted',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['gff3Move'],
     },
 
@@ -598,7 +601,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => $self->o('gff3_validate').' #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
     {
@@ -619,7 +622,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'gzip -n -f #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['MD5Checksum'],
     },
 

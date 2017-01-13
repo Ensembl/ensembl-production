@@ -87,7 +87,7 @@ sub pipeline_analyses {
       -flow_into   => {
                        '2' => 'RunSQL',
                       },
-      -rc_name     => 'normal',
+      -rc_name     => 'normal-rh7',
     },
 
     {
@@ -98,7 +98,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'normal-rh7',
     },
 
   ];

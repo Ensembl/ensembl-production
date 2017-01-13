@@ -111,7 +111,7 @@ sub pipeline_analyses {
                               eg_filename_format => $self->o('eg_filename_format'),
                               taxonomy_db        => $self->o('taxonomy_db'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['CompressFile'],
 	  },
 
@@ -124,7 +124,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'gzip -n -f #out_file#',
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
     },
 
   ];
