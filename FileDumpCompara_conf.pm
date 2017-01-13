@@ -92,7 +92,8 @@ sub default_options {
     # only contain paralogs.
     sofware_dir     => '/nfs/software/ensembl/RHEL7/linuxbrew/bin',
     newick_stats    => catdir($self->o('sofware_dir'), 'nw_stats'),
-    mafValidator    => '/nfs/panda/ensemblgenomes/external/mafTools/bin/mafValidator.py',
+    mafValidator    => catdir($self->o('sofware_dir'), 'mafValidator.py'),
+    #mafValidator    => '/nfs/panda/ensemblgenomes/external/mafTools/bin/mafValidator.py',
     
     xmllint         => 'xmllint',
     schema_dir      => '/nfs/panda/ensemblgenomes/external/xml_schema',
