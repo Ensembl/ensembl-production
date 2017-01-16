@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::Aligner::GsnapAligner;
+package Bio::EnsEMBL::EGPipeline::Common::Aligner::Bowtie2Aligner;
 
 use strict;
 use warnings;
@@ -32,11 +32,14 @@ sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
   
-  ($self->{kmer}) = rearrange(['KMER'], @args);
-  $self->{kmer} ||= 15;
+  $self->{index_program} = 'bowtie2-build';
+  $self->{align_program} = 'bowtie2';
   
-  $self->{index_program} = 'gmap_build';
-  $self->{align_program} = 'gsnap';
+  if ($self->{run_mode} eq 'local') {
+    $self->{align_params} = ' --local ';
+  } else {
+    $self->{align_params} = '';
+  }
   
   if ($self->{aligner_dir}) {
     $self->{index_program} = catdir($self->{aligner_dir}, $self->{index_program});
@@ -49,11 +52,9 @@ sub new {
 sub index_file {
   my ($self, $file) = @_;
   
-  my ($name, $path, undef) = fileparse($file, qr/\.[^.]*/);
+  (my $index_name = $file) =~ s/\.\w+$//;
   
-  my $index_cmd  = $self->{index_program};
-  $index_cmd    .= " -D $path -d $name -k $self->{kmer} ";
-  $index_cmd    .= " $file ";
+  my $index_cmd = "$self->{index_program} --quiet $file $index_name ";
   
   $self->run_cmd($index_cmd, 'index');
 }
@@ -62,7 +63,7 @@ sub index_exists {
   my ($self, $file) = @_;
   
   (my $index_name = $file) =~ s/\.\w+$//;
-  my $exists = -e $index_name ? 1 : 0;
+  my $exists = -e "$index_name.1.bt2" ? 1 : 0;
   
   return $exists;
 }
@@ -70,22 +71,27 @@ sub index_exists {
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
   
-  my ($name, $path, undef) = fileparse($ref, qr/\.[^.]*/);
-  
+  (my $index_name = $ref) =~ s/\.\w+$//;
   if (defined $file2) {
-   	$sam = $self->align_file($name, $path, $sam, "$file1 $file2");
+   	$sam = $self->align_file($index_name, $sam, " -1 $file1 -2 $file2 ");
   } else {
-   	$sam = $self->align_file($name, $path, $sam, $file1);
+   	$sam = $self->align_file($index_name, $sam, " -U $file1 ");
   }
   
   return $sam;
 }
 
 sub align_file {
-  my ($self, $name, $path, $sam, $files) = @_;
+  my ($self, $index_name, $sam, $files) = @_;
+  
+  my $format = $files =~ /fastq/ ? ' -q ' : ' -f ';
   
   my $align_cmd = $self->{align_program};
-  $align_cmd   .= " -D $path -d $name -N 1 -t $self->{threads} -A sam ";
+  $align_cmd   .= " --quiet ";
+  $align_cmd   .= " -x $index_name ";
+  $align_cmd   .= " -p $self->{threads} ";
+  $align_cmd   .= " $self->{align_params} ";
+  $align_cmd   .= " $format ";
   $align_cmd   .= " $files > $sam ";
   
   $self->run_cmd($align_cmd, 'align');

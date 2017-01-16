@@ -13,160 +13,223 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-=cut
-
-
-=pod
-
-=head1 CONTACT
-
-  Please email comments or questions to the public Ensembl
-  developers list at <dev@ensembl.org>.
-
-  Questions may also be sent to the Ensembl help desk at
-  <helpdesk@ensembl.org>.
  
 =cut
 
 package Bio::EnsEMBL::EGPipeline::Common::Aligner;
 
-use Log::Log4perl qw(:easy);
-use Bio::EnsEMBL::Utils::Argument qw( rearrange );
-use Bio::EnsEMBL::Utils::Exception qw(throw warning);
+use strict;
+use warnings;
 
-# samtools view -bS test.sam > test.bam
-my $sam2bam = "%s view -bS %s > %s";
-# samtools merge out.bam in1.bam in2.bam in3.bam
-my $mergebam = "%s merge -f %s %s";
-my $sortbam  = "%s sort %s %s";
-my $indexbam = "%s index %s %s";
-my $statbam  = "%s flagstat %s";
-#samtools mpileup -ugf ${REFERENCE} bwa_sorted.bam | bcftools view -bvcg > bwa_sampe.raw.bcf
-my $pileup = "%s mpileup -uf %s %s | %s view -bvcg - > %s";
-#bcftools view var.raw.bcf | vcfutils.pl varFilter -D100 > var.flt.vcf
-my $bcf2vcf = "%s view %s | %s varFilter -D100 > %s";
+use Bio::EnsEMBL::Utils::Argument qw(rearrange);
+use Bio::EnsEMBL::Utils::Exception qw(throw);
 
-my $logger = get_logger();
+use File::Spec::Functions qw(catdir);
+use IPC::Cmd qw(run);
 
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-	( $self->{bwa}, $self->{samtools}, $self->{bcftools}, $self->{vcfutils}, $self->{cleanup} ) =
-	  rearrange( [ 'BWA', 'SAMTOOLS', 'BCFTOOLS', 'VCFUTILS', 'CLEANUP' ], @args );
-	$self->{bwa}      ||= 'bwa';
-	$self->{samtools} ||= 'samtools';
-	$self->{bcftools} ||= 'bcftools';
-	$self->{vcfutils} ||= 'vcfutils.pl';
+  
+	(
+    $self->{samtools_dir}, $self->{samtools},
+    $self->{bcftools_dir}, $self->{bcftools}, $self->{vcfutils},
+    $self->{aligner_dir},
+    $self->{threads}, $self->{memory}, $self->{run_mode}, $self->{do_not_run}, $self->{cleanup},
+  ) =
+  rearrange(
+    [
+      'SAMTOOLS_DIR', 'SAMTOOLS',
+      'BCFTOOLS_DIR', 'BCFTOOLS', 'VCFUTILS',
+      'ALIGNER_DIR',
+      'THREADS', 'MEMORY', 'RUN_MODE', 'DO_NOT_RUN', 'CLEANUP',
+    ], @args
+  );
+  
+	$self->{samtools}   ||= 'samtools';
+	$self->{bcftools}   ||= 'bcftools';
+	$self->{vcfutils}   ||= 'vcfutils.pl';
+  $self->{threads}    ||= 1;
+  $self->{memory}     ||= 8000;
+  $self->{run_mode}   ||= 'default';
+  $self->{do_not_run} ||= 0;
+  $self->{cleanup}    ||= 1;
+  
+  if ($self->{samtools_dir}) {
+    $self->{samtools} = catdir($self->{samtools_dir}, $self->{samtools});
+  }
+  if ($self->{bcftools_dir}) {
+    $self->{bcftools} = catdir($self->{bcftools_dir}, $self->{bcftools});
+    $self->{vcfutils} = catdir($self->{bcftools_dir}, $self->{vcfutils});
+  }
+  
 	return $self;
+}
+
+sub version {
+  my ($self) = @_;
+  
+  my $cmd = $self->{align_program} . ' --version';
+  my ($success, $error, $buffer) = run(command => $cmd);
+  my $buffer_str = join "", @$buffer;
+  
+  if ($success) {
+    $buffer_str =~ /version\s+(\S+)/m;
+    return $1;
+  } else {
+    throw("Command '$cmd' failed, $error: $buffer_str");
+  }
 }
 
 sub index_file {
 	throw "index_file unimplemented";
 }
 
-sub align_file {
-	throw "align_file unimplemented";
+sub index_exists {
+	throw "index_exists unimplemented";
 }
 
-sub pairedend_to_sam {
-	throw "pairedend_to_sam unimplemented";
+sub align {
+	throw "align unimplemented";
 }
 
-sub single_to_sam {
-	throw "single_to_sam unimplemented";
+sub run_cmd {
+  my ($self, $cmd, $cmd_type) = @_;
+  
+  if (! $self->{do_not_run}) {
+    system($cmd) == 0 || throw "Cannot execute $cmd: $@";
+  }
+  
+  if ($cmd_type eq 'align') {
+    $self->align_cmds($cmd);
+  } elsif ($cmd_type eq 'index') {
+    $self->index_cmds($cmd);
+  }
+}
+
+sub index_cmds {
+	my ($self, $cmd) = @_;
+  
+  if (defined $cmd) {
+    push @{$self->{index_cmds}}, $cmd;
+  }
+  return $self->{index_cmds};
+}
+
+sub align_cmds {
+	my ($self, $cmd) = @_;
+  
+  if (defined $cmd) {
+    push @{$self->{align_cmds}}, $cmd;
+  }
+  return $self->{align_cmds};
 }
 
 sub sam_to_bam {
-	my ( $self, $sam, $bam ) = @_;
-	if ( !defined $bam ) {
-		$bam = $sam;
-		$bam =~ s/.sam/.bam/;
+	my ($self, $sam, $bam) = @_;
+  
+	if (! defined $bam) {
+		($bam = $sam) =~ s/\.sam$/\.bam/;
+    if ($bam eq $sam) {
+      $bam = "$sam.bam";
+    }
 	}
-	my $comm = sprintf( $sam2bam, $self->{samtools}, $sam, $bam );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
+  # First part: conversion from SAM to BAM
+  my $convert_cmd = "$self->{samtools} view -bS $sam";
+  
+  # Second part: sorting the BAM
+  my $threads = $self->{threads};
+  # Calculate the correct memory per thread
+  my $mem = $self->{memory} / $threads;
+  # Samtools sort is too greedy: we give it less
+  $mem *= 0.8;
+  my $mem_limit = $mem . 'M';
+  # Final sort command
+  my $sort_cmd = "$self->{samtools} sort -@ $threads -m $mem_limit -o $bam -O 'bam' -T $bam.sorting -";
+  
+  # Pipe both commands
+  my $cmd = "$convert_cmd | $sort_cmd";
+  
+  $self->run_cmd($cmd, 'align');
+  
 	return $bam;
 }
 
 sub merge_bam {
-	my ( $self, $in, $out ) = @_;
-	my $comm = sprintf( $mergebam, $self->{samtools}, $out, join( ' ', @$in ) );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
+	my ($self, $bams, $out) = @_;
+  
+  my $bam = join( ' ', @$bams );
+  my $threads = $self->{threads};
+  my $cmd = "$self->{samtools} merge -@ $threads -f $out $bam";
+  $self->run_cmd($cmd, 'align');
+  
 	return $out;
 }
 
 sub sort_bam {
-	my ( $self, $in, $out ) = @_;
-	if ( !defined $out ) {
-		$out = $in;
-		$out =~ s/.bam/.sorted/;
+	my ($self, $bam, $out_prefix) = @_;
+  
+	if (! defined $out_prefix) {
+		($out_prefix = $bam) =~ s/\.bam/\.sorted/;
+    if ($out_prefix eq $bam) {
+      $out_prefix = "$bam.sorted";
+    }
 	}
-	my $comm = sprintf( $sortbam, $self->{samtools}, $in, $out );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
-	return $out.'.bam';
+  my $cmd = "$self->{samtools} sort $bam $out_prefix";
+  $self->run_cmd($cmd, 'align');
+  
+	return "$out_prefix.bam";
 }
 
 sub index_bam {
-	my ( $self, $in, $use_csi ) = @_;
-
-	if (!defined $use_csi || ! $use_csi) {
-	    # Use BAI index format
-	    $index_argument = '-b';
-	}
-	else {
-	    # Use CSI index format
-	    $index_argument = '-c';
+	my ($self, $bam, $use_csi) = @_;
+  
+  my $index_options;
+  if (defined $use_csi && $use_csi) {
+    $index_options = '-c';
+	} else {
+    $index_options = '-b';
 	}
 	
-	my $comm = sprintf( $indexbam, $self->{samtools}, $index_argument, $in );
-	$logger->info("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
-	return;
+  my $cmd = "$self->{samtools} index $index_options $bam";
+  $self->run_cmd($cmd, 'align');
 }
 
 sub get_bam_stats {
-	my ( $self, $in ) = @_;
-	my $comm = sprintf( $statbam, $self->{samtools}, $in );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
-	return;
+	my ($self, $bam) = @_;
+  
+  my $cmd = "$self->{samtools} flagstat $bam";
+  my $stats = `$cmd 2>&1`;
+  
+	return $stats;
 }
 
 sub generate_vcf {
-	my ( $self, $bam, $ref ) = @_;
-	my $bcf = $self->pileup_bam( $bam, $ref );
-	my $vcf = $self->bcf2vcf($bcf);
+	my ($self, $ref, $bam, $vcf) = @_;
+  
+	if (! defined $vcf) {
+		($vcf = $bam) =~ s/\.bam/\.vcf/;
+    if ($vcf eq $bam) {
+      $vcf = "$bam.vcf";
+    }
+	}
+  my $cmd = "$self->{samtools} mpileup -uf $ref $bam";
+  $cmd   .= " | ";
+  $cmd   .= "$self->{bcftools} call -mv -o $vcf";
+  $self->run_cmd($cmd, 'align');
+  
 	return $vcf;
 }
 
-sub pileup_bam {
-	my ( $self, $bam, $ref, $bcf ) = @_;
-	if ( !defined $bcf ) {
-		$bcf = $bam;
-		$bcf =~ s/.bam/.bcf/;
-	}
-	my $comm =
-	  sprintf( $pileup, $self->{samtools}, $ref, $bam, $self->{bcftools},
-			   $bcf );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
-	return $bcf;
+sub dummy {
+  my $self = shift;
+  my ($dummy) = @_;
+  
+  if (defined $dummy) {
+    $self->{do_not_run} = $dummy;
+  }
+  
+  return $self->{do_not_run};
 }
-
-sub bcf2vcf {
-	my ( $self, $bcf, $vcf ) = @_;
-	if ( !defined $vcf ) {
-	    $vcf = $bcf;
-		$vcf =~ s/.bcf/.vcf/;
-	}
-	my $comm = sprintf( $bcf2vcf, $self->{bcftools}, $bcf, $self->{vcfutils}, $vcf );
-	$logger->debug("Executing $comm");
-	system($comm) == 0 || throw "Cannot execute $comm";
-	return $vcf;
-}
-
 
 1;
