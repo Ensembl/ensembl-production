@@ -16,154 +16,186 @@ limitations under the License.
 
 =cut
 
-
-=pod
-
-=head1 CONTACT
-
-  Please email comments or questions to the public Ensembl
-  developers list at <dev@ensembl.org>.
-
-  Questions may also be sent to the Ensembl help desk at
-  <helpdesk@ensembl.org>.
- 
-=cut
-
 package Bio::EnsEMBL::EGPipeline::Common::Aligner::StarAligner;
 
-use Log::Log4perl qw(:easy);
-use Bio::EnsEMBL::Utils::Argument qw( rearrange );
-use Bio::EnsEMBL::Utils::Exception qw(throw warning);
+use strict;
+use warnings;
 use base qw(Bio::EnsEMBL::EGPipeline::Common::Aligner);
+
+use Bio::EnsEMBL::Utils::Argument qw(rearrange);
+use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use File::Basename;
-
-my $logger = get_logger();
-
-# Optimized to require less memory but slower at mapping stage
-my $build_map_himem = 'STAR --runMode genomeGenerate --genomeDir %s --genomeFastaFiles %s --runThreadN %s --limitGenomeGenerateRAM %s --genomeSAsparseD 2 --genomeSAindexNbases 15 --genomeChrBinNbits 15';
-# Default
-my $build_map_default = 'STAR --runMode genomeGenerate --genomeDir %s --genomeFastaFiles %s --runThreadN %s --limitGenomeGenerateRAM %s';
-
-my $build_map = undef;
-
-# Default - use this with short reads
-
-my $star_default_pe = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM > %s';
-my $star_default_se = 'STAR --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM > %s';
-
-# Do not use seedSearchLmax parameter as it can not deal with reads with Ns or ambiguity bases
-
-# Long Reads
-
-# Adviced was:
-# Using STARLong
-# --outFilterMultimapScoreRange 20   --outFilterScoreMinOverLread 0   --outFilterMatchNminOverLread 0.66   --outFilterMismatchNmax 1000   --winAnchorMultimapNmax 200   --seedSearchStartLmax 12   --seedPerReadNmax 100000   --seedPerWindowNmax 100   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
-# See
-# https://groups.google.com/forum/#!searchin/rna-star/very$20long$20reads/rna-star/-2mBTPWRCJY/jgDbZjhl3NkJ
-
-# --alignWindowsPerReadNmax 30000 added to accommodate very long reads (>= 5000bp)
-
-my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --alignWindowsPerReadNmax 30000 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMultimapScoreRange 100  --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0.66 --outFilterMismatchNmax 1000 --winAnchorMultimapNmax 200 --seedSearchStartLmax 12 --alignWindowsPerReadNmax 30000 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-
-# Optimized for cross species comparison (ie for sensitivity)
-# but gives very long introns
-
-# --outFilterMismatchNmax 100   --seedSearchStartLmax 10   --seedPerReadNmax 100000   --seedPerWindowNmax 1000   --alignTranscriptsPerReadNmax 100000   --alignTranscriptsPerWindowNmax 10000
-
-#my $star_long_reads_pe = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s %s --outStd SAM --outFilterMismatchNmax 1000 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-#my $star_long_reads_se = 'STARlong --genomeDir %s --runThreadN %s --alignIntronMax %s --readFilesIn %s --outStd SAM --outFilterMismatchNmax 1000 --seedSearchStartLmax 20 --seedPerReadNmax 100000 --seedPerWindowNmax 1000 --alignTranscriptsPerReadNmax 100000 --alignTranscriptsPerWindowNmax 10000 > %s';
-
-my $star_pe = undef;
-my $star_se = undef;
+use File::Spec::Functions qw(catdir);
 
 sub new {
   my ($class, @args) = @_;
   my $self = $class->SUPER::new(@args);
-  ($self->{nb_threads},$self->{max_intron_size},$self->{memory_mode},$self->{read_type}) = rearrange(['NB_THREADS', 'MAX_INTRON_LENGTH', 'MEMORY_MODE', 'READ_TYPE'], @args);
-  $self->{nb_threads}  ||= 4;
-  $self->{max_intron_size} ||= 25000;
-  $self->{memory_mode} ||= 'default';
-  $self->{read_type}   ||= 'default';
-
-  # Let's make it very large as anyway we want the LSF to kill the job if too much memory is required
-  # rather than being killed quietly by STAR if memory max requirements are reached
-  $self->{RAM_limit} ||= '66000000000';
-
-  warn("memory_mode for indexing the genome, " . $self->{memory_mode} . "\n");
-
-  if ($self->{memory_mode} eq "default") {
-      $build_map = $build_map_default;
+  
+  (
+    $self->{max_intron_length},
+    $self->{index_mode},
+  ) =
+  rearrange(
+    [
+      'MAX_INTRON_LENGTH',
+      'INDEX_MODE'
+    ], @args
+  );
+  
+  $self->{index_program} = 'STAR';
+  $self->{align_program} = 'STAR';
+  
+  $self->{index_mode} ||= 'default';
+  
+  # Make memory limit very large as we want the LSF to kill the job if too
+  # much memory is required rather than being killed quietly by STAR.
+  $self->{RAM_limit} = '66000000000';
+  
+  if ($self->{run_mode} eq 'long_reads') {
+    $self->{align_program} .= 'long';
+    $self->{align_params}   = $self->long_read_options;
+  } elsif ($self->{run_mode} eq 'cross_species') {
+    $self->{align_program} .= 'long';
+    $self->{align_params}   = $self->cross_species_options;
+  } else {
+    $self->{align_params} = '';
   }
-  elsif ($self->{memory_mode} eq "himem") {
-      $build_map = $build_map_himem;
+  
+  if ($self->{max_intron_length}) {
+    $self->{align_params} .= " --alignIntronMax $self->{max_intron_length} ";
   }
-
-  warn("read_type for running the genome, " . $self->{read_type} . "\n");
-
-  if ($self->{read_type} eq "default") {
-      $star_se = $star_default_se;
-      $star_pe = $star_default_pe;
+   
+  if ($self->{aligner_dir}) {
+    $self->{index_program} = catdir($self->{aligner_dir}, $self->{index_program});
+    $self->{align_program} = catdir($self->{aligner_dir}, $self->{align_program});
   }
-  elsif ($self->{read_type} eq "long_reads") {
-      $star_se = $star_long_reads_se;
-      $star_pe = $star_long_reads_pe;
-  }
-  else {
-      throw("read type, " . $self->{read_type} . " is not allowed [default|long_reads]\n");
-  }
-
+  
   return $self;
+}
+
+sub long_read_options {
+  my ($self) = @_;
+  
+  # These options were advised for long reads, see: 
+  # https://groups.google.com/forum/#!searchin/rna-star/very$20long$20reads/rna-star/-2mBTPWRCJY/jgDbZjhl3NkJ
+  # (Do not use seedSearchLmax parameter as it can not deal with reads with Ns or ambiguity bases.)
+  
+  return 
+    " --alignTranscriptsPerReadNmax 100000 ".
+    " --alignTranscriptsPerWindowNmax 10000 ".
+    " --alignWindowsPerReadNmax 30000 ".
+    " --outFilterMatchNminOverLread 0.66 ".
+    " --outFilterMultimapScoreRange 100 ".
+    " --outFilterMismatchNmax 1000 ".
+    " --outFilterScoreMinOverLread 0 ".
+    " --seedPerReadNmax 100000 ".
+    " --seedPerWindowNmax 1000 ".
+    " --seedSearchStartLmax 12 ".
+    " --winAnchorMultimapNmax 200 ";
+}
+
+sub cross_species_options {
+  my ($self) = @_;
+  
+  return 
+    " --alignTranscriptsPerReadNmax 100000 ".
+    " --alignTranscriptsPerWindowNmax 10000 ".
+    " --outFilterMismatchNmax 1000 ".
+    " --seedPerReadNmax 100000 ".
+    " --seedPerWindowNmax 1000 ".
+    " --seedSearchStartLmax 20 ";
+}
+sub version {
+  my ($self) = @_;
+  
+  # STAR can't report it's own version (<sigh>), so we have to hope that
+  # the directory has the default name, and extract it from there.
+  my $version;
+  
+  my (undef, $dir, undef) = fileparse($self->{align_program});
+  $dir =~ s!/$!!;
+  if (-l $dir) {
+    ($version) = readlink($dir) =~ /STAR_([0-9a-z\.]+)\.[^\/]+$/;
+  } else {
+    ($version) = $dir =~ /STAR_([0-9a-z\.]+)\.[^\/]+$/;
+  }
+  
+  return $version || 'unknown';
 }
 
 sub index_file {
   my ($self, $file) = @_;
-  my ($name, $directories, $suffix) = fileparse($file,qr/\.[^.]*/);
   
-  my $comm = sprintf($build_map, $directories, $file, $self->{nb_threads}, $self->{RAM_limit});
-  $logger->debug("Executing $comm");
-  system($comm) == 0 || throw "Cannot execute command, $comm";
-  return;
+  my (undef, $path, undef) = fileparse($file, qr/\.[^.]*/);
+  
+  my $index_options =
+    " --runMode genomeGenerate ".
+    " --genomeDir $path ".
+    " --genomeFastaFiles $file ".
+    " --runThreadN $self->{threads} ".
+    " --limitGenomeGenerateRAM $self->{RAM_limit} ";
+  
+  if ($self->{index_mode} eq "himem") {
+    my $size = -s $file;
+    my $genomeSAindexNbases = ( log($size)/log(2) )/2 - 1;
+    
+    my $sequence_count = qx/cat $file | grep -c ">"/;
+    chomp($sequence_count);
+    my $genomeChrBinNbits = ( log($size/$sequence_count)/log(2) );
+    
+    $index_options .=
+      " --genomeSAsparseD 2 ".
+      " --genomeSAindexNbases $genomeSAindexNbases ".
+      " --genomeChrBinNbits $genomeChrBinNbits";
+  }
+  
+  my $index_cmd = $self->{index_program};
+  $index_cmd   .= " $index_options";
+  
+  $self->run_cmd($index_cmd, 'index');
+}
+
+sub index_exists {
+  my ($self, $file) = @_;
+  
+  my (undef, $path, undef) = fileparse($file, qr/\.[^.]*/);
+  my $index_name = catdir($path, 'SAindex');
+  my $exists = -e $index_name ? 1 : 0;
+  
+  return $exists;
 }
 
 sub align {
   my ($self, $ref, $sam, $file1, $file2) = @_;
-  my ($refname, $refdir, $refsuffix) = fileparse($ref,qr/\.[^.]*/);
-  if(defined $file2) {
-   	$self->pairedend_to_sam($refname,$refdir,$sam,$file1,$file2);
+  
+  my ($name, $path, undef) = fileparse($ref, qr/\.[^.]*/);
+  
+  if (defined $file2) {
+   	$sam = $self->align_file($name, $path, $sam, "$file1 $file2");
   } else {
-   	$self->single_to_sam($refname,$refdir,$sam,$file1);  	
+   	$sam = $self->align_file($name, $path, $sam, $file1);
   }
+  
   return $sam;
 }
 
-sub pairedend_to_sam {
-  my ($self, $refname,$refdir, $sam, $file1, $file2) = @_;
-  my $comm = sprintf($star_pe, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $file2, $sam);
-  $logger->debug("Executing $comm");
-  #system($comm) == 0 || throw "Cannot execute command, $comm";
-  my $wd = $sam;
-  $wd =~ s/[^\/]+$//;
-  my $stderr = qx(bash -c 'cd $wd && $comm' 2>&1 1>/dev/null);
-  if ($stderr) {
-      throw("Failed to execute external command, $comm, because of $stderr");
-      #throw "Cannot execute command, $comm";
-  }
-  return $sam;
-}
-
-sub single_to_sam {
-  my ($self, $refname,$refdir, $sam, $file1) = @_;
-  my $comm = sprintf($star_se, $refdir, $self->{nb_threads}, $self->{max_intron_size}, $file1, $sam);
-  $logger->debug("Executing command, $comm");
-  #system($comm) == 0 || throw "Cannot execute command, $comm";
-  my $wd = $sam;
-  $wd =~ s/[^\/]+$//;
-  my $stderr = qx(bash -c 'cd $wd && $comm' 2>&1 1>/dev/null);
-  if ($stderr) {
-      warn("Failed to execute external command, $@, because of $stderr\n");
-      throw "Cannot execute command, $comm";
-  }
+sub align_file {
+  my ($self, $name, $path, $sam, $files) = @_;
+  
+  my $align_options =
+    " --genomeDir $path ".
+    " --runThreadN $self->{threads} ".
+    " --readFilesIn $files ".
+    " --outStd SAM ";
+    
+  my $align_cmd = $self->{align_program};
+  $align_cmd   .= " $align_options ";
+  $align_cmd   .= " $self->{align_params} ";
+  $align_cmd   .= "  > $sam ";
+  
+  $self->run_cmd($align_cmd, 'align');
+  
   return $sam;
 }
 

@@ -20,62 +20,80 @@ package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::IndexGenome;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Hive::Process/;
-
-use Log::Log4perl qw(:easy);
-use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use Bio::EnsEMBL::EGPipeline::Common::Aligner;
-use Bio::EnsEMBL::DBSQL::DBAdaptor;
-
-my $logger = get_logger();
+use base qw(Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base);
 
 sub param_defaults {
   my ($self) = @_;
-  return {};
+  
+  return {
+    'samtools_dir' => '/nfs/panda/ensemblgenomes/external/samtools',
+    'threads'      => 4,
+    'memory_mode'  => 'default',
+    'gtf_file'     => undef,
+    'overwrite'    => 1,
+  };
 }
 
 sub fetch_input {
   my ($self) = @_;
-  my $aligner_module = $self->param('aligner');
-  eval "require $aligner_module";
-  $self->{'memory_mode'} = $self->param('memory_mode');
-  $self->{'aligner'}     = $aligner_module->new(-memory_mode => $self->{'memory_mode'});
-  return;
+  
+  if (defined $self->param('escape_branch') and $self->input_job->retry_count >= $self->input_job->analysis->max_retry_count) {
+    $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
+    $self->input_job->autoflow(0);
+    $self->complete_early("Failure probably due to memory limit, retrying with a higher limit.");
+  }
+  
+  my $aligner_class = $self->param_required('aligner_class');
+  my $aligner_dir   = $self->param_required('aligner_dir');
+  my $samtools_dir  = $self->param_required('samtools_dir');
+  my $threads       = $self->param_required('threads');
+  my $memory_mode   = $self->param_required('memory_mode');
+  my $gtf_file      = $self->param('gtf_file');
+  
+  eval "require $aligner_class";
+  
+  my $aligner_object = $aligner_class->new(
+    -aligner_dir  => $aligner_dir,
+    -samtools_dir => $samtools_dir,
+    -threads      => $threads,
+    -memory_mode  => $memory_mode,
+    -gtf_file     => $gtf_file,
+  );
+  $self->param('aligner_object', $aligner_object);
 }
 
 sub run {
   my ($self) = @_;
-
-  my $ref = $self->param('genome_file');
-
-  if ($self->{'memory_mode'} eq "default") {
+  my $genome_file = $self->param_required('genome_file');
+  my $memory_mode = $self->param_required('memory_mode');
+  my $overwrite   = $self->param_required('overwrite');
+  
+  my $index_exists = $self->param('aligner_object')->index_exists($genome_file);
+  
+  if ($overwrite || ! $index_exists) {
+    if ($memory_mode eq 'default' && defined $self->param('escape_branch')) {
+      my $sequence_count = qx/cat $genome_file | grep -c ">"/;
+      chomp($sequence_count);
       
-      # Check the number of sequences
-      
-      my $nb_sequences = qx/cat $ref | grep -c ">"/;
-      chomp($nb_sequences);
-      
-      if ($nb_sequences > 50000) {
-	  # $self->warning("Too many sequences, $nb_sequences, will pass it on to high memory mode");
-	  
-	  $self->dataflow_output_id(undef, -1);
-	  
-	  # Tell the Job we're 'done', so there is no need to carry on
-	  $self->input_job->incomplete(0);
-	  die "Too many sequences, $nb_sequences, will pass it on to high memory mode";
+      if ($sequence_count > 50000) {
+        $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
+        $self->input_job->autoflow(0);
+        $self->complete_early("Too many sequences ($sequence_count) for default memory settings, retrying with a higher limit.");
       }
+    }
+    
+    $self->param('aligner_object')->index_file($genome_file);
+    
+  } else {
+    $self->warning("Index for file '$genome_file' already exists, and won't be overwritten.");
   }
-  
-  print STDERR "Indexing $ref\n";
-
-  $self->{aligner}->index_file($ref);
-  
-  return;
-} ## end sub run
+}
 
 sub write_output {
   my ($self) = @_;
-  return;
+  
+  my $index_cmds = $self->param('aligner_object')->index_cmds;
+  $self->dataflow_output_id({ 'index_cmds' => $index_cmds }, 1);
 }
 
 1;
