@@ -392,11 +392,23 @@ sub alignment_analyses {
                               '3->B' => ['PairedSeqFile'],
                               '4->C' => ['SRASeqFile'],
                               '5->D' => ['SplitSeqFile'],
-                              'A->1' => ['MergeBam'],
-                              'B->1' => ['MergeBam'],
-                              'C->1' => ['MergeBam'],
-                              'D->1' => ['MergeBam'],
+                              'A->1' => ['MergeFactory'],
+                              'B->1' => ['MergeFactory'],
+                              'C->1' => ['MergeFactory'],
+                              'D->1' => ['MergeFactory'],
                             },
+    },
+    
+    {
+      -logic_name        => 'MergeFactory',
+      -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::MergeFactory',
+      -can_be_empty      => 1,
+      -parameters        => {},
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '1' => ['MergeBam'],
+                            },
+      -meadow_type       => 'LOCAL',
     },
 
     {
@@ -424,6 +436,7 @@ sub alignment_analyses {
     {
       -logic_name        => 'SRASeqFile',
       -module            => 'Bio::EnsEMBL::EGPipeline::SequenceAlignment::ShortRead::SRASeqFile',
+      -analysis_capacity => 8,
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {
