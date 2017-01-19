@@ -60,6 +60,8 @@ sub default_options {
     use_trnascan => 1,
     use_cmscan   => 1,
     
+    run_context => 'eg',
+    
     # Analysis settings
     mirbase_source_logic_name => 'mirbase',
     mirbase_target_logic_name => 'mirbase_gene',
@@ -75,8 +77,7 @@ sub default_options {
     cmscan_analysis_module   => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::CreateCmscanGenes',
 
     # Config for genes
-    gene_source      => undef,
-    stable_id_type   => 'eg',
+    gene_source => undef,
     
     # Remove existing genes; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
@@ -115,6 +116,8 @@ sub default_options {
       -dbname => $self->o('id_db_dbname'),
     },
     
+    # Registry for core dbs from previous release, for stable ID mapping
+    old_registry => undef,
   };
 }
 
@@ -340,7 +343,7 @@ sub pipeline_analyses {
                               source_logic_name => $self->o('mirbase_source_logic_name'),
                               target_logic_name => $self->o('mirbase_target_logic_name'),
                               gene_source       => $self->o('gene_source'),
-                              stable_id_type    => $self->o('stable_id_type'),
+                              stable_id_type    => $self->o('run_context'),
                               id_db             => $self->o('id_db'),
                             },
       -rc_name           => 'normal-rh7',
@@ -383,9 +386,10 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 1,
       -flow_into         => {
-                              '1' => WHEN(
+                              '1->A' => WHEN(
                                 '#use_cmscan#'  => ['CreateCmscanGenes'],
                               ),
+                              'A->1' => ['OldDatabaseParams'],
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -406,6 +410,30 @@ sub pipeline_analyses {
                               bias_threshold       => $self->o('bias_threshold'),
                               allow_repeat_overlap => $self->o('allow_repeat_overlap'),
                               allow_coding_overlap => $self->o('allow_coding_overlap'),
+                            },
+      -rc_name           => 'normal-rh7',
+
+    },
+
+    {
+      -logic_name        => 'OldDatabaseParams',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::OldDatabaseParams',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              old_reg_conf => $self->o('old_reg_conf'),
+                            },
+      -rc_name           => 'normal-rh7',
+      -flow_into         => ['StableIDMapping'],
+
+    },
+
+    {
+      -logic_name        => 'StableIDMapping',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::OldDatabaseParams',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              report_style => $self->o('run_context'),
+                              report_dir   => $self->o('pipeline_dir'),
                             },
       -rc_name           => 'normal-rh7',
 
