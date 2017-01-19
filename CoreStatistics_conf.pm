@@ -145,7 +145,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '1->B' => [
                                         'ConstitutiveExons',
-                                        'GeneCount',
+                                        'DeleteGeneCount',
                                         'GeneGC',
                                         'GenomeStats',
                                         'MetaCoords',
@@ -197,6 +197,23 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -analysis_capacity => 10,
       -rc_name           => 'normal-rh7',
+    },
+
+    {
+      -logic_name        => 'DeleteGeneCount',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd',
+      -parameters        => {
+                              sql => [
+                                'DELETE sra.* FROM '.
+                                  'seq_region_attrib sra INNER JOIN '.
+                                  'attrib_type at USING (attrib_type_id) '.
+                                  'WHERE at.code IN ("coding_cnt", "pseudogene_cnt", "noncoding_cnt")',
+                              ]
+                            },
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -rc_name           => 'normal-rh7',
+      -flow_into         => ['GeneCount'],
     },
 
     {
