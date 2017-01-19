@@ -41,12 +41,6 @@ sub fetch_input {
 
     $self->get_logger->info("Storing low complexity regions from file: $seg_outfile");
 
-    #if (-s $seg_outfile == 0) {
-    if (-z $seg_outfile) {
-        $self->warning("File $seg_outfile is empty, so not running seg analysis on it.");
-        return;
-    }
-
     my $analysis_adaptor        = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Analysis');
     my $analysis                = $analysis_adaptor->fetch_by_logic_name($analysis_logic_name);
     my $protein_feature_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'ProteinFeature');
@@ -82,29 +76,31 @@ sub run {
     my $analysis                = $self->param_required('analysis');
     my $protein_feature_adaptor = $self->param_required('protein_feature_adaptor');
 
-    open FILE, "$seg_outfile";
+    if (-s $seg_outfile) {
+      open my $fh, "$seg_outfile";
 
-    LINE: while (my $line = <FILE>) {
+      LINE: while (my $line = <$fh>) {
         # Skip unrelevant lines  '>3(36-43)'
         next LINE if ($line !~ /^\>/);
 
         $line=~/\>(\d+)\((\d+)\-(\d+)/;
-        
+
         my $translation_id = $1;
         my $start          = $2;
         my $end            = $3;
 
         my $feature = Bio::EnsEMBL::ProteinFeature->new(
-                -start    => $start,
-                -end      => $end,
-	        -hstart   => 0,
-	        -hend     => 0,
-                -hseqname => 'seg',  
-                -analysis => $analysis,
+          -start    => $start,
+          -end      => $end,
+          -hstart   => 0,
+          -hend     => 0,
+          -hseqname => 'seg',
+          -analysis => $analysis,
   	    );
         $protein_feature_adaptor->store($feature, $translation_id);
+      }
+      close($fh);
     }
-    close FILE;
 
     $protein_feature_adaptor->dbc->disconnect_if_idle();
 
