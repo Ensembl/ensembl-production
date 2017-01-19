@@ -482,8 +482,8 @@ sub default_options {
 
     ## Access to the ncbi taxonomy db
 	    'taxonomy_db' =>  {
-     	  	  -host   => 'ens-livemirror',
-       	  	  -port   => '3306',
+     	  	  -host   => 'mysql-ens-sta-1',
+       	  	  -port   => '4519',
        	  	  -user   => 'ensro',
        	  	  -dbname => 'ncbi_taxonomy',      	
        	},
