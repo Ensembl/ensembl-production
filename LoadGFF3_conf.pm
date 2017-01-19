@@ -91,7 +91,7 @@ sub default_options {
     production_lookup => 1,
     
     # Validate GFF3 before trying to parse it.
-    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    gt_exe        => '/nfs/software/ensembl/RHEL7/linuxbrew/bin/gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
     
