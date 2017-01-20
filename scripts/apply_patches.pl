@@ -54,17 +54,16 @@ $logger->debug("Patching databases to v$opts->{version}");
 # find lists of patches for each repo
 my $available_patches = {};
 my $patch_dirs = {
-        core          => "$opts->{basedir}/ensembl/sql",
-        rnaseq        => "$opts->{basedir}/ensembl/sql",
-        vega          => "$opts->{basedir}/ensembl/sql",
-        cdna          => "$opts->{basedir}/ensembl/sql",
-        otherfeatures => "$opts->{basedir}/ensembl/sql",
-        variation     => "$opts->{basedir}/ensembl-variation/sql",
-        funcgen       => "$opts->{basedir}/ensembl-funcgen/sql",
-        compara       => "$opts->{basedir}/ensembl-compara/sql",
-        ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql",
-        production => "$opts->{basedir}/ensembl-production/sql"
-};
+       core          => "$opts->{basedir}/ensembl/sql",
+       rnaseq        => "$opts->{basedir}/ensembl/sql",
+       vega          => "$opts->{basedir}/ensembl/sql",
+       cdna          => "$opts->{basedir}/ensembl/sql",
+       otherfeatures => "$opts->{basedir}/ensembl/sql",
+       variation     => "$opts->{basedir}/ensembl-variation/sql",
+       funcgen       => "$opts->{basedir}/ensembl-funcgen/sql",
+       compara       => "$opts->{basedir}/ensembl-compara/sql",
+       ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql",
+       production => "$opts->{basedir}/ensembl-production/sql" };
 while ( my ( $type, $dir ) = each %$patch_dirs ) {
   $logger->info("Retrieving $type patches from $dir");
   $available_patches->{$type} = list_patch_files($dir);
@@ -92,8 +91,8 @@ while ( my $row = $sth->fetchrow_arrayref() ) {
   next unless defined $row;
   my $dbname = $row->[0];
   if ( $dbname =~ m/$opts->{pattern}/ &&
-       $dbname ne 'test'               &&
-       $dbname ne 'mysql'              &&
+       $dbname ne 'test' &&
+       $dbname ne 'mysql' &&
        $dbname ne 'performance_schema' &&
        $dbname ne 'information_schema' )
   {
@@ -108,13 +107,26 @@ for my $database ( @{$available_databases} ) {
   $logger->debug("Considering $database");
   my $type = get_type($database);
   eval {
-    if ( defined $type ) {
+    if ( defined $type )
+    {
+      # check current version
+      my $version = get_version( $dbh, $database );
+      if ( !defined $version ) {
+        die "Cannot retrieve version for $database";
+      }
+      if ( $version != $opts->{version} &&
+           ( $version + 1 ) != $opts->{version} )
+      {
+        die
+"Cannot patch $database of version $version directly to $opts->{version}";
+      }
       my $patches = $available_patches->{$type};
       if ( !defined $patches ) {
         $logger->warn("Cannot patch database $database of type $type");
       }
       else {
-        $logger->debug("Checking patches for $type db $database");
+        $logger->debug(
+"Checking patches for $type db $database (current version $version)" );
         my $missing_patches =
           find_missing_patches( $dbh, $database, $patches,
                                 $opts->{version} );
@@ -126,11 +138,14 @@ for my $database ( @{$available_databases} ) {
           apply_patch( $dbh, $database, $missing_patch );
         }
       }
-    }
+    } ## end if ( defined $type )
   };
+  if ($@) {
+    $logger->warn("Could not patch $database: $@");
+  }
 } ## end for my $database ( @{$available_databases...})
 $logger->info(
-             "Completed appying $patchN patch(es) to $dbN database(s)");
+            " Completed appying $patchN patch(es) to $dbN database(s)");
 
 sub get_type {
   my ($dbname) = @_;
@@ -141,20 +156,31 @@ sub get_type {
   elsif ( $dbname =~ m/ensembl_production.*/ ) {
     $type = 'production';
   }
-  elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
+  elsif ( $dbname =~ m/[a-z]+_ontology_.*/ ) {
     $type = 'ontology';
   }
-  elsif ($dbname =~ m/master_schema_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_[0-9]+/ ) {
     $type = 'core';
   }
-  elsif ($dbname =~ m/master_schema_variation_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_variation_[0-9]+/ ) {
     $type = 'variation';
   }
-  elsif ($dbname =~ m/master_schema_funcgen_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_funcgen_[0-9]+/ ) {
     $type = 'funcgen';
   }
   elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/ ) {
     $type = $1;
   }
   return $type;
+} ## end sub get_type
+
+sub get_version {
+  my ( $dbh, $database ) = @_;
+  my $sth = $dbh->prepare(
+"select meta_value from $database.meta where meta_key='schema_version'"
+  );
+  $sth->execute();
+  my ($db_version) = $sth->fetchrow_array();
+  $sth->finish();
+  return $db_version;
 }
