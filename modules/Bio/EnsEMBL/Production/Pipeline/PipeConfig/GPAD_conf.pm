@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2016] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -122,11 +122,11 @@ sub pipeline_wide_parameters {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	=> {'LSF' => '-q production-rh6 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh6 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+      'default'  	=> {'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+      '32GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'},
+      '64GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'},
+      '128GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 128000 -R "rusage[mem=128000]"'},
+      '256GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 256000 -R "rusage[mem=256000]"'},
 	}
 }
 

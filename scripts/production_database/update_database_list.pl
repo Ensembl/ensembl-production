@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016] EMBL-European Bioinformatics Institute
+# Copyright [2016-2017] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ sub usage {
 
   print <<USAGE_END;
 Usage:
-  $0 --release NN --master master-server --mport master-port --mdbname master-database-name\\
-  $padding --server server1 --server server2 [...] \\
-  $padding --dbport 3306 --dbuser user --dbpass passwd \\
-  $padding --dbwuser write_user --dbwpass write_passwd
+  $0 --release NN --mhost master-server --mport master-port --mdbname master-database-name\\
+  $padding --host server1 --host server2 [...] \\
+  $padding --port 3306 --user user --pass passwd \\
+  $padding --muser user-master-server --mpass pass-master-server
 
 or
   $0 --help
@@ -41,7 +41,7 @@ where
 
   --release/-r  The current release (required).
 
-  --master/-m   The master server where the production database lives
+  --mhost/-mh   The master server where the production database lives
                 (optional, default is 'ens-staging1').
 
   --mport/-mP   The port on the master serve to connect to
@@ -50,21 +50,21 @@ where
   --mdbname/-md  The production database name on the master server that you want to conenct to
                 (optional, default is 'ensembl_production').
 
-  --server/-s   A database server (optional, may occur several times,
+  --host/-h   A database server (optional, may occur several times,
                 default is 'ens-staging1', and 'ens-staging2').
 
-  --dbport/-P   The port to connect to (optional, default is '3306').
+  --port/-P   The port to connect to (optional, default is '3306').
 
-  --dbuser/-u   The (read only) user to connect as (optional,
+  --user/-u   The (read only) user to connect as (optional,
                 default is 'ensro').
 
-  --dbpass/-p   The password to connect with as the above user
+  --pass/-p   The password to connect with as the above user
                 (optional, no default).
 
-  --dbwuser/-wu The user (with write permissions) to connect as
+  --muser/-mu The master server user (with write permissions) to connect as
                 (optional, default is 'ensadmin').
 
-  --dbwpass/-wp The password to connect with as the above user
+  --mpass/-mp The master server password to connect with as the above user
                 (optional, no default).
 
   --help/-h     Displays this help text.
@@ -101,28 +101,28 @@ ABOUT_END
 }
 
 my $release;
-my @servers;
-my $master = 'ens-staging1';
+my @hosts;
+my $mhost = 'ens-staging1';
 my $mport  = '3306';
 my $mdbname = 'ensembl_production';
 
-my $dbport = '3306';
-my ( $dbwuser, $dbwpass ) = ( 'ensadmin', undef );
-my ( $dbuser,  $dbpass )  = ( 'ensro',    undef );
+my $port = '3306';
+my ( $muser, $mpass ) = ( 'ensadmin', undef );
+my ( $user,  $pass )  = ( 'ensro',    undef );
 
 my $opt_help  = 0;
 my $opt_about = 0;
 
 if ( !GetOptions( 'release|r=i'  => \$release,
-                  'master|m=s'   => \$master,
+                  'mhost|mh=s'   => \$mhost,
                   'mport|mP=i'   => \$mport,
                   'mdbname|md=s' => \$mdbname,
-                  'server|s=s@'  => \@servers,
-                  'dbuser|u=s'   => \$dbuser,
-                  'dbpass|p=s'   => \$dbpass,
-                  'dbport|P=s'   => \$dbport,
-                  'dbwuser|wu=s' => \$dbwuser,
-                  'dbwpass|wp=s' => \$dbwpass,
+                  'host|s=s@'  => \@hosts,
+                  'user|u=s'   => \$user,
+                  'pass|p=s'   => \$pass,
+                  'port|P=s'   => \$port,
+                  'muser|mu=s' => \$muser,
+                  'mpass|mp=s' => \$mpass,
                   'help|h!'      => \$opt_help,
                   'about!'       => \$opt_about )
      || $opt_help )
@@ -138,8 +138,8 @@ if ( !GetOptions( 'release|r=i'  => \$release,
   exit();
 }
 
-if ( !@servers ) {
-  @servers = ( 'ens-staging1', 'ens-staging2' );
+if ( !@hosts ) {
+  @hosts = ( 'ens-staging1', 'ens-staging2' );
 }
 
 my %species;
@@ -150,8 +150,8 @@ my %found_databases;
 
 {
   my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $master, $mport, $mdbname );
-  my $dbh = DBI->connect( $dsn, $dbuser, $dbpass,
+                     $mhost, $mport, $mdbname );
+  my $dbh = DBI->connect( $dsn, $muser, $mpass,
                           { 'PrintError' => 1, 'RaiseError' => 1 } );
 
   {
@@ -194,9 +194,9 @@ my %found_databases;
   $dbh->disconnect();
 }
 
-foreach my $server (@servers) {
-  my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d', $server, $dbport );
-  my $dbh = DBI->connect( $dsn, $dbuser, $dbpass,
+foreach my $host (@hosts) {
+  my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d', $host, $port );
+  my $dbh = DBI->connect( $dsn, $user, $pass,
                           { 'PrintError' => 1, 'RaiseError' => 0 } );
 
   my $statement = 'SHOW DATABASES LIKE ?';
@@ -244,16 +244,16 @@ foreach my $server (@servers) {
                        'db_type'    => $db_type,
                        'db_assembly' => $db_assembly,
                        'db_suffix'   => $db_suffix,
-                       'db_host'     => $server };
+                       'db_host'     => $host};
     } ## end while ( $sth->fetch() )
   } ## end foreach my $species ( keys(...))
 
   $dbh->disconnect();
-} ## end foreach my $server (@servers)
+} ## end foreach my $host (@hosts)
 
 my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $master, $mport, $mdbname );
-my $dbh = DBI->connect( $dsn, $dbwuser, $dbwpass,
+                     $mhost, $mport, $mdbname );
+my $dbh = DBI->connect( $dsn, $muser, $mpass,
                         { 'PrintError' => 1, 'RaiseError' => 1 } );
 
 if ( scalar( keys(%databases) ) == 0 ) {

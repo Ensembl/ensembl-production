@@ -13,15 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_79_80_a.sql
+# patch_87_88_a.sql
 #
 # Title: Update schema version.
 #
 # Description:
-#   Update schema_version in meta table to 80.
+#   Update schema_version in meta table to 88.
 
-UPDATE meta SET meta_value='80' WHERE meta_key='schema_version';
+UPDATE meta SET meta_value='88' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_79_80a.sql|schema_version');
+  VALUES (NULL, 'patch', 'patch_87_88_a.sql|schema_version');
+

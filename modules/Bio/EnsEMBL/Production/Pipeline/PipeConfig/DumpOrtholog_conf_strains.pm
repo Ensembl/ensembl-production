@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ use strict;
 use warnings;
 use Bio::EnsEMBL::Hive::Version 2.3;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf');  
 
 sub default_options {
     my ($self) = @_;
@@ -181,23 +181,5 @@ sub pipeline_analyses {
   ];
 }
 
-
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'                 => {'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
-      'mem'                     => {'LSF' => '-q normal -M1000 -R"select[mem>1000] rusage[mem=1000]"'},
-      '2Gb_mem'         => {'LSF' => '-q normal -M2000 -R"select[mem>2000] rusage[mem=2000]"' },
-      '16Gb_mem'        => {'LSF' => '-q normal -M16000 -R"select[mem>16000] rusage[mem=16000]"' },
-      '24Gb_mem'        => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      '32Gb_mem'        => {'LSF' => '-q normal -M32000 -R"select[mem>32000] rusage[mem=32000]"' },
-      '250Mb_mem'       => {'LSF' => '-q normal -M250   -R"select[mem>250]   rusage[mem=250]"' },
-      '500Mb_mem'       => {'LSF' => '-q normal -M500   -R"select[mem>500]   rusage[mem=500]"' },
-      '1Gb_mem'             => {'LSF' => '-q normal -M1000  -R"select[mem>1000]  rusage[mem=1000]"' },
-      '8Gb_mem'             => {'LSF' => '-q normal -M8000  -R"select[mem>8000]  rusage[mem=8000]"' },
-      '24Gb_mem'            => {'LSF' => '-q normal -M24000 -R"select[mem>24000] rusage[mem=24000]"' },
-      'urgent_hcluster' => {'LSF' => '-q yesterday' },
-    }
-}
 
 1;

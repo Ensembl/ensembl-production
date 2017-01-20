@@ -222,7 +222,7 @@ sub fetch_features {
       push @features, @$features;
     }
   }
-  
+  $adaptor->clear_cache();
   if ($feature_type eq 'Transcript') {
     my $exon_features = $self->exon_features(\@features);
     push @features, @$exon_features;

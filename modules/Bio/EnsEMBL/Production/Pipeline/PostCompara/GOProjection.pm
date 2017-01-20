@@ -56,6 +56,7 @@ sub fetch_input {
     my $method_link_type       = $self->param_required('method_link_type');
     my $homology_types_allowed = $self->param_required('homology_types_allowed');
     my $percent_id_filter      = $self->param_required('percent_id_filter');
+    my $percent_cov_filter     = $self->param_required('percent_cov_filter');
     my $ensemblObj_type        = $self->param_required('ensemblObj_type');
     my $ensemblObj_type_target = $self->param_required('ensemblObj_type_target');
     my $evidence_codes         = $self->param_required('evidence_codes');
@@ -76,6 +77,7 @@ sub fetch_input {
     $self->param('method_link_type', $method_link_type);
     $self->param('homology_types_allowed', $homology_types_allowed);
     $self->param('percent_id_filter', $percent_id_filter);
+    $self->param('percent_cov_filter', $percent_cov_filter);
     $self->param('ensemblObj_type', $ensemblObj_type);
     $self->param('ensemblObj_type_target', $ensemblObj_type_target);
     $self->param('evidence_codes', $evidence_codes);
@@ -174,7 +176,7 @@ sub run {
     
     # get homologies from compara - comes back as a hash of arrays
     print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('is_tree_compliant'), $self->param('percent_id_filter'), '1');
+    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('is_tree_compliant'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
    
     print $log "\n\tProjecting GO Terms from $from_species to $to_species\n";
     print $log "\t\t$to_species, before projection, "; 

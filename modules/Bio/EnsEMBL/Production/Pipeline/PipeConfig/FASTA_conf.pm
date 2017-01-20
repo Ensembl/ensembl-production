@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ sub default_options {
         ncbiblast_exe => 'makeblastdb',
         blat_exe => 'faToTwoBit',
         
-        email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+        email => $self->o('ENV', 'USER').'@ebi.ac.uk',
     };
 }
 
@@ -376,8 +376,8 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'dump'      => { LSF => '-q long -M1000 -R"select[mem>1000] rusage[mem=1000]"' },
-      'indexing'  => { LSF => '-q normal -M3000 -R"select[mem>3000] rusage[mem=3000]"' },
+      'dump'      => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
+      'indexing'  => { LSF => '-q production-rh7 -M 3000 -R "rusage[mem=3000]"' },
     }
 }
 

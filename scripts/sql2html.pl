@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016] EMBL-European Bioinformatics Institute
+# Copyright [2016-2017] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -220,8 +220,6 @@ $css_code
 ##############
 
 my $html_footer = qq{
-    </div>
-  </div>
 </body>
 </html>};
 
@@ -472,9 +470,9 @@ foreach my $header_name (@header_names) {
   #----------------#  
   if ($header_flag == 1 and $header_name ne 'default') {
     $html_content .= qq{\n
-<div class="sql_schema_group_header" style="border-color:$hcolour">
-  <div id="$header_id" class="sql_schema_group_bullet" style="background-color:$hcolour"></div>
-  <h2 id="$header_id">$header_name</h2>
+<div id="header_${header_id}" class="sql_schema_group_header" style="border-color:$hcolour">
+  <div class="sql_schema_group_bullet" style="background-color:$hcolour"></div>
+  <h2>$header_name</h2>
 </div>\n};
     $header_id ++;
     my $header_desc = $documentation->{$header_name}{'desc'};    
@@ -609,6 +607,12 @@ sub display_tables_list {
       $html .= qq{\n      <ul class="sql_schema_table_list">\n};
       my $t_count = 0;
       foreach my $t_name (@{$tables}) {
+        if ($t_count>=$nb_by_col) {
+          $html .= qq{\n      </ul>\n      </div>};
+          $html .= qq{\n      <div style="float:left">};
+          $html .= qq{\n      <ul class="sql_schema_table_list">\n};
+          $t_count = 0;
+        }
         my $t_colour;
         if ($has_header == 0 && $show_colour) {
           $t_colour = $documentation->{$header_name}{'tables'}{$t_name}{'colour'};
@@ -616,12 +620,6 @@ sub display_tables_list {
         }
         $html .= add_table_name_to_list($t_name,$t_colour);
         $t_count++;
-        if ($t_count>=$nb_by_col) {
-          $html .= qq{\n      </ul>\n      </div>};
-          $html .= qq{\n      <div style="float:left">};
-          $html .= qq{\n      <ul class="sql_schema_table_list">\n};
-          $t_count = 0;
-        }
       }
       $html .= qq{\n      </ul>};
       $html .= qq{\n      </div>} if ($count > $nb_by_col);
@@ -722,11 +720,11 @@ sub fill_documentation {
       }
       # Header description
       elsif(!$documentation->{$header}{'tables'}) {
-        $documentation->{$header}{'desc'} = $tag_content;
+        $documentation->{$header}{'desc'} = escape_html($tag_content);
       }
       # Table description
       else {
-        $documentation->{$header}{'tables'}{$table}{$tag} = $tag_content;
+        $documentation->{$header}{'tables'}{$table}{$tag} = escape_html($tag_content);
       }
     }
     elsif ($tag eq 'colour') {
@@ -790,7 +788,7 @@ sub add_table_name {
   my $colour = shift || $default_colour;
 
   my $html = qq{
-  <div id="$t_name"class="sql_schema_table_header" style="border-top-color:$colour">
+  <div id="$t_name" class="sql_schema_table_header" style="border-top-color:$colour">
     <div class="sql_schema_table_header_left"><span style="background-color:$colour"></span>$t_name</div>
     <div class="sql_schema_table_header_right">
   };
@@ -929,13 +927,12 @@ sub add_examples {
         $show_hide .= show_hide_button("e_$table$nb", "$table$nb", 'query results');
         $sql_table = get_example_table($sql,$table,$nb);
       }
-      if (defined($sql)) {
+      $sql = escape_html($sql);
              
         foreach my $word (qw(SELECT DISTINCT COUNT CONCAT GROUP_CONCAT AS FROM LEFT JOIN USING WHERE AND OR ON IN LIMIT DESC ORDER GROUP BY)) {
           my $hl_word = qq{<span class="sql_schema_sql_highlight">$word</span>};
           $sql =~ s/$word /$hl_word /ig;
         }
-      }
       $html .= qq{
       <div>
         <div class="sql_schema_table_example_query">
@@ -960,7 +957,7 @@ sub add_see {
   my $html = '';
 
   if (scalar @$sees) {
-    $html .= qq{    <td class="sql_schema_extra_left"">\    <p style="font-weight:bold">See also:</p>\n  <ul>\n};
+    $html .= qq{    <td class="sql_schema_extra_left">\    <p style="font-weight:bold">See also:</p>\n  <ul>\n};
     foreach my $see (@$sees) {
       $html .= qq{      <li><a href="#$see">$see</a></li>\n};
     }
@@ -1219,6 +1216,17 @@ sub remove_char {
   my $text = shift;
   $text =~ s/`//g;
   return $text;
+}
+
+
+# Escape special character for the HTML output
+# Code taken from HTML::Escape::PurePerl
+sub escape_html {
+    my $str = shift;
+    return '' unless defined $str;
+    my %_escape_table = ( '&' => '&amp;', '>' => '&gt;', '<' => '&lt;', q{"} => '&quot;', q{'} => '&#39;', q{`} => '&#96;', '{' => '&#123;', '}' => '&#125;' );
+    $str =~ s/([><"'`{}])/$_escape_table{$1}/ge;
+    return $str;
 }
 
 

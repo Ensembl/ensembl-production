@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016] EMBL-European Bioinformatics Institute
+# Copyright [2016-2017] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ sub find_missing_patches {
   my ($dbh, $db_name, $all_patches, $release) = @_;
   if(defined $release) {
     my $last_release = $release - 1;
-    $all_patches = [grep {m/patch_${last_release}_${release}_[a-z]+.sql/} @$all_patches];
+    $all_patches = [grep {m/patch_${last_release}_${release}_*[a-z]+.sql/} @$all_patches];
   }
   # read patches from meta into a hash
   my $existing_patches = find_db_patches($dbh, $db_name);

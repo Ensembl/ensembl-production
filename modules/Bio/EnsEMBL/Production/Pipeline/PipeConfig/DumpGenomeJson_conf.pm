@@ -27,9 +27,9 @@ use base qw/Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf/;
 sub resource_classes {
   my ($self) = @_;
   return {
-      'default' => { 'LSF' => '-q production-rh6' },
+      'default' => { 'LSF' => '-q production-rh7' },
       'himem' =>
-        { 'LSF' => '-q production-rh6 -M 32000 -R "rusage[mem=32000]"' }
+        { 'LSF' => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' }
   };
 }
 

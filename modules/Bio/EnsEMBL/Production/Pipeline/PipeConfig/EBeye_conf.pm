@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ sub default_options {
  
       pipeline_name => 'ebeye_dump_'.$self->o('release'),
       
-      email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+      email => $self->o('ENV', 'USER').'@ebi.ac.uk',
       
     };
 }
@@ -173,7 +173,7 @@ sub resource_classes {
     return {
       %{$self->SUPER::resource_classes()},
       #Max memory consumed in a previous run was 2662.4MB. This gives us some breathing room
-      dump => { 'LSF' => '-q normal -M3500 -R"select[mem>3500] rusage[mem=3500]"'},
+      dump => { 'LSF' => '-q production-rh7 -M 3500 -R "rusage[mem=3500]"'},
     }
 }
 

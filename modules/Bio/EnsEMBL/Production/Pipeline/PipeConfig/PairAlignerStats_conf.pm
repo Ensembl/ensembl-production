@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -321,10 +321,10 @@ sub resource_classes {
     my $host = $self->o('pipeline_db')->{host};
     return {
 	    %{$self->SUPER::resource_classes}, # inherit 'default' from the parent class
-	    '100Mb' => { 'LSF' => '-q production-rh6 -M100 -R"rusage[mem=100]"' },
-	    '1Gb'   => { 'LSF' => '-q production-rh6 -M1000 -R"rusage[mem=1000]"' },
-	    '1.8Gb' => { 'LSF' => '-q production-rh6 -M1800 -R"rusage[mem=1800]"' },
-	    '3.6Gb' => { 'LSF' => '-q production-rh6 -M3600 -R"rusage[mem=3600]"' },
+	    '100Mb' => { 'LSF' => '-q production-rh7 -M100 -R"rusage[mem=100]"' },
+	    '1Gb'   => { 'LSF' => '-q production-rh7 -M1000 -R"rusage[mem=1000]"' },
+	    '1.8Gb' => { 'LSF' => '-q production-rh7 -M1800 -R"rusage[mem=1800]"' },
+	    '3.6Gb' => { 'LSF' => '-q production-rh7 -M3600 -R"rusage[mem=3600]"' },
 	   };
 }
 

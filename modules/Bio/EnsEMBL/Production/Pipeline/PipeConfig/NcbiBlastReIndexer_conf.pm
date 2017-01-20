@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ sub resource_classes {
   my $self = shift;
   return {
     %{$self->SUPER::resource_classes()},
-    dump => { 'LSF' => '-q normal -M4000 -R"select[mem>4000] rusage[mem=4000]"'},
+    dump => { 'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"'},
   }
 }
 

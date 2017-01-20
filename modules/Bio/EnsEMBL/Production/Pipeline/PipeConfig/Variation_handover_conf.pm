@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ sub default_options {
         
         pipeline_name => 'variation_handover_update_'.$self->o('release'),
         
-        email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+        email => $self->o('ENV', 'USER').'@ebi.ac.uk',
     };
 }
 
@@ -158,9 +158,9 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'default' => { 'LSF' => '-q normal'},
-      'normal'  => { 'LSF' => '-q normal -M 500 -R"select[mem>500] rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q normal -M 1000 -R"select[mem>1000] rusage[mem=1000]"'},
+      'default' => { 'LSF' => '-q production-rh7'},
+      'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"'},
     }
 }
 

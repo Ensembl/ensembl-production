@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ sub default_options {
       
       pipeline_name => 'flatfile_dump_'.$self->o('release'),
       
-      email => $self->o('ENV', 'USER').'@sanger.ac.uk',
+      email => $self->o('ENV', 'USER').'@ebi.ac.uk',
       
     };
 }
@@ -159,8 +159,8 @@ sub resource_classes {
     my $self = shift;
     return {
       %{$self->SUPER::resource_classes()},
-      dump => { 'LSF' => '-q normal -M1500 -R"select[mem>1500] rusage[mem=1500]"'},
-      check => { 'LSF' => '-q normal -M500 -R"select[mem>500] rusage[mem=500]"'},
+      dump => { 'LSF' => '-q production-rh7 -M 1500 -R "rusage[mem=1500]"'},
+      check => { 'LSF' => '--q production-rh7 -M 500 -R "rusage[mem=500]"'},
     }
 }
 

@@ -56,8 +56,8 @@ sub fetch_input {
 		      JOIN coord_system c USING (coord_system_id) 
 		      WHERE x.external_db_id=1000 
 		      AND c.species_id=?
-		      AND x.info_type="PROJECTION" 
-		      OR  x.info_type="DEPENDENT"';
+		      AND (x.info_type="PROJECTION" 
+		      OR  x.info_type="DEPENDENT")';
 
     # Delete by analysis.logic_name='go_projection' & 'interpro2go'
     # interpro2go annotations should be superceded by GOA annotation
@@ -71,8 +71,8 @@ sub fetch_input {
                       JOIN coord_system c USING (coord_system_id) 
                       WHERE x.external_db_id=1000 
                       AND c.species_id=?
-		      AND a.logic_name="go_projection"
-		      OR a.logic_name="interpro2go"';	 
+		      AND (a.logic_name="goa_import"
+		      OR a.logic_name="interpro2go")';
 
     $self->param('sql_delete_1', $sql_delete_1);
     $self->param('sql_delete_2', $sql_delete_2);
@@ -116,6 +116,9 @@ sub run {
     my %species_added_via_xref;
     # When GO mapped to Ensembl stable_id, add as direct xref
     my %species_added_via_tgt;
+    # UniProt data is the latest, we might not have the links yet
+    # This should be rare though, so numbers should stay low
+    my %unmatched_uniprot;
 
     while (<FILE>) {
       chomp $_;
@@ -177,6 +180,7 @@ sub run {
       $src_protein =~ s/src_protein=\w+://;
       $src_species =~ s/src_species=//;
       $info_text   = "from $src_species translation $src_protein";
+      $info_type = 'PROJECTION'
     }
 
     # Create new GO dbentry object
@@ -200,7 +204,7 @@ sub run {
              -db              => 'GO',
              -db_version      => '',
              -program         => 'goa_import',
-             -description     => 'Gene Ontology xrefs  data from GOA',
+             -description     => 'Gene Ontology xrefs data from GOA',
              -display_label   => 'GO xrefs from GOA',
           );
    }
@@ -208,8 +212,15 @@ sub run {
 
    # There could technically be more than one xref with the same display_label
    # In practice, we just want to add it as master_xref, so the first one is fine
-   my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
-   $go_xref->add_linkage_type($go_evidence, $uniprot_xrefs->[0]);
+   my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'Uniprot/SWISSPROT');
+   if (!$uniprot_xrefs) {
+     $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'Uniprot/SPTREMBL');
+   }
+   if ($uniprot_xrefs) {
+     $go_xref->add_linkage_type($go_evidence, $uniprot_xrefs->[0]);
+    } else {
+     $unmatched_uniprot{$tgt_species}++;
+    }
 
    # If GOA did not provide a tgt_feature, we have to guess the correct target based on our xrefs
    # This is slower, hence only used if nothing better is available

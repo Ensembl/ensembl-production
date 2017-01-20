@@ -35,7 +35,7 @@ CREATE TABLE `closure` (
   `subparent_term_id` int(10) unsigned DEFAULT NULL,
   `distance` tinyint(3) unsigned NOT NULL,
   `ontology_id` int(10) unsigned NOT NULL,
-  `confident_relationship` tinyint(1) NOT NULL,
+  `confident_relationship` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`closure_id`),
   UNIQUE KEY `child_parent_idx` (`child_term_id`,`parent_term_id`,`subparent_term_id`,`ontology_id`),
   KEY `parent_subparent_idx` (`parent_term_id`,`subparent_term_id`)
@@ -48,7 +48,7 @@ CREATE TABLE `meta` (
   `species_id` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `key_value_idx` (`meta_key`,`meta_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=24 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `ontology` (
   `ontology_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -89,13 +89,13 @@ CREATE TABLE `subset` (
 CREATE TABLE `synonym` (
   `synonym_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `term_id` int(10) unsigned NOT NULL,
-  `name` text NOT NULL,
-  `type` enum('EXACT','BROAD','NARROW','RELATED') DEFAULT NULL,
-  `dbxref` varchar(64) DEFAULT NULL,
+  `name` mediumtext COLLATE utf8_swedish_ci NOT NULL,
+  `type` enum('EXACT','BROAD','NARROW','RELATED') COLLATE utf8_swedish_ci DEFAULT NULL,
+  `dbxref` varchar(256) COLLATE utf8_swedish_ci NOT NULL,
   PRIMARY KEY (`synonym_id`),
   UNIQUE KEY `term_synonym_idx` (`term_id`,`synonym_id`),
   KEY `name_idx` (`name`(50))
-) ENGINE=MyISAM AUTO_INCREMENT=110288 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=110288 DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci;
 
 CREATE TABLE `term` (
   `term_id` int(10) unsigned NOT NULL AUTO_INCREMENT,

@@ -686,8 +686,8 @@ sub resource_classes {
 
   return {
 #    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -R "select[gpfs]"' },
-    'default' 			   => {'LSF' => '-q production-rh6' },
-    'i5_local_computation' => {'LSF' => '-q production-rh6 -n 4' },
+    'default' 			   => {'LSF' => '-q production-rh7' },
+    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4' },
   };
 }
 

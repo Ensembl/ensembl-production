@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016] EMBL-European Bioinformatics Institute
+# Copyright [2016-2017] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,8 @@ my $patch_dirs = {
         variation     => "$opts->{basedir}/ensembl-variation/sql",
         funcgen       => "$opts->{basedir}/ensembl-funcgen/sql",
         compara       => "$opts->{basedir}/ensembl-compara/sql",
-        ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql"
+        ontology => "$opts->{basedir}/ensembl/misc-scripts/ontology/sql",
+        production => "$opts->{basedir}/ensembl-production/sql"
 };
 while ( my ( $type, $dir ) = each %$patch_dirs ) {
   $logger->info("Retrieving $type patches from $dir");
@@ -136,6 +137,21 @@ sub get_type {
   my $type;
   if ( $dbname =~ m/ensembl_compara_.*/ ) {
     $type = 'compara';
+  }
+  elsif ( $dbname =~ m/ensembl_production.*/ ) {
+    $type = 'production';
+  }
+  elsif ($dbname =~ m/[a-z]+_ontology_.*/ ) {
+    $type = 'ontology';
+  }
+  elsif ($dbname =~ m/master_schema_[0-9]+/ ) {
+    $type = 'core';
+  }
+  elsif ($dbname =~ m/master_schema_variation_[0-9]+/ ) {
+    $type = 'variation';
+  }
+  elsif ($dbname =~ m/master_schema_funcgen_[0-9]+/ ) {
+    $type = 'funcgen';
   }
   elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/ ) {
     $type = $1;

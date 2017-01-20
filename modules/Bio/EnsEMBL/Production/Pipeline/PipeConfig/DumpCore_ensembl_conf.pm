@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016] EMBL-European Bioinformatics Institute
+Copyright [2016-2017] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,6 +61,9 @@ sub default_options {
        # Set to '0' to skip intentions checking during dataflow of jobs
        # default => ON (1)
        'check_intentions' => 1,
+       #Mouse strains won't be dumped until the next geneset update
+      #The pipeline require special hacks in place to dump these species.
+       'antispecies' => ['mus_musculus_balbcj','mus_musculus_c3hhej','mus_musculus_c57bl6nj','mus_musculus_casteij','mus_musculus_lpj','mus_musculus_pwkphj','mus_musculus_wsbeij','mus_spretus_spreteij','mus_musculus_129s1svimj','mus_musculus_akrj','mus_musculus_aj','mus_musculus_cbaj','mus_musculus_dba2j','mus_musculus_fvbnj','mus_musculus_nodshiltj','mus_musculus_nzohlltj'],
 	};
 }
 
@@ -140,16 +143,6 @@ sub tweak_analyses {
     $analyses_by_name->{'dump_fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
 }
 
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'                 => {'LSF' => '-q normal -M5000 -R"select[mem>5000] rusage[mem=5000]"'},
-      '32GB'        => {'LSF' => '-q normal -M32000 -R"select[mem>32000] rusage[mem=32000]"' },
-      '64GB'        => {'LSF' => '-q normal -M64000 -R"select[mem>64000] rusage[mem=64000]"' },
-      '128GB'        => {'LSF' => '-q normal -M128000 -R"select[mem>128000] rusage[mem=128000]"' },
-      '256GB'        => {'LSF' => '-q normal -M256000 -R"select[mem>256000] rusage[mem=256000]"' },
-    }
-}
 
 1;
 
