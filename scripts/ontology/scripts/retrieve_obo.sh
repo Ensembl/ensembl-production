@@ -33,7 +33,7 @@ fi
 #wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/pombe_mini_PR.obo" -O $dir/PRO.obo
 #wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/chebi.obo" -O $dir/chebi.obo
 wget "http://www.geneontology.org/ontology/obo_format_1_2/gene_ontology.1_2.obo" -O $dir/GO.obo
-wget "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-xp-simple.obo" -O $dir/SO.obo
+wget "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-simple.obo" -O $dir/SO.obo
 wget "http://palea.cgrb.oregonstate.edu/viewsvn/Poc/trunk/ontology/OBO_format/plant_ontology.obo?view=co" -O $dir/PO.obo
 wget "http://palea.cgrb.oregonstate.edu/viewsvn/Poc/trunk/ontology/collaborators_ontology/gramene/temporal_gramene.obo?view=co" -O $dir/GRO.obo
 wget "http://palea.cgrb.oregonstate.edu/viewsvn/Poc/trunk/ontology/collaborators_ontology/gramene/taxonomy/GR_tax-ontology.obo?view=co" -O $dir/GR_TAX.obo

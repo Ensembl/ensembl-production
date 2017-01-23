@@ -31,14 +31,49 @@ $srv -e "create database $dbname"
 $srv $dbname< $BASE_DIR/ensembl/misc-scripts/ontology/sql/tables.sql
 
 cd $dir
+
+#List order in which the ontologies need to be loaded
+declare -a orders;
+orders+=( "GO.obo" )
+orders+=( "SO.obo" )
+orders+=( "PATO.obo" )
+orders+=( "EFO.obo" )
+orders+=( "PO.obo" )
+orders+=( "GR_TAX.obo" )
+orders+=( "GRO.obo" )
+orders+=( "EO.obo" )
+orders+=( "TO.obo" )
+orders+=( "chEBI.obo" )
+orders+=( "PBO.obo" )
+orders+=( "MBO.obo" )
+orders+=( "MOD.obo" )
+orders+=( "FYPO.obo" )
+orders+=( "PECO.obo" )
+orders+=( "PR.obo" )
+
 msg "Reading OBO files from $dir"
-for file in `ls -S *.obo`; do
+#Getting list of obo files from $dir
+list_obo_files=($(find *.obo -type f))
+#Removing obo files already defined in order array
+for obo in ${orders[@]}; do
+  list_obo_files=("${list_obo_files[@]/#$obo}")
+done
+
+#Add remaining obo files to main orders array
+orders+=("${list_obo_files[@]}")
+
+
+for file in ${orders[@]}; do
+  if test -f $file; then
     ontology=${file/.obo/}
     msg "Loading $file as $ontology"
     perl $BASE_DIR/ensembl-production/scripts/ontology/scripts/load_OBO_file.pl $($srv details script) --name $dbname --file $file --ontology $ontology || {
         msg "Failed to load OBO file $file"
         exit 1
     }
+  else
+    msg "$file not found"
+  fi
 done
 cd -
 msg "Delete unknown ontology"
