@@ -49,15 +49,15 @@ sub args {
   my $opts = {
 
     # Master database location:
-    mhost     => 'ens-staging1',
-    mport     => 3306,
+    mhost     => 'mysql-ens-sta-1',
+    mport     => 4519,
     muser     => 'ensro',
     mdatabase => 'ensembl_production',
 
     # Taxonomy database location:
-    thost => 'ens-livemirror',
+    thost => 'mysql-ens-sta-1',
     tuser => 'ensro',
-    tport => 3306,
+    tport => 4519,
     tdatabase => 'ncbi_taxonomy',
 
     # User database location (default values):
