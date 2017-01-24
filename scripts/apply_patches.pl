@@ -31,7 +31,7 @@ GetOptions( $opts,                 'host|dbhost=s',
             'port|dbport=s',       'user|dbuser=s',
             'pass|dbpass=s',       'database|dbname:s',
             'pattern|dbpattern:s', 'basedir=s',
-            'verbose|v',           'version' );
+            'verbose|v',           'version=s' );
 
 if ( $opts->{verbose} ) {
   Log::Log4perl->easy_init($DEBUG);
@@ -44,7 +44,7 @@ my $logger = get_logger;
 
 if ( !defined $opts->{host} || !defined $opts->{basedir} ) {
   croak
-"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -basedir <ensembl dir>";
+"Usage: apply_patches.pl -host <host> -port <port> -user <user> -pass <pass> [-dbname <name>|-dbpattern <pattern>] -basedir <ensembl dir> [-version <release version]";
 }
 
 $opts->{version} ||= software_version;
