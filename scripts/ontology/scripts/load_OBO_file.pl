@@ -625,6 +625,27 @@ if($ontology_name eq 'HPO'){
   $obo_file_name = $new_obo_file_name;
 }
 
+## MP issues - switch '_' to ':' in references to other ontology terms in xrefs
+if($ontology_name eq 'MP'){
+  printf "Importing MP - performing post-processing\n";
+  my $new_obo_file_name = "${obo_file_name}.new";
+
+  open my $obo_fh, '<', $obo_file_name or die "Cannot open the file ${obo_file_name}: $!";
+  open my $new_obo_fh, '>', $new_obo_file_name or die "Cannot open target file ${new_obo_file_name}: $!";
+
+  while(my $line = <$obo_fh>) {
+
+   $line =~ s/CL_/CL:/         if $line =~/xref|def/;
+   $line =~ s/UBERON_/UBERON:/ if $line =~/xref|def/;
+   print $new_obo_fh $line;
+  }
+  close($obo_fh);
+  close($new_obo_fh);
+
+  printf "Switching to loading the file %s which is a post-processed file\n", $new_obo_file_name;
+  $obo_file_name = $new_obo_file_name;
+}
+
 my $my_parser = OBO::Parser::OBOParser->new;
 
 printf("Reading OBO file '%s'...\n", $obo_file_name);
