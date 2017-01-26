@@ -604,6 +604,27 @@ if ($returncode > 0) {
   $obo_file_name = $new_obo_file_name;
 }
 
+### HPO incompatibilities - remove lines wich cannot be loaded
+if($ontology_name eq 'HPO'){
+  printf "Importing HPO - performing post-processing\n";
+  my $new_obo_file_name = "${obo_file_name}.new";
+
+  open my $obo_fh, '<', $obo_file_name or die "Cannot open the file ${obo_file_name}: $!";
+  open my $new_obo_fh, '>', $new_obo_file_name or die "Cannot open target file ${new_obo_file_name}: $!";
+
+  while(my $line = <$obo_fh>) {
+
+   next if $line =~/orcid/;
+   next if $line =~/xref/ && (split/\s+/,$line)[1] !~/\;/; 
+   print $new_obo_fh $line;
+  }
+  close($obo_fh);
+  close($new_obo_fh);
+
+  printf "Switching to loading the file %s which is a post-processed file\n", $new_obo_file_name;
+  $obo_file_name = $new_obo_file_name;
+}
+
 my $my_parser = OBO::Parser::OBOParser->new;
 
 printf("Reading OBO file '%s'...\n", $obo_file_name);
