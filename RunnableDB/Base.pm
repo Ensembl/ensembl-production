@@ -191,6 +191,21 @@ sub fetch_external_db_id {
   return $external_db_id;
 }
 
+sub fetch_external_db_display {
+  my ($self, $db_name, $type) = @_;
+  
+  my $sql = 'SELECT db_display_name FROM external_db WHERE db_name = ?';
+  
+  my $dba = $self->get_DBAdaptor($type);
+  my $dbh = $dba->dbc->db_handle;
+  my $sth = $dbh->prepare($sql);
+  $sth->execute($db_name);
+  
+  my ($db_display_name) = $sth->fetchrow_array;
+  
+  return $db_display_name;
+}
+
 =head2 hive_database_string_for_user
 
   Return the name and location of the database in a human readable way.
