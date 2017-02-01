@@ -37,6 +37,7 @@ declare -a orders;
 orders+=( "GO.obo" )
 orders+=( "SO.obo" )
 orders+=( "PATO.obo" )
+orders+=( "HPO.obo")
 orders+=( "EFO.obo" )
 orders+=( "PO.obo" )
 orders+=( "GR_TAX.obo" )
