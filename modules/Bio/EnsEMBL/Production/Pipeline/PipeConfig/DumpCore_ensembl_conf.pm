@@ -51,7 +51,7 @@ sub default_options {
        'division'    => 'Ensembl',
 
 #'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
-       'gt_exe'       => '/software/ensembl/central/bin/gt',
+       'gt_exe'       => '/nfs/software/ensembl/RHEL7/linuxbrew/Cellar/genometools/1.5.8/bin/gt',
         # create BLAST databases, version 2.2.27+
 #'ncbiblast_exe' => $self->o('exe_dir').'ncbi-blast/makeblastdb',
        'ncbiblast_exe' => 'makeblastdb',
