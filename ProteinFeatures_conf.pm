@@ -48,7 +48,7 @@ sub default_options {
     interproscan_dir     => '/nfs/panda/ensemblgenomes/development/InterProScan',
     interproscan_exe     => catdir(
                                $self->o('interproscan_dir'),
-                               $self->o('interproscan_version'),
+                               'interproscan-'.$self->o('interproscan_version'),
                                'interproscan.sh'
                             ),
    	run_interproscan     => 1,
@@ -139,6 +139,14 @@ sub default_options {
         'db_version'    => '20.119',
         'ipscan_name'   => 'ProSitePatterns',
         'ipscan_xml'    => 'PROSITE_PATTERNS',
+        'ipscan_lookup' => 1,
+      },
+      {
+        'logic_name'    => 'sfld',
+        'db'            => 'SFLD',
+        'db_version'    => '1',
+        'ipscan_name'   => 'SFLD',
+        'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
       },
       {
