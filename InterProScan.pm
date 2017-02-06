@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
-use File::Path qw(make_path);
+use File::Path qw(make_path remove_tree);
 
 sub param_defaults {
   my ($self) = @_;
@@ -80,6 +80,8 @@ sub run {
       $self->dbc and $self->dbc->disconnect_if_idle();
       system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
     }
+    
+    remove_tree($tmp_dir);
   }
   
   if (! -e $outfile_xml) {
