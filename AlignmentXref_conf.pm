@@ -74,6 +74,10 @@ sub default_options {
     refseq_peptide => 0,
     refseq_dna     => 0,
 
+    # If there are existing xrefs based on checksums, don't introduce
+    # duplicate xrefs/object_xrefs, by default.
+    preferred_analysis => ['xrefuniparc', 'xrefuniprot'],
+
     # Default logic_names for the analyses.
     uniprot_reviewed_logic_name   => 'xref_sprot_blastp',
     uniprot_unreviewed_logic_name => 'xref_trembl_blastp',
@@ -88,7 +92,7 @@ sub default_options {
 
     # Some sources have descriptions which are either uninformative or
     # potentially misleading. The array elements are matched in their entirety.
-    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*'],
+    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*', 'AAEL\d.*'],
     
     # Align a particular species, rather than one matching the core db species.
     source_species => undef,
@@ -181,6 +185,15 @@ sub default_options {
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.
     production_lookup => 1,
+
+    # Entries in the xref table that are not linked to other tables
+    # via a foreign key relationship are deleted by default.
+    delete_unattached_xref => 1,
+
+    # By default, an email is sent for each species when the pipeline
+    # is complete, showing the breakdown of xrefs assigned.
+    email_xref_report => 1,
+    
   }
 
 }
@@ -221,10 +234,12 @@ sub pipeline_wide_parameters {
 
   return {
     %{$self->SUPER::pipeline_wide_parameters},
-    'uniprot_reviewed'   => $self->o('uniprot_reviewed'),
-    'uniprot_unreviewed' => $self->o('uniprot_unreviewed'),
-    'refseq_peptide'     => $self->o('refseq_peptide'),
-    'refseq_dna'         => $self->o('refseq_dna'),
+    'uniprot_reviewed'       => $self->o('uniprot_reviewed'),
+    'uniprot_unreviewed'     => $self->o('uniprot_unreviewed'),
+    'refseq_peptide'         => $self->o('refseq_peptide'),
+    'refseq_dna'             => $self->o('refseq_dna'),
+    'delete_unattached_xref' => $self->o('delete_unattached_xref'),
+    'email_xref_report'      => $self->o('email_xref_report'),
   };
 }
 
@@ -525,8 +540,17 @@ sub pipeline_analyses {
                               'WHERE edb.db_name = "#external_db#"',]
                           },
       -rc_name         => 'normal-rh7',
+      -flow_into       => WHEN('#delete_unattached_xref#' => ['DeleteUnattachedXref']),
     },
-    
+
+    {
+      -logic_name      => 'DeleteUnattachedXref',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Xref::DeleteUnattachedXref',
+      -max_retry_count => 0,
+      -parameters      => {},
+      -rc_name         => 'normal-rh7',
+    },
+
     {
       -logic_name      => 'ExtractSpecies',
       -module          => 'Bio::EnsEMBL::EGPipeline::BlastAlignment::ExtractSpecies',
@@ -717,11 +741,12 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::Xref::LoadAlignmentXref',
       -max_retry_count   => 1,
       -parameters        => {
-                              fasta_file            => '#db_fasta_file#',
+                              db_fasta_file         => '#db_fasta_file#',
+                              preferred_analysis    => $self->o('preferred_analysis'),
                               description_blacklist => $self->o('description_blacklist'),
                             },
       -rc_name           => 'normal-rh7',
-      -flow_into         => ['EmailReport'],
+      -flow_into         => WHEN('#email_xref_report#' => ['EmailReport']),
 
     },
 
