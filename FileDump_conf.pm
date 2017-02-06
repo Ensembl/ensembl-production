@@ -111,7 +111,7 @@ sub default_options {
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
     
-    gt_exe        => '/nfs/software/ensembl/RHEL7/linuxbrew/bin/gt',
+    gt_exe        => 'gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
 

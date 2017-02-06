@@ -117,7 +117,7 @@ sub default_options {
     
     # Generate a GFF file for loading into, e.g., WebApollo
     create_gff    => 0,
-    gt_exe        => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+    gt_exe        => 'gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
     gff_source    => undef,
