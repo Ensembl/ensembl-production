@@ -91,7 +91,7 @@ sub default_options {
     overwrite_gene_name   => 0,
     description_source    => [],
     overwrite_description => 0,
-    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*'],
+    description_blacklist => ['Uncharacterized protein', 'AGAP\d.*', 'AAEL\d.*'],
 
     load_uniprot        => 1,
     load_uniprot_go     => 1,
@@ -111,6 +111,9 @@ sub default_options {
       'MEROPS'       => 'MEROPS',
       'PDB'          => 'PDB',
     },
+    uniprot_secondary_external_dbs => {
+      'RefSeq_peptide' => 'RefSeq_dna',
+    },
 
     checksum_logic_name => 'xrefchecksum',
     checksum_module     => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniParc',
@@ -119,9 +122,11 @@ sub default_options {
     uniparc_transitive_module     => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProt',
 
     uniprot_transitive_logic_name  => 'xrefuniprot',
-    uniprot_transitive_go_module   => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
     uniprot_transitive_xref_module => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtXrefs',
-
+    
+    uniprot_transitive_go_logic_name  => 'gouniprot',
+    uniprot_transitive_go_module      => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtGO',
+    
     # Retrieve analysis descriptions from the production database;
     # the supplied registry file will need the relevant server details.
     production_lookup => 1,
@@ -226,7 +231,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -flow_into       => {
                             '2->A' => ['RunPipeline'],
-                            'A->2' => ['FinishingTouches'],
+                            'A->2' => WHEN('#email_xref_report#' => ['SetupXrefReport']),
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -351,7 +356,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
       -max_retry_count => 0,
       -parameters      => {
-                            logic_name         => $self->o('uniprot_transitive_logic_name'),
+                            logic_name         => $self->o('uniprot_transitive_go_logic_name'),
                             module             => $self->o('uniprot_transitive_go_module'),
                             production_lookup  => $self->o('production_lookup'),
                             production_db      => $self->o('production_db'),
@@ -409,11 +414,12 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::LoadUniProtXrefs',
       -max_retry_count => 0,
       -parameters      => {
-                            uniprot_db           => $self->o('remote_uniprot_db'),
-                            replace_all          => $self->o('replace_all'),
-                            logic_name           => $self->o('uniprot_transitive_logic_name'),
-                            external_dbs         => $self->o('uniprot_xref_external_dbs'),
-                            uniprot_external_dbs => $self->o('uniprot_external_dbs'),
+                            uniprot_db             => $self->o('remote_uniprot_db'),
+                            replace_all            => $self->o('replace_all'),
+                            logic_name             => $self->o('uniprot_transitive_logic_name'),
+                            external_dbs           => $self->o('uniprot_xref_external_dbs'),
+                            secondary_external_dbs => $self->o('uniprot_secondary_external_dbs'),
+                            uniprot_external_dbs   => $self->o('uniprot_external_dbs'),
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
@@ -434,20 +440,14 @@ sub pipeline_analyses {
                                  'ontology_xref onx LEFT OUTER JOIN '.
                                  'object_xref ox USING (object_xref_id) '.
                                  'WHERE ox.object_xref_id IS NULL',
+                               'UPDATE gene g LEFT OUTER JOIN '.
+                                 'xref x ON g.display_xref_id = x.xref_id '.
+                                 'SET g.display_xref_id = NULL '.
+                                 'WHERE x.xref_id IS NULL',
                              ]
                            },
       -meadow_type     => 'LOCAL',
-    },
-
-    {
-      -logic_name      => 'FinishingTouches',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 0,
-      -flow_into       => {
-                            '1->A' => WHEN('#delete_unattached_xref#' => ['DeleteUnattachedXref']),
-                            'A->1' => ['SetupXrefReport'],
-                          },
-      -meadow_type     => 'LOCAL',
+      -flow_into       => WHEN('#delete_unattached_xref#' => ['DeleteUnattachedXref']),
     },
 
     {
@@ -463,8 +463,8 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
       -flow_into       => {
-                            '1->A' => WHEN('#email_xref_report#' => ['NamesAndDescriptionsAfter']),
-                            'A->1' => WHEN('#email_xref_report#' => ['EmailXrefReport']),
+                            '1->A' => ['NamesAndDescriptionsAfter'],
+                            'A->1' => ['EmailXrefReport'],
                           },
       -meadow_type     => 'LOCAL',
     },
@@ -501,24 +501,25 @@ sub pipeline_analyses {
       -logic_name      => 'EmailXrefReport',
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::EmailXrefReport',
       -parameters      => {
-                            email                         => $self->o('email'),
-                            subject                       => 'Xref pipeline report for #species#',
-                            db_type                       => $self->o('db_type'),
-                            load_uniprot                  => $self->o('load_uniprot'),
-                            load_uniprot_go               => $self->o('load_uniprot_go'),
-                            load_uniprot_xrefs            => $self->o('load_uniprot_xrefs'),
-                            checksum_logic_name           => $self->o('checksum_logic_name'),
-                            uniparc_transitive_logic_name => $self->o('uniparc_transitive_logic_name'),
-                            uniprot_transitive_logic_name => $self->o('uniprot_transitive_logic_name'),
-                            uniparc_external_db           => $self->o('uniparc_external_db'),
-                            uniprot_external_dbs          => $self->o('uniprot_external_dbs'),
-                            uniprot_go_external_db        => $self->o('uniprot_go_external_db'),
-                            uniprot_xref_external_dbs     => $self->o('uniprot_xref_external_dbs'),
-                            replace_all                   => $self->o('replace_all'),
-                            gene_name_source              => $self->o('gene_name_source'),
-                            overwrite_gene_name           => $self->o('overwrite_gene_name'),
-                            description_source            => $self->o('description_source'),
-                            overwrite_description         => $self->o('overwrite_description'),
+                            email                            => $self->o('email'),
+                            subject                          => 'Xref pipeline report for #species#',
+                            db_type                          => $self->o('db_type'),
+                            load_uniprot                     => $self->o('load_uniprot'),
+                            load_uniprot_go                  => $self->o('load_uniprot_go'),
+                            load_uniprot_xrefs               => $self->o('load_uniprot_xrefs'),
+                            checksum_logic_name              => $self->o('checksum_logic_name'),
+                            uniparc_transitive_logic_name    => $self->o('uniparc_transitive_logic_name'),
+                            uniprot_transitive_logic_name    => $self->o('uniprot_transitive_logic_name'),
+                            uniprot_transitive_go_logic_name => $self->o('uniprot_transitive_go_logic_name'),
+                            uniparc_external_db              => $self->o('uniparc_external_db'),
+                            uniprot_external_dbs             => $self->o('uniprot_external_dbs'),
+                            uniprot_go_external_db           => $self->o('uniprot_go_external_db'),
+                            uniprot_xref_external_dbs        => $self->o('uniprot_xref_external_dbs'),
+                            replace_all                      => $self->o('replace_all'),
+                            gene_name_source                 => $self->o('gene_name_source'),
+                            overwrite_gene_name              => $self->o('overwrite_gene_name'),
+                            description_source               => $self->o('description_source'),
+                            overwrite_description            => $self->o('overwrite_description'),
                           },
       -max_retry_count => 1,
       -rc_name         => 'normal-rh7',
