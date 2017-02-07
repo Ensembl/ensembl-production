@@ -101,6 +101,7 @@ sub default_options {
     uniprot_external_dbs  => {
       'reviewed'   => 'Uniprot/SWISSPROT',
       'unreviewed' => 'Uniprot/SPTREMBL',
+      'splicevar'  => 'Uniprot/Varsplic',
     },
     uniprot_gn_external_db => 'Uniprot_gn',
     uniprot_go_external_db => 'GO',
@@ -379,7 +380,7 @@ sub pipeline_analyses {
       -parameters      => {
                             uniprot_db           => $self->o('remote_uniprot_db'),
                             replace_all          => $self->o('replace_all'),
-                            logic_name           => $self->o('uniprot_transitive_logic_name'),
+                            logic_name           => $self->o('uniprot_transitive_go_logic_name'),
                             external_db          => $self->o('uniprot_go_external_db'),
                             uniprot_external_dbs => $self->o('uniprot_external_dbs'),
                           },
