@@ -153,6 +153,9 @@ sub get_type {
   if ( $dbname =~ m/ensembl_compara_.*/ ) {
     $type = 'compara';
   }
+  elsif ( $dbname =~ m/ensembl_ancestral_.*/ ) {
+    $type = 'core';
+  }
   elsif ( $dbname =~ m/ensembl_production.*/ ) {
     $type = 'production';
   }
