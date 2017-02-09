@@ -85,9 +85,9 @@ sub align {
   
   if ($self->{run_mode} eq 'long_reads') {
     if (defined $file2) {
-      $sam = $self->align_file($ref, $sam, "$file1 $file2", '', 'mem');
+      $sam = $self->align_file($ref, $sam, "$file1 $file2", '', 'bwasw');
     } else {
-      $sam = $self->align_file($ref, $sam, $file1, '', 'mem');
+      $sam = $self->align_file($ref, $sam, $file1, '', 'bwasw');
     }
   } else {
     if (defined $file2) {
