@@ -69,9 +69,6 @@ sub default_options {
     #   List of tables to be backed up
     'dump_tables' => ['analysis','analysis_description','interpro','protein_feature','xref','object_xref','ontology_xref','dependent_xref'],
 
-    ## 'load_xrefs' parameters
-    'oracle_home' => '/sw/arch/dbtools/oracle/product/11.1.0.6.2/client',
-
     ## 'cleanup_prot_feature' parameters
     #   Species exclusion list for Interpro2Go if the analysis is turn 'ON'
     'exclusion'  => ['schizosaccharomyces_pombe'],
@@ -106,9 +103,9 @@ sub default_options {
 
     ## 'meta_table_update' parameters
     #   Information to update 'meta' table
-    'interproscan_version' => '5.20-59.0',
-    'interproscan_date'    => '15-Sept-2016',
-    'interpro_version'     => '59',
+    'interproscan_version' => '5.22-61.0',
+    'interproscan_date'    => '23-Jan-2017',
+    'interpro_version'     => '61',
 
     ## 'split_fasta' & 'split_md5_fasta' & 'split_no_md5_fasta'  parameters
     #   Parameters for dumping and splitting Fasta protein files:
@@ -123,13 +120,12 @@ sub default_options {
     ## 'run_Seg' & 'store_Seg_feat' parameters
     #   Flag -l shows only low-complexity segments (fasta format)
     #   Flag -n does not add complexity information to the header line
-    'seg_exe'        => '/nfs/panda/ensemblgenomes/external/bin/seg',
+    'seg_exe'        => 'seg',
     'seg_params'     => '-l -n',
     'seg_logic_name' => 'seg',
 
     ## 'run_InterProScan_lookup' & 'run_InterProScan_nolookup' & 'run_InterProScan_local' parameters
-    # Release 15 Sept 2016, InterProScan 5:version 5.20-59 using InterPro version 59.0 data
-	'interproscan_exe' => '/nfs/panda/ensemblgenomes/development/InterProScan/interproscan-5.20-59.0/interproscan.sh',
+	'interproscan_exe' => 'interproscan.sh',
 
     # Unused applications:
     # SignalP-GRAM_POSITIVE-4.0 SignalP-GRAM_NEGATIVE-4.0
@@ -181,8 +177,7 @@ sub default_options {
     'validating_parser' => 1,
 
     ## 'load_InterPro2Go' parameters
-    #   Release 17 Sept 2016 (http://www.geneontology.org/external2go/interpro2go)
-    'interpro2go' =>  '/nfs/panda/ensemblgenomes/development/InterProScan/interpro2go/2016_Sept_17/interpro2go',
+    'interpro2go' =>  '/nfs/panda/ensembl/production/interpro2go/interpro2go',
 
     #   Check if GO annotation exists from other sources before loading
     #   default => OFF (0)
@@ -212,7 +207,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '1',
+        'db_version'    => '2',
       },
       {
         'logic_name'    => 'cdd',
@@ -237,7 +232,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '10.0',
+        'db_version'    => '11.1',
       },
       {
         'logic_name'    => 'pfam',
@@ -310,18 +305,7 @@ sub default_options {
         'db_version'    => undef,
       },
     ],
-
-    #  Access to the prod db is sometimes useful, and since the location/name
-    #  doesn't change we might as well have a default.
-    'production_db' => {
-      -driver => $self->o('hive_driver'),
-      -host   => 'mysql-eg-pan-prod.ebi.ac.uk',
-      -port   => 4276,
-      -user   => 'ensro',
-      -pass   => '',
-      -group  => 'production',
-      -dbname => 'ensembl_production',
-    },      
+   
 
     # Don't fall over if someone uses 'hive_pass' instead of 'hive_password'
     hive_password => $self->o('hive_pass'),
@@ -333,7 +317,16 @@ sub default_options {
         -pass   => $self->o('hive_password'),
         -dbname => $self->o('hive_dbname'),
         -driver => 'mysql',
-      },      
+      },     
+      
+          'interpro_db' => {
+        -host   => $self->o('interpro_host'),
+        -port   => $self->o('interpro_port'),
+        -user   => $self->o('interpro_user'),
+        -pass   => $self->o('interpro_password'),
+        -dbname => $self->o('interpro_dbname'),
+        -driver => 'Oracle',
+      },  
   };
 }
 
@@ -436,7 +429,7 @@ sub pipeline_analyses {
     { -logic_name      => 'load_InterPro_xrefs',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::InterProScan::LoadInterProXrefs',
       -hive_capacity   => 50,
-      -parameters      => { oracle_home => $self->o('oracle_home'), },
+      -parameters      => { interpro_db => $self->o('interpro_db') },
       -rc_name         => 'default',
     },
 

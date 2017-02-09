@@ -88,7 +88,6 @@ sub run {
     my $line_width        = $self->param('line_width');
     my $allow_stop_codons = $self->param('allow_stop_codons');
     my $production_lookup = $self->param('production_lookup');
-    my $production_db     = $self->param('production_db');
   
     # Use the ensembl_production database to retrieve the biotypes
     # associated with the coding group, if possible.
@@ -98,7 +97,7 @@ sub run {
     # Check if the production lookup flag is turned on
     # If it is then connect to the production database
     if ($production_lookup){
-      $pdba = $self->get_DBAdaptor('production');
+      $pdba = $self->production_dba();
     }
     if (defined $pdba) {
       my $biotype_manager = $pdba->get_biotype_manager();
