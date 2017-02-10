@@ -73,10 +73,12 @@ sub _exit {
 }
 
 sub run {
+  my $dirs  = get_dirs();
 
-    my $release_file = File::Spec->catfile($OPTIONS->{directory}, 'release.txt');
-    my $dirs         = get_dirs();
- 
+  foreach my $dir (@{$dirs}) {
+    print STDERR "Processing $dir\n";
+    my $contents = get_contents($dir);
+    my $release_file = File::Spec->catfile($dir, 'release.txt');
     # Remove existing release.txt timestamp file
     # if -replace option provided
     if(-f $release_file) {
@@ -86,27 +88,22 @@ sub run {
     }
 
     open my $fh, '>', $release_file or die "Cannot open $release_file for writing: $!";
-
-    foreach my $dir (@{$dirs}) {
-       print STDERR "Processing $dir\n";
-       my $contents = get_contents($dir);
   
-    if(leaf_directory($contents)) {
-      print STDERR "Directory is a leaf; generating timestamp\n";
-      my $timestamp = getLoggingTime();
-      $dir = $1 if($dir =~/(ensembl\w*)$/);      
-      print $fh "$dir\t$timestamp\n";
-    }
+    print STDERR "Generating timestamp\n";
+    my $timestamp = getLoggingTime($dir.'/'.$contents->{files}->[0]);
+    $dir = $1 if($dir =~/(ensembl\w*)$/);
+    print $fh "$dir\t$timestamp\n";
+
+    close $fh or die "Cannot close $release_file: $!";
+    print STDERR "Processing $dir Complete\n";
   }
-  close $fh or die "Cannot close $release_file: $!";
-  print STDERR "Processing Complete\n";
 
 return;
 }
 
 sub get_dirs {
     my $base_dir = $OPTIONS->{directory};
-    my $output   = `find $base_dir -type d`;
+    my $output   = `find ${base_dir}/* -type d`;
     my @dirs     = map { chomp $_; $_ } split /\n/, $output;
 
 return \@dirs;
@@ -143,16 +140,11 @@ sub get_contents {
 return $output;
 }
 
-sub leaf_directory {
-    my ($contents) = @_;
-
-return (scalar(@{$contents->{dirs}}) == 0) ? 1 : 0;
-}
-
 sub getLoggingTime {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-    my $nice_timestamp = sprintf ( "%04d/%02d/%02d %02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec);
-
+  my ($file) = @_;
+  my $mtime = (stat ($file))[9];
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime($mtime);
+  my $nice_timestamp = sprintf ( "%04d/%02d/%02d %02d:%02d:%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec);
 return $nice_timestamp;
 }
 
