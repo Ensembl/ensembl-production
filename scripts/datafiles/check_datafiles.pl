@@ -107,7 +107,7 @@ sub check {
     }
   }
 
-  $o->{unix_group} = 'ensembl-ftp' unless $o->{unix_group};
+  $o->{unix_group} = 'ensemblftp' unless $o->{unix_group};
 
   return;
 }
@@ -519,7 +519,7 @@ Optional integer of the database port. Defaults to 3306.
 
 =item B<--unix_group>
 
-Specify the UNIX group these files should be readable by. Defaults to ensembl-ftp
+Specify the UNIX group these files should be readable by. Defaults to ensemblftp
 
 =item B<--datafile_dir | --dir>
 
