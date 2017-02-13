@@ -36,6 +36,7 @@ use File::Spec;
 use Getopt::Long;
 use Pod::Usage;
 use Data::Dumper;
+use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 my $DEFAULT_USER = 'ensgen';
 my $OPTIONS      = options();
@@ -74,6 +75,7 @@ sub _exit {
 
 sub run {
   my $dirs  = get_dirs();
+  my $release = software_version();
 
   foreach my $dir (@{$dirs}) {
     print STDERR "Processing $dir\n";
@@ -92,7 +94,7 @@ sub run {
     print STDERR "Generating timestamp\n";
     my $timestamp = getLoggingTime($dir.'/'.$contents->{files}->[0]);
     $dir = $1 if($dir =~/(ensembl\w*)$/);
-    print $fh "$dir\t$timestamp\n";
+    print $fh "$dir\t$release\t$timestamp\n";
 
     close $fh or die "Cannot close $release_file: $!";
     print STDERR "Processing $dir Complete\n";
