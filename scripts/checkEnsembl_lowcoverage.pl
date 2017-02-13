@@ -51,6 +51,7 @@ my $dbname_human  = '';
 my $dbhost_human  = '';
 my $human_port    = '';
 my $human_user    = '';
+my $human_pass    = '';
 
 my $lsf_params = '';
 my @a_2x_dbs;
@@ -69,9 +70,10 @@ my $queue = &LSF_QUEUE;
             'pass=s'       => \$pass,
             'dblist=s'     => \$dblist,
             'dbname_ref=s' => \$dbname_human,
-            'dbhost_ref=s' => \$dbhost_human,
-            'dbuser_ref=s' => \$human_user,
-            'dbport_ref=s' => \$human_port,
+            'host_ref=s' => \$dbhost_human,
+            'user_ref=s' => \$human_user,
+            'port_ref=s' => \$human_port,
+            'pass_ref=s' => \$human_pass,
             'log_file=s'   => \$log_file_name,
             'queue=s'      => \$queue,
             'lsf_params=s' => \$lsf_params,
@@ -107,7 +109,7 @@ if ($parallel) {
         my $cmd = 'bsub -q '.$queue
                     .' -oo '.$log_file_name.'.'.$dbname.'.log'
                     .' perl '.$0.' --host '.$host.' --port '.$port.' --user '.$user.' --dblist '.$dbname
-                    .' --dbhost_ref '.$dbhost_human.' --port '.$human_port.' --dbname_ref '.$dbname_human;
+                    .' --dbhost_ref '.$dbhost_human.' --port '.$human_port.' --pass '.$human_pass.' --dbname_ref '.$dbname_human;
         $cmd .= ' --pass '.$pass if ($pass ne '');
         $cmd .= ' --log_file '.$log_file_name.'.'.$dbname if defined $log_file_name;
         $cmd .= ' --write' if defined $write;
@@ -137,7 +139,7 @@ my $human_db = new Bio::EnsEMBL::DBSQL::DBAdaptor(
     -species => 'species1',
     -host    => $dbhost_human,
     -user    => $human_user,
-    -pass    => '',
+    -pass    => $human_pass,
     -port    => $human_port,
     -dbname  => $dbname_human
 );
