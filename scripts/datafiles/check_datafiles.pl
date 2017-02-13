@@ -163,14 +163,14 @@ sub test_path {
   my $file_gid  = $stat[5];
 
   #Now do the tests
-  # Files must have read permissions on user/group/other
-  # They cannot have write permissions on the user/group/other.
+  # Files must have read permissions on group/other
+  # Files need to be group writeable
+  # They cannot have write permissions on the other.
   # They can be executable (we don't care so don't check)
+  # We don't care about owner permissions
   ok(-s $path, "$prefix has data");
-  is($user_r, 4, "$prefix is Read by user");
-  is($user_w, 0, "$prefix cannot have user Write permissions");
   is($group_r, 4, "$prefix is Read by group");
-  is($group_w, 0, "$prefix cannot have group Write permissions");
+  is($group_w, 2, "$prefix is Write by group");
   is($other_r, 4, "$prefix is Read by other");
   is($other_w, 0, "$prefix cannot have have other Write permissions");
 
