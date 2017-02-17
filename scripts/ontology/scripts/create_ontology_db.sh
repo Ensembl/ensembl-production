@@ -116,8 +116,20 @@ if ! [ -z "$mart" ]; then
 	    $srv $mart -e "optimize table $table";
 	fi
     done
-
+    msg "Creating the dataset_name table for mart database $mart"
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl $($srv details script) -mart $mart -div ensembl -name _closure -main main || {
+        msg "Failed to create dataset_name table"
+        exit 1
+    }
     msg "Populating meta tables for mart database $mart"
-    $srv $mart < build_ontology_mart_meta.sql
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl $($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_template_template.xml -template_name ontology || {
+        msg "Failed to populate meta table for mart database $mart"
+        exit 1
+    }
+    msg "Populating meta tables for mart database $mart SO mini template"
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl $($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_mini_template_template.xml -template_name ontology_mini -ds_basename mini || {
+        msg "Failed to populate meta table for mart database $mart"
+        exit 1
+    }
     msg "Building mart database $mart complete"
 fi 
