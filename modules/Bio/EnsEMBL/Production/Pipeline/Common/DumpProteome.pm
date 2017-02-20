@@ -126,6 +126,14 @@ sub run {
       if ($header_style ne 'default') {
        $seq_obj->display_id($self->header($header_style, $transcript));
       }
+
+      my $nX = $seq_obj->seq() =~ tr/X//;
+      my $n = length ($seq_obj->seq());
+      my $ratio = $nX/$n;
+
+      if ($ratio > 0.9) {
+	$self->warning("Skipping transcript ". $transcript->stable_id()." as it has $nX Xs from a total of $n");
+      }
     
       if ($seq_obj->seq() =~ /\*/ && !$allow_stop_codons) {
        $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.");
