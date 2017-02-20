@@ -40,14 +40,8 @@ use base (
 sub fetch_input {
 	my ($self) = @_;
 
-	my $interpro = $self->param_required('interpro_db');
-
-	my $interpro_dbc = Bio::EnsEMBL::DBSQL::DBConnection->new(%$interpro);
-
-	$self->param( 'interpro_dbc', $interpro_dbc );
-
 	return 0;
-}
+      }
 
 sub write_output {
 	my ($self) = @_;
@@ -59,30 +53,41 @@ sub run {
 	my ($self) = @_;
 	my ( $interpro_accession, $interpro_description, $interpro_name );
 
+	my $interpro = $self->param_required('interpro_db');
+
+	my $interpro_dbc = Bio::EnsEMBL::DBSQL::DBConnection->new(%$interpro);
+
 	my $core_dba = $self->core_dba;
+	my $core_dbh = $core_dba->dbc()->db_handle();
 	my $external_dbId =
 	  $self->fetch_external_db_id( $core_dba->dbc()->db_handle(), 'Interpro' );
 
-	my $interpro_dbc->sql_helper()->execute_no_return(
-		-SQL =>
-"SELECT entry_ac, name, short_name FROM interpro.entry WHERE checked = 'Y'",
-		my $result = shift;
-		  if ( !$self->xref_exists( $core_dbh, $interpro_accession,
-									$external_dbId ) )
-		{
-			$self->insert_xref( $core_dbh, {
-								   external_db_id => $external_dbId,
-								   dbprimary_acc  => $interpro_accession,
-								   display_label  => $interpro_name,
-								   description    => $interpro_description, } );
-			return;
-		}
-	);
+	$interpro_dbc->sql_helper()->execute_no_return(
+							  -SQL =>
+							  "SELECT entry_ac, name, short_name FROM interpro.entry WHERE checked = 'Y'",
+							  -CALLBACK => sub {
+							    my $result = shift;
+							    my $interpro_accession = $result->[0];
+							    my $interpro_description = $result->[1];
+							    my $interpro_name = $result->[2];
 
+							    if ( !$self->xref_exists( $core_dbh, $interpro_accession,
+										      $external_dbId ) )
+							      {
+								$self->insert_xref( $core_dbh, {
+												external_db_id => $external_dbId,
+												dbprimary_acc  => $interpro_accession,
+												display_label  => $interpro_name,
+												description    => $interpro_description, } );
+							      }
+							    return;
+							  }
+							 );
+	
 	$core_dba->dbc->disconnect_if_idle();
-
+	
 	return 0;
-} ## end sub run
+      } ## end sub run
 
 1;
 
