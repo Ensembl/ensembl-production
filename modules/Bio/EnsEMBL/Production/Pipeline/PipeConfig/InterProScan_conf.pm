@@ -40,6 +40,8 @@ sub default_options {
     ## inherit other stuff from the base class
     %{ $self->SUPER::default_options() },
 
+	  hive_dbname=>undef,
+
     ## General parameters
     'pipeline_name' => $self->o('hive_dbname'),
 
@@ -453,8 +455,7 @@ sub pipeline_analyses {
                             db_backup_required => 0,
                             delete_existing    => $self->o('delete_existing'),
 							linked_tables      => $self->o('linked_tables'),
-                            production_lookup  => $self->o('production_lookup'),
-                            production_db      => $self->o('production_db'),
+                            production_lookup  => $self->o('production_lookup')
                           },
       -rc_name         => 'default',
     },
@@ -500,8 +501,7 @@ sub pipeline_analyses {
                        		proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                        		header_style => 'dbID',
                        		overwrite    => $self->o('overwrite'),
-                                production_lookup  => $self->o('production_lookup'),
-                                production_db      => $self->o('production_db'),
+                                production_lookup  => $self->o('production_lookup')
                      	  },
       -rc_name    	   => 'default',
       -flow_into  	   => $flow_dump_proteome,
