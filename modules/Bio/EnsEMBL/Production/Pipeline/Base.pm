@@ -32,6 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::Base;
 use strict;
 use warnings;
 use base qw/Bio::EnsEMBL::Hive::Process/;
+use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Scalar qw/check_ref/;
