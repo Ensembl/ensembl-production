@@ -592,7 +592,7 @@ sub pipeline_analyses {
 					         interproscan_exe          => $self->o('interproscan_exe'),
 				             interproscan_applications => $self->o('interproscan_lookup_applications'),
       					   },
-      -rc_name         => 'default',
+      -rc_name         => 'i5_computation',
       -flow_into       => ['store_features'],
     },
 
@@ -680,7 +680,8 @@ sub resource_classes {
   return {
 #    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -R "select[gpfs]"' },
     'default' 			   => {'LSF' => '-q production-rh7' },
-    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4' },
+    'i5_computation' 			   => {'LSF' => '-q production-rh7 -M 4096 -R "rusage[mem=4096]"' },
+    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -M 4096 -R "rusage[mem=4096]"' },
   };
 }
 
