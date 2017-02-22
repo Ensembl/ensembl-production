@@ -179,7 +179,7 @@ sub default_options {
     'validating_parser' => 1,
 
     ## 'load_InterPro2Go' parameters
-    'interpro2go' =>  '/nfs/panda/ensembl/production/interpro2go/interpro2go',
+    'interpro2go' =>  '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
 
     #   Check if GO annotation exists from other sources before loading
     #   default => OFF (0)
