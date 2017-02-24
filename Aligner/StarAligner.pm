@@ -136,7 +136,7 @@ sub index_file {
     " --runThreadN $self->{threads} ".
     " --limitGenomeGenerateRAM $self->{RAM_limit} ";
   
-  if ($self->{index_mode} eq "himem") {
+  if ($self->{index_mode} eq "large_genome") {
     my $size = -s $file;
     my $genomeSAindexNbases = ( log($size)/log(2) )/2 - 1;
     
