@@ -40,8 +40,11 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::ExonerateAlignment_conf;
 use strict;
 use warnings;
 
-use Bio::EnsEMBL::Hive::Version 2.3;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -226,6 +229,15 @@ sub pipeline_create_commands {
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('pipeline_dir'),
   ];
+}
+
+sub pipeline_wide_parameters {
+ my ($self) = @_;
+ 
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'make_genes' => $self->o('make_genes'),
+ };
 }
 
 sub pipeline_analyses {
@@ -519,23 +531,12 @@ sub pipeline_analyses {
                               output_file => catdir($dir, '#species#', 'post_exonerate_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['MakeGenesFlowControl'],
-    },
-
-    {
-      -logic_name        => 'MakeGenesFlowControl',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FlowControl',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              control_value => $self->o('make_genes'),
-                              control_flow  => { '0' => '1', '1' => '2', },
-                            },
-      -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => ['MetaCoords'],
-                              '2' => ['Deduplicate'],
+                              '1' => WHEN('#make_genes#' =>
+                                      ['Deduplicate'],
+                                     ELSE
+                                      ['MetaCoords']),
                             },
-      -meadow_type       => 'LOCAL',
     },
 
     {
