@@ -30,6 +30,7 @@ package Bio::EnsEMBL::Production::Pipeline::InterProScan::RunSeg;
 
 use strict;
 use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::Base');
+use Carp qw/confess/;
 
 sub fetch_input {
     my $self = shift @_;

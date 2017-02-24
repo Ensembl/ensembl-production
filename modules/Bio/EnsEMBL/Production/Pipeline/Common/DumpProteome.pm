@@ -120,11 +120,13 @@ sub run {
   
     foreach my $transcript (sort { $a->stable_id cmp $b->stable_id } @{$transcripts}) {
       my $seq_obj = $transcript->translate();
+
+      next unless defined $seq_obj; # deal with situation e.g. nontranslating_CDS where a translation is missing
     
       if ($header_style ne 'default') {
        $seq_obj->display_id($self->header($header_style, $transcript));
       }
-    
+
       if ($seq_obj->seq() =~ /\*/ && !$allow_stop_codons) {
        $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.");
       } else {
@@ -149,6 +151,9 @@ sub header {
     my ($self, $header_style, $transcript) = @_;
   
     my $translation = $transcript->translation;
+    if(!defined $translation) {
+      print $transcript->stable_id().":".$transcript->biotype()."\n";
+    }
     my $header = $translation->stable_id;
   
     if ($header_style eq 'dbID') {

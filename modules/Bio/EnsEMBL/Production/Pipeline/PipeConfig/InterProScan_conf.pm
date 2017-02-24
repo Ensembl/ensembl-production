@@ -40,6 +40,8 @@ sub default_options {
     ## inherit other stuff from the base class
     %{ $self->SUPER::default_options() },
 
+	  hive_dbname=>undef,
+
     ## General parameters
     'pipeline_name' => $self->o('hive_dbname'),
 
@@ -177,7 +179,7 @@ sub default_options {
     'validating_parser' => 1,
 
     ## 'load_InterPro2Go' parameters
-    'interpro2go' =>  '/nfs/panda/ensembl/production/interpro2go/interpro2go',
+    'interpro2go' =>  '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
 
     #   Check if GO annotation exists from other sources before loading
     #   default => OFF (0)
@@ -453,8 +455,7 @@ sub pipeline_analyses {
                             db_backup_required => 0,
                             delete_existing    => $self->o('delete_existing'),
 							linked_tables      => $self->o('linked_tables'),
-                            production_lookup  => $self->o('production_lookup'),
-                            production_db      => $self->o('production_db'),
+                            production_lookup  => $self->o('production_lookup')
                           },
       -rc_name         => 'default',
     },
@@ -500,8 +501,7 @@ sub pipeline_analyses {
                        		proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                        		header_style => 'dbID',
                        		overwrite    => $self->o('overwrite'),
-                                production_lookup  => $self->o('production_lookup'),
-                                production_db      => $self->o('production_db'),
+                                production_lookup  => $self->o('production_lookup')
                      	  },
       -rc_name    	   => 'default',
       -flow_into  	   => $flow_dump_proteome,
@@ -592,7 +592,7 @@ sub pipeline_analyses {
 					         interproscan_exe          => $self->o('interproscan_exe'),
 				             interproscan_applications => $self->o('interproscan_lookup_applications'),
       					   },
-      -rc_name         => 'default',
+      -rc_name         => 'i5_computation',
       -flow_into       => ['store_features'],
     },
 
@@ -678,9 +678,9 @@ sub resource_classes {
   my ($self) = @_;
 
   return {
-#    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -R "select[gpfs]"' },
     'default' 			   => {'LSF' => '-q production-rh7' },
-    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4' },
+    'i5_computation' 			   => {'LSF' => '-q production-rh7 -M 4096 -R "rusage[mem=4096]"' },
+    'i5_local_computation' => {'LSF' => '-q production-rh7 -n 4 -M 8192 -R "rusage[mem=8192]"' },
   };
 }
 
