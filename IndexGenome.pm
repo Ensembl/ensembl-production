@@ -28,6 +28,7 @@ sub param_defaults {
   return {
     'samtools_dir' => '/nfs/panda/ensemblgenomes/external/samtools',
     'threads'      => 4,
+    'index_mode'   => 'default',
     'memory_mode'  => 'default',
     'gtf_file'     => undef,
     'overwrite'    => 1,
@@ -47,7 +48,7 @@ sub fetch_input {
   my $aligner_dir   = $self->param_required('aligner_dir');
   my $samtools_dir  = $self->param_required('samtools_dir');
   my $threads       = $self->param_required('threads');
-  my $memory_mode   = $self->param_required('memory_mode');
+  my $index_mode    = $self->param('index_mode');
   my $gtf_file      = $self->param('gtf_file');
   
   eval "require $aligner_class";
@@ -56,7 +57,7 @@ sub fetch_input {
     -aligner_dir  => $aligner_dir,
     -samtools_dir => $samtools_dir,
     -threads      => $threads,
-    -memory_mode  => $memory_mode,
+    -index_mode   => $index_mode,
     -gtf_file     => $gtf_file,
   );
   $self->param('aligner_object', $aligner_object);
