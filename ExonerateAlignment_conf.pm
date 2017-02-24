@@ -290,9 +290,8 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2->A' => ['PreExonerateBackup'],
-                              '3->A' => ['CreateOFDatabase'],
-                              'A->1' => ['AnalysisFactory'],
+                              '2' => ['PreExonerateBackup'],
+                              '3' => ['CreateOFDatabase'],
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -309,6 +308,7 @@ sub pipeline_analyses {
                               output_file => catdir($dir, '#species#', 'pre_exonerate_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['AnalysisFactory'],
     },
 
     {
@@ -320,6 +320,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {},
       -rc_name           => 'normal',
+      -flow_into         => ['PreExonerateBackup'],
     },
 
     {
