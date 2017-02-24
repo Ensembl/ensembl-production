@@ -87,7 +87,7 @@ sub default_options {
 
     reformat_header => 1,
     trim_est        => 1,
-    trimest_exe     => catdir($self->o('program_dir'), 'EMBOSS/bin/trimest'),
+    trimest_exe     => 'trimest',
 
     # By default, the pipeline assumes EST data, rather than rnaseq or
     # protein data; that genes should not be created based on the alignments;
