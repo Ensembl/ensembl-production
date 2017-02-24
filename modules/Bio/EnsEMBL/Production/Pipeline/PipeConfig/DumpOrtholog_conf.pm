@@ -44,129 +44,16 @@ sub default_options {
 		%{ $self->SUPER::default_options() },
 
 		'registry'         => '',
-		'pipeline_name'    => $self->o('hive_dbname'),
-		'output_dir'       => '/nfs/ftp/pub/databases/ensembl/projections/',
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
+		'compara' => undef,
 
 		## Set to '1' for eg! run
 		#   default => OFF (0)
-		'eg' => 1,
+		'eg' => 0,
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
 
-		# orthologs cutoff
-		'perc_id'  => '30',
-		'perc_cov' => '66',
-
-		# 'target' & 'exclude' are mutually exclusive
-		#  only one of those should be defined if used
-		'species_config' => {
-			# Plants
-			'EPl_1' => {    # compara database to get orthologs from
-				            #  'plants', 'protists', 'fungi', 'metazoa', 'multi'
-				'compara' => 'plants',
-				# source species to project from
-				'source' => 'arabidopsis_thaliana',
-				# target species to project to (DEFAULT: undef)
-				'target' => undef,
-				# target species to exclude in projection
-				'exclude' => [ 'caenorhabditis_elegans',
-							   'drosophila_melanogaster',
-							   'homo_sapiens',
-							   'ciona_savignyi' ],
-				'homology_types' =>
-				  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
-
-			'EPl_2' => {
-				'compara' => 'plants',
-				'source'  => 'oryza_sativa',
-				'target'  => undef,
-				'exclude' => [ 'caenorhabditis_elegans',
-							   'drosophila_melanogaster',
-							   'homo_sapiens',
-							   'ciona_savignyi' ],
-				'homology_types' =>
-				  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
-			},
-
-			# Protists, dictyostelium_discoideum to all amoebozoa
-			'EPr_1' => { 'compara' => 'protists',
-						 'source'  => 'dictyostelium_discoideum',
-						 'target'  => ['polysphondylium_pallidum_pn500',
-									   'entamoeba_nuttalli_p19',
-									   'entamoeba_invadens_ip1',
-									   'entamoeba_histolytica_ku27',
-									   'entamoeba_histolytica_hm_3_imss',
-									   'entamoeba_histolytica_hm_1_imss_b',
-									   'entamoeba_histolytica_hm_1_imss_a',
-									   'entamoeba_histolytica',
-									   'entamoeba_dispar_saw760',
-									   'dictyostelium_purpureum',
-									   'dictyostelium_fasciculatum',
-									   'acanthamoeba_castellanii_str_neff' ],
-						 'exclude' => undef,
-						 'homology_types' =>
-						   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
-			},
-
-			# Fungi
-			'EF_1' => { 'compara' => 'fungi',
-						'source'  => 'schizosaccharomyces_pombe',
-						'target'  => undef,
-						'exclude' => ['saccharomyces_cerevisiae'],
-						'homology_types' =>
-						  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
-			},
-
-			'EF_2' => { 'compara' => 'fungi',
-						'source'  => 'saccharomyces_cerevisiae',
-						'target'  => undef,
-						'exclude' => ['schizosaccharomyces_pombe'],
-						'homology_types' =>
-						  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
-			},
-
-			# Metazoa
-			'EM_1' => { 'compara' => 'metazoa',
-						'source'  => 'caenorhabditis_elegans',
-						'target'  => ['caenorhabditis_brenneri',
-									  'caenorhabditis_briggsae',
-									  'caenorhabditis_japonica',
-									  'caenorhabditis_remanei',
-									  'pristionchus_pacificus',
-									  'brugia_malayi',
-									  'onchocerca_volvulus',
-									  'strongyloides_ratti',
-									  'loa_loa',
-									  'trichinella_spiralis' ],
-						'exclude' => undef,
-						'homology_types' =>
-						  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
-			},
-
-			'EM_2' => {
-				   'compara' => 'metazoa',
-				   'source'  => 'drosophila_melanogaster',
-				   'target'  => [
-							'drosophila_ananassae',  'drosophila_erecta',
-							'drosophila_grimshawi',  'drosophila_mojavensis',
-							'drosophila_persimilis', 'drosophila_pseudoobscura',
-							'drosophila_sechellia',  'drosophila_simulans',
-							'drosophila_virilis',    'drosophila_willistoni',
-							'drosophila_yakuba' ],
-				   'exclude' => undef,
-				   'homology_types' =>
-					 [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
-
-		},
-
-		'pipeline_db' => { -host   => $self->o('hive_host'),
-						   -port   => $self->o('hive_port'),
-						   -user   => $self->o('hive_user'),
-						   -pass   => $self->o('hive_password'),
-						   -dbname => $self->o('hive_dbname'),
-						   -driver => 'mysql', },
 
 	};
 } ## end sub default_options
@@ -206,16 +93,15 @@ sub pipeline_wide_parameters {
 sub pipeline_analyses {
 	my ($self) = @_;
 
-	return [ {
-		   -logic_name => 'backbone_fire_DumpOrthologs',
-		   -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-		   -input_ids  => [ {} ],
-		   -flow_into  => { '1' => ['SourceFactory'], } },
+	return [
 
 		{  -logic_name => 'SourceFactory',
+		   -input_ids  => [ {} ],
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
-		   -parameters => { 'species_config' => $self->o('species_config'), },
+		   -parameters => { 'species_config' => $self->o('species_config'),
+		   	 'compara' => $self->o('compara'),
+		   	 },
 		   -flow_into  => { '2'              => ['MLSSJobFactory'], },
 		   -rc_name    => 'default', },
 
@@ -256,7 +142,13 @@ sub pipeline_analyses {
 		   -batch_size    => 1,
 		   -rc_name       => '32Gb_mem',
 		   -hive_capacity => $self->o('getOrthologs_capacity'), },
-
+		   
+		   		{  -logic_name => 'RunCreateReleaseFile',
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
+		   -parameters => { 'output_dir'       => $self->o('output_dir')
+		   },
+		   -batch_size    => 1,
+		   -rc_name       => 'default'},
 	];
 } ## end sub pipeline_analyses
 

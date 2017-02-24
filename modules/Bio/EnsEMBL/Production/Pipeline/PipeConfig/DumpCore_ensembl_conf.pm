@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf;
+ Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_ensembl_conf;
 
 =head1 DESCRIPTION
 
