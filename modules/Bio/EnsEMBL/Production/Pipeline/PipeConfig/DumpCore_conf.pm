@@ -46,7 +46,7 @@ sub default_options {
        'registry'      => $self->o('registry'),   
        'release'       => $self->o('release'),
        'eg_version'    => $self->o('release'),
-       'pipeline_name' => $self->o('hive_dbname'),       
+       'pipeline_name' => $self->o('pipeline_name') || $self->o('hive_dbname'),       
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
        'dumps'     	   => [],
@@ -77,7 +77,7 @@ sub default_options {
        'genepredcheck_exe' => 'genePredCheck',
 
        ## dump_gff3 parameters
-       'gt_exe'          => '/nfs/panda/ensemblgenomes/external/genometools/bin/gt',
+       'gt_exe'          => 'gt',
        'gff3_tidy'       => $self->o('gt_exe').' gff3 -tidy -sort -retainids -force',
        'gff3_validate'   => $self->o('gt_exe').' gff3validator',
 
@@ -107,24 +107,7 @@ sub default_options {
 	   'ucsc' 		 => 1,
        ## dump_rdf parameters
        'xref' => 1,
-       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json',
-
-       'pipeline_db' => {  
- 	      -host   => $self->o('hive_host'),
-       	  -port   => $self->o('hive_port'),
-          -user   => $self->o('hive_user'),
-          -pass   => $self->o('hive_password'),
-	      -dbname => $self->o('hive_dbname'),
-          -driver => 'mysql',
-       },
-
-       'prod_db'  =>  {
-          -host     => 'mysql-eg-pan-prod.ebi.ac.uk',
-          -port     => '4276',
-          -user     => 'ensro',
-          -group    => 'production',
-          -dbname   => 'ensembl_production',
-       }
+       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json'
 
 	};
 }
@@ -165,8 +148,7 @@ sub pipeline_wide_parameters {
 		    'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
             'base_path'     => $self->o('ftp_dir'),
             'release'       => $self->o('release'),
-   			'prod_db' 		=> $self->o('prod_db'),
-			'eg'			=> $self->o('eg'),
+	    'eg'			=> $self->o('eg'),
 
             # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm 
             # needs to be change , maybe removing the need to eg flag
