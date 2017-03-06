@@ -241,6 +241,7 @@ sub run {
           $$regulation_dbas{$species} = $core_dba;
         }
       }
+      $core_dba->dbc()->disconnect_if_idle();
     }
   }
   $self->param( 'chromosome_dbas', $chromosome_dbas );
@@ -250,22 +251,22 @@ sub run {
 
 sub has_chromosome {
   my ( $self, $dba ) = @_;
-  my $helper = $dba->dbc->sql_helper();
-  my $sql    = q{
-     SELECT COUNT(*) FROM
+  my $cnt = $self->{chr_count}{$dba->dbc()->dbname()};
+  if(!defined $cnt) {
+    $cnt =
+      $dba->dbc()->sql_helper()->execute_into_hash(
+    -SQL => q{
+     SELECT cs.species_id, COUNT(*) FROM
      coord_system cs INNER JOIN
      seq_region sr USING (coord_system_id) INNER JOIN
      seq_region_attrib sa USING (seq_region_id) INNER JOIN
      attrib_type at USING (attrib_type_id)
-     WHERE cs.species_id = ?
-     AND at.code = 'karyotype_rank'
-   };
-  my $count =
-    $helper->execute_single_result( -SQL    => $sql,
-                                    -PARAMS => [ $dba->species_id() ] );
-  $dba->dbc->disconnect_if_idle();
-
-  return $count;
+     WHERE at.code = 'karyotype_rank'
+     GROUP BY cs.species_id
+   });
+    $self->{chr_count}{$dba->dbc()->dbname()} = $cnt;
+  }
+  return $cnt->{$dba->species_id()};
 }
 
 sub has_variation {
