@@ -43,16 +43,14 @@ sub default_options {
        
 #       'run_vep'			 => 1, # 0/1, Default => 1
        'vep_command'   		 => '--build all',
-	   'perl_command'  		 => 'perl -I ~/Variation/modules',
-       'perl_cmd'      		 => 'perl', # added
+	   'perl_command'  		 => 'perl',
 	   'blast_header_prefix' => 'EG:',
-       'exe_dir'             => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
 
        'ftpdir_vep'          => $self->o('ftp_dir').'/'.$self->o('vep_division').'/vep',
        'tempdir_vep'         => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/temp_dir/release-'.$self->o('release').'/'.$self->o('vep_division'),     
        'vep_div'             => $self->o('vep_division'),
-
-   	   'f_dump_vep' 	     => 0,
+	    
+	    'f_dump_vep' 	     => 0,
 	};
 }
 

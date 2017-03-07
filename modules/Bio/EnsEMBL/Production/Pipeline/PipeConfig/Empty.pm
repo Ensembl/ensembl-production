@@ -31,21 +31,14 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::Empty;
 use strict;
 use warnings;
 use Bio::EnsEMBL::Hive::Version 2.3;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+#use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
 
 sub default_options {
     my ($self) = @_;
 
     return {
-        %{ $self->SUPER::default_options() },               # inherit other stuff from the base class
-
-        'pipeline_db' => {  
-            -host   => $self->o('hive_host'),
-            -port   => $self->o('hive_port'),
-            -user   => $self->o('hive_user'),
-            -pass   => $self->o('hive_password'),
-            -dbname => $self->o('hive_dbname'),
-        },
+        %{ $self->SUPER::default_options() }
     };
 }
 

@@ -88,7 +88,6 @@ sub run {
     my $line_width        = $self->param('line_width');
     my $allow_stop_codons = $self->param('allow_stop_codons');
     my $production_lookup = $self->param('production_lookup');
-    my $production_db     = $self->param('production_db');
   
     # Use the ensembl_production database to retrieve the biotypes
     # associated with the coding group, if possible.
@@ -98,7 +97,7 @@ sub run {
     # Check if the production lookup flag is turned on
     # If it is then connect to the production database
     if ($production_lookup){
-      $pdba = $self->get_DBAdaptor('production');
+      $pdba = $self->production_dba();
     }
     if (defined $pdba) {
       my $biotype_manager = $pdba->get_biotype_manager();
@@ -121,11 +120,13 @@ sub run {
   
     foreach my $transcript (sort { $a->stable_id cmp $b->stable_id } @{$transcripts}) {
       my $seq_obj = $transcript->translate();
+
+      next unless defined $seq_obj; # deal with situation e.g. nontranslating_CDS where a translation is missing
     
       if ($header_style ne 'default') {
        $seq_obj->display_id($self->header($header_style, $transcript));
       }
-    
+
       if ($seq_obj->seq() =~ /\*/ && !$allow_stop_codons) {
        $self->warning("Translation for transcript ".$transcript->stable_id." contains stop codons. Skipping.");
       } else {
@@ -150,6 +151,9 @@ sub header {
     my ($self, $header_style, $transcript) = @_;
   
     my $translation = $transcript->translation;
+    if(!defined $translation) {
+      print $transcript->stable_id().":".$transcript->biotype()."\n";
+    }
     my $header = $translation->stable_id;
   
     if ($header_style eq 'dbID') {

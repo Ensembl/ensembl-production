@@ -1,3 +1,4 @@
+
 =head1 LICENSE
 
 Copyright [2009-2016] EMBL-European Bioinformatics Institute
@@ -25,75 +26,68 @@ limitations under the License.
  ckong@ebi.ac.uk
 
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::InterProScan::LoadInterProXrefs;
 
 use strict;
 use DBI;
-use DBD::Oracle qw(:ora_types);
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::StoreFeaturesBase');
+use base (
+		 'Bio::EnsEMBL::Production::Pipeline::InterProScan::StoreFeaturesBase');
 
 sub fetch_input {
-    my ($self) 	 = @_;
-    my $core_dbh = $self->core_dbh;
+	my ($self) = @_;
 
-    if (!exists $ENV{'ORACLE_HOME'}) {
-   	$ENV{'ORACLE_HOME'} = $self->param_required('oracle_home');
-    }
-
-    # Connection to VIPREAD, to collect InterPro entries
-    my $dsn   = 'DBI:Oracle:host=ora-dlvm5-018.ebi.ac.uk;sid=VIPREAD;port=1531';
-    my $user  = 'proteomes_prod';
-    my $pass  = 'pprod';
-    my $dbh   = DBI->connect($dsn, $user, $pass, {PrintError => 1, RaiseError => 1}) or die "Cannot connect to server: " . DBI->errstr;
-    my $sql   = "SELECT entry_ac, name, short_name FROM interpro.entry WHERE checked = 'Y'";
-    my $stmt  = $dbh->prepare("$sql") or die "Couldn't prepare statement:" . $dbh->errstr;
-
-    $self->param('core_dbh', $core_dbh);
-    $self->param('stmt', $stmt);
-
-return 0;
-}
+	return 0;
+      }
 
 sub write_output {
-    my ($self)  = @_;
+	my ($self) = @_;
 
-return 0;
+	return 0;
 }
 
 sub run {
-    my ($self)   = @_;
-    my ($interpro_accession, $interpro_description, $interpro_name);
+	my ($self) = @_;
+	my ( $interpro_accession, $interpro_description, $interpro_name );
 
-    my $core_dbh       = $self->param('core_dbh');
-    my $core_dba       = $self->core_dba;
-    my $stmt           = $self->param('stmt'); 
-    my $external_dbId  = $self->fetch_external_db_id($core_dbh, 'Interpro');
+	my $interpro = $self->param_required('interpro_db');
 
-    $stmt->execute();
+	my $interpro_dbc = Bio::EnsEMBL::DBSQL::DBConnection->new(%$interpro);
 
-    while (my $result = $stmt->fetchrow_arrayref) {
-      $interpro_accession   = $result->[0];
-      $interpro_description = $result->[1];
-      $interpro_name        = $result->[2]; 
+	my $core_dba = $self->core_dba;
+	my $core_dbh = $core_dba->dbc()->db_handle();
+	my $external_dbId =
+	  $self->fetch_external_db_id( $core_dba->dbc()->db_handle(), 'Interpro' );
 
-      if (!$self->xref_exists($core_dbh,$interpro_accession,$external_dbId)){
-         $self->insert_xref($core_dbh, {
-            external_db_id => $external_dbId,
-            dbprimary_acc  => $interpro_accession,
-            display_label  => $interpro_name,
-            description    => $interpro_description,
-         });
-     }
-   }
+	$interpro_dbc->sql_helper()->execute_no_return(
+							  -SQL =>
+							  "SELECT entry_ac, name, short_name FROM interpro.entry WHERE checked = 'Y'",
+							  -CALLBACK => sub {
+							    my $result = shift;
+							    my $interpro_accession = $result->[0];
+							    my $interpro_description = $result->[1];
+							    my $interpro_name = $result->[2];
 
-   $core_dba->dbc->disconnect_if_idle();
-
-return 0;
-}
+							    if ( !$self->xref_exists( $core_dbh, $interpro_accession,
+										      $external_dbId ) )
+							      {
+								$self->insert_xref( $core_dbh, {
+												external_db_id => $external_dbId,
+												dbprimary_acc  => $interpro_accession,
+												display_label  => $interpro_name,
+												description    => $interpro_description, } );
+							      }
+							    return;
+							  }
+							 );
+	
+	$core_dba->dbc->disconnect_if_idle();
+	
+	return 0;
+      } ## end sub run
 
 1;
-
 

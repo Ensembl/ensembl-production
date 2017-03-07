@@ -1,3 +1,4 @@
+
 =head1 LICENSE
 
 Copyright [2009-2016] EMBL-European Bioinformatics Institute
@@ -25,58 +26,59 @@ Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory
 ckong@ebi.ac.uk
 
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory;
 
 use strict;
 use Data::Dumper;
-use Bio::EnsEMBL::Registry;
 use base ('Bio::EnsEMBL::Hive::Process');
 
 sub param_defaults {
-    return {
+	return {
 
-           };
+	};
 }
 
 sub fetch_input {
-    my ($self) 	= @_;
+	my ($self) = @_;
 
-return 0;
+	return 0;
 }
 
 sub run {
-    my ($self) = @_;
+	my ($self) = @_;
 
-return 0;
+	return 0;
 }
 
 sub write_output {
-    my ($self)  = @_;
+	my ($self) = @_;
 
-    my $sp_config = $self->param_required('species_config');
+	my $sp_config     = $self->param_required('species_config');
+	my $compara_param = $self->param('compara');
 
-    foreach my $pair (keys $sp_config){
-       my $compara	  = $sp_config->{$pair}->{'compara'};
-       my $source         = $sp_config->{$pair}->{'source'};
-       my $target         = $sp_config->{$pair}->{'target'};
-       my $exclude        = $sp_config->{$pair}->{'exclude'};
-       my $homology_types = $sp_config->{$pair}->{'homology_types'}; 
+	foreach my $pair ( keys $sp_config ) {
+		my $compara = $sp_config->{$pair}->{'compara'};
+		if(defined $compara_param && $compara ne $compara_param) {
+			print STDERR "Skipping $compara\n";
+			next;		
+		}
+		print STDERR "Processing $compara\n";
+		my $source         = $sp_config->{$pair}->{'source'};
+		my $target         = $sp_config->{$pair}->{'target'};
+		my $exclude        = $sp_config->{$pair}->{'exclude'};
+		my $homology_types = $sp_config->{$pair}->{'homology_types'};
 
-      $self->dataflow_output_id(
-		{
-		 'compara' => $compara,
-		 'source'  => $source, 
-  		 'target'  => $target,
-  		 'exclude' => $exclude,
-		 'homology_types' => $homology_types,
-		},2); 
-      }
+		$self->dataflow_output_id( {  'compara'        => $compara,
+									  'source'         => $source,
+									  'target'         => $target,
+									  'exclude'        => $exclude,
+									  'homology_types' => $homology_types, },
+								   2 );
+	}
 
-return 0;
-}
-
-
+	return 0;
+} ## end sub write_output
 
 1;
-
 
