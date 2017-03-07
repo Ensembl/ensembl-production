@@ -82,7 +82,7 @@ sub run {
     # Get 'to_species' from mlss_id 
     my $mlss_id    = $self->param('mlss_id');
     my $mlss       = $mlssa->fetch_by_dbID($mlss_id);
-    my $gdbs       = $mlss->species_set_obj->genome_dbs();
+    my $gdbs       = $mlss->species_set()->genome_dbs();
     my $from_sp    = $self->param('from_sp');
     my $homo_types = $self->param('homo_types');
     my $to_sp ; 
@@ -134,7 +134,9 @@ sub run {
     my $perc_cov = $self->param_required('perc_cov');
 
     foreach my $homology (@{$homologies}) {
+
        if($self->param('eg')){ next unless $homology->is_tree_compliant()==1; }
+
 
        # Filter for homology types
        next if (!homology_type_allowed($homology->description, $homo_types));
