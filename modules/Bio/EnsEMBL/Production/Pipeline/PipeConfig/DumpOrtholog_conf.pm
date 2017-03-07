@@ -46,6 +46,7 @@ sub default_options {
 		'registry'         => '',
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
 		'compara' => undef,
+		'release' => software_version(),
 
 		## Set to '1' for eg! run
 		#   default => OFF (0)
@@ -102,7 +103,8 @@ sub pipeline_analyses {
 		   -parameters => { 'species_config' => $self->o('species_config'),
 		   	 'compara' => $self->o('compara'),
 		   	 },
-		   -flow_into  => { '2'              => ['MLSSJobFactory'], },
+		   -flow_into  => { '2->A'              => ['MLSSJobFactory'],
+				    'A->1' => [ 'RunCreateReleaseFile'  ] },
 		   -rc_name    => 'default', },
 
 		{  -logic_name => 'MLSSJobFactory',
@@ -110,7 +112,8 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory',
 		   -parameters =>
 			 { 'method_link_type' => $self->o('method_link_type'), },
-		   -flow_into => { '2' => ['GetOrthologs'], },
+		   -flow_into => { '2' => ['GetOrthologs'],
+				 },
 		   -rc_name   => 'default', },
 
 		{  -logic_name => 'GetOrthologs',
@@ -143,12 +146,15 @@ sub pipeline_analyses {
 		   -rc_name       => '32Gb_mem',
 		   -hive_capacity => $self->o('getOrthologs_capacity'), },
 		   
-		   		{  -logic_name => 'RunCreateReleaseFile',
+		{  -logic_name => 'RunCreateReleaseFile',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
-		   -parameters => { 'output_dir'       => $self->o('output_dir')
+		   -parameters => { 							
+                        'output_dir'       => $self->o('output_dir'),
+			'release' => $self->o('release'),
 		   },
 		   -batch_size    => 1,
-		   -rc_name       => 'default'},
+		   -rc_name       => 'default'
+		}
 	];
 } ## end sub pipeline_analyses
 
