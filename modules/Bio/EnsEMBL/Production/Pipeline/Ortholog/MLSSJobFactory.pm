@@ -67,7 +67,7 @@ sub write_output {
 
     foreach my $mlss (@$mlss_list){ 
        my $mlss_id = $mlss->dbID();
-       my $gdbs    = $mlss->species_set_obj->genome_dbs();
+       my $gdbs    = $mlss->species_set()->genome_dbs();
 
        my @gdbs_nm;    
 
