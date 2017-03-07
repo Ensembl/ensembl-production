@@ -45,6 +45,7 @@ sub default_options {
 
 		'output_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 		'compara' => undef,
+		'release' => undef,
 
 		## Set to '1' for eg! run
 		#   default => OFF (0)
