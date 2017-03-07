@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 
 =head1 LICENSE
 
@@ -50,7 +51,7 @@ run();
 
 sub options {
 	my $opts  = {};
-	my @flags = qw(directory|d=s replace ignore_user help man );
+	my @flags = qw(directory|d=s version|v=s help man );
 	GetOptions( $opts, @flags ) or pod2usage(1);
 
 	_exit( undef, 0, 1 ) if $opts->{help};
@@ -67,19 +68,6 @@ sub options {
 
 	$opts->{directory} = File::Spec->rel2abs( $opts->{directory} );
 
-	if ( $opts->{ignore_user} ) {
-		$logger->warn(
-"ignore_user option is on, ignoring that user should be $DEFAULT_USER. I hope you know what you're doing"
-		);
-	}
-	else {
-		if ( $ENV{USER} ne $DEFAULT_USER ) {
-			_exit(
-'You are not ensgen; either become ensgen & rerun this command or give -ignore_user to the script.',
-				1, 1 );
-		}
-	}
-
 	return $opts;
 } ## end sub options
 
@@ -90,7 +78,7 @@ sub _exit {
 }
 
 sub run {
-	create_release_file( $OPTIONS->{directory}, $OPTIONS->{replace} );
+	create_release_file( $OPTIONS->{directory}, $OPTIONS->{version} );
 	return;
 }
 
@@ -104,10 +92,8 @@ release.pl
 =head1 SYNOPSIS
 
   ./create_release_file.pl -directory /nfs/ftp/pub/databases/ensembl/projections
+  ./create_release_file.pl -directory /nfs/ftp/pub/databases/ensembl/projections -version 35
 
-  ./create_release_file.pl -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
-  
-  ./create_release_file.pl -replace -ignore_user -directory /nfs/ftp/pub/databases/ensembl/projections
     
 =head1 DESCRIPTION
 

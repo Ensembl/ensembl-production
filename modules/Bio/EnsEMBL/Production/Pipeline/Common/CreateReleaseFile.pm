@@ -41,6 +41,7 @@ use Pod::Usage;
 use Data::Dumper;
 use Log::Log4perl qw/get_logger/;
 use Carp qw/croak/;
+use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -48,8 +49,10 @@ our @EXPORT_OK = qw(create_release_file);
 
 sub create_release_file {
 
-	my ( $directory, $replace ) = @_;
+	my ( $directory, $version ) = @_;
 	
+	$version ||= software_version();
+
 	my $logger = get_logger();
 
 	my $release_file = File::Spec->catfile( $directory, 'release.txt' );
@@ -57,13 +60,9 @@ sub create_release_file {
 	my $dirs = get_dirs($directory);
 
 	# Remove existing release.txt timestamp file
-	# if -replace option provided
 	if ( -f $release_file ) {
-		if (!$replace) {
-			croak "$release_file already exists - not replacing";
-		}
-		$logger->info("Removing existing $release_file timestamp file");
-		unlink $release_file;
+	  $logger->info("Removing existing $release_file timestamp file");
+	  unlink $release_file;
 	}
 
 	open my $fh, '>', $release_file or
@@ -77,7 +76,7 @@ sub create_release_file {
 			$logger->info("Directory is a leaf; generating timestamp");
 			my $timestamp = getLoggingTime();
 			$dir = $1 if ( $dir =~ /(ensembl\w*)$/ );
-			print $fh "$dir\t$timestamp\n";
+			print $fh join("\t",$dir,$version,$timestamp)."\n";
 		}
 	}
 	close $fh or croak "Cannot close $release_file: $!";
