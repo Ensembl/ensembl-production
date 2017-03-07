@@ -40,7 +40,7 @@ sub param_defaults {
 	return {
 
 	};
-}
+      }
 
 sub fetch_input {
 	my ($self) = @_;
@@ -50,7 +50,7 @@ sub fetch_input {
 
 sub run {
 	my ($self) = @_;
-	create_release_file( $self->param('output_dir'), 1 );
+	create_release_file( $self->param('output_dir'), $self->param('release') );
 	return 0;
 }
 
