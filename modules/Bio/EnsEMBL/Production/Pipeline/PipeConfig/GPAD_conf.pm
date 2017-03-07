@@ -45,12 +45,12 @@ sub default_options {
 	## General parameters
     'registry'      => $self->o('registry'),   
     'release'       => $self->o('release'),
-    'pipeline_name' => $self->o('hive_dbname'),       
+    'pipeline_name' => 'gpad_loader',       
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
     'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
     ## Location of GPAD files
-    'gpad_directory' => '',
+    'gpad_directory' => undef,
 
 	## Email Report subject
     'email_subject'       	   => $self->o('pipeline_name').' GPAD loading pipeline has finished',
@@ -67,15 +67,6 @@ sub default_options {
 
     ## hive_capacity values for analysis
     'gpad_capacity'  => '50',
-
-    'pipeline_db' => {  
-	   	 -host   => $self->o('hive_host'),
-      	 -port   => $self->o('hive_port'),
-      	 -user   => $self->o('hive_user'),
-       	 -pass   => $self->o('hive_password'),
-	     -dbname => $self->o('hive_dbname'),
-      	 -driver => 'mysql',
-     },
 		
     };
 }
