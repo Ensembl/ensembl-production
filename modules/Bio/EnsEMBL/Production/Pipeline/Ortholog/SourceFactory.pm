@@ -69,12 +69,23 @@ sub write_output {
 		my $exclude        = $sp_config->{$pair}->{'exclude'};
 		my $homology_types = $sp_config->{$pair}->{'homology_types'};
 
-		$self->dataflow_output_id( {  'compara'        => $compara,
-									  'source'         => $source,
-									  'target'         => $target,
-									  'exclude'        => $exclude,
-									  'homology_types' => $homology_types, },
-								   2 );
+		my $division;
+		if($compara eq 'multi') {
+		  $division = 'Ensembl';
+		} else {
+		  $division = 'Ensembl'.ucfirst($compara);
+		}
+
+		my $dir_name = $self->param('output_dir').'/'.lc($division);
+
+		$self->dataflow_output_id( {  'output_dir'     => $dir_name,
+					      'division'       => $division,
+					      'compara'        => $compara,
+					      'source'         => $source,
+					      'target'         => $target,
+					      'exclude'        => $exclude,
+					      'homology_types' => $homology_types, },
+					   2 );
 	}
 
 	return 0;

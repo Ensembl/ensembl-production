@@ -105,10 +105,8 @@ sub run {
     # Build the output directory & filename
     my $datestring  = localtime();
     my $output_dir  = $self->param('output_dir');
+    my $division  = $self->param('output_dir');
     #my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
-    my $division = 'Ensembl';
-    $division    = $from_meta->get_division() if ($from_meta->get_division());
-    $output_dir  = File::Spec->catdir($output_dir, lc($division));
 
     if (!-e $output_dir) {
        $self->warning("Output directory '$output_dir' does not exist. I shall create it.");

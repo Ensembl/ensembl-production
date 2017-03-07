@@ -102,9 +102,10 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
 		   -parameters => { 'species_config' => $self->o('species_config'),
 		   	 'compara' => $self->o('compara'),
+				    'output_dir'       => $self->o('output_dir'),
 		   	 },
 		   -flow_into  => { '2->A'              => ['MLSSJobFactory'],
-				    'A->1' => [ 'RunCreateReleaseFile'  ] },
+				    'A->2' => [ 'RunCreateReleaseFile'  ] },
 		   -rc_name    => 'default', },
 
 		{  -logic_name => 'MLSSJobFactory',
@@ -119,7 +120,6 @@ sub pipeline_analyses {
 		{  -logic_name => 'GetOrthologs',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
 		   -parameters => { 'eg'               => $self->o('eg'),
-							'output_dir'       => $self->o('output_dir'),
 							'method_link_type' => $self->o('method_link_type'),
 		   },
 		   -batch_size    => 1,
@@ -129,8 +129,8 @@ sub pipeline_analyses {
 
 		{  -logic_name => 'GetOrthologs_16GB',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => { 'output_dir'       => $self->o('output_dir'),
-							'method_link_type' => $self->o('method_link_type'),
+		   -parameters => {
+				   'method_link_type' => $self->o('method_link_type'),
 		   },
 		   -batch_size    => 1,
 		   -rc_name       => '16Gb_mem',
@@ -139,8 +139,8 @@ sub pipeline_analyses {
 
 		{  -logic_name => 'GetOrthologs_32GB',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => { 'output_dir'       => $self->o('output_dir'),
-							'method_link_type' => $self->o('method_link_type'),
+		   -parameters => {
+				   'method_link_type' => $self->o('method_link_type'),
 		   },
 		   -batch_size    => 1,
 		   -rc_name       => '32Gb_mem',
@@ -149,7 +149,6 @@ sub pipeline_analyses {
 		{  -logic_name => 'RunCreateReleaseFile',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
 		   -parameters => { 							
-                        'output_dir'       => $self->o('output_dir'),
 			'release' => $self->o('release'),
 		   },
 		   -batch_size    => 1,

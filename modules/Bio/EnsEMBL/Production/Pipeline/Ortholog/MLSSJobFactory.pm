@@ -80,15 +80,24 @@ sub write_output {
         # Get non-source species
          my $ns_sp;
          foreach my $gdb_nm (@gdbs_nm){ $ns_sp = $gdb_nm unless($from_sp =~/^$gdb_nm/); }
+
+	 my $job = {
+		    mlss_id => $mlss_id, 
+		    compara => $compara,
+		    from_sp => $from_sp, 
+		    homology_types => $homo_types, 
+		    division => $self->param('division'),
+		    output_dir => $self->param('output_dir') 
+		   };
   
          # target species provided
          if(defined $to_sp){
            foreach my $sp (@$to_sp){
-             $self->dataflow_output_id({'mlss_id' => $mlss_id, 'compara' => $compara ,'from_sp' => $from_sp , 'homology_types' => $homo_types }, 2) if(grep (/^$sp$/, @gdbs_nm));      
+             $self->dataflow_output_id($job, 2) if(grep (/^$sp$/, @gdbs_nm));      
            }
 	 } 
  	 else {
-           $self->dataflow_output_id({'mlss_id' => $mlss_id, 'compara' => $compara ,'from_sp' => $from_sp, 'homology_types' => $homo_types }, 2) unless (grep (/^$ns_sp$/, @$ex_sp));         
+           $self->dataflow_output_id($job, 2) unless (grep (/^$ns_sp$/, @$ex_sp));         
 	 }
       }
    }
