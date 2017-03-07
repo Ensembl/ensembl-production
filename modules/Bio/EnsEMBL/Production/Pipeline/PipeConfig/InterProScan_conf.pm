@@ -309,19 +309,7 @@ sub default_options {
     ],
    
 
-    # Don't fall over if someone uses 'hive_pass' instead of 'hive_password'
-    hive_password => $self->o('hive_pass'),
-
-    'pipeline_db' => {
-        -host   => $self->o('hive_host'),
-        -port   => $self->o('hive_port'),
-        -user   => $self->o('hive_user'),
-        -pass   => $self->o('hive_password'),
-        -dbname => $self->o('hive_dbname'),
-        -driver => 'mysql',
-      },     
-      
-          'interpro_db' => {
+     'interpro_db' => {
         -host   => $self->o('interpro_host'),
         -port   => $self->o('interpro_port'),
         -user   => $self->o('interpro_user'),
