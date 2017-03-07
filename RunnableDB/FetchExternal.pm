@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchExternal
+Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FetchExternal
 
 =head1 DESCRIPTION
 
@@ -34,7 +34,7 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::BlastAlignment::FetchExternal;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FetchExternal;
 
 use strict;
 use warnings;
