@@ -22,6 +22,10 @@ use strict;
 use warnings;
 
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.4;
+
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -44,20 +48,32 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.20-59.0',
-    interproscan_dir     => '/nfs/panda/ensemblgenomes/development/InterProScan',
-    interproscan_exe     => catdir(
-                               $self->o('interproscan_dir'),
-                               'interproscan-'.$self->o('interproscan_version'),
-                               'interproscan.sh'
-                            ),
+    interproscan_version => '5.22-61.0',
+    interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
     # A file with md5 sums of translations that are in the lookup service
     md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
     
     # Transitive GO annotation
-    interpro2go_file => catdir($self->o('interproscan_dir'), 'interpro2go/2016_Sept_17/interpro2go'),
+    interpro2go_file => '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
+    
+    # On gene tree pages you can highlight based on InterPro domain. If a
+    # domain is only annotated on orthologs, and not on the current gene,
+    # then the description will be missing, because it is retrieved from
+    # the xref table. So, we can either load all InterPro records as xrefs
+    # in every core database, or we can load all InterPro records that are
+    # seen in that division.
+    interpro_desc_source => 'file',  # or 'core_dbs', or undef
+    
+    # A file with a complete list of descriptions.
+    interpro_desc_ebi_path => '/ebi/ftp/pub/databases/interpro/current',
+    interpro_desc_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current',
+    interpro_desc_file     => 'names.dat',
+    
+    # Files for storing intermediate lists of InterPro descriptions.
+    merged_file => catdir($self->o('pipeline_dir'), 'all.xrefs.txt'),
+    unique_file => catdir($self->o('pipeline_dir'), 'unique.xrefs.txt'),
     
     analyses =>
     [
@@ -96,7 +112,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '10.0',
+        'db_version'    => '11.1',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -104,7 +120,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '29.0',
+        'db_version'    => '30.0',
         'ipscan_name'   => 'Pfam',
         'ipscan_xml'    => 'PFAM',
         'ipscan_lookup' => 1,
@@ -112,7 +128,7 @@ sub default_options {
       {
         'logic_name'    => 'pfscan',
         'db'            => 'Prosite_profiles',
-        'db_version'    => '20.113',
+        'db_version'    => '20.119',
         'ipscan_name'   => 'ProSiteProfiles',
         'ipscan_xml'    => 'PROSITE_PROFILES',
         'ipscan_lookup' => 1,
@@ -144,7 +160,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '1',
+        'db_version'    => '2',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
@@ -172,6 +188,14 @@ sub default_options {
         'ipscan_name'   => 'TIGRFAM',
         'ipscan_xml'    => 'TIGRFAM',
         'ipscan_lookup' => 1,
+      },
+      {
+        'logic_name'    => 'mobidblite',
+        'db'            => 'MobiDBLite',
+        'db_version'    => '1.0',
+        'ipscan_name'   => 'MobiDBLite',
+        'ipscan_xml'    => 'MOBIDB_LITE',
+        'ipscan_lookup' => 0,
       },
       {
         'logic_name'    => 'ncoils',
@@ -231,7 +255,7 @@ sub default_options {
     
     # seg analysis is not run as part of InterProScan, so is always run locally
     run_seg        => 1,
-    seg_exe        => '/nfs/panda/ensemblgenomes/external/bin/seg',
+    seg_exe        => 'seg',
     seg_params     => '-l -n',
     
   };
@@ -268,15 +292,18 @@ sub pipeline_create_commands {
   ];
 }
 
+sub pipeline_wide_parameters {
+ my ($self) = @_;
+ 
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'interpro_desc_source' => $self->o('interpro_desc_source'),
+   'run_seg'              => $self->o('run_seg'),
+ };
+}
+
 sub pipeline_analyses {
   my $self = shift @_;
-  
-  my $dump_proteome_flow;
-  if ($self->o('run_seg')) {
-    $dump_proteome_flow  = ['SplitDumpFile', 'PartitionByChecksum'];
-  } else {
-    $dump_proteome_flow  = ['PartitionByChecksum'];
-  }
   
   return [
     {
@@ -298,7 +325,15 @@ sub pipeline_analyses {
       -parameters        => {
                               analyses => $self->o('analyses'),
                             },
-      -flow_into 	       => ['SpeciesFactory'],
+      -flow_into 	       => {
+                              '1->A' => ['SpeciesFactory'],
+                              'A->1' => WHEN(
+                                          '#interpro_desc_source# eq "file"' =>
+                                            ['FetchInterPro'],
+                                          '#interpro_desc_source# eq "core_dbs"' =>
+                                            ['SpeciesFactoryForDumpingInterPro']
+                                        ),
+                            },
       -meadow_type       => 'LOCAL',
     },
     
@@ -352,7 +387,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               analyses => $self->o('analyses'),
-                              run_seg           => $self->o('run_seg'),
+                              run_seg  => $self->o('run_seg'),
                             },
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
@@ -403,15 +438,20 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        => {
                               sql => [
-                                'DELETE i.*, x.* FROM '.
-                                  'interpro i LEFT OUTER JOIN '.
-                                  'xref x ON interpro_ac = dbprimary_acc',
+                                'DELETE i.* FROM interpro i '.
+                                  'LEFT OUTER JOIN protein_feature pf ON i.id = pf.hit_name '.
+                                  'WHERE pf.hit_name IS NULL ',
+                                'DELETE x.* FROM xref x '.
+                                  'INNER JOIN external_db edb USING (external_db_id) '.
+                                  'LEFT OUTER JOIN interpro i ON x.dbprimary_acc = i.interpro_ac '.
+                                  'WHERE edb.db_name = "Interpro" '.
+                                  'AND i.interpro_ac IS NULL ',
                               ]
                             },
       -rc_name           => 'normal-rh7',
       -flow_into         => ['DeletePathwayXrefs'],
     },
-    
+  
     {
       -logic_name        => 'DeletePathwayXrefs',
       -module            => 'Bio::EnsEMBL::EGPipeline::ProteinFeatures::DeletePathwayXrefs',
@@ -432,7 +472,13 @@ sub pipeline_analyses {
                               overwrite    => 1,
                             },
       -rc_name           => 'normal-rh7',
-      -flow_into         => $dump_proteome_flow,
+      -flow_into         => {
+                              '1' => WHEN('#run_seg#' =>
+                                      ['SplitDumpFile', 'PartitionByChecksum'],
+                                    ELSE
+                                      ['PartitionByChecksum']
+                                    ),
+                            },
     },
     
     {
@@ -623,6 +669,107 @@ sub pipeline_analyses {
       -rc_name           => 'normal-rh7',
     },
     
+    {
+      -logic_name      => 'FetchInterPro',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeatures::FetchInterPro',
+      -hive_capacity   => 10,
+      -max_retry_count => 1,
+      -parameters      => {
+                            interpro_desc_ebi_path => $self->o('interpro_desc_ebi_path'),
+                            interpro_desc_ftp_uri  => $self->o('interpro_desc_ftp_uri'),
+                            interpro_desc_file     => $self->o('interpro_desc_file'),
+                            output_file            => $self->o('unique_file'),
+                          },
+      -rc_name         => 'normal-rh7',
+      -flow_into       => ['SpeciesFactoryForStoringInterPro'],
+    },
+    
+    {
+      -logic_name      => 'SpeciesFactoryForDumpingInterPro',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -parameters      => {
+                            species         => $self->o('species'),
+                            antispecies     => $self->o('antispecies'),
+                            division        => $self->o('division'),
+                            run_all         => $self->o('run_all'),
+                            chromosome_flow => 0,
+                            regulation_flow => 0,
+                            variation_flow  => 0,
+                            meta_filters    => $self->o('meta_filters'),
+                          },
+      -max_retry_count => 1,
+      -flow_into       => {
+                            '2->A' => ['DumpInterProXrefs'],
+                            'A->1' => ['AggregateInterProXrefs'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'DumpInterProXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeatures::DumpInterProXrefs',
+      -parameters      => {
+                            filename => catdir($self->o('pipeline_dir'), '#species#.xrefs.txt'),
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -flow_into       => {
+                            1 => [ '?accu_name=filename&accu_address=[]' ],
+                          },
+      -rc_name         => 'normal-rh7',
+    },
+    
+    {
+      -logic_name      => 'AggregateInterProXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::ProteinFeatures::AggregateInterProXrefs',
+      -parameters      => {
+                            filenames   => '#filename#',
+                            merged_file => $self->o('merged_file'),
+                            unique_file => $self->o('unique_file'),
+                          },
+      -max_retry_count => 1,
+      -rc_name         => 'normal-rh7',
+      -flow_into       => ['SpeciesFactoryForStoringInterPro'],
+    },
+    
+    {
+      -logic_name      => 'SpeciesFactoryForStoringInterPro',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -parameters      => {
+                            species         => $self->o('species'),
+                            antispecies     => $self->o('antispecies'),
+                            division        => $self->o('division'),
+                            run_all         => $self->o('run_all'),
+                            chromosome_flow => 0,
+                            regulation_flow => 0,
+                            variation_flow  => 0,
+                            meta_filters    => $self->o('meta_filters'),
+                          },
+      -max_retry_count => 1,
+      -flow_into       => {
+                            '2' => ['StoreInterProXrefs'],
+                          },
+      -meadow_type     => 'LOCAL',
+    },
+    
+    {
+      -logic_name      => 'StoreInterProXrefs',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd',
+      -parameters      => {
+                            sql =>
+                            [
+                              'CREATE TEMPORARY TABLE tmp_xref LIKE xref',
+                              'ALTER TABLE tmp_xref DROP COLUMN xref_id',
+                              "LOAD DATA LOCAL INFILE '".$self->o('unique_file')."' INTO TABLE tmp_xref;",
+                              'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type, info_text) SELECT * FROM tmp_xref',
+                              'DROP TEMPORARY TABLE tmp_xref',
+                            ],
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -rc_name         => 'normal-rh7',
+    },
+    
   ];
 }
 
@@ -631,7 +778,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4GB_4CPU-rh7' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000] span[hosts=1]"'},
+    '4GB_4CPU-rh7' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
   }
 }
 
