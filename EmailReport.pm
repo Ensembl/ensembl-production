@@ -50,10 +50,13 @@ sub pf_summary {
   my $sql = "
     SELECT
       logic_name,
-      COUNT(protein_feature_id) AS pf_count
+      COUNT(protein_feature_id) AS pf_count,
+      COUNT(DISTINCT hit_name) AS pf_distinct_count,
+      COUNT(DISTINCT interpro_ac) AS interpro_distinct_count
     FROM
       analysis INNER JOIN
-      protein_feature USING (analysis_id)
+      protein_feature USING (analysis_id) LEFT OUTER JOIN
+      interpro ON hit_name = id
     GROUP BY
       logic_name
     ;

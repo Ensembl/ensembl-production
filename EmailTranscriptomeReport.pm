@@ -23,7 +23,6 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport');
 
-use MIME::Lite;
 use Path::Tiny qw(path);
 
 sub fetch_input {
@@ -51,27 +50,6 @@ sub fetch_input {
   $text .= "  SOLR format: $solr_file\n";
   
   $self->param('text', $text);
-}
-
-sub run {
-  my ($self) = @_;
-  my $email   = $self->param_required('email');
-  my $subject = $self->param_required('subject');
-  my $text    = $self->param_required('text');
-  
-  my $msg = MIME::Lite->new(
-    From    => $email,
-    To      => $email,
-    Subject => $subject,
-    Type    => 'multipart/mixed',
-  );
-  
-  $msg->attach(
-    Type => 'TEXT',
-    Data => $text,
-  );
-  
-  $msg->send;
 }
 
 sub statistics {
