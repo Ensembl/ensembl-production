@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::InterProPan::Aggregate
+Bio::EnsEMBL::EGPipeline::ProteinFeatures::AggregateInterProXrefs
 
 =head1 DESCRIPTION
 
@@ -34,7 +34,7 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::InterProPan::Aggregate;
+package Bio::EnsEMBL::EGPipeline::ProteinFeatures::AggregateInterProXrefs;
 
 use strict;
 use warnings;
