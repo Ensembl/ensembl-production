@@ -31,6 +31,7 @@ sub default_options {
 
     pipeline_name => 'transcriptome_domains',
     
+    transcriptome_dir  => undef,
     transcriptome_file => [],
     
     pipeline_dir => "/nfs/nobackup/ensemblgenomes/".$self->o('ENV', 'USER')."/transcriptome_domains",
@@ -43,13 +44,9 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_dir     => '/nfs/panda/ensemblgenomes/development/InterProScan',
-    interproscan_version => '5.19-58.0',
-    interproscan_exe     => catdir(
-                               $self->o('interproscan_dir'),
-                               $self->o('interproscan_version'),
-                               'interproscan.sh'
-                            ),
+    interproscan_version => '5.22-61.0',
+    interproscan_exe     => 'interproscan.sh',
+    
     interpro_applications =>
     [
       'CDD',
@@ -62,6 +59,7 @@ sub default_options {
       'ProDom',
       'ProSitePatterns',
       'ProSiteProfiles',
+      'SFLD',
       'SMART',
       'SUPERFAMILY',
       'TIGRFAM',
@@ -107,6 +105,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -input_ids         => [ {} ],
       -parameters        => {
+                              transcriptome_dir  => $self->o('transcriptome_dir'),
                               transcriptome_file => $self->o('transcriptome_file'),
                               pipeline_dir       => $self->o('pipeline_dir'),
                             },
@@ -151,8 +150,8 @@ sub pipeline_analyses {
       -rc_name           => '4GB_4CPU-rh7',
       -flow_into         => {
                               1 => [
-                                    ':////accu?outfile_xml=[]',
-                                    ':////accu?outfile_tsv=[]',
+                                    '?accu_name=outfile_xml&accu_address=[]',
+                                    '?accu_name=outfile_tsv&accu_address=[]',
                                    ],
                             },
     },
