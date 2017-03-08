@@ -24,13 +24,28 @@ use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use File::Basename;
 use File::Spec::Functions qw(catdir);
+use Path::Tiny;
 
 sub write_output {
   my ($self) = @_;
-  my $transcriptome_file = $self->param_required('transcriptome_file');
+  my $transcriptome_dir  = $self->param('transcriptome_dir');
+  my $transcriptome_file = $self->param('transcriptome_file');
   my $pipeline_dir       = $self->param_required('pipeline_dir');
   
-  foreach my $file (@$transcriptome_file) {
+  my @files;
+  
+  if (defined $transcriptome_dir) {
+    my $dir = path($transcriptome_dir);
+    foreach my $child ($dir->children) {
+      push @files, $child->canonpath if $child->is_file;
+    }
+  }
+  
+  if (defined $transcriptome_file) {
+    push @files, @$transcriptome_file;
+  }
+  
+  foreach my $file (@files) {
     if (-e $file) {
       my ($basename) = fileparse($file, qr/\.[^.]*/);
       my $output_ids =
