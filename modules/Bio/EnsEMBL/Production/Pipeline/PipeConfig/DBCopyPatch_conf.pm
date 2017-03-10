@@ -27,7 +27,7 @@ sub default_options {
     'by_species'  => 1,    #i.e others
     'by_division' => 1,    #i.e compara, marts, info, ontology
 
-    'division'     => undef,    # EB, EG, EPl, EPr, EM, EF
+    'division'     => [],    # EB, EG, EPl, EPr, EM, EF
     'from_staging' => '',       # server to copy from
     'to_staging'   => '',       # server to copy to
     'base_dir'     => getcwd,
