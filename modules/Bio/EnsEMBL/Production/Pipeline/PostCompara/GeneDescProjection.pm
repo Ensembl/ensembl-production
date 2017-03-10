@@ -31,7 +31,6 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub param_defaults {
     return {
-          
 	   };
 }
 
@@ -54,7 +53,6 @@ sub fetch_input {
     my $geneDesc_rules         = $self->param_required('geneDesc_rules');
     my $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
     my $taxon_filter           = $self->param('taxon_filter');
-    my $taxonomy_db            = $self->param('taxonomy_db');
     my $is_tree_compliant      = $self->param('is_tree_compliant');
 
     $self->param('flag_store_proj', $flag_store_proj);
@@ -71,7 +69,6 @@ sub fetch_input {
     $self->param('geneDesc_rules', $geneDesc_rules);
     $self->param('geneDesc_rules_target', $geneDesc_rules_target);
     $self->param('taxon_filter', $taxon_filter);
-    $self->param('taxonomy_db', $taxonomy_db);
     $self->param('is_tree_compliant', $is_tree_compliant);
 
     $self->check_directory($output_dir);
@@ -94,11 +91,10 @@ sub run {
     my $taxon_filter     = $self->param('taxon_filter');
 
     # Get taxon ancestry of the target species
-    my $taxonomy_db        = $self->param('taxonomy_db');  
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
     my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
     my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
-    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id, $taxonomy_db);  
+    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
     if(defined $taxon_filter){

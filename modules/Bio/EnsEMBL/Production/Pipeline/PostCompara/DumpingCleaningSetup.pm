@@ -38,24 +38,13 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 sub run {
     my ($self)  = @_;
 
-    my $g_config = $self->param('g_config');
-    my $gd_config = $self->param('gd_config');
-    my $go_config = $self->param('go_config');
     my $flag_GeneNames = $self->param('flag_GeneNames');
     my $flag_GeneDescr = $self->param('flag_GeneDescr');
     my $flag_GO        = $self->param('flag_GO');
-    my $flag_delete_gene_names = $self->param('flag_delete_gene_names');
-    my $flag_delete_gene_descriptions = $self->param('flag_delete_gene_descriptions');
-    my $flag_delete_go_terms        = $self->param('flag_delete_go_terms');
+
     my $output_dir  = $self->param('output_dir');
-    my $g_dump_tables = $self->param('g_dump_tables');
-    my $go_dump_tables = $self->param('go_dump_tables');
     my $projection_backup_list = $self->param('projection_backup_list');
     my $final_projection_backup_list;
-    my @species;
-    my @antispecies;
-    my @division;
-    my (@g_species,@g_antispecies,@g_division,@gd_species,@gd_antispecies,@gd_division,@go_species,@go_antispecies,@go_division);
     # If we have a projection list then that mean that we have already backed up and cleaned up a projections
     if ($projection_backup_list)
     {
@@ -81,67 +70,31 @@ sub run {
     }
     # If the parameter don't exist, process the projection hashes making sure that we have data for each projections
     else
-    {
-      # Process the Gene description projection hash and create unique species, division and antispecies hashes.
-      if ($flag_GeneDescr){
-        foreach my $pair (keys $gd_config){
-           push (@gd_species, @{$gd_config->{$pair}->{'species'}});
-           push (@gd_antispecies, @{$gd_config->{$pair}->{'antispecies'}});
-           push (@gd_division, @{$gd_config->{$pair}->{'division'}});
-        }
-        @gd_species=uniq(@gd_species);
-        @gd_antispecies=uniq(@gd_antispecies);
-        @gd_division=uniq(@gd_division);
-
-        $final_projection_backup_list->{"gd"} =
-          { 'species'       => \@gd_species,
-            'antispecies'   => \@gd_antispecies,
-            'division'        => \@gd_division,
-            'flag_delete_gene_descriptions' => $flag_delete_gene_descriptions,
-            'output_dir'      => $output_dir,
-            'dump_tables'     => $g_dump_tables,
-                  };
+      {
+        if ($flag_GeneDescr){
+          # Process the Gene description projection hash and create unique species, division and antispecies hashes.
+          $final_projection_backup_list->{gd} = process_pairs(values $self->param('gd_config'));
+          $final_projection_backup_list->{gd}->{flag_delete_gene_descriptions} = $self->param('flag_delete_gene_descriptions');
+          $final_projection_backup_list->{gd}->{output_dir} = $self->param('output_dir');
+          $final_projection_backup_list->{gd}->{dump_tables} = $self->param('g_dump_tables');
       }
-      # Process the gene name projection hash and create unique species, division and antispecies hashes.
+
       if ($flag_GeneNames){
-        foreach my $pair (keys $g_config){
-          push (@g_species, @{$g_config->{$pair}->{'species'}});
-          push (@g_antispecies, @{$g_config->{$pair}->{'antispecies'}});
-          push (@g_division, @{$g_config->{$pair}->{'division'}});
-        }
-        @g_species=uniq(@g_species);
-        @g_antispecies=uniq(@g_antispecies);
-        @g_division=uniq(@g_division);
-
-        $final_projection_backup_list->{"gn"} =
-          { 'species'       => \@g_species,
-            'antispecies'   => \@g_antispecies,
-            'division'        => \@g_division,
-            'flag_delete_gene_names' => $flag_delete_gene_names,
-            'output_dir'      => $output_dir,
-            'dump_tables'     => $g_dump_tables,
-                  };
+          $final_projection_backup_list->{gn} = process_pairs(values $self->param('gd_config'));
+          $final_projection_backup_list->{gn}->{output_dir} = $self->param('output_dir');
+          $final_projection_backup_list->{gn}->{dump_tables} = $self->param('g_dump_tables');
+          $final_projection_backup_list->{gn}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
       }
-      # Process the go projection hash and create unique species, division and antispecies hashes.
-      if ($flag_GO){
-        foreach my $pair (keys $go_config){
-           push (@go_species, @{$go_config->{$pair}->{'species'}});
-           push (@go_antispecies,  @{$go_config->{$pair}->{'antispecies'}});
-           push (@go_division,  @{$go_config->{$pair}->{'division'}});
-        }
-        @go_species=uniq(@go_species);
-        @go_antispecies=uniq(@go_antispecies);
-        @go_division=uniq(@go_division);
 
-        $final_projection_backup_list->{"go"} =
-          { 'species'       => \@go_species,
-            'antispecies'   => \@go_antispecies,
-            'division'        => \@go_division,
-            'flag_delete_go_terms' => $flag_delete_go_terms,
-            'output_dir'      => $output_dir,
-            'dump_tables'     => $go_dump_tables,
-                  };
-      }
+        if ($flag_GO)
+          {
+          # Process the go projection hash and create unique species, division and antispecies hashes. 
+          $final_projection_backup_list->{go} = process_pairs(values $self->param('gd_config'));
+          $final_projection_backup_list->{go}->{output_dir} = $self->param('output_dir');
+          $final_projection_backup_list->{go}->{dump_tables} = $self->param('go_dump_tables');
+          $final_projection_backup_list->{go}->{flag_delete_go_terms} = $self->param('flag_delete_go_terms');
+        }
+
       # Making sure that the projection hash is not empty 
       if (keys $final_projection_backup_list){
         foreach my $name (sort keys $final_projection_backup_list) {
@@ -161,9 +114,8 @@ sub run {
         $self->dataflow_output_id({},2);
         $self->dataflow_output_id({},1);
       }
-    }
-
-return 0;
+      }
+    return 0;
 }
 
 sub write_output {
@@ -172,10 +124,31 @@ sub write_output {
 return 0;
 }
 
-# Create a hash with unique items
-sub uniq {
-    my %seen;
-    grep !$seen{$_}++, @_;
+sub process_pairs {
+  my $result = {};
+  for my $k (qw/species antispecies division/) {
+    foreach my $pair (@_){
+      print Dumper($pair);
+      add_unique($result,$pair,$k);
+    }
+    $result->{$k} = [keys %{$result->{$k}}] if defined $result->{$k};
+  }
+  return $result;
+}
+
+sub add_unique {
+  my ($r,$p,$k)  = @_;
+  my $v = $p->{$k};
+  if(defined $v) {
+    if(ref($v) eq 'ARRAY') {
+      for my $s (@$v) {
+        $r->{$k}->{$s} = 1;
+      }
+    } else {
+      $r->{$k}->{$v} = 1;
+    }
+  }
+  return;
 }
 
 

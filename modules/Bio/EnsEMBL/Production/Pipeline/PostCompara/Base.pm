@@ -150,10 +150,10 @@ return undef;
 sub get_taxon_ancestry {
     my $self        = shift;
     my $to_taxon_id = shift;
-    my $taxonomy_db = shift;
 
-    my $dba          = Bio::EnsEMBL::DBSQL::DBAdaptor->new(%$taxonomy_db);
-    my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($dba);
+    my $taxonomy_db            = Bio::EnsEMBL::Registry->get_DBAdaptor(-SPECIES=>'multi',-GROUP=>'taxonomy');
+    my $node_adaptor = $taxonomy_db->get_TaxonomyNodeAdaptor();
+
     my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
     my @lineage      = @{$node_adaptor->fetch_ancestors($node)};
     my @ancestors;
@@ -314,7 +314,7 @@ sub process_cigar_line {
       else { $profile[$i] = 0; }
     } # for (my $i=0
 
-    if (! defined @{$hits[0]}) {
+    if (! defined $hits[0]) {
        print STDERR "Problem for root ID: $root_id\n";
        print Dumper @hits;
        print "**\n";

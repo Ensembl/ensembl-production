@@ -58,8 +58,8 @@ sub run {
          my $species                = $final_projection_list->{$pair}->{'species'};
          my $antispecies            = $final_projection_list->{$pair}->{'antispecies'};
          my $division               = $final_projection_list->{$pair}->{'division'};
-         my $run_all                = $final_projection_list->{$pair}->{'run_all'};       
-         my $method_link_type       = $final_projection_list->{$pair}->{'method_link_type'};  
+         my $run_all                = $final_projection_list->{$pair}->{'run_all'};
+         my $method_link_type       = $final_projection_list->{$pair}->{'method_link_type'};
          my $homology_types_allowed = $final_projection_list->{$pair}->{'homology_types_allowed'};
          my $percent_id_filter      = $final_projection_list->{$pair}->{'percent_id_filter'};
          my $percent_cov_filter     = $final_projection_list->{$pair}->{'percent_cov_filter'};
@@ -70,6 +70,9 @@ sub run {
 
          # Remove source/target species from the hash
          delete $final_projection_list->{$pair};
+
+         # TAXON CHECK HERE
+
          $self->param('projection_list', $final_projection_list);
          $self->dataflow_output_id(
 		{'source'      		  => $source, 

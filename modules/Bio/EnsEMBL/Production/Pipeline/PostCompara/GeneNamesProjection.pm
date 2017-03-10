@@ -25,7 +25,6 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
@@ -50,7 +49,7 @@ sub fetch_input {
     my $output_dir             = $self->param_required('output_dir');
     my $geneName_source        = $self->param_required('geneName_source');
     my $taxon_filter           = $self->param('taxon_filter');
-    my $taxonomy_db            = $self->param('taxonomy_db');
+
     my $is_tree_compliant      = $self->param('is_tree_compliant');
 
     $self->param('flag_store_proj', $flag_store_proj);
@@ -64,7 +63,6 @@ sub fetch_input {
     $self->param('percent_cov_filter', $percent_cov_filter);
     $self->param('geneName_source', $geneName_source);
     $self->param('taxon_filter', $taxon_filter);
-    $self->param('taxonomy_db', $taxonomy_db);
     $self->param('is_tree_compliant', $is_tree_compliant);
 
     $self->check_directory($output_dir);
@@ -87,11 +85,9 @@ sub run {
     my $taxon_filter     = $self->param('taxon_filter');
 
     # Get taxon ancestry of the target species
-    my $taxonomy_db        = $self->param('taxonomy_db');  
-    my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
-    my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
+    my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_species,'core','MetaContainer');
     my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
-    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id, $taxonomy_db);  
+    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
     if(defined $taxon_filter){
@@ -104,15 +100,6 @@ sub run {
     my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
     die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
 
-=pod
-    Bio::EnsEMBL::Registry->load_registry_from_db(
-            -host       => 'mysql-eg-staging-1.ebi.ac.uk',
-            -port       => 4160,
-            -user       => 'ensrw',
-            -pass       => 'scr1b3s1',
-            -db_version => '82',
-   );
-=cut
    my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
    my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology'); 
    my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB'); 

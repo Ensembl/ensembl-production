@@ -78,9 +78,8 @@ return \%homology_cache;
 }
 
 =head2 homology_type_allowed
-
-  
 =cut
+
 sub homology_type_allowed {
     my $h                      = shift;
     my $homology_types_allowed = shift;
