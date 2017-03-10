@@ -98,7 +98,7 @@ sub default_options {
        'skip_logic_names'    => [],
        # Previous release FASTA DNA files location
        # Previous release number
-       'prev_rel_dir' => '/warehouse/ens_ftp_arch_03/',
+       'prev_rel_dir' => '/nfs/ensemblftp/PUBLIC/pub/',
        'previous_release' => (software_version() - 1),
 
        ## dump_chain parameters

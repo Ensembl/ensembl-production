@@ -1,2 +1,1 @@
-ens-staging1 ensro
-ens-staging2 ensro
+mysql-ens-sta-1 ensro 4519

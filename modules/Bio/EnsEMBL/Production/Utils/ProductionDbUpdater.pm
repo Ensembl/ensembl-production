@@ -110,6 +110,9 @@ sub update_controlled_tables {
   elsif ( $dbc->dbname =~ m/_variation_/ ) {
     @tables = qw/attrib_type attrib attrib_set/;
   }
+  elsif ( $dbc->dbname =~ m/_compara_/ ) {
+    @tables = qw/external_db/;
+  }
   else {
     $logger->warn( "Do not know how to process database " . $dbc->dbname );
   }
