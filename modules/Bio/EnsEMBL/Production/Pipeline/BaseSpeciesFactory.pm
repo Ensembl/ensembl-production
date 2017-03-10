@@ -40,6 +40,7 @@ package Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory;
 use strict;
 use warnings;
 use Data::Dumper;
+use Bio::EnsEMBL::Registry;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
 
 sub param_defaults {
