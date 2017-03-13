@@ -45,7 +45,6 @@ sub default_options {
 	## General parameters
     'registry'      => $self->o('registry'),
     'release'       => $self->o('release'),
-    'pipeline_name' => $self->o('hive_db'),
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
     'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
@@ -57,15 +56,6 @@ sub default_options {
 
     # hive_capacity values for analysis
 	'highlighting_capacity'  => '50',
-
-    'pipeline_db' => {
-	   	 -host   => $self->o('hive_host'),
-      	 -port   => $self->o('hive_port'),
-      	 -user   => $self->o('hive_user'),
-       	 -pass   => $self->o('hive_password'),
-	     -dbname => $self->o('hive_db'),
-      	 -driver => 'mysql',
-     },
 
     };
 }
