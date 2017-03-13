@@ -67,13 +67,15 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  my $species = $self->param('species');
+  my $species = $self->param('species') || [];
+
   my @species = ( ref($species) eq 'ARRAY' ) ? @$species : ($species);
-  my $division = $self->param('division');
+
+  my $division = $self->param('division') || [];
   my @division =
     ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
   my $run_all     = $self->param('run_all');
-  my $antispecies = $self->param('antispecies');
+  my $antispecies = $self->param('antispecies') || [];
   my @antispecies =
     ( ref($antispecies) eq 'ARRAY' ) ? @$antispecies : ($antispecies);
   my %meta_filters = %{ $self->param('meta_filters') };
