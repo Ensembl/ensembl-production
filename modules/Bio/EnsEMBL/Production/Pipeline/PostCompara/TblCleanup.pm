@@ -33,20 +33,6 @@ use Bio::EnsEMBL::Registry;
 use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 use Bio::EnsEMBL::Utils::SqlHelper;
 
-sub fetch_input {
-    my ($self) 	= @_;
-
-    my $flag_delete_gene_names = $self->param('flag_delete_gene_names');
-    my $flag_delete_gene_descriptions = $self->param('flag_delete_gene_descriptions');
-    my $flag_delete_go_terms = $self->param('flag_delete_go_terms');
- 
-    $self->param('flag_delete_gene_names', $flag_delete_gene_names);
-    $self->param('flag_delete_gene_descriptions', $flag_delete_gene_descriptions);
-    $self->param('flag_delete_go_terms', $flag_delete_go_terms);
-
-return 0;
-}
-
 sub write_output {
     my ($self)  = @_;
 
@@ -62,15 +48,13 @@ sub run {
 
     my $flag_delete_gene_names = $self->param('flag_delete_gene_names');
     my $flag_delete_gene_descriptions = $self->param('flag_delete_gene_descriptions');
-    my $flag_delete_go_terms = $self->param('flag_delete_go_terms');
 
     $self->delete_gene_names($helper) if($flag_delete_gene_names==1);
     $self->delete_gene_desc($helper) if($flag_delete_gene_descriptions==1);
-    $self->delete_go_terms($helper) if($flag_delete_go_terms==1);
     
     $self->core_dbc()->disconnect_if_idle();
     
-return 0;
+    return 0;
 }
 
 =head2 delete_go_terms
