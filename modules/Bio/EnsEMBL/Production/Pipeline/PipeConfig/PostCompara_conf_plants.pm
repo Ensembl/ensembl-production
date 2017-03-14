@@ -35,11 +35,11 @@ ckong
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_plants;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
@@ -93,6 +93,7 @@ sub default_options {
                               'taxon_filter'    => 'eudicotyledons',
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
+                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # target species GeneDescription filter
                               'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                               # homology types filter
@@ -111,6 +112,7 @@ sub default_options {
                               'taxon_filter'    => 'Liliopsida',
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
+                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # target species GeneDescription filter
                               'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                               # homology types filter
@@ -129,6 +131,7 @@ sub default_options {
                               'taxon_filter'    => 'Liliopsida',
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
+                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # target species GeneDescription filter
                               'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                               # homology types filter
@@ -145,9 +148,10 @@ sub default_options {
                               'division'        => ['plants'],
  			      'run_all'         =>  0, # 1/0
                               # flowering group of your target species
-                              'taxon_filter'    => 'Liliopsida',
+                              'taxon_filter'    => 'eudicotyledons',
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
+                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # target species GeneDescription filter
                               'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
                               # homology types filter
@@ -160,3 +164,4 @@ sub default_options {
                        }
          };
 }
+1;
