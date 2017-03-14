@@ -42,7 +42,7 @@ sub fetch_input {
     my $flag_store_projections = $self->param_required('flag_store_projections');
     my $flag_GeneNames         = $self->param('flag_GeneNames');
     my $flag_GeneDescr         = $self->param('flag_GeneDescr');
-    my $species                = $self->param_required('species');
+    my $species                = $self->param('species');
     my $reports;
 
     foreach my $sp (@$species){
