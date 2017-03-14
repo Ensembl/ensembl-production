@@ -90,6 +90,8 @@ sub run {
     my $method_link_type = $self->param('method_link_type');
     my $taxon_filter     = $self->param('taxon_filter');
 
+    print "Processing names projection from $from_species to $to_species\n";
+
     # Get taxon ancestry of the target species
     my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
     my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
@@ -97,8 +99,9 @@ sub run {
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);
 
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if(defined $taxon_filter){
-       die("$taxon_filter is not found in the ancestor list of $to_species\n") if(!grep (/$taxon_filter/, @$names));
+    if(defined $taxon_filter && !grep (/$taxon_filter/, @$names)) {
+       warn("$taxon_filter is not found in the ancestor list of $to_species\n");
+       return;
     }
 
     # Creating adaptors
@@ -123,6 +126,10 @@ sub run {
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
+    if(!defined $mlss) {
+      warn "No orthology found for $from_species to $to_species";
+      return;
+    }
     my $mlss_id       = $mlss->dbID();
 
     # Get homologies from compara - comes back as a hash of arrays

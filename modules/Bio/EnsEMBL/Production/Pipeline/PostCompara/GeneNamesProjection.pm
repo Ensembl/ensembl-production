@@ -84,14 +84,17 @@ sub run {
     my $method_link_type = $self->param('method_link_type');
     my $taxon_filter     = $self->param('taxon_filter');
 
+    print "Processing names projection from $from_species to $to_species\n";
+
     # Get taxon ancestry of the target species
     my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_species,'core','MetaContainer');
     my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
     my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);
-
+    
     # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if(defined $taxon_filter){
-       die("$taxon_filter is not found in the ancestor list of $to_species\n") if(!grep (/$taxon_filter/, @$names));
+    if(defined $taxon_filter && !grep (/$taxon_filter/, @$names)) {
+       warn("$taxon_filter is not found in the ancestor list of $to_species\n");
+       return;
     }
     # Creating adaptors
     my $from_ga   = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
@@ -113,9 +116,15 @@ sub run {
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
+    print $from_GenomeDB->dbID()."\n";
+    print $to_GenomeDB->dbID()."\n";
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
-    my $mlss_id       = $mlss->dbID();
+    if(!defined $mlss) {
+      print "No $method_link_type found between $from_species and $to_species";
+      return;
+    }
 
+    my $mlss_id       = $mlss->dbID();
     # build hash of external db name -> ensembl object type mappings
     my %db_to_type = build_db_to_type($to_ga);
 
