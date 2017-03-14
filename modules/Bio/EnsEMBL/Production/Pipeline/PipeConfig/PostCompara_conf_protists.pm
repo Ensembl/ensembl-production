@@ -55,7 +55,7 @@ sub default_options {
                               'source'       => 'dictyostelium_discoideum',
                               'division'     => 'protists',
                               'run_all'      =>  0, # 1/0
-                              'taxon_filter' => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                              'taxon_filter' => 'Amoebozoa', # Eg: 'Liliopsida'/'eudicotyledons'
                               'geneName_source' 		 => ['UniProtKB/Swiss-Prot', 'Uniprot_gn'],
                               'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                               'homology_types_allowed' => ['ortholog_one2one'],
