@@ -151,7 +151,7 @@ sub get_taxon_ancestry {
     my $self        = shift;
     my $to_taxon_id = shift;
 
-    my $taxonomy_db            = Bio::EnsEMBL::Registry->get_DBAdaptor(-SPECIES=>'multi',-GROUP=>'taxonomy');
+    my $taxonomy_db            = Bio::EnsEMBL::Registry->get_DBAdaptor('multi','taxonomy');
     my $node_adaptor = $taxonomy_db->get_TaxonomyNodeAdaptor();
 
     my $node         = $node_adaptor->fetch_by_taxon_id($to_taxon_id);
