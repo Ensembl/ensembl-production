@@ -1,13 +1,13 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # Copyright [2016-2017] EMBL-European Bioinformatics Institute
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,7 +95,7 @@ sub check {
       );
     }
   }
-  
+
   foreach my $key (qw/datafile_dir/) {
     my $dir = $o->{$key};
     if(! -d $dir) {
@@ -106,9 +106,9 @@ sub check {
       );
     }
   }
-  
-  $o->{unix_group} = 'ensembl' unless $o->{unix_group};
-  
+
+  $o->{unix_group} = 'ensemblftp' unless $o->{unix_group};
+
   return;
 }
 
@@ -119,37 +119,37 @@ sub setup {
   $self->v('Detecting which samtools to use');
   $self->_find_perl_samtools();
   $self->_find_samtools();
-  
+
   $self->v('Using the database server %s@%s:%d', map { $o->{$_} } qw/username host port/);
-  
+
   ##SETTING UP REGISTRY
   my %args = (
-    -HOST => $o->{host}, -PORT => $o->{port}, 
+    -HOST => $o->{host}, -PORT => $o->{port},
     -USER => $o->{username}
   );
   $args{-DB_VERSION} = $o->{release};
   $args{-PASS} = $o->{password} if $o->{password};
   my $loaded = Bio::EnsEMBL::Registry->load_registry_from_db(%args);
   $self->v('Loaded %d DBAdaptor(s)', $loaded);
-  
+
   return;
 }
 
 sub test_path {
   my ($self, $path, $data_file) = @_;
-  
+
   #Just record the dir and file for later use when looking for extra files
   $path = rel2abs($path);
   my ($vol, $dir, $file) = splitpath($path);
   push(@{$self->{dirs}->{$dir}}, $file);
-  
+
   my $name = $data_file->name();
   my $prefix = "Data file $name | File [$path]";
-  
+
   #First pass. Check file & if not there then bail
   my $file_ok = ok(-f $path, "$prefix exists");
   return unless $file_ok;
-  
+
   #File attributes now we know it's here
   my @stat = stat($path);
   my $mode = $stat[2];
@@ -161,19 +161,19 @@ sub test_path {
   my $other_w = ($mode & S_IWOTH) >> 0;
 
   my $file_gid  = $stat[5];
-  
+
   #Now do the tests
-  # Files must have read permissions on user/group/other
-  # They cannot have write permissions on the user/group/other. 
+  # Files must have read permissions on group/other
+  # Files need to be group writeable
+  # They cannot have write permissions on the other.
   # They can be executable (we don't care so don't check)
+  # We don't care about owner permissions
   ok(-s $path, "$prefix has data");
-  is($user_r, 4, "$prefix is Read by user");
-  is($user_w, 0, "$prefix cannot have user Write permissions");
   is($group_r, 4, "$prefix is Read by group");
-  is($group_w, 0, "$prefix cannot have group Write permissions");
+  is($group_w, 2, "$prefix is Write by group");
   is($other_r, 4, "$prefix is Read by other");
   is($other_w, 0, "$prefix cannot have have other Write permissions");
-  
+
   if($self->opts->{unix_group}) {
     my $unix_group = $self->opts->{unix_group};
     my $group_gid = $self->_get_gid($unix_group);
@@ -188,7 +188,7 @@ sub test_path {
       fail("The UNIX group $unix_group is not known on this system");
     }
   }
-  
+
   return;
 }
 
@@ -257,7 +257,7 @@ sub _process_bam {
 	if $toplevel_slices->{$bam_seq_name} != $bam_info->{$bam_seq_name};
     }
   }
-  
+
   my $missing_count = scalar(@missing_names);
   if($missing_count > 0) {
     fail("We have names in the BAM file which are not part of this assembly. Please see note output for more details");
@@ -295,7 +295,7 @@ sub _get_core_like_dbs {
     next if $dba->species() eq 'multi';
     next if lc($dba->species()) eq 'ancestral sequences';
     next if $dba->dbc()->dbname() =~ /^.+_userdata$/xms;
-    
+
     my $type = $dba->get_MetaContainer()->single_value_by_key('schema_type');
     $dba->dbc()->disconnect_if_idle();
     next unless $type;
@@ -328,7 +328,7 @@ sub _get_bam_region_info {
   my ($self, $data_file) = @_;
   my $path = $data_file->path($self->opts->{datafile_dir});
   my $data;
-  
+
   if(!$NO_SAM_PERL) {
     $data = $self->_get_bam_region_info_from_perl($path);
   }
@@ -342,7 +342,7 @@ sub _get_bam_region_info {
       $data = $self->_get_bam_region_info_from_samtools($path);
     }
   }
-  
+
   return $data;
 }
 
@@ -357,7 +357,7 @@ sub _get_bam_region_info_from_perl {
   my $target_names = $header->target_name();
   my $target_lengths = $header->target_len();
   my $data;
-  $data->{$target_names->[$_]} = $target_lengths->[$_] 
+  $data->{$target_names->[$_]} = $target_lengths->[$_]
     for 0..($targets-1);
 
   return $data;
@@ -407,7 +407,7 @@ sub _get_toplevel_slice_info {
   return $self->{toplevel_names}->{$species};
 }
 
-#See if there are any UCSC synonyms hanging around. If not then we 
+#See if there are any UCSC synonyms hanging around. If not then we
 #do not have to look for them
 sub _has_synonyms {
   my ($self, $dba, $source) = @_;
@@ -476,13 +476,13 @@ check_datafiles.pl
   ./check_datafiles.pl -release VER -user USER -pass PASS -host HOST [-port PORT] -datafile_dir DIR [-unix_group UNIX_GROUP] \
                       [-species SPECIES] [-group GROUP] [-no_bamchecks] \
                       [-help | -man]
-  
+
   #EXAMPLE
   ./check_datafiles.pl -release 69 -host ensembdb.ensembl.org -port 5306 -user anonymous -datafile_dir /my/datafile
-  
+
   #Skipping BAM checks
   ./check_datafiles.pl -release 71 -host ensembdb.ensembl.org -port 5306 -user anonymous -datafile_dir /my/datafile -no_bamchecks
-  
+
 =head1 DESCRIPTION
 
 A script which ensures a data files directory works for a single release.
@@ -519,7 +519,7 @@ Optional integer of the database port. Defaults to 3306.
 
 =item B<--unix_group>
 
-Specify the UNIX group these files should be readable by. Defaults to ensembl
+Specify the UNIX group these files should be readable by. Defaults to ensemblftp
 
 =item B<--datafile_dir | --dir>
 
@@ -574,4 +574,3 @@ Man page
 =back
 
 =end
-
