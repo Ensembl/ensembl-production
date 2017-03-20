@@ -195,7 +195,7 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name      => 'InitialisePipeline',
+      -logic_name      => 'InitialiseXref',
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -input_ids       => [ {} ],
       -max_retry_count => 0,
@@ -267,7 +267,7 @@ sub pipeline_analyses {
                              ],
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal-rh7',
       -flow_into         => ['SetupUniParc']
     },
 

@@ -248,7 +248,7 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name      => 'InitialisePipeline',
+      -logic_name      => 'InitialiseAlignmentXref',
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
       -input_ids       => [{}],
@@ -746,12 +746,12 @@ sub pipeline_analyses {
                               description_blacklist => $self->o('description_blacklist'),
                             },
       -rc_name           => 'normal-rh7',
-      -flow_into         => WHEN('#email_xref_report#' => ['EmailReport']),
+      -flow_into         => WHEN('#email_xref_report#' => ['EmailAlignmentXrefReport']),
 
     },
 
     {
-      -logic_name        => 'EmailReport',
+      -logic_name        => 'EmailAlignmentXrefReport',
       -module            => 'Bio::EnsEMBL::EGPipeline::Xref::EmailAlignmentXrefReport',
       -max_retry_count   => 1,
       -parameters        => {
