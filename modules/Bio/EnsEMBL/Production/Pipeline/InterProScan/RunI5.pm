@@ -52,6 +52,8 @@ sub fetch_input {
     exit;
     }
 
+    $self->hive_dbc()->disconnect_if_idle();
+
 }
 
 sub run {
@@ -85,6 +87,8 @@ sub run {
  
     #$self->dbc->disconnect_when_inactive(1);
  
+    $self->hive_dbc()->disconnect_if_idle();
+
     $self->run_cmd(
       $interpro_cmd, 
       [ 
