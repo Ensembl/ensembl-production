@@ -664,7 +664,7 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'server' => {'LSF' => '-q production-rh6 -n ' . ($max_exonerate_jobs + 1) . ' -M ' . $server_memory . ' -R "rusage[mem=' . $server_memory . ']"'},
+    'server' => {'LSF' => '-q production-rh7 -n ' . ($max_exonerate_jobs + 1) . ' -M ' . $server_memory . ' -R "rusage[mem=' . $server_memory . ']"'},
   }
 }
 

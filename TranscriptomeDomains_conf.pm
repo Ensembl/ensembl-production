@@ -147,7 +147,7 @@ sub pipeline_analyses {
                               interproscan_exe          => $self->o('interproscan_exe'),
                               interproscan_applications => $self->o('interpro_applications'),
                             },
-      -rc_name           => '4GB_4CPU-rh7',
+      -rc_name           => '4GB_4CPU',
       -flow_into         => {
                               1 => [
                                     '?accu_name=outfile_xml&accu_address=[]',
@@ -163,7 +163,7 @@ sub pipeline_analyses {
       -parameters        => {
                               results_dir    => $self->o('results_dir'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['GenerateSolr'],
     },
     
@@ -175,7 +175,7 @@ sub pipeline_analyses {
                               interproscan_version => $self->o('interproscan_version'),
                               pathway_sources      => $self->o('pathway_sources'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
     
@@ -187,7 +187,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'InterProScan transcriptome annotation',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
   ];
@@ -198,7 +198,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4GB_4CPU-rh7' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000] span[hosts=1]"'},
+    '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000] span[hosts=1]"'},
   }
 }
 

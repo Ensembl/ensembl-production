@@ -128,7 +128,7 @@ sub db_related_analyses {
                               db_type     => $self->o('db_type'),
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_alignment_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -139,7 +139,7 @@ sub db_related_analyses {
       -can_be_empty      => 1,
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -181,7 +181,7 @@ sub db_related_analyses {
                               insdc_ids    => $self->o('insdc_ids'),
                               samtools_dir => $self->o('samtools_dir'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -194,7 +194,7 @@ sub db_related_analyses {
                               db_type     => $self->o('db_type'),
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'post_alignment_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['MetaCoords'],
     },
 
@@ -205,7 +205,7 @@ sub db_related_analyses {
       -parameters        => {
                               db_type => $self->o('db_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['MetaLevels'],
     },
 
@@ -216,7 +216,7 @@ sub db_related_analyses {
       -parameters        => {
                               db_type => $self->o('db_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
   ];

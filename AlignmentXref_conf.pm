@@ -273,7 +273,7 @@ sub pipeline_analyses {
                             regulation_flow => 0,
                             variation_flow  => 0,
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BackupCoreDatabase'],
                             'A->2' => ['DumpSequence'],
@@ -289,7 +289,7 @@ sub pipeline_analyses {
                             output_file => catdir($self->o('pipeline_dir'), '#species#', 'core_bkp.sql.gz'),
                             table_list  => ['analysis', 'analysis_description', 'identity_xref', 'object_xref', 'xref'],
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -317,7 +317,7 @@ sub pipeline_analyses {
                               proteome_dir => catdir($self->o('pipeline_dir'), '#species#', 'proteome'),
                               use_dbID     => 1,
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['SplitProteome'],
     },
 
@@ -332,7 +332,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => [ '?table_name=split_proteome' ],
                             }
@@ -346,7 +346,7 @@ sub pipeline_analyses {
                               transcriptome_dir => catdir($self->o('pipeline_dir'), '#species#', 'transcriptome'),
                               use_dbID          => 1,
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['SplitTranscriptome'],
     },
 
@@ -361,7 +361,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => [ '?table_name=split_transcriptome' ],
                             }
@@ -404,7 +404,7 @@ sub pipeline_analyses {
                             out_dir      => $self->o('uniprot_dir'),
                             file_varname => 'fasta_file',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['SpeciesFactoryForLoading'],
     },
     
@@ -416,7 +416,7 @@ sub pipeline_analyses {
                             logic_name  => $self->o('uniprot_unreviewed_logic_name'),
                             external_db => $self->o('uniprot_unreviewed_external_db'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['FetchUniprotUnreviewed'],
     },
 
@@ -432,7 +432,7 @@ sub pipeline_analyses {
                             out_dir      => $self->o('uniprot_dir'),
                             file_varname => 'fasta_file',
                           },
-      -rc_name         => '32Gb_mem_4Gb_tmp-rh7',
+      -rc_name         => '32Gb_mem_4Gb_tmp',
       -flow_into       => ['SpeciesFactoryForLoading'],
     },
     
@@ -444,7 +444,7 @@ sub pipeline_analyses {
                             logic_name  => $self->o('refseq_peptide_logic_name'),
                             external_db => $self->o('refseq_peptide_external_db'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['FetchRefSeq'],
     },
 
@@ -456,7 +456,7 @@ sub pipeline_analyses {
                             logic_name  => $self->o('refseq_dna_logic_name'),
                             external_db => $self->o('refseq_dna_external_db'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['FetchRefSeq'],
     },
 
@@ -472,7 +472,7 @@ sub pipeline_analyses {
                             out_dir         => $self->o('refseq_dir'),
                             file_varname    => 'fasta_file',
                           },
-      -rc_name         => '32Gb_mem_4Gb_tmp-rh7',
+      -rc_name         => '32Gb_mem_4Gb_tmp',
       -flow_into       => ['SpeciesFactoryForLoading'],
     },
 
@@ -539,7 +539,7 @@ sub pipeline_analyses {
                                 'external_db edb USING (external_db_id) '.
                               'WHERE edb.db_name = "#external_db#"',]
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => WHEN('#delete_unattached_xref#' => ['DeleteUnattachedXref']),
     },
 
@@ -548,7 +548,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::DeleteUnattachedXref',
       -max_retry_count => 0,
       -parameters      => {},
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -560,7 +560,7 @@ sub pipeline_analyses {
                             file_varname   => 'db_fasta_file',
                             data_type      => '#database_type#',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['CreateBlastDB'],
     },
 
@@ -574,7 +574,7 @@ sub pipeline_analyses {
                             proteome_source   => 'various',
                             logic_name_prefix => 'various',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => [
                             WHEN('#query_type# eq "pep"' =>
                               ['FetchProteomeFiles'],
@@ -591,7 +591,7 @@ sub pipeline_analyses {
       -parameters      => {
                             seq_type => 'proteome',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastP'],
                             'A->1' => ['FilterBlastHits'],
@@ -612,7 +612,7 @@ sub pipeline_analyses {
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '8GB_threads-rh7',
+      -rc_name         => '8GB_threads',
       -flow_into       => {
                             '-1' => ['BlastP_HighMem'],
                           },
@@ -632,7 +632,7 @@ sub pipeline_analyses {
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '16GB_threads-rh7',
+      -rc_name         => '16GB_threads',
       -flow_into       => {
                             '-1' => ['BlastP_HigherMem'],
                           },
@@ -651,7 +651,7 @@ sub pipeline_analyses {
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                           },
-      -rc_name         => '32GB_threads-rh7',
+      -rc_name         => '32GB_threads',
     },
     
     {
@@ -661,7 +661,7 @@ sub pipeline_analyses {
       -parameters      => {
                             seq_type => 'transcriptome',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['BlastN'],
                             'A->1' => ['FilterBlastHits'],
@@ -682,7 +682,7 @@ sub pipeline_analyses {
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '8GB_threads-rh7',
+      -rc_name         => '8GB_threads',
       -flow_into       => {
                             '-1' => ['BlastN_HighMem'],
                           },
@@ -702,7 +702,7 @@ sub pipeline_analyses {
                             filter_min_score => $self->o('filter_min_score'),
                             escape_branch    => -1,
                           },
-      -rc_name         => '16GB_threads-rh7',
+      -rc_name         => '16GB_threads',
       -flow_into       => {
                             '-1' => ['BlastN_HigherMem'],
                           },
@@ -721,7 +721,7 @@ sub pipeline_analyses {
                             filter_prune     => $self->o('filter_prune'),
                             filter_min_score => $self->o('filter_min_score'),
                           },
-      -rc_name         => '32GB_threads-rh7',
+      -rc_name         => '32GB_threads',
     },
 
     {
@@ -732,7 +732,7 @@ sub pipeline_analyses {
                             db_type      => 'core',
                             filter_top_x => 1,
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['LoadAlignmentXref'],
     },
 
@@ -745,7 +745,7 @@ sub pipeline_analyses {
                               preferred_analysis    => $self->o('preferred_analysis'),
                               description_blacklist => $self->o('description_blacklist'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => WHEN('#email_xref_report#' => ['EmailAlignmentXrefReport']),
 
     },
@@ -758,7 +758,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'Alignment Xref pipeline report for #species# with #external_db#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
   ];
 }
@@ -770,9 +770,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    '8GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
-    '16GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
-    '32GB_threads-rh7' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
+    '8GB_threads' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 8000 -R "rusage[mem=8000,tmp=8000]"'},
+    '16GB_threads' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 16000 -R "rusage[mem=16000,tmp=16000]"'},
+    '32GB_threads' => {'LSF' => '-q production-rh7 -n ' . ($blast_threads + 1) . ' -M 32000 -R "rusage[mem=32000,tmp=32000]"'},
   }
 }
 

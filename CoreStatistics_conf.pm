@@ -196,7 +196,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -212,7 +212,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['GeneCount'],
     },
 
@@ -221,7 +221,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['GeneCount_Check'],
     },
 
@@ -242,7 +242,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -250,7 +250,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGCBatch',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['GeneGC_Check'],
     },
 
@@ -266,7 +266,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -274,7 +274,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -285,7 +285,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -293,7 +293,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::MetaLevels',
       -max_retry_count   => 3,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['MetaLevels_Check'],
     },
 
@@ -309,7 +309,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['CanonicalTranscripts'],
     },
 
@@ -322,7 +322,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['CanonicalTranscripts_Check'],
     },
 
@@ -339,7 +339,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -352,7 +352,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => '12Gb_mem-rh7',
+      -rc_name           => '12Gb_mem',
       -flow_into         => ['PepStats_Check'],
     },
 
@@ -377,7 +377,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['CorrectNcoils'],
     },
 
@@ -387,7 +387,7 @@ sub pipeline_analyses {
       -parameters      => {},
       -max_retry_count => 1,
       -batch_size      => 50,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
     
     {
@@ -398,7 +398,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     # Core Tasks - End #########################################################
 
@@ -424,7 +424,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -437,7 +437,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -450,7 +450,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -463,7 +463,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -476,7 +476,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -489,7 +489,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
     # Chromosome Tasks - End ###################################################
@@ -500,7 +500,7 @@ sub pipeline_analyses {
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SnpCount',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
 
@@ -513,7 +513,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -can_be_empty      => 1,
     },
     # Variation Tasks - End ####################################################
@@ -525,7 +525,7 @@ sub pipeline_analyses {
                        email   => $self->o('email'),
                        subject => $self->o('pipeline_name').' has finished',
                      },
-      -rc_name    => 'normal-rh7',
+      -rc_name    => 'normal',
     },
 
   ];

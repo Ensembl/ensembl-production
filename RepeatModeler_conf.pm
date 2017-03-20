@@ -122,7 +122,7 @@ sub pipeline_analyses {
                               genome_dir       => catdir($self->o('results_dir'), '#species#'),
                               min_slice_length => $self->o('min_slice_length'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1->A' => ['SplitDumpFiles'],
                               'A->1' => ['MergeResults'],
@@ -142,7 +142,7 @@ sub pipeline_analyses {
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                               unique_file_names       => 1,
                             },
-      -rc_name           => '8Gb_mem-rh7',
+      -rc_name           => '8Gb_mem',
       -flow_into         => {'2' => ['BuildDatabase']},
     },
 
@@ -160,7 +160,7 @@ sub pipeline_analyses {
                'cd $RM_DB; '.
                $self->o('builddatabase_exe').' -engine '.$self->o('blast_engine').' -name $RM_DB #split_file#',
       },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['RepeatModeler'],
     },
 
@@ -175,7 +175,7 @@ sub pipeline_analyses {
                'cd '.$self->o('results_dir').'/$RM_DB; '.
                $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
       },
-      -rc_name           => '8Gb_mem_10_cores-rh7',
+      -rc_name           => '8Gb_mem_10_cores',
       -flow_into         => {
                               '-1' => ['RepeatModeler_HighMem'],
                             },
@@ -192,7 +192,7 @@ sub pipeline_analyses {
                'cd '.$self->o('results_dir').'/$RM_DB; '.
                $self->o('repeatmodeler_exe').' -pa 9 -engine '.$self->o('blast_engine').' -database $RM_DB',
       },
-      -rc_name           => '16Gb_mem_10_cores-rh7',
+      -rc_name           => '16Gb_mem_10_cores',
     },
 
     {
@@ -203,7 +203,7 @@ sub pipeline_analyses {
       {
         cmd => 'cat '.$self->o('results_dir').'/#species#*/RM_*/consensi.fa.classified > '.$self->o('results_dir').'/#species#.rm.lib',
       },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
   ];
@@ -214,8 +214,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '8Gb_mem_10_cores-rh7'  => {'LSF' => '-q production-rh7 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000]"'},
-    '16Gb_mem_10_cores-rh7' => {'LSF' => '-q production-rh7 -M 16000 -n 10 -R "rusage[mem=16000,tmp=4000]"'},
+    '8Gb_mem_10_cores'  => {'LSF' => '-q production-rh7 -M 8000 -n 10 -R "rusage[mem=8000,tmp=4000]"'},
+    '16Gb_mem_10_cores' => {'LSF' => '-q production-rh7 -M 16000 -n 10 -R "rusage[mem=16000,tmp=4000]"'},
   }
 }
 

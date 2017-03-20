@@ -112,7 +112,7 @@ sub pipeline_analyses {
                               vep_script => $self->o('vep_script'),
                               vep_params => $self->o('vep_params'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => ['ValidateVEP'],
                             },
@@ -127,7 +127,7 @@ sub pipeline_analyses {
                               vep_hc_script => $self->o('vep_hc_script'),
                               vep_hc_params => $self->o('vep_hc_params'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
   ];
 }

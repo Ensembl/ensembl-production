@@ -196,7 +196,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#delete_existing#' =>
                                       ['DeleteGenes'],
@@ -228,7 +228,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('mirbase_target_logic_name'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -240,7 +240,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('trnascan_target_logic_name'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -252,7 +252,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('cmscan_target_logic_name'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -346,7 +346,7 @@ sub pipeline_analyses {
                               stable_id_type    => $self->o('run_context'),
                               id_db             => $self->o('id_db'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -377,7 +377,7 @@ sub pipeline_analyses {
                               allow_repeat_overlap => 0,
                               allow_coding_overlap => 0,
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -411,7 +411,7 @@ sub pipeline_analyses {
                               allow_repeat_overlap => $self->o('allow_repeat_overlap'),
                               allow_coding_overlap => $self->o('allow_coding_overlap'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -422,7 +422,7 @@ sub pipeline_analyses {
       -parameters        => {
                               old_reg_conf => $self->o('old_reg_conf'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['StableIDMapping'],
 
     },
@@ -435,7 +435,7 @@ sub pipeline_analyses {
                               report_style => $self->o('run_context'),
                               report_dir   => $self->o('pipeline_dir'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
 
     },
 
@@ -444,7 +444,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::CoreStatistics::MetaCoords',
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailRNAGenesReport'],
     },
 
@@ -459,7 +459,7 @@ sub pipeline_analyses {
                               trnascan_logic_name => $self->o('trnascan_target_logic_name'),
                               cmscan_logic_name   => $self->o('cmscan_target_logic_name'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
   ];

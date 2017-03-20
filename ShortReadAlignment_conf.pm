@@ -289,7 +289,7 @@ sub alignment_analyses {
                               results_dir  => catdir($index_dir, '#species#'),
                               file_varname => 'gtf_file',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                                '1' => ['DumpGenome'],
                             },
@@ -307,7 +307,7 @@ sub alignment_analyses {
                               repeat_logic_names => $self->o('repeat_logic_names'),
                               min_slice_length   => $self->o('min_slice_length'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#bigwig#' =>
                                        ['SequenceLengths'],
@@ -327,7 +327,7 @@ sub alignment_analyses {
                               fasta_file  => '#genome_file#',
                               length_file => '#genome_file#'.'.lengths.txt',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['IndexGenome'],
     },
 
@@ -347,7 +347,7 @@ sub alignment_analyses {
                               overwrite     => 0,
                               escape_branch => -1,
                             },
-      -rc_name           => 'index_default-rh7',
+      -rc_name           => 'index_default',
       -flow_into         => {
                               '-1' => ['IndexGenome_HighMem'],
                                '1' => ['SequenceFactory'],
@@ -369,7 +369,7 @@ sub alignment_analyses {
                               index_mode    => $self->o('index_mode'),
                               memory_mode   => 'himem',
                             },
-      -rc_name           => 'index_himem-rh7',
+      -rc_name           => 'index_himem',
       -flow_into         => {
                               '1' => ['SequenceFactory'],
                             },
@@ -389,7 +389,7 @@ sub alignment_analyses {
                               tax_id_restrict => $self->o('tax_id_restrict'),
                               data_type       => $self->o('data_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['SeqFile'],
                               '3->B' => ['PairedSeqFile'],
@@ -419,7 +419,7 @@ sub alignment_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -can_be_empty      => 1,
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => ['AlignSequence'],
                             },
@@ -430,7 +430,7 @@ sub alignment_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -can_be_empty      => 1,
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => ['AlignSequence'],
                             },
@@ -445,7 +445,7 @@ sub alignment_analyses {
       -parameters        => {
                               work_dir => catdir($pipeline_dir, '#species#'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['AlignSequence'],
                             },
@@ -467,7 +467,7 @@ sub alignment_analyses {
                               delete_existing_files   => 0,
                               file_varname            => 'seq_file_1',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['AlignSequence'],
                             },
@@ -487,7 +487,7 @@ sub alignment_analyses {
                               max_intron     => $self->o('max_intron'),
                               escape_branch  => -1,
                             },
-      -rc_name           => 'align_default-rh7',
+      -rc_name           => 'align_default',
       -flow_into         => {
                               '-1' => ['AlignSequence_HighMem'],
                                '1' => ['SamToBam'],
@@ -509,7 +509,7 @@ sub alignment_analyses {
                               run_mode       => $self->o('run_mode'),
                               max_intron     => $self->o('max_intron'),
                             },
-      -rc_name           => 'align_himem-rh7',
+      -rc_name           => 'align_himem',
       -flow_into         => {
                                '1' => ['SamToBam'],
                                '2' => ['?table_name=align_cmds'],
@@ -527,7 +527,7 @@ sub alignment_analyses {
                               memory         => $self->o('samtobam_memory'),
                               clean_up       => $self->o('clean_up'),
                             },
-      -rc_name           => 'samtobam_mem-rh7',
+      -rc_name           => 'samtobam_mem',
       -flow_into         => {
                                '1' => ['?table_name=merge_bam', '?table_name=align_cmds'],
                             },
@@ -547,7 +547,7 @@ sub alignment_analyses {
                               use_csi      => $self->o('use_csi'),
                               clean_up     => $self->o('clean_up'),
                             },
-      -rc_name           => 'merge_mem-rh7',
+      -rc_name           => 'merge_mem',
       -flow_into         => {
                               '2' => ['?table_name=align_cmds',
                                      
@@ -571,7 +571,7 @@ sub alignment_analyses {
                               length_file   => '#genome_file#'.'.lengths.txt',
                               clean_up      => $self->o('clean_up'),
                             },
-      -rc_name           => '8Gb_mem-rh7',
+      -rc_name           => '8Gb_mem',
       -flow_into         => ['WriteIniFile', '?table_name=align_cmds'],
     },
 
@@ -584,7 +584,7 @@ sub alignment_analyses {
                               merge_level => $self->o('merge_level'),
                               ini_type    => $self->o('ini_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['WriteCmdFile'],
     },
 
@@ -597,7 +597,7 @@ sub alignment_analyses {
                               results_dir => catdir($results_dir, '#species#'),
                               merge_level => $self->o('merge_level'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
 
@@ -610,7 +610,7 @@ sub alignment_analyses {
                               subject      => 'Short Read Alignment pipeline: Report for #species#',
                               samtools_dir => $self->o('samtools_dir'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
   ];
 }
@@ -642,12 +642,12 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'index_default-rh7' => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_mem.   ' -R "rusage[mem='.$index_mem.   ',tmp=16000] span[hosts=1]"'},
-    'index_himem-rh7'   => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_himem. ' -R "rusage[mem='.$index_himem. ',tmp=16000] span[hosts=1]"'},
-    'align_default-rh7' => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$align_mem.   ' -R "rusage[mem='.$align_mem.   ',tmp=16000] span[hosts=1]"'},
-    'align_himem-rh7'   => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$align_himem. ' -R "rusage[mem='.$align_himem. ',tmp=16000] span[hosts=1]"'},
-    'samtobam_mem-rh7'  => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$samtobam_mem.' -R "rusage[mem='.$samtobam_mem.',tmp=16000] span[hosts=1]"'},
-    'merge_mem-rh7'     => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$merge_mem.   ' -R "rusage[mem='.$merge_mem. ',tmp=16000] span[hosts=1]"'},
+    'index_default' => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_mem.   ' -R "rusage[mem='.$index_mem.   ',tmp=16000] span[hosts=1]"'},
+    'index_himem'   => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$index_himem. ' -R "rusage[mem='.$index_himem. ',tmp=16000] span[hosts=1]"'},
+    'align_default' => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$align_mem.   ' -R "rusage[mem='.$align_mem.   ',tmp=16000] span[hosts=1]"'},
+    'align_himem'   => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$align_himem. ' -R "rusage[mem='.$align_himem. ',tmp=16000] span[hosts=1]"'},
+    'samtobam_mem'  => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$samtobam_mem.' -R "rusage[mem='.$samtobam_mem.',tmp=16000] span[hosts=1]"'},
+    'merge_mem'     => {'LSF' => '-q production-rh7 -n '. ($threads + 1) .' -M '.$merge_mem.   ' -R "rusage[mem='.$merge_mem. ',tmp=16000] span[hosts=1]"'},
   }
 }
 

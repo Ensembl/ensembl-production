@@ -272,7 +272,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -314,7 +314,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::DeleteUnattachedXref',
       -max_retry_count => 0,
       -parameters      => {},
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -335,7 +335,7 @@ sub pipeline_analyses {
       -parameters      => {
                             timing => 'before',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['?table_name=gene_descriptions'],
                             '3' => ['?table_name=gene_names'],
@@ -349,7 +349,7 @@ sub pipeline_analyses {
       -parameters      => {
                             timing => 'after',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['?table_name=gene_descriptions'],
                             '3' => ['?table_name=gene_names'],
@@ -368,7 +368,7 @@ sub pipeline_analyses {
                             citation_external_db => $self->o('citation_external_db'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
  ];
 }

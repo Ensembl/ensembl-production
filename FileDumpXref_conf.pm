@@ -103,7 +103,7 @@ sub pipeline_analyses {
                               logic_name         => $self->o('logic_name'),
                               external_db        => $self->o('external_db'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['CompressFile'],
 	  },
 
@@ -116,7 +116,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'gzip -n -f #out_file#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
   ];

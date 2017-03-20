@@ -209,7 +209,7 @@ sub pipeline_analyses {
                                      $self->o('gff3_tidy_file'),
                             },
       -input_ids         => [ {} ],
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['GFF3Validate'],
     },
 
@@ -221,7 +221,7 @@ sub pipeline_analyses {
                               cmd => $self->o('gff3_validate').' '.
                                      $self->o('gff3_tidy_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('-e #fasta_file#' =>
                                       ['FastaTidy'],
@@ -238,7 +238,7 @@ sub pipeline_analyses {
                               cmd => $self->o('fasta_tidy').' '.
                                      $self->o('fasta_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['BackupDatabase'],
     },
 
@@ -250,7 +250,7 @@ sub pipeline_analyses {
                               genome_file  => $self->o('fasta_file'),
                               header_style => 'name',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['BackupDatabase'],
     },
 
@@ -261,7 +261,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), $self->o('species'), 'pre_gff3_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#delete_existing#' =>
                                       ['DeleteGenes'],
@@ -275,7 +275,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::LoadGFF3::DeleteGenes',
       -max_retry_count   => 1,
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['AnalysisSetup'],
     },
 
@@ -302,7 +302,7 @@ sub pipeline_analyses {
       -parameters        => {
                               synonym_external_db => $self->o('synonym_external_db'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['LoadGFF3'],
     },
 
@@ -330,7 +330,7 @@ sub pipeline_analyses {
                               xref_translation_external_db => $self->o('xref_translation_external_db'),
                               
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#fix_models#' =>
                                       ['FixModels'],
@@ -346,7 +346,7 @@ sub pipeline_analyses {
       -parameters        => {
                               protein_fasta_file => $self->o('protein_fasta_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#apply_seq_edits#' =>
                                       ['ApplySeqEdits'],
@@ -363,7 +363,7 @@ sub pipeline_analyses {
                               genbank_file       => $self->o('genbank_file'),
                               protein_fasta_file => $self->o('protein_fasta_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
 
@@ -376,7 +376,7 @@ sub pipeline_analyses {
                               subject            => 'GFF3 Loading pipeline has completed for #species#',
                               protein_fasta_file => $self->o('protein_fasta_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
   ];

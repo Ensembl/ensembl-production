@@ -260,7 +260,7 @@ sub pipeline_analyses {
                             db_type     => $self->o('db_type'),
                             output_file => catdir($self->o('backup_dir'), '#species#', 'of_bkp.sql.gz'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '1->A' => ['AnalysisUnmergeFactory'],
                             'A->1' => ['AnalysisSetupFactory'],
@@ -280,7 +280,7 @@ sub pipeline_analyses {
                             linked_tables    => $self->o('linked_tables'),
                             db_type          => $self->o('db_type'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['AnalysisUnmerge'],
                           },
@@ -296,7 +296,7 @@ sub pipeline_analyses {
       -parameters        => {
                               db_type => $self->o('db_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -344,7 +344,7 @@ sub pipeline_analyses {
                             external_db_name  => $self->o('external_db_name'),
                             analysis_groups   => $self->o('analysis_groups'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['AnalysisMerge'],
                           },
@@ -360,7 +360,7 @@ sub pipeline_analyses {
       -parameters        => {
                               db_type => $self->o('db_type'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -371,7 +371,7 @@ sub pipeline_analyses {
       -parameters        => {
                               optimize_tables => 1,
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
   ];

@@ -65,7 +65,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -77,7 +77,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -89,7 +89,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -101,7 +101,7 @@ sub pipeline_analyses {
                             },
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
   ];
 }

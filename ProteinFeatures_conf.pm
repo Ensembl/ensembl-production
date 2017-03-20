@@ -314,7 +314,7 @@ sub pipeline_analyses {
       -parameters        => { 
                               md5_checksum_file => $self->o('md5_checksum_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['InterProScanPrograms'],
     },
     
@@ -375,7 +375,7 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1->A' => ['AnalysisFactory'],
                               'A->1' => ['DumpProteome'],
@@ -448,7 +448,7 @@ sub pipeline_analyses {
                                   'AND i.interpro_ac IS NULL ',
                               ]
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['DeletePathwayXrefs'],
     },
   
@@ -459,7 +459,7 @@ sub pipeline_analyses {
       -parameters        => {
                               pathway_sources => $self->o('pathway_sources'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -471,7 +471,7 @@ sub pipeline_analyses {
                               header_style => 'dbID',
                               overwrite    => 1,
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#run_seg#' =>
                                       ['SplitDumpFile', 'PartitionByChecksum'],
@@ -492,7 +492,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['RunSeg'],
                             },
@@ -508,7 +508,7 @@ sub pipeline_analyses {
       {
         cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
       },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['StoreSegFeatures'],
     },
     
@@ -522,7 +522,7 @@ sub pipeline_analyses {
                               logic_name   => 'seg',
                               seg_out_file => '#split_file#.seg.txt',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -532,7 +532,7 @@ sub pipeline_analyses {
       -parameters        => {
                               fasta_file => '#proteome_file#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => ['SplitChecksumFile'],
                               '2' => ['SplitNoChecksumFile'],
@@ -551,7 +551,7 @@ sub pipeline_analyses {
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                               delete_existing_files   => $self->o('run_interproscan'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['InterProScanLookup', 'InterProScanNoLookup'],
                             },
@@ -569,7 +569,7 @@ sub pipeline_analyses {
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                               delete_existing_files   => $self->o('run_interproscan'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['InterProScanLocal'],
                             },
@@ -590,7 +590,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_lookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4Gb_mem_4Gb_tmp-rh7',
+      -rc_name           => '4Gb_mem_4Gb_tmp',
       -flow_into         => ['StoreProteinFeatures'],
     },
     
@@ -609,7 +609,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_4CPU-rh7',
+      -rc_name           => '4GB_4CPU',
       -flow_into         => ['StoreProteinFeatures'],
     },
     
@@ -628,7 +628,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_4CPU-rh7',
+      -rc_name           => '4GB_4CPU',
       -flow_into         => ['StoreProteinFeatures'],
     },
     
@@ -642,7 +642,7 @@ sub pipeline_analyses {
                               analyses        => $self->o('analyses'),
                               pathway_sources => $self->o('pathway_sources'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -653,7 +653,7 @@ sub pipeline_analyses {
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
     
@@ -666,7 +666,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'Protein features pipeline: report for #species#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -680,7 +680,7 @@ sub pipeline_analyses {
                             interpro_desc_file     => $self->o('interpro_desc_file'),
                             output_file            => $self->o('unique_file'),
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['SpeciesFactoryForStoringInterPro'],
     },
     
@@ -716,7 +716,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             1 => [ '?accu_name=filename&accu_address=[]' ],
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
     
     {
@@ -728,7 +728,7 @@ sub pipeline_analyses {
                             unique_file => $self->o('unique_file'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => ['SpeciesFactoryForStoringInterPro'],
     },
     
@@ -767,7 +767,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 10,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
     
   ];
@@ -778,7 +778,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4GB_4CPU-rh7' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
+    '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
   }
 }
 

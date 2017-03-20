@@ -213,7 +213,7 @@ sub pipeline_analyses {
                             uniparc_db => $self->o('local_uniparc_db'),
                           },
       -max_retry_count => 1,
-      -rc_name         => '4Gb_mem_4Gb_tmp-rh7',
+      -rc_name         => '4Gb_mem_4Gb_tmp',
     },
 
     {
@@ -267,7 +267,7 @@ sub pipeline_analyses {
                              ],
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['SetupUniParc']
     },
 
@@ -303,7 +303,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => WHEN('#load_uniprot#' => ['SetupUniProt']),
     },
 
@@ -345,7 +345,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => [
                             WHEN('#load_uniprot_go#'    => ['SetupUniProtGO']),
                             WHEN('#load_uniprot_xrefs#' => ['SetupUniProtXrefs']),
@@ -386,7 +386,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -424,7 +424,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -456,7 +456,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::EGPipeline::Xref::DeleteUnattachedXref',
       -max_retry_count => 0,
       -parameters      => {},
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
 
     {
@@ -477,7 +477,7 @@ sub pipeline_analyses {
       -parameters      => {
                             timing => 'before',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['?table_name=gene_descriptions'],
                             '3' => ['?table_name=gene_names'],
@@ -491,7 +491,7 @@ sub pipeline_analyses {
       -parameters      => {
                             timing => 'after',
                           },
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
       -flow_into       => {
                             '2' => ['?table_name=gene_descriptions'],
                             '3' => ['?table_name=gene_names'],
@@ -523,7 +523,7 @@ sub pipeline_analyses {
                             overwrite_description            => $self->o('overwrite_description'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal-rh7',
+      -rc_name         => 'normal',
     },
  ];
 }

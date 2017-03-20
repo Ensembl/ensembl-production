@@ -257,7 +257,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '1->A' => ['DNAAnalysisFactory'],
                               'A->1' => ['DumpGenome'],
@@ -282,7 +282,7 @@ sub pipeline_analyses {
                               pipeline_dir       => $self->o('pipeline_dir'),
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
                               'A->1' => ['DeleteRepeatConsensus'],
@@ -326,7 +326,7 @@ sub pipeline_analyses {
       -parameters        => {
                               genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => [
                               WHEN('#dust# || #trf#' => ['SplitDumpFiles_1']),
                               WHEN('#repeatmasker#'  => ['SplitDumpFiles_2']),
@@ -345,7 +345,7 @@ sub pipeline_analyses {
                               out_dir                 => catdir($self->o('pipeline_dir'), '#species#', 'dust_trf'),
                               file_varname            => 'queryfile',
                             },
-      -rc_name           => '8Gb_mem-rh7',
+      -rc_name           => '8Gb_mem',
       -flow_into         => {
                               '2' => [
                                 WHEN('#dust#' => ['Dust']),
@@ -366,7 +366,7 @@ sub pipeline_analyses {
                               out_dir                 => catdir($self->o('pipeline_dir'), '#species#', 'repeatmasker'),
                               file_varname            => 'queryfile',
                             },
-      -rc_name           => '8Gb_mem-rh7',
+      -rc_name           => '8Gb_mem',
       -flow_into         => {
                               '2' => ['RepeatMaskerFactory'],
                             },
@@ -382,7 +382,7 @@ sub pipeline_analyses {
                               logic_name      => 'dust',
                               parameters_hash => $self->o('dust_parameters_hash'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
     {
@@ -395,7 +395,7 @@ sub pipeline_analyses {
                               logic_name      => 'trf',
                               parameters_hash => $self->o('trf_parameters_hash'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
@@ -408,7 +408,7 @@ sub pipeline_analyses {
                               rm_logic_name      => $self->o('repeatmasker_logic_name'),
                               max_seq_length     => $self->o('max_seq_length'),
                             },
-      -rc_name           => '8Gb_mem-rh7',
+      -rc_name           => '8Gb_mem',
       -flow_into         => ['RepeatMasker'],
     },
 
@@ -420,14 +420,14 @@ sub pipeline_analyses {
       -parameters        => {
                               repeatmasker_cache => $self->o('repeatmasker_cache'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
 
     {
       -logic_name        => 'UpdateMetadata',
       -module            => 'Bio::EnsEMBL::EGPipeline::DNAFeatures::UpdateMetadata',
       -parameters        => {},
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => WHEN('#email_report#' => ['EmailRepeatReport']),
     },
 
@@ -438,7 +438,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'DNA features pipeline: Repeat report for #species#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     }
 
   ];

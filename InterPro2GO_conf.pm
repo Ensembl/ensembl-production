@@ -133,7 +133,7 @@ sub pipeline_analyses {
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
     
@@ -146,7 +146,7 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'Protein features pipeline: report for #species#',
                             },
-      -rc_name           => 'normal-rh7',
+      -rc_name           => 'normal',
     },
     
   ];
