@@ -37,8 +37,7 @@ sub default_options {
     run_all       => 0,
     meta_filters => {},
     
-    interproscan_dir => '/nfs/panda/ensemblgenomes/development/InterProScan',
-    interpro2go_file => catdir($self->o('interproscan_dir'), 'interpro2go/2016_June_4/interpro2go'),
+    interpro2go_file => '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
   };
 }
 
@@ -84,8 +83,45 @@ sub pipeline_analyses {
                               variation_flow  => 0,
                             },
       -flow_into         => {
-                              '2' => ['StoreGoXrefs'],
+                              '2' => ['AnalysisSetup'],
                             },
+      -meadow_type       => 'LOCAL',
+    },
+    
+    {
+      -logic_name        => 'AnalysisSetup',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::AnalysisSetup',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              logic_name         => 'interpro2go',
+                              db                 => 'InterPro2GO',
+                              db_backup_required => 0,
+                              delete_existing    => 1,
+                              linked_tables      => ['object_xref'],
+                              production_lookup  => 1,
+                              production_db      => $self->o('production_db'),
+                            },
+      -flow_into         => ['RemoveOrphans'],
+      -meadow_type       => 'LOCAL',
+    },
+    
+    {
+      -logic_name        => 'RemoveOrphans',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              sql => [
+                                'DELETE dx.* FROM '.
+                                  'dependent_xref dx LEFT OUTER JOIN '.
+                                  'object_xref ox USING (object_xref_id) '.
+                                  'WHERE ox.object_xref_id IS NULL',
+                                'DELETE onx.* FROM '.
+                                  'ontology_xref onx LEFT OUTER JOIN '.
+                                  'object_xref ox USING (object_xref_id) '.
+                                  'WHERE ox.object_xref_id IS NULL',
+                              ]
+                            },
+      -flow_into         => ['StoreGoXrefs'],
       -meadow_type       => 'LOCAL',
     },
     
