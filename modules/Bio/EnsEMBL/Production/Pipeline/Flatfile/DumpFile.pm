@@ -157,7 +157,7 @@ sub run {
   map { $self->run_cmd("gzip $_") } @compress;
 
   $self->_create_README();
-  
+  $self->core_dbc()->disconnect_if_idle();  
   return;
 }
 

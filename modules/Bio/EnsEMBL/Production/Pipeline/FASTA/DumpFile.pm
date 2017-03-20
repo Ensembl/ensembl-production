@@ -198,6 +198,7 @@ sub write_output {
   foreach my $flow (@{$dataflows}) {
     $self->dataflow_output_id(@{$flow});
   }
+  $self->core_dbc()->disconnect_if_idle();
   return;
 }
 

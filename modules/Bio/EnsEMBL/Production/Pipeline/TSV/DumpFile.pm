@@ -69,7 +69,7 @@ sub run {
     $self->_write_tsv();
     $self->_create_README();
     $self->info( "Completed tsv dump for " . $self->param('species'));
-
+    $self->dbc()->disconnect_if_idle();
 return;
 }
 

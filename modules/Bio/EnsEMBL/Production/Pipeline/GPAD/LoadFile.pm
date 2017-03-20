@@ -46,7 +46,7 @@ sub fetch_input {
     my ($self) = @_;
 
     # Delete by xref.info_type='PROJECTION' OR 'DEPENDENT'
-    my $sql_delete_1 = 'DELETE x,ox,onx  FROM xref x 
+    my $sql_delete_1 = 'DELETE ox.*,onx.*  FROM xref x 
 		      JOIN object_xref ox USING (xref_id) 
 		      JOIN ontology_xref onx USING (object_xref_id) 
 		      JOIN analysis a USING (analysis_id)
@@ -61,7 +61,7 @@ sub fetch_input {
 
     # Delete by analysis.logic_name='go_projection' & 'interpro2go'
     # interpro2go annotations should be superceded by GOA annotation
-    my $sql_delete_2 = 'DELETE x,ox,onx  FROM xref x 
+    my $sql_delete_2 = 'DELETE ox.*,onx.*  FROM xref x 
                       JOIN object_xref ox USING (xref_id) 
                       JOIN ontology_xref onx USING (object_xref_id) 
                       JOIN analysis a USING (analysis_id)
