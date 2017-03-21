@@ -2,6 +2,7 @@
 
 SRV=$1
 
+cd $BASE_DIR/ensembl-funcgen
 $SRV -e "show databases" | grep funcgen | grep -v master_schema | while read db; do
     echo "Checking $db";
     schema_build=$(echo $db | sed -e 's/.*_\([0-9]*_[0-9]*\)$/\1/')
