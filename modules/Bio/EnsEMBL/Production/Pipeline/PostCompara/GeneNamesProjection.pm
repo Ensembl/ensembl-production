@@ -51,6 +51,8 @@ sub fetch_input {
     my $taxon_filter           = $self->param('taxon_filter');
 
     my $is_tree_compliant      = $self->param('is_tree_compliant');
+    my $project_all            = $self->param('project_all');
+    my $white_list            = $self->param('white_list');
 
     $self->param('flag_store_proj', $flag_store_proj);
     $self->param('to_species', $to_species);
@@ -64,6 +66,8 @@ sub fetch_input {
     $self->param('geneName_source', $geneName_source);
     $self->param('taxon_filter', $taxon_filter);
     $self->param('is_tree_compliant', $is_tree_compliant);
+    $self->param('project_all', $project_all);
+    $self->param('white_list', $white_list);
 
     $self->check_directory($output_dir);
     my $log_file  = $output_dir."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
@@ -126,7 +130,8 @@ sub run {
 
     my $mlss_id       = $mlss->dbID();
     # build hash of external db name -> ensembl object type mappings
-    my %db_to_type = build_db_to_type($to_ga);
+    my $db_to_type = build_db_to_type($to_ga);
+    my $source_db_to_type = build_db_to_type($from_ga);
 
     # Get homologies from compara - comes back as a hash of arrays
     print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
@@ -144,7 +149,14 @@ sub run {
        foreach my $to_stable_id (@to_genes) {
             my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
             next if (!$to_gene);
-            $self->project_genenames($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, $gene_nbr, scalar(@to_genes),  %db_to_type);
+            if (defined $self->param('project_all') and $self->param('project_all')==1)
+            {
+              $self->project_all_genenames($to_dbea, $from_gene, $to_gene, $log, scalar(@to_genes), $source_db_to_type);
+              $self->project_genenames($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, scalar(@to_genes),  $db_to_type);
+            }
+            else{
+              $self->project_genenames($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, scalar(@to_genes),  $db_to_type);
+            }
         }
         $gene_nbr++;
     }
@@ -171,7 +183,7 @@ sub write_output {
 ## internal methods
 ######################
 sub project_genenames {
-    my ($self, $to_geneAdaptor, $to_transcriptAdaptor, $to_dbea, $from_gene, $to_gene, $log, $gene_number, $total_gene_number, %db_to_type)  = @_;
+    my ($self, $to_geneAdaptor, $to_transcriptAdaptor, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $db_to_type)  = @_;
 
     my $flag_store_proj  = $self->param('flag_store_proj');
     my $from_species     = $self->param('from_species');
@@ -201,10 +213,10 @@ sub project_genenames {
 
           if($dbEntry->display_id=~/$from_gene_display_id/  && $flag_store_proj==1 && grep (/$from_gene_dbname/, @$geneName_source)){
 
-             print $log "\t\tProject from:".$from_gene->stable_id()."\t";
+             print $log "\t\tProject display xref from:".$from_gene->stable_id()."\t";
              print $log "to:".$to_gene->stable_id()."\t";
-             print $log "GeneName:".$from_gene->display_xref->display_id()."\t";
-             print $log "DB:".$from_gene->display_xref->dbname()."\n";
+             print $log "GeneName:".$from_gene_display_id."\t";
+             print $log "DB:".$from_gene_dbname."\n";
 
              # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
              my $info_txt = "from $from_species gene " . $from_gene->stable_id();
@@ -238,7 +250,7 @@ sub project_genenames {
 
              my $dbname = $dbEntry->dbname();
 
-             my $type = $db_to_type{$dbname};
+             my $type = $db_to_type->{$dbname};
 
             if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
               $to_gene->add_DBEntry($dbEntry);
@@ -297,6 +309,64 @@ sub project_genenames {
    }
 }
 
+# Project all the xrefs from a species to another and store them as type PROJECTION
+sub project_all_genenames {
+    my ($self, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $source_db_to_type)  = @_;
+
+    my $flag_store_proj  = $self->param('flag_store_proj');
+    my $from_species     = $self->param('from_species');
+    my $white_list  = $self->param('white_list');
+
+    foreach my $dbEntry (@{$from_gene->get_all_DBLinks()}) {
+      my @to_transcripts = @{$to_gene->get_all_Transcripts};
+      my $to_transcript = $to_transcripts[0];
+
+      my $dbname = $dbEntry->dbname();
+      my $type = $source_db_to_type->{$dbname};
+
+      # Skip xref if it's not in the white list. Only project xrefs from the white list.
+      next if (!grep (/$dbname/, @$white_list));
+
+      if ($flag_store_proj==1){
+        
+        print $log "\t\tProject xref from:".$from_gene->stable_id()."\t";
+        print $log "to:".$to_gene->stable_id()."\t";
+        print $log "Xref:".$dbEntry->display_id()."\t";
+        print $log "DB:".$dbname."\n";
+
+        # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
+        my $info_txt = "from $from_species gene " . $from_gene->stable_id();
+
+        # modify the display_id to have "(1 of many)" if this is a one-to-many ortholog
+        my $tuple_txt = "";
+        if ($total_gene_number > 1) {
+          $tuple_txt = " (1 of many)";
+          my $existing = $dbEntry->display_id();
+          $existing =~ s/ \(1 of many\)//;
+          $dbEntry->display_id($existing . $tuple_txt);
+          $info_txt .= $tuple_txt;
+        }
+
+        $dbEntry->info_type("PROJECTION");
+        $dbEntry->info_text($info_txt);
+
+        if ($type eq "Gene") {
+          $to_gene->add_DBEntry($dbEntry);
+          $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
+        }
+        elsif ($type eq "Transcript") {
+          $to_transcript->add_DBEntry($dbEntry);
+          $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
+        }
+        elsif ($type eq "Translation") {
+          my $to_translation = $to_transcript->translation();
+          return if (!$to_translation);
+          $to_translation->add_DBEntry($dbEntry);
+          $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
+        }
+      }
+    }
+}
 # ----------------------------------------------------------------------
 
 # Decide if a gene name should be overwritten
@@ -400,18 +470,18 @@ sub build_db_to_type {
 
   my ($to_ga) = @_;
 
-  my %db_to_type = ();
+  my $db_to_type;
 
   my $sth = $to_ga->dbc()->prepare("SELECT DISTINCT e.db_name, ox.ensembl_object_type FROM external_db e, xref x, object_xref ox WHERE x.xref_id=ox.xref_id AND e.external_db_id=x.external_db_id");
   $sth->execute();
   my ($db_name, $type);
   $sth->bind_columns(\$db_name, \$type);
   while($sth->fetch()){
-    $db_to_type{$db_name} = $type;
+    $db_to_type->{$db_name} = $type;
   }
   $sth->finish;
 
-  return %db_to_type;
+  return $db_to_type;
 
 }
 

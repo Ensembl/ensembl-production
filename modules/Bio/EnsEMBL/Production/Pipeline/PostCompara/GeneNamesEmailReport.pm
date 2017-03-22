@@ -43,6 +43,7 @@ sub fetch_input {
     my $flag_GeneNames         = $self->param('flag_GeneNames');
     my $flag_GeneDescr         = $self->param('flag_GeneDescr');
     my $species                = $self->param('species');
+    my $project_all            = $self->param('project_all');
     my $reports;
 
     foreach my $sp (@$species){
@@ -54,7 +55,9 @@ sub fetch_input {
        }
        else {
          $reports .= $self->info_type_summary($dbh, $sp) if($flag_GeneNames);
+         $reports .= $self->xref_type_summary($dbh, $sp) if($flag_GeneNames);
          $reports .= $self->geneDesc_summary($dbh, $sp)  if($flag_GeneDescr);
+         $reports .= $self->info_type_summary_project_all_xref($dbh, $sp) if ($flag_GeneNames and $project_all)
       }
    }
 
@@ -74,7 +77,43 @@ sub info_type_summary {
     my $sth = $dbh->prepare($sql);
     $sth->execute();
 
-    my $title   = "Summary of DB primary_acc, by info types: ($sp)";
+    my $title   = "Summary of DB primary_acc display_xref projected, by info types: ($sp)";
+    my $columns = $sth->{NAME};
+    my $results = $sth->fetchall_arrayref();
+
+return $self->format_table($title, $columns, $results);    
+}
+
+sub info_type_summary_project_all_xref {
+    my ($self, $dbh, $sp) = @_;
+
+    my $sql = 'select distinct(db_name), count(*) 
+                from xref LEFT JOIN external_db USING (external_db_id) 
+                where info_type="PROJECTION" 
+                group by db_name';
+
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+
+    my $title   = "Summary of xref projected to $sp";
+    my $columns = $sth->{NAME};
+    my $results = $sth->fetchall_arrayref();
+
+return $self->format_table($title, $columns, $results);    
+}
+
+sub xref_type_summary {
+    my ($self, $dbh, $sp) = @_;
+
+    my $sql = 'SELECT count(*),db_name 
+                FROM gene LEFT JOIN xref ON display_xref_id = xref_id 
+                LEFT JOIN external_db USING(external_db_id) 
+                WHERE xref.info_type = "PROJECTION" group by db_name';
+
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+
+    my $title   = "Summary of xref display_xref projected, by xref source: ($sp)";
     my $columns = $sth->{NAME};
     my $results = $sth->fetchall_arrayref();
 

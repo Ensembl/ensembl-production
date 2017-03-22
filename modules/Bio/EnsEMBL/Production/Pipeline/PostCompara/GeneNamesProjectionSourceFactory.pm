@@ -58,8 +58,9 @@ sub run {
          my $species                = $final_projection_list->{$pair}->{'species'};
          my $antispecies            = $final_projection_list->{$pair}->{'antispecies'};
          my $division               = $final_projection_list->{$pair}->{'division'};
-         my $run_all                = $final_projection_list->{$pair}->{'run_all'};
-         my $method_link_type       = $final_projection_list->{$pair}->{'method_link_type'};
+         my $project_all            = $final_projection_list->{$pair}->{'project_all'};
+         my $run_all                = $final_projection_list->{$pair}->{'run_all'};       
+         my $method_link_type       = $final_projection_list->{$pair}->{'method_link_type'};  
          my $homology_types_allowed = $final_projection_list->{$pair}->{'homology_types_allowed'};
          my $percent_id_filter      = $final_projection_list->{$pair}->{'percent_id_filter'};
          my $percent_cov_filter     = $final_projection_list->{$pair}->{'percent_cov_filter'};
@@ -67,6 +68,7 @@ sub run {
          my $geneName_source        = $final_projection_list->{$pair}->{'geneName_source'};
          my $geneDesc_rules         = $final_projection_list->{$pair}->{'geneDesc_rules'};
          my $geneDesc_rules_target  = $final_projection_list->{$pair}->{'geneDesc_rules_target'};
+         my $white_list             = $final_projection_list->{$pair}->{'white_list'};
 
          # Remove source/target species from the hash
          delete $final_projection_list->{$pair};
@@ -79,6 +81,7 @@ sub run {
 		 'species'     		  => $species, 
 		 'antispecies' 		  => $antispecies, 
   		 'division'    	  	  => $division, 
+       'project_all'     => $project_all,
 		 'run_all' 		  => $run_all,
 		 'method_link_type' 	  => $method_link_type,
                  'homology_types_allowed' => $homology_types_allowed,
@@ -87,13 +90,15 @@ sub run {
 		 'taxon_filter'           => $taxon_filter,
 		 'geneName_source'	  => $geneName_source,
 		 'geneDesc_rules'	  => $geneDesc_rules,
-		 'geneDesc_rules_target'  => $geneDesc_rules_target
+		 'geneDesc_rules_target'  => $geneDesc_rules_target,
+     'white_list'             => $white_list
 		},2);
                 # If parallel_GeneNames_projections is defined, we run all the projections at the same time in parallel
           if ($parallel_GeneNames_projections){
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
-                                 'source'                 => $source},1);
+                                 'source'                 => $source,
+                                 'project_all'            => $project_all},1);
           }
           # else, we run the projections sequentially, one set of projection at the time
           else{
@@ -101,13 +106,15 @@ sub run {
           if (keys $final_projection_list){
             $self->dataflow_output_id({'projection_list'       => $self->param('projection_list'),
                                  'species'                => $species,
-                                 'source'                 => $source},1);
+                                 'source'                 => $source,
+                                 'project_all'            => $project_all},1);
           }
            # If we only run one set of projection then behave like parallel projections
           else{
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
-                                 'source'                 => $source},1);
+                                 'source'                 => $source,
+                                 'project_all'            => $project_all},1);
           }
           last;
           }

@@ -96,11 +96,16 @@ sub default_options {
                                 'antispecies' => [],
                                 # target species division to project to
                                 'division'    => [],
+                                # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
+                                'project_all' =>  1,
+                                # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
+                                'white_list'  => ['RefSeq_mRNA', 'RefSeq_mRNA_predicted','RefSeq_ncRNA','RefSeq_ncRNA_predicted','RefSeq_peptide','RefSeq_peptide_predicted','EntrezGene','EntrezGene_trans_name','WikiGene','Uniprot/SPTREMBL','Uniprot/SWISSPROT','Uniprot_gn','protein_id','UniParc','ArrayExpress','RNACentral','MGI','MGI_trans_name','miRBase','miRBase_trans_name','RFAM','RFAM_trans_name'],
+                                # Run the pipeline on all the species 
                                 'run_all'     =>  0, # 1/0
                                 # flowering group of your target species
                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                 # source species GeneName filter
-                                'geneName_source'                => [],
+                                'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                 # homology types filter
                                 'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                                 'homology_types_allowed' => ['ortholog_one2one'],
@@ -125,7 +130,7 @@ sub default_options {
                                  # flowering group of your target species
                                  'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                  # source species GeneName filter for GeneDescription
-                                 'geneName_source'                => [],
+                                 'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                  # source species GeneDescription filter
                                  'geneDesc_rules'         => [],
                                  # target species GeneDescription filter
@@ -177,6 +182,7 @@ sub default_options {
                                 'antispecies' => [],
                                 # target species division to project to
                                 'division'    => [],
+                                # Run the pipeline on all the species 
                                 'run_all'     =>  0, # 1/0
                                 # homology types filter
                                 'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
@@ -257,13 +263,6 @@ sub default_options {
 	   #  Off by default. Control the storing of projections into database. 
        flag_store_projections => '1',
 
-    ## Access to the ncbi taxonomy db
-	    'taxonomy_db' =>  {
-     	  	  -host   => 'ens-livemirror',
-       	  	  -port   => '3306',
-       	  	  -user   => 'ensro',
-       	  	  -dbname => 'ncbi_taxonomy',      	
-       	},
 
        'pipeline_db' => {  
 		     -host   => $self->o('hive_host'),
