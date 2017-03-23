@@ -70,7 +70,6 @@ sub fetch_input {
 			 WHERE c.species_id=?
 			 GROUP BY i.interpro_ac, pf.translation_id';
 
-   my $sql_del_xref   = 'DELETE FROM xref WHERE external_db_id=1000 AND info_text LIKE "%interpro%"';
 
    $self->param('file', $file);
    $self->param('species', $species);
