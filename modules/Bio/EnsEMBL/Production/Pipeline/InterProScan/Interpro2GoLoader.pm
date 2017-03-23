@@ -46,12 +46,6 @@ sub fetch_input {
     my $ipr_ext_dbid             = $self->fetch_external_db_id($core_dbh, 'Interpro');
     my $go_ext_dbid              = $self->fetch_external_db_id($core_dbh, 'GO');
 
-    # Query to remove from 'ontology_xref' and 'object_xref' records with interpro GO annotation   
-    my $sql_clear_table =  'DELETE ox.*, onx.* FROM object_xref ox 
-                          INNER JOIN ontology_xref onx USING(object_xref_id)  
-                          INNER JOIN xref x ON onx.source_xref_id = x.xref_id 
-                          INNER JOIN xref x2 ON ox.xref_id=x2.xref_id 
-                          WHERE x.external_db_id =? AND x2.external_db_id =?';
 
     # Query to get all GO annotated translation_id, 
     # that supports collection species
@@ -94,7 +88,6 @@ sub fetch_input {
    $self->param('dbea', $dbea);
    $self->param('ipr_ext_dbid', $ipr_ext_dbid);
    $self->param('go_ext_dbid', $go_ext_dbid);
-   $self->param('sql_clear_table', $sql_clear_table);
    $self->param('sql_get_tid', $sql_get_tid);
    $self->param('sql_get_ipr_tid', $sql_get_ipr_tid);
 
@@ -117,11 +110,9 @@ sub run {
     my $dbea		        = $self->param_required('dbea');
     my $ipr_ext_dbid            = $self->param_required('ipr_ext_dbid');
     my $go_ext_dbid             = $self->param_required('go_ext_dbid');
-    my $sql_clear_table         = $self->param_required('sql_clear_table');
     my $sql_get_tid             = $self->param_required('sql_get_tid');
     my $sql_get_ipr_tid         = $self->param_required('sql_get_ipr_tid');
     my $sql_helper 	        = $self->core_dbc()->sql_helper();
-    my $sth_clear_table         = $core_dbh->prepare($sql_clear_table);
     my $sth_get_tid             = $core_dbh->prepare($sql_get_tid);
     my $sth_get_ipr_tid         = $core_dbh->prepare($sql_get_ipr_tid);
 
@@ -142,7 +133,6 @@ sub run {
     my $interpro2go = $self->parse_interpro2go( $file, \%interpro_xrefs );
     my ($interpro_ac, $domain, $translation, $transcript);
 
-    # $sth_clear_table->execute($ipr_ext_dbid, $go_ext_dbid);
     $sth_get_ipr_tid->execute($self->core_dba()->species_id());
     $sth_get_ipr_tid->bind_columns(\$interpro_ac, \$domain, \$translation, \$transcript);
 
