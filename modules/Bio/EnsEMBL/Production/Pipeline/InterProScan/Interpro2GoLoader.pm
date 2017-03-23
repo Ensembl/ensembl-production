@@ -58,11 +58,6 @@ sub fetch_input {
 			 WHERE x.external_db_id=? 
 			 AND c.species_id=?';
 
-    #  $sql_get_tid     = 'SELECT ox.ensembl_id FROM object_xref ox 
-    #                        JOIN xref x USING (xref_id) 
-    #                        WHERE x.external_db_id=? AND ox.ensembl_id=?';
-
-
     # Query to get mapping of interpro accession to ensembl translation,
     # 'GROUP BY' to remove duplicates of interpro_ac and translation_id
     # that supports collection species
@@ -74,10 +69,6 @@ sub fetch_input {
 			 JOIN coord_system c USING (coord_system_id) 
 			 WHERE c.species_id=?
 			 GROUP BY i.interpro_ac, pf.translation_id';
-
-   # $sql_get_ipr_tid = 'SELECT i.interpro_ac, pf.hit_name, pf.translation_id FROM interpro i
-   #                         JOIN protein_feature pf ON (hit_name=id)
-   #                         GROUP BY i.interpro_ac, pf.translation_id'; 
 
    my $sql_del_xref   = 'DELETE FROM xref WHERE external_db_id=1000 AND info_text LIKE "%interpro%"';
 
