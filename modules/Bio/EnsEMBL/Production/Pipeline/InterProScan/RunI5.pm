@@ -61,7 +61,9 @@ sub run {
   
     my $outfile_xml_base = "$protein_file.$run_mode";
     my $outfile_xml      = "$outfile_xml_base.xml";
-    
+   
+    unlink $outfile_xml if -e $outfile_xml;
+ 
     $self->get_logger->info("Interproscan results in XML format will go to: $outfile_xml");
   
     # Must use /tmp for short temporary file names.
