@@ -1,0 +1,26 @@
+{
+    "type": "object",
+    "required": [
+        "hit_name",
+        "display_label",
+        "type",
+        "count"
+    ],
+    "properties": {
+        "hit_name": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "display_label": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "count": {
+            "type": "number"
+        }
+    }
+}
