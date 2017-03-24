@@ -1,0 +1,1423 @@
+{
+    "required": [
+        "genes",
+        "is_reference"
+    ],
+    "type": [
+        "array",
+        "object"
+    ],
+    "properties": {
+        "species_id": {
+            "type": "string"
+        },
+        "division": {
+            "type": "string"
+        },
+        "is_reference": {
+            "type": "string"
+        },
+        "assembly": {
+            "required": [
+                "accession",
+                "level",
+                "name"
+            ],
+            "type": "object",
+            "properties": {
+                "accession": {
+                    "type": "null"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                }
+            }
+        },
+        "genes": {
+            "items": {
+                "required": [
+                    "GO",
+                    "biotype",
+                    "coord_system",
+                    "end",
+                    "genome",
+                    "genome_display",
+                    "homologues",
+                    "id",
+                    "lineage",
+                    "seq_region_name",
+                    "start",
+                    "strand",
+                    "taxon_id",
+                    "transcripts",
+                    "xrefs"
+                ],
+                "type": "object",
+                "properties": {
+                    "Interpro": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "GO_expanded": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "UniPathway": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "PANTHER": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Gene3D": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RefSeq_peptide_predicted": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "ncoils": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "PRINTS": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "OTTT": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Clone_based_ensembl_transcript": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Vega_transcript": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Clone_based_vega_gene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "CCDS": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RefSeq_mRNA_predicted": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Tmhmm": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "HGNC_trans_name": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "strand": {
+                        "type": "string"
+                    },
+                    "homologues": {
+                        "items": {
+                            "required": [
+                                "description",
+                                "genome",
+                                "genome_display",
+                                "stable_id"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "stable_id": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "genome_display": {
+                                    "type": "string"
+                                },
+                                "genome": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "end": {
+                        "type": "string"
+                    },
+                    "genome_display": {
+                        "type": "string"
+                    },
+                    "Uniprot/SWISSPROT": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Clone_based_ensembl_gene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "WikiGene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "HAMAP": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RNACentral": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "PDB": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Vega_gene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "start": {
+                        "type": "string"
+                    },
+                    "SignalP": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Smart": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "taxon_id": {
+                        "type": "string"
+                    },
+                    "Clone_based_vega_transcript": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RFAM_trans_name": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "protein_id": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "genome": {
+                        "type": "string"
+                    },
+                    "Pfam": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "ArrayExpress": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Superfamily": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "xrefs": {
+                        "items": {
+                            "required": [
+                                "dbname",
+                                "display_id",
+                                "info_text",
+                                "info_type",
+                                "primary_id"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "display_id": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "info_text": {
+                                    "type": "string"
+                                },
+                                "primary_id": {
+                                    "type": "string"
+                                },
+                                "info_type": {
+                                    "type": "string"
+                                },
+                                "dbname": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "EMBL": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "MetaCyc": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "MIM_GENE": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Vega_translation": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "coord_system": {
+                        "required": [
+                            "name",
+                            "version"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "version": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "RefSeq_mRNA": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Uniprot_gn": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Prosite_patterns": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "biotype": {
+                        "type": "string"
+                    },
+                    "protein_id_predicted": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "GO": {
+                        "items": {
+                            "required": [
+                                "evidence",
+                                "parents",
+                                "term"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "term": {
+                                    "type": "string"
+                                },
+                                "parents": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "evidence": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "Prosite_profiles": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "HPA": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "ProDom": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "UniGene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "lineage": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "TIGRfam": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Seg": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "OTTP": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "PIRSF": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "UniParc": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "MEROPS": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "EMBL_predicted": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RefSeq_peptide": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "seq_region_name": {
+                        "type": "string"
+                    },
+                    "UCSC": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "EntrezGene": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "KEGG_Enzyme": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Uniprot/SPTREMBL": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RFAM": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "RefSeq_ncRNA": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "OTTG": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "transcripts": {
+                        "items": {
+                            "required": [
+                                "biotype",
+                                "end",
+                                "exons",
+                                "id",
+                                "seq_region_name",
+                                "start",
+                                "strand",
+                                "xrefs"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "Interpro": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "exons": {
+                                    "items": {
+                                        "required": [
+                                            "end",
+                                            "id",
+                                            "seq_region_name",
+                                            "start",
+                                            "strand"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "seq_region_name": {
+                                                "type": "string"
+                                            },
+                                            "end": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "strand": {
+                                                "type": "string"
+                                            },
+                                            "start": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                },
+                                "PANTHER": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Gene3D": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RefSeq_peptide_predicted": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "ncoils": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "PRINTS": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "OTTT": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Clone_based_ensembl_transcript": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Vega_transcript": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "CCDS": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RefSeq_mRNA_predicted": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Tmhmm": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "HGNC_trans_name": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "Seg": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "end": {
+                                    "type": "string"
+                                },
+                                "UniPathway": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Uniprot/SWISSPROT": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "HAMAP": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RNACentral": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "PDB": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "start": {
+                                    "type": "string"
+                                },
+                                "SignalP": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Smart": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Clone_based_vega_transcript": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RFAM_trans_name": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "protein_id": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RefSeq_ncRNA": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Pfam": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Superfamily": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "xrefs": {
+                                    "items": {
+                                        "required": [
+                                            "dbname",
+                                            "display_id",
+                                            "info_text",
+                                            "info_type",
+                                            "primary_id"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "display_id": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "info_text": {
+                                                "type": "string"
+                                            },
+                                            "primary_id": {
+                                                "type": "string"
+                                            },
+                                            "info_type": {
+                                                "type": "string"
+                                            },
+                                            "dbname": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                },
+                                "EMBL": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "MetaCyc": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Vega_translation": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "translations": {
+                                    "items": {
+                                        "required": [
+                                            "UniParc",
+                                            "id",
+                                            "protein_features",
+                                            "xrefs"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "Interpro": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "protein_features": {
+                                                "items": {
+                                                    "required": [
+                                                        "dbname",
+                                                        "end",
+                                                        "name",
+                                                        "start",
+                                                        "translation_id"
+                                                    ],
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "end": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "translation_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "start": {
+                                                            "type": "string"
+                                                        },
+                                                        "interpro_ac": {
+                                                            "type": "string"
+                                                        },
+                                                        "dbname": {
+                                                            "type": "string"
+                                                        },
+                                                        "description": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "array"
+                                            },
+                                            "UniPathway": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "PANTHER": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Gene3D": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "RefSeq_peptide_predicted": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "ncoils": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Superfamily": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Tmhmm": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "Smart": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Seg": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Uniprot/SWISSPROT": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "HAMAP": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "PDB": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "SignalP": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Prosite_profiles": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "protein_id": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Pfam": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "PRINTS": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "xrefs": {
+                                                "items": {
+                                                    "required": [
+                                                        "dbname",
+                                                        "display_id",
+                                                        "primary_id"
+                                                    ],
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "display_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "associated_xrefs": {
+                                                            "items": {
+
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "description": {
+                                                            "type": "string"
+                                                        },
+                                                        "info_text": {
+                                                            "type": "string"
+                                                        },
+                                                        "linkage_types": {
+                                                            "items": {
+                                                                "required": [
+                                                                    "evidence",
+                                                                    "source"
+                                                                ],
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "source": {
+                                                                        "required": [
+                                                                            "dbname",
+                                                                            "description",
+                                                                            "display_id",
+                                                                            "primary_id"
+                                                                        ],
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "display_id": {
+                                                                                "type": [
+                                                                                    "null",
+                                                                                    "string"
+                                                                                ]
+                                                                            },
+                                                                            "primary_id": {
+                                                                                "type": [
+                                                                                    "null",
+                                                                                    "string"
+                                                                                ]
+                                                                            },
+                                                                            "description": {
+                                                                                "type": [
+                                                                                    "null",
+                                                                                    "string"
+                                                                                ]
+                                                                            },
+                                                                            "dbname": {
+                                                                                "type": [
+                                                                                    "null",
+                                                                                    "string"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "evidence": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "primary_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "info_type": {
+                                                            "type": "string"
+                                                        },
+                                                        "dbname": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "array"
+                                            },
+                                            "EMBL": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "MetaCyc": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Vega_translation": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Prosite_patterns": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "protein_id_predicted": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "GO": {
+                                                "items": {
+                                                    "required": [
+                                                        "evidence",
+                                                        "parents",
+                                                        "term"
+                                                    ],
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "term": {
+                                                            "type": "string"
+                                                        },
+                                                        "parents": {
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "evidence": {
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "array"
+                                            },
+                                            "HPA": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "ProDom": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "TIGRfam": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "OTTP": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "PIRSF": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "UniParc": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "MEROPS": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "EMBL_predicted": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "RefSeq_peptide": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Uniprot/SPTREMBL": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "KEGG_Enzyme": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "Reactome": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                },
+                                "RefSeq_mRNA": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Prosite_patterns": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "biotype": {
+                                    "type": "string"
+                                },
+                                "protein_id_predicted": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "GO": {
+                                    "items": {
+                                        "required": [
+                                            "evidence",
+                                            "parents",
+                                            "term"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "term": {
+                                                "type": "string"
+                                            },
+                                            "parents": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "evidence": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                },
+                                "Prosite_profiles": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "HPA": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "ProDom": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "strand": {
+                                    "type": "string"
+                                },
+                                "TIGRfam": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "OTTP": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "PIRSF": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "UniParc": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "MEROPS": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "EMBL_predicted": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "RefSeq_peptide": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "seq_region_name": {
+                                    "type": "string"
+                                },
+                                "UCSC": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Uniprot/SPTREMBL": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "KEGG_Enzyme": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "Reactome": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "HGNC": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "Reactome": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    }
+                }
+            },
+            "type": "array"
+        },
+        "id": {
+            "type": "string"
+        },
+        "genebuild": {
+            "type": "string"
+        },
+        "GO": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "organism": {
+            "required": [
+                "aliases",
+                "display_name",
+                "lineage",
+                "name",
+                "scientific_name",
+                "serotype",
+                "species_taxonomy_id",
+                "strain",
+                "taxonomy_id"
+            ],
+            "type": "object",
+            "properties": {
+                "lineage": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scientific_name": {
+                    "type": "string"
+                },
+                "serotype": {
+                    "type": "null"
+                },
+                "strain": {
+                    "type": "null"
+                },
+                "taxonomy_id": {
+                    "type": "string"
+                },
+                "species_taxonomy_id": {
+                    "type": "string"
+                },
+                "aliases": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            }
+        },
+        "dbname": {
+            "type": "string"
+        }
+    }
+}
