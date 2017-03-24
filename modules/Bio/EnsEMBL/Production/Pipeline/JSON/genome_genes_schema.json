@@ -64,11 +64,17 @@
                     "id": {
                         "type": "string"
                     },
+                    "version": {
+                        "type": "number"
+                    },
                     "description": {
                         "type": "string"
                     },
                     "strand": {
                         "type": "string"
+                    },
+                    "is_haplotype": {
+                        "type": "boolean"
                     },
                     "homologues": {
                         "items": {
@@ -227,6 +233,12 @@
                     "name": {
                         "type": "string"
                     },
+                    "synonyms": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
                     "seq_region_name": {
                         "type": "string"
                     },
@@ -264,6 +276,9 @@
                                             "id": {
                                                 "type": "string"
                                             },
+                                            "version": {
+                                                "type": "number"
+                                            },                                            
                                             "strand": {
                                                 "type": "string"
                                             },
@@ -277,6 +292,9 @@
                                 "id": {
                                     "type": "string"
                                 },
+                                "version": {
+                                    "type": "number"
+                                },                                
                                 "description": {
                                     "type": "string"
                                 },
@@ -423,6 +441,9 @@
                                             "id": {
                                                 "type": "string"
                                             },
+                                            "version": {
+                                                "type": "number"
+                                            },                                            
                                             "xrefs": {
                                                 "items": {
                                                     "required": [
