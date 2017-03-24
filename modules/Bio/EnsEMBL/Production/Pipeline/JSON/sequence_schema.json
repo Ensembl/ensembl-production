@@ -1,0 +1,28 @@
+{
+    "type": "object",
+    "required": [
+        "id",
+        "length",
+        "type"
+    ],
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "length": {
+            "type": "number"
+        },
+        "type": {
+            "type": "string"
+        },
+        "parent": {
+            "type": "string"
+        },
+        "synonyms": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
