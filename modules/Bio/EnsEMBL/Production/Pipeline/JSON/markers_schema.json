@@ -1,0 +1,17 @@
+{
+    "required": [
+        "name"
+    ],
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "synonyms": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
