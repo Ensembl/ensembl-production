@@ -79,7 +79,7 @@ sub run {
       }
 
       if ($flag_GeneNames){
-          $final_projection_backup_list->{gn} = process_pairs(values $self->param('gn_config'));
+          $final_projection_backup_list->{gn} = process_pairs(values $self->param('g_config'));
           $final_projection_backup_list->{gn}->{output_dir} = $self->param('output_dir');
           $final_projection_backup_list->{gn}->{dump_tables} = $self->param('g_dump_tables');
           $final_projection_backup_list->{gn}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
