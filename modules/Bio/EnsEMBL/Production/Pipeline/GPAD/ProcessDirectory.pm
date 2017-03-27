@@ -38,17 +38,24 @@ use base ('Bio::EnsEMBL::Hive::Process');
 sub run {
     my ($self) = @_;
 
-    my $dir = $self->param_required('gpad_directory');
+    my $gpad_dir_list = $self->param_required('gpad_directory');
 
-    opendir(DIR, $dir) or die $!;
-
-    # Flowing 1 job per *.gpa file
-    while (my $file = readdir(DIR)) {
-         next unless ($file =~ m/^annotations_ensembl.*gpa$/);
-         $file = $dir."/".$file;
-         $self->dataflow_output_id( { 'gpad_file' => $file }, 2); 
+    if(ref $gpad_dir_list ne 'ARRAY') {
+      $gpad_dir_list = [$gpad_dir_list];
     }
-    closedir(DIR);
+
+    for my $dir (@$gpad_dir_list) {      
+      print "Processing $dir\n";
+      opendir(DIR, $dir) or die $!;     
+      # Flowing 1 job per *.gpa file
+      while (my $file = readdir(DIR)) {
+	next unless ($file =~ m/^annotations_ensembl.*gpa$/);	 
+	$file = $dir."/".$file;
+	print "Scheduling $file\n";
+	$self->dataflow_output_id( { 'gpad_file' => $file }, 2); 
+      }
+      closedir(DIR);
+    }
 
 return 0;
 }
