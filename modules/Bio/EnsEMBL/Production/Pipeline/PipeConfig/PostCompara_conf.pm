@@ -51,7 +51,6 @@ sub default_options {
         
 	    # division for GeneName projection
             division     => undef, # Eg: protists, fungi, plants, metazoa
-            pipeline_name     => $self->o('ENV','USER').'_PostCompara_'.$self->o('ensembl_release'),
             output_dir        => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
             
             ## Flags controlling sub-pipeline to run
@@ -231,7 +230,7 @@ sub default_options {
 	    production_lookup => 1,
 
 	    ## Gene Coverage
-	    gcov_division          => $self->o('division_name'), 
+	    gcov_division          => $self->o('division'), 
 	
 		  # Email Report subject
       gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
