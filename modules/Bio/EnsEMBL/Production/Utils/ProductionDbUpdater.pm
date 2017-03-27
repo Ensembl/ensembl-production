@@ -258,7 +258,7 @@ sub update_analysis_description {
        SET ad.description=?,ad.display_label=?,ad.web_data=?,ad.displayable=?
        WHERE logic_name=?/,
         -PARAMS => [ $analysis->{description}, $analysis->{display_label},
-                     $analysis->{web_data},    $analysis->{displayable} ] );
+                     $analysis->{web_data},    $analysis->{displayable}, $logic_name ] );
     }
   }
   $logger->info( "Completed updating analysis_description for " . $dbname );
