@@ -40,7 +40,6 @@ sub run {
 
     my $flag_GeneNames = $self->param('flag_GeneNames');
     my $flag_GeneDescr = $self->param('flag_GeneDescr');
-    my $flag_GO        = $self->param('flag_GO');
 
     my $output_dir  = $self->param('output_dir');
     my $projection_backup_list = $self->param('projection_backup_list');
@@ -80,20 +79,11 @@ sub run {
       }
 
       if ($flag_GeneNames){
-          $final_projection_backup_list->{gn} = process_pairs(values $self->param('gd_config'));
+          $final_projection_backup_list->{gn} = process_pairs(values $self->param('gn_config'));
           $final_projection_backup_list->{gn}->{output_dir} = $self->param('output_dir');
           $final_projection_backup_list->{gn}->{dump_tables} = $self->param('g_dump_tables');
           $final_projection_backup_list->{gn}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
       }
-
-        if ($flag_GO)
-          {
-          # Process the go projection hash and create unique species, division and antispecies hashes. 
-          $final_projection_backup_list->{go} = process_pairs(values $self->param('gd_config'));
-          $final_projection_backup_list->{go}->{output_dir} = $self->param('output_dir');
-          $final_projection_backup_list->{go}->{dump_tables} = $self->param('go_dump_tables');
-          $final_projection_backup_list->{go}->{flag_delete_go_terms} = $self->param('flag_delete_go_terms');
-        }
 
       # Making sure that the projection hash is not empty 
       if (keys $final_projection_backup_list){
