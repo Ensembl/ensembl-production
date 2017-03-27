@@ -36,11 +36,20 @@ use Bio::EnsEMBL::Analysis;
 use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::StoreFeaturesBase');
 
 sub fetch_input {
-    my ($self) 	= @_;
+  return;
+}
+
+sub write_output {
+  return;
+}
+
+sub run {
+    my ($self)       = @_;
 
     my $file                     = $self->param_required('interpro2go');
     my $species                  = $self->param_required('species');
     my $flag_check_annot_exists  = $self->param_required('flag_check_annot_exists');
+    $self->hive_dbc->disconnect_if_idle();
     my $core_dbh                 = $self->core_dbh;
     my $dbea                     = Bio::EnsEMBL::Registry->get_adaptor($species,'Core','DBEntry');
     my $ipr_ext_dbid             = $self->fetch_external_db_id($core_dbh, 'Interpro');
@@ -71,42 +80,11 @@ sub fetch_input {
 			 GROUP BY i.interpro_ac, pf.translation_id';
 
 
-   $self->param('file', $file);
-   $self->param('species', $species);
-   $self->param('flag_check_annot_exists', $flag_check_annot_exists);
-   $self->param('core_dbh', $core_dbh);
-   $self->param('dbea', $dbea);
-   $self->param('ipr_ext_dbid', $ipr_ext_dbid);
-   $self->param('go_ext_dbid', $go_ext_dbid);
-   $self->param('sql_get_tid', $sql_get_tid);
-   $self->param('sql_get_ipr_tid', $sql_get_ipr_tid);
-
-return 0;
-}
-
-sub write_output {
-    my ($self)  = @_;
-
-return 0;
-}
-
-sub run {
-    my ($self)       = @_;
-
-    my $file                    = $self->param_required('file');
-    my $species                 = $self->param_required('species');
-    my $flag_check_annot_exists = $self->param_required('flag_check_annot_exists');
-    my $core_dbh                = $self->param_required('core_dbh');
-    my $dbea		        = $self->param_required('dbea');
-    my $ipr_ext_dbid            = $self->param_required('ipr_ext_dbid');
-    my $go_ext_dbid             = $self->param_required('go_ext_dbid');
-    my $sql_get_tid             = $self->param_required('sql_get_tid');
-    my $sql_get_ipr_tid         = $self->param_required('sql_get_ipr_tid');
     my $sql_helper 	        = $self->core_dbc()->sql_helper();
     my $sth_get_tid             = $core_dbh->prepare($sql_get_tid);
     my $sth_get_ipr_tid         = $core_dbh->prepare($sql_get_ipr_tid);
 
-    # Hash all interpro accessions exist for the species
+    # Hash all interpro accessions exist for the database
     my %interpro_xrefs = %{ $self->get_interpro_xrefs("interpro") };
 
     # get existing translations with GO terms as a hash for lookup
@@ -126,6 +104,8 @@ sub run {
     $sth_get_ipr_tid->execute($self->core_dba()->species_id());
     $sth_get_ipr_tid->bind_columns(\$interpro_ac, \$domain, \$translation, \$transcript);
 
+    my $gos = {};
+
     while ($sth_get_ipr_tid->fetch()) {
         # If flag_check_annot_exists is 'ON'
         # verify if a translation_id has GO terms annotated from any other source
@@ -140,21 +120,25 @@ sub run {
 	    foreach my $go_string (@go_string){
 	       ($go_id, $go_term) = split (/\|/,$go_string);
 
-               # Get existing GO dbentry from db to avoid duplicates
-               my $go_dbentry = $dbea->fetch_by_db_accession( 'GO', $go_id );
-	       bless( $go_dbentry, "Bio::EnsEMBL::OntologyXref" ) if ( defined $go_dbentry && ref($go_dbentry) ne "Bio::EnsEMBL::OntologyXref" );
+	       my $go_dbentry = $gos->{$go_id};
+	       if(!defined $go_dbentry) {
+		 # Get existing GO dbentry from db to avoid duplicates
+		 $go_dbentry = $dbea->fetch_by_db_accession( 'GO', $go_id );
+		 bless( $go_dbentry, "Bio::EnsEMBL::OntologyXref" ) if ( defined $go_dbentry && ref($go_dbentry) ne "Bio::EnsEMBL::OntologyXref" );
 
-	       # Create new go_dbentry only if is it not seen in db & hash 
-	       if ( !defined $go_dbentry ) {
+		 # Create new go_dbentry only if is it not seen in db & hash 
+		 if ( !defined $go_dbentry ) {
 		   $go_dbentry = Bio::EnsEMBL::OntologyXref->new(
 			-PRIMARY_ID  => $go_id,
-			-DBNAME      => 'GO',
-			-DISPLAY_ID  => $go_id,
-			-DESCRIPTION => $go_term,
-			-INFO_TYPE   => 'NONE',
-			-INFO_TEXT   => 'via interpro2go'
- 			);
-	       } 
+								 -DBNAME      => 'GO',
+								 -DISPLAY_ID  => $go_id,
+								 -DESCRIPTION => $go_term,
+								 -INFO_TYPE   => 'NONE',
+								 -INFO_TEXT   => 'via interpro2go'
+								);
+		 } 
+		 $gos->{$go_id} = $go_dbentry;
+	       }
 
 	       # Get IPR dbentry from hash to avoid db round trips
 	       my $ipr_dbentry = $interpro_terms->{$interpro_ac};
@@ -189,14 +173,12 @@ sub run {
                } else {
 		   $dbea->store( $go_dbentry, $translation, 'Translation', 1 ); 
 	       }
-	       #$dbea->store( $go_dbentry, $translation, 'Translation', 1 );		    
 		    
   	} #  foreach my $go_string (@go_string){		
      }
   }
 
   $self->core_dbc->disconnect_if_idle();
-  $self->hive_dbc->disconnect_if_idle();   
 
 return 0;
 }
