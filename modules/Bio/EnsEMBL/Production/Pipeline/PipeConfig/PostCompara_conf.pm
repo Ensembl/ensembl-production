@@ -238,16 +238,8 @@ sub default_options {
 	    
 	    ## For all pipelines
 	     #  Off by default. Control the storing of projections into database. 
-      flag_store_projections => '0', 
+      flag_store_projections => '0'
 
-       'pipeline_db' => {  
-		     -host   => $self->o('hive_host'),
-        	 -port   => $self->o('hive_port'),
-        	 -user   => $self->o('hive_user'),
-        	 -pass   => $self->o('hive_password'),
-	         -dbname => $self->o('hive_dbname'),
-        	 -driver => 'mysql',
-      	},
     };
 }
 
