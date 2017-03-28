@@ -40,18 +40,8 @@ sub default_options {
     return {
        # inherit other stuff from the base class
        %{ $self->SUPER::default_options() }, 
-       
-#       'run_vep'			 => 1, # 0/1, Default => 1
-       'vep_command'   		 => '--build all',
 	   'perl_command'  		 => 'perl',
-	   'blast_header_prefix' => 'EG:',
-
-       'ftpdir_vep'          => $self->o('ftp_dir').'/'.$self->o('vep_division').'/vep',
-       'tempdir_vep'         => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/temp_dir/release-'.$self->o('release').'/'.$self->o('vep_division'),     
-       'vep_div'             => $self->o('vep_division'),
-	    
-	    'f_dump_vep' 	     => 0,
-	};
+	   'blast_header_prefix' => 'EG:'};
 }
 
 sub pipeline_analyses {
@@ -84,65 +74,8 @@ sub pipeline_analyses {
 	  { -logic_name     => 'convert_fasta',
 	    -module         => 'Bio::EnsEMBL::Production::Pipeline::FASTA::BlastConverter',
 	    -hive_capacity  => 50,
- 	    -parameters     => { header_prefix => $self->o('blast_header_prefix'), }, 
-        -flow_into      => { '1' => ['dump_vep'] },
-	  },
-
-	  ##### VEP Dumps
-      { -logic_name    => 'create_ftpdir_vep',
-        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -parameters    => { cmd => 'mkdir -p ' . $self->o('ftpdir_vep'), },
-        -input_ids      => [{}],
-        -flow_into     => { '1' => [ $self->o('vep_div') ne 'bacteria' ? 'copy_tmp_to_ftp' : 'copy_tmp_to_ftp_bacteria'] },
-        -hive_capacity => -1,
-        -meadow_type   => 'LOCAL',
-      },
-
-      { -logic_name    => 'copy_tmp_to_ftp',
-        -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -parameters    => {
-           # Wrap copy command into a loop to avoid job failures, because a *.tar.gz didn't find any files. 
-           # This can happen, if an entire directory (like bacteria) comprises only of multi species databases.
-           # In this case all vep files will be in subdirectories. 
-           # There will be no matching files directly in the root of the temporary directory and 
-           # just copying *.tar.gz would make the job fail even though this is ok.
-                    		 cmd => q~
-							 for vep_file in `find #tempdir_vep# -maxdepth 2 -name "*.tar.gz"`
-							 do
-						     	cp $vep_file #ftpdir_vep#
-							 done
-                   		     ~,
-                    		 tempdir_vep => $self->o('tempdir_vep'),
-                    		 ftpdir_vep  => $self->o('ftpdir_vep'),                   		     
-               		       },
-         -hive_capacity => -1,
-		 -wait_for      => ['dump_vep', 'convert_fasta'],				
-      },    
-
-      { -logic_name    => 'copy_tmp_to_ftp_bacteria',
-	    -module        => 'Bio::EnsEMBL::Production::Pipeline::VEP::CopyTmpFtpDir',
-        -parameters    => {
-                    		 tempdir_vep => $self->o('tempdir_vep'),
-                    		 ftpdir_vep  => $self->o('ftpdir_vep'),                   		     
-               		       },
-         -hive_capacity => -1,
-		 -wait_for      => ['dump_vep', 'convert_fasta'],				
-      },           
-
-      { -logic_name     => 'dump_vep',
-        -module         => 'Bio::EnsEMBL::Variation::Pipeline::DumpVEP::DumpVEP',
-        -parameters     => {
-							  eg		 		   => $self->o('eg'), 
-							  eg_version 		   => $self->o('eg_version'), 
-						      ensembl_cvs_root_dir => $self->o('ensembl_cvs_root_dir'),
-                    		  pipeline_dir         => $self->o('tempdir_vep'),
-						      perl_command		   => $self->o('perl_command'),
-				              vep_command    	   => $self->o('vep_command'),
-                           },
-		-priority       => 1,
-	    -hive_capacity  => 50, 
-  	    -rc_name        => '32GB',
-      },     
+ 	    -parameters     => { header_prefix => $self->o('blast_header_prefix'), }
+	  }  
     ];
 }
 
@@ -154,14 +87,7 @@ sub tweak_analyses {
     ## Removed unused dataflow
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
-
-    ## Extend this section to add 'convert_fasta' analysis if fasta dump is done
-    if ($self->o('f_dump_vep')){
-        $analyses_by_name->{'job_factory'}->{'-flow_into'} = {
-                                                                '2->A' => $pipeline_flow,
-                                                                'A->2' => ['convert_fasta'],
-                                                              };   
-    }
+    return;
  
 }
 
