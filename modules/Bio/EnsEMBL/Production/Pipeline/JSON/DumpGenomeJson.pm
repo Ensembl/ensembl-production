@@ -143,6 +143,7 @@ sub write_json {
     $remodeller->disconnect();
   }
   $dba->dbc()->disconnect_if_idle();
+  $genome_dba->dbc()->disconnect_if_idle();
   my $json_file_path =
     $sub_dir . '/' . $self->production_name() . '.json';
   $self->info("Writing to $json_file_path");

@@ -130,6 +130,7 @@ sub run {
     $self->param('validate_me', \@files_to_validate);
     $main_fh->close;
     $xref_fh->close if defined $xref_fh;
+    $dba->dbc()->disconnect_if_idle();
 }
 
 
