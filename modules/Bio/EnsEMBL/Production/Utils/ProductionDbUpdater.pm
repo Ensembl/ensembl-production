@@ -251,6 +251,10 @@ sub update_analysis_description {
       $logger->debug("Updating $logic_name");
       if ( defined $analysis->{web_data} ) {
         $analysis->{web_data} = eval( $analysis->{web_data} );
+	my $dumper = Data::Dumper->new([$analysis->{web_data}]);
+	$dumper->Indent(0);
+	$dumper->Terse(1);
+	$analysis->{web_data} = $dumper->Dump();	
       }
       $dbc->sql_helper->execute_update(
         -SQL =>
