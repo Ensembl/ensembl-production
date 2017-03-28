@@ -12,8 +12,8 @@ CREATE TABLE `ens_release` (
 CREATE TABLE `frontpage_stats` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `useragent` text NOT NULL,
-  `created` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `updated` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `created` datetime DEFAULT NULL,
+  `updated` datetime DEFAULT NULL,
   `pageviews` int(10) unsigned NOT NULL DEFAULT '0',
   `jscr0` int(10) unsigned NOT NULL DEFAULT '0',
   `jscr1` int(10) unsigned NOT NULL DEFAULT '0',
