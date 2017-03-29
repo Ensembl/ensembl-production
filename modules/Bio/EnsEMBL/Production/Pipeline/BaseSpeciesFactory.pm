@@ -48,6 +48,8 @@ sub param_defaults {
 
   return { species         => [],
            division        => [],
+           taxons          => [],
+           antitaxons      => [],
            run_all         => 0,
            antispecies     => [],
            core_flow       => 2,
@@ -74,6 +76,11 @@ sub fetch_input {
   my $division = $self->param('division') || [];
   my @division =
     ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
+  my $taxons = $self->param('taxons') || [];
+  my @taxons = ( ref($taxons) eq 'ARRAY' ) ? @$taxons : ($taxons);
+  my $antitaxons = $self->param('antitaxons') || [];
+  my @antitaxons =
+    ( ref($antitaxons) eq 'ARRAY' ) ? @$antitaxons : ($antitaxons);
   my $run_all     = $self->param('run_all');
   my $antispecies = $self->param('antispecies') || [];
   my @antispecies =
@@ -84,6 +91,7 @@ sub fetch_input {
     Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'core' );
   my $all_compara_dbas =
     Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'compara' );
+  my $taxonomy_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi','taxonomy');
   my %core_dbas;
   my %compara_dbas;
 
@@ -110,12 +118,23 @@ sub fetch_input {
                                \%core_dbas, \%compara_dbas );
     }
   }
+  elsif ( scalar(@taxons) ) {
+    foreach my $taxon (@taxons) {
+      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $taxon, "add" );
+    }
+  }
   else {
-    $self->warning("Supply one of: -species, -division, -run_all OR you can seed jobs later");
+    $self->warning("Supply one of: -species, -division, -taxons, -run_all OR you can seed jobs later");
     #$self->throw(
     #           'You must supply one of: -species, -division, -run_all');
   }
 
+  if ( scalar(@antitaxons) ) {
+    foreach my $antitaxon (@antitaxons) {
+      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $antitaxon, "remove" );
+      $self->warning("$antitaxon successfully removed");
+    }
+  }  
   if ( scalar(@antispecies) ) {
     foreach my $antispecies (@antispecies) {
       delete $core_dbas{$antispecies};
@@ -180,6 +199,39 @@ sub process_division {
   return;
 
 } ## end sub process_division
+
+sub process_taxon {
+  my ( $self, $all_dbas, $core_dbas, $taxonomy_dba, $taxon, $action )
+    = @_;
+
+  my $species_count;
+  my $node_adaptor = $taxonomy_dba->get_TaxonomyNodeAdaptor();
+  my $node = $node_adaptor->fetch_by_taxon_name($taxon);
+  $self->throw("$taxon not found in the taxonomy database") if (!defined $node);
+  my $taxon_name = $node->names()->{'scientific name'}->[0];
+
+  foreach my $dba (@$all_dbas) {
+    my $dba_ancestors=$self->get_taxon_ancestors_name($dba,$node_adaptor);
+    if (grep(/$taxon_name/, @$dba_ancestors)){
+      if ($action eq "add"){
+        $$core_dbas{ $dba->species() } = $dba;
+        $species_count ++;
+      }
+      elsif ($action eq "remove")
+      {
+        delete $$core_dbas{$dba->species()};
+        $self->warning($dba->species()." successfully removed");
+      }
+    }
+    $dba->dbc->disconnect_if_idle();
+  }
+  if ($action eq "add")
+  {
+    $self->warning("$species_count species loaded for taxon $taxon_name");
+  }
+  return;
+
+} ## end sub process_taxon
 
 sub process_species {
   my ( $self, $all_dbas, $species, $core_dbas ) = @_;
@@ -284,6 +336,18 @@ sub has_regulation {
   my ($self, $species) = @_;
   my $dbva = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
   return $dbva ? 1 : 0;
+}
+
+#Return all the taxon ancestors names for a given dba
+sub get_taxon_ancestors_name {
+  my ($self, $dba, $node_adaptor) = @_;
+  my $dba_node = $node_adaptor->fetch_by_coredbadaptor($dba);
+  my @dba_lineage = @{$node_adaptor->fetch_ancestors($dba_node)};
+  my @dba_ancestors;
+  for my $lineage_node (@dba_lineage) {
+    push @dba_ancestors, $lineage_node->names()->{'scientific name'}->[0];
+  }
+  return \@dba_ancestors;
 }
 
 sub write_output {
