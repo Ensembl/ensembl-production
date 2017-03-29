@@ -107,11 +107,20 @@ sub default_options {
     vb_external_db       => 'VB_Community_Annotation',
     citation_external_db => 'PUBMED',
 
-    # Exclude genes which come from sources with names and descriptions already
-    exclude_logic_name => [
+    # Exclude genes which come from sources with names already
+    exclude_name_source => [
       'mirbase_gene',
       'rfam_12.1_gene',
       'trnascan_gene',
+    ],
+    
+    # Exclude genes which come from sources with descriptions already
+    exclude_desc_source => [
+      'mirbase_gene',
+      'rfam_12.1_gene',
+      'trnascan_gene',
+      'refseq_mdom',
+      'refseq_scal',
     ],
     
     description_blacklist => ['Uncharacterized protein', 'AGAP\d.*', 'AAEL\d.*'],
@@ -268,7 +277,8 @@ sub pipeline_analyses {
                             logic_name           => $self->o('logic_name'),
                             vb_external_db       => $self->o('vb_external_db'),
                             citation_external_db => $self->o('citation_external_db'),
-                            exclude_logic_name   => $self->o('exclude_logic_name'),
+                            exclude_name_source  => $self->o('exclude_name_source'),
+                            exclude_desc_source  => $self->o('exclude_desc_source'),
                           },
       -max_retry_count => 1,
       -hive_capacity   => $self->o('hive_capacity'),
