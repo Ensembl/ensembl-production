@@ -53,10 +53,10 @@ sub default_options {
           gn_config => { 
                         '1'=>{
                               'source'          => 'arabidopsis_thaliana',
-                              'division'        => ['plants'],
+                              'division'        => [],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'eudicotyledons',
+                              # Taxon name of species to project to
+                              'taxons'      => ['eudicotyledons'],
                               # source species GeneName filter for GeneDescription
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # homology types filter
@@ -68,10 +68,10 @@ sub default_options {
                              }, 
                         '2'=>{
                               'source'          => 'oryza_sativa',
-                              'division'        => ['plants'],
+                              'division'        => [],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'Liliopsida',
+                              # Taxon name of species to project to
+                              'taxons'      => ['Liliopsida'],
                               # source species GeneName filter for GeneDescription
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
                               # homology types filter
@@ -87,10 +87,11 @@ sub default_options {
           gd_config => { 
                         '1'=>{
                               'source'          => 'arabidopsis_thaliana',
-                              'division'        => ['plants'],
+                              'division'        => [],
+                              'antispecies'     => ['arabidopsis_thaliana'],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'eudicotyledons',
+                              # Taxon name of species to project to
+                              'taxons'      => ['eudicotyledons'],
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
@@ -106,10 +107,11 @@ sub default_options {
                         '2'=>{
                               'source'          => 'oryza_sativa',
                               'species'         => [], 
-                              'division'        => ['plants'],
+                              'division'        => [],
+                              'antispecies'     => ['oryza_sativa'],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'Liliopsida',
+                              # Taxon name of species to project to
+                              'taxons'      => ['Liliopsida'],
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
@@ -124,11 +126,11 @@ sub default_options {
                              },
                         '3'=>{
                               'source'          => 'arabidopsis_thaliana',
-                              'division'        => ['plants'],
+                              'division'        => [],
                               'antispecies'     => ['oryza_sativa'],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'Liliopsida',
+                              # Taxon name of species to project to
+                              'taxons'      => ['Liliopsida'],
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
@@ -145,10 +147,10 @@ sub default_options {
                               'source'          => 'oryza_sativa',
                               'species'         => [], 
                               'antispecies' => ['arabidopsis_thaliana'],
-                              'division'        => ['plants'],
+                              'division'        => [],
  			      'run_all'         =>  0, # 1/0
-                              # flowering group of your target species
-                              'taxon_filter'    => 'eudicotyledons',
+                              # Taxon name of species to project to
+                              'taxons'      => ['eudicotyledons'],
                               # source species GeneDescription filter
                               'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
                               'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],

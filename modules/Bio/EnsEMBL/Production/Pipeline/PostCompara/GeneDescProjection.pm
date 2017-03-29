@@ -52,7 +52,6 @@ sub fetch_input {
     my $geneName_source        = $self->param_required('geneName_source');
     my $geneDesc_rules         = $self->param_required('geneDesc_rules');
     my $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
-    my $taxon_filter           = $self->param('taxon_filter');
     my $is_tree_compliant      = $self->param('is_tree_compliant');
 
     $self->param('flag_store_proj', $flag_store_proj);
@@ -68,7 +67,6 @@ sub fetch_input {
     $self->param('geneName_source', $geneName_source);
     $self->param('geneDesc_rules', $geneDesc_rules);
     $self->param('geneDesc_rules_target', $geneDesc_rules_target);
-    $self->param('taxon_filter', $taxon_filter);
     $self->param('is_tree_compliant', $is_tree_compliant);
 
     $self->check_directory($output_dir);
@@ -88,21 +86,8 @@ sub run {
     my $compara          = $self->param('compara');
     my $release          = $self->param('release');
     my $method_link_type = $self->param('method_link_type');
-    my $taxon_filter     = $self->param('taxon_filter');
 
     print "Processing names projection from $from_species to $to_species\n";
-
-    # Get taxon ancestry of the target species
-    my $to_latin_species   = ucfirst(Bio::EnsEMBL::Registry->get_alias($to_species));
-    my $meta_container     = Bio::EnsEMBL::Registry->get_adaptor($to_latin_species,'core','MetaContainer');
-    my ($to_taxon_id)      = @{ $meta_container->list_value_by_key('species.taxonomy_id')};
-    my ($ancestors,$names) = $self->get_taxon_ancestry($to_taxon_id);
-
-    # Exit projection if 'taxon_filter' is not found in the $ancestor list
-    if(defined $taxon_filter && !grep (/$taxon_filter/, @$names)) {
-       warn("$taxon_filter is not found in the ancestor list of $to_species\n");
-       return;
-    }
 
     # Creating adaptors
     my $from_ga   = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
@@ -153,7 +138,6 @@ sub run {
     }
     close($log);
 #Disconnecting from the registry
-$meta_container->dbc->disconnect_if_idle();
 $from_ga->dbc->disconnect_if_idle();
 $to_ga->dbc->disconnect_if_idle();
 $to_ta->dbc->disconnect_if_idle();

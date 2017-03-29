@@ -50,7 +50,7 @@ sub default_options {
     'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
 
     ## Location of GPAD files
-    'gpad_directory' => undef,
+    'gpad_directory' => [],
 
 	## Email Report subject
     'email_subject'       	   => $self->o('pipeline_name').' GPAD loading pipeline has finished',

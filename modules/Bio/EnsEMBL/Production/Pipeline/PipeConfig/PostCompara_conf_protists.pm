@@ -53,9 +53,11 @@ sub default_options {
           gn_config => { 
                         '1'=>{
                               'source'       => 'dictyostelium_discoideum',
-                              'division'     => 'protists',
+                              'division'     => '',
                               'run_all'      =>  0, # 1/0
-                              'taxon_filter' => 'Amoebozoa', # Eg: 'Liliopsida'/'eudicotyledons'
+                              'antispecies'  => ['dictyostelium_discoideum'],
+                               # Taxon name of species to project to
+                              'taxons'      => ['Amoebozoa'],
                               'geneName_source' 		 => ['UniProtKB/Swiss-Prot', 'Uniprot_gn'],
                               'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
                               'homology_types_allowed' => ['ortholog_one2one'],
@@ -67,9 +69,10 @@ sub default_options {
           gd_config => { 
                         '1'=>{
                               'source'          => 'dictyostelium_discoideum',
-                              'division'        => 'protists',
+                              'division'        => '',
                               'run_all'         =>  0, # 1/0
-                              'taxon_filter'    => 'Amoebozoa',
+                              'antispecies'     => '',
+                              'taxons'      => ['Amoebozoa'],
                               'geneName_source' => ['UniProtKB/Swiss-Prot', 'Uniprot_gn'],
                               'geneDesc_rules'   	     => ['hypothetical', 'putative', 'unknown protein'] , 
                               'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,

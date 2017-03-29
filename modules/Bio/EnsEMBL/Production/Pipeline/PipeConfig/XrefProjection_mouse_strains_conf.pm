@@ -59,7 +59,6 @@ sub default_options {
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '1',
     	flag_GeneDescr    => '1',
-    	flag_GO           => '1',     
     	flag_GeneCoverage => '0',
 
     ## Flags controlling dependency between GeneNames & GeneDescr projections
@@ -72,13 +71,9 @@ sub default_options {
         # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
         # Default value is 1
         parallel_GeneNames_projections => '0',
-        parallel_GO_projections       => '0',
     ## analysis_capacity values for some analyses:
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
-        goProj_capacity        =>  '20',
-        geneCoverage_capacity  =>  '100',
-
     ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
     ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
     ## This flag should be enabled for EG and disable for e! species.
@@ -91,19 +86,21 @@ sub default_options {
                                 # source species to project from
                                 'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
                                 # target species to project to
-                                'species'     => ['mus_musculus_129s1svimj', 'mus_musculus_aj', 'mus_musculus_akrj', 'mus_musculus_balbcj', 'mus_musculus_c3hhej', 'mus_musculus_c57bl6nj', 'mus_musculus_casteij', 'mus_musculus_cbaj', 'mus_musculus_dba2j', 'mus_musculus_fvbnj', 'mus_musculus_lpj', 'mus_musculus_nodshiltj', 'mus_musculus_nzohlltj', 'mus_musculus_pwkphj', 'mus_musculus_wsbeij', 'mus_spretus_spreteij'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
                                 # target species to exclude
-                                'antispecies' => [],
+                                'antispecies' => ['mus_musculus','mus_spretus_spreteij'],
                                 # target species division to project to
                                 'division'    => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
+                                # Taxon name of species to project to
+                                'taxons'      => ['Mus'],
+                                # Taxon name of species to exclude 
+                                'antitaxons' => [],
                                 'project_all' =>  1,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => ['RefSeq_mRNA', 'RefSeq_mRNA_predicted','RefSeq_ncRNA','RefSeq_ncRNA_predicted','RefSeq_peptide','RefSeq_peptide_predicted','EntrezGene','EntrezGene_trans_name','WikiGene','Uniprot/SPTREMBL','Uniprot/SWISSPROT','Uniprot_gn','protein_id','UniParc','ArrayExpress','RNACentral','MGI','MGI_trans_name','miRBase','miRBase_trans_name','RFAM','RFAM_trans_name'],
                                 # Run the pipeline on all the species 
                                 'run_all'     =>  0, # 1/0
-                                # flowering group of your target species
-                                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                 # source species GeneName filter
                                 'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                 # homology types filter
@@ -121,14 +118,16 @@ sub default_options {
                                  # source species to project from
                                  'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
                                  # target species to project to
-                                 'species'     => ['mus_musculus_129s1svimj', 'mus_musculus_aj', 'mus_musculus_akrj', 'mus_musculus_balbcj', 'mus_musculus_c3hhej', 'mus_musculus_c57bl6nj', 'mus_musculus_casteij', 'mus_musculus_cbaj', 'mus_musculus_dba2j', 'mus_musculus_fvbnj', 'mus_musculus_lpj', 'mus_musculus_nodshiltj', 'mus_musculus_nzohlltj', 'mus_musculus_pwkphj', 'mus_musculus_wsbeij', 'mus_spretus_spreteij'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                 'species'     => ['mus_musculus','mus_spretus_spreteij'], # ['puccinia graminis', 'aspergillus_nidulans']
                                  # target species to exclude
                                  'antispecies' => [],
                                  # target species division to project to
                                  'division'    => [],
+                                 # Taxon name of species to project to
+                                 'taxons'      => ['Mus'],
+                                 # Taxon name of species to exclude 
+                                 'antitaxons' => [],
                                  'run_all'     =>  0, # 1/0
-                                 # flowering group of your target species
-                                 'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
                                  # source species GeneName filter for GeneDescription
                                  'geneName_source'                => ['MGI', 'MGI_trans_name'],
                                  # source species GeneDescription filter
@@ -170,108 +169,10 @@ sub default_options {
         gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
         gn_subject    => $self->o('pipeline_name').' subpipeline GeneNamesProjection has finished',
 
-	## GO Projection  
-	 	go_config => 
-		{ 
-                  '1'=>{
-                                # source species to project from
-                                'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
-                                # target species to project to
-                                'species'     => ['mus_musculus_129s1svimj', 'mus_musculus_aj', 'mus_musculus_akrj', 'mus_musculus_balbcj', 'mus_musculus_c3hhej', 'mus_musculus_c57bl6nj', 'mus_musculus_casteij', 'mus_musculus_cbaj', 'mus_musculus_dba2j', 'mus_musculus_fvbnj', 'mus_musculus_lpj', 'mus_musculus_nodshiltj', 'mus_musculus_nzohlltj', 'mus_musculus_pwkphj', 'mus_musculus_wsbeij', 'mus_spretus_spreteij'],
-                                # target species to exclude
-                                'antispecies' => [],
-                                # target species division to project to
-                                'division'    => [],
-                                # Run the pipeline on all the species 
-                                'run_all'     =>  0, # 1/0
-                                # homology types filter
-                                'go_method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                            'go_homology_types_allowed' => ['ortholog_one2one'],
-                        # homology percentage identity filter
-                        'go_percent_id_filter'      => '30',
-                        'go_cov_filter'     => '66',
-                                # object type of GO annotation (source)
-                                'ensemblObj_type'           => 'Translation', # 'Translation'/'Transcript'
-                                # object type to attach GO projection (target)
-                                'ensemblObj_type_target'    => 'Translation', # 'Translation'/'Transcript'
-                       },
-            },                  
-		
-	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
-	    # update analysis & analysis_description table
-#		required_analysis =>
-#   	[
-#     		{
-#       	 'logic_name'    => 'go_projection',
-#       	 'db'            => 'GO',
-#       	 'db_version'    => undef,
-#     		},     	
-#		],
-                required_analysis =>[],
-    	# Remove existing analyses; 
-    	# On '1' by default, if =0 then existing analyses will remain, 
-		#  with the logic_name suffixed by '_bkp'.
-    	delete_existing => 0,
-    
-		# Delete rows in tables connected to the existing analysis (via analysis_id)
-    	linked_tables => [], 
-  	        
-	    # Retrieve analsysis descriptions from the production database;
-    	# the supplied registry file will need the relevant server details.
-	    production_lookup => 1,
-
-        # Tables to dump
-        go_dump_tables => ['xref', 'object_xref', 'ontology_xref', 'external_synonym'],
-
-        # GOA webservice parameters
-        goa_webservice => 'http://www.ebi.ac.uk/QuickGO/',
-		goa_params     => 'GValidate?service=taxon&action=getBlacklist&taxon=',
-                 taxon_params     => 'GValidate?service=taxon&action=getConstraints',
-	
-                # only these evidence codes will be considered for GO term projection
-		# See https://www.ebi.ac.uk/panda/jira/browse/EG-974
-                evidence_codes => ['IDA', 'IEP', 'IGI', 'IMP', 'IPI', 'EXP'],
-		#  IC Inferred by curator
-		#  IDA Inferred from direct assay
-		#  IEA Inferred from electronic annotation
-		#  IGI Inferred from genetic interaction
-		#  IMP Inferred from mutant phenotype
-		#  IPI Inferred from physical interaction
-		#  ISS Inferred from sequence or structural similarity
-		#  NAS Non-traceable author statement
-		#  ND No biological data available
-		#  RCA Reviewed computational analysis
-		#  TAS Traceable author statement
-	
-
-		# GO Projection flags
-		#  Off by default. 
-		#  Check if GO term is already assigned, and don't project if it is.
-		flag_go_check          => '0', 
-		#  On by default.  
-		#  Control the printing of full statistics, i.e.:  
-		#   - number of terms per evidence type for projected GO terms
-		flag_full_stats        => '1', 
-		#  On by default. 
-		#  Delete existing projected (info_type='PROJECTION') GO terms in the target species, 
-		#  before doing projection   
-		flag_delete_go_terms   => '1',
-
-
 	    
 	## For all pipelines
 	   #  Off by default. Control the storing of projections into database. 
        flag_store_projections => '1',
-
-
-       'pipeline_db' => {  
-		     -host   => $self->o('hive_host'),
-        	 -port   => $self->o('hive_port'),
-        	 -user   => $self->o('hive_user'),
-        	 -pass   => $self->o('hive_password'),
-	         -dbname => $self->o('hive_dbname'),
-        	 -driver => 'mysql',
-      	},
 		
     };
 }

@@ -125,7 +125,7 @@ sub _write_tsv {
       }#gene
   }#slice 
   close $fh; 
-
+  $self->core_dbc()->disconnect_if_idle();
   $self->info( "Compressing tsv dump for " . $self->param('species'));
   my $unzip_out_file = $out_file;
   `gzip $unzip_out_file`;
