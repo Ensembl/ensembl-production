@@ -39,7 +39,7 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::FileDumpVEP_conf;
 use strict;
 use warnings;
 
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::Version 2.4;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::FileDump_conf');
 
 use File::Spec::Functions qw(catdir);
