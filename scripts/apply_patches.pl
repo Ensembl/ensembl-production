@@ -86,6 +86,7 @@ if ( !defined $opts->{pattern} ) {
 }
 
 my $sth = $dbh->prepare(q/show databases/);
+print $opts->{pattern}."\n";
 $sth->execute();
 while ( my $row = $sth->fetchrow_arrayref() ) {
   next unless defined $row;
@@ -94,6 +95,7 @@ while ( my $row = $sth->fetchrow_arrayref() ) {
        $dbname ne 'test' &&
        $dbname ne 'mysql' &&
        $dbname ne 'performance_schema' &&
+       $dbname ne 'PERCONA_SCHEMA' &&
        $dbname ne 'information_schema' )
   {
     push @$available_databases, $dbname;
@@ -105,10 +107,13 @@ my $patchN = 0;
 my $dbN    = 0;
 for my $database ( @{$available_databases} ) {
   $logger->debug("Considering $database");
-  my $type = get_type($database);
+  my ($name_version,$type) = get_version_type($database);
   eval {
     if ( defined $type )
     {
+      if($name_version ne software_version()) {
+	die "Cannot patch database named $database with version $name_version to software version ".software_version();
+      }
       # check current version
       my $version = get_version( $dbh, $database );
       if ( !defined $version ) {
@@ -120,6 +125,7 @@ for my $database ( @{$available_databases} ) {
         die
 "Cannot patch $database of version $version directly to $opts->{version}";
       }
+      $logger->debug("Checking patches for $database ($type)");
       my $patches = $available_patches->{$type};
       if ( !defined $patches ) {
         $logger->warn("Cannot patch database $database of type $type");
@@ -138,7 +144,9 @@ for my $database ( @{$available_databases} ) {
           apply_patch( $dbh, $database, $missing_patch );
         }
       }
-    } ## end if ( defined $type )
+    } else {
+	$logger->warn("Do not know how to handle database $database");
+      } ## end if ( defined $type )
   };
   if ($@) {
     $logger->warn("Could not patch $database: $@");
@@ -147,35 +155,51 @@ for my $database ( @{$available_databases} ) {
 $logger->info(
             " Completed appying $patchN patch(es) to $dbN database(s)");
 
-sub get_type {
+sub get_version_type {
   my ($dbname) = @_;
   my $type;
-  if ( $dbname =~ m/ensembl_compara_.*/ ) {
+  my $version;
+  if ( $dbname =~ m/ensembl_compara.*_([0-9]+)$/ ) {
     $type = 'compara';
+    $version= $1;
   }
-  elsif ( $dbname =~ m/ensembl_ancestral_.*/ ) {
+  elsif ( $dbname =~ m/ensembl_ancestral.*_([0-9]+)$/ ) {
     $type = 'core';
+    $version= $1;
   }
   elsif ( $dbname =~ m/ensembl_production.*/ ) {
     $type = 'production';
+    $version = software_version();
   }
-  elsif ( $dbname =~ m/[a-z]+_ontology_.*/ ) {
+  elsif ( $dbname =~ m/[a-z]+_ontology_([0-9]+)$/ ) {
     $type = 'ontology';
+    $version = $1;
   }
-  elsif ( $dbname =~ m/master_schema_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_([0-9]+)/ ) {
     $type = 'core';
+    $version = $1;
   }
-  elsif ( $dbname =~ m/master_schema_variation_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_variation_([0-9]+)/ ) {
     $type = 'variation';
+    $version = $1;
   }
-  elsif ( $dbname =~ m/master_schema_funcgen_[0-9]+/ ) {
+  elsif ( $dbname =~ m/master_schema_funcgen_([0-9]+)/ ) {
     $type = 'funcgen';
+    $version = $1;
   }
-  elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_[0-9]+(_[0-9]+)?/ ) {
+  elsif ( $dbname =~ m/.*_([a-z]+)_([0-9]+)_[0-9]+$/ ) {
     $type = $1;
+    $version = $2;
   }
-  return $type;
-} ## end sub get_type
+  elsif ( $dbname =~ m/.*_([a-z]+)_[0-9]+_([0-9]+)_[0-9]+$/ ) {
+    $type = $1;
+    $version = $2;
+  } else {
+    $logger->warn("Don't recognise database $dbname" );
+  }
+  return ($version,$type);
+} ## end sub get_version_type
+
 
 sub get_version {
   my ( $dbh, $database ) = @_;
