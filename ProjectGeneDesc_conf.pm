@@ -169,7 +169,7 @@ sub pipeline_analyses {
       -batch_size      =>  5,
       -hive_capacity   => 20,
       -flow_into       => {
-                            1 => [ ':////accu?summary=[]' ],
+                            1 => [ '?accu_name=summary&accu_address=[]' ],
                           },
       -max_retry_count => 1,
       -rc_name         => 'normal',
