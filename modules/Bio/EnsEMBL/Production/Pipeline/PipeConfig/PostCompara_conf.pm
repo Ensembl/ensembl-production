@@ -129,8 +129,10 @@ sub default_options {
                 'antispecies' => [],
 	 			        # target species division to project to
 	 			        'division'    => [],
-                # flowering group of your target species
-                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                # Taxon name of species to project to
+                'taxons'      => [],
+                # Taxon name of species to exclude 
+                'antitaxons' => [],
 	 			        # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
                 'project_all' =>  0,
                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
@@ -173,8 +175,10 @@ sub default_options {
                                 'antispecies' => [],
                                 # target species division to project to
                                 'division'    => [], 
-                                # flowering group of your target species
-                                'taxon_filter'                   => undef, # Eg: 'Liliopsida'/'eudicotyledons'
+                                 # Taxon name of species to project to
+                                'taxons'      => [],
+                                # Taxon name of species to exclude 
+                                'antitaxons' => [],
                                 'run_all'     =>  0, # 1/0
                                 # source species GeneName filter for GeneDescription
                                 'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
@@ -237,7 +241,8 @@ sub default_options {
 	    
 	    ## For all pipelines
 	     #  Off by default. Control the storing of projections into database. 
-      flag_store_projections => '0'
+
+      flag_store_projections => '0', 
 
     };
 }
@@ -313,6 +318,8 @@ sub pipeline_analyses {
                                 'flag_delete_gene_descriptions' => $self->o('flag_delete_gene_descriptions'),
                                 'output_dir'  => $self->o('output_dir'),
                                 'g_dump_tables' => $self->o('g_dump_tables'),
+                                'parallel_GeneNames_projections' => $self->o('parallel_GeneNames_projections'),
+
                                },
             -rc_name        => 'default',
             -flow_into       => {

@@ -59,7 +59,9 @@ sub run {
          my $antispecies            = $final_projection_list->{$pair}->{'antispecies'};
          my $division               = $final_projection_list->{$pair}->{'division'};
          my $project_all            = $final_projection_list->{$pair}->{'project_all'};
-         my $run_all                = $final_projection_list->{$pair}->{'run_all'};       
+         my $run_all                = $final_projection_list->{$pair}->{'run_all'};
+         my $taxons                 = $final_projection_list->{$pair}->{'taxons'};
+         my $antitaxons             = $final_projection_list->{$pair}->{'antitaxons'};
          my $method_link_type       = $final_projection_list->{$pair}->{'method_link_type'};  
          my $homology_types_allowed = $final_projection_list->{$pair}->{'homology_types_allowed'};
          my $percent_id_filter      = $final_projection_list->{$pair}->{'percent_id_filter'};
@@ -83,6 +85,8 @@ sub run {
   		 'division'    	  	  => $division, 
        'project_all'     => $project_all,
 		 'run_all' 		  => $run_all,
+     'taxons'       => $taxons,
+     'antitaxons'       => $antitaxons,
 		 'method_link_type' 	  => $method_link_type,
                  'homology_types_allowed' => $homology_types_allowed,
   		 'percent_id_filter'      => $percent_id_filter,
