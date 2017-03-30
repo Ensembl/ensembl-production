@@ -59,15 +59,24 @@ sub fetch_homologies {
        my ($from_stable_id, @to_stable_ids, @perc_id, @perc_cov);
        my $members = $homology->get_all_GeneMembers();
        my $mems    = $homology->get_all_Members();
-       foreach my $mem (@{$mems}){
-          push @perc_id,$mem->perc_id();
-       }
-       next if (grep {$_ < $percent_id_filter} @perc_id) ;
 
-       foreach my $mem (@{$mems}){
-   	      push @perc_cov,$mem->perc_cov();
+       # "high-confidence" perc_id must be at least 80 for apes and mouse/rat, at least 50 between mammals or between birds or between some fish, at least 25 otherwise.
+       # This new score replace perc_id and perc_cov for vertebrates.
+       if (defined $homology->is_high_confidence()) {
+         # Only carry on projections if "high-confidence" eq 1
+         next if $homology->is_high_confidence == 0;
        }
-       next if (grep {$_ < $percent_cov_filter} @perc_cov) ;
+       else {
+         foreach my $mem (@{$mems}){
+           push @perc_id,$mem->perc_id();
+         }
+         next if (grep {$_ < $percent_id_filter} @perc_id) ;
+
+         foreach my $mem (@{$mems}){
+   	        push @perc_cov,$mem->perc_cov();
+         }
+         next if (grep {$_ < $percent_cov_filter} @perc_cov) ;
+       }
 
        my $from_seen = 0;
 

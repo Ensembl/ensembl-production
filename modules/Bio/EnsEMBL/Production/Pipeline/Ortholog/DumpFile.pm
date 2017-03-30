@@ -118,10 +118,17 @@ sub run {
        my $from_perc_cov    = $from_member->perc_cov();
        my $from_gene        = $from_member->get_Transcript->get_Gene();
 
+       # "high-confidence" perc_id must be at least 80 for apes and mouse/rat, at least 50 between mammals or between birds or between some fish, at least 25 otherwise.
+       # This new score replace perc_id and perc_cov for vertebrates.
+       if (defined $homology->is_high_confidence()) {
+         # Only carry on projections if "high-confidence" eq 1
+         next if $homology->is_high_confidence == 0;
+       }
+       else {
        # Filter for perc_id & perc_cov on 'from' member
-       next if ($from_perc_id  < $perc_id);
-       next if ($from_perc_cov < $perc_cov);
-
+         next if ($from_perc_id  < $perc_id);
+         next if ($from_perc_cov < $perc_cov);
+       }
        ## Fully qualified identifiers with annotation source
        ## Havana genes are merged, so source is Ensembl
        my $from_mod_identifier = $from_gene->source();
