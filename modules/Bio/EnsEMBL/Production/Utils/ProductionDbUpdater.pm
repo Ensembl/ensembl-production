@@ -226,43 +226,60 @@ sub update_analysis_description {
 
   $logger->info("Retrieving analyses for $species/$type");
   my $analysis_types = $self->get_data_from_table(
-    $self->{prod_dba}->dbc(), q/
+    $self->{prod_dba}->dbc(), qq/
     SELECT ad.logic_name as logic_name, ad.description as description, 
     ad.display_label as display_label, wd.data as web_data, aw.displayable as displayable
     FROM analysis_description ad, species s, analysis_web_data aw 
     LEFT OUTER JOIN web_data wd ON aw.web_data_id = wd.web_data_id 
     WHERE ad.analysis_description_id = aw.analysis_description_id 
     AND aw.species_id = s.species_id 
-    AND s.db_name = ? 
-    AND aw.db_type =?/, 'logic_name' );
+    AND s.db_name = '$species' 
+    AND aw.db_type = '$type'/, 'logic_name' );
 
   $logger->info("Retrieving generic analyses");
-  while ( my ( $k, $v ) = each %{ $self->get_generic_analyses() } ) {
+  my $generic_analyses = $self->get_generic_analyses();
+  while ( my ( $k, $v ) = each %{ $generic_analyses } ) {
     if ( !exists $analysis_types->{$k} ) {
       $analysis_types->{$k} = $v;
     }
   }
-
   $logger->info("Updating analyses");
   while ( my ( $logic_name, $analysis ) = each %{$analysis_types} ) {
     if ( scalar( keys %$logic_names ) == 0 ||
          exists $logic_names->{$logic_name} )
     {
       $logger->debug("Updating $logic_name");
+      if(!defined $analysis->{web_data}) {
+	$analysis->{web_data} = $generic_analyses->{$logic_name}{web_data};
+      }
       if ( defined $analysis->{web_data} ) {
         $analysis->{web_data} = eval( $analysis->{web_data} );
 	my $dumper = Data::Dumper->new([$analysis->{web_data}]);
 	$dumper->Indent(0);
 	$dumper->Terse(1);
 	$analysis->{web_data} = $dumper->Dump();	
-      }
-      $dbc->sql_helper->execute_update(
-        -SQL =>
-          q/UPDATE analysis_description ad JOIN analysis a USING (analysis_id) 
+
+	$dbc->sql_helper->execute_update(
+					 -SQL =>
+					 q/UPDATE analysis_description ad JOIN analysis a USING (analysis_id) 
        SET ad.description=?,ad.display_label=?,ad.web_data=?,ad.displayable=?
        WHERE logic_name=?/,
-        -PARAMS => [ $analysis->{description}, $analysis->{display_label},
-                     $analysis->{web_data},    $analysis->{displayable}, $logic_name ] );
+					 -PARAMS => [ $analysis->{description}, $analysis->{display_label},
+						      $analysis->{web_data},    $analysis->{displayable}, $logic_name ] );
+
+
+      } else {
+
+	$dbc->sql_helper->execute_update(
+					 -SQL =>
+					 q/UPDATE analysis_description ad JOIN analysis a USING (analysis_id) 
+       SET ad.description=?,ad.display_label=?,ad.displayable=?
+       WHERE logic_name=?/,
+					 -PARAMS => [ $analysis->{description}, $analysis->{display_label},
+						      $analysis->{displayable}, $logic_name ] );
+
+      }
+      
     }
   }
   $logger->info( "Completed updating analysis_description for " . $dbname );

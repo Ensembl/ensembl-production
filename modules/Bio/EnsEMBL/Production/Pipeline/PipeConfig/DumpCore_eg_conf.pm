@@ -87,6 +87,12 @@ sub tweak_analyses {
     ## Removed unused dataflow
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
+
+    $analyses_by_name->{'job_factory'}->{'-flow_into'} = {
+							  '2->A' => $pipeline_flow,
+							  'A->2' => ['convert_fasta'],
+							 };   
+
     return;
  
 }
