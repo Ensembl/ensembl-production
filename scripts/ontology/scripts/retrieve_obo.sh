@@ -46,7 +46,7 @@ wget "http://purl.obolibrary.org/obo/cl-basic.obo" -O $dir/CL.obo
 wget "https://raw.githubusercontent.com/pato-ontology/pato/master/pato.obo" -O $dir/PATO.obo
 wget "http://www.berkeleybop.org/ontologies/obo-all/OGMS/OGMS.obo" -O $dir/OGMS.obo
 wget "http://www.brenda-enzymes.info/ontology/tissue/tree/update/update_files/BrendaTissueOBO" -O $dir/BTO.obo
-wget "http://www.berkeleybop.org/ontologies/obo-all/bfo/bfo.obo" -O $dir/BFO.obo
+wget "https://raw.githubusercontent.com/BFO-ontology/BFO/master/releases/2.0/bfo.obo" -O $dir/BFO.obo
 wget "https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo" -O $dir/UO.obo
 wget "https://raw.githubusercontent.com/evidenceontology/evidenceontology/master/eco.obo" -O $dir/ECO.obo
 wget "http://www.berkeleybop.org/ontologies/mp.obo" -O $dir/MP.obo
