@@ -25,13 +25,14 @@ if [[ -z ${dir} ]]; then
   dir='.'
 fi
 
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/fypo_extension.obo"
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/quiescence.obo" -O $dir/PBQ.obo
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/ontologies/go.obo"
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/ontologies/fypo-simple.obo" -O $dir/fypo.obo
-#wget "http://sourceforge.net/p/pombase/code/HEAD/tree/phenotype_ontology/releases/latest/fypo-simple.obo?format=raw" -O $dir/FYPO.obo
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/pombe_mini_PR.obo" -O $dir/PRO.obo
-#wget "http://curation.pombase.org/dumps/releases/pombase-chado-v$PB_VERSION-$PB_RELEASE/pombe-embl/mini-ontologies/chebi.obo" -O $dir/chebi.obo
+# Pombe ontology sources, MOD and PBO are not in this list at the moment.
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/pombe-embl/mini-ontologies/fypo_extension.obo" -O $dir/FYPO_EXTENSION.obo
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/pombe-embl/mini-ontologies/quiescence.obo" -O $dir/PBQ.obo
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/ontologies/go.obo" -O $dir/FYPO_GO.obo
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/ontologies/fypo-simple.obo" -O $dir/FYPO.obo
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/pombe-embl/mini-ontologies/pombe_mini_PR.obo" -O $dir/PRO.obo
+wget "http://curation.pombase.org/dumps/releases/pombase-chado-latest/pombe-embl/mini-ontologies/chebi.obo" -O $dir/CHEBI.obo
+
 wget "http://www.geneontology.org/ontology/obo_format_1_2/gene_ontology.1_2.obo" -O $dir/GO.obo
 wget "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/so-simple.obo" -O $dir/SO.obo
 wget "http://palea.cgrb.oregonstate.edu/viewsvn/Poc/trunk/ontology/OBO_format/plant_ontology.obo?view=co" -O $dir/PO.obo
