@@ -44,11 +44,11 @@ wget "http://svn.code.sf.net/p/efo/code/trunk/src/efoinobo/efo.obo" -O $dir/EFO.
 wget "http://sourceforge.net/p/pombase/code/HEAD/tree/phenotype_ontology/peco.obo?format=raw" -O $dir/PECO.obo
 wget "http://purl.obolibrary.org/obo/cl-basic.obo" -O $dir/CL.obo
 wget "https://raw.githubusercontent.com/pato-ontology/pato/master/pato.obo" -O $dir/PATO.obo
-wget "http://www.berkeleybop.org/ontologies/obo-all/OGMS/OGMS.obo" -O $dir/OGMS.obo
+wget "https://raw.githubusercontent.com/OGMS/ogms/master/src/ontology/ogms.obo" -O $dir/OGMS.obo
 wget "http://www.brenda-enzymes.info/ontology/tissue/tree/update/update_files/BrendaTissueOBO" -O $dir/BTO.obo
 wget "https://raw.githubusercontent.com/BFO-ontology/BFO/master/releases/2.0/bfo.obo" -O $dir/BFO.obo
 wget "https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo" -O $dir/UO.obo
 wget "https://raw.githubusercontent.com/evidenceontology/evidenceontology/master/eco.obo" -O $dir/ECO.obo
-wget "http://www.berkeleybop.org/ontologies/mp.obo" -O $dir/MP.obo
+wget --no-check-certificate "https://build.berkeleybop.org/job/build-mp-edit/lastSuccessfulBuild/artifact/src/ontology/mp.obo/*view*/" -O $dir/MP.obo
 wget "ftp://ftp.rgd.mcw.edu/pub/ontology/clinical_measurement/clinical_measurement.obo" -O $dir/CMO.obo
 wget "http://purl.obolibrary.org/obo/hp.obo" -O $dir/HPO.obo
