@@ -104,7 +104,7 @@ if ! [ -z "$mart" ]; then
     $srv $mart < $TMP_SQL
     #rm -f $TMP_SQL
     msg "Cleaning up and optimizing tables in $mart"
-    for table in $($srv $mart -e "show tables like \"closure%\""); do
+    for table in $($srv --skip-column-names $mart -e "show tables like \"closure%\""); do
 	cnt=$($srv $mart -e "select count(*) from $table")
 	if [ "$cnt" == "0" ]; then
 	    msg "Dropping table $table from $mart"
@@ -115,7 +115,7 @@ if ! [ -z "$mart" ]; then
 	fi
     done
     msg "Creating the dataset_name table for mart database $mart"
-    perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl $($srv details script) -mart $mart -div ensembl -name _closure -main main || {
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl $($srv details script) -mart $mart -div ensembl || {
         msg "Failed to create dataset_name table"
         exit 1
     }
