@@ -48,13 +48,14 @@ sub new {
 
 sub export_genes {
   my ( $self, $dba, $biotypes, $level, $load_xrefs ) = @_;
-
   $biotypes = $self->{biotypes} unless defined $biotypes;
   $level = $self->{level} unless defined $level;
   $load_xrefs = $self->{load_xrefs} unless defined $load_xrefs;
 
   # query for all genes, hash by ID
+print "Exporting genes...";
   my $genes = $self->get_genes( $dba, $biotypes, $level, $load_xrefs );
+print "Done!";
   return [ values %$genes ];
 }
 
@@ -73,7 +74,7 @@ sub get_genes {
 
   my @genes;
   my $sql = qq/
-  select f.stable_id as id, x.display_label as name, f.description, f.biotype,
+  select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype,
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
   s.name as seq_region_name
   from gene f
@@ -101,6 +102,11 @@ sub get_genes {
   my $seq_region_synonyms = $self->get_seq_region_synonyms( $dba, 'gene', $biotypes );
   while ( my ( $gene_id, $synonym ) = each %$seq_region_synonyms ) {
     $genes_hash->{$gene_id}->{seq_region_synonyms} = $synonym;
+  }
+  # add haplotypes
+  my $haplotypes = $self->get_haplotypes($dba, 'gene', $biotypes);
+  while ( my ( $gene_id, $synonym ) = each %$seq_region_synonyms ) {
+    $genes_hash->{$gene_id}->{is_haplotype} = 1;
   }
   # add coord_system info
   my $coord_systems = $self->get_coord_systems($dba, 'gene', $biotypes);
@@ -134,6 +140,7 @@ sub get_transcripts {
   my $sql = q/
     select g.stable_id as gene_id,
     t.stable_id as id,
+    t.version as version,
     x.display_label as name,
     t.description, 
     t.biotype,
@@ -184,6 +191,7 @@ sub get_transcripts {
   SELECT
   t.stable_id AS trans_id,
   e.stable_id AS id,
+  e.version AS version,
   s.name as seq_region_name,
   e.seq_region_start as start, 
   e.seq_region_end as end,
@@ -226,7 +234,8 @@ sub get_translations {
 
   my $sql = q/
     select t.stable_id as transcript_id,
-    tl.stable_id as id
+    tl.stable_id as id,
+    tl.version as version
     from transcript t
     join translation tl using (transcript_id)
     join seq_region s using (seq_region_id)
@@ -388,17 +397,6 @@ sub _generate_associated_xref_sql {
   /;
   return $sql;
 }
-
-
-# Creates:
-# $xrefs->{ stable_id => [ { primary_id => xref accession, display_id => display_label, dbname => , description =>  }, ... ] }
-# $oox->{ object_xref_id => { obj_id => stable_id, primary_id => xref accession, display_id => display_label, dbname => , description => 
-#                             linkage_types => [ { evidence => linkage_type, source => { primary_id , display_id, dbname , description}} ... ],
-#                             associated_xrefs => { associated_group_id => { condition_type => { rank , dbprimary_acc , display_label , dbname, description, source => { dbprimary_acc , display_id, dbname, description } }
-#                                                                         }
-#                                                }
-#                           }
-#       }
 
 sub get_xrefs {
   my ( $self, $dba, $type, $biotypes ) = @_;
@@ -569,13 +567,37 @@ sub get_seq_region_synonyms {
   return $synonyms;
 } 
 
+sub get_haplotypes {
+  my ( $self, $dba, $type, $biotypes ) = @_;
+  my $sql = qq/
+    select g.stable_id as id 
+    from $type g
+    join assembly_exception ae using (seq_region_id)
+    join seq_region s using (seq_region_id)
+    join coord_system c using (coord_system_id)
+    where c.species_id = ? and ae.exc_type='HAP'
+  /;
+  $sql = $self->_append_biotype_sql($sql,$biotypes);
+  my $haplotypes = {};
+  $dba->dbc()->sql_helper()->execute_no_return(
+  -SQL => $sql,
+  -PARAMS   => [ $dba->species_id() ],
+  -CALLBACK => sub {
+    my ($row) = @_;
+    $haplotypes->{ $row->[0] } = 1;
+    return;
+  } );
+  return $haplotypes;
+} 
+
+
 sub add_compara {
   my ( $self, $species, $genes, $compara_dba ) = @_;
   my $homologues = {};
-  print "Querying Compara\n";
+  warn "Adding compara...\n";
   $compara_dba->dbc()->sql_helper()->execute_no_return(
   -SQL => q/
-SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description
+SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id
 FROM homology_member hm1
  INNER JOIN homology_member hm2 ON (hm1.homology_id = hm2.homology_id)
  INNER JOIN homology h ON (hm1.homology_id = h.homology_id)
@@ -583,6 +605,7 @@ FROM homology_member hm1
  INNER JOIN gene_member gm2 ON (hm2.gene_member_id = gm2.gene_member_id)
  INNER JOIN genome_db g ON (gm1.genome_db_id = g.genome_db_id)
  INNER JOIN genome_db g2 ON (gm2.genome_db_id = g2.genome_db_id)
+ INNER JOIN gene_tree_root r ON (h.gene_tree_root_id=r.root_id)
 WHERE (hm1.gene_member_id <> hm2.gene_member_id)
  AND (gm1.stable_id <> gm2.stable_id)
  AND (g.name = ?)
@@ -592,7 +615,8 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
     push @{ $homologues->{ $row->[0] } },
     { stable_id   => $row->[1],
       genome      => $row->[2],
-      description => $row->[3] };
+      description => $row->[3],
+      gene_tree_id => $row->[4] };
     return;
   },
   -PARAMS => [$species] );
@@ -606,10 +630,23 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
       $gene->{homologues} = $homo;
     }
   }
-  print "Homology integrated into gene hash\n";
+  warn "Finished adding compara...\n";
   return;
 }
 
-
+sub add_funcgen {
+	my ($self, $genes, $funcgen_dba) = @_;
+	
+	my $probes = {};
+	# TODO load probes from funcgen DBA
+	
+	for my $gene ( @{$genes} ) {
+		for my $transcript (@{$gene->{transcripts}}) {
+			my $probes_for_transcript = $probes->{$transcript->{stable_id}};
+			$transcript->{probes} = $probes_for_transcript if defined $probes_for_transcript; 
+    	}
+	}	
+	return;
+}
 
 1;
