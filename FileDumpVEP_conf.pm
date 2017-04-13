@@ -49,32 +49,37 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'file_dump_vep_'.$self->o('cache_version'),
+    pipeline_name => 'file_dump_vep_'.$self->o('ensembl_release'),
 
-    ensembl_dir   => $self->o('ensembl_cvs_root_dir'),
-    perl_lib      => $self->o('ensembl_dir').'/ensembl-variation/modules',
+    # For species with variation can create an extra tabix-convert tar.gz file,
+    # for the web interface & REST API use in preference to non-converted ones.
+    # Don't need this complication (yet), so don't bother.
+    # convert => 1,
 
-    vep_script    => catdir(
-                       $self->o('ensembl_dir'),
-                       'ensembl-tools/scripts/variant_effect_predictor',
-                       'variant_effect_predictor.pl'),
+    # Don't change this unless you know what you're doing...
+    region_size => 1e6,
+  };
+}
 
-    vep_params    => ' --build all'.
-                     ' --db_version '    . $self->o('ensembl_release').
-                     ' --cache_version ' . $self->o('cache_version').
-                     ' --registry '      . $self->o('registry'),
+sub pipeline_create_commands {
+  my ($self) = @_;
 
-    vep_hc_script => catdir(
-                       $self->o('ensembl_dir'),
-                       'ensembl-variation/scripts/misc',
-                       'healthcheck_vep_caches.pl'),
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('pipeline_dir'),
+  ];
+}
 
-    vep_hc_params => ' --version '       . $self->o('ensembl_release').
-                     ' --cache_version ' . $self->o('cache_version').
-                     ' --random 0.01'.
-                     ' --no_fasta 1'.
-                     ' --max_vars 100',   
-    };
+sub pipeline_wide_parameters {
+ my ($self) = @_;
+ 
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'pipeline_dir'    => $self->o('pipeline_dir'),
+   'ensembl_release' => $self->o('ensembl_release'),
+   'eg_version'      => $self->o('eg_version'),
+   'region_size'     => $self->o('region_size'),
+ };
 }
 
 sub pipeline_analyses {
@@ -82,9 +87,21 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name        => 'SpeciesFactory',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -logic_name        => 'FileDumpVEP',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 0,
       -input_ids         => [ {} ],
+      -parameters        => {},
+      -flow_into         => {
+                              '1' => ['VEPSpeciesFactory'],
+                            },
+      -meadow_type       => 'LOCAL',
+    },
+
+    {
+      -logic_name        => 'VEPSpeciesFactory',
+      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::VEPSpeciesFactory',
+      -max_retry_count   => 1,
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
@@ -95,40 +112,88 @@ sub pipeline_analyses {
                               regulation_flow => 0,
                               variation_flow  => 0,
                             },
-      -max_retry_count   => 1,
       -flow_into         => {
-                              '2' => ['vep'],
+                              '2->A' => ['CreateDumpJobs'],
+                              'A->2' => ['CopySynonyms'],
                             },
       -meadow_type       => 'LOCAL',
     },
 
     {
-      -logic_name        => 'vep',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::VEPDumper',
-      -analysis_capacity => 10,
-      -max_retry_count   => 1,
+      -logic_name        => 'CreateDumpJobs',
+      -module            => 'Bio::EnsEMBL::VEP::Pipeline::DumpVEP::CreateDumpJobs',
+      -analysis_capacity => 20,
+      -max_retry_count   => 0,
       -parameters        => {
-                              perl_lib   => $self->o('perl_lib'),
-                              vep_script => $self->o('vep_script'),
-                              vep_params => $self->o('vep_params'),
+                              eg => 1,
                             },
       -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => ['ValidateVEP'],
+                              '3' => ['vep_core'],
+                              '5' => ['vep_variation'],
                             },
+    },
+
+    {
+      -logic_name        => 'vep_core',
+      -module            => 'Bio::EnsEMBL::VEP::Pipeline::DumpVEP::Dumper::Core',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {},
+      -rc_name           => 'normal',
+    },
+    
+    {
+      -logic_name        => 'vep_variation',
+      -module            => 'Bio::EnsEMBL::VEP::Pipeline::DumpVEP::Dumper::Variation',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -can_be_empty      => 1,
+      -parameters        => {
+                              convert => 0,
+                            },
+      -rc_name           => 'normal',
+    },
+
+    {
+      -logic_name        => 'CopySynonyms',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 0,
+      -parameters        =>
+        {
+          cmd => 'cp #pipeline_dir#/synonyms/#species#_#assembly#_chr_synonyms.txt '.
+                 '   #pipeline_dir#/#species#/#eg_version#_#assembly#/chr_synonyms.txt',
+        },
+      -rc_name           => 'normal',
+      -flow_into         => ['MergeInfoFiles'],
+    },
+
+    {
+      -logic_name        => 'MergeInfoFiles',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 0,
+      -parameters        => 
+        {
+          cmd => 'cat #pipeline_dir#/#species#/#eg_version#_#assembly#/info.txt_* > '.
+                 '    #pipeline_dir#/#species#/#eg_version#_#assembly#/info.txt; '.
+                 'rm  #pipeline_dir#/#species#/#eg_version#_#assembly#/info.txt_*;'
+        },
+      -rc_name           => 'normal',
+      -flow_into         => ['ValidateVEP'],
     },
 
     {
       -logic_name        => 'ValidateVEP',
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::ValidateVEP',
       -analysis_capacity => 10,
-      -max_retry_count   => 1,
+      -max_retry_count   => 0,
       -parameters        => {
-                              vep_hc_script => $self->o('vep_hc_script'),
-                              vep_hc_params => $self->o('vep_hc_params'),
+                              type    => 'core',
+                              convert => 0,
                             },
       -rc_name           => 'normal',
     },
+
   ];
 }
 

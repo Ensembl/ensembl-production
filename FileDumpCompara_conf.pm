@@ -68,7 +68,7 @@ sub default_options {
        '3' => ['wg_alignments_maf'],
     },
 
-    dump_names => {
+    compara_dumps => {
       'gene_trees_newick'    => 'GENE-TREES-NEWICK',
       'gene_alignments_cdna' => 'GENE-ALIGN-TRANSCRIPTS',
       'gene_alignments_aa'   => 'GENE-ALIGN-PEPTIDES',
@@ -100,36 +100,6 @@ sub default_options {
     orthoxml_schema => catdir($self->o('schema_dir'), 'orthoxml.paralogs.xsd'),
     phyloxml_schema => catdir($self->o('schema_dir'), 'phyloxml.xsd'),
 
-    # Need to refer to last release's checksums, to see what has changed.
-    checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums/compara',
-
-    # To get the download files to ND we need to generate a CSV file for
-    # bulk creation of the Drupal nodes, and two sets of shell commands for
-    # transferring data, one to be run at EBI, one at ND.
-    drupal_file      => $self->o('results_dir').'.csv',
-    manual_file      => $self->o('results_dir').'.txt',
-    sh_ebi_file      => $self->o('results_dir').'.ebi.sh',
-    sh_nd_file       => $self->o('results_dir').'.nd.sh',
-    staging_dir      => 'sites/default/files/ftp/staging',
-    nd_login         => $self->o('ENV', 'USER').'@www.vectorbase.org',
-    nd_downloads_dir => '/data/sites/drupal-pre/downloads',
-    nd_staging_dir   => '/data/sites/drupal-pre/staging',
-    release_date     => undef,
-
-    # For the Drupal nodes, each file type has a standard description.
-    # The module that creates the file substitutes values for the text in caps.
-    drupal_desc => {
-      'GENE-TREES-NEWICK'      => 'Gene trees in Newick (a.k.a. New Hampshire) format.',
-      'GENE-ALIGN-TRANSCRIPTS' => 'Alignments of transcript sequences, used to infer gene trees.',
-      'GENE-ALIGN-PEPTIDES'    => 'Alignments of peptide sequences, used to infer gene trees.',
-      'GENE-TREES-TRANSCRIPTS' => 'Gene trees in PhyloXML format, containing transcript alignments.',
-      'GENE-TREES-PEPTIDES'    => 'Gene trees in PhyloXML format, containing peptide alignments.',
-      'HOMOLOGS'               => 'Homologs in OrthoXML format.',
-      'WG-ALIGN'               => 'Pairwise whole genome alignment between <SPECIES1> and <SPECIES2>, in MAF format.',
-    },
-    
-    # Skip checksumming for files which don't require it.
-    'skip_file_match' => ['WG-ALIGN'],
   };
 }
 
@@ -178,49 +148,15 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name        => 'FileDump',
+      -logic_name        => 'FileDumpCompara',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 0,
       -input_ids         => [ {} ],
       -parameters        => {},
       -flow_into         => {
-                              '1->A' => ['TreeFactory', 'PairwiseAlignmentFactory'],
-                              'A->1' => ['CheckSumChecking'],
+                              '1' => ['TreeFactory', 'PairwiseAlignmentFactory'],
                             },
       -meadow_type       => 'LOCAL',
-    },
-
-    {
-      -logic_name        => 'CheckSumChecking',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::CheckSumChecking',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              checksum_dir    => $self->o('checksum_dir'),
-                              release_date    => $self->o('release_date'),
-                              skip_file_match => $self->o('skip_file_match'),
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => ['WriteDrupalFile'],
-    },
-
-    {
-      -logic_name        => 'WriteDrupalFile',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              drupal_file      => $self->o('drupal_file'),
-                              manual_file      => $self->o('manual_file'),
-                              sh_ebi_file      => $self->o('sh_ebi_file'),
-                              sh_nd_file       => $self->o('sh_nd_file'),
-                              staging_dir      => $self->o('staging_dir'),
-                              nd_login         => $self->o('nd_login'),
-                              nd_downloads_dir => $self->o('nd_downloads_dir'),
-                              nd_staging_dir   => $self->o('nd_staging_dir'),
-                              release_date     => $self->o('release_date'),
-                              drupal_desc      => $self->o('drupal_desc'),
-                              compara_files    => 1,
-                            },
-      -rc_name           => 'normal',
     },
 
     {
@@ -230,7 +166,7 @@ sub pipeline_analyses {
       -parameters        => {
                               compara          => $self->o('compara'),
                               dump_types       => $self->o('tree_dump_types'),
-                              dump_names       => $self->o('dump_names'),
+                              compara_dumps    => $self->o('compara_dumps'),
                               skip_dumps       => $self->o('skip_dumps'),
                               files_per_subdir => $self->o('files_per_subdir'),
                               release_date     => $self->o('release_date'),
@@ -238,17 +174,17 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '3->C' => ['gene_trees_newick'],
-                              'C->1' => ['PostProcessing'],
+                              'C->1' => ['TarFiles'],
                               '4->D' => ['gene_alignments_cdna'],
-                              'D->1' => ['PostProcessing'],
+                              'D->1' => ['TarFiles'],
                               '5->E' => ['gene_alignments_aa'],
-                              'E->1' => ['PostProcessing'],
+                              'E->1' => ['TarFiles'],
                               '6->F' => ['gene_trees_cdna_xml'],
-                              'F->1' => ['PostProcessing'],
+                              'F->1' => ['TarFiles'],
                               '7->G' => ['gene_trees_aa_xml'],
-                              'G->1' => ['PostProcessing'],
+                              'G->1' => ['TarFiles'],
                               '8->H' => ['homologs_xml'],
-                              'H->1' => ['PostProcessing'],
+                              'H->1' => ['TarFiles'],
                             },
     },
 
@@ -259,7 +195,7 @@ sub pipeline_analyses {
       -parameters        => {
                               compara          => $self->o('compara'),
                               dump_types       => $self->o('pairwise_dump_types'),
-                              dump_names       => $self->o('dump_names'),
+                              compara_dumps    => $self->o('compara_dumps'),
                               skip_dumps       => $self->o('skip_dumps'),
                               files_per_subdir => $self->o('files_per_subdir'),
                               release_date     => $self->o('release_date'),
@@ -420,7 +356,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '-1'    => ['wg_alignments_maf_himem'],
                                '2->A' => ['ValidateMAF'],
-                               'A->1' => ['PostProcessing'],
+                               'A->1' => ['TarFiles'],
                             },
     },
 
@@ -439,7 +375,7 @@ sub pipeline_analyses {
       -rc_name           => '16Gb_mem',
       -flow_into         => {
                                '2->A' => ['ValidateMAF'],
-                               'A->1' => ['PostProcessing'],
+                               'A->1' => ['TarFiles'],
                             },
     },
 
@@ -457,7 +393,7 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name        => 'PostProcessing',
+      -logic_name        => 'TarFiles',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
       -max_retry_count   => 0,
@@ -465,11 +401,11 @@ sub pipeline_analyses {
                               cmd => 'cd #out_dir#; tar -cf #sub_dir#.tar #sub_dir# --remove-files',
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
+      -flow_into         => ['CompressTarFile'],
     },
 
     {
-      -logic_name        => 'CompressFile',
+      -logic_name        => 'CompressTarFile',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
       -batch_size        => 10,
@@ -478,11 +414,11 @@ sub pipeline_analyses {
                               cmd => 'cd #out_dir#; gzip -n -f #sub_dir#.tar',
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['MD5Checksum'],
+      -flow_into         => ['MD5ChecksumTar'],
     },
 
     {
-      -logic_name        => 'MD5Checksum',
+      -logic_name        => 'MD5ChecksumTar',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -analysis_capacity => 10,
       -max_retry_count   => 0,

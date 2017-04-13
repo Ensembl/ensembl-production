@@ -82,31 +82,13 @@ sub default_options {
     skip_dumps => [],
     
     # Gap type 'scaffold' is assumed unless otherwise specified.
-    agp_gap_type => {
-      'anopheles_albimanus' => 'contig',
-      'anopheles_gambiae'   => 'contig',
-    },
+    agp_gap_type => {},
 
     # Linkage is assumed unless otherwise specified.
-    agp_linkage => {
-      'anopheles_albimanus' => 'no',
-      'anopheles_gambiae'   => 'no',
-    },
+    agp_linkage => {},
     
     # Linkage evidence 'paired-ends' is assumed unless otherwise specified.
-    agp_evidence => {
-      'aedes_aegypti'          => 'unspecified',
-      'anopheles_albimanus'    => 'na',
-      'anopheles_darlingi'     => 'unspecified',
-      'anopheles_gambiae'      => 'na',
-      'anopheles_gambiaeS'     => 'unspecified',
-      'culex_quinquefasciatus' => 'unspecified',
-      'glossina_morsitans'     => 'unspecified',
-      'ixodes_scapularis'      => 'unspecified',
-      'lutzomyia_longipalpis'  => 'unspecified',
-      'pediculus_humanus'      => 'unspecified',
-      'rhodnius_prolixus'      => 'unspecified',
-    },
+    agp_evidence => {},
 
     gff3_per_chromosome   => 0,
     gff3_include_scaffold => 1,
@@ -114,48 +96,6 @@ sub default_options {
     gt_exe        => 'gt',
     gff3_tidy     => $self->o('gt_exe').' gff3 -tidy -sort -retainids',
     gff3_validate => $self->o('gt_exe').' gff3validator',
-
-    # Need to refer to last release's checksums, to see what has changed.
-    checksum_dir => '/nfs/panda/ensemblgenomes/vectorbase/ftp_checksums',
-
-    # To get the download files to ND we need to generate a CSV file for
-    # bulk creation of the Drupal nodes, and two sets of shell commands for
-    # transferring data, one to be run at EBI, one at ND.
-    drupal_file      => $self->o('results_dir').'.csv',
-    manual_file      => $self->o('results_dir').'.txt',
-    sh_ebi_file      => $self->o('results_dir').'.ebi.sh',
-    sh_nd_file       => $self->o('results_dir').'.nd.sh',
-    staging_dir      => 'sites/default/files/ftp/staging',
-    nd_login         => $self->o('ENV', 'USER').'@www.vectorbase.org',
-    nd_downloads_dir => '/data/sites/drupal-pre/downloads',
-    nd_staging_dir   => '/data/sites/drupal-pre/staging',
-    release_date     => undef,
-
-    # For the Drupal nodes, each file type has a standard description.
-    # The module that creates the file substitutes values for the text in caps.
-    drupal_desc => {
-      'fasta_toplevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly, softmasked using RepeatMasker, Dust, and TRF.',
-      'fasta_seqlevel'    => '<STRAIN> strain genomic <SEQTYPE> sequences, <ASSEMBLY> assembly.',
-      'agp_assembly'      => 'AGP (v2.0) file relating <MAPPING> for the <SPECIES> <STRAIN> strain, <ASSEMBLY> assembly.',
-      'fasta_transcripts' => '<STRAIN> strain transcript sequences, <GENESET> geneset.',
-      'fasta_peptides'    => '<STRAIN> strain peptide sequences, <GENESET> geneset.',
-      'gtf_genes'         => '<STRAIN> strain <GENESET> geneset in GTF (v2.2) format.',
-      'gff3_genes'        => '<STRAIN> strain <GENESET> geneset in GFF3 format.',
-      'gff3_repeats'      => '<STRAIN> strain <ASSEMBLY> repeat features (RepeatMasker, Dust, TRF) in GFF3 format.',
-    },
-    
-    drupal_desc_exception => {
-      'fasta_toplevel' => {
-        'Musca domestica' => '<STRAIN> strain genomic <TOPLEVEL> sequences, <ASSEMBLY> assembly, softmasked using WindowMasker, Dust, and TRF.',
-      },
-      'gff3_repeats' => {
-        'Musca domestica' => '<STRAIN> strain <GENESET> repeat features (WindowMasker, Dust, TRF) in GFF3 format.',
-      },
-    },
-    
-    drupal_species => {
-      'Anopheles culicifacies' => 'Anopheles culicifacies A',
-    },
     
   };
 }
@@ -211,48 +151,13 @@ sub pipeline_analyses {
       -input_ids         => [ {} ],
       -parameters        => {},
       -flow_into         => {
-                              '1->A' => ['SpeciesFactory'],
-                              'A->1' => ['CheckSumChecking'],
+                              '1' => ['FileDumpSpeciesFactory'],
                             },
       -meadow_type       => 'LOCAL',
     },
 
     {
-      -logic_name        => 'CheckSumChecking',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::CheckSumChecking',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              checksum_dir  => $self->o('checksum_dir'),
-                              release_date  => $self->o('release_date'),
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => ['WriteDrupalFile'],
-    },
-
-    {
-      -logic_name        => 'WriteDrupalFile',
-      -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::WriteDrupalFile',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              drupal_file           => $self->o('drupal_file'),
-                              manual_file           => $self->o('manual_file'),
-                              sh_ebi_file           => $self->o('sh_ebi_file'),
-                              sh_nd_file            => $self->o('sh_nd_file'),
-                              staging_dir           => $self->o('staging_dir'),
-                              nd_login              => $self->o('nd_login'),
-                              nd_downloads_dir      => $self->o('nd_downloads_dir'),
-                              nd_staging_dir        => $self->o('nd_staging_dir'),
-                              release_date          => $self->o('release_date'),
-                              drupal_desc           => $self->o('drupal_desc'),
-                              drupal_desc_exception => $self->o('drupal_desc_exception'),
-                              drupal_species        => $self->o('drupal_species'),
-                              gene_dumps            => $self->o('gene_dumps'),
-                            },
-      -rc_name           => 'normal',
-    },
-
-    {
-      -logic_name        => 'SpeciesFactory',
+      -logic_name        => 'FileDumpSpeciesFactory',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
@@ -276,9 +181,9 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::EGPipeline::FileDump::DumpFactory',
       -max_retry_count   => 0,
       -parameters        => {
-                              dump_types     => $self->o('dump_types'),
-                              gene_dumps     => $self->o('gene_dumps'),
-                              skip_dumps     => $self->o('skip_dumps'),
+                              dump_types => $self->o('dump_types'),
+                              gene_dumps => $self->o('gene_dumps'),
+                              skip_dumps => $self->o('skip_dumps'),
                             },
       -flow_into         => $self->o('dump_types'),
       -meadow_type       => 'LOCAL',
@@ -299,7 +204,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['fasta_toplevel_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -315,7 +220,7 @@ sub pipeline_analyses {
                               header_style   => 'name_and_type_and_location',
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -333,7 +238,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['fasta_seqlevel_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -349,7 +254,7 @@ sub pipeline_analyses {
                               header_style   => 'name_and_type_and_location',
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -367,7 +272,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['agp_assembly_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -383,7 +288,7 @@ sub pipeline_analyses {
                               agp_evidence => $self->o('agp_evidence'),
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -399,7 +304,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['fasta_transcripts_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -413,7 +318,7 @@ sub pipeline_analyses {
                               header_style => 'extended',
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -429,7 +334,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['fasta_peptides_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -443,7 +348,7 @@ sub pipeline_analyses {
                               header_style => 'extended',
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -459,7 +364,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['gtf_genes_himem'],
-                               '1' => ['PostProcessing'],
+                               '1' => ['CompressFile'],
                             },
     },
 
@@ -473,7 +378,7 @@ sub pipeline_analyses {
                               data_type => 'basefeatures',
                             },
       -rc_name           => '16Gb_mem',
-      -flow_into         => ['PostProcessing'],
+      -flow_into         => ['CompressFile'],
     },
 
     {
@@ -495,7 +400,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '-1'   => ['gff3_genes_himem'],
                               '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
+                              'A->1' => ['CompressFile'],
                             },
     },
 
@@ -516,7 +421,7 @@ sub pipeline_analyses {
       -rc_name           => '16Gb_mem',
       -flow_into         => {
                               '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
+                              'A->1' => ['CompressFile'],
                             },
     },
 
@@ -539,7 +444,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '-1'   => ['gff3_repeats_himem'],
                               '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
+                              'A->1' => ['CompressFile'],
                             },
     },
 
@@ -560,7 +465,7 @@ sub pipeline_analyses {
       -rc_name           => '16Gb_mem',
       -flow_into         => {
                               '1->A' => ['gff3Tidy'],
-                              'A->1' => ['PostProcessing'],
+                              'A->1' => ['CompressFile'],
                             },
     },
 
@@ -602,15 +507,6 @@ sub pipeline_analyses {
                               cmd => $self->o('gff3_validate').' #out_file#',
                             },
       -rc_name           => 'normal',
-    },
-
-    {
-      -logic_name        => 'PostProcessing',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count   => 0,
-      -parameters        => {},
-      -flow_into         => ['CompressFile'],
-      -meadow_type       => 'LOCAL',
     },
 
     {

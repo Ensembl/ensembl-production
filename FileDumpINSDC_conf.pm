@@ -64,18 +64,7 @@ sub default_options {
     per_chromosome => 0,
     source         => 'VectorBase',
     source_url     => 'https://www.vectorbase.org',
-
-    delete_existing => 1,
   };
-}
-
-sub pipeline_wide_parameters {
- my ($self) = @_;
- 
- return {
-   %{$self->SUPER::pipeline_wide_parameters},
-   'delete_existing' => $self->o('delete_existing'),
- };
 }
 
 sub pipeline_analyses {
@@ -83,38 +72,9 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name        => 'FileDumpINSDC',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -input_ids         => [ {} ],
-      -max_retry_count   => 0,
-      -rc_name           => 'normal',
-      -flow_into         => [
-                              WHEN('#delete_existing#' => ['DeleteExistingFiles'],
-                              ELSE ['SpeciesFactory']
-                              ),
-                            ],
-      -meadow_type       => 'LOCAL',
-    },
-
-    {
-      -logic_name        => 'DeleteExistingFiles',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => 'mkdir -p #results_dir#_tmp;
-                                      mv #results_dir#/* #results_dir#_tmp/.',
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => {
-                              '1->A' => ['SpeciesFactory'],
-                              'A->1' => ['SetFilePermissions'],
-                            },
-      -meadow_type       => 'LOCAL',
-    },
-
-    {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EGSpeciesFactory',
+      -input_ids         => [ {} ],
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
@@ -153,30 +113,7 @@ sub pipeline_analyses {
                               taxonomy_db        => $self->o('taxonomy_db'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['CompressFile'],
 	  },
-
-    {
-      -logic_name        => 'CompressFile',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -analysis_capacity => 10,
-      -batch_size        => 10,
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => 'gzip -n -f #out_file#',
-                            },
-      -rc_name           => 'normal',
-    },
-
-    {
-      -logic_name        => 'SetFilePermissions',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 0,
-      -parameters        => {
-                              cmd => 'chmod g+rw #results_dir#/*',
-                            },
-      -rc_name           => 'normal',
-    },
 
   ];
 }
