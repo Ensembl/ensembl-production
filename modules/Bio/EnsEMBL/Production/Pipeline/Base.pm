@@ -150,7 +150,7 @@ return $self->get_dir($format, $self->param('species'));
 
 sub get_dir {
     my ($self, @extras) = @_;
-    my $base_dir = $self->param('base_path');
+    my $base_dir = $self->param_required('base_path');
     my $dir      = File::Spec->catdir($base_dir, @extras);
 
     if ($self->param('species')) {
