@@ -10,4 +10,3 @@ requires 'Exporter::Auto';
 requires 'Log::Log4perl';
 requires 'Config::Simple';
 requires 'String::Numeric';
-required 'Test::File';
