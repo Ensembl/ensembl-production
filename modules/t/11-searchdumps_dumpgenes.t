@@ -31,7 +31,9 @@ my $core_dba = $test->get_DBAdaptor('core');
 my $fetcher = Bio::EnsEMBL::Production::Search::GeneFetcher->new();
 
 my $genes = $fetcher->fetch_genes_for_dba($core_dba);
-is( scalar(@$genes), 87, "Correct number of genes" );
+is( scalar(@$genes), 88, "Correct number of genes" );
+
+is( scalar(grep {lc $_->{biotype} eq 'lrg'} @$genes), 0, "Checking for LRGs" );
 my ($gene) = grep { $_->{id} eq 'ENSG00000261370' } @$genes;
 ok( $gene, "Test gene found" );
 my $expected_gene = {
@@ -149,5 +151,8 @@ my $expected_gene = {
 	 'biotype' => 'pseudogene' };
 
 is_deeply( $gene, $expected_gene, "Testing gene structure" );
+
+is(scalar (grep { defined $_->{is_haplotype} && $_->{is_haplotype} == 1 } @$genes),1,"Haplotype genes");
+is(scalar (grep { !defined $_->{is_haplotype} || $_->{is_haplotype} == 0 } @$genes),87,"Non-haplotype genes");
 
 done_testing;

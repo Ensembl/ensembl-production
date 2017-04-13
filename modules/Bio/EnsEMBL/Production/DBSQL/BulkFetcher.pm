@@ -105,7 +105,7 @@ sub get_genes {
   }
   # add haplotypes
   my $haplotypes = $self->get_haplotypes($dba, 'gene', $biotypes);
-  while ( my ( $gene_id, $synonym ) = each %$seq_region_synonyms ) {
+  while ( my ( $gene_id, $synonym ) = each %$haplotypes ) {
     $genes_hash->{$gene_id}->{is_haplotype} = 1;
   }
   # add coord_system info
