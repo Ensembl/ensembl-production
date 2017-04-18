@@ -9,6 +9,12 @@
         "id": {
             "type": "string"
         },
+        "start": {
+            "type": "number"
+        },
+        "end": {
+            "type": "number"
+        },
         "length": {
             "type": "number"
         },
