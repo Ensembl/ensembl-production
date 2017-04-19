@@ -69,17 +69,18 @@ sub fetch_lrgs_for_dba {
 		-SQL => qq/
 			SELECT g.stable_id, x.display_label, edb.db_name, t.stable_id, sr.length
              FROM gene g
-             JOIN analysis a ON (g.analysis_id=g.analysis_id)
+             JOIN analysis a ON (g.analysis_id=a.analysis_id)
              JOIN object_xref ox ON (g.gene_id = ox.ensembl_id)
              JOIN xref x USING (xref_id)
              JOIN external_db edb USING (external_db_id)
              JOIN transcript t USING (gene_id)
              JOIN seq_region sr ON (sr.name=g.stable_id)
+             JOIN coord_system cs USING (coord_system_id)
             WHERE 
             	ox.ensembl_object_type = 'Gene'
               AND edb.db_name = 'HGNC'
               AND a.logic_name = 'LRG_import'
-            ORDER by g.stable_id, t.stable_id/,
+              AND cs.species_id = ?/,
 		-PARAMS   => [ $dba->species_id() ],
 		-CALLBACK => sub {
 			my ( $id, $gene, $gene_db, $transcript_id, $len ) = @{ shift @_ };
