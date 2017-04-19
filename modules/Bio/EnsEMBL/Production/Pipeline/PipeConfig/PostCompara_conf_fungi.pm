@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_fungi;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
