@@ -46,29 +46,44 @@ sub run {
     my $parallel_GeneNames_projections = $self->param('parallel_GeneNames_projections');
 
     my $final_projection_backup_list;
-    # If we have a projection list then that mean that we have already backed up and cleaned up a projections
+    # If we have a projection list then that mean that we have already backed up and cleaned up one projection
     if ($projection_backup_list)
     {
       $final_projection_backup_list=$projection_backup_list;
       if (keys $final_projection_backup_list){
         foreach my $name (sort keys $final_projection_backup_list) {
-          foreach my $projection (sort keys $final_projection_backup_list->{$name}){
-            $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
-            $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_descriptions} = $self->param('flag_delete_gene_descriptions');
-            $final_projection_backup_list->{$name}->{$projection}->{output_dir} = $self->param('output_dir');
-            $final_projection_backup_list->{$name}->{$projection}->{dump_tables} = $self->param('g_dump_tables');
-            $self->dataflow_output_id($final_projection_backup_list->{$name}->{$projection},2);
-            delete $final_projection_backup_list->{$name}->{$projection};
-           if (keys $final_projection_backup_list){
-             $self->param('projection_backup_list', $final_projection_backup_list);
-            $self->dataflow_output_id({'projection_backup_list'=> $self->param('projection_backup_list'),},1);
-           }
-           else{
-             $self->dataflow_output_id({},1);
-           }
-          last;
+          # Check that we have keys for a given name.
+          if (keys $final_projection_backup_list->{$name}){
+            foreach my $projection (sort keys $final_projection_backup_list->{$name}){
+              # Make sure we only add the delete flags to associated hash 
+              if ($name eq "gn"){
+                $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
+              }
+              elsif ($name eq "gd"){
+                $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_descriptions} = $self->param('flag_delete_gene_descriptions');
+              }
+              $final_projection_backup_list->{$name}->{$projection}->{output_dir} = $self->param('output_dir');
+              $final_projection_backup_list->{$name}->{$projection}->{dump_tables} = $self->param('g_dump_tables');
+              # Push projection hash to dumpTables and cleanup
+              $self->dataflow_output_id($final_projection_backup_list->{$name}->{$projection},2);
+              # Delete the projection hash from the final_projection_backup_list hash
+              delete $final_projection_backup_list->{$name}->{$projection};
+             if (keys $final_projection_backup_list){
+               $self->param('projection_backup_list', $final_projection_backup_list);
+               $self->dataflow_output_id({'projection_backup_list'=> $self->param('projection_backup_list'),},1);
+             }
+             else{
+               $self->dataflow_output_id({},1);
+             }
+            last;
+            }
           }
-          last;
+          else {
+            # If we don't have any values left for the name key, remove it from the hash
+            delete $final_projection_backup_list->{$name};
+            next;
+          }
+        last;
         }
      }
      else {
@@ -105,21 +120,36 @@ sub run {
       # Making sure that the projection hash is not empty 
       if (keys $final_projection_backup_list){
         foreach my $name (sort keys $final_projection_backup_list) {
-          foreach my $projection (sort keys $final_projection_backup_list->{$name}){
-            $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
-            $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_descriptions} = $self->param('flag_delete_gene_descriptions');
-            $final_projection_backup_list->{$name}->{$projection}->{output_dir} = $self->param('output_dir');
-            $final_projection_backup_list->{$name}->{$projection}->{dump_tables} = $self->param('g_dump_tables');
-            $self->dataflow_output_id($final_projection_backup_list->{$name}->{$projection},2);
-            delete $final_projection_backup_list->{$name}->{$projection};
-            if (keys $final_projection_backup_list){
-              $self->param('projection_backup_list', $final_projection_backup_list);
-              $self->dataflow_output_id({'projection_backup_list'=> $self->param('projection_backup_list'),},1);
+          # Check that we have keys for a given name.
+          if (keys $final_projection_backup_list->{$name}){
+            foreach my $projection (sort keys $final_projection_backup_list->{$name}){
+              # Make sure we only add the delete flags to associated hash 
+              if ($name eq "gn"){
+                $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_names} = $self->param('flag_delete_gene_names');
+              }
+              elsif ($name eq "gd"){
+                $final_projection_backup_list->{$name}->{$projection}->{flag_delete_gene_descriptions} = $self->param('flag_delete_gene_descriptions');
+              }
+              $final_projection_backup_list->{$name}->{$projection}->{output_dir} = $self->param('output_dir');
+              $final_projection_backup_list->{$name}->{$projection}->{dump_tables} = $self->param('g_dump_tables');
+              # Push projection hash to dumpTables and cleanup
+              $self->dataflow_output_id($final_projection_backup_list->{$name}->{$projection},2);
+              # Delete the projection hash from the final_projection_backup_list hash
+              delete $final_projection_backup_list->{$name}->{$projection};
+              if (keys $final_projection_backup_list){
+                $self->param('projection_backup_list', $final_projection_backup_list);
+                $self->dataflow_output_id({'projection_backup_list'=> $self->param('projection_backup_list'),},1);
+              }
+              else{
+                $self->dataflow_output_id({},1);
+              }
+            last;
             }
-            else{
-              $self->dataflow_output_id({},1);
-            }
-          last;
+          }
+          else {
+            # If we don't have any values left for the name key, remove it from the hash
+            delete $final_projection_backup_list->{$name};
+            next;
           }
         last;
         }
@@ -142,7 +172,6 @@ sub process_pairs {
   my $result = {};
   for my $k (qw/species antispecies division taxons/) {
     foreach my $pair (@_){
-      print Dumper($pair);
       add_unique($result,$pair,$k);
     }
     $result->{$k} = [keys %{$result->{$k}}] if defined $result->{$k};
