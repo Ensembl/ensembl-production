@@ -28,7 +28,7 @@ The analysis checks the $output_dir first to make sure we don't overwrite backup
 ckong and maurel
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables;
+package Bio::EnsEMBL::Production::Pipeline::Common::DumpTables;
 
 use strict;
 use Data::Dumper;
