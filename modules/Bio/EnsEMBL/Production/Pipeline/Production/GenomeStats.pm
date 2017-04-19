@@ -11,6 +11,7 @@ sub run {
   my $species    = $self->param('species');
   my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
 
+  ## What does this return? i.e. What is in the hash?
   my %genome_counts = $self->get_attrib_codes();
   $self->delete_old_stats($dba, %genome_counts);
   my $count;
