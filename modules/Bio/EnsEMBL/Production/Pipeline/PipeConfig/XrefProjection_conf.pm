@@ -100,7 +100,7 @@ sub default_options {
                                 # Taxon name of species to exclude 
                                 'antitaxons' => ['Sciurognathi'],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                                'project_all' =>  0,
+                                'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => [],
                                 # Run the pipeline on all the species  
@@ -128,7 +128,7 @@ sub default_options {
                                 # Taxon name of species to exclude 
                                 'antitaxons' => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                                'project_all' =>  0,
+                                'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => [],
                                 # Run the pipeline on all the species 
@@ -156,7 +156,7 @@ sub default_options {
                                 # Taxon name of species to exclude 
                                 'antitaxons' => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                                'project_all' =>  0,
+                                'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => [],
                                 # Run the pipeline on all the species 
@@ -184,7 +184,7 @@ sub default_options {
                                 # Taxon name of species to exclude 
                                 'antitaxons' => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                                'project_all' =>  0,
+                                'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => [],
                                 # Run the pipeline on all the species 
@@ -212,7 +212,7 @@ sub default_options {
                                 # Taxon name of species to exclude 
                                 'antitaxons' => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                                'project_all' =>  0,
+                                'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                                 'white_list'  => [],
                                 # Run the pipeline on all the species 
@@ -237,7 +237,7 @@ sub default_options {
  #                               # target species division to project to
  #                               'division'    => [],
  #                               # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
- #                               'project_all' =>  1,
+ #                               'project_xrefs' =>  1,
  #                               # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
  #                               'white_list'  => ['RefSeq_mRNA', 'RefSeq_mRNA_predicted','RefSeq_ncRNA','RefSeq_ncRNA_predicted','RefSeq_peptide','RefSeq_peptide_predicted','EntrezGene','EntrezGene_trans_name','WikiGene','Uniprot/SPTREMBL','Uniprot/SWISSPROT','Uniprot_gn','protein_id','UniParc','ArrayExpress','RNACentral','MGI','MGI_trans_name','miRBase','miRBase_trans_name','RFAM','RFAM_trans_name'],
   #                              # Run the pipeline on all the species 
@@ -443,30 +443,6 @@ sub default_options {
  	    # Email Report subject
         gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
         gn_subject    => $self->o('pipeline_name').' subpipeline GeneNamesProjection has finished',
-
-	    # This Array of hashes is supplied to the 'AnalysisSetup' Runnable to 
-	    # update analysis & analysis_description table
-#		required_analysis =>
-#   	[
-#     		{
-#       	 'logic_name'    => 'go_projection',
-#       	 'db'            => 'GO',
-#       	 'db_version'    => undef,
-#     		},     	
-#		],
-                required_analysis =>[],
-    	# Remove existing analyses; 
-    	# On '1' by default, if =0 then existing analyses will remain, 
-		#  with the logic_name suffixed by '_bkp'.
-    	delete_existing => 0,
-    
-		# Delete rows in tables connected to the existing analysis (via analysis_id)
-    	linked_tables => [], 
-  	        
-	    # Retrieve analsysis descriptions from the production database;
-    	# the supplied registry file will need the relevant server details.
-	    production_lookup => 1,
-
 
 	    
 	## For all pipelines
