@@ -47,15 +47,12 @@ my $logger = get_logger();
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-
-	my ( $self->{name_order} ) = rearrange( ['NAME_ORDER'] );
-
+	( $self->{name_order} ) = rearrange( ['NAME_ORDER'] );
 	if ( !defined $self->{name_order} ) {
-		$self->name_order = [ 'name',       'well_name',
-							  'clone_name', 'sanger_project',
-							  'synonym',    'embl_acc' ];
+		$self->{name_order} = [ 'name',       'well_name',
+								'clone_name', 'sanger_project',
+								'synonym',    'embl_acc' ];
 	}
-
 	return $self;
 }
 
@@ -75,15 +72,15 @@ sub fetch_sequences_for_dba {
 
 	my $main_seqs = $self->_fetch_seq_regions($dba);
 
-	return [@{$misc_features},@{$main_seqs}];
-	
+	return [ @{$misc_features}, @{$main_seqs} ];
+
 }
 
 sub _fetch_seq_regions {
 	my ( $self, $dba ) = @_;
 
 	my $helper     = $dba->dbc()->sql_helper();
-	my $species_id = $dba->dbc()->species_id();
+	my $species_id = $dba->species_id();
 
 	#identify current default top level
 	my $current_cs_id = $helper->execute_single_result(
@@ -95,7 +92,7 @@ sub _fetch_seq_regions {
           AND cs.name = 'chromosome'
           AND m.meta_key = 'assembly.default'/ );
 
-	my $patch_hap_dets = $self->_get_patch_hap_dets( $helper, $species_id );
+	my $patch_hap_dets = $self->_get_patch_hap_dets( $helper, $species_id );	
 
 	#get all seq_regions
 	my $seq_regions_by_name = {};
@@ -105,44 +102,41 @@ sub _fetch_seq_regions {
          FROM coord_system as cs, seq_region as sr
          LEFT JOIN seq_region_synonym as srs on sr.seq_region_id = srs.seq_region_id
         WHERE sr.coord_system_id = cs.coord_system_id and cs.species_id=?
-        and cs.name<>'lrg'/
-		  -PARAMS => [$species_id],
+        and cs.name<>'lrg'/,
+		-PARAMS   => [$species_id],
 		-CALLBACK => sub {
 			my ( $name, $len, $cs_name, $cs_id, $synonym ) = @{ shift @_ };
 
 			#don't index the supercontig with PATCH name
-			return if $type eq 'supercontig' && $patch_hap_dets->{$name};
+			return if $cs_name eq 'supercontig' && $patch_hap_dets->{$name};
 
 			#don't index chromosomes from previous assemblies
-			return if ( $type eq 'chromosome' ) && ( $cs_id != $current_cs_id );
+			return
+			  if ( $cs_name eq 'chromosome' ) && ( $cs_id != $current_cs_id );
 
 			my $sr = $seq_regions_by_name->{$name};
-			if ( defined $sr ) {
-				push @{ $sr->{synonyms} }, $synonym;
-			}
-			else {
-
+			if ( !defined $sr ) {
 				$sr = { id       => $name,
-						start    => $1,
+						start    => 1,
 						end      => $len,
 						length   => $len,
-						type     => $type,
-						synonyms => [$synonym] };
-
-				if ( $patch_hap_dets->{$name} ) {
-					$seq_region->{end}   = $patch_hap_dets{$name}{end};
-					$seq_region->{start} = $patch_hap_dets{$name}{start};
-					if ( $patch_hap_dets->{$name}{syn} ) {
-						push @{ $sr->{synonyms} }, $patch_hap_dets->{$name}{syn}
-						  unless $patch_hap_dets->{$old_name}{syn} eq $synonym
-					);
-				}
+						type     => $cs_name,
+						synonyms => [] };
+				$seq_regions_by_name->{$name} = $sr;
 			}
 
-			$seq_regions_by_name->{$name} = $sr;
-		}
-		return;
-		};
+			if ( $patch_hap_dets->{$name} ) {
+				$sr->{end}   = $patch_hap_dets->{$name}{end};
+				$sr->{start} = $patch_hap_dets->{$name}{start};
+				if ( $patch_hap_dets->{$name}{syn} ) {
+					push @{ $sr->{synonyms} }, $patch_hap_dets->{$name}{syn}
+					  unless $patch_hap_dets->{$name}{syn} eq $synonym;
+				}
+			}
+			push @{ $sr->{synonyms} }, $synonym if defined $synonym;
+
+			return;
+		} );
 	return [ values %$seq_regions_by_name ];
 } ## end sub _fetch_seq_regions
 
@@ -182,92 +176,14 @@ sub _get_patch_hap_dets {
         WHERE ae.exc_type = 'HAP' and species_id=?/,
 		-PARAMS   => [$species_id],
 		-CALLBACK => sub {
+
 			my ( $name, $start, $end ) = @{ shift @_ };
 			$patch_hap_dets->{$name} =
 			  { 'name' => $name, 'start' => $start, 'end' => $end, };
 			return;
 		} );
-
 	return $patch_hap_dets;
 } ## end sub _get_patch_hap_dets
-
-sub _fetch_lrgs {
-	my ( $self, $dba ) = @_;
-	 my $conf = shift;
-  return $conf->{'dbh'}->selectall_arrayref(
-        qq(SELECT g.stable_id, g.seq_region_start,g.seq_region_end, x.display_label, edb.db_name, t.stable_id, sr.length
-             FROM gene g, analysis a, object_xref ox, xref x, external_db edb, transcript t, seq_region sr
-            WHERE g.analysis_id = a.analysis_id
-              AND g.gene_id = ox.ensembl_id
-              AND ox.xref_id = x.xref_id
-              AND x.external_db_id = edb.external_db_id
-              AND g.gene_id = t.gene_id
-              AND g.stable_id = sr.name
-              AND ox.ensembl_object_type = 'Gene'
-              AND edb.db_name = 'HGNC'
-              AND a.logic_name = 'LRG_import'
-            ORDER by g.stable_id, t.stable_id)
-      );
-}
-
-sub sort_lrgs {
-  my ($dbspecies,$type,$fh,$lrgs) = @_;
-  my ($prev_gsi,$prev_disp_label,$prev_db_name,$prev_length);
-  my $query_terms = [];
-  foreach my $rec (@$lrgs) {
-    my $gsi = $rec->[0];
-    if ($gsi eq $prev_gsi) {
-      push @$query_terms, $rec->[3];
-    }
-    else {
-      if ($prev_gsi) {
-        &p(LRGLine($dbspecies,$type,$prev_gsi,$prev_disp_label,$prev_db_name,$query_terms,$prev_length),
-           $fh);
-      }
-      $prev_gsi        = $gsi;
-      $prev_disp_label = $rec->[1];
-      $prev_db_name    = $rec->[2];
-      $query_terms     = [ $rec->[3] ];
-      $prev_length     = $rec->[4];
-    }
-  }
-}
-
-sub LRGLine {
-  my ($species,$type,$gsi,$dbkey,$dbname,$tsids,$length) = @_;
-  my $url = sprintf(qq(%s/LRG/Summary?lrg=%s),
-                    $species,
-                    $gsi);
-  $species =~ s/_/ /;
-  my $description = "$gsi is a fixed reference sequence of length $length with a fixed transcript(s) for reporting purposes. It was created for $dbname gene $dbkey";
-  my $xml = qq(
-<doc>
-  <field name="id">$gsi</field>
-  <field name="description">$description</field>);
-  $xml .= qq(
-  <field name="xrefs">$dbkey</field>);
-  foreach my $tsi (@$tsids) {
-    $xml .= qq(
-  <field name="transcript">$tsi</field>);
-  }
-  $xml .= &common_fields($species,$type,'core');
-  $xml .= qq(
-  <field name="domain_url">$url</field>
-</doc>);
-  return $xml
-}
-
-my $lrg = {
-	id=>$id,
-	type=>'lrg',
-	start=>$start,
-	end=>$end,
-length=>$len,
-parent=>$gene	
-};
-
-	return [];
-}
 
 sub _fetch_misc_features {
 
@@ -290,7 +206,7 @@ sub _fetch_misc_features {
 
 	if (%$feat_types) {
 		my $mapsets = join ',', keys %$feat_types;
-		#get all misc_features
+		#get all misc_features#
 		$helper->execute_no_return(
 			-SQL => qq/
        SELECT mf.misc_feature_id, sr.name, cs.name, mf.seq_region_start, mf.seq_region_end,
@@ -301,67 +217,64 @@ sub _fetch_misc_features {
               JOIN coord_system as cs USING (coord_system_id)
               JOIN misc_attrib as ma USING (misc_feature_id)
               JOIN attrib_type as at USING (attrib_type_id)
-        WHERE 
+        WHERE
           ms.misc_set_id in ($mapsets)
           AND cs.species_id=?
         ORDER by mf.misc_feature_id, at.code/,
 			-PARAMS   => [$species_id],
 			-CALLBACK => sub {
 				my ( $id,  $sr,    $sr_type, $start, $end,
-					 $len, $ms_id, $code,    $val )
-				  = @( shift @_ );
-			  my $feature = $features->{$id};
-			  if ( !defined $feature ) {
-				$feature = { id          => $id,
-							 start       => $start,
-							 end         => $end,
-							 length      => $len,
-							 parent      => $sr,
-							 parent_type => $sr_type,
-							 synonyms    => [] };
-				$features->{$id} = $feature;
-			}
+					 $len, $ms_id, $code,    $val ) = @{ shift @_ };
+				my $feature = $features->{$id};
+				if ( !defined $feature ) {
+					$feature = { id          => $id,
+								 start       => $start,
+								 end         => $end,
+								 length      => $len,
+								 parent      => $sr,
+								 parent_type => $sr_type,
+								 synonyms    => [] };
+					$features->{$id} = $feature;
+				}
 
-			push $feature->synonyms( [ $code, $val ] );
+				push @{ $feature->{synonyms} }, [ $code, $val ];
 
-# the type is mixed in with other attribs so look for the first type attrib we find
-			  if ( !defined $feature->{type} && $code eq 'type' ) {
-				my $ftype = $feat_types->{$ms_id}{'type'};
-				#some hacks for the display of the type
-				$ftype =~ s/_/ /;
-				$ftype =~ s/arrayclone/clone/;
-				$ftype = ucfirst($ftype);
-				$feature->{type} = $ftype;
-			}
+## the type is mixed in with other attribs so look for the first type attrib we find
+				if ( !defined $feature->{type} && $code eq 'type' ) {
+					my $ftype = $feat_types->{$ms_id};
+					#some hacks for the display of the type
+					$ftype =~ s/_/ /;
+					$ftype =~ s/arrayclone/clone/;
+					$ftype = ucfirst($ftype);
+					$feature->{type} = $ftype;
+				}
 
-			return;
+				return;
 			} );
-	}
+	} ## end if (%$feat_types)
 	 # now all features have been found, some jiggery pokery to set the best name
-	return [ map { _set_feature_names($_) } values %$features ];
+	return [ map { _set_feature_names( $self, $_ ) } values %$features ];
 } ## end sub _fetch_misc_features
 
 sub _set_feature_names {
-	  my ($feature) = @_;
-	  my $name_to_use;
-	  # try to find the best name to use using an order of preference
-	  for my $name_type ( @{ $self->{name_order} } ) {
-		  unless ($name_to_use) {
-			  foreach my $name (
-				  @{ $feature->{synonyms} )
-				  {
-					  if ( $name->[0] eq $name_type ) {
-						  $name_to_use = $name->[1];
-					  }
-				  }
-				  };
-		  }
-	  }
-	  my @synonyms =
-		map { $_->[1] } grep { $_->[1] ne $name_to_use } $feature->{synonyms};
-	  $feature->{synonyms} = \@synonyms;
-	  $feature->{name}     = $name_to_use;
-	  return $feature;
+	my ( $self, $feature ) = @_;
+	my $name_to_use;
+	# try to find the best name to use using an order of preference
+	for my $name_type ( @{ $self->{name_order} } ) {
+		unless ($name_to_use) {
+			for my $name ( @{ $feature->{synonyms} } ) {
+				if ( $name->[0] eq $name_type ) {
+					$name_to_use = $name->[1];
+				}
+			}
+		}
+	}
+	my @synonyms =
+	  map { $_->[1] }
+	  grep { $_->[1] ne $name_to_use } @{ $feature->{synonyms} };
+	$feature->{synonyms} = \@synonyms;
+	$feature->{name}     = $name_to_use;
+	return $feature;
 }
 
 1;
