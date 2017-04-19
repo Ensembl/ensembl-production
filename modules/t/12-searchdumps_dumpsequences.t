@@ -16,9 +16,7 @@
 use Test::More;
 
 BEGIN {
-	use_ok('Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter');
-	use_ok('Bio::EnsEMBL::Production::Search::GeneFetcher');
-	use_ok('Bio::EnsEMBL::Production::Search::GenomeFetcher');
+	use_ok('Bio::EnsEMBL::Production::Search::SequenceFetcher');
 }
 
 diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X");
