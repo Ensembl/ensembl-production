@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_plants
 
 =head1 DESCRIPTION
 

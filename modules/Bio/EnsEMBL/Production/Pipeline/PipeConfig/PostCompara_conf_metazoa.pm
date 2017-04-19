@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_metazoa
 
 =head1 DESCRIPTION
 
@@ -35,7 +35,7 @@ ckong
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_metazoa;
 
 use strict;
 use warnings;
