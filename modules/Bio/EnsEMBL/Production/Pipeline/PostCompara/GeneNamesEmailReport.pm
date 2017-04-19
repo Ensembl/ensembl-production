@@ -43,7 +43,7 @@ sub fetch_input {
     my $flag_GeneNames         = $self->param('flag_GeneNames');
     my $flag_GeneDescr         = $self->param('flag_GeneDescr');
     my $species                = $self->param('species');
-    my $project_all            = $self->param('project_all');
+    my $project_xrefs            = $self->param('project_xrefs');
     my $reports;
 
     foreach my $sp (@$species){
@@ -57,7 +57,7 @@ sub fetch_input {
          $reports .= $self->info_type_summary($dbh, $sp) if($flag_GeneNames);
          $reports .= $self->xref_type_summary($dbh, $sp) if($flag_GeneNames);
          $reports .= $self->geneDesc_summary($dbh, $sp)  if($flag_GeneDescr);
-         $reports .= $self->info_type_summary_project_all_xref($dbh, $sp) if ($flag_GeneNames and $project_all)
+         $reports .= $self->info_type_summary_project_xrefs_xref($dbh, $sp) if ($flag_GeneNames and $project_xrefs)
       }
    }
 
@@ -84,7 +84,7 @@ sub info_type_summary {
 return $self->format_table($title, $columns, $results);    
 }
 
-sub info_type_summary_project_all_xref {
+sub info_type_summary_project_xrefs_xref {
     my ($self, $dbh, $sp) = @_;
 
     my $sql = 'select distinct(db_name), count(*) 
