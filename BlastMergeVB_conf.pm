@@ -186,6 +186,9 @@ sub default_options {
       },
     ],
     
+    # WebApollo files are stored in a local EBI archive.
+    proteome_dir => '/nfs/panda/ensemblgenomes/vectorbase/vb_proteome',
+    
     # Remove existing *_align_features; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
     delete_existing => 1,
@@ -224,6 +227,16 @@ sub pipeline_create_commands {
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('backup_dir'),
   ];
+}
+
+sub pipeline_wide_parameters {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    pipeline_dir => $self->o('pipeline_dir'),
+    proteome_dir => $self->o('proteome_dir'),
+  };
 }
 
 sub pipeline_analyses {
@@ -372,8 +385,22 @@ sub pipeline_analyses {
                               optimize_tables => 1,
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['CopyToArchive'],
     },
     
+    {
+      -logic_name        => 'CopyToArchive',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              cmd => 'mkdir -p #proteome_dir#/#species#;
+                                      cp #pipeline_dir#/#species#/*.gff3 #proteome_dir#/#species#/.;
+                                      cp #pipeline_dir#/#species#/*.json #proteome_dir#/#species#/.;
+                                      chmod -R g+rw #proteome_dir#/#species#;',
+                            },
+      -rc_name           => 'normal',
+    },
+
   ];
 }
 
