@@ -53,7 +53,6 @@ sub default_options {
 	division_name     => '', # Eg: protists, fungi, plants, metazoa
         pipeline_name     => $self->o('ENV','USER').'_XrefProjections_'.$self->o('ensembl_release'),
         output_dir      => '/lustre/scratch109/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
-	email => $self->o('ENV', 'USER').'@ebi.ac.uk',
 	## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '1',
@@ -450,22 +449,6 @@ sub default_options {
        flag_store_projections => '1',
 		
     };
-}
-
-
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'                 => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'                     => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"'},
-      '2Gb_mem'         => {'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"' },
-      '24Gb_mem'        => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000]"' },
-      '250Mb_mem'       => {'LSF' => '-q production-rh7 -M 250 -R "rusage[mem=250]"' },
-      '500Mb_mem'       => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"' },
-      '1Gb_mem'             => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
-      '8Gb_mem'             => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"' },
-      'urgent_hcluster' => {'LSF' => '-q production-rh7' },
-    }
 }
 
 1;
