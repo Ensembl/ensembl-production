@@ -353,31 +353,9 @@ sub build_db_to_type {
 
 }
 
-sub overwrite_transcript_display_xrefs {
-  my ($to_gene, $ref_dbEntry, $info_txt) = @_;
-  my $transcripts = $to_gene->get_all_Transcripts();
-  my @havana = grep { 
-    $_->analysis->logic_name eq 'ensembl_havana_transcript' ||
-    $_->analysis->logic_name eq 'proj_ensembl_havana_transcript' ||
-    $_->analysis->logic_name eq 'havana' ||
-    $_->analysis->logic_name eq 'proj_havana' ||
-    $_->analysis->logic_name eq 'havana_ig_gene' ||
-    $_->analysis->logic_name eq 'proj_havana_ig_gene'
-  } @{$transcripts};
-  my @ensembl = grep { 
-    $_->analysis->logic_name eq 'ensembl' ||
-    $_->analysis->logic_name eq 'proj_ensembl' ||
-    $_->analysis->logic_name eq 'ensembl_projection' ||
-    $_->analysis->logic_name eq 'ensembl_ig_gene'
-  } @{$transcripts};
-  _process_transcripts($ref_dbEntry, $info_txt, 1, \@havana);
-  _process_transcripts($ref_dbEntry, $info_txt, 201, \@ensembl);
-  return;
-}
-
-# Loop through the transcripts, set the expected SYMBOL-001 for havana & SYMBOL-201 for the rest
+# Loop through the transcripts, set the expected SYMBOL-201 for all the target transcripts
 # Attach the DBEntry and leave until later which will store the entry on the transcript
-sub _process_transcripts {
+sub overwrite_transcript_display_xrefs {
   my ($ref_dbEntry, $info_txt, $offset, $transcripts) = @_;
   my $from_dbname = $ref_dbEntry->dbname();
   my $base_name  = $ref_dbEntry->display_id();
@@ -460,8 +438,8 @@ sub project_display_xrefs_ensembl{
   # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
   $to_gene->status("KNOWN_BY_PROJECTION");
   $to_gene->display_xref($dbEntry);
-  # Set SYMBOL-001 for havana & SYMBOL-201 for the rest
-  overwrite_transcript_display_xrefs($to_gene, $dbEntry, $info_txt);
+  # Set SYMBOL-201 for all the target Transcripts
+  overwrite_transcript_display_xrefs($dbEntry, $info_txt, 201, \@to_transcripts);
   # update the gene so that the display_xref_id is set and the
   $to_geneAdaptor->update($to_gene);
   foreach my $transcript (@to_transcripts) {
