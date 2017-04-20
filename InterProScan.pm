@@ -23,6 +23,7 @@ use warnings;
 use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
 
 use File::Path qw(make_path remove_tree);
+use File::Temp qw(tempdir);
 
 sub param_defaults {
   my ($self) = @_;
@@ -57,7 +58,7 @@ sub run {
   
   if ($run_interproscan) {
     # Must use /tmp for short temporary file names; TMHMM can't cope with longer ones.
-    my $tmp_dir = "/tmp/$ENV{USER}.$ENV{LSB_JOBID}";
+    my $tmp_dir = tempdir(DIR => '/tmp', CLEANUP => 1);
     
     if (! -e $tmp_dir) {
       $self->warning("Output directory '$tmp_dir' does not exist. I shall create it.");
@@ -80,8 +81,6 @@ sub run {
       $self->dbc and $self->dbc->disconnect_if_idle();
       system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
     }
-    
-    remove_tree($tmp_dir);
   }
   
   if (! -e $outfile_xml) {
