@@ -49,6 +49,7 @@ sub default_options {
           %{ $self->SUPER::default_options() },
           flag_GeneNames    => '1',
           flag_GeneDescr    => '1',
+          flag_GeneCoverage => '1',
           ## GeneName Projection 
           gn_config => { 
                         '1'=>{
