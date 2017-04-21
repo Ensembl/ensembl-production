@@ -128,11 +128,10 @@ sub fetch_input {
     #$self->throw(
     #           'You must supply one of: -species, -division, -run_all');
   }
-
   if ( scalar(@antitaxons) ) {
     foreach my $antitaxon (@antitaxons) {
       $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $antitaxon, "remove" );
-      $self->warning("$antitaxon successfully removed");
+      $self->warning("$antitaxon taxon successfully removed");
     }
   }  
   if ( scalar(@antispecies) ) {
@@ -223,13 +222,21 @@ sub process_taxon {
       {
         delete $$core_dbas{$dba->species()};
         $self->warning($dba->species()." successfully removed");
+        $species_count ++;
       }
     }
     $dba->dbc->disconnect_if_idle();
   }
-  if ($action eq "add")
-  {
-    $self->warning("$species_count species loaded for taxon $taxon_name");
+  if ($species_count == 0) {
+    $self->throw("$taxon was processed but no species was added/removed")
+  }
+  else {
+    if ($action eq "add") {
+      $self->warning("$species_count species loaded for taxon $taxon_name");
+    }
+    if ($action eq "remove") {
+      $self->warning("$species_count species removed for taxon $taxon_name");
+    }
   }
   return;
 
