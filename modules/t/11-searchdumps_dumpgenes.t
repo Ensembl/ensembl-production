@@ -25,19 +25,20 @@ diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
 use Bio::EnsEMBL::Production::Search::GeneFetcher;
 use Bio::EnsEMBL::Test::MultiTestDB;
 
-my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
-my $core_dba = $test->get_DBAdaptor('core');
+my $test        = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
+my $core_dba    = $test->get_DBAdaptor('core');
+my $funcgen_dba = $test->get_DBAdaptor('funcgen');
+my $fetcher     = Bio::EnsEMBL::Production::Search::GeneFetcher->new();
 
-my $fetcher = Bio::EnsEMBL::Production::Search::GeneFetcher->new();
-
-my $genes = $fetcher->fetch_genes_for_dba($core_dba);
+my $genes = $fetcher->fetch_genes_for_dba( $core_dba, undef, $funcgen_dba );
 is( scalar(@$genes), 88, "Correct number of genes" );
 
-is( scalar(grep {lc $_->{biotype} eq 'lrg'} @$genes), 0, "Checking for LRGs" );
+is( scalar( grep { lc $_->{biotype} eq 'lrg' } @$genes ),
+	0, "Checking for LRGs" );
 my ($gene) = grep { $_->{id} eq 'ENSG00000261370' } @$genes;
 ok( $gene, "Test gene found" );
 my $expected_gene = {
-	 'xrefs' => [ { 'primary_id'  => 'OTTHUMG00000174633',
+	'xrefs' => [ {  'primary_id'  => 'OTTHUMG00000174633',
 					'info_type'   => 'NONE',
 					'dbname'      => 'OTTG',
 					'description' => undef,
@@ -55,19 +56,26 @@ my $expected_gene = {
 					'display_id'  => 'RPL14P5',
 					'primary_id'  => '37720',
 					'info_type'   => 'DIRECT' } ],
-	 'end'          => '970836',
-	 'start'        => '969238',
-	 'version'      => '1',
-	 'coord_system' => { 'version' => 'GRCh38', 'name' => 'chromosome' },
-	 'description' =>
-	   'ribosomal protein L14 pseudogene 5 [Source:HGNC Symbol;Acc:37720]',
-	 'seq_region_name' => 'HG480_HG481_PATCH',
-	 'id'              => 'ENSG00000261370',
-	 'transcripts'     => [ {
+	'end'          => '970836',
+	'start'        => '969238',
+	'version'      => '1',
+	'coord_system' => { 'version' => 'GRCh38', 'name' => 'chromosome' },
+	'description' =>
+	  'ribosomal protein L14 pseudogene 5 [Source:HGNC Symbol;Acc:37720]',
+	'seq_region_name' => 'HG480_HG481_PATCH',
+	'id'              => 'ENSG00000261370',
+	'transcripts'     => [ {
 		   'seq_region_synonyms' => undef,
 		   'start'               => '969238',
-		   'xrefs'               => [ {
-						 'display_id'  => 'RP11-309M23.2-001',
+		   'probes'              => [ {
+				  'probe'  => '214727_at',
+				  'array'  => 'HG-Focus',
+				  'vendor' => 'AFFY_HG_Focus' }, {
+				 'vendor' => 'AFFY_HG_U133_Plus_2',
+				 'array'  => 'HG-U133_Plus_2',
+				 'probe'  => '214727_at'
+			   } ],
+		   'xrefs' => [ {'display_id'  => 'RP11-309M23.2-001',
 						 'info_text'   => '',
 						 'description' => undef,
 						 'dbname'      => 'Vega_transcript',
@@ -146,13 +154,21 @@ my $expected_gene = {
 						   'version'  => '1',
 						   'rank'     => '3',
 						   'trans_id' => 'ENST00000569325' } ] } ],
-	 'strand'  => '-1',
-	 'name'    => 'RPL14P5',
-	 'biotype' => 'pseudogene' };
+	'strand'  => '-1',
+	'name'    => 'RPL14P5',
+	'biotype' => 'pseudogene' };
 
 is_deeply( $gene, $expected_gene, "Testing gene structure" );
 
-is(scalar (grep { defined $_->{is_haplotype} && $_->{is_haplotype} == 1 } @$genes),1,"Haplotype genes");
-is(scalar (grep { !defined $_->{is_haplotype} || $_->{is_haplotype} == 0 } @$genes),87,"Non-haplotype genes");
+is( scalar(
+		  grep { defined $_->{is_haplotype} && $_->{is_haplotype} == 1 } @$genes
+	),
+	1,
+	"Haplotype genes" );
+is( scalar(
+		 grep { !defined $_->{is_haplotype} || $_->{is_haplotype} == 0 } @$genes
+	),
+	87,
+	"Non-haplotype genes" );
 
 done_testing;
