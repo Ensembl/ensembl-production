@@ -62,8 +62,6 @@ sub run {
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
-    print $from_GenomeDB->dbID()."\n";
-    print $to_GenomeDB->dbID()."\n";
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
     if(!defined $mlss) {
       print "No $method_link_type found between $from_species and $to_species";
@@ -166,7 +164,7 @@ sub project_display_xrefs_genenames {
              }
              # For the Ensembl species, logic for Gene and Transcript
              if ($compara eq "Multi"){
-               $self->project_display_xrefs_ensembl($to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor);
+               $self->project_display_xrefs_ensembl($to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor, $log, $from_gene, $from_gene_dbname);
              }
             # For EG species
             else {
@@ -401,7 +399,7 @@ sub is_in_blacklist{
 # In this case just assign to genes
 
 sub project_display_xrefs_ensembl{
-  my ($self, $to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor )  = @_;
+  my ($self, $to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor, $log, $from_gene, $from_gene_dbname )  = @_;
   # Adding projection source information
   $dbEntry->info_type("PROJECTION");
   $dbEntry->info_text($info_txt);
@@ -453,6 +451,10 @@ sub project_display_xrefs_ensembl{
     }
     # Set the status & display xref if applicable for the gene's transcripts
     $to_transcriptAdaptor->update($transcript);
+    print $log "\t\t\tProject display xref from:".$from_gene->stable_id()."\t";
+    print $log "to:".$transcript->stable_id()."\t";
+    print $log "TranscriptName:".$transcript->display_xref->display_id()."\t";
+    print $log "DB:".$from_gene_dbname."\n";
   }
 }
 
