@@ -211,6 +211,8 @@ sub process_taxon {
   my $taxon_name = $node->names()->{'scientific name'}->[0];
 
   foreach my $dba (@$all_dbas) {
+    #Next if DB is Compara ancestral sequences
+    next if $dba->species() =~ /ancestral/i;
     my $dba_ancestors=$self->get_taxon_ancestors_name($dba,$node_adaptor);
     if (grep(/$taxon_name/, @$dba_ancestors)){
       if ($action eq "add"){
