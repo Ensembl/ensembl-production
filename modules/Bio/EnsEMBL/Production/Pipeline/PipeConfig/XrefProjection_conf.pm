@@ -97,7 +97,7 @@ sub default_options {
                                 # Taxon name of species to project to
                                 'taxons'      => ['Sarcopterygii'],
                                 # Taxon name of species to exclude 
-                                'antitaxons' => ['Sciurognathi'],
+                                'antitaxons' => ['Castorimorpha','Myomorpha'],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
                                 'project_xrefs' =>  0,
                                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
@@ -151,7 +151,7 @@ sub default_options {
                                 # target species division to project to
                                 'division'    => [],
                                 # Taxon name of species to project to
-                                'taxons'      => ['Sciurognathi'],
+                                'taxons'      => ['Castorimorpha','Myomorpha'],
                                 # Taxon name of species to exclude 
                                 'antitaxons' => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
@@ -266,7 +266,7 @@ sub default_options {
                                  # Taxon name of species to project to
                                  'taxons'      => ['Sarcopterygii'],
                                  # Taxon name of species to exclude 
-                                 'antitaxons' => ['Sciurognathi'],
+                                 'antitaxons' => ['Castorimorpha','Myomorpha'],
                                  # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
                         	 			 'run_all'     =>  0, # 1/0
                                  # source species GeneName filter for GeneDescription
@@ -319,7 +319,7 @@ sub default_options {
                                  # target species division to project to
                                  'division'    => [],
                                  # Taxon name of species to project to
-                                 'taxons'      => ['Sciurognathi'],
+                                 'taxons'      => ['Castorimorpha','Myomorpha'],
                                  # Taxon name of species to exclude 
                                  'antitaxons' => [],
                                  'run_all'     =>  0, # 1/0
