@@ -205,7 +205,7 @@ sub process_taxon {
 
   my $species_count;
   my $node_adaptor = $taxonomy_dba->get_TaxonomyNodeAdaptor();
-  my $node = $node_adaptor->fetch_by_taxon_name($taxon);
+  my $node = $node_adaptor->fetch_by_name_and_class($taxon,"scientific name");;
   $self->throw("$taxon not found in the taxonomy database") if (!defined $node);
   my $taxon_name = $node->names()->{'scientific name'}->[0];
 
