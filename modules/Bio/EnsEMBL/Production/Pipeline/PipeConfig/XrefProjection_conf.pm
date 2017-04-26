@@ -437,7 +437,7 @@ sub default_options {
                 #  before doing projection
                 flag_delete_gene_descriptions   => '1',
         # Tables to dump for GeneNames & GeneDescription projections subpipeline
-        g_dump_tables => ['gene', 'xref','transcript'],
+        g_dump_tables => ['gene', 'xref','transcript','object_xref','external_db','external_synonym'],
         
  	    # Email Report subject
         gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
