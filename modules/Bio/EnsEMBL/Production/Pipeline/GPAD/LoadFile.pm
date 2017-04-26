@@ -258,7 +258,10 @@ sub run {
       $is_transcript = 1;
       # Accession is the version with taxonomy id appended, e.g. URS0000007FBA_9606
       # We store as URS0000007FBA, so need to remove everything from the _
-      $db_object_id =~ s/_[0-9]*//;
+      my ($go_evidence, $tgt_species, $precursor_rna) = split /\|/, $annotation_properties;
+      $precursor_rna =~ s/precursor_rna=// if $precursor_rna;
+      $precursor_rna =~ s/_[0-9]*// if $precursor_rna;
+      $db_object_id = $precursor_rna;
       my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNACentral');
       if ($rnacentral_xrefs) {
         $master_xref = $rnacentral_xrefs->[0];
