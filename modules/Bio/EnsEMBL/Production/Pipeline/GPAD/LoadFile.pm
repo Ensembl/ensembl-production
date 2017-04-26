@@ -205,7 +205,7 @@ sub run {
 
     my $info_type = 'DIRECT';
     my $info_text = $assigned_by;
-    if ($assigned_by eq 'Ensembl' and defined $src_protein) {
+    if ($assigned_by =~ /Ensembl/ and defined $src_protein) {
       $src_protein =~ s/src_protein=\w+://;
       $src_species =~ s/src_species=//;
       $info_text   = "from $src_species translation $src_protein";
