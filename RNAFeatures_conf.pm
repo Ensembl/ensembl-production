@@ -141,7 +141,7 @@ sub default_options {
     trnascan_logic_name => 'trnascan_align',
     trnascan_db_name    => 'TRNASCAN_SE',
     trnascan_pseudo     => 0,
-    trnascan_threshold  => 20,
+    trnascan_threshold  => 40,
     trnascan_parameters => '',
 
     # The annotation from mirBase isn't always available, but if it is,
@@ -319,7 +319,10 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '1->A' => ['RNAAnalysisFactory'],
-                              'A->1' => ['DumpGenome'],
+                              'A->1' => WHEN(
+                                          '#run_cmscan# or #run_trnascan#' => ['DumpGenome'],
+                                          '#load_mirbase#'                 => ['miRBase'],
+                                        ),
                             },
     },
 
@@ -341,6 +344,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
+                              '1' => WHEN('#run_cmscan#' => ['TaxonomicFilter']),
                               '2' => ['AnalysisSetup'],
                             },
     },
@@ -357,23 +361,6 @@ sub pipeline_analyses {
                               production_db      => $self->o('production_db'),
                             },
       -meadow_type       => 'LOCAL',
-    },
-
-    {
-      -logic_name        => 'DumpGenome',
-      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome',
-      -analysis_capacity => 5,
-      -parameters        => {
-                              genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
-                            },
-      -rc_name           => 'normal',
-      -flow_into         => {
-                              '1' => WHEN(
-                                      '#run_cmscan#'                     => ['TaxonomicFilter'],
-                                      '!#run_cmscan# and #run_trnascan#' => ['SplitDumpFile'],
-                                      '#load_mirbase#'                   => ['miRBase'],
-                                     ),
-                            },
     },
 
     {
@@ -410,6 +397,16 @@ sub pipeline_analyses {
                               cmscan_cm_file    => $self->o('cmscan_cm_file'),
                               cmscan_logic_name => $self->o('cmscan_logic_name'),
                               parameters_hash   => $self->o('cmscan_param_hash'),
+                            },
+      -rc_name           => 'normal',
+    },
+    
+    {
+      -logic_name        => 'DumpGenome',
+      -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome',
+      -analysis_capacity => 5,
+      -parameters        => {
+                              genome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['SplitDumpFile'],
