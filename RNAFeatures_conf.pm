@@ -319,10 +319,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '1->A' => ['RNAAnalysisFactory'],
-                              'A->1' => WHEN(
-                                          '#run_cmscan# or #run_trnascan#' => ['DumpGenome'],
-                                          '#load_mirbase#'                 => ['miRBase'],
-                                        ),
+                              'A->1' => ['AnnotateRNAFeatures'],
                             },
     },
 
@@ -400,7 +397,19 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
     },
-    
+
+    {
+      -logic_name        => 'AnnotateRNAFeatures',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 1,
+      -parameters        => {},
+      -flow_into         => WHEN(
+                              '#run_cmscan# or #run_trnascan#' => ['DumpGenome'],
+                              '#load_mirbase#'                 => ['miRBase'],
+                            ),
+      -meadow_type       => 'LOCAL',
+    },
+
     {
       -logic_name        => 'DumpGenome',
       -module            => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::DumpGenome',
