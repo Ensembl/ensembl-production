@@ -261,6 +261,7 @@ sub run {
       my ($go_evidence, $tgt_species, $precursor_rna) = split /\|/, $annotation_properties;
       $precursor_rna =~ s/precursor_rna=// if $precursor_rna;
       $precursor_rna =~ s/_[0-9]*// if $precursor_rna;
+      $go_evidence =~ s/go_evidence=// if $go_evidence;
       $db_object_id = $precursor_rna;
       my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNACentral');
       if ($rnacentral_xrefs) {
