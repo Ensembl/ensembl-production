@@ -45,65 +45,6 @@ sub param_defaults {
 sub fetch_input {
     my ($self) = @_;
 
-    # Delete by xref.info_type='PROJECTION' OR 'DEPENDENT'
-    my $sql_delete_1 = 'DELETE ox.*,onx.*  FROM xref x 
-		      JOIN object_xref ox USING (xref_id) 
-		      JOIN ontology_xref onx USING (object_xref_id) 
-		      JOIN analysis a USING (analysis_id)
-		      JOIN translation tl ON (ox.ensembl_id=tl.translation_id) 
-		      JOIN transcript tf USING (transcript_id) 
-		      JOIN seq_region s USING (seq_region_id) 
-		      JOIN coord_system c USING (coord_system_id) 
-		      WHERE x.external_db_id=1000 
-		      AND c.species_id=?
-		      AND (x.info_type="PROJECTION" 
-		      OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")';
-
-    # Delete by analysis.logic_name='go_projection' & 'interpro2go'
-    # interpro2go annotations should be superceded by GOA annotation
-    my $sql_delete_2 = 'DELETE ox.*,onx.*  FROM xref x 
-                      JOIN object_xref ox USING (xref_id) 
-                      JOIN ontology_xref onx USING (object_xref_id) 
-                      JOIN analysis a USING (analysis_id)
-                      JOIN translation tl ON (ox.ensembl_id=tl.translation_id) 
-                      JOIN transcript tf USING (transcript_id) 
-                      JOIN seq_region s USING (seq_region_id) 
-                      JOIN coord_system c USING (coord_system_id) 
-                      WHERE x.external_db_id=1000 
-                      AND c.species_id=?
-		      AND (a.logic_name="goa_import"
-		      OR a.logic_name="interpro2go")';
-
-    # Same deletes but for GOs mapped to transcripts
-    my $sql_delete_3 = 'DELETE ox.*,onx.*  FROM xref x
-                      JOIN object_xref ox USING (xref_id)
-                      JOIN ontology_xref onx USING (object_xref_id)
-                      JOIN analysis a USING (analysis_id)
-                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
-                      JOIN seq_region s USING (seq_region_id)
-                      JOIN coord_system c USING (coord_system_id)
-                      WHERE x.external_db_id=1000
-                      AND c.species_id=?
-                      AND (x.info_type="PROJECTION"
-                      OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")';
-
-    my $sql_delete_4 = 'DELETE ox.*,onx.*  FROM xref x
-                      JOIN object_xref ox USING (xref_id)
-                      JOIN ontology_xref onx USING (object_xref_id)
-                      JOIN analysis a USING (analysis_id)
-                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
-                      JOIN seq_region s USING (seq_region_id)
-                      JOIN coord_system c USING (coord_system_id)
-                      WHERE x.external_db_id=1000
-                      AND c.species_id=?
-                      AND (a.logic_name="goa_import"
-                      OR a.logic_name="interpro2go")';
-
-    $self->param('sql_delete_1', $sql_delete_1);
-    $self->param('sql_delete_2', $sql_delete_2);
-    $self->param('sql_delete_3', $sql_delete_3);
-    $self->param('sql_delete_4', $sql_delete_4);
-
 return 0;
 }
 
@@ -116,18 +57,80 @@ sub run {
     my $file    = $self->param_required('gpad_file');
     my $species = $1 if($file=~/annotations_ensembl.*\-(.+)\.gpa/);
 
-    # Remove existing projected GO annotations from GOA 
+    # Remove existing projected GO annotations from GOA
     if ($self->param_required('delete_existing')) {
-        my $dba          = $reg->get_DBAdaptor($species, "core");         
-        my $sql_delete_1 = $self->param_required('sql_delete_1');
-        my $sql_delete_2 = $self->param_required('sql_delete_2');
+         # Delete by xref.info_type='PROJECTION' OR 'DEPENDENT'
+         my $sql_delete_1 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
+            JOIN object_xref ox USING (xref_id)
+            JOIN ontology_xref onx USING (object_xref_id)
+            LEFT JOIN dependent_xref dx USING (object_xref_id)
+            JOIN analysis a USING (analysis_id)
+            JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
+            JOIN transcript tf USING (transcript_id)
+            JOIN seq_region s USING (seq_region_id)
+            JOIN coord_system c USING (coord_system_id)
+            WHERE x.external_db_id=1000
+            AND c.species_id=?
+            AND (x.info_type="PROJECTION"
+            OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")';
+
+        # Delete by analysis.logic_name='go_projection' & 'interpro2go'
+        # interpro2go annotations should be superceded by GOA annotation
+        my $sql_delete_2 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
+                      JOIN object_xref ox USING (xref_id)
+                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN dependent_xref dx USING (object_xref_id)
+                      JOIN analysis a USING (analysis_id)
+                      JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
+                      JOIN transcript tf USING (transcript_id)
+                      JOIN seq_region s USING (seq_region_id)
+                      JOIN coord_system c USING (coord_system_id)
+                      WHERE x.external_db_id=1000
+                      AND c.species_id=?
+          AND (a.logic_name="goa_import"
+          OR a.logic_name="interpro2go")';
+
+        # Same deletes but for GOs mapped to transcripts
+        my $sql_delete_3 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
+                      JOIN object_xref ox USING (xref_id)
+                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN dependent_xref dx USING (object_xref_id)
+                      JOIN analysis a USING (analysis_id)
+                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
+                      JOIN seq_region s USING (seq_region_id)
+                      JOIN coord_system c USING (coord_system_id)
+                      WHERE x.external_db_id=1000
+                      AND c.species_id=?
+                      AND (x.info_type="PROJECTION"
+                      OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")';
+
+        my $sql_delete_4 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
+                      JOIN object_xref ox USING (xref_id)
+                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN dependent_xref dx USING (object_xref_id)
+                      JOIN analysis a USING (analysis_id)
+                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
+                      JOIN seq_region s USING (seq_region_id)
+                      JOIN coord_system c USING (coord_system_id)
+                      WHERE x.external_db_id=1000
+                      AND c.species_id=?
+                      AND (a.logic_name="goa_import"
+                      OR a.logic_name="interpro2go")';
+        my $dba          = $reg->get_DBAdaptor($species, "core");
         my $sth_1        = $dba->dbc->prepare($sql_delete_1);
         my $sth_2        = $dba->dbc->prepare($sql_delete_2);
+        my $sth_3        = $dba->dbc->prepare($sql_delete_3);
+        my $sth_4        = $dba->dbc->prepare($sql_delete_4);
 
         $sth_1->execute($dba->species_id());
         $sth_2->execute($dba->species_id());
+        $sth_3->execute($dba->species_id());
+        $sth_4->execute($dba->species_id());
         $sth_1->finish();
         $sth_2->finish();
+        $sth_3->finish();
+        $sth_4->finish();
+        $dba->dbc->disconnect_if_idle();
     }
 
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
@@ -323,6 +326,9 @@ sub run {
   }
 
   }# while FILE
+
+$odba->dbc->disconnect_if_idle();
+$dbe_adaptor->dbc->disconnect_if_idle();
 
 
 return 0;
