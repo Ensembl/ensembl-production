@@ -101,8 +101,9 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 			_add_key( $var, 'locations',  $features,  $var->{id} );
 			_add_key( $var, 'synonyms',   $synonyms,  $var->{id} );
 			_add_key( $var, 'gene_names', $genenames, $var->{id} );
-			_add_key( $var, 'failures', $failures, $var->{id} );
+			_add_key( $var, 'failures',   $failures,  $var->{id} );
 			my $ssids = $subsnps->{ $var->{id} };
+
 			if ( defined $ssids ) {
 				for my $ssid (@$ssids) {
 					push @{ $var->{synonyms} },
@@ -124,7 +125,7 @@ sub _calculate_min_max {
 	my $tmax = $h->execute_single_result(
 						   -SQL => q/select max(variation_id) from variation/ );
 	$logger->debug("Total ID range $tmin -> $tmax");
-	my $min = (( $offset - 1 )*$length)+1;
+	my $min = ( ( $offset - 1 )*$length ) + 1;
 	my $max = $min + $length;
 	$logger->debug("Current ID range $min -> $max");
 	return ( $min, $max );
@@ -357,9 +358,12 @@ sub _fetch_all_sources {
 
 sub _add_key {
 	my ( $obj, $k, $h, $v ) = @_;
-	my $o = $h->{$v};
-	$obj->{$k} = $o if defined $o;
+	if ( defined $v ) {
+		my $o = $h->{$v};
+		$obj->{$k} = $o if defined $o;
+	}
 	return;
+
 }
 
 1;
