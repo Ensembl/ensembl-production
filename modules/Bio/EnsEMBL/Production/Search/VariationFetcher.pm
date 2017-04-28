@@ -119,7 +119,7 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 
 sub _calculate_min_max {
 	my ( $self, $h, $offset, $length ) = @_;
-	$logger->info("Calculating $offset/$length");
+	$logger->debug("Calculating $offset/$length");
 	my $tmin = $h->execute_single_result(
 						   -SQL => q/select min(variation_id) from variation/ );
 	my $tmax = $h->execute_single_result(
