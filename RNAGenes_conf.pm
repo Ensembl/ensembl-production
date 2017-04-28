@@ -205,7 +205,7 @@ sub pipeline_analyses {
                                 '#use_mirbase#'  => ['DeleteMirbaseGenes'],
                                 '#use_trnascan#' => ['DeleteTrnascanGenes'],
                               ),
-                              'A->1' => ['ConfigureStableIDMapping'],
+                              'A->1' => ['DeleteUnattachedXref'],
                             },
     },
 
@@ -358,9 +358,19 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name        => 'DeleteUnattachedXref',
+      -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::DeleteUnattachedXref',
+      -max_retry_count   => 1,
+      -parameters        => {},
+      -rc_name           => 'normal',
+      -flow_into         => ['ConfigureStableIDMapping'],
+
+    },
+
+    {
       -logic_name        => 'ConfigureStableIDMapping',
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::ConfigureStableIDMapping',
-      -max_retry_count   => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               all_new_species => $self->o('all_new_species'),
                               old_reg_conf    => $self->o('old_registry'),
@@ -373,7 +383,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'StableIDMapping',
       -module            => 'Bio::EnsEMBL::EGPipeline::RNAFeatures::StableIDMapping',
-      -max_retry_count   => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               report_style => $self->o('run_context'),
                               report_dir   => $self->o('pipeline_dir'),
