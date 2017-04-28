@@ -94,14 +94,17 @@ sub default_options {
     truncated            => 0,
     nonsignificant       => 0,
     bias_threshold       => 0.3,
+    has_structure        => 1,
     allow_repeat_overlap => 1,
     allow_coding_overlap => 0,
+    maximum_per_hit_name => {
+                              'pre_miRNA' => 100,
+                            },
     
     # Connection details for database that tracks IDs
     id_db_host   => 'mysql-eg-pan-prod.ebi.ac.uk',
     id_db_port   => 4276,
     id_db_user   => 'ensrw',
-    id_db_pass   => undef,
     id_db_dbname => 'ena_identifiers',
     id_db => {
       -driver => $self->o('hive_driver'),
@@ -313,8 +316,10 @@ sub pipeline_analyses {
                               truncated            => $self->o('truncated'),
                               nonsignificant       => $self->o('nonsignificant'),
                               bias_threshold       => $self->o('bias_threshold'),
+                              has_structure        => $self->o('has_structure'),
                               allow_repeat_overlap => $self->o('allow_repeat_overlap'),
                               allow_coding_overlap => $self->o('allow_coding_overlap'),
+                              maximum_per_hit_name => $self->o('maximum_per_hit_name'),
                             },
       -rc_name           => 'normal',
     },
