@@ -128,11 +128,10 @@ sub fetch_input {
     #$self->throw(
     #           'You must supply one of: -species, -division, -run_all');
   }
-
   if ( scalar(@antitaxons) ) {
     foreach my $antitaxon (@antitaxons) {
       $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $antitaxon, "remove" );
-      $self->warning("$antitaxon successfully removed");
+      $self->warning("$antitaxon taxon successfully removed");
     }
   }  
   if ( scalar(@antispecies) ) {
@@ -206,11 +205,13 @@ sub process_taxon {
 
   my $species_count;
   my $node_adaptor = $taxonomy_dba->get_TaxonomyNodeAdaptor();
-  my $node = $node_adaptor->fetch_by_taxon_name($taxon);
+  my $node = $node_adaptor->fetch_by_name_and_class($taxon,"scientific name");;
   $self->throw("$taxon not found in the taxonomy database") if (!defined $node);
   my $taxon_name = $node->names()->{'scientific name'}->[0];
 
   foreach my $dba (@$all_dbas) {
+    #Next if DB is Compara ancestral sequences
+    next if $dba->species() =~ /ancestral/i;
     my $dba_ancestors=$self->get_taxon_ancestors_name($dba,$node_adaptor);
     if (grep(/$taxon_name/, @$dba_ancestors)){
       if ($action eq "add"){
@@ -221,13 +222,21 @@ sub process_taxon {
       {
         delete $$core_dbas{$dba->species()};
         $self->warning($dba->species()." successfully removed");
+        $species_count ++;
       }
     }
     $dba->dbc->disconnect_if_idle();
   }
-  if ($action eq "add")
-  {
-    $self->warning("$species_count species loaded for taxon $taxon_name");
+  if ($species_count == 0) {
+    $self->throw("$taxon was processed but no species was added/removed")
+  }
+  else {
+    if ($action eq "add") {
+      $self->warning("$species_count species loaded for taxon $taxon_name");
+    }
+    if ($action eq "remove") {
+      $self->warning("$species_count species removed for taxon $taxon_name");
+    }
   }
   return;
 

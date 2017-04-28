@@ -32,17 +32,13 @@ package Bio::EnsEMBL::Production::Pipeline::Common::EmailReport;
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
-	  'Bio::EnsEMBL::Production::Pipeline::Base',
-          #'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base',
-          );
+	  'Bio::EnsEMBL::Production::Pipeline::Base');
 
 sub fetch_input {
     my ($self) = @_;
     # To send an email, three parameters are required, 'email', 'subject',
     # and 'text'. For 'email', you can pass in the default address, which
-    # is set to '$USER@ebi.ac.uk', if your conf file inherits from
-    # EGGeneric_conf.pm. You will need to pass in the other parameters
-    # as well, or set them by overriding this method.
+    # is set to '$USER@ebi.ac.uk'
   
 return;
 }

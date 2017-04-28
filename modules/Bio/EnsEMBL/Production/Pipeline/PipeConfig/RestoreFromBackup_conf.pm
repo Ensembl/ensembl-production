@@ -31,7 +31,7 @@ package Bio::EnsEMBL::EGPipeline::PostCompara::PipeConfig::RestoreFromBackup_con
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 use File::Spec::Functions qw(catdir);
 use Bio::EnsEMBL::Hive::Version 2.3;
 

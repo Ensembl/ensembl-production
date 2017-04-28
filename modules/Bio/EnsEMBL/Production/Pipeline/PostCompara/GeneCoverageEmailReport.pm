@@ -50,8 +50,10 @@ sub fetch_input {
        my $subject    = $self->param('subject') || "An automatic message from your pipeline";
        my $output_dir = $self->param('output_dir');
        $reports .= $self->info_type_summary($dbh, $ga->dbc());
+       $ga->dbc()->disconnect_if_idle();
     }
        $self->param('text', $reports);
+       $gdba->dbc->disconnect_if_idle();
 }
 
 sub info_type_summary {

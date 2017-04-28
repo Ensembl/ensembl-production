@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_plants
 
 =head1 DESCRIPTION
 
@@ -49,6 +49,7 @@ sub default_options {
           %{ $self->SUPER::default_options() },
           flag_GeneNames    => '1',
           flag_GeneDescr    => '1',
+          flag_GeneCoverage => '1',
           ## GeneName Projection 
           gn_config => { 
                         '1'=>{

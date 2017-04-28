@@ -440,15 +440,24 @@ sub _dump_transcripts {
 
         # foreach transcripts of all genes with biotypes classed as cdna
         my $transcript_seq = $transcript->seq();
+	if(!defined $transcript_seq) {
+	  die "Transcript ".$transcript->stable_id()." has no sequence";
+	}
         $self->_create_display_id($transcript, $transcript_seq, $transcript_type);
         $transcript_serializer->print_Seq($transcript_seq);
         if ($biotype_manager->is_member_of_group( $transcript, 'coding')) {
           my $translation = $transcript->translation();
           if ($translation) {
             my $translation_seq = $transcript->translate();
+	    if(!defined $translation_seq) {
+	      die "Translation ".$translation->stable_id()." has no sequence";
+	    }
             $self->_create_display_id($translation, $translation_seq, 'pep');
             $peptide_serializer->print_Seq($translation_seq);
             my $cds_seq = Bio::Seq->new(-seq => $transcript->translateable_seq(), moltype => 'dna', alphabet => 'dna', id => $transcript->display_id());
+	    if(!defined $cds_seq) {
+	      die "CDS for transcript ".$transcript->stable_id()." has no sequence";
+	    }	    
             $self->_create_display_id($transcript, $cds_seq, 'cds');
             $cds_serializer->print_Seq($cds_seq);
             

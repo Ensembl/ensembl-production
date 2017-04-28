@@ -39,7 +39,9 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf');
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+ # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
@@ -52,6 +54,8 @@ sub default_options {
 	    # division for GeneName projection
             division     => undef, # Eg: protists, fungi, plants, metazoa
             output_dir        => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
+
+            email => $self->o('ENV', 'USER').'@ebi.ac.uk',
             
             ## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
@@ -63,11 +67,6 @@ sub default_options {
 	    # '0' by default, 
 	    #  set to '1' to ensure GeneDescr starts after GeneNames completed
             flag_Dependency   => '0',     
-            
-            ## analysis_capacity values for some analyses:
-            geneNameproj_capacity  =>  '20',
-            geneDescproj_capacity  =>  '20',
-            geneCoverage_capacity  =>  '100',
             
             ## Flag controlling the way the projections will run
             # If the parallel flag is on, all the projections will run at the same time
@@ -102,7 +101,7 @@ sub default_options {
                 #  before doing projection
             flag_delete_gene_descriptions   => '0',
             # Tables to dump for GeneNames & GeneDescription projections subpipeline
-            g_dump_tables => ['gene', 'xref'],
+            g_dump_tables => ['gene', 'xref','object_xref','external_db','external_synonym'],
             
  	    # Email Report subject
             gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
@@ -115,7 +114,7 @@ sub default_options {
             gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
 	    
             ## For all pipelines
-            #  Off by default. Control the storing of projections into database. 
+            #  on by default. Control the storing of projections into database.
             flag_store_projections => '1',
 
             ## GeneName Projection setting - override for each division
@@ -134,7 +133,7 @@ sub default_options {
                 # Taxon name of species to exclude 
                 'antitaxons' => [],
 	 			        # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
-                'project_all' =>  0,
+                'project_xrefs' =>  0,
                 # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
                 'white_list'  => [],
 	 			        # Run the pipeline on all the species 
@@ -195,55 +194,6 @@ sub default_options {
                                }, 
                            },
 
-		#  Off by default. 
-		#   Filtering of target species GeneDescription
-		#   If flag turn 'ON' Configure 'geneDesc_rules_target' parameter
-		#   (See JIRA EG-2676 for details)
-		#   eg. solanum_tuberosum genes with description below SHOULD receive projections
-		#		 "Uncharacterized protein" from UniProt
-		#		 "Predicted protein" from UniProt
-		#		 "Gene of unknown function" from PGSC
-		flag_filter   => '0', 
-		             #  Off by default.
-                #  Setting projected transcript statuses to NOVEL
-                #  Setting gene display_xrefs that were projected to NULL and status to NOVEL
-                #  Deleting projected xrefs, object_xrefs and synonyms
-                #  before doing projection
-                flag_delete_gene_names   => '0',
-                #  Off by default.
-                #  Setting descriptions that were projected to NULL
-                #  before doing projection
-                flag_delete_gene_descriptions   => '0',
-        # Tables to dump for GeneNames & GeneDescription projections subpipeline
-        g_dump_tables => ['gene', 'xref'],
-        
- 	    # Email Report subject
-        gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
-        gn_subject    => $self->o('pipeline_name').' subpipeline GeneNamesProjection has finished',
-
-    	# Remove existing analyses; 
-    	# On '1' by default, if =0 then existing analyses will remain, 
-		#  with the logic_name suffixed by '_bkp'.
-    	delete_existing => 1,
-    
-		# Delete rows in tables connected to the existing analysis (via analysis_id)
-    	linked_tables => [], 
-  	        
-	    # Retrieve analsysis descriptions from the production database;
-    	# the supplied registry file will need the relevant server details.
-	    production_lookup => 1,
-
-	    ## Gene Coverage
-	    gcov_division          => $self->o('division'), 
-	
-		  # Email Report subject
-      gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
-	    
-	    ## For all pipelines
-	     #  Off by default. Control the storing of projections into database. 
-
-      flag_store_projections => '0', 
-
     };
 }
 
@@ -275,32 +225,43 @@ sub beekeeper_extra_cmdline_options {
   ;
 }
 
+sub pipeline_wide_parameters {  # these parameter values are visible to all analyses, can be overridden by parameters{} and input_id{}
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
+
+        'flag_GeneNames'     => $self->o('flag_GeneNames'),
+        'flag_GeneDescr'       => $self->o('flag_GeneDescr'),
+        'flag_GeneCoverage'      => $self->o('flag_GeneCoverage')
+    };
+}
+
 sub pipeline_analyses {
   my ($self) = @_;
-
-  # Control which pipelines to run
-  my $pipeline_flow = [];
-  my $pipeline_flow_factory_waitfor = [];
-
-  if ($self->o('flag_GeneNames')) {
-    push @$pipeline_flow, 'backbone_fire_GNProj';
-    push @$pipeline_flow_factory_waitfor, 'GNProjSourceFactory';
-  }
-  if($self->o('flag_GeneDescr')) {
-    push @$pipeline_flow, 'backbone_fire_GDProj';
-    push @$pipeline_flow_factory_waitfor, 'GDProjSourceFactory';
-  }
-  if ($self->o('flag_GeneCoverage')) {
-    push @$pipeline_flow, 'backbone_fire_GeneCoverage';
-  }
   
   return [
+          #######################
+          ### Backbone to only decide to run DumplingCleaning for
+          ### Gene name and GeneDescription projections
+           {  -logic_name    => 'backbone_PostCompara',
+             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+             -input_ids     => [ {} ], # Needed to create jobs
+             -flow_into   => {
+                                1  => WHEN(
+                                   '!#flag_GeneCoverage#' => [ 'DumpingCleaning' ],
+                                   '#flag_GeneCoverage# and #flag_GeneNames# and #flag_GeneDescr#' => [ 'DumpingCleaning', 'GeneCoverageFactory'],
+                                   '#flag_GeneCoverage# and #flag_GeneNames# and !#flag_GeneDescr#' =>  [ 'DumpingCleaning', 'GeneCoverageFactory'],
+                                   '#flag_GeneCoverage# and !#flag_GeneNames# and #flag_GeneDescr#' => [ 'DumpingCleaning', 'GeneCoverageFactory'],
+                                   '#flag_GeneCoverage# and !#flag_GeneNames# and !#flag_GeneDescr#' => [ 'GeneCoverageFactory'],
+                                  ),
+                             },
+          },
+
           ########################
           ### DumpingCleaning
           
           {  -logic_name      => 'DumpingCleaning',
              -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-             -input_ids     => [ {} ], # Needed to create jobs
              -flow_into       => {                 '1->A' => ['DumpingCleaningSetup'],
                                                    'A->1' => ['backbone_fire_PostCompara'],
                                  },
@@ -345,7 +306,7 @@ sub pipeline_analyses {
           },
           
           {  -logic_name    => 'DumpTables',
-             -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables',
+             -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpTables',
              -rc_name       => '2Gb_mem',
           },
           
@@ -355,20 +316,16 @@ sub pipeline_analyses {
           {  -logic_name    => 'backbone_fire_PostCompara',
              -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
              -hive_capacity => -1,
-             -flow_into 	=> { 
-                                    '1'=> $pipeline_flow,
-       				   },
-          },   
+            -flow_into   => {
+                                1  => WHEN(
+                                   '#flag_GeneNames# and #flag_GeneDescr#' => [ 'GNProjSourceFactory', 'GDProjSourceFactory'],
+                                   '#flag_GeneNames# and !#flag_GeneDescr#' =>  [ 'GNProjSourceFactory'],
+                                   '!#flag_GeneNames# and #flag_GeneDescr#' => [ 'GDProjSourceFactory'],
+                                  ),
+                             },
+          },
           ########################
           ### GeneNamesProjection
-          {  -logic_name    => 'backbone_fire_GNProj',
-             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-             -hive_capacity => -1,
-             -flow_into     => {
-                                '1' => ['GNProjSourceFactory'] ,
-                               },
-             -meadow_type   => 'LOCAL',
-          },
           
           {  -logic_name    => 'GNProjSourceFactory',
              -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory',
@@ -402,7 +359,7 @@ sub pipeline_analyses {
                                },
              -rc_name       => 'default',
              -batch_size    =>  2, 
-             -analysis_capacity => $self->o('geneNameproj_capacity'),
+             -analysis_capacity => 20,
           },
           
           {  -logic_name    => 'GNEmailReport',
@@ -422,14 +379,6 @@ sub pipeline_analyses {
           
           ########################
           ### GeneDescProjection
-          {  -logic_name    => 'backbone_fire_GDProj',
-             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-             -hive_capacity => -1,
-             -flow_into     => {
-                                '1' => ['GDProjSourceFactory'] ,
-                               },
-             -meadow_type   => 'LOCAL',
-          },
           
           {  -logic_name    => 'GDProjSourceFactory',
              -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory',
@@ -464,7 +413,7 @@ sub pipeline_analyses {
                                },
              -rc_name       => 'default',
              -batch_size    =>  2, 
-             -analysis_capacity => $self->o('geneNameproj_capacity'),
+             -analysis_capacity => 20,
              -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],
           },
           
@@ -484,15 +433,6 @@ sub pipeline_analyses {
           },
           ################
           ### GeneCoverage
-          {  -logic_name  => 'backbone_fire_GeneCoverage',
-             -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-             -flow_into   => {
-                              '1->A' => ['GeneCoverageFactory'],
-                              'A->1' => ['GeneCoverageEmailReport'],
-                             },
-             -hive_capacity => -1,
-             -meadow_type   => 'LOCAL',
-          },
           
           {  -logic_name  => 'GeneCoverageFactory',
              -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageFactory',
@@ -500,9 +440,9 @@ sub pipeline_analyses {
                               division      => $self->o('gcov_division'),
                              },
              -flow_into 	=> { 
-                                    '2'=> [ 'GeneCoverage' ],
+                                    '2->A' => ['GeneCoverage'],
+                                    'A->1' => ['GeneCoverageEmailReport'],
       				   },
-             -wait_for    =>  $pipeline_flow_factory_waitfor,
              -rc_name     => 'default',
           },
           
@@ -513,7 +453,8 @@ sub pipeline_analyses {
                              },
              -batch_size  => 100,
              -rc_name     => 'default',
-             -analysis_capacity => $self->o('geneCoverage_capacity'),
+             -analysis_capacity => 100,
+             -rc_name       => '8Gb_mem',
           },
           
           {  -logic_name  => 'GeneCoverageEmailReport',
@@ -528,6 +469,21 @@ sub pipeline_analyses {
           },
           
          ];
+}
+
+sub resource_classes {
+    my $self = shift;
+    return {
+      'default'                 => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
+      'mem'                     => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"'},
+      '2Gb_mem'         => {'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"' },
+      '24Gb_mem'        => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000]"' },
+      '250Mb_mem'       => {'LSF' => '-q production-rh7 -M 250 -R "rusage[mem=250]"' },
+      '500Mb_mem'       => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"' },
+      '1Gb_mem'             => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
+      '8Gb_mem'             => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"' },
+      'urgent_hcluster' => {'LSF' => '-q production-rh7' },
+    }
 }
 
 1;

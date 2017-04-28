@@ -28,7 +28,7 @@ The analysis checks the $output_dir first to make sure we don't overwrite backup
 ckong and maurel
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::DumpTables;
+package Bio::EnsEMBL::Production::Pipeline::Common::DumpTables;
 
 use strict;
 use Data::Dumper;
@@ -95,8 +95,6 @@ sub run {
         unless (system("$mysql_binary -h$host -P$port -u$user -p$pass $dbname $table | gzip -c -6 > $output_dir/$dbname.$table.sql.gz") == 0) {
           $self->warning("Can't dump the original $table table from $dbname for backup because $!\n");
           exit 1;
-       } else {
-          $self->warning("Original $table table backed up in $dbname.$table.sql\n");
        }
       }
     }

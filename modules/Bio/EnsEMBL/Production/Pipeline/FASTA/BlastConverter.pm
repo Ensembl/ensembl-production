@@ -82,9 +82,7 @@ return [
   [qw/dna dna toplevel/],
   [qw/dna dna_rm toplevel/],
   [qw/pep pep all/],
-# [qw/pep pep abinitio/],
   [qw/cdna cdna all/],
-# [qw/cdna cdna abinitio/],
   [qw/ncrna ncrna/],
  ];
 }

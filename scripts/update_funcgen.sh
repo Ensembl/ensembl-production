@@ -6,7 +6,7 @@ cd $BASE_DIR/ensembl-funcgen
 $SRV -e "show databases" | grep funcgen | grep -v master_schema | while read db; do
     echo "Checking $db";
     schema_build=$(echo $db | sed -e 's/.*_\([0-9]*_[0-9]*\)$/\1/')
-    cnt=$($SRV --column-names=false $db -e "select count(*) from seq_region where schema_build<>\"$schema_build\"")
+    cnt=$($SRV --column-names=false $db -e "select count(*) from seq_region where schema_build = \"$schema_build\"")
     echo "$schema_build = $cnt"
     if [ "$cnt" == "0" ]; then
 	echo "Updating funcgen database"

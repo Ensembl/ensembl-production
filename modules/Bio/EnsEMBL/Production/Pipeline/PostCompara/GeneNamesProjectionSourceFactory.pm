@@ -58,7 +58,7 @@ sub run {
          my $species                = $final_projection_list->{$pair}->{'species'};
          my $antispecies            = $final_projection_list->{$pair}->{'antispecies'};
          my $division               = $final_projection_list->{$pair}->{'division'};
-         my $project_all            = $final_projection_list->{$pair}->{'project_all'};
+         my $project_xrefs            = $final_projection_list->{$pair}->{'project_xrefs'};
          my $run_all                = $final_projection_list->{$pair}->{'run_all'};
          my $taxons                 = $final_projection_list->{$pair}->{'taxons'};
          my $antitaxons             = $final_projection_list->{$pair}->{'antitaxons'};
@@ -83,7 +83,7 @@ sub run {
 		 'species'     		  => $species, 
 		 'antispecies' 		  => $antispecies, 
   		 'division'    	  	  => $division, 
-       'project_all'     => $project_all,
+       'project_xrefs'     => $project_xrefs,
 		 'run_all' 		  => $run_all,
      'taxons'       => $taxons,
      'antitaxons'       => $antitaxons,
@@ -102,7 +102,7 @@ sub run {
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
                                  'source'                 => $source,
-                                 'project_all'            => $project_all},1);
+                                 'project_xrefs'            => $project_xrefs},1);
           }
           # else, we run the projections sequentially, one set of projection at the time
           else{
@@ -111,14 +111,14 @@ sub run {
             $self->dataflow_output_id({'projection_list'       => $self->param('projection_list'),
                                  'species'                => $species,
                                  'source'                 => $source,
-                                 'project_all'            => $project_all},1);
+                                 'project_xrefs'            => $project_xrefs},1);
           }
            # If we only run one set of projection then behave like parallel projections
           else{
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
                                  'source'                 => $source,
-                                 'project_all'            => $project_all},1);
+                                 'project_xrefs'            => $project_xrefs},1);
           }
           last;
           }

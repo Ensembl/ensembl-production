@@ -214,6 +214,4 @@ sub default_options {
 	};
 } ## end sub default_options
 
-} ## end sub pipeline_analyses
-
 1;
