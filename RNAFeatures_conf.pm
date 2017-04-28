@@ -358,6 +358,22 @@ sub pipeline_analyses {
                               production_db      => $self->o('production_db'),
                             },
       -meadow_type       => 'LOCAL',
+      -flow_into         => ['DeleteAttributes'],
+    },
+
+    {
+      -logic_name      => 'DeleteAttributes',
+      -module          => 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd',
+      -max_retry_count => 0,
+      -parameters      => {
+                             sql => [
+                               'DELETE dafa.* FROM '.
+                                 'dna_align_feature_attrib dafa LEFT OUTER JOIN '.
+                                 'dna_align_feature daf USING (dna_align_feature_id) '.
+                                 'WHERE daf.dna_align_feature_id IS NULL',
+                             ]
+                           },
+      -meadow_type     => 'LOCAL',
     },
 
     {
