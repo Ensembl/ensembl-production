@@ -110,6 +110,7 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 				}
 			}
 			delete $var->{source_id};
+			$callback->($var);
 			return;
 		} );
 	return;
@@ -123,8 +124,8 @@ sub _calculate_min_max {
 	my $tmax = $h->execute_single_result(
 						   -SQL => q/select max(variation_id) from variation/ );
 	$logger->debug("Total ID range $tmin -> $tmax");
-	my $min = ( $offset - 1 )*$length;
-	my $max = $min + $length - 1;
+	my $min = (( $offset - 1 )*$length)+1;
+	my $max = $min + $length;
 	$logger->debug("Current ID range $min -> $max");
 	return ( $min, $max );
 }
