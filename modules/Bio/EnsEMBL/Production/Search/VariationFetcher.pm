@@ -223,10 +223,37 @@ sub _fetch_phenotype_features {
 
 sub _fetch_features {
 	my ( $self, $h, $min, $max ) = @_;
+	$logger->debug(" Fetching consequences for $min/$max ");
+	my $consequences = $h->execute_into_hash(
+		-SQL => q/SELECT 
+		tv.variation_feature_id, tv.feature_stable_id, tv.consequence_types, 
+		tv.polyphen_prediction, tv.polyphen_score,
+		tv.sift_prediction, tv.sift_score
+     FROM 
+     transcript_variation tv
+     JOIN variation_feature vf using (variation_feature_id)
+     WHERE 
+     vf.variation_id between ? AND ?/,
+		-PARAMS   => [ $min, $max ],
+		-CALLBACK => sub {
+			my ( $row, $value ) = @_;
+			$value = [] if !defined $value;
+			my $con = {
+				stable_id=>$row->[1],
+				consequence=>$row->[2]			
+			};
+			$con->{polyphen} = $row->[3] if defined $row->[3];
+			$con->{polyphen_score} = $row->[4] if defined $row->[4];
+			$con->{sift} = $row->[5] if defined $row->[5];
+			$con->{sift_score} = $row->[6] if defined $row->[6];
+			push( @{$value}, $con );
+			return $value;
+		} );
+		
 	$logger->debug(" Fetching features for $min/$max ");
 	return $h->execute_into_hash(
 		-SQL => q/SELECT 
-		vf.variation_id, sr.name, vf.seq_region_start, vf.seq_region_end, vf.seq_region_strand
+		vf.variation_id, sr.name, vf.seq_region_start, vf.seq_region_end, vf.seq_region_strand, vf.variation_feature_id
      FROM variation_feature vf
      JOIN seq_region sr USING (seq_region_id)
      WHERE vf.variation_id between ? AND ?/,
@@ -234,11 +261,14 @@ sub _fetch_features {
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
 			$value = [] if !defined $value;
-			push( @{$value}, {
+			my $var = {
 					 seq_region_name => $row->[1],
 					 start           => $row->[2],
 					 end             => $row->[3],
-					 strand          => $row->[4] } );
+					 strand          => $row->[4] };
+			my $consequence = $consequences->{$row->[5]};
+			$var->{consequences} = $consequence if defined $consequence;
+			push( @{$value}, $var );
 			return $value;
 		} );
 }
@@ -275,6 +305,7 @@ sub _fetch_failed_descriptions {
 			return $value;
 		} );
 }
+
 
 sub _fetch_all_studies {
 	my ( $self, $h ) = @_;
