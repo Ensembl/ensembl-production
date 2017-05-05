@@ -230,10 +230,9 @@ sub _fetch_features {
 		tv.polyphen_prediction, tv.polyphen_score,
 		tv.sift_prediction, tv.sift_score
      FROM 
-     transcript_variation tv
-     JOIN variation_feature vf using (variation_feature_id)
+     MTMP_transcript_variation tv
      WHERE 
-     vf.variation_id between ? AND ?/,
+     tv.variation_id between ? AND ?/,
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
