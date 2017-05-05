@@ -64,6 +64,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::FASTA::Base/;
 
 use File::Spec;
 use File::stat;
+use Bio::DB::HTS::Faidx;
 
 sub file_pattern {
   my ($self,$type) = @_;
@@ -102,10 +103,11 @@ sub run {
   my @file_list = @{$self->get_dna_files()};
   my $count = scalar(@file_list);
   my $running_total_size = 0;
+  my $data_type=$self->param('data_type');
   
   if($count) {
-    my $target_file = $self->target_file();
-    $self->info("Concatting type %s with %d file(s) into %s", $self->param('data_type'), $count, $target_file);
+    my $target_file = $self->target_file('dna');
+    $self->info("Concatting type %s with %d file(s) into %s", $data_type , $count, $target_file);
     
     if(-f $target_file) {
       $self->info("Target already exists. Removing");
@@ -127,7 +129,11 @@ sub run {
     if($running_total_size != $catted_size) {
       $self->throw(sprintf('The total size of the files catted together should be %d but was in fact %d. Failing as we expect the catted size to be the same', $running_total_size, $catted_size));
     }
-    
+    # Only creating Bgzip file and index file for dna, ignoring repeat masked file.
+    if ($data_type eq "dna"){
+      # Creating Bgzip file and index files into dna_index directory.
+      $self->bgzip_and_index_toplevel($target_file);
+    }
     $self->param('target_file', $target_file);
   }
   else {
@@ -142,6 +148,25 @@ sub write_output {
   if($file) {
     $self->dataflow_output_id({ file => $file, species => $self->param('species'), data_type => $self->param('data_type') }, 1);
   }
+  return;
+}
+
+sub bgzip_and_index_toplevel {
+  my ($self,$target_file) = @_;
+  my $target_bgzip_file = $self->target_file('dna_index');
+  $self->info('Copying toplevel file');
+  system("cp $target_file $target_bgzip_file")
+    and $self->throw( sprintf('Cannot copy %s to %s. RC %d', $target_file, $target_bgzip_file, ($?>>8)));
+  $self->info('extracting fasta toplevel file');
+  system("gunzip $target_bgzip_file")
+    and $self->throw( sprintf('Cannot gunzip %s. RC %d', $target_bgzip_file, ($?>>8)));
+  $target_bgzip_file=~ s/\.gz//;
+  $self->info('bgziping toplevel file');
+  system("bgzip $target_bgzip_file")
+    and $self->throw( sprintf('Cannot bgzip %s. RC %d', $target_bgzip_file, ($?>>8)));
+  $target_bgzip_file=$target_bgzip_file.'.gz';
+  $self->info('Creating index file');
+  Bio::DB::HTS::Faidx->new($target_bgzip_file);
   return;
 }
 
@@ -202,7 +227,7 @@ sub karyotype_sort {
 }
 
 sub target_file {
-  my ($self) = @_;
+  my ($self,$fasta_type) = @_;
   # File name format looks like:
   # <species>.<assembly>.<release>.<sequence type>.<id type>.<id>.fa.gz
   # e.g. Homo_sapiens.GRCh37.dna_rm.toplevel.fa.gz
@@ -213,7 +238,7 @@ sub target_file {
   push @name_bits, 'toplevel';
   push @name_bits, 'fa', 'gz';
   my $file_name = join( '.', @name_bits );
-  my $dir = $self->fasta_path('dna');
+  my $dir = $self->fasta_path($fasta_type);
   return File::Spec->catfile( $dir, $file_name );
 }
 
