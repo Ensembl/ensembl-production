@@ -58,7 +58,7 @@ sub fetch_variations {
 sub fetch_variations_for_dba {
 	my ( $self, $dba, $offset, $length ) = @_;
 	my @variants = ();
-	$self->_fetch_variations_callback(
+	$self->fetch_variations_callback(
 		$dba, $offset, $length,
 		sub {
 			my ($variant) = @_;
@@ -68,7 +68,7 @@ sub fetch_variations_for_dba {
 	return \@variants;
 }
 
-sub _fetch_variations_callback {
+sub fetch_variations_callback {
 	my ( $self, $dba, $offset, $length, $callback ) = @_;
 	$dba->dbc()->db_handle()->{mysql_use_result} = 1;    # streaming
 	my $h = $dba->dbc()->sql_helper();
@@ -115,20 +115,23 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 			return;
 		} );
 	return;
-} ## end sub _fetch_variations_callback
+} ## end sub fetch_variations_callback
 
 sub _calculate_min_max {
 	my ( $self, $h, $offset, $length ) = @_;
 	$logger->debug("Calculating $offset/$length");
-	my $tmin = $h->execute_single_result(
+	if ( !defined $offset ) {
+		$offset = $h->execute_single_result(
 						   -SQL => q/select min(variation_id) from variation/ );
-	my $tmax = $h->execute_single_result(
-						   -SQL => q/select max(variation_id) from variation/ );
-	$logger->debug("Total ID range $tmin -> $tmax");
-	my $min = ( ( $offset - 1 )*$length ) + 1;
-	my $max = $min + $length;
-	$logger->debug("Current ID range $min -> $max");
-	return ( $min, $max );
+	}
+	if ( !defined $length ) {
+		$length = $h->execute_single_result(
+			 -SQL => q/select max(variation_id) from variation/ ) - $offset + 1;
+	}
+
+	my $max = $offset + $length - 1;
+	$logger->debug("Current ID range $offset -> $max");
+	return ( $offset, $max );
 }
 
 sub _fetch_hgvs {
@@ -231,25 +234,21 @@ sub _fetch_features {
 		tv.sift_prediction, tv.sift_score
      FROM 
      transcript_variation tv
-     JOIN variation_feature vf using (variation_feature_id)
      WHERE 
-     vf.variation_id between ? AND ?/,
+     tv.variation_id between ? AND ?/,
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
 			$value = [] if !defined $value;
-			my $con = {
-				stable_id=>$row->[1],
-				consequence=>$row->[2]			
-			};
-			$con->{polyphen} = $row->[3] if defined $row->[3];
+			my $con = { stable_id => $row->[1], consequence => $row->[2] };
+			$con->{polyphen}       = $row->[3] if defined $row->[3];
 			$con->{polyphen_score} = $row->[4] if defined $row->[4];
-			$con->{sift} = $row->[5] if defined $row->[5];
-			$con->{sift_score} = $row->[6] if defined $row->[6];
+			$con->{sift}           = $row->[5] if defined $row->[5];
+			$con->{sift_score}     = $row->[6] if defined $row->[6];
 			push( @{$value}, $con );
 			return $value;
 		} );
-		
+
 	$logger->debug(" Fetching features for $min/$max ");
 	return $h->execute_into_hash(
 		-SQL => q/SELECT 
@@ -261,17 +260,16 @@ sub _fetch_features {
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
 			$value = [] if !defined $value;
-			my $var = {
-					 seq_region_name => $row->[1],
-					 start           => $row->[2],
-					 end             => $row->[3],
-					 strand          => $row->[4] };
-			my $consequence = $consequences->{$row->[5]};
+			my $var = { seq_region_name => $row->[1],
+						start           => $row->[2],
+						end             => $row->[3],
+						strand          => $row->[4] };
+			my $consequence = $consequences->{ $row->[5] };
 			$var->{consequences} = $consequence if defined $consequence;
 			push( @{$value}, $var );
 			return $value;
 		} );
-}
+} ## end sub _fetch_features
 
 sub _fetch_genenames {
 	my ( $self, $h, $min, $max ) = @_;
@@ -305,7 +303,6 @@ sub _fetch_failed_descriptions {
 			return $value;
 		} );
 }
-
 
 sub _fetch_all_studies {
 	my ( $self, $h ) = @_;
