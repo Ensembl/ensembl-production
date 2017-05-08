@@ -130,12 +130,14 @@ return File::Spec->catdir(@dirs);
 
 sub division {
     my ($self) = @_;
-    my $dba        = $self->get_DBAdaptor();
-    my ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+    my $division;
+    my $dba        = $self->get_DBAdaptor('core');
+    if(defined $division) {
+      ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+    }
     return if ! $division;
     $division =~ s/^Ensembl//;
-
-return lc($division);
+    return lc($division);
 }
 
 # New function to replace data_path, in TSV & ChainFile/DumpFile.pm
