@@ -91,7 +91,6 @@ sub fetch_input {
     Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'core' );
   my $all_compara_dbas =
     Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'compara' );
-  my $taxonomy_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi','taxonomy');
   my %core_dbas;
   my %compara_dbas;
 
@@ -120,7 +119,7 @@ sub fetch_input {
   }
   elsif ( scalar(@taxons) ) {
     foreach my $taxon (@taxons) {
-      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $taxon, "add" );
+      $self->process_taxon( $all_dbas, \%core_dbas , $self->taxonomy_dba(), $taxon, "add" );
     }
   }
   else {
@@ -130,7 +129,7 @@ sub fetch_input {
   }
   if ( scalar(@antitaxons) ) {
     foreach my $antitaxon (@antitaxons) {
-      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $antitaxon, "remove" );
+      $self->process_taxon( $all_dbas, \%core_dbas , $self->taxonomy_dba(), $antitaxon, "remove" );
       $self->warning("$antitaxon taxon successfully removed");
     }
   }  
@@ -146,6 +145,7 @@ sub fetch_input {
       $self->filter_species( $meta_key, $meta_filters{$meta_key},
                              \%core_dbas );
     }
+    
   }
 
   $self->param( 'core_dbas',    \%core_dbas );
@@ -198,6 +198,15 @@ sub process_division {
   return;
 
 } ## end sub process_division
+
+sub taxonomy_dba {
+	my ($self) = @_;
+	if(!defined $self->{taxonomy_dba}) {
+ 	  $self->{taxonomy_dba} = Bio::EnsEMBL::Registry->get_DBAdaptor('multi','taxonomy');
+ 	  warn "No taxonomy database found" unless defined $self->{taxonomy_dba};
+	}
+	return $self->{taxonomy_dba};
+}
 
 sub process_taxon {
   my ( $self, $all_dbas, $core_dbas, $taxonomy_dba, $taxon, $action )
