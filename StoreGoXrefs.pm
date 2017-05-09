@@ -93,15 +93,17 @@ sub delete_existing {
 sub store_go_xref {
   my ($self, $dbea, $analysis, $go) = @_;
   
-  my $ip_transl_sql =
-    'SELECT DISTINCT interpro_ac, translation_id FROM '.
-    'interpro INNER JOIN protein_feature ON (id = hit_name);';
-  my $ip_transl_sth = $self->core_dbh->prepare($ip_transl_sql);
+  my $sql =
+    'SELECT DISTINCT interpro_ac, transcript_id FROM '.
+    'interpro INNER JOIN '.
+    'protein_feature ON id = hit_name INNER JOIN '.
+    'translation USING (translation_id);';
+  my $sth = $self->core_dbh->prepare($sql);
   
-  $ip_transl_sth->execute();
+  $sth->execute();
   
-  while (my $row = $ip_transl_sth->fetchrow_arrayref()) {
-    my ($interpro_ac, $translation_id) = @$row;
+  while (my $row = $sth->fetchrow_arrayref()) {
+    my ($interpro_ac, $transcript_id) = @$row;
     
     if (exists $$go{$interpro_ac}) {
       foreach my $go (@{$$go{$interpro_ac}}) {
@@ -118,7 +120,7 @@ sub store_go_xref {
     
         my $go_xref = Bio::EnsEMBL::OntologyXref->new(%go_xref_args);
         $go_xref->add_linkage_type('IEA', $interpro_xref);
-        $dbea->store($go_xref, $translation_id, 'Translation', 1);
+        $dbea->store($go_xref, $transcript_id, 'Transcript', 1);
       }
     }
   }
