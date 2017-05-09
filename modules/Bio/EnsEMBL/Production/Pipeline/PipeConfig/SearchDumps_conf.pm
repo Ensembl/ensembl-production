@@ -98,15 +98,16 @@ sub pipeline_analyses {
     {
     -logic_name => 'DumpVariantJson',
     -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
-    -parameters => {
-    },
     -rc_name => '32g',
     -flow_into => {
+ 			   1 => ['?accu_name=variant_dump_file&accu_address=[]',
+ 			   '?accu_name=species'],
+ 			   
     }
   },
       {
     -logic_name => 'VariantDumpMerge',
-    -module => 'Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpFactory',
+    -module => 'Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpMerge',
     -parameters => {
     },
     -rc_name => '1g',
