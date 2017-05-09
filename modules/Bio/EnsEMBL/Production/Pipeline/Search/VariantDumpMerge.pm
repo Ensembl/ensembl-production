@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpFactory;
+package Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpMerge;
 
 use strict;
 use warnings;
@@ -38,10 +38,28 @@ sub run {
 	else {
 		Log::Log4perl->easy_init($INFO);
 	}
-	my $logger = get_logger();
-	$logger->info("Well well well");
+	my $logger         = get_logger();
+	my $file_names     = $self->param_required('variant_dump_file');
+	my $species        = $self->param_required('species');
+	my $sub_dir        = $self->get_data_path('json');
+	my $outfile = $sub_dir . '/' . $species . '_variants.json';
+	$logger->info(
+		 "Merging variant files for $species into $outfile" );
+	my $cmd = "echo '['>$outfile";
+	$logger->debug($cmd);
+	system($cmd) == 0 || throw "Could not write to $outfile";
+	my $n = 0;
+	for my $file (@$file_names) {
+		$logger->debug("Concatenating $file to $outfile");
+		if($n++>0) {
+			system("echo ','>>$outfile") == 0 || throw "Could not write to $outfile";			
+		}
+		system("cat $file >>$outfile") == 0 || throw "Could not concatenate $file to $outfile";
+		unlink $file || throw "Could not remove $file";
+	}
+	system("echo ']'>>$outfile") == 0 || throw "Could not write to $outfile";
+	$logger->info("Completed writing $n files to $outfile");
 	return;
 }
-
 
 1;
