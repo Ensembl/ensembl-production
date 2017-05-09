@@ -85,6 +85,12 @@ if(! @ARGV) {
         CHECKSUMS README
         Homo_sapiens.GRCh38.cds.all.fa.gz
     /]],
+    [[qw/fasta homo_sapiens dna_index/], [qw/
+        CHECKSUMS
+        Homo_sapiens.GRCh38.dna.toplevel.fa.gz
+        Homo_sapiens.GRCh38.dna.toplevel.fa.gz.fai
+        Homo_sapiens.GRCh38.dna.toplevel.fa.gz.gzi
+    /]],
   );
 
   foreach my $setup (@expected_files) {
