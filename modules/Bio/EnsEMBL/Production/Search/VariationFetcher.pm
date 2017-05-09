@@ -232,7 +232,7 @@ sub _fetch_features {
 		tv.polyphen_prediction, tv.polyphen_score,
 		tv.sift_prediction, tv.sift_score
      FROM 
-     transcript_variation tv
+     MTMP_transcript_variation tv
      WHERE 
      tv.variation_id between ? AND ?/,
 		-PARAMS   => [ $min, $max ],
