@@ -56,6 +56,8 @@ sub run {
 										  $self->param("offset"),
 										  $self->param("length") );
 	$self->{logger}->info("Variations for $species written to $file");
+	
+	$self->dataflow_output_id( {variant_dump_file=>$file, species=>$species}, 1);
 
 	return;
 } ## end sub run
@@ -75,7 +77,6 @@ sub write_variants {
 	$self->{logger}->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
-	print $json_file '[';
 	my $n = 0;
 	Bio::EnsEMBL::Production::Search::VariationFetcher->new()
 	  ->fetch_variations_callback(
@@ -88,7 +89,6 @@ sub write_variants {
 			print $json_file encode_json($var);
 			return;
 		} );
-	print $json_file ']';
 	close $json_file;
 	$self->{logger}->info("Wrote $n variants");
 	return $json_file_path;
