@@ -10,3 +10,4 @@ requires 'Exporter::Auto';
 requires 'Log::Log4perl';
 requires 'Config::Simple';
 requires 'String::Numeric';
+requires 'Bio::DB::HTS::Faidx';

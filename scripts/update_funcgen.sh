@@ -10,6 +10,6 @@ $SRV -e "show databases" | grep funcgen | grep -v master_schema | while read db;
     echo "$schema_build = $cnt"
     if [ "$cnt" == "0" ]; then
 	echo "Updating funcgen database"
-	perl -I modules ./scripts/release/update_DB_for_release.pl $($SRV details script) $($SRV details script_dnadb_) -dbname $db -check_displayable -skip_analyse -skip_xref_cleanup
+	perl -I modules ./scripts/release/update_DB_for_release.pl $($SRV details script) $($SRV details script_dnadb_) -dbname $db -check_displayable -no_log
     fi
 done

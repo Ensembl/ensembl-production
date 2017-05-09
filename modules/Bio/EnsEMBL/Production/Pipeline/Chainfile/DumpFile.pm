@@ -300,10 +300,16 @@ sub ensembl_to_ucsc_name {
     if(@{$synonyms}) {
       $ucsc_name = $synonyms->[0]->name();
     } else {
-      #MT is a special case; it's chrM
-      if($slice->is_chromosome()) { $ucsc_name = 'chrM' if($ensembl_name eq 'MT' );}
-      # If it was a ref region add chr onto it (only check if we have an adaptor)
-      elsif($slice->is_reference()) { $ucsc_name = 'chr'.$ensembl_name; }
+      if($slice->is_chromosome()) {
+        #MT is a special case; it's chrM
+        if($ensembl_name eq 'MT' ) {
+          $ucsc_name = 'chrM';
+        }
+        # If it was a ref region add chr onto it (only check if we have an adaptor)
+        elsif($slice->is_reference()) {
+          $ucsc_name = 'chr'.$ensembl_name;
+        }
+      }
     }
 
 return $ucsc_name_cache{$prod_name}{$ensembl_name} = $ucsc_name;  

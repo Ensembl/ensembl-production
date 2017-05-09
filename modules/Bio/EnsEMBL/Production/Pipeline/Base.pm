@@ -42,6 +42,8 @@ use File::Path qw/mkpath/;
 use POSIX qw/strftime/;
 use Carp;
 
+use Log::Log4perl qw/:easy/;
+
 sub hive_dbc {
     my $self = shift;
     my $dbc  = $self->dbc();
@@ -130,12 +132,14 @@ return File::Spec->catdir(@dirs);
 
 sub division {
     my ($self) = @_;
-    my $dba        = $self->get_DBAdaptor();
-    my ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+    my $division;
+    my $dba        = $self->get_DBAdaptor('core');
+    if(defined $division) {
+      ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+    }
     return if ! $division;
     $division =~ s/^Ensembl//;
-
-return lc($division);
+    return lc($division);
 }
 
 # New function to replace data_path, in TSV & ChainFile/DumpFile.pm
@@ -476,6 +480,20 @@ sub get_production_DBAdaptor {
   my ($self) = @_;
 
 return Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'production');
+}
+
+sub logger {
+	my ($self) = @_;
+	if ( !defined $self->{logger} ) {
+		if ( $self->debug() ) {
+			Log::Log4perl->easy_init($DEBUG);
+		}
+		else {
+			Log::Log4perl->easy_init($INFO);
+		}
+		$self->{logger} = get_logger();
+	}
+	return $self->{logger};
 }
 
 1;
