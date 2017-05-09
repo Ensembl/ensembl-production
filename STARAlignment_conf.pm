@@ -21,7 +21,7 @@ package Bio::EnsEMBL::EGPipeline::PipeConfig::STARAlignment_conf;
 use strict;
 use warnings;
 
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::Version 2.4;
 use base ('Bio::EnsEMBL::EGPipeline::PipeConfig::ShortReadAlignment_conf');
 use File::Spec::Functions qw(catdir);
 
@@ -33,10 +33,11 @@ sub default_options {
     db_type         => 'otherfeatures',
     reformat_header => 1,
     trim_est        => 1,
-    trimest_exe     => '/nfs/panda/ensemblgenomes/external/EMBOSS/bin/trimest',
+    trimest_exe     => 'trimest',
     insdc_ids       => 1,
-
-    logic_name => $self->o('data_type').'_'.$self->o('aligner'),
+    data_type       => 'est',
+    aligner         => 'star',
+    logic_name      => $self->o('data_type').'_'.$self->o('aligner'),
     
     # Remove existing alignments; if => 0 then existing analyses
     # and their features will remain, with the logic_name suffixed by '_bkp'.
