@@ -16,14 +16,14 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::LoadChecksums;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadChecksums;
 
 use strict;
 use warnings;
 
 use File::Basename;
 
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 sub run {
   my ($self) = @_;

@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::InterProScan;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 use File::Path qw(make_path remove_tree);
 use File::Temp qw(tempdir);

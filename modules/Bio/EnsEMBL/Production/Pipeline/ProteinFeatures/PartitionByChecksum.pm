@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::PartitionByChecksum;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::PartitionByChecksum;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 use Bio::SeqIO;
 use DBI qw(:sql_types);

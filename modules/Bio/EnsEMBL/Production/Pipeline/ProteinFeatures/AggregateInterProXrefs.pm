@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::ProteinFeatures::AggregateInterProXrefs
+Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AggregateInterProXrefs
 
 =head1 DESCRIPTION
 
@@ -34,11 +34,11 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::AggregateInterProXrefs;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AggregateInterProXrefs;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 sub run {
   my ($self) = @_;

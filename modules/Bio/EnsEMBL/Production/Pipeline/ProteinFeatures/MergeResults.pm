@@ -17,11 +17,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::MergeResults;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::MergeResults;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 use File::Spec::Functions qw(catdir);
 use Path::Tiny qw(path);

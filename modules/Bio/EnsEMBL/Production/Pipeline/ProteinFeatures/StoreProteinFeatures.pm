@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::StoreProteinFeatures;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 use Bio::EnsEMBL::DBEntry;
 use Bio::EnsEMBL::ProteinFeature;

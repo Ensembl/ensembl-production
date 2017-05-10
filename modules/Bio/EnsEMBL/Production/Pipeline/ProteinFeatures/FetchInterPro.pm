@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::ProteinFeatures::FetchInterPro
+Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro
 
 =head1 DESCRIPTION
 
@@ -34,11 +34,11 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::FetchInterPro;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FetchExternal');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::FetchExternal');
 
 use File::Spec::Functions qw(catdir);
 use Path::Tiny;

@@ -17,11 +17,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::EmailTranscriptomeReport;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailTranscriptomeReport;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::EmailReport');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EmailReport');
 
 use Path::Tiny qw(path);
 

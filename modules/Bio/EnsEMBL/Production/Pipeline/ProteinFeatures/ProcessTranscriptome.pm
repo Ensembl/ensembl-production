@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::ProcessTranscriptome;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ProcessTranscriptome;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 use File::Basename;
 use File::Spec::Functions qw(catdir);

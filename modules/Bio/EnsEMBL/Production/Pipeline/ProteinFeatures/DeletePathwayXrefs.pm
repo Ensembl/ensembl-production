@@ -16,11 +16,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::ProteinFeatures::DeletePathwayXrefs;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::DeletePathwayXrefs;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
 
 sub run {
   my ($self) = @_;
