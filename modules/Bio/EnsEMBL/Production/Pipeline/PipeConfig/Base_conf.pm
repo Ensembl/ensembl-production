@@ -32,7 +32,7 @@ sub default_options {
   my ($self) = @_;
   return {
           %{$self->SUPER::default_options},
-          pipeline_dir => $ENV{'PWD'},
+          pipeline_dir => $ENV{'PWD'}.'/'.$self->o('pipeline_name'),
           user => $ENV{'USER'},
           email => $ENV{'USER'}.'@ebi.ac.uk'
          };
