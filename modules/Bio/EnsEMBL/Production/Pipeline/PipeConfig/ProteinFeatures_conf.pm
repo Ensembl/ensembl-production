@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeatures_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.4;
@@ -33,8 +33,6 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'protein_features_'.$self->o('ensembl_release'),
-    
     species      => [],
     antispecies  => [],
     division     => [],
@@ -261,18 +259,6 @@ sub default_options {
   };
 }
 
-# Force an automatic loading of the registry in all workers.
-sub beekeeper_extra_cmdline_options {
-  my ($self) = @_;
-
-  my $options = join(' ',
-    $self->SUPER::beekeeper_extra_cmdline_options,
-    "-reg_conf ".$self->o('registry'),
-  );
-  
-  return $options;
-}
-
 # Ensures that species output parameter gets propagated implicitly.
 sub hive_meta_table {
   my ($self) = @_;
@@ -406,7 +392,6 @@ sub pipeline_analyses {
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => $self->o('linked_tables'),
                               production_lookup  => $self->o('production_lookup'),
-                              production_db      => $self->o('production_db'),
                               program            => $self->o('interproscan_version'),
                             },
       -meadow_type       => 'LOCAL',
