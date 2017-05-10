@@ -54,6 +54,7 @@ sub default_options {
         pipeline_name => 'core_handover_update_'.$self->o('release'),
         
         email => $self->o('ENV', 'USER').'@ebi.ac.uk',
+
     };
 }
 
@@ -104,7 +105,8 @@ sub pipeline_analyses {
         -logic_name => 'PepStats',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::PepStats',
         -parameters => {
-          tmpdir => '/tmp', binpath => '/software/pubseq/bin/emboss',
+          tmpdir => '/tmp',
+          pepstats_binary => 'pepstats',
           dbtype => 'core',
         },
         -max_retry_count  => 3,
