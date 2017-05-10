@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::Common::SqlCmd
+Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd
 
 =head1 DESCRIPTION
 
@@ -35,14 +35,14 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlCmd;
+package Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd;
 
 use strict;
 use warnings;
 
 use base (
   'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-  'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base'
+  'Bio::EnsEMBL::Production::Pipeline::Common::Base'
 );
 
 sub param_defaults {

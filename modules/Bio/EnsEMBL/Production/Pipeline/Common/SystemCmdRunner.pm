@@ -25,7 +25,6 @@ limitations under the License.
  ckong@ebi.ac.uk 
 
 =cut
-#package EGUtils::SystemCmdRunner;
 package Bio::EnsEMBL::Production::Pipeline::Common::SystemCmdRunner;
 
 use strict;

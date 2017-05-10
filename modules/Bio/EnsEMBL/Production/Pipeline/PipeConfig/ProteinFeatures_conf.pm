@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeatures_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::EGGeneric_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.4;
@@ -339,7 +339,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SpeciesFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EGSpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
                               species         => $self->o('species'),
@@ -686,7 +686,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForDumpingInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EGSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),
@@ -734,7 +734,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForStoringInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EGSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),
