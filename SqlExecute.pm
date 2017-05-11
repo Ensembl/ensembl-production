@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::EGPipeline::Common::SqlSelect
+Bio::EnsEMBL::EGPipeline::Common::SqlExecute
 
 
 =head1 Author
@@ -31,12 +31,20 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlSelect;
+package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::SqlExecute;
 
 use strict;
 use warnings;
 
 use base 'Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base';
+
+sub param_defaults {
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::param_defaults},
+    'out_file' => '/dev/null',
+  };
+}
 
 sub run {
   my ($self) = @_;
