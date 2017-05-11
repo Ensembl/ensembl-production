@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.22-61.0',
+    interproscan_version => '5.24-63.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -94,7 +94,7 @@ sub default_options {
       {
         'logic_name'    => 'gene3d',
         'db'            => 'Gene3D',
-        'db_version'    => '3.5.0',
+        'db_version'    => '4.1.0',
         'ipscan_name'   => 'Gene3D',
         'ipscan_xml'    => 'GENE3D',
         'ipscan_lookup' => 1,
@@ -102,7 +102,7 @@ sub default_options {
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '201605.11',
+        'db_version'    => '201701.18',
         'ipscan_name'   => 'Hamap',
         'ipscan_xml'    => 'HAMAP',
         'ipscan_lookup' => 1,
@@ -118,7 +118,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '30.0',
+        'db_version'    => '31.0',
         'ipscan_name'   => 'Pfam',
         'ipscan_xml'    => 'PFAM',
         'ipscan_lookup' => 1,
@@ -126,7 +126,7 @@ sub default_options {
       {
         'logic_name'    => 'pfscan',
         'db'            => 'Prosite_profiles',
-        'db_version'    => '20.119',
+        'db_version'    => '20.132',
         'ipscan_name'   => 'ProSiteProfiles',
         'ipscan_xml'    => 'PROSITE_PROFILES',
         'ipscan_lookup' => 1,
@@ -134,7 +134,7 @@ sub default_options {
       {
         'logic_name'    => 'pirsf',
         'db'            => 'PIRSF',
-        'db_version'    => '3.01',
+        'db_version'    => '3.02',
         'ipscan_name'   => 'PIRSF',
         'ipscan_xml'    => 'PIRSF',
         'ipscan_lookup' => 1,
@@ -150,7 +150,7 @@ sub default_options {
       {
         'logic_name'    => 'scanprosite',
         'db'            => 'Prosite_patterns',
-        'db_version'    => '20.119',
+        'db_version'    => '20.132',
         'ipscan_name'   => 'ProSitePatterns',
         'ipscan_xml'    => 'PROSITE_PATTERNS',
         'ipscan_lookup' => 1,
