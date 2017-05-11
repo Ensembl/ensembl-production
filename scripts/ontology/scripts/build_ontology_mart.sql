@@ -446,4 +446,7 @@ ALTER TABLE %MART_NAME%.closure_SO_mini__closure_mini__main CHANGE COLUMN closur
 CREATE TABLE %MART_NAME%.closure_SO_regulation__closure_regulation__main LIKE %MART_NAME%.closure_SO__closure__main;
 INSERT %MART_NAME%.closure_SO_regulation__closure_regulation__main SELECT * FROM %MART_NAME%.closure_SO__closure__main;
 ALTER TABLE %MART_NAME%.closure_SO_regulation__closure_regulation__main CHANGE COLUMN closure_id_301_key closure_regulation_id_301_key int(10) unsigned NOT NULL DEFAULT '0';
+CREATE TABLE %MART_NAME%.closure_SO_motif__closure_motif__main LIKE %MART_NAME%.closure_SO__closure__main;
+INSERT %MART_NAME%.closure_SO_motif__closure_motif__main SELECT * FROM %MART_NAME%.closure_SO__closure__main;
+ALTER TABLE %MART_NAME%.closure_SO_motif__closure_motif__main CHANGE COLUMN closure_id_301_key closure_motif_id_301_key int(10) unsigned NOT NULL DEFAULT '0';
 DROP TABLE %MART_NAME%.TEMP_ONTOLOGY;
