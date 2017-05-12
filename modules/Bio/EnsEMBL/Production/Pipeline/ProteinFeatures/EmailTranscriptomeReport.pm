@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailTranscriptomeR
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EmailReport');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::EmailReport');
 
 use Path::Tiny qw(path);
 
