@@ -134,8 +134,9 @@ sub division {
     my ($self) = @_;
     my $division;
     my $dba        = $self->get_DBAdaptor('core');
-    if(defined $division) {
+    if(defined $dba) {
       ($division) = @{$dba->get_MetaContainer()->list_value_by_key('species.division')};
+      $dba->dbc()->disconnect_if_idle();
     }
     return if ! $division;
     $division =~ s/^Ensembl//;
