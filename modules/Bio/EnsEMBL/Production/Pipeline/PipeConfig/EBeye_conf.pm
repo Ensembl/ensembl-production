@@ -84,7 +84,7 @@ sub pipeline_analyses {
     
       {
         -logic_name => 'ScheduleSpecies',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::SpeciesFactory',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SpeciesFactory',
         -parameters => {
           species => $self->o('species'),
           randomize => 1,
