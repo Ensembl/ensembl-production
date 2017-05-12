@@ -32,7 +32,7 @@ use File::Path qw(make_path);
 use Carp qw(croak);
 
 use Log::Log4perl qw/:easy/;
-
+use Data::Dumper;
 sub run {
 	my ($self) = @_;
 	if ( $self->debug() ) {
@@ -78,6 +78,7 @@ sub write_variants {
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
 	my $n = 0;
+	print $json_file '[' unless defined $offset;
 	Bio::EnsEMBL::Production::Search::VariationFetcher->new()
 	  ->fetch_variations_callback(
 		$dba, $offset, $length,
@@ -86,11 +87,13 @@ sub write_variants {
 			if ( $n++ > 0 ) {
 				print $json_file ',';
 			}
-			print $json_file encode_json($var);
+			my $j = encode_json($var);
+			print $json_file $j;
 			return;
 		} );
-	close $json_file;
-	$self->{logger}->info("Wrote $n variants");
+	print $json_file ']' unless defined $offset;
+	close $json_file ||throw "Could not close $json_file_path";
+	$self->{logger}->info("Wrote $n variants to $json_file_path");
 	return $json_file_path;
 } ## end sub write_variants
 
