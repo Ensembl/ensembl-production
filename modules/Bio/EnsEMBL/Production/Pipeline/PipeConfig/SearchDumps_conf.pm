@@ -79,7 +79,7 @@ sub pipeline_analyses {
     -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
     -parameters => {
     },
-    -analysis_capacity => 4,
+    -analysis_capacity => 8,
     -rc_name => '32g',
     -flow_into => {
     }
@@ -97,6 +97,7 @@ sub pipeline_analyses {
   },
     {
     -logic_name => 'DumpVariantJson',
+     -analysis_capacity => 8,
     -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
     -rc_name => '32g',
     -flow_into => {
