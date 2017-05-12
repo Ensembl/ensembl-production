@@ -18,7 +18,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory;
+ Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory;
 
 =head1 DESCRIPTION
 
@@ -35,13 +35,13 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory;
+package Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory;
 
 use strict;
 use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub param_defaults {
   my ($self) = @_;

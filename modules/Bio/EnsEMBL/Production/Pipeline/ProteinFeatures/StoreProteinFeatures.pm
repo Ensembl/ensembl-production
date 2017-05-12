@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeature
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use Bio::EnsEMBL::DBEntry;
 use Bio::EnsEMBL::ProteinFeature;

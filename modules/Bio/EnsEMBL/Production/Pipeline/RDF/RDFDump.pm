@@ -31,7 +31,7 @@ package Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump;
 use strict;
 use warnings;
 
-use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
+use parent ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 use Bio::EnsEMBL::RDF::EnsemblToTripleConverter;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
@@ -101,7 +101,7 @@ sub run {
 
     my $is_human;
     $is_human = 1 if $species eq 'homo_sapiens';
-    my $slices = $self->get_Slices(undef,$is_human); # see Production::Pipeline::Base;
+    my $slices = $self->get_Slices(undef,$is_human); # see Production::Pipeline::Common::Base;
     $triple_converter->print_seq_regions($slices);
 
     # Fetch all the things!

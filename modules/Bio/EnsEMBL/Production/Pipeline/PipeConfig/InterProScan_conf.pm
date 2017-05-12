@@ -389,7 +389,7 @@ sub pipeline_analyses {
     },
 
     { -logic_name      => 'job_factory',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
       -parameters      => {
                             species      => $self->o('species'),
                             antispecies  => $self->o('antispecies'),

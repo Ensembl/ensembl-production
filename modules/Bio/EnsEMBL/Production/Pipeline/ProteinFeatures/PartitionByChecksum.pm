@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::PartitionByChecksum
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use Bio::SeqIO;
 use DBI qw(:sql_types);

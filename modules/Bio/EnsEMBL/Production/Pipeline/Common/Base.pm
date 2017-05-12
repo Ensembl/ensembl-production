@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Base;
+ Bio::EnsEMBL::Production::Pipeline::Common::Base;
 
 =head1 DESCRIPTION
 
@@ -27,7 +27,7 @@ limitations under the License.
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::Base;
+package Bio::EnsEMBL::Production::Pipeline::Common::Base;
 
 use strict;
 use warnings;

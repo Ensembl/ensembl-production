@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::GenerateSolr;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use Path::Tiny qw(path);
 

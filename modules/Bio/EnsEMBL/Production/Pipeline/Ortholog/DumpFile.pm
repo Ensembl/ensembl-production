@@ -35,7 +35,7 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catdir);
-use base('Bio::EnsEMBL::Production::Pipeline::Base');
+use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub param_defaults {
     return {

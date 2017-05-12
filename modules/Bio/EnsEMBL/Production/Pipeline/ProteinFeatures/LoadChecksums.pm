@@ -23,7 +23,7 @@ use warnings;
 
 use File::Basename;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
   my ($self) = @_;

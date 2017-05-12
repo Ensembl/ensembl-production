@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::Release::DBCopyPatch;
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
-use base('Bio::EnsEMBL::Production::Pipeline::Base');
+use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub fetch_input {
   my ($self) = @_;

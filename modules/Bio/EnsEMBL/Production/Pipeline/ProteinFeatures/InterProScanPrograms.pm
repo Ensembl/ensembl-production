@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScanProgram
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
   my ($self) = @_;

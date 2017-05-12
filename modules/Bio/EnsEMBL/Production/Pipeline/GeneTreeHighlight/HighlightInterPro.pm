@@ -34,7 +34,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Compara::DBSQL::XrefAssociationAdaptor;
-use base('Bio::EnsEMBL::Production::Pipeline::Base');
+use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub param_defaults {
     return {

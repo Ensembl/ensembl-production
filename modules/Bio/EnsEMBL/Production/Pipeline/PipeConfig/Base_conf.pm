@@ -50,5 +50,15 @@ sub beekeeper_extra_cmdline_options {
   return $options;
 }
 
+sub resource_classes {
+    my $self = shift;
+    return {
+	    %{$self->SUPER::resource_classes},
+      'default' => { 'LSF' => '-q production-rh7'},
+      'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
+    }
+
+}
 
 1;

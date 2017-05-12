@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ProcessTranscriptom
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use File::Basename;
 use File::Spec::Functions qw(catdir);

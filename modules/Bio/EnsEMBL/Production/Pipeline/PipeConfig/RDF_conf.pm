@@ -71,7 +71,7 @@ sub pipeline_analyses {
   my $self = shift;
   return [ {
     -logic_name => 'ScheduleSpecies',
-    -module     => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
     -input_ids => [{}], # required for automatic seeding
     -parameters => {
        species     => $self->o('species'),

@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::GTF::EmailSummary;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use Bio::EnsEMBL::Hive::Utils qw/destringify/;
 
 sub fetch_input {

@@ -325,7 +325,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SpeciesFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
                               species         => $self->o('species'),
@@ -346,7 +346,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'BackupTables',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::DatabaseDumper',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
       -max_retry_count   => 1,
       -parameters        => {
                               table_list  => [
@@ -384,7 +384,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'AnalysisSetup',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::AnalysisSetup',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count   => 0,
       -parameters        => {
                               db_backup_required => 1,
@@ -399,7 +399,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'RemoveOrphans',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::SqlCmd',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
       -max_retry_count   => 0,
       -parameters        => {
                               sql => [
@@ -671,7 +671,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForDumpingInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),
@@ -719,7 +719,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForStoringInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),

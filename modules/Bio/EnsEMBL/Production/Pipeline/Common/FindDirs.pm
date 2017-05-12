@@ -46,11 +46,11 @@ Allowed parameters are:
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::FindDirs;
+package Bio::EnsEMBL::Production::Pipeline::Common::FindDirs;
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Production::Pipeline::Base;
+use Bio::EnsEMBL::Production::Pipeline::Common::Base;
 
 use base qw/Bio::EnsEMBL::Hive::RunnableDB::JobFactory/;
 

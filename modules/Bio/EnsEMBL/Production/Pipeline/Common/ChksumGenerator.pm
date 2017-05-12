@@ -38,11 +38,11 @@ file, parent directory or any hidden files.
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::ChksumGenerator;
+package Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use Cwd;
 use File::Spec;
 use Data::Dumper;

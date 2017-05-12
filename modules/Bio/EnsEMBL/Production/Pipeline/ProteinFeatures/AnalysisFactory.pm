@@ -20,7 +20,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisFactory;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub write_output {
   my ($self) = @_;

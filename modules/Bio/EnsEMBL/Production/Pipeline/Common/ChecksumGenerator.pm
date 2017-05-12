@@ -50,12 +50,12 @@ Allowed parameters are:
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator;
+package Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator;
 
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use File::Spec;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
