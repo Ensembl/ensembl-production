@@ -186,12 +186,20 @@ sub _fetch_synonyms {
 
 sub _fetch_phenotype_features {
 	my ( $self, $h, $min, $max ) = @_;
+	# only query if we have data to avoid nulls
+	my $pfs = $h->execute_simple(-SQL=>q/select pf.object_id 
+from phenotype_feature pf
+where pf.type = 'Variation' and pf.is_significant = 1
+LIMIT 1/);
+	if(scalar(@$pfs)==0) {
+	  $logger->debug("No phenotype features found");
+	  return {};
+	}
 	$logger->debug("Fetching phenotypes for $min/$max");
 	my $phenotypes = $self->_fetch_all_phenotypes($h);
 	my $sources    = $self->_fetch_all_sources($h);
 	my $studies    = $self->_fetch_all_studies($h);
-	return $h->execute_into_hash(
-		-SQL => q/SELECT 
+	my $sql = q/SELECT 
 		v.variation_id, 
 		pf.phenotype_id,
 		pf.study_id,
@@ -207,9 +215,12 @@ sub _fetch_phenotype_features {
                  join attrib_type AS at2 on (av.attrib_type_id = at2.attrib_type_id and at2.code = 'variation_names' ))
            USING (phenotype_feature_id)
      WHERE 
-     v.variation_id between ? AND ?
+     v.variation_id is not null 
+     AND v.variation_id between ? AND ?
      AND pf.type = 'Variation'
-     AND pf.is_significant = 1/,
+     AND pf.is_significant = 1/;
+	return $h->execute_into_hash(
+		-SQL => $sql,
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
@@ -232,9 +243,10 @@ sub _fetch_features {
 		tv.polyphen_prediction, tv.polyphen_score,
 		tv.sift_prediction, tv.sift_score
      FROM 
-     MTMP_transcript_variation tv
+     transcript_variation tv
+     JOIN variation_feature vf USING (variation_feature_id)
      WHERE 
-     tv.variation_id between ? AND ?/,
+     vf.variation_id between ? AND ?/,
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
