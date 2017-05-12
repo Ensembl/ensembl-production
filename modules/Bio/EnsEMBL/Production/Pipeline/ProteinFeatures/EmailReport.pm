@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::EmailReport');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::EmailReport');
 
 sub fetch_input {
   my ($self) = @_;
