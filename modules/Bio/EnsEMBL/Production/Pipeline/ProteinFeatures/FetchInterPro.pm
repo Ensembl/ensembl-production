@@ -38,7 +38,7 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::FetchExternal');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::FetchExternal');
 
 use File::Spec::Functions qw(catdir);
 use Path::Tiny;

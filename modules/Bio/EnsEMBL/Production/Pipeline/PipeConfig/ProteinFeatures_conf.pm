@@ -419,7 +419,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'DeleteInterPro',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::SqlCmd',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
       -max_retry_count   => 0,
       -parameters        => {
                               sql => [
@@ -449,7 +449,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'DumpProteome',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::DumpProteome',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
       -max_retry_count   => 0,
       -parameters        => {
                               proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
@@ -468,7 +468,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SplitDumpFile',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::FastaSplit',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
       -parameters        => {
                               fasta_file              => '#proteome_file#',
@@ -526,7 +526,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SplitChecksumFile',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::FastaSplit',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
       -parameters        => {
                               fasta_file              => '#checksum_file#',
@@ -544,7 +544,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SplitNoChecksumFile',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::FastaSplit',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
       -parameters        => {
                               fasta_file              => '#nochecksum_file#',
@@ -739,7 +739,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'StoreInterProXrefs',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::RunnableDB::SqlCmd',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
       -parameters      => {
                             sql =>
                             [
@@ -764,6 +764,7 @@ sub resource_classes {
   return {
     %{$self->SUPER::resource_classes},
     '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
+    '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,tmp=4000]"'}
   }
 }
 
