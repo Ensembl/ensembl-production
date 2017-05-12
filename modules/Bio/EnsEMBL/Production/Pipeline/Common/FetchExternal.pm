@@ -34,11 +34,11 @@ James Allen
 
 =cut
 
-package Bio::EnsEMBL::EGPipeline::Common::RunnableDB::FetchExternal;
+package Bio::EnsEMBL::Production::Pipeline::Common::FetchExternal;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::EGPipeline::Common::RunnableDB::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use File::Copy qw(copy);
 use File::Spec::Functions qw(catdir);
