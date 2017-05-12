@@ -44,19 +44,28 @@ sub run {
 	else {
 		Log::Log4perl->easy_init($INFO);
 	}
+	my $compara = $self->param('compara');
+	if(!defined $compara) {
+		$compara = $self->division();
+		if(!defined $compara || $compara eq '') {
+			$compara = 'multi';
+		}
+	}
+	
 	my $logger = get_logger();
-	if ( $self->param('species') ne "Ancestral sequences" ) {
-		$logger->info("Dumping genome for ".$self->param('species'));
-		$self->dump_genome( $self->param('species'), $self->param('compara') );
-		$logger->info("Dumping genes for ".$self->param('species'));
-		$self->dump_genes( $self->param('species'), $self->param('compara') );
-		$logger->info("Dumping sequences for ".$self->param('species'));
-		$self->dump_sequences( $self->param('species') );
-		$logger->info("Dumping markers for ".$self->param('species'));
-		$self->dump_lrgs( $self->param('species') );
-		$logger->info("Dumping markers for ".$self->param('species'));
-		$self->dump_markers( $self->param('species') );
-		$logger->info("Completed dumping ".$self->param('species'));
+	my $species = $self->param('species');
+	if ( $species ne "Ancestral sequences" ) {
+		$logger->info("Dumping genome for ".$species);
+		$self->dump_genome( $species );
+		$logger->info("Dumping genes for ".$species);
+		$self->dump_genes( $species, $compara );
+		$logger->info("Dumping sequences for ".$species);
+		$self->dump_sequences( $species );
+		$logger->info("Dumping markers for ".$species);
+		$self->dump_lrgs( $species );
+		$logger->info("Dumping markers for ".$species);
+		$self->dump_markers( $species );
+		$logger->info("Completed dumping ".$species);
 	}
 	return;
 }
