@@ -35,7 +35,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory;
+package Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory;
 
 use strict;
 use warnings;
