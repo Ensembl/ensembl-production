@@ -603,8 +603,16 @@ sub get_haplotypes {
 
 sub add_compara {
 	my ( $self, $species, $genes, $compara_dba ) = @_;
-	my $homologues = {};
 	warn "Adding compara...\n";
+	$self->add_homologues( $species, $genes, $compara_dba );
+	$self->add_family( $species, $genes, $compara_dba );
+	warn "Finished adding compara...\n";
+	return;
+}
+
+sub add_homologues {
+	my ( $self, $species, $genes, $compara_dba ) = @_;
+	my $homologues = {};
 	$compara_dba->dbc()->sql_helper()->execute_no_return(
 		-SQL => q/
 SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id
@@ -630,19 +638,66 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
 			return;
 		},
 		-PARAMS => [$species] );
-
+	my $n = 0;
 	for my $gene ( @{$genes} ) {
 		if ( !defined $gene->{id} ) {
 			throw("No stable ID for gene");
 		}
 		my $homo = $homologues->{ $gene->{id} };
 		if ( defined $homo ) {
+			$n++;
 			$gene->{homologues} = $homo;
 		}
 	}
-	warn "Finished adding compara...\n";
+	print "Added homologues to $n genes\n";
 	return;
-} ## end sub add_compara
+} ## end sub add_homologues
+
+sub add_family {
+	my ( $self, $species, $genes, $compara_dba ) = @_;
+	my $families = {};
+	# hash all families for this genome by sequence stable_id
+	$compara_dba->dbc()->sql_helper()->execute_no_return(
+		-SQL => q/
+SELECT s.stable_id, f.stable_id, f.version, f.description
+FROM family f
+JOIN family_member fm USING (family_id)
+JOIN seq_member s USING (seq_member_id)
+JOIN genome_db g USING (genome_db_id)
+WHERE g.name = ?/,
+		-CALLBACK => sub {
+			my ($row) = @_;
+			my $f = { stable_id => $row->[1] };
+			$f->{version}     = $row->[2] if ( defined $row->[2] );
+			$f->{description} = $row->[3] if ( defined $row->[3] );
+			push @{ $families->{ $row->[0] } }, $f;
+			return;
+		},
+		-PARAMS => [$species] );
+
+		my $n = 0;
+	# add families for each member
+	for my $gene ( @{$genes} ) {
+
+		for my $transcript ( @{ $gene->{transcripts} } ) {
+			my $family = $families->{ $transcript->{id} };
+			if ( defined $family ) {
+				$n++;
+				$transcript->{families} = $family;
+			}
+
+			for my $translation ( @{ $transcript->{translations} } ) {
+				$family = $families->{ $translation->{id} };
+				if ( defined $family ) {
+					$n++;
+					$translation->{families} = $family;
+				}
+			}
+		}
+	}
+	print "Added families to $n objects\n";
+	return;
+} ## end sub add_family
 
 my $probe_set_sql = q/select distinct
     probe_set_transcript.stable_id AS transcript_stable_id,
@@ -674,7 +729,7 @@ where
 sub add_funcgen {
 	my ( $self, $genes, $funcgen_dba ) = @_;
 	my $probes = {};
-	for my $sql ( $probe_set_sql ) {
+	for my $sql ($probe_set_sql) {
 		$funcgen_dba->dbc()->sql_helper()->execute_no_return(
 			-SQL      => $sql,
 			-CALLBACK => sub {
