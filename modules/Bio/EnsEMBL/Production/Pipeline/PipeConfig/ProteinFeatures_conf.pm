@@ -325,7 +325,7 @@ sub pipeline_analyses {
     
     {
       -logic_name        => 'SpeciesFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -max_retry_count   => 1,
       -parameters        => {
                               species         => $self->o('species'),
@@ -671,7 +671,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForDumpingInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),
@@ -719,7 +719,7 @@ sub pipeline_analyses {
     
     {
       -logic_name      => 'SpeciesFactoryForStoringInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters      => {
                             species         => $self->o('species'),
                             antispecies     => $self->o('antispecies'),
