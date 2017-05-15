@@ -263,16 +263,26 @@ sub run {
       # We store as URS0000007FBA, so need to remove everything from the _
       my ($go_evidence, $tgt_species, $precursor_rna) = split /\|/, $annotation_properties;
       $precursor_rna =~ s/precursor_rna=// if $precursor_rna;
-      $precursor_rna =~ s/_[0-9]*// if $precursor_rna;
       $go_evidence =~ s/go_evidence=// if $go_evidence;
-      $db_object_id = $precursor_rna;
-      my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNACentral');
-      if ($rnacentral_xrefs) {
-        $master_xref = $rnacentral_xrefs->[0];
-        $go_xref->add_linkage_type($go_evidence, $master_xref);
-       } else {
-        $unmatched_rnacentral{$tgt_species}++;
-       }
+      # precursor_rna could be a list of accessions
+      my @precursor_rnas = split(",", $precursor_rna) if $precursor_rna;
+      foreach my $rna (@precursor_rnas) {
+        $rna =~ s/_[0-9]*//;
+        $db_object_id = $rna;
+        my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNACentral');
+        if ($rnacentral_xrefs) {
+          $master_xref = $rnacentral_xrefs->[0];
+          $go_xref->add_linkage_type($go_evidence, $master_xref);
+          $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
+  
+          foreach my $transcript (@$transcripts) {
+            $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
+            $species_added_via_xref{$tgt_species}++;
+           }
+        } else {
+          $unmatched_rnacentral{$tgt_species}++;
+        }
+      }
    }
 
    # If GOA did not provide a tgt_feature, we have to guess the correct target based on our xrefs
