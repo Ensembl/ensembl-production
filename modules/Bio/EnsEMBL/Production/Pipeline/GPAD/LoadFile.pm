@@ -202,7 +202,7 @@ sub run {
      $analysis = Bio::EnsEMBL::Analysis->
         new( -logic_name      => 'goa_import',
              -db              => 'GO',
-             -db_version      => '',
+             -db_version      => undef,
              -program         => 'goa_import',
              -description     => 'Gene Ontology xrefs data from GOA',
              -display_label   => 'GO xrefs from GOA',
