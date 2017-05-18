@@ -196,7 +196,7 @@ sub fetch_probes_for_dba {
 				seq_region_name => $row->{seq_region_name},
 				start           => $row->{start},
 				end             => $row->{end},
-				strand          => { $row->{strand} } };
+				strand          => $row->{strand} };
 			return;
 		} );
 	# probe sets
