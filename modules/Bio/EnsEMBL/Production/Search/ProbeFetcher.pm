@@ -119,7 +119,7 @@ sub fetch_probes_for_dba {
 #		  # probes
 
 	my $species = $dba->species();
-
+	$logger->info("Fetching transcripts");
 	my $transcripts = {};
 	$core_dba->dbc()->sql_helper()->execute_no_return(
 		-SQL => q/select t.stable_id, g.stable_id, x.display_label 
@@ -133,7 +133,10 @@ sub fetch_probes_for_dba {
 			$transcripts->{ $row->[0] } = $t;
 			return;
 		} );
+	$logger->info( "Fetched details for " .
+				   scalar( keys %$transcripts ) . " transcripts" );
 
+	$logger->info("Fetching probe transcripts");
 	my $probe_transcripts = {};
 	$dba->dbc()->sql_helper()->execute_no_return(
 		-SQL =>
@@ -145,8 +148,11 @@ sub fetch_probes_for_dba {
 			$probe_transcripts->{ $row->[0] }->{description} = $row->[2];
 			return;
 		} );
+	$logger->info( "Fetched details for " .
+				   scalar( keys %$probe_transcripts ) . " probe_transcripts" );
 
 	# load probes
+	$logger->info("Fetching probes");
 	my $probes        = {};
 	my $probes_by_set = {};
 	$dba->dbc()->sql_helper()->execute_no_return(
@@ -187,13 +193,15 @@ sub fetch_probes_for_dba {
 				push @{ $probes_by_set->{ $row->{probe_set_id} } }, $p;
 			}
 			push @{ $p->{locations} }, {
-						 seq_region_name => $row->{seq_region_name},
-						 start           => $row->{start},
-						 end             => $row->{end},
-						 strand          => { $row->{strand} } };
+				seq_region_name => $row->{seq_region_name},
+				start           => $row->{start},
+				end             => $row->{end},
+				strand          => { $row->{strand} } };
 			return;
 		} );
 	# probe sets
+	$logger->info(
+				 "Fetched details for " . scalar( keys %$probes ) . " probes" );
 
 	return { probes => [ values %{$probes} ] };
 } ## end sub fetch_probes_for_dba
