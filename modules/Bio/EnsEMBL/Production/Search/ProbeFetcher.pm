@@ -152,7 +152,7 @@ sub fetch_probes_for_dba {
 	$dba->dbc()->sql_helper()->execute_no_return(
 		-SQL => q/SELECT
       p.probe_id as id,
-      p.probe_name as probe_name,
+      p.name as name,
       p.probe_set_id as probe_set_id,
       array_chip.name as array_chip,
       array.name as array,
