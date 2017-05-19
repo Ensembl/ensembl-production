@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson;
+package Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson;
 
 use strict;
 use warnings;
@@ -38,16 +38,19 @@ use Data::Dumper;
 
 sub dump {
 	my ( $self, $species ) = @_;
-	$self->{logger}->info("Dumping regulatory features for $species");
-	my $elems =
-	  Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()
-	  ->fetch_regulatory_elements($species);
+	$self->{logger}->info("Dumping probes for $species");
+	my $all_probes = Bio::EnsEMBL::Production::Search::ProbeFetcher->new()
+	  ->fetch_probes($species);
+	my $probes = $all_probes->{probes};
+	$self->{logger}
+	  ->info( "Dumped " . scalar( @{$probes} ) . " probes for $species" );
+	$self->write_json( $species, 'probes', $probes ) if scalar(@$probes) > 0;
+	my $probe_sets = $all_probes->{probe_sets};
 	$self->{logger}->info(
-			"Dumped " . scalar(@$elems) . " regulatory features for $species" );
-	$self->write_json( $species, 'regulatory_elements', $elems )
-	  if scalar(@$elems) > 0;
+			"Dumped " . scalar( @{$probe_sets} ) . " probe sets for $species" );
+	$self->write_json( $species, 'probe_sets', $probe_sets )
+	  if scalar(@$probe_sets) > 0;
 	return;
 }
-
 
 1;

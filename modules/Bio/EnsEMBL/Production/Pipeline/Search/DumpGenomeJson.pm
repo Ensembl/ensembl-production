@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Search::BaseDumpJson/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 
@@ -36,36 +36,27 @@ use Bio::EnsEMBL::Production::Search::LRGFetcher;
 
 use Log::Log4perl qw/:easy/;
 
-sub run {
-	my ($self) = @_;
-	if ( $self->debug() ) {
-		Log::Log4perl->easy_init($DEBUG);
-	}
-	else {
-		Log::Log4perl->easy_init($INFO);
-	}
-	my $compara = $self->param('compara');
-	if(!defined $compara) {
-		$compara = $self->division();
-		if(!defined $compara || $compara eq '') {
-			$compara = 'multi';
-		}
-	}
-	
-	my $logger = get_logger();
-	my $species = $self->param('species');
+sub dump {
+	my ( $self, $species ) = @_;
 	if ( $species ne "Ancestral sequences" ) {
-		$logger->info("Dumping genome for ".$species);
-		$self->dump_genome( $species );
-		$logger->info("Dumping genes for ".$species);
+		my $compara = $self->param('compara');
+		if ( !defined $compara ) {
+			$compara = $self->division();
+			if ( !defined $compara || $compara eq '' ) {
+				$compara = 'multi';
+			}
+		}
+		$self->{logger}->info( "Dumping genome for " . $species );
+		$self->dump_genome($species);
+		$self->{logger}->info( "Dumping genes for " . $species );
 		$self->dump_genes( $species, $compara );
-		$logger->info("Dumping sequences for ".$species);
-		$self->dump_sequences( $species );
-		$logger->info("Dumping markers for ".$species);
-		$self->dump_lrgs( $species );
-		$logger->info("Dumping markers for ".$species);
-		$self->dump_markers( $species );
-		$logger->info("Completed dumping ".$species);
+		$self->{logger}->info( "Dumping sequences for " . $species );
+		$self->dump_sequences($species);
+		$self->{logger}->info( "Dumping markers for " . $species );
+		$self->dump_lrgs($species);
+		$self->{logger}->info( "Dumping markers for " . $species );
+		$self->dump_markers($species);
+		$self->{logger}->info( "Completed dumping " . $species );
 	}
 	return;
 }
@@ -97,39 +88,25 @@ sub dump_genes {
 sub dump_sequences {
 	my ( $self, $species ) = @_;
 	my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
-	  ->fetch_sequences( $species );
-	$self->write_json($species,'sequences',$sequences) if scalar(@$sequences)>0;
+	  ->fetch_sequences($species);
+	$self->write_json( $species, 'sequences', $sequences )
+	  if scalar(@$sequences) > 0;
 	return;
 }
 
 sub dump_markers {
 	my ( $self, $species ) = @_;
 	my $markers = Bio::EnsEMBL::Production::Search::MarkerFetcher->new()
-	  ->fetch_markers( $species );
-	$self->write_json($species,'markers',$markers) if scalar(@$markers)>0;
+	  ->fetch_markers($species);
+	$self->write_json( $species, 'markers', $markers ) if scalar(@$markers) > 0;
 	return;
 }
 
 sub dump_lrgs {
 	my ( $self, $species ) = @_;
-		my $lrgs = Bio::EnsEMBL::Production::Search::LRGFetcher->new()
-	  ->fetch_lrgs( $species );
-	$self->write_json($species,'lrgs',$lrgs)
-	 if scalar(@$lrgs)>0;
-	return;
-}
-
-sub write_json {
-	my ( $self, $species, $type, $data ) = @_;
-	$self->build_base_directory();
-	my $sub_dir        = $self->get_data_path('json');
-	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
-	$self->info("Writing to $json_file_path");
-	open my $json_file, '>', $json_file_path or
-	  throw "Could not open $json_file_path for writing";
-	print $json_file encode_json($data);
-	close $json_file;
-	$self->info("Write complete");
+	my $lrgs =
+	  Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs($species);
+	$self->write_json( $species, 'lrgs', $lrgs ) if scalar(@$lrgs) > 0;
 	return;
 }
 

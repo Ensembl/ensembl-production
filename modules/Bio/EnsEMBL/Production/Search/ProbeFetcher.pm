@@ -52,15 +52,32 @@ sub new {
 }
 
 sub fetch_probes {
-	my ( $self, $name ) = @_;
+	my ( $self, $name, $offset, $length ) = @_;
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'funcgen' );
 	croak "Could not find database adaptor for $name" unless defined $dba;
 	my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'core' );
-	return $self->fetch_probes_for_dba( $dba, $core_dba );
+	return $self->fetch_probes_for_dba( $dba, $core_dba, $offset, $length );
 }
 
 sub fetch_probes_for_dba {
-	my ( $self, $dba, $core_dba ) = @_;
+	my ( $self, $dba, $core_dba, $offset, $length ) = @_;
+
+	my $h = $dba->dbc()->sql_helper();
+
+	my $min;
+	my $max;
+	if ( defined $offset && defined $length ) {
+		$min = $offset;
+		$max = $offset + $length - 1;
+	}
+	else {
+		$min = $h->execute_single_result(
+						  -SQL => "select min(probe_id) from probe" );
+		$max = $h->execute_single_result(
+									-SQL => "select max(probe_id) from probe" );
+	}
+	
+	$logger->info("Dumping probe.probe_id from $min-$max");
 
 	my $all_probes = {};
 
@@ -84,15 +101,14 @@ sub fetch_probes_for_dba {
 
 	$logger->info("Fetching probe transcripts");
 	my $probe_transcripts = {};
-	$dba->dbc()->sql_helper()->execute_no_return(
+	$h->execute_no_return(
 		-SQL =>
 		  q/select probe_id, stable_id, description from probe_transcript/,
 		-CALLBACK => sub {
 			my $row = shift @_;
-			my $t = $transcripts->{ $row->[1] };
-			die Dumper($row->[1]) unless defined $t;
-			$probe_transcripts->{ $row->[0] } =
-			  { %{ $t } };
+			my $t   = $transcripts->{ $row->[1] };
+			die Dumper( $row->[1] ) unless defined $t;
+			$probe_transcripts->{ $row->[0] } = { %{$t} };
 			$probe_transcripts->{ $row->[0] }->{description} = $row->[2];
 			return;
 		} );
@@ -103,7 +119,7 @@ sub fetch_probes_for_dba {
 	$logger->info("Fetching probes");
 	my $probes        = {};
 	my $probes_by_set = {};
-	$dba->dbc()->sql_helper()->execute_no_return(
+	$h->execute_no_return(
 		-SQL => q/SELECT
       p.probe_id as id,
       p.name as name,
@@ -150,8 +166,8 @@ sub fetch_probes_for_dba {
 	# probe sets
 	$logger->info(
 				 "Fetched details for " . scalar( keys %$probes ) . " probes" );
-	my $probe_sets = [];			 
-	$dba->dbc()->sql_helper()->execute_no_return(
+	my $probe_sets = [];
+	$h->execute_no_return(
 		-SQL => q/SELECT
       ps.probe_set_id as id,
       ps.name as name,
@@ -164,16 +180,15 @@ sub fetch_probes_for_dba {
       join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
       join array using (array_id)/,
 		-USE_HASHREFS => 1,
-		-CALLBACK     => sub {	
+		-CALLBACK     => sub {
 			my $row = shift @_;
 			my $id  = $species . '_probeset_' . $row->{id};
-			$row->{probes} = $probes_by_set->{$row->{id}};
-			$row->{id} = $id;
+			$row->{probes} = $probes_by_set->{ $row->{id} };
+			$row->{id}     = $id;
 			delete $row->{family} unless defined $row->{family};
 			push @{$probe_sets}, $row;
 			return;
-		}
-		);	 
+		} );
 
 	return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
 } ## end sub fetch_probes_for_dba

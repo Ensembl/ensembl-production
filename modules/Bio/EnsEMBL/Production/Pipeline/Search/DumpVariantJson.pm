@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Search::BaseDumpJson/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use Bio::EnsEMBL::Production::Search::VariationFetcher;
@@ -32,20 +32,9 @@ use File::Path qw(make_path);
 use Carp qw(croak);
 
 use Log::Log4perl qw/:easy/;
-use Data::Dumper;
-sub run {
-	my ($self) = @_;
-	if ( $self->debug() ) {
-		Log::Log4perl->easy_init($DEBUG);
-	}
-	else {
-		Log::Log4perl->easy_init($INFO);
-	}
-	$self->{logger} = get_logger();
-	$self->build_base_directory();
-	my $sub_dir = $self->get_data_path('json');
 
-	my $species = $self->param_required('species');
+sub dump {
+	my ($self, $species) = @_;
 
 	$self->{logger}->debug("Fetching DBA for $species");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
