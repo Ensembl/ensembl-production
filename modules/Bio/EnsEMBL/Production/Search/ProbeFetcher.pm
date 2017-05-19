@@ -41,6 +41,7 @@ use Carp qw/croak/;
 
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
+use Data::Dumper;
 
 my $logger = get_logger();
 
@@ -125,7 +126,7 @@ sub fetch_probes_for_dba {
 		-SQL => q/select t.stable_id, g.stable_id, x.display_label 
 	from transcript t
 	join gene g using (gene_id)
-	join xref x on (g.display_xref_id=x.xref_id)/,
+	left join xref x on (g.display_xref_id=x.xref_id)/,
 		-CALLBACK => sub {
 			my $row = shift @_;
 			my $t = { id => $row->[0], gene_id => $row->[1] };
@@ -143,8 +144,10 @@ sub fetch_probes_for_dba {
 		  q/select probe_id, stable_id, description from probe_transcript/,
 		-CALLBACK => sub {
 			my $row = shift @_;
+			my $t = $transcripts->{ $row->[1] };
+			die Dumper($row->[1]) unless defined $t;
 			$probe_transcripts->{ $row->[0] } =
-			  { %{ $transcripts->{ $row->[1] } } };
+			  { %{ $t } };
 			$probe_transcripts->{ $row->[0] }->{description} = $row->[2];
 			return;
 		} );
@@ -202,8 +205,32 @@ sub fetch_probes_for_dba {
 	# probe sets
 	$logger->info(
 				 "Fetched details for " . scalar( keys %$probes ) . " probes" );
+	my $probe_sets = [];			 
+	$dba->dbc()->sql_helper()->execute_no_return(
+		-SQL => q/SELECT
+      ps.probe_set_id as id,
+      ps.name as name,
+      ps.family as family,
+      array_chip.name as array_chip,
+      array.name as array,
+      array.vendor as array_vendor
+    FROM
+      probe_set ps
+      join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
+      join array using (array_id)/,
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {	
+			my $row = shift @_;
+			my $id  = $species . '_probeset_' . $row->{id};
+			$row->{probes} = $probes_by_set->{$row->{id}};
+			$row->{id} = $id;
+			delete $row->{family} unless defined $row->{family};
+			push @{$probe_sets}, $row;
+			return;
+		}
+		);	 
 
-	return { probes => [ values %{$probes} ] };
+	return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
 } ## end sub fetch_probes_for_dba
 
 1;
