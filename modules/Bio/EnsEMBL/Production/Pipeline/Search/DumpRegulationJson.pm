@@ -49,7 +49,7 @@ sub run {
 
 	my $species = $self->param_required('species');
 
-	#$self->dump_features($species);
+	$self->dump_features($species);
 	$self->dump_probes($species);
 
 	return;
