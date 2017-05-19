@@ -64,61 +64,6 @@ sub fetch_probes_for_dba {
 
 	my $all_probes = {};
 
-	#	my $probe_set_transcripts = {};
-	#	$dba->dbc()->sql_helper()->execute_no_return(
-	#		-SQL => q/select probe_set_id, stable_id from probe_set_transcript/,
-	#		-CALLBACK => sub {
-	#			my $row = shift @_;
-	#			$probe_set_transcripts->{ $row->[0] } = $transcripts->{ $row->[1] };
-	#			return;
-	#		} );
-
-#		  my $species = $dba->species();
-#		  # probe sets
-#		  $dba->dbc()->sql_helper()->execute_no_return(
-#			-SQL => q/SELECT
-#      ps.probe_set_id as id,
-#	  ps.name as probe_set_name,
-#      p.probe_name as probe_name,
-#      array_chip.name as array_chip,
-#      array.name as array,
-#      array.vendor as array_vendor,
-#      sr.name as seq_region_name,
-#      pf.seq_region_start as start,
-#      pf.seq_region_end as end,
-#      pf.seq_region_strand as strand
-#    FROM
-#      probe_set ps
-#      join probe p using (probe_set_id)
-#      join probe_feature pf using (probe_id)
-#      join seq_region sr using (seq_region_id)
-#      JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id  AND sr.schema_build=cs.schema_build)
-#      join array_chip on (probe.array_chip_id=array_chip.array_chip_id)
-#      join array using (array_id)
-#	WHERE
-#		cs.is_current=1/,
-#			-USE_HASHREFS => 1,
-#			-CALLBACK     => sub {
-#				my $row = shift @_;
-#				my $id  = $species . '_probeset_' . $row->{id};
-#				my $p   = $probes->{$id};
-#				if ( !defined $p ) {
-#					$p = {%$row};
-#					delete $p->{seq_region_name};
-#					delete $p->{start};
-#					delete $p->{end};
-#					delete $p->{strand};
-#					$probes->{$id} = $p;
-#				}
-#				push @{ $p->{locations} }, {
-#					seq_region_name => $row->{seq_region_name},
-#					start           => $row->{start},
-#					end             => $row->{end},
-#					strand          => { $row->{strand} } };
-#				return;
-#			} );
-#		  # probes
-
 	my $species = $dba->species();
 	$logger->info("Fetching transcripts");
 	my $transcripts = {};
