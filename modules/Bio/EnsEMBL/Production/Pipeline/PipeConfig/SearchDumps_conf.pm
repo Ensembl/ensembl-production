@@ -65,11 +65,11 @@ sub pipeline_analyses {
 							run_all     => $self->o('run_all') },
 		   -rc_name   => '1g',
 		   -flow_into => { 2      => ['DumpGenomeJson'],
-						   '4->A' => ['VariantDumpFactory'],
-						   'A->4' => ['VariantDumpMerge'],
-						   6      => ['DumpRegulationJson'],
-						   6      => ['DumpProbesJson'] } }, {
-		   -logic_name => 'DumpGenomeJson',
+                                   '4->A' => ['VariantDumpFactory'],
+                                   'A->4' => ['VariantDumpMerge'],
+                                   6      => ['DumpRegulationJson','DumpProbesJson'] } },
+                 {
+                  -logic_name => 'DumpGenomeJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
 		   -parameters    => {},
