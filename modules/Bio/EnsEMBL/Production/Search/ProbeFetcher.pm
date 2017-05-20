@@ -103,7 +103,8 @@ sub fetch_probes_for_dba {
 	my $probe_transcripts = {};
 	$h->execute_no_return(
 		-SQL =>
-		  q/select probe_id, stable_id, description from probe_transcript/,
+		  q/select probe_id, stable_id, description from probe_transcript where probe_id between ? and ?/,
+		  -PARAMS=>[$min, $max],
 		-CALLBACK => sub {
 			my $row = shift @_;
 			my $t   = $transcripts->{ $row->[1] };
@@ -139,7 +140,8 @@ sub fetch_probes_for_dba {
       join array_chip on (p.array_chip_id=array_chip.array_chip_id)
       join array using (array_id)
 	WHERE
-		cs.is_current=1/,
+		cs.is_current=1 and p.probe_id between ? AND ?/,
+		  -PARAMS=>[$min, $max],
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
 			my $row = shift @_;
@@ -177,8 +179,11 @@ sub fetch_probes_for_dba {
       array.vendor as array_vendor
     FROM
       probe_set ps
+      join probe p using (probe_set_id)
       join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
-      join array using (array_id)/,
+      join array using (array_id)
+      WHERE p.probe_id between ? AND ?/,
+      		  -PARAMS=>[$min, $max],
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
 			my $row = shift @_;
