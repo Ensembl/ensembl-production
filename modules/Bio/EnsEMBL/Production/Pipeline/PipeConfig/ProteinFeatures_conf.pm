@@ -362,6 +362,7 @@ sub pipeline_analyses {
                               output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
+      -analysis_capacity => 20,
       -flow_into         => {
                               '1->A' => ['AnalysisFactory'],
                               'A->1' => ['DumpProteome'],
@@ -371,6 +372,7 @@ sub pipeline_analyses {
     { -logic_name        => 'AnalysisFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisFactory',
       -max_retry_count   => 1,
+      -analysis_capacity => 20,
       -parameters        => {
                               analyses => $self->o('analyses'),
                               run_seg  => $self->o('run_seg'),
@@ -401,6 +403,7 @@ sub pipeline_analyses {
       -logic_name        => 'RemoveOrphans',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
       -max_retry_count   => 0,
+      -analysis_capacity => 20,
       -parameters        => {
                               sql => [
                                 'DELETE dx.* FROM '.
@@ -421,6 +424,7 @@ sub pipeline_analyses {
       -logic_name        => 'DeleteInterPro',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
       -max_retry_count   => 0,
+      -analysis_capacity => 20,
       -parameters        => {
                               sql => [
                                 'DELETE i.* FROM interpro i '.
@@ -441,6 +445,7 @@ sub pipeline_analyses {
       -logic_name        => 'DeletePathwayXrefs',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::DeletePathwayXrefs',
       -max_retry_count   => 1,
+      -analysis_capacity => 20,
       -parameters        => {
                               pathway_sources => $self->o('pathway_sources'),
                             },
@@ -451,6 +456,7 @@ sub pipeline_analyses {
       -logic_name        => 'DumpProteome',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
       -max_retry_count   => 0,
+      -analysis_capacity => 20,
       -parameters        => {
                               proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
                               header_style => 'dbID',
