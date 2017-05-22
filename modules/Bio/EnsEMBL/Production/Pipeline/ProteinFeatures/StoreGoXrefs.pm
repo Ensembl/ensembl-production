@@ -26,6 +26,8 @@ use Bio::EnsEMBL::OntologyXref;
 
 sub run {
   my ($self) = @_;
+
+  $self->hive_dbc()->disconnect_if_idle();
   
   my $aa   = $self->core_dba->get_adaptor('Analysis');
   my $dbea = $self->core_dba->get_adaptor('DBEntry');
