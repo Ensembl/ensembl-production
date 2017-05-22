@@ -28,7 +28,7 @@ use Bio::EnsEMBL::Compara::Family;
 use Carp qw/croak/;
 
 use strict;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory/;
 
 sub run {
   my ($self) = @_;
