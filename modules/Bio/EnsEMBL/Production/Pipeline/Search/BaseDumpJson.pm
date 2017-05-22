@@ -42,9 +42,11 @@ sub run {
 		Log::Log4perl->easy_init($INFO);
 	}
 	$self->{logger} = get_logger();
-
-	$self->dump( $self->param_required('species') );
-
+	$self->hive_dbc()->reconnect_when_lost();
+	my $species = $self->param_required('species');
+	$self->dump( $species );
+	
+	
 	return;
 }
 
