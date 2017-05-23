@@ -644,20 +644,7 @@ sub pipeline_analyses {
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
-      -rc_name           => 'normal',
-      -flow_into         => ['EmailReport'],
-    },
-    
-    {
-      -logic_name        => 'EmailReport',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
-      -hive_capacity     => 10,
-      -max_retry_count   => 1,
-      -parameters        => {
-                              email   => $self->o('email'),
-                              subject => 'Protein features pipeline: report for #species#',
-                            },
-      -rc_name           => 'normal',
+      -rc_name           => 'normal'
     },
     
     {
