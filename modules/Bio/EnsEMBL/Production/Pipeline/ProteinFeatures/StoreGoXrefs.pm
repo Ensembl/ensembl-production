@@ -102,7 +102,7 @@ sub delete_existing {
 
 sub store_go_xref {
   my ($self, $dbea, $analysis, $go) = @_;
-  
+  my $species_id = $self->core_dba()->species_id();
   my $sql =
     qq/
     SELECT DISTINCT interpro_ac, transcript_id 
@@ -146,10 +146,10 @@ sub store_go_xref {
 
 sub get_interpro {
   my ($self, $dbea, $interpro_ac) = @_;
-  my $interpro_xref = $self->{interpro}->{$interpro_xref};
+  my $interpro_xref = $self->{interpro}->{$interpro_ac};
   if(!defined $interpro_xref) {
     $interpro_xref = $dbea->fetch_by_db_accession('Interpro', $interpro_ac);
-    $self->{interpro}->{$interpro_xref} = $interpro_xref;
+    $self->{interpro}->{$interpro_ac} = $interpro_xref;
   }
   return $interpro_xref;
 }
