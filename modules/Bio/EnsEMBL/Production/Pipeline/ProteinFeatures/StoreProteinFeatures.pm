@@ -62,6 +62,7 @@ sub run {
   
   $self->store_features(\@features);
   $self->store_pathways(\@pathways);
+  $self->core_dbc()->disconnect_if_idle();
 }
 
 sub parse_match {

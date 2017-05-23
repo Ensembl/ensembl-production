@@ -39,6 +39,7 @@ sub run {
   $self->delete_existing();
   
   $self->store_go_xref($dbea, $analysis, $go);
+  $self->core_dbc()->disconnect_if_idle();
 }
 
 sub parse_interpro2go {
@@ -144,7 +145,7 @@ sub store_go_xref {
   }
 }
 
-sub get_interpro {
+sub get_interpro_xref {
   my ($self, $dbea, $interpro_ac) = @_;
   my $interpro_xref = $self->{interpro}->{$interpro_ac};
   if(!defined $interpro_xref) {

@@ -67,6 +67,7 @@ sub run {
     }
     
     close $fh;
+    $self->core_dbc()->disconnect_if_idle();
   }
 }
 
