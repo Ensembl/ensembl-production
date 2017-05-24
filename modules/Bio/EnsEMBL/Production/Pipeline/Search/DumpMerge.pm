@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpMerge;
+package Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge;
 
 use strict;
 use warnings;
@@ -38,23 +38,32 @@ sub run {
 	else {
 		Log::Log4perl->easy_init($INFO);
 	}
-	my $logger         = get_logger();
-	my $file_names     = $self->param_required('variant_dump_file');
-	my $species        = $self->param_required('species');
-	my $sub_dir        = $self->get_data_path('json');
-	my $outfile = $sub_dir . '/' . $species . '_variants.json';
-	$logger->info(
-		 "Merging variant files for $species into $outfile" );
+	my $logger     = get_logger();
+	my $species    = $self->param_required('species');
+	my $type       = $self->param_required('type');
+	my $sub_dir    = $self->get_data_path('json');
+	my $file_names = $self->param_required('dump_file');
+	my $outfile    = $sub_dir . '/' . $species . '_' . $type . '.json';
+	$logger->info("Merging $type files for $species into $outfile");
+	$self->merge_files( $outfile, $file_names );
+	return;
+}
+
+sub merge_files {
+	my ( $self, $outfile, $file_names ) = @_;
 	my $cmd = "echo '['>$outfile";
+	my $logger     = get_logger();
 	$logger->debug($cmd);
 	system($cmd) == 0 || throw "Could not write to $outfile";
 	my $n = 0;
 	for my $file (@$file_names) {
 		$logger->debug("Concatenating $file to $outfile");
-		if($n++>0) {
-			system("echo ','>>$outfile") == 0 || throw "Could not write to $outfile";			
+		if ( $n++ > 0 ) {
+			system("echo ','>>$outfile") == 0 ||
+			  throw "Could not write to $outfile";
 		}
-		system("cat $file >>$outfile") == 0 || throw "Could not concatenate $file to $outfile";
+		system("cat $file >>$outfile") == 0 ||
+		  throw "Could not concatenate $file to $outfile";
 		unlink $file || throw "Could not remove $file";
 	}
 	system("echo ']'>>$outfile") == 0 || throw "Could not write to $outfile";

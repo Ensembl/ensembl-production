@@ -70,10 +70,9 @@ sub dump {
 
 	$self->dataflow_output_id( {
 							   probes_dump_file   => $probes_json_file_path,
-							   probeset_dump_file => $probesets_json_file_path,
+							   probesets_dump_file => $probesets_json_file_path,
 							   species            => $species },
 							 1 );
-
 	  return;
 } ## end sub dump
 

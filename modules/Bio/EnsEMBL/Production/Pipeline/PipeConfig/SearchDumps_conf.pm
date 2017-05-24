@@ -43,8 +43,9 @@ sub default_options {
 		species        => [],
 		division       => [],
 		antispecies    => [],
-		run_all        => 0,        #always run every species
-		variant_length => 1000000 };
+		run_all        => 0,         #always run every species
+		variant_length => 1000000,
+		probe_length   => 1000000, };
 }
 
 sub pipeline_wide_parameters {
@@ -65,11 +66,12 @@ sub pipeline_analyses {
 							run_all     => $self->o('run_all') },
 		   -rc_name   => '1g',
 		   -flow_into => { 2      => ['DumpGenomeJson'],
-                                   '4->A' => ['VariantDumpFactory'],
-                                   'A->4' => ['VariantDumpMerge'],
-                                   6      => ['DumpRegulationJson','DumpProbesJson'] } },
-                 {
-                  -logic_name => 'DumpGenomeJson',
+						   '4->A' => ['VariantDumpFactory'],
+						   'A->4' => ['VariantDumpMerge'],
+						   '6->B' => ['ProbeDumpFactory'],
+						   'B->6' => ['ProbeDumpMerge'],
+						   6      => 'DumpRegulationJson' } }, {
+		   -logic_name => 'DumpGenomeJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
 		   -parameters    => {},
@@ -85,20 +87,14 @@ sub pipeline_analyses {
 		   -rc_name       => '8g',
 		   -flow_into     => {} },
 
-		{  -logic_name => 'DumpProbesJson',
-		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
-		   -parameters    => {},
-		   -hive_capacity => 8,
-		   -rc_name       => '32g',
-		   -flow_into     => {} },
-
 		{  -logic_name => 'VariantDumpFactory',
-		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpFactory',
-		   -parameters => { length => $self->o('variant_length') },
-		   -rc_name    => '1g',
-		   -flow_into  => { 2      => 'DumpVariantJson', } },
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
+		   -parameters => { type   => 'variation',
+							table  => 'variation',
+							column => 'variation_id',
+							length => $self->o('variant_length') },
+		   -rc_name   => '1g',
+		   -flow_into => { 2 => 'DumpVariantJson', } },
 
 		{  -logic_name    => 'DumpVariantJson',
 		   -hive_capacity => 8,
@@ -106,17 +102,49 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
 		   -rc_name   => '32g',
 		   -flow_into => {
-			   1 => [ '?accu_name=variant_dump_file&accu_address=[]',
+			   1 => [ '?accu_name=dump_file&accu_address=[]',
 					  '?accu_name=species' ],
 
 		   } },
 
 		{  -logic_name => 'VariantDumpMerge',
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
+		   -parameters => { type => 'variants'
+		   },
+
+		   -rc_name   => '1g',
+		   -flow_into => {} },
+
+		{
+			-logic_name => 'ProbeDumpFactory',
+			  -module =>
+			  'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
+			  -parameters => { type   => 'funcgen',
+							   table  => 'probe',
+							   column => 'probe_id',
+							   length => $self->o('variant_length') },
+			  -rc_name   => '1g',
+			  -flow_into => { 2 => 'DumpProbeJson', }
+		},
+
+		{  -logic_name    => 'DumpProbeJson',
+		   -hive_capacity => 8,
 		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpMerge',
-		   -parameters => {},
+			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
+		   -rc_name   => '32g',
+		   -flow_into => {
+			   1 => [ '?accu_name=probes_dump_file&accu_address=[]',
+					  '?accu_name=probesets_dump_file&accu_address=[]',
+					  '?accu_name=species' ],
+
+		   } },
+
+		{  -logic_name => 'ProbeDumpMerge',
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesMerge',
 		   -rc_name    => '1g',
-		   -flow_into  => {} }, ];
+		   -flow_into  => {} }
+
+	];
 } ## end sub pipeline_analyses
 
 sub beekeeper_extra_cmdline_options {

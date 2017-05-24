@@ -46,7 +46,7 @@ sub dump {
 										  $self->param("length") );
 	$self->{logger}->info("Variations for $species written to $file");
 	
-	$self->dataflow_output_id( {variant_dump_file=>$file, species=>$species}, 1);
+	$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
 
 	return;
 } ## end sub run

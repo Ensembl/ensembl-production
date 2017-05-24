@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::VariantDumpFactory;
+package Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory;
 
 use strict;
 use warnings;
@@ -35,22 +35,25 @@ sub run {
 	my ($self) = @_;
 
 	my $species = $self->param_required('species');
+	my $type = $self->param_required('type');
+	my $table = $self->param_required('table');
+	my $column = $self->param_required('column');
 
-	$self->logger()->debug("Fetching DBA for $species");
-	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
+	$self->logger()->debug("Fetching $type DBA for $species");
+	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 
-	throw "No variation database found for $species" unless defined $dba;
+	throw "No $type database found for $species" unless defined $dba;
 
 	my $length = $self->param_required('length');
 
 	my $min_id =
 	  $dba->dbc()->sql_helper()
 	  ->execute_single_result(
-							-SQL => 'select min(variation_id) from variation' );
+							-SQL => 'select min('.$column.') from '.$table );
 	my $max_id =
 	  $dba->dbc()->sql_helper()
 	  ->execute_single_result(
-							-SQL => 'select max(variation_id) from variation' );
+							-SQL => 'select max('.$column.') from '.$table );
 
 	my $offset = $min_id;
 	my $n      = 0;
