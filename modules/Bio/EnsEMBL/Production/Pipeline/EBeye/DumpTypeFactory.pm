@@ -40,7 +40,7 @@ Allowed parameters are:
 
 =over 8
 
-=item types - The database types to use; defaults to core and vega
+=item types - The database types to use; defaults to core
 
 =back
 
@@ -59,7 +59,7 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults()},
     column_names => ['type','species'],
-    default_types => [qw/core vega/],
+    default_types => [qw/core/],
   };
 }
 

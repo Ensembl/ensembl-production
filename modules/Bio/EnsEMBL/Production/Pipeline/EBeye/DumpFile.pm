@@ -50,7 +50,7 @@ Allowed parameters are:
 
 =item release - The current release we are emitting
 
-=item type - The database type of data we are emitting. Should be core or vega
+=item type - The database type of data we are emitting. Should be core
 
 =back
 
@@ -79,8 +79,8 @@ my %exception_type_to_description = ('REF' => 'reference',
 sub param_defaults {
   my ($self) = @_;
   return {
-    supported_types => { core => 1, vega => 1 },
-    validator => 'xmlstarlet', #can be xmlstarlet or xmllint
+    supported_types => { core => 1 },
+    validator => 'xmllint', #can be xmlstarlet or xmllint
     xmlstarlet => 'xml',
     xmllint => 'xmllint',
   };

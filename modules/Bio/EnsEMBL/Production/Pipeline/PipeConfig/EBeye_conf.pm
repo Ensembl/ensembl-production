@@ -46,7 +46,7 @@ sub default_options {
       
       release => software_version(),
 
-      validator => 'xmlstarlet',
+      validator => 'xmllint',
 
       # always run every species
       run_all => 0, 
