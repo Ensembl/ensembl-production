@@ -92,6 +92,9 @@ sub get_genes {
   @genes = @$result;
 
   my $genes_hash = { map { $_->{id} => $_ } @genes };
+
+  # add type
+  map { $genes_hash->{$_}{type} = 'gene' } keys %{$genes_hash};
   # query for all synonyms, hash by gene ID
   my $synonyms = $self->get_synonyms( $dba, $biotypes );
   while ( my ( $gene_id, $synonym ) = each %$synonyms ) {
@@ -214,7 +217,9 @@ sub get_transcripts {
 
   my $transcript_hash = {};
   for my $transcript (@transcripts) {
+    $transcript->{type} = 'transcript';
     push @{ $transcript->{exons} }, @{ $exons{$transcript->{id}} };
+    map { $_->{type} = 'exon' } @{ $transcript->{exons} };
     push @{ $transcript_hash->{ $transcript->{gene_id} } }, $transcript;
     delete $transcript_hash->{gene_id};
   }
@@ -259,6 +264,7 @@ sub get_translations {
 
   my $translation_hash = {};
   for my $translation (@translations) {
+    $translation->{type} = 'translation';
     push @{ $translation_hash->{ $translation->{transcript_id} } }, $translation;
     delete $translation_hash->{transcript_id};
   }
