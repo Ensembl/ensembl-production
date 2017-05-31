@@ -890,8 +890,8 @@ The files are consistently named following this pattern:
 <assembly>:      The assembly build name.
 <sequence type>: pep for peptide sequences
 <status>
-  * 'pep.all' - the super-set of all translations resulting from Ensembl known
-     or novel gene predictions.
+  * 'pep.all' - the super-set of all translations resulting from Ensembl 
+     gene predictions.
   * 'pep.abinitio' translations resulting from 'ab initio' gene
      prediction algorithms such as SNAP and GENSCAN. In general, all
      'ab initio' predictions are based solely on the genomic sequence and
@@ -900,23 +900,12 @@ The files are consistently named following this pattern:
 fa : All files in these directories represent FASTA database files
 gz : All files are compacted with GNU Zip for storage efficiency.
 
-EXAMPLES (Note: Most species do not sequences for each different <status>)
+EXAMPLES (Note: Most species do not have sequences for each different <status>)
  for Human:
     Homo_sapiens.NCBI36.pep.all.fa.gz
-      contains all known and novel peptides
+      contains all annotated peptides
     Homo_sapiens.NCBI36.pep.abinitio.fa.gz
       contains all abinitio predicted peptide
-
-Difference between known and novel
-----------------------------------
-Protein models that can be mapped to species-specific entries in
-Swiss-Prot, RefSeq or SPTrEMBL are referred to in Ensembl as
-known genes.  Those that cannot be mapped are called novel
-(e.g. genes predicted on the basis of evidence from closely related species).
-
-For models annotated by HAVANA the status is set manually. Models that have 
-an HGNC name are referred to as known and the remaining models are referred to
-as novel.
 
 -------------------------------
 FASTA Sequence Header Lines
@@ -932,7 +921,7 @@ General format:
 
 Example of Ensembl Peptide header:
 
->ENSP00000328693 pep:novel chromosome:NCBI35:1:904515:910768:1 gene:ENSG00000158815:transcript:ENST00000328693 gene_biotype:protein_coding transcript_biotype:protein_coding
+>ENSP00000328693 pep chromosome:NCBI35:1:904515:910768:1 gene:ENSG00000158815:transcript:ENST00000328693 gene_biotype:protein_coding transcript_biotype:protein_coding
  ^               ^   ^     ^                                   ^                    ^                          ^                            ^ 
  ID              |   |  LOCATION                          GENE:stable gene ID       |                       GENE: gene biotype           TRANSCRIPT: transcript biotype
                  | STATUS                                           TRANSCRIPT: stable transcript ID
@@ -962,7 +951,7 @@ The files are consistently named following this pattern:
 <sequence type>: cdna for cDNA sequences
 <status>
   * 'cdna.all' - the super-set of all transcripts resulting from
-     Ensembl known, novel and pseudo gene predictions (see more below).
+     Ensembl gene predictions (see more below).
   * 'cdna.abinitio' - transcripts resulting from 'ab initio' gene prediction
      algorithms such as SNAP and GENSCAN. In general all 'ab initio'
      predictions are solely based on the genomic sequence and do not
@@ -973,22 +962,10 @@ The files are consistently named following this pattern:
 EXAMPLES  (Note: Most species do not sequences for each different <status>)
   for Human:
     Homo_sapiens.NCBI36.cdna.all.fa.gz
-      cDNA sequences for all transcripts: known, novel and pseudo
+      cDNA sequences for all transcripts
     Homo_sapiens.NCBI36.cdna.abinitio.fa.gz
       cDNA sequences for 'ab-initio' prediction transcripts.
 
-Difference between known and novel transcripts
------------------------------------------------
-Transcript or protein models that can be mapped to species-specific entries
-in Swiss-Prot, RefSeq or SPTrEMBL are referred to as known genes in Ensembl.
-Those that cannot be mapped are called novel genes (e.g. genes predicted on
-the basis of evidence from closely related species).
-
-For models annotated by HAVANA the status is set manually. Models that have 
-an HGNC name are referred to as known and the remaining models are referred to
-as novel.
-
--------------------------------
 FASTA Sequence Header Lines
 ------------------------------
 The FASTA sequence header lines are designed to be consistent across
@@ -1001,7 +978,7 @@ General format:
 
 Example of an Ensembl cDNA header:
 
->ENST00000289823 cdna:known chromosome:NCBI35:8:21922367:21927699:1 gene:ENSG00000158815 gene_biotype:protein_coding transcript_biotype:protein_coding
+>ENST00000289823 cdna chromosome:NCBI35:8:21922367:21927699:1 gene:ENSG00000158815 gene_biotype:protein_coding transcript_biotype:protein_coding
  ^               ^    ^     ^                                       ^                    ^                           ^       
  ID              |    |  LOCATION                         GENE: gene stable ID        GENE: gene biotype        TRANSCRIPT: transcript biotype
                  |  STATUS
@@ -1029,23 +1006,12 @@ The files are consistently named following this pattern:
 <sequence type>: cds for CDS sequences
 <status>
   * 'cds.all' - the super-set of all transcripts coding sequences resulting from
-     Ensembl known, novel and pseudo gene predictions (see more below).
+     Ensembl gene predictions (see more below).
 
 EXAMPLES  (Note: Most species do not have sequences for each different <status>)
   for Human:
     Homo_sapiens.NCBI37.cds.all.fa.gz
-      cds sequences for all transcripts: known, novel and pseudo
-
-Difference between known and novel transcripts
------------------------------------------------
-Transcript or protein models that can be mapped to species-specific entries
-in Swiss-Prot, RefSeq or SPTrEMBL are referred to as known genes in Ensembl.
-Those that cannot be mapped are called novel genes (e.g. genes predicted on
-the basis of evidence from closely related species).
-
-For models annotated by HAVANA the status is set manually. Models that have 
-an HGNC name are referred to as known and the remaining models are referred to
-as novel.
+      cds sequences for all transcripts
 
 -------------------------------
 FASTA Sequence Header Lines
@@ -1060,7 +1026,7 @@ General format:
 
 Example of an Ensembl CDS header:
 
->ENST00000525148 cds:known chromosome:GRCh37:11:66188562:66193526:1 gene:ENSG00000174576 gene_biotype:protein_coding transcript_biotype:nonsense_mediated_decay
+>ENST00000525148 cds chromosome:GRCh37:11:66188562:66193526:1 gene:ENSG00000174576 gene_biotype:protein_coding transcript_biotype:nonsense_mediated_decay
  ^               ^    ^     ^                                       ^                    ^                           ^       
  ID              |    |  LOCATION                         GENE: gene stable ID        GENE: gene biotype        TRANSCRIPT: transcript biotype
                  |  STATUS
