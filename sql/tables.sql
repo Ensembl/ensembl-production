@@ -61,8 +61,7 @@ CREATE TABLE species (
 
   PRIMARY KEY (species_id),
   UNIQUE INDEX db_name_idx (db_name),
-  UNIQUE INDEX production_name_idx (production_name),
-  UNIQUE INDEX species_prefix_idx (species_prefix)
+  UNIQUE INDEX production_name_idx (production_name)
 );
 
 -- The 'species_alias' table
