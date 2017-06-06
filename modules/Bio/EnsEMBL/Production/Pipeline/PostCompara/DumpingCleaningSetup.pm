@@ -44,6 +44,7 @@ sub run {
     my $output_dir  = $self->param('output_dir');
     my $projection_backup_list = $self->param('projection_backup_list');
     my $parallel_GeneNames_projections = $self->param('parallel_GeneNames_projections');
+    my $parallel_GeneDescription_projections = $self->param('parallel_GeneDescription_projections');
 
     my $final_projection_backup_list;
     # If we have a projection list then that mean that we have already backed up and cleaned up one projection
@@ -95,7 +96,7 @@ sub run {
     else
       { 
         if ($flag_GeneDescr){
-          if ($parallel_GeneNames_projections) {
+          if ($parallel_GeneDescription_projections) {
             # Process the Gene description projection hash and create unique species, division and antispecies hashes.
             $final_projection_backup_list->{gd}->{1} = process_pairs(values $self->param('gd_config'));
           }
