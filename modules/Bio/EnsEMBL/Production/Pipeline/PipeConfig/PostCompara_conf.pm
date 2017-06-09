@@ -304,7 +304,7 @@ sub pipeline_analyses {
            -meadow_type   => 'LOCAL',
           },
           {  -logic_name      => 'SpeciesFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into       => {
                                   '2->A' => ['DumpTables'],
@@ -349,7 +349,7 @@ sub pipeline_analyses {
           },    
           
           {  -logic_name      => 'GNProjTargetFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into      => {
                                  2 => ['GNProjection']
@@ -403,7 +403,7 @@ sub pipeline_analyses {
           },
 
           {  -logic_name      => 'GDProjTargetFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into      => {
                                  2 => ['GDProjection']

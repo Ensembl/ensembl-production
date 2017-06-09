@@ -30,7 +30,7 @@ package Bio::EnsEMBL::Production::Pipeline::TSV::Base;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub _generate_file_name {
     my ($self) = @_;
