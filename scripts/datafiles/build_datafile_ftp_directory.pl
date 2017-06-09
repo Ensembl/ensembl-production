@@ -159,6 +159,13 @@ sub _process_dba {
 
       $self->_process_datafile($df, $self->_target_datafiles_root($df));
     }
+    # Creating symlinks for README and md5sum files
+    if($schema_type eq 'core_like'){
+      $self->_process_datafile($datafiles->[0],$self->_target_species_root($datafiles->[0]), 'README');
+      $self->_process_datafile($datafiles->[0],$self->_target_species_root($datafiles->[0]), 'md5sum.txt');
+    }
+    $self->_process_datafile($datafiles->[0],$self->_target_datafiles_root($datafiles->[0]), 'README');
+    $self->_process_datafile($datafiles->[0],$self->_target_datafiles_root($datafiles->[0]), 'md5sum.txt');
   }
   $dba->dbc()->disconnect_if_idle();
   return;
@@ -263,7 +270,7 @@ sub _process_missing_ftp_links {
 
 
 sub _process_datafile {
-  my ($self, $datafile, $target_dir) = @_;
+  my ($self, $datafile, $target_dir, $file) = @_;
 
   if(! -d $target_dir) {
     if($self->opts->{dry}) {
@@ -274,41 +281,59 @@ sub _process_datafile {
       mkpath($target_dir) or die "Cannot create the directory $target_dir: $!";
     }
   }
-  my $files = $self->_files($datafile);
+  my $files = $self->_files($datafile,$file);
+  # For extra files, sort the array and get the latest version of the file.
+  if (defined $file){
+    # Sort versionned files
+    my @sorted_files = sort @{$files};
+    # Only keep latest file
+    my $last_file = pop @sorted_files;
+    my @files;
+    push @files,$last_file;
+    $files = \@files;
+  }
 
   foreach my $filepath (@{$files}) {
-    my ($file_volume, $file_dir, $name) = File::Spec->splitpath($filepath);
-    my $target = File::Spec->catfile($target_dir, $name);
-
-    if($self->opts()->{dry}) {
-      $self->v("\tWould have linked '%s' -> '%s'", $filepath, $target);
-      $self->_flag_missing_ftp_link($datafile);
-    }
-    else {
-      if(-e $target) {
-        if(-l $target) {
-          unlink $target;
-        }
-        elsif(-f $target) {
-          my $id = $datafile->dbID();
-          die "Cannot unlink $target as it is a file and not a symbolic link. Datafile ID was $id";
-        }
+    # Check if file exist, some directories are missing extra files
+    if (defined $filepath){
+      my ($file_volume, $file_dir, $name) = File::Spec->splitpath($filepath);
+      my $target;
+      if (defined $file){
+        $target = File::Spec->catfile($target_dir, $file);
       }
+      else {
+        $target = File::Spec->catfile($target_dir, $name);
+      }
+
+      if($self->opts()->{dry}) {
+        $self->v("\tWould have linked '%s' -> '%s'", $filepath, $target);
+        $self->_flag_missing_ftp_link($datafile);
+      }
+      else {
+        if(-e $target) {
+          if(-l $target) {
+            unlink $target;
+          }
+          elsif(-f $target) {
+            my $id = $datafile->dbID();
+            die "Cannot unlink $target as it is a file and not a symbolic link. Datafile ID was $id";
+          }
+        }
       
-      #Generate the relative link
-      my $relative_path_dir = File::Spec->abs2rel($file_dir, $target_dir);
-      my $relative_path = File::Spec->catfile($relative_path_dir, $name);
+        #Generate the relative link
+        my $relative_path_dir = File::Spec->abs2rel($file_dir, $target_dir);
+        my $relative_path = File::Spec->catfile($relative_path_dir, $name);
       
-      $self->v("\tLinking %s -> %s", $filepath, $target);
-      $self->v("\tRelative path is %s", $relative_path);
-      symlink($relative_path, $target) or die "Cannot symbolically link $filepath (${relative_path}) to $target: $!";
+        $self->v("\tLinking %s -> %s", $filepath, $target);
+        $self->v("\tRelative path is %s", $relative_path);
+        symlink($relative_path, $target) or die "Cannot symbolically link $filepath (${relative_path}) to $target: $!";
       
-      $self->_flag_missing_ftp_link($datafile);
+        $self->_flag_missing_ftp_link($datafile);
+      }
     }
   }
   return;
 }
-
 
 # Expected path: base/FILETYPE/SPECIES/TYPE/files
 # e.g. pub/release-66/bam/pan_trogladytes/genebuild/chimp_1.bam
@@ -414,10 +439,13 @@ sub _get_dbs {
 
 
 sub _files {
-  my ($self, $datafile) = @_;
+  my ($self, $datafile, $file) = @_;
   my $source_file = $datafile->path($self->opts->{datafile_dir});
   $source_file =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
+  if (defined $file){
+    $name=$file;
+  }
   my $escaped_name = quotemeta($name);
   my $regex = qr/^$escaped_name.*/;
 

@@ -100,6 +100,13 @@ sub default_options {
             #  Setting descriptions that were projected to NULL
                 #  before doing projection
             flag_delete_gene_descriptions   => '0',
+
+            ## Flag controlling the way the projections will run
+            # If the parallel flag is on, all the projections will run at the same time
+            # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
+            # Default value is 1
+            parallel_GeneDescription_projections => '1',
+
             # Tables to dump for GeneNames & GeneDescription projections subpipeline
             g_dump_tables => ['gene', 'xref','object_xref','external_db','external_synonym'],
             
@@ -280,6 +287,7 @@ sub pipeline_analyses {
                                 'output_dir'  => $self->o('output_dir'),
                                 'g_dump_tables' => $self->o('g_dump_tables'),
                                 'parallel_GeneNames_projections' => $self->o('parallel_GeneNames_projections'),
+                                'parallel_GeneDescription_projections' => $self->o('parallel_GeneDescription_projections')
 
                                },
             -rc_name        => 'default',
@@ -296,7 +304,7 @@ sub pipeline_analyses {
            -meadow_type   => 'LOCAL',
           },
           {  -logic_name      => 'SpeciesFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into       => {
                                   '2->A' => ['DumpTables'],
@@ -332,6 +340,7 @@ sub pipeline_analyses {
              -parameters    => {
                                 g_config  => $self->o('gn_config'),
                                 parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
+                                flag_GeneNames  => $self->o('flag_GeneNames')
                                }, 
              -flow_into     => {
                                 '2->A' => ['GNProjTargetFactory'],
@@ -340,7 +349,7 @@ sub pipeline_analyses {
           },    
           
           {  -logic_name      => 'GNProjTargetFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into      => {
                                  2 => ['GNProjection']
@@ -384,7 +393,8 @@ sub pipeline_analyses {
              -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjectionSourceFactory',
              -parameters    => {
                                 g_config  => $self->o('gd_config'),
-                                parallel_GeneNames_projections => $self->o('parallel_GeneNames_projections'),
+                                parallel_GeneDescription_projections => $self->o('parallel_GeneDescription_projections'),
+                                flag_GeneDescr  => $self->o('flag_GeneDescr'),
                                }, 
              -flow_into     => {
                                 '2->A' => ['GDProjTargetFactory'],
@@ -393,7 +403,7 @@ sub pipeline_analyses {
           },
 
           {  -logic_name      => 'GDProjTargetFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::BaseSpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into      => {
                                  2 => ['GDProjection']
@@ -411,7 +421,7 @@ sub pipeline_analyses {
                                 'flag_filter'             => $self->o('flag_filter'),
                                 'is_tree_compliant'       => $self->o('is_tree_compliant'),
                                },
-             -rc_name       => 'default',
+             -rc_name       => 'mem',
              -batch_size    =>  2, 
              -analysis_capacity => 20,
              -wait_for      => [$self->o('flag_Dependency') ? 'GNProjection' : ()],

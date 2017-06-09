@@ -34,7 +34,7 @@ use warnings;
 use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
-use base('Bio::EnsEMBL::Production::Pipeline::Base');
+use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub fetch_input {
   my ($self) = @_;

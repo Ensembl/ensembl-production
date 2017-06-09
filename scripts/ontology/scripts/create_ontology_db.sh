@@ -129,5 +129,15 @@ if ! [ -z "$mart" ]; then
         msg "Failed to populate meta table for mart database $mart"
         exit 1
     }
+    msg "Populating meta tables for mart database $mart SO regulation template"
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl $($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_regulation_template_template.xml -template_name ontology_regulation -ds_basename regulation || {
+        msg "Failed to populate meta table for mart database $mart"
+        exit 1
+    }
+    msg "Populating meta tables for mart database $mart SO motif template"
+    perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl $($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_motif_template_template.xml -template_name ontology_motif -ds_basename motif || {
+        msg "Failed to populate meta table for mart database $mart"
+        exit 1
+    }
     msg "Building mart database $mart complete"
 fi 

@@ -41,6 +41,9 @@ sub run {
     my $projection_list = $self->param('projection_list');
     my $g_config = $self->param_required('g_config') || die "'g_config' is an obligatory parameter";
     my $parallel_GeneNames_projections = $self->param('parallel_GeneNames_projections');
+    my $parallel_GeneDescription_projections => $self->param('parallel_GeneDescription_projections');
+    my $flag_GeneNames = $self->param('flag_GeneNames');
+    my $flag_GeneDescr = $self->param('flag_GeneDescr');
     my $final_projection_list;
 
     if ($projection_list)
@@ -97,8 +100,8 @@ sub run {
 		 'geneDesc_rules_target'  => $geneDesc_rules_target,
      'white_list'             => $white_list
 		},2);
-                # If parallel_GeneNames_projections is defined, we run all the projections at the same time in parallel
-          if ($parallel_GeneNames_projections){
+                # If parallel_GeneNames_projections or parallel_GeneDescription_projections is defined, we run all the projections at the same time in parallel
+          if (($flag_GeneNames and $parallel_GeneNames_projections) or ($flag_GeneDescr and $parallel_GeneDescription_projections)){
             $self->dataflow_output_id({'projection_list'  => {},
                                  'species'                => $species,
                                  'source'                 => $source,

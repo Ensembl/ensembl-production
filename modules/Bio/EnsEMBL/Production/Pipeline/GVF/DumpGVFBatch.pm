@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::GVF::DumpGVFBatch;
 use strict;
 use Data::Dumper;
 use Bio::EnsEMBL::Production::Pipeline::Common::SystemCmdRunner;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 #use base ('EGVar::FTP::RunnableDB::GVF::Base');
 use Carp;
 

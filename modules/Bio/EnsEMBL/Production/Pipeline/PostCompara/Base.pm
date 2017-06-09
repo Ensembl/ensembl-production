@@ -24,7 +24,7 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Attribute;
-use base ('Bio::EnsEMBL::Production::Pipeline::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 =head2 fetch_homologies 
 

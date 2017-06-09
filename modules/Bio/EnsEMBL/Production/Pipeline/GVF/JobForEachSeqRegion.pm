@@ -31,7 +31,7 @@ use strict;
 use Data::Dumper;
 use Hash::Util qw( lock_hash );
 #use base ('EGVar::FTP::RunnableDB::GVF::Base');
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
     my $self = shift @_;

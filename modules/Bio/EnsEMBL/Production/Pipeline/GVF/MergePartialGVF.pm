@@ -34,7 +34,7 @@ use Carp;
 use Hash::Util qw( lock_hash );
 use Log::Log4perl qw/:easy/;
 use Bio::EnsEMBL::Production::Pipeline::Common::SystemCmdRunner;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
     my $self = shift;

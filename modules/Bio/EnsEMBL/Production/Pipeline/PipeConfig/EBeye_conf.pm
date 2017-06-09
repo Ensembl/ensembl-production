@@ -46,7 +46,7 @@ sub default_options {
       
       release => software_version(),
 
-      validator => 'xmlstarlet',
+      validator => 'xmllint',
 
       # always run every species
       run_all => 0, 
@@ -84,7 +84,7 @@ sub pipeline_analyses {
     
       {
         -logic_name => 'ScheduleSpecies',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::SpeciesFactory',
+        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SpeciesFactory',
         -parameters => {
           species => $self->o('species'),
           randomize => 1,

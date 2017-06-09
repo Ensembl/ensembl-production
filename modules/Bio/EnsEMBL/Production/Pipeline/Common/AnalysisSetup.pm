@@ -50,7 +50,7 @@ package Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 use Bio::EnsEMBL::Analysis;
 
 sub param_defaults {
