@@ -76,7 +76,8 @@ sub get_genes {
 	my $sql = qq/
   select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype,
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
-  s.name as seq_region_name
+  s.name as seq_region_name,
+  'gene' as ensembl_object_type
   from gene f
   left join xref x on (f.display_xref_id = x.xref_id)
   join seq_region s using (seq_region_id)
@@ -92,8 +93,9 @@ sub get_genes {
 
 	@genes = @$result;
 
+        # turn into hash
 	my $genes_hash = { map { $_->{id} => $_ } @genes };
-	# query for all synonyms, hash by gene ID
+        # query for all synonyms, hash by gene ID
 	my $synonyms = $self->get_synonyms( $dba, $biotypes );
 	while ( my ( $gene_id, $synonym ) = each %$synonyms ) {
 		$genes_hash->{$gene_id}->{synonyms} = $synonym;
@@ -149,7 +151,8 @@ sub get_transcripts {
     t.seq_region_start as start, 
     t.seq_region_end as end, 
     t.seq_region_strand as strand,
-    s.name as seq_region_name
+    s.name as seq_region_name,
+    'transcript' as ensembl_object_type
     FROM 
     gene g
     join transcript t using (gene_id)
@@ -200,7 +203,8 @@ sub get_transcripts {
   e.seq_region_start as start, 
   e.seq_region_end as end,
   e.seq_region_strand as strand,
-  et.rank as rank
+  et.rank as rank,
+  'exon' as ensembl_object_type
   FROM transcript t
   JOIN exon_transcript et ON t.transcript_id = et.`transcript_id`
   JOIN exon e ON et.exon_id = e.`exon_id`
@@ -228,7 +232,7 @@ sub get_transcripts {
 	for my $transcript (@transcripts) {
 		push @{ $transcript->{exons} }, @{ $exons{ $transcript->{id} } };
 		push @{ $transcript_hash->{ $transcript->{gene_id} } }, $transcript;
-		delete $transcript_hash->{gene_id};
+		delete $transcript_hash->{gene_id};                
 	}
 	return $transcript_hash;
 } ## end sub get_transcripts
@@ -239,7 +243,8 @@ sub get_translations {
 	my $sql = q/
     select t.stable_id as transcript_id,
     tl.stable_id as id,
-    tl.version as version
+    tl.version as version,
+    'translation' as ensembl_object_type
     from transcript t
     join translation tl using (transcript_id)
     join seq_region s using (seq_region_id)
@@ -290,7 +295,8 @@ sub get_protein_features {
     pf.seq_start as start,
     pf.seq_end as end,
     a.db as dbname,
-    i.interpro_ac
+    i.interpro_ac,
+    'protein_feature' as ensembl_object_type
     from transcript t
     join translation tl using (transcript_id)
     join protein_feature pf using (translation_id)
