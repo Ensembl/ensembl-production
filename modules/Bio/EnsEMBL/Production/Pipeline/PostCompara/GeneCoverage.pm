@@ -24,6 +24,7 @@ use Data::Dumper;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
 use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
+use Bio::EnsEMBL::Utils::Exception qw(throw);
 
 sub run {
     my ($self) = @_;
@@ -164,10 +165,21 @@ return 0;
 sub store_gene_attrib {
     my ($id, $species, $score1, $score2) = @_;
 
+    my $db_adaptor;
+    eval {
+      $db_adaptor  = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+    };
+    if(!defined $db_adaptor) {
+      warn "Could not find species $species for gene $id - skipping";
+      return;      
+    }
     my $gene_adaptor   = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'Gene');
-    my $db_adaptor     = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $attrib_adaptor = $db_adaptor->get_AttributeAdaptor();
     my $gene           = $gene_adaptor->fetch_by_translation_stable_id($id);
+    if(!defined $gene) {
+      warn "Could not find gene with translation stable ID $id for species $species - skipping";
+      return;
+    }
     my $gene_id        = $gene->dbID();
 
     # Ensure attrib_types exists in core
