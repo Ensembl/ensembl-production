@@ -46,6 +46,9 @@ sub dump {
 				$compara = 'multi';
 			}
 		}
+		if ( defined $compara ) {
+			$self->{logger}->info("Using compara $compara");
+		}
 		$self->{logger}->info( "Dumping genome for " . $species );
 		$self->dump_genome($species);
 		$self->{logger}->info( "Dumping genes for " . $species );
@@ -59,7 +62,7 @@ sub dump {
 		$self->{logger}->info( "Completed dumping " . $species );
 	}
 	return;
-}
+} ## end sub dump
 
 sub dump_genome {
 	my ( $self, $species, $compara ) = @_;
