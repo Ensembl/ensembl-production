@@ -17,7 +17,7 @@ for table in $@; do
     src_chk=$($srv --column-name=false $src -e "checksum table $table")
     tgt_chk=$($srv --column-name=false $tgt -e "checksum table $table")
     if [ "$src_chk" != "$tgt_chk" ]; then
-        echo "Running sync $src $table -> $tgt"
+        echo "Running sync $src $table -> $tgt $table"
         $srv mysqldump $src $table | $srv $tgt
     fi
 done
