@@ -45,7 +45,7 @@ sub default_options {
 		antispecies    => [],
 		run_all        => 0,         #always run every species
 		variant_length => 1000000,
-		probe_length   => 1000000, };
+		probe_length   => 100000, };
 }
 
 sub pipeline_wide_parameters {
