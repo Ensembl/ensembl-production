@@ -82,8 +82,10 @@ sub _fetch_seq_regions {
 	my $helper     = $dba->dbc()->sql_helper();
 	my $species_id = $dba->species_id();
 
+	my $current_cs_id = 0;
+
 	#identify current default top level
-	my $current_cs_id = $helper->execute_single_result(
+	my $current_cs_ids = $helper->execute_simple(
 		-SQL => qq/
        SELECT cs.coord_system_id
          FROM coord_system cs
@@ -91,6 +93,10 @@ sub _fetch_seq_regions {
         WHERE cs.version = m.meta_value
           AND cs.name = 'chromosome'
           AND m.meta_key = 'assembly.default'/ );
+
+	if(scalar(@$current_cs_ids)>0) {
+	  $current_cs_id = $current_cs_ids->[0];
+	}
 
 	my $patch_hap_dets = $self->_get_patch_hap_dets( $helper, $species_id );	
 
