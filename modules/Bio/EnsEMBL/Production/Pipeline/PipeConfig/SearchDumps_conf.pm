@@ -122,7 +122,7 @@ sub pipeline_analyses {
 			  -parameters => { type   => 'funcgen',
 							   table  => 'probe',
 							   column => 'probe_id',
-							   length => $self->o('variant_length') },
+							   length => $self->o('probe_length') },
 			  -rc_name   => '1g',
 			  -flow_into => { 2 => 'DumpProbeJson', }
 		},
