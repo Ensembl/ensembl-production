@@ -47,7 +47,7 @@ use Log::Log4perl qw/:easy/;
 sub hive_dbc {
     my $self = shift;
     my $dbc  = $self->dbc();
-    confess('Type error!') unless($dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
+    confess('Type error!') if(defined $dbc && !$dbc->isa('Bio::EnsEMBL::DBSQL::DBConnection'));
 
 return $dbc;
 }
@@ -143,10 +143,16 @@ sub production_dbh {
     return $dbh;
 }
 
+my $is_multi = {
+	production=>1,
+	ontology=>1,
+	taxonomy=>1
+};
+
 sub get_DBAdaptor {
     my ($self, $type) = @_;
     $type ||= 'core';
-    my $species = ($type eq 'production') ? 'multi' : $self->param_required('species');
+    my $species = ($is_multi->{type}) ? 'multi' : $self->param_required('species');
 
 return Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
 }
@@ -507,18 +513,51 @@ sub logger {
 	return $self->{logger};
 }
 
+sub metadata_dba {
+  my $self = shift;
+  my $dba =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "metadata" );
+  if (!defined $dba && defined $self->param('metadata_db')) {
+    my %db = %{$self->param('ontology_db')};
+    $dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(%db);
+  }
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor'));
+	
+  return $dba;
+}
+
+sub ontology_dba {
+  my $self = shift;
+  my $dba =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "ontology" );
+  if (!defined $dba && defined $self->param('ontology_db')) {
+    my %db = %{$self->param('ontology_db')};
+    $dba = Bio::EnsEMBL::DBSQL::OntologyDBAdaptor->new(%db);
+  }
+  if (!defined $dba && $self->param('onto_db')) {
+    my %db = %{$self->param('onto_db')};
+    $dba = Bio::EnsEMBL::DBSQL::OntologyTaxonomyDBAdaptor->new(%db);
+  }
+  confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
+	
+  return $dba;
+}
+
 sub taxonomy_dba {
   my $self = shift;
   
-  my $dba = $self->get_DBAdaptor('taxonomy');
-  if (!defined $dba) {
+  my $dba =
+    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
+    
+  if (!defined $dba && $self->param('taxonomy_db')) {
     my %taxonomy_db = %{$self->param('taxonomy_db')};
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
-  if (!defined $dba) {
+  if (!defined $dba && $self->param('tax_db')) {
     my %taxonomy_db = %{$self->param('tax_db')};
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
+  confess("No taxonomy DBAdaptor found") unless defined $dba;
   confess('Type error!') unless($dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 	
   return $dba;
