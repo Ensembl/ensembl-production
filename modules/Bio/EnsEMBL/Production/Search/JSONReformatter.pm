@@ -60,6 +60,7 @@ sub process_json_file {
 		while (<$fh>) {
 			my $obj = $json->incr_parse($_);
 			if ( defined $obj ) {
+				$n++;
 				$callback->($obj);
 				$json->incr_reset();
 				my $c = getc($fh);
