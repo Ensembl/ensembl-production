@@ -62,7 +62,7 @@ sub write_json {
 	my $sub_dir        = $self->get_data_path('json');
 	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
 	$self->write_json_to_file( $json_file_path, $data );
-	return;
+	return $json_file_path;
 }
 
 sub write_json_to_file {
