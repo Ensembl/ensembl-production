@@ -49,18 +49,21 @@ sub dump {
 		if ( defined $compara ) {
 			$self->{logger}->info("Using compara $compara");
 		}
+		my $output = { species => $species };
 		$self->{logger}->info( "Dumping genome for " . $species );
-		$self->dump_genome($species);
+		$output->{genome_file} = $self->dump_genome($species);
 		$self->{logger}->info( "Dumping genes for " . $species );
-		$self->dump_genes( $species, $compara );
+		$output->{genes_file} = $self->dump_genes( $species, $compara );
 		$self->{logger}->info( "Dumping sequences for " . $species );
-		$self->dump_sequences($species);
+		$output->{seqs_file} = $self->dump_sequences($species);
 		$self->{logger}->info( "Dumping markers for " . $species );
-		$self->dump_lrgs($species);
+		$output->{lrgs_file} = $self->dump_lrgs($species);
 		$self->{logger}->info( "Dumping markers for " . $species );
-		$self->dump_markers($species);
+		$output->{markers_file} = $self->dump_markers($species);
 		$self->{logger}->info( "Completed dumping " . $species );
-	}
+		$self->dataflow_output_id( $output, 1 );
+
+	} ## end if ( $species ne "Ancestral sequences")
 	return;
 } ## end sub dump
 
@@ -76,41 +79,50 @@ sub dump_genome {
 		$genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new()
 		  ->fetch_genome($species);
 	}
-	$self->write_json( $species, 'genome', $genome );
-	return;
+	return $self->write_json( $species, 'genome', $genome );
 }
 
 sub dump_genes {
 	my ( $self, $species, $compara ) = @_;
 	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
 	  ->fetch_genes( $species, $compara );
-	$self->write_json( $species, 'genes', $genes );
-	return;
+	return $self->write_json( $species, 'genes', $genes );
 }
 
 sub dump_sequences {
 	my ( $self, $species ) = @_;
 	my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
 	  ->fetch_sequences($species);
-	$self->write_json( $species, 'sequences', $sequences )
-	  if scalar(@$sequences) > 0;
-	return;
+	if ( scalar(@$sequences) > 0 ) {
+		return $self->write_json( $species, 'sequences', $sequences );
+	}
+	else {
+		return undef;
+	}
 }
 
 sub dump_markers {
 	my ( $self, $species ) = @_;
 	my $markers = Bio::EnsEMBL::Production::Search::MarkerFetcher->new()
 	  ->fetch_markers($species);
-	$self->write_json( $species, 'markers', $markers ) if scalar(@$markers) > 0;
-	return;
+	if ( scalar(@$markers) > 0 ) {
+		$self->write_json( $species, 'markers', $markers );
+	}
+	else {
+		return undef;
+	}
 }
 
 sub dump_lrgs {
 	my ( $self, $species ) = @_;
 	my $lrgs =
 	  Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs($species);
-	$self->write_json( $species, 'lrgs', $lrgs ) if scalar(@$lrgs) > 0;
-	return;
+	if ( scalar(@$lrgs) > 0 ) {
+		$self->write_json( $species, 'lrgs', $lrgs );
+	}
+	else {
+		return undef;
+	}
 }
 
 1;
