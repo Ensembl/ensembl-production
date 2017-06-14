@@ -66,6 +66,7 @@ sub write_variants {
 	$self->{logger}->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
+	$self->hive_dbc()->disconnect_if_idle();
 	my $n = 0;
 	print $json_file '[' unless defined $offset;
 	Bio::EnsEMBL::Production::Search::VariationFetcher->new()
