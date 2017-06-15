@@ -20,13 +20,7 @@ class ProjectFTP(object):
             "url": "ftp.ensemblgenomes.org",
             "www": "http://www.ensemblgenomes.org",
             "license": "/info/about/legal/code_licence",
-            "divisions": {
-                "bacteria": { "collections": True },
-                "fungi": { "collections": False },
-                "metazoa": { "collections": False },
-                "plants": { "collections": False },
-                "protists": { "collections": False }
-            }
+            "divisions": [ "fungi" ] # [ "bacteria", "fungi", "metazoa", "plants", "protists" ]
         }
     }
     
@@ -72,15 +66,57 @@ class ProjectFTP(object):
                 
             except error_perm, resp:
                 if str(resp) == "550 No files found":
-                    print("No species directories in %s" % rdfdir)
+                    print("No species directories in %s" % rdfDir)
                 else:
                     raise
-
+        else: # this is EnsemblGenomes, have to deal with divisions and possibly collections
+            try:
+                divisions = ProjectFTP.projectInfo[self.project]["divisions"]
+                for division in sorted(divisions):
+                    divisionRDFDir = "/pub/current/%s/rdf" % division
+                    self.parseDivision(divisionRDFDir, speciesData)
+                    
+            except error_perm, resp:
+                if str(resp) == "550 No files found":
+                    print("No species/collections directories in %s" % divisionRDFDir)
+                else:
+                    raise
+                            
         self.disconnect()
         
         return speciesData
+
+    def parseDivision(self, rdfDir, speciesData):
+        """Recursive method to parse EnsemblGenomes RDF data organised according to division
+        and eventually collections.
+        A division might have all data organised into collections, e.g. bactera (one sub 
+        directory per collection, each containing one directory for each species in the collection),
+        or it might have some species each one into its own directory and some collections
+        as well, e.g. fungi.
+        """
+
+        self.ftp.cwd(rdfDir)
+        subDirs = self.ftp.nlst()
+        for subDir in subDirs:
+            if "collection" not in subDir:
+                # this is a normal species dir, add the species info directly
+                species_name = subDir
+                print("Adding %s" % species_name)
+                speciesData.append(
+                    {
+                        "name": species_name,
+                        "rdf": {
+                            "core": "ftp://%s%s/%s/%s.ttl.gz" % (self.url, rdfDir, species_name, species_name),
+                            "xrefs": "ftp://%s%s/%s/%s_xrefs.ttl.gz" % (self.url, rdfDir, species_name, species_name),
+                        }
+                    }
+                )
+            else:
+                # enter the collection subdir and get the species data from there
+                self.parseDivision("%s/%s" % (rdfDir, subDir), speciesData)
+            
         
 if __name__ == "__main__":
-    ftp = ProjectFTP("ensembl")
+    ftp = ProjectFTP("ensemblgenomes")
     species = ftp.parseSpecies()
     print(species)
