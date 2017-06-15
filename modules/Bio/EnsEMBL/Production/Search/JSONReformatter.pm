@@ -34,7 +34,7 @@ use strict;
 use warnings;
 
 use Exporter 'import';    # gives you Exporter's import() method directly
-our @EXPORT = qw(process_json_file);
+our @EXPORT = qw(process_json_file reformat_json);
 
 use Log::Log4perl qw/get_logger/;
 use Carp qw/croak/;
@@ -72,5 +72,28 @@ sub process_json_file {
 	$logger->info("Completed processing $n elements from $file");
 	return;
 } ## end sub process_file
+
+sub reformat_json {
+	my ( $infile, $outfile, $callback ) = @_;
+	open my $fh, ">", $outfile || croak "Could not open $outfile for writing";
+	print $fh '[';
+	my $n = 0;
+
+	process_json_file(
+		$infile,
+		sub {
+			my ($obj) = @_;
+			my $new_obj = $callback->($obj);
+			if ( $n++ > 0 ) {
+				print $fh ",";
+			}
+			print $fh encode_json($new_obj);
+			return;
+		} );
+
+	print $fh ']';
+	close $fh;
+	return;
+}
 
 1;

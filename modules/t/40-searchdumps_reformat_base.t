@@ -15,6 +15,7 @@
 
 use Test::More;
 use JSON;
+use File::Slurp;
 use Data::Dumper;
 
 BEGIN {
@@ -68,9 +69,9 @@ subtest "Array with flanking whitespace", sub {
 	my $test_file = "./40-searchdumps_reformat_base.json";
 	open my $out, ">",
 	  $test_file || die "Could not open $test_file for writing";
-	  print $out " \t\n";
+	print $out " \t\n";
 	print $out encode_json($test_data);
-	  print $out " \t\n";
+	print $out " \t\n";
 	close $out;
 	my $objs = [];
 	process_json_file(
@@ -112,7 +113,7 @@ subtest "Empty array", sub {
 
 subtest "Hash", sub {
 	# create a test structure
-	my $test_data = {a=>1};
+	my $test_data = { a => 1 };
 	# write to a JSON file
 	my $test_file = "./40-searchdumps_reformat_base.json";
 	open my $out, ">",
@@ -134,6 +135,40 @@ subtest "Hash", sub {
 		pass("Processing a non-array should raise an error");
 	}
 	unlink $test_file;
+};
+
+subtest "Reformat object file", sub {
+	# create a test structure
+	my $test_data = [ { a => 1 }, { a => 2 }, { a => 3 } ];
+	# write to a JSON file
+	my $test_file = "./40-searchdumps_reformat_base.json";
+	open my $out, ">",
+	  $test_file || die "Could not open $test_file for writing";
+	print $out encode_json($test_data);
+	close $out;
+	my $out_file = "./40-searchdumps_reformat_base_out.json";
+	reformat_json(
+		$test_file, $out_file,
+		sub {
+			my $obj = shift;
+			return { b => $obj->{a}, done => 1 };
+		} );
+	my $test_data2 = decode_json( read_file($out_file) );
+	is( 3, scalar @$test_data2, "3 objs" );
+	my $obj1 = $test_data2->[0];
+	my $obj2 = $test_data2->[1];
+	my $obj3 = $test_data2->[2];
+	is( 1, $obj1->{b},    "b in obj 0" );
+	is( 2, $obj2->{b},    "b in obj 1" );
+	is( 3, $obj3->{b},    "b in obj 2" );
+	is( 1, $obj1->{done}, "done in obj 0" );
+	is( 1, $obj2->{done}, "done in obj 1" );
+	is( 1, $obj3->{done}, "done in obj 2" );
+	ok( !defined $obj1->{a}, "a in obj 0" );
+	ok( !defined $obj2->{a}, "a in obj 0" );
+	ok( !defined $obj3->{a}, "a in obj 0" );
+	unlink $test_file;
+	unlink $out_file;
 };
 
 done_testing;
