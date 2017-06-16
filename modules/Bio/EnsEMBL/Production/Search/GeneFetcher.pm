@@ -56,15 +56,22 @@ sub new {
 }
 
 sub fetch_genes {
-	my ( $self, $name, $compara_name ) = @_;
+	my ( $self, $name, $compara_name, $type ) = @_;
 	$logger->debug("Fetching DBA for $name");
-	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'core' );
+	$type ||= 'core';
+	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, $type );
 	croak "Could not find database adaptor for $name" unless defined $dba;
-	my $funcgen_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'funcgen' );
-	my $compara_dba =
-	  Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' )
-	  if defined $compara_name;
-	return $self->fetch_genes_for_dba( $dba, $compara_dba, $funcgen_dba );
+	if ( $type eq 'core' ) {
+		my $funcgen_dba =
+		  Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'funcgen' );
+		my $compara_dba =
+		  Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' )
+		  if defined $compara_name;
+		return $self->fetch_genes_for_dba( $dba, $compara_dba, $funcgen_dba );
+	}
+	else {
+		return $self->fetch_genes_for_dba($dba);
+	}
 }
 
 sub fetch_genes_for_dba {
