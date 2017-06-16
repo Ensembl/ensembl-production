@@ -54,6 +54,8 @@ sub dump {
 		$output->{genome_file} = $self->dump_genome($species);
 		$self->{logger}->info( "Dumping genes for " . $species );
 		$output->{genes_file} = $self->dump_genes( $species, $compara );
+		$self->{logger}->info( "Dumping otherfeatures genes for " . $species );
+		$output->{otherfeatures_file} = $self->dump_otherfeatures( $species, $compara );
 		$self->{logger}->info( "Dumping sequences for " . $species );
 		$output->{seqs_file} = $self->dump_sequences($species);
 		$self->{logger}->info( "Dumping markers for " . $species );
@@ -87,6 +89,13 @@ sub dump_genes {
 	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
 	  ->fetch_genes( $species, $compara );
 	return $self->write_json( $species, 'genes', $genes );
+}
+
+sub dump_otherfeatures {
+	my ( $self, $species ) = @_;
+	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
+	  ->fetch_genes( $species );
+	return $self->write_json( $species, 'otherfeatures', $genes );
 }
 
 sub dump_sequences {
