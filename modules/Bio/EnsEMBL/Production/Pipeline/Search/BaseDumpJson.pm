@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::Search::BaseDumpJson;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 
@@ -42,7 +42,7 @@ sub run {
 		Log::Log4perl->easy_init($INFO);
 	}
 	$self->{logger} = get_logger();
-	$self->hive_dbc()->reconnect_when_lost(1);
+	$self->hive_dbc()->reconnect_when_lost(1) if defined $self->hive_dbc();
 	my $species = $self->param_required('species');
 	$self->dump( $species );
 	
