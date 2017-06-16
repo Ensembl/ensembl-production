@@ -56,7 +56,7 @@ def main(argv):
 
     # create Void RDF graph and dump it to file
     voidFile = "%_void.ttl" % project
-    voidRdf = VoidRDF(speciesInfo)
+    voidRdf = VoidRDF(project, release, releaseDate, speciesInfo)
     voidRdf.write(voidFile)
 
     # # QC
