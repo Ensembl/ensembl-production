@@ -95,6 +95,7 @@ sub metadata_to_hash {
 						   name                => $md->name(),
 						   display_name        => $md->display_name(),
 						   scientific_name     => $md->scientific_name(),
+						   url_name            => $md->url_name(),
 						   strain              => $md->strain(),
 						   serotype            => $md->serotype(),
 						   taxonomy_id         => $md->taxonomy_id(),
