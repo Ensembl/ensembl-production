@@ -77,11 +77,14 @@ sub get_genes {
   select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype,
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
   s.name as seq_region_name,
-  'gene' as ensembl_object_type
+  'gene' as ensembl_object_type,
+  ifnull(ad.display_label,a.logic_name) as analysis
   from gene f
   left join xref x on (f.display_xref_id = x.xref_id)
   join seq_region s using (seq_region_id)
   join coord_system c using (coord_system_id)
+  join analysis a using (analysis_id)
+  left join analysis_description ad using (analysis_id)
   where c.species_id = ? 
   /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes );
@@ -93,9 +96,9 @@ sub get_genes {
 
 	@genes = @$result;
 
-        # turn into hash
+	# turn into hash
 	my $genes_hash = { map { $_->{id} => $_ } @genes };
-        # query for all synonyms, hash by gene ID
+	# query for all synonyms, hash by gene ID
 	my $synonyms = $self->get_synonyms( $dba, $biotypes );
 	while ( my ( $gene_id, $synonym ) = each %$synonyms ) {
 		$genes_hash->{$gene_id}->{synonyms} = $synonym;
@@ -152,13 +155,16 @@ sub get_transcripts {
     t.seq_region_end as end, 
     t.seq_region_strand as strand,
     s.name as seq_region_name,
-    'transcript' as ensembl_object_type
+    'transcript' as ensembl_object_type,
+    ifnull(ad.display_label,a.logic_name) as analysis
     FROM 
     gene g
     join transcript t using (gene_id)
     left join xref x on (t.display_xref_id = x.xref_id)
     join seq_region s on (s.seq_region_id = g.seq_region_id)
     join coord_system c using (coord_system_id)
+    join analysis a on (t.analysis_id=a.analysis_id)
+    left join analysis_description ad on (a.analysis_id=ad.analysis_id)
     where c.species_id = ? 
     /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes, 't' );
@@ -232,7 +238,7 @@ sub get_transcripts {
 	for my $transcript (@transcripts) {
 		push @{ $transcript->{exons} }, @{ $exons{ $transcript->{id} } };
 		push @{ $transcript_hash->{ $transcript->{gene_id} } }, $transcript;
-		delete $transcript_hash->{gene_id};                
+		delete $transcript_hash->{gene_id};
 	}
 	return $transcript_hash;
 } ## end sub get_transcripts
@@ -335,7 +341,7 @@ sub _generate_xref_sql {
 		$translation_join = 'JOIN translation tl USING (transcript_id)';
 	}
 	my $sql = qq/
-      SELECT ${table_alias}.stable_id AS id, x.dbprimary_acc, x.display_label, e.db_name, x.description, x.info_type, x.info_text
+      SELECT ${table_alias}.stable_id AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
       FROM ${table_name} f
       ${translation_join}
       JOIN object_xref ox         ON (${table_alias}.${other_table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
@@ -362,8 +368,8 @@ sub _generate_object_xref_sql {
 		$translation_join = 'JOIN translation tl USING (transcript_id)';
 	}
 	my $sql = qq/ 
-    SELECT ox.object_xref_id, ${select_alias}.stable_id AS id, x.dbprimary_acc, x.display_label, e.db_name, x.description, 
-           oox.linkage_type, sx.dbprimary_acc, sx.display_label, sx.description, se.db_name
+    SELECT ox.object_xref_id, ${select_alias}.stable_id AS id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name,  x.description, 
+           oox.linkage_type, sx.dbprimary_acc, sx.display_label, sx.description, se.db_name, se.db_display_name
       FROM ${table_name} ${table_alias}
       ${translation_join}
       JOIN object_xref ox      ON (${select_alias}.${other_table_name}_id=ox.ensembl_id AND ox.ensembl_object_type='${Table_name}')
@@ -392,7 +398,7 @@ sub _generate_associated_xref_sql {
 	}
 
 	my $sql = qq/
-    SELECT ax.object_xref_id, ax.rank, ax.condition_type, x.dbprimary_acc, x.display_label, xe.db_name, x.description, 
+    SELECT ax.object_xref_id, ax.rank, ax.condition_type, x.dbprimary_acc, x.display_label, xe.db_name, xe.db_display_name, x.description, 
            sx.dbprimary_acc, sx.display_label, se.db_name, sx.description, ax.associated_group_id 
       FROM ${root_table_name} f
       ${translation_join}
@@ -412,6 +418,15 @@ sub _generate_associated_xref_sql {
 sub get_xrefs {
 	my ( $self, $dba, $type, $biotypes ) = @_;
 
+	my $synonyms = {};
+	$dba->dbc()->sql_helper()->execute_no_return(
+		-SQL      => q/select xref_id,synonym from external_synonym/,
+		-CALLBACK => sub {
+			my ( $id, $syn ) = @_;
+			push @{ $synonyms->{$id} }, $syn;
+			return;
+		} );
+
 	my $sql = $self->_generate_xref_sql($type);
 	$sql = $self->_append_biotype_sql( $sql, $biotypes, $type );
 	my $oox_sql = $self->_generate_object_xref_sql($type);
@@ -425,16 +440,19 @@ sub get_xrefs {
 		-PARAMS   => [ $dba->species_id() ],
 		-CALLBACK => sub {
 			my ($row) = @_;
-			my ( $stable_id, $dbprimary_acc, $display_label, $db_name,
-				 $description, $info_type, $info_text )
-			  = @$row;
-			push @{ $xrefs->{$stable_id} }, {
-				primary_id  => $dbprimary_acc,
-				display_id  => $display_label,
-				dbname      => $db_name,
-				description => $description,
-				info_type   => $info_type,
-				info_text   => $info_text };
+			my ( $stable_id,     $xref_id,   $dbprimary_acc,
+				 $display_label, $db_name,   $db_display_name,
+				 $description,   $info_type, $info_text ) = @$row;
+			my $x = { primary_id  => $dbprimary_acc,
+					  display_id  => $display_label,
+					  dbname      => $db_name,
+					  db_display  => $db_display_name,
+					  description => $description,
+					  info_type   => $info_type,
+					  info_text   => $info_text };
+			my $syn = $synonyms->{$xref_id};
+			$x->{synonyms} = $syn if defined $syn;
+			push @{ $xrefs->{$stable_id} }, $x;
 			return;
 		} );
 	# now handle oox
@@ -449,7 +467,7 @@ sub get_xrefs {
 				 $db_name,             $description,
 				 $linkage_type,        $other_dbprimary_acc,
 				 $other_display_label, $other_description,
-				 $other_dbname ) = @$row;
+				 $other_dbname, $other_db_display_name ) = @$row;
 			my $xref = $oox_xrefs->{$ox_id};
 			if ( !defined $xref ) {
 				$xref = { obj_id      => $stable_id,
@@ -466,6 +484,7 @@ sub get_xrefs {
 							primary_id  => $other_dbprimary_acc,
 							display_id  => $other_display_label,
 							dbname      => $other_dbname,
+							db_display_name => $other_db_display_name,
 							description => $other_description, } };
 			return;
 		} );
@@ -479,16 +498,20 @@ sub get_xrefs {
 			my ( $associated_ox_id,     $associated_rank,
 				 $associated_condition, $dbprimary_acc,
 				 $display_label,        $db_name,
+				 $db_display_name,
 				 $description,          $other_dbprimary_acc,
 				 $other_display_label,  $other_db_name,
 				 $other_description,    $associated_group_id ) = @$row;
 			my $xref = $oox_xrefs->{$associated_ox_id};
 			# add linkage type to $xref
-			$xref->{associated_xrefs}->{$associated_group_id}
-			  ->{$associated_condition} = {
+			if ( defined $associated_group_id && defined $associated_condition )
+			{
+				$xref->{associated_xrefs}->{$associated_group_id}
+				  ->{$associated_condition} = {
 										 rank        => $associated_rank,
 										 primary_id  => $dbprimary_acc,
 										 display_id  => $display_label,
+										 db_display_name => $db_display_name,
 										 dbname      => $db_name,
 										 description => $description,
 										 source      => {
@@ -497,6 +520,7 @@ sub get_xrefs {
 											 dbname     => $other_db_name,
 											 description => $other_description,
 										 } };
+			}
 			return;
 		} );
 
@@ -681,7 +705,7 @@ WHERE g.name = ?/,
 		},
 		-PARAMS => [$species] );
 
-		my $n = 0;
+	my $n = 0;
 	# add families for each member
 	for my $gene ( @{$genes} ) {
 
