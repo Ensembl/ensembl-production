@@ -47,12 +47,12 @@ sub process_json_file {
 	$logger->info("Processing $file");
 	# open filehandle
 	open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
-	# seek through whitespace 
+	# seek through whitespace
 	my $c;
-	while(($c = getc($fh)) =~ m/\s/) {}
-	if($c ne '[') {
+	while ( ( $c = getc($fh) ) =~ m/\s/ ) { }
+	if ( $c ne '[' ) {
 		croak "JSON file must contain an array only";
-	}	
+	}
 	my $n    = 0;
 	my $json = new JSON;
 	{
@@ -71,7 +71,7 @@ sub process_json_file {
 	close $fh;
 	$logger->info("Completed processing $n elements from $file");
 	return;
-} ## end sub process_file
+} ## end sub process_json_file
 
 sub reformat_json {
 	my ( $infile, $outfile, $callback ) = @_;
@@ -84,16 +84,26 @@ sub reformat_json {
 		sub {
 			my ($obj) = @_;
 			my $new_obj = $callback->($obj);
-			if ( $n++ > 0 ) {
-				print $fh ",";
+			if ( ref($new_obj) eq 'ARRAY' ) {
+				for my $o (@$new_obj) {
+					if ( $n++ > 0 ) {
+						print $fh ",";
+					}
+					print $fh encode_json($o);
+				}
 			}
-			print $fh encode_json($new_obj);
+			else {
+				if ( $n++ > 0 ) {
+					print $fh ",";
+				}
+				print $fh encode_json($new_obj);
+			}
 			return;
 		} );
 
 	print $fh ']';
 	close $fh;
 	return;
-}
+} ## end sub reformat_json
 
 1;

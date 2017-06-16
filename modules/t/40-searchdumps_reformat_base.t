@@ -171,4 +171,41 @@ subtest "Reformat object file", sub {
 	unlink $out_file;
 };
 
+subtest "Reformat object file with arrays", sub {
+	# create a test structure
+	my $test_data = [ { a => 1 }, { a => 2 }, { a => 3 } ];
+	# write to a JSON file
+	my $test_file = "./40-searchdumps_reformat_base.json";
+	open my $out, ">",
+	  $test_file || die "Could not open $test_file for writing";
+	print $out encode_json($test_data);
+	close $out;
+	my $out_file = "./40-searchdumps_reformat_base_out.json";
+	reformat_json(
+		$test_file, $out_file,
+		sub {
+			my $obj = shift;
+			return [{ b => $obj->{a}},{ done => 1 }];
+		} );
+	my $test_data2 = decode_json( read_file($out_file) );
+	is( 6, scalar @$test_data2, "6 objs" );
+	my $obj1 = $test_data2->[0];
+	my $obj2 = $test_data2->[1];
+	my $obj3 = $test_data2->[2];
+	my $obj4 = $test_data2->[3];
+	my $obj5 = $test_data2->[4];
+	my $obj6 = $test_data2->[5];
+	is( 1, $obj1->{b},    "b in obj 0" );
+	is( 2, $obj3->{b},    "b in obj 2" );
+	is( 3, $obj5->{b},    "b in obj 4" );
+	is( 1, $obj2->{done}, "done in obj 1" );
+	is( 1, $obj4->{done}, "done in obj 3" );
+	is( 1, $obj6->{done}, "done in obj 5" );
+	ok( !defined $obj1->{a}, "a in obj 0" );
+	ok( !defined $obj2->{a}, "a in obj 0" );
+	ok( !defined $obj3->{a}, "a in obj 0" );
+	unlink $test_file;
+	unlink $out_file;
+};
+
 done_testing;
