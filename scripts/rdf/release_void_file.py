@@ -16,7 +16,7 @@ from rdflib.namespace import RDF, FOAF, VOID
 
 from project_ftp import ProjectFTP
 from void_rdf import VoidRDF
-# from qc_void import VOIDQC
+from qc_void import qc
 # from github import push_to_branch_repo
 
 def usage():
@@ -47,19 +47,21 @@ def main(argv):
         print("Error: project must be either 'ensembl' or 'ensemblgenomes'", sys.stderr)
         sys.exit(2)
 
-
     # retrieve species info (name, core/xref rdf paths)
     # for each species with RDF in the project FTP area
     speciesInfo = ProjectFTP(project).parseSpecies()
 
-    # create Void RDF graph and dump it to file
+    # create Void RDF graph
     voidFile = "%s_void.ttl" % project
     voidRdf = VoidRDF(project, release, releaseDate, speciesInfo)
-    voidRdf.write(voidFile)
+    voidRdf.generate()
 
-    # # QC
-    # voidQC = VOIDQC(voidFile)
-    # voidQC.check()
+    # QC of the VOID file
+    # raise AttributeError if it does not pass, do not handle
+    voidRdf.qc()
+
+    # Dump VOID RDF to file
+    voidRdf.write(voidFile)
 
     # # push to the project specific branch of the RDF platform github repo
     # branch = project
