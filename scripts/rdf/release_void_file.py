@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """Script to generate a new VOID file describing the RDF dataset
-for either Ensembl or EnsemblGenomes."""
+for either Ensembl or EnsemblGenomes.
+Additionally, the script validate the file and pushes it to the project
+specific branch in the EBI SPOT GitHub repository."""
+
 from __future__ import print_function
 
 import sys
@@ -19,7 +22,7 @@ from rdflib.namespace import RDF, FOAF, VOID
 from project_ftp import ProjectFTP
 from void_rdf import VoidRDF
 from qc_void import qc
-# from github import push_to_branch_repo
+from github import push_to_repo_branch
 
 def usage():
     print("release_void_file.py\n[options]\n\t-c <config file> (default: void_rdf.cfg)\n\t-p <project> [ensembl|ensemblgenomes] (default: ensembl)\n\t-r <release> (e.g. 89, default: 'current')\n\t-d <release date> (format: DD-MM-YYYY)\n")
@@ -74,7 +77,6 @@ def main(argv):
     ### Dump VOID RDF to file and zip
     voidRdf.write(voidFile)
     
-
     ### Push to the project specific branch of the RDF platform github repo
     # read configuration to get necessary parameters, i.e. branch and token
     config = RawConfigParser()
@@ -86,7 +88,7 @@ def main(argv):
     if not token:
         raise AttributeError("Couldn\'t get valid access token for %s from config file" % project)
 
-    # push_to_branch_repo(branch, token)
+    push_to_repo_branch(voidFile, voidFile, branch, token)
         
 if __name__ == "__main__":
     main(sys.argv[1:])
