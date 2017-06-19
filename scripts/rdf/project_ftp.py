@@ -20,7 +20,7 @@ class ProjectFTP(object):
             "url": "ftp.ensemblgenomes.org",
             "www": "http://www.ensemblgenomes.org",
             "license": "/info/about/legal/code_licence",
-            "divisions": [ "fungi" ] # [ "bacteria", "fungi", "metazoa", "plants", "protists" ]
+            "divisions": [ "bacteria", "fungi", "metazoa", "plants", "protists" ]
         }
     }
     
@@ -101,7 +101,6 @@ class ProjectFTP(object):
             if "collection" not in subDir:
                 # this is a normal species dir, add the species info directly
                 species_name = subDir
-                print("Adding %s" % species_name)
                 speciesData.append(
                     {
                         "name": species_name,
@@ -114,9 +113,3 @@ class ProjectFTP(object):
             else:
                 # enter the collection subdir and get the species data from there
                 self.parseDivision("%s/%s" % (rdfDir, subDir), speciesData)
-            
-        
-if __name__ == "__main__":
-    ftp = ProjectFTP("ensemblgenomes")
-    species = ftp.parseSpecies()
-    print(species)
