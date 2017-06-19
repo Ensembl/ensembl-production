@@ -2,6 +2,7 @@
 """Class whose instances take information from project species RDF files,
 construct an RDF graph representing the dataset (VOID), and dump it to file."""
 
+import gzip
 import datetime
 import rdflib
 from rdflib import Graph
@@ -190,9 +191,8 @@ class VoidRDF(object):
     def write(self, fileName):
         """Dump VOID RDF graph to file."""
         voidOutput = self.void.serialize(format = 'turtle')
-        voidFile = open(fileName, 'w')
-        voidFile.write(voidOutput)
-        voidFile.close()
+        with gzip.open(fileName, 'wb') as f:
+            f.write(voidOutput)
 
     def qc(self):
         """Quality control. This is basically a combination of SPARQL queries and python error msg in case the results is not what we expect.
