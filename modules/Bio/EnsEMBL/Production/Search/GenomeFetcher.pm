@@ -103,6 +103,8 @@ sub metadata_to_hash {
 						   aliases             => $md->aliases() },
 			 assembly => { name      => $md->assembly_name(),
 						   accession => $md->assembly_accession(),
+						   default   => $md->assembly_default(),
+						   ucsc      => $md->assembly_ucsc(),
 						   level     => $md->assembly_level() } };
 }
 
