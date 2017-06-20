@@ -7,45 +7,53 @@ import base64
 import json
 import datetime
 
-def push_to_repo_branch(gitHubFileName, fileName, branch, token):
+def push_to_repo_branch(gitHubFileName, fileName, branch, user, token):
     message = "Automated update " + str(datetime.datetime.now())
     path = "https://api.github.com/repos/EBISPOT/RDF-platform/branches/%s" % branch
 
-    r = requests.get(path, headers = {'Authorization': token })
+    r = requests.get(path, auth=(user,token))
+    if not r.ok:
+        print("Error when retrieving branch info from %s" % path)
+        print("Reason: %s [%d]" % (r.text, r.status_code))
+        raise
     rjson = r.json()
     treeurl = rjson['commit']['commit']['tree']['url']
-    r2 = requests.get(treeurl, headers = {'Authorization': token })
+    r2 = requests.get(treeurl, auth=(user,token))
+    if not r2.ok:
+        print("Error when retrieving commit tree from %s" % treeurl)
+        print("Reason: %s [%d]" % (r2.text, r2.status_code))
+        raise
     r2json = r2.json()
     sha = None
 
     for file in r2json['tree']:
         # Found file, get the sha code
-        if file['path'] == gitHubFilename:
+        if file['path'] == gitHubFileName:
             sha = file['sha']
 
     # if sha is None after the for loop, we did not find the file name!
     if sha is None:
-        print "Could not find " + gitHubFilename + " in repos 'tree' "
+        print "Could not find " + gitHubFileName + " in repos 'tree' "
         raise Exception
 
-    # assume file is gizipped
-    with gzip.open(fileName, 'rb') as data:
-        data_as_string = data.read()
-        content = base64.b64encode(data_as_string)
-    
+    with open(fileName) as data:
+        content = base64.b64encode(data.read())
+
     # gathered all the data, now let's push
     inputdata = {}
     inputdata["path"] = gitHubFileName
     inputdata["branch"] = branch
     inputdata["message"] = message
     inputdata["content"] = content
-    inputdata["sha"] = str(sha)
+    if sha:
+        inputdata["sha"] = str(sha)
 
     updateURL = "https://api.github.com/repos/EBISPOT/RDF-platform/contents/" + gitHubFileName
     try:
-        rPut = requests.put(updateURL, headers = {'Authorization': token }, data = json.dumps(inputdata))
-        if rPut.status_code == 404:
-            print "Status code 404 when I tried to push - so I raise an error!"
+        rPut = requests.put(updateURL, auth=(user,token), data = json.dumps(inputdata))
+        if not rPut.ok:
+            print("Error when pushing to %s" % updateURL)
+            print("Reason: %s [%d]" % (rPut.text, rPut.status_code))
             raise Exception
     except requests.exceptions.RequestException as e:
         print 'Something went wrong! I will print all the information that is available so you can figure out what happend!'
