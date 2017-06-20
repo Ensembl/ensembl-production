@@ -226,31 +226,6 @@ sub default_options {
                                 'percent_id_filter'      => '30',
                                 'percent_cov_filter'     => '66',
                         },
-                 #Only uncomment when mouse strains have changed
-#                  '6'=>{
-#                                # source species to project from
-#                                'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
- #                               # target species to project to
- #                               'species'     =>  ['mus_spretus_spreteij'], # ['puccinia graminis', 'aspergillus_nidulans']
- #                               # target species to exclude
- #                               'antispecies' => [],
- #                               # target species division to project to
- #                               'division'    => [],
- #                               # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
- #                               'project_xrefs' =>  1,
- #                               # Project all white list. Only the following xrefs will be projected from source to target. This doesn't affect display xref
- #                               'white_list'  => ['RefSeq_mRNA', 'RefSeq_mRNA_predicted','RefSeq_ncRNA','RefSeq_ncRNA_predicted','RefSeq_peptide','RefSeq_peptide_predicted','EntrezGene','EntrezGene_trans_name','WikiGene','Uniprot/SPTREMBL','Uniprot/SWISSPROT','Uniprot_gn','protein_id','UniParc','ArrayExpress','RNACentral','MGI','MGI_trans_name','miRBase','miRBase_trans_name','RFAM','RFAM_trans_name'],
-  #                              # Run the pipeline on all the species 
-  #                              'run_all'     =>  0, # 1/0
-  #                              # source species GeneName filter
-  #                              'geneName_source'                => ['MGI', 'MGI_trans_name'],
-  #                              # homology types filter
-  #                              'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-  #                              'homology_types_allowed' => ['ortholog_one2one'],
-  #                              # homology percentage identity filter
-  #                              'percent_id_filter'      => '30',
-  #                              'percent_cov_filter'     => '66',
-  #                     },
 		},
 
 	## GeneDescription Projection 
