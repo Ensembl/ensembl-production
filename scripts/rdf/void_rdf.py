@@ -188,11 +188,16 @@ class VoidRDF(object):
             self.void.add( (speciesPart2, dct.title, Literal(title)) )
             self.void.add( (speciesPart2, dct.description, Literal("External references for %s" % title)) )
 
-    def write(self, fileName):
+    def write(self, fileName, zipped):
         """Dump VOID RDF graph to file."""
         voidOutput = self.void.serialize(format = 'turtle')
-        with gzip.open(fileName, 'wb') as f:
-            f.write(voidOutput)
+        if zipped:
+            with gzip.open(fileName, 'wb') as f:
+                f.write(voidOutput)
+        else:
+            voidFile = open(fileName, 'w')
+            voidFile.write(voidOutput)
+            voidFile.close()
 
     def qc(self):
         """Quality control. This is basically a combination of SPARQL queries and python error msg in case the results is not what we expect.
@@ -404,6 +409,8 @@ class VoidRDF(object):
                 listOfPredicats.append(str(row.b))
             if "http://rdfs.org/ns/void#dataDump" not in listOfPredicats:
                 raise AttributeError("dataDump of type http://rdfs.org/ns/void#dataDump is missing in "+entity)
+
+        print("Looks good")
 
     def recursive_subset_check(self, entity):
         """A helper function to check recursivly if the last level of a subset has a dataDump link."""
