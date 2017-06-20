@@ -71,6 +71,7 @@ sub default_options {
         # If the parallel flag is off, the projections will run sequentially, one set of projections at the time.
         # Default value is 1
         parallel_GeneNames_projections => '0',
+        parallel_GeneDescription_projections => '0',
     ## analysis_capacity values for some analyses:
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
