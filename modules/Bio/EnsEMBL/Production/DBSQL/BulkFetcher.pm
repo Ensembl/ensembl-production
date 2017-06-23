@@ -219,9 +219,9 @@ sub get_transcripts {
   WHERE c.species_id = ?
   ORDER BY `id`
   /;
-	my %exons;    # key them off their transcript ID
+	my $exons = {};    # key them off their transcript ID
 
-	$dba->dbc->sql_helper->execute(
+	$dba->dbc->sql_helper->execute_no_return(
 		-SQL          => $exon_sql,
 		-PARAMS       => [ $dba->species_id ],
 		-USE_HASHREFS => 1,
@@ -231,12 +231,71 @@ sub get_transcripts {
 			  $coord_systems->{ $row->{trans_id}
 			  };    # borrow coordinate system from relevant transcript
 
-			push @{ $exons{ $row->{trans_id} } }, $row;
+			push @{ $exons->{ $row->{trans_id} } }, $row;
+			return;
 		} );
-
+		
+	my $supporting_features = {};	
+	$dba->dbc->sql_helper->execute_no_return(
+		-SQL          => q/
+		select t.stable_id as trans_id,
+		f.hit_name as id,
+		f.hit_start as start,
+		f.hit_end as end,
+		f.evalue as evalue,
+		d.db_name as db_name,
+		d.db_display_name as db_display,
+		a.logic_name as analysis
+		from coord_system c
+		join seq_region s using (coord_system_id)
+		join transcript t using (seq_region_id)
+		join transcript_supporting_feature sf using (transcript_id)
+		join dna_align_feature f on (f.dna_align_feature_id=sf.feature_id)
+		join external_db d using (external_db_id)
+		join analysis a on (a.analysis_id=f.analysis_id)
+		where sf.feature_type='dna_align_feature'
+		and c.species_id=?
+		/,
+		-PARAMS       => [ $dba->species_id ],
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
+			my ($row) = @_;
+			push @{ $supporting_features->{ $row->{trans_id} } }, $row;
+			return;
+		} );
+	$dba->dbc->sql_helper->execute_no_return(
+		-SQL          => q/
+		select sf.transcript_id as trans_id,
+		f.hit_name as id,
+		f.hit_start as start,
+		f.hit_end as end,
+		f.evalue as evalue,
+		d.db_name as db_name,
+		d.db_display_name as db_display,
+		a.logic_name as analysis
+		from 
+		coord_system c
+		join seq_region s using (coord_system_id)
+		join transcript using (seq_region_id)
+		join transcript_supporting_feature sf using (transcript_id)
+		join protein_align_feature f on (f.protein_align_feature_id=sf.feature_id)
+		join external_db d using (external_db_id)
+		join analysis a on (a.analysis_id=f.analysis_id)
+		where sf.feature_type='protein_align_feature'
+		and c.species_id=?
+		/,
+		-PARAMS       => [ $dba->species_id ],
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
+			my ($row) = @_;
+			push @{ $supporting_features->{ $row->{trans_id} } }, $row;
+			return;
+		} );
 	my $transcript_hash = {};
 	for my $transcript (@transcripts) {
-		push @{ $transcript->{exons} }, @{ $exons{ $transcript->{id} } };
+		push @{ $transcript->{exons} }, @{ $exons->{ $transcript->{id} } };
+		my $sf = $supporting_features->{ $transcript->{id} };
+		push @{ $transcript->{supporting_features} }, @{$sf} if defined $sf && scalar(@$sf)>0;
 		push @{ $transcript_hash->{ $transcript->{gene_id} } }, $transcript;
 		delete $transcript_hash->{gene_id};
 	}
@@ -422,7 +481,7 @@ sub get_xrefs {
 	$dba->dbc()->sql_helper()->execute_no_return(
 		-SQL      => q/select xref_id,synonym from external_synonym/,
 		-CALLBACK => sub {
-			my ( $id, $syn ) = @_;
+			my ( $id, $syn ) = @{$_[0]};
 			push @{ $synonyms->{$id} }, $syn;
 			return;
 		} );
