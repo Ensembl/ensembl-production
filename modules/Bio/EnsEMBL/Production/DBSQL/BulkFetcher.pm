@@ -119,6 +119,11 @@ sub get_genes {
 	while ( my ( $gene_id, $coord_system ) = each %$coord_systems ) {
 		$genes_hash->{$gene_id}->{coord_system} = $coord_system;
 	}
+	# add stable_ids
+	my $ids = $self->get_stable_ids($dba, 'gene');
+	while ( my ($gene_id, $old_ids) = each %{$ids}) {
+		$genes_hash->{$gene_id}->{previous_ids} = $old_ids;		
+	}
 
 	if ( $load_xrefs == 1 ) {
 		# query for all xrefs, hash by gene ID
@@ -291,11 +296,16 @@ sub get_transcripts {
 			push @{ $supporting_features->{ $row->{trans_id} } }, $row;
 			return;
 		} );
+		
+	my $stable_ids = $self->get_stable_ids($dba, 'transcript');
+		
 	my $transcript_hash = {};
 	for my $transcript (@transcripts) {
 		push @{ $transcript->{exons} }, @{ $exons->{ $transcript->{id} } };
 		my $sf = $supporting_features->{ $transcript->{id} };
 		push @{ $transcript->{supporting_features} }, @{$sf} if defined $sf && scalar(@$sf)>0;
+		my $ids = $stable_ids->{$transcript->{id}};
+		$transcript->{previous_ids} = $ids if defined $ids && scalar(@$ids)>0;
 		push @{ $transcript_hash->{ $transcript->{gene_id} } }, $transcript;
 		delete $transcript_hash->{gene_id};
 	}
@@ -327,6 +337,8 @@ sub get_translations {
 	if ( $level eq 'protein_feature' ) {
 		$protein_features = $self->get_protein_features( $dba, $biotypes );
 	}
+	
+	my $stable_ids = $self->get_stable_ids($dba, 'translation');	
 
 	my @translations = @{
 		$dba->dbc()->sql_helper()->execute(
@@ -336,7 +348,9 @@ sub get_translations {
 			-CALLBACK     => sub {
 				my ($row) = @_;
 				$row->{xrefs}            = $xrefs->{ $row->{id} };
-				$row->{protein_features} = $protein_features->{ $row->{id} };
+				$row->{protein_features} = $protein_features->{ $row->{id} };				
+				my $ids = $stable_ids->{$row->{id}};
+				$row->{previous_ids} = $ids if defined $ids && scalar(@$ids)>0;
 				return $row;
 			} ) };
 
@@ -688,6 +702,36 @@ sub get_haplotypes {
 			return;
 		} );
 	return $haplotypes;
+}
+
+my $base_id_sql = q/
+      SELECT f.stable_id as id, sie.old_stable_id as old_id
+      FROM stable_id_event as sie
+      JOIN %s f on (f.stable_id=sie.new_stable_id)
+      %sJOIN seq_region s USING (seq_region_id)
+      JOIN coord_system c USING (coord_system_id)
+      WHERE sie.type=?
+      AND old_stable_id != new_stable_id      
+      AND c.species_id=?
+/;
+my $stable_id_sql = {
+	gene=>sprintf($base_id_sql, 'gene',''),
+	transcript=>sprintf($base_id_sql, 'transcript',''),
+	translation=>sprintf($base_id_sql, 'translation','JOIN transcript USING (transcript_id) ')
+};
+
+sub get_stable_ids {
+	my ($self, $dba, $type) = @_;
+	my $stable_ids = {};
+	$dba->dbc()->sql_helper()->execute_no_return(
+		-SQL      => $stable_id_sql->{$type},
+		-PARAMS   => [ $type, $dba->species_id() ],
+		-CALLBACK => sub {
+			my ($row) = @_;
+			push @{$stable_ids->{ $row->[0] }}, $row->[1];
+			return;
+		} );
+	return $stable_ids;
 }
 
 sub add_compara {
