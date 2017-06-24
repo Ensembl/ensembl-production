@@ -28,12 +28,7 @@ use Bio::EnsEMBL::Utils::Exception qw(throw);
 
 use Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter;
 
-use JSON;
-use File::Path qw(make_path);
-use Carp qw(croak);
-
 use Log::Log4perl qw/:easy/;
-use Data::Dumper;
 
 sub run {
 	my ($self) = @_;
@@ -62,29 +57,4 @@ sub run {
 	return;
 } ## end sub run
 
-sub dump {
-	my ( $self, $species ) = @_;
-	throw "dump() must be implemented";
-	return;
-}
-
-sub write_json {
-	my ( $self, $species, $type, $data ) = @_;
-	$self->build_base_directory();
-	my $sub_dir        = $self->get_data_path('json');
-	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
-	$self->write_json_to_file( $json_file_path, $data );
-	return;
-}
-
-sub write_json_to_file {
-	my ( $self, $json_file_path, $data ) = @_;
-	$self->info("Writing to $json_file_path");
-	open my $json_file, '>', $json_file_path or
-	  throw "Could not open $json_file_path for writing";
-	print $json_file encode_json($data);
-	close $json_file;
-	$self->info("Write complete");
-	return;
-}
 1;
