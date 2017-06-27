@@ -33,6 +33,7 @@ use Bio::EnsEMBL::Production::Search::GeneFetcher;
 use Bio::EnsEMBL::Production::Search::SequenceFetcher;
 use Bio::EnsEMBL::Production::Search::MarkerFetcher;
 use Bio::EnsEMBL::Production::Search::LRGFetcher;
+use Bio::EnsEMBL::Production::Search::IdFetcher;
 
 use Log::Log4perl qw/:easy/;
 
@@ -62,6 +63,8 @@ sub dump {
 		$output->{lrgs_file} = $self->dump_lrgs($species);
 		$self->{logger}->info( "Dumping markers for " . $species );
 		$output->{markers_file} = $self->dump_markers($species);
+		$self->{logger}->info( "Dumping IDs for " . $species );
+		$output->{ids_file} = $self->dump_ids($species);
 		$self->{logger}->info( "Completed dumping " . $species );
 		$self->dataflow_output_id( $output, 1 );
 
@@ -128,6 +131,17 @@ sub dump_lrgs {
 	  Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs($species);
 	if ( scalar(@$lrgs) > 0 ) {
 		$self->write_json( $species, 'lrgs', $lrgs );
+	}
+	else {
+		return undef;
+	}
+}
+sub dump_ids {
+	my ( $self, $species ) = @_;
+	my $ids =
+	  Bio::EnsEMBL::Production::Search::IdFetcher->new()->fetch_ids($species);
+	if ( scalar(@$ids) > 0 ) {
+		$self->write_json( $species, 'ids', $ids );
 	}
 	else {
 		return undef;
