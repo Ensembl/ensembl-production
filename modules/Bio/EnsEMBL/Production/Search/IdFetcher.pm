@@ -150,6 +150,7 @@ qq(Ensembl $type $osi is no longer in the database and has not been mapped to an
 			}
 			push @$ids, {
 				id                  => $osi,
+				type                => $type,
 				description         => $desc,
 				current_mappings    => \@current_sis,
 				deprecated_mappings => \@deprecated_sis };
