@@ -76,11 +76,11 @@ sub fetch_ids_for_dba {
 	my $mapping = {};
 	$helper->execute_no_return(
 		-SQL =>
-q/SELECT sie.type, sie.old_stable_id, if(isnull(sie.new_stable_id),'NULL',sie.new_stable_id),
+q/SELECT sie.type, sie.old_stable_id, sie.new_stable_id,
            ms.old_release*1.0 as X, ms.new_release*1.0 as Y
-      FROM $dbname.mapping_session as ms, $dbname.stable_id_event as sie
-     WHERE ms.mapping_session_id = sie.mapping_session_id 
-       AND ( old_stable_id != new_stable_id or isnull(new_stable_id) )
+      FROM mapping_session as ms
+      JOIN stable_id_event as sie USING (mapping_session_id) 
+       WHERE ( old_stable_id != new_stable_id or new_stable_id is null )
      ORDER by Y desc, X desc/,
 		-CALLBACK => sub {
 			my ( $type, $osi, $nsi, $old_release, $new_release ) =
@@ -88,14 +88,16 @@ q/SELECT sie.type, sie.old_stable_id, if(isnull(sie.new_stable_id),'NULL',sie.ne
 			return
 			  if $current_stable_ids->{$type}
 			  {$osi};    ## Don't want to show current stable IDs.
-			return if $osi eq $nsi;    ##
+			return if defined $nsi && $osi eq $nsi;    ##
 			   #if the mapped ID is current set it as an example, as long as it's post release 62
 			if ( !$mapping->{$type}{$osi}{'example'} && $new_release > 62 ) {
-				if ( $current_stable_ids->{$type}{$nsi} ) {
+				if ( defined $nsi && $current_stable_ids->{$type}{$nsi} ) {
 					$mapping->{$type}{$osi}{'example'} = $nsi;
 				}
 			}
-			$mapping->{$type}{$osi}{'matches'}{$nsi}++;
+			if(defined $nsi) {
+				$mapping->{$type}{$osi}{'matches'}{$nsi}++;
+			}
 		} );
 
 	my $other_count = 0;
@@ -108,7 +110,7 @@ q/SELECT sie.type, sie.old_stable_id, if(isnull(sie.new_stable_id),'NULL',sie.ne
 				if ( $current_stable_ids->{$type}{$nsi} ) {
 					push @current_sis, $nsi;
 				}
-				elsif ( $_ ne 'NULL' ) {
+				elsif ( $nsi ) {
 					push @deprecated_sis, $nsi;
 				}
 			}
