@@ -99,8 +99,8 @@ sub reformat_genes {
 					 source => $gene->{analysis},
 					 domain_url =>
 					   sprintf( "%s/Gene/Summary?g=%s&amp;db=%s",
-								$genome->{organism}->{name},
-								$gene->{id}, $type ) };
+								$genome->{organism}->{url_name}, $gene->{id},
+								$type ) };
 		} );
 	return;
 } ## end sub reformat_genes
@@ -183,7 +183,8 @@ sub reformat_transcripts {
 					source => $gene->{analysis},
 					domain_url =>
 					  sprintf( "%s/Transcript/Summary?g=%s&amp;db=%s",
-							   $genome->{organism}->{name}, $transcript->{id},
+							   $genome->{organism}->{url_name},
+							   $transcript->{id},
 							   $type ) };
 
 			} ## end for my $transcript ( @{...})
@@ -244,10 +245,9 @@ sub reformat_ids {
 					 description => $desc,
 					 domain_url =>
 					   sprintf( "%s/%s/?g=%s&amp;db=%s",
-								$genome->{organism}->{name},
+								$genome->{organism}->{url_name},
 								ucfirst( $id->{type} ),
-								$id->{id},
-								$type ) };
+								$id->{id}, $type ) };
 		} );
 
 	return;
@@ -277,7 +277,7 @@ sub reformat_sequences {
 					 description => $desc,
 					 domain_url =>
 					   sprintf( "%s/Location/View?r=%s:%d-%d&amp;db=%s",
-								$genome->{organism}->{name},
+								$genome->{organism}->{url_name},
 								$seq->{id}, 1, $seq->{length}, $type ) };
 		} );
 
@@ -297,21 +297,39 @@ sub reformat_lrgs {
 				description =>
 				  sprintf(
 '%s is a fixed reference sequence of length %d with a fixed transcript(s) for reporting purposes. It was created for %s gene %s.',
-					$lrg->{id}, $lrg->{length}, $lrg->{source_database}, $lrg->{source_gene} ),
+					$lrg->{id},              $lrg->{length},
+					$lrg->{source_database}, $lrg->{source_gene} ),
 				domain_url => sprintf( "%s/LRG/Summary?lrg=%s&amp;db=%s",
-									   $genome->{organism}->{name},
+									   $genome->{organism}->{url_name},
 									   $lrg->{id}, $type ) };
 		} );
 
 	return;
 }
 
-sub reformat_gene_families {
-	my ( $self, $infile, $outfile ) = @_;
+sub reformat_markers {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($marker) = @_;
+			my $m = { %{ _base( $genome, $type, 'Marker' ) },
+					  contigviewbottom => 'marker_core_marker=normal',
+					  id               => $marker->{id},
+					  domain_url =>
+						sprintf( "%s/Marker/Details?m=%s",
+								 $genome->{organism}->{url_name},
+								 $marker->{id} ) };
+			$m->{synonyms} = $marker->{synonyms}
+			  if _array_nonempty( $marker->{synonyms} );
+			return $m;
+		} );
+
 	return;
 }
 
-sub reformat_markers {
+sub reformat_gene_families {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
 }

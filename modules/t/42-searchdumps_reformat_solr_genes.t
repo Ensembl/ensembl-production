@@ -125,10 +125,10 @@ subtest "Sequence reformat", sub {
 "Tilepath 7270026 (length 181259 bp) is mapped to chromosome 12. It has synonyms of AC079953.28, FinishAc, tilepath."
 		);
 		is( $e->{domain_url},
-			"homo_sapiens/Location/View?r=7270026:1-181259&amp;db=core" );
+			"Homo_sapiens/Location/View?r=7270026:1-181259&amp;db=core" );
 	}
-	
-		{
+
+	{
 		my ($e) = grep { $_->{id} eq 'X' } @$new_seqs;
 		diag( Dumper($e) );
 		is( $e->{feature_type}, 'Sequence' );
@@ -136,38 +136,60 @@ subtest "Sequence reformat", sub {
 "Chromosome X (length 156040895 bp). It has synonyms of CM000685.2, chrX, NC_000023.11."
 		);
 		is( $e->{domain_url},
-			"homo_sapiens/Location/View?r=X:1-156040895&amp;db=core" );
+			"Homo_sapiens/Location/View?r=X:1-156040895&amp;db=core" );
 	}
-	
-		{
+
+	{
 		my ($e) = grep { $_->{id} eq 'DAAF01080952.1' } @$new_seqs;
 		diag( Dumper($e) );
 		is( $e->{feature_type}, 'Sequence' );
-		is( $e->{description},
-"Contig DAAF01080952.1 (length 171 bp)"
-		);
+		is( $e->{description},  "Contig DAAF01080952.1 (length 171 bp)" );
 		is( $e->{domain_url},
-			"homo_sapiens/Location/View?r=DAAF01080952.1:1-171&amp;db=core" );
+			"Homo_sapiens/Location/View?r=DAAF01080952.1:1-171&amp;db=core" );
 	}
 };
 subtest "LRGs reformat", sub {
-	$formatter->reformat_lrgs( File::Spec->catfile(
-													 $Bin, "lrgs_test.json"
-									),
-									$out_file,
-									$genome, 'core' );
+	$formatter->reformat_lrgs( File::Spec->catfile( $Bin, "lrgs_test.json" ),
+							   $out_file, $genome, 'core' );
 	my $new_lrgs = decode_json( read_file($out_file) );
 	is( scalar(@$new_lrgs), 4, "Checking correct number of lrgs" );
-		my ($e) = grep { $_->{id} eq 'LRG_22' } @$new_lrgs;
-		diag( Dumper($e) );
-		is( $e->{feature_type}, 'Sequence' );
-		is( $e->{description},
+	my ($e) = grep { $_->{id} eq 'LRG_22' } @$new_lrgs;
+	diag( Dumper($e) );
+	is( $e->{feature_type}, 'Sequence' );
+	is( $e->{description},
 "LRG_22 is a fixed reference sequence of length 10058 with a fixed transcript(s) for reporting purposes. It was created for HGNC gene C1QA."
-		);
-		is( $e->{domain_url},
-			"homo_sapiens/LRG/Summary?lrg=LRG_22&amp;db=core" );
+	);
+	is( $e->{domain_url}, "Homo_sapiens/LRG/Summary?lrg=LRG_22&amp;db=core" );
 
 };
-
+subtest "Markers reformat", sub {
+	$formatter->reformat_markers( File::Spec->catfile( $Bin, "markers_test.json"
+								  ),
+								  $out_file,
+								  $genome, 'core' );
+	my $new_markers = decode_json( read_file($out_file) );
+	is( scalar(@$new_markers), 3, "Checking correct number of markers" );
+	{
+		my ($e) = grep { $_->{id} eq '58017' } @$new_markers;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Marker' );
+		is( scalar( @{ $e->{synonyms} } ), 2 );
+		is( $e->{domain_url}, "Homo_sapiens/Marker/Details?m=58017" );
+	}
+	{
+		my ($e) = grep { $_->{id} eq '44919' } @$new_markers;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Marker' );
+		is( scalar( @{ $e->{synonyms} } ), 1 );
+		is( $e->{domain_url}, "Homo_sapiens/Marker/Details?m=44919" );
+	}
+	{
+		my ($e) = grep { $_->{id} eq '127219' } @$new_markers;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Marker' );
+		ok(!defined $e->{synonyms});
+		is( $e->{domain_url}, "Homo_sapiens/Marker/Details?m=127219" );
+	}
+};
 
 done_testing;
