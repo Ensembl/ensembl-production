@@ -182,7 +182,7 @@ sub dump_core_rdf {
 }
 
 sub dump_xrefs_rdf {
-  my ($self, $xrefs_fname, $genes);
+  my ($self, $xrefs_fname, $genes) = @_;
   
   ### Xrefs RDF ###
   #
