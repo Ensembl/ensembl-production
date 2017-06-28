@@ -75,8 +75,7 @@ sub fetch_ids_for_dba {
 
 	my $mapping = {};
 	$helper->execute_no_return(
-		-SQL =>
-q/SELECT sie.type, sie.old_stable_id, sie.new_stable_id,
+		-SQL => q/SELECT sie.type, sie.old_stable_id, sie.new_stable_id,
            ms.old_release*1.0 as X, ms.new_release*1.0 as Y
       FROM mapping_session as ms
       JOIN stable_id_event as sie USING (mapping_session_id) 
@@ -89,13 +88,13 @@ q/SELECT sie.type, sie.old_stable_id, sie.new_stable_id,
 			  if $current_stable_ids->{$type}
 			  {$osi};    ## Don't want to show current stable IDs.
 			return if defined $nsi && $osi eq $nsi;    ##
-			   #if the mapped ID is current set it as an example, as long as it's post release 62
+			    #if the mapped ID is current set it as an example, as long as it's post release 62
 			if ( !$mapping->{$type}{$osi}{'example'} && $new_release > 62 ) {
 				if ( defined $nsi && $current_stable_ids->{$type}{$nsi} ) {
 					$mapping->{$type}{$osi}{'example'} = $nsi;
 				}
 			}
-			if(defined $nsi) {
+			if ( defined $nsi ) {
 				$mapping->{$type}{$osi}{'matches'}{$nsi}++;
 			}
 		} );
@@ -110,52 +109,17 @@ q/SELECT sie.type, sie.old_stable_id, sie.new_stable_id,
 				if ( $current_stable_ids->{$type}{$nsi} ) {
 					push @current_sis, $nsi;
 				}
-				elsif ( $nsi ) {
+				elsif ($nsi) {
 					push @deprecated_sis, $nsi;
 				}
 			}
-			if (@current_sis) {
-				$other_count++;
-				my $example_id   = $mapping->{$type}{$osi}{'example'};
-				my $current_id_c = scalar(@current_sis);
-				my $cur_txt =
-				  $current_id_c > 1 ? "$current_id_c current identifiers" :
-				                      "$current_id_c current identifier";
-				$cur_txt .= $example_id ? " (eg $example_id)" : '';
-				$desc = qq(Ensembl $type $osi is no longer in the database.);
-				my $deprecated_id_c = scalar(@deprecated_sis);
-				if ($deprecated_id_c) {
-					my $dep_txt =
-					  $deprecated_id_c > 1 ?
-					  "$deprecated_id_c deprecated identifiers" :
-					  "$deprecated_id_c deprecated identifier";
-					$desc .= " It has been mapped to $dep_txt";
-					$desc .= $current_id_c ? " and $cur_txt." : '.';
-				}
-				elsif ($current_id_c) {
-					$desc .= "It has been mapped to $cur_txt.";
-				}
-			}
-			elsif (@deprecated_sis) {
-				$other_count++;
-				my $deprecated_id_c = scalar(@deprecated_sis);
-				my $id = $deprecated_id_c > 1 ? 'identifiers' : 'identifier';
-				$desc =
-qq(Ensembl $type $osi is no longer in the database but it has been mapped to $deprecated_id_c deprecated $id.);
-			}
-			else {
-				$other_count++;
-				$desc =
-qq(Ensembl $type $osi is no longer in the database and has not been mapped to any newer identifiers.);
-			}
-			push @$ids, {
-				id                  => $osi,
-				type                => $type,
-				description         => $desc,
-				current_mappings    => \@current_sis,
-				deprecated_mappings => \@deprecated_sis };
-		} ## end foreach my $osi ( keys %{ $mapping...})
-	} ## end foreach my $type ( keys %$mapping)
+			my $id = { id => $osi, type => $type };
+			$id->{deprecated_mappings} = \@deprecated_sis
+			  if scalar(@deprecated_sis) > 0;
+			$id->{current_mappings} = \@current_sis if scalar(@current_sis) > 0;
+			push @$ids, $id;
+		}
+	}
 	return $ids;
 } ## end sub fetch_ids_for_dba
 
