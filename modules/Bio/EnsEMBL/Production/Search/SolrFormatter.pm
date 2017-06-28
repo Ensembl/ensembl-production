@@ -192,6 +192,67 @@ sub reformat_transcripts {
 	return;
 } ## end sub reformat_transcripts
 
+sub reformat_ids {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($id) = @_;
+
+			my $desc = sprintf( "Ensembl %s %s is no longer in the database",
+								ucfirst( $id->{type} ), $id->{id} );
+			my $deprecated_id_c =
+			  _array_nonempty( $id->{deprecated_mappings} ) ?
+			  scalar( @{ $id->{deprecated_mappings} } ) :
+			  0;
+			my $current_id_c =
+			  _array_nonempty( $id->{current_mappings} ) ?
+			  scalar( @{ $id->{current_mappings} } ) :
+			  0;
+
+			my $dep_txt  = '';
+			my $curr_txt = '';
+			if ( $deprecated_id_c > 0 ) {
+				$dep_txt =
+				  $deprecated_id_c > 1 ?
+				  "$deprecated_id_c deprecated identifiers" :
+				  "$deprecated_id_c deprecated identifier";
+			}
+			if ( $current_id_c > 0 ) {
+				my $example_id = $id->{current_mappings}->[0];
+				$curr_txt =
+				  $current_id_c > 1 ? "$current_id_c current identifiers" :
+				                      "$current_id_c current identifier";
+				$curr_txt .= $example_id ? " (e.g. $example_id)" : '';
+			}
+			if ( $current_id_c > 0 && $deprecated_id_c > 0 ) {
+				$desc .= " and has been mapped to $curr_txt and $dep_txt";
+			}
+			elsif ( $current_id_c > 0 && $deprecated_id_c == 0 ) {
+				$desc .= " and has been mapped to $curr_txt";
+			}
+			elsif ( $current_id_c == 0 && $deprecated_id_c > 0 ) {
+				$desc .= " and has been mapped to $dep_txt";
+			}
+			else {
+				$desc .= ' and has not been mapped to any newer identifiers.';
+			}
+			return { %{ _base( $genome, $type, ucfirst( $id->{type} ) ) },
+					 id          => $id->{id},
+					 description => $desc,
+					 domain_url =>
+					   sprintf( "%s/%s/?g=%s&amp;db=%s",
+								$genome->{organism}->{name},
+								ucfirst( $id->{type} ),
+								$id->{id},
+								$type ) };
+		} );
+
+	return;
+} ## end sub reformat_ids
+
 sub reformat_gene_families {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
@@ -307,6 +368,11 @@ sub _add_xrefs {
 		push @$hr, _hr( $obj, $type, $xref );
 	}
 	return;
+}
+
+sub _array_nonempty {
+	my ($ref) = @_;
+	return defined $ref && scalar(@$ref) > 0;
 }
 
 1;

@@ -80,11 +80,33 @@ subtest "Transcript reformat", sub {
 		scalar( @{ $new_transcript->{prot_domain} } ),
 		"Checking correct number of protein domains" );
 	is( 2,
-		scalar( grep { m/Interpro/ } @{$new_transcript->{_hr}} ),
+		scalar( grep { m/Interpro/ } @{ $new_transcript->{_hr} } ),
 		"Checking number of Interpro HRs" );
 	is( 2,
-		scalar( grep { m/supporting evidence/ } @{$new_transcript->{_hr}} ),
+		scalar( grep { m/supporting evidence/ } @{ $new_transcript->{_hr} } ),
 		"Checking number of supporting evidence HRs" );
+};
+
+subtest "ID reformat", sub {
+	$formatter->reformat_ids( File::Spec->catfile( $Bin, "ids_test.json" ),
+							  $out_file, $genome, 'core' );
+	my $new_ids = decode_json( read_file($out_file) );
+	is( 6, scalar(@$new_ids), "Checking correct number of IDs" );
+	my ($curr_only) = grep { $_->{id} eq 'bananag' } @$new_ids;
+	diag( Dumper($curr_only) );
+	is( $curr_only->{description},
+"Ensembl Gene bananag is no longer in the database and has been mapped to 1 current identifier (e.g. ENSG00000204704)"
+	);
+	my ($dep_only) = grep { $_->{id} eq 'lychee' } @$new_ids;
+	diag( Dumper($dep_only) );
+	is( $dep_only->{description},
+"Ensembl Gene lychee is no longer in the database and has been mapped to 1 deprecated identifier"
+	);
+	my ($both) = grep { $_->{id} eq 'loganberry' } @$new_ids;
+	diag( Dumper($both) );
+	is( $both->{description},
+"Ensembl Transcript loganberry is no longer in the database and has been mapped to 1 current identifier (e.g. raspberry) and 1 deprecated identifier"
+	);
 };
 
 done_testing;
