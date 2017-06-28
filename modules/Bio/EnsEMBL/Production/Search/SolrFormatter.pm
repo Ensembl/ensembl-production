@@ -253,11 +253,6 @@ sub reformat_ids {
 	return;
 } ## end sub reformat_ids
 
-sub reformat_gene_families {
-	my ( $self, $infile, $outfile ) = @_;
-	return;
-}
-
 sub reformat_sequences {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
 
@@ -266,12 +261,16 @@ sub reformat_sequences {
 		$infile, $outfile,
 		sub {
 			my ($seq) = @_;
-			my $desc = sprintf('%s %s (length %d bp)',ucfirst($seq->{type}),$seq->{id},$seq->{length});
-			if(defined $seq->{parent}) {
-				$desc = sprintf("%s is mapped to %s %s", $desc, $seq->{parent_type}, $seq->{parent});
+			my $desc = sprintf( '%s %s (length %d bp)',
+								ucfirst( $seq->{type} ),
+								$seq->{id}, $seq->{length} );
+			if ( defined $seq->{parent} ) {
+				$desc = sprintf( "%s is mapped to %s %s",
+								 $desc, $seq->{parent_type}, $seq->{parent} );
 			}
-			if(_array_nonempty($seq->{synonyms})) {
-				$desc .= '. It has synonyms of '.join(', ',@{$seq->{synonyms}}).'.';
+			if ( _array_nonempty( $seq->{synonyms} ) ) {
+				$desc .= '. It has synonyms of ' .
+				  join( ', ', @{ $seq->{synonyms} } ) . '.';
 			}
 			return { %{ _base( $genome, $type, 'Sequence' ) },
 					 id          => $seq->{id},
@@ -279,12 +278,36 @@ sub reformat_sequences {
 					 domain_url =>
 					   sprintf( "%s/Location/View?r=%s:%d-%d&amp;db=%s",
 								$genome->{organism}->{name},
-								$seq->{id},
-								1,
-								$seq->{length},
-								$type ) };
+								$seq->{id}, 1, $seq->{length}, $type ) };
 		} );
 
+	return;
+} ## end sub reformat_sequences
+
+sub reformat_lrgs {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($lrg) = @_;
+			return {
+				%{ _base( $genome, $type, 'Sequence' ) },
+				id => $lrg->{id},
+				description =>
+				  sprintf(
+'%s is a fixed reference sequence of length %d with a fixed transcript(s) for reporting purposes. It was created for %s gene %s.',
+					$lrg->{id}, $lrg->{length}, $lrg->{source_database}, $lrg->{source_gene} ),
+				domain_url => sprintf( "%s/LRG/Summary?lrg=%s&amp;db=%s",
+									   $genome->{organism}->{name},
+									   $lrg->{id}, $type ) };
+		} );
+
+	return;
+}
+
+sub reformat_gene_families {
+	my ( $self, $infile, $outfile ) = @_;
 	return;
 }
 

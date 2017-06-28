@@ -150,5 +150,24 @@ subtest "Sequence reformat", sub {
 			"homo_sapiens/Location/View?r=DAAF01080952.1:1-171&amp;db=core" );
 	}
 };
+subtest "LRGs reformat", sub {
+	$formatter->reformat_lrgs( File::Spec->catfile(
+													 $Bin, "lrgs_test.json"
+									),
+									$out_file,
+									$genome, 'core' );
+	my $new_lrgs = decode_json( read_file($out_file) );
+	is( scalar(@$new_lrgs), 4, "Checking correct number of lrgs" );
+		my ($e) = grep { $_->{id} eq 'LRG_22' } @$new_lrgs;
+		diag( Dumper($e) );
+		is( $e->{feature_type}, 'Sequence' );
+		is( $e->{description},
+"LRG_22 is a fixed reference sequence of length 10058 with a fixed transcript(s) for reporting purposes. It was created for HGNC gene C1QA."
+		);
+		is( $e->{domain_url},
+			"homo_sapiens/LRG/Summary?lrg=LRG_22&amp;db=core" );
+
+};
+
 
 done_testing;
