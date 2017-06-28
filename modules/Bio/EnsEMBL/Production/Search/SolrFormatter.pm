@@ -259,7 +259,32 @@ sub reformat_gene_families {
 }
 
 sub reformat_sequences {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($seq) = @_;
+			my $desc = sprintf('%s %s (length %d bp)',ucfirst($seq->{type}),$seq->{id},$seq->{length});
+			if(defined $seq->{parent}) {
+				$desc = sprintf("%s is mapped to %s %s", $desc, $seq->{parent_type}, $seq->{parent});
+			}
+			if(_array_nonempty($seq->{synonyms})) {
+				$desc .= '. It has synonyms of '.join(', ',@{$seq->{synonyms}}).'.';
+			}
+			return { %{ _base( $genome, $type, 'Sequence' ) },
+					 id          => $seq->{id},
+					 description => $desc,
+					 domain_url =>
+					   sprintf( "%s/Location/View?r=%s:%d-%d&amp;db=%s",
+								$genome->{organism}->{name},
+								$seq->{id},
+								1,
+								$seq->{length},
+								$type ) };
+		} );
+
 	return;
 }
 

@@ -109,4 +109,46 @@ subtest "ID reformat", sub {
 	);
 };
 
+subtest "Sequence reformat", sub {
+	$formatter->reformat_sequences( File::Spec->catfile(
+													 $Bin, "sequences_test.json"
+									),
+									$out_file,
+									$genome, 'core' );
+	my $new_seqs = decode_json( read_file($out_file) );
+	is( 3, scalar(@$new_seqs), "Checking correct number of seqs" );
+	{
+		my ($e) = grep { $_->{id} eq '7270026' } @$new_seqs;
+		diag( Dumper($e) );
+		is( $e->{feature_type}, 'Sequence' );
+		is( $e->{description},
+"Tilepath 7270026 (length 181259 bp) is mapped to chromosome 12. It has synonyms of AC079953.28, FinishAc, tilepath."
+		);
+		is( $e->{domain_url},
+			"homo_sapiens/Location/View?r=7270026:1-181259&amp;db=core" );
+	}
+	
+		{
+		my ($e) = grep { $_->{id} eq 'X' } @$new_seqs;
+		diag( Dumper($e) );
+		is( $e->{feature_type}, 'Sequence' );
+		is( $e->{description},
+"Chromosome X (length 156040895 bp). It has synonyms of CM000685.2, chrX, NC_000023.11."
+		);
+		is( $e->{domain_url},
+			"homo_sapiens/Location/View?r=X:1-156040895&amp;db=core" );
+	}
+	
+		{
+		my ($e) = grep { $_->{id} eq 'DAAF01080952.1' } @$new_seqs;
+		diag( Dumper($e) );
+		is( $e->{feature_type}, 'Sequence' );
+		is( $e->{description},
+"Contig DAAF01080952.1 (length 171 bp)"
+		);
+		is( $e->{domain_url},
+			"homo_sapiens/Location/View?r=DAAF01080952.1:1-171&amp;db=core" );
+	}
+};
+
 done_testing;
