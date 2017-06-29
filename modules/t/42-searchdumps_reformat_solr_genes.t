@@ -215,5 +215,24 @@ subtest "Domains reformat", sub {
 		is( $e->{description}, "Interpro domain IPR029063 [test description] is found in 1 genes in Human and has 1 records from signature databases: 3.40.50.150" );
 	}
 };
+subtest "Families reformat", sub {
+	$formatter->reformat_gene_families( File::Spec->catfile( $Bin, "genes_test.json"
+								  ),
+								  $out_file,
+								  $genome, 'core' );
+	my $new_families = decode_json( read_file($out_file) );	
+	diag(Dumper($new_families));
+	{
+		my ($e) = grep { $_->{id} eq 'PTHR12496' } @$new_families;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Family' );
+		is(scalar (@{$e->{assoc_genes}}), 1);
+		is(scalar (@{$e->{assoc_gene_names}}), 1);
+		is(scalar (@{$e->{assoc_transcripts}}), 1);
+		is(scalar (@{$e->{assoc_proteins}}), 1);
+		is( $e->{domain_url}, "Homo_sapiens/Location/Gene?ftype=Family=PTHR12496;g=ENSG00000127720" );
+		is( $e->{description}, "Ensembl protein family PTHR12496 [RRNAD1]: 1 gene / 1 proteins in Homo sapiens" );
+	}
+};
 
 done_testing;

@@ -366,19 +366,17 @@ sub reformat_domains {
 		  defined $i->{interpro_description} ?
 		  " [" . $i->{interpro_description} . "]" :
 		  '';
-		  
-		my $ids = [keys %{$i->{ids}}];
+
+		my $ids = [ keys %{ $i->{ids} } ];
 		push @$ds, {
 			%{ _base( $genome, $type, 'Domain' ) },
 			id          => $i->{id},
 			synonyms    => $ids,
 			description => sprintf(
 "Interpro domain %s%s is found in %d genes in Human and has %d records from signature databases: %s",
-				$i->{id},
-				$desc,
-				scalar( keys %{ $i->{genes} } ),
-				scalar( @$ids ),
-				join( ", ", @$ids) ),
+				$i->{id},                        $desc,
+				scalar( keys %{ $i->{genes} } ), scalar(@$ids),
+				join( ", ", @$ids ) ),
 			domain_url => sprintf( "%s/Location/Genome?ftype=Domain;id=%s",
 								   $genome->{organism}->{url_name},
 								   $i->{id} ) };
@@ -390,6 +388,71 @@ sub reformat_domains {
 } ## end sub reformat_domains
 
 sub reformat_gene_families {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+
+	my $families = {};
+	process_json_file(
+		$infile,
+		sub {
+			my ($gene) = @_;
+			for my $transcript ( @{ $gene->{transcripts} } ) {
+				if ( defined $transcript->{translations} ) {
+					for my $translation ( @{ $transcript->{translations} } ) {
+						if ( defined $translation->{families} ) {
+							for my $family ( @{ $translation->{families} } ) {
+								my $f = $families->{ $family->{stable_id} };
+								if ( !defined $f ) {
+									$f = { id          => $family->{stable_id},
+										   description => $family->{description} };
+									$families->{ $family->{stable_id} } = $f;
+								}
+								$f->{genes}->{ $gene->{id} }++;
+								if ( defined $gene->{name} ) {
+									$f->{gene_names}->{ $gene->{name} }++;
+								}
+								$f->{transcripts}->{ $transcript->{id} }++;
+								$f->{translations}->{ $translation->{id} }++;
+							}
+
+						}
+					}
+				}
+			}
+			return;
+		} );
+
+	my $ds = [];
+	for my $f ( values %{$families} ) {
+		my $genes       = [ keys %{ $f->{genes} } ];
+		my $gene_names  = [ keys %{ $f->{gene_names} } ];
+		my $transcripts = [ keys %{ $f->{transcripts} } ];
+		my $proteins    = [ keys %{ $f->{translations} } ];
+		push @$ds, {
+			%{ _base( $genome, $type, 'Family' ) },
+			id                => $f->{id},
+			name              => $f->{id},
+			assoc_genes       => $genes,
+			assoc_gene_names  => $gene_names,
+			assoc_transcripts => $transcripts,
+			assoc_proteins    => $proteins,
+			description       => sprintf(
+					"Ensembl protein family %s%s: %d gene / %d proteins in %s",
+					$f->{id},       defined $f->{description}?' ['.$f->{description}.']':'',
+					scalar @$genes, scalar @$proteins,
+					$genome->{organism}->{display_name} ),
+			domain_url => sprintf( "%s/Location/Gene?ftype=Family=%s;g=%s",
+								   $genome->{organism}->{url_name},
+								   $f->{id},
+								   $genes->[0] ) };
+	}
+	open my $fh, ">", $outfile or die "Could not open $outfile for writing";
+	print $fh encode_json($ds);
+	close $fh;
+
+	return;
+} ## end sub reformat_gene_families
+
+sub reformat_gene_trees {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
 }
