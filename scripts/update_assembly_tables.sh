@@ -8,7 +8,7 @@ for db_type in otherfeatures cdna rnaseq; do
     for db in $(grep $db_type $file); do 
         core=${db/$db_type/core}
         echo "Syncing assembly from $core to $db"
-        ./sync_tables.sh $srv $core $db seq_region coord_system seq_region_attrib assembly assembly_exception dna
+        ./sync_tables.sh $srv $core $db assembly assembly_exception coord_system seq_region seq_region_synonym seq_region_attrib karyotype mapping_set seq_region_mapping
     done
 done
 rm -f $file

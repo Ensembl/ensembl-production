@@ -260,6 +260,11 @@ if ( scalar( keys(%databases) ) == 0 ) {
   printf( "Did not find any new databases for release %s\n", $release );
 } 
 else {
+  my $division_species =
+      'INSERT IGNORE INTO division_species '
+    . '(division_id, species_id) '
+    . 'VALUES (?, ?)';
+  my $division_species_query = $dbh->prepare($division_species);
   my $statement =
       'INSERT INTO db '
     . '(species_id, is_current, db_type, '
@@ -276,6 +281,7 @@ SQL
     
     my @already_recorded = $dbh->selectrow_array('select count(1) from db where species_id =? and db_type =? and db_release =?', 
       {}, $db_hash->{species_id}, $db_hash->{db_type}, $release);
+
       
     if($already_recorded[0]) {
       my @name = $dbh->selectrow_array('select common_name from species where species_id =?', {}, $db_hash->{species_id});
@@ -289,6 +295,8 @@ SQL
       $update_sth->bind_param( 6, $db_hash->{'db_type'},      SQL_VARCHAR );
       $update_sth->bind_param( 7, $release,                   SQL_INTEGER );
       $update_sth->execute();
+
+
     }
     else {
       printf( "Inserting database '%s' into "
@@ -303,6 +311,13 @@ SQL
       $sth->bind_param( 6, $db_hash->{'db_host'},     SQL_VARCHAR );
   
       $sth->execute();
+
+          printf( "Inserting database '%s' into "
+                . "the production database division_species table if it doesn't exist\n",
+              $database );
+      $division_species_query->bind_param( 1, 1,  SQL_INTEGER );
+      $division_species_query->bind_param( 2, $db_hash->{'species_id'},  SQL_INTEGER );
+      $division_species_query->execute();
     }
   }
   $sth->finish();

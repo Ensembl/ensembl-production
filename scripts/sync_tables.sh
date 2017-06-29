@@ -13,11 +13,11 @@ if [ -z "$srv" ] || [ -z "$tgt" ] || [ -z "$src" ]; then
 fi
 
 for table in $@; do 
-    echo "Comparing $src.$table to $tgt on $srv"
+    echo "Comparing $src.$table to $tgt.$table on $srv"
     src_chk=$($srv --column-name=false $src -e "checksum table $table")
-    tgt_chk=$($srv --column-name=false $src -e "checksum table $table")
+    tgt_chk=$($srv --column-name=false $tgt -e "checksum table $table")
     if [ "$src_chk" != "$tgt_chk" ]; then
-        echo "Running sync $src $table -> $tgt"
+        echo "Running sync $src $table -> $tgt $table"
         $srv mysqldump $src $table | $srv $tgt
     fi
 done

@@ -63,7 +63,7 @@ package Bio::EnsEMBL::Production::Pipeline::SpeciesFactory;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Registry;
 
