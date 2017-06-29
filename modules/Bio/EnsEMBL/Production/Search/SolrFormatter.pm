@@ -403,7 +403,8 @@ sub reformat_gene_families {
 								my $f = $families->{ $family->{stable_id} };
 								if ( !defined $f ) {
 									$f = { id          => $family->{stable_id},
-										   description => $family->{description} };
+										   description => $family->{description}
+									};
 									$families->{ $family->{stable_id} } = $f;
 								}
 								$f->{genes}->{ $gene->{id} }++;
@@ -437,14 +438,16 @@ sub reformat_gene_families {
 			assoc_proteins    => $proteins,
 			description       => sprintf(
 					"Ensembl protein family %s%s: %d gene / %d proteins in %s",
-					$f->{id},       defined $f->{description}?' ['.$f->{description}.']':'',
-					scalar @$genes, scalar @$proteins,
+					$f->{id},
+					defined $f->{description} ? ' [' . $f->{description} . ']' :
+					  '',
+					scalar @$genes,
+					scalar @$proteins,
 					$genome->{organism}->{display_name} ),
 			domain_url => sprintf( "%s/Location/Gene?ftype=Family=%s;g=%s",
-								   $genome->{organism}->{url_name},
-								   $f->{id},
+								   $genome->{organism}->{url_name}, $f->{id},
 								   $genes->[0] ) };
-	}
+	} ## end for my $f ( values %{$families...})
 	open my $fh, ">", $outfile or die "Could not open $outfile for writing";
 	print $fh encode_json($ds);
 	close $fh;
@@ -453,9 +456,41 @@ sub reformat_gene_families {
 } ## end sub reformat_gene_families
 
 sub reformat_gene_trees {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($gene) = @_;
+			my $id_str = $gene->{id};
+			if ( defined $gene->{name} ) {
+				$id_str = $gene->{name} . " ($id_str}";
+			}
+			my $docs = {};
+			for my $homolog ( @{ $gene->{homologues} } ) {
+				my $doc = $docs->{ $homolog->{gene_tree_id} };
+				if ( !defined $doc ) {
+
+					my $gt = { %{ _base( $genome, $type, 'GeneTree' ) },
+							   id         => $homolog->{gene_tree_id},
+							   assoc_gene => $gene->{id},
+							   description =>
+								 sprintf( "Gene %s is a member of GeneTree %s",
+										  $id_str, $homolog->{gene_tree_id} ),
+							   domain_url =>
+								 sprintf( "%s/Gene/Compara_Tree?g=%s",
+										  $genome->{organism}->{url_name},
+										  $gene->{id} ) };
+					$gt->{assoc_gene_name} = $gene->{name}
+					  if defined $gene->{name};
+					$docs->{ $homolog->{gene_tree_id} } = $gt;
+				}
+			}
+			return [ values %$docs ];
+		} );
+
 	return;
-}
+} ## end sub reformat_gene_trees
 
 sub reformat_variants {
 	my ( $self, $infile, $outfile ) = @_;
