@@ -58,7 +58,7 @@ The code flows once per species to branch 2.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::SpeciesFactory;
+package Bio::EnsEMBL::Production::Pipeline::Production::SpeciesFactory;
 
 use strict;
 use warnings;

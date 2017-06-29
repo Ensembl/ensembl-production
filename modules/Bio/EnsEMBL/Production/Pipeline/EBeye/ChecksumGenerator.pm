@@ -45,7 +45,7 @@ package Bio::EnsEMBL::Production::Pipeline::EBeye::ChecksumGenerator;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator Bio::EnsEMBL::Production::Pipeline::EBeye::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator Bio::EnsEMBL::Production::Pipeline::EBeye::Base/;
 
 sub fetch_input {
   my ($self) = @_;
