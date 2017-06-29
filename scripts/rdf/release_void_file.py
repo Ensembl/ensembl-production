@@ -60,7 +60,7 @@ def main(argv):
         usage()
         sys.exit(2)
 
-    voidFile = "%s_void.ttl" % project
+    voidFile = 'void.ttl'
     zipped = False
     if project == 'ensemblgenomes':
         voidFile = voidFile + '.gz'
