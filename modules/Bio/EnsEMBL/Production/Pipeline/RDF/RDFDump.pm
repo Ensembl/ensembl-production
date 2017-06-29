@@ -161,12 +161,13 @@ sub dump_core_rdf {
 							     common_name => $meta_adaptor->get_common_name));
 
   # write sequence regions
-  my $slice_trans = Bio::EnsEMBL::IO::Translator::Slice->new(meta_adaptor => $meta_adaptor);
+  my $slice_trans = Bio::EnsEMBL::IO::Translator::Slice->new(version => $self->param('release'), meta_adaptor => $meta_adaptor);
   map { $core_writer->write($_, $slice_trans) } @{$slices};
 
   # write BulkFetcher 'features'
   my $feature_trans =
-    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
+                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
 							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
 							  meta_adaptor      => $meta_adaptor);
   map { $core_writer->write($_, $feature_trans) } @{$genes};
@@ -182,13 +183,14 @@ sub dump_core_rdf {
 }
 
 sub dump_xrefs_rdf {
-  my ($self, $xrefs_fname, $genes);
+    my ($self, $xrefs_fname, $genes) = @_;
   
   ### Xrefs RDF ###
   #
   my $fh = IO::File->new($xrefs_fname, "w") || die "$! $xrefs_fname";
   my $feature_trans =
-    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
+                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
 							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
 							  meta_adaptor      => $self->get_DBAdaptor->get_MetaContainer);
   my $xrefs_writer = Bio::EnsEMBL::IO::Writer::RDF::XRefs->new($feature_trans);
