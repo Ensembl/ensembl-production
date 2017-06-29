@@ -375,12 +375,15 @@ sub get_protein_features {
     pf.seq_end as end,
     a.db as dbname,
     i.interpro_ac,
+    ix.description as interpro_description,
     'protein_feature' as ensembl_object_type
     from transcript t
     join translation tl using (transcript_id)
     join protein_feature pf using (translation_id)
     join analysis a on (a.analysis_id = pf.analysis_id)
     left join interpro i on (pf.hit_name = i.id)
+    left join xref ix on (i.interpro_ac = ix.dbprimary_acc)
+    left join external_db idx on (ix.external_db_id=idx.external_db_id and idx.db_name='Interpro')
     join seq_region s using (seq_region_id)
     join coord_system c using (coord_system_id)
     where c.species_id = ? 
@@ -394,6 +397,9 @@ sub get_protein_features {
 
 	my $pf_hash = {};
 	for my $protein_feature (@protein_features) {
+		delete $protein_feature->{description} unless defined $protein_feature->{description};
+		delete $protein_feature->{interpro_ac} unless defined $protein_feature->{interpro_ac};
+		delete $protein_feature->{interpro_description} unless defined $protein_feature->{interpro_description};
 		push @{ $pf_hash->{ $protein_feature->{translation_id} } },
 		  $protein_feature;
 		delete $pf_hash->{translation_id};
