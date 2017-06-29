@@ -329,6 +329,66 @@ sub reformat_markers {
 	return;
 }
 
+sub reformat_domains {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	my $ipr = {};
+	process_json_file(
+		$infile,
+		sub {
+			my ($gene) = @_;
+			for my $transcript ( @{ $gene->{transcripts} } ) {
+				if ( defined $transcript->{translations} ) {
+					for my $translation ( @{ $transcript->{translations} } ) {
+						for my $pf ( grep { defined $_->{interpro_ac} }
+									 @{ $translation->{protein_features} } )
+						{
+							my $i = $ipr->{ $pf->{interpro_ac} };
+							if ( !defined $i ) {
+								$i = { id => $pf->{interpro_ac} };
+								$i->{interpro_description} =
+								  $pf->{interpro_description}
+								  if defined $pf->{interpro_description};
+								$ipr->{ $pf->{interpro_ac} } = $i;
+							}
+							$i->{genes}{ $gene->{id} }++;
+							$i->{ids}{ $pf->{name} }++;
+						}
+					}
+				}
+			}
+			return;
+		} );
+
+	my $ds = [];
+	for my $i ( values %{$ipr} ) {
+
+		my $desc =
+		  defined $i->{interpro_description} ?
+		  " [" . $i->{interpro_description} . "]" :
+		  '';
+		  
+		my $ids = [keys %{$i->{ids}}];
+		push @$ds, {
+			%{ _base( $genome, $type, 'Domain' ) },
+			id          => $i->{id},
+			synonyms    => $ids,
+			description => sprintf(
+"Interpro domain %s%s is found in %d genes in Human and has %d records from signature databases: %s",
+				$i->{id},
+				$desc,
+				scalar( keys %{ $i->{genes} } ),
+				scalar( @$ids ),
+				join( ", ", @$ids) ),
+			domain_url => sprintf( "%s/Location/Genome?ftype=Domain;id=%s",
+								   $genome->{organism}->{url_name},
+								   $i->{id} ) };
+	}
+	open my $fh, ">", $outfile or die "Could not open $outfile for writing";
+	print $fh encode_json($ds);
+	close $fh;
+	return;
+} ## end sub reformat_domains
+
 sub reformat_gene_families {
 	my ( $self, $infile, $outfile ) = @_;
 	return;

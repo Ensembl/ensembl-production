@@ -191,5 +191,29 @@ subtest "Markers reformat", sub {
 		is( $e->{domain_url}, "Homo_sapiens/Marker/Details?m=127219" );
 	}
 };
+subtest "Domains reformat", sub {
+	$formatter->reformat_domains( File::Spec->catfile( $Bin, "genes_test.json"
+								  ),
+								  $out_file,
+								  $genome, 'core' );
+	my $new_domains= decode_json( read_file($out_file) );	
+	{
+		my ($e) = grep { $_->{id} eq 'IPR025714' } @$new_domains;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Domain' );
+		is(scalar (@{$e->{synonyms}}), 1);
+		is( $e->{domain_url}, "Homo_sapiens/Location/Genome?ftype=Domain;id=IPR025714" );
+		is( $e->{description}, "Interpro domain IPR025714 is found in 1 genes in Human and has 1 records from signature databases: PF13679" );
+	}
+	
+		{
+		my ($e) = grep { $_->{id} eq 'IPR029063' } @$new_domains;
+		diag( Dumper($e) );
+		is( $e->{feature_type},            'Domain' );
+		is(scalar (@{$e->{synonyms}}), 1);
+		is( $e->{domain_url}, "Homo_sapiens/Location/Genome?ftype=Domain;id=IPR029063" );
+		is( $e->{description}, "Interpro domain IPR029063 [test description] is found in 1 genes in Human and has 1 records from signature databases: 3.40.50.150" );
+	}
+};
 
 done_testing;
