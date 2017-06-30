@@ -389,7 +389,7 @@ sub reformat_domains {
 
 sub reformat_gene_families {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-
+	$type ||= 'compara';
 	my $families = {};
 	process_json_file(
 		$infile,
@@ -457,7 +457,7 @@ sub reformat_gene_families {
 
 sub reformat_gene_trees {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$type ||= 'core';
+	$type ||= 'compara';
 	reformat_json(
 		$infile, $outfile,
 		sub {
@@ -492,27 +492,111 @@ sub reformat_gene_trees {
 	return;
 } ## end sub reformat_gene_trees
 
-sub reformat_variants {
-	my ( $self, $infile, $outfile ) = @_;
-	return;
-}
-
-sub reformat_phenotypes {
-	my ( $self, $infile, $outfile ) = @_;
-	return;
-}
-
 sub reformat_regulatory_features {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
 }
 
 sub reformat_probes {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($probe) = @_;
+			my $desc = sprintf( "%s probe %s (%s array)",
+								$probe->{array_vendor},
+								$probe->{name}, $probe->{array_chip} );
+			if ( !_array_nonempty( $probe->{locations} ) ) {
+				$desc .= " does not hit the genome";
+			}
+			else {
+				$desc .= " hits the genome in " .
+				  scalar( @{ $probe->{locations} } ) . " location(s).";
+				if ( _array_nonempty( $probe->{transcripts} ) ) {
+					my $gene;
+					my @transcripts = map {
+						$gene = $_->{gene_name} || $_->{gene_id}
+						  unless defined $gene;
+						$_->{id}
+					} @{ $probe->{transcripts} };
+					$desc .=
+					  " It hits transcripts in the following gene: $gene (" .
+					  join( ", ", @transcripts ) . ")";
+				}
+			}
+			return {
+				  %{ _base( $genome, $type, 'OligoProbe' ) },
+				  id          => $probe->{id},
+				  description => $desc,
+				  domain_url =>
+					sprintf(
+					  "%s/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=%s",
+					  $genome->{organism}->{url_name},
+					  $probe->{id} ) };
+		} );
+
+	return;
+} ## end sub reformat_probes
+
+sub reformat_probesets {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'core';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($probeset)  = @_;
+			my $transcripts = {};
+			my $locations   = [];
+			for my $probe ( @{ $probeset->{probes} } ) {
+				$locations = [ @$locations, @{ $probe->{locations} } ];
+				if ( defined $probe->{transcripts} ) {
+					for my $transcript ( @{ $probe->{transcripts} } ) {
+						$transcript->{ $transcript->{id} } = $transcript;
+					}
+				}
+			}
+			my $desc = sprintf( "%s probeset %s (%s array)",
+								$probeset->{array_vendor},
+								$probeset->{name}, $probeset->{array_chip} );
+			if ( !_array_nonempty($locations) ) {
+				$desc .= " has no probes that hit the genome";
+			}
+			else {
+				$desc .= " hits the genome in " .
+				  scalar( @{$locations} ) . " location(s).";
+				if ( _array_nonempty( keys %$transcripts ) ) {
+					my $gene;
+					my @transcript_names = map {
+						$gene = $gene->{gene_name} || $gene->{gene_id}
+						  unless defined $gene;
+						$_->{id}
+					} values %{$transcripts};
+					$desc .=
+					  " They hit transcripts in the following gene: $gene (" .
+					  join( ", ", @transcript_names ) . ")";
+				}
+			}
+			return {
+				%{ _base( $genome, $type, 'OligoProbe' ) },
+				id          => $probeset->{id},
+				description => $desc,
+				domain_url =>
+				  sprintf(
+"%s/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=%s;ptype=pset",
+					$genome->{organism}->{url_name},
+					$probeset->{id} ) };
+		} );
+
+	return;
+} ## end sub reformat_probesets
+
+sub reformat_variants {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
 }
 
-sub reformat_probesets {
+sub reformat_phenotypes {
 	my ( $self, $infile, $outfile ) = @_;
 	return;
 }
@@ -544,7 +628,7 @@ sub _ref_boost {
 
 sub _db_boost {
 	my ($type) = @_;
-	return $type eq 'core' ? 40 : undef;
+	return $type eq 'core' ? 40 : 1;
 }
 
 my $sites = { Ensembl         => "http://www.ensembl.org/",
