@@ -109,8 +109,7 @@ sub fetch_probes_for_dba {
 			my $row = shift @_;
 			my $t   = $transcripts->{ $row->[1] };
 			die Dumper( $row->[1] ) unless defined $t;
-			$probe_transcripts->{ $row->[0] } = { %{$t} };
-			$probe_transcripts->{ $row->[0] }->{description} = $row->[2];
+			push @{$probe_transcripts->{ $row->[0] }}, { %{$t}, description=> $row->[2]};
 			return;
 		} );
 	$logger->info( "Fetched details for " .
