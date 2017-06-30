@@ -105,7 +105,7 @@ sub _convert {
       my $target_file_unzip = File::Spec->catdir($target_dir, $file_name);
 
       `cp $source_file $target_dir`;
-      `gunzip $target_file`;
+      `gunzip -f $target_file`;
       # Replace fasta header
       `perl -pi -e 's/^>/>$prefix/' $target_file_unzip`;
     }

@@ -21,7 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::Flatfile::Base;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub data_path {
   my ($self) = @_;

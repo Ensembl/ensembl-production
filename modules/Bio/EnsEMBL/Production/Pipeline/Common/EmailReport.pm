@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::Common::EmailReport;
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
-	  'Bio::EnsEMBL::Production::Pipeline::Base');
+	  'Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub fetch_input {
     my ($self) = @_;

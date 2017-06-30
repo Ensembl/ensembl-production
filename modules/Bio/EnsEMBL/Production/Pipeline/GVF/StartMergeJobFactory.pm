@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::GVF::StartMergeJobFactory;
 use strict;
 use Data::Dumper;
 #use base ('EGVar::FTP::RunnableDB::GVF::Base');
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use Carp;
 
 sub run {

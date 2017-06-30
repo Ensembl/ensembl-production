@@ -29,7 +29,7 @@ package Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF;
 use strict;
 use warnings;
 
-use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
+use parent ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub fetch_input {
   my ($self) = @_;

@@ -32,7 +32,7 @@ use List::MoreUtils qw/natatime/;
 
 use strict;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 my $rmConn;
 

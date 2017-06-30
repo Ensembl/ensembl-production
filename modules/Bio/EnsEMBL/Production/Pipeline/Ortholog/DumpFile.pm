@@ -35,7 +35,7 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catdir);
-use base('Bio::EnsEMBL::Production::Pipeline::Base');
+use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub param_defaults {
     return {
@@ -73,6 +73,7 @@ sub run {
 
     # Create Compara adaptors
     my $compara = $self->param('compara');
+print Dumper($compara);
     my $mlssa   = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
     my $ha      = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
     my $gdba    = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", "GenomeDB");
@@ -86,38 +87,37 @@ sub run {
     my $from_sp    = $self->param('from_sp');
     my $homo_types = $self->param('homo_types');
     my $to_sp ; 
+    my $from_gdb;
+    my $to_gdb;
 
-    foreach my $gdb (@$gdbs){ $to_sp = $gdb->name() if($gdb->name() !~/^$from_sp$/); }
-   
-    # Create Core adaptors
-    my $from_meta      = Bio::EnsEMBL::Registry->get_adaptor($from_sp, 'core', 'MetaContainer');
-    my ($from_prod_sp) = @{ $from_meta->list_value_by_key('species.production_name') };
-    my $to_meta        = Bio::EnsEMBL::Registry->get_adaptor($to_sp,'core','MetaContainer');
-    my ($to_prod_sp)   = @{ $to_meta->list_value_by_key('species.production_name')};
-
-    die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_meta || !$to_meta);
-
+    foreach my $gdb (@$gdbs){ 
+      if($gdb->name() eq $from_sp) {
+	$from_gdb = $gdb;
+      } else {
+	$to_gdb = $gdb;
+	$to_sp = $gdb->name();
+      } 
+    }
+    print "TO=$to_sp\n";
     # Build Compara GenomeDB objects
     my $ml_type  = $self->param('ml_type');
-    my $from_gdb = $gdba->fetch_by_registry_name($from_sp);
-    my $to_gdb   = $gdba->fetch_by_registry_name($to_sp);
 
     # Build the output directory & filename
     my $datestring  = localtime();
     my $output_dir  = $self->param('output_dir');
     my $division  = $self->param('output_dir');
-    #my $output_file = $output_dir."/orthologs-$from_prod_sp-$to_prod_sp.tsv";
+    #my $output_file = $output_dir."/orthologs-$from_sp-$to_sp.tsv";
 
     if (!-e $output_dir) {
        $self->warning("Output directory '$output_dir' does not exist. I shall create it.");
        make_path($output_dir) or $self->throw("Failed to create output directory '$output_dir'");
     }
-    my $output_file = "/orthologs-$from_prod_sp-$to_prod_sp.tsv";
+    my $output_file = "/orthologs-$from_sp-$to_sp.tsv";
     $output_file    = File::Spec->catdir($output_dir, $output_file);
 
     open FILE , ">$output_file" or die "couldn't open file " . $output_file . " $!";
     print FILE "## " . $datestring . "\n";
-    print FILE "## orthologs from $from_prod_sp to $to_prod_sp\n";
+    print FILE "## orthologs from $from_sp to $to_sp\n";
     print FILE "## compara db " . $mlssa->dbc->dbname() . "\n";
     print FILE "## division " . $division . "\n"; 
 
@@ -192,24 +192,24 @@ sub run {
           my $to_identifier = $to_mod_identifier . ":" . $to_gene->stable_id;
 
           if (scalar(@$from_uniprot) == 0 && scalar(@$to_uniprot) == 0) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
+             print FILE "$from_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
           } elsif (scalar(@$from_uniprot) == 0) {
             foreach my $to_xref (@$to_uniprot) {
-             print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
-             print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
+             print FILE "$from_sp\t" . $from_identifier . "\t$from_stable_id\tno_uniprot\t";
+             print FILE "$to_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
             }
          } elsif (scalar(@$to_uniprot) == 0) {
             foreach my $from_xref (@$from_uniprot) {
-               print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
-               print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
+               print FILE "$from_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+               print FILE "$to_sp\t" . $to_identifier . "\t$to_stable_id\tno_uniprot\t" .$homology->description."\n";
             }
          }
          else {
            foreach my $to_xref (@$to_uniprot) {
               foreach my $from_xref (@$from_uniprot) {
-                 print FILE "$from_prod_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
-                 print FILE "$to_prod_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
+                 print FILE "$from_sp\t" . $from_identifier . "\t$from_stable_id\t$from_xref\t";
+                 print FILE "$to_sp\t" . $to_identifier . "\t$to_stable_id\t$to_xref\t" .$homology->description."\n";
               }
            }
         } 
@@ -219,8 +219,6 @@ sub run {
    close FILE;
 
    $self->hive_dbc->disconnect_if_idle();
-   $from_meta->dbc->disconnect_if_idle();
-   $to_meta->dbc->disconnect_if_idle();
    $mlssa->dbc->disconnect_if_idle();
    $ha->dbc->disconnect_if_idle();
    $gdba->dbc->disconnect_if_idle();
