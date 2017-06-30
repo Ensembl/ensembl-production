@@ -155,8 +155,9 @@ sub fetch_probes_for_dba {
 				delete $p->{strand};
 				delete $p->{probe_set_id};
 				$probes->{$id} = $p;
-				$probes->{transcripts} = $probe_transcripts->{ $row->{id} };
-				push @{ $probes_by_set->{ $row->{probe_set_id} } }, $p;
+				my $transcripts = $probe_transcripts->{ $row->{id} };
+				$p->{transcripts} = $transcripts if defined $transcripts;
+				push @{ $probes_by_set->{ $row->{probe_set_id} } }, $p if defined $row->{probe_set_id};
 			}
 			push @{ $p->{locations} }, {
 				seq_region_name => $row->{seq_region_name},
@@ -171,7 +172,7 @@ sub fetch_probes_for_dba {
 	my $probe_sets = [];
 	$h->execute_no_return(
 		-SQL => q/SELECT
-      ps.probe_set_id as id,
+      distinct ps.probe_set_id as id,
       ps.name as name,
       ps.family as family,
       array_chip.name as array_chip,
@@ -194,7 +195,8 @@ sub fetch_probes_for_dba {
 			push @{$probe_sets}, $row;
 			return;
 		} );
-
+	$logger->info(
+				 "Fetched details for " . scalar( @$probe_sets ) . " probe sets" );
 	return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
 } ## end sub fetch_probes_for_dba
 
