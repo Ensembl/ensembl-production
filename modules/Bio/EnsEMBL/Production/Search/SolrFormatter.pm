@@ -552,7 +552,7 @@ sub reformat_probesets {
 				$locations = [ @$locations, @{ $probe->{locations} } ];
 				if ( defined $probe->{transcripts} ) {
 					for my $transcript ( @{ $probe->{transcripts} } ) {
-						$transcript->{ $transcript->{id} } = $transcript;
+						$transcripts->{ $transcript->{id} } = $transcript;
 					}
 				}
 			}
@@ -565,16 +565,16 @@ sub reformat_probesets {
 			else {
 				$desc .= " hits the genome in " .
 				  scalar( @{$locations} ) . " location(s).";
-				if ( _array_nonempty( keys %$transcripts ) ) {
+				if ( scalar( keys %$transcripts )>0 ) {
 					my $gene;
 					my @transcript_names = map {
-						$gene = $gene->{gene_name} || $gene->{gene_id}
+						$gene = $_->{gene_name} || $_->{gene_id}
 						  unless defined $gene;
 						$_->{id}
 					} values %{$transcripts};
 					$desc .=
 					  " They hit transcripts in the following gene: $gene (" .
-					  join( ", ", @transcript_names ) . ")";
+					  join( ", ", sort @transcript_names ) . ")";
 				}
 			}
 			return {

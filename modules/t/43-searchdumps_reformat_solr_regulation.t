@@ -93,4 +93,47 @@ subtest "Probes reformat", sub {
 	unlink $out_file;
 };
 
+subtest "Probesets reformat", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "probesets_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "solr_probes_test.json" );
+	$formatter->reformat_probesets( $in_file, $out_file, $genome, 'funcgen' );
+	my $new_probes = decode_json( read_file($out_file) );
+	{
+		my ($probe) = grep { $_->{id} eq 'homo_sapiens_probeset_1' } @$new_probes;
+		my $expected = {
+          'id' => 'homo_sapiens_probeset_1',
+          'species_name' => 'Homo sapiens',
+          'db_boost' => 1,
+          'database_type' => 'funcgen',
+          'feature_type' => 'OligoProbe',
+          'reference_strain' => 0,
+          'species' => 'homo_sapiens',
+          'description' => 'AFFY probeset 1000_at (HC-G110 array) hits the genome in 30 location(s). They hit transcripts in the following gene: MAPK3 (ENST00000263025, ENST00000322266, ENST00000461737, ENST00000466521, ENST00000484663, ENST00000485579, ENST00000490298, ENST00000494643)',
+          'domain_url' => 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=homo_sapiens_probeset_1;ptype=pset',
+          'website' => 'http://www.ensembl.org/',
+          'ref_boost' => 10
+        };
+		is_deeply( $probe, $expected );
+	}
+	{
+		my ($probe) = grep { $_->{id} eq 'homo_sapiens_probeset_201' } @$new_probes;
+		my $expected = {
+          'id' => 'homo_sapiens_probeset_201',
+          'reference_strain' => 0,
+          'species_name' => 'Homo sapiens',
+          'description' => 'AFFY probeset 1059_at (HC-G110 array) hits the genome in 23 location(s).',
+          'ref_boost' => 10,
+          'species' => 'homo_sapiens',
+          'domain_url' => 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=homo_sapiens_probeset_201;ptype=pset',
+          'feature_type' => 'OligoProbe',
+          'database_type' => 'funcgen',
+          'website' => 'http://www.ensembl.org/',
+          'db_boost' => 1
+        };
+		is_deeply( $probe, $expected );
+
+	}
+	unlink $out_file;
+};
+
 done_testing;
