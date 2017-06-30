@@ -34,7 +34,6 @@ my $fetcher = Bio::EnsEMBL::Production::Search::IdFetcher->new();
 my $ids = $fetcher->fetch_ids_for_dba($core_dba);
 diag( Dumper($ids) );
 use JSON;
-print encode_json($ids);
 is( scalar @$ids, 5, "Expected number of IDs" );
 my ($current) = grep { $_->{id} eq 'bananag' } @$ids;
 diag( Dumper($current) );
