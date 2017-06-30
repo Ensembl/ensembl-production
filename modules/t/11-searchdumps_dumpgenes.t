@@ -103,6 +103,7 @@ is( scalar(
 
 subtest "Checking protein_coding gene", sub {
 	my ($gene) = grep { $_->{id} eq 'ENSG00000204704' } @$genes;
+	use Data::Dumper;
 	my $expected_gene = {
           'xrefs' => [
                        {
@@ -1193,7 +1194,6 @@ subtest "Checking protein_coding gene", sub {
                           'hs6M1-15'
                         ]
         };
-   
 	is_deeply( sort_gene($gene),
 			   sort_gene($expected_gene),
 			   "Testing gene structure" );
@@ -1301,6 +1301,19 @@ subtest "Checking ncRNA gene", sub {
 					  'end'             => '969286',
 					  'strand'          => '-1',
 					  'version'         => '1' } ],
+					  'probes' => [
+                                             {
+                                               'probe' => '214727_at',
+                                               'array' => 'HG-Focus',
+                                               'vendor' => 'AFFY_HG_Focus'
+                                             },
+                                             {
+                                               'array' => 'HG-U133_Plus_2',
+                                               'probe' => '214727_at',
+                                               'vendor' => 'AFFY_HG_U133_Plus_2'
+                                             }
+                                           ],
+					  
 			   'ensembl_object_type' => 'transcript' } ],
 		'version'         => '1',
 		'biotype'         => 'pseudogene',
