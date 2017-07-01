@@ -493,13 +493,40 @@ sub reformat_gene_trees {
 } ## end sub reformat_gene_trees
 
 sub reformat_regulatory_features {
-	my ( $self, $infile, $outfile ) = @_;
+		my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'funcgen';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($f)  = @_;
+			return undef if defined $f->{set_name} && $f->{set_name} =~ m/FANTOM/;				
+			my $desc;
+			my $url;
+			if($f->{type} eq 'TarBase miRNA') {
+				$desc = sprintf("%s is a %s from %s which hits the genome in %d locations", $f->{name},$f->{class}, $f->{set_name}, scalar(@{$f->{locations}}) );
+				$url = sprintf("%s/Location/Genome?ftype=RegulatoryFactor;id=%s;fset=TarBase miRNA",$genome->{organism}->{url_name},
+					  $f->{id}, $f->{set_name});
+			} else {				
+				$desc = sprintf("%s regulatory feature",$f->{feature_name});
+				$url = sprintf(
+					  "%s/Regulation/Summary?rf=%s",
+					  $genome->{organism}->{url_name},
+					  $f->{id} );
+			}
+			return {
+				  %{ _base( $genome, $type, 'RegulatoryFeature' ) },
+				  id          => $f->{id},
+				  description => $desc,
+				  domain_url =>
+					$url };
+		}
+		);
 	return;
 }
 
 sub reformat_probes {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$type ||= 'core';
+	$type ||= 'funcgen';
 	reformat_json(
 		$infile, $outfile,
 		sub {
@@ -541,7 +568,7 @@ sub reformat_probes {
 
 sub reformat_probesets {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$type ||= 'core';
+	$type ||= 'funcgen';
 	reformat_json(
 		$infile, $outfile,
 		sub {
