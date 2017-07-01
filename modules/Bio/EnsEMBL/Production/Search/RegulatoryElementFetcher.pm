@@ -64,8 +64,7 @@ sub fetch_regulatory_elements_for_dba {
 	my $h = $dba->dbc()->sql_helper();
 
 	$h->execute_no_return(
-		-SQL => 
-          q/select 
+		-SQL => q/select 
       rf.stable_id as id, 
       sr.name as seq_region_name, 
       (rf.seq_region_start - rf.bound_start_length) as start, 
@@ -79,22 +78,21 @@ sub fetch_regulatory_elements_for_dba {
      JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id  AND sr.schema_build=cs.schema_build)
     where
       cs.is_current=1
-      /,-USE_HASHREFS => 1,
-		-CALLBACK => sub {
+      /,
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
 			my $feature = shift @_;
 			push @$elems, $feature;
 			return;
 		} );
-	
-
+	my $features = {};
 	$h->execute_no_return(
 		-SQL => q/ 
      select 
-      concat('external_feature_',ef.external_feature_id) as id, 
       sr.name as seq_region_name, 
       ef.seq_region_start as start, 
       ef.seq_region_end as end, 
-      ef.display_label as feature_name, 
+      ef.display_label as name, 
       ft.name as feature_type,
       ft.description as description, 
       ft.class as class, 
@@ -109,23 +107,35 @@ sub fetch_regulatory_elements_for_dba {
     where
       cs.is_current = 1
       /,
-      -USE_HASHREFS => 1,
-		-CALLBACK => sub {
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
+
 			my $f = shift @_;
-			return if ( $f->{feature_name} =~ /FANTOM/ );
+			my $m = $features->{ $f->{name} };
+			my $location = { start           => $f->{start},
+							 end             => $f->{end},
+							 seq_region_name => $f->{seq_region_name} };
+			if ( !defined $features->{ $f->{name} } ) {
+				$m = $f;
+				$f->{id} = $m->{name};
 
-			for my $id ( split ',', $f->{set_name} ) {
-				push @{ $f->{synonyms} }, $id
-				  unless $id eq 'display_label';
+				for my $id ( split ',', $f->{set_name} ) {
+					push @{ $f->{synonyms} }, $id unless $id eq 'display_label';
+				}
+				$features->{ $f->{name} } = $m;
+				delete $m->{seq_region_name};
+				delete $m->{start};
+				delete $m->{end};
 			}
-
-			push @$elems, $f;
+			push @{ $m->{locations} }, $location;
 			return;
 		} );
-	
+
+	my $mirna = {};
+
 	$h->execute_no_return(
 		-SQL => q/
-		select concat('mirna_target_feature_',mrf.mirna_target_feature_id) as id,
+		select
   mrf.display_label as name, 
   mrf.accession as accession, 
   mrf.method as method,
@@ -147,15 +157,29 @@ sub fetch_regulatory_elements_for_dba {
      JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id AND sr.schema_build=cs.schema_build)
     WHERE cs.is_current = 1
       /,
-      -USE_HASHREFS => 1,
-		-CALLBACK => sub {
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
 			my $f = shift @_;
-			return if ( $f->{feature_name} =~ /FANTOM/ );
-			push @$elems, $f;
+			my $m = $mirna->{ $f->{accession} };
+			my $location = {
+						  start                  => $f->{start},
+						  end                    => $f->{end},
+						  seq_region_name        => $f->{seq_region_name},
+						  supporting_information => $f->{supporting_information}
+			};
+			if ( !defined $mirna->{ $f->{accession} } ) {
+				$m                          = $f;
+				$f->{id}                    = $m->{name};
+				$mirna->{ $f->{accession} } = $m;
+				delete $m->{seq_region_name};
+				delete $m->{start};
+				delete $m->{end};
+				delete $m->{supporting_information};
+			}
+			push @{ $m->{locations} }, $location;
 			return;
 		} );
-
-	return $elems;
+	return [ @$elems, values %$mirna, values %$features ];
 } ## end sub fetch_regulatory_elements_for_dba
 
 1;
