@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 use Test::More;
 
 BEGIN {
@@ -39,21 +38,21 @@ my $out = $fetcher->fetch_probes_for_dba( $dba, $core_dba );
 is( scalar( @{ $out->{probes} } ), 851 );
 my ($probe) = grep { $_->{id} eq '23633' } @{ $out->{probes} };
 
-my $expected_probe = {
-	'transcripts' => [ { 'description' => 'Test probe mapping',
-						 'gene_name'   => 'RPL14P5',
-						 'gene_id'     => 'ENSG00000261370',
-						 'id'          => 'ENST00000569325' } ],
-	'id'           => '23633',
-	'array_vendor' => 'AGILENT',
-	'name'         => 'A_14_P100214',
-	'array'        => 'CGH_44b',
-	'locations'    => [ {
-					   'start'           => '32890549',
-					   'end'             => '32890608',
-					   'seq_region_name' => '13',
-					   'strand'          => '1' } ],
-	'array_chip' => 'CGH_44b' };
+my $expected_probe = { 'transcripts' => [ {
+										 'description' => 'Test probe mapping',
+										 'gene_name'   => 'RPL14P5',
+										 'gene_id'     => 'ENSG00000261370',
+										 'id'          => 'ENST00000569325' } ],
+					   'id'           => '23633',
+					   'array_vendor' => 'AGILENT',
+					   'name'         => 'A_14_P100214',
+					   'array'        => 'CGH_44b',
+					   'locations'    => [ {
+										  'start'           => '32890549',
+										  'end'             => '32890608',
+										  'seq_region_name' => '13',
+										  'strand'          => '1' } ],
+					   'array_chip' => 'CGH_44b' };
 is_deeply( $probe, $expected_probe );
 
 is( scalar( @{ $out->{probe_sets} } ), 1 );
