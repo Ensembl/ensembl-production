@@ -84,6 +84,7 @@ sub reformat_json {
 		sub {
 			my ($obj) = @_;
 			my $new_obj = $callback->($obj);
+			return if !defined $new_obj;
 			if ( ref($new_obj) eq 'ARRAY' ) {
 				for my $o (@$new_obj) {
 					if ( $n++ > 0 ) {
