@@ -6,7 +6,8 @@
     },
     'homo_sapiens_dump' => {
       'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
-      'funcgen' => 'Bio::EnsEMBL::Funcgen::DBSQL::DBAdaptor'
+      'funcgen' => 'Bio::EnsEMBL::Funcgen::DBSQL::DBAdaptor',
+      'variation' => 'Bio::EnsEMBL::Variation::DBSQL::DBAdaptor'
     },
     'saccharomyces_cerevisiae' => {
       'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
