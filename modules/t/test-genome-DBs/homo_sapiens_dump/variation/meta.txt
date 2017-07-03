@@ -49,7 +49,7 @@
 57	\N	patch	patch_77_78_c.sql|Drop the table study_variation
 58	\N	patch	patch_77_78_d.sql|Extend the index type_val_idx in the table attrib
 59	\N	patch	patch_77_78_e.sql|add indexes on father_ and mother_individual_id and population name
-2	\N	schema_version	83
+2	\N	schema_version	90
 60	\N	patch	patch_78_79_a.sql|schema version
 61	\N	patch	patch_78_79_b.sql|change the column attrib_type_id by attrib_id in the variation_attrib table
 62	\N	patch	patch_78_79_c.sql|Store more detailed Sift information
@@ -68,3 +68,22 @@
 75	\N	patch	patch_81_82_c.sql|new entry in the failed_description table
 76	\N	patch	patch_82_83_a.sql|schema version
 77	\N	patch	patch_82_83_b.sql|Add the evidence ExAC in variation and variation_feature
+78	\N	patch	patch_83_84_a.sql|schema version
+79	\N	patch	patch_84_85_a.sql|schema version
+80	\N	patch	patch_84_85_c.sql|drop column moltype from variation_synonym
+81	\N	patch	patch_84_85_d.sql|Making attrib_id auto_increment
+82	\N	patch	patch_84_85_e.sql|drop the table tagged_variation_feature
+83	\N	patch	patch_84_85_f.sql|add phenotype_ontology_accession
+84	\N	patch	patch_84_85_g.sql|allow the column description to store more text in the source table
+85	\N	patch	patch_84_85_b.sql|create sample_synonym
+86	\N	patch	patch_85_86_a.sql|schema version
+87	\N	patch	patch_85_86_b.sql|add qualifier & index to phenotype_onology_accession
+88	\N	patch	patch_85_86_c.sql|add index on study.external_reference
+89	\N	patch	patch_86_87_a.sql|schema version
+90	\N	patch	patch_87_88_a.sql|schema version
+91	\N	patch	patch_87_88_b.sql|seq_region_name_255
+92	\N	patch	patch_88_89_a.sql|schema version
+93	\N	patch	patch_88_89_b.sql|Drop strain_gtype_poly table
+94	\N	patch	patch_89_90_a.sql|schema version
+95	\N	patch	patch_89_90_b.sql|add start_retained_variant to consequence_types in variation_feature and transcript_variation
+96	\N	patch	patch_89_90_c.sql|remove regulatory and TFBS consequences from consequence_types in  transcript_variation
