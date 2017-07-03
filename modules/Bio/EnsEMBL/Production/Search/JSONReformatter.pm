@@ -33,7 +33,7 @@ package Bio::EnsEMBL::Production::Search::JSONReformatter;
 use strict;
 use warnings;
 
-use Exporter 'import';    # gives you Exporter's import() method directly
+use Exporter 'import'; 
 our @EXPORT = qw(process_json_file reformat_json);
 
 use Log::Log4perl qw/get_logger/;
