@@ -23,7 +23,7 @@ use File::Spec;
 use Data::Dumper;
 
 BEGIN {
-	use_ok('Bio::EnsEMBL::Production::Search::SolrFormatter');
+	use_ok('Bio::EnsEMBL::Production::Search::GenomeSolrFormatter');
 }
 
 my $in_file        = File::Spec->catfile( $Bin, "genes_test.json" );
@@ -32,7 +32,7 @@ my $out_file       = File::Spec->catfile( $Bin, "solr_genes_test.json" );
 
 my $genome = decode_json( read_file($genome_in_file) );
 
-my $formatter = Bio::EnsEMBL::Production::Search::SolrFormatter->new();
+my $formatter = Bio::EnsEMBL::Production::Search::GenomeSolrFormatter->new();
 
 subtest "Gene reformat", sub {
 	$formatter->reformat_genes( $in_file, $out_file, $genome, 'core' );

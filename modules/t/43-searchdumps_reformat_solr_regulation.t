@@ -23,12 +23,12 @@ use File::Spec;
 use Data::Dumper;
 
 BEGIN {
-	use_ok('Bio::EnsEMBL::Production::Search::SolrFormatter');
+	use_ok('Bio::EnsEMBL::Production::Search::RegulationSolrFormatter');
 }
 
 my $genome_in_file = File::Spec->catfile( $Bin, "genome_test.json" );
 my $genome         = decode_json( read_file($genome_in_file) );
-my $formatter      = Bio::EnsEMBL::Production::Search::SolrFormatter->new();
+my $formatter      = Bio::EnsEMBL::Production::Search::RegulationSolrFormatter->new();
 
 subtest "Probes reformat", sub {
 	my $in_file  = File::Spec->catfile( $Bin, "probes_test.json" );
