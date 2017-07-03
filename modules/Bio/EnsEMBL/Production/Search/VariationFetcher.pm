@@ -97,20 +97,23 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 			my $var = shift;
 			_add_key( $var, 'source',     $sources,   $var->{source_id} );
 			_add_key( $var, 'gwas',       $gwas,      $var->{name} );
+			_add_key( $var, 'phenotypes',  $phenotypes,      $var->{id} );
 			_add_key( $var, 'hgvs',       $hgvs,      $var->{id} );
 			_add_key( $var, 'locations',  $features,  $var->{id} );
 			_add_key( $var, 'synonyms',   $synonyms,  $var->{id} );
 			_add_key( $var, 'gene_names', $genenames, $var->{id} );
 			_add_key( $var, 'failures',   $failures,  $var->{id} );
 			my $ssids = $subsnps->{ $var->{id} };
-
 			if ( defined $ssids ) {
 				for my $ssid (@$ssids) {
 					push @{ $var->{synonyms} },
 					  { name => $ssid, source => $dbsnp };
 				}
 			}
+			$var->{somatic} = $var->{somatic}==1?'true':'false';
 			delete $var->{source_id};
+			$var->{id} = $var->{name};
+			delete $var->{name};
 			$callback->($var);
 			return;
 		} );
@@ -124,11 +127,12 @@ sub _calculate_min_max {
 						   -SQL => q/select min(variation_id) from variation/ );
 	}
 	if ( !defined $length ) {
-		$length = $h->execute_single_result(
-			 -SQL => q/select max(variation_id) from variation/ ) - $offset + 1;
+		$length = ($h->execute_single_result(
+			 -SQL => q/select max(variation_id) from variation/ )) - $offset + 1;
 	}
 	$logger->debug("Calculating $offset/$length");
 	my $max = $offset + $length - 1;
+	
 	$logger->debug("Current ID range $offset -> $max");
 	return ( $offset, $max );
 }
@@ -252,10 +256,10 @@ sub _fetch_features {
 			my ( $row, $value ) = @_;
 			$value = [] if !defined $value;
 			my $con = { stable_id => $row->[1], consequence => $row->[2] };
-			$con->{polyphen}       = $row->[3] if defined $row->[3];
-			$con->{polyphen_score} = $row->[4] if defined $row->[4];
-			$con->{sift}           = $row->[5] if defined $row->[5];
-			$con->{sift_score}     = $row->[6] if defined $row->[6];
+			$con->{polyphen}       = $row->[3] if defined $row->[3] && $row->[3] ne '';
+			$con->{polyphen_score} = $row->[4] if defined $row->[4] && $row->[4] != 0;
+			$con->{sift}           = $row->[5] if defined $row->[5] && $row->[5] ne '';
+			$con->{sift_score}     = $row->[6] if defined $row->[6] && $row->[6] != 0;
 			push( @{$value}, $con );
 			return $value;
 		} );
