@@ -41,10 +41,12 @@ is( scalar(@som), 898, "Testing correct numbers of non-somatic variants" );
 	my ($var) = grep { $_->{id} eq 'rs7569578' } @som;
 	is_deeply(
 		$var, {
-		   'id'         => 'rs7569578',
+		   'id'   => 'rs7569578',
+		   'hgvs' => [ 'c.1881+3399G>A', 'n.99+25766C>T'
+		   ],
 		   'gene_names' => [ 'banana', 'mango' ],
-		   'source'     => { 'name' => 'dbSNP', 'version' => '138' },
-		   'locations'  => [ {
+		   'source'    => { 'name' => 'dbSNP', 'version' => '138' },
+		   'locations' => [ {
 					   'seq_region_name' => '2',
 					   'start'           => '45411130',
 					   'strand'          => '1',
@@ -53,48 +55,66 @@ is( scalar(@som), 898, "Testing correct numbers of non-somatic variants" );
 							  'consequence' =>
 								'non_coding_transcript_variant,intron_variant',
 							  'stable_id' => 'ENST00000427020' } ] } ],
-		   'synonyms' => [ {
-				  'name'   => 'rs57302278',
-				  'source' => { 'name'    => 'Archive dbSNP',
-								'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss11455892' }, {
-				  'name'   => 'ss86053513',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss91145073' }, {
-				  'name'   => 'ss97034149',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss109467753' }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss110190545' }, {
-				  'name'   => 'ss138435502',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'name'   => 'ss144054833',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss157002687' }, {
-				  'name'   => 'ss163387157',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'name'   => 'ss200374933',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'name'   => 'ss219215407',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'name'   => 'ss231145043',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss238705051' }, {
-				  'name'   => 'ss253077410',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'name'   => 'ss276448458',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss292259141' }, {
-				  'name'   => 'ss555526757',
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' } }, {
-				  'source' => { 'name' => 'dbSNP', 'version' => '138' },
-				  'name'   => 'ss649111058' } ],
+		   'synonyms' => [ {  'name'   => 'rs57302278',
+							  'source' => { 'name'    => 'Archive dbSNP',
+											'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss11455892' }, {
+							  'name' => 'ss86053513',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss91145073' }, {
+							  'name' => 'ss97034149',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss109467753' }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss110190545' }, {
+							  'name' => 'ss138435502',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'name' => 'ss144054833',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss157002687' }, {
+							  'name' => 'ss163387157',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'name' => 'ss200374933',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'name' => 'ss219215407',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'name' => 'ss231145043',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss238705051' }, {
+							  'name' => 'ss253077410',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'name' => 'ss276448458',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss292259141' }, {
+							  'name' => 'ss555526757',
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' } }, {
+							  'source' =>
+								{ 'name' => 'dbSNP', 'version' => '138' },
+							  'name' => 'ss649111058' } ],
 		   'somatic' => 'false' },
 		'Testing variation with consequences and gene names' );
 }
