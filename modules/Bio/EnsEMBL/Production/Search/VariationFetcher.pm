@@ -383,64 +383,70 @@ q/SELECT phenotype_id, stable_id, name, description, poa.accession as accession
 							description => $row->[3], };
 				if ( defined $row->[4] ) {
 					$doc->{ontology_accession} = $row->[4];
-					my $terms =
-					  $onto_dba->dbc()->sql_helper()->execute(
-					  -SQL => q/select t.name, o.name from term t
+
+					$onto_dba->dbc()->sql_helper()->execute_no_return(
+						-SQL => q/select t.name, o.name, s.name
+					  from term t
 					join ontology o using (ontology_id)
+					left join synonym s using (term_id)
 					where t.accession=?/,
-					  -PARAMS => [ $row->[4] ] );
-					  if(scalar @$terms>0) {
-						$doc->{ontology_term} = $terms->[0][0];					  	
-						$doc->{ontology_name} = $terms->[0][1];					  	
-					  }
-			}
-			return $doc;
+						-PARAMS   => [ $row->[4] ],
+						-CALLBACK => sub {
+							my ($t) = @_;
+							$doc->{ontology_term} = $t->[0];
+							$doc->{ontology_name} = $t->[1];
+							push @{ $doc->{ontology_synonyms} }, $t->[2]
+							  if defined $t->[2];
+							return;
+						} );
+				}
+				return $doc;
 			} );
 	}
 	return $self->{phenotypes};
 } ## end sub _fetch_all_phenotypes
 
 sub _fetch_all_gwas {
-	  my ( $self, $h, $min, $max ) = @_;
-	  if ( !defined $self->{gwas} ) {
-		  $logger->debug("Fetching GWAS");
-		  $self->{gwas} = $h->execute_into_hash(
-			  -SQL => q/SELECT distinct pf.object_id as name, s.name as source
+	my ( $self, $h, $min, $max ) = @_;
+	if ( !defined $self->{gwas} ) {
+		$logger->debug("Fetching GWAS");
+		$self->{gwas} = $h->execute_into_hash(
+			-SQL => q/SELECT distinct pf.object_id as name, s.name as source
        FROM phenotype_feature pf
        JOIN source s USING (source_id)
       WHERE pf.is_significant = 1
         AND s.name like "%GWAS%"/,
-			  -CALLBACK => sub {
-				  my ( $row, $value ) = @_;
-				  $value = [] if !defined $value;
-				  push( @{$value}, $row->[1] );
-				  return $value;
-			  } );
-	  }
-	  return $self->{gwas};
+			-CALLBACK => sub {
+				my ( $row, $value ) = @_;
+				$value = [] if !defined $value;
+				push( @{$value}, $row->[1] );
+				return $value;
+			} );
+	}
+	return $self->{gwas};
 }
 
 sub _fetch_all_sources {
-	  my ( $self, $h ) = @_;
-	  if ( !defined $self->{sources} ) {
-		  $logger->debug("Fetching sources");
-		  $self->{sources} = $h->execute_into_hash(
-			  -SQL      => q/SELECT source_id, name, version from source/,
-			  -CALLBACK => sub {
-				  my ( $row, $value ) = @_;
-				  return { name => $row->[1], version => $row->[2] };
-			  } );
-	  }
-	  return $self->{sources};
+	my ( $self, $h ) = @_;
+	if ( !defined $self->{sources} ) {
+		$logger->debug("Fetching sources");
+		$self->{sources} = $h->execute_into_hash(
+			-SQL      => q/SELECT source_id, name, version from source/,
+			-CALLBACK => sub {
+				my ( $row, $value ) = @_;
+				return { name => $row->[1], version => $row->[2] };
+			} );
+	}
+	return $self->{sources};
 }
 
 sub _add_key {
-	  my ( $obj, $k, $h, $v ) = @_;
-	  if ( defined $v ) {
-		  my $o = $h->{$v};
-		  $obj->{$k} = $o if defined $o;
-	  }
-	  return;
+	my ( $obj, $k, $h, $v ) = @_;
+	if ( defined $v ) {
+		my $o = $h->{$v};
+		$obj->{$k} = $o if defined $o;
+	}
+	return;
 
 }
 
