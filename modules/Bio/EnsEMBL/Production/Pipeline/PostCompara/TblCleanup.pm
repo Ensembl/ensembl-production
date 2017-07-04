@@ -81,14 +81,14 @@ return 0;
 sub delete_gene_names {
     my ($self,$helper)       = @_;
 
-    print STDERR "Setting projected transcript statuses to NOVEL\n";
+    print STDERR "Setting projected transcript display_xrefs amd description to NULL \n";
 
-    my $sql_del_terms = "UPDATE gene g, xref x, transcript t SET t.display_xref_id = NULL, t.description = NULL, t.status='NOVEL' WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION' AND g.gene_id = t.gene_id";
+    my $sql_del_terms = "UPDATE gene g, xref x, transcript t SET t.display_xref_id = NULL, t.description = NULL WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION' AND g.gene_id = t.gene_id";
     $helper->execute_update(-SQL => $sql_del_terms);
 
-    print STDERR "Setting gene display_xrefs that were projected to NULL and status to NOVEL\n\n";
+    print STDERR "Setting gene display_xrefs that were projected to NULL\n\n";
 
-    $sql_del_terms = "UPDATE gene g, xref x SET g.display_xref_id = NULL, g.status='NOVEL' WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION'";
+    $sql_del_terms = "UPDATE gene g, xref x SET g.display_xref_id = NULL WHERE g.display_xref_id=x.xref_id AND x.info_type='PROJECTION'";
 
     $helper->execute_update(-SQL => $sql_del_terms);
 
