@@ -52,14 +52,17 @@ sub fetch_variations {
 	my ( $self, $name, $offset, $length ) = @_;
 	$logger->debug("Fetching DBA for $name");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'variation' );
-	return $self->fetch_variations_for_dba($dba);
+	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );
+	return $self->fetch_variations_for_dba( $dba, $onto_dba );
 }
 
 sub fetch_variations_for_dba {
-	my ( $self, $dba, $offset, $length ) = @_;
+	my ( $self, $dba, $onto_dba, $offset, $length ) = @_;
 	my @variants = ();
 	$self->fetch_variations_callback(
-		$dba, $offset, $length,
+		$dba,
+		$onto_dba,
+		$offset, $length,
 		sub {
 			my ($variant) = @_;
 			push @variants, $variant;
@@ -69,7 +72,7 @@ sub fetch_variations_for_dba {
 }
 
 sub fetch_variations_callback {
-	my ( $self, $dba, $offset, $length, $callback ) = @_;
+	my ( $self, $dba, $onto_dba, $offset, $length, $callback ) = @_;
 	$dba->dbc()->db_handle()->{mysql_use_result} = 1;    # streaming
 	my $h = $dba->dbc()->sql_helper();
 
@@ -85,7 +88,8 @@ sub fetch_variations_callback {
 	my $subsnps = $self->_fetch_subsnps( $h, $min, $max );
 	my $synonyms = $self->_fetch_synonyms( $h, $min, $max, $sources );
 	my $genenames = $self->_fetch_genenames( $h, $min, $max );
-	my $phenotypes = $self->_fetch_phenotype_features( $h, $min, $max );
+	my $phenotypes =
+	  $self->_fetch_phenotype_features( $h, $onto_dba, $min, $max );
 	my $failures = $self->_fetch_failed_descriptions( $h, $min, $max );
 	$h->execute_no_return(
 		-SQL =>
@@ -95,22 +99,23 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
 			my $var = shift;
-			_add_key( $var, 'source',     $sources,   $var->{source_id} );
-			_add_key( $var, 'gwas',       $gwas,      $var->{name} );
-			_add_key( $var, 'phenotypes',  $phenotypes,      $var->{id} );
-			_add_key( $var, 'hgvs',       $hgvs,      $var->{id} );
-			_add_key( $var, 'locations',  $features,  $var->{id} );
-			_add_key( $var, 'synonyms',   $synonyms,  $var->{id} );
-			_add_key( $var, 'gene_names', $genenames, $var->{id} );
-			_add_key( $var, 'failures',   $failures,  $var->{id} );
+			_add_key( $var, 'source',     $sources,    $var->{source_id} );
+			_add_key( $var, 'gwas',       $gwas,       $var->{name} );
+			_add_key( $var, 'phenotypes', $phenotypes, $var->{id} );
+			_add_key( $var, 'hgvs',       $hgvs,       $var->{id} );
+			_add_key( $var, 'locations',  $features,   $var->{id} );
+			_add_key( $var, 'synonyms',   $synonyms,   $var->{id} );
+			_add_key( $var, 'gene_names', $genenames,  $var->{id} );
+			_add_key( $var, 'failures',   $failures,   $var->{id} );
 			my $ssids = $subsnps->{ $var->{id} };
+
 			if ( defined $ssids ) {
 				for my $ssid (@$ssids) {
 					push @{ $var->{synonyms} },
 					  { name => $ssid, source => $dbsnp };
 				}
 			}
-			$var->{somatic} = $var->{somatic}==1?'true':'false';
+			$var->{somatic} = $var->{somatic} == 1 ? 'true' : 'false';
 			delete $var->{source_id};
 			$var->{id} = $var->{name};
 			delete $var->{name};
@@ -127,12 +132,13 @@ sub _calculate_min_max {
 						   -SQL => q/select min(variation_id) from variation/ );
 	}
 	if ( !defined $length ) {
-		$length = ($h->execute_single_result(
-			 -SQL => q/select max(variation_id) from variation/ )) - $offset + 1;
+		$length = ( $h->execute_single_result(
+							  -SQL => q/select max(variation_id) from variation/
+					) ) - $offset + 1;
 	}
 	$logger->debug("Calculating $offset/$length");
 	my $max = $offset + $length - 1;
-	
+
 	$logger->debug("Current ID range $offset -> $max");
 	return ( $offset, $max );
 }
@@ -156,23 +162,24 @@ q/SELECT h.variation_id, h.hgvs_name
 sub _fetch_subsnps {
 	my ( $self, $h, $min, $max ) = @_;
 	my $cnt = $h->execute_single_result(
-	-SQL=>"select count(*) from information_schema.tables where table_name=? and table_schema=?",
-	-PARAMS=>['subsnp_map',$h->db_connection()->dbname()]
-	);
-	if($cnt==1) {
-	$logger->debug("Fetching subsnps for $min/$max");
-	return $h->execute_into_hash(
 		-SQL =>
+"select count(*) from information_schema.tables where table_name=? and table_schema=?",
+		-PARAMS => [ 'subsnp_map', $h->db_connection()->dbname() ] );
+	if ( $cnt == 1 ) {
+		$logger->debug("Fetching subsnps for $min/$max");
+		return $h->execute_into_hash(
+			-SQL =>
 q/SELECT variation_id, concat('ss',subsnp_id)                                                                                                                                                                                  
        FROM subsnp_map WHERE variation_id between ? and ?/,
-		-PARAMS   => [ $min, $max ],
-		-CALLBACK => sub {
-			my ( $row, $value ) = @_;
-			$value = [] if !defined $value;
-			push( @{$value}, $row->[1] );
-			return $value;
-		} );
-	} else {
+			-PARAMS   => [ $min, $max ],
+			-CALLBACK => sub {
+				my ( $row, $value ) = @_;
+				$value = [] if !defined $value;
+				push( @{$value}, $row->[1] );
+				return $value;
+			} );
+	}
+	else {
 		return {};
 	}
 }
@@ -197,21 +204,22 @@ sub _fetch_synonyms {
 }
 
 sub _fetch_phenotype_features {
-	my ( $self, $h, $min, $max ) = @_;
+	my ( $self, $h, $onto_dba, $min, $max ) = @_;
 	# only query if we have data to avoid nulls
-	my $pfs = $h->execute_simple(-SQL=>q/select pf.object_id 
+	my $pfs = $h->execute_simple(
+		-SQL => q/select pf.object_id 
 from phenotype_feature pf
 where pf.type = 'Variation' and pf.is_significant = 1
-LIMIT 1/);
-	if(scalar(@$pfs)==0) {
-	  $logger->debug("No phenotype features found");
-	  return {};
+LIMIT 1/ );
+	if ( scalar(@$pfs) == 0 ) {
+		$logger->debug("No phenotype features found");
+		return {};
 	}
 	$logger->debug("Fetching phenotypes for $min/$max");
-	my $phenotypes = $self->_fetch_all_phenotypes($h);
+	my $phenotypes = $self->_fetch_all_phenotypes( $h, $onto_dba );
 	my $sources    = $self->_fetch_all_sources($h);
 	my $studies    = $self->_fetch_all_studies($h);
-	my $sql = q/SELECT 
+	my $sql        = q/SELECT 
 		v.variation_id, 
 		pf.phenotype_id,
 		pf.study_id,
@@ -225,14 +233,14 @@ LIMIT 1/);
            USING (phenotype_feature_id)
      LEFT JOIN ( phenotype_feature_attrib AS av 
                  join attrib_type AS at2 on (av.attrib_type_id = at2.attrib_type_id and at2.code = 'variation_names' ))
-           USING (phenotype_feature_id)
+           USING (phenotype_feature_id)          
      WHERE 
      v.variation_id is not null 
      AND v.variation_id between ? AND ?
      AND pf.type = 'Variation'
      AND pf.is_significant = 1/;
 	return $h->execute_into_hash(
-		-SQL => $sql,
+		-SQL      => $sql,
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
@@ -264,10 +272,13 @@ sub _fetch_features {
 			my ( $row, $value ) = @_;
 			$value = [] if !defined $value;
 			my $con = { stable_id => $row->[1], consequence => $row->[2] };
-			$con->{polyphen}       = $row->[3] if defined $row->[3] && $row->[3] ne '';
-			$con->{polyphen_score} = $row->[4] if defined $row->[4] && $row->[4] != 0;
-			$con->{sift}           = $row->[5] if defined $row->[5] && $row->[5] ne '';
-			$con->{sift_score}     = $row->[6] if defined $row->[6] && $row->[6] != 0;
+			$con->{polyphen} = $row->[3]
+			  if defined $row->[3] && $row->[3] ne '';
+			$con->{polyphen_score} = $row->[4]
+			  if defined $row->[4] && $row->[4] != 0;
+			$con->{sift} = $row->[5] if defined $row->[5] && $row->[5] ne '';
+			$con->{sift_score} = $row->[6]
+			  if defined $row->[6] && $row->[6] != 0;
 			push( @{$value}, $con );
 			return $value;
 		} );
@@ -358,62 +369,78 @@ sub _fetch_all_studies {
 } ## end sub _fetch_all_studies
 
 sub _fetch_all_phenotypes {
-	my ( $self, $h ) = @_;
+	my ( $self, $h, $onto_dba ) = @_;
 	if ( !defined $self->{phenotypes} ) {
 		$self->{phenotypes} = $h->execute_into_hash(
-			-SQL => q/SELECT phenotype_id, stable_id, name, description
-			FROM phenotype/,
+			-SQL =>
+q/SELECT phenotype_id, stable_id, name, description, poa.accession as accession
+			FROM phenotype
+	        LEFT JOIN phenotype_ontology_accession poa USING (phenotype_id)/,
 			-CALLBACK => sub {
 				my ( $row, $value ) = @_;
-				return { stable_id   => $row->[1],
-						 name        => $row->[2],
-						 description => $row->[3] };
+				my $doc = { stable_id   => $row->[1],
+							name        => $row->[2],
+							description => $row->[3], };
+				if ( defined $row->[4] ) {
+					$doc->{ontology_accession} = $row->[4];
+					my $terms =
+					  $onto_dba->dbc()->sql_helper()->execute(
+					  -SQL => q/select t.name, o.name from term t
+					join ontology o using (ontology_id)
+					where t.accession=?/,
+					  -PARAMS => [ $row->[4] ] );
+					  if(scalar @$terms>0) {
+						$doc->{ontology_term} = $terms->[0][0];					  	
+						$doc->{ontology_name} = $terms->[0][1];					  	
+					  }
+			}
+			return $doc;
 			} );
 	}
 	return $self->{phenotypes};
-}
+} ## end sub _fetch_all_phenotypes
 
 sub _fetch_all_gwas {
-	my ( $self, $h, $min, $max ) = @_;
-	if ( !defined $self->{gwas} ) {
-		$logger->debug("Fetching GWAS");
-		$self->{gwas} = $h->execute_into_hash(
-			-SQL => q/SELECT distinct pf.object_id as name, s.name as source
+	  my ( $self, $h, $min, $max ) = @_;
+	  if ( !defined $self->{gwas} ) {
+		  $logger->debug("Fetching GWAS");
+		  $self->{gwas} = $h->execute_into_hash(
+			  -SQL => q/SELECT distinct pf.object_id as name, s.name as source
        FROM phenotype_feature pf
        JOIN source s USING (source_id)
       WHERE pf.is_significant = 1
-        AND s.name like "%NHGRI_GWAS%"/,
-			-CALLBACK => sub {
-				my ( $row, $value ) = @_;
-				$value = [] if !defined $value;
-				push( @{$value}, $row->[1] );
-				return $value;
-			} );
-	}
-	return $self->{gwas};
+        AND s.name like "%GWAS%"/,
+			  -CALLBACK => sub {
+				  my ( $row, $value ) = @_;
+				  $value = [] if !defined $value;
+				  push( @{$value}, $row->[1] );
+				  return $value;
+			  } );
+	  }
+	  return $self->{gwas};
 }
 
 sub _fetch_all_sources {
-	my ( $self, $h ) = @_;
-	if ( !defined $self->{sources} ) {
-		$logger->debug("Fetching sources");
-		$self->{sources} = $h->execute_into_hash(
-			-SQL      => q/SELECT source_id, name, version from source/,
-			-CALLBACK => sub {
-				my ( $row, $value ) = @_;
-				return { name => $row->[1], version => $row->[2] };
-			} );
-	}
-	return $self->{sources};
+	  my ( $self, $h ) = @_;
+	  if ( !defined $self->{sources} ) {
+		  $logger->debug("Fetching sources");
+		  $self->{sources} = $h->execute_into_hash(
+			  -SQL      => q/SELECT source_id, name, version from source/,
+			  -CALLBACK => sub {
+				  my ( $row, $value ) = @_;
+				  return { name => $row->[1], version => $row->[2] };
+			  } );
+	  }
+	  return $self->{sources};
 }
 
 sub _add_key {
-	my ( $obj, $k, $h, $v ) = @_;
-	if ( defined $v ) {
-		my $o = $h->{$v};
-		$obj->{$k} = $o if defined $o;
-	}
-	return;
+	  my ( $obj, $k, $h, $v ) = @_;
+	  if ( defined $v ) {
+		  my $o = $h->{$v};
+		  $obj->{$k} = $o if defined $o;
+	  }
+	  return;
 
 }
 
