@@ -155,6 +155,11 @@ q/SELECT h.variation_id, h.hgvs_name
 
 sub _fetch_subsnps {
 	my ( $self, $h, $min, $max ) = @_;
+	my $cnt = $h->execute_single_result(
+	-SQL=>"select count(*) from information_schema.tables where table_name=? and table_schema=?",
+	-PARAMS=>['subsnp_map',$h->db_connection()->dbname()]
+	);
+	if($cnt==1) {
 	$logger->debug("Fetching subsnps for $min/$max");
 	return $h->execute_into_hash(
 		-SQL =>
@@ -167,6 +172,9 @@ q/SELECT variation_id, concat('ss',subsnp_id)
 			push( @{$value}, $row->[1] );
 			return $value;
 		} );
+	} else {
+		return {};
+	}
 }
 
 sub _fetch_synonyms {
