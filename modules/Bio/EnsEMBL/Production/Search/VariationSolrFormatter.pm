@@ -35,29 +35,88 @@ use Carp;
 use File::Slurp;
 
 use base qw/Bio::EnsEMBL::Production::Search::SolrFormatter/;
+
 sub new {
-  my ($class, @args) = @_;
-  my $self = $class->SUPER::new(@args);
-  return $self;
+	my ( $class, @args ) = @_;
+	my $self = $class->SUPER::new(@args);
+	return $self;
 }
 
 sub reformat_variants {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'variation';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($v) = @_;
+			return undef if ( $v->{somatic} eq 'true' );
+			my $v2 = { %{ _base( $genome, $type, 'Variant' ) },
+					   id => $v->{id},
+					   domain_url =>
+						 sprintf( '%s/Variation/Summary?v=%s',
+								  $genome->{organism}->{url_name},
+								  $v->{id} ) };
+			$v2->{description} = sprintf( "A %s Variant.", $v->{source}{name} );
+
+			if ( _array_nonempty( $v->{synonyms} ) ) {
+				for my $syn ( @{ $v->{synonyms} } ) {
+					push @{ $v2->{synonyms} }, $syn->{name};
+				}
+			}
+			if ( _array_nonempty( $v->{gene_names} ) ) {
+				$v2->{description} .=
+				  sprintf( " Gene Association(s): %s.",
+						   join( ", ", @{ $v->{gene_names} } ) );
+			}
+			if ( _array_nonempty( $v->{hgvs} ) ) {
+				$v2->{hgvs_names} = $v->{hgvs};
+				$v2->{description} .=
+				  sprintf( " HGVS Name(s): %s.",
+						   join( ", ", @{ $v2->{hgvs_names} } ) );
+			}
+			if ( _array_nonempty( $v->{gwas} ) ) {
+				$v2->{hgvs_names} = $v->{hgvs};
+				$v2->{description} .=
+				  sprintf( " GWAS studies: %s.",
+						   join( ", ", @{ $v->{gwas} } ) );
+			}
+			if ( _array_nonempty( $v->{phenotypes} ) ) {
+				$v2->{description} .=
+				  sprintf( " Phenotype(s): %s.",
+						   join( ', ',
+								 map { $_->{phenotype}{description} || $_->{phenotype}{name} }
+								   @{ $v->{phenotypes} } ) );
+				my @onto =
+				  map  { $_->{phenotype}{ontology_term} }
+				  grep { defined $_->{phenotype}{ontology_term} } @{ $v->{phenotypes} };
+				$v2->{description} .=
+				  sprintf( " Phenotype ontologies: %s.", join( ', ', @onto ) )
+				  if @onto;
+			}
+			if ( _array_nonempty( $v->{failures} ) ) {
+				$v2->{description} .=
+				  ' ' . join( '. ', @{ $v->{failures} } );
+			}
+			return $v2;
+		} );
 	return;
-}
+} ## end sub reformat_variants
 
 sub reformat_somatic_variants {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'variation';
 	return;
 }
 
 sub reformat_structural_variants {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'variation';
 	return;
 }
 
 sub reformat_phenotypes {
-	my ( $self, $infile, $outfile ) = @_;
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'variation';
 	return;
 }
 
