@@ -2066,3 +2066,12 @@ INSERT INTO failed_description (failed_description_id,description) VALUES (17,'V
 INSERT INTO failed_description (failed_description_id,description) VALUES (18,'Supporting evidence can not be re-mapped to the current assembly');
 INSERT INTO failed_description (failed_description_id,description) VALUES (19,'Variant maps to more than one genomic location');
 INSERT INTO failed_description (failed_description_id,description) VALUES (20,'Variant at first base in sequence');
+
+/**
+Additional table that is not part of the standard schema but used by dumps
+*/
+CREATE TABLE `subsnp_map` (
+  `variation_id` int(11) unsigned NOT NULL,
+  `subsnp_id` int(11) unsigned DEFAULT NULL,
+  KEY `variation_idx` (`variation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
