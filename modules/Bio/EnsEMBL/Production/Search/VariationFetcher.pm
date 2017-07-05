@@ -244,9 +244,9 @@ LIMIT 1/ );
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
-			$value = [] if !defined $value;
-			my $pf = {};
-			_add_key( $pf, 'phenotype', $phenotypes, $row->[1] );
+			$value = [] if !defined $value;			
+			my $phenotype = $phenotypes->{$row->[1]} || {};
+			my $pf = {%{$phenotype}};
 			_add_key( $pf, 'study',     $studies,    $row->[2] );
 			_add_key( $pf, 'source',    $sources,    $row->[3] );
 			push @$value, $pf;

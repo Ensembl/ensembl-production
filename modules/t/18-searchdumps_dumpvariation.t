@@ -28,8 +28,7 @@ use Log::Log4perl qw/:easy/;
 Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
-use File::Slurp;
-use JSON;
+
 
 my $test_onto = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $onto_dba  = $test_onto->get_DBAdaptor('ontology');
@@ -39,7 +38,6 @@ my $dba     = $test->get_DBAdaptor('variation');
 my $fetcher = Bio::EnsEMBL::Production::Search::VariationFetcher->new();
 
 my $out = $fetcher->fetch_variations_for_dba( $dba, $onto_dba );
-write_file( "variants_test.json", encode_json($out) );
 is( scalar(@$out), 899, "Testing correct numbers of variants" );
 my @som = grep { $_->{somatic} eq 'false' } @{$out};
 is( scalar(@som), 898, "Testing correct numbers of non-somatic variants" );
@@ -202,13 +200,12 @@ is( scalar(@som), 898, "Testing correct numbers of non-somatic variants" );
 								  'name' =>
 									'Test study for the associate_study table',
 								  'description' => undef } ] },
-				  'phenotype' => {
 						   'stable_id'          => undef,
 						   'ontology_accession' => 'OMIM:100800',
 						   'ontology_term'      => 'Achondroplasia',
 						   'ontology_name'      => 'OMIM',
 						   'description'        => 'ACHONDROPLASIA',
-						   'name'               => 'ACH' },
+						   'name'               => 'ACH',
 				  'source' => { 'name' => 'dbSNP', 'version' => '138' } } ] },
 		"Testing variation with phenotypes" );
 }
