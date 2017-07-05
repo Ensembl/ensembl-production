@@ -481,7 +481,7 @@ CREATE TABLE allele_code (
   
   PRIMARY KEY (allele_code_id),
   UNIQUE KEY allele_idx (allele(1000))
-);
+) DEFAULT CHARSET=latin1;
 
 
 /**
