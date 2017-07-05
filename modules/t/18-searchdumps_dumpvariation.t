@@ -27,7 +27,6 @@ use Log::Log4perl qw/:easy/;
 
 Log::Log4perl->easy_init($DEBUG);
 
-use Data::Dumper;
 
 my $test_onto = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $onto_dba  = $test_onto->get_DBAdaptor('ontology');
@@ -201,11 +200,11 @@ subtest "Testing variant fetching", sub {
 								  'name' =>
 									'Test study for the associate_study table',
 								  'description' => undef } ] },
-					  'stable_id'          => undef,
 					  'ontology_accession' => 'OMIM:100800',
 					  'ontology_term'      => 'Achondroplasia',
 					  'ontology_name'      => 'OMIM',
 					  'description'        => 'ACHONDROPLASIA',
+					  'id'                 => 1,
 					  'name'               => 'ACH',
 					  'source' => { 'name' => 'dbSNP', 'version' => '138' } } ]
 			},
@@ -214,16 +213,16 @@ subtest "Testing variant fetching", sub {
 };
 subtest "Testing phenotype fetching", sub {
 	my $out = $fetcher->fetch_phenotypes_for_dba( $dba, $onto_dba );
-	is(scalar(@{$out}), 3, "Correct number of phenotypes");	
-	my ($ph) = grep {defined $_->{name} && $_->{name} eq 'ACH'} @{$out};
-	is_deeply($ph,{
-          'stable_id' => undef,
-          'name' => 'ACH',
-          'ontology_term' => 'Achondroplasia',
-          'ontology_name' => 'OMIM',
-          'ontology_accession' => 'OMIM:100800',
-          'description' => 'ACHONDROPLASIA'
-        });
+	is( scalar( @{$out} ), 3, "Correct number of phenotypes" );
+	my ($ph) = grep { defined $_->{name} && $_->{name} eq 'ACH' } @{$out};
+	is_deeply(
+		$ph, {
+		  'id'                 => 1,
+		  'name'               => 'ACH',
+		  'ontology_term'      => 'Achondroplasia',
+		  'ontology_name'      => 'OMIM',
+		  'ontology_accession' => 'OMIM:100800',
+		  'description'        => 'ACHONDROPLASIA' } );
 };
 
 done_testing;

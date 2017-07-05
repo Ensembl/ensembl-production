@@ -127,16 +127,19 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 
 sub fetch_phenotypes {
 	my ( $self, $name ) = @_;
-		$logger->debug("Fetching DBA for $name");
+	$logger->debug("Fetching DBA for $name");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'variation' );
 	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );
 	return $self->fetch_phenotypes_for_dba( $dba, $onto_dba );
-	}
-	
+}
+
 sub fetch_phenotypes_for_dba {
 	my ( $self, $dba, $onto_dba ) = @_;
-	return [values %{$self->_fetch_all_phenotypes($dba->dbc()->sql_helper(), $onto_dba)}];
-} ## end sub _fetch_all_phenotypes
+	return [ values %{
+				 $self->_fetch_all_phenotypes(
+											$dba->dbc()->sql_helper(), $onto_dba
+				 ) } ];
+}
 
 sub _calculate_min_max {
 	my ( $self, $h, $offset, $length ) = @_;
@@ -257,11 +260,11 @@ LIMIT 1/ );
 		-PARAMS   => [ $min, $max ],
 		-CALLBACK => sub {
 			my ( $row, $value ) = @_;
-			$value = [] if !defined $value;			
-			my $phenotype = $phenotypes->{$row->[1]} || {};
-			my $pf = {%{$phenotype}};
-			_add_key( $pf, 'study',     $studies,    $row->[2] );
-			_add_key( $pf, 'source',    $sources,    $row->[3] );
+			$value = [] if !defined $value;
+			my $phenotype = $phenotypes->{ $row->[1] } || {};
+			my $pf = { %{$phenotype} };
+			_add_key( $pf, 'study',  $studies, $row->[2] );
+			_add_key( $pf, 'source', $sources, $row->[3] );
 			push @$value, $pf;
 			return $value;
 		} );
@@ -391,12 +394,12 @@ q/SELECT phenotype_id, stable_id, name, description, poa.accession as accession
 	        LEFT JOIN phenotype_ontology_accession poa USING (phenotype_id)/,
 			-CALLBACK => sub {
 				my ( $row, $value ) = @_;
-				my $doc = { stable_id   => $row->[1],
-							name        => $row->[2],
-							description => $row->[3], };
+				my $doc = { id => $row->[0] };
+				$doc->{stable_id}   = $row->[1] if defined $row->[1];
+				$doc->{name}        = $row->[2] if defined $row->[2];
+				$doc->{description} = $row->[3] if defined $row->[3];
 				if ( defined $row->[4] ) {
 					$doc->{ontology_accession} = $row->[4];
-
 					$onto_dba->dbc()->sql_helper()->execute_no_return(
 						-SQL => q/select t.name, o.name, s.name
 					  from term t
@@ -415,7 +418,7 @@ q/SELECT phenotype_id, stable_id, name, description, poa.accession as accession
 				}
 				return $doc;
 			} );
-	}
+	} ## end if ( !defined $self->{...})
 	return $self->{phenotypes};
 } ## end sub _fetch_all_phenotypes
 
