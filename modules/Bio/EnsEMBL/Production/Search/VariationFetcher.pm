@@ -125,6 +125,19 @@ q/SELECT v.variation_id as id, v.name as name, v.source_id as source_id, v.somat
 	return;
 } ## end sub fetch_variations_callback
 
+sub fetch_phenotypes {
+	my ( $self, $name ) = @_;
+		$logger->debug("Fetching DBA for $name");
+	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'variation' );
+	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );
+	return $self->fetch_phenotypes_for_dba( $dba, $onto_dba );
+	}
+	
+sub fetch_phenotypes_for_dba {
+	my ( $self, $dba, $onto_dba ) = @_;
+	return [values %{$self->_fetch_all_phenotypes($dba->dbc()->sql_helper(), $onto_dba)}];
+} ## end sub _fetch_all_phenotypes
+
 sub _calculate_min_max {
 	my ( $self, $h, $offset, $length ) = @_;
 	if ( !defined $offset ) {
