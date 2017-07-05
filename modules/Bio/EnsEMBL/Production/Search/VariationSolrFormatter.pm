@@ -81,21 +81,28 @@ sub reformat_variants {
 						   join( ", ", @{ $v->{gwas} } ) );
 			}
 			if ( _array_nonempty( $v->{phenotypes} ) ) {
+				my $onto  = [];
+				my $pdesc = [];
+				for my $phenotype ( @{ $v->{phenotypes} } ) {
+					push @$onto, $phenotype->{ontology_term}
+					  if defined $phenotype->{ontology_term};
+					my $nom = $phenotype->{description} || $phenotype->{name};
+					push @$pdesc, $nom;
+					$v2->{ont_acc} = $phenotype->{ontology_accession}
+					  if defined $phenotype->{ontology_accession};
+					$v2->{ont_term} = $phenotype->{ontology_term}
+					  if defined $phenotype->{ontology_accession};
+					$v2->{ont_syn} = $phenotype->{ontology_synonyms}
+					  if _array_nonempty( $phenotype->{ontology_synonyms} );
+				}
 				$v2->{description} .=
-				  sprintf( " Phenotype(s): %s.",
-						   join( ', ',
-								 map { $_->{phenotype}{description} || $_->{phenotype}{name} }
-								   @{ $v->{phenotypes} } ) );
-				my @onto =
-				  map  { $_->{phenotype}{ontology_term} }
-				  grep { defined $_->{phenotype}{ontology_term} } @{ $v->{phenotypes} };
+				  sprintf( " Phenotype(s): %s.", join( ', ', @$pdesc ) );
 				$v2->{description} .=
-				  sprintf( " Phenotype ontologies: %s.", join( ', ', @onto ) )
-				  if @onto;
+				  sprintf( " Phenotype ontologies: %s.", join( ', ', @$onto ) )
+				  if @$onto;
 			}
 			if ( _array_nonempty( $v->{failures} ) ) {
-				$v2->{description} .=
-				  ' ' . join( '. ', @{ $v->{failures} } );
+				$v2->{description} .= ' ' . join( '. ', @{ $v->{failures} } );
 			}
 			return $v2;
 		} );
