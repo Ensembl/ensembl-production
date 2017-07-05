@@ -74,7 +74,8 @@ subtest "Variation reformat", sub {
 			   'hgvs_names'       => undef,
 			   'reference_strain' => 0,
 			   'database_type'    => 'variation',
-			   'synonyms' => [ 'rs17765152',  'rs60739517',
+			   'synonyms'         => [
+							   'rs17765152',  'rs60739517',
 							   'ss3244399',   'ss24191327',
 							   'ss67244375',  'ss67641327',
 							   'ss68201979',  'ss70722711',
@@ -111,7 +112,7 @@ subtest "Variation reformat", sub {
 				'description' =>
 				  'A dbSNP Variant. Variant does not map to the genome',
 				'id'       => 'rs111067473',
-				'synonyms' => [ 'ss117978004' ] },
+				'synonyms' => ['ss117978004'] },
 			  "Failed variant" );
 
 	}
@@ -121,25 +122,88 @@ subtest "Variation reformat", sub {
 subtest "Somatic Mutation test", sub {
 	my $in_file  = File::Spec->catfile( $Bin, "variants_test.json" );
 	my $out_file = File::Spec->catfile( $Bin, "solr_variants_test.json" );
-	$formatter->reformat_somatic_variants( $in_file, $out_file, $genome, 'variation' );
+	$formatter->reformat_somatic_variants( $in_file, $out_file, $genome,
+										   'variation' );
 	my $new_variations = decode_json( read_file($out_file) );
-	is(scalar @{$new_variations},1,"1 somatic");
+	is( scalar @{$new_variations}, 1, "1 somatic" );
 	my ($var) = grep { $_->{id} eq 'COSM946275' } @$new_variations;
-	is_deeply($var, {
-          'reference_strain' => 0,
-          'ref_boost' => 10,
-          'domain_url' => 'Homo_sapiens/Variation/Summary?v=COSM946275',
-          'description' => 'A COSMIC Somatic Mutation.',
-          'species_name' => 'Homo sapiens',
-          'id' => 'COSM946275',
-          'feature_type' => 'Variant',
-          'website' => 'http://www.ensembl.org/',
-          'synonyms' => [
-                          'ss0'
-                        ],
-          'db_boost' => 1,
-          'species' => 'homo_sapiens',
-          'database_type' => 'variation'
-        });
+	is_deeply( $var, {
+				 'reference_strain' => 0,
+				 'ref_boost'        => 10,
+				 'domain_url'  => 'Homo_sapiens/Variation/Summary?v=COSM946275',
+				 'description' => 'A COSMIC Somatic Mutation.',
+				 'species_name'  => 'Homo sapiens',
+				 'id'            => 'COSM946275',
+				 'feature_type'  => 'Variant',
+				 'website'       => 'http://www.ensembl.org/',
+				 'synonyms'      => ['ss0'],
+				 'db_boost'      => 1,
+				 'species'       => 'homo_sapiens',
+				 'database_type' => 'variation' } );
+	unlink $out_file;
+};
+
+subtest "Phenotype test", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "phenotypes_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "solr_phenotypes_test.json" );
+	$formatter->reformat_phenotypes( $in_file, $out_file, $genome,
+									 'variation' );
+	my $new_phenotypes = decode_json( read_file($out_file) );
+	{
+		my ($p) = grep { $_->{id} eq 2 } @$new_phenotypes;
+		is_deeply( $p, {
+					 'ref_boost'        => 10,
+					 'website'          => 'http://www.ensembl.org/',
+					 'database_type'    => 'variation',
+					 'id'               => '2',
+					 'description'      => 'COSMIC:tumour_site:skin',
+					 'species_name'     => 'Homo sapiens',
+					 'reference_strain' => 0,
+					 'feature_type'     => 'Phenotype',
+					 'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=2',
+					 'species'    => 'homo_sapiens',
+					 'db_boost'   => 1 } );
+	}
+	{
+		my ($p) = grep { $_->{id} eq 1 } @$new_phenotypes;
+		is_deeply(
+			$p,
+			{  'name'               => 'ACH',
+			   'description'        => 'ACHONDROPLASIA',
+			   'id'                 => '1',
+			   'database_type'      => 'variation',
+			   'ontology_term'      => 'Achondroplasia',
+			   'website'            => 'http://www.ensembl.org/',
+			   'ontology_accession' => 'OMIM:100800',
+			   'ref_boost'          => 10,
+			   'db_boost'           => 1,
+			   'ontology_name'      => 'OMIM',
+			   'species'            => 'homo_sapiens',
+			   'feature_type'       => 'Phenotype',
+			   'reference_strain'   => 0,
+			   'domain_url'         => 'Homo_sapiens/Phenotypes/Locations?ph=1',
+			   'species_name'       => 'Homo sapiens' } );
+	}
+	{
+		my ($p) = grep { $_->{id} eq 17889 } @$new_phenotypes;
+		is_deeply(
+			$p,
+
+			{  'species_name'     => 'Homo sapiens',
+			   'reference_strain' => 0,
+			   'feature_type'     => 'Phenotype',
+			   'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=17889',
+			   'species'    => 'homo_sapiens',
+			   'db_boost'   => 1,
+			   'ref_boost'  => 10,
+			   'ontology_accession' => 'EFO:0005193',
+			   'id'                 => '17889',
+			   'description'        => 'IgG glycosylation',
+			   'website'            => 'http://www.ensembl.org/',
+			   'database_type'      => 'variation' } );
+	}
+
+	unlink $out_file;
+
 };
 done_testing;

@@ -44,13 +44,30 @@ sub new {
 
 sub reformat_variants {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$self->_reformat_variants($infile,$outfile,$genome,$type,0);
+	$self->_reformat_variants( $infile, $outfile, $genome, $type, 0 );
 	return;
-} ## end sub reformat_variants
+}
 
 sub reformat_somatic_variants {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$self->_reformat_variants($infile,$outfile,$genome,$type,1);
+	$self->_reformat_variants( $infile, $outfile, $genome, $type, 1 );
+	return;
+}
+
+sub reformat_phenotypes {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$type ||= 'variation';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($p) = @_;
+			my $p2 = {
+				%{ _base( $genome, $type, 'Phenotype' ) }, %{$p},
+				domain_url => sprintf( '%s/Phenotypes/Locations?ph=%s',
+									   $genome->{organism}->{url_name},
+									   $p->{id} ) };
+			return $p2;
+		} );
 	return;
 }
 
@@ -61,9 +78,10 @@ sub _reformat_variants {
 		$infile, $outfile,
 		sub {
 			my ($v) = @_;
-			if($somatic) {
+			if ($somatic) {
 				return undef if ( $v->{somatic} eq 'false' );
-			} else {
+			}
+			else {
 				return undef if ( $v->{somatic} eq 'true' );
 			}
 			my $v2 = { %{ _base( $genome, $type, 'Variant' ) },
@@ -72,7 +90,8 @@ sub _reformat_variants {
 						 sprintf( '%s/Variation/Summary?v=%s',
 								  $genome->{organism}->{url_name},
 								  $v->{id} ) };
-			$v2->{description} = sprintf( "A %s %s.", $v->{source}{name}, $somatic?'Somatic Mutation':'Variant' );
+			$v2->{description} = sprintf( "A %s %s.",
+				$v->{source}{name}, $somatic ? 'Somatic Mutation' : 'Variant' );
 
 			if ( _array_nonempty( $v->{synonyms} ) ) {
 				for my $syn ( @{ $v->{synonyms} } ) {
@@ -123,15 +142,9 @@ sub _reformat_variants {
 			return $v2;
 		} );
 	return;
-} ## end sub reformat_variants
+} ## end sub _reformat_variants
 
 sub reformat_structural_variants {
-	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$type ||= 'variation';
-	return;
-}
-
-sub reformat_phenotypes {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
 	$type ||= 'variation';
 	return;
