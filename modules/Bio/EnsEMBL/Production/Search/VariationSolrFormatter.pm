@@ -44,19 +44,35 @@ sub new {
 
 sub reformat_variants {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$self->_reformat_variants($infile,$outfile,$genome,$type,0);
+	return;
+} ## end sub reformat_variants
+
+sub reformat_somatic_variants {
+	my ( $self, $infile, $outfile, $genome, $type ) = @_;
+	$self->_reformat_variants($infile,$outfile,$genome,$type,1);
+	return;
+}
+
+sub _reformat_variants {
+	my ( $self, $infile, $outfile, $genome, $type, $somatic ) = @_;
 	$type ||= 'variation';
 	reformat_json(
 		$infile, $outfile,
 		sub {
 			my ($v) = @_;
-			return undef if ( $v->{somatic} eq 'true' );
+			if($somatic) {
+				return undef if ( $v->{somatic} eq 'false' );
+			} else {
+				return undef if ( $v->{somatic} eq 'true' );
+			}
 			my $v2 = { %{ _base( $genome, $type, 'Variant' ) },
 					   id => $v->{id},
 					   domain_url =>
 						 sprintf( '%s/Variation/Summary?v=%s',
 								  $genome->{organism}->{url_name},
 								  $v->{id} ) };
-			$v2->{description} = sprintf( "A %s Variant.", $v->{source}{name} );
+			$v2->{description} = sprintf( "A %s %s.", $v->{source}{name}, $somatic?'Somatic Mutation':'Variant' );
 
 			if ( _array_nonempty( $v->{synonyms} ) ) {
 				for my $syn ( @{ $v->{synonyms} } ) {
@@ -108,12 +124,6 @@ sub reformat_variants {
 		} );
 	return;
 } ## end sub reformat_variants
-
-sub reformat_somatic_variants {
-	my ( $self, $infile, $outfile, $genome, $type ) = @_;
-	$type ||= 'variation';
-	return;
-}
 
 sub reformat_structural_variants {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;

@@ -118,4 +118,28 @@ subtest "Variation reformat", sub {
 	unlink $out_file;
 };
 
+subtest "Somatic Mutation test", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "variants_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "solr_variants_test.json" );
+	$formatter->reformat_somatic_variants( $in_file, $out_file, $genome, 'variation' );
+	my $new_variations = decode_json( read_file($out_file) );
+	is(scalar @{$new_variations},1,"1 somatic");
+	my ($var) = grep { $_->{id} eq 'COSM946275' } @$new_variations;
+	is_deeply($var, {
+          'reference_strain' => 0,
+          'ref_boost' => 10,
+          'domain_url' => 'Homo_sapiens/Variation/Summary?v=COSM946275',
+          'description' => 'A COSMIC Somatic Mutation.',
+          'species_name' => 'Homo sapiens',
+          'id' => 'COSM946275',
+          'feature_type' => 'Variant',
+          'website' => 'http://www.ensembl.org/',
+          'synonyms' => [
+                          'ss0'
+                        ],
+          'db_boost' => 1,
+          'species' => 'homo_sapiens',
+          'database_type' => 'variation'
+        });
+};
 done_testing;
