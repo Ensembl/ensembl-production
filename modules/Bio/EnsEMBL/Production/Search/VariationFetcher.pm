@@ -141,15 +141,112 @@ sub fetch_phenotypes_for_dba {
 				 ) } ];
 }
 
+sub fetch_structural_variations {
+	my ( $self, $name, $offset, $length ) = @_;
+	$logger->debug("Fetching DBA for $name");
+	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'variation' );
+	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );
+	return $self->fetch_structural_variations_for_dba($dba);
+}
+
+sub fetch_structural_variations_for_dba {
+	my ( $self, $dba, $offset, $length ) = @_;
+	my @variants = ();
+	$self->fetch_structural_variations_callback(
+		$dba, $offset, $length,
+		sub {
+			my ($variant) = @_;
+			push @variants, $variant;
+			return;
+		} );
+	return \@variants;
+}
+
+sub fetch_structural_variations_callback {
+	my ( $self, $dba, $offset, $length, $callback ) = @_;
+	# slice data
+	$dba->dbc()->db_handle()->{mysql_use_result} = 1;    # streaming
+	my $h = $dba->dbc()->sql_helper();
+	my ( $min, $max ) =
+	  $self->_calculate_min_max( $h, $offset, $length, 'structural_variation',
+								 'structural_variation_id' );
+	print "$min $max\n";
+	$h->execute_no_return(
+		-SQL => q/SELECT
+           v.variation_name as id,
+           s.name as source,
+           s.description as source_description,
+           st.name as study,
+           r.name as seq_region_name,
+           vf.seq_region_start as start,
+           vf.seq_region_end as end,
+           group_concat(ssv.variation_name) as ssv
+      FROM structural_variation as v 
+        LEFT JOIN study as st ON (st.study_id=v.study_id)
+        LEFT JOIN structural_variation_association as sva ON (v.structural_variation_id=sva.structural_variation_id)
+        LEFT JOIN structural_variation as ssv ON (ssv.structural_variation_id = sva.supporting_structural_variation_id)
+        JOIN source s ON (v.source_id = s.source_id)
+        JOIN structural_variation_feature vf ON (v.structural_variation_id = vf.structural_variation_id)
+        JOIN seq_region r ON (r.seq_region_id = vf.seq_region_id)
+     WHERE 
+       v.is_evidence = 0
+       AND v.structural_variation_id between ? AND ?
+       GROUP BY v.structural_variation_id/,
+		-PARAMS       => [ $min, $max ],
+		-USE_HASHREFS => 1,
+		-CALLBACK     => sub {
+			my $var = shift;
+			if(defined $var->{ssv}) {
+			for my $av ( split ',', $var->{ssv} ) {
+				push @{ $var->{supporting_evidence} }, $av;
+			}
+		}
+			delete $var->{study} unless defined $var->{study};
+			delete $var->{ssv};
+			$callback->($var);
+
+			return;
+		} );
+
+#	$h->execute_no_return(
+#		-SQL => q/SELECT
+#           v.variation_name as id,
+#           s.name as source,
+#           s.description as source_description,
+#           st.name as study,
+#           r.name as seq_region_name,
+#           vf.seq_region_start as start,
+#           vf.seq_region_end as end
+#      FROM structural_variation as v 
+#        LEFT JOIN study as st ON (st.study_id=v.study_id)
+#        JOIN source s ON (v.source_id = s.source_id)
+#        JOIN structural_variation_feature vf ON (v.structural_variation_id = vf.structural_variation_id)
+#        JOIN seq_region r ON (r.seq_region_id = vf.seq_region_id)
+#     WHERE 
+#       v.is_evidence = 0
+#       AND v.structural_variation_id between ? AND ?/,
+#		-PARAMS       => [ $min, $max ],
+#		-USE_HASHREFS => 1,
+#		-CALLBACK     => sub {
+#			my $var = shift;
+#			delete $var->{study} unless defined $var->{study};
+#			$callback->($var);
+#			return;
+#		} );
+	return;
+} ## end sub fetch_structural_variations_callback
+
 sub _calculate_min_max {
-	my ( $self, $h, $offset, $length ) = @_;
+	my ( $self, $h, $offset, $length, $table, $key ) = @_;
+	$table ||= 'variation';
+	$key   ||= 'variation_id';
 	if ( !defined $offset ) {
-		$offset = $h->execute_single_result(
-						   -SQL => q/select min(variation_id) from variation/ );
+		$offset =
+		  $h->execute_single_result( -SQL => qq/select min($key) from $table/ );
 	}
 	if ( !defined $length ) {
 		$length = ( $h->execute_single_result(
-							  -SQL => q/select max(variation_id) from variation/
+										-SQL => qq/select max($key) from $table/
 					) ) - $offset + 1;
 	}
 	$logger->debug("Calculating $offset/$length");

@@ -27,7 +27,6 @@ use Log::Log4perl qw/:easy/;
 
 Log::Log4perl->easy_init($DEBUG);
 
-
 my $test_onto = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $onto_dba  = $test_onto->get_DBAdaptor('ontology');
 
@@ -211,18 +210,48 @@ subtest "Testing variant fetching", sub {
 			"Testing variation with phenotypes" );
 	}
 };
+subtest "Testing SV fetching", sub {
+	my $out = $fetcher->fetch_structural_variations_for_dba($dba);
+	is( @{$out}, 7, "Expected number of SVs" );
+	{
+		my ($v) = grep { $_->{id} eq 'esv93078' } @{$out};
+		is_deeply(
+			   $v, {
+				 'source'              => 'DGVa',
+				 'seq_region_name'     => '8',
+				 'start'               => '7823440',
+				 'id'                  => 'esv93078',
+				 'end'                 => '8819373',
+				 'supporting_evidence' => [ 'essv194301', 'essv194300' ],
+				 'study'               => 'estd59',
+				 'source_description'  => 'Database of Genomic Variants Archive'
+			   },
+			   "Expected evidenced SV" )
+	}
+	{
+		my ($v) = grep { $_->{id} eq 'CN_674347' } @{$out};
+		is_deeply( $v, {
+					  'source_description' => 'http://www.affymetrix.com/',
+					  'end'                => '27793771',
+					  'id'                 => 'CN_674347',
+					  'start'              => '27793747',
+					  'seq_region_name'    => '18',
+					  'source'             => 'Affy GenomeWideSNP_6 CNV' },
+				   "Expected evidence-less SV" )
+	}
+};
+
 subtest "Testing phenotype fetching", sub {
 	my $out = $fetcher->fetch_phenotypes_for_dba( $dba, $onto_dba );
 	is( scalar( @{$out} ), 3, "Correct number of phenotypes" );
 	my ($ph) = grep { defined $_->{name} && $_->{name} eq 'ACH' } @{$out};
-	is_deeply(
-		$ph, {
-		  'id'                 => 1,
-		  'name'               => 'ACH',
-		  'ontology_term'      => 'Achondroplasia',
-		  'ontology_name'      => 'OMIM',
-		  'ontology_accession' => 'OMIM:100800',
-		  'description'        => 'ACHONDROPLASIA' } );
+	is_deeply( $ph, {
+				  'id'                 => 1,
+				  'name'               => 'ACH',
+				  'ontology_term'      => 'Achondroplasia',
+				  'ontology_name'      => 'OMIM',
+				  'ontology_accession' => 'OMIM:100800',
+				  'description'        => 'ACHONDROPLASIA' } );
 };
 
 done_testing;
