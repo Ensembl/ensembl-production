@@ -26,7 +26,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 
-use Bio::EnsEMBL::Production::Search::SolrFormatter;
+use Bio::EnsEMBL::Production::Search::GenomeSolrFormatter;
 
 use JSON;
 use File::Slurp qw/read_file/;
@@ -53,10 +53,20 @@ sub run {
 
 	my $genes_file_out = $sub_dir . '/' . $species . '_genes.json';
 	my $transcripts_file_out = $sub_dir . '/' . $species . '_transcripts.json';
-	my $reformatter    = Bio::EnsEMBL::Production::Search::SolrFormatter->new();
+	my $reformatter    = Bio::EnsEMBL::Production::Search::GenomeSolrFormatter->new();
 	$self->{logger}->info("Reformatting $genes_file into $genes_file_out");
 	$reformatter->reformat_genes($genes_file, $genes_file_out, $genome, 'core');
+	$reformatter->reformat_ids($genes_file, $genes_file_out, $genome, 'core');
+	$reformatter->reformat_sequences($genes_file, $genes_file_out, $genome, 'core');
 	$reformatter->reformat_transcripts($genes_file, $transcripts_file_out, $genome, 'core');
+	$reformatter->reformat_gene_families($genes_file, $genes_file_out, $genome, 'core');
+	$reformatter->reformat_gene_trees($genes_file, $genes_file_out, $genome, 'core');
+
+
+	
+	$reformatter->reformat_lrgs($genes_file, $genes_file_out, $genome, 'core');
+	$reformatter->reformat_markers($genes_file, $genes_file_out, $genome, 'core');
+	$reformatter->reformat_domains($genes_file, $genes_file_out, $genome, 'core');
 	return;
 }
 

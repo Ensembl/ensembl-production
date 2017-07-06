@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 
@@ -42,17 +42,22 @@ sub run {
 	my $species    = $self->param_required('species');
 	my $type       = $self->param_required('type');
 	my $sub_dir    = $self->get_data_path('json');
-	my $file_names = $self->param_required('dump_file');
-	my $outfile    = $sub_dir . '/' . $species . '_' . $type . '.json';
-	$logger->info("Merging $type files for $species into $outfile");
-	$self->merge_files( $outfile, $file_names );
+	my $file_names = $self->param('dump_file');
+	if ( !defined $file_names || scalar(@$file_names) > 0 ) {
+		my $outfile = $sub_dir . '/' . $species . '_' . $type . '.json';
+		$logger->info("Merging $type files for $species into $outfile");
+		$self->merge_files( $outfile, $file_names );
+	}
+	else {
+		$logger->info("No merge $type found files for $species");
+	}
 	return;
 }
 
 sub merge_files {
 	my ( $self, $outfile, $file_names ) = @_;
-	my $cmd = "echo '['>$outfile";
-	my $logger     = get_logger();
+	my $cmd    = "echo '['>$outfile";
+	my $logger = get_logger();
 	$logger->debug($cmd);
 	system($cmd) == 0 || throw "Could not write to $outfile";
 	my $n = 0;

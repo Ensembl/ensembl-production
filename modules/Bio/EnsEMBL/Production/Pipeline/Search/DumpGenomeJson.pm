@@ -25,6 +25,7 @@ use warnings;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Search::BaseDumpJson/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+use Bio::EnsEMBL::Registry;
 
 use JSON;
 use File::Path qw(make_path);
@@ -51,12 +52,11 @@ sub dump {
 			$self->{logger}->info("Using compara $compara");
 		}
 		my $output = { species => $species };
+
 		$self->{logger}->info( "Dumping genome for " . $species );
 		$output->{genome_file} = $self->dump_genome($species);
 		$self->{logger}->info( "Dumping genes for " . $species );
 		$output->{genes_file} = $self->dump_genes( $species, $compara );
-		$self->{logger}->info( "Dumping otherfeatures genes for " . $species );
-		$output->{otherfeatures_file} = $self->dump_otherfeatures( $species, $compara );
 		$self->{logger}->info( "Dumping sequences for " . $species );
 		$output->{seqs_file} = $self->dump_sequences($species);
 		$self->{logger}->info( "Dumping markers for " . $species );
@@ -65,9 +65,14 @@ sub dump {
 		$output->{markers_file} = $self->dump_markers($species);
 		$self->{logger}->info( "Dumping IDs for " . $species );
 		$output->{ids_file} = $self->dump_ids($species);
+		$self->{logger}->info( "Dumping otherfeatures genes for " . $species );
+		$output->{otherfeatures_genes_file} =
+		  $self->dump_otherfeatures_genes( $species, $compara );
+		$self->{logger}->info( "Dumping otherfeatures seqs for " . $species );
+		$output->{otherfeatures_seqs_file} =
+		  $self->dump_otherfeatures_sequences( $species, $compara );
 		$self->{logger}->info( "Completed dumping " . $species );
 		$self->dataflow_output_id( $output, 1 );
-
 	} ## end if ( $species ne "Ancestral sequences")
 	return;
 } ## end sub dump
@@ -94,11 +99,18 @@ sub dump_genes {
 	return $self->write_json( $species, 'genes', $genes );
 }
 
-sub dump_otherfeatures {
+sub dump_otherfeatures_genes {
 	my ( $self, $species ) = @_;
-	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
-	  ->fetch_genes( $species );
-	return $self->write_json( $species, 'otherfeatures', $genes );
+	my $odba =
+	  Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' );
+	if ( defined $odba ) {
+		my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
+		  ->fetch_genes_for_dba($odba);
+		return $self->write_json( $species, 'otherfeatures', $genes );
+	}
+	else {
+		return undef;
+	}
 }
 
 sub dump_sequences {
@@ -110,6 +122,22 @@ sub dump_sequences {
 	}
 	else {
 		return undef;
+	}
+}
+
+sub dump_otherfeatures_sequences {
+	my ( $self, $species ) = @_;
+	my $odba =
+	  Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' );
+	if ( defined $odba ) {
+		my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
+		  ->fetch_sequences($species);
+		if ( scalar(@$sequences) > 0 ) {
+			return $self->write_json( $species, 'otherfeatures', $sequences );
+		}
+		else {
+			return undef;
+		}
 	}
 }
 
@@ -136,6 +164,7 @@ sub dump_lrgs {
 		return undef;
 	}
 }
+
 sub dump_ids {
 	my ( $self, $species ) = @_;
 	my $ids =

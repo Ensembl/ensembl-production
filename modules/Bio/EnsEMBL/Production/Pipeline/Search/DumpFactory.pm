@@ -45,6 +45,14 @@ sub run {
 	throw "No $type database found for $species" unless defined $dba;
 
 	my $length = $self->param_required('length');
+	
+	my $cnt = $dba->dbc()->sql_helper()
+	  ->execute(
+							-SQL => 'select '.$column.' from '.$table.' limit 1' );
+	if(!scalar @$cnt) {
+		$self->logger->info("$table is empty - not spawning any jobs");
+		return;
+	}
 
 	my $min_id =
 	  $dba->dbc()->sql_helper()

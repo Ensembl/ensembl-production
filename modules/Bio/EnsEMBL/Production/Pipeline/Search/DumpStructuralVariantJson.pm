@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson;
+package Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson;
 
 use strict;
 use warnings;
@@ -41,28 +41,27 @@ sub dump {
 
 	throw "No variation database found for $species" unless defined $dba;
 
-	my $file = $self->write_variants( $dba,
+	my $file = $self->write_structural_variants( $dba,
 										  $self->param("offset"),
 										  $self->param("length") );
-										  										  
-	$self->{logger}->info("Variations for $species written to $file");
+	$self->{logger}->info("Structural variations for $species written to $file");
 	
 	$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
 
 	return;
 } ## end sub run
 
-sub write_variants {
+sub write_structural_variants {
 	my ( $self, $dba, $offset, $length ) = @_;
 
 	my $sub_dir = $self->get_data_path('json');
 	my $json_file_path;
 	if ( defined $offset ) {
 		$json_file_path =
-		  $sub_dir . '/' . $dba->species() . '_' . $offset . '_variants.json';
+		  $sub_dir . '/' . $dba->species() . '_' . $offset . '_structuralvariants.json';
 	}
 	else {
-		$json_file_path = $sub_dir . '/' . $dba->species() . '_variants.json';
+		$json_file_path = $sub_dir . '/' . $dba->species() . '_structuralvariants.json';
 	}
 	$self->{logger}->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
@@ -70,9 +69,9 @@ sub write_variants {
 	$self->hive_dbc()->disconnect_if_idle();
 	my $n = 0;
 	print $json_file '[' unless defined $offset;
-	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );
+	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );	
 	Bio::EnsEMBL::Production::Search::VariationFetcher->new()
-	  ->fetch_variations_callback(
+	  ->fetch_structural_variations_callback(
 		$dba, $onto_dba, $offset, $length,
 		sub {
 			my $var = shift;
@@ -85,7 +84,7 @@ sub write_variants {
 		} );
 	print $json_file ']' unless defined $offset;
 	close $json_file ||throw "Could not close $json_file_path";
-	$self->{logger}->info("Wrote $n variants to $json_file_path");
+	$self->{logger}->info("Wrote $n structural variants to $json_file_path");
 	return $json_file_path;
 } ## end sub write_variants
 
