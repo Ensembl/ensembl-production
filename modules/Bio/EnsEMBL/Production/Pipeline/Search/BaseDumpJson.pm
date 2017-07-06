@@ -44,22 +44,25 @@ sub run {
 	$self->{logger} = get_logger();
 	$self->hive_dbc()->reconnect_when_lost(1) if defined $self->hive_dbc();
 	my $species = $self->param_required('species');
-	$self->dump( $species );
-	
+	my $type = $self->param('type') || 'core';
+	$self->dump( $species, $type );	
 	
 	return;
 }
 
 sub dump {
-	my ( $self, $species ) = @_;
+	my ( $self, $species, $type ) = @_;
 	throw "dump() must be implemented";
 	return;
 }
 
 sub write_json {
-	my ( $self, $species, $type, $data ) = @_;
+	my ( $self, $species, $type, $data, $db_type ) = @_;
 	$self->build_base_directory();
 	my $sub_dir        = $self->get_data_path('json');
+	if(defined $db_type && $db_type ne '' && $db_type ne 'core') {
+		$type = "${db_type}_${type}";
+	}
 	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
 	$self->write_json_to_file( $json_file_path, $data );
 	return $json_file_path;

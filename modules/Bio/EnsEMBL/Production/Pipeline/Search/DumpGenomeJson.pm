@@ -51,28 +51,37 @@ sub dump {
 		if ( defined $compara ) {
 			$self->{logger}->info("Using compara $compara");
 		}
-		my $output = { species => $species };
-
+		# dump the genome file
 		$self->{logger}->info( "Dumping genome for " . $species );
-		$output->{genome_file} = $self->dump_genome($species);
-		$self->{logger}->info( "Dumping genes for " . $species );
-		$output->{genes_file} = $self->dump_genes( $species, $compara );
-		$self->{logger}->info( "Dumping sequences for " . $species );
-		$output->{seqs_file} = $self->dump_sequences($species);
-		$self->{logger}->info( "Dumping markers for " . $species );
-		$output->{lrgs_file} = $self->dump_lrgs($species);
-		$self->{logger}->info( "Dumping markers for " . $species );
-		$output->{markers_file} = $self->dump_markers($species);
-		$self->{logger}->info( "Dumping IDs for " . $species );
-		$output->{ids_file} = $self->dump_ids($species);
-		$self->{logger}->info( "Dumping otherfeatures genes for " . $species );
-		$output->{otherfeatures_genes_file} =
-		  $self->dump_otherfeatures_genes( $species, $compara );
-		$self->{logger}->info( "Dumping otherfeatures seqs for " . $species );
-		$output->{otherfeatures_seqs_file} =
-		  $self->dump_otherfeatures_sequences( $species, $compara );
+		my $genome_file = $self->dump_genome( $species, $compara );
 		$self->{logger}->info( "Completed dumping " . $species );
-		$self->dataflow_output_id( $output, 1 );
+
+		# figure out output
+		$self->dataflow_output_id( {  species     => $species,
+									  type        => 'core',
+									  genome_file => $genome_file },
+								   2 );
+
+		$self->dataflow_output_id( {  species     => $species,
+									  type        => 'otherfeatures',
+									  genome_file => $genome_file },
+								   7 )
+		  if (Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' )
+		  );
+
+		$self->dataflow_output_id( {  species     => $species,
+									  type        => 'variation',
+									  genome_file => $genome_file },
+								   4 )
+		  if ( Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' ) );
+
+		$self->dataflow_output_id( {  species     => $species,
+									  type        => 'funcgen',
+									  genome_file => $genome_file },
+								   6 )
+		  if ( Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' ) )
+		  ;
+
 	} ## end if ( $species ne "Ancestral sequences")
 	return;
 } ## end sub dump
@@ -90,91 +99,6 @@ sub dump_genome {
 		  ->fetch_genome($species);
 	}
 	return $self->write_json( $species, 'genome', $genome );
-}
-
-sub dump_genes {
-	my ( $self, $species, $compara ) = @_;
-	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
-	  ->fetch_genes( $species, $compara );
-	return $self->write_json( $species, 'genes', $genes );
-}
-
-sub dump_otherfeatures_genes {
-	my ( $self, $species ) = @_;
-	my $odba =
-	  Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' );
-	if ( defined $odba ) {
-		my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
-		  ->fetch_genes_for_dba($odba);
-		return $self->write_json( $species, 'otherfeatures', $genes );
-	}
-	else {
-		return undef;
-	}
-}
-
-sub dump_sequences {
-	my ( $self, $species ) = @_;
-	my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
-	  ->fetch_sequences($species);
-	if ( scalar(@$sequences) > 0 ) {
-		return $self->write_json( $species, 'sequences', $sequences );
-	}
-	else {
-		return undef;
-	}
-}
-
-sub dump_otherfeatures_sequences {
-	my ( $self, $species ) = @_;
-	my $odba =
-	  Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' );
-	if ( defined $odba ) {
-		my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
-		  ->fetch_sequences($species);
-		if ( scalar(@$sequences) > 0 ) {
-			return $self->write_json( $species, 'otherfeatures', $sequences );
-		}
-		else {
-			return undef;
-		}
-	}
-}
-
-sub dump_markers {
-	my ( $self, $species ) = @_;
-	my $markers = Bio::EnsEMBL::Production::Search::MarkerFetcher->new()
-	  ->fetch_markers($species);
-	if ( scalar(@$markers) > 0 ) {
-		$self->write_json( $species, 'markers', $markers );
-	}
-	else {
-		return undef;
-	}
-}
-
-sub dump_lrgs {
-	my ( $self, $species ) = @_;
-	my $lrgs =
-	  Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs($species);
-	if ( scalar(@$lrgs) > 0 ) {
-		$self->write_json( $species, 'lrgs', $lrgs );
-	}
-	else {
-		return undef;
-	}
-}
-
-sub dump_ids {
-	my ( $self, $species ) = @_;
-	my $ids =
-	  Bio::EnsEMBL::Production::Search::IdFetcher->new()->fetch_ids($species);
-	if ( scalar(@$ids) > 0 ) {
-		$self->write_json( $species, 'ids', $ids );
-	}
-	else {
-		return undef;
-	}
 }
 
 1;

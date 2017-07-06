@@ -66,20 +66,30 @@ sub pipeline_analyses {
 							division    => $self->o('division'),
 							run_all     => $self->o('run_all') },
 		   -rc_name   => '1g',
-		   -flow_into => {
-					2 => ['DumpGenomeJson'],
-					4 => [ 'VariantDumpFactory', 'StructuralVariantDumpFactory',
-						   'DumpPhenotypesJson' ],
-					6 => [ 'DumpRegulationJson', 'ProbeDumpFactory' ] } }, {
+		   -flow_into => { 2 => ['DumpGenomeJson'], } }, {
 		   -logic_name => 'DumpGenomeJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
 		   -parameters    => {},
 		   -hive_capacity => 8,
-		   -rc_name       => '32g',
-		   -flow_into     => {} },
+		   -rc_name       => '1g',
+		   -flow_into     => {
+			   2 => ['DumpGenesJson'],
+			   7 => ['DumpGenesJson'],
+			   4 => [ 'VariantDumpFactory',
+					  'StructuralVariantDumpFactory',
+					  'DumpPhenotypesJson' ],
+			   6 => [ 'DumpRegulationJson', 'ProbeDumpFactory' ]
 
-		{  -logic_name => 'DumpRegulationJson',
+		   } }, {
+		   -logic_name => 'DumpGenesJson',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+		   -parameters    => {},
+		   -hive_capacity => 8,
+		   -rc_name       => '32g',
+		   -flow_into     => {} }, {
+		   -logic_name => 'DumpRegulationJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
 		   -parameters    => {},
@@ -156,10 +166,9 @@ sub pipeline_analyses {
 							table  => 'probe',
 							column => 'probe_id',
 							length => $self->o('probe_length') },
-		   -rc_name   => '1g',
-		   -flow_into => {
-						   '2->A' => 'DumpProbeJson',
-						   'A->1' => 'ProbeDumpMerge' } },
+		   -rc_name => '1g',
+		   -flow_into =>
+			 { '2->A' => 'DumpProbeJson', 'A->1' => 'ProbeDumpMerge' } },
 
 		{  -logic_name    => 'DumpProbeJson',
 		   -hive_capacity => 8,
