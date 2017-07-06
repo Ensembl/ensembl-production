@@ -30,6 +30,7 @@ Usage:
   $padding --host server1 --host server2 [...] \\
   $padding --port 3306 --user user --pass passwd \\
   $padding --muser user-master-server --mpass pass-master-server
+  $padding --nointeraction
 
 or
   $0 --help
@@ -70,6 +71,9 @@ where
   --help/-h     Displays this help text.
 
   --about/-a    Displays a text about this program (what it does etc.).
+
+  --nointeraction/-nI  Disable user input to allow the script to run as part of a cronjob
+
 USAGE_END
 } ## end sub usage
 
@@ -112,6 +116,7 @@ my ( $user,  $pass )  = ( 'ensro',    undef );
 
 my $opt_help  = 0;
 my $opt_about = 0;
+my $opt_nointeraction = 0;
 
 if ( !GetOptions( 'release|r=i'  => \$release,
                   'mhost|mh=s'   => \$mhost,
@@ -124,7 +129,9 @@ if ( !GetOptions( 'release|r=i'  => \$release,
                   'muser|mu=s' => \$muser,
                   'mpass|mp=s' => \$mpass,
                   'help|h!'      => \$opt_help,
-                  'about!'       => \$opt_about )
+                  'about!'       => \$opt_about,
+                  'nointeraction|nI!' => \$opt_nointeraction
+                   )
      || $opt_help )
 {
   usage();
@@ -341,9 +348,16 @@ if ( scalar( keys(%existing_databases) ) !=
       if($db_release != $release) {
         next; #if db release not same as the current one then skip
       }
-      printf( "\t%s. Remove this database? (y/N): ", $db_name );
-      my $yesno = <STDIN>;
-      chomp($yesno);
+      my $yesno;
+      if ($opt_nointeraction) {
+        printf( "\t%s. Removing this database: ", $db_name );
+        $yesno='y';
+      }
+      else{
+        printf( "\t%s. Remove this database? (y/N): ", $db_name );
+        $yesno = <STDIN>;
+        chomp($yesno);
+      }
       if ( lc($yesno) =~ /^y(?:es)?$/ ) {
         my @dbid = $dbh->selectrow_array('select db_id from db_list where full_db_name =?', {}, $db_name);
         my $sth = $dbh->prepare('delete from db where db_id =?');
