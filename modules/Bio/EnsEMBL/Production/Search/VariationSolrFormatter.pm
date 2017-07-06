@@ -61,11 +61,12 @@ sub reformat_phenotypes {
 		$infile, $outfile,
 		sub {
 			my ($p) = @_;
-			my $p2 = {
-				%{ _base( $genome, $type, 'Phenotype' ) }, %{$p},
-				domain_url => sprintf( '%s/Phenotypes/Locations?ph=%s',
-									   $genome->{organism}->{url_name},
-									   $p->{id} ) };
+			my $p2 = { %{ _base( $genome, $type, 'Phenotype' ) },
+					   %{$p},
+					   domain_url =>
+						 sprintf( '%s/Phenotypes/Locations?ph=%s',
+								  $genome->{organism}->{url_name},
+								  $p->{id} ) };
 			return $p2;
 		} );
 	return;
@@ -147,7 +148,29 @@ sub _reformat_variants {
 sub reformat_structural_variants {
 	my ( $self, $infile, $outfile, $genome, $type ) = @_;
 	$type ||= 'variation';
+	reformat_json(
+		$infile, $outfile,
+		sub {
+			my ($v) = @_;
+			$type ||= 'variation';
+			my $v2 = {
+				%{ _base( $genome, $type, 'StructuralVariant' ) },
+				id => $v->{id},
+				description =>
+				  sprintf("A structural variation from %s, identified by %s%s.",
+						  $v->{source},
+						  $v->{source_description},
+						  defined $v->{study} ? " ($v->{study})." : '' ),
+				domain_url => sprintf( '%s/StructuralVariation/Explore?sv=%s',
+									   $genome->{organism}->{url_name},
+									   $v->{id} ) };
+									   
+			$v2->{supporting_evidence} = $v->{supporting_evidence}
+			  if _array_nonempty( $v->{supporting_evidence} );
+
+			return $v2;
+		} );
 	return;
-}
+} ## end sub reformat_structural_variants
 
 1;

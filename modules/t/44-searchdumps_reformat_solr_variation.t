@@ -143,6 +143,54 @@ subtest "Somatic Mutation test", sub {
 	unlink $out_file;
 };
 
+subtest "Structural variants test", sub {
+	my $in_file = File::Spec->catfile( $Bin, "structuralvariants_test.json" );
+	my $out_file =
+	  File::Spec->catfile( $Bin, "solr_structuralvariants_test.json" );
+	$formatter->reformat_structural_variants( $in_file, $out_file, $genome,
+											  'variation' );
+	my $new_variations = decode_json( read_file($out_file) );
+	is( scalar @{$new_variations}, 7, "7 SVs" );
+	{
+		my ($v) = grep { $_->{id} eq 'esv93078' } @$new_variations;
+		is_deeply(
+			$v, {
+			   'database_type'       => 'variation',
+			   'ref_boost'           => 10,
+			   'reference_strain'    => 0,
+			   'species'             => 'homo_sapiens',
+			   'id'                  => 'esv93078',
+			   'website'             => 'http://www.ensembl.org/',
+			   'species_name'        => 'Homo sapiens',
+			   'supporting_evidence' => [ 'essv194301', 'essv194300' ],
+			   'db_boost'            => 1,
+			   'description' =>
+'A structural variation from DGVa, identified by Database of Genomic Variants Archive(estd59).',
+			   'feature_type' => 'StructuralVariant',
+			   'domain_url' =>
+				 'Homo_sapiens/StructuralVariation/Explore?sv=esv93078' } );
+	}
+	{
+		my ($v) = grep { $_->{id} eq 'CN_674347' } @$new_variations;
+		is_deeply(
+			$v, {
+			   'species'          => 'homo_sapiens',
+			   'reference_strain' => 0,
+			   'id'               => 'CN_674347',
+			   'ref_boost'        => 10,
+			   'database_type'    => 'variation',
+			   'domain_url' =>
+				 'Homo_sapiens/StructuralVariation/Explore?sv=CN_674347',
+			   'description' =>
+'A structural variation from Affy GenomeWideSNP_6 CNV, identified by http://www.affymetrix.com/.',
+			   'feature_type' => 'StructuralVariant',
+			   'db_boost'     => 1,
+			   'website'      => 'http://www.ensembl.org/',
+			   'species_name' => 'Homo sapiens' } );
+	}
+	unlink $out_file;
+};
+
 subtest "Phenotype test", sub {
 	my $in_file  = File::Spec->catfile( $Bin, "phenotypes_test.json" );
 	my $out_file = File::Spec->catfile( $Bin, "solr_phenotypes_test.json" );
@@ -166,23 +214,22 @@ subtest "Phenotype test", sub {
 	}
 	{
 		my ($p) = grep { $_->{id} eq 1 } @$new_phenotypes;
-		is_deeply(
-			$p,
-			{  'name'               => 'ACH',
-			   'description'        => 'ACHONDROPLASIA',
-			   'id'                 => '1',
-			   'database_type'      => 'variation',
-			   'ontology_term'      => 'Achondroplasia',
-			   'website'            => 'http://www.ensembl.org/',
-			   'ontology_accession' => 'OMIM:100800',
-			   'ref_boost'          => 10,
-			   'db_boost'           => 1,
-			   'ontology_name'      => 'OMIM',
-			   'species'            => 'homo_sapiens',
-			   'feature_type'       => 'Phenotype',
-			   'reference_strain'   => 0,
-			   'domain_url'         => 'Homo_sapiens/Phenotypes/Locations?ph=1',
-			   'species_name'       => 'Homo sapiens' } );
+		is_deeply( $p, {
+					 'name'               => 'ACH',
+					 'description'        => 'ACHONDROPLASIA',
+					 'id'                 => '1',
+					 'database_type'      => 'variation',
+					 'ontology_term'      => 'Achondroplasia',
+					 'website'            => 'http://www.ensembl.org/',
+					 'ontology_accession' => 'OMIM:100800',
+					 'ref_boost'          => 10,
+					 'db_boost'           => 1,
+					 'ontology_name'      => 'OMIM',
+					 'species'            => 'homo_sapiens',
+					 'feature_type'       => 'Phenotype',
+					 'reference_strain'   => 0,
+					 'domain_url'   => 'Homo_sapiens/Phenotypes/Locations?ph=1',
+					 'species_name' => 'Homo sapiens' } );
 	}
 	{
 		my ($p) = grep { $_->{id} eq 17889 } @$new_phenotypes;
@@ -202,8 +249,6 @@ subtest "Phenotype test", sub {
 			   'website'            => 'http://www.ensembl.org/',
 			   'database_type'      => 'variation' } );
 	}
-
 	unlink $out_file;
-
 };
 done_testing;
