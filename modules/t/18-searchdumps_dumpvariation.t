@@ -222,7 +222,7 @@ subtest "Testing SV fetching", sub {
 				 'start'               => '7823440',
 				 'id'                  => 'esv93078',
 				 'end'                 => '8819373',
-				 'supporting_evidence' => [ 'essv194301', 'essv194300' ],
+				 'supporting_evidence' => [ 'essv194300','essv194301' ],
 				 'study'               => 'estd59',
 				 'source_description'  => 'Database of Genomic Variants Archive'
 			   },

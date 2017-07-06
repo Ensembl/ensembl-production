@@ -160,7 +160,7 @@ sub reformat_structural_variants {
 				  sprintf("A structural variation from %s, identified by %s%s.",
 						  $v->{source},
 						  $v->{source_description},
-						  defined $v->{study} ? " ($v->{study})." : '' ),
+						  defined $v->{study} ? " ($v->{study})" : '' ),
 				domain_url => sprintf( '%s/StructuralVariation/Explore?sv=%s',
 									   $genome->{organism}->{url_name},
 									   $v->{id} ) };

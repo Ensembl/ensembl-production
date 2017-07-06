@@ -196,43 +196,17 @@ sub fetch_structural_variations_callback {
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
 			my $var = shift;
-			if(defined $var->{ssv}) {
-			for my $av ( split ',', $var->{ssv} ) {
-				push @{ $var->{supporting_evidence} }, $av;
+			if ( defined $var->{ssv} ) {
+				for my $av ( sort split ',', $var->{ssv} ) {
+					push @{ $var->{supporting_evidence} }, $av;
+				}
 			}
-		}
 			delete $var->{study} unless defined $var->{study};
 			delete $var->{ssv};
 			$callback->($var);
 
 			return;
 		} );
-
-#	$h->execute_no_return(
-#		-SQL => q/SELECT
-#           v.variation_name as id,
-#           s.name as source,
-#           s.description as source_description,
-#           st.name as study,
-#           r.name as seq_region_name,
-#           vf.seq_region_start as start,
-#           vf.seq_region_end as end
-#      FROM structural_variation as v 
-#        LEFT JOIN study as st ON (st.study_id=v.study_id)
-#        JOIN source s ON (v.source_id = s.source_id)
-#        JOIN structural_variation_feature vf ON (v.structural_variation_id = vf.structural_variation_id)
-#        JOIN seq_region r ON (r.seq_region_id = vf.seq_region_id)
-#     WHERE 
-#       v.is_evidence = 0
-#       AND v.structural_variation_id between ? AND ?/,
-#		-PARAMS       => [ $min, $max ],
-#		-USE_HASHREFS => 1,
-#		-CALLBACK     => sub {
-#			my $var = shift;
-#			delete $var->{study} unless defined $var->{study};
-#			$callback->($var);
-#			return;
-#		} );
 	return;
 } ## end sub fetch_structural_variations_callback
 

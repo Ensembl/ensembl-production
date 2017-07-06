@@ -162,10 +162,10 @@ subtest "Structural variants test", sub {
 			   'id'                  => 'esv93078',
 			   'website'             => 'http://www.ensembl.org/',
 			   'species_name'        => 'Homo sapiens',
-			   'supporting_evidence' => [ 'essv194301', 'essv194300' ],
+			   'supporting_evidence' => [ 'essv194300', 'essv194301' ],
 			   'db_boost'            => 1,
 			   'description' =>
-'A structural variation from DGVa, identified by Database of Genomic Variants Archive(estd59).',
+'A structural variation from DGVa, identified by Database of Genomic Variants Archive (estd59).',
 			   'feature_type' => 'StructuralVariant',
 			   'domain_url' =>
 				 'Homo_sapiens/StructuralVariation/Explore?sv=esv93078' } );
