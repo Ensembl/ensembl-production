@@ -26,8 +26,6 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Search::BaseDumpJson/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher;
-use Bio::EnsEMBL::Production::Search::ProbeFetcher;
-
 use JSON;
 use File::Path qw(make_path);
 use Carp qw(croak);
@@ -35,19 +33,21 @@ use Carp qw(croak);
 use Log::Log4perl qw/:easy/;
 use Data::Dumper;
 
-
 sub dump {
 	my ( $self, $species ) = @_;
 	$self->{logger}->info("Dumping regulatory features for $species");
 	my $elems =
 	  Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()
 	  ->fetch_regulatory_elements($species);
-	$self->{logger}->info(
+	if ( defined $elems && scalar(@$elems) > 0 ) {
+		$self->{logger}->info(
 			"Dumped " . scalar(@$elems) . " regulatory features for $species" );
-	$self->write_json( $species, 'regulatory_elements', $elems )
-	  if scalar(@$elems) > 0;
+		my $file = $self->write_json( $species, 'regulatory_elements', $elems )
+		  ;
+		$self->dataflow_output_id( { dump_file => $file, species => $species },
+								   1 );
+	}
 	return;
 }
-
 
 1;

@@ -76,8 +76,7 @@ sub pipeline_analyses {
 		   -flow_into     => {
 			   2 => ['DumpGenesJson'],
 			   7 => ['DumpGenesJson'],
-			   4 => [ 'VariantDumpFactory',
-					  'StructuralVariantDumpFactory',
+			   4 => [ 'VariantDumpFactory', 'StructuralVariantDumpFactory',
 					  'DumpPhenotypesJson' ],
 			   6 => [ 'DumpRegulationJson', 'ProbeDumpFactory' ]
 
@@ -88,14 +87,16 @@ sub pipeline_analyses {
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '32g',
-		   -flow_into     => {1=>['ReformatGenomeAdvancedSearch','ReformatGenomeSolr']} }, {
+		   -flow_into =>
+			 { 1 => [ 'ReformatGenomeAdvancedSearch', 'ReformatGenomeSolr' ] }
+		}, {
 		   -logic_name => 'DumpRegulationJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '8g',
-		   -flow_into     => {} },
+		   -flow_into     => { 1 => 'ReformatRegulationSolr' } },
 
 		{  -logic_name => 'VariantDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -120,10 +121,9 @@ sub pipeline_analyses {
 
 		{  -logic_name => 'VariantDumpMerge',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
-		   -parameters => { type => 'variants' },
-
-		   -rc_name   => '1g',
-		   -flow_into => {} },
+		   -parameters => { file_type => 'variants' },
+		   -rc_name    => '1g',
+		   -flow_into => { 1 => 'ReformatVariantsSolr' } },
 
 		{  -logic_name => 'StructuralVariantDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -148,10 +148,9 @@ sub pipeline_analyses {
 
 		{  -logic_name => 'StructuralVariantDumpMerge',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
-		   -parameters => { type => 'structuralvariants' },
-
-		   -rc_name   => '1g',
-		   -flow_into => {} },
+		   -parameters => { file_type => 'structuralvariants' },
+		   -rc_name    => '1g',
+		   -flow_into  => { 1 => 'ReformatStructuralVariantsSolr' } },
 
 		{  -logic_name => 'DumpPhenotypesJson',
 		   -module =>
@@ -159,7 +158,7 @@ sub pipeline_analyses {
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '32g',
-		   -flow_into     => {} }, {
+		   -flow_into     => { 1 => 'ReformatPhenotypesSolr' } }, {
 		   -logic_name => 'ProbeDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
 		   -parameters => { type   => 'funcgen',
@@ -185,17 +184,48 @@ sub pipeline_analyses {
 		{  -logic_name => 'ProbeDumpMerge',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesMerge',
-		   -rc_name   => '1g',
-		   -flow_into => {} },
-		   
-		   {-logic_name => 'ReformatGenomeAdvancedSearch',
+		   -rc_name => '1g',
+		   -flow_into =>
+			 { 2 => 'ReformatProbesSolr', 3 => 'ReformatProbeSetsSolr', } },
+
+		{  -logic_name => 'ReformatGenomeAdvancedSearch',
 		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
 		   -rc_name   => '1g',
-		   -flow_into => {} },
-		   		   {-logic_name => 'ReformatGenomeSolr',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatGenomeSolr',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatVariantsSolr',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatStructuralVariantsSolr',
+		   -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatStructuralVariantsSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatPhenotypesSolr',
+		   -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatPhenotypesSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatProbesSolr',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} },
+		, {-logic_name => 'ReformatProbeSetsSolr',
+		   -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbeSetsSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatRegulationSolr',
+		   -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatRegulationSolr',
 		   -rc_name   => '1g',
 		   -flow_into => {} }
 

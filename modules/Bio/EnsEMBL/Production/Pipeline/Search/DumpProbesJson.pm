@@ -60,20 +60,24 @@ sub dump {
 	my $all_probes = Bio::EnsEMBL::Production::Search::ProbeFetcher->new()
 	  ->fetch_probes( $species, $offset, $length );
 	my $probes = $all_probes->{probes};
-	$self->{logger}
-	  ->info( "Dumped " . scalar( @{$probes} ) . " probes for $species" );
-	$self->write_json_to_file( $probes_json_file_path, $probes );
+	if ( scalar @$probes > 0 ) {
+		$self->{logger}
+		  ->info( "Dumped " . scalar( @{$probes} ) . " probes for $species" );
+		$self->write_json_to_file( $probes_json_file_path, $probes, 1 );
+	}
+
 	my $probe_sets = $all_probes->{probe_sets};
 	$self->{logger}->info(
 			"Dumped " . scalar( @{$probe_sets} ) . " probe sets for $species" );
-	$self->write_json_to_file( $probesets_json_file_path, $probe_sets );
-
-	$self->dataflow_output_id( {
-							   probes_dump_file   => $probes_json_file_path,
-							   probesets_dump_file => $probesets_json_file_path,
-							   species            => $species },
-							 1 );
-	  return;
+	if ( scalar @$probe_sets > 0 ) {
+		$self->write_json_to_file( $probesets_json_file_path, $probe_sets, 1 );
+		$self->dataflow_output_id( {
+							  probes_dump_file    => $probes_json_file_path,
+							  probesets_dump_file => $probesets_json_file_path,
+							  species             => $species },
+							1 );
+	}
+	return;
 } ## end sub dump
 
 1;

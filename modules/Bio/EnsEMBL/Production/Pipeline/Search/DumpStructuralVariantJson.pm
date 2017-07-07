@@ -44,9 +44,10 @@ sub dump {
 	my $file = $self->write_structural_variants( $dba,
 										  $self->param("offset"),
 										  $self->param("length") );
-	$self->{logger}->info("Structural variations for $species written to $file");
-	
-	$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
+	if(defined $file) {										  
+		$self->{logger}->info("Structural variations for $species written to $file");
+		$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
+	}
 
 	return;
 } ## end sub run
@@ -85,7 +86,11 @@ sub write_structural_variants {
 	print $json_file ']' unless defined $offset;
 	close $json_file ||throw "Could not close $json_file_path";
 	$self->{logger}->info("Wrote $n structural variants to $json_file_path");
-	return $json_file_path;
+	if($n==0) {
+		unlink $json_file_path;
+	} else {
+		return $json_file_path;
+	}
 } ## end sub write_variants
 
 1;

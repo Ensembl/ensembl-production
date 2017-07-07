@@ -42,10 +42,12 @@ sub dump {
 	throw "No variation database found for $species" unless defined $dba;
 	my $phenotypes = Bio::EnsEMBL::Production::Search::VariationFetcher->new()
 	  ->fetch_phenotypes($species);
-	my $file = $self->write_json( $species, 'phenotypes', $phenotypes );
-
-	$self->dataflow_output_id( { dump_file => $file, species => $species }, 1 );
-
+	if ( defined $phenotypes && scalar(@$phenotypes) > 0 ) {
+		my $file =
+		  $self->write_json( $species, 'phenotypes', $phenotypes );
+		$self->dataflow_output_id( { dump_file => $file, species => $species },
+								   1 );
+	}
 	return;
 }
 

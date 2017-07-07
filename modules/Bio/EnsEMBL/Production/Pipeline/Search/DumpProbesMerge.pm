@@ -41,17 +41,39 @@ sub run {
 	my $logger  = get_logger();
 	my $species = $self->param_required('species');
 	my $sub_dir = $self->get_data_path('json');
+	my $type    = $self->param_required('type');
 	{
 		my $file_names = $self->param_required('probes_dump_file');
-		my $outfile           = $sub_dir . '/' . $species . '_probes.json';
-		$logger->info("Merging probes files for $species into $outfile");
-		$self->merge_files( $outfile, $file_names );
+		if ( scalar(@$file_names) > 0 ) {
+			my $outfile = $sub_dir . '/' . $species . '_probes.json';
+			$logger->info("Merging probes files for $species into $outfile");
+			$self->merge_files( $outfile, $file_names );
+			# write output
+			$self->dataflow_output_id( {  species   => $species,
+										  type      => $type,
+										  dump_file => $outfile,
+										  genome_file =>
+											$self->param_required('genome_file')
+									   },
+									   2 );
+		}
 	}
 	{
 		my $file_names = $self->param_required('probesets_dump_file');
-		my $outfile           = $sub_dir . '/' . $species . '_probesets.json';
-		$logger->info("Merging probesets files for $species into $outfile");
-		$self->merge_files( $outfile, $file_names );
+		if ( scalar(@$file_names) > 0 )
+		{
+			my $outfile = $sub_dir . '/' . $species . '_probesets.json';
+			$logger->info("Merging probesets files for $species into $outfile");
+			$self->merge_files( $outfile, $file_names );
+			# write output
+			$self->dataflow_output_id( {  species   => $species,
+										  type      => $type,
+										  dump_file => $outfile,
+										  genome_file =>
+											$self->param_required('genome_file')
+									   },
+									   3 );
+		}
 	}
 	return;
 } ## end sub run

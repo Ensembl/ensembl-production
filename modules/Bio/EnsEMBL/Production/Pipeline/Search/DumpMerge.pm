@@ -38,23 +38,31 @@ sub run {
 	else {
 		Log::Log4perl->easy_init($INFO);
 	}
-	my $logger     = get_logger();
-	my $species    = $self->param_required('species');
+	my $logger  = get_logger();
+	my $species = $self->param_required('species');
+
 	my $type       = $self->param_required('type');
+	my $file_type  = $self->param_required('file_type');
 	my $sub_dir    = $self->get_data_path('json');
 	my $file_names = $self->param('dump_file');
-	if ( !defined $file_names || scalar(@$file_names) > 0 ) {
-		my $outfile = $sub_dir . '/' . $species . '_' . $type . '.json';
+	if ( defined $file_names && scalar(@$file_names) > 0 ) {
+		my $outfile =
+		  $sub_dir . '/' . $species . '_' . $file_type . '.json';
 		$logger->info("Merging $type files for $species into $outfile");
 		$self->merge_files( $outfile, $file_names );
 		# write output
-		
+		$self->dataflow_output_id( {  species   => $species,
+									  type      => $type,
+									  dump_file => $outfile,
+									  genome_file =>
+										$self->param_required('genome_file') },
+								   1 );
 	}
 	else {
 		$logger->info("No merge $type found files for $species");
 	}
 	return;
-}
+} ## end sub run
 
 sub merge_files {
 	my ( $self, $outfile, $file_names ) = @_;
@@ -71,7 +79,7 @@ sub merge_files {
 		}
 		system("cat $file >>$outfile") == 0 ||
 		  throw "Could not concatenate $file to $outfile";
-		unlink $file || throw "Could not remove $file";
+		#unlink $file || throw "Could not remove $file";
 	}
 	system("echo ']'>>$outfile") == 0 || throw "Could not write to $outfile";
 	$logger->info("Completed writing $n files to $outfile");

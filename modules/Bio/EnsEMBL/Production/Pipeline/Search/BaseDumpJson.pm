@@ -45,8 +45,8 @@ sub run {
 	$self->hive_dbc()->reconnect_when_lost(1) if defined $self->hive_dbc();
 	my $species = $self->param_required('species');
 	my $type = $self->param('type') || 'core';
-	$self->dump( $species, $type );	
-	
+	$self->dump( $species, $type );
+
 	return;
 }
 
@@ -59,8 +59,8 @@ sub dump {
 sub write_json {
 	my ( $self, $species, $type, $data, $db_type ) = @_;
 	$self->build_base_directory();
-	my $sub_dir        = $self->get_data_path('json');
-	if(defined $db_type && $db_type ne '' && $db_type ne 'core') {
+	my $sub_dir = $self->get_data_path('json');
+	if ( defined $db_type && $db_type ne '' && $db_type ne 'core' ) {
 		$type = "${db_type}_${type}";
 	}
 	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
@@ -69,11 +69,22 @@ sub write_json {
 }
 
 sub write_json_to_file {
-	my ( $self, $json_file_path, $data ) = @_;
+	my ( $self, $json_file_path, $data, $no_brackets ) = @_;
 	$self->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
-	print $json_file encode_json($data);
+	if ($no_brackets) {
+		my $n = 0;
+		for my $elem (@$data) {
+			if ( $n++ > 0 ) {
+				print $json_file ',';
+			}
+			print $json_file encode_json($elem);
+		}
+	}
+	else {
+		print $json_file encode_json($data);
+	}
 	close $json_file;
 	$self->info("Write complete");
 	return;
