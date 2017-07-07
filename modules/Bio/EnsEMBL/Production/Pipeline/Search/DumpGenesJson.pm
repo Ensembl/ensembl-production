@@ -35,7 +35,6 @@ use Bio::EnsEMBL::Production::Search::SequenceFetcher;
 use Bio::EnsEMBL::Production::Search::MarkerFetcher;
 use Bio::EnsEMBL::Production::Search::LRGFetcher;
 use Bio::EnsEMBL::Production::Search::IdFetcher;
-
 use Log::Log4perl qw/:easy/;
 
 sub dump {
@@ -56,18 +55,21 @@ sub dump {
 		$type ||= 'core';
 		my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 
-		my $output = { species => $species };
+		my $output = { species     => $species,
+					   type        => $type,
+					   genome_file => $self->param('genome_file') };
 		$self->{logger}->info("Dumping data for $species $type");
 		$self->{logger}->info("Dumping genes");
-		$output->{genome_file} = $self->dump_genes( $dba, $compara, $type );
+		$output->{genes_file} = $self->dump_genes( $dba, $compara, $type );
 		$self->{logger}->info("Dumping sequences");
-		$output->{seqs_file} = $self->dump_sequences( $dba, $type );
+		$output->{sequences_file} = $self->dump_sequences( $dba, $type );
 		$self->{logger}->info("Dumping markers");
 		$output->{lrgs_file} = $self->dump_lrgs( $dba, $type );
 		$self->{logger}->info("Dumping markers");
 		$output->{markers_file} = $self->dump_markers( $dba, $type );
 		$self->{logger}->info("Dumping IDs");
-		$output->{ids_file} = $self->dump_ids( $dba, $type );
+		$output->{ids_file} = $self->dump_ids( $dba, $type );		
+		
 		$self->{logger}->info("Completed dumping $species $type");
 		$self->dataflow_output_id( $output, 1 );
 	} ## end if ( $species ne "Ancestral sequences")
@@ -145,5 +147,6 @@ sub dump_ids {
 		return undef;
 	}
 }
+
 
 1;

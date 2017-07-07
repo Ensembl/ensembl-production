@@ -47,6 +47,8 @@ sub run {
 		my $outfile = $sub_dir . '/' . $species . '_' . $type . '.json';
 		$logger->info("Merging $type files for $species into $outfile");
 		$self->merge_files( $outfile, $file_names );
+		# write output
+		
 	}
 	else {
 		$logger->info("No merge $type found files for $species");

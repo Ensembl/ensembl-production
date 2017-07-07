@@ -464,6 +464,7 @@ sub reformat_gene_trees {
 			}
 			my $docs = {};
 			for my $homolog ( @{ $gene->{homologues} } ) {
+				next unless defined $homolog->{gene_tree_id}; # ncrna gene trees have no stable IDs
 				my $doc = $docs->{ $homolog->{gene_tree_id} };
 				if ( !defined $doc ) {
 

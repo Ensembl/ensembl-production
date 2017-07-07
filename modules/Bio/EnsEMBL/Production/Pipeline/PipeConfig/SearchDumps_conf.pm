@@ -88,7 +88,7 @@ sub pipeline_analyses {
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '32g',
-		   -flow_into     => {} }, {
+		   -flow_into     => {1=>['ReformatGenomeAdvancedSearch','ReformatGenomeSolr']} }, {
 		   -logic_name => 'DumpRegulationJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
@@ -185,6 +185,17 @@ sub pipeline_analyses {
 		{  -logic_name => 'ProbeDumpMerge',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesMerge',
+		   -rc_name   => '1g',
+		   -flow_into => {} },
+		   
+		   {-logic_name => 'ReformatGenomeAdvancedSearch',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
+		   -rc_name   => '1g',
+		   -flow_into => {} },
+		   		   {-logic_name => 'ReformatGenomeSolr',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeSolr',
 		   -rc_name   => '1g',
 		   -flow_into => {} }
 

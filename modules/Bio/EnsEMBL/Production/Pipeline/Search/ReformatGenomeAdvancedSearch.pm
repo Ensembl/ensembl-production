@@ -39,11 +39,14 @@ sub run {
 		Log::Log4perl->easy_init($INFO);
 	}
 	$self->{logger} = get_logger();
+
+	my $genes_file      = $self->param('genes_file');
+	return unless defined $genes_file;
+
 	my $species         = $self->param_required('species');
 	my $sub_dir         = $self->get_data_path('adv_search');
 	my $genes_file_out  = $sub_dir . '/' . $species . '_genes.json';
 	my $genome_file_out = $sub_dir . '/' . $species . '_genome.json';
-	my $genes_file      = $self->param_required('genes_file');
 	my $genome_file     = $self->param_required('genome_file');
 	my $reformatter =
 	  Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new(
