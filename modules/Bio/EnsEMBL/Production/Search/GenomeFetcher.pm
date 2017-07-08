@@ -47,15 +47,37 @@ my $logger = get_logger();
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-	my ( $metadata_dba, $eg, $compara, $funcgen ) = rearrange( [ 'METADATA_DBA', 'EG'], @args );
+	my ( $metadata_dba, $eg, $taxonomy_dba ) =
+	  rearrange( [ 'METADATA_DBA', 'EG', 'TAXONOMY_DBA' ], @args );
 	if ( !defined $metadata_dba ) {
 		eval {
-		$metadata_dba =
-		  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "metadata" );
+			$metadata_dba =
+			  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "metadata" );
 		};
-		if($@) {
+		if ($@) {
 			$logger->warn("Cannot find metadata database");
 		}
+	}
+	if ( !defined $metadata_dba ) {
+		eval {
+			$metadata_dba =
+			  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "metadata" );
+		};
+		if ($@) {
+			$logger->warn("Cannot find metadata database");
+		}
+	}
+	if ( !defined $taxonomy_dba ) {
+		eval {
+			$taxonomy_dba =
+			  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
+		};
+		if ($@) {
+			$logger->warn("Cannot find taxonomy database");
+		}
+	}
+	if ( defined $taxonomy_dba ) {
+		$self->{node_adaptor} = $taxonomy_dba->get_TaxonomyNodeAdaptor();
 	}
 	if ( defined $metadata_dba ) {
 		$self->{info_adaptor} = $metadata_dba->get_GenomeInfoAdaptor();
@@ -66,7 +88,7 @@ sub new {
 		}
 	}
 	return $self;
-}
+} ## end sub new
 
 sub fetch_genome {
 	my ( $self, $name ) = @_;
@@ -85,27 +107,44 @@ sub fetch_metadata {
 sub metadata_to_hash {
 	my ( $self, $md ) = @_;
 	croak "No metadata supplied" unless defined $md;
-	return { id           => $md->name(),
-			 dbname       => $md->dbname(),
-			 species_id   => $md->species_id(),
-			 division     => $md->division(),
-			 genebuild    => $md->genebuild(),
-			 is_reference => $md->is_reference() == 1 ? "true" : "false",
-			 organism     => {
-						   name                => $md->name(),
-						   display_name        => $md->display_name(),
-						   scientific_name     => $md->scientific_name(),
-						   url_name            => $md->url_name(),
-						   strain              => $md->strain(),
-						   serotype            => $md->serotype(),
-						   taxonomy_id         => $md->taxonomy_id(),
-						   species_taxonomy_id => $md->species_taxonomy_id(),
-						   aliases             => $md->aliases() },
-			 assembly => { name      => $md->assembly_name(),
-						   accession => $md->assembly_accession(),
-						   default   => $md->assembly_default(),
-						   ucsc      => $md->assembly_ucsc(),
-						   level     => $md->assembly_level() } };
-}
+	my $genome = {
+		   id              => $md->name(),
+		   dbname          => $md->dbname(),
+		   species_id      => $md->species_id(),
+		   division        => $md->division(),
+		   genebuild       => $md->genebuild(),
+		   is_reference    => $md->is_reference() == 1 ? "true" : "false",
+		   has_pan_compara => $md->has_pan_compara() == 1 ? "true" : "false",
+		   has_peptide_compara => $md->has_peptide_compara() == 1 ? "true" :
+			 "false",
+		   has_synteny => $md->has_synteny() == 1 ? "true" : "false",
+		   has_genome_alignments => $md->has_genome_alignments() == 1 ? "true" :
+			 "false",
+		   has_other_alignments => $md->has_other_alignments() == 1 ? "true" :
+			 "false",
+		   has_variations => $md->has_variations() == 1 ? "true" : "false",
+		   organism => { name                => $md->name(),
+						 display_name        => $md->display_name(),
+						 scientific_name     => $md->scientific_name(),
+						 url_name            => $md->url_name(),
+						 strain              => $md->strain(),
+						 serotype            => $md->serotype(),
+						 taxonomy_id         => $md->taxonomy_id(),
+						 species_taxonomy_id => $md->species_taxonomy_id(),
+						 aliases             => $md->aliases() },
+		   assembly => { name      => $md->assembly_name(),
+						 accession => $md->assembly_accession(),
+						 default   => $md->assembly_default(),
+						 ucsc      => $md->assembly_ucsc(),
+						 level     => $md->assembly_level() } };
+	if ( defined $self->{node_adaptor} ) {
+		$genome->{organism}->{lineage} = [
+			grep {$_ ne 'root'} map {
+				$_->names()->{'scientific name'}->[0]
+				} @{ $self->{node_adaptor}->fetch_ancestors( $md->taxonomy_id() )
+				} ];
+	}
+	return $genome;
+} ## end sub metadata_to_hash
 
 1;
