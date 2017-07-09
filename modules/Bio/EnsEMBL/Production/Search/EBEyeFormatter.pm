@@ -32,6 +32,7 @@ use Carp;
 use File::Slurp;
 use XML::Simple;
 use POSIX 'strftime';
+use XML::Writer;
 
 use Exporter 'import';
 our @EXPORT = qw(_array_nonempty _id_ver _base);
@@ -58,12 +59,16 @@ sub reformat_genome {
 
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
-	printf $fh "<entry id=\"%s\">\n", $genome->{id};
-	_print_dates($fh);
-	_print_crossrefs( $fh,
+	my $writer = XML::Writer->new( OUTPUT => $fh, NEWLINES => 1 );
+	$writer->xmlDecl("ISO-8859-1");
+	$writer->doctype("entry");
+
+	_print_entry_start( $writer, $genome->{id} );
+	_print_dates($writer);
+	_print_crossrefs( $writer,
 					 { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} } );
 	_print_additional_fields(
-				 $fh, {
+				 $writer, {
 				   'genomic_unit'       => $genome->{division},
 				   'display_name'       => $genome->{organism}{display_name},
 				   'scientific_name'    => $genome->{organism}{scientific_name},
@@ -83,70 +88,31 @@ sub reformat_genome {
 				   'has_other_alignments'  => $genome->{has_other_alignments},
 				   'has_variations'        => $genome->{has_variations},
 				   'alias'                 => $genome->{organism}{aliases},
-				   'classification'        => $genome->{organism}{lineage} }
-	);
-	print $fh "</entry>\n";
+				   'classification'        => $genome->{organism}{lineage} } );
+	_print_entry_end($writer);
+	$writer->end();
 	close $fh;
 	return;
 } ## end sub reformat_genome
 
-sub _print_additional_fields {
-	my ( $fh, $fields ) = @_;
-	printf $fh "\t\t<additional_fields>\n";
-	while ( my ( $k, $v ) = each %$fields ) {
-		if ( defined $v ) {
-			if ( ref($v) eq 'ARRAY' ) {
-				for my $e (@$v) {
-					_print_field( $fh, $k, $e );
-				}
-			}
-			else {
-				_print_field( $fh, $k, $v );
-			}
-		}
-	}
-	printf $fh "\t</additional_fields>\n";
-	return;
-}
-
-sub _print_field {
-	my ( $fh, $key, $value ) = @_;
-	return unless defined $value;
-	printf $fh qq(		<field name="$key">$value</field>
-	), $key, $value;
-	return;
-}
-
-sub _print_dates {
-	my ($fh) = @_;
-	print $fh qq(	<dates>
-		<date value="$date" type="creation"/>
-		<date value="$date" type="last_modification"/>
-	</dates>
-	);
-	return;
-}
-
-sub _print_crossrefs {
-	my ( $fh, $xrefs ) = @_;
-	printf $fh qq(	<cross_references>
-		);
-	while ( my ( $k, $v ) = each %$xrefs ) {
-		printf $fh qq(		<ref dbname="ncbi_taxonomy_id" dbkey="%s"/>
-		), $k, $v;
-	}
-	print $fh "\t</cross_references>\n";
-	return;
-}
-
-sub add_key {
-	my ( $v, $to, $to_key ) = @_;
-	$to->{$to_key} = $v if defined $v;
-	return;
-}
-
 sub reformat_genes {
 	my ( $self, $genome_file, $genes_file, $outfile ) = @_;
+
+	my $genome = read_json($genome_file);
+
+	open my $writer, '>', $outfile or
+	  croak "Could not open $outfile for writing";
+
+	#	printf $writer q(<?xml version="1.0" encoding="ISO-8859-1"?>
+	#<!DOCTYPE database [ <!ENTITY auml "&#228;">]>
+	#<database>
+	#	<name>%s</name>
+	#	<description>%s %s % database</description>
+	#	<release>%s</release>
+	#	<entries>
+	#	);
+	#	_print_entry_start( $writer, $genome->{id} );
+	#	_print_dates($writer);
 	return;
 }
 
@@ -157,6 +123,81 @@ sub reformat_sequences {
 
 sub reformat_variants {
 	my ( $self, $genome_file, $variants_file, $outfile ) = @_;
+	return;
+}
+
+sub _print_entry_start {
+	my ( $writer, $id ) = @_;
+	$writer->startTag( "entry", "id" => $id );
+	return;
+}
+
+sub _print_entry_end {
+	my ($writer) = @_;
+	$writer->endTag("entry");
+	return;
+}
+
+sub _print_additional_fields {
+	my ( $writer, $fields ) = @_;
+	$writer->startTag("additional_fields");
+	while ( my ( $k, $v ) = each %$fields ) {
+		if ( defined $v ) {
+			if ( ref($v) eq 'ARRAY' ) {
+				for my $e (@$v) {
+					_print_field( $writer, $k, $e );
+				}
+			}
+			else {
+				_print_field( $writer, $k, $v );
+			}
+		}
+	}
+	$writer->endTag("additional_fields");
+	return;
+}
+
+sub _print_field {
+	my ( $writer, $key, $value ) = @_;
+	return unless defined $value;
+	if(ref($value) eq 'ARRAY') {
+		for my $e (@{$value}) {
+			_print_field($writer,$key,$e);
+		}				
+	} else {
+		$writer->dataElement($key, $value);
+	}
+	return;
+}
+
+sub _print_dates {
+	my ($writer) = @_;
+	$writer->startTag("dates");
+	$writer->emptyTag( "date", creation => $date, last_modification => $date );
+	$writer->endTag("dates");
+	return;
+}
+
+sub _print_crossrefs {
+	my ( $writer, $xrefs ) = @_;
+	$writer->startTag("cross_references");
+	while ( my ( $k, $v ) = each %$xrefs ) {
+		if ( ref $v eq 'ARRAY' ) {
+			for my $e ( @{$v} ) {
+				$writer->emptyTag( "ref", dbname => $k, dbkey => $e );
+			}
+		}
+		else {
+			$writer->emptyTag( "ref", dbname => $k, dbkey => $v );
+		}
+	}
+	$writer->endTag("cross_references");
+	return;
+}
+
+sub add_key {
+	my ( $v, $to, $to_key ) = @_;
+	$to->{$to_key} = $v if defined $v;
 	return;
 }
 

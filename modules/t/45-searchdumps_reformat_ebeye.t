@@ -37,9 +37,9 @@ subtest "EBEye genome", sub {
 	unlink $out_file;
 };
 
-#subtest "EBEye genes", sub {
-#	my $in_file  = File::Spec->catfile( $Bin, "genes_test.json" );
-#	my $out_file = File::Spec->catfile( $Bin, "ebeye_genes_test.json" );
-#};
+subtest "EBEye genes", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "genes_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "ebeye_genes_test.json" );
+};
 
 done_testing;
