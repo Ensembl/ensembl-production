@@ -13,3 +13,4 @@ requires 'String::Numeric';
 requires 'Bio::DB::HTS::Faidx';
 requires 'File::Slurp';
 requires 'Log::Log4perl';
+requires 'XML::Simple';
