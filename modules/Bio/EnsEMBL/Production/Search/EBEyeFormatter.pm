@@ -96,15 +96,15 @@ sub reformat_genome {
 } ## end sub reformat_genome
 
 sub reformat_genes {
-	my ( $self, $genome_file, $genes_file, $outfile ) = @_;
+	my ( $self, $genome_file, $database, $genes_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1,DATA_INDENT => 2);
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
-	$writer->dataElement( 'name', $genome->{dbname} );
-	$genome->{dbname} =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
+	$writer->dataElement( 'name', $database );
+	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
 	my $type    = $1;
 	my $release = $2;
 	$writer->dataElement( 'description',

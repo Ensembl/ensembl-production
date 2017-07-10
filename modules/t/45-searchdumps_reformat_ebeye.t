@@ -41,7 +41,7 @@ subtest "EBEye genome", sub {
 subtest "EBEye genes", sub {
 	my $in_file  = File::Spec->catfile( $Bin, "genes_test.json" );
 	my $out_file = File::Spec->catfile( $Bin, "ebeye_genes_test.xml" );
-	$formatter->reformat_genes( $genome_in_file, $in_file, $out_file );
+	$formatter->reformat_genes( $genome_in_file, 'homo_sapiens_core_89_38', $in_file, $out_file );
 	my $genes = XMLin( $out_file, ForceArray => 1 );
 	for my $entry (@{$genes->{entries}}) {
 		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
