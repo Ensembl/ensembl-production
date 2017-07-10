@@ -205,7 +205,7 @@ subtest "Domains reformat", sub {
 		is( $e->{domain_url},
 			"Homo_sapiens/Location/Genome?ftype=Domain;id=IPR025714" );
 		is( $e->{description},
-"Interpro domain IPR025714 is found in 1 genes in Human and has 1 records from signature databases: PF13679"
+"Interpro domain IPR025714 [methyltrans_dom] is found in 1 genes in Human and has 1 records from signature databases: PF13679"
 		);
 	}
 
