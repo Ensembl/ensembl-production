@@ -140,9 +140,6 @@ my $old_dbh =  DBI->connect("DBI:mysql:database=$database;host=$oldhost;port=$ol
 
 my $error;
 my $dbh = DBI->connect("DBI:mysql:database=$database;host=$host;port=$port",$user,$pass);
-:q
-
-
 
 #since there is no database defined, will run it agains all core databases
 my $pattern;

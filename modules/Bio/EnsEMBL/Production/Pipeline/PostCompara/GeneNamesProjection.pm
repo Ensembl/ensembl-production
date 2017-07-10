@@ -133,9 +133,7 @@ sub project_display_xrefs_genenames {
 
     if(defined $from_gene->display_xref() && check_overwrite_display_xref($from_gene, $to_gene, $from_species, $to_species)) {
        my $from_gene_dbname     = $from_gene->display_xref->dbname();
-       my $from_gene_display_id = $from_gene->display_xref->display_id();         
-
-       return if ($from_gene->status eq 'KNOWN_BY_PROJECTION');
+       my $from_gene_display_id = $from_gene->display_xref->display_id();
 
        # Skip clone names if projecting all sources
        return if (lc($from_gene_dbname) =~ /clone/);
@@ -433,23 +431,20 @@ sub project_display_xrefs_ensembl{
     return;
   }
 
-  # Set gene status to "KNOWN_BY_PROJECTION" and update display_xref
-  $to_gene->status("KNOWN_BY_PROJECTION");
+  # Update display_xref
   $to_gene->display_xref($dbEntry);
   # Set SYMBOL-201 for all the target Transcripts
   overwrite_transcript_display_xrefs($dbEntry, $info_txt, 201, \@to_transcripts);
   # update the gene so that the display_xref_id is set and the
   $to_geneAdaptor->update($to_gene);
   foreach my $transcript (@to_transcripts) {
-    # Set the status of the gene's transcripts to "KNOWN_BY_PROJECTION"
-    $transcript->status("KNOWN_BY_PROJECTION");
     #Now assign names to the transcripts;
     my $display = $transcript->display_xref();
     if ($display){
       $transcript->add_DBEntry($display);
       $to_dbea->store($display, $transcript->dbID(), 'Transcript', 1);
     }
-    # Set the status & display xref if applicable for the gene's transcripts
+    # Set the display xref if applicable for the gene's transcripts
     $to_transcriptAdaptor->update($transcript);
     print $log "\t\t\tProject display xref from:".$from_gene->stable_id()."\t";
     print $log "to:".$transcript->stable_id()."\t";

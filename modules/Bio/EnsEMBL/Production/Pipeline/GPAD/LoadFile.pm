@@ -283,6 +283,8 @@ sub run {
           $unmatched_rnacentral{$tgt_species}++;
         }
       }
+   } elsif ($db =~ /ensembl/) {
+     $go_xref->add_linkage_type($go_evidence);
    }
 
    # If GOA did not provide a tgt_feature, we have to guess the correct target based on our xrefs

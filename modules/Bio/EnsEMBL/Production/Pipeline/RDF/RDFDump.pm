@@ -21,8 +21,8 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-    This process relies heavily on modules found in the VersioningService repository
-    It gets the appropriate data from BulkFetcher, and serialises to RDF
+    This process is now based on the ensembl-io unified framework.
+    It gets the appropriate data from BulkFetcher, and serialises to RDF.
 
 =cut
 
@@ -31,13 +31,20 @@ package Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump;
 use strict;
 use warnings;
 
-use parent ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
-use Bio::EnsEMBL::RDF::EnsemblToTripleConverter;
+use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
+
+use IO::File;
+use File::Spec::Functions qw/catdir/;
+
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
-use IO::File;
-use File::Spec::Functions qw/catdir/;
+
+use Bio::EnsEMBL::IO::Object::RDF;
+use Bio::EnsEMBL::IO::Translator::Slice;
+use Bio::EnsEMBL::IO::Translator::BulkFetcherFeature;
+use Bio::EnsEMBL::IO::Writer::RDF;
+use Bio::EnsEMBL::IO::Writer::RDF::XRefs;
 
 sub fetch_input {
     my $self = shift;
@@ -58,81 +65,63 @@ sub fetch_input {
 
 
 sub run {
-    my $self = shift;
-    my $species = $self->param('species');
-    my $config_file = $self->param('config_file'); # config required for mapping Ensembl things to RDF (xref_LOD_mapping.json)
-    my $release = $self->param('release');
-    my $production_name = $self->production_name;
-    my $path = $self->data_path();
-    unless (defined $path && $path ne '') { $path = $self->get_dir($release) };
-    my $target_file = catdir($path, $species.".ttl");
-    my $main_fh = IO::File->new($target_file,"w") || die "$! $target_file";
-    my $xref_file = catdir($path, $species."_xrefs.ttl");
-    my $xref_fh;
-    $xref_fh = IO::File->new($xref_file,"w") if $self->param('xref');
-    my $dba = $self->get_DBAdaptor; 
+  my $self = shift;
+  
+  my $species = $self->param('species');
+  my $release = $self->param('release');
 
-    my $division = 'Multi';
-    $division    = $self->division() if ($self->param('eg'));
-    my $compara_dba = Bio::EnsEMBL::Registry->get_adaptor($division, 'compara', 'GenomeDB');
-    # Configure bulk extractor to go all the way down to protein features.
-    # Can also be told to stop at transcript level as well as others.
-    my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
-    my $gene_array = $bulk->export_genes($dba,undef,'protein_feature',$self->param('xref'));
-    $bulk->add_compara($species, $gene_array, $compara_dba);
+  ### Fetch the data, i.e. genes-transcripts-translations and sequence regions
+  #
+  # configure bulk extractor to go all the way down to protein features.
+  # can also be told to stop at transcript level as well as others.
+  my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
+  my $dba = $self->get_DBAdaptor; 
+  my $genes = $bulk->export_genes($dba, undef, 'protein_feature', $self->param('xref'));
+  my $compara_dba =
+    Bio::EnsEMBL::Registry->get_adaptor($self->param('eg')?$self->division():'Multi', 'compara', 'GenomeDB');
+  $bulk->add_compara($species, $genes, $compara_dba);
 
-    # Configure triple converter
-    my $converter_config = { 
-      ontology_adaptor => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
-      meta_adaptor => $dba->get_MetaContainer,
-      species => $species,
-      xref => $self->param('xref'),
-      release => $release,
-      xref_mapping_file => $config_file,
-      main_fh => $main_fh,
-      xref_fh => $xref_fh,
-      production_name => $production_name
-    };
-    my $triple_converter = Bio::EnsEMBL::RDF::EnsemblToTripleConverter->new($converter_config);
+  my $slices = $self->get_Slices(undef, ($species eq 'homo_sapiens')?1:0);
+  #
+  ############
+  
+  ### Dump RDF
+  #
+  my $path = $self->data_path();
+  $path = $self->get_dir($release) unless defined $path && $path ne '';
 
-    # start writing out
-    $triple_converter->print_namespaces;
-    $triple_converter->print_species_info;
+  my $core_rdf_file = catdir($path, $species . ".ttl");
+  $self->dump_core_rdf($core_rdf_file, $slices, $genes);
 
-    my $is_human;
-    $is_human = 1 if $species eq 'homo_sapiens';
-    my $slices = $self->get_Slices(undef,$is_human); # see Production::Pipeline::Common::Base;
-    $triple_converter->print_seq_regions($slices);
+  # xrefs are optional
+  my $xrefs_rdf_file = catdir($path, $species . "_xrefs.ttl");
+  $self->dump_xrefs_rdf($xrefs_rdf_file, $genes) if $self->param('xref');
+  #
+  ###########
+  
+  ### Add a graph file for Virtuoso loading.
+  my $graph_path = $path;
+  $self->param('dir', $graph_path);
+  $graph_path = $self->get_dir($release) unless $graph_path;
 
-    # Fetch all the things!
-    while (my $gene = shift @$gene_array) {
-        my $feature_uri = $triple_converter->generate_feature_uri($gene->{id},'gene');
-        $triple_converter->print_feature($gene,$feature_uri,'gene');
-    }
+  # graph files need to be named exactly the same as the underlying
+  # data for Virtuoso to correctly namespace the data
+  $self->create_virtuoso_file(sprintf("%s/%s.ttl.gz.graph", $graph_path, $self->production_name));
+  $self->create_virtuoso_file(sprintf("%s/%s_xrefs.ttl.gz.graph", $graph_path, $self->production_name));
+  #
+  ###########
+  
+  ### Compress the files
+  system("gzip $core_rdf_file");
+  system("gzip $xrefs_rdf_file");
 
-    # Add a graph file for Virtuoso loading.
-    my $graph_path = $path;
-    $self->param('dir', $graph_path);
-    unless ($graph_path) { $graph_path = $self->get_dir($release) };
-    # Graph files need to be named exactly the same as the underlying data for Virtuoso to correctly namespace the data
-    $triple_converter->create_virtuoso_file(sprintf("%s/%s.ttl.gz.graph",$graph_path,$production_name));
-    $triple_converter->create_virtuoso_file(sprintf("%s/%s_xrefs.ttl.gz.graph",$graph_path,$production_name));
+  ### Create list of files to validate
+  my @files_to_validate = ($core_rdf_file . '.gz');
+  push @files_to_validate, $xrefs_rdf_file . '.gz' if $self->param('xref');
+  $self->param('validate_me', \@files_to_validate);
 
-    #compress the files
-    system("gzip $target_file");
-    $target_file=$target_file.'.gz';
-    system("gzip $xref_file");
-    $xref_file=$xref_file.'.gz';
-
-    # Create list of files to validate
-    my @files_to_validate = ($target_file);
-    if ($self->param('xref')) { push @files_to_validate, $xref_file }
-    $self->param('validate_me', \@files_to_validate);
-    $main_fh->close;
-    $xref_fh->close if defined $xref_fh;
-    $dba->dbc()->disconnect_if_idle();
+  $dba->dbc()->disconnect_if_idle();
 }
-
 
 sub write_output {  # store and dataflow
     my $self = shift;
@@ -152,4 +141,83 @@ sub data_path {
 
   return $self->get_dir('rdf', $self->param('species'));
 }
+
+# encapsulate the details of RDF writing
+# uses the ensembl-io framework
+sub dump_core_rdf {
+  my ($self, $core_fname, $slices, $genes) = @_;
+  
+  ### Dump core RDF ###
+  #
+  # start writing out: namespaces and species info
+  my $fh = IO::File->new($core_fname, "w") || die "$! $core_fname";
+  my $core_writer = Bio::EnsEMBL::IO::Writer::RDF->new();
+  $core_writer->open($fh);
+
+  my $meta_adaptor = $self->get_DBAdaptor->get_MetaContainer;
+  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->namespaces());
+  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->species(taxon_id => $meta_adaptor->get_taxonomy_id,
+							     scientific_name => $meta_adaptor->get_scientific_name,
+							     common_name => $meta_adaptor->get_common_name));
+
+  # write sequence regions
+  my $slice_trans = Bio::EnsEMBL::IO::Translator::Slice->new(version => $self->param('release'), meta_adaptor => $meta_adaptor);
+  map { $core_writer->write($_, $slice_trans) } @{$slices};
+
+  # write BulkFetcher 'features'
+  my $feature_trans =
+    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
+                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
+							  meta_adaptor      => $meta_adaptor);
+  map { $core_writer->write($_, $feature_trans) } @{$genes};
+  
+  # finally write connecting triple to master RDF file
+  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->dataset(version => $self->param('release'),
+							     project => $self->param('eg')?'ensemblgenomes':'ensembl',
+							     production_name => $self->production_name));
+  $core_writer->close();
+  #
+  ################
+
+}
+
+sub dump_xrefs_rdf {
+  my ($self, $xrefs_fname, $genes) = @_;
+  
+  ### Xrefs RDF ###
+  #
+  my $fh = IO::File->new($xrefs_fname, "w") || die "$! $xrefs_fname";
+  my $feature_trans =
+    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
+                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
+							  meta_adaptor      => $self->get_DBAdaptor->get_MetaContainer);
+  my $xrefs_writer = Bio::EnsEMBL::IO::Writer::RDF::XRefs->new($feature_trans);
+  $xrefs_writer->open($fh);
+  
+  # write namespaces
+  $xrefs_writer->write(Bio::EnsEMBL::IO::Object::RDF->namespaces());
+
+  # then dump feature xrefs
+  map { $xrefs_writer->write($_) } @{$genes};
+
+  $xrefs_writer->close();
+  #
+  ################
+}
+
+sub create_virtuoso_file {
+  my $self = shift;
+  my $path = shift; # a .graph file, named after the rdf file.
+
+  my $version_graph_uri = sprintf "http://rdf.ebi.ac.uk/dataset/%s/%d", $self->param('eg')?'ensemblgenomes':'ensembl', $self->param('release');
+  my $graph_uri = sprintf "%s/%s", $version_graph_uri, $self->production_name;
+
+  my $graph_fh = IO::File->new($path, 'w') or die "Cannot open virtuoso file $path: $!\n";
+  print $graph_fh $graph_uri . "\n";
+  $graph_fh->close();
+  
+}
+
 1;
