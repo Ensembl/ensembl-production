@@ -74,7 +74,7 @@ sub get_genes {
 
 	my @genes;
 	my $sql = qq/
-  select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype,
+  select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype, f.source,
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
   s.name as seq_region_name,
   'gene' as ensembl_object_type,

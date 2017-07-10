@@ -1186,6 +1186,7 @@ subtest "Checking protein_coding gene", sub {
           'biotype' => 'protein_coding',
           'name' => 'OR2W1',
           'ensembl_object_type' => 'gene',
+          'source' => 'ensembl',
           'coord_system' => {
                               'version' => 'GRCh38',
                               'name' => 'chromosome'
@@ -1318,6 +1319,7 @@ subtest "Checking ncRNA gene", sub {
 			   'ensembl_object_type' => 'transcript' } ],
 		'version'         => '1',
 		'biotype'         => 'pseudogene',
+		'source' => 'havana',
 		'strand'          => '-1',
 		'end'             => '970836',
 		'seq_region_name' => 'HG480_HG481_PATCH',
