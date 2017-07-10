@@ -30,9 +30,9 @@ use List::MoreUtils qw/natatime/;
 use JSON;
 use Carp;
 use File::Slurp;
-use XML::Simple;
 use POSIX 'strftime';
 use XML::Writer;
+use Bio::EnsEMBL::Production::Search::JSONReformatter;
 
 use Exporter 'import';
 our @EXPORT = qw(_array_nonempty _id_ver _base);
@@ -59,7 +59,7 @@ sub reformat_genome {
 
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
-	my $writer = XML::Writer->new( OUTPUT => $fh, NEWLINES => 1 );
+	my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1,DATA_INDENT => 2 );
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("entry");
 
@@ -97,22 +97,123 @@ sub reformat_genome {
 
 sub reformat_genes {
 	my ( $self, $genome_file, $genes_file, $outfile ) = @_;
-
 	my $genome = read_json($genome_file);
+	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
+	my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1,DATA_INDENT => 2);
+	$writer->xmlDecl("ISO-8859-1");
+	$writer->doctype("database");
+	$writer->startTag('database');
+	$writer->dataElement( 'name', $genome->{dbname} );
+	$genome->{dbname} =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
+	my $type    = $1;
+	my $release = $2;
+	$writer->dataElement( 'description',
+						  sprintf( "%s %s %s database",
+								   $genome->{division},
+								   $genome->{organism}{display_name},
+								   $type, $release ) );
+	$writer->dataElement( 'release', $release );
+	_print_dates($writer);
+	$writer->startTag('entries');
+	process_json_file(
+		$genes_file,
+		sub {
+			my ($gene) = @_;
+			_print_entry_start( $writer, $gene->{id} );
+			$writer->dataElement( 'name', $gene->{name} )
+			  if defined $gene->{name};
+			$writer->dataElement( 'description', $gene->{description} )
+			  if defined $gene->{description};
+			my $xrefs = {ncbi_taxonomy_id => $genome->{organism}{taxonomy_id}};
+			my $fields = {
+				 featuretype => 'Gene',
+				 source      => $gene->{source} . ' ' . $gene->{biotype},
+				 haplotype   => (
+					 ( defined $gene->{haplotype} && $gene->{haplotype} eq '1' )
+					 ? 'haplotype' :
+					   'reference' ),
+				 genomic_unit => $genome->{division},
+				 location =>
+				   sprintf( '%s:%s-%s',
+							$gene->{seq_region_name}, $gene->{start},
+							$gene->{end} ),
+				 database => $type };
 
-	open my $writer, '>', $outfile or
-	  croak "Could not open $outfile for writing";
+			$fields->{gene_synonyms} = $gene->{synonyms}
+			  if defined $gene->{synonyms};
+			$fields->{gene_version} = $gene->{id} . '.' . $gene->{version}
+			  if defined $gene->{version} && $gene->{version} > 0;
 
-	#	printf $writer q(<?xml version="1.0" encoding="ISO-8859-1"?>
-	#<!DOCTYPE database [ <!ENTITY auml "&#228;">]>
-	#<database>
-	#	<name>%s</name>
-	#	<description>%s %s % database</description>
-	#	<release>%s</release>
-	#	<entries>
-	#	);
-	#	_print_entry_start( $writer, $genome->{id} );
-	#	_print_dates($writer);
+			_add_xrefs( $xrefs, $gene );
+
+			if ( defined $gene->{probes} ) {
+				for my $probe ( @{ $gene->{probes} } ) {
+					push @{ $fields->{probes} }, $probe->{probe};
+				}
+			}
+
+			if ( defined $gene->{homologues} ) {
+				my $gts = {};
+				for my $homologue ( @{ $gene->{homologues} } ) {
+					$gts->{ $homologue->{gene_tree_id} }++;
+				}
+				$fields->{genetree} = [ keys %$gts ];
+			}
+
+			if ( defined $gene->{seq_region_synonyms} ) {
+				for my $sr ( @{ $gene->{seq_region_synonyms} } ) {
+					push @{ $fields->{seq_region_synonyms} }, $sr->{id};
+				}
+			}
+
+			my $exons = {};
+			for my $transcript ( @{ $gene->{transcripts} } ) {
+				$fields->{transcript_count}++;
+				push @{ $fields->{transcript} }, $transcript->{id};
+				push @{ $fields->{transcript_version} },
+				  $transcript->{id} . '.' . $transcript->{version}
+				  if defined $transcript->{version} &&
+				  $transcript->{version} > 0;
+				_add_xrefs( $xrefs, $transcript );
+				for my $translation ( @{ $transcript->{translations} } ) {
+					push @{ $fields->{peptide} }, $translation->{id};
+					push @{ $fields->{peptide_version} },
+					  $translation->{id} . '.' . $translation->{version}
+					  if defined $translation->{version} &&
+					  $translation->{version} > 0;
+					_add_xrefs( $xrefs, $translation );
+					for my $pf ( @{ $translation->{protein_features} } ) {
+						$fields->{domains}++;
+						push @{ $fields->{domain} }, $pf->{name};
+
+					}
+				}
+				for my $exon ( @{ $transcript->{exons} } ) {
+					$exons->{ $exon->{id} }++;
+				}
+			} ## end for my $transcript ( @{...})
+			$fields->{exon}       = [ values %$exons ];
+			$fields->{exon_count} = scalar values %$exons;
+			_print_crossrefs( $writer, $xrefs );
+			_print_additional_fields( $writer, $fields );
+			_print_entry_end($writer);
+			return;
+		} );
+	$writer->endTag('entries');
+	$writer->endTag('database');
+	$writer->end();
+	close $fh;
+	return;
+} ## end sub reformat_genes
+
+sub _add_xrefs {
+	my ( $xrefs, $o ) = @_;
+	for my $xref ( @{ $o->{xrefs} } ) {
+		push @{ $xrefs->{ $xref->{dbname} } }, $xref->{primary_id};
+		push @{ $xrefs->{ $xref->{dbname} } }, $xref->{display_id}
+		  if $xref->{primary_id} ne $xref->{display_id};
+
+	}
 	return;
 }
 
@@ -144,7 +245,7 @@ sub _print_additional_fields {
 	while ( my ( $k, $v ) = each %$fields ) {
 		if ( defined $v ) {
 			if ( ref($v) eq 'ARRAY' ) {
-				for my $e (@$v) {
+				for my $e (sort @$v) {
 					_print_field( $writer, $k, $e );
 				}
 			}
@@ -160,12 +261,13 @@ sub _print_additional_fields {
 sub _print_field {
 	my ( $writer, $key, $value ) = @_;
 	return unless defined $value;
-	if(ref($value) eq 'ARRAY') {
-		for my $e (@{$value}) {
-			_print_field($writer,$key,$e);
-		}				
-	} else {
-		$writer->dataElement($key, $value);
+	if ( ref($value) eq 'ARRAY' ) {
+		for my $e ( @{$value} ) {
+			_print_field( $writer, $key, $e );
+		}
+	}
+	else {
+		$writer->dataElement( 'field', $value, name=>$key);
 	}
 	return;
 }
@@ -173,7 +275,8 @@ sub _print_field {
 sub _print_dates {
 	my ($writer) = @_;
 	$writer->startTag("dates");
-	$writer->emptyTag( "date", creation => $date, last_modification => $date );
+	$writer->emptyTag( "date", type=>'creation', value => $date);
+	$writer->emptyTag( "date", type=>'last_modification', value => $date);
 	$writer->endTag("dates");
 	return;
 }
@@ -183,7 +286,7 @@ sub _print_crossrefs {
 	$writer->startTag("cross_references");
 	while ( my ( $k, $v ) = each %$xrefs ) {
 		if ( ref $v eq 'ARRAY' ) {
-			for my $e ( @{$v} ) {
+			for my $e ( sort @{$v} ) {
 				$writer->emptyTag( "ref", dbname => $k, dbkey => $e );
 			}
 		}

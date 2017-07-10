@@ -30,16 +30,28 @@ my $genome_in_file = File::Spec->catfile( $Bin, "genome_test.json" );
 my $formatter = Bio::EnsEMBL::Production::Search::EBEyeFormatter->new();
 subtest "EBEye genome", sub {
 	my $out_file = File::Spec->catfile( $Bin, "ebeye_genome_test.xml" );
-	$formatter->reformat_genome($genome_in_file, $out_file);
-	my $genome =  XMLin($out_file, ForceArray => 1);
-	my $genome_expected =  XMLin($out_file.'.expected', ForceArray => 1);
-	is_deeply($genome,$genome_expected,"Testing structure");
+	$formatter->reformat_genome( $genome_in_file, $out_file );
+	my $genome = XMLin( $out_file, ForceArray => 1 );
+	my $genome_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
+	$genome_expected->{dates} = $genome->{dates};
+	is_deeply( $genome, $genome_expected, "Testing structure" );
 	unlink $out_file;
 };
 
 subtest "EBEye genes", sub {
 	my $in_file  = File::Spec->catfile( $Bin, "genes_test.json" );
-	my $out_file = File::Spec->catfile( $Bin, "ebeye_genes_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "ebeye_genes_test.xml" );
+	$formatter->reformat_genes( $genome_in_file, $in_file, $out_file );
+	my $genes = XMLin( $out_file, ForceArray => 1 );
+	for my $entry (@{$genes->{entries}}) {
+		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
+	}
+	my $genes_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
+	$genes_expected->{dates} = $genes->{dates};
+		for my $entry (@{$genes_expected->{entries}}) {
+		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
+	}
+	is_deeply( $genes, $genes_expected, "Testing structure" );
 };
 
 done_testing;
