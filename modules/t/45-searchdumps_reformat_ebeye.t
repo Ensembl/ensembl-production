@@ -52,6 +52,17 @@ subtest "EBEye genes", sub {
 		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
 	}
 	is_deeply( $genes, $genes_expected, "Testing structure" );
+	unlink $out_file;
+};
+subtest "EBEye sequences", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "sequences_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "ebeye_sequences_test.xml" );
+	$formatter->reformat_sequences( $genome_in_file, 'homo_sapiens_core_89_38', $in_file, $out_file );
+	my $seqs = XMLin( $out_file, ForceArray => 1 );
+	my $seqs_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
+	$seqs_expected->{dates} = $seqs->{dates};
+	is_deeply( $seqs, $seqs_expected, "Testing structure" );
+	unlink $out_file;
 };
 
 done_testing;

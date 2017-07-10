@@ -59,7 +59,8 @@ sub reformat_genome {
 
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
-	my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1,DATA_INDENT => 2 );
+	my $writer =
+	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("entry");
 
@@ -99,7 +100,8 @@ sub reformat_genes {
 	my ( $self, $genome_file, $database, $genes_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
-	my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1,DATA_INDENT => 2);
+	my $writer =
+	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
@@ -124,20 +126,22 @@ sub reformat_genes {
 			  if defined $gene->{name};
 			$writer->dataElement( 'description', $gene->{description} )
 			  if defined $gene->{description};
-			my $xrefs = {ncbi_taxonomy_id => $genome->{organism}{taxonomy_id}};
+			my $xrefs =
+			  { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} };
 			my $fields = {
-				 featuretype => 'Gene',
-				 source      => $gene->{source} . ' ' . $gene->{biotype},
-				 haplotype   => (
+				species     => $genome->{organism}{display_name},
+				system_name => $genome->{organism}{name},
+				featuretype => 'Gene',
+				source    => $gene->{source} . ' ' . $gene->{biotype},
+				haplotype => (
 					 ( defined $gene->{haplotype} && $gene->{haplotype} eq '1' )
 					 ? 'haplotype' :
 					   'reference' ),
-				 genomic_unit => $genome->{division},
-				 location =>
-				   sprintf( '%s:%s-%s',
-							$gene->{seq_region_name}, $gene->{start},
-							$gene->{end} ),
-				 database => $type };
+				genomic_unit => $genome->{division},
+				location     => sprintf( '%s:%s-%s',
+									 $gene->{seq_region_name}, $gene->{start},
+									 $gene->{end} ),
+				database => $type };
 
 			$fields->{gene_synonyms} = $gene->{synonyms}
 			  if defined $gene->{synonyms};
@@ -161,8 +165,8 @@ sub reformat_genes {
 			}
 
 			if ( defined $gene->{seq_region_synonyms} ) {
-				for my $sr ( @{ $gene->{seq_region_synonyms} } ) {
-					push @{ $fields->{seq_region_synonyms} }, $sr->{id};
+				for my $sr ( @{ $gene->{seq_region_synonym} } ) {
+					push @{ $fields->{seq_region_synonym} }, $sr->{id};
 				}
 			}
 
@@ -192,7 +196,7 @@ sub reformat_genes {
 					$exons->{ $exon->{id} }++;
 				}
 			} ## end for my $transcript ( @{...})
-			$fields->{exon}       = [ values %$exons ];
+			$fields->{exon}       = [ keys %$exons ];
 			$fields->{exon_count} = scalar values %$exons;
 			_print_crossrefs( $writer, $xrefs );
 			_print_additional_fields( $writer, $fields );
@@ -218,9 +222,52 @@ sub _add_xrefs {
 }
 
 sub reformat_sequences {
-	my ( $self, $genome_file, $sequences_file, $outfile ) = @_;
+	my ( $self, $genome_file, $database, $sequences_file, $outfile ) = @_;
+	my $genome = read_json($genome_file);
+	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
+	my $writer =
+	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
+	$writer->xmlDecl("ISO-8859-1");
+	$writer->doctype("database");
+	$writer->startTag('database');
+	$writer->dataElement( 'name', $database );
+	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
+	my $type    = $1;
+	my $release = $2;
+	$writer->dataElement( 'description',
+						  sprintf( "%s %s %s database",
+								   $genome->{division},
+								   $genome->{organism}{display_name},
+								   $type, $release ) );
+	$writer->dataElement( 'release', $release );
+	_print_dates($writer);
+	$writer->startTag('entries');
+	process_json_file(
+		$sequences_file,
+		sub {
+			my ($seq) = @_;
+			_print_entry_start( $writer, $seq->{id} );
+			$writer->dataElement( 'name', $seq->{id} );
+			_print_crossrefs( $writer, {
+								 ncbi_taxonomy_id =>
+								   $genome->{organism}{taxonomy_id} } );
+			_print_additional_fields(
+						 $writer, {
+						   species     => $genome->{organism}{display_name},
+						   system_name => $genome->{organism}{name},
+						   coord_system => $seq->{type},
+						   length => $seq->{length},
+						   location => sprintf('%s:%d-%d',$seq->{id},$seq->{start},$seq->{end})
+						 } );
+			_print_entry_end($writer);
+			return;
+		} );
+	$writer->endTag('entries');
+	$writer->endTag('database');
+	$writer->end();
+	close $fh;
 	return;
-}
+} ## end sub reformat_sequences
 
 sub reformat_variants {
 	my ( $self, $genome_file, $variants_file, $outfile ) = @_;
@@ -245,7 +292,7 @@ sub _print_additional_fields {
 	while ( my ( $k, $v ) = each %$fields ) {
 		if ( defined $v ) {
 			if ( ref($v) eq 'ARRAY' ) {
-				for my $e (sort @$v) {
+				for my $e ( sort @$v ) {
 					_print_field( $writer, $k, $e );
 				}
 			}
@@ -267,7 +314,7 @@ sub _print_field {
 		}
 	}
 	else {
-		$writer->dataElement( 'field', $value, name=>$key);
+		$writer->dataElement( 'field', $value, name => $key );
 	}
 	return;
 }
@@ -275,8 +322,8 @@ sub _print_field {
 sub _print_dates {
 	my ($writer) = @_;
 	$writer->startTag("dates");
-	$writer->emptyTag( "date", type=>'creation', value => $date);
-	$writer->emptyTag( "date", type=>'last_modification', value => $date);
+	$writer->emptyTag( "date", type => 'creation',          value => $date );
+	$writer->emptyTag( "date", type => 'last_modification', value => $date );
 	$writer->endTag("dates");
 	return;
 }
