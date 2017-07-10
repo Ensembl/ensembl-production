@@ -129,19 +129,20 @@ sub reformat_genes {
 			my $xrefs =
 			  { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} };
 			my $fields = {
-				species     => $genome->{organism}{display_name},
-				system_name => $genome->{organism}{name},
-				featuretype => 'Gene',
-				source    => $gene->{source} . ' ' . $gene->{biotype},
-				haplotype => (
+				 species     => $genome->{organism}{display_name},
+				 system_name => $genome->{organism}{name},
+				 featuretype => 'Gene',
+				 source      => $gene->{source} . ' ' . $gene->{biotype},
+				 haplotype   => (
 					 ( defined $gene->{haplotype} && $gene->{haplotype} eq '1' )
 					 ? 'haplotype' :
 					   'reference' ),
-				genomic_unit => $genome->{division},
-				location     => sprintf( '%s:%s-%s',
-									 $gene->{seq_region_name}, $gene->{start},
-									 $gene->{end} ),
-				database => $type };
+				 genomic_unit => $genome->{division},
+				 location =>
+				   sprintf( '%s:%s-%s',
+							$gene->{seq_region_name}, $gene->{start},
+							$gene->{end} ),
+				 database => $type };
 
 			$fields->{gene_synonyms} = $gene->{synonyms}
 			  if defined $gene->{synonyms};
@@ -250,15 +251,18 @@ sub reformat_sequences {
 			$writer->dataElement( 'name', $seq->{id} );
 			_print_crossrefs( $writer, {
 								 ncbi_taxonomy_id =>
-								   $genome->{organism}{taxonomy_id} } );
+								   $genome->{organism}{taxonomy_id} }
+			);
 			_print_additional_fields(
-						 $writer, {
-						   species     => $genome->{organism}{display_name},
-						   system_name => $genome->{organism}{name},
-						   coord_system => $seq->{type},
-						   length => $seq->{length},
-						   location => sprintf('%s:%d-%d',$seq->{id},$seq->{start},$seq->{end})
-						 } );
+								$writer, {
+								  species => $genome->{organism}{display_name},
+								  system_name  => $genome->{organism}{name},
+								  coord_system => $seq->{type},
+								  length       => $seq->{length},
+								  location =>
+									sprintf( '%s:%d-%d',
+										$seq->{id}, $seq->{start}, $seq->{end} )
+								} );
 			_print_entry_end($writer);
 			return;
 		} );
@@ -270,9 +274,52 @@ sub reformat_sequences {
 } ## end sub reformat_sequences
 
 sub reformat_variants {
-	my ( $self, $genome_file, $variants_file, $outfile ) = @_;
+	my ( $self, $genome_file, $database, $variants_file, $outfile ) = @_;
+	my $genome = read_json($genome_file);
+	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
+	my $writer =
+	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
+	$writer->xmlDecl("ISO-8859-1");
+	$writer->doctype("database");
+	$writer->startTag('database');
+	$writer->dataElement( 'name', $database );
+	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
+	my $type    = $1;
+	my $release = $2;
+	$writer->dataElement( 'description',
+						  sprintf( "%s %s %s database",
+								   $genome->{division},
+								   $genome->{organism}{display_name},
+								   $type, $release ) );
+	$writer->dataElement( 'release', $release );
+	_print_dates($writer);
+	$writer->startTag('entries');
+	process_json_file(
+		$variants_file,
+		sub {
+			my ($var) = @_;
+			_print_entry_start( $writer, $var->{id} );
+			$writer->dataElement( 'name', $var->{id} );
+			_print_crossrefs( $writer, {
+								 ncbi_taxonomy_id =>
+								   $genome->{organism}{taxonomy_id} } );
+			_print_additional_fields(
+								$writer, {
+								  species => $genome->{organism}{display_name},
+								  system_name      => $genome->{organism}{name},
+								  variation_source => $var->{source}{name},
+								  description =>
+									sprintf( 'A %s Variant', $var->{source}{name} ) }
+			);
+			_print_entry_end($writer);
+			return;
+		} );
+	$writer->endTag('entries');
+	$writer->endTag('database');
+	$writer->end();
+	close $fh;
 	return;
-}
+} ## end sub reformat_variants
 
 sub _print_entry_start {
 	my ( $writer, $id ) = @_;

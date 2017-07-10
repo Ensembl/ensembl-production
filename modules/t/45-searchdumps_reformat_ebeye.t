@@ -64,5 +64,14 @@ subtest "EBEye sequences", sub {
 	is_deeply( $seqs, $seqs_expected, "Testing structure" );
 	unlink $out_file;
 };
-
+subtest "EBEye variants", sub {
+	my $in_file  = File::Spec->catfile( $Bin, "variants_test.json" );
+	my $out_file = File::Spec->catfile( $Bin, "ebeye_variants_test.xml" );
+	$formatter->reformat_variants( $genome_in_file, 'homo_sapiens_variation_89_38', $in_file, $out_file );
+	my $vars = XMLin( $out_file, ForceArray => 1 );
+	my $vars_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
+	$vars_expected->{dates} = $vars->{dates};
+	is_deeply( $vars, $vars_expected, "Testing structure" );
+	unlink $out_file;
+};
 done_testing;
