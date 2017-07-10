@@ -96,7 +96,7 @@ sub store_attrib {
 
 sub run_pepstats {
   my ($self, $tmpfile) = @_;
-  my $PEPSTATS = $self->param('pepstats_binary');
+  my $PEPSTATS = $self->param('pepstats_binary') || 'pepstats';
   open(OUT, "$PEPSTATS -filter < $tmpfile 2>&1 |") or die "Problem running $PEPSTATS";
   my @lines   = <OUT>;
   my $attribs = {};
