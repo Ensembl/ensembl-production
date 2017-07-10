@@ -14,49 +14,48 @@
       <name>METTL25</name>
       <description>methyltransferase like 25 [Source:HGNC Symbol;Acc:HGNC:26228]</description>
       <cross_references>
-        <ref dbname="RefSeq_peptide_predicted" dbkey="XP_016875510" />
-        <ref dbname="RefSeq_peptide_predicted" dbkey="XP_016875510.1" />
-        <ref dbname="RefSeq_ncRNA_predicted" dbkey="XR_001748900" />
-        <ref dbname="RefSeq_ncRNA_predicted" dbkey="XR_001748900.1" />
         <ref dbname="UniParc" dbkey="UPI000013CC3E" />
         <ref dbname="GO" dbkey="GO:0032259" />
-        <ref dbname="ncbi_taxonomy_id" dbkey="9606" />
-        <ref dbname="UniGene" dbkey="Hs.506222" />
-        <ref dbname="HGNC_trans_name" dbkey="METTL25-206" />
-        <ref dbname="UCSC" dbkey="uc001szq.4" />
-        <ref dbname="UCSC" dbkey="uc058rlb.1" />
         <ref dbname="HGNC" dbkey="HGNC:26228" />
         <ref dbname="HGNC" dbkey="METTL25" />
+        <ref dbname="ncbi_taxonomy_id" dbkey="9606" />
+        <ref dbname="UniGene" dbkey="Hs.506222" />
+        <ref dbname="RefSeq_ncRNA_predicted" dbkey="XR_001748900" />
+        <ref dbname="RefSeq_ncRNA_predicted" dbkey="XR_001748900.1" />
+        <ref dbname="HGNC_trans_name" dbkey="METTL25-206" />
+        <ref dbname="RefSeq_peptide_predicted" dbkey="XP_016875510" />
+        <ref dbname="RefSeq_peptide_predicted" dbkey="XP_016875510.1" />
+        <ref dbname="UCSC" dbkey="uc001szq.4" />
+        <ref dbname="UCSC" dbkey="uc058rlb.1" />
       </cross_references>
       <additional_fields>
-        <field name="exon">1</field>
-        <field name="exon">1</field>
-        <field name="exon">1</field>
-        <field name="exon">1</field>
-        <field name="location">12:82358497-82479236</field>
         <field name="transcript_count">2</field>
-        <field name="domain">3.40.50.150</field>
-        <field name="domain">PF13679</field>
-        <field name="gene_version">ENSG00000127720.7</field>
-        <field name="genomic_unit">Ensembl</field>
-        <field name="peptide_version">ENSP00000248306.3</field>
-        <field name="seq_region_synonyms">CM000674.2</field>
-        <field name="seq_region_synonyms">NC_000012.12</field>
-        <field name="seq_region_synonyms">chr12</field>
-        <field name="haplotype">reference</field>
         <field name="gene_synonyms">C12orf26</field>
         <field name="gene_synonyms">FLJ22789</field>
+        <field name="system_name">homo_sapiens</field>
+        <field name="genomic_unit">Ensembl</field>
         <field name="transcript">ENST00000248306</field>
         <field name="transcript">ENST00000548569</field>
-        <field name="source">ensembl protein_coding</field>
+        <field name="species">Homo sapiens</field>
+        <field name="exon">ENSE00000910621</field>
+        <field name="exon">ENSE00002404968</field>
+        <field name="exon">ENSE00002409580</field>
+        <field name="exon">ENSE00003463804</field>
+        <field name="domain">3.40.50.150</field>
+        <field name="domain">PF13679</field>
+        <field name="location">12:82358497-82479236</field>
         <field name="domains">2</field>
-        <field name="featuretype">Gene</field>
-        <field name="genetree">ENSGT00530000063745</field>
-        <field name="exon_count">4</field>
         <field name="transcript_version">ENST00000248306.7</field>
         <field name="transcript_version">ENST00000548569.5</field>
-        <field name="peptide">ENSP00000248306</field>
         <field name="database">core</field>
+        <field name="peptide_version">ENSP00000248306.3</field>
+        <field name="genetree">ENSGT00530000063745</field>
+        <field name="gene_version">ENSG00000127720.7</field>
+        <field name="exon_count">4</field>
+        <field name="featuretype">Gene</field>
+        <field name="source">ensembl protein_coding</field>
+        <field name="peptide">ENSP00000248306</field>
+        <field name="haplotype">reference</field>
       </additional_fields>
     </entry>
   </entries>
