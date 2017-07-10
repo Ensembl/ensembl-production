@@ -375,6 +375,7 @@ sub get_protein_features {
     pf.seq_end as end,
     a.db as dbname,
     i.interpro_ac,
+    ix.display_label as interpro_name,
     ix.description as interpro_description,
     'protein_feature' as ensembl_object_type
     from transcript t
@@ -399,6 +400,7 @@ sub get_protein_features {
 	for my $protein_feature (@protein_features) {
 		delete $protein_feature->{description} unless defined $protein_feature->{description};
 		delete $protein_feature->{interpro_ac} unless defined $protein_feature->{interpro_ac};
+		delete $protein_feature->{interpro_name} unless defined $protein_feature->{interpro_name} && $protein_feature->{interpro_name} ne $protein_feature->{interpro_ac};
 		delete $protein_feature->{interpro_description} unless defined $protein_feature->{interpro_description};
 		push @{ $pf_hash->{ $protein_feature->{translation_id} } },
 		  $protein_feature;

@@ -199,6 +199,7 @@ subtest "Checking protein_coding gene", sub {
                                                                              {
                                                                                'translation_id' => 'ENSP00000366380',
                                                                                'interpro_description' => 'G protein-coupled receptor, rhodopsin-like',
+                                                                               'interpro_name' => 'GPCR_Rhodpsn',
                                                                                'dbname' => 'Pfam',
                                                                                'ensembl_object_type' => 'protein_feature',
                                                                                'name' => 'PF00001',
