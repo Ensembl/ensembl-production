@@ -214,7 +214,7 @@ sub default_options {
       {
         'logic_name'    => 'cdd',
         'db'            => 'CDD',
-        'db_version'    => '3.14',
+        'db_version'    => '3.16',
       },
       {
         'logic_name'    => 'blastprodom',
@@ -224,12 +224,12 @@ sub default_options {
       {
         'logic_name'    => 'gene3d',
         'db'            => 'Gene3D',
-        'db_version'    => '3.5.0',
+        'db_version'    => '4.1.0',
       },
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '201605.11',
+        'db_version'    => '201701.18',
       },
       {
         'logic_name'    => 'hmmpanther',
@@ -239,17 +239,17 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '30.0',
+        'db_version'    => '31.0',
       },
       {
         'logic_name'    => 'pfscan',
         'db'            => 'Prosite_profiles',
-        'db_version'    => '20.119',
+        'db_version'    => '20.132',
       },
       {
         'logic_name'    => 'pirsf',
         'db'            => 'PIRSF',
-        'db_version'    => '3.01',
+        'db_version'    => '3.02',
       },
       {
         'logic_name'    => 'prints',
@@ -259,7 +259,7 @@ sub default_options {
       {
         'logic_name'    => 'scanprosite',
         'db'            => 'Prosite_patterns',
-        'db_version'    => '20.119',
+        'db_version'    => '20.132',
       },
       {
         'logic_name'    => 'smart',
@@ -284,12 +284,12 @@ sub default_options {
       {
         'logic_name'    => 'signalp',
         'db'            => 'SignalP',
-        'db_version'    => undef,
+        'db_version'    => '4.1',
       },
       {
         'logic_name'    => 'tmhmm',
         'db'            => 'Tmhmm',
-        'db_version'    => undef,
+        'db_version'    => '2.0c',
       },
       {
         'logic_name'    => 'seg',
