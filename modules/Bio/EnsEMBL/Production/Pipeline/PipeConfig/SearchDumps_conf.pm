@@ -87,9 +87,9 @@ sub pipeline_analyses {
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '32g',
-		   -flow_into =>
-			 { 1 => [ 'ReformatGenomeAdvancedSearch', 'ReformatGenomeSolr' ] }
-		}, {
+		   -flow_into     => {
+					 1 => ['ReformatGenomeAdvancedSearch', 'ReformatGenomeSolr',
+						   'ReformatGenomeEBeye' ] } }, {
 		   -logic_name => 'DumpRegulationJson',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
@@ -123,7 +123,8 @@ sub pipeline_analyses {
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
 		   -parameters => { file_type => 'variants' },
 		   -rc_name    => '1g',
-		   -flow_into => { 1 => 'ReformatVariantsSolr' } },
+		   -flow_into =>
+			 { 1 => [ 'ReformatVariantsSolr', 'ReformatGenomeEBeye' ] } },
 
 		{  -logic_name => 'StructuralVariantDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -150,7 +151,7 @@ sub pipeline_analyses {
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
 		   -parameters => { file_type => 'structuralvariants' },
 		   -rc_name    => '1g',
-		   -flow_into  => { 1 => 'ReformatStructuralVariantsSolr' } },
+		   -flow_into => { 1 => 'ReformatStructuralVariantsSolr' } },
 
 		{  -logic_name => 'DumpPhenotypesJson',
 		   -module =>
@@ -198,9 +199,19 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeSolr',
 		   -rc_name   => '1g',
 		   -flow_into => {} }, {
+		   -logic_name => 'ReformatGenomeEBeye',
+		   -module =>
+			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
 		   -logic_name => 'ReformatVariantsSolr',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsSolr',
+		   -rc_name   => '1g',
+		   -flow_into => {} }, {
+		   -logic_name => 'ReformatVariantsEBeye',
+		   -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsEBeye',
 		   -rc_name   => '1g',
 		   -flow_into => {} }, {
 		   -logic_name => 'ReformatStructuralVariantsSolr',

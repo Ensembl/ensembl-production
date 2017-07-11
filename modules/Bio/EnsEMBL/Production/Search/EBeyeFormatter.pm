@@ -160,7 +160,7 @@ sub reformat_genes {
 			if ( defined $gene->{homologues} ) {
 				my $gts = {};
 				for my $homologue ( @{ $gene->{homologues} } ) {
-					$gts->{ $homologue->{gene_tree_id} }++;
+					$gts->{ $homologue->{gene_tree_id} }++ if defined $homologue->{gene_tree_id};
 				}
 				$fields->{genetree} = [ keys %$gts ];
 			}
