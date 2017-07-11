@@ -70,20 +70,22 @@ sub write_json {
 
 sub write_json_to_file {
 	my ( $self, $json_file_path, $data, $no_brackets ) = @_;
+	croak "No data supplied for $json_file_path" unless defined $data;
 	$self->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
 	if ($no_brackets) {
-		my $n = 0;
+	        croak "Data supplied for $json_file_path is not an array" unless ref($data) eq 'ARRAY';
+	        my $n = 0;
 		for my $elem (@$data) {
 			if ( $n++ > 0 ) {
 				print $json_file ',';
 			}
-			print $json_file encode_json($elem);
+			print $json_file encode_json($elem) || croak "Could not write data element $n to $json_file_path: $!";;
 		}
 	}
 	else {
-		print $json_file encode_json($data);
+		print $json_file encode_json($data) || croak "Could not write data to $json_file_path: $!";
 	}
 	close $json_file;
 	$self->info("Write complete");
