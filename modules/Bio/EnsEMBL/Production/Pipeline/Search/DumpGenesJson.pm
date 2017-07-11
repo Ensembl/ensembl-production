@@ -63,7 +63,7 @@ sub dump {
 		$output->{genes_file} = $self->dump_genes( $dba, $compara, $type );
 		$self->{logger}->info("Dumping sequences");
 		$output->{sequences_file} = $self->dump_sequences( $dba, $type );
-		$self->{logger}->info("Dumping markers");
+		$self->{logger}->info("Dumping LRGs");
 		$output->{lrgs_file} = $self->dump_lrgs( $dba, $type );
 		$self->{logger}->info("Dumping markers");
 		$output->{markers_file} = $self->dump_markers( $dba, $type );
@@ -92,7 +92,10 @@ sub dump_genes {
 	my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()
 	  ->fetch_genes_for_dba( $dba, $compara_dba, $funcgen_dba );
 	if ( defined $genes && scalar(@$genes) > 0 ) {
-		return $self->write_json( $dba->species(), 'genes', $genes, $type );
+	        $self->{logger}->info("Writing ".scalar(@$genes)." genes to JSON");
+		my $f = $self->write_json( $dba->species, 'genes', $genes, $type );
+	        $self->{logger}->info("Wrote ".scalar(@$genes)." genes to $f");
+		return $f;
 	}
 	else {
 		return undef;
@@ -104,8 +107,10 @@ sub dump_sequences {
 	my $sequences = Bio::EnsEMBL::Production::Search::SequenceFetcher->new()
 	  ->fetch_sequences_for_dba($dba);
 	if ( scalar(@$sequences) > 0 ) {
-		return $self->write_json( $dba->species, 'sequences', $sequences,
-								  $type );
+	        $self->{logger}->info("Writing ".scalar(@$sequences)." sequences to JSON");
+		my $f = $self->write_json( $dba->species, 'sequences', $sequences, $type );
+	        $self->{logger}->info("Wrote ".scalar(@$sequences)." sequences to $f");
+		return $f;
 	}
 	else {
 		return undef;
@@ -117,7 +122,10 @@ sub dump_markers {
 	my $markers = Bio::EnsEMBL::Production::Search::MarkerFetcher->new()
 	  ->fetch_markers_for_dba($dba);
 	if ( scalar(@$markers) > 0 ) {
-		$self->write_json( $dba->species, 'markers', $markers, $type );
+	        $self->{logger}->info("Writing ".scalar(@$markers)." markers to JSON");
+		my $f = $self->write_json( $dba->species, 'markers', $markers, $type );
+	        $self->{logger}->info("Wrote ".scalar(@$markers)." markers to $f");
+		return $f;
 	}
 	else {
 		return undef;
@@ -129,7 +137,10 @@ sub dump_lrgs {
 	my $lrgs = Bio::EnsEMBL::Production::Search::LRGFetcher->new()
 	  ->fetch_lrgs_for_dba($dba);
 	if ( scalar(@$lrgs) > 0 ) {
-		$self->write_json( $dba->species, 'lrgs', $type );
+ 	        $self->{logger}->info("Writing ".scalar(@$lrgs)." LRGs to JSON");
+		my $f = $self->write_json( $dba->species, 'lrgs', $lrgs, $type );
+	        $self->{logger}->info("Wrote ".scalar(@$lrgs)." LRGs to $f");
+		return $f;
 	}
 	else {
 		return undef;
@@ -141,7 +152,10 @@ sub dump_ids {
 	my $ids = Bio::EnsEMBL::Production::Search::IdFetcher->new()
 	  ->fetch_ids_for_dba($dba);
 	if ( scalar(@$ids) > 0 ) {
-		$self->write_json( $dba->species, 'ids', $ids, $type );
+ 	        $self->{logger}->info("Writing ".scalar(@$ids)." IDs to JSON");
+		my $f = $self->write_json( $dba->species, 'ids', $ids, $type );
+	        $self->{logger}->info("Wrote ".scalar(@$ids)." IDs to $f");
+		return $f;
 	}
 	else {
 		return undef;
