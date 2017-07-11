@@ -170,7 +170,6 @@ sub fetch_structural_variations_callback {
 	my ( $min, $max ) =
 	  $self->_calculate_min_max( $h, $offset, $length, 'structural_variation',
 								 'structural_variation_id' );
-	print "$min $max\n";
 	$h->execute_no_return(
 		-SQL => q/SELECT
            v.variation_name as id,
