@@ -20,14 +20,14 @@ use JSON;
 use XML::Simple;
 
 BEGIN {
-	use_ok('Bio::EnsEMBL::Production::Search::EBEyeFormatter');
+	use_ok('Bio::EnsEMBL::Production::Search::EBeyeFormatter');
 }
 
 diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
 );
 
 my $genome_in_file = File::Spec->catfile( $Bin, "genome_test.json" );
-my $formatter = Bio::EnsEMBL::Production::Search::EBEyeFormatter->new();
+my $formatter = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
 subtest "EBEye genome", sub {
 	my $out_file = File::Spec->catfile( $Bin, "ebeye_genome_test.xml" );
 	$formatter->reformat_genome( $genome_in_file, $out_file );

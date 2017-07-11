@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Search::EBEyeFormatter;
+package Bio::EnsEMBL::Production::Search::EBeyeFormatter;
 
 use warnings;
 use strict;
