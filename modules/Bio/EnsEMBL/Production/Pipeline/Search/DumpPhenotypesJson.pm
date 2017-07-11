@@ -45,8 +45,8 @@ sub dump {
 	if ( defined $phenotypes && scalar(@$phenotypes) > 0 ) {
 		my $file =
 		  $self->write_json( $species, 'phenotypes', $phenotypes );
-		$self->dataflow_output_id( { dump_file => $file, species => $species },
-								   1 );
+		$self->dataflow_output_id( { dump_file => $file, species => $species, genome_file=>$self->param('genome_file'), type=>'variation' },
+								   2 );
 	}
 	return;
 }

@@ -96,7 +96,7 @@ sub pipeline_analyses {
 		   -parameters    => {},
 		   -hive_capacity => 8,
 		   -rc_name       => '8g',
-		   -flow_into     => { 1 => 'ReformatRegulationSolr' } },
+		   -flow_into     => { 2 => 'ReformatRegulationSolr' } },
 
 		{  -logic_name => 'VariantDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -157,8 +157,8 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpPhenotypesJson',
 		   -parameters    => {},
 		   -hive_capacity => 8,
-		   -rc_name       => '32g',
-		   -flow_into     => { 1 => 'ReformatPhenotypesSolr' } }, {
+		   -rc_name       => '1g',
+		   -flow_into     => { 2 => 'ReformatPhenotypesSolr' } }, {
 		   -logic_name => 'ProbeDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
 		   -parameters => { type   => 'funcgen',

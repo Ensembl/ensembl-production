@@ -44,8 +44,9 @@ sub dump {
 			"Dumped " . scalar(@$elems) . " regulatory features for $species" );
 		my $file = $self->write_json( $species, 'regulatory_elements', $elems )
 		  ;
-		$self->dataflow_output_id( { dump_file => $file, species => $species },
-								   1 );
+		$self->dataflow_output_id( { dump_file => $file, species => $species, type => $self->param('type'), 
+					     genome_file=> $self->param('genome_file') },
+								   2 );
 	}
 	return;
 }
