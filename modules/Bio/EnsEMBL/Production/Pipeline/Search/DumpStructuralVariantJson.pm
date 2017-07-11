@@ -70,10 +70,9 @@ sub write_structural_variants {
 	$self->hive_dbc()->disconnect_if_idle();
 	my $n = 0;
 	print $json_file '[' unless defined $offset;
-	my $onto_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( 'multi', 'ontology' );	
 	Bio::EnsEMBL::Production::Search::VariationFetcher->new()
 	  ->fetch_structural_variations_callback(
-		$dba, $onto_dba, $offset, $length,
+		$dba, $offset, $length,
 		sub {
 			my $var = shift;
 			if ( $n++ > 0 ) {
