@@ -45,6 +45,8 @@ sub run {
 	my $file_type  = $self->param_required('file_type');
 	my $sub_dir    = $self->get_data_path('json');
 	my $file_names = $self->param('dump_file');
+	use Data::Dumper;
+print Dumper $file_names;
 	if ( defined $file_names && scalar(@$file_names) > 0 ) {
 		my $outfile =
 		  $sub_dir . '/' . $species . '_' . $file_type . '.json';

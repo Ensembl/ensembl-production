@@ -46,7 +46,7 @@ sub dump {
 										  $self->param("length") );
 	if(defined $file) {										  
 		$self->{logger}->info("Structural variations for $species written to $file");
-		$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
+		$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 2);
 	}
 
 	return;
@@ -87,6 +87,7 @@ sub write_structural_variants {
 	$self->{logger}->info("Wrote $n structural variants to $json_file_path");
 	if($n==0) {
 		unlink $json_file_path;
+		return undef;
 	} else {
 		return $json_file_path;
 	}
