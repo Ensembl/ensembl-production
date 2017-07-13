@@ -126,7 +126,7 @@ sub default_options {
                               'heterocephalus_glaber_male',
                               'heterocephalus_glaber_female',
                               'cricetulus_griseus_chok1gshd',
-                              'cricetulus_griseus_crigribgi',
+                              'cricetulus_griseus_crigri',
                               'microtus_ochrogaster'],
 				# target species to exclude in projection
 				'exclude' => undef,
@@ -197,7 +197,7 @@ sub default_options {
                                    'heterocephalus_glaber_male',
                                    'heterocephalus_glaber_female',
                                    'cricetulus_griseus_chok1gshd',
-                                   'cricetulus_griseus_crigribgi',
+                                   'cricetulus_griseus_crigri',
                                    'microtus_ochrogaster'],
 					 'exclude' => undef,
 					 'homology_types' =>
