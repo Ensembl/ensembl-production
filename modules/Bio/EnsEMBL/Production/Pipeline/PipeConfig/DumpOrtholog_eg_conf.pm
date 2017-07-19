@@ -47,9 +47,11 @@ sub default_options {
 		'compara' => undef,
 		'release' => undef,
 
-		## Set to '1' for eg! run
-		#   default => OFF (0)
-		'eg' => 1,
+        # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
+	    # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
+        # This flag should be enabled for EG and disable for e! species.
+
+        'is_tree_compliant' => '1',
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
@@ -58,7 +60,7 @@ sub default_options {
 		'perc_id'  => '30',
 		'perc_cov' => '66',
 
-		# 'target' & 'exclude' are mutually exclusive
+		# 'species' & 'exclude' are mutually exclusive
 		#  only one of those should be defined if used
 		'species_config' => {
 			# Plants
@@ -67,24 +69,20 @@ sub default_options {
 				'compara' => 'plants',
 				# source species to project from
 				'source' => 'arabidopsis_thaliana',
-				# target species to project to (DEFAULT: undef)
-				'target' => undef,
-				# target species to exclude in projection
-				'exclude' => [ 'caenorhabditis_elegans',
-							   'drosophila_melanogaster',
-							   'homo_sapiens',
-							   'ciona_savignyi' ],
+				# species to project to (DEFAULT: undef)
+				'species' => undef,
+				'antispecies' => 'arabidopsis_thaliana',
+				# Division
+				'division' => 'EnsemblPlants',
 				'homology_types' =>
 				  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
 
 			'EPl_2' => {
 				'compara' => 'plants',
 				'source'  => 'oryza_sativa',
-				'target'  => undef,
-				'exclude' => [ 'caenorhabditis_elegans',
-							   'drosophila_melanogaster',
-							   'homo_sapiens',
-							   'ciona_savignyi' ],
+				'antispecies'  => 'oryza_sativa',
+				'division' => 'EnsemblPlants',
+				'species'  => undef,
 				'homology_types' =>
 				  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
 			},
@@ -92,7 +90,9 @@ sub default_options {
 			# Protists, dictyostelium_discoideum to all amoebozoa
 			'EPr_1' => { 'compara' => 'protists',
 						 'source'  => 'dictyostelium_discoideum',
-						 'target'  => ['polysphondylium_pallidum_pn500',
+						 'antispecies'  => 'dictyostelium_discoideum',
+						 'division' => 'EnsemblProtists',
+						 'species'  => ['polysphondylium_pallidum_pn500',
 									   'entamoeba_nuttalli_p19',
 									   'entamoeba_invadens_ip1',
 									   'entamoeba_histolytica_ku27',
@@ -104,32 +104,35 @@ sub default_options {
 									   'dictyostelium_purpureum',
 									   'dictyostelium_fasciculatum',
 									   'acanthamoeba_castellanii_str_neff' ],
-						 'exclude' => undef,
 						 'homology_types' =>
 						   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
 			},
 
 			# Fungi
 			'EF_1' => { 'compara' => 'fungi',
+			            'division' => 'EnsemblFungi',
 						'source'  => 'schizosaccharomyces_pombe',
-						'target'  => undef,
-						'exclude' => ['saccharomyces_cerevisiae'],
+						'species'  => undef,
+						'antispecies' => ['saccharomyces_cerevisiae','schizosaccharomyces_pombe'],
 						'homology_types' =>
 						  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
 			},
 
 			'EF_2' => { 'compara' => 'fungi',
+                        'division' => 'EnsemblFungi',
 						'source'  => 'saccharomyces_cerevisiae',
-						'target'  => undef,
-						'exclude' => ['schizosaccharomyces_pombe'],
+						'species'  => undef,
+						'antispecies' => ['schizosaccharomyces_pombe','saccharomyces_cerevisiae'],
 						'homology_types' =>
 						  [ 'ortholog_one2one', 'apparent_ortholog_one2one' ],
 			},
 
 			# Metazoa
 			'EM_1' => { 'compara' => 'metazoa',
+			            'division' => 'EnsemblMetazoa',
 						'source'  => 'caenorhabditis_elegans',
-						'target'  => ['caenorhabditis_brenneri',
+						'antispecies'  => 'caenorhabditis_elegans',
+						'species'  => ['caenorhabditis_brenneri',
 									  'caenorhabditis_briggsae',
 									  'caenorhabditis_japonica',
 									  'caenorhabditis_remanei',
@@ -146,8 +149,10 @@ sub default_options {
 
 			'EM_2' => {
 				   'compara' => 'metazoa',
+				   'division' => 'EnsemblMetazoa',
 				   'source'  => 'drosophila_melanogaster',
-				   'target'  => [
+				   'antispecies'  => 'drosophila_melanogaster',
+				   'species'  => [
 							'drosophila_ananassae',  'drosophila_erecta',
 							'drosophila_grimshawi',  'drosophila_mojavensis',
 							'drosophila_persimilis', 'drosophila_pseudoobscura',
