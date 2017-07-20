@@ -35,7 +35,7 @@ use Bio::SeqIO;
 use File::Basename qw(dirname fileparse);
 use File::Path qw(make_path remove_tree);
 use POSIX qw(ceil);
-use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub param_defaults {
     my ($self) = @_;
