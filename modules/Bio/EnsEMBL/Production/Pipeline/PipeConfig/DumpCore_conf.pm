@@ -216,7 +216,7 @@ sub pipeline_analyses {
 
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
-       -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
+       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
 #       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
        -hive_capacity => 10,
