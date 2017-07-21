@@ -31,7 +31,7 @@ package Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump;
 use strict;
 use warnings;
 
-use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
+use parent ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use IO::File;
 use File::Spec::Functions qw/catdir/;
