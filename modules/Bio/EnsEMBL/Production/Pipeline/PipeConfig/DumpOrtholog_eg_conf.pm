@@ -43,7 +43,7 @@ sub default_options {
 		# inherit other stuff from the base class
 		%{ $self->SUPER::default_options() },
 
-		'output_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
+		'output_dir'       => '/nfs/ftp/pub/databases/ensembl/projections/',
 		'compara' => undef,
 		'release' => undef,
 
