@@ -133,6 +133,9 @@ sub run {
         $dba->dbc->disconnect_if_idle();
     }
 
+    my $hive_dbc = $self->dbc;
+    $hive_dbc->disconnect_if_idle();
+
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
 
