@@ -23,6 +23,8 @@
 
 
 use strict;
+use warnings;
+
 use POSIX;
 use Getopt::Long;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
