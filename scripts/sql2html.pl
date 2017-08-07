@@ -85,7 +85,7 @@ $format_headers = 1 if (!defined($format_headers));
 $sort_headers   = 1 if (!defined($sort_headers));
 $sort_tables    = 1 if (!defined($sort_tables));
 
-$skip_conn      = undef if ($skip_conn == 0);
+$skip_conn    ||= undef;
 
 $port ||= 3306;
 
