@@ -1308,7 +1308,7 @@ sub get_connection_and_query {
 }
 
 
-sub get_css_code() {
+sub get_css_code {
   my $css = qq{
 <style type="text/css">
   /* Icons */
