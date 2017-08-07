@@ -234,8 +234,8 @@ my $html_footer = qq{
 
 # Create a complex hash "%$documentation" to store all the documentation content
 
-open SQLFILE, "< $sql_file" or die "Can't open $sql_file : $!";
-while (<SQLFILE>) {
+open(my $sql_fh, '<', $sql_file) or die "Can't open $sql_file : $!";
+while (<$sql_fh>) {
   chomp $_;
   next if ($_ eq '');
   next if ($_ =~ /^\s*(DROP|PARTITION)/i);
@@ -390,7 +390,7 @@ while (<SQLFILE>) {
         $col_type="$2$3<br />";
         my $end_type = 0;
         while ($end_type != 1){
-          my $line = <SQLFILE>;
+          my $line = <$sql_fh>;
           chomp $line;
           $line = remove_char($line);
 
@@ -427,7 +427,7 @@ while (<SQLFILE>) {
     }
   }
 }
-close(SQLFILE);
+close($sql_fh);
 
 
 
@@ -525,12 +525,12 @@ $html_content .= add_legend();
 ######################
 ## HTML/output file ##
 ######################
-open  HTML, "> $html_file" or die "Can't open $html_file : $!";
-print HTML $html_header."\n";
-print HTML slurp_intro($intro_file)."\n";
-print HTML $html_content."\n";
-print HTML $html_footer."\n";
-close(HTML);
+open(my $html_fh, '>', $html_file) or die "Can't open $html_file : $!";
+print $html_fh $html_header."\n";
+print $html_fh slurp_intro($intro_file)."\n";
+print $html_fh $html_content."\n";
+print $html_fh $html_footer."\n";
+close($html_fh);
 chmod 0755, $html_file;
 
 
@@ -1261,7 +1261,7 @@ sub insert_text_into_html_head {
   return '' if (!defined $header_file);
 
   local $/=undef;
-  open my $fh, "< $header_file" or die "Can't open $header_file: $!";
+  open(my $fh, '<', $header_file) or die "Can't open $header_file: $!";
   my $header_html = <$fh>;
   close $fh;
   return $header_html;
@@ -1274,7 +1274,7 @@ sub slurp_intro {
   return qq{<h1>Ensembl $db_team Schema Documentation</h1>\n<h2>Introduction</h2>\n<p><i>please, insert your introduction here</i><p><br />} if (!defined $intro_file);
 
   local $/=undef;
-  open my $fh, "< $intro_file" or die "Can't open $intro_file: $!";
+  open(my $fh, '<', $intro_file) or die "Can't open $intro_file: $!";
   my $intro_html = <$fh>;
   close $fh;
   
