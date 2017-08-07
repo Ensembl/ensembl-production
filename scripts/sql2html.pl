@@ -479,7 +479,7 @@ foreach my $header_name (@header_names) {
   <h2>$header_name</h2>
 </div>\n};
     $header_id ++;
-    my $header_desc = $documentation->{$header_name}{'desc'};    
+    my $header_desc = escape_html($documentation->{$header_name}{'desc'});
     $html_content .= qq{<p class="sql_schema_group_header_desc">$header_desc</p>} if (defined($header_desc));
   }
   
@@ -724,11 +724,11 @@ sub fill_documentation {
       }
       # Header description
       elsif(!$documentation->{$header}{'tables'}) {
-        $documentation->{$header}{'desc'} = escape_html($tag_content);
+        $documentation->{$header}{'desc'} = $tag_content;
       }
       # Table description
       else {
-        $documentation->{$header}{'tables'}{$table}{$tag} = escape_html($tag_content);
+        $documentation->{$header}{'tables'}{$table}{$tag} = $tag_content;
       }
     }
     elsif ($tag eq 'colour') {
@@ -826,7 +826,7 @@ sub add_info {
   
   foreach my $inf (@{$infos}) {
     my ($title,$content) = split('@info@', $inf);
-    $content = add_internal_link($content,$data) if (defined($data));
+    $content = add_internal_link(escape_html($content),$data) if (defined($data));
     
     $html .= qq{
     <table>
@@ -861,7 +861,7 @@ sub add_columns {
     my $name    = $col->{name};
     my $type    = $col->{type};
     my $default = $col->{default};
-    my $desc    = $col->{desc};
+    my $desc    = escape_html($col->{desc});
     my $index   = $col->{index};
     
     # links
@@ -912,7 +912,7 @@ sub add_examples {
         $sql = $2;
       } elsif (!defined($sql)){
         $html .= qq{<p>} if ($has_desc == 0);
-        $html .= $line;
+        $html .= escape_html($line);
         $has_desc = 1;
       }
       else {
