@@ -356,7 +356,7 @@ while (<SQLFILE>) {
         next;
       }
       elsif ($doc =~ /^\s*(unique\s+)?(key|index)\s+([^\s\(]+)\s*\((.+)\)/i) { # Keys and indexes
-        add_column_index("$1$2",$4,$3);
+        add_column_index(($1//'').$2,$4,$3);
         next;
       }
       elsif ($doc =~ /^\s*(unique)\s+(\S*)\s*\((.+)\)/i) { # Unique
@@ -648,7 +648,7 @@ sub display_tables_list {
     }
   }
   
-  my $input_margin;
+  my $input_margin = '';
   if ($header_flag == 1 and $format_headers == 1){
     $html .= qq{\n  <div style="clear:both" />\n</div>};
   } else {
@@ -778,6 +778,8 @@ sub add_table_name_to_list {
   if (defined($t_colour)) {
     $t_colour = ($t_colour ne '') ? qq{ style="background-color:$t_colour"} : '';
     $t_colour = qq{<div class="sql_schema_table_name_nh"$t_colour>&nbsp;</div> };
+  } else {
+    $t_colour = '';
   }
   my $html = qq{        <li>$t_colour<a href="#$t_name" class="sql_schema_link" style="font-weight:bold">$t_name</a></li>\n};
   return $html;
@@ -888,7 +890,7 @@ sub add_examples {
   my $table = shift;
   my $data  = shift;
   my $examples  = $data->{example};
-  my $html;
+  my $html = '';
 
   my $nb = (scalar(@$examples) > 1) ? 1 : '';
 
@@ -1103,7 +1105,7 @@ sub add_column_type_and_default_value {
 sub parse_column_type {
   my $type = shift;
   $type =~ /^\s*(enum|set)\s*\((.*)\)/i;
-  my $c_type = uc($1);
+  my $c_type = uc($1 // '');
   my $c_data = $2;
   return $type unless ($c_data);
   
@@ -1172,7 +1174,7 @@ sub get_example_table {
     foreach my $result (@$results) {
       last if ($count >= $SQL_LIMIT);
       $html .= qq{      <tr$bg><td>};
-      $html .= join("</td><td>", @$result);
+      $html .= join("</td><td>", map {$_ // 'NULL'} @$result);
       $html .= qq{</td></tr>};
       
       $bg = ($bg eq '')  ? ' class="bg2"' : '';  
