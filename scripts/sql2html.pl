@@ -774,7 +774,6 @@ sub fill_documentation {
 sub add_table_name_to_list {
   my $t_name = shift;
   my $t_colour = shift;
-  my $c = $t_colour;
   if (defined($t_colour)) {
     $t_colour = ($t_colour ne '') ? qq{ style="background-color:$t_colour"} : '';
     $t_colour = qq{<div class="sql_schema_table_name_nh"$t_colour>&nbsp;</div> };
