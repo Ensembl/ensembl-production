@@ -1238,6 +1238,14 @@ sub escape_html {
     foreach my $char (keys(%_revert_escape_table)) {
       $str =~ s/$char/$_revert_escape_table{$char}/g;
     }
+    foreach my $tag (qw(b i u code table caption table thead tbody tr th td ul ol li)) {
+      my $in = "&lt;$tag&gt;";
+      my $out = "<$tag>";
+      $str =~ s/$in/$out/g;
+      $in = "&lt;/$tag&gt;";
+      $out = "</$tag>";
+      $str =~ s/$in/$out/g;
+    }
     
     return $str;
 }
