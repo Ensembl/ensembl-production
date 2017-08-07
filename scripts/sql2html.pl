@@ -1008,8 +1008,7 @@ sub add_species_list {
   <td class="sql_schema_extra_right"$margin><p><span>List of species with populated data:</span>$show_hide</p>
     <div id="sp_$table" style="display:none;">};
       
-  @species_list = map{ $_ =~ s/_/ /g; $_ } @species_list;
-  @species_list = map { qq{<li class="sql_schema_species_name">}.ucfirst($_)."</li>" } @species_list;
+  @species_list = map { qq{<li class="sql_schema_species_name">}.get_pretty_species_name($_)."</li>" } @species_list;
   
   $html .= qq{      <ul>\n        }.join("\n        ",@species_list).qq{\n      </ul>\n};
   $html .= qq{    </div>\n  </td>};
@@ -1017,6 +1016,11 @@ sub add_species_list {
   return $html;
 }
 
+sub get_pretty_species_name {
+    my $name = shift;
+    $name =~ s/_/ /g;
+    return ucfirst $name;
+}
 
 # Method searching the tag @link into the string given as argument and replace it by an internal HTML link 
 sub add_internal_link {
