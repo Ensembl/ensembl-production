@@ -570,6 +570,7 @@ sub display_tables_list {
   
   my $has_header = 0;
   my $nb_col_line = 0;
+  my $header_index = 1;
   
   foreach my $header_name (@header_names) {
     
@@ -600,9 +601,10 @@ sub display_tables_list {
           $nb_col_line = 0;
         }
       
-        $html .= display_header($header_name,$nbc);
+        $html .= display_header($header_name,$nbc,$header_index);
         $nb_col_line += $nbc;
         $has_header = 1;
+        $header_index++;
       }
       
       # List of tables #
@@ -671,6 +673,7 @@ sub display_tables_list {
 sub display_header {
   my $header_name = shift;
   my $nb_col = shift;
+  my $header_index = shift;
   
   my $html;
   
@@ -685,7 +688,7 @@ sub display_header {
   <div class="sql_schema_table_group">
     <div class="sql_schema_table_group_header" style="border-color:$hcolour">
       <div class="sql_schema_table_group_bullet" style="background-color:$hcolour"></div>
-      <h2>$header_name</h2>
+      <h2><a class="sql_schema_link" href="#header_${header_index}">$header_name</a></h2>
     </div>};
   } 
   else {
