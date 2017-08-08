@@ -531,7 +531,6 @@ print $html_fh slurp_intro($intro_file)."\n";
 print $html_fh $html_content."\n";
 print $html_fh $html_footer."\n";
 close($html_fh);
-chmod 0755, $html_file;
 
 
 
