@@ -30,6 +30,9 @@ use Bio::EnsEMBL::Attribute;
 sub run {
   my ($self) = @_;
   my $species    = $self->param('species');
+
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+
   my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
   my $ta         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
   my $aa         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
@@ -114,8 +117,8 @@ sub run {
   $self->store_statistics($species, \%stats_hash, \%stats_attrib);
   #Disconnecting from the registry
   $dba->dbc->disconnect_if_idle();
-  $ta->dbc->disconnect_if_idle();
-  $aa->dbc->disconnect_if_idle();
+  my $prod_dba    = $self->get_production_DBAdaptor();
+  $prod_dba->dbc()->disconnect_if_idle();
 }
 
 sub get_slices {
@@ -179,7 +182,6 @@ sub store_attrib {
   my @attribs = ($attrib);
   $aa->remove_from_Slice($slice, $code);
   $aa->store_on_Slice($slice, \@attribs);
-  $prod_dba->dbc()->disconnect_if_idle();
 }
 
 sub get_attrib {
@@ -205,7 +207,7 @@ sub get_biotype_group {
      AND biotype_group = ?
      AND db_type like '%core%' };
   my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
-  $prod_dba->dbc()->disconnect_if_idle();
+  #$prod_dba->dbc()->disconnect_if_idle();
   return \@biotypes;
 }
 
