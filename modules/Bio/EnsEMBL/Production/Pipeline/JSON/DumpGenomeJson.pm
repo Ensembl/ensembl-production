@@ -98,6 +98,7 @@ sub write_json {
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
   die "Could not find genome " . $self->production_name()
     if !defined $md;
+  $genome_dba->dbc()->disconnect_if_idle();
 
   my $genome = {
             id           => $md->name(),
@@ -137,13 +138,14 @@ sub write_json {
   }
   # remodel
   my $remodeller = $self->param('remodeller');
+  my $hive_dbc = $self->dbc;
+  $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
   if ( defined $remodeller ) {
     $self->info("Remodelling genes");
     $remodeller->remodel_genome($genome);
     $remodeller->disconnect();
   }
   $dba->dbc()->disconnect_if_idle();
-  $genome_dba->dbc()->disconnect_if_idle();
   my $json_file_path =
     $sub_dir . '/' . $self->production_name() . '.json';
   $self->info("Writing to $json_file_path");
