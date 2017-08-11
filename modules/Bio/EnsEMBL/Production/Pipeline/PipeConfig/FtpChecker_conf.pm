@@ -73,9 +73,10 @@ sub pipeline_analyses {
 				meta_filters    => $self->o('meta_filters'),
 				chromosome_flow => 0 },
            -flow_into     => { 
-			      '2' => ['CheckCoreFtp'],
-			      '4' => ['CheckVariationFtp'],
-			      '5' => ['CheckComparaFtp'],
+			      '2->A' => ['CheckCoreFtp'],
+			      '4->A' => ['CheckVariationFtp'],
+			      '5->A' => ['CheckComparaFtp'],
+			      'A->1' => ['ReportFailures'],
 			     },
            -hive_capacity => 1,
 	   -meadow_type   => 'LOCAL', 
@@ -111,11 +112,9 @@ sub pipeline_analyses {
 	    -logic_name => 'ReportFailures',
 	    -module =>
 	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::ReportFailures',
-	    -input_ids => [{}],
 	    -parameters      => {
 				failures_file    => $self->o('failures_file')
 				},
-	    -wait_for => ['CheckCoreFtp','CheckVariationFtp','CheckComparaFtp']
 	   }
 
 
