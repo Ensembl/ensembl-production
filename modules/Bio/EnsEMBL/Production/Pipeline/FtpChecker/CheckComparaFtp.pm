@@ -54,6 +54,8 @@ sub run {
   my $division;
   if($species eq 'multi') {
     $division = "";
+  }elsif($species eq 'pan_homology') {
+    $division = "pan_ensembl/";
   }else {
     $division = "$species/";
   }
