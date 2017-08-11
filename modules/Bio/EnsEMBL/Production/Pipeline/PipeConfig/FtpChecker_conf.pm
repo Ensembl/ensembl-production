@@ -71,8 +71,7 @@ sub pipeline_analyses {
 				division        => $self->o('division'),
 				run_all         => $self->o('run_all'),
 				meta_filters    => $self->o('meta_filters'),
-				chromosome_flow => 0,
-				variation_flow  => 0 },
+				chromosome_flow => 0 },
            -flow_into     => { 
 			      '2' => ['CheckCoreFtp'],
 			      '4' => ['CheckVariationFtp'],
