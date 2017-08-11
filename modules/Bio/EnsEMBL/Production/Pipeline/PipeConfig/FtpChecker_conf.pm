@@ -58,28 +58,51 @@ sub default_options {
 
 sub pipeline_analyses {
   my ($self) = @_;
-  return [ {
-           -logic_name => 'SpeciesFactory',
-           -module =>
-             'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+  return [ 
+	  {
+	   -logic_name => 'SpeciesFactory',
+	   -module =>
+	   'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
            -max_retry_count => 1,
            -input_ids       => [ {} ],
            -parameters      => {
-                            species         => $self->o('species'),
-                            antispecies     => $self->o('antispecies'),
-                            division        => $self->o('division'),
-                            run_all         => $self->o('run_all'),
-                            meta_filters    => $self->o('meta_filters'),
-                            chromosome_flow => 0,
-                            variation_flow  => 0 },
+				species         => $self->o('species'),
+				antispecies     => $self->o('antispecies'),
+				division        => $self->o('division'),
+				run_all         => $self->o('run_all'),
+				meta_filters    => $self->o('meta_filters'),
+				chromosome_flow => 0,
+				variation_flow  => 0 },
            -flow_into     => { 
-			      '2' => ['CheckCoreFtp'], },
+			      '2' => ['CheckCoreFtp'],
+			      '4' => ['CheckVariationFtp'],
+			      '5' => ['CheckComparaFtp'],
+			     },
            -hive_capacity => 1,
-	    -meadow_type   => 'LOCAL', }, 
+	   -meadow_type   => 'LOCAL', 
+	  }, 
+	  {
+	   -logic_name => 'CheckCoreFtp',
+	   -module =>
+	   'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckCoreFtp',
+	   -hive_capacity => 100,
+	   -flow_into => {
+			  2 => [ '?table_name=failures']
+			 } 
+	  },
 	   {
-	    -logic_name => 'CheckCoreFtp',
+	    -logic_name => 'CheckVariationFtp',
 	    -module =>
-	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckCoreFtp',
+	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckVariationFtp',
+	    -hive_capacity => 100,
+	    -flow_into => {
+			   2 => [ '?table_name=failures']
+			  } 
+	   },
+	   {
+	    -logic_name => 'CheckComparaFtp',
+	    -module =>
+	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckComparaFtp',
 	    -hive_capacity => 100,
 	    -flow_into => {
 			   2 => [ '?table_name=failures']
@@ -92,13 +115,15 @@ sub pipeline_analyses {
 	    -input_ids => [{}],
 	    -parameters      => {
 				failures_file    => $self->o('failures_file')
-			       },
-	    -wait_for => ['CheckCoreFtp']
+				},
+	    -wait_for => ['CheckCoreFtp','CheckVariationFtp','CheckComparaFtp']
 	   }
+
+
 	 ];
 } ## end sub pipeline_analyses
 
-sub beekeeper_extra_cmdline_options [B{
+sub beekeeper_extra_cmdline_options {
   my $self = shift;
   return "-reg_conf " . $self->o("registry");
 }
@@ -106,19 +131,19 @@ sub beekeeper_extra_cmdline_options [B{
 sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
-    %{ $self->SUPER::pipeline_wide_parameters()
-      },    # inherit other stuff from the base class
-    base_path    => $self->o('base_path')
-};
+	  %{ $self->SUPER::pipeline_wide_parameters()
+	   },    # inherit other stuff from the base class
+	  base_path    => $self->o('base_path')
+	 };
 }
 
 sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-	    @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
-	    $self->db_cmd('CREATE TABLE failures (species varchar(64), type varchar(16), file_path text)')
-    ];
-  }
+  my ($self) = @_;
+  return [
+	  @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
+	  $self->db_cmd('CREATE TABLE failures (species varchar(64), type varchar(16), file_path text)')
+	 ];
+}
 
 1;
 
