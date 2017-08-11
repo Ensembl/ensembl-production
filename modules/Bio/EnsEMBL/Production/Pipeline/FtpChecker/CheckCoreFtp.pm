@@ -117,7 +117,7 @@ sub run {
   my $species = $self->param('species');
   if ( $species ne "Ancestral sequences" ) {
     Log::Log4perl->easy_init($DEBUG);
-    my $self->{logger} = get_logger();
+    $self->{logger} = get_logger();
     my $base_path = $self->param('base_path');
     $self->{logger}->info("Checking $species on $base_path");
     my $dba = $self->core_dba();
