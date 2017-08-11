@@ -52,7 +52,7 @@ sub default_options {
     meta_filters  => {},
     force_update  => 0,
     base_path     => undef,
-    output_path     => './failures',
+    failures_file  => './failures.txt',
  };
 }
 
@@ -72,14 +72,29 @@ sub pipeline_analyses {
                             meta_filters    => $self->o('meta_filters'),
                             chromosome_flow => 0,
                             variation_flow  => 0 },
-           -flow_into     => { '2' => ['CheckGenomeFtp'], },
+           -flow_into     => { 
+			      '2' => ['CheckGenomeFtp'], },
            -hive_capacity => 1,
-           -meadow_type   => 'LOCAL', }, {
-           -logic_name => 'CheckGenomeFtp',
-           -module =>
-             'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckGenomeFtp',
-           -hive_capacity => 100,
-					 } 
+	    -meadow_type   => 'LOCAL', }, 
+	   {
+	    -logic_name => 'CheckGenomeFtp',
+	    -module =>
+	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckGenomeFtp',
+	    -hive_capacity => 100,
+	    -flow_into => {
+			   2 => [ '?table_name=failures']
+			  } 
+	   },
+	   {
+	    -logic_name => 'ReportFailures',
+	    -module =>
+	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::ReportFailures',
+	    -input_ids => [{}],
+	    -parameters      => {
+				failures_file    => $self->o('failures_file')
+			       },
+	    -wait_for => ['CheckGenomeFtp']
+	   }
 	 ];
 } ## end sub pipeline_analyses
 
@@ -93,10 +108,17 @@ sub pipeline_wide_parameters {
   return {
     %{ $self->SUPER::pipeline_wide_parameters()
       },    # inherit other stuff from the base class
-    base_path    => $self->o('base_path'),
-    output_path    => $self->o('output_path')
+    base_path    => $self->o('base_path')
 };
 }
+
+sub pipeline_create_commands {
+    my ($self) = @_;
+    return [
+	    @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
+	    $self->db_cmd('CREATE TABLE failures (species varchar(64), file_path text)')
+    ];
+  }
 
 1;
 

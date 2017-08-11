@@ -28,6 +28,8 @@ use Bio::EnsEMBL::Utils::Exception qw(throw);
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Data::Dumper;
 
+use Log::Log4perl qw/:easy/;
+
 my $expected_files = {
 		      "{division}/embl/{species_dir}/"=>[
 							'{species_uc}.*.dat.gz',
@@ -114,9 +116,13 @@ sub run {
   my ($self) = @_;
   my $species = $self->param('species');
   if ( $species ne "Ancestral sequences" ) {
+    Log::Log4perl->easy_init($DEBUG);
+    my $logger = get_logger();
+    my $base_path = $self->param('base_path');
+    $logger->info("Checking $species on $base_path");
     my $dba = $self->core_dba();
     my $vals = {};
-    $vals->{species} = $species;
+    $vals->{species} = $species;    
     $vals->{species_uc} = ucfirst $species;
     if($dba->dbc()->dbname() =~ m/^(.*_collection)_core_.*/) {
       $vals->{species_dir} = $1.'/'.$species;
@@ -132,14 +138,19 @@ sub run {
       $division =~ s/ensembl//i;
       $vals->{division} = $division if $division ne '';
     }
-    my $base_path = $self->param('base_path');
+
     while( my($dir,$files) = each %$expected_files) { 
       for my $file (@$files) {
 	my $path = _expand_str($base_path.'/'.$dir.'/'.$file, $vals);
 	my @files = glob($path);
 	if(scalar(@files) == 0) {
-	  print "Could not find $path\n";
-	  push @problems, $path;
+	  $logger->error("Could not find $path for $species");
+	  $self->dataflow_output_id(   
+				    {
+				     species => $species,
+				     file_path=>$path
+				    }
+				    , 2);
 	}
       }
     }    
