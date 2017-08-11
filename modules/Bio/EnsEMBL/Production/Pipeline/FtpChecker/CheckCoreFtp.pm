@@ -17,12 +17,12 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckGenomeFtp;
+package Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckCoreFtp;
 
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckFtp/;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
@@ -117,9 +117,9 @@ sub run {
   my $species = $self->param('species');
   if ( $species ne "Ancestral sequences" ) {
     Log::Log4perl->easy_init($DEBUG);
-    my $logger = get_logger();
+    my $self->{logger} = get_logger();
     my $base_path = $self->param('base_path');
-    $logger->info("Checking $species on $base_path");
+    $self->{logger}->info("Checking $species on $base_path");
     my $dba = $self->core_dba();
     my $vals = {};
     $vals->{species} = $species;    
@@ -138,33 +138,9 @@ sub run {
       $division =~ s/ensembl//i;
       $vals->{division} = $division if $division ne '';
     }
-
-    while( my($dir,$files) = each %$expected_files) { 
-      for my $file (@$files) {
-	my $path = _expand_str($base_path.'/'.$dir.'/'.$file, $vals);
-	my @files = glob($path);
-	if(scalar(@files) == 0) {
-	  $logger->error("Could not find $path for $species");
-	  $self->dataflow_output_id(   
-				    {
-				     species => $species,
-				     file_path=>$path
-				    }
-				    , 2);
-	}
-      }
-    }    
+    $self->check_files($species, 'core', $base_path, $expected_files, $vals);
   }
   return;
-}
-
-sub _expand_str {
-  my ($template, $vals) = @_;
-  my $str = $template;
-  while(my ($k,$v) = each %$vals) {
-    $str =~ s/\{$k\}/$v/g;
-  }
-  return $str;
 }
 
 1;

@@ -73,13 +73,13 @@ sub pipeline_analyses {
                             chromosome_flow => 0,
                             variation_flow  => 0 },
            -flow_into     => { 
-			      '2' => ['CheckGenomeFtp'], },
+			      '2' => ['CheckCoreFtp'], },
            -hive_capacity => 1,
 	    -meadow_type   => 'LOCAL', }, 
 	   {
-	    -logic_name => 'CheckGenomeFtp',
+	    -logic_name => 'CheckCoreFtp',
 	    -module =>
-	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckGenomeFtp',
+	    'Bio::EnsEMBL::Production::Pipeline::FtpChecker::CheckCoreFtp',
 	    -hive_capacity => 100,
 	    -flow_into => {
 			   2 => [ '?table_name=failures']
@@ -93,12 +93,12 @@ sub pipeline_analyses {
 	    -parameters      => {
 				failures_file    => $self->o('failures_file')
 			       },
-	    -wait_for => ['CheckGenomeFtp']
+	    -wait_for => ['CheckCoreFtp']
 	   }
 	 ];
 } ## end sub pipeline_analyses
 
-sub beekeeper_extra_cmdline_options {
+sub beekeeper_extra_cmdline_options [B{
   my $self = shift;
   return "-reg_conf " . $self->o("registry");
 }
@@ -116,7 +116,7 @@ sub pipeline_create_commands {
     my ($self) = @_;
     return [
 	    @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
-	    $self->db_cmd('CREATE TABLE failures (species varchar(64), file_path text)')
+	    $self->db_cmd('CREATE TABLE failures (species varchar(64), type varchar(16), file_path text)')
     ];
   }
 
