@@ -118,7 +118,7 @@ foreach my $host_line (@hosts) {
     $entrez_db = "Nucleotide";
 
     my $sth = $db->prepare(
-"SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN transcript on ensembl_id = transcript_id WHERE db_name in ('RefSeq_dna', 'RefSeq_dna_predicted', 'RefSeq_mRNA', 'RefSeq_mRNA_predicted', 'RefSeq_ncRNA', 'RefSeq_ncRNA_predicted') GROUP BY dbprimary_acc,  stable_id"
+"SELECT dbprimary_acc,  stable_id FROM object_xref o INNER JOIN xref x on o.xref_id = x.xref_id INNER JOIN external_db e on e.external_db_id =x.external_db_id INNER JOIN transcript on ensembl_id = transcript_id WHERE db_name in ('RefSeq_dna', 'RefSeq_dna_predicted', 'RefSeq_mRNA', 'RefSeq_mRNA_predicted', 'RefSeq_ncRNA', 'RefSeq_ncRNA_predicted') and dbprimary_acc like '__\_%'"
     );
     $sth->execute();
     print STDOUT "Writing out nucleotide links for database $dbname\n";
