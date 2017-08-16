@@ -43,128 +43,170 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
-  my ($self) = @_;    
-  return {
-          # inherit other stuff from the base class
-          %{ $self->SUPER::default_options() },
-          flag_GeneNames    => '1',
-          flag_GeneDescr    => '1',
-          flag_GeneCoverage => '1',
-          ## GeneName Projection 
-          gn_config => { 
-                        '1'=>{
-                              'source'          => 'arabidopsis_thaliana',
-                              'division'        => [],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['eudicotyledons'],
-                              # source species GeneName filter for GeneDescription
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter 
-                              'percent_id_filter'      => '30', 
-                              'percent_cov_filter'     => '66',
-                             }, 
-                        '2'=>{
-                              'source'          => 'oryza_sativa',
-                              'division'        => [],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['Liliopsida'],
-                              # source species GeneName filter for GeneDescription
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter 
-                              'percent_id_filter'      => '30', 
-                              'percent_cov_filter'     => '66',
-                             }
-                       },
-          parallel_GeneDescription_projections => '0',
-          ## GeneDescription Projection 
-          gd_config => { 
-                        '1'=>{
-                              'source'          => 'arabidopsis_thaliana',
-                              'division'        => [],
-                              'antispecies'     => ['arabidopsis_thaliana'],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['eudicotyledons'],
-                              # source species GeneDescription filter
-                              'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # target species GeneDescription filter
-                              'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter 
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             },
-                        '2'=>{
-                              'source'          => 'oryza_sativa',
-                              'species'         => [], 
-                              'division'        => [],
-                              'antispecies'     => ['oryza_sativa'],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['Liliopsida'],
-                              # source species GeneDescription filter
-                              'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # target species GeneDescription filter
-                              'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             },
-                        '3'=>{
-                              'source'          => 'arabidopsis_thaliana',
-                              'division'        => [],
-                              'antispecies'     => ['oryza_sativa'],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['Liliopsida'],
-                              # source species GeneDescription filter
-                              'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # target species GeneDescription filter
-                              'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter 
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             },
-                        '4'=>{
-                              'source'          => 'oryza_sativa',
-                              'species'         => [], 
-                              'antispecies' => ['arabidopsis_thaliana'],
-                              'division'        => [],
- 			      'run_all'         =>  0, # 1/0
-                              # Taxon name of species to project to
-                              'taxons'      => ['eudicotyledons'],
-                              # source species GeneDescription filter
-                              'geneDesc_rules'   	  => ['hypothetical', 'putative', 'unknown protein'],
-                              'geneName_source'                => ['UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL'],
-                              # target species GeneDescription filter
-                              'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
-                              # homology types filter
- 				  'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-			      'homology_types_allowed' => ['ortholog_one2one'],
-                              # homology percentage identity filter
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             }
-                       }
-         };
+    my ($self) = @_;
+    return {
+        # inherit other stuff from the base class
+        %{ $self->SUPER::default_options() },
+        flag_GeneNames    => '1',
+        flag_GeneDescr    => '1',
+        flag_GeneCoverage => '1',
+        ## GeneName Projection
+        gn_config => {
+            '1' => {
+                'source'   => 'arabidopsis_thaliana',
+                'division' => [],
+                'run_all'  => 0,                        # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['eudicotyledons'],
+
+                # source species GeneName filter for GeneDescription
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            },
+            '2' => {
+                'source'   => 'oryza_sativa',
+                'division' => [],
+                'run_all'  => 0,                # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['Liliopsida'],
+
+                # source species GeneName filter for GeneDescription
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            }
+        },
+        parallel_GeneDescription_projections => '0',
+        ## GeneDescription Projection
+        gd_config => {
+            '1' => {
+                'source'      => 'arabidopsis_thaliana',
+                'division'    => [],
+                'antispecies' => ['arabidopsis_thaliana'],
+                'run_all'     => 0,                          # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['eudicotyledons'],
+
+                # source species GeneDescription filter
+                'geneDesc_rules'  => [ 'hypothetical', 'putative', 'unknown protein' ],
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # target species GeneDescription filter
+                'geneDesc_rules_target' => [
+                    'Uncharacterized protein',
+                    'Predicted protein',
+                    'Gene of unknown',
+                    'hypothetical protein'
+                ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            },
+            '2' => {
+                'source'      => 'oryza_sativa',
+                'species'     => [],
+                'division'    => [],
+                'antispecies' => ['oryza_sativa'],
+                'run_all'     => 0,                  # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['Liliopsida'],
+
+                # source species GeneDescription filter
+                'geneDesc_rules'  => [ 'hypothetical', 'putative', 'unknown protein' ],
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # target species GeneDescription filter
+                'geneDesc_rules_target' => [
+                    'Uncharacterized protein',
+                    'Predicted protein',
+                    'Gene of unknown',
+                    'hypothetical protein'
+                ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            },
+            '3' => {
+                'source'      => 'arabidopsis_thaliana',
+                'division'    => [],
+                'antispecies' => ['oryza_sativa'],
+                'run_all'     => 0,                        # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['Liliopsida'],
+
+                # source species GeneDescription filter
+                'geneDesc_rules'  => [ 'hypothetical', 'putative', 'unknown protein' ],
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # target species GeneDescription filter
+                'geneDesc_rules_target' => [
+                    'Uncharacterized protein',
+                    'Predicted protein',
+                    'Gene of unknown',
+                    'hypothetical protein'
+                ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            },
+            '4' => {
+                'source'      => 'oryza_sativa',
+                'species'     => [],
+                'antispecies' => ['arabidopsis_thaliana'],
+                'division'    => [],
+                'run_all'     => 0,                          # 1/0
+                     # Taxon name of species to project to
+                'taxons' => ['eudicotyledons'],
+
+                # source species GeneDescription filter
+                'geneDesc_rules'  => [ 'hypothetical', 'putative', 'unknown protein' ],
+                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+
+                # target species GeneDescription filter
+                'geneDesc_rules_target' => [
+                    'Uncharacterized protein',
+                    'Predicted protein',
+                    'Gene of unknown',
+                    'hypothetical protein'
+                ],
+
+                # homology types filter
+                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
+                'homology_types_allowed' => ['ortholog_one2one'],
+
+                # homology percentage identity filter
+                'percent_id_filter'  => '30',
+                'percent_cov_filter' => '66',
+            }
+        }
+    };
 }
 1;
