@@ -384,14 +384,8 @@ sub write_output {
   my $regulation_dbas   = $self->param('regulation_dbas');
   my $otherfeatures_dbas = $self->param('otherfeatures_dbas');
   my @all_core_species;
-
   foreach my $species ( sort keys %$core_dbas ) {
     push @all_core_species,$species;
-  }
-  $self->dataflow_output_id( {'species'          => \@all_core_species,},
-                               $self->param('core_hash_flow') );
-
-  foreach my $species ( sort keys %$core_dbas ) {
     # If check_intention is turned on, then check the production database
     # and decide if data need to be re-dumped.
     if ( $check_intentions == 1 ) {
@@ -447,6 +441,9 @@ sub write_output {
     $self->dataflow_output_id( { 'species' => $species },
                                $self->param('otherfeatures_flow') );
   }
+
+  $self->dataflow_output_id( {'species'          => \@all_core_species,},
+                               $self->param('core_hash_flow') );
 
   return;
 
