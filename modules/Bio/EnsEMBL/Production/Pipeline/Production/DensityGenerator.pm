@@ -45,6 +45,8 @@ sub run {
   $self->delete_old_features( $dba, $logic_name );
   $self->check_analysis($dba);
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+
   my $density_type = $self->get_density_type($analysis);
   Bio::EnsEMBL::Registry->get_adaptor( $species, 'core', 'DensityType' )->store($density_type);
   my $slices = Bio::EnsEMBL::Registry->get_adaptor( $species, 'core', 'slice' )->fetch_all_karyotype();
@@ -84,9 +86,10 @@ sub run {
     $dfa->store(@features);
   }
 
-  #Disconnecting from the registry
+  # Disconnecting from the registry
   $dba->dbc->disconnect_if_idle();
-  $dfa->dbc->disconnect_if_idle();
+  my $prod_dba    = $self->get_production_DBAdaptor();
+  $prod_dba->dbc()->disconnect_if_idle();
   return;
 } ## end sub run
 
