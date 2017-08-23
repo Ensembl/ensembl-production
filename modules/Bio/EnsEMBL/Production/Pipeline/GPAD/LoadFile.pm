@@ -134,7 +134,7 @@ sub run {
     }
 
     my $hive_dbc = $self->dbc;
-    $hive_dbc->disconnect_if_idle();
+    $hive_dbc->disconnect_if_idle() if defined $self->dbc;
 
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
@@ -251,8 +251,9 @@ sub run {
    if ($db =~ /UniProt/) {
       $is_protein = 1;
       my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
-      if (scalar(@$uniprot_xrefs) != 0 and $uniprot_xrefs->[0]->dbname =~ m/uniprot/i) {
-        $master_xref = $uniprot_xrefs->[0];
+      my @master_xref = grep { $_->dbname =~ m/uniprot/i } @$uniprot_xrefs;
+      if (scalar(@master_xref) !=0 ) {
+        my $master_xref = $master_xref[0];
         $go_xref->add_linkage_type($go_evidence, $master_xref);
        } else {
         $unmatched_uniprot{$tgt_species}++;
