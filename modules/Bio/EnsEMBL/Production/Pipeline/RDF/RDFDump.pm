@@ -81,6 +81,9 @@ sub run {
     Bio::EnsEMBL::Registry->get_adaptor($self->param('eg')?$self->division():'Multi', 'compara', 'GenomeDB');
   $bulk->add_compara($species, $genes, $compara_dba);
 
+  my $hive_dbc = $self->dbc;
+  $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+
   my $slices = $self->get_Slices(undef, ($species eq 'homo_sapiens')?1:0);
   #
   ############
