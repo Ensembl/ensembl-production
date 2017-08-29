@@ -120,6 +120,7 @@ def main(argv):
 
         print('Pushing %s to EBI SPOT GitHub repo (branch: %s)' % (voidFile, branch))
         push_to_repo_branch(voidFile, voidFile, branch, user, token)
+        print("Done.")
     else:
         print('Skipping pushing the file to EBI SPOT repo')
         
