@@ -591,7 +591,15 @@ sub pipeline_analyses {
       -parameters => {},
       -hive_capacity => 50,
       -rc_name       => '64GB', 
+      -flow_into     => { -1 => 'dump_json_128GB', },
      },
+
+      { -logic_name     => 'dump_json_128GB',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
+      -parameters   => {},
+      -hive_capacity  => 50,
+      -rc_name       => '128GB',
+  },
         
 ### TSV XREF
     { -logic_name    => 'dump_tsv_uniprot',
