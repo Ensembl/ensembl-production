@@ -90,7 +90,7 @@ class VoidRDF(object):
         g.add( (self.ds, RDF.type, dcmi.Dataset) )
         g.add( (self.ds, dct.title, Literal(self.project)) ) # As in the doc
         g.add( (self.ds, dct.description, Literal("%s genes and external references in RDF" % self.project)) ) # As in the doc
-        g.add( (self.ds, FOAF.page, Literal("http://www.ebi.ac.uk/rdf/services/"))) # As in the doc
+        g.add( (self.ds, FOAF.page, ebi.rdf+"/services/sparql")) # As in the doc
         g.add( (self.ds, dct.publisher, Literal("http://www.ebi.ac.uk/")) ) # As in the doc. From Specs? But could make sense to add license
         g.add( (self.ds, pav.hasCurrentVersion, ensemblVersion) ) # Version date uri
         g.add( (self.ds, dct.publisher, Literal(ebi)) )
@@ -117,7 +117,7 @@ class VoidRDF(object):
         g.add( (ensemblDist, dct.publisher, Literal(ebi)) )                                                      #As in the doc
         g.add( (ensemblDist, dct.license, Literal("http://www.ebi.ac.uk/about/terms-of-use")) )
         g.add( (ensemblDist, URIRef(dct + 'format'), Literal("text/turtle")) )
-        g.add( (ensemblDist, FOAF.page, ebi.rdf+"/services/ensembl") ) # As in the doc
+        g.add( (ensemblDist, FOAF.page, ebi.rdf+"/services/sparql") ) # As in the doc
         g.add( (ensemblDist, VOID.dataDump, Literal('unknown') ) ) # As in the doc
         g.add( (ensemblDist, pav.version, Literal(date, datatype=XSD.date)) )
 
@@ -142,7 +142,7 @@ class VoidRDF(object):
             self.void.add( (self.ds, dct.hasPart, speciesId))
 
             # Summary
-            self.void.add( (speciesId, RDF.type, dct.Dataset))
+            self.void.add( (speciesId, RDF.type, dcmi.Dataset))
             self.void.add( (speciesId, dct.title, Literal(title)) )
             self.void.add( (speciesId, dct.description, Literal("%s Ensembl RDF" % title)) )
             self.void.add( (speciesId, dct.publisher, self.uri) )
@@ -168,7 +168,6 @@ class VoidRDF(object):
             self.void.add( (speciesDist, dct.publisher, self.uri) )
             self.void.add( (speciesDist, dct.license, Literal(self.license)) )
             self.void.add( (speciesDist, URIRef(dct + 'format'), Literal("text/turtle")) )
-            self.void.add( (speciesDist, FOAF.page, Literal("unknown")) ) # This would be now the homepage of the ontology, but not OLS, which might be something to change
             self.void.add( (speciesDist, pav.version, Literal(self.release)) ) # Version can be null sometimes! So need a check for that replace with something else in case
 
             # Here we add species subset to the distribution level
@@ -226,7 +225,7 @@ class VoidRDF(object):
                 qres=self.void.query(query)
                 # If result is empty, that means connectivity is not given!
                 if (len(qres)==0):
-                    print "No data Dump found through first run, now looking for a Subsets!"
+                    # print "No data Dump found through first run, now looking for a Subsets!"
                     query='SELECT ?a ?b ?c WHERE {'+entity+' <http://purl.org/pav/hasCurrentVersion> ?d . ?d <http://purl.org/dc/terms/hasDistribution> ?x. ?x <http://rdfs.org/ns/void#subset> ?z  }'
                     check2=self.void.query(query)
                     if (len(check2)==0):
