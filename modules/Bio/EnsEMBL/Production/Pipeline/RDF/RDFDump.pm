@@ -77,10 +77,14 @@ sub run {
   my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
   my $dba = $self->get_DBAdaptor; 
   my $genes = $bulk->export_genes($dba, undef, 'protein_feature', $self->param('xref'));
-  my $compara_dba =
-    Bio::EnsEMBL::Registry->get_adaptor($self->param('eg')?$self->division():'Multi', 'compara', 'GenomeDB');
-  $bulk->add_compara($species, $genes, $compara_dba);
-
+  my $compara_name = $self->param('eg')?$self->division():'Multi';
+  eval {
+    my $compara_dba =
+      Bio::EnsEMBL::Registry->get_adaptor($compara_name, 'compara', 'GenomeDB');
+    $bulk->add_compara($species, $genes, $compara_dba);
+  } or do {
+    warn "Compara DB $compara_name not found - compara data not being added";
+  };
   my $hive_dbc = $self->dbc;
   $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 
