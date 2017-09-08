@@ -1,5 +1,0 @@
-If you are generating these HTML summaries then please use RedCloth (a Ruby program) to generate it. The gem ships with the binary redcloth and generates docs like so:
-
-redcloth fasta.textile > fasta.html
-
-Easy!
