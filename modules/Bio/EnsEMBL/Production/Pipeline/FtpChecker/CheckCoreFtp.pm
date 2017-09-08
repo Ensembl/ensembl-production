@@ -31,85 +31,84 @@ use Data::Dumper;
 use Log::Log4perl qw/:easy/;
 
 my $expected_files = {
-		      "{division}/embl/{species_dir}/"=>[
+		      "embl" => {"dir" => "{division}/embl/{species_dir}/", "expected" =>[
 							'{species_uc}.*.dat.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/genbank/{species_dir}/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "genbank" => {"dir" => "{division}/genbank/{species_dir}/", "expected" =>[
 							'{species_uc}.*.dat.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/gtf/{species_dir}/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "gtf" => {"dir" => "{division}/gtf/{species_dir}/", "expected" =>[
 							'{species_uc}.*.gtf.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/gff3/{species_dir}/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "gff3" => {"dir" => "{division}/gff3/{species_dir}/", "expected" =>[
 							'{species_uc}.*.gff3.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/vep/{collection_dir}"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "vep" => {"dir" => "{division}/vep/{collection_dir}", "expected" =>[
 							'{species}_vep*.tar.gz',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/json/{species_dir}/"=>[
-							'{species}.json.gz',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/rdf/{species_dir}/"=>[
-							'{species}.ttl.gz',
-							'{species}.ttl.gz.graph',
-							'{species}_xrefs.ttl.gz',
-							'{species}_xrefs.ttl.gz.graph',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/tsv/{species_dir}/"=>[
-							'{species}.ena.ttl.gz',
-							'{species}.entrez.ttl.gz',
-							'{species}.karyotype.ttl.gz',
-							'{species}.refseq.ttl.gz',
-							'{species}.uniprot.ttl.gz',
-							 'README_ENA.tsv',
-							 'README_entrez.tsv',
-							 'README_refseq.tsv',
-							 'README_uniprot.tsv',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/fasta/{species_dir}/pep/"=>[
+							 'CHECKSUMS*'
+						       ]},
+		      "json" => {"dir" => "{division}/json/{species_dir}/", "expected" =>[
+							'{species}*.json',
+							 'CHECKSUMS*'
+						       ]},
+		      "rdf" => {"dir" => "{division}/rdf/{species_dir}/", "expected" =>[
+							'{species}*.ttl.gz',
+							'{species}*.ttl.gz.graph',
+							'{species}_xrefs*.ttl.gz',
+							'{species}_xrefs*.ttl.gz.graph',
+							 'CHECKSUMS*'
+						       ]},
+		      "tsv" => {"dir" => "{division}/tsv/{species_dir}/", "expected" =>[
+							'{species_uc}*.ena.tsv.gz',
+							'{species_uc}*.entrez.tsv.gz',
+							'{species_uc}*.karyotype.tsv.gz',
+							'{species_uc}*.refseq.tsv.gz',
+							'{species_uc}*.uniprot.tsv.gz',
+							 'README_ENA*.tsv',
+							 'README_entrez*.tsv',
+							 'README_refseq*.tsv',
+							 'README_uniprot*.tsv',
+							 'CHECKSUMS*'
+						       ]},
+		      "fasta_pep" => {"dir" => "{division}/fasta/{species_dir}/pep/", "expected" =>[
 							'{species_uc}.*.fa.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/fasta/{species_dir}/cdna/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "fasta_cdna" => {"dir" => "{division}/fasta/{species_dir}/cdna/", "expected" =>[
 							'{species_uc}.*.fa.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/fasta/{species_dir}/cds/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "fasta_cds" => {"dir" => "{division}/fasta/{species_dir}/cds/", "expected" =>[
 							'{species_uc}.*.fa.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-#		      "{division}/fasta/{species_dir}/ncrna/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+#		      "fasta_ncrna" => {"dir" => "{division}/fasta/{species_dir}/ncrna/", "expected" =>[
 #							'{species_uc}.*.fa.gz',
-#							 'README',
-#							 'CHECKSUMS'
-#						       ],
-		      "{division}/fasta/{species_dir}/dna/"=>[
+#							 'README*',
+#							 'CHECKSUMS*'
+#						       ]},
+		      "fasta_dna" => {"dir" => "{division}/fasta/{species_dir}/dna/", "expected" =>[
 							'{species_uc}.*.fa.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/fasta/{species_dir}/dna_index/"=>[
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "fasta_dna_index" => {"dir" => "{division}/fasta/{species_dir}/dna_index/", "expected" =>[
 							'{species_uc}.*.fa.gz',
 							'{species_uc}.*.fa.gz.fai',
 							'{species_uc}.*.fa.gz.gzi',
-							 'README',
-							 'CHECKSUMS'
-						       ],
+							 'CHECKSUMS*'
+						       ]},
 };
 
 sub run {

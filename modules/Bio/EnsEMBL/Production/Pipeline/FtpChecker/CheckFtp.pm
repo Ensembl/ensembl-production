@@ -35,16 +35,19 @@ use Log::Log4perl qw/:easy/;
 sub check_files {
   my ($self, $species, $type, $base_path, $expected_files, $vals) = @_;
   my $n = 0;
-  while( my($dir,$files) = each %$expected_files) { 
-    for my $file (@$files) {
-      my $path = _expand_str($base_path.'/'.$dir.'/'.$file, $vals);
+  $DB::single = 1;
+  while( my($format) = each %$expected_files) { 
+    for my $file (@{$expected_files->{$format}->{expected}}) {
+      my $path = _expand_str($base_path.'/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
       my @files = glob($path);
       if(scalar(@files) == 0) {
 	$self->{logger}->error("Could not find $path");
 	$self->dataflow_output_id(   
 				  {
 				   species => $species,
+           division => $vals->{division},
 				   type => $type,
+           format => $format,
 				   file_path=>$path
 				  }
 				  , 2);

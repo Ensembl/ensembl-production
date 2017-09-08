@@ -31,17 +31,17 @@ use Data::Dumper;
 use Log::Log4perl qw/:easy/;
 
 my $expected_files = {
-		      "{division}tsv/ensembl-compara/homologies/"=>[
+		      "tsv" =>{"dir" => "{division}tsv/ensembl-compara/homologies/", "expected" =>[
 							   'Compara.*.homologies.tsv.gz',
 							   'README.*',
-							   'MD5SUM'
-							  ],
-		      "{division}xml/ensembl-compara/homologies/"=>[
+							   'MD5SUM*'
+							  ]},
+		      "xml" => {"dir" => "{division}xml/ensembl-compara/homologies/", "expected" =>[
 						       'Compara.*.xml.gz',
 						       'Compara.*.phyloxml.xml.tar.gz',
 						       'README.*',
-						       'MD5SUM'
-						      ]
+						       'MD5SUM*'
+						      ]},
 		     };
 
 sub run {

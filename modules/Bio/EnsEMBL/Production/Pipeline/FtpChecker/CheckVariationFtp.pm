@@ -31,21 +31,21 @@ use Data::Dumper;
 use Log::Log4perl qw/:easy/;
 
 my $expected_files = {
-		      "{division}/vcf/{species_dir}/"=>[
-							'{species}.vcf.gz',
-							'{species}_incl_consequences.vcf.gz',
-							'{species}.vcf.gz.tbi',
-							'{species}_incl_consequences.vcf.gz.tbi',
-							 'README',
-							 'CHECKSUMS'
-						       ],
-		      "{division}/gvf/{species_dir}/"=>[
-							'{species}.gvf.gz',
-							'{species}_failed.gvf.gz',
-							'{species}_incl_consequences.gvf.gz',
-							 'README',
-							 'CHECKSUMS'
-						       ]
+		      "vcf" => {"dir" => "{division}/vcf/{species_dir}/", "excepted" =>[
+							'{species}*.vcf.gz',
+							'{species}_incl_consequences*.vcf.gz',
+							'{species}*.vcf.gz.tbi',
+							'{species}_incl_consequences*.vcf.gz.tbi',
+							 'README*',
+							 'CHECKSUMS*'
+						       ]},
+		      "gvf" => {"dir" => "{division}/gvf/{species_dir}/", "excepted" =>[
+							'{species}*.gvf.gz',
+							'{species}_failed*.gvf.gz',
+							'{species}_incl_consequences*.gvf.gz',
+							 'README*',
+							 'CHECKSUMS*'
+						       ]}
 };
 
 sub run {
