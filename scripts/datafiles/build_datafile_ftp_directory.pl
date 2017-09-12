@@ -175,72 +175,72 @@ sub _get_funcgen_DataFiles {
   my ($self, $dba) = @_;
   
   my $species = $dba->species;
-
-  my $segmentation_file_adaptor = $dba->get_SegmentationFileAdaptor;
-  my $result_set_adaptor        = $dba->get_ResultSetAdaptor;
-  my $coord_system_adaptor      = $dba->dnadb->get_CoordSystemAdaptor;
-
-  my @datafiles_fast_constructor_arguments;
+  my @funcgen_datafiles_found;
+  
+  my $data_file_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($dba->dnadb);
+  
+  my $coord_system_adaptor = $dba->dnadb->get_CoordSystemAdaptor;
+  my $all_coord_systems = $coord_system_adaptor->fetch_all;
+  my $coord_system = $all_coord_systems->[0];
 
   if ($species eq 'homo_sapiens') {
   
     my $crispr_adaptor = $dba->get_CrisprSitesFileAdaptor;
     my $crispr_file    = $crispr_adaptor->fetch_file;
 
-    push @datafiles_fast_constructor_arguments, {
-        analysis      => $crispr_file->get_Analysis,
-        name          => $crispr_file->name,
-        file_type     => $crispr_file->file_type,
-        url           => $crispr_file->file,
-    };
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -analysis     => $crispr_file->get_Analysis,
+        -name         => $crispr_file->name,
+        -url          => $crispr_file->file,
+        -file_type    => $crispr_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
   }
 
+  my $segmentation_file_adaptor = $dba->get_SegmentationFileAdaptor;
   my $all_segmentation_files = $segmentation_file_adaptor->fetch_all;
 
   foreach my $current_segmentation_file (@$all_segmentation_files) {
-    push @datafiles_fast_constructor_arguments, {
-      analysis      => $current_segmentation_file->get_Analysis,
-      name          => $current_segmentation_file->name,
-      file_type     => $current_segmentation_file->file_type,
-      url           => $current_segmentation_file->file,
-    };
+  
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -analysis     => $current_segmentation_file->get_Analysis,
+        -name         => $current_segmentation_file->name,
+        -url          => $current_segmentation_file->file,
+        -file_type    => $current_segmentation_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
   }
-
-  my $all_result_sets = $result_set_adaptor->fetch_all;
-
-  RESULT_SET:
-  foreach my $current_result_set (@$all_result_sets) {
-
-    # We don't have bigwigs for all results sets, e.g.: technical replicates.
-    next if (! defined $current_result_set->dbfile_path);
-
-    push @datafiles_fast_constructor_arguments, {
-      analysis      => $current_result_set->analysis,
-      name          => $current_result_set->name,
-      file_type     => 'BIGWIG',
-      url           => $current_result_set->dbfile_path,
-    };
-  }
-
-  my @datafiles;
-  my $all_coord_systems = $coord_system_adaptor->fetch_all;
-  use Bio::EnsEMBL::DBSQL::DataFileAdaptor;
-  my $data_file_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($result_set_adaptor->db);
-  Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $data_file_adaptor);
-
-  foreach my $current_datafile_fast_constructor_argument (@datafiles_fast_constructor_arguments) {
-
-    $current_datafile_fast_constructor_argument->{dbID}         = undef;
-    $current_datafile_fast_constructor_argument->{coord_system} = $all_coord_systems->[0];
-    $current_datafile_fast_constructor_argument->{adaptor}      = $data_file_adaptor;
+  
+  my $alignment_adaptor = $dba->get_AlignmentAdaptor;
+  my $all_alignments    = $alignment_adaptor->fetch_all;
+  
+  ALIGNMENT:
+  foreach my $current_alignment (@$all_alignments) {
+  
+    # We don't have bigwigs for all alignments, e.g.: technical replicates.
+    next ALIGNMENT if (! $current_alignment->has_bigwig_DataFile);
     
-    use Bio::EnsEMBL::DataFile;
-    push @datafiles, Bio::EnsEMBL::DataFile->new_fast($current_datafile_fast_constructor_argument);
+    my $bigwig_data_file = $current_alignment->fetch_bigwig_DataFile;
+    
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -analysis     => $current_alignment->fetch_Analysis,
+        -name         => $current_alignment->name,
+        -url          => $bigwig_data_file->path,
+        -file_type    => $bigwig_data_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
   }
 
-  return \@datafiles;
+  # Uiuiui
+  Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $data_file_adaptor);
+  return \@funcgen_datafiles_found;
 }
-
 
 sub _get_core_like_DataFiles{
   my ($self, $dba) = @_;
