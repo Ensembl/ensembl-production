@@ -78,6 +78,8 @@ sub run {
     my $interpro_cmd = qq($interproscan_exe $options $input_option $output_option);
     
     if (! -e $outfile_xml) {
+      my $dba = $self->get_DBAdaptor('core');
+      $dba->dbc && $dba->dbc->disconnect_if_idle();
       $self->dbc and $self->dbc->disconnect_if_idle();
       system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
     }
