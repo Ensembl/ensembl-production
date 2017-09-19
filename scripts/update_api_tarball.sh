@@ -20,6 +20,7 @@ for repo in $list; do
         }
     else
         cd $repo
+        git checkout $branch
         git fetch || {
             echo "Could not fetch $repo" 1>&2 
             exit 2
