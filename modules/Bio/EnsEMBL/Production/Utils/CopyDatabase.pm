@@ -22,6 +22,8 @@ use strict;
 use warnings;
 
 use Bio::EnsEMBL::Utils::Exception qw(throw);
+use Exporter qw/import/;
+our @EXPORT_OK = qw(copy_database);
 use Bio::EnsEMBL::Hive::Utils::URL;
 use Log::Log4perl qw/:easy/;
 use DBI;
@@ -40,15 +42,7 @@ if(!Log::Log4perl->initialized()) {
 }
 
 sub copy_database {
-  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop,$skip_views, $noflush,$opt_skip_views) = @_;
-
-	# Check executable
-	$logger->info("Checking mysqlcheck exist");
-	check_executables("mysqlcheck");
-	$logger->info("Checking rsync exist");
-	check_executables("rsync");
-
-	my $working_dir = rel2abs( curdir() );
+  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
 
 	# Get list of tables that we want to copy or skip
 	my %only_tables;
@@ -69,9 +63,19 @@ sub copy_database {
     croak "Source server $source_db->{host} is not valid";
   }
 
+  # Verify target server exist.
+  if ( !defined($target_db->{host}) || $target_db->{host} eq '' ) {
+    croak "Target server $target_db->{host} is not valid";
+  }
+
+  # Check executable
+  $logger->debug("Checking myisamchk exist");
+  check_executables("myisamchk",$target_db);
+  $logger->debug("Checking rsync exist");
+  check_executables("rsync",$target_db);
+
 
   #Connect to source database
-  $logger->info("Connecting to source $source_db_uri database");
   my $source_dsn = create_dsn($source_db,$update,$opt_only_tables,$source_db_uri,"source");
   my $source_dbh = create_dbh($source_dsn,$source_db);
   
@@ -106,10 +110,10 @@ sub copy_database {
   }
   else {
   	$tmp_dir = $target_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'tmpdir'")->[0][1];
-    if ( !-d $tmp_dir ) {
+    if ( system("ssh $target_db->{host} ls $tmp_dir >/dev/null 2>&1") != 0 ) {
       croak "Can not find the temporary directory $tmp_dir";
     }
-    $logger->info("Using tmp dir: $tmp_dir");
+    $logger->debug("Using tmp dir: $tmp_dir");
     
     $staging_dir = catdir( $tmp_dir, sprintf( "tmp.%s", $target_db->{dbname} ) );
     
@@ -117,26 +121,28 @@ sub copy_database {
     # directory actually exists, and that the staging directory within the
     # temporary directory does *not* exist.
 
-    if ( !$drop && -d $destination_dir ) {
-      $logger->info("Destination directory $destination_dir already exists");
+    if ( !$drop && system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1") == 0 ) {
+      $logger->error("Destination directory $destination_dir already exists");
       croak "Database destination directory $destination_dir exist. You can use the --drop option to drop the database on the target server";
     }
     # If option drop enabled, drop database on target server.
     if ($drop){
     	$logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db;");
+      $target_dbh->do("DROP DATABASE $target_db->{dbname};");
     }
     
-    if (-d $staging_dir ) {
+    if (system("ssh $target_db->{host} ls $staging_dir >/dev/null 2>&1") == 0 ) {
       $logger->info("Staging directory $staging_dir already exists, using rsync with delete");
       $force=1;
     }
-    
-    my @create_staging_dir_cmd = ('ssh ', $target_db->{host}, ';','mkdir ', $staging_dir);
-    if ( system(@create_staging_dir_cmd) != 0 ) {
-      if ( !-d $staging_dir || !$update || !$opt_only_tables) {
+    else {
+      # Creating staging directory
+      $logger->debug("Creating $staging_dir");
+      system("ssh $target_db->{host} mkdir -p $staging_dir >/dev/null 2>&1");
+      if ( system("ssh $target_db->{host} ls $staging_dir >/dev/null 2>&1") != 0) {
         $logger->info("Failed to create staging directory $staging_dir");
-        croak "Cannot create staging directory $staging_dir";      }
+        croak "Cannot create staging directory $staging_dir";
+      }
     }
   }
 
@@ -172,61 +178,40 @@ sub copy_database {
         }
       }
       else {
-        if ($skip_views) {
-        	$logger->error("SKIPPING view $table");
-        }
-        else {
-          push( @views, $table );
-        }
+        push( @views, $table );
         next TABLE;
       }
       push( @tables, $table );
     } ## end while ( $table_sth->fetch...)
 
-  if (!$noflush){
-    #Flushing and locking source database
-    $logger->info("Flushing and locking source database\n");
+  #Flushing and locking source database
+  $logger->info("Flushing and locking source database\n");
 
-    ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
-    if ($source_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'version'")->[0][1] lt "5.6"){
-      flush_and_lock($source_dbh,\@tables);
-    }
-    else {
-      flush_with_read_lock_mysql_5_6($source_dbh,\@tables);
-    }
-     
-    #Flushing and locking target database
-    if ($update || $opt_only_tables) {
-      $logger->info("Flushing and locking target database\n");
-      if ($target_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'version'")->[0][1] lt "5.6"){
-        flush_and_lock($target_dbh,\@tables);
-      }
-      else{
-        flush_with_read_lock_mysql_5_6($target_dbh,\@tables);
-      }
-    }
+  ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
 
-  }
-  else{
-    $logger->info("You are running the script with --noflush.The database will not be locked during the copy.This is not recomended!!!");
+  flush_with_read_lock($source_dbh,\@tables);
+
+  #Flushing and locking target database
+  if ($update || $opt_only_tables) {
+    $logger->info("Flushing and locking target database\n");
+    flush_with_read_lock($target_dbh,\@tables);
   }
 
   #Optimize source database
+  $logger->info("Optimizing tables on source database");
   optimize_tables($source_dbh,\@tables);
   
-  #Disconnecting from the database before doing the copy
-  $source_dbh->disconnect();
-  $target_dbh->disconnect();
-
   # Copying mysql database files
 
-  my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir);
+  my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
 
   # Unlock tables source and target
+  $logger->info("Unlocking tables on source database");
 
   unlock_tables($source_dbh);
 
   if ($update || $opt_only_tables){
+    $logger->info("Unlocking tables on target database");
     unlock_tables($target_dbh);
   }
 
@@ -236,19 +221,19 @@ sub copy_database {
   }
   
   # Repair views
-  view_repair($opt_skip_views,$source_db,$target_db,\@views,$staging_dir);
+  view_repair($source_db,$target_db,\@views,$staging_dir);
   
-  $target_dbh = create_dbh($target_dsn,$target_db);
   #Optimize target
   # if we use the update option, optimize the target database
-  if ($update || $opt_only_tables) {    
+  if ($update || $opt_only_tables) {
+    $logger->info("Optimizing tables on target database");
     optimize_tables($target_dbh,\@tables);
   }
 
-  $target_dbh->disconnect();
+  $logger->info("Checking/repairing tables on target database");
 
   # Check target database
-  mysqlcheck_db ($target_db,\@tables);
+  myisamchk_db(\@tables,$staging_dir);
 
   #move database from tmp dir to data dir
   # Only move the database from the temp directory to live directory if
@@ -259,15 +244,13 @@ sub copy_database {
     }
   }
  
-  if (!$noflush){
-    #Flush tables
-    flush_tables($target_dbh,\@tables,$target_db);
-  }
+  #Flush tables
+  flush_tables($target_dbh,\@tables,$target_db);
 
-  $target_dbh = create_dbh($target_dsn,$target_db);
-  $source_dbh = create_dbh($source_dsn,$source_db);
+  # Copy functions and procedures if exists
   copy_functions_and_procedures($source_dbh,$target_dbh,$source_db,$target_db);
 
+  #disconnect from MySQL server
   $source_dbh->disconnect();
   $target_dbh->disconnect();
 
@@ -306,9 +289,9 @@ sub create_dbh {
 }
 
 sub check_executables {
-  my ($executable) = @_;
+  my ($executable,$db) = @_;
 
-  my $output = `which $executable`;
+  my $output = `ssh $db->{host} which $executable`;
   my $rc     = $? >> 8;
 
   if($rc != 0) {
@@ -325,28 +308,15 @@ sub get_db_connection_params {
   return $db;
 }
 
-sub flush_with_read_lock_mysql_5_6 {
+sub flush_with_read_lock {
   my ($dbh,$tables) = @_;
   # Flush and Lock tables with a read lock.
-  $logger->info("FLUSHING AND LOCKING TABLES...");
   $dbh->do(sprintf( "FLUSH TABLES %s WITH READ LOCK", join( ', ', @{$tables} ) ) );
-  return;
-}
-
-sub flush_and_lock {
-  my ($dbh,$tables) = @_;
-  # Lock tables with a read lock.
-  $logger->info("LOCKING TABLES...");
-  $dbh->do(sprintf( "LOCK TABLES %s READ", join( ' READ, ', @{$tables} ) ) );
-  # Flush tables.
-  $logger->info("FLUSHING TABLES...");
-  $dbh->do(sprintf( "FLUSH TABLES SOURCE %s", join( ', ', @{$tables} ) ) );
   return;
 }
 
 sub optimize_tables {
   my ($dbh, $tables) = @_;
-  $logger->info("OPTIMIZING TABLES...");
   foreach my $table (@{$tables}) {
     $dbh->do( sprintf( "OPTIMIZE TABLE %s", $table ) );
   }
@@ -355,61 +325,52 @@ sub optimize_tables {
 
 sub unlock_tables {
   my ($dbh) = @_;
-  $logger->info("UNLOCKING TABLES SOURCE...");
   $dbh->do('UNLOCK TABLES');
-  $dbh->disconnect();
   return;
 }
 
 sub flush_tables {
   my ($dbh,$tables,$target_db) = @_;
-  $logger->info("FLUSHING TABLES ON TARGET...");
   $dbh->do("use $target_db->{dbname}");
   my $ddl = sprintf('FLUSH TABLES %s', join(q{, }, @{$tables}));
   $dbh->do($ddl);
-  $dbh->disconnect();
   return;
 }
 
 sub view_repair {
-  my ($opt_skip_views,$source_db,$target_db,$views,$staging_dir) =@_;
+  my ($source_db,$target_db,$views,$staging_dir) =@_;
 
-  if ($opt_skip_views) {
-    $logger->info("SKIPPING VIEWS...");
+  $logger->info("Processing views");
+
+  if ( $source_db->{dbname} eq $target_db->{dbname} ) {
+    $logger->info("Source and target names ($source_db->{dbname}) are the same. Views do not need repairing");
   }
   else {
-    $logger->info("PROCESSING VIEWS...");
+    my $ok = 1;
 
-    if ( $source_db->{dbname} eq $target_db->{dbname} ) {
-      $logger->info("Source and target names ($source_db->{dbname}) are the same. Views do not need repairing");
+  VIEW:
+    foreach my $current_view (@{$views}) {
+      $logger->info("Processing $current_view");
+
+      my $view_frm_loc = catfile( $staging_dir, "${current_view}.frm" );
+
+      if ( tie my @view_frm, 'Tie::File', $view_frm_loc ) {
+        for (@view_frm) {
+          s/`$source_db`/`$target_db`/g;
+        }
+        untie @view_frm;
+      }
+      else {
+        $logger->error("Cannot tie file $view_frm_loc for VIEW repair.");
+        $ok = 0;
+        next VIEW;
+      }
     }
-    else {
-      my $ok = 1;
 
-    VIEW:
-      foreach my $current_view (@{$views}) {
-        $logger->info("Processing $current_view");
-
-        my $view_frm_loc = catfile( $staging_dir, "${current_view}.frm" );
-
-        if ( tie my @view_frm, 'Tie::File', $view_frm_loc ) {
-          for (@view_frm) {
-            s/`$source_db`/`$target_db`/g;
-          }
-          untie @view_frm;
-        }
-        else {
-          $logger->error("Cannot tie file $view_frm_loc for VIEW repair.");
-          $ok = 0;
-          next VIEW;
-        }
-      }
-
-      if ( !$ok ) {
-        croak "FAILED: view cleanup failed. (cleanup of view frm files in $staging_dir may be needed";
-      }
-    } ## end else [ if ( $source_db eq $target_db)]
-  } ## end else [ if ($opt_skip_views) ]
+    if ( !$ok ) {
+      croak "FAILED: view cleanup failed. (cleanup of view frm files in $staging_dir may be needed";
+    }
+  } ## end else [ if ( $source_db eq $target_db)]
   return;
 }
 
@@ -417,8 +378,6 @@ sub myisamchk_db {
   my ($tables,$staging_dir) = @_;
   # Check the copied table files with myisamchk.  Let myisamchk
   # automatically repair any broken or un-closed tables.
-
-  $logger->info("CHECKING TABLES...");
 
   foreach my $table (@{$tables}) {
     foreach my $index (
@@ -430,36 +389,11 @@ sub myisamchk_db {
         $index );
 
       if ( system(@check_cmd) != 0 ) {
-        croak "Failed to check some tables. Please clean up $staging_dir";
-
+        croak "Failed to check $table table. Please clean up $staging_dir";
         last;
       }
     }
   } ## end foreach my $table (@tables)
-  return;
-}
-
-sub mysqlcheck_db {
-  my ($db,$tables) = @_;
-  
-  my @mysql_check_cmd = ('myisamchk', '--host', $db->{host}, '--port', $db->{port}, '--user', $db->{user}, '--pass', $db->{pass}, '--auto-repair', '--check-only-changed' ,'--check', '--database', $db->{dbname});
-
-  if ($tables){
-    foreach my $table (@{$tables}) {
-      push @mysql_check_cmd, $table;
-      if ( system(@mysql_check_cmd) != 0 ) {
-        croak "Failed to check and repair $db->{dbname} on $db->{host}";
-        last;
-      }
-      else { $logger->debug("database $db->{dbname} $table is fine") }
-      pop @mysql_check_cmd;
-    }
-    $logger->debug("database $db->{dbname} is fine")
-  }
-  else{
-    $logger->warn("no table copied, can't check them")
-  }
-
   return;
 }
 
@@ -469,41 +403,36 @@ sub move_database {
   # Move table files into place in and remove the staging directory.  We already
   # know that the destination directory does not exist.
 
-  $logger->info("MOVING $staging_dir TO $destination_dir...");
+  $logger->info("Moving $staging_dir to $destination_dir");
 
-
-  my @create_destination_dir_cmd = ('ssh ', $target_db->{host}, ';','mkdir ', $destination_dir);
-  if ( system(@create_destination_dir_cmd) != 0 ) {
+  if ( system("ssh $target_db->{host} mkdir -p $destination_dir >/dev/null 2>&1") != 0 ) {
     croak "Failed to create destination directory $destination_dir. Please clean up $staging_dir.";
   }
   
-  my @mv_db_opt = ('ssh ', $target_db->{host}, ';','mv ',catfile( $staging_dir, 'db.opt' ), $destination_dir);
+  my @mv_db_opt = ('ssh', $target_db->{host},'mv',catfile( $staging_dir, 'db.opt' ), $destination_dir);
   if ( system(@mv_db_opt) != 0 ) {
     croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
   }
 
   foreach my $table (@{$tables}, @{$views}) {
-    my @files = glob( catfile( $staging_dir, sprintf( "%s*", $table ) ) );
+    my @files;
+    foreach my $file_extention ("MYD", "MYI", "frm"){
+      push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
+    }
 
-    $logger->info( "Moving $table...\n");
-
-     my @mv_db_files = ('ssh ', $target_db->{host}, ';','mv ');
+    $logger->debug( "Moving $table");
 
   FILE:
     foreach my $file (@files) {
-      push @mv_db_files, $file, $destination_dir;
-      if ( system(@mv_db_files) != 0 ) {
+      if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
         croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
         next FILE;
       }
-      pop @mv_db_files;
-      pop @mv_db_files;
     }
   }
 
   # Remove the now empty staging directory.
-  my @rm_staging_dir = ('ssh ', $target_db->{host}, ';','rm -r ', $staging_dir);
-  if ( system(@rm_staging_dir) != 0 ) {
+  if ( system("ssh $target_db->{host} rm -r  $staging_dir") != 0 ) {
     croak "Failed to unlink the staging directory $staging_dir. Clean this up manually.";
   }
   return;
@@ -518,7 +447,7 @@ sub copy_functions_and_procedures{
 
       my $type = $proc_funcs->{$name}->{type};
       if($type !~ /FUNCTION|PROCEDURE/){
-        $logger->warn("Copying '$type' not implemted. Skipping....");
+        $logger->warn("Copying '$type' not implemted. Skipping");
         next;
       }
 
@@ -532,7 +461,7 @@ sub copy_functions_and_procedures{
       $logger->info("COPYING $proc_funcs->{$name}->{type} $name");
       $target_dbh->do($sql) or die $source_dbh->errstr;
     }
-    $logger->info("Finished copying functions and procedures");
+    $logger->debug("Finished copying functions and procedures");
   }
   else {
     $logger->debug("No functions or procedures to copy")
@@ -547,13 +476,17 @@ sub copy_functions_and_procedures{
 # options.
 
 sub copy_mysql_files {
-  my ($force,$update,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$source_db,$target_db,$staging_dir,$source_dir) = @_;
+  my ($force,$update,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose) = @_;
 
   my @copy_cmd;
   
-  @copy_cmd = ('rsync');
+  @copy_cmd = ('ssh', $target_db->{host}, 'rsync');
 
-  push(@copy_cmd, '--whole-file', '--archive', '--progress' );
+  push(@copy_cmd, '--whole-file', '--archive');
+
+  if ($verbose){
+    push (@copy_cmd, '--progress');
+  }
 
   if ($force) {
     push( @copy_cmd, '--delete', '--delete-excluded' );
@@ -569,7 +502,7 @@ sub copy_mysql_files {
   push (@copy_cmd, '--chmod=Du=rwx,go=rx,Fu=rwx,go=rx');  
 
   # Add TCP with arcfour encryption, TCP does go pretty fast (~110 MB/s) and is a better choice in LAN situation.
-  push(@copy_cmd, '-e', q{ssh -c arcfour} );
+  push(@copy_cmd, '-e ssh');
 
   if ( defined($opt_only_tables) ) {
     push( @copy_cmd, '--ignore-times' );
@@ -597,22 +530,25 @@ sub copy_mysql_files {
 
     push( @copy_cmd, "--include=*" );
   }
-  
-  #Copying over ssh
-  push (@copy_cmd, "-e ssh ");
 
+  if ( $source_db->{host} eq $target_db->{host} ) {
+    # Local copy.
+    push( @copy_cmd,
+          sprintf( "%s/", catdir( $source_dir, $source_db->{dbname} ) ) );
+  }
+  else {
+    # Copy from remote server.
+    push( @copy_cmd,
+          sprintf( "%s:%s/",
+                   $source_db->{host}, catdir( $source_dir, $source_db->{dbname} ) )
+    );
+  }
 
-  # Copy from remote server.
-  push( @copy_cmd,
-          sprintf( "%s:%s/", $source_db->{host}, catdir( $source_dir, $source_db->{dbname} ) )
-  );
-
-  push( @copy_cmd, sprintf( "%s:%s/", $target_db->{host}, $staging_dir ) );
+  push( @copy_cmd, sprintf( "%s/", $staging_dir ) );
 
   # Perform the copy and make sure it succeeds.
 
-  printf( "COPYING '%s:%d/%s' TO STAGING DIRECTORY '%s'\n",
-          $source_db->{host}, $source_db->{port}, $source_db->{dbname}, $staging_dir );
+  $logger->info( "Copying $source_db->{host}:$source_db->{port}/$source_db->{dbname}' to staging directory $staging_dir");
 
   # For debugging:
   # print( join( ' ', @copy_cmd ), "\n" );
