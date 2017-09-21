@@ -27,8 +27,7 @@ my $opts = {};
 GetOptions( $opts,                 'source_db_uri=s',
             'target_db_uri=s',     'only_tables=s',
             'skip_tables=s',       'update|u',
-            'drop|d',             'skip_views',
-            'noflush' );
+            'drop|d', 'verbose' );
 
 if ( $opts->{verbose} ) {
   Log::Log4perl->easy_init($DEBUG);
@@ -40,12 +39,9 @@ else {
 my $logger = get_logger;
 
 if ( !defined $opts->{source_db_uri} || !defined $opts->{target_db_uri} ) {
-  croak
-"Usage: copy_database.pl -source_db_uri <source_db_uri> -target_db_uri <target_db_uri> [-only_tables=table1,table2] [-skip_tables=table1,table2] [-update] [-drop] [-skip_views] [-noflush] ";
+  croak "Usage: copy_database.pl -source_db_uri <mysql://user:password\@host:port/db_name> -target_db_uri <mysql://user:password\@host:port/db_name> [-only_tables=table1,table2] [-skip_tables=table1,table2] [-update] [-drop] [-verbose]";
 }
 
 $logger->debug("Copying $opts->{source_db_uri} to $opts->{target_db_uri}");
 
-copy_database ($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{opt_only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{skip_views}, $opts->{noflush});
-
-$logger->info("Successfully copied $opts->{source_db_uri} to $opts->{target_db_uri}");
+copy_database($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{opt_only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{verbose});
