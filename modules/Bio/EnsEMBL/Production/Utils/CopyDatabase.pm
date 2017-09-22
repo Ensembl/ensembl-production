@@ -117,7 +117,7 @@ sub copy_database {
     # If option drop enabled, drop database on target server.
     elsif ($drop){
       $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db->{dbname};");
+      $target_dbh->do("DROP DATABASE $target_db->{dbname};") or die $target_dbh->errstr;
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
@@ -195,10 +195,9 @@ sub copy_database {
 
   #Optimize source database
   $logger->info("Optimizing tables on source database");
-  optimize_tables($source_dbh,\@tables);
-  
-  # Copying mysql database files
+  optimize_tables($source_dbh,\@tables,$source_db);
 
+  # Copying mysql database files
   my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
 
   # Unlock tables source and target
@@ -218,13 +217,6 @@ sub copy_database {
   
   # Repair views
   view_repair($source_db,$target_db,\@views,$staging_dir);
-  
-  #Optimize target
-  # if we use the update option, optimize the target database
-  if ($target_db_exist == 0) {
-    $logger->info("Optimizing tables on target database");
-    optimize_tables($target_dbh,\@tables);
-  }
 
   $logger->info("Checking/repairing tables on target database");
 
@@ -239,11 +231,15 @@ sub copy_database {
   }
  
   #Flush tables
-  $logger->info("Flusing tables on target database");
+  $logger->info("Flushing tables on target database");
   flush_tables($target_dbh,\@tables,$target_db);
 
   # Copy functions and procedures if exists
   copy_functions_and_procedures($source_dbh,$target_dbh,$source_db,$target_db);
+
+  #Optimize target
+  $logger->info("Optimizing tables on target database");
+  optimize_tables($target_dbh,\@tables,$target_db);
 
   #disconnect from MySQL server
   $source_dbh->disconnect();
@@ -334,29 +330,31 @@ sub get_db_connection_params {
 sub flush_with_read_lock {
   my ($dbh,$tables) = @_;
   # Flush and Lock tables with a read lock.
-  $dbh->do(sprintf( "FLUSH TABLES %s WITH READ LOCK", join( ', ', @{$tables} ) ) );
+  my $ddl = sprintf( "FLUSH TABLES %s WITH READ LOCK", join( ', ', @{$tables} ) );
+  $dbh->do($ddl) or die $dbh->errstr;
   return;
 }
 
 sub optimize_tables {
-  my ($dbh, $tables) = @_;
+  my ($dbh, $tables, $db) = @_;
+  $dbh->do("use $db->{dbname}") or die $dbh->errstr;
   foreach my $table (@{$tables}) {
-    $dbh->do( sprintf( "OPTIMIZE TABLE %s", $table ) );
+    $dbh->do( sprintf( "OPTIMIZE TABLE %s", $table ) ) or die $dbh->errstr;
   }
   return;
 }
 
 sub unlock_tables {
   my ($dbh) = @_;
-  $dbh->do('UNLOCK TABLES');
+  $dbh->do('UNLOCK TABLES') or die $dbh->errstr;
   return;
 }
 
 sub flush_tables {
-  my ($dbh,$tables,$target_db) = @_;
-  $dbh->do("use $target_db->{dbname}");
+  my ($dbh,$tables,$db) = @_;
+  $dbh->do("use $db->{dbname}") or die $dbh->errstr;
   my $ddl = sprintf('FLUSH TABLES %s', join(q{, }, @{$tables}));
-  $dbh->do($ddl);
+  $dbh->do($ddl) or die $dbh->errstr;
   return;
 }
 
@@ -516,9 +514,8 @@ sub copy_mysql_files {
   }
   
   # Update will copy updated tables from source db to target db
-
   if ($update) {
-    push( @copy_cmd, '--update', '--checksum');
+    push( @copy_cmd, '--checksum', '--delete');
   }
 
   # Set files permission to 755 (rwxr-xr-x)
