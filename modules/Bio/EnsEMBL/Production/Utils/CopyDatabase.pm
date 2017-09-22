@@ -44,16 +44,16 @@ if(!Log::Log4perl->initialized()) {
 sub copy_database {
   my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
 
-	# Get list of tables that we want to copy or skip
-	my %only_tables;
-	my %skip_tables;
-	if ( defined($opt_only_tables) ) {
-	  %only_tables = map( { $_ => 1 } split( /,/, $opt_only_tables ) );
-	}
+  # Get list of tables that we want to copy or skip
+  my %only_tables;
+  my %skip_tables;
+  if ( defined($opt_only_tables) ) {
+    %only_tables = map( { $_ => 1 } split( /,/, $opt_only_tables ) );
+  }
 
-	if ( defined($opt_skip_tables) ) {
-	  %skip_tables = map( { $_ => 1 } split( /,/, $opt_skip_tables ) );
-	}
+  if ( defined($opt_skip_tables) ) {
+    %skip_tables = map( { $_ => 1 } split( /,/, $opt_skip_tables ) );
+  }
 
   my $source_db = get_db_connection_params( $source_db_uri);
   my $target_db = get_db_connection_params( $target_db_uri);
@@ -68,6 +68,11 @@ sub copy_database {
     croak "Target server $target_db->{host} is not valid";
   }
 
+
+  if ((defined $update && defined $drop) || (defined $opt_only_tables && defined $drop)) {
+    croak "You can't drop the target database when using the --update and --only_tables options.";
+  }
+
   # Check executable
   $logger->debug("Checking myisamchk exist");
   check_executables("myisamchk",$target_db);
@@ -76,11 +81,11 @@ sub copy_database {
 
 
   #Connect to source database
-  my $source_dsn = create_dsn($source_db,$update,$opt_only_tables,$source_db_uri,"source");
+  my $source_dsn = create_dsn($source_db,$source_db_uri);
   my $source_dbh = create_dbh($source_dsn,$source_db);
   
   #Connect to target database
-  my $target_dsn = create_dsn($target_db,$update,$opt_only_tables,$target_db_uri,"target");
+  my $target_dsn = create_dsn($target_db,$target_db_uri);
   my $target_dbh = create_dbh($target_dsn,$target_db);
   
   # Get source and target server data directories.
@@ -100,51 +105,42 @@ sub copy_database {
 
   my $destination_dir = catdir( $target_dir, $target_db->{dbname} );
   my $staging_dir;
-  my $tmp_dir;
   my $force=0;
   
-  # If we update the database, we don't need a tmp dir
-  # We will use the dest dir instead of staging dir.
-  if ($update || $opt_only_tables) {
-    $staging_dir=$destination_dir;
-  }
-  else {
-  	$tmp_dir = $target_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'tmpdir'")->[0][1];
-    if ( system("ssh $target_db->{host} ls $tmp_dir >/dev/null 2>&1") != 0 ) {
-      croak "Can not find the temporary directory $tmp_dir";
+  #Check if database exist on target server
+  if (system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1") == 0) {
+    # If we update the database, we don't need a tmp dir
+    # We will use the dest dir instead of staging dir.
+    if ($update || $opt_only_tables){
+      $staging_dir=$destination_dir;
     }
-    $logger->debug("Using tmp dir: $tmp_dir");
-    
-    $staging_dir = catdir( $tmp_dir, sprintf( "tmp.%s", $target_db->{dbname} ) );
-    
-    # Try to make sure the temporary directory and the final destination
-    # directory actually exists, and that the staging directory within the
-    # temporary directory does *not* exist.
-
-    if ( !$drop && system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1") == 0 ) {
+    # If option drop enabled, drop database on target server.
+    elsif ($drop){
+      $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
+      $target_dbh->do("DROP DATABASE $target_db->{dbname};");
+      # Create the staging dir in server temp directory
+      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
+    }
+    # If drop not enable, die
+    else
+    {
       $logger->error("Destination directory $destination_dir already exists");
       croak "Database destination directory $destination_dir exist. You can use the --drop option to drop the database on the target server";
     }
-    # If option drop enabled, drop database on target server.
-    if ($drop){
-    	$logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db->{dbname};");
-    }
-    
-    if (system("ssh $target_db->{host} ls $staging_dir >/dev/null 2>&1") == 0 ) {
-      $logger->info("Staging directory $staging_dir already exists, using rsync with delete");
-      $force=1;
+  }
+  # If database don't exist on source server
+  else {
+    # If option update is defined, the database need to exist on target server.
+    if ($update || $opt_only_tables){
+      croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
     }
     else {
-      # Creating staging directory
-      $logger->debug("Creating $staging_dir");
-      system("ssh $target_db->{host} mkdir -p $staging_dir >/dev/null 2>&1");
-      if ( system("ssh $target_db->{host} ls $staging_dir >/dev/null 2>&1") != 0) {
-        $logger->info("Failed to create staging directory $staging_dir");
-        croak "Cannot create staging directory $staging_dir";
-      }
+      # Create the staging dir in server temp directory
+      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
   }
+
+  my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
 
   my @tables;
   my @views;
@@ -192,7 +188,7 @@ sub copy_database {
   flush_with_read_lock($source_dbh,\@tables);
 
   #Flushing and locking target database
-  if ($update || $opt_only_tables) {
+  if ($target_db_exist == 0) {
     $logger->info("Flushing and locking target database\n");
     flush_with_read_lock($target_dbh,\@tables);
   }
@@ -210,7 +206,7 @@ sub copy_database {
 
   unlock_tables($source_dbh);
 
-  if ($update || $opt_only_tables){
+  if ($target_db_exist == 0){
     $logger->info("Unlocking tables on target database");
     unlock_tables($target_dbh);
   }
@@ -225,7 +221,7 @@ sub copy_database {
   
   #Optimize target
   # if we use the update option, optimize the target database
-  if ($update || $opt_only_tables) {
+  if ($target_db_exist == 0) {
     $logger->info("Optimizing tables on target database");
     optimize_tables($target_dbh,\@tables);
   }
@@ -238,13 +234,12 @@ sub copy_database {
   #move database from tmp dir to data dir
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
-  if (!$update) {
-    if (!$opt_only_tables) {
+  if ($target_db_exist != 0) {
       move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db);
-    }
   }
  
   #Flush tables
+  $logger->info("Flusing tables on target database");
   flush_tables($target_dbh,\@tables,$target_db);
 
   # Copy functions and procedures if exists
@@ -263,15 +258,43 @@ sub copy_database {
   return;
 }
 
+sub create_staging_db_tmp_dir {
+  my ($dbh,$db,$staging_dir,$force) = @_;
+  $logger->debug("creating database tmp dir on target server");
+  my $tmp_dir = $dbh->selectall_arrayref("SHOW VARIABLES LIKE 'tmpdir'")->[0][1];
+  if ( system("ssh $db->{host} ls $tmp_dir >/dev/null 2>&1") != 0 ) {
+    croak "Can not find the temporary directory $tmp_dir";
+  }
+  $logger->debug("Using tmp dir: $tmp_dir");
+
+  $staging_dir = catdir( $tmp_dir, sprintf( "tmp.%s", $db->{dbname} ) );
+
+  if (system("ssh $db->{host} ls $staging_dir >/dev/null 2>&1") == 0 ) {
+    $logger->info("Staging directory $staging_dir already exists, using rsync with delete");
+    $force=1;
+  }
+  else {
+    # Creating staging directory
+    $logger->debug("Creating $staging_dir");
+    system("ssh $db->{host} mkdir -p $staging_dir >/dev/null 2>&1");
+    if ( system("ssh $db->{host} ls $staging_dir >/dev/null 2>&1") != 0) {
+      $logger->info("Failed to create staging directory $staging_dir");
+      croak "Cannot create staging directory $staging_dir";
+    }
+  }
+  return ($force,$staging_dir);
+}
+
 sub create_dsn {
-  my ($db,$update,$opt_only_tables,$db_uri,$server_type) = @_;
+  my ($db,$db_uri) = @_;
   my $dsn;
-  if ($update || $opt_only_tables || $server_type eq "source"){
-    $logger->debug("Connecting to $server_type $db_uri database");
+  my $exist_db = `mysql -ss -r --host=$db->{host} --port=$db->{port} --user=$db->{user} --password=$db->{pass} -e "show databases like '$db->{dbname}'"`;
+  if ($exist_db){
+    $logger->debug("Connecting to $db_uri database");
     $dsn = sprintf( "DBI:mysql:database=%s;host=%s;port=%d", $db->{dbname}, $db->{host}, $db->{port} );
   }
   else{
-    $logger->debug("Connecting to $server_type server $db_uri");
+    $logger->debug("Connecting to server $db->{host}:$db->{port}");
     $dsn = sprintf( "DBI:mysql:host=%s;port=%d",$db->{host}, $db->{port} );
   }
 
