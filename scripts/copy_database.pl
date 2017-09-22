@@ -44,4 +44,4 @@ if ( !defined $opts->{source_db_uri} || !defined $opts->{target_db_uri} ) {
 
 $logger->debug("Copying $opts->{source_db_uri} to $opts->{target_db_uri}");
 
-copy_database($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{opt_only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{verbose});
+copy_database($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{verbose});
