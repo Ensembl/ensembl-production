@@ -68,6 +68,14 @@ sub copy_database {
     croak "Target server $target_db->{host} is not valid";
   }
 
+  if (!defined($source_db->{pass}) || $source_db->{pass} eq ''){
+    croak "You need to run this script as the admin MySQL user on $source_db->{host}"
+  }
+
+  if (!defined($target_db->{pass}) || $target_db->{pass} eq ''){
+    croak "You need to run this script as the admin MySQL user on $target_db->{host}"
+  }
+
 
   if ((defined $update && defined $drop) || (defined $opt_only_tables && defined $drop)) {
     croak "You can't drop the target database when using the --update and --only_tables options.";
