@@ -485,8 +485,7 @@ return ($rc, $output);
 
 sub get_production_DBAdaptor {
   my ($self) = @_;
-
-return Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'production');
+  return $self->production_dba();
 }
 
 
