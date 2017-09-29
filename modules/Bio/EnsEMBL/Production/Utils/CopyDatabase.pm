@@ -443,7 +443,8 @@ sub move_database {
     croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
   }
 
-  foreach my $table (@{$tables}, @{$views}) {
+  # Moving tables
+  foreach my $table (@{$tables}) {
     my @files;
     foreach my $file_extention ("MYD", "MYI", "frm"){
       push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
@@ -457,6 +458,17 @@ sub move_database {
         croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
         next FILE;
       }
+    }
+  }
+
+  # Moving views
+  foreach my $view (@{$views}) {
+    my $file = catfile( $staging_dir, sprintf( "%s.%s", $view, "frm"));
+
+    $logger->debug( "Moving $view");
+
+    if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
+      croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
     }
   }
 
