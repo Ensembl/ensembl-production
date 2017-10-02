@@ -101,10 +101,16 @@ sub copy_database {
   my $target_dir = $target_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'datadir'")->[0][1];
 
   if ( !defined($source_dir) ) {
+      #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "Failed to find data directory for source server at $source_db->{host}";
   }
 
   if ( !defined($target_dir) ) {
+      #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "Failed to find data directory for target server at $target_db->{host}";
   }
 
@@ -133,6 +139,9 @@ sub copy_database {
     else
     {
       $logger->error("Destination directory $destination_dir already exists");
+      #disconnect from MySQL server
+      $source_dbh->disconnect();
+      $target_dbh->disconnect();
       croak "Database destination directory $destination_dir exist. You can use the --drop option to drop the database on the target server";
     }
   }
@@ -140,6 +149,9 @@ sub copy_database {
   else {
     # If option update is defined, the database need to exist on target server.
     if ($update || $opt_only_tables){
+      #disconnect from MySQL server
+      $source_dbh->disconnect();
+      $target_dbh->disconnect();
       croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
     }
     else {
@@ -170,15 +182,17 @@ sub copy_database {
       {
         next TABLE;
       }
-      elsif ( defined($opt_skip_tables) &&
-        exists( $skip_tables{$table} ) )
+      elsif ( defined($opt_skip_tables) && exists( $skip_tables{$table} ) )
       {
         next TABLE;
       }
 
       if ( defined($engine) ) {
         if ( $engine eq 'InnoDB' ) {
-            croak "FAILED: can not copy InnoDB tables. Please convert $source_db->{dbname}.${table} to MyISAM";
+          #disconnect from MySQL server
+          $source_dbh->disconnect();
+          $target_dbh->disconnect();
+          croak "FAILED: can not copy InnoDB tables. Please convert $source_db->{dbname}.${table} to MyISAM";
         }
       }
       else {
@@ -220,22 +234,25 @@ sub copy_database {
 
   # Die if copy failed
   if ($copy_failed) {
+    #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "FAILED: copy failed (cleanup of $staging_dir may be needed).";
   }
   
   # Repair views
-  view_repair($source_db,$target_db,\@views,$staging_dir);
+  view_repair($source_db,$target_db,\@views,$staging_dir,$source_dbh,$target_dbh);
 
   $logger->info("Checking/repairing tables on target database");
 
   # Check target database
-  myisamchk_db(\@tables,$staging_dir);
+  myisamchk_db(\@tables,$staging_dir,$source_dbh,$target_dbh);
 
   #move database from tmp dir to data dir
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
   if ($target_db_exist != 0) {
-      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db);
+      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh);
   }
  
   #Flush tables
@@ -267,6 +284,8 @@ sub create_staging_db_tmp_dir {
   $logger->debug("creating database tmp dir on target server");
   my $tmp_dir = $dbh->selectall_arrayref("SHOW VARIABLES LIKE 'tmpdir'")->[0][1];
   if ( system("ssh $db->{host} ls $tmp_dir >/dev/null 2>&1") != 0 ) {
+    #disconnect from MySQL server
+    $dbh->disconnect();
     croak "Can not find the temporary directory $tmp_dir";
   }
   $logger->debug("Using tmp dir: $tmp_dir");
@@ -283,6 +302,8 @@ sub create_staging_db_tmp_dir {
     system("ssh $db->{host} mkdir -p $staging_dir >/dev/null 2>&1");
     if ( system("ssh $db->{host} ls $staging_dir >/dev/null 2>&1") != 0) {
       $logger->info("Failed to create staging directory $staging_dir");
+      #disconnect from MySQL server
+      $dbh->disconnect();
       croak "Cannot create staging directory $staging_dir";
     }
   }
@@ -367,7 +388,7 @@ sub flush_tables {
 }
 
 sub view_repair {
-  my ($source_db,$target_db,$views,$staging_dir) =@_;
+  my ($source_db,$target_db,$views,$staging_dir, $source_dbh, $target_dbh) =@_;
 
   $logger->info("Processing views");
 
@@ -375,36 +396,22 @@ sub view_repair {
     $logger->info("Source and target names ($source_db->{dbname}) are the same. Views do not need repairing");
   }
   else {
-    my $ok = 1;
-
-  VIEW:
     foreach my $current_view (@{$views}) {
       $logger->info("Processing $current_view");
-
       my $view_frm_loc = catfile( $staging_dir, "${current_view}.frm" );
-
-      if ( tie my @view_frm, 'Tie::File', $view_frm_loc ) {
-        for (@view_frm) {
-          s/`$source_db`/`$target_db`/g;
-        }
-        untie @view_frm;
-      }
-      else {
-        $logger->error("Cannot tie file $view_frm_loc for VIEW repair.");
-        $ok = 0;
-        next VIEW;
+      if ( system("ssh $target_db->{host} sed -i -e 's/$source_db->{dbname}/$target_db->{dbname}/g' $view_frm_loc >/dev/null 2>&1") != 0 ) {
+        #disconnect from MySQL server
+        $source_dbh->disconnect();
+        $target_dbh->disconnect();
+        croak "Failed to repair view $current_view in $staging_dir.";
       }
     }
-
-    if ( !$ok ) {
-      croak "FAILED: view cleanup failed. (cleanup of view frm files in $staging_dir may be needed";
-    }
-  } ## end else [ if ( $source_db eq $target_db)]
+  }
   return;
 }
 
 sub myisamchk_db {
-  my ($tables,$staging_dir) = @_;
+  my ($tables,$staging_dir,$source_dbh,$target_dbh) = @_;
   # Check the copied table files with myisamchk.  Let myisamchk
   # automatically repair any broken or un-closed tables.
 
@@ -418,6 +425,9 @@ sub myisamchk_db {
         $index );
 
       if ( system(@check_cmd) != 0 ) {
+        #disconnect from MySQL server
+        $source_dbh->disconnect();
+        $target_dbh->disconnect();
         croak "Failed to check $table table. Please clean up $staging_dir";
         last;
       }
@@ -427,7 +437,7 @@ sub myisamchk_db {
 }
 
 sub move_database {
-  my ($staging_dir, $destination_dir, $tables, $views, $target_db)=@_;
+  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh)=@_;
 
   # Move table files into place in and remove the staging directory.  We already
   # know that the destination directory does not exist.
@@ -435,11 +445,17 @@ sub move_database {
   $logger->info("Moving $staging_dir to $destination_dir");
 
   if ( system("ssh $target_db->{host} mkdir -p $destination_dir >/dev/null 2>&1") != 0 ) {
+    #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "Failed to create destination directory $destination_dir. Please clean up $staging_dir.";
   }
   
   my @mv_db_opt = ('ssh', $target_db->{host},'mv',catfile( $staging_dir, 'db.opt' ), $destination_dir);
   if ( system(@mv_db_opt) != 0 ) {
+    #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
   }
 
@@ -468,12 +484,18 @@ sub move_database {
     $logger->debug( "Moving $view");
 
     if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
+      #disconnect from MySQL server
+      $source_dbh->disconnect();
+      $target_dbh->disconnect();
       croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
     }
   }
 
   # Remove the now empty staging directory.
   if ( system("ssh $target_db->{host} rm -r  $staging_dir") != 0 ) {
+    #disconnect from MySQL server
+    $source_dbh->disconnect();
+    $target_dbh->disconnect();
     croak "Failed to unlink the staging directory $staging_dir. Clean this up manually.";
   }
   return;
