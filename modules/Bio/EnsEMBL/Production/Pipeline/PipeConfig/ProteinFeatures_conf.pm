@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.24-63.0',
+    interproscan_version => '5.26-65.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -110,7 +110,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '11.1',
+        'db_version'    => '12,0',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -158,7 +158,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '2',
+        'db_version'    => '3',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
