@@ -69,11 +69,11 @@ sub copy_database {
   }
 
   if (!defined($source_db->{pass}) || $source_db->{pass} eq ''){
-    croak "You need to run this script as the admin MySQL user on $source_db->{host}"
+    croak "You need to run this script as the MySQL user that can write on $source_db->{host}"
   }
 
   if (!defined($target_db->{pass}) || $target_db->{pass} eq ''){
-    croak "You need to run this script as the admin MySQL user on $target_db->{host}"
+    croak "You need to run this script as the MySQL user that can write on $target_db->{host}"
   }
 
 
