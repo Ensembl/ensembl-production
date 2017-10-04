@@ -81,6 +81,10 @@ sub copy_database {
     croak "You can't drop the target database when using the --update and --only_tables options.";
   }
 
+  if (!defined($source_db->{dbname}) || !defined($target_db->{dbname})) {
+    croak "You need to specify a database name in source and target URI";
+  }
+
   # Check executable
   $logger->debug("Checking myisamchk exist");
   check_executables("myisamchk",$target_db);
