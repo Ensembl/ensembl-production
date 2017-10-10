@@ -83,7 +83,7 @@ sub pipeline_analyses {
         -input_ids  => [ {} ],
         -flow_into  => {
           'A->1' => ['Notify'],
-          '4->A' => ['SnpDensity', 'SnpCount', 'NonSense', 'GenomeStats'],
+          '4->A' => ['SnpDensity', 'SnpCount', 'GenomeStats'],
         },
       },
 
@@ -101,17 +101,6 @@ sub pipeline_analyses {
         -parameters => {
           table => 'gene', logic_name => 'snpdensity', value_type => 'sum',
           bin_count => $self->o('bin_count'), max_run => $self->o('max_run'),
-        },
-        -max_retry_count  => 2,
-        -hive_capacity    => 10,
-        -rc_name          => 'default',
-      },
-
-      {
-        -logic_name => 'NonSense',
-        -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::NonSense',
-        -parameters => {
-          frequency => 0.1, observation => 20,
         },
         -max_retry_count  => 2,
         -hive_capacity    => 10,
