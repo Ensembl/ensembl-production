@@ -575,7 +575,6 @@ sub copy_genes {
            -MODIFIED_DATE => $gene->modified_date(),
            -BIOTYPE       => $gene->biotype(),
            -SOURCE        => $gene->source(),
-           -STATUS        => $gene->status(),
            -IS_CURRENT    => $gene->is_current() );
       if ( defined $gdisplay_xref ) {
         $tgene->add_DBEntry($gdisplay_xref);
@@ -602,7 +601,6 @@ sub copy_genes {
                 -MODIFIED_DATE => $transcript->modified_date(),
                 -DESCRIPTION   => $transcript->description(),
                 -BIOTYPE       => $transcript->biotype(),
-                -STATUS        => $transcript->status(),
                 -IS_CURRENT    => $transcript->is_current() );
         if ( defined $tdisplay_xref ) {
           $ttranscript->add_DBEntry($tdisplay_xref);
