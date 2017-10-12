@@ -288,11 +288,13 @@ sub prepare_schema {
       -SQL =>
 "select $col_str from analysis_description where analysis_id=(select analysis_id from analysis where logic_name=?)",
       -PARAMS => [$logic_name] );
-    $rows->[0][0] = $analysis_id;
-    $tgt->dbc()->sql_helper()->execute_update(
-      -SQL =>
-"insert into analysis_description($col_str) values($place_holders)",
-      -PARAMS => $rows->[0] );
+    if(scalar(@$rows>0)) {
+      $rows->[0][0] = $analysis_id;
+      $tgt->dbc()->sql_helper()->execute_update(
+                                                -SQL =>
+                                                "insert into analysis_description($col_str) values($place_holders)",
+                                                -PARAMS => $rows->[0] );
+    }
   }
 
   return;
