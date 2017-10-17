@@ -40,7 +40,8 @@ DROP VIEW logic_name_overview;
 DROP VIEW unconnected_analyses;
 DROP TABLE analysis_web_data;
 ALTER TABLE web_data DROP COLUMN data;
-
+ALTER TABLE analysis_description CHANGE COLUMN default_web_data_id web_data_id INT(1);
+ALTER TABLE analysis_description CHANGE COLUMN default_displayable displayable TINYINT(1) NOT NULL;
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_91_92_d.sql|analysis_description_update');
