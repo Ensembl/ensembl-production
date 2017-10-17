@@ -29,9 +29,7 @@ CREATE TABLE web_data_element (
   created_by    INTEGER,
   created_at    DATETIME,
   modified_by   INTEGER,
-  modified_at   DATETIME,
-
-  PRIMARY KEY (web_data_id)   
+  modified_at   DATETIME   
 );
 
 INSERT INTO web_data_element(web_data_id,data_key,data_value) (SELECT web_data_id,"hash",data FROM web_data);
