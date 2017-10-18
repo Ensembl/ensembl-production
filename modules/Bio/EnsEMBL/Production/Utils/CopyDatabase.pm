@@ -166,6 +166,10 @@ sub copy_database {
 
   my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
 
+
+  #Check if we have enough space on target server before starting the db copy
+  check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+
   my @tables;
   my @views;
 
@@ -627,6 +631,40 @@ sub copy_mysql_files {
 
   return $copy_failed;
 } 
+
+# Subroutine to check source database size and target server space available.
+# Added 10% of server space to the calculation to make sure we don't completely fill up the server.
+sub check_space_before_copy {
+my ($source_db,$source_dir,$target_db,$staging_dir) = @_;
+my $threshold = 10;
+
+#Getting source database size
+my ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+
+#Getting target server space
+my @cmd = `ssh $target_db->{host} df -P $staging_dir`;
+my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+
+#Calculate extra space to make sure we don't fully fill up the server
+my $threshold_server = ($threshold * $available)/100;
+
+my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
+
+if ( $space_left_after_copy == abs($space_left_after_copy) ) {
+    $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
+} else {
+    croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
+}
+
+return;
+}
+
+#Subroutine to convert kilobytes in MB, GB, TB...
+sub scaledkbytes {
+   (sort { length $a <=> length $b }
+   map { sprintf '%.3g%s', $_[0]/1024**$_->[1], $_->[0] }
+   [KB => 0],[MB=>1],[GB=>2],[TB=>3],[PB=>4],[EB=>5])[0]
+}
 
 
 1;
