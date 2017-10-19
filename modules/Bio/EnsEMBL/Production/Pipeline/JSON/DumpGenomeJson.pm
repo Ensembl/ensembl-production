@@ -98,7 +98,6 @@ sub write_json {
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
   die "Could not find genome " . $self->production_name()
     if !defined $md;
-  $genome_dba->dbc()->disconnect_if_idle();
 
   my $genome = {
             id           => $md->name(),
@@ -120,6 +119,7 @@ sub write_json {
                           accession => $md->assembly_accession(),
                           level     => $md->assembly_level() } };
 
+  $genome_dba->dbc()->disconnect_if_idle();
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
   # add compara
