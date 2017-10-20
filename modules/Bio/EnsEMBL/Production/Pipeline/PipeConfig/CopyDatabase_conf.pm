@@ -62,6 +62,7 @@ sub pipeline_analyses {
             -logic_name => 'copy_database',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive',
             -input_ids => [],
+            -max_retry_count => 0,
             -parameters => {
         },
 	 -meadow_type => 'LOCAL',
