@@ -211,7 +211,7 @@ sub copy_database {
     } ## end while ( $table_sth->fetch...)
 
   #Flushing and locking source database
-  $logger->info("Flushing and locking source database\n");
+  $logger->info("Flushing and locking source database");
 
   ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
 
@@ -219,7 +219,7 @@ sub copy_database {
 
   #Flushing and locking target database
   if ($target_db_exist == 0) {
-    $logger->info("Flushing and locking target database\n");
+    $logger->info("Flushing and locking target database");
     flush_with_read_lock($target_dbh,\@tables);
   }
 
