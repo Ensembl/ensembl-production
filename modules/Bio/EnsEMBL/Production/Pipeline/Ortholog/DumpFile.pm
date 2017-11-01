@@ -133,6 +133,7 @@ sub run {
        ## Havana genes are merged, so source is Ensembl
        my $from_mod_identifier = $from_gene->source();
        if ($from_mod_identifier =~ /havana/) { $from_mod_identifier = 'ensembl'; }
+       if ($from_mod_identifier =~ /insdc/) { $from_mod_identifier = 'ensembl'; }
 
        my $from_stable_id   = $from_mod_identifier . ":" . $from_member->stable_id();
        my $from_translation = $from_member->get_Translation();
@@ -160,6 +161,7 @@ sub run {
           ## Havana genes are merged, so source is Ensembl
           my $to_mod_identifier = $to_gene->source();
           if ($to_mod_identifier =~ /havana/) { $to_mod_identifier = 'ensembl'; }
+          if ($to_mod_identifier =~ /insdc/) { $to_mod_identifier = 'ensembl'; }
           my $to_stable_id   = $to_mod_identifier . ":" . $to_member->stable_id();
           my $to_translation = $to_member->get_Translation();
 
