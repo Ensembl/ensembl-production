@@ -618,7 +618,7 @@ sub copy_mysql_files {
 
   # Perform the copy and make sure it succeeds.
 
-  $logger->info( "Copying $source_db->{host}:$source_db->{port}/$source_db->{dbname}' to staging directory $staging_dir");
+  $logger->info( "Copying $source_db->{host}:$source_db->{port}/$source_db->{dbname} to staging directory $staging_dir");
 
   # For debugging:
   # print( join( ' ', @copy_cmd ), "\n" );
