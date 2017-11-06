@@ -18,7 +18,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Common::BaseSpeciesFactory;
+ Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory;
 
 =head1 DESCRIPTION
 
@@ -29,317 +29,133 @@ limitations under the License.
  database to decide if a species has had an update to its DNA or not. An update
  means any change to the assembly or repeat masking.
 
-=head1 MAINTAINER
-
- ckong@ebi.ac.uk 
-
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory;
 
 use strict;
 use warnings;
-use Data::Dumper;
+
 use Bio::EnsEMBL::Registry;
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::DbFactory/;
 
 sub param_defaults {
   my ($self) = @_;
 
-  return { species         => [],
-           division        => [],
-           taxons          => [],
-           antitaxons      => [],
-           run_all         => 0,
-           antispecies     => [],
-           core_hash_flow  => 1,
-           core_flow       => 2,
-           chromosome_flow => 3,
-           variation_flow  => 4,
-           compara_flow    => 5,
-           regulation_flow => 6,
-           otherfeatures_flow => 7,
-           div_synonyms    => {
-                             'eb'  => 'bacteria',
-                             'ef'  => 'fungi',
-                             'em'  => 'metazoa',
-                             'epl' => 'plants',
-                             'epr' => 'protists',
-                             'e'   => 'ensembl' },
-           meta_filters => {}, };
+  return {
+    %{$self->SUPER::param_defaults},
+    all_species_flow   => 1,
+    core_flow          => 2,
+    chromosome_flow    => 3,
+    variation_flow     => 4,
+    compara_flow       => 5,
+    regulation_flow    => 6,
+    otherfeatures_flow => 7,
+    check_intentions   => 0,
+  };
 }
 
-sub fetch_input {
+sub write_output {
   my ($self) = @_;
-  my $species = $self->param('species') || [];
+  my $all_species      = $self->param_required('all_species');
+  my $all_species_flow = $self->param('all_species_flow');
+  my $core_flow        = $self->param('core_flow');
+  my $check_intentions = $self->param('check_intentions');
 
-  my @species = ( ref($species) eq 'ARRAY' ) ? @$species : ($species);
-
-  my $division = $self->param('division') || [];
-  my @division =
-    ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
-  my $taxons = $self->param('taxons') || [];
-  my @taxons = ( ref($taxons) eq 'ARRAY' ) ? @$taxons : ($taxons);
-  my $antitaxons = $self->param('antitaxons') || [];
-  my @antitaxons =
-    ( ref($antitaxons) eq 'ARRAY' ) ? @$antitaxons : ($antitaxons);
-  my $run_all     = $self->param('run_all');
-  my $antispecies = $self->param('antispecies') || [];
-  my @antispecies =
-    ( ref($antispecies) eq 'ARRAY' ) ? @$antispecies : ($antispecies);
-  my %meta_filters = %{ $self->param('meta_filters') };
-
-  my $all_dbas =
-    Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'core' );
-  my $all_compara_dbas =
-    Bio::EnsEMBL::Registry->get_all_DBAdaptors( -GROUP => 'compara' );
-  my $taxonomy_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi','taxonomy');
-  my %core_dbas;
-  my %compara_dbas;
-
-  if ( !scalar(@$all_dbas) ) {
-    $self->throw(
-"No core databases found in the registry; please check your registry parameters."
-    );
-  }
-
-  if ($run_all) {
-    %core_dbas = map { $_->species => $_ } @$all_dbas;
-    delete $core_dbas{'Ancestral sequences'};
-    %compara_dbas = map { $_->species => $_ } @$all_compara_dbas;
-    $self->warning( scalar( keys %core_dbas ) . " species loaded" );
-  }
-  elsif ( scalar(@species) ) {
-    foreach my $species (@species) {
-      $self->process_species( $all_dbas, $species, \%core_dbas );
+  foreach my $species ( @{$all_species} ) {
+    # If check_intention is turned on, then check the production database
+    # and decide if data need to be re-dumped.
+    my $requires_new_dna = 1;
+    if ( $check_intentions == 1 ) {
+      $requires_new_dna = $self->requires_new_dna($species);
     }
+    my $dataflow_params = {
+      species          => $species,
+      requires_new_dna => $requires_new_dna,
+      check_intentions => $check_intentions,
+    };
+
+    $self->dataflow_output_id( $dataflow_params, $core_flow );
   }
-  elsif ( scalar(@taxons) ) {
-    foreach my $taxon (@taxons) {
-      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $taxon, "add" );
-    }
-  }
-  elsif ( scalar(@division) ) {
-    foreach my $division (@division) {
-      $self->process_division( $all_dbas, $all_compara_dbas, $division,
-                               \%core_dbas, \%compara_dbas );
-    }
-  }
-  else {
-    $self->warning("Supply one of: -species, -division, -taxons, -run_all OR you can seed jobs later");
-    #$self->throw(
-    #           'You must supply one of: -species, -division, -run_all');
-  }
-  if ( scalar(@antitaxons) ) {
-    foreach my $antitaxon (@antitaxons) {
-      $self->process_taxon( $all_dbas, \%core_dbas , $taxonomy_dba, $antitaxon, "remove" );
-      $self->warning("$antitaxon taxon successfully removed");
-    }
-  }  
-  if ( scalar(@antispecies) ) {
-    foreach my $antispecies (@antispecies) {
-      delete $core_dbas{$antispecies};
-      $self->warning("$antispecies successfully removed");
+
+  my $flow_species = $self->flow_species($all_species);
+  foreach my $flow ( keys %$flow_species ) {
+    foreach my $species ( @{ $$flow_species{$flow} } ) {
+      $self->dataflow_output_id( {'species' => $species}, $flow );
     }
   }
 
-  if ( scalar( keys %meta_filters ) ) {
-    foreach my $meta_key ( keys %meta_filters ) {
-      $self->filter_species( $meta_key, $meta_filters{$meta_key},
-                             \%core_dbas );
-    }
-  }
-
-  $self->param( 'core_dbas',    \%core_dbas );
-  $self->param( 'compara_dbas', \%compara_dbas );
-} ## end sub fetch_input
-
-sub process_division {
-  my ( $self, $all_dbas, $all_compara_dbas, $division, $core_dbas,
-       $compara_dbas )
-    = @_;
-  my $division_count = 0;
-
-  my %div_synonyms = %{ $self->param('div_synonyms') };
-  if ( exists $div_synonyms{$division} ) {
-    $division = $div_synonyms{$division};
-  }
-
-  $division = lc($division);
-  $division =~ s/ensembl//;
-  my $div_long = 'Ensembl' . ucfirst($division);
-
-  foreach my $dba (@$all_dbas) {
-    my $dbname = $dba->dbc->dbname();
-
-    if ( $dbname =~ /$division\_.+_collection_/ ) {
-      $$core_dbas{ $dba->species() } = $dba;
-      $division_count++;
-    }
-    elsif ( $dbname !~ /_collection_/ ) {
-      if ( $div_long eq $dba->get_MetaContainer->get_division() ) {
-        $$core_dbas{ $dba->species() } = $dba;
-        $division_count++;
-      }
-      $dba->dbc->disconnect_if_idle();
-    }
-  }
-  $self->warning("$division_count species loaded for $division");
-
-  foreach my $dba (@$all_compara_dbas) {
-    my $compara_div = $dba->species();
-    if ( $compara_div eq 'multi' ) {
-      $compara_div = 'ensembl';
-    }
-    if ( $compara_div eq $division ) {
-      $$compara_dbas{$compara_div} = $dba;
-      $self->warning("Added compara for $division");
-    }
-  }
-
-  return;
-
-} ## end sub process_division
-
-sub process_taxon {
-  my ( $self, $all_dbas, $core_dbas, $taxonomy_dba, $taxon, $action )
-    = @_;
-
-  my $species_count;
-  my $node_adaptor = $taxonomy_dba->get_TaxonomyNodeAdaptor();
-  my $node = $node_adaptor->fetch_by_name_and_class($taxon,"scientific name");;
-  $self->throw("$taxon not found in the taxonomy database") if (!defined $node);
-  my $taxon_name = $node->names()->{'scientific name'}->[0];
-
-  foreach my $dba (@$all_dbas) {
-    #Next if DB is Compara ancestral sequences
-    next if $dba->species() =~ /ancestral/i;
-    my $dba_ancestors=$self->get_taxon_ancestors_name($dba,$node_adaptor);
-    if (grep(/$taxon_name/, @$dba_ancestors)){
-      if ($action eq "add"){
-        $$core_dbas{ $dba->species() } = $dba;
-        $species_count ++;
-      }
-      elsif ($action eq "remove")
-      {
-        delete $$core_dbas{$dba->species()};
-        $self->warning($dba->species()." successfully removed");
-        $species_count ++;
-      }
-    }
-    $dba->dbc->disconnect_if_idle();
-  }
-  if ($species_count == 0) {
-    $self->throw("$taxon was processed but no species was added/removed")
-  }
-  else {
-    if ($action eq "add") {
-      $self->warning("$species_count species loaded for taxon $taxon_name");
-    }
-    if ($action eq "remove") {
-      $self->warning("$species_count species removed for taxon $taxon_name");
-    }
-  }
-  return;
-
-} ## end sub process_taxon
-
-sub process_species {
-  my ( $self, $all_dbas, $species, $core_dbas ) = @_;
-
-  foreach my $dba (@$all_dbas) {
-    if ( $species eq $dba->species() ) {
-      $$core_dbas{$species} = $dba;
-      last;
-    }
-  }
-
-  if ( exists $$core_dbas{$species} ) {
-    $self->warning("$species successfully found");
-  }
-  else {
-    $self->throw(
-"Core database not found for '$species'; please check your registry parameters."
-    );
-  }
+  $self->dataflow_output_id( {'species' => $all_species}, $all_species_flow );
 }
 
-sub filter_species {
-  my ( $self, $meta_key, $meta_value, $core_dbas ) = @_;
-
-  foreach my $species ( keys %$core_dbas ) {
-    my $core_dba = $$core_dbas{$species};
-    my $meta_values =
-      $core_dba->get_MetaContainer->list_value_by_key($meta_key);
-    unless ( exists { map { $_ => 1 } @$meta_values }->{$meta_value} ) {
-      delete $$core_dbas{$species};
-      $self->warning(
-"$species successfully removed by filter '$meta_key = $meta_value'" );
-    }
-  }
-}
-
-sub run {
-  my ($self)          = @_;
-  my $chromosome_flow = $self->param('chromosome_flow');
-  my $variation_flow  = $self->param('variation_flow');
+sub flow_species {
+  my ($self, $all_species) = @_;
+  my $compara_dbs        = $self->param('compara_dbs');
+  my $chromosome_flow    = $self->param('chromosome_flow');
+  my $variation_flow     = $self->param('variation_flow');
+  my $compara_flow       = $self->param('compara_flow');
   my $regulation_flow    = $self->param('regulation_flow');
   my $otherfeatures_flow = $self->param('otherfeatures_flow');
-  my $core_dbas       = $self->param('core_dbas');
-  my ( $chromosome_dbas, $variation_dbas, $regulation_dbas, $otherfeatures_dbas );
 
-  if ( $chromosome_flow || $variation_flow || $regulation_flow || $otherfeatures_flow) {
-    foreach my $species ( keys %$core_dbas ) {
-      my $core_dba = $$core_dbas{$species};
+  my @chromosome_species;
+  my @variation_species;
+  my @regulation_species;
+  my @otherfeatures_species;
+  my @compara_species;
 
+  if ($chromosome_flow || $variation_flow || $regulation_flow || $otherfeatures_flow) {
+    foreach my $species ( @{$all_species} ) {
       if ($chromosome_flow) {
-        if ( $self->has_chromosome($core_dba) ) {
-          $$chromosome_dbas{$species} = $core_dba;
+        if ( $self->has_chromosome($species) ) {
+          push @chromosome_species, $species;
         }
       }
 
       if ($variation_flow) {
         if ( $self->has_variation($species) ) {
-          $$variation_dbas{$species} = $core_dba;
+          push @variation_species, $species;
         }
       }
       if ($regulation_flow) {
         if ($self->has_regulation($species)) {
-          $$regulation_dbas{$species} = $core_dba;
+          push @regulation_species, $species;
         }
       }
       if ($otherfeatures_flow){
         if ($self->has_otherfeatures($species)) {
-          $$otherfeatures_dbas{$species} = $core_dba;
+          push @otherfeatures_species, $species;
         }
       }
-      $core_dba->dbc()->disconnect_if_idle();
     }
   }
-  $self->param( 'chromosome_dbas', $chromosome_dbas );
-  $self->param( 'variation_dbas',  $variation_dbas );
-  $self->param( 'regulation_dbas', $regulation_dbas );
-  $self->param( 'otherfeatures_dbas', $otherfeatures_dbas);
-} ## end sub run
+
+  if ($compara_flow) {
+    foreach my $dbname ( keys %$compara_dbs ) {
+      push @compara_species, $$compara_dbs{$dbname};
+    };
+  }
+
+  my $flow_species = {
+    $chromosome_flow    => \@chromosome_species,
+    $variation_flow     => \@variation_species,
+    $regulation_flow    => \@regulation_species,
+    $otherfeatures_flow => \@otherfeatures_species,
+    $compara_flow       => \@compara_species,
+  };
+
+  return $flow_species;
+}
 
 sub has_chromosome {
-  my ( $self, $dba ) = @_;
-  my $cnt = $self->{chr_count}{$dba->dbc()->dbname()};
-  if(!defined $cnt) {
-    $cnt =
-      $dba->dbc()->sql_helper()->execute_into_hash(
-    -SQL => q{
-     SELECT cs.species_id, COUNT(*) FROM
-     coord_system cs INNER JOIN
-     seq_region sr USING (coord_system_id) INNER JOIN
-     seq_region_attrib sa USING (seq_region_id) INNER JOIN
-     attrib_type at USING (attrib_type_id)
-     WHERE at.code = 'karyotype_rank'
-     GROUP BY cs.species_id
-   });
-    $self->{chr_count}{$dba->dbc()->dbname()} = $cnt;
-  }
-  return $cnt->{$dba->species_id()};
+  my ( $self, $species ) = @_;
+  my $gc = 
+    Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'GenomeContainer');
+  
+  my $has_chromosome = $gc->has_karyotype();
+  
+  $gc && $gc->dbc->disconnect_if_idle();
+
+  return $has_chromosome;
 }
 
 sub has_variation {
@@ -347,107 +163,34 @@ sub has_variation {
   my $dbva =
     Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
 
-  return $dbva ? 1 : 0;
+  my $has_variation = defined $dbva ? 1 : 0;
+  
+  $has_variation && $dbva->dbc->disconnect_if_idle();
+
+  return $has_variation;
 }
 
 sub has_regulation {
   my ($self, $species) = @_;
   my $dbreg = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
-  return $dbreg ? 1 : 0;
+
+  my $has_regulation = defined $dbreg ? 1 : 0;
+  
+  $has_regulation && $dbreg->dbc->disconnect_if_idle();
+
+  return $has_regulation;
 }
 
 sub has_otherfeatures {
   my ($self, $species) = @_;
   my $dbof = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'otherfeatures');
-  return $dbof ? 1 : 0;
+
+  my $has_otherfeatures = defined $dbof ? 1 : 0;
+  
+  $has_otherfeatures && $dbof->dbc->disconnect_if_idle();
+
+  return $has_otherfeatures;
 }
-
-#Return all the taxon ancestors names for a given dba
-sub get_taxon_ancestors_name {
-  my ($self, $dba, $node_adaptor) = @_;
-  my $dba_node = $node_adaptor->fetch_by_coredbadaptor($dba);
-  my @dba_lineage = @{$node_adaptor->fetch_ancestors($dba_node)};
-  my @dba_ancestors;
-  for my $lineage_node (@dba_lineage) {
-    push @dba_ancestors, $lineage_node->names()->{'scientific name'}->[0];
-  }
-  return \@dba_ancestors;
-}
-
-sub write_output {
-  my ($self) = @_;
-  my $check_intentions = $self->param('check_intentions') || 0;
-  my $core_dbas        = $self->param('core_dbas');
-  my $compara_dbas     = $self->param('compara_dbas');
-  my $chromosome_dbas  = $self->param('chromosome_dbas');
-  my $variation_dbas   = $self->param('variation_dbas');
-  my $regulation_dbas   = $self->param('regulation_dbas');
-  my $otherfeatures_dbas = $self->param('otherfeatures_dbas');
-  my @all_core_species;
-  foreach my $species ( sort keys %$core_dbas ) {
-    push @all_core_species,$species;
-    # If check_intention is turned on, then check the production database
-    # and decide if data need to be re-dumped.
-    if ( $check_intentions == 1 ) {
-      my $requires_new_dna = $self->requires_new_dna($species);
-      if ($requires_new_dna) {
-        $self->dataflow_output_id( {
-                                 'species'          => $species,
-                                 'requires_new_dna' => '1',
-                                 'check_intentions' => $check_intentions
-                               },
-                               $self->param('core_flow') );
-      }
-      else {
-        $self->dataflow_output_id( {
-                                 'species'          => $species,
-                                 'requires_new_dna' => '0',
-                                 'check_intentions' => $check_intentions
-                               },
-                               $self->param('core_flow') );
-      }
-    }
-    else {
-        $self->dataflow_output_id( {
-                                 'species'          => $species,
-                                 'requires_new_dna' => '1',
-                                 'check_intentions' => $check_intentions
-                               },
-                               $self->param('core_flow') );
-    }
-  }
-
-  foreach my $species ( sort keys %$chromosome_dbas ) {
-    $self->dataflow_output_id( { 'species' => $species },
-                               $self->param('chromosome_flow') );
-  }
-
-  foreach my $species ( sort keys %$variation_dbas ) {
-    $self->dataflow_output_id( { 'species' => $species },
-                               $self->param('variation_flow') );
-  }
-
-  foreach my $species ( sort keys %$compara_dbas ) {
-    $self->dataflow_output_id( { 'species' => $species },
-                               $self->param('compara_flow') );
-  }
-
-  foreach my $species ( sort keys %$regulation_dbas ) {
-    $self->dataflow_output_id( { 'species' => $species },
-                               $self->param('regulation_flow') );
-  }
-
-  foreach my $species ( sort keys %$otherfeatures_dbas ) {
-    $self->dataflow_output_id( { 'species' => $species },
-                               $self->param('otherfeatures_flow') );
-  }
-
-  $self->dataflow_output_id( {'species'          => \@all_core_species,},
-                               $self->param('core_hash_flow') );
-
-  return;
-
-} ## end sub write_output
 
 sub requires_new_dna {
   my ( $self, $species ) = @_;
