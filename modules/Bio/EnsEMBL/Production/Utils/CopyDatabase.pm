@@ -219,10 +219,6 @@ sub copy_database {
     flush_with_read_lock($target_dbh,\@tables);
   }
 
-  #Optimize source database
-  $logger->info("Optimizing tables on source database");
-  optimize_tables($source_dbh,\@tables,$source_db);
-
   # Copying mysql database files
   my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
 
