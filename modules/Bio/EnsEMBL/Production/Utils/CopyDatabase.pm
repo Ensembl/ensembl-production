@@ -68,10 +68,6 @@ sub copy_database {
     croak "Target server $target_db->{host} is not valid";
   }
 
-  if (!defined($source_db->{pass}) || $source_db->{pass} eq ''){
-    croak "You need to run this script as the MySQL user that can write on $source_db->{host}"
-  }
-
   if (!defined($target_db->{pass}) || $target_db->{pass} eq ''){
     croak "You need to run this script as the MySQL user that can write on $target_db->{host}"
   }
