@@ -169,16 +169,16 @@ sub copy_database {
   my @tables;
   my @views;
 
-  my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS');
+  my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS') or die $source_dbh->errstr;
 
-  $table_sth->execute();
+  $table_sth->execute() or die $source_dbh->errstr;
 
   my %row;
   # Fancy magic from DBI manual.
   $table_sth->bind_columns( \( @row{ @{ $table_sth->{'NAME_lc'} } } ) );
 
   TABLE:
-    while ( $table_sth->fetch() ) {
+    while ( $table_sth->fetch() or die $source_dbh->errstr ) {
       my $table  = $row{'name'};
       my $engine = $row{'engine'};
 
