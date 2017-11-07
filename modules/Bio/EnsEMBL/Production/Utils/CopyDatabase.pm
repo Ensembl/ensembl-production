@@ -178,7 +178,7 @@ sub copy_database {
   $table_sth->bind_columns( \( @row{ @{ $table_sth->{'NAME_lc'} } } ) );
 
   TABLE:
-    while ( $table_sth->fetch() or die $source_dbh->errstr ) {
+    while ( $table_sth->fetch() ) {
       my $table  = $row{'name'};
       my $engine = $row{'engine'};
 
