@@ -44,11 +44,13 @@ sub dump {
 	my $file = $self->write_variants( $dba,
 										  $self->param("offset"),
 										  $self->param("length") );
-										  										  
-	$self->{logger}->info("Variations for $species written to $file");
 	
-	$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 1);
-
+	if(defined $file) {
+	  $self->{logger}->info("Variations for $species written to $file");
+	  
+	  $self->dataflow_output_id( {dump_file=>$file, species=>$species}, 2);
+	} 
+	
 	return;
 } ## end sub run
 
@@ -86,7 +88,12 @@ sub write_variants {
 	print $json_file ']' unless defined $offset;
 	close $json_file ||throw "Could not close $json_file_path";
 	$self->{logger}->info("Wrote $n variants to $json_file_path");
-	return $json_file_path;
+	if ($n==0) {
+	  unlink $json_file_path;
+	  return undef;
+	} else {
+	  return $json_file_path;
+	}
 } ## end sub write_variants
 
 1;

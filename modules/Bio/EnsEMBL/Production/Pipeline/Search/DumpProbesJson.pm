@@ -76,7 +76,9 @@ sub dump {
 		$self->write_json_to_file( $probesets_json_file_path, $probe_sets, 1 );
 		$output->{probesets_dump_file} = $probesets_json_file_path;
 	}
-	$self->dataflow_output_id( $output, 1 );    
+	if(scalar @$probe_sets>0 && scalar @$probes>0) {
+	  $self->dataflow_output_id( $output, 2 );    
+	}
 	return;
 } ## end sub dump
 
