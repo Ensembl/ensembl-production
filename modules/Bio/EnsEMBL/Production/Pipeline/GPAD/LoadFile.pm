@@ -62,7 +62,7 @@ sub run {
          # Delete by xref.info_type='PROJECTION' OR 'DEPENDENT'
          my $sql_delete_1 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
             JOIN object_xref ox USING (xref_id)
-            JOIN ontology_xref onx USING (object_xref_id)
+            LEFT JOIN ontology_xref onx USING (object_xref_id)
             LEFT JOIN dependent_xref dx USING (object_xref_id)
             JOIN analysis a USING (analysis_id)
             JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
@@ -78,7 +78,7 @@ sub run {
         # interpro2go annotations should be superceded by GOA annotation
         my $sql_delete_2 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
                       JOIN object_xref ox USING (xref_id)
-                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN ontology_xref onx USING (object_xref_id)
                       LEFT JOIN dependent_xref dx USING (object_xref_id)
                       JOIN analysis a USING (analysis_id)
                       JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
@@ -93,7 +93,7 @@ sub run {
         # Same deletes but for GOs mapped to transcripts
         my $sql_delete_3 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
                       JOIN object_xref ox USING (xref_id)
-                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN ontology_xref onx USING (object_xref_id)
                       LEFT JOIN dependent_xref dx USING (object_xref_id)
                       JOIN analysis a USING (analysis_id)
                       JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
@@ -106,7 +106,7 @@ sub run {
 
         my $sql_delete_4 = 'DELETE ox.*,onx.*,dx.*  FROM xref x
                       JOIN object_xref ox USING (xref_id)
-                      JOIN ontology_xref onx USING (object_xref_id)
+                      LEFT JOIN ontology_xref onx USING (object_xref_id)
                       LEFT JOIN dependent_xref dx USING (object_xref_id)
                       JOIN analysis a USING (analysis_id)
                       JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
@@ -132,6 +132,9 @@ sub run {
         $sth_4->finish();
         $dba->dbc->disconnect_if_idle();
     }
+
+    my $hive_dbc = $self->dbc;
+    $hive_dbc->disconnect_if_idle() if defined $self->dbc;
 
     my $odba = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
@@ -247,12 +250,10 @@ sub run {
    # Distinguish if data is UniProt (proteins) or RNACentral (transcripts)
    if ($db =~ /UniProt/) {
       $is_protein = 1;
-      my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'Uniprot/SWISSPROT');
-      if (!$uniprot_xrefs) {
-        $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'Uniprot/SPTREMBL');
-      }
-      if ($uniprot_xrefs) {
-        $master_xref = $uniprot_xrefs->[0];
+      my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
+      my @master_xref = grep { $_->dbname =~ m/uniprot/i } @$uniprot_xrefs;
+      if (scalar(@master_xref) !=0 ) {
+        my $master_xref = $master_xref[0];
         $go_xref->add_linkage_type($go_evidence, $master_xref);
        } else {
         $unmatched_uniprot{$tgt_species}++;
@@ -269,8 +270,8 @@ sub run {
       foreach my $rna (@precursor_rnas) {
         $rna =~ s/_[0-9]*//;
         $db_object_id = $rna;
-        my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNACentral');
-        if ($rnacentral_xrefs) {
+        my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
+        if (scalar(@$rnacentral_xrefs) != 0) {
           $master_xref = $rnacentral_xrefs->[0];
           $go_xref->add_linkage_type($go_evidence, $master_xref);
           $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);

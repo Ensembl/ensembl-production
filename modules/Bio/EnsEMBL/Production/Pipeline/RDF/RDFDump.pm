@@ -31,13 +31,15 @@ package Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump;
 use strict;
 use warnings;
 
-use parent ('Bio::EnsEMBL::Production::Pipeline::Base');
+use parent ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use IO::File;
 use File::Spec::Functions qw/catdir/;
 
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
+use Bio::EnsEMBL::Utils::SequenceOntologyMapper;
+
 use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
 
 use Bio::EnsEMBL::IO::Object::RDF;
@@ -77,9 +79,16 @@ sub run {
   my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
   my $dba = $self->get_DBAdaptor; 
   my $genes = $bulk->export_genes($dba, undef, 'protein_feature', $self->param('xref'));
-  my $compara_dba =
-    Bio::EnsEMBL::Registry->get_adaptor($self->param('eg')?$self->division():'Multi', 'compara', 'GenomeDB');
-  $bulk->add_compara($species, $genes, $compara_dba);
+  my $compara_name = $self->param('eg')?$self->division():'Multi';
+  eval {
+    my $compara_dba =
+      Bio::EnsEMBL::Registry->get_adaptor($compara_name, 'compara', 'GenomeDB');
+    $bulk->add_compara($species, $genes, $compara_dba);
+  } or do {
+    warn "Compara DB $compara_name not found - compara data not being added";
+  };
+  my $hive_dbc = $self->dbc;
+  $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 
   my $slices = $self->get_Slices(undef, ($species eq 'homo_sapiens')?1:0);
   #
@@ -168,8 +177,8 @@ sub dump_core_rdf {
   my $feature_trans =
     Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
                                                           xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
-							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
-							  meta_adaptor      => $meta_adaptor);
+							  biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
+							  adaptor           => $self->get_DBAdaptor);
   map { $core_writer->write($_, $feature_trans) } @{$genes};
   
   # finally write connecting triple to master RDF file
@@ -191,8 +200,8 @@ sub dump_xrefs_rdf {
   my $feature_trans =
     Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
                                                           xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
-							  ontology_adaptor  => Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm'),
-							  meta_adaptor      => $self->get_DBAdaptor->get_MetaContainer);
+							  biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
+							  adaptor           => $self->get_DBAdaptor);
   my $xrefs_writer = Bio::EnsEMBL::IO::Writer::RDF::XRefs->new($feature_trans);
   $xrefs_writer->open($fh);
   

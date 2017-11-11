@@ -32,7 +32,7 @@ use warnings;
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catdir);
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
-use base ('Bio::EnsEMBL::Production::Pipeline::InterProScan::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub param_defaults {
     my ($self) = @_;
@@ -106,6 +106,7 @@ sub run {
       push @{$biotypes}, 'protein_coding';
     }
 
+    $self->dbc()->disconnect_if_idle() if defined $self->dbc();
     open(my $fh, '>', $proteome_file) or $self->throw("Cannot open file $proteome_file: $!");
     my $serializer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new(
       $fh,

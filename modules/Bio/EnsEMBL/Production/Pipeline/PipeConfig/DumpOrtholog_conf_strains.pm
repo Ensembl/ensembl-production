@@ -43,9 +43,11 @@ sub default_options {
 		# inherit other stuff from the base class
 		%{ $self->SUPER::default_options() },
 
-		## Set to '1' for eg! run
-		#   default => OFF (0)
-		'eg' => 0,
+        # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
+	    # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
+        # This flag should be enabled for EG and disable for e! species.
+
+        'is_tree_compliant' => '0',
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
@@ -60,16 +62,12 @@ sub default_options {
 
 			'1' => { 'compara' => 'multi',
 					 'source'  => 'mus_musculus',
-					 'target'  => [
-							'mus_musculus_129s1svimj', 'mus_musculus_aj',
-							'mus_musculus_akrj',       'mus_musculus_balbcj',
-							'mus_musculus_c3hhej',     'mus_musculus_c57bl6nj',
-							'mus_musculus_casteij',    'mus_musculus_cbaj',
-							'mus_musculus_dba2j',      'mus_musculus_fvbnj',
-							'mus_musculus_lpj',        'mus_musculus_nodshiltj',
-							'mus_musculus_nzohlltj',   'mus_musculus_pwkphj',
-							'mus_musculus_wsbeij' ],
-					 'exclude' => undef,
+					 'antispecies' => ['mus_musculus','mus_spretus_spreteij','mus_pahari','mus_caroli'],
+                      # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
+                      # Taxon name of species to project to
+                     'taxons'      => ['Mus'],
+                      # target species division to project to
+                     'division' => 'Ensembl',
 					 'homology_types' =>
 					   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
 

@@ -216,7 +216,7 @@ sub pipeline_analyses {
 
 ### GENERATE CHECKSUM      
     {  -logic_name => 'checksum_generator',
-       -module     => 'Bio::EnsEMBL::Production::Pipeline::ChksumGenerator',
+       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
 #       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
        -hive_capacity => 10,
@@ -463,6 +463,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -max_retry_count => 1,
       -hive_capacity   => 10,
+      -priority        => 5,
       -rc_name         => 'default',
     },
 
@@ -478,6 +479,7 @@ sub pipeline_analyses {
                     )},
       -max_retry_count => 1,
       -hive_capacity   => 10,
+      -priority        => 5,
       -rc_name         => 'default',
     },
 
@@ -492,6 +494,7 @@ sub pipeline_analyses {
       -flow_into       => { 1 => 'concat_fasta' },
       -max_retry_count => 1,
       -hive_capacity   => 10,
+      -priority        => 5,
       -rc_name         => 'default',
     },
 
@@ -512,6 +515,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',
       -can_be_empty    => 1,
       -max_retry_count => 5,
+      -priority        => 5,
       -flow_into  	   => {
           1 => [qw/primary_assembly/]
        },
@@ -521,6 +525,7 @@ sub pipeline_analyses {
       -module           => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CreatePrimaryAssembly',
       -can_be_empty     => 1,
       -max_retry_count  => 5,
+      -priority        => 5,
       -wait_for         => 'dump_dna'
     },
         
@@ -555,7 +560,7 @@ sub pipeline_analyses {
           config_file => $self->o('config_file'),
        },
       -analysis_capacity => 4,
-      -rc_name => '32GB',
+      -rc_name => '64GB',
       # Validate both output files
       -flow_into => { 2 => ['validate_rdf'], }
     },

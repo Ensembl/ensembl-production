@@ -11,6 +11,10 @@ requires 'Log::Log4perl';
 requires 'Config::Simple';
 requires 'String::Numeric';
 requires 'Bio::DB::HTS::Faidx';
+<<<<<<< HEAD
 requires 'File::Slurp';
 requires 'Log::Log4perl';
 requires 'XML::Simple';
+=======
+requires 'Time::Duration';
+>>>>>>> master

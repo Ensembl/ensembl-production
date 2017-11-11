@@ -23,6 +23,8 @@
 
 
 use strict;
+use warnings;
+
 use POSIX;
 use Getopt::Long;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
@@ -85,7 +87,7 @@ $format_headers = 1 if (!defined($format_headers));
 $sort_headers   = 1 if (!defined($sort_headers));
 $sort_tables    = 1 if (!defined($sort_tables));
 
-$skip_conn      = undef if ($skip_conn == 0);
+$skip_conn    ||= undef;
 
 $port ||= 3306;
 
@@ -232,8 +234,8 @@ my $html_footer = qq{
 
 # Create a complex hash "%$documentation" to store all the documentation content
 
-open SQLFILE, "< $sql_file" or die "Can't open $sql_file : $!";
-while (<SQLFILE>) {
+open(my $sql_fh, '<', $sql_file) or die "Can't open $sql_file : $!";
+while (<$sql_fh>) {
   chomp $_;
   next if ($_ eq '');
   next if ($_ =~ /^\s*(DROP|PARTITION)/i);
@@ -262,8 +264,10 @@ while (<SQLFILE>) {
     # Header name
     if ($doc =~ /^\@header\s*(.+)$/i and $header_flag == 1) {
       $header = $1;
-      push (@header_names,$header);
-      $tables_names->{$header} = [];
+      unless (exists $tables_names->{$header}) {
+        push (@header_names,$header);
+        $tables_names->{$header} = [];
+      }
       next;
     }    
     # Table name
@@ -354,7 +358,7 @@ while (<SQLFILE>) {
         next;
       }
       elsif ($doc =~ /^\s*(unique\s+)?(key|index)\s+([^\s\(]+)\s*\((.+)\)/i) { # Keys and indexes
-        add_column_index("$1$2",$4,$3);
+        add_column_index(($1//'').$2,$4,$3);
         next;
       }
       elsif ($doc =~ /^\s*(unique)\s+(\S*)\s*\((.+)\)/i) { # Unique
@@ -386,7 +390,7 @@ while (<SQLFILE>) {
         $col_type="$2$3<br />";
         my $end_type = 0;
         while ($end_type != 1){
-          my $line = <SQLFILE>;
+          my $line = <$sql_fh>;
           chomp $line;
           $line = remove_char($line);
 
@@ -423,7 +427,7 @@ while (<SQLFILE>) {
     }
   }
 }
-close(SQLFILE);
+close($sql_fh);
 
 
 
@@ -475,7 +479,7 @@ foreach my $header_name (@header_names) {
   <h2>$header_name</h2>
 </div>\n};
     $header_id ++;
-    my $header_desc = $documentation->{$header_name}{'desc'};    
+    my $header_desc = escape_html($documentation->{$header_name}{'desc'});
     $html_content .= qq{<p class="sql_schema_group_header_desc">$header_desc</p>} if (defined($header_desc));
   }
   
@@ -521,13 +525,12 @@ $html_content .= add_legend();
 ######################
 ## HTML/output file ##
 ######################
-open  HTML, "> $html_file" or die "Can't open $html_file : $!";
-print HTML $html_header."\n";
-print HTML slurp_intro($intro_file)."\n";
-print HTML $html_content."\n";
-print HTML $html_footer."\n";
-close(HTML);
-chmod 0755, $html_file;
+open(my $html_fh, '>', $html_file) or die "Can't open $html_file : $!";
+print $html_fh $html_header."\n";
+print $html_fh slurp_intro($intro_file)."\n";
+print $html_fh $html_content."\n";
+print $html_fh $html_footer."\n";
+close($html_fh);
 
 
 
@@ -567,6 +570,7 @@ sub display_tables_list {
   
   my $has_header = 0;
   my $nb_col_line = 0;
+  my $header_index = 1;
   
   foreach my $header_name (@header_names) {
     
@@ -597,9 +601,10 @@ sub display_tables_list {
           $nb_col_line = 0;
         }
       
-        $html .= display_header($header_name,$nbc);
+        $html .= display_header($header_name,$nbc,$header_index);
         $nb_col_line += $nbc;
         $has_header = 1;
+        $header_index++;
       }
       
       # List of tables #
@@ -646,7 +651,7 @@ sub display_tables_list {
     }
   }
   
-  my $input_margin;
+  my $input_margin = '';
   if ($header_flag == 1 and $format_headers == 1){
     $html .= qq{\n  <div style="clear:both" />\n</div>};
   } else {
@@ -668,6 +673,7 @@ sub display_tables_list {
 sub display_header {
   my $header_name = shift;
   my $nb_col = shift;
+  my $header_index = shift;
   
   my $html;
   
@@ -682,7 +688,7 @@ sub display_header {
   <div class="sql_schema_table_group">
     <div class="sql_schema_table_group_header" style="border-color:$hcolour">
       <div class="sql_schema_table_group_bullet" style="background-color:$hcolour"></div>
-      <h2>$header_name</h2>
+      <h2><a class="sql_schema_link" href="#header_${header_index}">$header_name</a></h2>
     </div>};
   } 
   else {
@@ -720,11 +726,11 @@ sub fill_documentation {
       }
       # Header description
       elsif(!$documentation->{$header}{'tables'}) {
-        $documentation->{$header}{'desc'} = escape_html($tag_content);
+        $documentation->{$header}{'desc'} = $tag_content;
       }
       # Table description
       else {
-        $documentation->{$header}{'tables'}{$table}{$tag} = escape_html($tag_content);
+        $documentation->{$header}{'tables'}{$table}{$tag} = $tag_content;
       }
     }
     elsif ($tag eq 'colour') {
@@ -772,10 +778,11 @@ sub fill_documentation {
 sub add_table_name_to_list {
   my $t_name = shift;
   my $t_colour = shift;
-  my $c = $t_colour;
   if (defined($t_colour)) {
     $t_colour = ($t_colour ne '') ? qq{ style="background-color:$t_colour"} : '';
     $t_colour = qq{<div class="sql_schema_table_name_nh"$t_colour>&nbsp;</div> };
+  } else {
+    $t_colour = '';
   }
   my $html = qq{        <li>$t_colour<a href="#$t_name" class="sql_schema_link" style="font-weight:bold">$t_name</a></li>\n};
   return $html;
@@ -821,7 +828,7 @@ sub add_info {
   
   foreach my $inf (@{$infos}) {
     my ($title,$content) = split('@info@', $inf);
-    $content = add_internal_link($content,$data) if (defined($data));
+    $content = add_internal_link(escape_html($content),$data) if (defined($data));
     
     $html .= qq{
     <table>
@@ -856,7 +863,7 @@ sub add_columns {
     my $name    = $col->{name};
     my $type    = $col->{type};
     my $default = $col->{default};
-    my $desc    = $col->{desc};
+    my $desc    = escape_html($col->{desc});
     my $index   = $col->{index};
     
     # links
@@ -886,7 +893,7 @@ sub add_examples {
   my $table = shift;
   my $data  = shift;
   my $examples  = $data->{example};
-  my $html;
+  my $html = '';
 
   my $nb = (scalar(@$examples) > 1) ? 1 : '';
 
@@ -907,7 +914,7 @@ sub add_examples {
         $sql = $2;
       } elsif (!defined($sql)){
         $html .= qq{<p>} if ($has_desc == 0);
-        $html .= $line;
+        $html .= escape_html($line);
         $has_desc = 1;
       }
       else {
@@ -1003,8 +1010,7 @@ sub add_species_list {
   <td class="sql_schema_extra_right"$margin><p><span>List of species with populated data:</span>$show_hide</p>
     <div id="sp_$table" style="display:none;">};
       
-  @species_list = map{ $_ =~ s/_/ /g; $_ } @species_list;
-  @species_list = map { qq{<li class="sql_schema_species_name">}.ucfirst($_)."</li>" } @species_list;
+  @species_list = map { qq{<li class="sql_schema_species_name">}.get_pretty_species_name($_)."</li>" } @species_list;
   
   $html .= qq{      <ul>\n        }.join("\n        ",@species_list).qq{\n      </ul>\n};
   $html .= qq{    </div>\n  </td>};
@@ -1012,6 +1018,11 @@ sub add_species_list {
   return $html;
 }
 
+sub get_pretty_species_name {
+    my $name = shift;
+    $name =~ s/_/ /g;
+    return ucfirst $name;
+}
 
 # Method searching the tag @link into the string given as argument and replace it by an internal HTML link 
 sub add_internal_link {
@@ -1101,7 +1112,7 @@ sub add_column_type_and_default_value {
 sub parse_column_type {
   my $type = shift;
   $type =~ /^\s*(enum|set)\s*\((.*)\)/i;
-  my $c_type = uc($1);
+  my $c_type = uc($1 // '');
   my $c_data = $2;
   return $type unless ($c_data);
   
@@ -1132,6 +1143,7 @@ sub get_example_table {
   
   $sql =~ /select\s+(.+)\s+from/i;
   my $cols = $1;
+  $cols = '*' if $cols =~ /^\*\s/;
   my @tcols;
      
   foreach my $col (split(',',$cols)) {
@@ -1169,7 +1181,7 @@ sub get_example_table {
     foreach my $result (@$results) {
       last if ($count >= $SQL_LIMIT);
       $html .= qq{      <tr$bg><td>};
-      $html .= join("</td><td>", @$result);
+      $html .= join("</td><td>", map {$_ // 'NULL'} @$result);
       $html .= qq{</td></tr>};
       
       $bg = ($bg eq '')  ? ' class="bg2"' : '';  
@@ -1232,6 +1244,14 @@ sub escape_html {
     foreach my $char (keys(%_revert_escape_table)) {
       $str =~ s/$char/$_revert_escape_table{$char}/g;
     }
+    foreach my $tag (qw(b i u code table caption table thead tbody tr th td ul ol li)) {
+      my $in = "&lt;$tag&gt;";
+      my $out = "<$tag>";
+      $str =~ s/$in/$out/g;
+      $in = "&lt;/$tag&gt;";
+      $out = "</$tag>";
+      $str =~ s/$in/$out/g;
+    }
     
     return $str;
 }
@@ -1243,7 +1263,7 @@ sub insert_text_into_html_head {
   return '' if (!defined $header_file);
 
   local $/=undef;
-  open my $fh, "< $header_file" or die "Can't open $header_file: $!";
+  open(my $fh, '<', $header_file) or die "Can't open $header_file: $!";
   my $header_html = <$fh>;
   close $fh;
   return $header_html;
@@ -1256,7 +1276,7 @@ sub slurp_intro {
   return qq{<h1>Ensembl $db_team Schema Documentation</h1>\n<h2>Introduction</h2>\n<p><i>please, insert your introduction here</i><p><br />} if (!defined $intro_file);
 
   local $/=undef;
-  open my $fh, "< $intro_file" or die "Can't open $intro_file: $!";
+  open(my $fh, '<', $intro_file) or die "Can't open $intro_file: $!";
   my $intro_html = <$fh>;
   close $fh;
   
@@ -1304,7 +1324,7 @@ sub get_connection_and_query {
 }
 
 
-sub get_css_code() {
+sub get_css_code {
   my $css = qq{
 <style type="text/css">
   /* Icons */

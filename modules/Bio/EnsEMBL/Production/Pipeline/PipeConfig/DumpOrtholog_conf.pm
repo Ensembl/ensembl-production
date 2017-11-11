@@ -48,9 +48,11 @@ sub default_options {
 		'compara' => undef,
 		'release' => software_version(),
 
-		## Set to '1' for eg! run
-		#   default => OFF (0)
-		'eg' => 0,
+        # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
+	    # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
+        # This flag should be enabled for EG and disable for e! species.
+
+        'is_tree_compliant' => '0',
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
@@ -104,22 +106,23 @@ sub pipeline_analyses {
 		   	 'compara' => $self->o('compara'),
 				    'output_dir'       => $self->o('output_dir'),
 		   	 },
-		   -flow_into  => { '2->A'              => ['MLSSJobFactory'],
-				    'A->2' => [ 'RunCreateReleaseFile'  ] },
-		   -rc_name    => 'default', },
+		    -flow_into  => { '2->A'              => ['SpeciesFactory'],
+				    'A->1' => [ 'RunCreateReleaseFile'  ] },
+		    -rc_name    => 'default',
+		 },
 
-		{  -logic_name => 'MLSSJobFactory',
-		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Ortholog::MLSSJobFactory',
-		   -parameters =>
-			 { 'method_link_type' => $self->o('method_link_type'), },
-		   -flow_into => { '2' => ['GetOrthologs'],
-				 },
-		   -rc_name   => 'default', },
+		 {  -logic_name      => 'SpeciesFactory',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+             -max_retry_count => 1,
+             -flow_into       => {
+                                  '2' => ['GetOrthologs'],
+                                 },
+             -rc_name         => 'default',
+          },
 
 		{  -logic_name => 'GetOrthologs',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => { 'eg'               => $self->o('eg'),
+		   -parameters => { 'is_tree_compliant' => $self->o('is_tree_compliant'),
 							'method_link_type' => $self->o('method_link_type'),
 		   },
 		   -batch_size    => 1,

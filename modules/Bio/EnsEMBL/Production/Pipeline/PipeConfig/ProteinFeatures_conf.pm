@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.24-63.0',
+    interproscan_version => '5.26-65.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -110,7 +110,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '11.1',
+        'db_version'    => '12,0',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -158,7 +158,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '2',
+        'db_version'    => '3',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
@@ -312,7 +312,7 @@ sub pipeline_analyses {
                               analyses => $self->o('analyses'),
                             },
       -flow_into 	       => {
-                              '1->A' => ['SpeciesFactory'],
+                              '1->A' => ['DbFactory'],
                               'A->1' => WHEN(
                                           '#interpro_desc_source# eq "file"' =>
                                             ['FetchInterPro'],
@@ -324,8 +324,8 @@ sub pipeline_analyses {
     },
     
     {
-      -logic_name        => 'SpeciesFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name        => 'DbFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
       -parameters        => {
                               species         => $self->o('species'),
@@ -339,7 +339,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '2->A' => ['BackupTables'],
-                              'A->2' => ['StoreGoXrefs'],
+                              'A->2' => ['AnnotateProteinFeatures'],
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -363,10 +363,7 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -analysis_capacity => 20,
-      -flow_into         => {
-                              '1->A' => ['AnalysisFactory'],
-                              'A->1' => ['DumpProteome'],
-                            },
+      -flow_into         => ['AnalysisFactory'],
     },
     
     { -logic_name        => 'AnalysisFactory',
@@ -450,6 +447,35 @@ sub pipeline_analyses {
                               pathway_sources => $self->o('pathway_sources'),
                             },
       -rc_name           => 'normal',
+    },
+    
+    {
+      -logic_name        => 'AnnotateProteinFeatures',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 0,
+      -analysis_capacity => 20,
+      -parameters        => {},
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '1->A' => ['SpeciesFactory'],
+                              'A->1' => ['StoreGoXrefs'],
+                            },
+    },
+    
+    {
+      -logic_name        => 'SpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              chromosome_flow    => 0,
+                              otherfeatures_flow => 0,
+                              regulation_flow    => 0,
+                              variation_flow     => 0,
+                            },
+      -flow_into         => {
+                              '2' => ['DumpProteome'],
+                            },
+      -meadow_type       => 'LOCAL',
     },
     
     {
@@ -666,14 +692,16 @@ sub pipeline_analyses {
       -logic_name      => 'SpeciesFactoryForDumpingInterPro',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters      => {
-                            species         => $self->o('species'),
-                            antispecies     => $self->o('antispecies'),
-                            division        => $self->o('division'),
-                            run_all         => $self->o('run_all'),
-                            chromosome_flow => 0,
-                            regulation_flow => 0,
-                            variation_flow  => 0,
-                            meta_filters    => $self->o('meta_filters'),
+                            species            => $self->o('species'),
+                            antispecies        => $self->o('antispecies'),
+                            division           => $self->o('division'),
+                            run_all            => $self->o('run_all'),
+                            chromosome_flow    => 0,
+                            compara_flow       => 0,
+                            otherfeatures_flow => 0,
+                            regulation_flow    => 0,
+                            variation_flow     => 0,
+                            meta_filters       => $self->o('meta_filters'),
                           },
       -max_retry_count => 1,
       -flow_into       => {
@@ -714,14 +742,16 @@ sub pipeline_analyses {
       -logic_name      => 'SpeciesFactoryForStoringInterPro',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters      => {
-                            species         => $self->o('species'),
-                            antispecies     => $self->o('antispecies'),
-                            division        => $self->o('division'),
-                            run_all         => $self->o('run_all'),
-                            chromosome_flow => 0,
-                            regulation_flow => 0,
-                            variation_flow  => 0,
-                            meta_filters    => $self->o('meta_filters'),
+                            species            => $self->o('species'),
+                            antispecies        => $self->o('antispecies'),
+                            division           => $self->o('division'),
+                            run_all            => $self->o('run_all'),
+                            chromosome_flow    => 0,
+                            compara_flow       => 0,
+                            otherfeatures_flow => 0,
+                            regulation_flow    => 0,
+                            variation_flow     => 0,
+                            meta_filters       => $self->o('meta_filters'),
                           },
       -max_retry_count => 1,
       -flow_into       => {

@@ -83,42 +83,44 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   
-  my $new_path = $self->new_path();
-  #Remove all files from the new path
-  $self->unlink_all_files($new_path);
+  foreach my $directory ('dna','dna_index')
+  {
+    my $new_path = $self->new_path($directory);
+    #Remove all files from the new path
+    $self->unlink_all_files($new_path);
   
-  my $files = $self->get_dna_files();
-  foreach my $old_file (@{$files}) {
-    my $new_file = $self->new_filename($old_file);
-    $self->fine('copy %s %s', $old_file, $new_file);
-    copy($old_file, $new_file) or $self->throw("Cannot copy $old_file to $new_file: $!");
+    my $files = $self->get_dna_files($directory);
+    foreach my $old_file (@{$files}) {
+      my $new_file = $self->new_filename($old_file,$directory);
+      $self->fine('copy %s %s', $old_file, $new_file);
+      copy($old_file, $new_file) or $self->throw("Cannot copy $old_file to $new_file: $!");
+    }
   }
-  
   return;
 }
 
 sub new_filename {
-  my ($self, $old_filename) = @_;
+  my ($self, $old_filename,$directory) = @_;
   my ($old_volume, $old_dir, $old_file) = File::Spec->splitpath($old_filename);
   my $old_release = $self->param('previous_release');
   my $release = $self->param('release');
   my $new_file = $old_file;
   $new_file =~ s/\.$old_release\./.$release./;
-  my $new_path = $self->new_path();
+  my $new_path = $self->new_path($directory);
   return File::Spec->catfile($new_path, $new_file);
 }
 
 sub new_path {
-  my ($self) = @_;
-  return $self->fasta_path('dna');
+  my ($self,$directory) = @_;
+  return $self->fasta_path($directory);
 }
 
 sub get_dna_files {
-  my ($self) = @_;
-  my $old_path = $self->old_path();
+  my ($self,$directory) = @_;
+  my $old_path = $self->old_path($self->param('species'),$directory);
   my $filter = sub {
     my ($filename) = @_;
-    return ($filename =~ /\.fa\.gz$/ || $filename eq 'README') ? 1 : 0;
+    return ($filename =~ /\.fa\.gz/ || $filename eq 'README') ? 1 : 0;
   };
   my $files = $self->find_files($old_path, $filter);
   return $files;

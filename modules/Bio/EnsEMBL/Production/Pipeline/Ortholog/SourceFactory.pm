@@ -65,27 +65,30 @@ sub write_output {
 		}
 		print STDERR "Processing $compara\n";
 		my $source         = $sp_config->{$pair}->{'source'};
-		my $target         = $sp_config->{$pair}->{'target'};
-		my $exclude        = $sp_config->{$pair}->{'exclude'};
+		my $species        = $sp_config->{$pair}->{'species'};
+	    my $antispecies    = $sp_config->{$pair}->{'antispecies'};
+	    my $taxons        = $sp_config->{$pair}->{'taxons'};
+	    my $antitaxons    = $sp_config->{$pair}->{'antitaxons'};
 		my $homology_types = $sp_config->{$pair}->{'homology_types'};
-
-		my $division;
-		if($compara eq 'multi') {
-		  $division = 'Ensembl';
-		} else {
-		  $division = 'Ensembl'.ucfirst($compara);
-		}
-
+		my $division = $sp_config->{$pair}->{'division'};
 		my $dir_name = $self->param('output_dir').'/'.lc($division);
+
+		if (!defined $division){
+			$self->throw("Division need to be defined");
+		}
 
 		$self->dataflow_output_id( {  'output_dir'     => $dir_name,
 					      'division'       => $division,
 					      'compara'        => $compara,
 					      'source'         => $source,
-					      'target'         => $target,
-					      'exclude'        => $exclude,
-					      'homology_types' => $homology_types, },
-					   2 );
+					      'species'         => $species,
+					      'antispecies'     => $antispecies,
+					      'taxons'         => $taxons,
+					      'antitaxons'     => $antitaxons,
+ 	 				      'homology_types' => $homology_types, },
+                       2 );
+	    $self->dataflow_output_id( {  'output_dir'     => $dir_name, },
+					   1 );
 	}
 
 	return 0;

@@ -1,0 +1,3 @@
+rdflib
+rfc3987
+requests

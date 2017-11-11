@@ -213,6 +213,8 @@ sub run_type {
 
   #Only run if we are told to & the current DBA is the same as the attached DNADB by checking the Stringified ref
   my $dba = $self->get_DBAdaptor($type);
+  my $hive_dbc = $self->dbc;
+  $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
   if ( $sequence_types->{dna} && $dba eq $dba->dnadb() ) {
     $self->info( "Starting dna dump for " . $species );
     $self->_dump_dna($type);
