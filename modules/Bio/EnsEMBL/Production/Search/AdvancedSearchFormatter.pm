@@ -80,6 +80,9 @@ sub remodel_genome {
 	print $out "[";
 	$genome->{organism}->{lineage} =
 	  $self->expand_taxon( $genome->{organism}->{taxonomy_id} );
+	  
+	$genome->{name} ||= $genome->{id};  
+	
 	my $n          = 0;
 	my $genome_gos = {};
 	process_json_file(

@@ -110,7 +110,8 @@ sub fetch_variations_callback {
 q/SELECT v.variation_id as id, v.name as name, v.class_attrib_id as class, v.source_id as source_id, v.somatic as somatic,
      v.minor_allele_freq as minor_allele_freq, v.minor_allele as minor_allele, v.minor_allele_count as minor_allele_count,
      v.ancestral_allele as ancestral_allele,
-    v.evidence_attribs as evidence_attribs
+    v.evidence_attribs as evidence_attribs,
+    v.clinical_significance as clinical_significance
 
       FROM variation v WHERE variation_id BETWEEN ? and ?/,
     -PARAMS       => [ $min, $max ],
@@ -136,6 +137,11 @@ q/SELECT v.variation_id as id, v.name as name, v.class_attrib_id as class, v.sou
       }
       $var->{somatic} = $var->{somatic} == 1 ? 'true' : 'false';
       $var->{class} = $class_attribs->{$var->{class}};
+      if ( defined $var->{clinical_significance} ) {
+        $var->{clinical_significance} = [ split ',', $var->{clinical_significance} ];
+      } else {
+        delete $var->{clinical_significance};
+      }     
       delete $var->{source_id};
       $var->{id} = $var->{name};
       delete $var->{name};
@@ -460,8 +466,7 @@ sub _fetch_features {
   return $h->execute_into_hash(
     -SQL => q/SELECT 
 		vf.variation_id, sr.name, vf.seq_region_start, vf.seq_region_end, vf.seq_region_strand, vf.variation_feature_id,
-		vf.allele_string,
-		vf.clinical_significance
+		vf.allele_string
      FROM variation_feature vf
      JOIN seq_region sr USING (seq_region_id)
      WHERE vf.variation_id between ? AND ?/,
@@ -482,10 +487,6 @@ sub _fetch_features {
       my $reg_feat = $reg_features->{ $row->[5] };
       $var->{regulatory_features} = $reg_feat
         if defined $reg_feat && scalar(@$reg_feat) > 0;
-      my $clinical_significance = $row->[7];
-      if ( defined $clinical_significance ) {
-        $var->{clinical_significance} = [ split ',', $clinical_significance ];
-      }
 
       push( @{$value}, $var );
       return $value;

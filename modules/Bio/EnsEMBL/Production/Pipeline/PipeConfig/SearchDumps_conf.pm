@@ -124,7 +124,7 @@ sub pipeline_analyses {
 		   -parameters => { file_type => 'variants' },
 		   -rc_name    => '1g',
 		   -flow_into =>
-			 { 1 => [ 'ReformatVariantsSolr', 'ReformatGenomeEBeye' ] } },
+			 { 1 => [ 'ReformatVariantsSolr', 'ReformatGenomeEBeye', 'ReformatVariantsAdvancedSearch' ] } },
 
 		{  -logic_name => 'StructuralVariantDumpFactory',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -193,7 +193,14 @@ sub pipeline_analyses {
 		   -module =>
 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
 		   -rc_name   => '1g',
-		   -flow_into => {} }, {
+		   -flow_into => {} },
+		   
+		      {  -logic_name => 'ReformatVariantsAdvancedSearch',
+       -module =>
+'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsAdvancedSearch',
+       -rc_name   => '1g',
+       -flow_into => {} },
+        {
 		   -logic_name => 'ReformatGenomeSolr',
 		   -module =>
 			 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeSolr',

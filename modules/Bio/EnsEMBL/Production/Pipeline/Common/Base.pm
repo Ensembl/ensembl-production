@@ -38,6 +38,8 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Scalar qw/check_ref/;
+use Bio::EnsEMBL::DBSQL::OntologyDBAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
 use File::Find;
 use File::Spec;
 use File::Path qw/mkpath/;
@@ -164,7 +166,7 @@ sub get_DBAdaptor {
   my ( $self, $type ) = @_;
   $type ||= 'core';
   my $species =
-    ( $type eq 'production' ) ? 'multi' : $self->param_required('species');
+    ( $type eq 'production' || $type eq 'taxonomy' || $type eq 'ontology') ? 'multi' : $self->param_required('species');
 
   return Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 }
@@ -523,6 +525,25 @@ sub get_production_DBAdaptor {
   my ($self) = @_;
   return $self->production_dba();
 }
+
+sub ontology_dba {
+  my $self = shift;
+
+  my $dba = $self->get_DBAdaptor('ontology');
+  if ( !defined $dba ) {
+    my %ontology_db = %{ $self->param('ontology_db') };
+    $dba =
+      Bio::EnsEMBL::DBSQL::OntologyDBAdaptor->new(%ontology_db);
+  }
+  if ( !defined $dba ) {
+    my %ontology_db = %{ $self->param('onto_db') };
+    $dba = Bio::EnsEMBL::Ontology::DBSQL::OntologyDBAdaptor->new(%ontology_db);
+  }
+  confess('Type error!') unless ( $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
+
+  return $dba;
+}
+
 
 sub taxonomy_dba {
   my $self = shift;
