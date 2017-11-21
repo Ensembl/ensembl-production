@@ -199,6 +199,7 @@ sub write_output {
     $self->dataflow_output_id(@{$flow});
   }
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
   return;
 }
 

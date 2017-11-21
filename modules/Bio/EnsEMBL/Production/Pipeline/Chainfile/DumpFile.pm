@@ -113,6 +113,7 @@ sub run {
     }
 
     $core_dba->dbc->disconnect_if_idle;
+    $self->hive_dbc()->disconnect_if_idle();
 
 return;
 }

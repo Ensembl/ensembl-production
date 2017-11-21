@@ -176,6 +176,8 @@ sub run {
     $self->print_to_file($slices, $abinitio_path, 'PredictionTranscript', 1);
   }
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
+
 }
 
 

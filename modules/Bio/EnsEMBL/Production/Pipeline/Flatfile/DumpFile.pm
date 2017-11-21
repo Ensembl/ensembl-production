@@ -158,6 +158,7 @@ sub run {
 
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
+  $self->hive_dbc()->disconnect_if_idle();  
   return;
 }
 
