@@ -63,7 +63,7 @@ sub default_options {
        'check_intentions' => 1,
        #Mouse strains won't be dumped until the next geneset update
       #The pipeline require special hacks in place to dump these species.
-       'antispecies' => ['mus_musculus_balbcj','mus_musculus_c3hhej','mus_musculus_c57bl6nj','mus_musculus_casteij','mus_musculus_lpj','mus_musculus_pwkphj','mus_musculus_wsbeij','mus_spretus_spreteij','mus_musculus_129s1svimj','mus_musculus_akrj','mus_musculus_aj','mus_musculus_cbaj','mus_musculus_dba2j','mus_musculus_fvbnj','mus_musculus_nodshiltj','mus_musculus_nzohlltj'],
+       'antispecies' => ['mus_musculus_balbcj','mus_musculus_c3hhej','mus_musculus_c57bl6nj','mus_musculus_casteij','mus_musculus_lpj','mus_musculus_pwkphj','mus_musculus_wsbeij','mus_spretus_spreteij','mus_musculus_129s1svimj','mus_musculus_akrj','mus_musculus_aj','mus_musculus_cbaj','mus_musculus_dba2j','mus_musculus_fvbnj','mus_musculus_nodshiltj','mus_musculus_nzohlltj','mus_caroli','mus_pahari'],
 	};
 }
 
