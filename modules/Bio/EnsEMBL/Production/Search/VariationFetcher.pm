@@ -143,8 +143,10 @@ q/SELECT v.variation_id as id, v.name as name, v.class_attrib_id as class, v.sou
         delete $var->{clinical_significance};
       }     
       delete $var->{source_id};
+      _clean_keys($var);
       $var->{id} = $var->{name};
       delete $var->{name};
+      _clean_keys($var);
       $callback->($var);
       return;
     } );
@@ -302,7 +304,10 @@ q/SELECT vc.variation_id, p.pmid, p.title
     -CALLBACK => sub {
       my ( $row, $value ) = @_;
       $value = [] if !defined $value;
-      push( @{$value}, { pubmed_id => $row->[1], title => $row->[2] } );
+      my $h = {};
+      $h->{pubmed_id} = $row->[1] if defined $row->[1];
+      $h->{title} = $row->[2] if defined $row->[2];
+      push( @{$value}, $h );
       return $value;
     } );
 }
@@ -352,8 +357,8 @@ LIMIT 1/ );
 		pf.phenotype_id,
 		pf.study_id,
 		pf.source_id,
-		group_concat( distinct ag.value SEPARATOR ';') AS gn,
-        group_concat( distinct av.value SEPARATOR ';') AS vars
+		ag.value AS gn,
+    av.value AS vars
      FROM variation v
      JOIN phenotype_feature pf ON (v.name=pf.object_id)
      LEFT JOIN ( phenotype_feature_attrib AS ag 
@@ -374,7 +379,7 @@ LIMIT 1/ );
       my ( $row, $value ) = @_;
       $value = [] if !defined $value;
       my $phenotype = $phenotypes->{ $row->[1] } || {};
-      my $pf = { %{$phenotype} };
+      my $pf = { %{$phenotype} }; # make a copy
       _add_key( $pf, 'study',  $studies, $row->[2] );
       _add_key( $pf, 'source', $sources, $row->[3] );
       push @$value, $pf;
@@ -548,8 +553,9 @@ sub _fetch_all_studies {
       -SQL      => q/select study_id, name, description, study_type from study/,
       -CALLBACK => sub {
         my ( $row, $value ) = @_;
-        $value =
-          { name => $row->[2], description => $row->[3], type => $row->[4] };
+        $value->{name} = $row->[2] if defined $row->[2];        
+        $value->{description} = $row->[3] if defined $row->[3];        
+        $value->{type} = $row->[4] if defined $row->[4];        
         return $value;
       } );
 
@@ -642,7 +648,10 @@ sub _fetch_all_sources {
       -SQL      => q/SELECT source_id, name, version from source/,
       -CALLBACK => sub {
         my ( $row, $value ) = @_;
-        return { name => $row->[1], version => $row->[2] };
+        my $h = {};
+        $h->{name} = $row->[1] if defined $row->[1];
+        $h->{version} = $row->[2] if defined $row->[2];
+        return $h;
       } );
   }
   return $self->{sources};
@@ -656,6 +665,16 @@ sub _add_key {
   }
   return;
 
+}
+
+sub _clean_keys {
+  my ($o) = @_;
+  while (my ($k,$v) = each %$o) {
+    if(!defined $v || (ref($v) eq 'ARRAY' && scalar(@$v)==0)) {
+      delete $o->{$k};
+    }
+  }
+  return;
 }
 
 1;
