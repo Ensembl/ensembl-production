@@ -198,6 +198,8 @@ sub run {
    }
    close FILE;
 
+   Bio::EnsEMBL::Registry->get_DBAdaptor( $self->param('species'), 'core' )->dbc->disconnect_if_idle();
+   Bio::EnsEMBL::Registry->get_DBAdaptor( $self->param('source'), 'core' )->dbc->disconnect_if_idle();
    $self->hive_dbc->disconnect_if_idle();
    $mlssa->dbc->disconnect_if_idle();
    $ha->dbc->disconnect_if_idle();
