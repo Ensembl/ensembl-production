@@ -32,6 +32,9 @@ sub run {
     my $division     = $self->param_required('division');
     my $root_id      = $self->param_required('root_id');
 
+    my $hive_dbc = $self->dbc;
+    $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+
     my $sql_geneTree       = "SELECT r.root_id, cigar_line, n.node_id, m.stable_id, m.taxon_id, g.name
                         FROM gene_tree_node n, gene_tree_root r, seq_member m, genome_db g, gene_align_member gam
                         WHERE m.seq_member_id = n.seq_member_id
