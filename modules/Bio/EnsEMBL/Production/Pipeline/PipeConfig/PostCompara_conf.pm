@@ -463,7 +463,7 @@ sub pipeline_analyses {
                              },
              -batch_size  => 100,
              -rc_name     => 'default',
-             -analysis_capacity => 100,
+             -analysis_capacity => 20,
              -rc_name       => '8Gb_mem',
           },
           
