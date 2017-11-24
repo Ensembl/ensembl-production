@@ -772,10 +772,10 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
 		-CALLBACK => sub {
 			my ($row) = @_;
 			push @{ $homologues->{ $row->[0] } }, {
-				stable_id    => $row->[1],
-				genome       => $row->[2],
-				description  => $row->[3],
-				gene_tree_id => $row->[4] };
+				stable_id      => $row->[1],
+				genome         => $row->[2],
+				orthology_type => $row->[3],
+				gene_tree_id   => $row->[4] };
 			return;
 		},
 		-PARAMS => [$species] );
