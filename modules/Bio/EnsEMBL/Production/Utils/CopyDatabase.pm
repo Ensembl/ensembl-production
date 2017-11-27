@@ -131,7 +131,7 @@ sub copy_database {
     # If option drop enabled, drop database on target server.
     elsif ($drop){
       $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db->{dbname};") or die $target_dbh->errstr;
+      $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
