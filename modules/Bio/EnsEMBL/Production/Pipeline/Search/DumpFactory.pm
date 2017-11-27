@@ -39,7 +39,7 @@ sub run {
 	my $table = $self->param_required('table');
 	my $column = $self->param_required('column');
 
-	$self->logger()->debug("Fetching $type DBA for $species");
+	$self->log()->debug("Fetching $type DBA for $species");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 
 	throw "No $type database found for $species" unless defined $dba;
@@ -66,7 +66,7 @@ sub run {
 	my $offset = $min_id;
 	my $n      = 0;
 	while ( $offset < $max_id ) {
-		$self->logger()->debug("Writing slice job for $offset,$length");
+		$self->log()->debug("Writing slice job for $offset,$length");
 		$self->dataflow_output_id( {  'species' => $species,
 									  'offset'  => $offset,
 									  'length'  => $length },
@@ -74,7 +74,7 @@ sub run {
 		$offset += $length;
 		$n++;
 	}
-	$self->logger()->debug("Wrote $n slice jobs");
+	$self->log()->debug("Wrote $n slice jobs");
 
 	return;
 } ## end sub run
