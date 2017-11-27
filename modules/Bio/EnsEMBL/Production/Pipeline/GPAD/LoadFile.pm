@@ -284,7 +284,7 @@ sub run {
           $unmatched_rnacentral{$tgt_species}++;
         }
       }
-   } elsif ($db =~ /ensembl/) {
+   } else {
      $go_xref->add_linkage_type($go_evidence);
    }
 
