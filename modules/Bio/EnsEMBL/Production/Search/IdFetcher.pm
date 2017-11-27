@@ -70,7 +70,7 @@ sub fetch_ids_for_dba {
 	my $current_stable_ids = {};
 	for my $type (@$types) {
 		$current_stable_ids->{$type} =
-		  $helper->execute_into_hash( -SQL => "select stable_id,1 from $type" );
+		  $helper->execute_into_hash( -SQL => "select stable_id,1 from $type where stable_id is not null" );
 	}
 
 	my $mapping = {};

@@ -74,7 +74,7 @@ sub get_genes {
 
 	my @genes;
 	my $sql = qq/
-  select f.stable_id as id, f.version as version, x.display_label as name, f.description, f.biotype, f.source,
+  select ifnull(f.stable_id,f.gene_id) as id, f.version as version, x.display_label as name, f.description, f.biotype, f.source,
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
   s.name as seq_region_name,
   'gene' as ensembl_object_type,
@@ -150,8 +150,8 @@ sub get_transcripts {
 	my ( $self, $dba, $biotypes, $level, $load_xrefs ) = @_;
 
 	my $sql = q/
-    select g.stable_id as gene_id,
-    t.stable_id as id,
+    select ifnull(g.stable_id, g.gene_id) as gene_id,
+    ifnull(t.stable_id,t.transcript_id) as id,
     t.version as version,
     x.display_label as name,
     t.description, 
@@ -207,8 +207,8 @@ sub get_transcripts {
 
 	my $exon_sql = q/
   SELECT
-  t.stable_id AS trans_id,
-  e.stable_id AS id,
+  ifnull(t.stable_id, t.transcript_id) AS trans_id,
+  ifnull(e.stable_id, e.exon_id) AS id,
   e.version AS version,
   s.name as seq_region_name,
   e.seq_region_start as start, 
@@ -243,7 +243,7 @@ sub get_transcripts {
 	my $supporting_features = {};	
 	$dba->dbc->sql_helper->execute_no_return(
 		-SQL          => q/
-		select t.stable_id as trans_id,
+		select ifnull(t.stable_id, t.transcript_id) as trans_id,
 		f.hit_name as id,
 		f.hit_start as start,
 		f.hit_end as end,
@@ -270,7 +270,7 @@ sub get_transcripts {
 		} );
 	$dba->dbc->sql_helper->execute_no_return(
 		-SQL          => q/
-		select sf.transcript_id as trans_id,
+		select ifnull(t.stable_id,t.transcript_id) as trans_id,
 		f.hit_name as id,
 		f.hit_start as start,
 		f.hit_end as end,
@@ -281,7 +281,7 @@ sub get_transcripts {
 		from 
 		coord_system c
 		join seq_region s using (coord_system_id)
-		join transcript using (seq_region_id)
+		join transcript t using (seq_region_id)
 		join transcript_supporting_feature sf using (transcript_id)
 		join protein_align_feature f on (f.protein_align_feature_id=sf.feature_id)
 		join external_db d using (external_db_id)
@@ -316,8 +316,8 @@ sub get_translations {
 	my ( $self, $dba, $biotypes, $level, $load_xrefs ) = @_;
 
 	my $sql = q/
-    select t.stable_id as transcript_id,
-    tl.stable_id as id,
+    select ifnull(t.stable_id,t.transcript_id) as transcript_id,
+    ifnull(tl.stable_id,tl.translation_id) as id,
     tl.version as version,
     'translation' as ensembl_object_type
     from transcript t
@@ -368,7 +368,7 @@ sub get_protein_features {
 
 	my $sql = q/
     select
-    tl.stable_id as translation_id,
+    ifnull(tl.stable_id, tl.translation_id) as translation_id,
     pf.hit_name as name,
     pf.hit_description as description,
     pf.seq_start as start,
@@ -411,21 +411,12 @@ sub get_protein_features {
 
 sub _generate_xref_sql {
 	my ( $self, $table_name ) = @_;
-	my $Table_name = ucfirst($table_name);
-	my $other_table_name =
-	  $table_name;   # for translation joins on object_xref, otherwise invisible
-	my $table_alias      = 'f';
-	my $translation_join = '';
 	if ( $table_name eq 'translation' ) {
-		$table_alias      = 'tl';
-		$table_name       = 'transcript';
-		$translation_join = 'JOIN translation tl USING (transcript_id)';
-	}
-	my $sql = qq/
-      SELECT ${table_alias}.stable_id AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
-      FROM ${table_name} f
-      ${translation_join}
-      JOIN object_xref ox         ON (${table_alias}.${other_table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
+	  return qq/
+      SELECT ifnull(tl.stable_id, tl.translation_id) AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
+      FROM transcript t
+      JOIN translation tl USING (transcript_id)
+      JOIN object_xref ox         ON (tl.translation_id = ox.ensembl_id AND ox.ensembl_object_type = 'Translation')
       JOIN xref x                 USING (xref_id)
       JOIN external_db e          USING (external_db_id)
       JOIN seq_region s           USING (seq_region_id)
@@ -433,68 +424,91 @@ sub _generate_xref_sql {
       LEFT JOIN ontology_xref oox USING (object_xref_id)
       WHERE c.species_id = ? AND oox.object_xref_id is null 
     /;
-	return $sql;
+	} else {
+	  my $Table_name = ucfirst($table_name);
+	  return qq/SELECT ifnull(f.stable_id, f.${table_name}_id) AS id, x.xref_id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name, x.description, x.info_type, x.info_text
+	    FROM ${table_name} f
+	    JOIN object_xref ox ON (f.${table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
+	    JOIN xref x USING (xref_id)
+	    JOIN external_db e USING (external_db_id)
+	    JOIN seq_region s           USING (seq_region_id)
+            JOIN coord_system c         USING (coord_system_id)
+      LEFT JOIN ontology_xref oox USING (object_xref_id)
+	    WHERE c.species_id = ? AND oox.object_xref_id is null/;
+	}
 } ## end sub _generate_xref_sql
 
 sub _generate_object_xref_sql {
 	my ( $self, $table_name ) = @_;
-	my $other_table_name = $table_name;            # for translation case
-	my $Table_name       = ucfirst($table_name);
-	my $table_alias      = 'f';
-	my $select_alias     = $table_alias;
-	my $translation_join = '';
+
 	if ( $table_name eq 'translation' ) {
-		$table_name       = 'transcript';
-		$select_alias     = 'tl';
-		$translation_join = 'JOIN translation tl USING (transcript_id)';
-	}
-	my $sql = qq/ 
-    SELECT ox.object_xref_id, ${select_alias}.stable_id AS id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name,  x.description, 
+	 return qq/SELECT ox.object_xref_id, ifnull(tl.stable_id, tl.translation_id) AS id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name,  x.description, 
            oox.linkage_type, sx.dbprimary_acc, sx.display_label, sx.description, se.db_name, se.db_display_name
-      FROM ${table_name} ${table_alias}
-      ${translation_join}
-      JOIN object_xref ox      ON (${select_alias}.${other_table_name}_id=ox.ensembl_id AND ox.ensembl_object_type='${Table_name}')
-      JOIN xref x              USING (xref_id)
-      JOIN external_db e       USING (external_db_id)
-      JOIN seq_region s        USING (seq_region_id)
-      JOIN coord_system c      USING (coord_system_id)
-      JOIN ontology_xref oox   USING (object_xref_id)
+      FROM transcript t
+      JOIN translation tl USING (transcript_id)
+      JOIN object_xref ox         ON (tl.translation_id = ox.ensembl_id AND ox.ensembl_object_type = 'Translation')
+      JOIN xref x                 USING (xref_id)
+      JOIN external_db e          USING (external_db_id)
+      JOIN seq_region s           USING (seq_region_id)
+      JOIN coord_system c         USING (coord_system_id)
+      JOIN ontology_xref oox USING (object_xref_id)
       LEFT JOIN xref sx        ON (oox.source_xref_id = sx.xref_id)
       LEFT JOIN external_db se ON (se.external_db_id = sx.external_db_id)
       WHERE c.species_id = ? 
-  /;
-	return $sql;
+    /;
+	} else {
+	  my $Table_name = ucfirst($table_name);
+	  return qq/SELECT ox.object_xref_id, ifnull(f.stable_id, f.${table_name}_id) AS id, x.dbprimary_acc, x.display_label, e.db_name, e.db_display_name,  x.description, 
+           oox.linkage_type, sx.dbprimary_acc, sx.display_label, sx.description, se.db_name, se.db_display_name
+	    FROM ${table_name} f
+	    JOIN object_xref ox ON (f.${table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
+	    JOIN xref x USING (xref_id)
+	    JOIN external_db e USING (external_db_id)
+	    JOIN seq_region s           USING (seq_region_id)
+            JOIN coord_system c         USING (coord_system_id)
+            JOIN ontology_xref oox USING (object_xref_id)
+            LEFT JOIN xref sx        ON (oox.source_xref_id = sx.xref_id)
+            LEFT JOIN external_db se ON (se.external_db_id = sx.external_db_id)
+	    WHERE c.species_id = ?/;
+	}
+      
 } ## end sub _generate_object_xref_sql
 
 sub _generate_associated_xref_sql {
 	my ( $self, $table_name ) = @_;
-	my $Table_name       = ucfirst($table_name);
-	my $table_alias      = 'f';
-	my $root_table_name  = $table_name;
-	my $translation_join = '';
 	if ( $table_name eq 'translation' ) {
-		$table_alias      = 'tl';
-		$root_table_name  = 'transcript';
-		$translation_join = 'JOIN translation tl USING (transcript_id)';
-	}
-
-	my $sql = qq/
+	  return qq/
     SELECT ax.object_xref_id, ax.rank, ax.condition_type, x.dbprimary_acc, x.display_label, xe.db_name, xe.db_display_name, x.description, 
            sx.dbprimary_acc, sx.display_label, se.db_name, sx.description, ax.associated_group_id 
-      FROM ${root_table_name} f
-      ${translation_join}
-      JOIN object_xref ox     ON (${table_alias}.${table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
+      FROM transcript t
+      JOIN translation tl USING (transcript_id)
+      JOIN object_xref ox     ON (tl.translation_id = ox.ensembl_id AND ox.ensembl_object_type = 'Translation')
       JOIN associated_xref ax USING (object_xref_id) 
       JOIN xref x             ON (x.xref_id = ax.xref_id) 
       JOIN external_db xe     ON (x.external_db_id = xe.external_db_id) 
       JOIN xref sx            ON (sx.xref_id = ax.source_xref_id) 
       JOIN external_db se     ON (se.external_db_id = sx.external_db_id) 
-      JOIN seq_region s       USING (seq_region_id)
-      JOIN coord_system c     USING (coord_system_id)
-      WHERE c.species_id=? 
-  /;
-	return $sql;
-} ## end sub _generate_associated_xref_sql
+      JOIN seq_region s           USING (seq_region_id)
+      JOIN coord_system c         USING (coord_system_id)
+      WHERE c.species_id = ?
+    /;
+	} else {
+	  my $Table_name = ucfirst($table_name);
+	  return qq/
+    SELECT ax.object_xref_id, ax.rank, ax.condition_type, x.dbprimary_acc, x.display_label, xe.db_name, xe.db_display_name, x.description, 
+           sx.dbprimary_acc, sx.display_label, se.db_name, sx.description, ax.associated_group_id 
+	    FROM ${table_name} f
+	    JOIN object_xref ox ON (f.${table_name}_id = ox.ensembl_id AND ox.ensembl_object_type = '${Table_name}')
+            JOIN associated_xref ax USING (object_xref_id) 
+            JOIN xref x             ON (x.xref_id = ax.xref_id) 
+            JOIN external_db xe     ON (x.external_db_id = xe.external_db_id) 
+            JOIN xref sx            ON (sx.xref_id = ax.source_xref_id) 
+            JOIN external_db se     ON (se.external_db_id = sx.external_db_id) 
+	    JOIN seq_region s           USING (seq_region_id)
+            JOIN coord_system c         USING (coord_system_id)
+	    WHERE c.species_id = ?/;
+	}
+} ## end sub _generate_xref_sql
 
 sub get_xrefs {
 	my ( $self, $dba, $type, $biotypes ) = @_;
@@ -619,7 +633,7 @@ sub get_xrefs {
 sub get_coord_systems {
 	my ( $self, $dba, $type, $biotypes ) = @_;
 	my $sql = qq/
-    select g.stable_id as id, c.name, c.version
+    select ifnull(g.stable_id,g.${type}_id) as id, c.name, c.version
     from $type g
     join seq_region s using (seq_region_id)
     join coord_system c using (coord_system_id)
@@ -644,7 +658,7 @@ sub get_coord_systems {
 sub get_synonyms {
 	my ( $self, $dba, $biotypes ) = @_;
 	my $sql = q/
-    select g.stable_id as id, e.synonym
+    select ifnull(g.stable_id,g.gene_id) as id, e.synonym
     from gene g
     join external_synonym e on (g.display_xref_id = e.xref_id)
     join seq_region s using (seq_region_id)
@@ -667,7 +681,7 @@ sub get_synonyms {
 sub get_seq_region_synonyms {
 	my ( $self, $dba, $type, $biotypes ) = @_;
 	my $sql = qq/
-    select g.stable_id as id, sr.synonym as synonym, e.db_name as db 
+    select ifnull(g.stable_id,${type}_id) as id, sr.synonym as synonym, e.db_name as db 
     from $type g
     join seq_region_synonym sr using (seq_region_id)
     join seq_region s using (seq_region_id)
@@ -692,7 +706,7 @@ sub get_seq_region_synonyms {
 sub get_haplotypes {
 	my ( $self, $dba, $type, $biotypes ) = @_;
 	my $sql = qq/
-    select g.stable_id as id 
+    select ifnull(g.stable_id,${type}_id) as id 
     from $type g
     join assembly_exception ae using (seq_region_id)
     join seq_region s using (seq_region_id)
