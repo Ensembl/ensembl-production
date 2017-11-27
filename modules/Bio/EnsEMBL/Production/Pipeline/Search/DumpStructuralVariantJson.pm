@@ -44,6 +44,7 @@ sub dump {
 	my $file = $self->write_structural_variants( $dba,
 										  $self->param("offset"),
 										  $self->param("length") );
+	$dba->dbc()->disconnect_if_idle();
 	if(defined $file) {										  
 		$self->{logger}->info("Structural variations for $species written to $file");
 		$self->dataflow_output_id( {dump_file=>$file, species=>$species}, 2);

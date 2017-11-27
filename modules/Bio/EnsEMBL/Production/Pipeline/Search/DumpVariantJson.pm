@@ -37,6 +37,7 @@ sub dump {
 	my ($self, $species) = @_;
 
 	$self->{logger}->debug("Fetching DBA for $species");
+	$self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
 
 	throw "No variation database found for $species" unless defined $dba;
@@ -44,7 +45,7 @@ sub dump {
 	my $file = $self->write_variants( $dba,
 										  $self->param("offset"),
 										  $self->param("length") );
-	
+	$dba->dbc()->disconnect_if_idle();
 	if(defined $file) {
 	  $self->{logger}->info("Variations for $species written to $file");
 	  

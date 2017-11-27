@@ -57,8 +57,10 @@ sub dump {
 	}
 
 	$self->{logger}->info("Dumping probes for $species");
+	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' );
 	my $all_probes = Bio::EnsEMBL::Production::Search::ProbeFetcher->new()
-	  ->fetch_probes( $species, $offset, $length );
+	  ->fetch_probes_for_dba( $dba, $offset, $length );
+	$dba->dbc()->disconnect_if_idle();
 	my $probes = $all_probes->{probes};
 	my $output = {
 		      species => $species };

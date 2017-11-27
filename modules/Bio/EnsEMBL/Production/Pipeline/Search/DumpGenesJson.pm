@@ -58,6 +58,7 @@ sub dump {
 		my $output = { species     => $species,
 					   type        => $type,
 					   genome_file => $self->param('genome_file') };
+		$self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
 		$self->{logger}->info("Dumping data for $species $type");
 		$self->{logger}->info("Dumping genes");
 		$output->{genes_file} = $self->dump_genes( $dba, $compara, $type );
@@ -71,6 +72,7 @@ sub dump {
 		$output->{ids_file} = $self->dump_ids( $dba, $type );		
 		
 		$self->{logger}->info("Completed dumping $species $type");
+		$dba->dbc()->disconnect_if_idle(1);
 		$self->dataflow_output_id( $output, 1 );
 	} ## end if ( $species ne "Ancestral sequences")
 	return;
