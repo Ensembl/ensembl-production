@@ -219,6 +219,7 @@ sub get_dir {
       push @extras, $fasta_type if ( defined $fasta_type );
       $dir = File::Spec->catdir( $base_dir, @extras );
     }
+    $mc->dbc()->disconnect_if_idle();
   }
   mkpath($dir);
 
@@ -549,11 +550,11 @@ sub taxonomy_dba {
   my $self = shift;
 
   my $dba = $self->get_DBAdaptor('taxonomy');
-  if ( !defined $dba ) {
+  if ( !defined $dba && defined $self->param('taxonomy_db') ) {
     my %taxonomy_db = %{ $self->param('taxonomy_db') };
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
-  if ( !defined $dba ) {
+  if ( !defined $dba && defined $self->param('tax_db') ) {
     my %taxonomy_db = %{ $self->param('tax_db') };
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
