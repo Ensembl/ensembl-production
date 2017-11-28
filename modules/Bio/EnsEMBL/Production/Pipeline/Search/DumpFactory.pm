@@ -50,7 +50,7 @@ sub run {
 	  ->execute(
 							-SQL => 'select '.$column.' from '.$table.' limit 1' );
 	if(!scalar @$cnt) {
-		$self->logger->info("$table is empty - not spawning any jobs");
+		$self->log()->info("$table is empty - not spawning any jobs");
 		return;
 	}
 
