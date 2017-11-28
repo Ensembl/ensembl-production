@@ -69,6 +69,18 @@ sub _append_biotype_sql {
 	return $sql;
 }
 
+sub _append_analysis_sql {
+  my ($self, $dba, $sql, $table) = @_;
+  my $analysis_ids = $dba->dbc()->sql_helper()->execute_simple(
+							       -SQL => q/select analysis_id from analysis_description where web_data rlike 'do_not_display'/
+							      );
+  if(scalar @{$analysis_ids}>0) {
+    $sql .= ' and '.$table.'.analysis_id not in ('.join(',', @$analysis_ids).')'; 
+  }
+  return $sql;
+}
+
+
 sub get_genes {
 	my ( $self, $dba, $biotypes, $level, $load_xrefs ) = @_;
 
@@ -88,13 +100,14 @@ sub get_genes {
   where c.species_id = ? 
   /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes );
+	$sql = $self->_append_analysis_sql( $dba, $sql, 'f' );
 
 	my $result =
 	  $dba->dbc()->sql_helper()->execute( -SQL    => $sql,
 										  -PARAMS => [ $dba->species_id() ],
 										  -USE_HASHREFS => 1, );
-
 	@genes = @$result;
+	print "Retrieved ".scalar(@genes)." genes\n";
 
 	# turn into hash
 	my $genes_hash = { map { $_->{id} => $_ } @genes };
@@ -173,6 +186,9 @@ sub get_transcripts {
     where c.species_id = ? 
     /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes, 't' );
+
+	$sql = $self->_append_analysis_sql( $dba, $sql, 't' );
+	
 	my $xrefs = {};
 	if ( $load_xrefs == 1 ) {
 		$xrefs = $self->get_xrefs( $dba, 'transcript', $biotypes );
@@ -224,6 +240,8 @@ sub get_transcripts {
   WHERE c.species_id = ?
   ORDER BY `id`
   /;
+	$exon_sql = $self->_append_analysis_sql( $dba, $exon_sql, 't' );
+
 	my $exons = {};    # key them off their transcript ID
 
 	$dba->dbc->sql_helper->execute_no_return(
@@ -241,8 +259,7 @@ sub get_transcripts {
 		} );
 		
 	my $supporting_features = {};	
-	$dba->dbc->sql_helper->execute_no_return(
-		-SQL          => q/
+	$sql = q/
 		select ifnull(t.stable_id, t.transcript_id) as trans_id,
 		f.hit_name as id,
 		f.hit_start as start,
@@ -260,7 +277,10 @@ sub get_transcripts {
 		join analysis a on (a.analysis_id=f.analysis_id)
 		where sf.feature_type='dna_align_feature'
 		and c.species_id=?
-		/,
+		/;
+	$sql = $self->_append_analysis_sql( $dba, $sql, 't' );
+	$dba->dbc->sql_helper->execute_no_return(
+		-SQL          => $sql,
 		-PARAMS       => [ $dba->species_id ],
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
@@ -268,8 +288,8 @@ sub get_transcripts {
 			push @{ $supporting_features->{ $row->{trans_id} } }, $row;
 			return;
 		} );
-	$dba->dbc->sql_helper->execute_no_return(
-		-SQL          => q/
+
+	$sql = q/
 		select ifnull(t.stable_id,t.transcript_id) as trans_id,
 		f.hit_name as id,
 		f.hit_start as start,
@@ -288,7 +308,10 @@ sub get_transcripts {
 		join analysis a on (a.analysis_id=f.analysis_id)
 		where sf.feature_type='protein_align_feature'
 		and c.species_id=?
-		/,
+		/;
+	$sql = $self->_append_analysis_sql( $dba, $sql, 't' );
+	$dba->dbc->sql_helper->execute_no_return(
+		-SQL          => $sql,
 		-PARAMS       => [ $dba->species_id ],
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
@@ -327,6 +350,7 @@ sub get_translations {
     where c.species_id = ? 
   /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes, 't' );
+	$sql = $self->_append_analysis_sql( $dba, $sql, 't' );
 	my $xrefs = {};
 	if ( $load_xrefs == 1 ) {
 		$xrefs = $self->get_xrefs( $dba, 'translation', $biotypes );
@@ -640,6 +664,7 @@ sub get_coord_systems {
     where c.species_id = ? 
   /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes );
+	$sql = $self->_append_analysis_sql( $dba, $sql, 'g' );
 
 	my $coord_systems = {};
 
@@ -689,7 +714,8 @@ sub get_seq_region_synonyms {
     left join external_db e using (external_db_id)
     where c.species_id = ? 
   /;
-	$sql = $self->_append_biotype_sql( $sql, $biotypes );
+	$sql = $self->_append_biotype_sql( $sql, $biotypes, 'g' );
+	$sql = $self->_append_analysis_sql( $dba, $sql, 'g' );
 	my $synonyms = {};
 	$dba->dbc()->sql_helper()->execute_no_return(
 		-SQL      => $sql,
@@ -714,6 +740,7 @@ sub get_haplotypes {
     where c.species_id = ? and ae.exc_type='HAP'
   /;
 	$sql = $self->_append_biotype_sql( $sql, $biotypes );
+	$sql = $self->_append_analysis_sql( $dba, $sql, 'g' );
 	my $haplotypes = {};
 	$dba->dbc()->sql_helper()->execute_no_return(
 		-SQL      => $sql,
