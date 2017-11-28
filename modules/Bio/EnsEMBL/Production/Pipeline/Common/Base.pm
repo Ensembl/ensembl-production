@@ -166,7 +166,7 @@ sub get_DBAdaptor {
   my ( $self, $type ) = @_;
   $type ||= 'core';
   my $species =
-    ( $type eq 'production' || $type eq 'taxonomy' || $type eq 'ontology') ? 'multi' : $self->param_required('species');
+    ( $type eq 'production' || $type eq 'taxonomy' || $type eq 'ontology' || $type eq 'metadata') ? 'multi' : $self->param_required('species');
 
   return Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 }
@@ -542,6 +542,17 @@ sub ontology_dba {
   }
   confess('Type error!') unless ( $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
 
+  return $dba;
+}
+
+sub metadata_dba {
+  my $self = shift;
+
+  my $dba = $self->get_DBAdaptor('metadata');
+  if ( !defined $dba && defined $self->param('metadata_db') ) {
+    my %db = %{ $self->param('metadata_db') };
+    $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%db);
+  }
   return $dba;
 }
 
