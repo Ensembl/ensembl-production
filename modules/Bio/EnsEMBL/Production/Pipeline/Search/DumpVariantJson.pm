@@ -36,7 +36,7 @@ use Log::Log4perl qw/:easy/;
 sub dump {
 	my ($self, $species) = @_;
 
-	$self->{logger}->debug("Fetching DBA for $species");
+	$self->log()->debug("Fetching DBA for $species");
 	$self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
 
@@ -47,7 +47,7 @@ sub dump {
 										  $self->param("length") );
 	$dba->dbc()->disconnect_if_idle();
 	if(defined $file) {
-	  $self->{logger}->info("Variations for $species written to $file");
+	  $self->log()->info("Variations for $species written to $file");
 	  
 	  $self->dataflow_output_id( {dump_file=>$file, species=>$species}, 2);
 	} 
@@ -67,7 +67,7 @@ sub write_variants {
 	else {
 		$json_file_path = $sub_dir . '/' . $dba->species() . '_variants.json';
 	}
-	$self->{logger}->info("Writing to $json_file_path");
+	$self->log()->info("Writing to $json_file_path");
 	open my $json_file, '>', $json_file_path or
 	  throw "Could not open $json_file_path for writing";
 
@@ -88,7 +88,7 @@ sub write_variants {
 		} );
 	print $json_file ']' unless defined $offset;
 	close $json_file ||throw "Could not close $json_file_path";
-	$self->{logger}->info("Wrote $n variants to $json_file_path");
+	$self->log()->info("Wrote $n variants to $json_file_path");
 	if ($n==0) {
 	  unlink $json_file_path;
 	  return undef;
