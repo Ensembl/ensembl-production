@@ -74,6 +74,9 @@ if(!Log::Log4perl->initialized()) {
   Log::Log4perl->easy_init($DEBUG);
 }
 
+my $hive_dbc = $self->dbc;
+$hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+
 copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop);
 
 my $runtime =  duration(time() - $start_time);
