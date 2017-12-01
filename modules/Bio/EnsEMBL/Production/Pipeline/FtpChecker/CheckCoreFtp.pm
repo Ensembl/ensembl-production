@@ -135,8 +135,8 @@ sub run {
     if(defined $division) {
       $division = lc ($division);
       $division =~ s/ensembl//i;
-      $vals->{division} = $division if $division ne '';
-    }
+		}
+    $vals->{division} = $division;
     $self->check_files($species, 'core', $base_path, $expected_files, $vals);
   }
   return;
