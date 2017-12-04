@@ -74,6 +74,7 @@ sub pipeline_analyses {
 	  { -logic_name     => 'convert_fasta',
 	    -module         => 'Bio::EnsEMBL::Production::Pipeline::FASTA::BlastConverter',
 	    -hive_capacity  => 50,
+      -priority        => 5,
  	    -parameters     => { header_prefix => $self->o('blast_header_prefix'), }
 	  }  
     ];
