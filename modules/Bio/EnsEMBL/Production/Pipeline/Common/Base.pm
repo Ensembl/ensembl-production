@@ -51,7 +51,11 @@ sub log {
   if ( !defined $self->{log} ) {
     $self->{log} = get_logger();
     if ( !Log::Log4perl->initialized() ) {
-      Log::Log4perl->easy_init($DEBUG);
+      if($self->debug()==0) {
+	Log::Log4perl->easy_init($INFO);
+      } else {
+	Log::Log4perl->easy_init($DEBUG);
+      }
     }
   }
   return $self->{log};
