@@ -168,6 +168,7 @@ sub copy_database {
 
   my @tables;
   my @views;
+  my @tables_flush;
 
   my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS') or die $source_dbh->errstr;
 
@@ -204,6 +205,10 @@ sub copy_database {
         next TABLE;
       }
       push( @tables, $table );
+      # If the table exist in target db, add it to the tables_flush array
+      if (system("ssh $target_db->{host} ls ${destination_dir}/${table} >/dev/null 2>&1")==0){
+        push( @tables_flush, $table );
+      }
     } ## end while ( $table_sth->fetch...)
 
   #Flushing and locking source database
@@ -214,9 +219,9 @@ sub copy_database {
   flush_with_read_lock($source_dbh,\@tables);
 
   #Flushing and locking target database
-  if ($target_db_exist == 0) {
+  if ($target_db_exist == 0 and @tables_flush) {
     $logger->info("Flushing and locking target database");
-    flush_with_read_lock($target_dbh,\@tables);
+    flush_with_read_lock($target_dbh,\@tables_flush);
   }
 
   # Copying mysql database files
