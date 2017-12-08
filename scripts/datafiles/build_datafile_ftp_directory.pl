@@ -179,6 +179,12 @@ sub _get_funcgen_DataFiles {
   
   my $data_file_adaptor = Bio::EnsEMBL::DBSQL::DataFileAdaptor->new($dba->dnadb);
   
+  # Workaround, because DataFile uses the group to build directories:
+  #
+  # https://github.com/Ensembl/ensembl/blob/release/90/modules/Bio/EnsEMBL/DataFile.pm#L140
+  #
+  $data_file_adaptor->db->group('funcgen');
+  
   my $coord_system_adaptor = $dba->dnadb->get_CoordSystemAdaptor;
   my $all_coord_systems = $coord_system_adaptor->fetch_all;
   my $coord_system = $all_coord_systems->[0];
