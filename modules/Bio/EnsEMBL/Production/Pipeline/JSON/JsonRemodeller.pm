@@ -501,14 +501,19 @@ sub find_genome_name {
   my ( $self, $genome ) = @_;
   my $name = $self->{genome_names}->{$genome};
   if ( !defined $name ) {
-    my $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
-                                                    'MetaContainer' );
+    my $meta;
+    eval {
+      $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
+						   'MetaContainer' );
+    };
     if ( !defined $meta ) {
-      throw "Cannot find genome $genome";
+      warn "Cannot find genome $genome - using original name";
+      $self->{genome_names}->{$genome} = $genome;
+    } else {
+      $name = $meta->get_display_name();
+      $meta->db()->dbc()->disconnect_if_idle();
+      $self->{genome_names}->{$genome} = $name;
     }
-    $name = $meta->get_display_name();
-    $meta->db()->dbc()->disconnect_if_idle();
-    $self->{genome_names}->{$genome} = $name;
   }
   return $name;
 }
