@@ -38,6 +38,10 @@ sub new {
 
 	croak "-URL required" unless defined $self->{url};
 
+	if($self->{url} !~ m/\/$/) {
+	  $self->{url} .= '/';
+	}
+
 	$self->{ua} = LWP::UserAgent->new();
 	$self->{retry_wait}  ||= 60;
 	$self->{retry_count} ||= 1000;
@@ -46,12 +50,16 @@ sub new {
 
 sub get_load {
 	my ( $self, $server ) = @_;
-	my $response = $self->{ua}->get( $self->{url} . '/load/' . $server );
+	my $url = $self->{url} . 'load/' . $server;
+	$logger->debug("Invoking $url");
+	my $response = $self->{ua}->get( $url );
 	if ( $response->is_success ) {
-		return decode_json($response->decoded_content);    # or whatever
+	  $logger->debug($response->decoded_content);
+		return decode_json($response->decoded_content);   
 	}
 	else {
-		croak $response->status_line;
+	  $logger->error("Failed to invoke $url: ".$response->status_line);
+	  croak $response->status_line;
 	}
 }
 
