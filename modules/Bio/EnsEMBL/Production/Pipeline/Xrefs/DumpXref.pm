@@ -70,7 +70,7 @@ sub run {
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
   my $source_sth = $dbi->prepare("SELECT distinct s.name, s.source_id from source s, primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = s.source_id");
   my $sequence_sth = $dbi->prepare("SELECT p.xref_id, p.sequence, x.species_id FROM primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = ?");
-  my $mapping_source_sth = $dbi->prepare("insert into source_mapping_method values (?,?)");
+  my $mapping_source_sth = $dbi->prepare("insert ignore into source_mapping_method values (?,?)");
 
   # Create sequence files
   my $full_path = File::Spec->catfile($base_path, $species, 'xref');
