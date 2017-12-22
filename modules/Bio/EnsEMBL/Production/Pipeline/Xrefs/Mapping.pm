@@ -21,7 +21,6 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping;
 use strict;
 use warnings;
 
-#use XrefMapper::SubmitMapper;
 use XrefMapper::BasicMapper;
 use XrefMapper::ProcessMappings;
 use XrefMapper::ProcessPrioritys;
@@ -35,10 +34,10 @@ use XrefMapper::UniParcMapper;
 use XrefMapper::RNACentralMapper;
 use XrefMapper::OfficialNaming;
 use XrefMapper::DirectXrefs;
-use Bio::EnsEMBL::Registry;
 use XrefMapper::db;
+use File::Path qw/make_path/;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 
 sub run {
@@ -46,6 +45,7 @@ sub run {
   my $xref_url     = $self->param_required('xref_url');
   my $species      = $self->param_required('species');
   my $base_path    = $self->param_required('base_path');
+  my $source_url   = $self->param_required('source_url');
 
   my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($xref_url);
   my $user   = $parsed_url->{'user'};
@@ -65,7 +65,13 @@ sub run {
     -pass    => $core_dbc->pass
   );
   $core_db->dir($base_path);
-
+  $core_db->species($species);
+  my $full_path = File::Spec->catfile($base_path, $species, 'ensembl');
+  make_path($full_path);
+  my $cdna_path = File::Spec->catfile($full_path, 'transcripts.fa');
+  my $pep_path  = File::Spec->catfile($full_path, 'peptides.fa');
+  $core_db->dna_file($cdna_path);
+  $core_db->protein_file($pep_path);
 
   my $xref_db = XrefMapper::db->new(
     -host    => $host,
@@ -75,11 +81,33 @@ sub run {
     -pass    => $pass
   );
 
-  my $mapper = XrefMapper::BasicMapper->new();
+  # Look for species-specific mapper
+  my $module;
+  my $class = "XrefMapper::$species.pm";
+  my $eval_test = eval { require $class; };
+  if ($eval_test == 1) {
+    $module = $class;
+  } else {
+    $module = "XrefMapper::BasicMapper";
+  }
+  my $mapper = $module->new();
   $mapper->xref($xref_db);
   $mapper->add_meta_pair("xref", $host.":".$dbname);
   $mapper->core($core_db);
   $mapper->add_meta_pair("species", $host.":".$dbname);
+
+  my $core_info = XrefMapper::CoreInfo->new($mapper);
+  $core_info->get_core_data();
+  $mapper->get_alt_alleles();
+
+  my $coord = XrefMapper::CoordinateMapper->new($mapper);
+  $coord->run_coordinatemapping(1);
+
+  my $checksum_mapper = XrefMapper::UniParcMapper->new($mapper);
+  $checksum_mapper->process($source_url);
+  $checksum_mapper = XrefMapper::RNACentralMapper->new($mapper);
+  $checksum_mapper->process($source_url);
+
   my $parser = XrefMapper::ProcessMappings->new($mapper);
   $parser->process_mappings();
 
