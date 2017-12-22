@@ -59,6 +59,7 @@ sub run {
   my $method        = $self->param_required('method');
   my $query_cutoff  = $self->param_required('query_cutoff');
   my $target_cutoff = $self->param_required('target_cutoff');
+  my $job_index     = $self->param_required('job_index');
   
   # inspect file size to decide on chunking
   my $size = stat($target_file)->size;
@@ -76,6 +77,7 @@ sub run {
       target_cutoff => $target_cutoff,
       max_chunks    => $chunks, 
       chunk         => $chunklet, 
+      job_index     => $job_index,
       source_file   => $source_file, 
       target_file   => $target_file, 
       xref_url      => $xref_url,
