@@ -21,9 +21,10 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleSource;
 use strict;
 use warnings;
 use XrefParser::Database;
-use Bio::EnsEMBL::Hive::Utils::URL;
+use File::Basename;
+use File::Spec::Functions;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 
 sub run {
@@ -32,6 +33,7 @@ sub run {
   my $species          = $self->param_required('species');
   my $release          = $self->param_required('release');
   my $sql_dir          = $self->param_required('sql_dir');
+  my $base_path        = $self->param_required('base_path');
 
   my $source_url       = $self->param('source_url');
   my $source_db        = $self->param('source_db');
@@ -47,11 +49,7 @@ sub run {
   my $port             = $self->param('xref_port');
 
   if (defined $db_url) {
-    my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($db_url);
-    $user = $parsed_url->{'user'};
-    $pass = $parsed_url->{'pass'};
-    $host = $parsed_url->{'host'};
-    $port = $parsed_url->{'port'};
+    ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
 
   # Create Xref database
@@ -65,32 +63,30 @@ sub run {
   $dbc->create($sql_dir, 1, 1); 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
 
-  # Select list of sources from versioning database
+  # Retrieve list of sources from versioning database
   if (defined $source_url) {
-    my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($source_url);
-    $source_user = $parsed_url->{'user'};
-    $source_pass = $parsed_url->{'pass'};
-    $source_host = $parsed_url->{'host'};
-    $source_port = $parsed_url->{'port'};
-    $source_db   = $parsed_url->{'dbname'};
+    ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   }
-  my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s;database=%s", $source_host, $source_port, $source_db);
-  my $dbi = DBI->connect( $dbconn, $source_user, $source_pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
-  my $select_source_sth = $dbi->prepare("SELECT name, parser, file_name FROM source s, version v WHERE s.source_id = v.source_id");
-  my ($name, $parser, $file_name, $dataflow_params);
+  my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
+  my $select_source_sth = $dbi->prepare("SELECT name, parser, uri, index_uri, count_seen FROM source s, version v WHERE s.source_id = v.source_id");
+  my ($name, $parser, $file_name, $dataflow_params, $db, $priority);
   $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$file_name);
+  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority);
 
   while ($select_source_sth->fetch()) {
-  if (!defined $file_name) { next; }
     $dataflow_params = {
       species     => $species,
       parser      => $parser,
       name        => $name,
       xref_url    => $xref_db_url,
+      db          => $db,
       file_name   => $file_name
     };
-    $self->dataflow_output_id($dataflow_params, 2);
+    if ($priority == 1) {
+      $self->dataflow_output_id($dataflow_params, 2);
+    } elsif ($priority == 2) {
+      $self->dataflow_output_id($dataflow_params, 3);
+    }
   }
   $dataflow_params = {
     xref_url    => $xref_db_url,

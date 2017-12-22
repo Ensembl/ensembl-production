@@ -21,19 +21,8 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource;
 use strict;
 use warnings;
 use DBI;
-use URI;
-use Net::FTP;
-use HTTP::Tiny;
-use URI;
-use URI::file;
-use File::Basename;
-use File::Spec::Functions;
-use XrefParser::Database;
-use IO::File;
-use Bio::EnsEMBL::Hive::Utils::URL;
-use Text::Glob qw( match_glob );
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my ($self) = @_;
@@ -51,86 +40,36 @@ sub run {
   my $port             = $self->param('source_port');
 
   if (defined $db_url) {
-    my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($db_url);
-    $user      = $parsed_url->{'user'};
-    $pass      = $parsed_url->{'pass'};
-    $host      = $parsed_url->{'host'};
-    $port      = $parsed_url->{'port'};
-    $source_db = $parsed_url->{'dbname'};
+    ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   }
   $self->create_db($source_dir, $user, $pass, $db_url, $source_db, $host, $port) unless $reuse_db;
 
-  my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $source_db);
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $insert_source_sth = $dbi->prepare("INSERT IGNORE INTO source (name, parser) VALUES (?, ?)");
-  my $insert_version_sth = $dbi->prepare("INSERT INTO version (source_id, uri, file_name, count_seen) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, 1)");
+  my $insert_version_sth = $dbi->prepare("INSERT INTO version (source_id, uri, index_uri, count_seen) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?)");
 
   # Can re-use existing files if specified
   if ($skip_download) { return; }
 
-  open( INFILE, "<$config_file" ) or die("Can't read $config_file $! \n");
-  while ( my $line = <INFILE> ) {
-    chomp $line;
-    my ($name, $parser, $file) = split( /\t/, $line );
-    my $file_name = $self->download_file($file, $base_path, $name);
+  my $sources = $self->parse_config($config_file);
+
+  foreach my $source (@$sources) {
+    my $name = $source->{'name'};
+    my $parser = $source->{'parser'};
+    my $priority = $source->{'priority'};
+    my $file = $source->{'file'};
+    my $db = $source->{'db'};
+    my $file_name = $self->download_file($file, $base_path, $name, $db);
     $insert_source_sth->execute($name, $parser);
-    $insert_version_sth->execute($name, $file, $file_name);
+    $insert_version_sth->execute($name, $file_name, $db, $priority);
   }
-  close INFILE;
 
+  # Load any checksum data
+  $self->load_checksum($base_path, $dbi);
+
+  $insert_source_sth->finish();
+  $insert_version_sth->finish();
 }
-
-sub create_db {
-  my ($self, $source_dir, $user, $pass, $db_url, $source_db, $host, $port) = @_;
-  my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s", $host, $port);
-  my $dbh = DBI->connect( $dbconn, $user, $pass, {'RaiseError' => 1}) or croak( "Can't connect to server: " . $DBI::errstr );
-  my %dbs = map {$_->[0] => 1} @{$dbh->selectall_arrayref('SHOW DATABASES')};
-  if ($dbs{$source_db}) {
-    $dbh->do( "DROP DATABASE $source_db" );
-  }
-  $dbh->do( 'CREATE DATABASE ' . $source_db);
-  my $table_file = catfile( $source_dir, 'table.sql' );
-  my $cmd = "mysql -u $user -p'$pass' -P 4524 -h mysql-ens-core-prod-1 $source_db < $table_file";
-  system($cmd);
-}
-
-sub download_file {
-  my ($self, $file, $base_path, $source_name) = @_;
-
-  my $uri = URI->new($file);
-  if (!defined $uri->scheme) { return; }
-  my $file_path;
-  $source_name =~ s/\///g;
-  my $dest_dir = catdir($base_path, $source_name);
-
-  if ($uri->scheme eq 'ftp') {
-    my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
-    if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
-      $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
-    }
-    $ftp->login( 'anonymous', '-anonymous@' ); 
-    $ftp->cwd( dirname( $uri->path ) );
-    $ftp->binary();
-    foreach my $remote_file ( ( @{ $ftp->ls() } ) ) {
-      if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
-      $remote_file =~ s/\///g;
-      $file_path = catfile($dest_dir, basename($remote_file));
-      mkdir(dirname($file_path));
-      $ftp->get( $remote_file, $file_path );
-    }
-  } elsif ($uri->scheme eq 'http') {
-    $file_path = catfile($dest_dir, basename($uri->path));
-    mkdir(dirname($file_path));
-    open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
-    my $http = HTTP::Tiny->new();
-    my $response = $http->get($uri->as_string());
-    print OUT $response->{content};
-    close OUT;
-  }
-  return $file_path;
-  
-}
-
 
 1;
 

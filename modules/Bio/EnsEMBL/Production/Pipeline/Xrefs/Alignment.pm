@@ -47,36 +47,36 @@ use Bio::EnsEMBL::Utils::Exception;
 use File::Basename;
 use File::Spec::Functions;
 
-use parent qw/Bio::EnsEMBL::Versioning::Pipeline::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my $self = shift;
 
   my $max_chunks    = $self->param_required('max_chunks');
   my $chunk         = $self->param_required('chunk');
-  my $source        = $self->param('source_file');
-  my $target        = $self->param('target_file');
-  my $seq_type      = $self->param('seq_type');
+  my $source        = $self->param_required('source_file');
+  my $target        = $self->param_required('target_file');
+  my $seq_type      = $self->param_required('seq_type');
   my $method        = $self->param_required('align_method');
+  my $query_cutoff  = $self->param_required('query_cutoff');
+  my $target_cutoff = $self->param_required('target_cutoff');
   my $base_path     = $self->param_required('base_path');
   my $xref_url      = $self->param_required('xref_url');
   my $map_file      = $self->param_required('map_file');
+  my $job_index     = $self->param_required('job_index');
 
-  my ($user, $pass, $host, $port, $dbname);
-  my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($xref_url);
-  $user = $parsed_url->{'user'};
-  $pass = $parsed_url->{'pass'};
-  $host = $parsed_url->{'host'};
-  $port = $parsed_url->{'port'};
-  $dbname = $parsed_url->{'dbname'};
-  my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
-  my $sth = $dbi->prepare("insert into mapping_jobs (root_dir, map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?,?)");
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
+  my $job_sth = $dbi->prepare("insert into mapping_jobs (root_dir, map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?,?)");
+  my $mapping_sth = $dbi->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
 
   my $out_file = "xref_".$seq_type.".".$max_chunks."-".$chunk.".out";
-  $sth->execute($base_path, $map_file, 'SUBMITTED', $out_file, $out_file, $max_chunks, $chunk);
+  my $job_id = $job_index . $chunk;
+  $job_sth->execute($base_path, $map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
+  $mapping_sth->execute($job_id, $seq_type, $query_cutoff, $target_cutoff);
 
   my $file_path = catfile($base_path, $map_file);
+  mkdir(dirname($file_path));
   my $fh = IO::File->new($file_path,'w') or throw("Couldn't open". $file_path ." for writing: $!\n");
 
   my $ryo = "xref:%qi:%ti:%ei:%ql:%tl:%qab:%qae:%tab:%tae:%C:%s\n";
@@ -91,7 +91,8 @@ sub run {
   }
 
   $fh->close();
-  $sth->finish();
+  $job_sth->finish();
+  $mapping_sth->finish();
 }
 
 1;

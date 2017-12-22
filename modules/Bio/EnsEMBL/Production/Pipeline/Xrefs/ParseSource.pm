@@ -21,12 +21,9 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::ParseSource;
 use strict;
 use warnings;
 use XrefParser::Database;
-use Bio::EnsEMBL::Hive::Utils::URL;
 use File::Basename;
-use File::Spec::Functions;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
-
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my ($self) = @_;
@@ -35,13 +32,9 @@ sub run {
   my $file_name    = $self->param_required('file_name');
   my $source       = $self->param_required('name');
   my $xref_url     = $self->param_required('xref_url');
+  my $db           = $self->param('db');
 
-  my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($xref_url);
-  my $user   = $parsed_url->{'user'};
-  my $pass   = $parsed_url->{'pass'};
-  my $host   = $parsed_url->{'host'};
-  my $port   = $parsed_url->{'port'};
-  my $dbname = $parsed_url->{'dbname'};
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
   my $xref_dbc = XrefParser::Database->new({
             host    => $host,
@@ -50,30 +43,48 @@ sub run {
             user    => $user,
             pass    => $pass });
 
-  my $dbconn = sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
   my $select_species_id_sth = $dbi->prepare("SELECT species_id FROM species where name = ?");
-  my $select_source_id_sth = $dbi->prepare("SELECT source_id FROM source_url WHERE parser = ? and species_id = ?");
   $select_species_id_sth->execute($species);
   my $species_id = ($select_species_id_sth->fetchrow_array())[0];
-  $select_source_id_sth->execute($parser, $species_id);
-  my $source_id = ($select_source_id_sth->fetchrow_array())[0];
+  my $source_id = $self->get_source_id($dbi, $parser, $species_id);
 
   # Some sources are not available for all species
   if (!defined $source_id) { return; }
 
+  # Some sources need connection to a species database
+  my $dba;
+  if (defined $db) {
+    my $registry = 'Bio::EnsEMBL::Registry';
+    $dba = $registry->get_DBAdaptor($species, $db);
+    return unless $dba;
+  }
+
+  # Create list of files
   my $dir = dirname($file_name);
-  my @files = `ls $dir`;
+  my @list_files = `ls $dir`;
+  my @files;
+  foreach my $file (@list_files) {
+    $file =~ s/\n//;
+    $file = $dir . "/" . $file;
+    push @files, $file;
+  }
 
   my $module = "XrefParser::$parser";
   eval "require $module";
   my $xref_run = $module->new($xref_dbc);
-  $xref_run->run( { source_id  => $source_id,
-                    species_id => $species_id,
-                    files      => [@files] }) ;
+  if (defined $dba) {
+    $xref_run->run_script( { source_id  => $source_id,
+                             species_id => $species_id,
+                             dba        => $dba,
+                             file       => $file_name }) ;
+  } else {
+    $xref_run->run( { source_id  => $source_id,
+                      species_id => $species_id,
+                      files      => [@files] }) ;
+  }
 
   $select_species_id_sth->finish();
-  $select_source_id_sth->finish();
 
 }
 
