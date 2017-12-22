@@ -43,15 +43,13 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::DumpEnsembl;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use File::Path qw/make_path/;
 use File::Spec;
 use IO::File;
-
-use Digest::MD5 qw/md5_hex/;
 
 
 sub run {
@@ -110,7 +108,7 @@ sub write_output {
   };
   $self->dataflow_output_id($dataflow_params, 2);
 
-  # Create jobs for dna dumping and alignment
+  # Create jobs for cdna dumping and alignment
   $dataflow_params = {
     species     => $species,
     file_path   => $cdna_path,
