@@ -46,7 +46,7 @@ use File::stat;
 use File::Path qw/make_path/;
 use File::Spec;
 
-use parent qw/Bio::EnsEMBL::Versioning::Pipeline::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my $self = shift;
@@ -56,13 +56,12 @@ sub run {
   my $seq_type      = $self->param_required('seq_type');
   my $xref_url      = $self->param_required('xref_url');
   my $base_path     = $self->param_required('base_path');
+  my $method        = $self->param_required('method');
+  my $query_cutoff  = $self->param_required('query_cutoff');
+  my $target_cutoff = $self->param_required('target_cutoff');
   
   # inspect file size to decide on chunking
   my $size = stat($target_file)->size;
-  my $method = '--bestn 5';
-  if ($seq_type eq 'pep') { 
-    $method = '--bestn 1';
-  }
   my $chunks = int ($size / 1000000) + 1;
   $self->warning(sprintf('Spawning %d alignment jobs for %s',$chunks,$target_file),'INFO');
 
@@ -73,6 +72,8 @@ sub run {
     my $output_path_chunk = $output_path . sprintf "/%s_alignment_%s_of_%s.map", $seq_type, $chunklet, $chunks;
     $self->dataflow_output_id({
       align_method  => $method, 
+      query_cutoff  => $query_cutoff,
+      target_cutoff => $target_cutoff,
       max_chunks    => $chunks, 
       chunk         => $chunklet, 
       source_file   => $source_file, 

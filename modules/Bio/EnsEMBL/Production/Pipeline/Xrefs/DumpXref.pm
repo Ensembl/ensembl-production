@@ -41,7 +41,7 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::DumpXref;
 use strict;
 use warnings;
 
-use parent qw/Bio::EnsEMBL::Versioning::Pipeline::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 use File::Path qw/make_path/;
 use File::Spec;
 use File::Basename;
@@ -52,19 +52,14 @@ use XrefParser::Database;
 sub run {
   my ($self) = @_;
 
-  my $species   = $self->param_required('species');
-  my $base_path = $self->param_required('base_path');
-  my $xref_url  = $self->param_required('xref_url');
-  my $file_path = $self->param_required('file_path');
-  my $seq_type  = $self->param_required('seq_type');
+  my $species     = $self->param_required('species');
+  my $base_path   = $self->param_required('base_path');
+  my $xref_url    = $self->param_required('xref_url');
+  my $file_path   = $self->param_required('file_path');
+  my $seq_type    = $self->param_required('seq_type');
+  my $config_file = $self->param_required('config_file');
 
-  my ($user, $pass, $host, $port, $dbname);
-  my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($xref_url);
-  $user = $parsed_url->{'user'};
-  $pass = $parsed_url->{'pass'};
-  $host = $parsed_url->{'host'};
-  $port = $parsed_url->{'port'};
-  $dbname = $parsed_url->{'dbname'};
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbc = XrefParser::Database->new({
             host    => $host,
             dbname  => $dbname,
@@ -72,39 +67,73 @@ sub run {
             user    => $user,
             pass    => $pass });
 
-  my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
-  my $sequence_sth = $dbi->prepare("SELECT p.xref_id, p.sequence, x.species_id , x.source_id FROM primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ?");
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
+  my $source_sth = $dbi->prepare("SELECT distinct s.name, s.source_id from source s, primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = s.source_id");
+  my $sequence_sth = $dbi->prepare("SELECT p.xref_id, p.sequence, x.species_id FROM primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = ?");
+  my $mapping_source_sth = $dbi->prepare("insert into source_mapping_method values (?,?)");
 
+  # Create sequence files
   my $full_path = File::Spec->catfile($base_path, $species, 'xref');
   make_path($full_path);
-  my $filename = File::Spec->catfile($full_path, "$seq_type.fasta");
-  open( my $DH,">", $filename) || die "Could not open $filename";
 
-  $sequence_sth->execute($seq_type);
-  my $count = 0;
-  while(my @row = $sequence_sth->fetchrow_array()){
-    $count++;
-    # Ambiguous peptides must be cleaned out to protect Exonerate from J,O and U codes
-    $row[1] = uc($row[1]);
-    $row[1] =~ s/(.{60})/$1\n/g;
-    if ($seq_type eq 'pep') { $row[1] =~ tr/JOU/X/ }
-    print $DH ">".$row[0]."\n".$row[1]."\n";
+  # Create hash of available alignment methods
+  my %method;
+  my %query_cutoff;
+  my %target_cutoff;
+  my $sources = $self->parse_config($config_file);
+  my $job_index = 1;
+  foreach my $source (@$sources) {
+    my $name = $source->{'name'};
+    my $method = $source->{'method'};
+    my $query_cutoff = $source->{'query_cutoff'};
+    my $target_cutoff = $source->{'target_cutoff'};
+    $method{$name} = $method;
+    $query_cutoff{$name} = $query_cutoff;
+    $target_cutoff{$name} = $target_cutoff;
   }
 
-  close $DH;
+  $source_sth->execute($seq_type);
+  while (my @row = $source_sth->fetchrow_array()) {
+    my $name = $row[0];
+    my $source_id = $row[1];
+    if ($name =~ /RefSeq_.*RNA/) { $name = 'RefSeq_dna'; }
+    if ($name =~ /RefSeq_peptide/) { $name = 'RefSeq_peptide'; }
+    if (defined $method{$name}) {
+      my $method = $method{$name};
+      my $query_cutoff = $query_cutoff{$name};
+      my $target_cutoff = $target_cutoff{$name};
+      $name =~ s/\///;
+      my $filename = File::Spec->catfile($full_path, $seq_type ."_$name.fasta");
+      open( my $DH,">", $filename) || die "Could not open $filename";
+      $sequence_sth->execute($seq_type, $source_id);
+      while(my @row = $sequence_sth->fetchrow_array()){
+        # Ambiguous peptides must be cleaned out to protect Exonerate from J,O and U codes
+        $row[1] = uc($row[1]);
+        $row[1] =~ s/(.{60})/$1\n/g;
+        if ($seq_type eq 'pep') { $row[1] =~ tr/JOU/X/ }
+        print $DH ">".$row[0]."\n".$row[1]."\n";
+      }
+      $mapping_source_sth->execute($source_id, $seq_type);
+      close $DH;
+      my $dataflow_params = {
+        species       => $species,
+        ensembl_fasta => $file_path,
+        seq_type      => $seq_type,
+        xref_url      => $xref_url,
+        method        => $method,
+        query_cutoff  => $query_cutoff,
+        target_cutoff => $target_cutoff,
+        job_index     => $job_index,
+        xref_fasta    => $filename
+      };
+      $self->dataflow_output_id($dataflow_params, 2);
+      $job_index++;
+    }
+  }
+
+  $source_sth->finish();
   $sequence_sth->finish();
-
-  if ($count > 0) {
-    my $dataflow_params = {
-      species       => $species,
-      ensembl_fasta => $file_path,
-      seq_type      => $seq_type,
-      xref_url      => $xref_url,
-      xref_fasta    => $filename
-    };
-    $self->dataflow_output_id($dataflow_params, 2);
-  }
+  
   return;
 }
 
