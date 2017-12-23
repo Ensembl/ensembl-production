@@ -83,10 +83,10 @@ sub run {
 
   # Look for species-specific mapper
   my $module;
-  my $class = "XrefMapper::$species.pm";
+  my $class = "XrefMapper/$species.pm";
   my $eval_test = eval { require $class; };
   if ($eval_test == 1) {
-    $module = $class;
+    $module = "XrefMapper::$species";
   } else {
     $module = "XrefMapper::BasicMapper";
   }
