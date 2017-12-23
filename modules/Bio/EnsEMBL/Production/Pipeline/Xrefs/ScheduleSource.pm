@@ -34,6 +34,7 @@ sub run {
   my $release          = $self->param_required('release');
   my $sql_dir          = $self->param_required('sql_dir');
   my $base_path        = $self->param_required('base_path');
+  my $order_priority   = $self->param_required('priority');
 
   my $source_url       = $self->param('source_url');
   my $source_db        = $self->param('source_db');
@@ -82,10 +83,8 @@ sub run {
       db          => $db,
       file_name   => $file_name
     };
-    if ($priority == 1) {
+    if ($priority == $order_priority) {
       $self->dataflow_output_id($dataflow_params, 2);
-    } elsif ($priority == 2) {
-      $self->dataflow_output_id($dataflow_params, 3);
     }
   }
   $dataflow_params = {
