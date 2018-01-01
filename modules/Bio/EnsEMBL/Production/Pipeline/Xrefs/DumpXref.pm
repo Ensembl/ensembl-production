@@ -95,6 +95,7 @@ sub run {
   $source_sth->execute($seq_type);
   while (my @row = $source_sth->fetchrow_array()) {
     my $name = $row[0];
+    my $source = $name;
     my $source_id = $row[1];
     if ($name =~ /RefSeq_.*RNA/) { $name = 'RefSeq_dna'; }
     if ($name =~ /RefSeq_peptide/) { $name = 'RefSeq_peptide'; }
@@ -102,8 +103,8 @@ sub run {
       my $method = $method{$name};
       my $query_cutoff = $query_cutoff{$name};
       my $target_cutoff = $target_cutoff{$name};
-      $name =~ s/\///;
-      my $filename = File::Spec->catfile($full_path, $seq_type ."_$name.fasta");
+      $source =~ s/\///;
+      my $filename = File::Spec->catfile($full_path, $seq_type ."_$source" . "_$source_id.fasta");
       open( my $DH,">", $filename) || die "Could not open $filename";
       $sequence_sth->execute($seq_type, $source_id);
       while(my @row = $sequence_sth->fetchrow_array()){
@@ -124,6 +125,7 @@ sub run {
         query_cutoff  => $query_cutoff,
         target_cutoff => $target_cutoff,
         job_index     => $job_index,
+        source_id     => $source_id,
         xref_fasta    => $filename
       };
       $self->dataflow_output_id($dataflow_params, 2);

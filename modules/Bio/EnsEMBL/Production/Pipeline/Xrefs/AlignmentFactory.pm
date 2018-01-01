@@ -51,14 +51,15 @@ use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 sub run {
   my $self = shift;
   my $species       = $self->param_required('species');
-  my $target_file   = $self->param_required('xref_fasta');
-  my $source_file   = $self->param_required('ensembl_fasta');
+  my $target_file   = $self->param_required('ensembl_fasta');
+  my $source_file   = $self->param_required('xref_fasta');
   my $seq_type      = $self->param_required('seq_type');
   my $xref_url      = $self->param_required('xref_url');
   my $base_path     = $self->param_required('base_path');
   my $method        = $self->param_required('method');
   my $query_cutoff  = $self->param_required('query_cutoff');
   my $target_cutoff = $self->param_required('target_cutoff');
+  my $source_id     = $self->param_required('source_id');
   my $job_index     = $self->param_required('job_index');
   
   # inspect file size to decide on chunking
@@ -70,7 +71,7 @@ sub run {
   make_path($output_path);
 
   for (my $chunklet = 1; $chunklet <= $chunks; $chunklet++) {
-    my $output_path_chunk = $output_path . sprintf "/%s_alignment_%s_of_%s.map", $seq_type, $chunklet, $chunks;
+    my $output_path_chunk = $output_path . sprintf "/%s_alignment_%s_%s_of_%s.map", $seq_type, $source_id, $chunklet, $chunks;
     $self->dataflow_output_id({
       align_method  => $method, 
       query_cutoff  => $query_cutoff,
@@ -81,8 +82,8 @@ sub run {
       source_file   => $source_file, 
       target_file   => $target_file, 
       xref_url      => $xref_url,
-      target_source => $self->param('source'),
       map_file      => $output_path_chunk,
+      source_id     => $source_id,
       seq_type      => $seq_type
     },2);
   }

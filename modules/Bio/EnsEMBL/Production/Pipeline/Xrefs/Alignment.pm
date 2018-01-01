@@ -64,6 +64,7 @@ sub run {
   my $xref_url      = $self->param_required('xref_url');
   my $map_file      = $self->param_required('map_file');
   my $job_index     = $self->param_required('job_index');
+  my $source_id     = $self->param_required('source_id');
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
@@ -71,7 +72,7 @@ sub run {
   my $mapping_sth = $dbi->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
 
   my $out_file = "xref_".$seq_type.".".$max_chunks."-".$chunk.".out";
-  my $job_id = $job_index . $chunk;
+  my $job_id = $source_id . $job_index . $chunk;
   $job_sth->execute($base_path, $map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
   $mapping_sth->execute($job_id, $seq_type, $query_cutoff, $target_cutoff);
 
