@@ -27,6 +27,7 @@ use URI;
 use URI::file;
 use File::Basename;
 use File::Spec::Functions;
+use File::Path qw/make_path/;
 use XrefParser::Database;
 use XrefParser::BaseParser;
 use IO::File;
@@ -163,6 +164,14 @@ sub get_dbi {
   }
   my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
   return $dbi;
+}
+
+sub get_path {
+  my ($self, $species, $base_path, $type) = @_;
+  my $full_path = File::Spec->catfile($base_path, $species, 'ensembl');
+  make_path($full_path);
+  my $path = File::Spec->catfile($full_path, $type);
+  return $path;
 }
 
 

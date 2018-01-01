@@ -43,12 +43,10 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::DumpEnsembl;
 use strict;
 use warnings;
 
-use parent qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 use Bio::EnsEMBL::Utils::IO::FASTASerializer;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
-use File::Path qw/make_path/;
-use File::Spec;
 use IO::File;
 
 
@@ -57,10 +55,8 @@ sub run {
   my $species   = $self->param_required('species');
   my $base_path = $self->param_required('base_path');
 
-  my $full_path = File::Spec->catfile($base_path, $species, 'ensembl');
-  make_path($full_path);
-  my $cdna_path = File::Spec->catfile($full_path, 'transcripts.fa');
-  my $pep_path  = File::Spec->catfile($full_path, 'peptides.fa');
+  my $cdna_path = $self->get_path($species, $base_path, 'transcripts.fa');
+  my $pep_path = $self->get_path($species, $base_path, 'peptides.fa');
   $self->param('cdna_path', $cdna_path);
   $self->param('pep_path', $pep_path);
 
