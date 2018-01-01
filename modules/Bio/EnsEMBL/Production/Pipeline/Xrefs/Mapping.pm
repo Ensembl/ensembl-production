@@ -35,9 +35,8 @@ use XrefMapper::RNACentralMapper;
 use XrefMapper::OfficialNaming;
 use XrefMapper::DirectXrefs;
 use XrefMapper::db;
-use File::Path qw/make_path/;
 
-use parent qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 
 sub run {
@@ -47,12 +46,7 @@ sub run {
   my $base_path    = $self->param_required('base_path');
   my $source_url   = $self->param_required('source_url');
 
-  my $parsed_url = Bio::EnsEMBL::Hive::Utils::URL::parse($xref_url);
-  my $user   = $parsed_url->{'user'};
-  my $pass   = $parsed_url->{'pass'};
-  my $host   = $parsed_url->{'host'};
-  my $port   = $parsed_url->{'port'};
-  my $dbname = $parsed_url->{'dbname'};
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
   my $registry = 'Bio::EnsEMBL::Registry';
   my $core_adaptor = $registry->get_DBAdaptor($species, 'Core');
@@ -66,10 +60,8 @@ sub run {
   );
   $core_db->dir($base_path);
   $core_db->species($species);
-  my $full_path = File::Spec->catfile($base_path, $species, 'ensembl');
-  make_path($full_path);
-  my $cdna_path = File::Spec->catfile($full_path, 'transcripts.fa');
-  my $pep_path  = File::Spec->catfile($full_path, 'peptides.fa');
+  my $cdna_path = $self->get_path($species, $base_path, 'transcripts.fa');
+  my $pep_path = $self->get_path($species, $base_path, 'peptides.fa');
   $core_db->dna_file($cdna_path);
   $core_db->protein_file($pep_path);
 
@@ -82,14 +74,13 @@ sub run {
   );
 
   # Look for species-specific mapper
-  my $module;
+  my $module = 'XrefMapper::BasicMapper';;
   my $class = "XrefMapper/$species.pm";
   my $eval_test = eval { require $class; };
-  if ($eval_test == 1) {
-    $module = "XrefMapper::$species";
-  } else {
-    $module = "XrefMapper::BasicMapper";
+  if (defined $eval_test) {
+    $module = "XrefMapper::$species" if $eval_test == 1;
   }
+
   my $mapper = $module->new();
   $mapper->xref($xref_db);
   $mapper->add_meta_pair("xref", $host.":".$dbname);
