@@ -61,7 +61,7 @@ sub run {
             port    => $port,
             user    => $user,
             pass    => $pass });
-  $dbc->create($sql_dir, 1, 1); 
+  $dbc->create($sql_dir, 1, 1) if $order_priority == 1; 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
 
   # Retrieve list of sources from versioning database
