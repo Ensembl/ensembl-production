@@ -32,8 +32,8 @@ sub run {
   my $reuse_db         = $self->param_required('reuse_db');
   my $skip_download    = $self->param_required('skip_download');
 
-  my $user             = $self->param_required('source_user');
-  my $pass             = $self->param_required('source_pass');
+  my $user             = $self->param('source_user');
+  my $pass             = $self->param('source_pass');
   my $db_url           = $self->param('source_url');
   my $source_db        = $self->param('source_db');
   my $host             = $self->param('source_host');
