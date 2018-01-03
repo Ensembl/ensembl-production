@@ -69,18 +69,20 @@ sub run {
     ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   }
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT name, parser, uri, index_uri, count_seen FROM source s, version v WHERE s.source_id = v.source_id");
-  my ($name, $parser, $file_name, $dataflow_params, $db, $priority);
+  my $select_source_sth = $dbi->prepare("SELECT name, parser, uri, index_uri, count_seen, revision FROM source s, version v WHERE s.source_id = v.source_id");
+  my ($name, $parser, $file_name, $dataflow_params, $db, $priority, $release_file);
   $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority);
+  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority, \$release_file);
 
   while ($select_source_sth->fetch()) {
+    if ($db eq 'checksum') { next; }
     $dataflow_params = {
       species     => $species,
       parser      => $parser,
       name        => $name,
       xref_url    => $xref_db_url,
       db          => $db,
+      release_file=> $release_file,
       file_name   => $file_name
     };
     if ($priority == $order_priority) {
