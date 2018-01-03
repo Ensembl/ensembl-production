@@ -33,6 +33,7 @@ sub run {
   my $source       = $self->param_required('name');
   my $xref_url     = $self->param_required('xref_url');
   my $db           = $self->param('db');
+  my $release_file = $self->param('release_file');
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
@@ -67,6 +68,7 @@ sub run {
   foreach my $file (@list_files) {
     $file =~ s/\n//;
     $file = $dir . "/" . $file;
+    if (defined $release_file and $file eq $release_file) { next; }
     push @files, $file;
   }
 
@@ -77,10 +79,12 @@ sub run {
     $xref_run->run_script( { source_id  => $source_id,
                              species_id => $species_id,
                              dba        => $dba,
+                             rel_file   => $release_file,
                              file       => $file_name }) ;
   } else {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,
+                      rel_file   => $release_file,
                       files      => [@files] }) ;
   }
 
