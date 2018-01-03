@@ -54,9 +54,10 @@ sub run {
   my ($self) = @_;
   my $species   = $self->param_required('species');
   my $base_path = $self->param_required('base_path');
+  my $release   = $self->param_required('release');
 
-  my $cdna_path = $self->get_path($species, $base_path, 'transcripts.fa');
-  my $pep_path = $self->get_path($species, $base_path, 'peptides.fa');
+  my $cdna_path = $self->get_path($base_path, $species, $release, "ensembl", 'transcripts.fa');
+  my $pep_path = $self->get_path($base_path, $species, $release, "ensembl", 'peptides.fa');
   $self->param('cdna_path', $cdna_path);
   $self->param('pep_path', $pep_path);
 

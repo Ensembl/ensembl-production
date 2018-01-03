@@ -42,17 +42,12 @@ use strict;
 use warnings;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
-use File::Path qw/make_path/;
-use File::Spec;
-use File::Basename;
-use File::Spec::Functions;
-use IO::File;
-use XrefParser::Database;
 
 sub run {
   my ($self) = @_;
 
   my $species     = $self->param_required('species');
+  my $release     = $self->param_required('release');
   my $base_path   = $self->param_required('base_path');
   my $xref_url    = $self->param_required('xref_url');
   my $file_path   = $self->param_required('file_path');
@@ -60,21 +55,13 @@ sub run {
   my $config_file = $self->param_required('config_file');
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
-  my $dbc = XrefParser::Database->new({
-            host    => $host,
-            dbname  => $dbname,
-            port    => $port,
-            user    => $user,
-            pass    => $pass });
-
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
   my $source_sth = $dbi->prepare("SELECT distinct s.name, s.source_id from source s, primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = s.source_id");
   my $sequence_sth = $dbi->prepare("SELECT p.xref_id, p.sequence, x.species_id FROM primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = ?");
   my $mapping_source_sth = $dbi->prepare("insert ignore into source_mapping_method values (?,?)");
 
   # Create sequence files
-  my $full_path = File::Spec->catfile($base_path, $species, 'xref');
-  make_path($full_path);
+  my $full_path = $self->get_path($base_path, $species, $release, "xref");
 
   # Create hash of available alignment methods
   my %method;

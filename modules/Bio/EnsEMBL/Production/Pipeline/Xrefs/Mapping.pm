@@ -45,6 +45,7 @@ sub run {
   my $species      = $self->param_required('species');
   my $base_path    = $self->param_required('base_path');
   my $source_url   = $self->param_required('source_url');
+  my $release      = $self->param_required('release');
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
@@ -60,8 +61,8 @@ sub run {
   );
   $core_db->dir($base_path);
   $core_db->species($species);
-  my $cdna_path = $self->get_path($species, $base_path, 'transcripts.fa');
-  my $pep_path = $self->get_path($species, $base_path, 'peptides.fa');
+  my $cdna_path = $self->get_path($base_path, $species, $release, "ensembl", 'transcripts.fa');
+  my $pep_path = $self->get_path($base_path, $species, $release, "ensembl", 'peptides.fa');
   $core_db->dna_file($cdna_path);
   $core_db->protein_file($pep_path);
 

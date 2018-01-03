@@ -28,7 +28,6 @@ use URI::file;
 use File::Basename;
 use File::Spec::Functions;
 use File::Path qw/make_path/;
-use XrefParser::Database;
 use XrefParser::BaseParser;
 use IO::File;
 use JSON;
@@ -168,11 +167,14 @@ sub get_dbi {
 }
 
 sub get_path {
-  my ($self, $species, $base_path, $type) = @_;
-  my $full_path = File::Spec->catfile($base_path, $species, 'ensembl');
+  my ($self, $base_path, $species, $release, $category, $file_name) = @_;
+  my $full_path = File::Spec->catfile($base_path, $species, $release, $category);
   make_path($full_path);
-  my $path = File::Spec->catfile($full_path, $type);
-  return $path;
+  if (defined $file_name) {
+    return File::Spec->catfile($full_path, $file_name);
+  } else {
+    return $full_path;
+  }
 }
 
 

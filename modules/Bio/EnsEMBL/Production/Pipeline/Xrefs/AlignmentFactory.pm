@@ -43,14 +43,13 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::AlignmentFactory;
 use strict;
 use warnings;
 use File::stat;
-use File::Path qw/make_path/;
-use File::Spec;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my $self = shift;
   my $species       = $self->param_required('species');
+  my $release       = $self->param_required('release');
   my $target_file   = $self->param_required('ensembl_fasta');
   my $source_file   = $self->param_required('xref_fasta');
   my $seq_type      = $self->param_required('seq_type');
@@ -67,8 +66,7 @@ sub run {
   my $chunks = int ($size / 1000000) + 1;
   $self->warning(sprintf('Spawning %d alignment jobs for %s',$chunks,$target_file),'INFO');
 
-  my $output_path = File::Spec->catfile($species, 'alignment');
-  make_path($output_path);
+  my $output_path = $self->get_path($base_path, $species, $release, "alignment");
 
   for (my $chunklet = 1; $chunklet <= $chunks; $chunklet++) {
     my $output_path_chunk = $output_path . sprintf "/%s_alignment_%s_%s_of_%s.map", $seq_type, $source_id, $chunklet, $chunks;
