@@ -13,6 +13,7 @@
       "db" : "checksum",
       "priority" : 1
     },
+    {
       "name" : "RNACentral",
       "parser" : "ChecksumParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.g",
@@ -103,7 +104,7 @@
     {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqGPFFParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate_*rna.gpff.gz",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate_*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
@@ -113,7 +114,7 @@
     {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqGPFFParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*rna.gpff.gz",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
