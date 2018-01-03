@@ -68,7 +68,7 @@ sub download_file {
   my $file_path;
   $source_name =~ s/\///g;
   my $dest_dir = catdir($base_path, $source_name);
-  if ($db eq 'checksum') {
+  if (defined $db and $db eq 'checksum') {
     $dest_dir = catdir($base_path, 'Checksum');
   }
 
@@ -115,6 +115,7 @@ sub load_checksum {
   my ($self, $path, $dbi) = @_;
   my $load_checksum_sth = $dbi->prepare("load data local infile ? into table checksum_xref");
   my $checksum_dir = catdir($path, 'Checksum');
+  make_path($checksum_dir);
   my $counter = 1;
 
   my @files = `ls $checksum_dir`;
