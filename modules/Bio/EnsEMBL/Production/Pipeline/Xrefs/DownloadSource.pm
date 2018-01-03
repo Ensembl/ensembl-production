@@ -27,46 +27,27 @@ use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 sub run {
   my ($self) = @_;
   my $base_path        = $self->param_required('base_path');
-  my $config_file      = $self->param_required('config_file');
-  my $source_dir       = $self->param_required('source_dir');
-  my $reuse_db         = $self->param_required('reuse_db');
-  my $skip_download    = $self->param_required('skip_download');
+  my $parser           = $self->param_required('parser');
+  my $name             = $self->param_required('name');
+  my $priority         = $self->param_required('priority');
+  my $db_url           = $self->param_required('db_url');
+  my $file             = $self->param_required('file');
+  my $db               = $self->param('db');
+  my $version_file     = $self->param('version_file');
 
-  my $user             = $self->param('source_user');
-  my $pass             = $self->param('source_pass');
-  my $db_url           = $self->param('source_url');
-  my $source_db        = $self->param('source_db');
-  my $host             = $self->param('source_host');
-  my $port             = $self->param('source_port');
-
-  if (defined $db_url) {
-    ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  }
-  $self->create_db($source_dir, $user, $pass, $db_url, $source_db, $host, $port) unless $reuse_db;
-
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $insert_source_sth = $dbi->prepare("INSERT IGNORE INTO source (name, parser) VALUES (?, ?)");
-  my $insert_version_sth = $dbi->prepare("INSERT INTO version (source_id, uri, index_uri, count_seen) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?)");
+  my $insert_version_sth = $dbi->prepare("INSERT INTO version (source_id, uri, index_uri, count_seen, revision) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?, ?)");
 
-  # Can re-use existing files if specified
-  if ($skip_download) { return; }
-
-  my $sources = $self->parse_config($config_file);
-
-  foreach my $source (@$sources) {
-    my $name = $source->{'name'};
-    my $parser = $source->{'parser'};
-    my $priority = $source->{'priority'};
-    my $file = $source->{'file'};
-    my $db = $source->{'db'};
-    my $file_name = $self->download_file($file, $base_path, $name, $db);
-    $insert_source_sth->execute($name, $parser);
-    $insert_version_sth->execute($name, $file_name, $db, $priority);
+  my $file_name = $self->download_file($file, $base_path, $name, $db);
+  my $version;
+  if (defined $version_file) {
+    $version = $self->download_file($version_file, $base_path, $name, $db);
   }
 
-  # Load any checksum data
-  $self->load_checksum($base_path, $dbi);
-
+  $insert_source_sth->execute($name, $parser);
+  $insert_version_sth->execute($name, $file_name, $db, $priority, $version);
   $insert_source_sth->finish();
   $insert_version_sth->finish();
 }
