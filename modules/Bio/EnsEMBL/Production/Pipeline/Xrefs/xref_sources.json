@@ -7,6 +7,13 @@
       "priority" : 1
     },
     {
+      "name" : "CCDS",
+      "parser" : "CCDSParser",
+      "file" : "Database",
+      "db" : "ccds",
+      "priority" : 1
+    },
+    {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
