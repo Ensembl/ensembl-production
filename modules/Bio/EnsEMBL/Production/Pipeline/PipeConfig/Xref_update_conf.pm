@@ -78,8 +78,8 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-            {-logic_name => 'download_source',
-             -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
+            {-logic_name => 'schedule_download',
+             -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleDownload',
              -input_ids  => [{}],
              -parameters => {
                              base_path     => $self->o('base_path'),
@@ -94,8 +94,22 @@ sub pipeline_analyses {
                              reuse_db      => $self->o('reuse_db'),
                              skip_download => $self->o('skip_download'),
                             },
-             -flow_into  => { '1->A' => 'schedule_species',
-                              'A->1' => 'notify_by_email'},
+             -flow_into  => { '2->A' => 'download_source',
+                              'A->1' => 'checksum'},
+             -rc_name    => 'normal',
+            },
+            {-logic_name => 'download_source',
+             -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
+             -parameters => { base_path     => $self->o('base_path'),},
+             -rc_name    => 'normal',
+            },
+            {-logic_name => 'checksum',
+             -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
+             -parameters => {
+                             base_path     => $self->o('base_path'),
+                             skip_download => $self->o('skip_download'),
+                            },
+             -flow_into  => { '1' => 'schedule_species',},
              -rc_name    => 'normal',
             },
             {-logic_name => 'schedule_species',
