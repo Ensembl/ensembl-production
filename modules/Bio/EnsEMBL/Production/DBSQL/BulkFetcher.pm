@@ -100,7 +100,8 @@ sub get_genes {
   f.seq_region_start as start, f.seq_region_end as end, f.seq_region_strand as strand,
   s.name as seq_region_name,
   'gene' as ensembl_object_type,
-  ifnull(ad.display_label,a.logic_name) as analysis
+  a.logic_name as analysis,
+  ad.display_label as analysis_display
   from gene f
   left join xref x on (f.display_xref_id = x.xref_id)
   join seq_region s using (seq_region_id)
@@ -204,7 +205,8 @@ sub get_transcripts {
     t.seq_region_strand as strand,
     s.name as seq_region_name,
     'transcript' as ensembl_object_type,
-    ifnull(ad.display_label,a.logic_name) as analysis
+    a.logic_name as analysis,
+    ad.display_label as analysis_display
     FROM 
     gene g
     join transcript t using (gene_id)
@@ -312,7 +314,8 @@ sub get_transcripts {
 		f.evalue as evalue,
 		d.db_name as db_name,
 		d.db_display_name as db_display,
-		a.logic_name as analysis
+		a.logic_name as analysis,
+        ad.display_label as analysis_display
 		from coord_system c
 		join seq_region s using (coord_system_id)
 		join transcript t using (seq_region_id)
@@ -320,6 +323,7 @@ sub get_transcripts {
 		join dna_align_feature f on (f.dna_align_feature_id=sf.feature_id)
 		join external_db d using (external_db_id)
 		join analysis a on (a.analysis_id=f.analysis_id)
+		left join analysis_description ad on (a.analysis_id=ad.analysis_id)
 		where sf.feature_type='dna_align_feature'
 		and c.species_id=?
 		/;
@@ -347,7 +351,8 @@ sub get_transcripts {
 		f.evalue as evalue,
 		d.db_name as db_name,
 		d.db_display_name as db_display,
-		a.logic_name as analysis
+		a.logic_name as analysis,
+		ad.display_label as analysis_display
 		from 
 		coord_system c
 		join seq_region s using (coord_system_id)
@@ -356,6 +361,7 @@ sub get_transcripts {
 		join protein_align_feature f on (f.protein_align_feature_id=sf.feature_id)
 		join external_db d using (external_db_id)
 		join analysis a on (a.analysis_id=f.analysis_id)
+	    left join analysis_description ad on (a.analysis_id=ad.analysis_id)
 		where sf.feature_type='protein_align_feature'
 		and c.species_id=?
 		/;
