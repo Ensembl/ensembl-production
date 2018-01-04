@@ -20,7 +20,6 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleDownload;
 
 use strict;
 use warnings;
-use DBI;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 

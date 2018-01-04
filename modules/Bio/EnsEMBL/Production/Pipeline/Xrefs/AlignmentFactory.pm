@@ -64,7 +64,6 @@ sub run {
   # inspect file size to decide on chunking
   my $size = stat($target_file)->size;
   my $chunks = int ($size / 1000000) + 1;
-  $self->warning(sprintf('Spawning %d alignment jobs for %s',$chunks,$target_file),'INFO');
 
   my $output_path = $self->get_path($base_path, $species, $release, "alignment");
 

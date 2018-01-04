@@ -106,6 +106,8 @@ sub run {
   my $direct_mappings = XrefMapper::DirectXrefs->new($mapper);
   $direct_mappings->process();
 
+
+  ## From this step on, the steps are fully dependent and cannot be re-run individually
   my $priority = XrefMapper::ProcessPrioritys->new($mapper);
   $priority->process();
 
@@ -120,13 +122,13 @@ sub run {
   $official_naming->run();
 
   my $tester = XrefMapper::TestMappings->new($mapper);
-  $tester->direct_stable_id_check(); # Will only give warnings
-  $tester->entry_number_check();     # Will only give warnings
-  $tester->name_change_check();      # Will only give warnings
+  $tester->direct_stable_id_check();
+  $tester->entry_number_check();
+  $tester->name_change_check();
 
+  ## From this step on, will update the core database
   my $loader = XrefMapper::XrefLoader->new($mapper);
   $loader->update();
-
   my $display = XrefMapper::DisplayXrefs->new($mapper);
   $display->genes_and_transcripts_attributes_set();
 

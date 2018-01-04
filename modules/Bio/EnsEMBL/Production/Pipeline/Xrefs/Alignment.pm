@@ -42,10 +42,7 @@ package Bio::EnsEMBL::Production::Pipeline::Xrefs::Alignment;
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Mongoose::Utils::ExonerateAligner;
 use Bio::EnsEMBL::Utils::Exception;
-use File::Basename;
-use File::Spec::Functions;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
@@ -76,9 +73,7 @@ sub run {
   $job_sth->execute($base_path, $map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
   $mapping_sth->execute($job_id, $seq_type, $query_cutoff, $target_cutoff);
 
-  my $file_path = catfile($base_path, $map_file);
-  mkdir(dirname($file_path));
-  my $fh = IO::File->new($file_path,'w') or throw("Couldn't open". $file_path ." for writing: $!\n");
+  my $fh = IO::File->new($map_file, 'w') or throw("Couldn't open". $map_file ." for writing: $!\n");
 
   my $ryo = "xref:%qi:%ti:%ei:%ql:%tl:%qab:%qae:%tab:%tae:%C:%s\n";
   my $exe = `which exonerate`;
