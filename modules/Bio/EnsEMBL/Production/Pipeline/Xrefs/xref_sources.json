@@ -23,7 +23,7 @@
     {
       "name" : "RNACentral",
       "parser" : "ChecksumParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.g",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
       "db" : "checksum",
       "priority" : 1
     },
