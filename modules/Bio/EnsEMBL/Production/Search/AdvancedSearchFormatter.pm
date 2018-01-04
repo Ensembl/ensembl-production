@@ -124,13 +124,13 @@ sub remodel_gene {
 	$self->{protein_features} = {};
 	my $new_gene = $self->copy_hash(
 		$gene,
-		qw/id name description biotype seq_region_name start end strand coord_system homologues/
+		qw/id name description biotype analysis seq_region_name start end strand coord_system homologues/
 	);
 	$self->collate_xrefs( $gene, $new_gene );
 	# process transcripts
 	for my $transcript ( @{ $gene->{transcripts} } ) {
 		my $new_transcript = $self->copy_hash( $transcript,
-			 qw/id name description biotype seq_region_name start end strand/ );
+			 qw/id name description biotype analysis seq_region_name start end strand/ );
 		$self->collate_xrefs( $transcript, $new_transcript );
 		# process translations
 		for my $translation ( @{ $transcript->{translations} } ) {
