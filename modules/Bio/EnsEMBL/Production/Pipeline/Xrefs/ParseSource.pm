@@ -62,14 +62,20 @@ sub run {
   }
 
   # Create list of files
-  my $dir = dirname($file_name);
-  my @list_files = `ls $dir`;
+  my @list_files = `ls $file_name`;
   my @files;
   foreach my $file (@list_files) {
     $file =~ s/\n//;
-    $file = $dir . "/" . $file;
+    $file = $file_name . "/" . $file;
     if (defined $release_file and $file eq $release_file) { next; }
     push @files, $file;
+  }
+
+  my $single_file;
+  if (scalar(@list_files) == 0) {
+    $single_file = $file_name;
+  } else {
+    $single_file = $files[0];
   }
 
   my $module = "XrefParser::$parser";
@@ -80,7 +86,7 @@ sub run {
                              species_id => $species_id,
                              dba        => $dba,
                              rel_file   => $release_file,
-                             file       => $file_name }) ;
+                             file       => $single_file}) ;
   } else {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,

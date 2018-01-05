@@ -60,7 +60,7 @@ sub create_db {
 }
 
 sub download_file {
-  my ($self, $file, $base_path, $source_name, $db) = @_;
+  my ($self, $file, $base_path, $source_name, $db, $release) = @_;
 
   my $uri = URI->new($file);
   if (!defined $uri->scheme) { return $file; }
@@ -95,7 +95,10 @@ sub download_file {
     print OUT $response->{content};
     close OUT;
   }
-  return $file_path;
+  if (defined $release) {
+    return $file_path;
+  }
+  return dirname($file_path);
   
 }
 

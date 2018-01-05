@@ -37,12 +37,12 @@ sub run {
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $insert_source_sth = $dbi->prepare("INSERT IGNORE INTO source (name, parser) VALUES (?, ?)");
-  my $insert_version_sth = $dbi->prepare("INSERT INTO version (source_id, uri, index_uri, count_seen, revision) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?, ?)");
+  my $insert_version_sth = $dbi->prepare("INSERT ignore INTO version (source_id, uri, index_uri, count_seen, revision) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?, ?)");
 
   my $file_name = $self->download_file($file, $base_path, $name, $db);
   my $version;
   if (defined $version_file) {
-    $version = $self->download_file($version_file, $base_path, $name, $db);
+    $version = $self->download_file($version_file, $base_path, $name, $db, 'version');
   }
 
   $insert_source_sth->execute($name, $parser);
