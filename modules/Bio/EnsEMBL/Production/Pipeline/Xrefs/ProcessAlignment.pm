@@ -16,18 +16,12 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping;
+package Bio::EnsEMBL::Production::Pipeline::Xrefs::ProcessAlignment;
 
 use strict;
 use warnings;
 
-use XrefMapper::BasicMapper;
-use XrefMapper::ProcessPrioritys;
-use XrefMapper::ProcessPaired;
-use XrefMapper::TestMappings;
-use XrefMapper::XrefLoader;
-use XrefMapper::DisplayXrefs;
-use XrefMapper::OfficialNaming;
+use XrefMapper::ProcessMappings;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
@@ -40,30 +34,8 @@ sub run {
   my $release      = $self->param_required('release');
 
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
-
-  my $priority = XrefMapper::ProcessPrioritys->new($mapper);
-  $priority->process();
-
-  my $paired = XrefMapper::ProcessPaired->new($mapper);
-  $paired->process();
-
-  $mapper->biomart_testing();
-  $mapper->source_defined_move();
-  $mapper->process_alt_alleles();
-
-  my $official_naming = XrefMapper::OfficialNaming->new($mapper);
-  $official_naming->run();
-
-  my $tester = XrefMapper::TestMappings->new($mapper);
-  $tester->direct_stable_id_check();
-  $tester->entry_number_check();
-  $tester->name_change_check();
-
-  ## From this step on, will update the core database
-  my $loader = XrefMapper::XrefLoader->new($mapper);
-  $loader->update();
-  my $display = XrefMapper::DisplayXrefs->new($mapper);
-  $display->genes_and_transcripts_attributes_set();
+  my $parser = XrefMapper::ProcessMappings->new($mapper);
+  $parser->process_mappings();
 
 }
 

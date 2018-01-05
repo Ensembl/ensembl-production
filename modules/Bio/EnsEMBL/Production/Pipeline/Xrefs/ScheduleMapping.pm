@@ -16,18 +16,25 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping;
+package Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleMapping;
 
 use strict;
 use warnings;
 
 use XrefMapper::BasicMapper;
+use XrefMapper::ProcessMappings;
 use XrefMapper::ProcessPrioritys;
 use XrefMapper::ProcessPaired;
+use XrefMapper::CoreInfo;
 use XrefMapper::TestMappings;
 use XrefMapper::XrefLoader;
 use XrefMapper::DisplayXrefs;
+use XrefMapper::CoordinateMapper;
+use XrefMapper::UniParcMapper;
+use XrefMapper::RNACentralMapper;
 use XrefMapper::OfficialNaming;
+use XrefMapper::DirectXrefs;
+use XrefMapper::db;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
@@ -37,33 +44,29 @@ sub run {
   my $xref_url     = $self->param_required('xref_url');
   my $species      = $self->param_required('species');
   my $base_path    = $self->param_required('base_path');
+  my $source_url   = $self->param_required('source_url');
   my $release      = $self->param_required('release');
 
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
 
-  my $priority = XrefMapper::ProcessPrioritys->new($mapper);
-  $priority->process();
+  my $core_info = XrefMapper::CoreInfo->new($mapper);
+  $core_info->get_core_data();
+  $mapper->get_alt_alleles();
 
-  my $paired = XrefMapper::ProcessPaired->new($mapper);
-  $paired->process();
+  $self->dataflow_output_id( {
+    xref_url   => $xref_url,
+    species    => $species,
+    base_path  => $base_path,
+    release    => $release,
+    source_url => $source_url
+  }, 2);
 
-  $mapper->biomart_testing();
-  $mapper->source_defined_move();
-  $mapper->process_alt_alleles();
-
-  my $official_naming = XrefMapper::OfficialNaming->new($mapper);
-  $official_naming->run();
-
-  my $tester = XrefMapper::TestMappings->new($mapper);
-  $tester->direct_stable_id_check();
-  $tester->entry_number_check();
-  $tester->name_change_check();
-
-  ## From this step on, will update the core database
-  my $loader = XrefMapper::XrefLoader->new($mapper);
-  $loader->update();
-  my $display = XrefMapper::DisplayXrefs->new($mapper);
-  $display->genes_and_transcripts_attributes_set();
+  $self->dataflow_output_id( {
+    xref_url   => $xref_url,
+    species    => $species,
+    base_path  => $base_path,
+    release    => $release
+  }, 1);
 
 }
 

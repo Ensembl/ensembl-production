@@ -180,6 +180,52 @@ sub get_path {
   }
 }
 
+sub get_xref_mapper {
+  my ($self, $xref_url, $species, $base_path, $release) = @_;
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
+
+  my $registry = 'Bio::EnsEMBL::Registry';
+  my $core_adaptor = $registry->get_DBAdaptor($species, 'Core');
+  my $core_dbc = $core_adaptor->dbc;
+  my $core_db = XrefMapper::db->new(
+    -host    => $core_dbc->host,
+    -dbname  => $core_dbc->dbname,
+    -port    => $core_dbc->port,
+    -user    => $core_dbc->user,
+    -pass    => $core_dbc->pass
+  );
+  $core_db->dir($base_path);
+  $core_db->species($species);
+  my $cdna_path = $self->get_path($base_path, $species, $release, "ensembl", 'transcripts.fa');
+  my $pep_path = $self->get_path($base_path, $species, $release, "ensembl", 'peptides.fa');
+  $core_db->dna_file($cdna_path);
+  $core_db->protein_file($pep_path);
+
+  my $xref_db = XrefMapper::db->new(
+    -host    => $host,
+    -dbname  => $dbname,
+    -port    => $port,
+    -user    => $user,
+    -pass    => $pass
+  );
+
+  # Look for species-specific mapper
+  my $module = 'XrefMapper::BasicMapper';;
+  my $class = "XrefMapper/$species.pm";
+  my $eval_test = eval { require $class; };
+  if (defined $eval_test) {
+    $module = "XrefMapper::$species" if $eval_test == 1;
+  }
+
+  my $mapper = $module->new();
+  $mapper->xref($xref_db);
+  $mapper->add_meta_pair("xref", $host.":".$dbname);
+  $mapper->core($core_db);
+  $mapper->add_meta_pair("species", $host.":".$dbname);
+
+  return $mapper;
+}
+
 
 1;
 
