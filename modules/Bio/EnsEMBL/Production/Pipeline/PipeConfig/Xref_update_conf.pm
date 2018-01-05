@@ -82,7 +82,6 @@ sub pipeline_analyses {
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleDownload',
              -input_ids  => [{}],
              -parameters => {
-                             base_path     => $self->o('base_path'),
                              config_file   => $self->o('config_file'),
                              source_dir    => $self->o('source_dir'),
                              source_url    => $self->o('source_url'),
@@ -100,14 +99,14 @@ sub pipeline_analyses {
             },
             {-logic_name => 'download_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
-             -parameters => { base_path     => $self->o('base_path'),},
+             -parameters => { base_path     => $self->o('base_path')},
              -rc_name    => 'normal',
             },
             {-logic_name => 'checksum',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
              -parameters => {
                              base_path     => $self->o('base_path'),
-                             skip_download => $self->o('skip_download'),
+                             skip_download => $self->o('skip_download')
                             },
              -flow_into  => { '1' => 'schedule_species',},
              -rc_name    => 'normal',
