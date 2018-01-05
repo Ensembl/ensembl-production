@@ -32,6 +32,7 @@ sub run {
   return if $skip_download;
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  $self->load_checksum($base_path, $dbi);
 
 }
 
