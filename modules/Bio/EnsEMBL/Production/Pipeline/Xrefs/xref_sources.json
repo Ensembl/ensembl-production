@@ -192,7 +192,7 @@
     {
       "name" : "VGNC",
       "parser" : "VGNCParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/ensembl/VGNC_to_Ensembl_mapping.txt",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/vgnc_gene_set_All.txt.gz",
       "priority" : 1
     },
     {
