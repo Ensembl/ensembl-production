@@ -65,12 +65,12 @@ sub run {
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
-  my $job_sth = $dbi->prepare("insert into mapping_jobs (root_dir, map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?,?)");
+  my $job_sth = $dbi->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?,?)");
   my $mapping_sth = $dbi->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
 
   my $out_file = "xref_".$seq_type.".".$max_chunks."-".$chunk.".out";
   my $job_id = $source_id . $job_index . $chunk;
-  $job_sth->execute($base_path, $map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
+  $job_sth->execute($map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
   $mapping_sth->execute($job_id, $seq_type, $query_cutoff, $target_cutoff);
 
   my $fh = IO::File->new($map_file, 'w') or throw("Couldn't open". $map_file ." for writing: $!\n");
