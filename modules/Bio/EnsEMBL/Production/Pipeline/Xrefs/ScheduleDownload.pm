@@ -25,7 +25,6 @@ use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
 sub run {
   my ($self) = @_;
-  my $base_path        = $self->param_required('base_path');
   my $config_file      = $self->param_required('config_file');
   my $source_dir       = $self->param_required('source_dir');
   my $reuse_db         = $self->param_required('reuse_db');
