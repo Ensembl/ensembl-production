@@ -65,7 +65,7 @@ sub run {
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
-  my $job_sth = $dbi->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?,?)");
+  my $job_sth = $dbi->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?)");
   my $mapping_sth = $dbi->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
 
   my $out_file = "xref_".$seq_type.".".$max_chunks."-".$chunk.".out";
