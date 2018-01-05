@@ -192,25 +192,7 @@
     {
       "name" : "VGNC",
       "parser" : "VGNCParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/chimpanzee/*_All.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "VGNC",
-      "parser" : "VGNCParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/dog/*_All.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "VGNC",
-      "parser" : "VGNCParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/horse/*_All.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "VGNC",
-      "parser" : "VGNCParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/cow/*_All.txt",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/ensembl/VGNC_to_Ensembl_mapping.txt",
       "priority" : 1
     },
     {
