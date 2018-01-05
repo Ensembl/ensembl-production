@@ -35,7 +35,6 @@ sub default_options {
     return {
            %{ $self->SUPER::default_options() },
            'email'            => $self->o('ENV', 'USER').'@ebi.ac.uk',
-           'base_path'        => '',
            'release'          => software_version(),
            'sql_dir'          => $self->o('ENV', 'HOME')."/work/lib/ensembl/misc-scripts/xref_mapping",
            'pipeline_name'    => 'xref_update_'.$self->o('release'),
