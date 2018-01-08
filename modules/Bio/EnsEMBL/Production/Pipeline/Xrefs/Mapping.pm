@@ -39,6 +39,8 @@ sub run {
   my $base_path    = $self->param_required('base_path');
   my $release      = $self->param_required('release');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
 
   my $priority = XrefMapper::ProcessPrioritys->new($mapper);

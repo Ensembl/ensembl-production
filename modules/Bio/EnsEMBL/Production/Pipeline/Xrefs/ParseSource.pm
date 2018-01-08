@@ -35,6 +35,8 @@ sub run {
   my $db           = $self->param('db');
   my $release_file = $self->param('release_file');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
   my $xref_dbc = XrefParser::Database->new({
@@ -49,6 +51,7 @@ sub run {
   $select_species_id_sth->execute($species);
   my $species_id = ($select_species_id_sth->fetchrow_array())[0];
   my $source_id = $self->get_source_id($dbi, $parser, $species_id);
+  $select_species_id_sth->finish();
 
   # Some sources are not available for all species
   if (!defined $source_id) { return; }
@@ -93,8 +96,6 @@ sub run {
                       rel_file   => $release_file,
                       files      => [@files] }) ;
   }
-
-  $select_species_id_sth->finish();
 
 }
 
