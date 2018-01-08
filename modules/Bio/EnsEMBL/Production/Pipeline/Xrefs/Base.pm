@@ -194,7 +194,7 @@ sub get_xref_mapper {
     -user    => $core_dbc->user,
     -pass    => $core_dbc->pass
   );
-  $core_db->dir($base_path);
+  $core_db->dir("$base_path/$species");
   $core_db->species($species);
   my $cdna_path = $self->get_path($base_path, $species, $release, "ensembl", 'transcripts.fa');
   my $pep_path = $self->get_path($base_path, $species, $release, "ensembl", 'peptides.fa');
