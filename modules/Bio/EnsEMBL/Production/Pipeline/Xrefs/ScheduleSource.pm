@@ -63,6 +63,10 @@ sub run {
             pass    => $pass });
   $dbc->create($sql_dir, 1, 1) if $order_priority == 1; 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
+  my $xref_dbi = $dbc->dbi();
+  my $select_species_id_sth = $xref_dbi->prepare("SELECT species_id FROM species where name = ?");
+  $select_species_id_sth->execute($species);
+  my $species_id = ($select_species_id_sth->fetchrow_array())[0];
 
   # Retrieve list of sources from versioning database
   if (defined $source_url) {
@@ -76,16 +80,54 @@ sub run {
 
   while ($select_source_sth->fetch()) {
     if ($db eq 'checksum') { next; }
-    $dataflow_params = {
-      species     => $species,
-      parser      => $parser,
-      name        => $name,
-      xref_url    => $xref_db_url,
-      db          => $db,
-      release_file=> $release_file,
-      file_name   => $file_name
-    };
-    if ($priority == $order_priority) {
+    if ($priority != $order_priority) { next; }
+
+    # Some sources are species-specific
+    my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id);
+    if (!defined $source_id) { next; }
+
+    # Some sources need connection to a species database
+    my $dba;
+    if (defined $db) {
+      my $registry = 'Bio::EnsEMBL::Registry';
+      $dba = $registry->get_DBAdaptor($species, $db);
+      next unless $dba;
+    }
+
+    # Create list of files
+    my @list_files = `ls $file_name`;
+    foreach my $file (@list_files) {
+      $file =~ s/\n//;
+      $file = $file_name . "/" . $file;
+      if (defined $release_file and $file eq $release_file) { next; }
+
+      my @files;
+      push @files, $file;
+      $dataflow_params = {
+        species       => $species,
+        species_id    => $species_id,
+        parser        => $parser,
+        source        => $source_id,
+        xref_url      => $xref_db_url,
+        db            => $db,
+        release_file  => $release_file,
+        files         => \@files,
+        file_name     => $files[0]
+      };
+      $self->dataflow_output_id($dataflow_params, 2);
+    }
+
+    if (scalar(@list_files) == 0) {
+      $dataflow_params = {
+        species       => $species,
+        species_id    => $species_id,
+        parser        => $parser,
+        source        => $source_id,
+        xref_url      => $xref_db_url,
+        db            => $db,
+        release_file  => $release_file,
+        file_name     => $file_name
+      };
       $self->dataflow_output_id($dataflow_params, 2);
     }
   }
@@ -96,6 +138,7 @@ sub run {
   $self->dataflow_output_id($dataflow_params, 1);
 
   $select_source_sth->finish();
+  $select_species_id_sth->finish();
 
 }
 

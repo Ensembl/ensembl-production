@@ -29,9 +29,11 @@ sub run {
   my ($self) = @_;
   my $parser       = $self->param_required('parser');
   my $species      = $self->param_required('species');
+  my $species_id   = $self->param_required('species_id');
   my $file_name    = $self->param_required('file_name');
-  my $source       = $self->param_required('name');
+  my $source_id    = $self->param_required('source');
   my $xref_url     = $self->param_required('xref_url');
+  my $list_files   = $self->param('files');
   my $db           = $self->param('db');
   my $release_file = $self->param('release_file');
 
@@ -47,44 +49,20 @@ sub run {
             pass    => $pass });
 
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
-  my $select_species_id_sth = $dbi->prepare("SELECT species_id FROM species where name = ?");
-  $select_species_id_sth->execute($species);
-  my $species_id = ($select_species_id_sth->fetchrow_array())[0];
-  my $source_id = $self->get_source_id($dbi, $parser, $species_id);
-  $select_species_id_sth->finish();
-
-  # Some sources are not available for all species
-  if (!defined $source_id) { return; }
-
-  # Some sources need connection to a species database
-  my $dba;
-  if (defined $db) {
-    my $registry = 'Bio::EnsEMBL::Registry';
-    $dba = $registry->get_DBAdaptor($species, $db);
-    return unless $dba;
-  }
-
-  # Create list of files
-  my @list_files = `ls $file_name`;
-  my @files;
-  foreach my $file (@list_files) {
-    $file =~ s/\n//;
-    $file = $file_name . "/" . $file;
-    if (defined $release_file and $file eq $release_file) { next; }
-    push @files, $file;
-  }
 
   my $single_file;
-  if (scalar(@list_files) == 0) {
+  if (!defined $list_files || scalar(@$list_files) > 0) {
     $single_file = $file_name;
   } else {
-    $single_file = $files[0];
+    $single_file = $list_files->[0];
   }
 
   my $module = "XrefParser::$parser";
   eval "require $module";
   my $xref_run = $module->new($xref_dbc);
-  if (defined $dba) {
+  if (defined $db) {
+    my $registry = 'Bio::EnsEMBL::Registry';
+    my $dba = $registry->get_DBAdaptor($species, $db);
     $xref_run->run_script( { source_id  => $source_id,
                              species_id => $species_id,
                              dba        => $dba,
@@ -94,7 +72,7 @@ sub run {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,
                       rel_file   => $release_file,
-                      files      => [@files] }) ;
+                      files      => [@$list_files] }) ;
   }
 
 }
