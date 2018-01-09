@@ -132,7 +132,7 @@ and m4.meta_key='genebuild.version'
                                              -type  => 'FAMILY',
                                              -class => 'Family.family'
                                             ),
-                                                     -species_set_obj => $sso );
+                                                     -species_set => $sso );
   
   $compara_dba->get_MethodLinkSpeciesSetAdaptor()->store($mlss);
   my $family_dba = $compara_dba->get_FamilyAdaptor();
