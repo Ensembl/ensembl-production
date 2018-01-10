@@ -31,18 +31,20 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     'pathway_sources' => [],
+    'id_prefix'       => '',
   };
 }
 
 sub run {
   my ($self) = @_;
-  my $xml_file = $self->param_required('xml_file');
-  my $tsv_file = $self->param_required('tsv_file');
+  my $xml_file  = $self->param_required('xml_file');
+  my $tsv_file  = $self->param_required('tsv_file');
+  my $id_prefix = $self->param_required('id_prefix');
   
   (my $solr_file = $tsv_file) =~ s/(tsv)$/solr/;
   $self->param('solr_file', $solr_file);
   
-  my $domains = $self->generate_solr($xml_file, $tsv_file, $solr_file);
+  my $domains = $self->generate_solr($xml_file, $tsv_file, $solr_file, $id_prefix);
   
   $self->param('with_domains', scalar(keys %$domains));
 }
@@ -59,11 +61,11 @@ sub write_output {
 }
 
 sub generate_solr {
-  my ($self, $xml_file, $tsv_file, $solr_file) = @_;
+  my ($self, $xml_file, $tsv_file, $solr_file, $id_prefix) = @_;
   
   my $go_terms = $self->go_terms($xml_file);
   my $pathways = $self->pathways($xml_file);
-  my $domains = $self->parse_tsv($tsv_file, $go_terms, $pathways);
+  my $domains = $self->parse_tsv($tsv_file, $go_terms, $pathways, $id_prefix);
   $self->write_solr($solr_file, $domains);
   
   return $domains;
@@ -118,7 +120,7 @@ sub pathways {
 }
 
 sub parse_tsv {
-  my ($self, $tsv_file, $go_terms, $pathways) = @_;
+  my ($self, $tsv_file, $go_terms, $pathways, $id_prefix) = @_;
   
   my $file_obj = path($tsv_file);
   my $data = $file_obj->slurp;
@@ -130,7 +132,7 @@ sub parse_tsv {
     my @row = split(/\t/, $row);
     next unless scalar(@row) > 0;
     
-    my $id = "VBMISC_".$row[0];
+    my $id = $id_prefix.$row[0];
     
     $domains{$id}{'annotation_date'} = flip_date($row[10]).'T00:00:00Z';
     $domains{$id}{'domain_ids'}{$row[4]}++;

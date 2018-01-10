@@ -38,6 +38,8 @@ sub default_options {
     
     results_dir => $self->o('pipeline_dir'),
     
+    id_prefix => '',
+    
     interpro_applications =>
     [
       'CDD',
@@ -151,6 +153,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::GenerateSolr',
       -max_retry_count   => 1,
       -parameters        => {
+                              id_prefix            => $self->o('id_prefix'),
                               interproscan_version => $self->o('interproscan_version'),
                               pathway_sources      => $self->o('pathway_sources'),
                             },
