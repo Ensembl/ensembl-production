@@ -79,7 +79,7 @@ sub run {
   $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority, \$release_file);
 
   while ($select_source_sth->fetch()) {
-    if ($db eq 'checksum') { next; }
+    if (defined $db && $db eq 'checksum') { next; }
     if ($priority != $order_priority) { next; }
 
     # Some sources are species-specific
