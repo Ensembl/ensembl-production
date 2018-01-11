@@ -33,7 +33,6 @@ sub run {
   my $file_name    = $self->param_required('file_name');
   my $source_id    = $self->param_required('source');
   my $xref_url     = $self->param_required('xref_url');
-  my $list_files   = $self->param('files');
   my $db           = $self->param('db');
   my $release_file = $self->param('release_file');
 
@@ -50,12 +49,8 @@ sub run {
 
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
 
-  my $single_file;
-  if (!defined $list_files || scalar(@$list_files) > 0) {
-    $single_file = $file_name;
-  } else {
-    $single_file = $list_files->[0];
-  }
+  my @files;
+  push @files, $file_name;
 
   my $module = "XrefParser::$parser";
   eval "require $module";
@@ -67,12 +62,14 @@ sub run {
                              species_id => $species_id,
                              dba        => $dba,
                              rel_file   => $release_file,
-                             file       => $single_file}) ;
+                             dbi        => $dbi,
+                             file       => $file_name}) ;
   } else {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,
                       rel_file   => $release_file,
-                      files      => [@$list_files] }) ;
+                      dbi        => $dbi,
+                      files      => [@files] }) ;
   }
 
 }

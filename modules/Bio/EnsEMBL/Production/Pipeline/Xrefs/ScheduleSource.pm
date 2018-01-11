@@ -101,8 +101,6 @@ sub run {
       $file = $file_name . "/" . $file;
       if (defined $release_file and $file eq $release_file) { next; }
 
-      my @files;
-      push @files, $file;
       $dataflow_params = {
         species       => $species,
         species_id    => $species_id,
@@ -111,8 +109,7 @@ sub run {
         xref_url      => $xref_db_url,
         db            => $db,
         release_file  => $release_file,
-        files         => \@files,
-        file_name     => $files[0]
+        file_name     => $file
       };
       $self->dataflow_output_id($dataflow_params, 2);
     }
