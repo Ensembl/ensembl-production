@@ -256,6 +256,9 @@ sub default_options {
     seg_exe        => 'seg',
     seg_params     => '-l -n',
     
+    # By default the pipeline won't email with a summary of the results.
+    # If this is switched on, you get one email per species.
+    email_report => 0,
   };
 }
 
@@ -285,6 +288,7 @@ sub pipeline_wide_parameters {
    %{$self->SUPER::pipeline_wide_parameters},
    'interpro_desc_source' => $self->o('interpro_desc_source'),
    'run_seg'              => $self->o('run_seg'),
+   'email_report'         => $self->o('email_report'),
  };
 }
 
@@ -670,7 +674,24 @@ sub pipeline_analyses {
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
-      -rc_name           => 'normal'
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '1' => WHEN('#email_report#' =>
+                                      ['EmailReport']
+                                     ),
+                            },
+    },
+    
+    {
+      -logic_name        => 'EmailReport',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
+      -hive_capacity     => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              email   => $self->o('email'),
+                              subject => 'Protein features pipeline: report for #species#',
+                            },
+      -rc_name           => 'normal',
     },
     
     {
