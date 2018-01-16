@@ -216,7 +216,7 @@ CREATE TABLE `dna_align_feature` (
   `cigar_line` text,
   `external_db_id` int(10) unsigned DEFAULT NULL,
   `hcoverage` double DEFAULT NULL,
-  `external_data` text,
+  `align_type` enum('ensembl','cigar','vulgar','mdtag') DEFAULT 'ensembl',
   PRIMARY KEY (`dna_align_feature_id`),
   KEY `seq_region_idx` (`seq_region_id`,`analysis_id`,`seq_region_start`,`score`),
   KEY `seq_region_idx_2` (`seq_region_id`,`seq_region_start`),
@@ -224,6 +224,16 @@ CREATE TABLE `dna_align_feature` (
   KEY `analysis_idx` (`analysis_id`),
   KEY `external_db_idx` (`external_db_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=29415780 DEFAULT CHARSET=latin1 MAX_ROWS=100000000 AVG_ROW_LENGTH=80;
+
+CREATE TABLE `dna_align_feature_attrib` (
+  `dna_align_feature_id` int(10) unsigned NOT NULL,
+  `attrib_type_id` smallint(5) unsigned NOT NULL,
+  `value` text NOT NULL,
+  UNIQUE KEY `dna_align_feature_attribx` (`dna_align_feature_id`,`attrib_type_id`,`value`(500)),
+  KEY `dna_align_feature_idx` (`dna_align_feature_id`),
+  KEY `type_val_idx` (`attrib_type_id`,`value`(40)),
+  KEY `val_only_idx` (`value`(40))
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `exon` (
   `exon_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -285,7 +295,6 @@ CREATE TABLE `gene` (
   `seq_region_strand` tinyint(2) NOT NULL,
   `display_xref_id` int(10) unsigned DEFAULT NULL,
   `source` varchar(40) NOT NULL,
-  `status` enum('KNOWN','NOVEL','PUTATIVE','PREDICTED','KNOWN_BY_PROJECTION','UNKNOWN','ANNOTATED') DEFAULT NULL,
   `description` text,
   `is_current` tinyint(1) NOT NULL DEFAULT '1',
   `canonical_transcript_id` int(10) unsigned NOT NULL,
@@ -463,11 +472,11 @@ CREATE TABLE `meta` (
   `meta_id` int(11) NOT NULL AUTO_INCREMENT,
   `species_id` int(10) unsigned DEFAULT '1',
   `meta_key` varchar(40) NOT NULL,
-  `meta_value` varchar(255) DEFAULT NULL,
+  `meta_value` varchar(255) NOT NULL,
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`),
   KEY `species_value_idx` (`species_id`,`meta_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=2171 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2188 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_coord` (
   `table_name` varchar(40) NOT NULL,
@@ -631,6 +640,7 @@ CREATE TABLE `protein_align_feature` (
   `cigar_line` text,
   `external_db_id` int(10) unsigned DEFAULT NULL,
   `hcoverage` double DEFAULT NULL,
+  `align_type` enum('ensembl','cigar','vulgar','mdtag') DEFAULT 'ensembl',
   PRIMARY KEY (`protein_align_feature_id`),
   KEY `seq_region_idx` (`seq_region_id`,`analysis_id`,`seq_region_start`,`score`),
   KEY `seq_region_idx_2` (`seq_region_id`,`seq_region_start`),
@@ -646,7 +656,7 @@ CREATE TABLE `protein_feature` (
   `seq_end` int(10) NOT NULL,
   `hit_start` int(10) NOT NULL,
   `hit_end` int(10) NOT NULL,
-  `hit_name` varchar(40) NOT NULL,
+  `hit_name` varchar(40) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
   `analysis_id` smallint(5) unsigned NOT NULL,
   `score` double DEFAULT NULL,
   `evalue` double DEFAULT NULL,
@@ -654,7 +664,7 @@ CREATE TABLE `protein_feature` (
   `external_data` text,
   `hit_description` text,
   PRIMARY KEY (`protein_feature_id`),
-  UNIQUE KEY `aln_idx` (`translation_id`,`hit_name`,`seq_start`,`seq_end`,`hit_start`,`hit_end`),
+  UNIQUE KEY `aln_idx` (`translation_id`,`hit_name`,`seq_start`,`seq_end`,`hit_start`,`hit_end`,`analysis_id`),
   KEY `hitname_idx` (`hit_name`),
   KEY `analysis_idx` (`analysis_id`),
   KEY `translation_idx` (`translation_id`)
@@ -692,7 +702,7 @@ CREATE TABLE `repeat_feature` (
 
 CREATE TABLE `seq_region` (
   `seq_region_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) NOT NULL,
+  `name` varchar(255) NOT NULL,
   `coord_system_id` int(10) unsigned NOT NULL,
   `length` int(10) unsigned NOT NULL,
   PRIMARY KEY (`seq_region_id`),
@@ -774,7 +784,6 @@ CREATE TABLE `transcript` (
   `display_xref_id` int(10) unsigned DEFAULT NULL,
   `source` varchar(40) NOT NULL DEFAULT 'ensembl',
   `biotype` varchar(40) NOT NULL,
-  `status` enum('KNOWN','NOVEL','PUTATIVE','PREDICTED','KNOWN_BY_PROJECTION','UNKNOWN','ANNOTATED') DEFAULT NULL,
   `description` text,
   `is_current` tinyint(1) NOT NULL DEFAULT '1',
   `canonical_translation_id` int(10) unsigned DEFAULT NULL,
