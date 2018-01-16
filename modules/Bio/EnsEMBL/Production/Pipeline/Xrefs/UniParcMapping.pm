@@ -36,7 +36,8 @@ sub run {
 
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
   my $checksum_mapper = XrefMapper::UniParcMapper->new($mapper);
-  $checksum_mapper->process($source_url);
+  my $species_id = $self->get_taxon_id($species);
+  $checksum_mapper->process($source_url, $species_id);
 
 }
 

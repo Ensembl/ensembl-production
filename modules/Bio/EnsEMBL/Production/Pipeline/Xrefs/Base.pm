@@ -226,6 +226,16 @@ sub get_xref_mapper {
   return $mapper;
 }
 
+sub get_taxon_id {
+  my $self = shift;
+  my $species = shift;
+  my $registry = 'Bio::EnsEMBL::Registry';
+  my $meta_container = $registry->get_adaptor($species,'core', 'MetaContainer');
+  my $species_id = $meta_container->get_taxonomy_id();
+
+  return $species_id;
+}
+
 
 1;
 

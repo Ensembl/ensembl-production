@@ -40,6 +40,7 @@ sub run {
   my $release      = $self->param_required('release');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+  my $species_id = $self->get_taxon_id($species);
 
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
   my $dbi = $mapper->xref->dbc();
@@ -55,7 +56,7 @@ sub run {
   $mapper->process_alt_alleles($dbi);
 
   my $official_naming = XrefMapper::OfficialNaming->new($mapper);
-  $official_naming->run();
+  $official_naming->run($species_id);
 
   my $tester = XrefMapper::TestMappings->new($mapper);
   $tester->direct_stable_id_check();

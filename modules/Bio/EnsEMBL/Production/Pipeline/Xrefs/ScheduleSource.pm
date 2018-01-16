@@ -64,9 +64,8 @@ sub run {
   $dbc->create($sql_dir, 1, 1) if $order_priority == 1; 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
   my $xref_dbi = $dbc->dbi();
-  my $select_species_id_sth = $xref_dbi->prepare("SELECT species_id FROM species where name = ?");
-  $select_species_id_sth->execute($species);
-  my $species_id = ($select_species_id_sth->fetchrow_array())[0];
+
+  my $species_id = $self->get_taxon_id($species);
 
   # Retrieve list of sources from versioning database
   if (defined $source_url) {
@@ -136,7 +135,6 @@ sub run {
   $self->dataflow_output_id($dataflow_params, 1);
 
   $select_source_sth->finish();
-  $select_species_id_sth->finish();
 
 }
 

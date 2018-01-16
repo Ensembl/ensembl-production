@@ -63,10 +63,12 @@ sub run {
                              dba        => $dba,
                              rel_file   => $release_file,
                              dbi        => $dbi,
+                             species    => $species,
                              file       => $file_name}) ;
   } else {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,
+                      species    => $species,
                       rel_file   => $release_file,
                       dbi        => $dbi,
                       files      => [@files] }) ;
