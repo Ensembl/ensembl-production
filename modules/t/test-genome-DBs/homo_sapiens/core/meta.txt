@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	85
+1	\N	schema_version	91
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -212,3 +212,20 @@
 2168	\N	patch	patch_83_84_e.sql|nullable_versions
 2169	\N	patch	patch_84_85_a.sql|schema_version
 2170	\N	patch	patch_84_85_b.sql|remove_duplicated_key
+2171	\N	patch	patch_85_86_a.sql|schema_version
+2172	\N	patch	patch_85_86_b.sql|add dna_align_feature_attrib table
+2173	\N	patch	patch_85_86_c.sql|meta_case_insensitive
+2174	\N	patch	patch_86_87_a.sql|schema_version
+2175	\N	patch	patch_86_87_b.sql|meta_value_NOT_NULL
+2176	\N	patch	patch_86_87_c.sql|datetime_default_NULL
+2177	\N	patch	patch_87_88_a.sql|schema_version
+2178	\N	patch	patch_87_88_b.sql|seq_region_name_255
+2179	\N	patch	patch_87_88_c.sql|protein_featue_uniqueness
+2180	\N	patch	patch_88_89_a.sql|schema_version
+2181	\N	patch	patch_89_90_a.sql|schema_version
+2182	\N	patch	patch_89_90_b.sql|remove_status
+2183	\N	patch	patch_89_90_c.sql|pf_hit_name_case_sensitive
+2184	\N	patch	patch_90_91_a.sql|schema_version
+2185	\N	patch	patch_90_91_b.sql|align_type
+2186	\N	patch	patch_90_91_c.sql|protein_align_type
+2187	\N	patch	patch_90_91_d.sql|remove_external_data
