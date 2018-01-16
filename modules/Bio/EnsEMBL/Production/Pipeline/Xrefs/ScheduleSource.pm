@@ -109,6 +109,7 @@ sub run {
         xref_url      => $xref_db_url,
         db            => $db,
         release_file  => $release_file,
+        priority      => $priority,
         file_name     => $file
       };
       $self->dataflow_output_id($dataflow_params, 2);
