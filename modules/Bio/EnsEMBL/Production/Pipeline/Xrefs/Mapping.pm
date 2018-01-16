@@ -42,6 +42,7 @@ sub run {
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
+  my $dbi = $mapper->xref->dbc();
 
   my $priority = XrefMapper::ProcessPrioritys->new($mapper);
   $priority->process();
@@ -50,8 +51,8 @@ sub run {
   $paired->process();
 
   $mapper->biomart_testing();
-  $mapper->source_defined_move();
-  $mapper->process_alt_alleles();
+  $mapper->source_defined_move($dbi);
+  $mapper->process_alt_alleles($dbi);
 
   my $official_naming = XrefMapper::OfficialNaming->new($mapper);
   $official_naming->run();
