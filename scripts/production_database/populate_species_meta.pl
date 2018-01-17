@@ -62,7 +62,6 @@ sub args {
 
     # User database location (default values):
     port => 3306,
-    
     removedeprecated => 0, 
   };
 
@@ -81,6 +80,7 @@ sub args {
     port|P=i
     user|u=s
     pass|p=s
+    release|rel=i
     database|d=s
     pattern=s
     verbose|v!
@@ -101,7 +101,7 @@ sub check_opts {
   my ($self) = @_;
   my $o = $self->{opts};
 
-  foreach my $required (qw/host user tdatabase/) {
+  foreach my $required (qw/host user tdatabase release/) {
     my $msg = "Required parameter --${required} was not given";
     pod2usage( -msg => $msg, -verbose => 1, -exitval => 1 ) if !$o->{$required};
   }
@@ -401,7 +401,7 @@ sub _production_dbc {
   my %args   = (
     -HOST   => $o->{mhost},
     -PORT   => $o->{mport},
-    -DBNAME => $o->{mdatabase},
+    -DBNAME => $o->{mdatabase} . '_' . $o->{release},
     -USER   => $o->{muser}
   );
   $args{-PASS} = $o->{mpass} if $o->{mpass};
@@ -450,6 +450,7 @@ populate_species_meta.pl
   ./populate_species_meta.pl -h host [-P port] \\
     -u user [-p password]
     -d database \\
+    -rel release_number \\
     [-mh host] [-mP port] \\
     [-mu user] [-mp password] [-md database] \\
     [-th host] [-tP port] \\
