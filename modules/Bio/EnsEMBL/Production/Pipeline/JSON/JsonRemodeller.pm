@@ -219,7 +219,7 @@ sub collate_xrefs {
       }
       my $evidence = [];
       for my $lt ( @{ $xref->{linkage_types} } ) {
-        push $evidence, $lt->{evidence};
+        push @$evidence, $lt->{evidence};
       }
       # add associated xrefs
       if ( defined $xref->{associated_xrefs} &&
