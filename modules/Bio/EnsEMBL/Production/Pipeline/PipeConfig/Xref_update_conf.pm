@@ -107,7 +107,8 @@ sub pipeline_analyses {
                              base_path     => $self->o('base_path'),
                              skip_download => $self->o('skip_download')
                             },
-             -flow_into  => { '1' => 'schedule_species',},
+             -flow_into  => { '1->A' => 'schedule_species',
+                              'A->1' => 'notify_by_email'},
              -rc_name    => 'normal',
             },
             {-logic_name => 'schedule_species',
@@ -203,6 +204,7 @@ sub pipeline_analyses {
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Alignment',
              -parameters => {'base_path'   => $self->o('base_path')},
              -rc_name    => 'normal',
+             -hive_capacity => 100,
             },
             {-logic_name => 'schedule_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleMapping',
