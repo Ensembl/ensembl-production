@@ -63,6 +63,7 @@ sub run {
   my $job_index     = $self->param_required('job_index');
   my $source_id     = $self->param_required('source_id');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
   my $job_sth = $dbi->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?)");
@@ -72,6 +73,8 @@ sub run {
   my $job_id = $source_id . $job_index . $chunk;
   $job_sth->execute($map_file, 'SUBMITTED', $out_file, $out_file, $chunk, $job_id);
   $mapping_sth->execute($job_id, $seq_type, $query_cutoff, $target_cutoff);
+  $job_sth->finish();
+  $mapping_sth->finish();
 
   my $fh = IO::File->new($map_file, 'w') or throw("Couldn't open". $map_file ." for writing: $!\n");
 
@@ -87,8 +90,6 @@ sub run {
   }
 
   $fh->close();
-  $job_sth->finish();
-  $mapping_sth->finish();
 }
 
 1;

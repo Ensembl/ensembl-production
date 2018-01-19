@@ -140,6 +140,7 @@ sub load_checksum {
   close $output_fh;
 
   $load_checksum_sth->execute($checksum_file);
+  $load_checksum_sth->finish();
 
 }
 
@@ -187,12 +188,14 @@ sub get_xref_mapper {
   my $registry = 'Bio::EnsEMBL::Registry';
   my $core_adaptor = $registry->get_DBAdaptor($species, 'Core');
   my $core_dbc = $core_adaptor->dbc;
+  $core_dbc->disconnect_if_idle();
   my $core_db = XrefMapper::db->new(
     -host    => $core_dbc->host,
     -dbname  => $core_dbc->dbname,
     -port    => $core_dbc->port,
     -user    => $core_dbc->user,
-    -pass    => $core_dbc->pass
+    -pass    => $core_dbc->pass,
+    -disconnect_when_inactive => 1
   );
   $core_db->dir("$base_path/$species");
   $core_db->species($species);
@@ -206,7 +209,8 @@ sub get_xref_mapper {
     -dbname  => $dbname,
     -port    => $port,
     -user    => $user,
-    -pass    => $pass
+    -pass    => $pass,
+    -disconnect_when_inactive => 1
   );
 
   # Look for species-specific mapper

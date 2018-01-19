@@ -54,6 +54,7 @@ sub run {
   my $seq_type    = $self->param_required('seq_type');
   my $config_file = $self->param_required('config_file');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
   my $source_sth = $dbi->prepare("SELECT distinct s.name, s.source_id from source s, primary_xref p, xref x WHERE p.xref_id = x.xref_id AND p.sequence_type = ? AND x.source_id = s.source_id");
@@ -121,6 +122,7 @@ sub run {
   }
 
   $source_sth->finish();
+  $mapping_source_sth->finish();
   $sequence_sth->finish();
   
   return;

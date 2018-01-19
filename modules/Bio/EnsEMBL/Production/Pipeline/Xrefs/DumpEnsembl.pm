@@ -56,6 +56,7 @@ sub run {
   my $base_path = $self->param_required('base_path');
   my $release   = $self->param_required('release');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my $cdna_path = $self->get_path($base_path, $species, $release, "ensembl", 'transcripts.fa');
   my $pep_path = $self->get_path($base_path, $species, $release, "ensembl", 'peptides.fa');
   $self->param('cdna_path', $cdna_path);

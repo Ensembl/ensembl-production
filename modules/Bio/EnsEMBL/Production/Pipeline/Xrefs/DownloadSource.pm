@@ -34,6 +34,7 @@ sub run {
   my $db               = $self->param('db');
   my $version_file     = $self->param('version_file');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $insert_source_sth = $dbi->prepare("INSERT IGNORE INTO source (name, parser) VALUES (?, ?)");

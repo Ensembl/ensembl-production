@@ -58,6 +58,7 @@ sub run {
   if (defined $db) {
     my $registry = 'Bio::EnsEMBL::Registry';
     my $dba = $registry->get_DBAdaptor($species, $db);
+    $dba->dbc()->disconnect_if_idle();
     $xref_run->run_script( { source_id  => $source_id,
                              species_id => $species_id,
                              dba        => $dba,
@@ -65,6 +66,7 @@ sub run {
                              dbi        => $dbi,
                              species    => $species,
                              file       => $file_name}) ;
+    $self->cleanup_DBAdaptor($db);
   } else {
     $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,

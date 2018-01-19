@@ -34,6 +34,7 @@ sub run {
   my $source_url   = $self->param_required('source_url');
   my $release      = $self->param_required('release');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
   my $checksum_mapper = XrefMapper::UniParcMapper->new($mapper);
   my $species_id = $self->get_taxon_id($species);
