@@ -58,13 +58,13 @@
       "priority" : 2
     },
     {
-      "name" : "MGI",
+      "name" : "MGI_desc",
       "parser" : "MGI_Desc_Parser",
       "file" : "http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt",
       "priority" : 1
     },
     {
-      "name" : "MGI",
+      "name" : "MGI_ccds",
       "parser" : "MGI_CCDS_Parser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_mouse/CCDS.current.txt",
       "priority" : 2
@@ -217,6 +217,12 @@
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "http://zfin.org/data_transfer/Downloads/gene_seq.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "ZFIN_desc",
+      "parser" : "ZFINDescParser",
+      "file" : "ftp://zfin.org/pub/transfer/MEOW/zfin_genes.txt",
       "priority" : 1
     },
     {
