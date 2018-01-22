@@ -1,6 +1,6 @@
 
 =head1 LICENSE
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ and m4.meta_key='genebuild.version'
                                              -type  => 'FAMILY',
                                              -class => 'Family.family'
                                             ),
-                                                     -species_set_obj => $sso );
+                                                     -species_set => $sso );
   
   $compara_dba->get_MethodLinkSpeciesSetAdaptor()->store($mlss);
   my $family_dba = $compara_dba->get_FamilyAdaptor();

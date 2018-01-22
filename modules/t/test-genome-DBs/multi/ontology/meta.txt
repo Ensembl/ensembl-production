@@ -1,5 +1,5 @@
 1	schema_type	ontology	\N
-2	schema_version	90	\N
+2	schema_version	92	\N
 3	patch	patch_79_80_a.sql|schema_version	\N
 4	OBO_file_date	GO.obo/18:03:2015 17:12	\N
 5	OBO_load_date	GO.obo/Thu Mar 19 13:49:08 2015	\N
@@ -23,3 +23,5 @@
 23	patch	patch_87_88_a.sql|schema_version	\N
 24	patch	patch_88_89_a.sql|schema_version	\N
 25	patch	patch_89_90_a.sql|schema_version	\N
+26	patch	patch_90_91_a.sql|schema_version	\N
+27	patch	patch_91_92_a.sql|schema_version	\N
