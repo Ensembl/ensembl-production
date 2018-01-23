@@ -30,6 +30,9 @@ else {
   $options = '-run_all 1';
 }
 
+# Suppress auto-retry behaviour in test run. It creates errors if the job is not transactional w.r.t test data
+$options .= ' --retry_throwing_jobs 0'; 
+
 ok(1, 'Startup test');
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
@@ -230,7 +233,7 @@ my $repeat_density = 0;
 foreach my $r (@repeat_density) {
    $repeat_density += $r->density_value;
 }
-is($repeat_density, '49.3626', "Repeat density for chromosome 6");
+cmp_ok($repeat_density, '==',49.3626, "Repeat density for chromosome 6");
 
 
 # Check gc density for chromosome 6
@@ -239,7 +242,7 @@ my $gc_density = 0;
 foreach my $gc (@gc_density) {
    $gc_density += $gc->density_value;
 }
-is($gc_density, '85.02', "GC density for chromosome 6");
+cmp_ok($gc_density,'==', 85.02, "GC density for chromosome 6");
 
 
 # Check gc count for ENSG00000167393
@@ -248,7 +251,7 @@ my $gc_count = 0;
 foreach my $c (@gc_count) {
    $gc_count += $c->value;
 }
-is($gc_count, 58.29, "GC count for ENSG00000167393");
+cmp_ok($gc_count,'==', 58.29, "GC count for ENSG00000167393");
 
 # Check total length and reference length
 my $ref_sql = "select sum(length) from seq_region sr, seq_region_attrib sra, coord_system cs
