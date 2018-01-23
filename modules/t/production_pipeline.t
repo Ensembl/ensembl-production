@@ -43,7 +43,7 @@ my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 # Override default sleep value (6 seconds) in order to allow a busy test machine to finish starting the workers
 # before beekeeper checks to see if they're running, finds nothing, and then spawns another
-$pipeline->beekeeper_sleep(0.2);
+$pipeline->beekeeper_sleep(0.5);
 $pipeline->run();
 
 my $dfa  = $human_dba->get_DensityFeatureAdaptor();
