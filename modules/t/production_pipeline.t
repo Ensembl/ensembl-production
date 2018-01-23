@@ -30,9 +30,6 @@ else {
   $options = '-run_all 1';
 }
 
-# Suppress auto-retry behaviour in test run. It creates errors if the job is not transactional w.r.t test data
-$options .= ' --retry_throwing_jobs 0'; 
-
 ok(1, 'Startup test');
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
@@ -44,6 +41,9 @@ my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get 
 
 my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+# Override default sleep value (6 seconds) in order to allow a busy test machine to finish starting the workers
+# before beekeeper checks to see if they're running, finds nothing, and then spawns another
+$pipeline->beekeeper_sleep(0.2);
 $pipeline->run();
 
 my $dfa  = $human_dba->get_DensityFeatureAdaptor();
