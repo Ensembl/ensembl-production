@@ -162,9 +162,11 @@ sub copy_database {
 
   my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
 
-
-  #Check if we have enough space on target server before starting the db copy
-  check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+  #Only check space on target server when copying a database that don't exist on target server.
+  if ($target_db_exist != 0) {
+    #Check if we have enough space on target server before starting the db copy
+    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+  }
 
   my @tables;
   my @views;
