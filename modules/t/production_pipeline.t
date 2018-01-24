@@ -41,6 +41,9 @@ my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get 
 
 my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+# Override default sleep value (6 seconds) in order to allow a busy test machine to finish starting the workers
+# before beekeeper checks to see if they're running, finds nothing, and then spawns another
+$pipeline->beekeeper_sleep(0.5);
 $pipeline->run();
 
 my $dfa  = $human_dba->get_DensityFeatureAdaptor();
@@ -230,7 +233,7 @@ my $repeat_density = 0;
 foreach my $r (@repeat_density) {
    $repeat_density += $r->density_value;
 }
-is($repeat_density, '49.3626', "Repeat density for chromosome 6");
+cmp_ok($repeat_density, '==',49.3626, "Repeat density for chromosome 6");
 
 
 # Check gc density for chromosome 6
@@ -239,7 +242,7 @@ my $gc_density = 0;
 foreach my $gc (@gc_density) {
    $gc_density += $gc->density_value;
 }
-is($gc_density, '85.02', "GC density for chromosome 6");
+cmp_ok($gc_density,'==', 85.02, "GC density for chromosome 6");
 
 
 # Check gc count for ENSG00000167393
@@ -248,7 +251,7 @@ my $gc_count = 0;
 foreach my $c (@gc_count) {
    $gc_count += $c->value;
 }
-is($gc_count, 58.29, "GC count for ENSG00000167393");
+cmp_ok($gc_count,'==', 58.29, "GC count for ENSG00000167393");
 
 # Check total length and reference length
 my $ref_sql = "select sum(length) from seq_region sr, seq_region_attrib sra, coord_system cs
