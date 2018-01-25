@@ -450,8 +450,8 @@ populate_species_meta.pl
   ./populate_species_meta.pl -h host -P port \\
     -u user [-p password]
     -d database \\
-    -mh host -mP port -mu user -md database [-mp password] \\
-    -th host -tP port -tu user -td database [-tp password] \\
+    -md database -mh host -mP port -mu user [-mp password] \\
+    -td database -th host -tP port -tu user [-tp password] \\
     [-dropbaks]
     [-dumppath]
     [-v]
