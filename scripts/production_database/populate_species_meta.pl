@@ -49,19 +49,19 @@ sub args {
   my $opts = {
 
     # Master database location:
-    mhost     => 'mysql-ens-sta-1',
-    mport     => 4519,
-    muser     => 'ensro',
-    mdatabase => 'ensembl_production',
+    mhost     => '',
+    mport     => '',
+    muser     => '',
+    mdatabase => '',
 
     # Taxonomy database location:
-    thost => 'mysql-ens-sta-1',
-    tuser => 'ensro',
-    tport => 4519,
-    tdatabase => 'ncbi_taxonomy',
+    thost => '',
+    tuser => '',
+    tport => '',
+    tdatabase => '',
 
     # User database location (default values):
-    port => 3306,
+    port => '',
     removedeprecated => 0, 
   };
 
@@ -101,7 +101,7 @@ sub check_opts {
   my ($self) = @_;
   my $o = $self->{opts};
 
-  foreach my $required (qw/host user tdatabase release/) {
+  foreach my $required (qw/host user mdatabase mhost mport muser tdatabase thost tport tuser/) {
     my $msg = "Required parameter --${required} was not given";
     pod2usage( -msg => $msg, -verbose => 1, -exitval => 1 ) if !$o->{$required};
   }
@@ -401,7 +401,7 @@ sub _production_dbc {
   my %args   = (
     -HOST   => $o->{mhost},
     -PORT   => $o->{mport},
-    -DBNAME => $o->{mdatabase} . '_' . $o->{release},
+    -DBNAME => $o->{mdatabase},
     -USER   => $o->{muser}
   );
   $args{-PASS} = $o->{mpass} if $o->{mpass};
@@ -447,14 +447,11 @@ populate_species_meta.pl
 
 =head1 SYNOPSIS
 
-  ./populate_species_meta.pl -h host [-P port] \\
+  ./populate_species_meta.pl -h host -P port \\
     -u user [-p password]
     -d database \\
-    -rel release_number \\
-    [-mh host] [-mP port] \\
-    [-mu user] [-mp password] [-md database] \\
-    [-th host] [-tP port] \\
-    [-tu user] [-tp password] [-td database] \\
+    -mh host -mP port -mu user -md database [-mp password] \\
+    -th host -tP port -tu user -td database [-tp password] \\
     [-dropbaks]
     [-dumppath]
     [-v]
