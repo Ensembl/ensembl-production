@@ -154,7 +154,7 @@ sub delete_old_features {
   my $sql    = q{
     DELETE df
     FROM   density_feature df, density_type dt, analysis a, seq_region s, coord_system cs
-    WHERE  df.seq_region_id = s.seq_region_id 
+    WHERE  df.seq_region_id = s.seq_region_id
     AND    s.coord_system_id = cs.coord_system_id
     AND    cs.species_id = ? AND a.analysis_id = dt.analysis_id
     AND    dt.density_type_id = df.density_type_id
@@ -194,7 +194,7 @@ sub get_analysis {
   my $helper   = $prod_dba->dbc()->sql_helper();
   my $sql      = q{
     SELECT distinct display_label, description
-    FROM analysis_description 
+    FROM analysis_description
     WHERE is_current = 1 and logic_name = ? };
   my $anals = $helper->execute( -SQL => $sql, -PARAMS => [$logic_name] )->[0];
   throw "Could not find analysis $logic_name" unless ( defined $anals );
@@ -215,7 +215,7 @@ sub get_biotype_group {
   my $helper = $prod_dba->dbc()->sql_helper();
   my $sql      = q{
     SELECT name
-    FROM biotype
+    FROM master_biotype
     WHERE object_type = 'gene'
     AND is_current = 1
     AND biotype_group = ?

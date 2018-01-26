@@ -201,7 +201,7 @@ sub get_biotype_group {
   my $helper = $prod_dba->dbc()->sql_helper();
   my $sql = q{
      SELECT name
-     FROM biotype
+     FROM master_biotype
      WHERE object_type = 'gene'
      AND is_current = 1
      AND biotype_group = ?
