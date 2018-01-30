@@ -21,7 +21,7 @@
 
 RENAME TABLE biotype TO master_biotype;
 
-ALTER TABLE master_biotype ADD COLUMN so_term VARCHAR(32) AFTER biotype_group;
+ALTER TABLE master_biotype ADD COLUMN so_acc VARCHAR(64) AFTER biotype_group;
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
