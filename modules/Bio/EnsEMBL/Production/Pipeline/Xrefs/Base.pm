@@ -145,13 +145,14 @@ sub load_checksum {
 }
 
 sub get_source_id {
-  my ($self, $dbi, $parser, $species_id) = @_;
-  my $select_source_id_sth = $dbi->prepare("SELECT source_id FROM source_url WHERE parser = ? and species_id = ?");
-  $select_source_id_sth->execute($parser, $species_id);
+  my ($self, $dbi, $parser, $species_id, $name) = @_;
+  $name = "%$name%";
+  my $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ? and name like ?");
+  $select_source_id_sth->execute($parser, $species_id, $name);
   my $source_id = ($select_source_id_sth->fetchrow_array())[0];
   # If no species-specific source, look for common sources
   if (!defined $source_id) {
-    $select_source_id_sth->execute($parser, 1);
+    $select_source_id_sth->execute($parser, 1, $name);
     $source_id = ($select_source_id_sth->fetchrow_array())[0];
   }
   $select_source_id_sth->finish();
