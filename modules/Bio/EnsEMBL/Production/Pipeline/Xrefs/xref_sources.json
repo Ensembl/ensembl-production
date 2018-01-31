@@ -238,6 +238,12 @@
       "priority" : 1
     },
     {
+      "name" : "Xenbase",
+      "parser" : "XenopusJamboreeParser",
+      "file" : "ftp://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
+      "priority" : 1
+    },
+    {
       "name" : "miRBase",
       "parser" : "miRBaseParser",
       "file" : "ftp://mirbase.org/pub/mirbase/CURRENT/miRNA.dat.gz",
