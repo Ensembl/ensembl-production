@@ -82,7 +82,7 @@ sub run {
     if ($priority != $order_priority) { next; }
 
     # Some sources are species-specific
-    my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id);
+    my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id, $name);
     if (!defined $source_id) { next; }
 
     # Some sources need connection to a species database
@@ -93,29 +93,8 @@ sub run {
       next unless $dba;
     }
 
-    # Create list of files
-    my @list_files = `ls $file_name`;
-    foreach my $file (@list_files) {
-      $file =~ s/\n//;
-      $file = $file_name . "/" . $file;
-      if (defined $release_file and $file eq $release_file) { next; }
-
-      $dataflow_params = {
-        species       => $species,
-        species_id    => $species_id,
-        parser        => $parser,
-        source        => $source_id,
-        xref_url      => $xref_db_url,
-        db            => $db,
-        release_file  => $release_file,
-        priority      => $priority,
-        file_name     => $file
-      };
-      $self->dataflow_output_id($dataflow_params, 2);
-    }
-
-    if (scalar(@list_files) == 0) {
-      $dataflow_params = {
+    if ($file_name eq 'Database') {
+     $dataflow_params = {
         species       => $species,
         species_id    => $species_id,
         parser        => $parser,
@@ -126,6 +105,27 @@ sub run {
         file_name     => $file_name
       };
       $self->dataflow_output_id($dataflow_params, 2);
+    } else {
+      # Create list of files
+      my @list_files = `ls $file_name`;
+      foreach my $file (@list_files) {
+        $file =~ s/\n//;
+        $file = $file_name . "/" . $file;
+        if (defined $release_file and $file eq $release_file) { next; }
+  
+        $dataflow_params = {
+          species       => $species,
+          species_id    => $species_id,
+          parser        => $parser,
+          source        => $source_id,
+          xref_url      => $xref_db_url,
+          db            => $db,
+          release_file  => $release_file,
+          priority      => $priority,
+          file_name     => $file
+        };
+        $self->dataflow_output_id($dataflow_params, 2);
+      }
     }
   }
   $dataflow_params = {
