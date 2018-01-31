@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_91_92_x.sql
+# patch_92_93_b.sql
 #
 # Title: Update biotype to master_biotype tables.
 #
