@@ -1,13 +1,13 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # Copyright [2016-2018] EMBL-European Bioinformatics Institute
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,7 +81,7 @@ if ( !GetOptions( 'mhost|mh=s'     => \$mhost,
 {
   my $indent = ' ' x length($0);
   print <<USAGE_END;
-This script copies master tables from the production database 
+This script copies master tables from the production database
 into a user-defined database.
 
 Usage:
@@ -237,7 +237,7 @@ my %data;
       if ( defined($dumppath) ) {
         backup_table($dumppath,$dbname,$table,$timestamp);
       }
-      
+
       $dbh->do(sprintf( 'DROP TABLE IF EXISTS %s', $full_table_name_bak ) );
       # Make a backup of any existing data.
       $dbh->do( sprintf( 'CREATE TABLE %s LIKE %s',$full_table_name_bak, $full_table_name ) );
@@ -261,10 +261,10 @@ my %data;
           my $insert_statement = sprintf('INSERT INTO %s (%s) VALUES (%s)',
             $full_table_name,
             join( ', ', map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
-            join( ', ', map { $dbh->quote( $row->[ $_ - 1 ], $colinfo->{$_}{'DATA_TYPE'} ) } ( 1 .. $numcols ) ) 
+            join( ', ', map { $dbh->quote( $row->[ $_ - 1 ], $colinfo->{$_}{'DATA_TYPE'} ) } ( 1 .. $numcols ) )
           );
           printf( STDERR "EXECUTING: %s\n", $insert_statement ) if ($verbose);
-          
+
           $dbh->do($insert_statement);
         }
       }
@@ -274,7 +274,7 @@ my %data;
 
       print("<updated data>");
       diff_tables($dbh, $table, $key_name, $full_table_name_bak, $full_table_name);
-      
+
       {
         if (@updates) {
           print("\n");
@@ -356,8 +356,8 @@ sub backup_table {
     printf( "Backing up table %s on file.\n", $table );
     printf( "--> %s\n",                       $filename );
 
-    if (system( "mysqldump","--host=$host","--port=$port","--user=$user", 
-                (defined($pass) ? "--password=$pass" : "--skip-opt"), "--result-file=$filename", 
+    if (system( "mysqldump","--host=$host","--port=$port","--user=$user",
+                (defined($pass) ? "--password=$pass" : "--skip-opt"), "--result-file=$filename",
                 "--skip-opt","$dbname","$table" ) ) {
       die("mysqldump failed: $?");
     }
@@ -385,7 +385,7 @@ sub update_external_db {
         $full_table_name,
         join( ', ', map { $colinfo->{$_}{'COLUMN_NAME'} } 1 .. $numcols ),
         join( ', ', map { $dbh->quote( $master_row->[ $_ - 1 ], $colinfo->{$_}{'DATA_TYPE'} ) } ( 1 .. $numcols ) ) );
-      
+
       printf( STDERR "EXECUTING: %s\n", $insert_statement ) if ($verbose);
       $dbh->do($insert_statement);
     } else {

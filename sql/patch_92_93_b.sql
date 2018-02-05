@@ -19,9 +19,9 @@
 #
 # Description:
 #   Change constraint name_type_idx from (name, object_type, db_type) to (name, object_type).
-#   Dupicates of (name, object_type) have to be combined in a single row.
 #   Rename biotype table to master_biotype.
 #   Add so_acc column to master_biotype and populate it.
+#   Create biotype view.
 
 -- Remove existing composite unique key that contains (name, object_type, db_type)
 DROP INDEX name_type_idx ON biotype;
@@ -235,6 +235,21 @@ UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='vaultRNA' AND object_t
 UPDATE master_biotype SET so_acc='SO:0002040' WHERE name='vaultRNA' AND object_type='transcript';
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='Y_RNA' AND object_type='gene';
 UPDATE master_biotype SET so_acc='SO:0000405' WHERE name='Y_RNA' AND object_type='transcript';
+
+-- biotype table view
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW biotype AS
+SELECT
+  biotype_id AS biotype_id,
+  name AS name,
+  object_type AS object_type,
+  db_type AS db_type,
+  attrib_type_id AS attrib_type_id,
+  description AS description,
+  biotype_group AS biotype_group,
+  so_acc AS so_acc
+FROM master_biotype
+WHERE is_current = true
+ORDER BY biotype_id;
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
