@@ -203,7 +203,7 @@ sub pipeline_analyses {
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Alignment',
              -parameters => {'base_path'   => $self->o('base_path')},
              -rc_name    => 'normal',
-             -hive_capacity => 100,
+             -hive_capacity => 300,
             },
             {-logic_name => 'schedule_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleMapping',
