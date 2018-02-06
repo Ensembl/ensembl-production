@@ -65,7 +65,7 @@ RENAME TABLE biotype TO master_biotype;
 -- Add new column so_acc
 ALTER TABLE master_biotype ADD COLUMN so_acc VARCHAR(64) AFTER biotype_group;
 
--- Populate so_acc column
+-- Populate so_acc column according to Bio::EnsEMBL::Utils::SequenceOntologyMapper
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='ambiguous_orf' AND object_type='gene';
 UPDATE master_biotype SET so_acc='SO:0001877' WHERE name='ambiguous_orf' AND object_type='transcript';
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='antisense' AND object_type='gene';
@@ -235,6 +235,21 @@ UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='vaultRNA' AND object_t
 UPDATE master_biotype SET so_acc='SO:0002040' WHERE name='vaultRNA' AND object_type='transcript';
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='Y_RNA' AND object_type='gene';
 UPDATE master_biotype SET so_acc='SO:0000405' WHERE name='Y_RNA' AND object_type='transcript';
+
+-- Populate so_acc column with new mappings (best judjemment used)
+UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=21;
+UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=22;
+UPDATE master_biotype SET so_acc='SO:0002139' WHERE biotype_id=28;
+UPDATE master_biotype SET so_acc='SO:0000756' WHERE biotype_id=37;
+UPDATE master_biotype SET so_acc='SO:0000756' WHERE biotype_id=38;
+UPDATE master_biotype SET so_acc='SO:0000569' WHERE biotype_id=73;
+UPDATE master_biotype SET so_acc='SO:0000569' WHERE biotype_id=74;
+UPDATE master_biotype SET so_acc='SO:0002120' WHERE biotype_id=118;
+UPDATE master_biotype SET so_acc='SO:0001459' WHERE biotype_id=197;
+UPDATE master_biotype SET so_acc='SO:0000101' WHERE biotype_id=209;
+UPDATE master_biotype SET so_acc='SO:0000101' WHERE biotype_id=210;
+UPDATE master_biotype SET so_acc='SO:0002185' WHERE biotype_id=212;
+UPDATE master_biotype SET so_acc='SO:0001877' WHERE biotype_id=218;
 
 -- biotype table view
 CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW biotype AS
