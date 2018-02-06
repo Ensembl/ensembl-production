@@ -223,7 +223,7 @@ sub pipeline_analyses {
         },
         -max_retry_count  => 3,
         -hive_capacity    => 5,
-        -rc_name          => 'normal',
+        -rc_name          => 'mem',
         -can_be_empty     => 1,
       },
 
