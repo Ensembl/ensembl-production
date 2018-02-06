@@ -27,7 +27,8 @@ my $timestamp = strftime( "%Y%m%d-%H%M%S", localtime() );
 my %master_tables = ( 'attrib_type'     => 1,
                       'external_db'     => 1,
                       'misc_set'        => 1,
-                      'unmapped_reason' => 1 );
+                      'unmapped_reason' => 1,
+                      'biotype'         => 1 );
 
 my %variation_master_tables = ( 'attrib_type'     => 1,
                                 'attrib'          => 1,
