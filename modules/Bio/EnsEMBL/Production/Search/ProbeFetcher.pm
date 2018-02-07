@@ -62,6 +62,8 @@ sub fetch_probes {
 sub fetch_probes_for_dba {
 	my ( $self, $dba, $core_dba, $offset, $length ) = @_;
 
+	my $core = $core_dba->dbc()->dbname();
+
 	my $h = $dba->dbc()->sql_helper();
 
 	my $min;
@@ -108,8 +110,7 @@ sub fetch_probes_for_dba {
 		-CALLBACK => sub {
 			my $row = shift @_;
 			my $t   = $transcripts->{ $row->[1] };
-			die Dumper( $row->[1] ) unless defined $t;
-			push @{$probe_transcripts->{ $row->[0] }}, { %{$t}, description=> $row->[2]};
+			push @{$probe_transcripts->{ $row->[0] }}, { %{$t}, description=> $row->[2]} if defined $t;
 			return;
 		} );
 	$logger->info( "Fetched details for " .
@@ -120,7 +121,7 @@ sub fetch_probes_for_dba {
 	my $probes        = {};
 	my $probes_by_set = {};
 	$h->execute_no_return(
-		-SQL => q/SELECT
+		-SQL => qq/SELECT
       p.probe_id as id,
       p.name as name,
       p.probe_set_id as probe_set_id,
@@ -134,12 +135,11 @@ sub fetch_probes_for_dba {
     FROM
       probe p
       join probe_feature pf using (probe_id)
-      join seq_region sr using (seq_region_id)
-      JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id  AND sr.schema_build=cs.schema_build)
+      join $core.seq_region sr using (seq_region_id)
       join array_chip on (p.array_chip_id=array_chip.array_chip_id)
       join array using (array_id)
 	WHERE
-		cs.is_current=1 and p.probe_id between ? AND ?/,
+		p.probe_id between ? AND ?/,
 		  -PARAMS=>[$min, $max],
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
