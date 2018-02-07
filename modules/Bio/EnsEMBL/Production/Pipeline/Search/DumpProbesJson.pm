@@ -58,9 +58,11 @@ sub dump {
 
 	$self->{logger}->info("Dumping probes for $species");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' );
+	my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
 	my $all_probes = Bio::EnsEMBL::Production::Search::ProbeFetcher->new()
-	  ->fetch_probes_for_dba( $dba, $offset, $length );
+	  ->fetch_probes_for_dba( $dba, $core_dba, $offset, $length );
 	$dba->dbc()->disconnect_if_idle();
+	$core_dba->dbc()->disconnect_if_idle();
 	my $probes = $all_probes->{probes};
 	my $output = {
 		      species => $species };
@@ -78,8 +80,8 @@ sub dump {
 		$self->write_json_to_file( $probesets_json_file_path, $probe_sets, 1 );
 		$output->{probesets_dump_file} = $probesets_json_file_path;
 	}
-	if(scalar @$probe_sets>0 && scalar @$probes>0) {
-	  $self->dataflow_output_id( $output, 2 );    
+	if(scalar @$probe_sets>0 || scalar @$probes>0) {
+	  $self->dataflow_output_id( $output, 2 );
 	}
 	return;
 } ## end sub dump
