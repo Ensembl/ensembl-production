@@ -147,15 +147,30 @@ sub load_checksum {
 sub get_source_id {
   my ($self, $dbi, $parser, $species_id, $name) = @_;
   $name = "%$name%";
-  my $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ? and name like ?");
-  $select_source_id_sth->execute($parser, $species_id, $name);
-  my $source_id = ($select_source_id_sth->fetchrow_array())[0];
+  my $source_id;
+  my $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ?");
+  my $select_count_source_id_sth = $dbi->prepare("SELECT count(*) FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? AND species_id = ?");
+  $select_count_source_id_sth->execute($parser, $species_id);
+  my $count = ($select_count_source_id_sth->fetchrow_array());
+  if ($count == 1) { 
+    $select_source_id_sth->execute($parser, $species_id);
+    $source_id = ($select_source_id_sth->fetchrow_array());
+  }
+  $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ? and name like ?");
+  $select_count_source_id_sth = $dbi->prepare("SELECT count(*) FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? AND species_id = ? AND name like ?");
+  $select_count_source_id_sth->execute($parser, $species_id, $name);
+  $count = ($select_count_source_id_sth->fetchrow_array());
+  if ($count == 1) {
+    $select_source_id_sth->execute($parser, $species_id, $name);
+    $source_id = ($select_source_id_sth->fetchrow_array());
+  }
   # If no species-specific source, look for common sources
   if (!defined $source_id) {
     $select_source_id_sth->execute($parser, 1, $name);
     $source_id = ($select_source_id_sth->fetchrow_array())[0];
   }
   $select_source_id_sth->finish();
+  $select_count_source_id_sth->finish();
   return $source_id;
 }
 
