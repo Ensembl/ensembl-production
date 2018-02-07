@@ -45,9 +45,7 @@ sub run {
 	my $file_type  = $self->param_required('file_type');
 	my $sub_dir    = $self->get_data_path('json');
 	my $file_names = $self->param('dump_file');
-	use Data::Dumper;
-print Dumper $file_names;
-	if ( defined $file_names && scalar(@$file_names) > 0 ) {
+	if ( defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0]) {
 		my $outfile =
 		  $sub_dir . '/' . $species . '_' . $file_type . '.json';
 		$logger->info("Merging $type files for $species into $outfile");
@@ -74,14 +72,16 @@ sub merge_files {
 	system($cmd) == 0 || throw "Could not write to $outfile";
 	my $n = 0;
 	for my $file (@$file_names) {
-		$logger->debug("Concatenating $file to $outfile");
-		if ( $n++ > 0 ) {
-			system("echo ','>>$outfile") == 0 ||
-			  throw "Could not write to $outfile";
-		}
-		system("cat $file >>$outfile") == 0 ||
-		  throw "Could not concatenate $file to $outfile";
-		#unlink $file || throw "Could not remove $file";
+	  if(defined $file) {
+	    $logger->debug("Concatenating $file to $outfile");
+	    if ( $n++ > 0 ) {
+	      system("echo ','>>$outfile") == 0 ||
+		throw "Could not write to $outfile";
+	    }
+	    system("cat $file >>$outfile") == 0 ||
+	      throw "Could not concatenate $file to $outfile";
+	    #unlink $file || throw "Could not remove $file";
+	  }
 	}
 	system("echo ']'>>$outfile") == 0 || throw "Could not write to $outfile";
 	$logger->info("Completed writing $n files to $outfile");
