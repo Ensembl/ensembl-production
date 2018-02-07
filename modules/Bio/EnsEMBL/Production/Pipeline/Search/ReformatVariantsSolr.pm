@@ -58,6 +58,8 @@ sub run {
 		my $reformatter =
 		  Bio::EnsEMBL::Production::Search::VariationSolrFormatter->new();
 
+		$self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
+
 		{
 			my $dump_file_out = $sub_dir . '/' . $species . '_variants.json';
 			$self->{logger}
