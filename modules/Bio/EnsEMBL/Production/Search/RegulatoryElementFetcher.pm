@@ -63,8 +63,10 @@ sub fetch_regulatory_elements_for_dba {
 
 	my $h = $dba->dbc()->sql_helper();
 
+	(my $core = $dba->dbc()->dbname) =~ s/_funcgen_/_core_/;
+
 	$h->execute_no_return(
-		-SQL => q/select 
+		-SQL => qq/select 
       rf.stable_id as id, 
       sr.name as seq_region_name, 
       (rf.seq_region_start - rf.bound_start_length) as start, 
@@ -73,11 +75,8 @@ sub fetch_regulatory_elements_for_dba {
       'RegulatoryFeature' as type
     from 
       regulatory_feature rf
-      join seq_region sr using (seq_region_id)
+      join $core.seq_region sr using (seq_region_id)
       join feature_type ft using (feature_type_id)
-     JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id  AND sr.schema_build=cs.schema_build)
-    where
-      cs.is_current=1
       /,
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
@@ -87,7 +86,7 @@ sub fetch_regulatory_elements_for_dba {
 		} );
 	my $features = {};
 	$h->execute_no_return(
-		-SQL => q/ 
+		-SQL => qq/ 
      select 
       sr.name as seq_region_name, 
       ef.seq_region_start as start, 
@@ -102,10 +101,7 @@ sub fetch_regulatory_elements_for_dba {
       external_feature ef
       join feature_type ft using (feature_type_id)
       join feature_set fs using (feature_set_id)
-      join seq_region sr using (seq_region_id)
-     JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id AND sr.schema_build=cs.schema_build)
-    where
-      cs.is_current = 1
+      join $core.seq_region sr using (seq_region_id)
       /,
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
@@ -134,7 +130,7 @@ sub fetch_regulatory_elements_for_dba {
 	my $mirna = {};
 
 	$h->execute_no_return(
-		-SQL => q/
+		-SQL => qq/
 		select
   mrf.display_label as name, 
   mrf.accession as accession, 
@@ -153,9 +149,7 @@ sub fetch_regulatory_elements_for_dba {
      from mirna_target_feature mrf
      JOIN feature_type ft USING (feature_type_id)
      JOIN feature_set fs USING (feature_set_id)
-     JOIN seq_region sr USING (seq_region_id)
-     JOIN coord_system cs ON (cs.coord_system_id=sr.coord_system_id AND sr.schema_build=cs.schema_build)
-    WHERE cs.is_current = 1
+     JOIN $core.seq_region sr USING (seq_region_id)
       /,
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
