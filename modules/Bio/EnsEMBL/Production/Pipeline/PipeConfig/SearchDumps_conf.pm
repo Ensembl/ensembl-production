@@ -65,7 +65,7 @@ sub pipeline_analyses {
 							antispecies => $self->o('antispecies'),
 							division    => $self->o('division'),
 							run_all     => $self->o('run_all') },
-		   -rc_name   => '1g',
+		   -rc_name   => '4g',
 		   -flow_into => { 2 => ['DumpGenomeJson'], } }, {
 		   -logic_name => 'DumpGenomeJson',
 		   -module =>
@@ -114,7 +114,7 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
 		   -rc_name   => '32g',
 		   -flow_into => {
-			   1 => [ '?accu_name=dump_file&accu_address=[]',
+			   2 => [ '?accu_name=dump_file&accu_address=[]',
 					  '?accu_name=species' ],
 
 		   } },
@@ -142,7 +142,7 @@ sub pipeline_analyses {
 'Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson',
 		   -rc_name   => '32g',
 		   -flow_into => {
-			   1 => [ '?accu_name=dump_file&accu_address=[]',
+			   2 => [ '?accu_name=dump_file&accu_address=[]',
 					  '?accu_name=species' ],
 
 		   } },
@@ -176,7 +176,7 @@ sub pipeline_analyses {
 			 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
 		   -rc_name   => '32g',
 		   -flow_into => {
-			   1 => [ '?accu_name=probes_dump_file&accu_address=[]',
+			   2 => [ '?accu_name=probes_dump_file&accu_address=[]',
 					  '?accu_name=probesets_dump_file&accu_address=[]',
 					  '?accu_name=species' ],
 
