@@ -77,6 +77,7 @@ sub fetch_genes {
 sub fetch_genes_for_dba {
 	my ( $self, $dba, $compara_dba, $funcgen_dba ) = @_;
 	$logger->debug( "Retrieving genes for " . $dba->species() );
+	$dba->dbc()->db_handle()->{mysql_use_result} = 1;
 	my @genes =
 	  grep { _include_gene($_) } @{ $self->{fetcher}->export_genes($dba) };
 	$self->{fetcher}->add_funcgen( \@genes, $funcgen_dba )
