@@ -262,7 +262,14 @@ sub collate_xrefs {
 						$ann->{parents} = [ map { $_ } @$expanded_terms ];
 					}
 					while ( my ( $k, $v ) = each %$ass ) {
-						$ann->{$k} = $v->{primary_id};
+					        my $k2 = process_key($k);
+						if($k2 =~ m/^[A-z]/) {
+						  if($k2 eq 'evidence') {
+						    $k2 = 'evidence_from';
+						  }
+						  # leading numbers are not valid elastic keys
+						  $ann->{$k2} = $v->{primary_id};
+						}
 					}
 					push @$anns, $ann;
 				}
