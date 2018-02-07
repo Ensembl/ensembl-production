@@ -60,16 +60,30 @@ sub param_defaults {
 
 sub run {
   my ($self) = @_;
-  my @species      = @{ $self->param('species') };
-  my @taxons       = @{ $self->param('taxons') };
-  my @division     = @{ $self->param('division') };
-  my $run_all      = $self->param('run_all');
-  my @antispecies  = @{ $self->param('antispecies') };
-  my @antitaxons   = @{ $self->param('antitaxons') };
-  my %meta_filters = %{ $self->param('meta_filters') };
-  my $db_type      = $self->param('db_type');
-
   my $reg = 'Bio::EnsEMBL::Registry';
+
+  my $species = $self->param('species') || [];
+
+  my @species = ( ref($species) eq 'ARRAY' ) ? @$species : ($species);
+
+  my $taxons = $self->param('taxons') || [];
+  my @taxons = ( ref($taxons) eq 'ARRAY' ) ? @$taxons : ($taxons);
+
+  my $division = $self->param('division') || [];
+  my @division = ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
+
+  my $run_all      = $self->param('run_all');
+
+  my $antitaxons = $self->param('antitaxons') || [];
+  my @antitaxons = ( ref($antitaxons) eq 'ARRAY' ) ? @$antitaxons : ($antitaxons);
+
+  my $antispecies = $self->param('antispecies') || [];
+  my @antispecies =
+    ( ref($antispecies) eq 'ARRAY' ) ? @$antispecies : ($antispecies);
+
+  my %meta_filters = %{ $self->param('meta_filters') };
+
+  my $db_type      = $self->param('db_type');
 
   my $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
 

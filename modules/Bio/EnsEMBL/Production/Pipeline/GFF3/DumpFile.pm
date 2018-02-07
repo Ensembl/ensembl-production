@@ -169,6 +169,7 @@ sub run {
   $self->info("Dumping GFF3 README for %s", $self->param('species'));
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
 }
 
 sub print_to_file {

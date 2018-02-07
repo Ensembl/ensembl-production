@@ -41,7 +41,6 @@ sub run {
   my $dfa        = Bio::EnsEMBL::Registry->get_adaptor( $species, 'core', 'DensityFeature' );
   my $analysis   = $self->get_analysis($logic_name);
   my $max_run    = $self->param('max_run');
-
   $self->delete_old_features( $dba, $logic_name );
   $self->check_analysis($dba);
 
@@ -153,7 +152,7 @@ sub delete_old_features {
   my ( $self, $dba, $logic_name ) = @_;
   my $helper = $dba->dbc()->sql_helper();
   my $sql    = q{
-    DELETE df, dt
+    DELETE df
     FROM   density_feature df, density_type dt, analysis a, seq_region s, coord_system cs
     WHERE  df.seq_region_id = s.seq_region_id 
     AND    s.coord_system_id = cs.coord_system_id
@@ -164,17 +163,7 @@ sub delete_old_features {
     -SQL    => $sql,
     -PARAMS => [ $dba->species_id(), $logic_name ]
   );
-
-  # Cleanup anything which didn't have a feature linked. Happened during production
-  my $left_join_sql = <<'SQL';
-DELETE    dt 
-FROM      density_type dt 
-LEFT JOIN density_feature df using (density_type_id) 
-JOIN      analysis a using (analysis_id)
-WHERE     df.density_type_id IS NULL
-AND       a.logic_name =?
-SQL
-  $helper->execute_update( -SQL => $left_join_sql, -PARAMS => [$logic_name] );
+  return;
 }
 
 ## Checks if the analysis already exists in the database

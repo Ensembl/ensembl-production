@@ -366,7 +366,7 @@ sub pipeline_analyses {
                                 'flag_store_projections'  => $self->o('flag_store_projections'),
                                 'is_tree_compliant'       => $self->o('is_tree_compliant'),
                                },
-             -rc_name       => 'default',
+             -rc_name       => 'mem',
              -batch_size    =>  2, 
              -analysis_capacity => 20,
           },
@@ -463,7 +463,7 @@ sub pipeline_analyses {
                              },
              -batch_size  => 100,
              -rc_name     => 'default',
-             -analysis_capacity => 100,
+             -analysis_capacity => 20,
              -rc_name       => '8Gb_mem',
           },
           

@@ -61,7 +61,15 @@ sub run {
 
     # Build Compara GenomeDB objects
     my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
+    if(!defined $from_GenomeDB) {
+      warn "Genome DB not found for $from_species";
+      return;
+    }
     my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
+    if(!defined $to_GenomeDB) {
+      warn "Genome DB not found for $to_species";
+      return;
+    }
     my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
     if(!defined $mlss) {
       print "No $method_link_type found between $from_species and $to_species";

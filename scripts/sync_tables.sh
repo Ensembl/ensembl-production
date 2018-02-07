@@ -14,8 +14,8 @@ fi
 
 for table in $@; do 
     echo "Comparing $src.$table to $tgt.$table on $srv"
-    src_chk=$($srv --column-name=false $src -e "checksum table $table" | cut -f 2)
-    tgt_chk=$($srv --column-name=false $tgt -e "checksum table $table" | cut -f 2)
+    src_chk=$($srv --column-names=false $src -e "checksum table $table" | cut -f 2)
+    tgt_chk=$($srv --column-names=false $tgt -e "checksum table $table" | cut -f 2)
     if [ "$src_chk" != "$tgt_chk" ]; then
         echo "Running sync $src $table -> $tgt $table"
         $srv mysqldump $src $table | $srv $tgt
