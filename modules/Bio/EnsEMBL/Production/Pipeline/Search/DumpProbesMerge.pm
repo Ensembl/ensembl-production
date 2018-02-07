@@ -43,8 +43,8 @@ sub run {
 	my $sub_dir = $self->get_data_path('json');
 	my $type    = $self->param_required('type');
 	{
-		my $file_names = $self->param_required('probes_dump_file');
-		if ( scalar(@$file_names) > 0 ) {
+		my $file_names = $self->param('probes_dump_file');
+		if ( defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0]) {
 			my $outfile = $sub_dir . '/' . $species . '_probes.json';
 			$logger->info("Merging probes files for $species into $outfile");
 			$self->merge_files( $outfile, $file_names );
@@ -59,8 +59,8 @@ sub run {
 		}
 	}
 	{
-		my $file_names = $self->param_required('probesets_dump_file');
-		if ( scalar(@$file_names) > 0 )
+		my $file_names = $self->param('probesets_dump_file');
+		if (defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0])
 		{
 			my $outfile = $sub_dir . '/' . $species . '_probesets.json';
 			$logger->info("Merging probesets files for $species into $outfile");
