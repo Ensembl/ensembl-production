@@ -569,7 +569,7 @@ sub taxonomy_dba {
     my %taxonomy_db = %{ $self->param('tax_db') };
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
-  confess('Type error!') unless ( $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
+  confess('Type error!') unless ( defined $dba && $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
 
   return $dba;
 }
