@@ -86,7 +86,7 @@ sub download_file {
       mkdir(dirname($file_path));
       $ftp->get( $remote_file, $file_path );
     }
-  } elsif ($uri->scheme eq 'http') {
+  } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
     mkdir(dirname($file_path));
     open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
