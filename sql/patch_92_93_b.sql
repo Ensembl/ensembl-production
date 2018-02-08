@@ -15,13 +15,13 @@
 
 # patch_92_93_b.sql
 #
-# Title: Update table biotype to master_biotype.
+# Title: Update table biotype to master_biotype and add SO term mappings.
 #
 # Description:
 #   Change constraint name_type_idx from (name, object_type, db_type) to (name, object_type)
 #   to enforce that (name, object_type) pairs are unique as used by the ORM.
 #   Rename biotype table to master_biotype.
-#   Add so_acc column to master_biotype and populate it.
+#   Add so_acc column to master_biotype and populate it (Sequence Ontology accession mappings).
 #   Create biotype view.
 
 -- Remove existing composite unique key that contains (name, object_type, db_type)
@@ -237,18 +237,17 @@ UPDATE master_biotype SET so_acc='SO:0002040' WHERE name='vaultRNA' AND object_t
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='Y_RNA' AND object_type='gene';
 UPDATE master_biotype SET so_acc='SO:0000405' WHERE name='Y_RNA' AND object_type='transcript';
 
--- Populate so_acc column with new mappings (best judgement used)
-UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=21;
-UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=22;
+-- Populate so_acc column with new mappings
 UPDATE master_biotype SET so_acc='SO:0002139' WHERE biotype_id=28;
 UPDATE master_biotype SET so_acc='SO:0000756' WHERE biotype_id=37;
 UPDATE master_biotype SET so_acc='SO:0000756' WHERE biotype_id=38;
+UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=41;
 UPDATE master_biotype SET so_acc='SO:0000569' WHERE biotype_id=73;
 UPDATE master_biotype SET so_acc='SO:0000569' WHERE biotype_id=74;
 UPDATE master_biotype SET so_acc='SO:0002120' WHERE biotype_id=118;
 UPDATE master_biotype SET so_acc='SO:0001459' WHERE biotype_id=197;
 UPDATE master_biotype SET so_acc='SO:0000101' WHERE biotype_id=209;
-UPDATE master_biotype SET so_acc='SO:0000101' WHERE biotype_id=210;
+UPDATE master_biotype SET so_acc='SO:0000111' WHERE biotype_id=210;
 UPDATE master_biotype SET so_acc='SO:0002185' WHERE biotype_id=212;
 UPDATE master_biotype SET so_acc='SO:0001877' WHERE biotype_id=218;
 
@@ -269,4 +268,4 @@ ORDER BY biotype_id;
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_92_93_b.sql|biotype to master_biotype');
+  VALUES (NULL, 'patch', 'patch_92_93_b.sql|biotype to master_biotype with new so_acc column');
