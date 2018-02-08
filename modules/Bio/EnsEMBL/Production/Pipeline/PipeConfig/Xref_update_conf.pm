@@ -55,8 +55,8 @@ sub default_options {
            'source_user'      => '',
            'source_pass'      => '',
            'source_db'        => '',
-           'reuse_db'         => 1,
-           'skip_download'    => 1,
+           'reuse_db'         => 0,
+           'skip_download'    => 0,
 
            ## Parameters for xref database
            'xref_db'          => '',
