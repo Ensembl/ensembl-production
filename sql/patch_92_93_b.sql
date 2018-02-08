@@ -1,5 +1,5 @@
 -- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
--- Copyright [2016-2017] EMBL-European Bioinformatics Institute
+-- Copyright [2016-2018] EMBL-European Bioinformatics Institute
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@
 # Title: Update table biotype to master_biotype.
 #
 # Description:
-#   Change constraint name_type_idx from (name, object_type, db_type) to (name, object_type).
+#   Change constraint name_type_idx from (name, object_type, db_type) to (name, object_type)
+#   to enforce that (name, object_type) pairs are unique as used by the ORM.
 #   Rename biotype table to master_biotype.
 #   Add so_acc column to master_biotype and populate it.
 #   Create biotype view.
@@ -236,7 +237,7 @@ UPDATE master_biotype SET so_acc='SO:0002040' WHERE name='vaultRNA' AND object_t
 UPDATE master_biotype SET so_acc='SO:0001263' WHERE name='Y_RNA' AND object_type='gene';
 UPDATE master_biotype SET so_acc='SO:0000405' WHERE name='Y_RNA' AND object_type='transcript';
 
--- Populate so_acc column with new mappings (best judjemment used)
+-- Populate so_acc column with new mappings (best judgement used)
 UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=21;
 UPDATE master_biotype SET so_acc='SO:0000345' WHERE biotype_id=22;
 UPDATE master_biotype SET so_acc='SO:0002139' WHERE biotype_id=28;
