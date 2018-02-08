@@ -247,7 +247,7 @@ sub pipeline_analyses {
             },
             {-logic_name => 'mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping',
-             -rc_name    => 'normal',
+             -rc_name    => 'mem',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
             },
