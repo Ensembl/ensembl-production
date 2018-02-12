@@ -53,6 +53,9 @@ sub default_options {
     # A file with md5 sums of translations that are in the lookup service
     md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
     
+    # Allow the checksum loading to be skipped (not recommended)
+    skip_checksum_loading => 0,
+    
     # Transitive GO annotation
     interpro2go_file => '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
     
@@ -314,7 +317,8 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadChecksums',
       -max_retry_count   => 1,
       -parameters        => {
-                              md5_checksum_file => $self->o('md5_checksum_file'),
+                              md5_checksum_file     => $self->o('md5_checksum_file'),
+                              skip_checksum_loading => $self->o('skip_checksum_loading'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['InterProScanPrograms'],
