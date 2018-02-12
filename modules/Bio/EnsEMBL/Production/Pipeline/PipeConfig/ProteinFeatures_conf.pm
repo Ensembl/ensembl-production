@@ -110,7 +110,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '12,0',
+        'db_version'    => '12.0',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -395,7 +395,8 @@ sub pipeline_analyses {
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => $self->o('linked_tables'),
                               production_lookup  => $self->o('production_lookup'),
-                              program            => $self->o('interproscan_version'),
+                              program            => $self->o('InterProScan'),
+                              program_version    => $self->o('interproscan_version'),
                             },
       -meadow_type       => 'LOCAL',
     },
