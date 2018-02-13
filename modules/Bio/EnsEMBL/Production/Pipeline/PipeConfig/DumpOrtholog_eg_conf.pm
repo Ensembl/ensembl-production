@@ -55,6 +55,8 @@ sub default_options {
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 1,
 
 		# orthologs cutoff
 		'perc_id'  => '30',

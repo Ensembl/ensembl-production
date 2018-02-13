@@ -51,6 +51,8 @@ sub default_options {
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 0,
 
 		# orthologs cutoff
 		'perc_id'  => '30',
@@ -62,7 +64,7 @@ sub default_options {
 
 			'1' => { 'compara' => 'multi',
 					 'source'  => 'mus_musculus',
-					 'antispecies' => ['mus_musculus','mus_spretus_spreteij','mus_pahari','mus_caroli'],
+					 'antispecies' => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'],
                       # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
                       # Taxon name of species to project to
                      'taxons'      => ['Mus'],
