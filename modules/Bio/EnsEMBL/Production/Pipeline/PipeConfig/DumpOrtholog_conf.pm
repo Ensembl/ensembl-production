@@ -47,6 +47,8 @@ sub default_options {
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
 		'compara' => undef,
 		'release' => software_version(),
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 0,
 
         # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
 	    # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
@@ -105,6 +107,7 @@ sub pipeline_analyses {
 		   -parameters => { 'species_config' => $self->o('species_config'),
 		   	 'compara' => $self->o('compara'),
 				    'output_dir'       => $self->o('output_dir'),
+						'cleanup_dir'     => $self->o('cleanup_dir')
 		   	 },
 		    -flow_into  => { '2->A'              => ['SpeciesFactory'],
 				    'A->1' => [ 'RunCreateReleaseFile'  ] },
