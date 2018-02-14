@@ -76,6 +76,8 @@ sub pipeline_wide_parameters {
 sub pipeline_analyses {
   my $self = shift @_;
   
+  my $output_file = '#out_file#_#species#' if $self->o('out_file');
+  
   return [
     {
       -logic_name      => 'DbFactory',
@@ -94,19 +96,20 @@ sub pipeline_analyses {
                           },
       -rc_name         => 'normal',
       -flow_into       => {
-                            '2->A' => ['SqlExecute'],
+                            '2->A' => ['DbCmd'],
                             'A->1' => ['ProcessResults'],
                           },
     },
     
     {
-      -logic_name      => 'SqlExecute',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlExecute',
+      -logic_name      => 'DbCmd',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbCmd',
       -max_retry_count => 0,
       -parameters      => {
-                            db_type  => $self->o('db_type'),
-                            sql_file => $self->o('sql_file'),
-                            out_file => $self->o('out_file').'_#species#',
+                            append      => [qw(-N)],
+                            db_type     => $self->o('db_type'),
+                            input_file  => $self->o('sql_file'),
+                            output_file => $output_file,
                           },
       -batch_size      => 10,
       -hive_capacity   => 10,
