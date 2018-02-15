@@ -9,9 +9,12 @@ export PATH=$PATH:$PWD/htslib
 echo "Running test suite"
 echo "Using $PERL5LIB"
 if [ "$COVERALLS" = 'true' ]; then
-  PERL5OPT='-MDevel::Cover=+ignore,bioperl,+ignore,ensembl-test' perl $PWD/ensembl-test/scripts/runtests.pl -verbose $PWD/modules/t $SKIP_TESTS
+    # PERL5OPT='-MDevel::Cover=+ignore,bioperl,+ignore,ensembl-test' perl $PWD/ensembl-test/scripts/runtests.pl -verbose $PWD/modules/t $SKIP_TESTS
+    PERL5OPT='-MDevel::Cover=+ignore,bioperl,+ignore,ensembl-test' prove -v $PWD/modules/t/production_pipeline.t
+    
 else
-  perl $PWD/ensembl-test/scripts/runtests.pl $PWD/modules/t $SKIP_TESTS
+    # perl $PWD/ensembl-test/scripts/runtests.pl $PWD/modules/t $SKIP_TESTS
+    prove -v $PWD/modules/t/production_pipeline.t
 fi
 
 rt=$?

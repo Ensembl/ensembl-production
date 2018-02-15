@@ -33,6 +33,7 @@ else {
 ok(1, 'Startup test');
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
+$human->hide("core", "genome_statistics");
 my $human_dba = $human->get_DBAdaptor('core');
 ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do not continue';
 
@@ -310,5 +311,6 @@ is($is_constitutive, 1, "ENSE00001654835 is constitutive");
 $is_constitutive = $exon2->is_constitutive();
 is($is_constitutive, 0, "ENSE00001612438 is not constitutive");
 
+$human->restore();
 
 done_testing();

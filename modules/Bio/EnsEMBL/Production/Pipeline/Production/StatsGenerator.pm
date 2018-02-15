@@ -71,6 +71,8 @@ sub run {
    sort( { $a->coord_system()->rank() <=> $b->coord_system()->rank()
            || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
   while (my $slice = shift @all_sorted_slices) {
+    next if $slice->seq_region_name =~ /LRG/;
+    
     if ($slice->is_reference) {
       $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
       $stats_attrib{'transcript'} = 'transcript_cnt';
@@ -81,14 +83,22 @@ sub run {
         }
         $stats_hash{$ref_code} += $count;
       }
-      $count = $self->get_attrib($slice, 'noncoding_cnt_%');
-      if ($count > 0) {
-        $self->store_attrib($slice, $count, 'noncoding_cnt');
+      
+      my $slice_attrib_counts = $self->count_attrib_on_slice($slice, 'noncoding_cnt_%');
+      my $slice_attrib_total_count = 0;
+      foreach my $attrib (keys %{$slice_attrib_counts}) {
+	next unless $slice_attrib_counts->{$attrib} > 0;
+	
+	$stats_hash{$attrib} += $slice_attrib_counts->{$attrib};
+	$stats_attrib{$attrib} = $attrib;
+
+	$slice_attrib_total_count += $slice_attrib_counts->{$attrib};
+	$self->store_attrib($slice, $slice_attrib_counts->{$attrib}, $attrib);
       }
-      $stats_hash{'noncoding_cnt'} += $count;
+      
+      $stats_hash{'noncoding_cnt'} += $slice_attrib_total_count;
       $stats_attrib{'noncoding_cnt'} = 'noncoding_cnt';
-    } elsif ($slice->seq_region_name =~ /LRG/) {
-      next;
+      
     } else {
       my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
       my $alt_slices = $sa->fetch_by_region_unique($slice->coord_system->name(), $slice->seq_region_name());
@@ -102,12 +112,22 @@ sub run {
           }
           $stats_hash{$alt_code} += $alt_count;
         }
-        $alt_count = $self->get_attrib($slice, 'noncoding_acnt_%');
-        if ($alt_count > 0) {
-          $self->store_attrib($slice, $alt_count, 'noncoding_acnt');
-        }
-        $stats_hash{'noncoding_acnt'} += $alt_count;
-        $stats_attrib{'noncoding_acnt'} = 'noncoding_acnt';
+
+	my $slice_attrib_counts = $self->count_attrib_on_slice($slice, 'noncoding_acnt_%');
+	my $slice_attrib_total_count = 0;
+	foreach my $attrib (keys %{$slice_attrib_counts}) {
+	  next unless $slice_attrib_counts->{$attrib} > 0;
+	  
+	  $stats_hash{$attrib} += $slice_attrib_counts->{$attrib};
+	  $stats_attrib{$attrib} = $attrib;
+
+	  $slice_attrib_total_count += $slice_attrib_counts->{$attrib};
+	  $self->store_attrib($slice, $slice_attrib_counts->{$attrib}, $attrib);
+	}
+      
+	$stats_hash{'noncoding_acnt'} += $slice_attrib_total_count;
+	$stats_attrib{'noncoding_acnt'} = 'noncoding_acnt';
+
       }
     }
     if ($sum >= $total) {
@@ -184,15 +204,16 @@ sub store_attrib {
   $aa->store_on_Slice($slice, \@attribs);
 }
 
-sub get_attrib {
+sub count_attrib_on_slice {
   my ($self, $slice, $code) = @_;
   my $aa          = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
   my $attributes = $aa->fetch_all_by_Slice($slice, $code);
-  my $count = 0;
+  my $counts;
   foreach my $attribute (@$attributes) {
-    $count += $attribute->value();
+    $counts->{$attribute->{code}} += $attribute->value();
   }
-  return $count;
+  
+  return $counts;
 }
 
 sub get_biotype_group {
