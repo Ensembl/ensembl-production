@@ -1,12 +1,12 @@
 -- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 -- Copyright [2016-2018] EMBL-European Bioinformatics Institute
--- 
+--
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
 -- You may obtain a copy of the License at
--- 
+--
 --      http://www.apache.org/licenses/LICENSE-2.0
--- 
+--
 -- Unless required by applicable law or agreed to in writing, software
 -- distributed under the License is distributed on an "AS IS" BASIS,
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,13 +30,13 @@ CREATE TABLE IF NOT EXISTS meta (
 ) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 # Add schema type and schema version to the meta table
-INSERT INTO meta (species_id, meta_key, meta_value) VALUES 
-  (NULL, 'schema_type', 'production'), 
-  (NULL, 'schema_version', 92);
+INSERT INTO meta (species_id, meta_key, meta_value) VALUES
+  (NULL, 'schema_type', 'production'),
+  (NULL, 'schema_version', 93);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_91_92_a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_92_93_a.sql|schema version');
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
@@ -72,18 +72,18 @@ CREATE TABLE species_alias (
   species_id        INTEGER UNSIGNED NOT NULL,      -- FK into species
   alias             varchar(255) NOT NULL,          -- alias
   is_current        BOOLEAN NOT NULL DEFAULT true,  -- if it's still current
-  
+
   -- Columns for the web interface:
   created_by    INTEGER,
   created_at    DATETIME,
   modified_by   INTEGER,
   modified_at   DATETIME,
-  
+
   PRIMARY KEY (species_alias_id),
-  UNIQUE INDEX (alias, is_current),             -- aliases MUST be unique for 
-                                                -- the current set. A certain 
-                                                -- amount of duplication is 
-                                                -- allowed if an alias moved 
+  UNIQUE INDEX (alias, is_current),             -- aliases MUST be unique for
+                                                -- the current set. A certain
+                                                -- amount of duplication is
+                                                -- allowed if an alias moved
                                                 -- once
   INDEX sa_speciesid_idx (species_id)
 );
@@ -228,7 +228,7 @@ CREATE TABLE analysis_web_data (
 CREATE TABLE web_data (
   web_data_id               INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
   data                      TEXT,
-  
+
   -- Columns for internal documentation
   comment TEXT,
 
@@ -441,7 +441,7 @@ FROM    species
   JOIN  db USING (species_id)
 WHERE species.is_current = true;
 
--- The 'full_analysis_description' view provids, for each database,
+-- The 'full_analysis_description' view provides, for each database,
 -- /nearly/ exactly what should go into the 'analysis_description'
 -- table, apart from the fact that it uses 'analysis.logic_name' rather
 -- than 'analysis.analysis_id'.
