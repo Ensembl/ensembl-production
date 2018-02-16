@@ -36,7 +36,7 @@ CREATE TABLE `constrained_element` (
   `dnafrag_end` int(12) unsigned NOT NULL,
   `dnafrag_strand` int(2) NOT NULL,
   `method_link_species_set_id` int(10) unsigned NOT NULL,
-  `p_value` double DEFAULT NULL,
+  `p_value` double NOT NULL DEFAULT '0',
   `score` double NOT NULL DEFAULT '0',
   KEY `dnafrag_id` (`dnafrag_id`),
   KEY `constrained_element_id_idx` (`constrained_element_id`),
@@ -48,10 +48,12 @@ CREATE TABLE `constrained_element` (
 CREATE TABLE `dnafrag` (
   `dnafrag_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `length` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(40) NOT NULL DEFAULT '',
+  `name` varchar(255) NOT NULL DEFAULT '',
   `genome_db_id` int(10) unsigned NOT NULL,
   `coord_system_name` varchar(40) NOT NULL DEFAULT '',
+  `cellular_component` enum('NUC','MT','PT') NOT NULL DEFAULT 'NUC',
   `is_reference` tinyint(1) NOT NULL DEFAULT '1',
+  `codon_table_id` tinyint(2) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`dnafrag_id`),
   UNIQUE KEY `name` (`genome_db_id`,`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -64,6 +66,17 @@ CREATE TABLE `dnafrag_region` (
   `dnafrag_strand` tinyint(4) NOT NULL DEFAULT '0',
   KEY `synteny` (`synteny_region_id`,`dnafrag_id`),
   KEY `synteny_reversed` (`dnafrag_id`,`synteny_region_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `exon_boundaries` (
+  `gene_member_id` int(10) unsigned NOT NULL,
+  `seq_member_id` int(10) unsigned NOT NULL,
+  `dnafrag_start` int(11) NOT NULL,
+  `dnafrag_end` int(11) NOT NULL,
+  `sequence_length` int(10) unsigned NOT NULL,
+  `left_over` tinyint(1) NOT NULL DEFAULT '0',
+  KEY `seq_member_id` (`seq_member_id`),
+  KEY `gene_member_id` (`gene_member_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `external_db` (
@@ -126,6 +139,7 @@ CREATE TABLE `gene_member` (
   `source_name` enum('ENSEMBLGENE','EXTERNALGENE') NOT NULL,
   `taxon_id` int(10) unsigned NOT NULL,
   `genome_db_id` int(10) unsigned DEFAULT NULL,
+  `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group','current_notdumped','notcurrent') NOT NULL DEFAULT 'coding',
   `canonical_member_id` int(10) unsigned DEFAULT NULL,
   `description` text,
   `dnafrag_id` bigint(20) unsigned DEFAULT NULL,
@@ -140,7 +154,9 @@ CREATE TABLE `gene_member` (
   KEY `source_name` (`source_name`),
   KEY `canonical_member_id` (`canonical_member_id`),
   KEY `dnafrag_id_start` (`dnafrag_id`,`dnafrag_start`),
-  KEY `dnafrag_id_end` (`dnafrag_id`,`dnafrag_end`)
+  KEY `dnafrag_id_end` (`dnafrag_id`,`dnafrag_end`),
+  KEY `biotype_dnafrag_id_start_end` (`biotype_group`,`dnafrag_id`,`dnafrag_start`,`dnafrag_end`),
+  KEY `genome_db_id_biotype` (`genome_db_id`,`biotype_group`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 MAX_ROWS=100000000;
 
 CREATE TABLE `gene_member_hom_stats` (
@@ -158,13 +174,14 @@ CREATE TABLE `gene_member_hom_stats` (
 CREATE TABLE `gene_member_qc` (
   `gene_member_stable_id` varchar(128) NOT NULL,
   `genome_db_id` int(10) unsigned NOT NULL,
-  `seq_member_id` int(10) DEFAULT NULL,
+  `seq_member_id` int(10) unsigned DEFAULT NULL,
   `n_species` int(11) DEFAULT NULL,
   `n_orth` int(11) DEFAULT NULL,
   `avg_cov` float DEFAULT NULL,
   `status` varchar(50) NOT NULL,
   KEY `genome_db_id` (`genome_db_id`),
-  KEY `gene_member_stable_id` (`gene_member_stable_id`)
+  KEY `gene_member_stable_id` (`gene_member_stable_id`),
+  KEY `seq_member_id` (`seq_member_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `gene_tree_node` (
@@ -257,7 +274,7 @@ CREATE TABLE `gene_tree_root_attr` (
 
 CREATE TABLE `gene_tree_root_tag` (
   `root_id` int(10) unsigned NOT NULL,
-  `tag` varchar(50) NOT NULL,
+  `tag` varchar(255) DEFAULT NULL,
   `value` mediumtext NOT NULL,
   KEY `root_id_tag` (`root_id`,`tag`),
   KEY `root_id` (`root_id`),
@@ -273,6 +290,8 @@ CREATE TABLE `genome_db` (
   `has_karyotype` tinyint(1) NOT NULL DEFAULT '0',
   `is_high_coverage` tinyint(1) NOT NULL DEFAULT '0',
   `genome_component` varchar(5) DEFAULT NULL,
+  `strain_name` varchar(40) DEFAULT NULL,
+  `display_name` varchar(255) DEFAULT NULL,
   `locator` varchar(400) DEFAULT NULL,
   `first_release` smallint(5) unsigned DEFAULT NULL,
   `last_release` smallint(5) unsigned DEFAULT NULL,
@@ -313,12 +332,12 @@ CREATE TABLE `genomic_align_block` (
 
 CREATE TABLE `genomic_align_tree` (
   `node_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `parent_id` bigint(20) unsigned DEFAULT NULL,
   `root_id` bigint(20) unsigned NOT NULL DEFAULT '0',
   `left_index` int(10) NOT NULL DEFAULT '0',
   `right_index` int(10) NOT NULL DEFAULT '0',
-  `left_node_id` bigint(10) NOT NULL DEFAULT '0',
-  `right_node_id` bigint(10) NOT NULL DEFAULT '0',
+  `left_node_id` bigint(10) DEFAULT NULL,
+  `right_node_id` bigint(10) DEFAULT NULL,
   `distance_to_parent` double NOT NULL DEFAULT '1',
   PRIMARY KEY (`node_id`),
   KEY `parent_id` (`parent_id`),
@@ -389,7 +408,7 @@ CREATE TABLE `homology_member` (
 
 CREATE TABLE `mapping_session` (
   `mapping_session_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `type` enum('family','tree') DEFAULT NULL,
+  `type` enum('family','tree','hmm') DEFAULT NULL,
   `when_mapped` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `rel_from` int(10) unsigned DEFAULT NULL,
   `rel_to` int(10) unsigned DEFAULT NULL,
@@ -452,7 +471,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=75 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=102 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `method_link` (
   `method_link_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -562,6 +581,8 @@ CREATE TABLE `seq_member` (
   `genome_db_id` int(10) unsigned DEFAULT NULL,
   `sequence_id` int(10) unsigned DEFAULT NULL,
   `gene_member_id` int(10) unsigned DEFAULT NULL,
+  `has_transcript_edits` tinyint(1) NOT NULL DEFAULT '0',
+  `has_translation_edits` tinyint(1) NOT NULL DEFAULT '0',
   `description` text,
   `dnafrag_id` bigint(20) unsigned DEFAULT NULL,
   `dnafrag_start` int(10) DEFAULT NULL,
@@ -579,6 +600,21 @@ CREATE TABLE `seq_member` (
   KEY `dnafrag_id_end` (`dnafrag_id`,`dnafrag_end`),
   KEY `seq_member_gene_member_id_end` (`seq_member_id`,`gene_member_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 MAX_ROWS=100000000;
+
+CREATE TABLE `seq_member_projection` (
+  `target_seq_member_id` int(10) unsigned NOT NULL,
+  `source_seq_member_id` int(10) unsigned NOT NULL,
+  `identity` float(5,2) DEFAULT NULL,
+  PRIMARY KEY (`target_seq_member_id`),
+  KEY `source_seq_member_id` (`source_seq_member_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `seq_member_projection_stable_id` (
+  `target_seq_member_id` int(10) unsigned NOT NULL,
+  `source_stable_id` varchar(128) NOT NULL,
+  PRIMARY KEY (`target_seq_member_id`),
+  KEY `source_stable_id` (`source_stable_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `sequence` (
   `sequence_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
