@@ -38,6 +38,14 @@ sub param_defaults {
 sub fetch_input {
   my ($self) = @_;
   
+  if (defined $self->param('escape_branch') and 
+      $self->input_job->retry_count >= $self->input_job->analysis->max_retry_count) 
+  {
+    $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
+    $self->input_job->autoflow(0);
+    $self->complete_early("Job failed, retrying with higher memory limit.");
+  }
+  
   my $input_file = $self->param_required('input_file');
   $self->throw("File '$input_file' does not exist") if (! -e $input_file);
 }
@@ -57,6 +65,9 @@ sub run {
   my $outfile_tsv  = "$outfile_base.tsv";
   
   if ($run_interproscan) {
+    unlink $outfile_xml if -e $outfile_xml;
+    unlink $outfile_tsv if -e $outfile_tsv;
+    
     # Must use /tmp for short temporary file names; TMHMM can't cope with longer ones.
     my $tmp_dir = tempdir(DIR => '/tmp', CLEANUP => 1);
     
@@ -77,15 +88,13 @@ sub run {
     
     my $interpro_cmd = qq($interproscan_exe $options $input_option $output_option);
     
-    if (! -e $outfile_xml) {
-      if ($self->param_is_defined('species')) {
-        my $dba = $self->get_DBAdaptor('core');
-        $dba->dbc && $dba->dbc->disconnect_if_idle();
-      }
-      $self->dbc and $self->dbc->disconnect_if_idle();
-      
-      system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
+    if ($self->param_is_defined('species')) {
+      my $dba = $self->get_DBAdaptor('core');
+      $dba->dbc && $dba->dbc->disconnect_if_idle();
     }
+    $self->dbc and $self->dbc->disconnect_if_idle();
+    
+    system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
   }
   
   if (! -e $outfile_xml) {

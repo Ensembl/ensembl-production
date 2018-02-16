@@ -53,6 +53,9 @@ sub default_options {
     # A file with md5 sums of translations that are in the lookup service
     md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
     
+    # Allow the checksum loading to be skipped (not recommended)
+    skip_checksum_loading => 0,
+    
     # Transitive GO annotation
     interpro2go_file => '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
     
@@ -110,7 +113,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '12,0',
+        'db_version'    => '12.0',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -297,12 +300,25 @@ sub pipeline_analyses {
   
   return [
     {
+      -logic_name        => 'InterProScanVersionCheck',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScanVersionCheck',
+      -max_retry_count   => 0,
+      -input_ids         => [ {} ],
+      -parameters        => {
+                              interproscan_version => $self->o('interproscan_version'),
+                              interproscan_exe     => $self->o('interproscan_exe'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['LoadChecksums'],
+    },
+    
+    {
       -logic_name        => 'LoadChecksums',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadChecksums',
       -max_retry_count   => 1,
-      -input_ids         => [ {} ],
-      -parameters        => { 
-                              md5_checksum_file => $self->o('md5_checksum_file'),
+      -parameters        => {
+                              md5_checksum_file     => $self->o('md5_checksum_file'),
+                              skip_checksum_loading => $self->o('skip_checksum_loading'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['InterProScanPrograms'],
@@ -395,7 +411,8 @@ sub pipeline_analyses {
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => $self->o('linked_tables'),
                               production_lookup  => $self->o('production_lookup'),
-                              program            => $self->o('interproscan_version'),
+                              program            => 'InterProScan',
+                              program_version    => $self->o('interproscan_version'),
                             },
       -meadow_type       => 'LOCAL',
     },
@@ -610,9 +627,34 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_lookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
+        escape_branch             => -1,
       },
       -rc_name           => '8Gb_mem_4Gb_tmp',
-      -flow_into         => ['StoreProteinFeatures'],
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                              '-1' => ['InterProScanLookup_HighMem'],
+                            },
+    },
+    
+    {
+      -logic_name        => 'InterProScanLookup_HighMem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+      -hive_capacity     => 50,
+      -batch_size        => 10,
+      -max_retry_count   => 1,
+      -can_be_empty      => 1,
+      -parameters        =>
+      {
+        input_file                => '#split_file#',
+        run_mode                  => 'lookup',
+        interproscan_exe          => $self->o('interproscan_exe'),
+        interproscan_applications => '#interproscan_lookup_applications#',
+        run_interproscan          => $self->o('run_interproscan'),
+      },
+      -rc_name           => '16Gb_mem_4Gb_tmp',
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                            },
     },
     
     {
@@ -629,9 +671,34 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
+        escape_branch             => -1,
       },
       -rc_name           => '8GB_4CPU',
-      -flow_into         => ['StoreProteinFeatures'],
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                              '-1' => ['InterProScanNoLookup_HighMem'],
+                            },
+    },
+    
+    {
+      -logic_name        => 'InterProScanNoLookup_HighMem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+      -hive_capacity     => 50,
+      -batch_size        => 1,
+      -max_retry_count   => 1,
+      -can_be_empty      => 1,
+      -parameters        =>
+      {
+        input_file                => '#split_file#',
+        run_mode                  => 'nolookup',
+        interproscan_exe          => $self->o('interproscan_exe'),
+        interproscan_applications => '#interproscan_nolookup_applications#',
+        run_interproscan          => $self->o('run_interproscan'),
+      },
+      -rc_name           => '16GB_4CPU',
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                            },
     },
     
     {
@@ -648,9 +715,34 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
+        escape_branch             => -1,
       },
       -rc_name           => '8GB_4CPU',
-      -flow_into         => ['StoreProteinFeatures'],
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                              '-1' => ['InterProScanLocal_HighMem'],
+                            },
+    },
+    
+    {
+      -logic_name        => 'InterProScanLocal_HighMem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+      -hive_capacity     => 50,
+      -batch_size        => 1,
+      -max_retry_count   => 1,
+      -can_be_empty      => 1,
+      -parameters        =>
+      {
+        input_file                => '#split_file#',
+        run_mode                  => 'local',
+        interproscan_exe          => $self->o('interproscan_exe'),
+        interproscan_applications => '#interproscan_local_applications#',
+        run_interproscan          => $self->o('run_interproscan'),
+      },
+      -rc_name           => '16GB_4CPU',
+      -flow_into         => {
+                               '1' => ['StoreProteinFeatures'],
+                            },
     },
     
     {
@@ -810,8 +902,10 @@ sub resource_classes {
     '4GB' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"'},
     '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
     '8GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 8000 -R "rusage[mem=8000,tmp=4000]"'},
+    '16GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 16000 -R "rusage[mem=16000,tmp=4000]"'},
     '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
-    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000,tmp=4000]"'}
+    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000,tmp=4000]"'},
+    '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,tmp=4000]"'},
   }
 }
 

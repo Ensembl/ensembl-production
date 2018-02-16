@@ -22,103 +22,106 @@ package Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
-
-
 use Bio::EnsEMBL::Attribute;
+use Bio::EnsEMBL::Utils::Exception qw/throw/;
+
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
   my ($self) = @_;
-  my $species    = $self->param('species');
 
-  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+  throw "Supposed to be overridden by subclasses";
+  
+  # my $species    = $self->param('species');
 
-  my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
-  my $ta         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
-  my $aa         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
+  # $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
-  my $has_readthrough = 0;
-  my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
-  if (@readthroughs) {
-    $has_readthrough = 1;
-  }
+  # my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  # my $ta         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
+  # my $aa         = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
 
-  my %attrib_codes = $self->get_attrib_codes($has_readthrough);
-  $self->delete_old_attrib($dba, %attrib_codes);
-  $self->delete_old_stats($dba, %attrib_codes);
-  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
-  $self->delete_old_attrib($dba, %alt_attrib_codes);
-  $self->delete_old_stats($dba, %alt_attrib_codes);
-  my $total = $self->get_total();
-  my $sum = 0;
-  my $count;
-  my $alt_count;
-  my %slices_hash;
-  my %stats_hash;
-  my %stats_attrib;
-  my $ref_length = $self->get_ref_length();
-  if ($ref_length) {
-    $stats_hash{ref_length} = $ref_length;
-  }
-  my $total_length = $self->get_total_length();
-  if ($total_length) {
-    $stats_hash{total_length} = $total_length;
-  }
+  # my $has_readthrough = 0;
+  # my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
+  # if (@readthroughs) {
+  #   $has_readthrough = 1;
+  # }
 
-  my $all_slices = $self->get_all_slices($species);
+  # my %attrib_codes = $self->get_attrib_codes($has_readthrough);
+  # $self->delete_old_attrib($dba, %attrib_codes);
+  # $self->delete_old_stats($dba, %attrib_codes);
+  # my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
+  # $self->delete_old_attrib($dba, %alt_attrib_codes);
+  # $self->delete_old_stats($dba, %alt_attrib_codes);
+  # my $total = $self->get_total();
+  # my $sum = 0;
+  # my $count;
+  # my $alt_count;
+  # my %slices_hash;
+  # my %stats_hash;
+  # my %stats_attrib;
+  # my $ref_length = $self->get_ref_length();
+  # if ($ref_length) {
+  #   $stats_hash{ref_length} = $ref_length;
+  # }
+  # my $total_length = $self->get_total_length();
+  # if ($total_length) {
+  #   $stats_hash{total_length} = $total_length;
+  # }
 
-  my @all_sorted_slices =
-   sort( { $a->coord_system()->rank() <=> $b->coord_system()->rank()
-           || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
-  while (my $slice = shift @all_sorted_slices) {
-    if ($slice->is_reference) {
-      $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
-      $stats_attrib{'transcript'} = 'transcript_cnt';
-      foreach my $ref_code (keys %attrib_codes) {
-        $count = $self->get_feature_count($slice, $ref_code, $attrib_codes{$ref_code});
-        if ($count > 0) {
-          $self->store_attrib($slice, $count, $ref_code);
-        }
-        $stats_hash{$ref_code} += $count;
-      }
-      $count = $self->get_attrib($slice, 'noncoding_cnt_%');
-      if ($count > 0) {
-        $self->store_attrib($slice, $count, 'noncoding_cnt');
-      }
-      $stats_hash{'noncoding_cnt'} += $count;
-      $stats_attrib{'noncoding_cnt'} = 'noncoding_cnt';
-    } elsif ($slice->seq_region_name =~ /LRG/) {
-      next;
-    } else {
-      my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
-      my $alt_slices = $sa->fetch_by_region_unique($slice->coord_system->name(), $slice->seq_region_name());
-      foreach my $alt_slice (@$alt_slices) {
-        $stats_hash{'alt_transcript'} += $ta->count_all_by_Slice($alt_slice);
-        $stats_attrib{'alt_transcript'} = 'transcript_acnt';
-        foreach my $alt_code (keys %alt_attrib_codes) {
-          $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
-          if ($alt_count > 0) {
-            $self->store_attrib($slice, $alt_count, $alt_code);
-          }
-          $stats_hash{$alt_code} += $alt_count;
-        }
-        $alt_count = $self->get_attrib($slice, 'noncoding_acnt_%');
-        if ($alt_count > 0) {
-          $self->store_attrib($slice, $alt_count, 'noncoding_acnt');
-        }
-        $stats_hash{'noncoding_acnt'} += $alt_count;
-        $stats_attrib{'noncoding_acnt'} = 'noncoding_acnt';
-      }
-    }
-    if ($sum >= $total) {
-      last;
-    }
-  }
-  $self->store_statistics($species, \%stats_hash, \%stats_attrib);
-  #Disconnecting from the registry
-  $dba->dbc->disconnect_if_idle();
-  my $prod_dba    = $self->get_production_DBAdaptor();
-  $prod_dba->dbc()->disconnect_if_idle();
+  # my $all_slices = $self->get_all_slices($species);
+
+  # my @all_sorted_slices =
+  #  sort( { $a->coord_system()->rank() <=> $b->coord_system()->rank()
+  #          || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
+  # while (my $slice = shift @all_sorted_slices) {
+  #   next if $slice->seq_region_name =~ /LRG/;
+    
+  #   if ($slice->is_reference) {
+  #     $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
+  #     $stats_attrib{'transcript'} = 'transcript_cnt';
+  #     foreach my $ref_code (keys %attrib_codes) {
+  #       $count = $self->get_feature_count($slice, $ref_code, $attrib_codes{$ref_code});
+  #       if ($count > 0) {
+  #         $self->store_attrib($slice, $count, $ref_code);
+  #       }
+  #       $stats_hash{$ref_code} += $count;
+  #     }
+  #     $count = $self->get_attrib($slice, 'noncoding_cnt_%');
+  #     if ($count > 0) {
+  #       $self->store_attrib($slice, $count, 'noncoding_cnt');
+  #     }
+  #     $stats_hash{'noncoding_cnt'} += $count;
+  #     $stats_attrib{'noncoding_cnt'} = 'noncoding_cnt';
+  #   } else {
+  #     my $sa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice');
+  #     my $alt_slices = $sa->fetch_by_region_unique($slice->coord_system->name(), $slice->seq_region_name());
+  #     foreach my $alt_slice (@$alt_slices) {
+  #       $stats_hash{'alt_transcript'} += $ta->count_all_by_Slice($alt_slice);
+  #       $stats_attrib{'alt_transcript'} = 'transcript_acnt';
+  #       foreach my $alt_code (keys %alt_attrib_codes) {
+  #         $alt_count = $self->get_feature_count($alt_slice, $alt_code, $alt_attrib_codes{$alt_code});
+  #         if ($alt_count > 0) {
+  #           $self->store_attrib($slice, $alt_count, $alt_code);
+  #         }
+  #         $stats_hash{$alt_code} += $alt_count;
+  #       }
+  #       $alt_count = $self->get_attrib($slice, 'noncoding_acnt_%');
+  #       if ($alt_count > 0) {
+  #         $self->store_attrib($slice, $alt_count, 'noncoding_acnt');
+  #       }
+  #       $stats_hash{'noncoding_acnt'} += $alt_count;
+  #       $stats_attrib{'noncoding_acnt'} = 'noncoding_acnt';
+  #     }
+  #   }
+  #   if ($sum >= $total) {
+  #     last;
+  #   }
+  # }
+  # $self->store_statistics($species, \%stats_hash, \%stats_attrib);
+  # #Disconnecting from the registry
+  # $dba->dbc->disconnect_if_idle();
+  # my $prod_dba    = $self->get_production_DBAdaptor();
+  # $prod_dba->dbc()->disconnect_if_idle();
 }
 
 sub get_slices {

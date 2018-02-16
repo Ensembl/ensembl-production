@@ -70,6 +70,15 @@ sub parse_match {
   
   my $signature = $match->{signature};
   
+  # These values are bound to Perl DBI SQL_DOUBLE constants by the store
+  # function in the ProteinFeatureAdaptor, which means that numbers in
+  # scientific E-notation will only be recognised if the 'E' is lowercased.
+  my $score = $match->{score};
+  $score =~ s/E/e/;
+  
+  my $evalue = $match->{evalue};
+  $evalue =~ s/E/e/;
+  
   my $feature_common =
   {
     'translation_id' => $translation_id,
@@ -79,8 +88,8 @@ sub parse_match {
     'interpro_ac'    => $signature->{entry}->{ac},
     'interpro_name'  => $signature->{entry}->{name},
     'interpro_desc'  => $signature->{entry}->{desc},
-    'score'          => $match->{score},
-    'evalue'         => $match->{evalue},
+    'score'          => $score,
+    'evalue'         => $evalue,
   };
   
   my @locs;
