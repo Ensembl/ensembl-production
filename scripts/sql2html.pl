@@ -27,7 +27,8 @@ use warnings;
 
 use POSIX;
 use Getopt::Long;
-use Bio::EnsEMBL::DBSQL::DBAdaptor;
+
+use Bio::EnsEMBL::DBSQL::DBConnection;
 
 
 ###############
@@ -93,14 +94,14 @@ $port ||= 3306;
 
 # Dababase connection (optional)
 if (defined($host) && !defined($skip_conn)) {
-  my $db_adaptor = new Bio::EnsEMBL::DBSQL::DBAdaptor(
+  my $dbc = new Bio::EnsEMBL::DBSQL::DBConnection(
     -host => $host,
     -user => $user,
     -pass => $pass,
     -port => $port,
     -dbname => $dbname
   ) or die("DATABASE CONNECTION ERROR: Could not get a database adaptor for $dbname on $host:$port\n");
-  $db_handle = $db_adaptor->dbc->db_handle;
+  $db_handle = $dbc->db_handle;
 }
 
 
