@@ -116,26 +116,26 @@ CREATE TABLE db (
 -- The 'master_biotype' table.
 -- Contains all the valid biotypes used for genes and transcripts.
 CREATE TABLE master_biotype (
-  biotype_id    INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-  name          VARCHAR(64) NOT NULL,
-  is_current    BOOLEAN NOT NULL DEFAULT true,
-  is_dumped     BOOLEAN NOT NULL DEFAULT true,
-  object_type   ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
-  db_type       SET('cdna', 'core', 'coreexpressionatlas',
-                    'coreexpressionest', 'coreexpressiongnf', 'funcgen',
-                    'otherfeatures', 'rnaseq', 'variation', 'vega',
-                    'presite', 'sangerverga')
-                    NOT NULL DEFAULT 'core',
-  attrib_type_id INT(11) DEFAULT NULL,
-  description   TEXT,
-  biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined') DEFAULT NULL,
-  so_acc        VARCHAR(64),
+  biotype_id      INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  name            VARCHAR(64) NOT NULL,
+  is_current      BOOLEAN NOT NULL DEFAULT true,
+  is_dumped       BOOLEAN NOT NULL DEFAULT true,
+  object_type     ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
+  db_type         SET('cdna', 'core', 'coreexpressionatlas',
+                      'coreexpressionest', 'coreexpressiongnf', 'funcgen',
+                      'otherfeatures', 'rnaseq', 'variation', 'vega',
+                      'presite', 'sangerverga')
+                      NOT NULL DEFAULT 'core',
+  attrib_type_id  INT(11) DEFAULT NULL,
+  description     TEXT,
+  biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined') DEFAULT NULL,
+  so_acc          VARCHAR(64),
 
   -- Columns for the web interface:
-  created_by    INTEGER,
-  created_at    DATETIME,
-  modified_by   INTEGER,
-  modified_at   DATETIME,
+  created_by      INTEGER,
+  created_at      DATETIME,
+  modified_by     INTEGER,
+  modified_at     DATETIME,
 
   PRIMARY KEY (biotype_id),
   UNIQUE KEY name_type_idx (name, object_type)
