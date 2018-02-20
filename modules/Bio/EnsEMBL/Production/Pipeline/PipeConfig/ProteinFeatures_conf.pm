@@ -356,6 +356,7 @@ sub pipeline_analyses {
                               chromosome_flow => 0,
                               regulation_flow => 0,
                               variation_flow  => 0,
+                              collection_subset => 0,
                             },
       -flow_into         => {
                               '2->A' => ['BackupTables'],

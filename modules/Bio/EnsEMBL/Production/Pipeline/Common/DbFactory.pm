@@ -55,6 +55,7 @@ sub param_defaults {
                        'e'   => 'ensembl' },
     meta_filters => {},
     db_type      => 'core',
+    collection_subset => 1,
   };
 }
 
@@ -203,6 +204,10 @@ sub add_species {
 sub remove_species {
   my ( $self, $dbname, $species, $dbs ) = @_;
 
+  if (!$self->param('collection_subset') && $dbname =~ /_collection_/) {
+    $self->throw("Cannot remove '$species' because it is part of a collection database");
+  }
+
   delete $$dbs{$dbname}{$species};
   
   if ( scalar( keys %{ $$dbs{$dbname} } ) == 0 ) {
@@ -216,6 +221,10 @@ sub process_species {
 
   foreach my $dba ( @$all_dbas ) {
     if ( $species eq $dba->species() ) {
+      if (!$self->param('collection_subset') && $dba->dbc->dbname =~ /_collection_/) {
+        $self->throw("Cannot add '$species' because it is part of a collection database");
+      }
+      
       $self->add_species($dba, $dbs);
       $self->warning("$species loaded");
       $loaded = 1;
@@ -242,6 +251,10 @@ sub process_taxon {
     next if $dba->species() =~ /ancestral/i;
     my $dba_ancestors = $self->get_taxon_ancestors_name($dba,$node_adaptor);
     if (grep(/$taxon_name/, @$dba_ancestors)){
+      if (!$self->param('collection_subset') && $dba->dbc->dbname =~ /_collection_/) {
+        $self->throw("Cannot process '$taxon' because matching species are part of a collection database");
+      }
+      
       if ($action eq "add"){
         $self->add_species($dba, $dbs);
         $species_count++;
