@@ -49,3 +49,4 @@
 55	\N	patch	patch_90_91_a.sql|schema_version
 56	\N	patch	patch_91_92_a.sql|schema_version
 57	\N	patch	patch_92_93_a.sql|schema_version
+58	\N	patch	patch_92_93_b.sql|biotype to master_biotype with new so_acc column

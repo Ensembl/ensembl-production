@@ -32,24 +32,6 @@ CREATE TABLE `analysis_web_data` (
   KEY `wd_idx` (`web_data_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4509 DEFAULT CHARSET=latin1;
 
-CREATE TABLE `biotype` (
-  `biotype_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `is_dumped` tinyint(1) NOT NULL DEFAULT '1',
-  `object_type` enum('gene','transcript') NOT NULL DEFAULT 'gene',
-  `db_type` set('cdna','core','coreexpressionatlas','coreexpressionest','coreexpressiongnf','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') NOT NULL DEFAULT 'core',
-  `attrib_type_id` int(11) DEFAULT NULL,
-  `description` text,
-  `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`biotype_id`),
-  UNIQUE KEY `name_type_idx` (`name`,`object_type`,`db_type`)
-) ENGINE=MyISAM AUTO_INCREMENT=204 DEFAULT CHARSET=latin1;
-
 CREATE TABLE `changelog` (
   `changelog_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `release_id` int(11) DEFAULT NULL,
@@ -160,6 +142,25 @@ CREATE TABLE `master_attrib_type` (
   UNIQUE KEY `code_idx` (`code`)
 ) ENGINE=MyISAM AUTO_INCREMENT=460 DEFAULT CHARSET=latin1;
 
+CREATE TABLE `master_biotype` (
+  `biotype_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `is_current` tinyint(1) NOT NULL DEFAULT '1',
+  `is_dumped` tinyint(1) NOT NULL DEFAULT '1',
+  `object_type` enum('gene','transcript') NOT NULL DEFAULT 'gene',
+  `db_type` set('cdna','core','coreexpressionatlas','coreexpressionest','coreexpressiongnf','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') NOT NULL DEFAULT 'core',
+  `attrib_type_id` int(11) DEFAULT NULL,
+  `description` text,
+  `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
+  `so_acc` varchar(64) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `modified_by` int(11) DEFAULT NULL,
+  `modified_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`biotype_id`),
+  UNIQUE KEY `name_type_idx` (`name`,`object_type`)
+) ENGINE=MyISAM AUTO_INCREMENT=204 DEFAULT CHARSET=latin1;
+
 CREATE TABLE `master_external_db` (
   `external_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `db_name` varchar(100) NOT NULL,
@@ -215,7 +216,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=58 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=59 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -289,6 +290,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `att
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`test_user`@`localhost` SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc` from `master_biotype` where (`master_biotype`.`is_current` = TRUE) order by `master_biotype`.`biotype_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `db_list` AS select `db`.`db_id` AS `db_id`,concat(concat_ws('_',`species`.`db_name`,`db`.`db_type`,`db`.`db_release`,`db`.`db_assembly`),`db`.`db_suffix`) AS `full_db_name` from (`species` join `db` on((`species`.`species_id` = `db`.`species_id`))) where (`species`.`is_current` = 1);
 

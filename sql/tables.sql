@@ -124,11 +124,11 @@ CREATE TABLE master_biotype (
   db_type         SET('cdna', 'core', 'coreexpressionatlas',
                       'coreexpressionest', 'coreexpressiongnf', 'funcgen',
                       'otherfeatures', 'rnaseq', 'variation', 'vega',
-                      'presite', 'sangerverga')
+                      'presite', 'sangervega')
                       NOT NULL DEFAULT 'core',
   attrib_type_id  INT(11) DEFAULT NULL,
   description     TEXT,
-  biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined') DEFAULT NULL,
+  biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
   so_acc          VARCHAR(64),
 
   -- Columns for the web interface:
