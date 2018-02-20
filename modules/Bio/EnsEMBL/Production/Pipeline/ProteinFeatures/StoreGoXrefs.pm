@@ -73,23 +73,16 @@ sub parse_interpro2go {
 sub delete_existing {
   my ($self) = @_;
 
-  my $species_id = $self->core_dba()->species_id();
   my $delete_ox_sql =
     qq/DELETE ox.*, ontx.* 
     FROM 
-    coord_system c
-    JOIN seq_region s USING (coord_system_id)
-    JOIN transcript t USING (seq_region_id)
-    JOIN object_xref ox ON (ox.ensembl_id=t.transcript_id)
+    object_xref ox
     JOIN ontology_xref ontx USING (object_xref_id) 
     JOIN xref x1 ON (ox.xref_id = x1.xref_id) 
     JOIN external_db edb1 ON (x1.external_db_id = edb1.external_db_id) 
     JOIN xref x2 ON (ontx.source_xref_id = x2.xref_id) 
     JOIN external_db edb2 ON (x2.external_db_id = edb2.external_db_id) 
-    WHERE 
-    c.species_id=$species_id
-    AND ox.ensembl_object_type='Transcript'
-    AND edb1.db_name = "GO" 
+    WHERE edb1.db_name = "GO" 
     AND edb2.db_name = "Interpro"/;
   $self->core_dbh->do($delete_ox_sql);
 
@@ -110,11 +103,7 @@ sub store_go_xref {
     FROM 
     interpro 
     JOIN protein_feature ON id = hit_name 
-    JOIN translation USING (translation_id)
-    JOIN transcript t USING (transcript_id)
-    JOIN seq_region s USING (seq_region_id)
-    JOIN coord_system c USING (coord_system_id)
-    WHERE c.species_id=$species_id/;
+    JOIN translation USING (translation_id)/;
   my $sth = $self->core_dbh->prepare($sql);
   
   $sth->execute();
