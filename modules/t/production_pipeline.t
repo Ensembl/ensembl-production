@@ -1,12 +1,12 @@
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # Copyright [2016-2018] EMBL-European Bioinformatics Institute
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -152,7 +152,7 @@ my $long_noncoding_density = 0;
 foreach my $n (@long_noncoding_density) {
    $long_noncoding_density += $n->density_value;
 }
-is($long_noncoding_density, 7, "LongNonCoding density on chromosome 6");
+is($long_noncoding_density, 5, "LongNonCoding density on chromosome 6");
 
 # Check long noncoding density for all chromosomes
 @long_noncoding_density = @{ $dfa->fetch_all('longnoncodingdensity') };
@@ -168,7 +168,7 @@ my $long_noncoding_count = 0;
 foreach my $c (@long_noncoding_count) {
    $long_noncoding_count += $c->value;
 }
-is($long_noncoding_count, 7, "Long non coding count on chromosome 6");
+is($long_noncoding_count, 5, "Long non coding count on chromosome 6");
 
 # Check long noncoding count for all reference chromosomes
 @long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt_l') };
