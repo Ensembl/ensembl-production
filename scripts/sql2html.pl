@@ -25,6 +25,7 @@
 use strict;
 use warnings;
 
+use File::Basename ();
 use POSIX;
 use Getopt::Long;
 
@@ -37,6 +38,7 @@ use Bio::EnsEMBL::DBSQL::DBConnection;
 
 my ($sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
 my ($host,$port,$dbname,$user,$pass,$skip_conn,$db_handle,$hosts_list);
+my $out_diagram_dir;
 
 usage() if (!scalar(@ARGV));
  
@@ -50,6 +52,7 @@ GetOptions(
     'format_headers=i' => \$format_headers,
     'sort_headers=i'   => \$sort_headers,
     'sort_tables=i'    => \$sort_tables,
+    'out_diagram_dir=s'=> \$out_diagram_dir,
     'host=s'           => \$host,
     'port=i'           => \$port,
     'dbname=s'         => \$dbname,
@@ -356,10 +359,17 @@ while (<$sql_fh>) {
       # INDEXES #
       #---------#
       
-      # Skip the FOREIGN KEY
-      next if ($doc =~ /^\s*foreign\s+key/i || $doc =~ /^\s+$/);
-      
-      if ($doc =~ /^\s*(primary\s+key)\s*\w*\s*\((.+)\)/i or $doc =~ /^\s*(unique)\s*\((.+)\)/i){ # Primary or unique;
+      # Remove the comments
+      $doc =~ s/--\s.*$//;
+
+      # Skip the blank lines
+      next if ($doc =~ /^\s+$/);
+
+      if ($doc =~ /FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\s*\((\S+)\)/i) { # foreign key
+        push @{$documentation->{$header}{'tables'}{$table}->{foreign_keys}}, [$1,$2,$3];
+        next;
+      }
+      elsif ($doc =~ /^\s*(primary\s+key)\s*\w*\s*\((.+)\)/i or $doc =~ /^\s*(unique)\s*\((.+)\)/i){ # Primary or unique;
         add_column_index($1,$2);
         next;
       }
@@ -439,7 +449,169 @@ while (<$sql_fh>) {
 }
 close($sql_fh);
 
+my %table_documentation;
+foreach my $c (keys %$documentation) {
+  my $h = $documentation->{$c};
+  foreach my $table_name (keys %{$h->{tables}}) {
+    $table_documentation{$table_name} = $h->{tables}->{$table_name};
+    $h->{tables}->{$table_name}->{category} = $c;
+  }
+}
 
+sub table_box {
+    my ($graph, $table_name) = @_;
+    my $table_doc = $table_documentation{$table_name};
+    my @rows = map {sprintf('<tr><td bgcolor="white" port="port%s">%s%s</td></tr>', $_->{name}, ($_->{index} =~ /\bprimary\b/i ? '<B>PK</B>&nbsp;&nbsp;' : ''), $_->{name})} @{$table_doc->{column}};
+    $graph->add_node($table_name,
+        'shape' => 'box',
+        'style' => 'filled,rounded',
+        'fillcolor' => $table_doc->{colour},
+        'label' => sprintf('<<table border="0"><th><td><font point-size="16">%s</font></td></th><hr/>%s</table>>', $table_name, join('', @rows)),
+    );
+}
+
+sub generate_whole_diagram {
+    my ($show_clusters, $column_links) = @_;
+    my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
+        'label' => "$db_team schema diagram",
+        'fontsize' => 20,
+        $column_links
+          ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
+          : ( 'splines' => 'ortho', ),
+    );
+    foreach my $table_name (sort keys %table_documentation) {
+        table_box($graph, $table_name);
+    }
+    foreach my $table_name (sort keys %table_documentation) {
+        foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+            $graph->add_edge($table_name => $fk->[1],
+                'style' => 'dashed',
+                $column_links ? (
+                    'from_port' => "$fk->[0]:e",
+                    'to_port' => "$fk->[2]:w",
+                ) : (),
+            );
+        }
+    }
+
+    if ($show_clusters) {
+        foreach my $h (sort keys %$documentation) {
+            my $cluster_id = clean_name($h);
+            my $c = blend_colors($documentation->{$h}->{colour}, '#FFFFFF', 0.8);
+            $graph->cluster_2_attributes()->{$cluster_id} = {
+                'cluster_label' => $h,
+                'style' => 'rounded,filled,noborder',
+                'fill_colour_pair' => ["#$c"],
+            };
+            my @cluster_nodes;
+            $graph->cluster_2_nodes()->{$cluster_id} = \@cluster_nodes;
+            foreach my $t (sort keys %{$documentation->{$h}->{tables}}) {
+                push @cluster_nodes, $t;
+            }
+        }
+    }
+    return $graph;
+}
+
+
+sub blend_colors {
+    my ($color1, $color2, $alpha) = @_;
+    my @rgb1 = map {hex($_)} unpack("(A2)*", substr $color1, 1);
+    my @rgb2 = map {hex($_)} unpack("(A2)*", substr $color2, 1);
+    my @rgb = map {int($rgb1[$_] + $alpha * ($rgb2[$_]-$rgb1[$_]))}  0..2;
+    my $c = join('', map {sprintf('%X', $_)} @rgb);
+    return $c;
+}
+
+sub sub_table_box {
+    my ($graph, $table_name, $fields) = @_;
+    my $table_doc = $table_documentation{$table_name};
+    my @rows;
+    my $has_ellipsis;
+    foreach my $c (@{$table_doc->{column}}) {
+        if ($fields->{$c->{name}}) {
+            push @rows, sprintf('<tr><td bgcolor="white" port="port%s">%s%s</td></tr>', $c->{name}, ($c->{index} =~ /\bprimary\b/i ? '<B>PK</B>&nbsp;&nbsp;' : ''), $c->{name});
+            $has_ellipsis = 0;
+        } elsif (!$has_ellipsis) {
+            push @rows, '<tr><td bgcolor="white"><i>...</i></td></tr>';
+            $has_ellipsis = 1;
+        }
+    }
+    $graph->add_node($table_name,
+        'shape' => 'box',
+        'style' => 'filled,rounded',
+        'fillcolor' => $table_doc->{colour},
+        'label' => sprintf('<<table border="0"><th><td><font point-size="16">%s</font></td></th><hr/>%s</table>>', $table_name, join('', @rows)),
+    );
+}
+
+sub generate_sub_diagram {
+    my ($cluster, $column_links) = @_;
+    my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
+        'label' => "$db_team schema diagram: $cluster tables",
+        'fontsize' => 20,
+        $column_links
+          ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
+          : ( 'splines' => 'ortho', ),
+    );
+    foreach my $table_name (sort keys %{$documentation->{$cluster}->{tables}}) {
+        table_box($graph, $table_name);
+    }
+    my %clusters_to_draw = ($cluster => 1);
+    my %other_table_fields;
+    my @drawn_fks;
+    foreach my $table_name (sort keys %table_documentation) {
+        foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+            if ($table_documentation{$table_name}->{category} eq $cluster) {
+                $other_table_fields{$fk->[1]}->{$fk->[2]} = 1;
+                $clusters_to_draw{ $table_documentation{$fk->[1]}->{category} } = 1;
+                push @drawn_fks, [$table_name, @$fk];
+            } elsif ($table_documentation{$fk->[1]}->{category} eq $cluster) {
+                $other_table_fields{$table_name}->{$fk->[0]} = 1;
+                $clusters_to_draw{ $table_documentation{$table_name}->{category} } = 1;
+                push @drawn_fks, [$table_name, @$fk];
+            }
+        }
+    }
+    foreach my $table_name (sort keys %other_table_fields) {
+        sub_table_box($graph, $table_name, $other_table_fields{$table_name} || {}) if $cluster ne $table_documentation{$table_name}->{category};
+    }
+    foreach my $fk (@drawn_fks) {
+        my $table_name = shift @$fk;
+        $graph->add_edge($table_name => $fk->[1],
+            'style' => 'dashed',
+            $column_links ? (
+                'from_port' => $fk->[0].':e',
+                'to_port' => $fk->[2].':w',
+            ) : (),
+        );
+    }
+
+    foreach my $h (sort keys %clusters_to_draw) {
+        #next unless $h eq $cluster;
+        my $cluster_id = clean_name($h);
+        my $c = blend_colors($documentation->{$h}->{colour}, '#FFFFFF', 0.8);
+        $graph->cluster_2_attributes()->{$cluster_id} = {
+            'cluster_label' => $h,
+            ($h eq $cluster) ?
+                ( 'style' => 'rounded,filled,noborder', 'fill_colour_pair' => ["#$c"], )
+              : ( 'style' => 'filled,noborder', 'fill_colour_pair' => ['white'] ),
+        };
+        my @cluster_nodes;
+        $graph->cluster_2_nodes()->{$cluster_id} = \@cluster_nodes;
+        foreach my $t (sort keys %{$documentation->{$h}->{tables}}) {
+            push @cluster_nodes, $t if (($h eq $cluster) || $other_table_fields{$t});
+        }
+    }
+    return $graph;
+}
+
+sub clean_name {
+    my $n = shift;
+    $n =~ s/\s+/_/g;
+    $n =~ s/[\-\/]+/_/g;
+    return lc $n;
+}
 
 
 ###########
@@ -458,6 +630,29 @@ if ($sort_tables == 1) {
     @{$tables} = sort(@{$tables});
   }
 }
+
+# Remove the empty headers (e.g. "default")
+@header_names = grep {scalar(@{$tables_names->{$_}})} @header_names;
+
+
+#####################
+## Schema diagrams ##
+#####################
+if ($out_diagram_dir) {
+    require Bio::EnsEMBL::Hive::Utils::GraphViz;
+    my $full_diagram_dir = File::Basename::dirname($html_file) . "/$out_diagram_dir";
+    my $graph = generate_whole_diagram('show_clusters', 'column_links');
+    $graph->dot_input_filename("$full_diagram_dir/$db_team.dot");
+    $graph->as_png("$full_diagram_dir/$db_team.png");
+    foreach my $c (@header_names) {
+        my $filename = "$full_diagram_dir/$db_team.".clean_name($c);
+        my $graph = generate_sub_diagram($c, 'column_links');
+        $graph->as_png("$filename.png");
+        fetch_png_dimensions($c, "$filename.png");
+    }
+}
+
+
 
 # Legend link
 if ($show_colour and scalar @colours > 1 and $header_flag != 1) {
@@ -491,6 +686,13 @@ foreach my $header_name (@header_names) {
     $header_id ++;
     my $header_desc = escape_html($documentation->{$header_name}{'desc'});
     $html_content .= qq{<p class="sql_schema_group_header_desc">$header_desc</p>} if (defined($header_desc));
+
+    if ($out_diagram_dir) {
+        my $l = clean_name($header_name);
+        my $w = get_best_width($header_name);
+        my $wt = $w ? qq{width="${w}px"} : '';
+        $html_content .= qq{<div align="center"><a href="$out_diagram_dir/$db_team.$l.png"><img src="$out_diagram_dir/$db_team.$l.png" $wt /></a></div>};
+    }
   }
   
   #------------------------#
@@ -542,6 +744,30 @@ print $html_fh $html_content."\n";
 print $html_fh $html_footer."\n";
 close($html_fh);
 
+
+
+my %dimensions;
+sub fetch_png_dimensions {
+    my ($image_id, $filename) = @_;
+    my $ss = `file $filename`;
+    if (`file $filename` =~ /PNG image data, (\d+) x (\d+),/) {
+        $dimensions{$image_id} = [$1,$2];
+    }
+}
+
+sub get_best_width {
+    my ($image_id) = @_;
+    my $def_w = 500;
+    my $def_h = 500;
+    if (my $a = $dimensions{$image_id}) {
+        if ($a->[1] > $def_h) {
+            return int($a->[0] * $def_h / $a->[1]);
+        } elsif ($a->[0] > $def_w) {
+            return $def_w;
+        }
+    }
+    return undef;
+}
 
 
 
