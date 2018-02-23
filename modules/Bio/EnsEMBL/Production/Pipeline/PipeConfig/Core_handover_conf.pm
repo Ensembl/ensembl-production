@@ -212,7 +212,7 @@ sub pipeline_analyses {
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGC',
         -max_retry_count  => 3,
         -hive_capacity    => 5,
-        -rc_name => 'normal',
+        -rc_name => 'mem',
       },
 
       {
@@ -278,7 +278,7 @@ sub resource_classes {
     return {
       'default' => { 'LSF' => ''},
       'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 3000 -R "rusage[mem=3000]"'},
     }
 }
 
