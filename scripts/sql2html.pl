@@ -1757,6 +1757,7 @@ sub usage {
     -format_headers   A flag to display formatted headers for a group of tables (1) or not (0) in the top menu list. By default, the value is set to 1.                
     -sort_headers     A flag to sort (1) or not (0) the headers by alphabetic order. By default, the value is set to 1.
     -sort_tables      A flag to sort (1) or not (0) the tables by alphabetic order. By default, the value is set to 1.
+    'out_diagram_dir  Where to generate schema diagrams (one for the whole schema, and one per category). By default, the value is not set, meaning no diagrams are generated.
                      
     Other optional options:
     
