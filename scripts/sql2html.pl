@@ -132,6 +132,7 @@ my $tag = '';
 my $display = 'Show';
 my $parenth_count = 0;
 my $header_colour;
+my $pk = [];
 
 my $SQL_LIMIT = 50;
 my $img_plus  = qq{<img src="/i/16/plus-button.png" class="sql_schema_icon" alt="show"/>};
@@ -245,6 +246,7 @@ while (<$sql_fh>) {
   # Verifications
   if ($_ =~ /^\/\*\*/)  { $in_doc=1; next; }  # start of a table documentation
   if ($_ =~ /^\s*create\s+table\s+(if\s+not\s+exists\s+)?`?(\w+)`?/i) { # start to parse the content of the table
+    $pk = [];
     if ($table eq $2) { 
       $in_table=1;
       $parenth_count++;
@@ -336,6 +338,9 @@ while (<$sql_fh>) {
 
 
     if ($parenth_count == 0) { # End of the sql table definition
+    if (scalar(@$pk)) {
+      add_column_index('primary key', join(',', @$pk));
+    }
     if (scalar @{$documentation->{$header}{'tables'}{$table}{column}} > $count_sql_col) {
       print STDERR "Description of a non existant column in the table $table!\n";
     }
@@ -425,6 +430,10 @@ while (<$sql_fh>) {
       }
 
       add_column_type_and_default_value($col_name,$col_type,$col_def);
+
+      if ($doc =~ /\bprimary\s+key\b/i) {
+        push @$pk, $col_name;
+      }
     }
   }
 }
