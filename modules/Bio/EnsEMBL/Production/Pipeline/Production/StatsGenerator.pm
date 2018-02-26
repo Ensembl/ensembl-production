@@ -31,7 +31,7 @@ sub run {
   my ($self) = @_;
 
   throw "Supposed to be overridden by subclasses";
-  
+
   # my $species    = $self->param('species');
 
   # $self->dbc()->disconnect_if_idle() if defined $self->dbc();
@@ -75,7 +75,7 @@ sub run {
   #          || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
   # while (my $slice = shift @all_sorted_slices) {
   #   next if $slice->seq_region_name =~ /LRG/;
-    
+
   #   if ($slice->is_reference) {
   #     $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
   #     $stats_attrib{'transcript'} = 'transcript_cnt';
@@ -208,7 +208,7 @@ sub get_biotype_group {
      WHERE object_type = 'gene'
      AND is_current = 1
      AND biotype_group = ?
-     AND db_type like '%core%' };
+     AND FIND_IN_SET('core', db_type)>0 };
   my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
   #$prod_dba->dbc()->disconnect_if_idle();
   return \@biotypes;
