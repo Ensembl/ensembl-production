@@ -36,7 +36,7 @@ use Bio::EnsEMBL::DBSQL::DBConnection;
 ### Options ###
 ###############
 
-my ($sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
+my ($sql_file,$fk_sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
 my ($host,$port,$dbname,$user,$pass,$skip_conn,$db_handle,$hosts_list);
 my $out_diagram_dir;
 
@@ -45,6 +45,7 @@ usage() if (!scalar(@ARGV));
 GetOptions(
     'i=s' => \$sql_file,
     'o=s' => \$html_file,
+    'fk=s' => \$fk_sql_file,
     'd=s' => \$db_team,
     'c=i' => \$show_colour,
     'v=i' => \$version,
@@ -456,6 +457,21 @@ foreach my $c (keys %$documentation) {
     $table_documentation{$table_name} = $h->{tables}->{$table_name};
     $h->{tables}->{$table_name}->{category} = $c;
   }
+}
+
+if ($fk_sql_file) {
+    open $sql_fh, '<', $fk_sql_file or die "Can't open $fk_sql_file : $!";
+    while (<$sql_fh>) {
+      chomp $_;
+      next if ($_ eq '');
+      my $doc = remove_char($_);
+      if ($doc =~ /ALTER\s+TABLE\s+(\S+)\s+ADD.*FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\((\S+)\)/i) {
+          push @{$table_documentation{$1}->{foreign_keys}}, [$2,$3,$4];
+      } elsif ($doc =~ /ALTER.*FOREIGN/i) {
+          die "Unrecognized contruct: $doc";
+      }
+    }
+    close($sql_fh);
 }
 
 sub table_box {
@@ -1748,6 +1764,7 @@ sub usage {
 
     -i                A SQL file name (Required)
     -o                An HTML output file name (Required)
+    -fk               An external SQL file name with foreign keys statements (Optional)
     -d                The name of the database (e.g Core, Variation, Functional Genomics, ...)
     -c                A flag to display the colours associated with the tables (1) or not (0). By default, the value is set to 1.
     -v                Version of the schema. Replace the string ####DB_VERSION#### by the value of the parameter "-v", in the introduction text. (Optional)
