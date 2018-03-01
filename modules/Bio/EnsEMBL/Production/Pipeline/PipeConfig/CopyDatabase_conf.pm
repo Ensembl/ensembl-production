@@ -48,6 +48,7 @@ sub pipeline_create_commands {
             # additional tables needed for long multiplication pipeline's operation:
     $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
     $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
+    $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
     $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
     $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
     ];
