@@ -128,7 +128,6 @@ sub run {
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
     $odba->dbc->disconnect_if_idle();
-    $DB::single = 1;
     
     # Retrieve existing or create new analysis object
     my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species , "core", "analysis" );
@@ -175,7 +174,7 @@ sub run {
       # Parse annotation information
       # $go_evidence and $tgt_species should always be populated
       # The remaining fields might or might not, but they should alwyays be available in that order
-      my ($go_evidence, $tgt_species, $tgt_gene, $tgt_protein, $tgt_transcript, $src_species, $src_gene, $src_protein);
+      my ($go_evidence, $tgt_species, $tgt_gene, $tgt_protein, $tgt_transcript, $src_species, $src_gene, $src_protein, $precursor_rna);
       foreach my $annotation_propertie (split /\|/, $annotation_properties){
         if ($annotation_propertie =~ m/tgt_gene/){
           $annotation_propertie =~ s/tgt_gene=\w+://;
@@ -208,6 +207,10 @@ sub run {
         elsif ($annotation_propertie =~ m/src_gene/){
           $annotation_propertie =~ s/src_gene=//;
           $src_gene=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/precursor_rna/){
+          $annotation_propertie =~ s/precursor_rna=//;
+          $precursor_rna=$annotation_propertie;
         }
         else{
           $self->warning("Error parsing $annotation_propertie, not matching any expected annotation\n");
@@ -258,9 +261,6 @@ sub run {
 	$is_transcript = 1;
 	# Accession is the version with taxonomy id appended, e.g. URS0000007FBA_9606
 	# We store as URS0000007FBA, so need to remove everything from the _
-      my ($go_evidence, $tgt_species, $precursor_rna) = split /\|/, $annotation_properties;
-	$precursor_rna =~ s/precursor_rna=// if $precursor_rna;
-	$go_evidence =~ s/go_evidence=// if $go_evidence;
 	# precursor_rna could be a list of accessions
 	my @precursor_rnas = split(",", $precursor_rna) if $precursor_rna;
 	foreach my $rna (@precursor_rnas) {
