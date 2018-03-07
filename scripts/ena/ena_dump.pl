@@ -26,8 +26,8 @@ use Net::FTP;
 
 my $gene_file;
 my $trans_file;
-my $host = 'ens-livemirror';
-my $port = 3306;
+my $host = '';
+my $port = '';
 my $user = 'ensro';
 my $version;
 my $upload_only;
