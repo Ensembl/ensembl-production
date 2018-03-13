@@ -189,7 +189,7 @@ sub store_attrib {
 
 sub get_attrib {
   my ($self, $slice, $code) = @_;
-  my $aa          = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
+  my $aa = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
   my $attributes = $aa->fetch_all_by_Slice($slice, $code);
   my $count = 0;
   foreach my $attribute (@$attributes) {
@@ -199,19 +199,14 @@ sub get_attrib {
 }
 
 sub get_biotype_group {
-  my ($self, $biotype) = @_;
-  my $prod_dba = $self->get_production_DBAdaptor();
-  my $helper = $prod_dba->dbc()->sql_helper();
-  my $sql = q{
-     SELECT name
-     FROM master_biotype
-     WHERE object_type = 'gene'
-     AND is_current = 1
-     AND biotype_group = ?
-     AND FIND_IN_SET('core', db_type)>0 };
-  my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
-  #$prod_dba->dbc()->disconnect_if_idle();
-  return \@biotypes;
+  my ($self, $group) = @_;
+
+  my $ba = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Biotype');
+
+  my $biotypes = $ba->fetch_all_by_group_object_db_type( $group, 'gene', 'core' );
+  my @names = map { $_->name } @{$biotypes};
+
+  return \@names;
 }
 
 sub store_statistics {
