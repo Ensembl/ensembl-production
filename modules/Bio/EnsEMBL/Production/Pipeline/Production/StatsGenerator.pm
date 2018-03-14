@@ -198,17 +198,6 @@ sub get_attrib {
   return $count;
 }
 
-sub get_biotype_group {
-  my ($self, $group) = @_;
-
-  my $ba = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Biotype');
-
-  my $biotypes = $ba->fetch_all_by_group_object_db_type( $group, 'gene', 'core' );
-  my @names = map { $_->name } @{$biotypes};
-
-  return \@names;
-}
-
 sub store_statistics {
   my ($self, $species, $stats_hash, $stats_attrib) = @_;
   my $stats;
