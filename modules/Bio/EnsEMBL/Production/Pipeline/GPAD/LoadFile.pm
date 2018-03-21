@@ -167,45 +167,65 @@ sub run {
       my ($translation, $translations, $transcript, $transcripts, $is_protein, $is_transcript);
 
       $self->log()->debug($lineN . ": " . $_);
-      # UniProtKB       A0A060MZW1      involved_in     GO:0042254      GO_REF:0000002  ECO:0000256     InterPro:IPR001790|InterPro:IPR030670           20160716        InterPro                go_evidence=IEA|tgt_species=entamoeba_histolytica
+      # UniProtKB       A0A060MZW1      involved_in     GO:0042254      GO_REF:0000002  ECO:0000256     InterPro:IPR001790|InterPro:IPR030670           20160716        InterPro                tgt_species=entamoeba_histolytica|go_evidence=IEA
+      #or
+      # UniProtKB       A0A1I9WA83      enables GO:0004129      GO_REF:0000107  ECO:0000265     UniProtKB:P00403|ensembl:ENSP00000354876                20180303        Ensembl         tgt_species=ailuropoda_melanoleuca|tgt_gene=ensembl:ENSAMEG00000023439|tgt_protein=ensembl:ENSAMEP00000021356|src_species=homo_sapiens|src_gene=ensembl:ENSG00000198712|src_protein=ensembl:ENSP00000354876|go_evidence=IEA
       my ($db, $db_object_id, $qualifier, $go_id, $go_ref, $eco, $with, $taxon_id, $date, $assigned_by, $annotation_extension, $annotation_properties) = split /\t/,$_ ;
       # Parse annotation information
       # $go_evidence and $tgt_species should always be populated
       # The remaining fields might or might not, but they should alwyays be available in that order
-      my ($go_evidence, $tgt_species, $tgt_gene, $tgt_feature, $src_species, $src_gene, $src_protein) = split /\|/, $annotation_properties;
-      my ($tgt_protein, $tgt_transcript, $master_xref);
-      $tgt_gene    =~ s/tgt_gene=\w+:// if $tgt_gene;
-      $tgt_species =~ s/tgt_species=// if $tgt_species;
+      my ($go_evidence, $tgt_species, $tgt_gene, $tgt_protein, $tgt_transcript, $src_species, $src_gene, $src_protein, $precursor_rna);
+      foreach my $annotation_propertie (split /\|/, $annotation_properties){
+        if ($annotation_propertie =~ m/tgt_gene/){
+          $annotation_propertie =~ s/tgt_gene=\w+://;
+          $tgt_gene=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/tgt_species/){
+          $annotation_propertie =~ s/tgt_species=//;
+          $tgt_species=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/go_evidence/){
+          $annotation_propertie =~ s/go_evidence=//;
+          $go_evidence=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/tgt_protein/){
+          $annotation_propertie =~ s/tgt_protein=\w+://;
+          $tgt_protein=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/tgt_transcript/){
+          $annotation_propertie =~ s/tgt_transcript=//;
+          $tgt_transcript=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/src_protein/){
+          $annotation_propertie =~ s/src_protein=\w+://;
+          $src_protein=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/src_species/){
+          $annotation_propertie =~ s/src_species=//;
+          $src_species=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/src_gene/){
+          $annotation_propertie =~ s/src_gene=//;
+          $src_gene=$annotation_propertie;
+        }
+        elsif ($annotation_propertie =~ m/precursor_rna/){
+          $annotation_propertie =~ s/precursor_rna=//;
+          $precursor_rna=$annotation_propertie;
+        }
+        else{
+          $self->warning("Error parsing $annotation_propertie, not matching any expected annotation\n");
+        }
+      }
 
       # target species should always be the same as production name in the GOA file
       next unless $tgt_species=~/$species/;
-
-      $go_evidence =~ s/go_evidence=// if $go_evidence;
  
-      # If the tgt_feature field is populated, it could be tgt_protein or tgt_transcript
-      if (defined $tgt_feature) {
-	$self->log()->debug("Handling feature $tgt_feature");
-         if ($tgt_feature =~ /tgt_protein/) {
-             $tgt_feature =~ s/tgt_protein=\w+://;
-             $tgt_protein = $tgt_feature;
-         } 
-         elsif ($tgt_feature =~ /tgt_transcript/) {
-             $tgt_feature =~ s/tgt_transcript=//;
-             $tgt_transcript = $tgt_feature;
-         } else {
-             $self->warning("Error parsing $annotation_properties, no match for $tgt_feature\n");
-         }
-      }
-
-
       $self->log()->debug("Creating GO xref for $go_id");
       my $info_type = 'DIRECT';
       my $info_text = $assigned_by;
       if ($assigned_by =~ /Ensembl/ and defined $src_protein) {
-	$src_protein =~ s/src_protein=\w+://;
-	$src_species =~ s/src_species=//;
-	$info_text   = "from $src_species translation $src_protein";
-	$info_type = 'PROJECTION'
+        $info_text   = "from $src_species translation $src_protein";
+        $info_type = 'PROJECTION'
       }
       
       # Create new GO dbentry object
@@ -220,6 +240,7 @@ sub run {
 						   ); 
       
       $go_xref->analysis($analysis);
+      my $master_xref;
       
       # There could technically be more than one xref with the same display_label
       # In practice, we just want to add it as master_xref, so the first one is fine
@@ -240,9 +261,6 @@ sub run {
 	$is_transcript = 1;
 	# Accession is the version with taxonomy id appended, e.g. URS0000007FBA_9606
 	# We store as URS0000007FBA, so need to remove everything from the _
-      my ($go_evidence, $tgt_species, $precursor_rna) = split /\|/, $annotation_properties;
-	$precursor_rna =~ s/precursor_rna=// if $precursor_rna;
-	$go_evidence =~ s/go_evidence=// if $go_evidence;
 	# precursor_rna could be a list of accessions
 	my @precursor_rnas = split(",", $precursor_rna) if $precursor_rna;
 	foreach my $rna (@precursor_rnas) {
@@ -268,37 +286,7 @@ sub run {
 	$go_xref->add_linkage_type($go_evidence);
       }
       
-      # If GOA did not provide a tgt_feature, we have to guess the correct target based on our xrefs
-      # This is slower, hence only used if nothing better is available
-      if (!defined $tgt_feature) {
-	$self->log()->debug("Finding tgt_feature");
-	if ($is_protein) {
-	  $self->log()->debug("Finding protein $db_object_id");
-	  $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id);
-	  if(scalar @$translations == 0) {
-	    $self->log()->debug("Could not find translation for $db_object_id");
-	  }
-	  # Protein xref is attached to translation
-	  # But GO term should be attached to transcript
-	  foreach my $translation (@$translations) {
-	    $self->log()->debug("Attaching via translation to transcript ".$translation->transcript()->dbID());
-           $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
-	    $species_added_via_xref{$tgt_species}++;
-	  }
-	} elsif ($is_transcript) {
-	  $self->log()->debug("Finding transcript $db_object_id");
-	  $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
-	  
-	  foreach my $transcript (@$transcripts) {
-	    $self->log()->debug("Attaching to transcript ".$transcript->dbID());
-	    $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
-	    $species_added_via_xref{$tgt_species}++;
-         }
-	} else {
-	  $self->log()->debug("Couldn't figure out how to find target feature");
-	}
-      } elsif (defined $tgt_protein) {
-
+  if (defined $tgt_protein) {
 	# If GOA provide a tgt_protein, this is the direct mapping to Ensembl feature
 	# This becomes our object for the new xref	
 	$self->log()->debug("Looking for protein $tgt_protein");
@@ -331,8 +319,35 @@ sub run {
 	  $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
 	  $species_added_via_tgt{$tgt_species}++;
 	}
-      } else {
-	$self->log()->debug("Failed to work out how to store annotation");
+      }
+         # If GOA did not provide a tgt_transcript or tgt_protein, we have to guess the correct target based on our xrefs
+      # This is slower, hence only used if nothing better is available
+      else {
+	$self->log()->debug("Finding tgt_feature");
+	if ($is_protein) {
+	  $self->log()->debug("Finding protein $db_object_id");
+	  $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id);
+	  if(scalar @$translations == 0) {
+	    $self->log()->debug("Could not find translation for $db_object_id");
+	  }
+	  # Protein xref is attached to translation
+	  # But GO term should be attached to transcript
+	  foreach my $translation (@$translations) {
+	    $self->log()->debug("Attaching via translation to transcript ".$translation->transcript()->dbID());
+           $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
+	    $species_added_via_xref{$tgt_species}++;
+	  }
+	} elsif ($is_transcript) {
+	  $self->log()->debug("Finding transcript $db_object_id");
+	  $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
+	  foreach my $transcript (@$transcripts) {
+	    $self->log()->debug("Attaching to transcript ".$transcript->dbID());
+	    $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
+	    $species_added_via_xref{$tgt_species}++;
+         }
+	} else {
+	  $self->log()->debug("Couldn't figure out how to find target feature");
+	}
       }
     }
     
