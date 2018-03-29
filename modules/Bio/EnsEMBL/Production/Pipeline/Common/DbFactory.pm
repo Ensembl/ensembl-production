@@ -110,7 +110,7 @@ sub run {
     delete $dbs{'Ancestral sequences'};
     $self->warning("All species in " . scalar(keys %dbs) . " databases loaded");
     
-    %compara_dbs = map { $_->dbc->dbname => $_->species } @$all_compara_dbas;
+    %compara_dbs = map { $_->species => $_ } @$all_compara_dbas;
   }
   elsif ( scalar(@species) ) {
     foreach my $species (@species) {
@@ -184,10 +184,10 @@ sub write_output {
     $self->dataflow_output_id( $dataflow_params, $db_flow );
   }
 
-  foreach my $dbname ( keys %$compara_dbs ) {
+  foreach my $division ( keys %$compara_dbs ) {
     my $dataflow_params = {
-      dbname  => $dbname,
-      species => $$compara_dbs{$dbname},
+      dbname  => $$compara_dbs{$division}->dbc->dbname,
+      species => $division,
     };
 
     $self->dataflow_output_id( $dataflow_params, $compara_flow );
@@ -325,7 +325,7 @@ sub process_division_compara {
       $compara_div = 'ensembl';
     }
     if ( $compara_div eq $division ) {
-      $$compara_dbs{$dba->dbc->dbname} = $compara_div;
+      $$compara_dbs{$division} = $dba;
       $self->warning("Added compara for $division");
     }
   }
