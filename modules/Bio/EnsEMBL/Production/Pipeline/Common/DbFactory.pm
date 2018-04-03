@@ -85,7 +85,10 @@ sub run {
 
   my $db_type      = $self->param('db_type');
 
-  my $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
+  my $taxonomy_dba;
+  if (scalar(@taxons) || scalar(@antitaxons)) {
+    $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
+  }
 
   my $all_dbas = $reg->get_all_DBAdaptors( -GROUP => $db_type );
   my %dbs;

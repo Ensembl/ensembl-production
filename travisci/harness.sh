@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PERL5LIB=$PWD/bioperl-live-bioperl-release-1-2-3:$PWD/ensembl-test/modules:$PWD/ensembl/modules:$PWD/ensembl-compara/modules:$PWD/ensembl-hive/modules:$PWD/ensembl-orm/modules:$PWD/modules
+export PERL5LIB=$PWD/bioperl-live-bioperl-release-1-2-3:$PWD/ensembl-test/modules:$PWD/ensembl/modules:$PWD/ensembl-compara/modules:$PWD/ensembl-variation/modules:$PWD/ensembl-hive/modules:$PWD/ensembl-orm/modules:$PWD/modules
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/htslib
 

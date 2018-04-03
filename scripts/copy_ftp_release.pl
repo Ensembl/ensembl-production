@@ -86,6 +86,12 @@ sub process_file {
 	my $com = "cd $newdir; tar xvzf $file; mv $oldtar $newtar; tar cvzf ${newtar}.tar.gz $newtar; rm -rf $newtar; cd -";
 	$log->debug("Compara: ".$com);
 	`$com`;
+	} elsif($file=~m/Compara\.([0-9]+)\..*\.gz/) {
+		my $newfile = rename_file(substr($file,0,$-[1]).${new_ens_rel}.substr($file,$+[1]));
+		my $newdir = dirname($newfile);
+		my $com = "cd $newdir; cp $file $newfile";
+		$log->debug("Compara: ".$com);
+		`$com`;
     } elsif($file=~m/_vep_([0-9]+)_.*\.tar\.gz/) {
 	my $newfile = rename_file(substr($file,0,$-[1]).$new_rel.substr($file,$+[1]));	
 	my $newtar = basename($newfile);
