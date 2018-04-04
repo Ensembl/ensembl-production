@@ -84,7 +84,7 @@ sub write_json {
   # work out compara division
   my $compara_name = $self->division();
   if ( !defined $compara_name || $compara_name eq '' ) {
-    $compara_name = 'ensembl';
+    $compara_name = 'multi';
   }
   if ( $compara_name eq 'bacteria' ) {
     $compara_name = 'pan_homology';
@@ -92,7 +92,7 @@ sub write_json {
   # get genome
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ( $compara_name ne 'ensembl' ) {
+  if ( $compara_name ne 'multi' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
