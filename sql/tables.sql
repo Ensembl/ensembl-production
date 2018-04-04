@@ -38,6 +38,9 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_92_93_a.sql|schema version');
 
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_92_93_b.sql|biotype to master_biotype with new so_acc column');
+
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
 CREATE TABLE species (
@@ -110,31 +113,32 @@ CREATE TABLE db (
 );
 
 
--- The 'biotype' table.
+-- The 'master_biotype' table.
 -- Contains all the valid biotypes used for genes and transcripts.
-CREATE TABLE biotype (
-  biotype_id    INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-  name          VARCHAR(64) NOT NULL,
-  is_current    BOOLEAN NOT NULL DEFAULT true,
-  is_dumped     BOOLEAN NOT NULL DEFAULT true,
-  object_type   ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
-  db_type       SET('cdna', 'core', 'coreexpressionatlas',
-                    'coreexpressionest', 'coreexpressiongnf', 'funcgen',
-                    'otherfeatures', 'rnaseq', 'variation', 'vega',
-                    'presite', 'sangerverga')
-                    NOT NULL DEFAULT 'core',
-  attrib_type_id INT(11) DEFAULT NULL,
-  description   TEXT,
-  biotype_group ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined') DEFAULT NULL,
+CREATE TABLE master_biotype (
+  biotype_id      INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  name            VARCHAR(64) NOT NULL,
+  is_current      BOOLEAN NOT NULL DEFAULT true,
+  is_dumped       BOOLEAN NOT NULL DEFAULT true,
+  object_type     ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
+  db_type         SET('cdna', 'core', 'coreexpressionatlas',
+                      'coreexpressionest', 'coreexpressiongnf', 'funcgen',
+                      'otherfeatures', 'rnaseq', 'variation', 'vega',
+                      'presite', 'sangervega')
+                      NOT NULL DEFAULT 'core',
+  attrib_type_id  INT(11) DEFAULT NULL,
+  description     TEXT,
+  biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
+  so_acc          VARCHAR(64),
 
   -- Columns for the web interface:
-  created_by    INTEGER,
-  created_at    DATETIME,
-  modified_by   INTEGER,
-  modified_at   DATETIME,
+  created_by      INTEGER,
+  created_at      DATETIME,
+  modified_by     INTEGER,
+  modified_at     DATETIME,
 
   PRIMARY KEY (biotype_id),
-  UNIQUE INDEX name_type_idx (name, object_type, db_type)
+  UNIQUE KEY name_type_idx (name, object_type)
 );
 
 -- The 'meta_key' table.
@@ -501,8 +505,8 @@ FROM    web_data wd
 WHERE   awd.analysis_web_data_id IS NULL;
 
 
--- Views for the master tables.  These four views are simply selecting
--- the entries from the corresponding master table that have is_current
+-- Views for the master tables.  These views are simply selecting the
+-- entries from the corresponding master table that have is_current
 -- set to true.
 
 CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib_type AS
@@ -531,6 +535,20 @@ SELECT
 FROM    master_attrib_set
 WHERE   is_current = true
 ORDER BY attrib_set_id,attrib_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW biotype AS
+SELECT
+  biotype_id AS biotype_id,
+  name AS name,
+  object_type AS object_type,
+  db_type AS db_type,
+  attrib_type_id AS attrib_type_id,
+  description AS description,
+  biotype_group AS biotype_group,
+  so_acc AS so_acc
+FROM master_biotype
+WHERE is_current = true
+ORDER BY biotype_id;
 
 CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW external_db AS
 SELECT

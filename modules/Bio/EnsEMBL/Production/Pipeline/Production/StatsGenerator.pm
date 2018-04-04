@@ -31,7 +31,7 @@ sub run {
   my ($self) = @_;
 
   throw "Supposed to be overridden by subclasses";
-  
+
   # my $species    = $self->param('species');
 
   # $self->dbc()->disconnect_if_idle() if defined $self->dbc();
@@ -75,7 +75,7 @@ sub run {
   #          || $b->seq_region_length() <=> $a->seq_region_length() } @$all_slices) ;
   # while (my $slice = shift @all_sorted_slices) {
   #   next if $slice->seq_region_name =~ /LRG/;
-    
+
   #   if ($slice->is_reference) {
   #     $stats_hash{'transcript'} += $ta->count_all_by_Slice($slice);
   #     $stats_attrib{'transcript'} = 'transcript_cnt';
@@ -189,29 +189,13 @@ sub store_attrib {
 
 sub get_attrib {
   my ($self, $slice, $code) = @_;
-  my $aa          = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
+  my $aa = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Attribute');
   my $attributes = $aa->fetch_all_by_Slice($slice, $code);
   my $count = 0;
   foreach my $attribute (@$attributes) {
     $count += $attribute->value();
   }
   return $count;
-}
-
-sub get_biotype_group {
-  my ($self, $biotype) = @_;
-  my $prod_dba = $self->get_production_DBAdaptor();
-  my $helper = $prod_dba->dbc()->sql_helper();
-  my $sql = q{
-     SELECT name
-     FROM biotype
-     WHERE object_type = 'gene'
-     AND is_current = 1
-     AND biotype_group = ?
-     AND db_type like '%core%' };
-  my @biotypes = @{ $helper->execute_simple(-SQL => $sql, -PARAMS => [$biotype]) };
-  #$prod_dba->dbc()->disconnect_if_idle();
-  return \@biotypes;
 }
 
 sub store_statistics {
