@@ -52,3 +52,4 @@ wget "https://raw.githubusercontent.com/evidenceontology/evidenceontology/master
 wget --no-check-certificate "https://build.berkeleybop.org/job/build-mp-edit/lastSuccessfulBuild/artifact/src/ontology/mp.obo/*view*/" -O $dir/MP.obo
 wget "ftp://ftp.rgd.mcw.edu/pub/ontology/clinical_measurement/clinical_measurement.obo" -O $dir/CMO.obo
 wget "http://purl.obolibrary.org/obo/hp.obo" -O $dir/HPO.obo
+wget "ftp://ftp.rgd.mcw.edu/pub/ontology/vertebrate_trait/vertebrate_trait.obo" -O $dir/VT.obo
