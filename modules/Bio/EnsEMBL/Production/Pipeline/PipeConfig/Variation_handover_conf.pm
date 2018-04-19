@@ -39,11 +39,11 @@ sub default_options {
         species => [],
         
         ### Allow pipeline to run on species without declarations. Use it with -species parameter
-        force => 0,
+        force => 1,
 
         release => software_version(),
 
-        run_all => 0,
+        run_all => 1,
 
         bin_count => '150',
 
