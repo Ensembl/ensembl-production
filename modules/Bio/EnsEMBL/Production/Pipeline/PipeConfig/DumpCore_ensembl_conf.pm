@@ -59,8 +59,8 @@ sub default_options {
 #'blat_exe' => $self->o('exe_dir').'faToTwoBit',
        'blat_exe' => 'faToTwoBit',
        # Set to '0' to skip intentions checking during dataflow of jobs
-       # default => ON (1)
-       'check_intentions' => 1,
+       # default => OFF (0)
+       'check_intentions' => 0,
 	};
 }
 
