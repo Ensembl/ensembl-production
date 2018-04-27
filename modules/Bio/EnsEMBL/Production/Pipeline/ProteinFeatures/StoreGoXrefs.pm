@@ -139,6 +139,7 @@ sub store_go_xref {
     
         my $go_xref = Bio::EnsEMBL::OntologyXref->new(%go_xref_args);
         $go_xref->add_linkage_type('IEA', $interpro_xref);
+        $go_xref->{version} = undef;
         $dbea->store($go_xref, $transcript_id, 'Transcript', 1);
       }
     }
