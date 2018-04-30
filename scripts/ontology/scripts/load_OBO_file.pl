@@ -808,7 +808,7 @@ foreach my $rel_type (@{$ontology->get_relationship_types()}) {
 print("Finished reading OBO file, now writing to database...\n");
 
 
-my $unknown_onto_id = write_ontology($dbh, \%namespaces, $ontology->data_version() );
+my $unknown_onto_id = write_ontology($dbh, \%namespaces, $ontology->data_version() || $ontology->date() );
 write_subset($dbh, \%subsets);
 write_term($dbh, \%terms, \%subsets, \%namespaces, $unknown_onto_id);
 write_relation_type($dbh, \%relation_types);
