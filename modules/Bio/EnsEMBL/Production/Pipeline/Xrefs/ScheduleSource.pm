@@ -66,6 +66,7 @@ sub run {
   my $xref_dbi = $dbc->dbi();
 
   my $species_id = $self->get_taxon_id($species);
+  my $division = $self->get_division($species);
 
   # Retrieve list of sources from versioning database
   if (defined $source_url) {
@@ -82,7 +83,7 @@ sub run {
     if ($priority != $order_priority) { next; }
 
     # Some sources are species-specific
-    my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id, $name);
+    my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id, $name, $division);
     if (!defined $source_id) { next; }
 
     # Some sources need connection to a species database
