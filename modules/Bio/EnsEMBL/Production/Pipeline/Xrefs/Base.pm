@@ -198,7 +198,7 @@ sub get_path {
 }
 
 sub get_xref_mapper {
-  my ($self, $xref_url, $species, $base_path, $release) = @_;
+  my ($self, $xref_url, $species, $base_path, $release, $taxon) = @_;
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
   my $registry = 'Bio::EnsEMBL::Registry';
@@ -229,12 +229,20 @@ sub get_xref_mapper {
     -disconnect_when_inactive => 1
   );
 
-  # Look for species-specific mapper
   my $module = 'XrefMapper::BasicMapper';;
+
+  # Look for species-specific mapper
   my $class = "XrefMapper/$species.pm";
   my $eval_test = eval { require $class; };
   if (defined $eval_test) {
     $module = "XrefMapper::$species" if $eval_test == 1;
+  } else {
+  # Look for taxon-specific mapper
+    $class = "XrefMapper/$taxon.pm";
+    $eval_test = eval { require $class; };
+    if (defined $eval_test) {
+      $module = "XrefMapper::$taxon" if $eval_test == 1;
+    }
   }
 
   my $mapper = $module->new();

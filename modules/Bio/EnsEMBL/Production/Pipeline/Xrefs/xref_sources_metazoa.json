@@ -9,43 +9,43 @@
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/c_briggsae/PRJNA10731/annotation/c_briggsae.PRJNA10731.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_briggsae/PRJNA10731/annotation/c_briggsae.PRJNA10731.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/c_japonica/PRJNA12591/annotation/c_japonica.PRJNA12591.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_japonica/PRJNA12591/annotation/c_japonica.PRJNA12591.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/o_volvulus/PRJEB513/annotation/o_volvulus.PRJEB513.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/o_volvulus/PRJEB513/annotation/o_volvulus.PRJEB513.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/p_pacificus/PRJNA12644/annotation/p_pacificus.PRJNA12644.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/p_pacificus/PRJNA12644/annotation/p_pacificus.PRJNA12644.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/s_ratti/PRJEB125/annotation/s_ratti.PRJEB125.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/s_ratti/PRJEB125/annotation/s_ratti.PRJEB125.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {
       "name" : "wormbase",
       "parser" : "WormbaseDirectParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/WS263/species/b_malayi/PRJNA10729/annotation/b_malayi.PRJNA10729.WS263.xrefs.txt.gz",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/b_malayi/PRJNA10729/annotation/b_malayi.PRJNA10729.RELEASE.xrefs.txt.gz",
       "priority" : 1
     },
     {

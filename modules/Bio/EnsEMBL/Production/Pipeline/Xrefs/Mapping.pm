@@ -38,11 +38,12 @@ sub run {
   my $species      = $self->param_required('species');
   my $base_path    = $self->param_required('base_path');
   my $release      = $self->param_required('release');
+  my $taxon        = $self->param('taxon');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my $species_id = $self->get_taxon_id($species);
 
-  my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
+  my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release, $taxon);
   my $dbi = $mapper->xref->dbc();
 
   my $priority = XrefMapper::ProcessPrioritys->new($mapper);

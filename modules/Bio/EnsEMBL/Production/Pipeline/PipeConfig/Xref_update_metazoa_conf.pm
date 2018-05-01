@@ -42,12 +42,14 @@ sub default_options {
            'species'          => ['caenorhabditis_elegans'],
            'antispecies'      => [],
            'division'         => [],
+           'taxon'            => 'wormbase',
            'run_all'          => 0,
            'force'            => ['caenorhabditis_elegans'],
            'check_intentions' => 0,
 
            ## Parameters for source download
            'config_file'      => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources_metazoa.json",
+           'ftp_release'      => 'WS263',
            'source_dir'       => $self->o('ENV', 'HOME')."/work/lib/VersioningService/sql",
            'source_url'       => 'mysql://ensadmin:ensembl@mysql-ens-core-prod-1:4524/mr6_metazoa_source_db',
            'xref_db'          => 'mysql://ensadmin:ensembl@mysql-ens-core-prod-1:4524',
