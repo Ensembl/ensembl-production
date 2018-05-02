@@ -559,7 +559,6 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
-      -analysis_capacity => 4,
       -rc_name => '64GB',
       # Validate both output files
       -flow_into => { 2 => ['validate_rdf'], }
