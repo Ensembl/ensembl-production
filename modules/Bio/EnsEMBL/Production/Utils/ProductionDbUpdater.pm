@@ -87,6 +87,11 @@ my $tables = {
                   all_cols => [qw/attrib_set_id attrib_id/],
                   row_id   => 'attrib_set_id' },
 
+  biotype => { label    => 'name',
+               cols     => [qw/biotype_id name object_type db_type attrib_type_id description biotype_group so_acc/],
+               all_cols => [qw/biotype_id name object_type db_type attrib_type_id description biotype_group so_acc/],
+               row_id   => 'biotype_id' },
+
   misc_set => { label    => 'code',
                 cols     => [qw/misc_set_id code name description max_length/],
                 all_cols => [qw/misc_set_id code name description max_length/],
@@ -105,7 +110,7 @@ sub update_controlled_tables {
   my @tables = ();
   if ( $dbc->dbname =~ m/_cdna|core|otherfeatures|rnaseq|vega_/ ) {
     @tables =
-      qw/attrib_type external_db misc_set unmapped_reason analysis_description/;
+      qw/attrib_type biotype external_db misc_set unmapped_reason analysis_description/;
   }
   elsif ( $dbc->dbname =~ m/_variation_/ ) {
     @tables = qw/attrib_type attrib attrib_set/;
