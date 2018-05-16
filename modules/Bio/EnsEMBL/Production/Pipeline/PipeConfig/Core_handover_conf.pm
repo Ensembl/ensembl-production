@@ -278,7 +278,7 @@ sub resource_classes {
     return {
       'default' => { 'LSF' => ''},
       'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh7 -M 3000 -R "rusage[mem=3000]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 3500 -R "rusage[mem=3500]"'},
     }
 }
 
