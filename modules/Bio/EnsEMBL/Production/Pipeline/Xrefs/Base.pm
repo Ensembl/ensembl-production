@@ -46,7 +46,8 @@ sub parse_config {
 }
 
 sub create_db {
-  my ($self, $source_dir, $user, $pass, $db_url, $source_db, $host, $port) = @_;
+  my ($self, $source_dir, $source_url) = @_;
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($source_url);
   my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s", $host, $port);
   my $dbh = DBI->connect( $dbconn, $user, $pass, {'RaiseError' => 1}) or croak( "Can't connect to server: " . $DBI::errstr );
   my %dbs = map {$_->[0] => 1} @{$dbh->selectall_arrayref('SHOW DATABASES')};
