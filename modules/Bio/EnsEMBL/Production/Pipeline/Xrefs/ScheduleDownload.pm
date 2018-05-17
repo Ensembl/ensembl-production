@@ -31,19 +31,16 @@ sub run {
   my $skip_download    = $self->param_required('skip_download');
   my $ftp_release      = $self->param('ftp_release');
 
-  my $user             = $self->param('source_user');
-  my $pass             = $self->param('source_pass');
-  my $db_url           = $self->param('source_url');
-  my $source_db        = $self->param('source_db');
-  my $host             = $self->param('source_host');
-  my $port             = $self->param('source_port');
+  my $db_url = $self->param('source_url') || sprintf(
+    "mysql://%s:%s@%s:%s/%s",
+    $self->param('source_user'),
+    $self->param('source_pass'),
+    $self->param('source_host'),
+    $self->param('source_port'),
+    $self->param('source_db')
+  );
 
-  if (defined $db_url) {
-    ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  } else {
-    $db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $source_db);
-  }
-  $self->create_db($source_dir, $user, $pass, $db_url, $source_db, $host, $port) unless $reuse_db;
+  $self->create_db($source_dir, $db_url) unless $reuse_db;
 
   # Can re-use existing files if specified
   if ($skip_download) { return; }
