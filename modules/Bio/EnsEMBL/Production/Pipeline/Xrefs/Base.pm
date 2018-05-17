@@ -71,7 +71,7 @@ sub download_file {
   if (defined $db and $db eq 'checksum') {
     $dest_dir = catdir($base_path, 'Checksum');
   }
-
+  make_path($dest_dir);
   if ($uri->scheme eq 'ftp') {
     my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
     if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
@@ -84,12 +84,10 @@ sub download_file {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
-      mkdir(dirname($file_path));
       $ftp->get( $remote_file, $file_path );
     }
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
-    mkdir(dirname($file_path));
     open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
     my $http = HTTP::Tiny->new();
     my $response = $http->get($uri->as_string());
