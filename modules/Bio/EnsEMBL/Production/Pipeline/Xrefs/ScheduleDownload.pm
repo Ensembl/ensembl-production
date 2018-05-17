@@ -31,14 +31,7 @@ sub run {
   my $skip_download    = $self->param_required('skip_download');
   my $ftp_release      = $self->param('ftp_release');
 
-  my $db_url = $self->param('source_url') || sprintf(
-    "mysql://%s:%s@%s:%s/%s",
-    $self->param('source_user'),
-    $self->param('source_pass'),
-    $self->param('source_host'),
-    $self->param('source_port'),
-    $self->param('source_db')
-  );
+  my $db_url = $self->param_required('source_url');
 
   $self->create_db($source_dir, $db_url) unless $reuse_db;
 
