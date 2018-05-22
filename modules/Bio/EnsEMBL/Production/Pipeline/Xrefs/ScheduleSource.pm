@@ -45,7 +45,7 @@ sub run {
   my $host             = $self->param('xref_host');
   my $port             = $self->param('xref_port');
 
-  if (defined $db_url) {
+  if ($db_url) {
     ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
 
