@@ -178,6 +178,7 @@ sub write_output {
       dbname       => $dbname,
       species_list => \@species_list,
       species      => $species_list[0],
+      group        => $$dbs{$dbname}{$species_list[0]}->group,
     };
 
     $self->dataflow_output_id( $dataflow_params, $db_flow );
