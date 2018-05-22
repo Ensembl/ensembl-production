@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.28-67.0',
+    interproscan_version => '5.29-68.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -105,7 +105,7 @@ sub default_options {
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '2017_10',
+        'db_version'    => '2018_03',
         'ipscan_name'   => 'Hamap',
         'ipscan_xml'    => 'HAMAP',
         'ipscan_lookup' => 1,
@@ -129,7 +129,7 @@ sub default_options {
       {
         'logic_name'    => 'pfscan',
         'db'            => 'Prosite_profiles',
-        'db_version'    => '2017_09',
+        'db_version'    => '2018_02',
         'ipscan_name'   => 'ProSiteProfiles',
         'ipscan_xml'    => 'PROSITE_PROFILES',
         'ipscan_lookup' => 1,
@@ -153,7 +153,7 @@ sub default_options {
       {
         'logic_name'    => 'scanprosite',
         'db'            => 'Prosite_patterns',
-        'db_version'    => '2017_09',
+        'db_version'    => '2018_02',
         'ipscan_name'   => 'ProSitePatterns',
         'ipscan_xml'    => 'PROSITE_PATTERNS',
         'ipscan_lookup' => 1,
