@@ -843,7 +843,9 @@ PRIMARY ASSEMBLY
 -----------------
 Primary assembly contains all toplevel sequence regions excluding haplotypes
 and patches. This file is best used for performing sequence similarity searches
-where patch and haplotype sequences would confuse analysis.   
+where patch and haplotype sequences would confuse analysis. If the primary
+assembly file is not present, that indicates that there are no haplotype/patch
+regions, and the 'toplevel' file is equivalent.
 
 EXAMPLES
 
