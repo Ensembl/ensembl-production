@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use XrefMapper::RNACentralMapper;
+use XrefMapper::Methods::MySQLChecksum;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
@@ -31,14 +32,23 @@ sub run {
   my $xref_url     = $self->param_required('xref_url');
   my $species      = $self->param_required('species');
   my $base_path    = $self->param_required('base_path');
-  my $source_url   = $self->param_required('source_url');
+  my $db_url       = $self->param_required('source_url');
   my $release      = $self->param_required('release');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
-  my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
-  my $checksum_mapper = XrefMapper::RNACentralMapper->new($mapper);
   my $species_id = $self->get_taxon_id($species);
-  $checksum_mapper->process($source_url, $species_id);
+
+  my $mapper = XrefMapper::RNACentralMapper->new($self->get_xref_mapper($xref_url, $species, $base_path, $release, $taxon));
+  # Unroll this method to avoid an extra "check if there is data before proceeding"
+  # $mapper->process($source_url, $species_id);
+ 
+  my $target = $mapper->target;
+  my $object_type = $mapper->object_type;
+  my $source_id = $mapper->source_id;
+
+  my $method = XrefMapper::Methods::MySQLChecksum->new( -MAPPER => $mapper);
+  my $results = $method->run($target, $source_id, $object_type, $db_url);
+  $mapper->upload($results, $species_id) if @{$results};
 
 }
 
