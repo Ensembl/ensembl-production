@@ -57,7 +57,7 @@ sub default_options {
 # override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
     my $self = shift;
-    return "-reg_conf ".$self->o("registry");
+    return "-reg_conf ".$self->o("reg_conf");
 }
 
 
