@@ -61,7 +61,7 @@ sub create_db {
 }
 
 sub download_file {
-  my ($self, $file, $base_path, $source_name, $db, $release) = @_;
+  my ($self, $file, $base_path, $source_name, $db, $skip_download_if_file_present, $release) = @_;
 
   my $uri = URI->new($file);
   if (!defined $uri->scheme) { return $file; }
@@ -84,15 +84,17 @@ sub download_file {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
-      $ftp->get( $remote_file, $file_path );
+      $ftp->get( $remote_file, $file_path ) unless $skip_download_if_file_present and -f $file_path;
     }
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
-    open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
-    my $http = HTTP::Tiny->new();
-    my $response = $http->get($uri->as_string());
-    print OUT $response->{content};
-    close OUT;
+    unless ($skip_download_if_file_present and -f $file_path) {
+      open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+      my $http = HTTP::Tiny->new();
+      my $response = $http->get($uri->as_string());
+      print OUT $response->{content};
+      close OUT;
+    }
   }
   if (defined $release) {
     return $file_path;

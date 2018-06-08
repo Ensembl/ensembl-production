@@ -34,9 +34,6 @@ sub run {
 
   $self->create_db($source_dir, $db_url) unless $reuse_db;
 
-  # Can re-use existing files if specified
-  if ($skip_download) { return; }
-
   my $sources = $self->parse_config($config_file);
   my $dataflow_params;
 
@@ -54,7 +51,8 @@ sub run {
       db           => $db,
       version_file => $version_file,
       db_url       => $db_url,
-      file         => $file
+      file         => $file,
+      skip_download=> $skip_download,
     };
     $self->dataflow_output_id($dataflow_params, 2);
   }
