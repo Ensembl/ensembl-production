@@ -85,6 +85,7 @@ sub pipeline_analyses {
              -flow_into  => { '2->A' => 'download_source',
                               'A->1' => 'checksum'},
              -rc_name    => 'small',
+             -meadow_type     => 'LOCAL',
             },
             {-logic_name => 'download_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
@@ -217,6 +218,8 @@ sub pipeline_analyses {
              -parameters => {'base_path'   => $self->o('base_path'),
                              'taxon'       => $self->o('taxon'),
                              'release'     => $self->o('release')},
+            -hive_capacity => 300,
+            -analysis_capacity => 30
             },
             {-logic_name => 'uniparc_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::UniParcMapping',
@@ -224,6 +227,8 @@ sub pipeline_analyses {
              -parameters => {'base_path'   => $self->o('base_path'),
                              'taxon'       => $self->o('taxon'),
                              'release'     => $self->o('release')},
+            -hive_capacity => 300,
+            -analysis_capacity => 30
             },
             {-logic_name => 'coordinate_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CoordinateMapping',
