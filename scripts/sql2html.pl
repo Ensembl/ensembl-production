@@ -228,6 +228,8 @@ $css_code
 ##############
 
 my $html_footer = qq{
+    </div>
+  </div>
 </body>
 </html>};
 
@@ -290,7 +292,7 @@ while (<$sql_fh>) {
     }
     # Colour of the table header (used for both set, table) (optional)
     elsif ($doc =~ /^\@(colour)\s*(.+)$/i) {
-      fill_documentation ($1,$2) if ($show_colour);
+      fill_documentation ($1,uc($2)) if ($show_colour);
     }
     # Column
     elsif ($doc =~ /^\@(column)\s*(.+)$/i) {
