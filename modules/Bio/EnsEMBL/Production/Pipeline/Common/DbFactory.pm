@@ -105,9 +105,10 @@ sub run {
 
   if ($run_all) {
     foreach my $dba (@$all_dbas) {
-      $self->add_species($dba, \%dbs);
+      unless ($dba->species eq 'Ancestral sequences') {
+        $self->add_species($dba, \%dbs);
+      }
     }
-    delete $dbs{'Ancestral sequences'};
     $self->warning("All species in " . scalar(keys %dbs) . " databases loaded");
     
     %compara_dbs = map { $_->species => $_ } @$all_compara_dbas;
