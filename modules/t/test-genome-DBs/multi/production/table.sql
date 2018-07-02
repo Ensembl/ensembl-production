@@ -216,7 +216,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=59 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=60 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -291,7 +291,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `att
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`test_user`@`localhost` SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc` from `master_biotype` where (`master_biotype`.`is_current` = TRUE) order by `master_biotype`.`biotype_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`test_user`@`localhost` SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `db_list` AS select `db`.`db_id` AS `db_id`,concat(concat_ws('_',`species`.`db_name`,`db`.`db_type`,`db`.`db_release`,`db`.`db_assembly`),`db`.`db_suffix`) AS `full_db_name` from (`species` join `db` on((`species`.`species_id` = `db`.`species_id`))) where (`species`.`is_current` = 1);
 
