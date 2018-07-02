@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	93
+1	\N	schema_version	94
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -233,3 +233,7 @@
 2189	\N	patch	patch_91_92_b.sql|add_cigar_line_align_type
 2190	\N	patch	patch_92_93_a.sql|schema_version
 2191	1	patch	patch_92_93_b.sql|biotype_table
+2192	\N	patch	patch_92_93_c.sql|collate_index_interpro
+2193	\N	patch	patch_93_94_a.sql|schema_version
+2194	\N	patch	patch_93_94_b.sql|nullable_ox_analysis
+2195	\N	patch	patch_93_94_c.sql|default_aln_type
