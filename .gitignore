@@ -32,3 +32,5 @@ a.out
 *.obj
 *.class
 MultiTestDB.conf
+.idea
+*.iml

@@ -173,6 +173,10 @@ sub store_features {
     );
     
     my $protein_feature = Bio::EnsEMBL::ProteinFeature->new(%pf_args);
+    $protein_feature->{'align_type'} = undef;
+    $protein_feature->{'cigar_string'} = undef;
+    $protein_feature->{'external_data'} = undef;
+    
     $pfa->store($protein_feature, $$feature{'translation_id'});
     
     if (defined $interpro_ac && $interpro_ac ne '') {

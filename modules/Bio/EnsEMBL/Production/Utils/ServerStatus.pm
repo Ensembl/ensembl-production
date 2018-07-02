@@ -14,6 +14,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+=head1 NAME
+
+Bio::EnsEMBL::Production::Utils::ServerStatus - find server status using production infrastructure REST services
+
+=head1 SYNOPSIS
+
+    use Bio::EnsEMBL::Production::Utils::ServerStatus;
+    my $stat = Bio::EnsEMBL::Production::Utils::ServerStatus->new(-URL=>'http://myrestsrv:5001/hosts/%s/load');
+    my $srv = "mysql-mine-all-mine";
+    # print the current load
+    print $stat->get_load($srv)."\n";
+    $stat->wait_for_load(10);
+    print $stat->get_load($srv)."\n";
+
+=head1 DESCRIPTION
+
+This module 
+
+=head2 Methods
+
+=over 12
+
+=item C<new>
+
+Returns a new object. Arguments:
+
+=over 4
+
+=item C<-URL> - URL for server load endpoint. Use %s as placeholder for server
+
+=item C<-RETRY_WAIT> - number of seconds to wait between calls to load (default 60)
+
+=item C<-RETRY_COUNT> - number of times to try for desired load before giving up (default 1000)
+
+=back
+
+
+=item C<get_load>
+
+Return the current 1m, 5m and 15m loads for the specified server as a hashref.
+
+=item C<wait_for_load>
+
+Wait until the 1m load for the specified server drops to below the specified threshold.
+
+Arguments:
+
+=over 4
+
+=item name of server
+
+=item 1m load threshold
+
+=back
+
+=back
+
+=head1 AUTHOR
+
+Dan Staines <dstaines@ebi.ac.uk>
+
+=cut
+
 package Bio::EnsEMBL::Production::Utils::ServerStatus;
 
 use strict;
@@ -38,10 +101,6 @@ sub new {
 
 	croak "-URL required" unless defined $self->{url};
 
-	if($self->{url} !~ m/\/$/) {
-	  $self->{url} .= '/';
-	}
-
 	$self->{ua} = LWP::UserAgent->new();
 	$self->{retry_wait}  ||= 60;
 	$self->{retry_count} ||= 1000;
@@ -50,7 +109,7 @@ sub new {
 
 sub get_load {
 	my ( $self, $server ) = @_;
-	my $url = $self->{url} . 'load/' . $server;
+	my $url = sprintf($self->{url}, $server);
 	$logger->debug("Invoking $url");
 	my $response = $self->{ua}->get( $url );
 	if ( $response->is_success ) {

@@ -228,6 +228,8 @@ $css_code
 ##############
 
 my $html_footer = qq{
+    </div>
+  </div>
 </body>
 </html>};
 
@@ -290,7 +292,7 @@ while (<$sql_fh>) {
     }
     # Colour of the table header (used for both set, table) (optional)
     elsif ($doc =~ /^\@(colour)\s*(.+)$/i) {
-      fill_documentation ($1,$2) if ($show_colour);
+      fill_documentation ($1,uc($2)) if ($show_colour);
     }
     # Column
     elsif ($doc =~ /^\@(column)\s*(.+)$/i) {
@@ -465,7 +467,7 @@ if ($fk_sql_file) {
       chomp $_;
       next if ($_ eq '');
       my $doc = remove_char($_);
-      if ($doc =~ /ALTER\s+TABLE\s+(\S+)\s+ADD.*FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\((\S+)\)/i) {
+      if ($doc =~ /ALTER\s+TABLE\s+(\S+)\s+ADD.*FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\s*\((\S+)\)/i) {
           push @{$table_documentation{$1}->{foreign_keys}}, [$2,$3,$4];
       } elsif ($doc =~ /ALTER.*FOREIGN/i) {
           die "Unrecognized contruct: $doc";
@@ -499,7 +501,10 @@ sub generate_whole_diagram {
         table_box($graph, $table_name);
     }
     foreach my $table_name (sort keys %table_documentation) {
+	my %seen_fk = ();
         foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+	    next if( defined $seen_fk{ $fk->[1] } );
+	    $seen_fk{ $fk->[1] } = 1;
             $graph->add_edge($table_name => $fk->[1],
                 'style' => 'dashed',
                 $column_links ? (
@@ -577,7 +582,11 @@ sub generate_sub_diagram {
     my %other_table_fields;
     my @drawn_fks;
     foreach my $table_name (sort keys %table_documentation) {
+	my %seen_fk = ();
         foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+	    next if( defined $seen_fk{ $fk->[1] } );
+	    $seen_fk{ $fk->[1] } = 1;
+
             if ($table_documentation{$table_name}->{category} eq $cluster) {
                 $other_table_fields{$fk->[1]}->{$fk->[2]} = 1;
                 $clusters_to_draw{ $table_documentation{$fk->[1]}->{category} } = 1;
