@@ -44,8 +44,6 @@ sub default_options {
     meta_filters => {},
     
     db_type => 'core',
-    
-    check_intentions => 0,
   };
 }
 
@@ -140,9 +138,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -batch_size        => 100,
       -max_retry_count   => 0,
-      -parameters        => {
-                              check_intentions => $self->o('check_intentions'),
-                            },
+      -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['CoreFlow'],

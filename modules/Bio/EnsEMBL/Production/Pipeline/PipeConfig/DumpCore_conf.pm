@@ -56,9 +56,6 @@ sub default_options {
 	   'antispecies' => [],
        'division' 	 => [], 
 	   'run_all'     => 0,	
-	   # Set to '0' to skip intentions checking during dataflow of jobs
-       # default => OFF (0)
-       'check_intentions' => 0,
 
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
@@ -202,7 +199,6 @@ sub pipeline_analyses {
 	 { -logic_name     => 'job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters     => {
-						     check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),

@@ -51,7 +51,6 @@ sub param_defaults {
     compara_flow       => 5,
     regulation_flow    => 6,
     otherfeatures_flow => 7,
-    check_intentions   => 0,
   };
 }
 
@@ -60,22 +59,9 @@ sub write_output {
   my $all_species      = $self->param_required('all_species');
   my $all_species_flow = $self->param('all_species_flow');
   my $core_flow        = $self->param('core_flow');
-  my $check_intentions = $self->param('check_intentions');
 
   foreach my $species ( @{$all_species} ) {
-    # If check_intention is turned on, then check the production database
-    # and decide if data need to be re-dumped.
-    my $requires_new_dna = 1;
-    if ( $check_intentions == 1 ) {
-      $requires_new_dna = $self->requires_new_dna($species);
-    }
-    my $dataflow_params = {
-      species          => $species,
-      requires_new_dna => $requires_new_dna,
-      check_intentions => $check_intentions,
-    };
-
-    $self->dataflow_output_id( $dataflow_params, $core_flow );
+    $self->dataflow_output_id( {'species' => $species}, $core_flow );
   }
 
   my $flow_species = $self->flow_species($all_species);
@@ -190,31 +176,6 @@ sub has_otherfeatures {
   $has_otherfeatures && $dbof->dbc->disconnect_if_idle();
 
   return $has_otherfeatures;
-}
-
-sub requires_new_dna {
-  my ( $self, $species ) = @_;
-
-  my $sql = <<'SQL';
-    select count(*)
-    from changelog c
-    join changelog_species cs using (changelog_id)
-    join species s using (species_id)
-    where c.release_id = ?
-    and (c.assembly = ? or c.repeat_masking = ?)
-    and c.status = ?
-    and s.production_name = ?
-SQL
-
-  my $release  = $self->param('release');
-  my $params   = [ $release, 'Y', 'Y', 'handed_over', $species ];
-  my $prod_dba = $self->get_production_DBAdaptor();
-  my $result =
-    $prod_dba->dbc()->sql_helper()
-    ->execute_single_result( -SQL => $sql, -PARAMS => $params );
-  $prod_dba->dbc()->disconnect_if_idle();
-
-  return $result;
 }
 
 1;

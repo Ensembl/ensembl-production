@@ -44,7 +44,6 @@ sub default_options {
            'division'         => [],
            'run_all'          => 0,
            'force'            => 0,
-           'check_intentions' => 0,
 
            ## Parameters for source download
            'config_file'      => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
@@ -113,7 +112,6 @@ sub pipeline_analyses {
             {-logic_name => 'schedule_species',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -parameters => {
-                             check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
