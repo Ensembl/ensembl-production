@@ -71,7 +71,7 @@ sub write_output {
     }
   }
 
-  $self->dataflow_output_id( {'species' => $all_species}, $all_species_flow );
+  $self->dataflow_output_id( {'all_species' => $all_species}, $all_species_flow );
 }
 
 sub flow_species {
