@@ -156,20 +156,6 @@
       "priority" : 1
     },
     {
-      "name" : "UCSC_hg38",
-      "parser" : "UCSCParser",
-      "file" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz",
-      "release" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/README.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "UCSC_mm10",
-      "parser" : "UCSCParser",
-      "file" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/knownGene.txt.gz",
-      "release" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/README.txt",
-      "priority" : 1
-    },
-    {
       "name" : "Uniprot/SWISSPROT",
       "parser" : "UniProtParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
