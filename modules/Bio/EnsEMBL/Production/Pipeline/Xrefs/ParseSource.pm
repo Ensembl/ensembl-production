@@ -55,11 +55,12 @@ sub run {
   my $module = "XrefParser::$parser";
   eval "require $module";
   my $xref_run = $module->new($xref_dbc);
+  my $failure = 0;
   if (defined $db) {
     my $registry = 'Bio::EnsEMBL::Registry';
     my $dba = $registry->get_DBAdaptor($species, $db);
     $dba->dbc()->disconnect_if_idle();
-    $xref_run->run_script( { source_id  => $source_id,
+    $failure += $xref_run->run_script( { source_id  => $source_id,
                              species_id => $species_id,
                              dba        => $dba,
                              rel_file   => $release_file,
@@ -68,13 +69,14 @@ sub run {
                              file       => $file_name}) ;
     $self->cleanup_DBAdaptor($db);
   } else {
-    $xref_run->run( { source_id  => $source_id,
+    $failure += $xref_run->run( { source_id  => $source_id,
                       species_id => $species_id,
                       species    => $species,
                       rel_file   => $release_file,
                       dbi        => $dbi,
                       files      => [@files] }) ;
   }
+  if ($failure) { die; }
 
 }
 

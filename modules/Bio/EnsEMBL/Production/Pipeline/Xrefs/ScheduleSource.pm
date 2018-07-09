@@ -23,6 +23,7 @@ use warnings;
 use XrefParser::Database;
 use File::Basename;
 use File::Spec::Functions;
+use Carp;
 
 use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 
@@ -90,7 +91,14 @@ sub run {
     if (defined $db) {
       my $registry = 'Bio::EnsEMBL::Registry';
       $dba = $registry->get_DBAdaptor($species, $db);
-      next unless $dba;
+      if (!$dba) {
+        # Not all species have an otherfeatures database
+        if ($db eq 'otherfeatures') {
+          next;
+        } else {
+          confess("Cannot use $parser for $species, no $db database") unless $dba;
+        }
+      }
     }
 
     if ($file_name eq 'Database') {
