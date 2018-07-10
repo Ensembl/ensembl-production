@@ -36,12 +36,7 @@ sub run {
   my $base_path        = $self->param_required('base_path');
   my $order_priority   = $self->param_required('priority');
 
-  my $source_url       = $self->param('source_url');
-  my $source_db        = $self->param('source_db');
-  my $source_user      = $self->param('source_user');
-  my $source_pass      = $self->param('source_pass');
-  my $source_host      = $self->param('source_host');
-  my $source_port      = $self->param('source_port');
+  my $source_url       = $self->param_required('source_url');
 
   my $db_url           = $self->param('xref_db');
   my $user             = $self->param('xref_user');
@@ -49,7 +44,7 @@ sub run {
   my $host             = $self->param('xref_host');
   my $port             = $self->param('xref_port');
 
-  if (defined $db_url) {
+  if ($db_url) {
     ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
 
@@ -69,9 +64,7 @@ sub run {
   my $division = $self->get_division($species);
 
   # Retrieve list of sources from versioning database
-  if (defined $source_url) {
-    ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
-  }
+  my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
   my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, index_uri, count_seen, revision FROM source s, version v WHERE s.source_id = v.source_id");
   my ($name, $parser, $file_name, $dataflow_params, $db, $priority, $release_file);

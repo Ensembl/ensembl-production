@@ -46,7 +46,8 @@ sub parse_config {
 }
 
 sub create_db {
-  my ($self, $source_dir, $user, $pass, $db_url, $source_db, $host, $port) = @_;
+  my ($self, $source_dir, $source_url) = @_;
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($source_url);
   my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s", $host, $port);
   my $dbh = DBI->connect( $dbconn, $user, $pass, {'RaiseError' => 1}) or croak( "Can't connect to server: " . $DBI::errstr );
   my %dbs = map {$_->[0] => 1} @{$dbh->selectall_arrayref('SHOW DATABASES')};
@@ -60,7 +61,7 @@ sub create_db {
 }
 
 sub download_file {
-  my ($self, $file, $base_path, $source_name, $db, $release) = @_;
+  my ($self, $file, $base_path, $source_name, $db, $skip_download_if_file_present, $release) = @_;
 
   my $uri = URI->new($file);
   if (!defined $uri->scheme) { return $file; }
@@ -70,7 +71,7 @@ sub download_file {
   if (defined $db and $db eq 'checksum') {
     $dest_dir = catdir($base_path, 'Checksum');
   }
-
+  make_path($dest_dir);
   if ($uri->scheme eq 'ftp') {
     my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
     if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
@@ -83,17 +84,17 @@ sub download_file {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
-      mkdir(dirname($file_path));
-      $ftp->get( $remote_file, $file_path );
+      $ftp->get( $remote_file, $file_path ) unless $skip_download_if_file_present and -f $file_path;
     }
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
-    mkdir(dirname($file_path));
-    open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
-    my $http = HTTP::Tiny->new();
-    my $response = $http->get($uri->as_string());
-    print OUT $response->{content};
-    close OUT;
+    unless ($skip_download_if_file_present and -f $file_path) {
+      open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+      my $http = HTTP::Tiny->new();
+      my $response = $http->get($uri->as_string());
+      print OUT $response->{content};
+      close OUT;
+    }
   }
   if (defined $release) {
     return $file_path;
