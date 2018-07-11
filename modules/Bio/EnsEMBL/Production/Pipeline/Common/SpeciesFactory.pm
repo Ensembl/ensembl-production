@@ -116,8 +116,8 @@ sub flow_species {
   }
 
   if ($compara_flow) {
-    foreach my $dbname ( keys %$compara_dbs ) {
-      push @compara_species, $$compara_dbs{$dbname};
+    foreach my $division ( keys %$compara_dbs ) {
+      push @compara_species, $division;
     };
   }
 
