@@ -41,7 +41,10 @@ sub default_options {
        # inherit other stuff from the base class
        %{ $self->SUPER::default_options() }, 
 	   'perl_command'  		 => 'perl',
-	   'blast_header_prefix' => 'EG:'};
+	   'blast_header_prefix' => 'EG:',
+      ## dump_gff3 & dump_gtf parameter
+      'abinitio'        => 0
+      };
 }
 
 sub pipeline_analyses {
