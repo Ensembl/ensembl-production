@@ -145,7 +145,7 @@ sub run {
     $unzipped_out_file = $out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_out_file");
   } elsif (scalar(@chroms) > 0) {
     # If species has only chromosomes, dump only one file
@@ -160,7 +160,7 @@ sub run {
     $unzipped_out_file = $alt_out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $alt_out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_alt_out_file");
   }
 
