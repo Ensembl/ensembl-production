@@ -569,7 +569,7 @@ sub tidy_file_handle {
       $self->throw("Cannot continue. The file %s has already been created this session. Fail!");
     }
   }
-  gzip $path => $target, %args or throw "GZip error compressing $path to $target: $GzipError";
+  gzip -n $path => $target, %args or throw "GZip error compressing $path to $target: $GzipError";
   $self->info('    Removing original file from filesystem');
   unlink $path or throw "Could not delete $path: $!";
   $self->info('    Finished');
