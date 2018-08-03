@@ -134,7 +134,7 @@ sub run {
     $unzipped_out_file = $out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_out_file");
     push @$out_files, $chr_out_file;
     push @$out_files, $out_file;
@@ -154,7 +154,7 @@ sub run {
     $unzipped_out_file = $alt_out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $alt_out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_alt_out_file");
     push @$out_files, $alt_out_file;
   }
