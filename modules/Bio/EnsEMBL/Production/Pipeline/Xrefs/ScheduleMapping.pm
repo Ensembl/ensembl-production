@@ -46,8 +46,9 @@ sub run {
   my $base_path    = $self->param_required('base_path');
   my $source_url   = $self->param_required('source_url');
   my $release      = $self->param_required('release');
+  my $taxon        = $self->param('taxon');
 
-  my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
+  my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release, $taxon);
 
   my $core_info = XrefMapper::CoreInfo->new($mapper);
   $core_info->get_core_data();

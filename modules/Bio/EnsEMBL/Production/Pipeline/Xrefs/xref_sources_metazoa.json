@@ -1,0 +1,141 @@
+[
+    {
+      "name" : "ArrayExpress",
+      "parser" : "ArrayExpressParser",
+      "file" : "Database",
+      "db" : "core",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_briggsae/PRJNA10731/annotation/c_briggsae.PRJNA10731.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/c_japonica/PRJNA12591/annotation/c_japonica.PRJNA12591.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/o_volvulus/PRJEB513/annotation/o_volvulus.PRJEB513.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/p_pacificus/PRJNA12644/annotation/p_pacificus.PRJNA12644.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/s_ratti/PRJEB125/annotation/s_ratti.PRJEB125.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "wormbase",
+      "parser" : "WormbaseDirectParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/wormbase/releases/RELEASE/species/b_malayi/PRJNA10729/annotation/b_malayi.PRJNA10729.RELEASE.xrefs.txt.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "UniParc",
+      "parser" : "ChecksumParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
+      "db" : "checksum",
+      "priority" : 1
+    },
+    {
+      "name" : "RNACentral",
+      "parser" : "ChecksumParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
+      "db" : "checksum",
+      "priority" : 1
+    },
+    {
+      "name" : "EntrezGene",
+      "parser" : "EntrezGeneParser",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "RFAM",
+      "parser" : "RFAMParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.seed.gz",
+      "db" : "core",
+      "priority" : 1
+    },
+    {
+      "name" : "Reactome",
+      "parser" : "ReactomeParser",
+      "file" : "http://www.reactome.org/download/current/Ensembl2Reactome_All_Levels.txt",
+      "release" : "http://www.reactome.org/ReactomeRESTfulAPI/RESTfulWS/version",
+      "priority" : 1
+    },
+    {
+      "name" : "Reactome",
+      "parser" : "ReactomeParser",
+      "file" : "http://www.reactome.org/download/current/UniProt2Reactome_All_Levels.txt",
+      "release" : "http://www.reactome.org/ReactomeRESTfulAPI/RESTfulWS/version",
+      "priority" : 2
+    },
+    {
+      "name" : "RefSeq_dna",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/release/invertebrate/invertebrate*.rna.gbff.gz",
+      "method" : "--bestn 5",
+      "query_cutoff" : 95,
+      "target_cutoff" : 70,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "RefSeq_peptide",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/release/invertebrate/invertebrate*.protein.gpff.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "Uniprot/SWISSPROT",
+      "parser" : "UniProtParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_invertebrates.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/reldate.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "Uniprot/SPTREMBL",
+      "parser" : "UniProtParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_trembl_invertebrates.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/reldate.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "miRBase",
+      "parser" : "miRBaseParser",
+      "file" : "ftp://mirbase.org/pub/mirbase/CURRENT/miRNA.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 90,
+      "target_cutoff" : 90,
+      "priority" : 1
+    }
+]
