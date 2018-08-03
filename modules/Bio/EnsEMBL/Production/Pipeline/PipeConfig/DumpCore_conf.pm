@@ -71,6 +71,7 @@ sub default_options {
 
 	   ## dump_gff3 & dump_gtf parameter
        'abinitio'        => 1,
+       'gene' => 1,
 
 	   ## dump_gtf parameters, e! specific
 	   'gtftogenepred_exe' => 'gtfToGenePred',
@@ -240,6 +241,7 @@ sub pipeline_analyses {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),						
 				   	        abinitio        => $self->o('abinitio'),
+                    gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
@@ -252,6 +254,7 @@ sub pipeline_analyses {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),						
    		        	        abinitio        => $self->o('abinitio'),
+                        gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '32GB',
@@ -262,8 +265,9 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe'),
-					        abinitio        => $self->o('abinitio'),						
+					          gene_pred_check => $self->o('genepredcheck_exe'),
+					          abinitio        => $self->o('abinitio'),
+                    gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '64GB',
@@ -273,9 +277,10 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf_128GB',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe'),
-   		        	        abinitio        => $self->o('abinitio'),					
+				                gtf_to_genepred => $self->o('gtftogenepred_exe'),
+					              gene_pred_check => $self->o('genepredcheck_exe'),
+                        abinitio        => $self->o('abinitio'),
+                        gene => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '128GB',
@@ -291,6 +296,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
 	      abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -311,6 +317,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
     	  abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -330,6 +337,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
     	  abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -349,6 +357,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
 	      abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
