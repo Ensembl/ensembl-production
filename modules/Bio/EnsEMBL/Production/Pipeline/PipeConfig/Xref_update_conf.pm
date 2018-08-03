@@ -48,7 +48,7 @@ sub default_options {
            ## Parameters for source download
            'config_file'      => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
            'source_url'       => '',
-           'source_dir'       => $self->o('ENV', 'HOME')."/work/lib/VersioningService/sql",
+           'source_dir'       => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
            'source_host'      => '',
            'source_port'      => '',
            'source_user'      => '',
