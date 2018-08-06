@@ -110,7 +110,7 @@ sub default_options {
                      # target species division to project to
                      'division' => 'Ensembl',
                      # Taxon name of species to project to
-                     'taxons'      => ['Neopterygii','Cyclostomata','Coelacanthimorpha','Amphibia'],
+                     'taxons'      => ['Neopterygii','Cyclostomata','Coelacanthimorpha','Amphibia','Tunicata'],
                      # Taxon name of species to exclude
                      'antitaxons' => [],
 					 'exclude' => undef,
