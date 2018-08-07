@@ -110,7 +110,8 @@ sub pipeline_analyses {
 						'cleanup_dir'     => $self->o('cleanup_dir')
 		   	 },
 		    -flow_into  => { '2->A'              => ['SpeciesFactory'],
-				    'A->1' => [ 'RunCreateReleaseFile'  ] },
+				    'A->1' => [ 'SpeciesFactoryAll'  ],
+						},
 		    -rc_name    => 'default',
 		 },
 
@@ -122,6 +123,25 @@ sub pipeline_analyses {
                                  },
              -rc_name         => 'default',
           },
+			{  -logic_name      => 'SpeciesFactoryAll',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+             -max_retry_count => 1,
+             -flow_into       => {
+                                  '1' => ['SpeciesNoOrthologs'],
+                                 },
+             -rc_name         => 'default',
+          },
+
+		{  -logic_name => 'SpeciesNoOrthologs',
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs',
+		   -parameters => {
+			      'release' => $self->o('release'),
+       },
+		   -batch_size    => 1,
+			 -flow_into       => {
+				 '1' => ['RunCreateReleaseFile'],
+			 } ,
+		   -rc_name       => 'default',},
 
 		{  -logic_name => 'GetOrthologs',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',

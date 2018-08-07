@@ -82,7 +82,6 @@ sub write_output {
 		if ($cleanup_dir){
 			unlink glob "$dir_name/*";
 		}
-
 		$self->dataflow_output_id( {  'output_dir'     => $dir_name,
 					      'division'       => $division,
 					      'compara'        => $compara,
@@ -93,7 +92,9 @@ sub write_output {
 					      'antitaxons'     => $antitaxons,
  	 				      'homology_types' => $homology_types, },
                        2 );
-	    $self->dataflow_output_id( {  'output_dir'     => $dir_name, },
+			#Flowing all the species to figure out species without orthologs
+	    $self->dataflow_output_id( {  'output_dir'     => $dir_name,
+					      'division'       => $division },
 					   1 );
 	}
 
