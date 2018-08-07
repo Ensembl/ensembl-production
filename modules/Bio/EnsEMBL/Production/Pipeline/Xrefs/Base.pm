@@ -272,12 +272,13 @@ sub get_division {
   my $meta_container = $registry->get_adaptor($species,'core', 'MetaContainer');
   my $division = $meta_container->get_division();
 
-  my %division_taxon = {
-    'Ensembl'        => 7742,
-    'Vertebrates'    => 7742,
-    'EnsemblMetazoa' => 33208,
-    'Metazoa'        => 33208
-  };
+  my %division_taxon = (
+    'EnsemblVertebrates' => 7742,
+    'Ensembl'            => 7742,
+    'Vertebrates'        => 7742,
+    'EnsemblMetazoa'     => 33208,
+    'Metazoa'            => 33208
+  );
   my $division_id = $division_taxon{$division};
 
   return $division_id;
