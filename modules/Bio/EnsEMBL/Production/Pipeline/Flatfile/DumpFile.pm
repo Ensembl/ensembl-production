@@ -131,7 +131,7 @@ sub run {
       }
       return;
     });
-    $self->run_cmd("gzip $path");
+    $self->run_cmd("gzip -n $path");
   } else {
     $self->info('Did not find any non-chromosomal data');
   }
@@ -156,7 +156,7 @@ sub run {
     });
   }
   
-  map { $self->run_cmd("gzip $_") } @compress;
+  map { $self->run_cmd("gzip -n $_") } @compress;
 
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
