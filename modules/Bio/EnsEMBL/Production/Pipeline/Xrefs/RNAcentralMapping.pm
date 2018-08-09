@@ -38,7 +38,7 @@ sub run {
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my $species_id = $self->get_taxon_id($species);
 
-  my $mapper = XrefMapper::RNACentralMapper->new($self->get_xref_mapper($xref_url, $species, $base_path, $release, $taxon));
+  my $mapper = XrefMapper::RNACentralMapper->new($self->get_xref_mapper($xref_url, $species, $base_path, $release));
   # Unroll this method to avoid an extra "check if there is data before proceeding"
   # $mapper->process($source_url, $species_id);
  
