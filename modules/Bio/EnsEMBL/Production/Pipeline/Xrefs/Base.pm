@@ -146,7 +146,7 @@ sub load_checksum {
 }
 
 sub get_source_id {
-  my ($self, $dbi, $parser, $species_id, $name) = @_;
+  my ($self, $dbi, $parser, $species_id, $name, $division_id) = @_;
   $name = "%$name%";
   my $source_id;
   my $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ?");
@@ -167,7 +167,7 @@ sub get_source_id {
   }
   # If no species-specific source, look for common sources
   if (!defined $source_id) {
-    $select_source_id_sth->execute($parser, 1, $name);
+    $select_source_id_sth->execute($parser, $division_id, $name);
     $source_id = ($select_source_id_sth->fetchrow_array())[0];
   }
   $select_source_id_sth->finish();
@@ -255,6 +255,23 @@ sub get_taxon_id {
   my $species_id = $meta_container->get_taxonomy_id();
 
   return $species_id;
+}
+
+sub get_division_id {
+  my $self = shift;
+  my $species = shift;
+  my $registry = 'Bio::EnsEMBL::Registry';
+  my $meta_container = $registry->get_adaptor($species,'core', 'MetaContainer');
+  my $division = $meta_container->get_division();
+  my %division_taxon = (
+    'Ensembl'            => 7742,
+    'EnsemblVertebrates' => 7742,
+    'Vertebrates'        => 7742,
+    'EnsemblMetazoa'     => 33208,
+    'Metazoa'            => 33208
+  );
+  my $division_id = $division_taxon{$division};
+  return $division_id;
 }
 
 
