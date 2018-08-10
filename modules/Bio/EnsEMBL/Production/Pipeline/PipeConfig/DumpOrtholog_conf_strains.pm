@@ -69,7 +69,7 @@ sub default_options {
                       # Taxon name of species to project to
                      'taxons'      => ['Mus'],
                       # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
 					 'homology_types' =>
 					   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
 
