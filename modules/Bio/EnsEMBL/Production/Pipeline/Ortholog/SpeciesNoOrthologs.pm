@@ -20,6 +20,10 @@ Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs;
 
 =head1 DESCRIPTION
 
+This module get a list of all the available species for a given division, then get the list of all the species that we project to
+by parsing all the ortholog files. The module then compare both list to get all the species without orthology-based projection. 
+These species get stored in a file called "genome_no_orthologs.txt" with the date, release number, division and species taxon id.
+
 =head1 AUTHOR
 
 maurel@ebi.ac.uk
