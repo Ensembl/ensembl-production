@@ -31,15 +31,16 @@ sub run {
   my $priority         = $self->param_required('priority');
   my $db_url           = $self->param_required('db_url');
   my $file             = $self->param_required('file');
+  my $skip_download    = $self->param_required('skip_download');
   my $db               = $self->param('db');
   my $version_file     = $self->param('version_file');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
-  my $file_name = $self->download_file($file, $base_path, $name, $db);
+  my $file_name = $self->download_file($file, $base_path, $name, $db, $skip_download);
   my $version;
   if (defined $version_file) {
-    $version = $self->download_file($version_file, $base_path, $name, $db, 'version');
+    $version = $self->download_file($version_file, $base_path, $name, $db, $skip_download, 'version');
   }
 
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);

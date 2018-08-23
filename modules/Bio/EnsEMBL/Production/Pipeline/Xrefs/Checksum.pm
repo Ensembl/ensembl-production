@@ -33,6 +33,12 @@ sub run {
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  if ($skip_download) {
+    my $sth = $dbi->prepare("select 1 from checksum_xref limit 1");
+    $sth->execute;
+    my $table_nonempty = $sth->fetchrow_array;
+    return if $table_nonempty;
+  }
   $self->load_checksum($base_path, $dbi);
 
 }

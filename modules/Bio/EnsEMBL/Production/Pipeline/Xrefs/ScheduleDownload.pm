@@ -30,22 +30,9 @@ sub run {
   my $reuse_db         = $self->param_required('reuse_db');
   my $skip_download    = $self->param_required('skip_download');
 
-  my $user             = $self->param('source_user');
-  my $pass             = $self->param('source_pass');
-  my $db_url           = $self->param('source_url');
-  my $source_db        = $self->param('source_db');
-  my $host             = $self->param('source_host');
-  my $port             = $self->param('source_port');
+  my $db_url = $self->param_required('source_url');
 
-  if (defined $db_url) {
-    ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  } else {
-    $db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $source_db);
-  }
-  $self->create_db($source_dir, $user, $pass, $db_url, $source_db, $host, $port) unless $reuse_db;
-
-  # Can re-use existing files if specified
-  if ($skip_download) { return; }
+  $self->create_db($source_dir, $db_url) unless $reuse_db;
 
   my $sources = $self->parse_config($config_file);
   my $dataflow_params;
@@ -64,7 +51,8 @@ sub run {
       db           => $db,
       version_file => $version_file,
       db_url       => $db_url,
-      file         => $file
+      file         => $file,
+      skip_download=> $skip_download,
     };
     $self->dataflow_output_id($dataflow_params, 2);
   }
