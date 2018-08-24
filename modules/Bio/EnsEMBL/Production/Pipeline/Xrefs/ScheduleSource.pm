@@ -39,7 +39,7 @@ sub run {
 
   my $source_url       = $self->param_required('source_url');
 
-  my $db_url           = $self->param('xref_db');
+  my $db_url           = $self->param('xref_url');
   my $user             = $self->param('xref_user');
   my $pass             = $self->param('xref_pass');
   my $host             = $self->param('xref_host');

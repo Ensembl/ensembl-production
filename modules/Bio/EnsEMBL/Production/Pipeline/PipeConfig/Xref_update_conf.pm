@@ -22,6 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::Xref_update_conf;
 use strict;
 use warnings;
 
+use Bio::EnsEMBL::Hive::Version 2.5;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
@@ -35,29 +36,33 @@ sub default_options {
            %{ $self->SUPER::default_options() },
            'email'            => $self->o('ENV', 'USER').'@ebi.ac.uk',
            'release'          => software_version(),
-           'sql_dir'          => $self->o('ENV', 'HOME')."/work/lib/ensembl/misc-scripts/xref_mapping",
            'pipeline_name'    => 'xref_update_'.$self->o('release'),
 
+           'work_dir'         => $self->o('ENV', 'HOME')."/work/lib",
+           'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
+ 
            ## 'job_factory' parameters
            'species'          => [],
-           'antispecies'      => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij drosophila_melanogaster caenorhabditis_elegans saccharomyces_cerevisiae/],
-           'division'         => 'EnsemblVertebrates',
+           'antispecies'      => [],
+           'division'         => [],
            'run_all'          => 0,
-           'force'            => 0,
 
            ## Parameters for source download
-           'config_file'      => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
+           'config_file'      => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
            'source_url'       => '',
-           'source_dir'       => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
+           'source_dir'       => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
            'reuse_db'         => 0,
            'skip_download'    => 0,
 
            ## Parameters for xref database
-           'xref_db'          => '',
+           'xref_url'         => '',
            'xref_user'        => '',
            'xref_pass'        => '',
            'xref_host'        => '',
            'xref_port'        => '',
+
+           # Don't need lots of retries for most analyses
+           'hive_default_max_retry_count' => 1,
         };
 }
 
@@ -88,7 +93,8 @@ sub pipeline_analyses {
             {-logic_name => 'download_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
              -parameters => { base_path     => $self->o('base_path')},
-             -rc_name    => 'small',
+             -rc_name    => 'normal',
+             -max_retry_count => 3,
             },
             {-logic_name => 'checksum',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
@@ -107,7 +113,6 @@ sub pipeline_analyses {
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
                              run_all     => $self->o('run_all'),
-                             force       => $self->o('force'),
                             },
              -flow_into  => { '2->A' => 'schedule_source',
                               'A->2' => 'schedule_dependent_source'},
@@ -121,7 +126,7 @@ sub pipeline_analyses {
                              priority      => 1,
                              base_path     => $self->o('base_path'),
                              source_url    => $self->o('source_url'),
-                             xref_db       => $self->o('xref_db'),
+                             xref_url      => $self->o('xref_url'),
                              xref_host     => $self->o('xref_host'),
                              xref_port     => $self->o('xref_port'),
                              xref_user     => $self->o('xref_user'),
@@ -138,7 +143,7 @@ sub pipeline_analyses {
                              priority      => 2,
                              base_path     => $self->o('base_path'),
                              source_url    => $self->o('source_url'),
-                             xref_db       => $self->o('xref_db'),
+                             xref_url      => $self->o('xref_url'),
                              xref_host     => $self->o('xref_host'),
                              xref_port     => $self->o('xref_port'),
                              xref_user     => $self->o('xref_user'),
