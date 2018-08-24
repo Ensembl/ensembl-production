@@ -89,7 +89,7 @@ sub pipeline_analyses {
             {-logic_name => 'download_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
              -parameters => { base_path     => $self->o('base_path')},
-             -rc_name    => 'small',
+             -rc_name    => 'normal',
             },
             {-logic_name => 'checksum',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
