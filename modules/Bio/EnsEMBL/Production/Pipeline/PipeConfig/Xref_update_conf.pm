@@ -45,7 +45,6 @@ sub default_options {
            'antispecies'      => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij drosophila_melanogaster caenorhabditis_elegans saccharomyces_cerevisiae/],
            'division'         => 'EnsemblVertebrates',
            'run_all'          => 0,
-           'force'            => 0,
 
            ## Parameters for source download
            'config_file'      => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
@@ -109,7 +108,6 @@ sub pipeline_analyses {
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
                              run_all     => $self->o('run_all'),
-                             force       => $self->o('force'),
                             },
              -flow_into  => { '2->A' => 'schedule_source',
                               'A->2' => 'schedule_dependent_source'},
