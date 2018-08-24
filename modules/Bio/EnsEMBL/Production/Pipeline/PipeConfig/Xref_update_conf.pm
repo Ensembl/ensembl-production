@@ -22,6 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::Xref_update_conf;
 use strict;
 use warnings;
 
+use Bio::EnsEMBL::Hive::Version 2.5;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
@@ -59,6 +60,9 @@ sub default_options {
            'xref_pass'        => '',
            'xref_host'        => '',
            'xref_port'        => '',
+
+           # Don't need lots of retries for most analyses
+           'hive_default_max_retry_count' => 1,
         };
 }
 
@@ -90,6 +94,7 @@ sub pipeline_analyses {
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
              -parameters => { base_path     => $self->o('base_path')},
              -rc_name    => 'normal',
+             -max_retry_count => 3,
             },
             {-logic_name => 'checksum',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
