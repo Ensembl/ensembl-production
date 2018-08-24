@@ -35,9 +35,11 @@ sub default_options {
            %{ $self->SUPER::default_options() },
            'email'            => $self->o('ENV', 'USER').'@ebi.ac.uk',
            'release'          => software_version(),
-           'sql_dir'          => $self->o('ENV', 'HOME')."/work/lib/ensembl/misc-scripts/xref_mapping",
            'pipeline_name'    => 'xref_update_'.$self->o('release'),
 
+           'work_dir'         => $self->o('ENV', 'HOME')."/work/lib";
+           'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
+ 
            ## 'job_factory' parameters
            'species'          => [],
            'antispecies'      => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij drosophila_melanogaster caenorhabditis_elegans saccharomyces_cerevisiae/],
@@ -46,9 +48,9 @@ sub default_options {
            'force'            => 0,
 
            ## Parameters for source download
-           'config_file'      => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
+           'config_file'      => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
            'source_url'       => '',
-           'source_dir'       => $self->o('ENV', 'HOME')."/work/lib/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
+           'source_dir'       => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
            'reuse_db'         => 0,
            'skip_download'    => 0,
 
