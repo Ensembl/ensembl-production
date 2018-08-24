@@ -55,7 +55,7 @@ sub default_options {
            'skip_download'    => 0,
 
            ## Parameters for xref database
-           'xref_db'          => '',
+           'xref_url'         => '',
            'xref_user'        => '',
            'xref_pass'        => '',
            'xref_host'        => '',
@@ -126,7 +126,7 @@ sub pipeline_analyses {
                              priority      => 1,
                              base_path     => $self->o('base_path'),
                              source_url    => $self->o('source_url'),
-                             xref_db       => $self->o('xref_db'),
+                             xref_url      => $self->o('xref_url'),
                              xref_host     => $self->o('xref_host'),
                              xref_port     => $self->o('xref_port'),
                              xref_user     => $self->o('xref_user'),
@@ -143,7 +143,7 @@ sub pipeline_analyses {
                              priority      => 2,
                              base_path     => $self->o('base_path'),
                              source_url    => $self->o('source_url'),
-                             xref_db       => $self->o('xref_db'),
+                             xref_url      => $self->o('xref_url'),
                              xref_host     => $self->o('xref_host'),
                              xref_port     => $self->o('xref_port'),
                              xref_user     => $self->o('xref_user'),
