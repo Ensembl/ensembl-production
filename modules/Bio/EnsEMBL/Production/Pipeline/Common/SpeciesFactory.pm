@@ -56,9 +56,9 @@ sub param_defaults {
 
 sub write_output {
   my ($self) = @_;
-  my $all_species        = $self->param_required('all_species');
-  my $all_species_flow   = $self->param('all_species_flow');
-  my $core_flow          = $self->param('core_flow');
+  my $all_species      = $self->param_required('all_species');
+  my $all_species_flow = $self->param('all_species_flow');
+  my $core_flow        = $self->param('core_flow');
 
   foreach my $species ( @{$all_species} ) {
     $self->dataflow_output_id(
@@ -88,10 +88,9 @@ sub flow_species {
   my ($self, $all_species) = @_;
   my $chromosome_flow    = $self->param('chromosome_flow');
   my $variation_flow     = $self->param('variation_flow');
-  my $compara_flow       = $self->param('compara_flow');
   my $regulation_flow    = $self->param('regulation_flow');
   my $otherfeatures_flow = $self->param('otherfeatures_flow');
-  my $compara_dbs        = $self->param('compara_dbs');
+  my $compara_flow       = $self->param('compara_flow');
 
   my @chromosome_species;
   my @variation_species;
@@ -126,6 +125,7 @@ sub flow_species {
   }
 
   if ($compara_flow) {
+    my $compara_dbs = $self->param('compara_dbs');
     foreach my $division ( keys %$compara_dbs ) {
       push @compara_species, $division;
     };
