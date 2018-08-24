@@ -464,22 +464,6 @@ sub pipeline_analyses {
     },
 
     { -logic_name  => 'dump_fasta_dna',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -parameters  => {
-       },
-      -can_be_empty    => 1,
-      -flow_into       => {
-                            1 => WHEN(
-                        '#requires_new_dna# >= 1' => 'dump_dna',
-                        ELSE 'copy_dna',
-                    )},
-      -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'default',
-    },
-
-    { -logic_name  => 'dump_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
       -parameters  => {
             sequence_type_list  => $self->o('dna_sequence_type_list'),
@@ -494,18 +478,6 @@ sub pipeline_analyses {
       -rc_name         => 'default',
     },
 
-    {
-      -logic_name => 'copy_dna',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
-      -can_be_empty => 1,
-      -hive_capacity => 5,
-      -parameters => {
-        ftp_dir => $self->o('prev_rel_dir'),
-        release => $self->o('release'),
-        previous_release => $self->o('previous_release'),
-      },
-    },
-    
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 
     { -logic_name      => 'concat_fasta',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',
