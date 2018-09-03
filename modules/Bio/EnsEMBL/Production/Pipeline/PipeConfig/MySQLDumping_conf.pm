@@ -47,7 +47,7 @@ sub default_options {
         'host'     => $self->o('host'),
         'port'     => $self->o('port'),
         'output_dir'     	   => '/nfs/nobackup/dba/sysmysql/ensembl/mysql',
-        'base_dir'  => getcwd,
+        'base_dir'  => $self->o('ensembl_cvs_root_dir'),
         'pipeline_name'  => 'mysql_dumping',
 
         ## 'DbDumpingFactory' parameters
