@@ -157,14 +157,14 @@
     },
     {
       "name" : "UCSC_hg38",
-      "parser" : "UCSCParser",
+      "parser" : "UCSC_human_parser",
       "file" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz",
       "release" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/README.txt",
       "priority" : 1
     },
     {
       "name" : "UCSC_mm10",
-      "parser" : "UCSC_mouse_Parser",
+      "parser" : "UCSC_mouse_parser",
       "file" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/knownGene.txt.gz",
       "release" : "ftp://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/README.txt",
       "priority" : 1
