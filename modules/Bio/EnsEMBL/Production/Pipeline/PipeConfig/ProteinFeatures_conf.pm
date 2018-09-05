@@ -379,7 +379,7 @@ sub pipeline_analyses {
                                 'protein_feature',
                                 'xref',
                               ],
-                              output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
       -analysis_capacity => 20,
