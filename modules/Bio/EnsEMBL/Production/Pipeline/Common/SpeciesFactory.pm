@@ -61,13 +61,23 @@ sub write_output {
   my $core_flow        = $self->param('core_flow');
 
   foreach my $species ( @{$all_species} ) {
-    $self->dataflow_output_id( {'species' => $species}, $core_flow );
+    $self->dataflow_output_id(
+      {
+        species => $species,
+        group   => 'core',
+      },
+    $core_flow);
   }
 
-  my $flow_species = $self->flow_species($all_species);
-  foreach my $flow ( keys %$flow_species ) {
-    foreach my $species ( @{ $$flow_species{$flow} } ) {
-      $self->dataflow_output_id( {'species' => $species}, $flow );
+  my ($flow, $flow_species) = $self->flow_species($all_species);
+  foreach my $group ( keys %$flow ) {
+    foreach my $species ( @{ $$flow_species{$group} } ) {
+      $self->dataflow_output_id(
+        {
+          species => $species,
+          group   => $group,
+        },
+      $$flow{$group} );
     }
   }
 
@@ -76,12 +86,11 @@ sub write_output {
 
 sub flow_species {
   my ($self, $all_species) = @_;
-  my $compara_dbs        = $self->param('compara_dbs');
   my $chromosome_flow    = $self->param('chromosome_flow');
   my $variation_flow     = $self->param('variation_flow');
-  my $compara_flow       = $self->param('compara_flow');
   my $regulation_flow    = $self->param('regulation_flow');
   my $otherfeatures_flow = $self->param('otherfeatures_flow');
+  my $compara_flow       = $self->param('compara_flow');
 
   my @chromosome_species;
   my @variation_species;
@@ -116,20 +125,29 @@ sub flow_species {
   }
 
   if ($compara_flow) {
+    my $compara_dbs = $self->param('compara_dbs');
     foreach my $division ( keys %$compara_dbs ) {
       push @compara_species, $division;
     };
   }
 
-  my $flow_species = {
-    $chromosome_flow    => \@chromosome_species,
-    $variation_flow     => \@variation_species,
-    $regulation_flow    => \@regulation_species,
-    $otherfeatures_flow => \@otherfeatures_species,
-    $compara_flow       => \@compara_species,
+  my $flow = {
+    'core'          => $chromosome_flow,
+    'variation'     => $variation_flow,
+    'regulation'    => $regulation_flow,
+    'otherfeatures' => $otherfeatures_flow,
+    'compara'       => $compara_flow,
   };
 
-  return $flow_species;
+  my $flow_species = {
+    'core'          => \@chromosome_species,
+    'variation'     => \@variation_species,
+    'regulation'    => \@regulation_species,
+    'otherfeatures' => \@otherfeatures_species,
+    'compara'       => \@compara_species,
+  };
+
+  return ($flow, $flow_species);
 }
 
 sub has_chromosome {
