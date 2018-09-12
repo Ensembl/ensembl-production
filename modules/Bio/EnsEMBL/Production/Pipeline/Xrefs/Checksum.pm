@@ -29,7 +29,6 @@ sub run {
   my $skip_download    = $self->param_required('skip_download');
   my $db_url           = $self->param('db_url');
 
-  return if $skip_download;
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
