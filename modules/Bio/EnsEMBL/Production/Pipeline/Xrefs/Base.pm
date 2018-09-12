@@ -46,14 +46,14 @@ sub parse_config {
 }
 
 sub create_db {
-  my ($self, $source_dir, $source_url) = @_;
+  my ($self, $source_dir, $source_url, $reuse_db_if_present) = @_;
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($source_url);
   my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s", $host, $port);
   my $dbh = DBI->connect( $dbconn, $user, $pass, {'RaiseError' => 1}) or croak( "Can't connect to server: " . $DBI::errstr );
   my %dbs = map {$_->[0] => 1} @{$dbh->selectall_arrayref('SHOW DATABASES')};
-  if ($dbs{$source_db}) {
-    $dbh->do( "DROP DATABASE $source_db" );
-  }
+  return if $reuse_db_if_present and $dbs{$source_db};
+
+  $dbh->do( "DROP DATABASE IF EXISTS $source_db" );
   $dbh->do( 'CREATE DATABASE ' . $source_db);
   my $table_file = catfile( $source_dir, 'table.sql' );
   my $cmd = "mysql -u $user -p'$pass' -P $port -h $host $source_db < $table_file";
