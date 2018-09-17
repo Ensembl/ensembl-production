@@ -43,8 +43,9 @@ sub default_options {
         'pipeline_name' => 'ols_ontology_loading',
         'run_mart'      => 1,
         'wipe_all'      => 1,
+        'skip_go'       => 0,
         'verbose'       => 0,
-        'ens_version'=> $self->o('ENV', 'ENS_VERSION'),
+        'ens_version'   => $self->o('ENV', 'ENS_VERSION'),
         'db_name'       => "ensembl_ontology_" . $self->o('ens_version'),
         'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
@@ -88,8 +89,9 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                    '#wipe_all#' => [ 'reset_db' ],
-                    ELSE [ 'load_go_ontology' ]
+                    '#wipe_all# == 1'                   => [ 'reset_db' ],
+                    '#wipe_all# == 0 && #skip_go# == 1' => [ 'ontologies_factory' ],
+                    '#wipe_all# == 0 && #skip_go# == 0' => [ 'load_go_ontology' ]
                 )
             },
         },
@@ -98,37 +100,43 @@ sub pipeline_analyses {
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
             -meadow_type     => 'LOCAL',
             -parameters      => {
-                db_conn => $self->o('db_url'),
-                sql     => [ 'DROP DATABASE ' . $self->o('db_name'), 'CREATE DATABASE ' . $self->o('db_name') ]
+                db_conn => $self->o('db_host'),
+                sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name'), 'CREATE DATABASE ' . $self->o('db_name') ]
             },
-            -flow_into       => [ 'load_go_ontology' ],
+            -max_retry_count => 1,
+            -flow_into       => {
+                1 => WHEN(
+                    '#skip_go#' => [ 'ontologies_factory' ],
+                    ELSE [ 'load_go_ontology' ]
+                )
+            },
             -max_retry_count => 1,
         },
         # load GO ontology first, init_db once and load main ontology
         {
-            -logic_name        => 'load_go_ontology',
-            -module            => 'bio.ensembl.ontology.OLSHiveLoader',
-            -language          => 'python3',
-            -parameters        => {
+            -logic_name => 'load_go_ontology',
+            -module     => 'bio.ensembl.ontology.OLSHiveLoader',
+            -language   => 'python3',
+            -parameters => {
                 db_url        => $self->o('db_url'),
-                ontology_name => 'go'
+                ontology_name => 'go',
+                'wipe'        => 1
             },
-            -flow_into         => {
-                1 => [ 'ontologies_factory' ],
+            -flow_into  => [ 'ontologies_factory' ],
+        },
+        {
+            -logic_name  => 'ontologies_factory',
+            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+            -meadow_type => 'LOCAL ',
+            -parameters  => {
+                inputlist    => $self->o('ontologies'),
+                column_names => [ 'ontology_name' ]
             },
-        }, {
-        -logic_name  => 'ontologies_factory',
-        -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-        -meadow_type => 'LOCAL ',
-        -parameters  => {
-            inputlist    => $self->o('ontologies'),
-            column_names => [ 'ontology_name' ]
+            -flow_into   => {
+                '2->A' => [ 'ontology_load' ],
+                'A->1' => [ 'compute_closure' ]
+            },
         },
-        -flow_into   => {
-            '2->A' => [ 'ontology_load' ],
-            'A->1' => [ 'compute_closure' ]
-        },
-    },
         {
             -logic_name        => 'ontology_load',
             -module            => 'bio.ensembl.ontology.OLSHiveLoader',
@@ -136,9 +144,7 @@ sub pipeline_analyses {
             -analysis_capacity => 4,
             -parameters        => {
                 db_url => $self->o('db_url'),
-            },
-            -flow_into         => {
-                1 => [ 'ontology_load' ],
+                wipe        => 1
             },
         },
         {
