@@ -48,6 +48,7 @@ sub default_options {
         'ens_version'   => $self->o('ENV', 'ENS_VERSION'),
         'db_name'       => "ensembl_ontology_" . $self->o('ens_version'),
         'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
+        'verbosity'     => 1,
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
         'ontologies'    => [ 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco', 'bfo',
             'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo' ]
@@ -70,7 +71,7 @@ sub pipeline_wide_parameters {
         'ens_version'  => $self->o('ens_version'),
         'wipe_all'     => $self->o('wipe_all'),
         'srv'          => $self->o('srv'),
-        'mart_db_name' => $self->o('mart_db_name'),
+        'mart_db_name' => $self->o('mart_db_name')
     };
 }
 
@@ -120,7 +121,9 @@ sub pipeline_analyses {
             -parameters => {
                 db_url        => $self->o('db_url'),
                 ontology_name => 'go',
-                'wipe'        => 1
+                'wipe'        => 1,
+                'output_dir'  => $self->o('output_dir'),
+                'log_level'   => $self->o('verbosity')
             },
             -flow_into  => [ 'ontologies_factory' ],
         },
@@ -143,8 +146,10 @@ sub pipeline_analyses {
             -language          => 'python3',
             -analysis_capacity => 4,
             -parameters        => {
-                db_url => $self->o('db_url'),
-                wipe        => 1
+                db_url       => $self->o('db_url'),
+                wipe         => 1,
+                'output_dir' => $self->o('output_dir'),
+                'log_level'  => $self->o('verbosity')
             },
         },
         {
