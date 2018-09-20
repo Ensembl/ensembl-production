@@ -673,7 +673,7 @@ if ($out_diagram_dir) {
         my $filename = "$full_diagram_dir/$db_team.".clean_name($c);
         my $graph = generate_sub_diagram($c, 'column_links');
         $graph->as_png("$filename.png");
-        fetch_png_dimensions($c, "$filename.png");
+        fetch_diagram_dimensions($c, "$filename.png");
     }
 }
 
@@ -772,9 +772,9 @@ close($html_fh);
 
 
 my %dimensions;
-sub fetch_png_dimensions {
+sub fetch_diagram_dimensions {
     my ($image_id, $filename) = @_;
-    if (`identify $filename` =~ / PNG (\d+)x(\d+) /) {
+    if (`identify $filename` =~ /(?:PNG|SVG) (\d+)x(\d+) /) {
         $dimensions{$image_id} = [$1,$2];
     }
 }
