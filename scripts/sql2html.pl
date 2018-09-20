@@ -774,8 +774,7 @@ close($html_fh);
 my %dimensions;
 sub fetch_png_dimensions {
     my ($image_id, $filename) = @_;
-    my $ss = `file $filename`;
-    if (`file $filename` =~ /PNG image data, (\d+) x (\d+),/) {
+    if (`identify $filename` =~ / PNG (\d+)x(\d+) /) {
         $dimensions{$image_id} = [$1,$2];
     }
 }
