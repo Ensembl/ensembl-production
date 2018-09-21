@@ -28,9 +28,25 @@ use warnings;
 use File::Basename ();
 use POSIX;
 use Getopt::Long;
+use Readonly;
 
 use Bio::EnsEMBL::DBSQL::DBConnection;
 
+
+#################
+### Constants ###
+#################
+
+Readonly my %diagram_format_params => (
+  'png'  => {
+    'extension'       => 'png',
+    'graphviz_method' => 'as_png',
+  },
+  'svg'  => {
+    'extension'       => 'svg',
+    'graphviz_method' => 'as_svg',
+  },
+);
 
 ###############
 ### Options ###
@@ -38,7 +54,7 @@ use Bio::EnsEMBL::DBSQL::DBConnection;
 
 my ($sql_file,$fk_sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
 my ($host,$port,$dbname,$user,$pass,$skip_conn,$db_handle,$hosts_list);
-my $out_diagram_dir;
+my ($out_diagram_dir, $diagram_format);
 
 usage() if (!scalar(@ARGV));
  
@@ -54,6 +70,7 @@ GetOptions(
     'sort_headers=i'   => \$sort_headers,
     'sort_tables=i'    => \$sort_tables,
     'out_diagram_dir=s'=> \$out_diagram_dir,
+    'diagram_format=s' => \$diagram_format,
     'host=s'           => \$host,
     'port=i'           => \$port,
     'dbname=s'         => \$dbname,
@@ -95,6 +112,13 @@ $sort_tables    = 1 if (!defined($sort_tables));
 $skip_conn    ||= undef;
 
 $port ||= 3306;
+
+$diagram_format ||= 'png';
+
+if (!exists($diagram_format_params{$diagram_format})) {
+  print "> Error! Diagram format '$diagram_format' not supported\n";
+  usage();
+}
 
 # Dababase connection (optional)
 if (defined($host) && !defined($skip_conn)) {
@@ -666,14 +690,18 @@ if ($sort_tables == 1) {
 if ($out_diagram_dir) {
     require Bio::EnsEMBL::Hive::Utils::GraphViz;
     my $full_diagram_dir = File::Basename::dirname($html_file) . "/$out_diagram_dir";
+    my $extension = $diagram_format_params{$diagram_format}->{'extension'};
+    my $file_generator = $diagram_format_params{$diagram_format}->{'graphviz_method'};
+
     my $graph = generate_whole_diagram('show_clusters', 'column_links');
     $graph->dot_input_filename("$full_diagram_dir/$db_team.dot");
-    $graph->as_png("$full_diagram_dir/$db_team.png");
+    $graph->$file_generator("$full_diagram_dir/$db_team.$extension");
+
     foreach my $c (@header_names) {
-        my $filename = "$full_diagram_dir/$db_team.".clean_name($c);
+        my $filename = "$full_diagram_dir/$db_team." . clean_name($c) . ".$extension";
         my $graph = generate_sub_diagram($c, 'column_links');
-        $graph->as_png("$filename.png");
-        fetch_diagram_dimensions($c, "$filename.png");
+        $graph->$file_generator($filename);
+        fetch_diagram_dimensions($c, $filename);
     }
 }
 
@@ -716,7 +744,9 @@ foreach my $header_name (@header_names) {
         my $l = clean_name($header_name);
         my $w = get_best_width($header_name);
         my $wt = $w ? qq{width="${w}px"} : '';
-        $html_content .= qq{<div align="center"><a href="$out_diagram_dir/$db_team.$l.png"><img src="$out_diagram_dir/$db_team.$l.png" $wt /></a></div>};
+        my $ext = $diagram_format_params{$diagram_format}->{'extension'};
+
+        $html_content .= qq{<div align="center"><a href="$out_diagram_dir/$db_team.$l.$ext"><img src="$out_diagram_dir/$db_team.$l.$ext" $wt /></a></div>};
     }
   }
   
@@ -790,7 +820,7 @@ sub get_best_width {
             return $def_w;
         }
     }
-    return undef;
+    return;
 }
 
 
@@ -1783,6 +1813,7 @@ sub usage {
     -sort_headers     A flag to sort (1) or not (0) the headers by alphabetic order. By default, the value is set to 1.
     -sort_tables      A flag to sort (1) or not (0) the tables by alphabetic order. By default, the value is set to 1.
     'out_diagram_dir  Where to generate schema diagrams (one for the whole schema, and one per category). By default, the value is not set, meaning no diagrams are generated.
+    -diagram_format   File format to be used for generated schema diagrams. Supported values: png (default), svg.
                      
     Other optional options:
     
