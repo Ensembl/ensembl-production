@@ -91,7 +91,7 @@ sub pipeline_analyses {
         -logic_name => 'SnpCount',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SnpCount',
         -max_retry_count  => 2,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 
@@ -103,7 +103,7 @@ sub pipeline_analyses {
           bin_count => $self->o('bin_count'), max_run => $self->o('max_run'),
         },
         -max_retry_count  => 2,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'default',
       },
 
@@ -111,7 +111,7 @@ sub pipeline_analyses {
         -logic_name => 'GenomeStats',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
         -max_retry_count  => 3,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 
