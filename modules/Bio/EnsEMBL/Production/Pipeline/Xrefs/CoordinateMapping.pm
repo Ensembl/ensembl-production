@@ -37,7 +37,7 @@ sub run {
   my $mapper = $self->get_xref_mapper($xref_url, $species, $base_path, $release);
   my $coord = XrefMapper::CoordinateMapper->new($mapper);
   my $species_id = $self->get_taxon_id($species);
-  $coord->run_coordinatemapping(1, $species_id);
+  #$coord->run_coordinatemapping(1, $species_id);
 
 }
 
