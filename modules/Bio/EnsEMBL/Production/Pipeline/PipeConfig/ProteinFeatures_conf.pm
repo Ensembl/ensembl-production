@@ -407,7 +407,7 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        => {
                               db_backup_required => 1,
-                              db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => $self->o('linked_tables'),
                               production_lookup  => $self->o('production_lookup'),
