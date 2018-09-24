@@ -51,7 +51,6 @@ sub param_defaults {
     compara_flow       => 5,
     regulation_flow    => 6,
     otherfeatures_flow => 7,
-    check_intentions   => 0,
   };
 }
 
@@ -60,42 +59,38 @@ sub write_output {
   my $all_species      = $self->param_required('all_species');
   my $all_species_flow = $self->param('all_species_flow');
   my $core_flow        = $self->param('core_flow');
-  my $check_intentions = $self->param('check_intentions');
 
   foreach my $species ( @{$all_species} ) {
-    # If check_intention is turned on, then check the production database
-    # and decide if data need to be re-dumped.
-    my $requires_new_dna = 1;
-    if ( $check_intentions == 1 ) {
-      $requires_new_dna = $self->requires_new_dna($species);
-    }
-    my $dataflow_params = {
-      species          => $species,
-      requires_new_dna => $requires_new_dna,
-      check_intentions => $check_intentions,
-    };
-
-    $self->dataflow_output_id( $dataflow_params, $core_flow );
+    $self->dataflow_output_id(
+      {
+        species => $species,
+        group   => 'core',
+      },
+    $core_flow);
   }
 
-  my $flow_species = $self->flow_species($all_species);
-  foreach my $flow ( keys %$flow_species ) {
-    foreach my $species ( @{ $$flow_species{$flow} } ) {
-      $self->dataflow_output_id( {'species' => $species}, $flow );
+  my ($flow, $flow_species) = $self->flow_species($all_species);
+  foreach my $group ( keys %$flow ) {
+    foreach my $species ( @{ $$flow_species{$group} } ) {
+      $self->dataflow_output_id(
+        {
+          species => $species,
+          group   => $group,
+        },
+      $$flow{$group} );
     }
   }
 
-  $self->dataflow_output_id( {'species' => $all_species}, $all_species_flow );
+  $self->dataflow_output_id( {'all_species' => $all_species}, $all_species_flow );
 }
 
 sub flow_species {
   my ($self, $all_species) = @_;
-  my $compara_dbs        = $self->param('compara_dbs');
   my $chromosome_flow    = $self->param('chromosome_flow');
   my $variation_flow     = $self->param('variation_flow');
-  my $compara_flow       = $self->param('compara_flow');
   my $regulation_flow    = $self->param('regulation_flow');
   my $otherfeatures_flow = $self->param('otherfeatures_flow');
+  my $compara_flow       = $self->param('compara_flow');
 
   my @chromosome_species;
   my @variation_species;
@@ -130,20 +125,29 @@ sub flow_species {
   }
 
   if ($compara_flow) {
-    foreach my $dbname ( keys %$compara_dbs ) {
-      push @compara_species, $$compara_dbs{$dbname};
+    my $compara_dbs = $self->param('compara_dbs');
+    foreach my $division ( keys %$compara_dbs ) {
+      push @compara_species, $division;
     };
   }
 
-  my $flow_species = {
-    $chromosome_flow    => \@chromosome_species,
-    $variation_flow     => \@variation_species,
-    $regulation_flow    => \@regulation_species,
-    $otherfeatures_flow => \@otherfeatures_species,
-    $compara_flow       => \@compara_species,
+  my $flow = {
+    'core'          => $chromosome_flow,
+    'variation'     => $variation_flow,
+    'regulation'    => $regulation_flow,
+    'otherfeatures' => $otherfeatures_flow,
+    'compara'       => $compara_flow,
   };
 
-  return $flow_species;
+  my $flow_species = {
+    'core'          => \@chromosome_species,
+    'variation'     => \@variation_species,
+    'regulation'    => \@regulation_species,
+    'otherfeatures' => \@otherfeatures_species,
+    'compara'       => \@compara_species,
+  };
+
+  return ($flow, $flow_species);
 }
 
 sub has_chromosome {
@@ -190,31 +194,6 @@ sub has_otherfeatures {
   $has_otherfeatures && $dbof->dbc->disconnect_if_idle();
 
   return $has_otherfeatures;
-}
-
-sub requires_new_dna {
-  my ( $self, $species ) = @_;
-
-  my $sql = <<'SQL';
-    select count(*)
-    from changelog c
-    join changelog_species cs using (changelog_id)
-    join species s using (species_id)
-    where c.release_id = ?
-    and (c.assembly = ? or c.repeat_masking = ?)
-    and c.status = ?
-    and s.production_name = ?
-SQL
-
-  my $release  = $self->param('release');
-  my $params   = [ $release, 'Y', 'Y', 'handed_over', $species ];
-  my $prod_dba = $self->get_production_DBAdaptor();
-  my $result =
-    $prod_dba->dbc()->sql_helper()
-    ->execute_single_result( -SQL => $sql, -PARAMS => $params );
-  $prod_dba->dbc()->disconnect_if_idle();
-
-  return $result;
 }
 
 1;

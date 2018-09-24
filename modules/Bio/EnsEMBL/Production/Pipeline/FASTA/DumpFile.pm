@@ -147,12 +147,6 @@ sub fetch_input {
   }
  
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type_list') };
-  # Skip dna dumps if 
-  # 'check_intentions' flag is 1
-  # AND 'requires_new_dna' is 0
-  if($self->param('check_intentions')==1 && $self->param('requires_new_dna')==0){ 
-     delete $sequence_types{'dna'};
-  }
   $self->param('sequence_types', \%sequence_types);
  
   my $dba = $self->get_DBAdaptor();

@@ -56,9 +56,6 @@ sub default_options {
 	   'antispecies' => [],
        'division' 	 => [], 
 	   'run_all'     => 0,	
-	   # Set to '0' to skip intentions checking during dataflow of jobs
-       # default => OFF (0)
-       'check_intentions' => 0,
 
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
@@ -203,7 +200,6 @@ sub pipeline_analyses {
 	 { -logic_name     => 'job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters     => {
-						     check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
@@ -477,22 +473,6 @@ sub pipeline_analyses {
     },
 
     { -logic_name  => 'dump_fasta_dna',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -parameters  => {
-       },
-      -can_be_empty    => 1,
-      -flow_into       => {
-                            1 => WHEN(
-                        '#requires_new_dna# >= 1' => 'dump_dna',
-                        ELSE 'copy_dna',
-                    )},
-      -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'default',
-    },
-
-    { -logic_name  => 'dump_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
       -parameters  => {
             sequence_type_list  => $self->o('dna_sequence_type_list'),
@@ -507,18 +487,6 @@ sub pipeline_analyses {
       -rc_name         => 'default',
     },
 
-    {
-      -logic_name => 'copy_dna',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
-      -can_be_empty => 1,
-      -hive_capacity => 5,
-      -parameters => {
-        ftp_dir => $self->o('prev_rel_dir'),
-        release => $self->o('release'),
-        previous_release => $self->o('previous_release'),
-      },
-    },
-    
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 
     { -logic_name      => 'concat_fasta',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',
