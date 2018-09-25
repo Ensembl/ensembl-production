@@ -33,7 +33,7 @@ echo "Dumping sql file for $database";
 mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} -d $database > ${output_dir}/$database/$database.sql;
 echo "Gzipping txt files";
 ls -1 | grep .txt | grep -v LOADER-LOG | while read file; do
-        gzip -c "$file" > "$output_dir/$database/$file.gz"
+        gzip -nc "$file" > "$output_dir/$database/$file.gz"
         rm -f $file
 done
 if [ -e "$database.sql" ]; then

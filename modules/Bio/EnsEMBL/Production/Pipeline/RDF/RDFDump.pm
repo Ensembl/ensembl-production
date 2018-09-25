@@ -121,8 +121,8 @@ sub run {
   ###########
   
   ### Compress the files
-  system("gzip $core_rdf_file");
-  system("gzip $xrefs_rdf_file");
+  system("gzip -n $core_rdf_file");
+  system("gzip -n $xrefs_rdf_file");
 
   ### Create list of files to validate
   my @files_to_validate = ($core_rdf_file . '.gz');
