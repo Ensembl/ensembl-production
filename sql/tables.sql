@@ -37,6 +37,8 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_94_95_a.sql|schema version');
+
+INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_94_95_b.sql|vertebrate_division_rename');
 
 
