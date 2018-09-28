@@ -38,6 +38,9 @@ INSERT INTO meta (species_id, meta_key, meta_value) VALUES
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_94_95_a.sql|schema version');
 
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_94_95_b.sql|vertebrate_division_rename');
+
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.

@@ -323,7 +323,7 @@ sub process_division_compara {
   foreach my $dba (@$all_compara_dbas) {
     my $compara_div = $dba->species();
     if ( $compara_div eq 'multi' ) {
-      $compara_div = 'ensembl';
+      $compara_div = 'vertebrates';
     }
     if ( $compara_div eq $division ) {
       $$compara_dbs{$division} = $dba;
