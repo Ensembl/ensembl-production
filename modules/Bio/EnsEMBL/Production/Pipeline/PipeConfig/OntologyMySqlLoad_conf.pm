@@ -40,7 +40,6 @@ sub default_options {
         'output_dir'    => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
         'base_dir'      => $self->o('ENV', 'BASE_DIR'),
         'srv_cmd'       => undef,
-        'pipeline_name' => 'ols_ontology_loading',
         'run_mart'      => 1,
         'wipe_all'      => 1,
         'skip_go'       => 0,
@@ -49,6 +48,7 @@ sub default_options {
         'db_name'       => "ensembl_ontology_" . $self->o('ens_version'),
         'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
         'verbosity'     => 1,
+        'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
         'ontologies'    => [ 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco', 'bfo',
             'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo' ]
@@ -86,7 +86,6 @@ sub pipeline_analyses {
             -logic_name      => 'step_init',
             -input_ids       => [ {} ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -meadow_type     => 'LOCAL',
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
@@ -99,7 +98,6 @@ sub pipeline_analyses {
         {
             -logic_name      => 'reset_db',
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-            -meadow_type     => 'LOCAL',
             -parameters      => {
                 db_conn => $self->o('db_host'),
                 sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name'), 'CREATE DATABASE ' . $self->o('db_name') ]
@@ -115,22 +113,22 @@ sub pipeline_analyses {
         },
         # load GO ontology first, init_db once and load main ontology
         {
-            -logic_name => 'load_go_ontology',
-            -module     => 'bio.ensembl.ontology.OLSHiveLoader',
-            -language   => 'python3',
-            -parameters => {
+            -logic_name  => 'load_go_ontology',
+            -module      => 'bio.ensembl.ontology.OLSHiveLoader',
+            -language    => 'python3',
+            -rc_name     => 'default',
+            -parameters  => {
                 db_url        => $self->o('db_url'),
                 ontology_name => 'go',
                 'wipe'        => 1,
                 'output_dir'  => $self->o('output_dir'),
                 'log_level'   => $self->o('verbosity')
             },
-            -flow_into  => [ 'ontologies_factory' ],
+            -flow_into   => [ 'ontologies_factory' ],
         },
         {
             -logic_name  => 'ontologies_factory',
             -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -meadow_type => 'LOCAL ',
             -parameters  => {
                 inputlist    => $self->o('ontologies'),
                 column_names => [ 'ontology_name' ]
@@ -145,6 +143,7 @@ sub pipeline_analyses {
             -module            => 'bio.ensembl.ontology.OLSHiveLoader',
             -language          => 'python3',
             -analysis_capacity => 4,
+            -rc_name           => 'default',
             -parameters        => {
                 db_url       => $self->o('db_url'),
                 wipe         => 1,
@@ -156,6 +155,7 @@ sub pipeline_analyses {
             -logic_name      => 'compute_closure',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::ComputeClosure',
             -max_retry_count => 1, # use per-analysis limiter
+            -rc_name         => '32GB',
             -flow_into       => {
                 1 => [ 'add_subset_map' ],
             },
@@ -163,6 +163,8 @@ sub pipeline_analyses {
         {
             -logic_name => 'add_subset_map',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::AddSubsetMap',
+            -rc_name    => '32GB',
+            -meadow_type => 'LSF',
             -flow_into  => {
                 1 => WHEN(
                     '#run_mart#' => [ 'mart_load' ],
@@ -172,6 +174,7 @@ sub pipeline_analyses {
         {
             -logic_name => 'mart_load',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::MartLoad',
+            -rc_name    => 'default',
             -parameters => {
                 mart => $self->o('mart_db_name'),
                 srv  => $self->o('srv')
@@ -179,5 +182,17 @@ sub pipeline_analyses {
         }
     ];
 }
+
+sub resource_classes {
+    my $self = shift;
+    return {
+        'default' => { 'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"' },
+        '32GB'    => { 'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"' },
+        '64GB'    => { 'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"' },
+        '128GB'   => { 'LSF' => '-q production-rh7 -n 4 -M 128000 -R "rusage[mem=128000]"' },
+        '256GB'   => { 'LSF' => '-q production-rh7 -n 4 -M 256000 -R "rusage[mem=256000]"' },
+    }
+}
+
 
 1;
