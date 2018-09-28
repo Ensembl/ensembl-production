@@ -78,8 +78,7 @@ sub pipeline_analyses {
 			      '5->A' => ['CheckComparaFtp'],
 			      'A->1' => ['ReportFailures'],
 			     },
-           -hive_capacity => 1,
-	   -meadow_type   => 'LOCAL', 
+           -hive_capacity => 1
 	  }, 
 	  {
 	   -logic_name => 'CheckCoreFtp',

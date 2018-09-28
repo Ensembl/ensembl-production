@@ -193,8 +193,7 @@ CREATE TABLE IF NOT EXISTS gvf_merge (
        -input_ids      => [ {} ], 
        -parameters     => {},
        -hive_capacity  => -1,
-       -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
+       -rc_name 	   => 'default',
        -flow_into      => {'1->A' => ['GVF_setup'],
                            'A->1' => ['GVF_job_factory'],
                           }		                       

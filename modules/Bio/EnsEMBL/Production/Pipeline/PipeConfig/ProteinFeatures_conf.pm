@@ -339,8 +339,7 @@ sub pipeline_analyses {
                                           '#interpro_desc_source# eq "core_dbs"' =>
                                             ['SpeciesFactoryForDumpingInterPro']
                                         ),
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -360,8 +359,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2->A' => ['BackupTables'],
                               'A->2' => ['AnnotateProteinFeatures'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -397,8 +395,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
                               'A->1' => ['RemoveOrphans'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -413,8 +410,7 @@ sub pipeline_analyses {
                               production_lookup  => $self->o('production_lookup'),
                               program            => 'InterProScan',
                               program_version    => $self->o('interproscan_version'),
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -434,8 +430,7 @@ sub pipeline_analyses {
                                   'WHERE ox.object_xref_id IS NULL',
                               ]
                             },
-      -flow_into         => ['DeleteInterPro'],
-      -meadow_type       => 'LOCAL',
+      -flow_into         => ['DeleteInterPro']
     },
     
     {
@@ -495,8 +490,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '2' => ['DumpProteome'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -820,8 +814,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '2->A' => ['DumpInterProXrefs'],
                             'A->1' => ['AggregateInterProXrefs'],
-                          },
-      -meadow_type     => 'LOCAL',
+                          }
     },
     
     {
@@ -869,8 +862,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -flow_into       => {
                             '2' => ['StoreInterProXrefs'],
-                          },
-      -meadow_type     => 'LOCAL',
+                          }
     },
     
     {
