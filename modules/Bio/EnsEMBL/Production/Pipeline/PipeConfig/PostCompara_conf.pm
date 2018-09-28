@@ -271,8 +271,7 @@ sub pipeline_analyses {
              -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
              -flow_into       => {                 '1->A' => ['DumpingCleaningSetup'],
                                                    'A->1' => ['backbone_fire_PostCompara'],
-                                 },
-             -meadow_type   => 'LOCAL',
+                                 }
           },
           
           { -logic_name     => 'DumpingCleaningSetup',
@@ -300,8 +299,7 @@ sub pipeline_analyses {
            -logic_name      => 'Iterator',
            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
            -flow_into       => {                 '1' => ['DumpingCleaningSetup'],
-                               },
-           -meadow_type   => 'LOCAL',
+                               }
           },
           {  -logic_name      => 'SpeciesFactory',
              -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -382,8 +380,7 @@ sub pipeline_analyses {
                                },
              -flow_into     => {
                                 1 => ['GNProjSourceFactory']
-                               },
-             -meadow_type   => 'LOCAL',
+                               }
           },
           
           ########################
@@ -438,8 +435,7 @@ sub pipeline_analyses {
                                  },
              -flow_into     => {
                                 1 => ['GDProjSourceFactory']
-                               },
-             -meadow_type   => 'LOCAL',
+                               }
           },
           ################
           ### GeneCoverage
@@ -474,8 +470,7 @@ sub pipeline_analyses {
                               'subject'    => $self->o('gcov_subject'),
                               'output_dir' => $self->o('output_dir'),
                               'compara'    => $self->o('division'),
-                             },
-             -meadow_type      => 'LOCAL',
+                             }
           },
           
          ];

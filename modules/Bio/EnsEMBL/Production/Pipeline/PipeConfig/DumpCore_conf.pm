@@ -191,7 +191,6 @@ sub pipeline_analyses {
        -parameters     => {},
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
        -flow_into      => {'1->A' => ['job_factory'],
                            'A->1' => ['checksum_generator'],
                           }		                       
@@ -226,8 +225,7 @@ sub pipeline_analyses {
 #          	'subject'    			 => $self->o('subject'),
        },
        -hive_capacity  => -1,
-       -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
+       -rc_name 	   => 'default'
     },
 
 ### GTF
@@ -379,8 +377,7 @@ sub pipeline_analyses {
        -module         => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
        -parameters     => { cmd => 'mv #out_file#.sorted.gz #out_file#', },
        -hive_capacity  => 10,
-       -rc_name        => 'default',	
-       -meadow_type    => 'LOCAL',
+       -rc_name        => 'default',
        -flow_into      => 'validate_gff3',
       },
  
