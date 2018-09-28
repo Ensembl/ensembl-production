@@ -382,8 +382,7 @@ sub pipeline_analyses {
 
 	    {
 	     -logic_name => 'update_genome_db_locator',
-	     -module     => 'Bio::EnsEMBL::Compara::Production::EPOanchors::UpdateGenomeDBLocator',
-	     -meadow_type    => 'LOCAL',
+	     -module     => 'Bio::EnsEMBL::Compara::Production::EPOanchors::UpdateGenomeDBLocator'
 	     # -flow_into => { 1 => ['pairaligner_stats'],
 	     # 		   },
 	    },

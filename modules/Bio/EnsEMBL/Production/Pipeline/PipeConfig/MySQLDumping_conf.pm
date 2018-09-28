@@ -89,8 +89,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               1 => 'DatabaseDump',
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
      {
       -logic_name  => 'DatabaseDump',

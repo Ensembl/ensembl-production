@@ -183,8 +183,7 @@ sub pipeline_analyses {
           	'subject'    => $self->o('email_subject'),
 			'output_dir' => $self->o('output_dir'),
        },
-      -rc_name 	      => 'default',     
-	  -meadow_type    => 'LOCAL',
+      -rc_name 	      => 'default'
     },  
     
   ];
