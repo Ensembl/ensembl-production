@@ -214,7 +214,7 @@ sub pipeline_analyses {
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
-#       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
+#       -wait_for   => [$pipeline_flow],
        -hive_capacity => 10,
     },
 
@@ -500,7 +500,6 @@ sub pipeline_analyses {
       -can_be_empty     => 1,
       -max_retry_count  => 5,
       -priority        => 5,
-      -wait_for         => 'dump_dna'
     },
         
 ### ASSEMBLY CHAIN	
