@@ -43,11 +43,10 @@ sub default_options {
         'run_mart'      => 1,
         'wipe_all'      => 1,
         'skip_go'       => 0,
-        'verbose'       => 0,
+        'verbosity'     => 1,
         'ens_version'   => $self->o('ENV', 'ENS_VERSION'),
         'db_name'       => "ensembl_ontology_" . $self->o('ens_version'),
         'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
-        'verbosity'     => 1,
         'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
         'ontologies'    => [ 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco', 'bfo',
@@ -71,7 +70,8 @@ sub pipeline_wide_parameters {
         'ens_version'  => $self->o('ens_version'),
         'wipe_all'     => $self->o('wipe_all'),
         'srv'          => $self->o('srv'),
-        'mart_db_name' => $self->o('mart_db_name')
+        'mart_db_name' => $self->o('mart_db_name'),
+        'skip_go'      => $self->o('skip_go')
     };
 }
 
