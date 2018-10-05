@@ -58,7 +58,7 @@ sub run {
 	my $dba = $self->get_DBAdaptor($type);
 	$self->{logger}->info("Reformatting $dump_file into $dump_file_out");
 	$reformatter->reformat_variants(
-			$self, $genome_file, $dba->dbc()->dbname(), $dump_file,
+			$genome_file, $dba->dbc()->dbname(), $dump_file,
 			$dump_file_out );
 
 	return;
