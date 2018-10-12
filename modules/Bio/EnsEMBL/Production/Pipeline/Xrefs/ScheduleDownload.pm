@@ -27,12 +27,11 @@ sub run {
   my ($self) = @_;
   my $config_file      = $self->param_required('config_file');
   my $source_dir       = $self->param_required('source_dir');
-  my $reuse_db         = $self->param_required('reuse_db');
   my $skip_download    = $self->param_required('skip_download');
 
   my $db_url = $self->param_required('source_url');
 
-  $self->create_db($source_dir, $db_url) unless $reuse_db;
+  $self->create_db($source_dir, $db_url, $self->param_required('reuse_db'));
 
   my $sources = $self->parse_config($config_file);
   my $dataflow_params;
