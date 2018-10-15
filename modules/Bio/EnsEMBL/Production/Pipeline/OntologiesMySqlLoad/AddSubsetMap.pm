@@ -25,7 +25,6 @@ use warnings FATAL => 'all';
 use Bio::EnsEMBL::Hive::DBSQL::DBConnection;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
-1;
 sub fetch_input {
 }
 
@@ -75,8 +74,22 @@ sub write_output {
         GROUP BY child_term.term_id, parent_term.term_id
     );
 
+    my $drop_statement = q(
+        SHOW TABLES LIKE 'aux_%'
+    );
+
     my $dbc = Bio::EnsEMBL::Hive::DBSQL::DBConnection->new(-url => $self->param_required('db_url'));
     $dbc->connect();
+    my $dbh = $dbc->db_handle();
+
+    my $droph = $dbc->prepare($drop_statement);
+
+    # drop all previous auxiliary table
+    $droph->execute();
+    while (my $drop_table_name = $droph->fetchrow_array()) {
+        $self->warning('Dropping: ' . $drop_table_name);
+        $dbh->do('DROP TABLE '. $drop_table_name);
+    }
 
     my $sth = $dbc->prepare($statement);
 
@@ -85,8 +98,6 @@ sub write_output {
     my ($ontology_name, $subset_name);
 
     $sth->bind_columns(\($ontology_name, $subset_name));
-
-    my $dbh = $dbc->db_handle();
 
     while ($sth->fetch()) {
 
