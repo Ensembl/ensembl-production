@@ -8,5 +8,7 @@ fi
 sql='grant select, show view on `'$db'`.* to `anonymous`@`%`';
 echo "database: " $db
 echo "sql: " $sql
-mysql-publicsql-admin -e "$sql"
-mysql-eg-mirror-admin -e "$sql"
+admin-mysql-eg-publicsql -e "$sql"
+sql2='grant select, show view on `'$db'`.* to `ensro`@`%.ebi.ac.uk`';
+echo "sql: " $sql2
+admin-mysql-eg-publicsql -e "$sql2"
