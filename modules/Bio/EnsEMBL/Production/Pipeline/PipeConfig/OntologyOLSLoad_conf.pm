@@ -98,7 +98,7 @@ sub pipeline_analyses {
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
             -parameters      => {
                 db_conn => $self->o('db_host'),
-                sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name')]
+                sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name') ]
             },
             -max_retry_count => 1,
             -flow_into       => [ 'create_db' ],
@@ -124,7 +124,7 @@ sub pipeline_analyses {
             },
             -flow_into  => {
                 '2->A' => [ 'ontology_load' ],
-                'A->1' => [ 'compute_closure' ]
+                'A->1' => [ 'reset__closure' ]
             },
         },
         {
@@ -169,6 +169,17 @@ sub pipeline_analyses {
             -logic_name      => 'dummy',
             -input_ids       => [ {} ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count => 1,
+        },
+        {
+            -logic_name      => 'reset__closure',
+            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+            -parameters      => {
+                db_conn => $self->o('db_host'),
+                sql     => [ 'DROP TABLES LIKE \'aux_%\' ' ]
+            },
+            -max_retry_count => 1,
+            -flow_into       => [ 'compute_closure' ],
             -max_retry_count => 1,
         },
         {
