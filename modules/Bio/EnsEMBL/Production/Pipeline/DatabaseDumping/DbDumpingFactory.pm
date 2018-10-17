@@ -48,6 +48,9 @@ sub run {
 #Connect to the MySQL server
   my $dsn=sprintf( "DBI:mysql:database=%s;host=%s;port=%d", 'information_schema', $host, $port );
   my $dbh = DBI->connect( $dsn, $user, $password, {'PrintError' => 1,'AutoCommit' => 0 } );
+  if ( !defined($dbh) ) {
+    die "Failed to connect to the server $dsn";
+  }
 # Get the list of databases from the infromation_schema database excluding generic MysQL or system databases
   my $sth = $dbh->prepare('SELECT schema_name from SCHEMATA where schema_name not in ("performance_schema","mysql","information_schema","PERCONA_SCHEMA")') or die $dbh->errstr;
   $sth->execute() or die $dbh->errstr;
