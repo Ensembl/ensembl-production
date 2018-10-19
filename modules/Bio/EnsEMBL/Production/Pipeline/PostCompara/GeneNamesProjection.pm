@@ -52,26 +52,10 @@ sub run {
     my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB');
     die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
 
-    # Retrieve existing or create new analysis object
+    # Retrieve analysis
     my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($to_species , "core", "analysis" );
     my $analysis = $analysis_adaptor->fetch_by_logic_name('xref_projection');
 
-    if(!defined $analysis){
-      my $prod_dba=Bio::EnsEMBL::Registry->get_DBAdaptor('multi','production');
-      my $prod_dbc = $prod_dba->dbc();
-      my $prod_analysis = $prod_dbc->sql_helper()->execute( -SQL => qq/select logic_name, description, display_label from analysis_description where logic_name = 'xref_projection' /, -USE_HASHREFS => 1);
-
-      if (!defined $prod_analysis){
-        die "Analysis xref_projection is missing from the Production database, please add it";
-      }
-      else{
-        $analysis = Bio::EnsEMBL::Analysis->
-          new( -logic_name      => $prod_analysis->[0]->{logic_name},
-                -description     => $prod_analysis->[0]->{description},
-                -display_label   => $prod_analysis->[0]->{display_label},
-        );
-      }
-    }
     # Write projection info metadata
     $self->check_directory($output_dir);
     my $log_file  = $output_dir."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
