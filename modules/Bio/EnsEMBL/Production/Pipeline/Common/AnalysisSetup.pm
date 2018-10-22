@@ -225,19 +225,22 @@ sub production_updates {
       $self->param($property, $properties{$property});
      }      
    }
-   $sth = $dbh->prepare(
-    'INSERT IGNORE INTO analysis_web_data '.
-      '(analysis_description_id, web_data_id, species_id, db_type, '.
-        'displayable, created_at, modified_at) '.
-    'SELECT '.
-      'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.
-        'ad.default_displayable, NOW(), NOW() '.
-    'FROM analysis_description ad, species s '.
-    'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
-   );
-  
-   $sth->execute($db_type, $logic_name, $species);
-  
+   if ($dbc->pass) {
+     $sth = $dbh->prepare(
+      'INSERT IGNORE INTO analysis_web_data '.
+        '(analysis_description_id, web_data_id, species_id, db_type, '.
+          'displayable, created_at, modified_at) '.
+      'SELECT '.
+        'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.
+          'ad.default_displayable, NOW(), NOW() '.
+      'FROM analysis_description ad, species s '.
+      'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
+    );
+
+    $sth->execute($db_type, $logic_name, $species);
+  } else {
+    $self->warning("Insufficient permissions to link $species and $logic_name");
+  }
 }
 
 1;
