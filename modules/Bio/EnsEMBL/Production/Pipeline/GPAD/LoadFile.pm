@@ -46,7 +46,7 @@ sub run {
     my ($self)  = @_;
     # Parse filename to get $target_species
     my $file    = $self->param_required('gpad_file');
-    my $species = $1 if($file=~/annotations_ensembl.*\-(.+)\.gpa/);
+    my $species = $self->param_required('species');
 
     $self->log()->info("Loading $species from $file");
 
@@ -131,17 +131,6 @@ sub run {
     # Retrieve existing or create new analysis object
     my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species , "core", "analysis" );
     my $analysis = $analysis_adaptor->fetch_by_logic_name('goa_import');
-    
-    if(!defined $analysis){
-      $analysis = Bio::EnsEMBL::Analysis->
-        new( -logic_name      => 'goa_import',
-             -db              => 'GO',
-             -db_version      => undef,
-             -program         => 'goa_import',
-             -description     => 'Gene Ontology xrefs data from GOA',
-             -display_label   => 'GO xrefs from GOA',
-	   );
-    }
 
     my $tl_adaptor  = $dba->get_TranslationAdaptor();
     my $dbe_adaptor = $dba->get_DBEntryAdaptor();
