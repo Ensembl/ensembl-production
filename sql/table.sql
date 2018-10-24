@@ -45,7 +45,7 @@ INSERT INTO meta (species_id, meta_key, meta_value)
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
 CREATE TABLE species (
-  species_id      INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  species_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_name         VARCHAR(255) NOT NULL, -- Name used in database names.
   common_name     VARCHAR(255) NOT NULL, -- What we often refer to it as.
   web_name        VARCHAR(255) NOT NULL, -- Name that the web site is using.
@@ -54,88 +54,86 @@ CREATE TABLE species (
   url_name        VARCHAR(255) NOT NULL DEFAULT '', -- Name that is used in URLs
   taxon           VARCHAR(8) NOT NULL,
   species_prefix  VARCHAR(20) NOT NULL,
-  is_current      BOOLEAN NOT NULL DEFAULT true,
+  is_current      TINYINT NOT NULL DEFAULT '1',
   attrib_type_id  SMALLINT(5) UNSIGNED DEFAULT NULL,
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (species_id),
-  UNIQUE INDEX db_name_idx (db_name),
-  UNIQUE INDEX production_name_idx (production_name)
+  UNIQUE KEY db_name_idx (db_name),
+  UNIQUE KEY production_name_idx (production_name)
 );
 
 -- The 'species_alias' table
 -- Lists all aliases for all species including those no longer active
 
 CREATE TABLE species_alias (
-  species_alias_id  INTEGER UNSIGNED NOT NULL AUTO_INCREMENT, -- surrogate key
-  species_id        INTEGER UNSIGNED NOT NULL,      -- FK into species
+  species_alias_id  INT UNSIGNED NOT NULL AUTO_INCREMENT, -- surrogate key
+  species_id        INT UNSIGNED NOT NULL,      -- FK into species
   alias             varchar(255) NOT NULL,          -- alias
-  is_current        BOOLEAN NOT NULL DEFAULT true,  -- if it's still current
+  is_current        TINYINT NOT NULL DEFAULT '1',  -- if it's still current
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (species_alias_id),
-  UNIQUE INDEX (alias, is_current),             -- aliases MUST be unique for
+  UNIQUE KEY (alias, is_current),             -- aliases MUST be unique for
                                                 -- the current set. A certain
                                                 -- amount of duplication is
                                                 -- allowed if an alias moved
                                                 -- once
-  INDEX sa_speciesid_idx (species_id)
+  KEY sa_speciesid_idx (species_id)
 );
 
 
 -- The 'db' table.
 -- This table contains all species-specific databases for this release.
 CREATE TABLE db (
-  db_id         INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-  species_id    INTEGER UNSIGNED NOT NULL,  -- FK into 'species'.
-  is_current    BOOLEAN NOT NULL DEFAULT false,
+  db_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  species_id    INT UNSIGNED NOT NULL,  -- FK into 'species'.
+  is_current    TINYINT NOT NULL DEFAULT '0',
   db_type       ENUM('cdna', 'core', 'coreexpressionatlas',
                      'coreexpressionest', 'coreexpressiongnf',
                      'funcgen', 'otherfeatures', 'rnaseq',
-                     'variation', 'vega')
-                     NOT NULL DEFAULT 'core',
+                     'variation', 'vega') NOT NULL DEFAULT 'core',
   db_release    VARCHAR(8) NOT NULL,
   db_assembly   VARCHAR(8) NOT NULL,
   db_suffix     CHAR(1) DEFAULT '',
   db_host       VARCHAR(32) DEFAULT NULL,
 
   PRIMARY KEY (db_id),
-  UNIQUE INDEX species_release_idx (species_id, db_type, db_release)
+  UNIQUE KEY species_release_idx (species_id, db_type, db_release)
 );
 
 
 -- The 'master_biotype' table.
 -- Contains all the valid biotypes used for genes and transcripts.
 CREATE TABLE master_biotype (
-  biotype_id      INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  biotype_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name            VARCHAR(64) NOT NULL,
-  is_current      BOOLEAN NOT NULL DEFAULT true,
-  is_dumped       BOOLEAN NOT NULL DEFAULT true,
+  is_current      TINYINT NOT NULL DEFAULT '1',
+  is_dumped       TINYINT NOT NULL DEFAULT '1',
   object_type     ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
   db_type         SET('cdna', 'core', 'coreexpressionatlas',
                       'coreexpressionest', 'coreexpressiongnf', 'funcgen',
                       'otherfeatures', 'rnaseq', 'variation', 'vega',
-                      'presite', 'sangervega')
-                      NOT NULL DEFAULT 'core',
+                      'presite', 'sangervega') NOT NULL DEFAULT 'core',
   attrib_type_id  INT(11) DEFAULT NULL,
   description     TEXT,
   biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
   so_acc          VARCHAR(64),
 
   -- Columns for the web interface:
-  created_by      INTEGER,
+  created_by      INT,
   created_at      DATETIME,
-  modified_by     INTEGER,
+  modified_by     INT,
   modified_at     DATETIME,
 
   PRIMARY KEY (biotype_id),
@@ -146,32 +144,31 @@ CREATE TABLE master_biotype (
 -- Contains the meta keys that may or must be available in the 'meta'
 -- table in the Core databases.
 CREATE TABLE meta_key (
-  meta_key_id       INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  meta_key_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name              VARCHAR(64) NOT NULL,
-  is_optional       BOOLEAN NOT NULL DEFAULT false,
-  is_current        BOOLEAN NOT NULL DEFAULT true,
+  is_optional       TINYINT NOT NULL DEFAULT '0',
+  is_current        TINYINT NOT NULL DEFAULT '1',
   db_type           SET('cdna', 'core', 'funcgen', 'otherfeatures',
-                        'rnaseq', 'variation', 'vega')
-                    NOT NULL DEFAULT 'core',
+                        'rnaseq', 'variation', 'vega') NOT NULL DEFAULT 'core',
   description       TEXT,
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (meta_key_id),
-  UNIQUE INDEX name_type_idx (name, db_type)
+  UNIQUE KEY name_type_idx (name, db_type)
 );
 
 -- The 'meta_key_species' table.
 -- Connects the 'meta_key' and the 'species' tables.
 CREATE TABLE meta_key_species (
-  meta_key_id       INTEGER UNSIGNED NOT NULL,
-  species_id        INTEGER UNSIGNED NOT NULL,
+  meta_key_id       INT UNSIGNED NOT NULL,
+  species_id        INT UNSIGNED NOT NULL,
 
-  UNIQUE INDEX uniq_idx (meta_key_id, species_id)
+  UNIQUE KEY uniq_idx (meta_key_id, species_id)
 );
 
 -- The 'analysis_description' table.
@@ -179,23 +176,23 @@ CREATE TABLE meta_key_species (
 -- be available in the 'analysis_description' table, except for the
 -- 'web_data' and 'displayable' columns.
 CREATE TABLE analysis_description (
-  analysis_description_id   INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  analysis_description_id   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   logic_name                VARCHAR(128) NOT NULL,
   description               TEXT,
   display_label             VARCHAR(256) NOT NULL,
   db_version                TINYINT(1) NOT NULL DEFAULT '1',
-  is_current                BOOLEAN NOT NULL DEFAULT true,
+  is_current                TINYINT NOT NULL DEFAULT '1',
   default_web_data_id       INT(10) UNSIGNED DEFAULT NULL,
-  default_displayable       BOOLEAN DEFAULT NULL,
+  default_displayable       TINYINT DEFAULT NULL,
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (analysis_description_id),
-  UNIQUE INDEX logic_name_idx (logic_name)
+  UNIQUE KEY logic_name_idx (logic_name)
 );
 
 -- The 'analysis_web_data' table.
@@ -204,43 +201,42 @@ CREATE TABLE analysis_description (
 -- 'analysis_description' table.  Ties together species,
 -- analysis_description, and the web_data.
 CREATE TABLE analysis_web_data (
-  analysis_web_data_id      INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-  analysis_description_id   INTEGER UNSIGNED NOT NULL,
-  web_data_id               INTEGER UNSIGNED DEFAULT NULL,
-  species_id                INTEGER UNSIGNED NOT NULL,
+  analysis_web_data_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  analysis_description_id   INT UNSIGNED NOT NULL,
+  web_data_id               INT UNSIGNED DEFAULT NULL,
+  species_id                INT UNSIGNED NOT NULL,
 
   db_type                   ENUM('cdna', 'core', 'funcgen',
                                 'otherfeatures', 'rnaseq', 'vega',
-                                'presite', 'sangervega', 'grch37_archive')
-                            NOT NULL DEFAULT 'core',
+                                'presite', 'sangervega', 'grch37_archive') NOT NULL DEFAULT 'core',
 
-  displayable               BOOLEAN NOT NULL DEFAULT true,
+  displayable               TINYINT NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (analysis_web_data_id),
-  UNIQUE INDEX uniq_idx (species_id, db_type, analysis_description_id),
-  INDEX ad_idx (analysis_description_id),
-  INDEX wd_idx (web_data_id)
+  UNIQUE KEY uniq_idx (species_id, db_type, analysis_description_id),
+  KEY ad_idx (analysis_description_id),
+  KEY wd_idx (web_data_id)
 );
 
 -- The 'web_data' table.
 -- Contains the unique web_data.
 CREATE TABLE web_data (
-  web_data_id               INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  web_data_id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
   data                      TEXT,
 
   -- Columns for internal documentation
   comment TEXT,
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (web_data_id)
@@ -256,13 +252,13 @@ CREATE TABLE master_attrib_type (
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (attrib_type_id),
-  UNIQUE INDEX code_idx (code)
+  UNIQUE KEY code_idx (code)
 );
 
 -- The 'master_attrib' table.
@@ -274,9 +270,9 @@ CREATE TABLE master_attrib (
   is_current          TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (attrib_id),
@@ -291,9 +287,9 @@ CREATE TABLE master_attrib_set (
   is_current          TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   UNIQUE KEY set_idx (attrib_set_id, attrib_id),
@@ -316,13 +312,13 @@ CREATE TABLE master_external_db (
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (external_db_id),
-  UNIQUE INDEX db_name_idx (db_name,db_release,is_current)
+  UNIQUE KEY db_name_idx (db_name,db_release,is_current)
 );
 
 -- The 'master_misc_set' table
@@ -336,13 +332,13 @@ CREATE TABLE master_misc_set (
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (misc_set_id),
-  UNIQUE INDEX code_idx (code)
+  UNIQUE KEY code_idx (code)
 );
 
 
@@ -355,9 +351,9 @@ CREATE TABLE master_unmapped_reason (
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (unmapped_reason_id)
@@ -388,9 +384,9 @@ CREATE TABLE changelog (
   is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
-  created_by    INTEGER,
+  created_by    INT,
   created_at    DATETIME,
-  modified_by   INTEGER,
+  modified_by   INT,
   modified_at   DATETIME,
 
   PRIMARY KEY (changelog_id)
