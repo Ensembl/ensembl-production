@@ -54,7 +54,7 @@ CREATE TABLE species (
   url_name        VARCHAR(255) NOT NULL DEFAULT '', -- Name that is used in URLs
   taxon           VARCHAR(8) NOT NULL,
   species_prefix  VARCHAR(20) NOT NULL,
-  is_current      TINYINT NOT NULL DEFAULT true,
+  is_current      TINYINT NOT NULL DEFAULT '1',
   attrib_type_id  SMALLINT(5) UNSIGNED DEFAULT NULL,
 
   -- Columns for the web interface:
@@ -75,7 +75,7 @@ CREATE TABLE species_alias (
   species_alias_id  INT UNSIGNED NOT NULL AUTO_INCREMENT, -- surrogate key
   species_id        INT UNSIGNED NOT NULL,      -- FK into species
   alias             varchar(255) NOT NULL,          -- alias
-  is_current        TINYINT NOT NULL DEFAULT true,  -- if it's still current
+  is_current        TINYINT NOT NULL DEFAULT '1',  -- if it's still current
 
   -- Columns for the web interface:
   created_by    INT,
@@ -98,7 +98,7 @@ CREATE TABLE species_alias (
 CREATE TABLE db (
   db_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   species_id    INT UNSIGNED NOT NULL,  -- FK into 'species'.
-  is_current    TINYINT NOT NULL DEFAULT false,
+  is_current    TINYINT NOT NULL DEFAULT '0',
   db_type       ENUM('cdna', 'core', 'coreexpressionatlas',
                      'coreexpressionest', 'coreexpressiongnf',
                      'funcgen', 'otherfeatures', 'rnaseq',
@@ -119,8 +119,8 @@ CREATE TABLE db (
 CREATE TABLE master_biotype (
   biotype_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name            VARCHAR(64) NOT NULL,
-  is_current      TINYINT NOT NULL DEFAULT true,
-  is_dumped       TINYINT NOT NULL DEFAULT true,
+  is_current      TINYINT NOT NULL DEFAULT '1',
+  is_dumped       TINYINT NOT NULL DEFAULT '1',
   object_type     ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
   db_type         SET('cdna', 'core', 'coreexpressionatlas',
                       'coreexpressionest', 'coreexpressiongnf', 'funcgen',
@@ -148,8 +148,8 @@ CREATE TABLE master_biotype (
 CREATE TABLE meta_key (
   meta_key_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name              VARCHAR(64) NOT NULL,
-  is_optional       TINYINT NOT NULL DEFAULT false,
-  is_current        TINYINT NOT NULL DEFAULT true,
+  is_optional       TINYINT NOT NULL DEFAULT '0',
+  is_current        TINYINT NOT NULL DEFAULT '1',
   db_type           SET('cdna', 'core', 'funcgen', 'otherfeatures',
                         'rnaseq', 'variation', 'vega')
                     NOT NULL DEFAULT 'core',
@@ -184,7 +184,7 @@ CREATE TABLE analysis_description (
   description               TEXT,
   display_label             VARCHAR(256) NOT NULL,
   db_version                TINYINT(1) NOT NULL DEFAULT '1',
-  is_current                TINYINT NOT NULL DEFAULT true,
+  is_current                TINYINT NOT NULL DEFAULT '1',
   default_web_data_id       INT(10) UNSIGNED DEFAULT NULL,
   default_displayable       TINYINT DEFAULT NULL,
 
@@ -214,7 +214,7 @@ CREATE TABLE analysis_web_data (
                                 'presite', 'sangervega', 'grch37_archive')
                             NOT NULL DEFAULT 'core',
 
-  displayable               TINYINT NOT NULL DEFAULT true,
+  displayable               TINYINT NOT NULL DEFAULT '1',
 
   -- Columns for the web interface:
   created_by    INT,
