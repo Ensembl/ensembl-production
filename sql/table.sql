@@ -102,8 +102,7 @@ CREATE TABLE db (
   db_type       ENUM('cdna', 'core', 'coreexpressionatlas',
                      'coreexpressionest', 'coreexpressiongnf',
                      'funcgen', 'otherfeatures', 'rnaseq',
-                     'variation', 'vega')
-                     NOT NULL DEFAULT 'core',
+                     'variation', 'vega') NOT NULL DEFAULT 'core',
   db_release    VARCHAR(8) NOT NULL,
   db_assembly   VARCHAR(8) NOT NULL,
   db_suffix     CHAR(1) DEFAULT '',
@@ -125,8 +124,7 @@ CREATE TABLE master_biotype (
   db_type         SET('cdna', 'core', 'coreexpressionatlas',
                       'coreexpressionest', 'coreexpressiongnf', 'funcgen',
                       'otherfeatures', 'rnaseq', 'variation', 'vega',
-                      'presite', 'sangervega')
-                      NOT NULL DEFAULT 'core',
+                      'presite', 'sangervega') NOT NULL DEFAULT 'core',
   attrib_type_id  INT(11) DEFAULT NULL,
   description     TEXT,
   biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
@@ -151,8 +149,7 @@ CREATE TABLE meta_key (
   is_optional       TINYINT NOT NULL DEFAULT '0',
   is_current        TINYINT NOT NULL DEFAULT '1',
   db_type           SET('cdna', 'core', 'funcgen', 'otherfeatures',
-                        'rnaseq', 'variation', 'vega')
-                    NOT NULL DEFAULT 'core',
+                        'rnaseq', 'variation', 'vega') NOT NULL DEFAULT 'core',
   description       TEXT,
 
   -- Columns for the web interface:
@@ -211,8 +208,7 @@ CREATE TABLE analysis_web_data (
 
   db_type                   ENUM('cdna', 'core', 'funcgen',
                                 'otherfeatures', 'rnaseq', 'vega',
-                                'presite', 'sangervega', 'grch37_archive')
-                            NOT NULL DEFAULT 'core',
+                                'presite', 'sangervega', 'grch37_archive') NOT NULL DEFAULT 'core',
 
   displayable               TINYINT NOT NULL DEFAULT '1',
 
