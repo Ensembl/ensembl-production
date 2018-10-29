@@ -161,7 +161,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '3',
+        'db_version'    => '4',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
@@ -193,7 +193,7 @@ sub default_options {
       {
         'logic_name'    => 'mobidblite',
         'db'            => 'MobiDBLite',
-        'db_version'    => '1.5',
+        'db_version'    => '2.0',
         'ipscan_name'   => 'MobiDBLite',
         'ipscan_xml'    => 'MOBIDB_LITE',
         'ipscan_lookup' => 0,
