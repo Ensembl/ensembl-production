@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.30-69.0',
+    interproscan_version => '5.31-70.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -161,7 +161,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '3',
+        'db_version'    => '4',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
@@ -193,7 +193,7 @@ sub default_options {
       {
         'logic_name'    => 'mobidblite',
         'db'            => 'MobiDBLite',
-        'db_version'    => '1.5',
+        'db_version'    => '2.0',
         'ipscan_name'   => 'MobiDBLite',
         'ipscan_xml'    => 'MOBIDB_LITE',
         'ipscan_lookup' => 0,

@@ -52,7 +52,8 @@ sub run {
 	next unless ($file =~ m/^annotations_ensembl.*gpa$/);	 
 	$file = $dir."/".$file;
 	print "Scheduling $file\n";
-	$self->dataflow_output_id( { 'gpad_file' => $file }, 2); 
+  my $species = $1 if($file=~/annotations_ensembl.*\-(.+)\.gpa/);
+	$self->dataflow_output_id( { 'gpad_file' => $file, 'species' => $species }, 2);
       }
       closedir(DIR);
     }
