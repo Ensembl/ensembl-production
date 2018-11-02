@@ -262,7 +262,7 @@ sub process_taxon {
   }
 
   if ($species_count == 0) {
-    $self->throw("$taxon was processed but no species was added/removed")
+    $self->warning("$taxon was processed but no species was added/removed")
   }
   else {
     if ($action eq "add") {
