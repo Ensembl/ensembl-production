@@ -43,7 +43,7 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
     
-    db_type => 'core',
+    group => 'core',
   };
 }
 
@@ -86,7 +86,7 @@ sub pipeline_analyses {
                               division     => $self->o('division'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
-                              db_type      => $self->o('db_type'),
+                              group        => $self->o('group'),
                             },
       -flow_into         => {
                               '2->A' => ['DbFlow'],
@@ -109,7 +109,7 @@ sub pipeline_analyses {
                               division     => $self->o('division'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
-                              db_type      => $self->o('db_type'),
+                              group        => $self->o('group'),
                             },
       -flow_into         => {
                               '2->A' => ['CoreFlow'],

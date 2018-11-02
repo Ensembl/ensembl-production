@@ -54,8 +54,18 @@ sub param_defaults {
                        'epr' => 'protists',
                        'e'   => 'ensembl' },
     meta_filters => {},
-    db_type      => 'core',
+    group        => 'core',
   };
+}
+
+sub fetch_input {
+  my ($self) = @_;
+
+  # Switched parameter name from 'db_type' to 'group', but for backwards-
+  # compatability allow db_type to still be specified.
+  if ($self->param_is_defined('db_type')) {
+    $self->param('group', $self->param('db_type'));
+  }
 }
 
 sub run {
@@ -83,14 +93,14 @@ sub run {
 
   my %meta_filters = %{ $self->param('meta_filters') };
 
-  my $db_type      = $self->param('db_type');
+  my $group = $self->param('group');
 
   my $taxonomy_dba;
   if (scalar(@taxons) || scalar(@antitaxons)) {
     $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
   }
 
-  my $all_dbas = $reg->get_all_DBAdaptors( -GROUP => $db_type );
+  my $all_dbas = $reg->get_all_DBAdaptors( -GROUP => $group );
   my %dbs;
 
   my $all_compara_dbas;
@@ -100,7 +110,7 @@ sub run {
   my %compara_dbs;
 
   if ( ! scalar(@$all_dbas) && ! scalar(@$all_compara_dbas) ) {
-    $self->throw("No $db_type or compara databases found in the registry");
+    $self->throw("No $group or compara databases found in the registry");
   }
 
   if ($run_all) {
@@ -165,6 +175,7 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $group        = $self->param('group');
   my $dbs          = $self->param_required('dbs');
   my $db_flow      = $self->param_required('db_flow');
   my $all_dbs_flow = $self->param_required('all_dbs_flow');
@@ -185,13 +196,15 @@ sub write_output {
     $self->dataflow_output_id( $dataflow_params, $db_flow );
   }
 
-  foreach my $division ( keys %$compara_dbs ) {
-    my $dataflow_params = {
-      dbname  => $$compara_dbs{$division}->dbc->dbname,
-      species => $division,
-    };
+  if ($group eq 'core') {
+    foreach my $division ( keys %$compara_dbs ) {
+      my $dataflow_params = {
+        dbname  => $$compara_dbs{$division}->dbc->dbname,
+        species => $division,
+      };
 
-    $self->dataflow_output_id( $dataflow_params, $compara_flow );
+      $self->dataflow_output_id( $dataflow_params, $compara_flow );
+    }
   }
 
   $self->dataflow_output_id( {all_dbs => \@dbnames}, $all_dbs_flow );
@@ -307,7 +320,19 @@ sub process_division {
       $species_count++;
     }
     elsif ( $dbname !~ /_collection_/ ) {
-      if ( $div_long eq $dba->get_MetaContainer->get_division() ) {
+      my $db_division;
+      if ($dba->group eq 'core') {
+        $db_division = $dba->get_MetaContainer->get_division();
+      } else {
+        my $dna_dba = $dba->dnadb();
+        if ($dna_dba->group eq 'core') {
+          $db_division = $dna_dba->get_MetaContainer->get_division();
+        } else {
+          $self->throw("Could not retrieve DNA database for $dbname");
+        }
+      }
+
+      if ( $div_long eq $db_division ) {
         $self->add_species($dba, $dbs);
         $species_count++;
       }
