@@ -47,12 +47,16 @@ sub param_defaults {
     all_dbs_flow => 1,
     db_flow      => 2,
     compara_flow => 5, # compara_flow moved here from SpeciesFactory; retain former flow #5 here, to avoid bugs
-    div_synonyms => { 'eb'  => 'bacteria',
-                       'ef'  => 'fungi',
-                       'em'  => 'metazoa',
-                       'epl' => 'plants',
-                       'epr' => 'protists',
-                       'e'   => 'ensembl' },
+    div_synonyms => {
+                      'eb'  => 'bacteria',
+                      'ef'  => 'fungi',
+                      'em'  => 'metazoa',
+                      'epl' => 'plants',
+                      'epr' => 'protists',
+                      'e'   => 'vertebrates',
+                      'ev'  => 'vertebrates',
+                      'ensembl' => 'vertebrates',
+                    },
     meta_filters => {},
     group        => 'core',
   };
