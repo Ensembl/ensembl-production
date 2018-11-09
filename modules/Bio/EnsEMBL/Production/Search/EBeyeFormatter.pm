@@ -57,6 +57,11 @@ sub reformat_genome {
 
 	my $genome = read_json($genome_file);
 
+        # Extract only the division name and make it lowercase
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists  etc...
+        my $genome_division = $genome->{division};
+        my $genomic_unit_val = lc substr($genome_division,7);
+
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
 	my $writer =
@@ -71,7 +76,7 @@ sub reformat_genome {
 	_print_additional_fields(
 				 $writer, {
 				   'division'		=> $genome->{division},
-				   'genomic_unit'       => $genome->{division},
+				   'genomic_unit'       => $genomic_unit_val,
 				   'display_name'       => $genome->{organism}{display_name},
 				   'scientific_name'    => $genome->{organism}{scientific_name},
 				   'production_name'    => $genome->{organism}{production_name},
@@ -100,6 +105,11 @@ sub reformat_genome {
 sub reformat_genes {
 	my ( $self, $genome_file, $database, $genes_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+        # Extract only the division name and make it lowercase
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists  etc...
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = lc substr($genome_division,7);
+
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
@@ -138,7 +148,7 @@ sub reformat_genes {
 					 ( defined $gene->{haplotype} && $gene->{haplotype} eq '1' )
 					 ? 'haplotype' :
 					   'reference' ),
-				 genomic_unit => $genome->{division},
+				 genomic_unit => $genomic_unit_val,
 				 location =>
 				   sprintf( '%s:%s-%s',
 							$gene->{seq_region_name}, $gene->{start},
@@ -226,6 +236,12 @@ sub _add_xrefs {
 sub reformat_sequences {
 	my ( $self, $genome_file, $database, $sequences_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+	
+	# Extract only the division name and make it lowercase
+	# EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists  etc...        
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = lc substr($genome_division,7);
+	
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
@@ -257,6 +273,7 @@ sub reformat_sequences {
 			_print_additional_fields(
 								$writer, {
 								  species => $genome->{organism}{display_name},
+								  genomic_unit => $genomic_unit_val, 
 								  system_name  => $genome->{organism}{name},
 								  coord_system => $seq->{type},
 								  length       => $seq->{length},
@@ -277,6 +294,12 @@ sub reformat_sequences {
 sub reformat_variants {
 	my ( $self, $genome_file, $database, $variants_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+
+	# Extract only the division name and make it lowercase
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists  etc...
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = lc substr($genome_division,7);
+
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
@@ -306,7 +329,8 @@ sub reformat_variants {
 								   $genome->{organism}{taxonomy_id} } );
 			_print_additional_fields(
 								$writer, {
-								  species => $genome->{organism}{display_name},
+								  species 	   => $genome->{organism}{display_name},
+								  genomic_unit 	   => $genomic_unit_val,
 								  system_name      => $genome->{organism}{name},
 								  variation_source => $var->{source}{name},
 								  description =>
