@@ -70,6 +70,7 @@ sub reformat_genome {
 					 { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} } );
 	_print_additional_fields(
 				 $writer, {
+				   'division'		=> $genome->{division},
 				   'genomic_unit'       => $genome->{division},
 				   'display_name'       => $genome->{organism}{display_name},
 				   'scientific_name'    => $genome->{organism}{scientific_name},
