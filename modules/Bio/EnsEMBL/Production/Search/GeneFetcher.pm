@@ -56,18 +56,24 @@ sub new {
 }
 
 sub fetch_genes {
-	my ( $self, $name, $compara_name, $type ) = @_;
+	my ( $self, $name, $compara_name, $type, $use_pan_compara ) = @_;
 	$logger->debug("Fetching DBA for $name");
 	$type ||= 'core';
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $name, $type );
 	croak "Could not find database adaptor for $name" unless defined $dba;
 	if ( $type eq 'core' ) {
-		my $funcgen_dba =
+		my $funcgen_dba; 
+    my $compara_dba;
+    my $pan_compara_dba;
+    $funcgen_dba =
 		  Bio::EnsEMBL::Registry->get_DBAdaptor( $name, 'funcgen' );
-		my $compara_dba =
-		  Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' )
+    $compara_dba = 
+      Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' )
 		  if defined $compara_name;
-		return $self->fetch_genes_for_dba( $dba, $compara_dba, $funcgen_dba );
+		$pan_compara_dba =
+      Bio::EnsEMBL::Registry->get_DBAdaptor( 'pan_homology', 'compara' )
+      if $use_pan_compara;
+    return $self->fetch_genes_for_dba( $dba, $compara_dba, $funcgen_dba, $pan_compara_dba );
 	}
 	else {
 		return $self->fetch_genes_for_dba($dba);
@@ -75,7 +81,7 @@ sub fetch_genes {
 }
 
 sub fetch_genes_for_dba {
-	my ( $self, $dba, $compara_dba, $funcgen_dba ) = @_;
+	my ( $self, $dba, $compara_dba, $funcgen_dba, $pan_compara_dba ) = @_;
 	$logger->debug( "Retrieving genes for " . $dba->species() );
 	$dba->dbc()->db_handle()->{mysql_use_result} = 1;
 	my @genes =
@@ -84,6 +90,8 @@ sub fetch_genes_for_dba {
 	  if defined $funcgen_dba;
 	$self->{fetcher}->add_compara( $dba->species(), \@genes, $compara_dba )
 	  if defined $compara_dba;
+  $self->{fetcher}->add_pan_compara( $dba->species(), \@genes, $pan_compara_dba )
+    if defined $pan_compara_dba;
 	return \@genes;
 }
 
