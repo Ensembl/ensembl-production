@@ -185,6 +185,7 @@ sub reformat_genes {
 			my $exons = {};
 			my $all_protein_domain = {};
  			my $all_protein_domain_description = {};
+			my $all_probeset = {};
 			for my $transcript ( @{ $gene->{transcripts} } ) {
 				$fields->{transcript_count}++;
 				push @{ $fields->{transcript} }, $transcript->{id};
@@ -212,12 +213,18 @@ sub reformat_genes {
 				for my $exon ( @{ $transcript->{exons} } ) {
 					$exons->{ $exon->{id} }++;
 				}
+	
+				for my $probeset ( @{ $transcript->{probes} } ) {
+ 					$all_probeset->{ $probeset->{probe} }++;
+ 				}
+
 			} ## end for my $transcript ( @{...})
 			$fields->{exon}       = [ keys %$exons ];
 			$fields->{exon_count} = scalar values %$exons;
 			$fields->{domain}     = [ keys %$all_protein_domain ];
  			$fields->{domains}    = scalar values %$all_protein_domain;
  			$fields->{domain_description} = [ keys %$all_protein_domain_description ];
+			$fields->{probeset}   = [ keys %$all_probeset ];
 			_print_crossrefs( $writer, $xrefs );
 			_print_additional_fields( $writer, $fields );
 			_print_entry_end($writer);
