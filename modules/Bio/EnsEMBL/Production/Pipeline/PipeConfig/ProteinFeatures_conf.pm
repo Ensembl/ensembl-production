@@ -121,7 +121,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '31.0',
+        'db_version'    => '32.0',
         'ipscan_name'   => 'Pfam',
         'ipscan_xml'    => 'PFAM',
         'ipscan_lookup' => 1,
