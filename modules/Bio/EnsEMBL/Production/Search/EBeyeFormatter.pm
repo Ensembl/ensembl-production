@@ -274,7 +274,7 @@ sub reformat_sequences {
 								$writer, {
 								  species => $genome->{organism}{display_name},
 								  genomic_unit => $genomic_unit_val, 
-								  system_name  => $genome->{organism}{name},
+								  production_name  => $genome->{organism}{name},
 								  coord_system => $seq->{type},
 								  length       => $seq->{length},
 								  location =>
@@ -331,7 +331,7 @@ sub reformat_variants {
 								$writer, {
 								  species 	   => $genome->{organism}{display_name},
 								  genomic_unit 	   => $genomic_unit_val,
-								  system_name      => $genome->{organism}{name},
+								  production_name  => $genome->{organism}{name},
 								  variation_source => $var->{source}{name},
 								  description =>
 									sprintf( 'A %s Variant', $var->{source}{name} ) }
