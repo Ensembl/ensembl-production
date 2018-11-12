@@ -183,6 +183,8 @@ sub reformat_genes {
 			}
 
 			my $exons = {};
+			my $all_protein_domain = {};
+ 			my $all_protein_domain_description = {};
 			for my $transcript ( @{ $gene->{transcripts} } ) {
 				$fields->{transcript_count}++;
 				push @{ $fields->{transcript} }, $transcript->{id};
@@ -199,8 +201,11 @@ sub reformat_genes {
 					  $translation->{version} > 0;
 					_add_xrefs( $xrefs, $translation );
 					for my $pf ( @{ $translation->{protein_features} } ) {
-						$fields->{domains}++;
-						push @{ $fields->{domain} }, $pf->{name};
+						#$fields->{domains}++;
+						#push @{ $fields->{domain} }, $pf->{name};
+						$all_protein_domain->{ $pf->{name} }++;
+ 						$all_protein_domain_description->{ $pf->{description} }++
+ 							if defined $pf->{description} and $pf->{name} ne $pf->{description};
 
 					}
 				}
@@ -210,6 +215,9 @@ sub reformat_genes {
 			} ## end for my $transcript ( @{...})
 			$fields->{exon}       = [ keys %$exons ];
 			$fields->{exon_count} = scalar values %$exons;
+			$fields->{domain}     = [ keys %$all_protein_domain ];
+ 			$fields->{domains}    = scalar values %$all_protein_domain;
+ 			$fields->{domain_description} = [ keys %$all_protein_domain_description ];
 			_print_crossrefs( $writer, $xrefs );
 			_print_additional_fields( $writer, $fields );
 			_print_entry_end($writer);
