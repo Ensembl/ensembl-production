@@ -177,7 +177,7 @@ sub reformat_genes {
 			}
 
 			if ( defined $gene->{seq_region_synonyms} ) {
-				for my $sr ( @{ $gene->{seq_region_synonym} } ) {
+				for my $sr ( @{ $gene->{seq_region_synonyms} } ) {
 					push @{ $fields->{seq_region_synonym} }, $sr->{id};
 				}
 			}
