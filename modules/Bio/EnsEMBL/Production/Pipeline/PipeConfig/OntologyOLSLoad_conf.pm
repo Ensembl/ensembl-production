@@ -71,7 +71,8 @@ sub pipeline_wide_parameters {
         'srv'          => $self->o('srv'),
         'mart_db_name' => $self->o('mart_db_name'),
         'output_dir'   => $self->o('output_dir'),
-        'verbosity'    => $self->o('verbosity')
+        'verbosity'    => $self->o('verbosity'),
+        'ontologies'   => $self->o('ontologies')
     };
 }
 
@@ -83,7 +84,9 @@ sub pipeline_analyses {
     return [
         {
             -logic_name      => 'step_init',
-            -input_ids       => [ {} ],
+            -input_ids       => [ {
+                'input_id_list' => [ { "ontology_name" => 'go' }, { "ontology_name" => 'fpo' } ] #[map { {ontology_name => $_} } ('go', )],
+            } ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 1,
             -flow_into       => {
@@ -117,15 +120,12 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'ontologies_factory',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -parameters => {
-                inputlist    => $self->o('ontologies'),
-                column_names => [ 'ontology_name' ]
-            },
+            -module     => 'Bio::EnsEMBL::Hive::Examples::Factories::RunnableDB::GrabN',
             -flow_into  => {
-                '2->A' => [ 'ontology_load' ],
-                'A->1' => [ 'compute_closure' ]
-            },
+                # To "fold", the fan requires access to its parent's parameters, via either INPUT_PLUS or the parameter stack
+                '2->A' => { 'ontology_load' => INPUT_PLUS },
+                'A->1' => WHEN('#_list_exhausted#' => [ 'compute_closure' ], ELSE [ 'ontologies_factory' ]),
+            }
         },
         {
             -logic_name        => 'ontology_load',
@@ -149,7 +149,7 @@ sub pipeline_analyses {
                 'column_names' => [ 'term_index' ]
             },
             -flow_into  => {
-                '2->A' => { 'ontology_term_load' => INPUT_PLUS() },
+                '2->A' => { 'ontology_term_load' => INPUT_PLUS },
                 'A->1' => [ 'dummy' ]
             },
         },
