@@ -17,7 +17,7 @@ limitations under the License.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::AddSubsetMap;
+package Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap;
 
 use strict;
 use warnings FATAL => 'all';

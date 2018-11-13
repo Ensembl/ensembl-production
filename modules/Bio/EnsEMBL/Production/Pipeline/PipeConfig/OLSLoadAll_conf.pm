@@ -22,10 +22,10 @@ Check and compute terms closure.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoadAll_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoadAll_conf;
 
 use strict;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoad_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf');
 use warnings FATAL => 'all';
 
 sub default_options {
@@ -34,30 +34,8 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         'wipe_all'   => 1,
-        'ontologies' => [
-            { 'ontology_name' => 'go' },
-            { 'ontology_name' => 'so' },
-            { 'ontology_name' => 'pato' },
-            { 'ontology_name' => 'hp' },
-            { 'ontology_name' => 'vt' },
-            { 'ontology_name' => 'efo' },
-            { 'ontology_name' => 'po' },
-            { 'ontology_name' => 'eo' },
-            { 'ontology_name' => 'to' },
-            { 'ontology_name' => 'chebi' },
-            { 'ontology_name' => 'pr' },
-            { 'ontology_name' => 'fypo' },
-            { 'ontology_name' => 'peco' },
-            { 'ontology_name' => 'bfo' },
-            { 'ontology_name' => 'bto' },
-            { 'ontology_name' => 'cl' },
-            { 'ontology_name' => 'cmo' },
-            { 'ontology_name' => 'eco' },
-            { 'ontology_name' => 'mp' },
-            { 'ontology_name' => 'ogms' },
-            { 'ontology_name' => 'uo' },
-            { 'ontology_name' => 'mondo' }
-        ]
+        'ontologies'    => [ 'go', 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco',
+            'bfo', 'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo', 'mondo' ]
     }
 }
 

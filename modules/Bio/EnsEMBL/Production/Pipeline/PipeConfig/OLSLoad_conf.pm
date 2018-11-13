@@ -22,7 +22,7 @@ Check and compute terms closure.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoad_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
@@ -85,7 +85,8 @@ sub pipeline_analyses {
         {
             -logic_name      => 'step_init',
             -input_ids       => [ {
-                'input_id_list' => [ { "ontology_name" => 'go' }, { "ontology_name" => 'fpo' } ] #[map { {ontology_name => $_} } ('go', )],
+                # 'input_id_list' => [ { "ontology_name" => 'go' }, { "ontology_name" => 'fpo' } ] #[map { {ontology_name => $_} } ('go', )],
+                'input_id_list' => '#expr([map { {ontology_name => $_} } @{#ontologies#}])expr#',
             } ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 1,
@@ -173,7 +174,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name      => 'compute_closure',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::ComputeClosure',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::ComputeClosure',
             -max_retry_count => 1, # use per-analysis limiter
             -rc_name         => '32GB',
             -flow_into       => {
@@ -182,14 +183,14 @@ sub pipeline_analyses {
         },
         {
             -logic_name  => 'add_subset_map',
-            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::AddSubsetMap',
+            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap',
             -rc_name     => '32GB',
             -meadow_type => 'LSF',
             -flow_into   => [ 'mart_load' ]
         },
         {
             -logic_name => 'mart_load',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::MartLoad',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad',
             -rc_name    => 'default',
             -parameters => {
                 mart => $self->o('mart_db_name'),
