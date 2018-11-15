@@ -59,25 +59,28 @@ sub write_output {
   my $all_species      = $self->param_required('all_species');
   my $all_species_flow = $self->param('all_species_flow');
   my $core_flow        = $self->param('core_flow');
+  my $group            = $self->param('group');
 
   foreach my $species ( @{$all_species} ) {
     $self->dataflow_output_id(
       {
         species => $species,
-        group   => 'core',
+        group   => $group,
       },
     $core_flow);
   }
 
-  my ($flow, $flow_species) = $self->flow_species($all_species);
-  foreach my $group ( keys %$flow ) {
-    foreach my $species ( @{ $$flow_species{$group} } ) {
-      $self->dataflow_output_id(
-        {
-          species => $species,
-          group   => $group,
-        },
-      $$flow{$group} );
+  if ($group eq 'core') {
+    my ($flow, $flow_species) = $self->flow_species($all_species);
+    foreach my $group ( keys %$flow ) {
+      foreach my $species ( @{ $$flow_species{$group} } ) {
+        $self->dataflow_output_id(
+          {
+            species => $species,
+            group   => $group,
+          },
+        $$flow{$group} );
+      }
     }
   }
 
