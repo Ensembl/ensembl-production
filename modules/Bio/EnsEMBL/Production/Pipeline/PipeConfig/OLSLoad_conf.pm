@@ -125,7 +125,7 @@ sub pipeline_analyses {
             -flow_into  => {
                 # To "fold", the fan requires access to its parent's parameters, via either INPUT_PLUS or the parameter stack
                 '2->A' => { 'ontology_load' => INPUT_PLUS },
-                'A->1' => WHEN('#_list_exhausted#' => [ 'compute_closure' ], ELSE [ 'ontologies_factory' ]),
+                'A->1' => WHEN('#_list_exhausted#' => [ 'compute_closure' ], ELSE [ 'ontologies_factory' ])
             }
         },
         {
@@ -151,8 +151,13 @@ sub pipeline_analyses {
             },
             -flow_into  => {
                 '2->A' => { 'ontology_term_load' => INPUT_PLUS },
-                'A->1' => [ 'dummy' ]
+                'A->1' => [ 'ontology_report' ]
             },
+        },
+        {
+            -logic_name      => 'dummy',
+            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count => 1,
         },
         {
             -logic_name        => 'ontology_term_load',
@@ -167,10 +172,14 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name      => 'dummy',
-            -input_ids       => [ {} ],
-            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -logic_name      => 'ontology_report',
+            -module          => 'bio.ensembl.ontology.hive.OLSImportReport',
+            -language        => 'python3',
             -max_retry_count => 1,
+            -rc_name         => 'default',
+            -parameters      => {
+                -output_dir => $self->o('output_dir')
+            }
         },
         {
             -logic_name      => 'compute_closure',
