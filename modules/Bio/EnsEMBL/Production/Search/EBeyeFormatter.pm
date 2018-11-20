@@ -163,6 +163,8 @@ sub reformat_genes {
 					$gts->{ $homologue->{gene_tree_id} }++ if defined $homologue->{gene_tree_id};
 				}
 				$fields->{genetree} = [ keys %$gts ];
+        
+        _add_orthologue_xrefs($xrefs, $genome, $gene->{homologues});
 			}
 
 			if ( defined $gene->{seq_region_synonyms} ) {
@@ -210,6 +212,43 @@ sub reformat_genes {
 	close $fh;
 	return;
 } ## end sub reformat_genes
+
+sub _add_orthologue_xrefs {
+  my ($xrefs, $source_genome, $homologues) = @_;
+  return unless _genome_orthologue_dbname($source_genome->{organism}->{name});
+  my @orthologues = grep {_include_orthologue($_)} @$homologues;
+  foreach my $orthologue (@orthologues) {  
+    my $dbname = _genome_orthologue_dbname($orthologue->{genome}, 
+                                           $source_genome->{division} );
+    next unless $dbname;
+    push @{ $xrefs->{ $dbname } }, $orthologue->{stable_id};
+  }
+}
+
+sub _include_orthologue {
+  my $orthologue = shift; 
+  return $orthologue->{description} =~ 
+    /(ortholog_one2one|apparent_ortholog_one2one
+      |ortholog_one2many|ortholog_many2many)/x;
+}
+
+sub _genome_orthologue_dbname {
+  my $target_genome   = shift;
+  my $source_division = shift || 'Ensembl';
+  my $prefix = $source_division eq 'Ensembl' ? 'ensembl' : 'ensemblgenomes';
+  my $dbname_lookup = {
+    'homo_sapiens'                             => "ensembl_ortholog",
+    'mus_musculus'                             => "ensembl_ortholog",
+    'drosophila_melanogaster'                  => "${prefix}_ortholog",
+    'caenorhabditis_elegans'                   => "${prefix}_ortholog",
+    'saccharomyces_cerevisiae'                 => "${prefix}_ortholog",
+    'arabidopsis_thaliana'                     => "ensemblgenomes_ortholog",
+    'escherichia_coli_str_k_12_substr_mg1655'  => "ensemblgenomes_ortholog",
+    'schizosaccharomyces_pombe'                => "ensemblgenomes_ortholog",
+    'bacillus_subtilis_subsp_subtilis_str_168' => "ensemblgenomes_ortholog",
+  };
+  return $dbname_lookup->{$target_genome};
+}
 
 sub _add_xrefs {
 	my ( $xrefs, $o ) = @_;
