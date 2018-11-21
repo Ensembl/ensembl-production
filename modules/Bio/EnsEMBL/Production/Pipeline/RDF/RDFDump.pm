@@ -68,7 +68,7 @@ sub fetch_input {
 
 sub run {
   my $self = shift;
-  
+
   my $species = $self->param('species');
   my $release = $self->param('release');
 
@@ -77,7 +77,7 @@ sub run {
   # configure bulk extractor to go all the way down to protein features.
   # can also be told to stop at transcript level as well as others.
   my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
-  my $dba = $self->get_DBAdaptor; 
+  my $dba = $self->get_DBAdaptor;
   my $genes = $bulk->export_genes($dba, undef, 'protein_feature', $self->param('xref'));
   my $compara_name = $self->param('eg')?$self->division():'Multi';
   eval {
@@ -93,7 +93,7 @@ sub run {
   my $slices = $self->get_Slices(undef, ($species eq 'homo_sapiens')?1:0);
   #
   ############
-  
+
   ### Dump RDF
   #
   my $path = $self->data_path();
@@ -107,7 +107,7 @@ sub run {
   $self->dump_xrefs_rdf($xrefs_rdf_file, $genes) if $self->param('xref');
   #
   ###########
-  
+
   ### Add a graph file for Virtuoso loading.
   my $graph_path = $path;
   $self->param('dir', $graph_path);
@@ -119,7 +119,7 @@ sub run {
   $self->create_virtuoso_file(sprintf("%s/%s_xrefs.ttl.gz.graph", $graph_path, $self->production_name));
   #
   ###########
-  
+
   ### Compress the files
   system("gzip -n $core_rdf_file");
   system("gzip -n $xrefs_rdf_file");
@@ -155,7 +155,7 @@ sub data_path {
 # uses the ensembl-io framework
 sub dump_core_rdf {
   my ($self, $core_fname, $slices, $genes) = @_;
-  
+
   ### Dump core RDF ###
   #
   # start writing out: namespaces and species info
@@ -182,7 +182,7 @@ sub dump_core_rdf {
     biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
     adaptor           => $self->get_DBAdaptor);
   map { $core_writer->write($_, $feature_trans) } @{$genes};
-  
+
   # finally write connecting triple to master RDF file
   $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->dataset(
     version => $self->param('release'),
@@ -197,7 +197,7 @@ sub dump_core_rdf {
 
 sub dump_xrefs_rdf {
   my ($self, $xrefs_fname, $genes) = @_;
-  
+
   ### Xrefs RDF ###
   #
   my $fh = IO::File->new($xrefs_fname, "w") || die "$! $xrefs_fname";
@@ -208,7 +208,7 @@ sub dump_xrefs_rdf {
     adaptor           => $self->get_DBAdaptor);
   my $xrefs_writer = Bio::EnsEMBL::IO::Writer::RDF::XRefs->new($feature_trans);
   $xrefs_writer->open($fh);
-  
+
   # write namespaces
   $xrefs_writer->write(Bio::EnsEMBL::IO::Object::RDF->namespaces());
 
@@ -230,7 +230,7 @@ sub create_virtuoso_file {
   my $graph_fh = IO::File->new($path, 'w') or die "Cannot open virtuoso file $path: $!\n";
   print $graph_fh $graph_uri . "\n";
   $graph_fh->close();
-  
+
 }
 
 1;
