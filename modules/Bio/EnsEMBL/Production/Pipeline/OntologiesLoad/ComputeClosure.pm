@@ -17,7 +17,7 @@ limitations under the License.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::ComputeClosure;
+package Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::ComputeClosure;
 use strict;
 use warnings FATAL => 'all';
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
@@ -50,7 +50,7 @@ sub write_output {
     else {
         # The user has the 'Config::Simple' module installed.  See
         # if this is an ini-file or not...
-        my $config_file = $self->param('base_dir') . "/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/OntologiesMySqlLoad/closure_config.ini";
+        my $config_file = $self->param('base_dir') . "/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/OntologiesLoad/closure_config.ini";
         print "\nIni file path $config_file\n";
         $config = new Config::Simple($config_file)->vars();
     }

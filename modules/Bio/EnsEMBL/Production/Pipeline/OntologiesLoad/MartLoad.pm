@@ -16,7 +16,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::MartLoad;
+package Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad;
 use strict;
 use warnings FATAL => 'all';
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
@@ -35,7 +35,7 @@ sub write_output {
     my $mart = $self->param_required('mart');
     my $srv = $self->param_required('srv');
     my $dbname = $self->param_required('db_name');
-    my $templatefile = $self->param_required('base_dir') . "/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/OntologiesMySqlLoad/build_ontology_mart.sql";
+    my $templatefile = $self->param_required('base_dir') . "/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/OntologiesLoad/build_ontology_mart.sql";
 
     $self->log("Creating mart $srv:$mart");
     $self->run_system_command("$srv -e \"DROP database IF EXISTS $mart\"");

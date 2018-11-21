@@ -22,10 +22,10 @@ Check and compute terms closure.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoadAll_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoadAll_conf;
 
 use strict;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoad_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf');
 use warnings FATAL => 'all';
 
 sub default_options {
@@ -33,7 +33,7 @@ sub default_options {
     #TODO RELEASE 96: add mondo ontology for
     return {
         %{$self->SUPER::default_options},
-        'wipe_all'      => 1,
+        'wipe_all'   => 1,
         'ontologies'    => [ 'go', 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco',
             'bfo', 'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo', 'mondo' ]
     }

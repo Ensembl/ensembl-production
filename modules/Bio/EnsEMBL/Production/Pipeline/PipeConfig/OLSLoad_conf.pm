@@ -22,7 +22,7 @@ Check and compute terms closure.
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OntologyOLSLoad_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
@@ -71,7 +71,8 @@ sub pipeline_wide_parameters {
         'srv'          => $self->o('srv'),
         'mart_db_name' => $self->o('mart_db_name'),
         'output_dir'   => $self->o('output_dir'),
-        'verbosity'    => $self->o('verbosity')
+        'verbosity'    => $self->o('verbosity'),
+        'ontologies'   => $self->o('ontologies')
     };
 }
 
@@ -83,7 +84,10 @@ sub pipeline_analyses {
     return [
         {
             -logic_name      => 'step_init',
-            -input_ids       => [ {} ],
+            -input_ids       => [ {
+                # 'input_id_list' => [ { "ontology_name" => 'go' }, { "ontology_name" => 'fpo' } ] #[map { {ontology_name => $_} } ('go', )],
+                'input_id_list' => '#expr([map { {ontology_name => $_} } @{#ontologies#}])expr#',
+            } ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 1,
             -flow_into       => {
@@ -117,15 +121,12 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'ontologies_factory',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -parameters => {
-                inputlist    => $self->o('ontologies'),
-                column_names => [ 'ontology_name' ]
-            },
+            -module     => 'Bio::EnsEMBL::Hive::Examples::Factories::RunnableDB::GrabN',
             -flow_into  => {
-                '2->A' => [ 'ontology_load' ],
-                'A->1' => [ 'compute_closure' ]
-            },
+                # To "fold", the fan requires access to its parent's parameters, via either INPUT_PLUS or the parameter stack
+                '2->A' => { 'ontology_load' => INPUT_PLUS },
+                'A->1' => WHEN('#_list_exhausted#' => [ 'compute_closure' ], ELSE [ 'ontologies_factory' ])
+            }
         },
         {
             -logic_name        => 'ontology_load',
@@ -149,9 +150,14 @@ sub pipeline_analyses {
                 'column_names' => [ 'term_index' ]
             },
             -flow_into  => {
-                '2->A' => { 'ontology_term_load' => INPUT_PLUS() },
-                'A->1' => [ 'dummy' ]
+                '2->A' => { 'ontology_term_load' => INPUT_PLUS },
+                'A->1' => [ 'ontology_report' ]
             },
+        },
+        {
+            -logic_name      => 'dummy',
+            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count => 1,
         },
         {
             -logic_name        => 'ontology_term_load',
@@ -166,14 +172,18 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name      => 'dummy',
-            -input_ids       => [ {} ],
-            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -logic_name      => 'ontology_report',
+            -module          => 'bio.ensembl.ontology.hive.OLSImportReport',
+            -language        => 'python3',
             -max_retry_count => 1,
+            -rc_name         => 'default',
+            -parameters      => {
+                -output_dir => $self->o('output_dir')
+            }
         },
         {
             -logic_name      => 'compute_closure',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::ComputeClosure',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::ComputeClosure',
             -max_retry_count => 1, # use per-analysis limiter
             -rc_name         => '32GB',
             -flow_into       => {
@@ -182,14 +192,14 @@ sub pipeline_analyses {
         },
         {
             -logic_name  => 'add_subset_map',
-            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::AddSubsetMap',
+            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap',
             -rc_name     => '32GB',
             -meadow_type => 'LSF',
             -flow_into   => [ 'mart_load' ]
         },
         {
             -logic_name => 'mart_load',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesMySqlLoad::MartLoad',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad',
             -rc_name    => 'default',
             -parameters => {
                 mart => $self->o('mart_db_name'),
