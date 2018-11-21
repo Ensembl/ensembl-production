@@ -1,0 +1,1 @@
+1	23633	ENST00000569325	Test probe mapping

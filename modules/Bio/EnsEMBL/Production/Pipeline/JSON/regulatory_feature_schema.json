@@ -1,0 +1,38 @@
+{
+    "type": "object",
+    "required": [
+        "id"
+    ],
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "start": {
+            "type": "number"
+        },
+        "end": {
+            "type": "number"
+        },
+        "strand": {
+            "type": "number"
+        },
+        "seq_region_name": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "synonyms": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
