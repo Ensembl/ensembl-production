@@ -75,6 +75,7 @@ sub run {
       }
     }
   }
+  $dbh->disconnect;
  
 }
 
