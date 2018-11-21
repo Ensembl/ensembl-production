@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,6 +63,10 @@ sub run {
       );
       
       my $protein_feature = Bio::EnsEMBL::ProteinFeature->new(%pf_args);
+      $protein_feature->{'align_type'} = undef;
+      $protein_feature->{'cigar_string'} = undef;
+      $protein_feature->{'external_data'} = undef;
+      
       $pfa->store($protein_feature, $translation_id);
     }
     

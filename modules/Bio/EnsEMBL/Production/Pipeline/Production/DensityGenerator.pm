@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ sub delete_old_features {
   my $sql    = q{
     DELETE df
     FROM   density_feature df, density_type dt, analysis a, seq_region s, coord_system cs
-    WHERE  df.seq_region_id = s.seq_region_id 
+    WHERE  df.seq_region_id = s.seq_region_id
     AND    s.coord_system_id = cs.coord_system_id
     AND    cs.species_id = ? AND a.analysis_id = dt.analysis_id
     AND    dt.density_type_id = df.density_type_id
@@ -194,7 +194,7 @@ sub get_analysis {
   my $helper   = $prod_dba->dbc()->sql_helper();
   my $sql      = q{
     SELECT distinct display_label, description
-    FROM analysis_description 
+    FROM analysis_description
     WHERE is_current = 1 and logic_name = ? };
   my $anals = $helper->execute( -SQL => $sql, -PARAMS => [$logic_name] )->[0];
   throw "Could not find analysis $logic_name" unless ( defined $anals );
@@ -207,20 +207,6 @@ sub get_analysis {
   );
   $prod_dba->dbc()->disconnect_if_idle();
   return $analysis;
-}
-
-sub get_biotype_group {
-  my ($self, $group) = @_;
-  my $prod_dba = $self->get_production_DBAdaptor();
-  my $helper = $prod_dba->dbc()->sql_helper();
-  my $sql      = q{
-    SELECT name
-    FROM biotype
-    WHERE object_type = 'gene'
-    AND is_current = 1
-    AND biotype_group = ?
-    AND db_type like '%core%' };
-  return $helper->execute_simple(-SQL => $sql, -PARAMS => [$group]) || [];
 }
 
 # Empty method if no specific option is needed

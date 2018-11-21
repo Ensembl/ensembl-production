@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -382,8 +382,7 @@ sub pipeline_analyses {
 
 	    {
 	     -logic_name => 'update_genome_db_locator',
-	     -module     => 'Bio::EnsEMBL::Compara::Production::EPOanchors::UpdateGenomeDBLocator',
-	     -meadow_type    => 'LOCAL',
+	     -module     => 'Bio::EnsEMBL::Compara::Production::EPOanchors::UpdateGenomeDBLocator'
 	     # -flow_into => { 1 => ['pairaligner_stats'],
 	     # 		   },
 	    },

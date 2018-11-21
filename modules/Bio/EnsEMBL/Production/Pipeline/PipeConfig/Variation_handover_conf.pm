@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ sub default_options {
         species => [],
         
         ### Allow pipeline to run on species without declarations. Use it with -species parameter
-        force => 0,
+        force => 1,
 
         release => software_version(),
 
-        run_all => 0,
+        run_all => 1,
 
         bin_count => '150',
 
@@ -91,7 +91,7 @@ sub pipeline_analyses {
         -logic_name => 'SnpCount',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::SnpCount',
         -max_retry_count  => 2,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 
@@ -103,7 +103,7 @@ sub pipeline_analyses {
           bin_count => $self->o('bin_count'), max_run => $self->o('max_run'),
         },
         -max_retry_count  => 2,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'default',
       },
 
@@ -111,7 +111,7 @@ sub pipeline_analyses {
         -logic_name => 'GenomeStats',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
         -max_retry_count  => 3,
-        -hive_capacity    => 10,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 

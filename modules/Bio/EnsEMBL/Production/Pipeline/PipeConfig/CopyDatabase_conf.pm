@@ -7,7 +7,7 @@
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2017] EMBL-European Bioinformatics Institute
+    Copyright [2016-2018] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -48,6 +48,7 @@ sub pipeline_create_commands {
             # additional tables needed for long multiplication pipeline's operation:
     $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
     $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
+    $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
     $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
     $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
     ];

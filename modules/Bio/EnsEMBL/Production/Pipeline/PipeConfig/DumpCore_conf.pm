@@ -56,9 +56,6 @@ sub default_options {
 	   'antispecies' => [],
        'division' 	 => [], 
 	   'run_all'     => 0,	
-	   # Set to '0' to skip intentions checking during dataflow of jobs
-       # default => OFF (0)
-       'check_intentions' => 0,
 
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
@@ -71,6 +68,7 @@ sub default_options {
 
 	   ## dump_gff3 & dump_gtf parameter
        'abinitio'        => 1,
+       'gene' => 1,
 
 	   ## dump_gtf parameters, e! specific
 	   'gtftogenepred_exe' => 'gtfToGenePred',
@@ -183,7 +181,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
+          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
         }
         
     return [
@@ -193,7 +191,6 @@ sub pipeline_analyses {
        -parameters     => {},
        -hive_capacity  => -1,
        -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
        -flow_into      => {'1->A' => ['job_factory'],
                            'A->1' => ['checksum_generator'],
                           }		                       
@@ -202,7 +199,6 @@ sub pipeline_analyses {
 	 { -logic_name     => 'job_factory',
        -module         => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters     => {
-						     check_intentions => $self->o('check_intentions'),
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
@@ -218,7 +214,7 @@ sub pipeline_analyses {
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
-#       -wait_for   => [$pipeline_flow,'dump_dna','copy_dna'],
+#       -wait_for   => [$pipeline_flow],
        -hive_capacity => 10,
     },
 
@@ -229,8 +225,7 @@ sub pipeline_analyses {
 #          	'subject'    			 => $self->o('subject'),
        },
        -hive_capacity  => -1,
-       -rc_name 	   => 'default',       
-       -meadow_type    => 'LOCAL',
+       -rc_name 	   => 'default'
     },
 
 ### GTF
@@ -240,6 +235,7 @@ sub pipeline_analyses {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),						
 				   	        abinitio        => $self->o('abinitio'),
+                    gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
@@ -252,6 +248,7 @@ sub pipeline_analyses {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
 					        gene_pred_check => $self->o('genepredcheck_exe'),						
    		        	        abinitio        => $self->o('abinitio'),
+                        gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '32GB',
@@ -262,8 +259,9 @@ sub pipeline_analyses {
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
 				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe'),
-					        abinitio        => $self->o('abinitio'),						
+					          gene_pred_check => $self->o('genepredcheck_exe'),
+					          abinitio        => $self->o('abinitio'),
+                    gene            => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '64GB',
@@ -273,9 +271,10 @@ sub pipeline_analyses {
 	{ -logic_name     => 'dump_gtf_128GB',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
       -parameters     => {
-				            gtf_to_genepred => $self->o('gtftogenepred_exe'),
-					        gene_pred_check => $self->o('genepredcheck_exe'),
-   		        	        abinitio        => $self->o('abinitio'),					
+				                gtf_to_genepred => $self->o('gtftogenepred_exe'),
+					              gene_pred_check => $self->o('genepredcheck_exe'),
+                        abinitio        => $self->o('abinitio'),
+                        gene => $self->o('gene')
                           },
 	  -hive_capacity  => 50,
       -rc_name       => '128GB',
@@ -291,6 +290,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
 	      abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -311,6 +311,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
     	  abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -330,6 +331,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
     	  abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -349,6 +351,7 @@ sub pipeline_analyses {
           logic_name         => $self->o('logic_name'),
           db_type            => $self->o('db_type'),
 	      abinitio           => $self->o('abinitio'),
+        gene               => $self->o('gene'),
 	      out_file_stem      => $self->o('out_file_stem'),
 	      xrefs              => $self->o('xrefs'),        
         },
@@ -374,8 +377,7 @@ sub pipeline_analyses {
        -module         => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
        -parameters     => { cmd => 'mv #out_file#.sorted.gz #out_file#', },
        -hive_capacity  => 10,
-       -rc_name        => 'default',	
-       -meadow_type    => 'LOCAL',
+       -rc_name        => 'default',
        -flow_into      => 'validate_gff3',
       },
  
@@ -468,22 +470,6 @@ sub pipeline_analyses {
     },
 
     { -logic_name  => 'dump_fasta_dna',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -parameters  => {
-       },
-      -can_be_empty    => 1,
-      -flow_into       => {
-                            1 => WHEN(
-                        '#requires_new_dna# >= 1' => 'dump_dna',
-                        ELSE 'copy_dna',
-                    )},
-      -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'default',
-    },
-
-    { -logic_name  => 'dump_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
       -parameters  => {
             sequence_type_list  => $self->o('dna_sequence_type_list'),
@@ -498,18 +484,6 @@ sub pipeline_analyses {
       -rc_name         => 'default',
     },
 
-    {
-      -logic_name => 'copy_dna',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
-      -can_be_empty => 1,
-      -hive_capacity => 5,
-      -parameters => {
-        ftp_dir => $self->o('prev_rel_dir'),
-        release => $self->o('release'),
-        previous_release => $self->o('previous_release'),
-      },
-    },
-    
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 
     { -logic_name      => 'concat_fasta',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',
@@ -526,7 +500,6 @@ sub pipeline_analyses {
       -can_be_empty     => 1,
       -max_retry_count  => 5,
       -priority        => 5,
-      -wait_for         => 'dump_dna'
     },
         
 ### ASSEMBLY CHAIN	
@@ -559,7 +532,6 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
-      -analysis_capacity => 4,
       -rc_name => '64GB',
       # Validate both output files
       -flow_into => { 2 => ['validate_rdf'], }

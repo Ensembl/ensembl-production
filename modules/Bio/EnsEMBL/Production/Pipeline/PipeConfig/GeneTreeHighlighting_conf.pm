@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,109 +21,55 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
-
- ckong@ebi.ac.uk
+Populate compara table with GO and InterPro terms,
+to enable highlighting in the genome browser.
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneTreeHighlighting_conf;
 
 use strict;
 use warnings;
-use File::Spec;
-use Bio::EnsEMBL::Hive::Version 2.3;
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
+use Bio::EnsEMBL::Hive::Version 2.4;
 
 sub default_options {
-    my ($self) = @_;
-
-    return {
-        # inherit other stuff from the base class
-        %{ $self->SUPER::default_options() },
-
-	## General parameters
-    'registry'      => $self->o('registry'),
-    'release'       => $self->o('release'),
-    'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
-
-	## 'job_factory' parameters
-    'division'      => [],
-
-    ## Allow division of compara database to be explicitly specified
-    'compara_division' => undef,
-
-    # hive_capacity values for analysis
-	'highlighting_capacity'  => '50',
-
-    };
-}
-
-sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-      # inheriting database and hive tables' creation
-      @{$self->SUPER::pipeline_create_commands},
-      'mkdir -p '.$self->o('output_dir'),
-    ];
-}
-
-# Ensures output parameters gets propagated implicitly
-sub hive_meta_table {
   my ($self) = @_;
 
   return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack'  => 1,
-  };
-}
+    %{$self->SUPER::default_options},
 
-# override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
-  my ($self) = @_;
-  return
-      ' -reg_conf ' . $self->o('registry'),
-  ;
-}
+    species      => [],
+    division     => [],
+    run_all      => 0,
+    antispecies  => [],
+    meta_filters => {},
 
-# these parameter values are visible to all analyses,
-# can be overridden by parameters{} and input_id{}
-sub pipeline_wide_parameters {
-    my ($self) = @_;
-    return {
-            %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
-		    'pipeline_name' => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
-    };
-}
+    ## Allow division of compara database to be explicitly specified
+    compara_division => undef,
 
-sub resource_classes {
-    my $self = shift;
-    return {
-      'default'  	=> {'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 256000 -R "rusage[mem=256000]"'},
-	}
+    # hive_capacity values for analysis
+    highlighting_capacity => 50,
+
+  }
 }
 
 sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-    {  -logic_name => 'backbone_fire_GeneTreeHighlighting',
-       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids  => [ {} ] ,
-       -flow_into  => { '1' => ['job_factory'], }
-    },
 
     { -logic_name  => 'job_factory',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+       -input_ids  => [ {} ] ,
        -parameters => {
-                        division    => $self->o('division'),
+                        species      => $self->o('species'),
+                        antispecies  => $self->o('antispecies'),
+                        division     => $self->o('division'),
+                        run_all      => $self->o('run_all'),
+                        meta_filters => $self->o('meta_filters'),
                       },
-      -hive_capacity   => -1,
       -rc_name 	       => 'default',
       -max_retry_count => 1,
       -flow_into      => {'2->A' => ['highlight_go'],

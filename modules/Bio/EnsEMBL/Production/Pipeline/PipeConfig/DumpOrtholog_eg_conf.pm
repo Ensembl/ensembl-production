@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,6 +55,8 @@ sub default_options {
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 1,
 
 		# orthologs cutoff
 		'perc_id'  => '30',

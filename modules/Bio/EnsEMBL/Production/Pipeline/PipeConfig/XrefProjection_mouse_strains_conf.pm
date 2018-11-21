@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [1999-2016] EMBL-European Bioinformatics Institute
+Copyright [1999-2018] EMBL-European Bioinformatics Institute
 and Wellcome Trust Sanger Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +89,7 @@ sub default_options {
                                 # target species to project to
                                 'species'     => [], # ['puccinia graminis', 'aspergillus_nidulans']
                                 # target species to exclude
-                                'antispecies' => ['mus_musculus','mus_spretus_spreteij','mus_pahari','mus_caroli'],
+                                'antispecies' => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'],
                                 # target species division to project to
                                 'division'    => [],
                                 # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
@@ -119,7 +119,7 @@ sub default_options {
                                  # source species to project from
                                  'source'      => 'mus_musculus', # 'schizosaccharomyces_pombe'
                                  # target species to project to
-                                 'species'     => ['mus_musculus','mus_spretus_spreteij','mus_pahari','mus_caroli'], # ['puccinia graminis', 'aspergillus_nidulans']
+                                 'species'     => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'], # ['puccinia graminis', 'aspergillus_nidulans']
                                  # target species to exclude
                                  'antispecies' => [],
                                  # target species division to project to
@@ -163,9 +163,6 @@ sub default_options {
                 #  Setting descriptions that were projected to NULL
                 #  before doing projection
                 flag_delete_gene_descriptions   => '1',
-        # Tables to dump for GeneNames & GeneDescription projections subpipeline
-        g_dump_tables => ['gene', 'xref','transcript'],
-        
  	    # Email Report subject
         gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
         gn_subject    => $self->o('pipeline_name').' subpipeline GeneNamesProjection has finished',

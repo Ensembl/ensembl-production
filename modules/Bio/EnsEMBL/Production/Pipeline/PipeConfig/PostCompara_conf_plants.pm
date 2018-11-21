@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [1999-2016] EMBL-European Bioinformatics Institute
+Copyright [1999-2018] EMBL-European Bioinformatics Institute
 and Wellcome Trust Sanger Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,47 +47,13 @@ sub default_options {
     return {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
-        flag_GeneNames    => '1',
+        flag_GeneNames    => '0',
         flag_GeneDescr    => '1',
         flag_GeneCoverage => '1',
         ## GeneName Projection
         gn_config => {
             '1' => {
-                'source'   => 'arabidopsis_thaliana',
-                'division' => [],
-                'run_all'  => 0,                        # 1/0
-                     # Taxon name of species to project to
-                'taxons' => ['eudicotyledons'],
-
-                # source species GeneName filter for GeneDescription
-                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
-
-                # homology types filter
-                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                'homology_types_allowed' => ['ortholog_one2one'],
-
-                # homology percentage identity filter
-                'percent_id_filter'  => '30',
-                'percent_cov_filter' => '66',
             },
-            '2' => {
-                'source'   => 'oryza_sativa',
-                'division' => [],
-                'run_all'  => 0,                # 1/0
-                     # Taxon name of species to project to
-                'taxons' => ['Liliopsida'],
-
-                # source species GeneName filter for GeneDescription
-                'geneName_source' => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
-
-                # homology types filter
-                'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                'homology_types_allowed' => ['ortholog_one2one'],
-
-                # homology percentage identity filter
-                'percent_id_filter'  => '30',
-                'percent_cov_filter' => '66',
-            }
         },
         parallel_GeneDescription_projections => '0',
         ## GeneDescription Projection

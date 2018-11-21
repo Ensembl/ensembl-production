@@ -105,6 +105,19 @@ CREATE TABLE `attrib_type` (
   UNIQUE KEY `c` (`code`)
 ) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 
+CREATE TABLE `biotype` (
+  `biotype_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `object_type` enum('gene','transcript') NOT NULL DEFAULT 'gene',
+  `db_type` set('cdna','core','coreexpressionatlas','coreexpressionest','coreexpressiongnf','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') NOT NULL DEFAULT 'core',
+  `attrib_type_id` int(11) DEFAULT NULL,
+  `description` text,
+  `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
+  `so_acc` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`biotype_id`),
+  UNIQUE KEY `name_type_idx` (`name`,`object_type`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 CREATE TABLE `coord_system` (
   `coord_system_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `species_id` int(10) unsigned NOT NULL DEFAULT '1',
@@ -215,7 +228,7 @@ CREATE TABLE `dna_align_feature` (
   `cigar_line` text,
   `external_db_id` smallint(5) unsigned DEFAULT NULL,
   `hcoverage` double DEFAULT NULL,
-  `external_data` text,
+  `align_type` enum('ensembl','cigar','vulgar','mdtag') DEFAULT 'ensembl',
   PRIMARY KEY (`dna_align_feature_id`),
   KEY `seq_region_idx` (`seq_region_id`,`analysis_id`,`seq_region_start`,`score`),
   KEY `seq_region_idx_2` (`seq_region_id`,`seq_region_start`),
@@ -368,7 +381,7 @@ CREATE TABLE `identity_xref` (
 
 CREATE TABLE `interpro` (
   `interpro_ac` varchar(40) NOT NULL DEFAULT '',
-  `id` varchar(40) NOT NULL DEFAULT '',
+  `id` varchar(40) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
   UNIQUE KEY `interpro_ac` (`interpro_ac`,`id`),
   KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -480,7 +493,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`),
   KEY `species_value_idx` (`species_id`,`meta_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=140 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=153 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_coord` (
   `table_name` varchar(40) NOT NULL DEFAULT '',
@@ -530,7 +543,7 @@ CREATE TABLE `object_xref` (
   `ensembl_object_type` enum('RawContig','Transcript','Gene','Translation','Operon','OperonTranscript','Marker') NOT NULL,
   `xref_id` int(10) unsigned NOT NULL,
   `linkage_annotation` varchar(255) DEFAULT NULL,
-  `analysis_id` smallint(5) unsigned NOT NULL,
+  `analysis_id` smallint(5) unsigned DEFAULT NULL,
   UNIQUE KEY `ensembl_object_type` (`ensembl_object_type`,`ensembl_id`,`xref_id`),
   KEY `oxref_idx` (`object_xref_id`,`xref_id`,`ensembl_object_type`,`ensembl_id`),
   KEY `xref_idx` (`xref_id`,`ensembl_object_type`)
@@ -641,6 +654,7 @@ CREATE TABLE `protein_align_feature` (
   `cigar_line` text,
   `external_db_id` smallint(5) unsigned DEFAULT NULL,
   `hcoverage` double DEFAULT NULL,
+  `align_type` enum('ensembl','cigar','vulgar','mdtag') DEFAULT 'ensembl',
   PRIMARY KEY (`protein_align_feature_id`),
   KEY `seq_region_idx` (`seq_region_id`,`analysis_id`,`seq_region_start`,`score`),
   KEY `seq_region_idx_2` (`seq_region_id`,`seq_region_start`),
@@ -663,6 +677,8 @@ CREATE TABLE `protein_feature` (
   `perc_ident` float DEFAULT NULL,
   `external_data` text,
   `hit_description` text,
+  `cigar_line` text,
+  `align_type` enum('ensembl','cigar','cigarplus','vulgar','mdtag') DEFAULT NULL,
   PRIMARY KEY (`protein_feature_id`),
   UNIQUE KEY `aln_idx` (`translation_id`,`hit_name`,`seq_start`,`seq_end`,`hit_start`,`hit_end`,`analysis_id`),
   KEY `translation_id` (`translation_id`),

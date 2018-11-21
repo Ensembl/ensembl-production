@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2017] EMBL-European Bioinformatics Institute
+# Copyright [2016-2018] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,20 +49,19 @@ sub args {
   my $opts = {
 
     # Master database location:
-    mhost     => 'mysql-ens-sta-1',
-    mport     => 4519,
-    muser     => 'ensro',
-    mdatabase => 'ensembl_production',
+    mhost     => '',
+    mport     => '',
+    muser     => '',
+    mdatabase => '',
 
     # Taxonomy database location:
-    thost => 'mysql-ens-sta-1',
-    tuser => 'ensro',
-    tport => 4519,
-    tdatabase => 'ncbi_taxonomy',
+    thost => '',
+    tuser => '',
+    tport => '',
+    tdatabase => '',
 
     # User database location (default values):
-    port => 3306,
-    
+    port => '',
     removedeprecated => 0, 
   };
 
@@ -81,6 +80,7 @@ sub args {
     port|P=i
     user|u=s
     pass|p=s
+    release|rel=i
     database|d=s
     pattern=s
     verbose|v!
@@ -101,7 +101,7 @@ sub check_opts {
   my ($self) = @_;
   my $o = $self->{opts};
 
-  foreach my $required (qw/host user tdatabase/) {
+  foreach my $required (qw/host user mdatabase mhost mport muser tdatabase thost tport tuser/) {
     my $msg = "Required parameter --${required} was not given";
     pod2usage( -msg => $msg, -verbose => 1, -exitval => 1 ) if !$o->{$required};
   }
@@ -447,13 +447,11 @@ populate_species_meta.pl
 
 =head1 SYNOPSIS
 
-  ./populate_species_meta.pl -h host [-P port] \\
+  ./populate_species_meta.pl -h host -P port \\
     -u user [-p password]
     -d database \\
-    [-mh host] [-mP port] \\
-    [-mu user] [-mp password] [-md database] \\
-    [-th host] [-tP port] \\
-    [-tu user] [-tp password] [-td database] \\
+    -md database -mh host -mP port -mu user [-mp password] \\
+    -td database -th host -tP port -tu user [-tp password] \\
     [-dropbaks]
     [-dumppath]
     [-v]
