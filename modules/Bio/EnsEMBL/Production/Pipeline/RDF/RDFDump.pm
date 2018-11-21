@@ -165,26 +165,30 @@ sub dump_core_rdf {
 
   my $meta_adaptor = $self->get_DBAdaptor->get_MetaContainer;
   $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->namespaces());
-  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->species(taxon_id => $meta_adaptor->get_taxonomy_id,
-							     scientific_name => $meta_adaptor->get_scientific_name,
-							     common_name => $meta_adaptor->get_common_name));
+  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->species(
+    taxon_id => $meta_adaptor->get_taxonomy_id,
+    scientific_name => $meta_adaptor->get_scientific_name,
+    common_name => $meta_adaptor->get_common_name
+  ));
 
   # write sequence regions
   my $slice_trans = Bio::EnsEMBL::IO::Translator::Slice->new(version => $self->param('release'), meta_adaptor => $meta_adaptor);
   map { $core_writer->write($_, $slice_trans) } @{$slices};
 
   # write BulkFetcher 'features'
-  my $feature_trans =
-    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
-                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
-							  biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
-							  adaptor           => $self->get_DBAdaptor);
+  my $feature_trans = Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(
+    version => $self->param('release'),
+    xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+    biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
+    adaptor           => $self->get_DBAdaptor);
   map { $core_writer->write($_, $feature_trans) } @{$genes};
   
   # finally write connecting triple to master RDF file
-  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->dataset(version => $self->param('release'),
-							     project => $self->param('eg')?'ensemblgenomes':'ensembl',
-							     production_name => $self->production_name));
+  $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->dataset(
+    version => $self->param('release'),
+    project => $self->param('eg')?'ensemblgenomes':'ensembl',
+    production_name => $self->production_name
+  ));
   $core_writer->close();
   #
   ################
@@ -197,11 +201,11 @@ sub dump_xrefs_rdf {
   ### Xrefs RDF ###
   #
   my $fh = IO::File->new($xrefs_fname, "w") || die "$! $xrefs_fname";
-  my $feature_trans =
-    Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(version => $self->param('release'),
-                                                          xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
-							  biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
-							  adaptor           => $self->get_DBAdaptor);
+  my $feature_trans = Bio::EnsEMBL::IO::Translator::BulkFetcherFeature->new(
+    version           => $self->param('release'),
+    xref_mapping_file => $self->param('config_file'), # required for mapping Ensembl things to RDF
+    biotype_mapper    => Bio::EnsEMBL::Utils::SequenceOntologyMapper->new(Bio::EnsEMBL::Registry->get_adaptor('multi','ontology','OntologyTerm')),
+    adaptor           => $self->get_DBAdaptor);
   my $xrefs_writer = Bio::EnsEMBL::IO::Writer::RDF::XRefs->new($feature_trans);
   $xrefs_writer->open($fh);
   
