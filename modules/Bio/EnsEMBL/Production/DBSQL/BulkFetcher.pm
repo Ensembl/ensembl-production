@@ -858,6 +858,14 @@ sub add_compara {
 	return;
 }
 
+sub add_pan_compara {
+  my ( $self, $species, $genes, $compara_dba ) = @_;
+  warn "Adding pan taxonomic compara...\n";
+  $self->add_homologues( $species, $genes, $compara_dba );
+  warn "Finished adding pan taxonomic compara...\n";
+  return;
+}
+
 sub add_homologues {
 	my ( $self, $species, $genes, $compara_dba ) = @_;
 	my $homologues = {};
@@ -894,7 +902,8 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
 		my $homo = $homologues->{ $gene->{id} };
 		if ( defined $homo ) {
 			$n++;
-			$gene->{homologues} = $homo;
+			$gene->{homologues} ||= [];
+      push @{ $gene->{homologues} }, @$homo;
 		}
 	}
 	print "Added homologues to $n genes\n";
