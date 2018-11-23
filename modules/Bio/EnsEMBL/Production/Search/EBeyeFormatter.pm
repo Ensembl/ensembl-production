@@ -71,7 +71,6 @@ sub reformat_genome {
 	$writer->doctype("entry");
 
 	_print_entry_start( $writer, $genome->{id} );
-	_print_dates($writer);
 	_print_crossrefs( $writer,
 					 { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} } );
 	_print_additional_fields(
@@ -128,7 +127,6 @@ sub reformat_genes {
 								   $genome->{organism}{display_name},
 								   $type, $release ) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$genes_file,
@@ -276,7 +274,6 @@ sub reformat_sequences {
 								   $genome->{organism}{display_name},
 								   $type, $release ) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$sequences_file,
@@ -335,7 +332,6 @@ sub reformat_variants {
 								   $genome->{organism}{display_name},
 								   $type, $release ) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$variants_file,
