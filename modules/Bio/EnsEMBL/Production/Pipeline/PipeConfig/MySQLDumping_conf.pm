@@ -46,13 +46,18 @@ sub default_options {
         'pass'     => $self->o('pass'),
         'host'     => $self->o('host'),
         'port'     => $self->o('port'),
-        'output_dir'     	   => '/nfs/nobackup/dba/sysmysql/ensembl/mysql',
+        'meta_user'     => $self->o('meta_user'),
+        'meta_host'     => $self->o('meta_host'),
+        'meta_port'     => $self->o('meta_port'),
+        'meta_database' => $self->o('meta_database'),
         'base_dir'  => $self->o('ensembl_cvs_root_dir'),
         'pipeline_name'  => 'mysql_dumping',
-
+        'division' => [],
+        'base_output_dir'     	   => '/nfs/nobackup/dba/sysmysql/',
+        'vertebrates_release' => $self->o('vertebrates_release'),
+        'non_vertebrates_release' => $self->o('non_vertebrates_release'),
         ## 'DbDumpingFactory' parameters
-        'run_all'     => 0,
-        'db_pattern'    => [],
+        'databases'    => [],
     }
 }
 
@@ -80,12 +85,15 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -input_ids         => [ {} ],
       -parameters        => {
-                              run_all         => $self->o('run_all'),
-                              db_pattern         => $self->o('db_pattern'),
-                              user      => $self->o('user'),
-                              password      => $self->o('pass'),
-                              host      => $self->o('host'),
-                              port      => $self->o('port'),
+                              division        => $self->o('division'),
+                              databases         => $self->o('databases'),
+                              meta_user      => $self->o('meta_user'),
+                              meta_host      => $self->o('meta_host'),
+                              meta_port      => $self->o('meta_port'),
+                              meta_database => $self->o('meta_database'),
+                              base_output_dir => $self->o('base_output_dir'),
+                              vertebrates_release => $self->o('vertebrates_release'),
+                              non_vertebrates_release => $self->o('non_vertebrates_release'),
                             },
       -flow_into         => {
                               1 => 'DatabaseDump',
@@ -102,8 +110,7 @@ sub pipeline_analyses {
         'password'      => $self->o('pass'),
         'host'      => $self->o('host'),
         'port'      => $self->o('port'),
-        'base_dir'  => $self->o('base_dir'),
-        'output_dir' => $self->o('output_dir'),
+        'base_dir'  => $self->o('base_dir')
         },
       -rc_name          => 'default',
       -analysis_capacity => 10
