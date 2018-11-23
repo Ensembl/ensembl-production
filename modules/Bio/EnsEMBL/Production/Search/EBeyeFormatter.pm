@@ -266,7 +266,7 @@ sub reformat_sequences {
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
-	$writer->dataElement( 'name', $database );
+	$writer->dataElement( 'name', $genome->{division} ); #$database );
 	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
 	my $type    = $1;
 	my $release = $2;
@@ -325,7 +325,7 @@ sub reformat_variants {
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
-	$writer->dataElement( 'name', $database );
+	$writer->dataElement( 'name', $genome->{division} );
 	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
 	my $type    = $1;
 	my $release = $2;
