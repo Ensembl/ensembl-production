@@ -5,10 +5,6 @@
   <name>homo_sapiens_core_89_38</name>
   <description>Ensembl Homo sapiens core database</description>
   <release>89</release>
-  <dates>
-    <date type="creation" value="2017-07-10" />
-    <date type="last_modification" value="2017-07-10" />
-  </dates>
   <entries>
     <entry id="ENSG00000127720">
       <name>METTL25</name>
@@ -46,6 +42,15 @@
         <field name="location">12:82358497-82479236</field>
         <field name="domains">2</field>
         <field name="transcript_version">ENST00000248306.7</field>
+        <field name="probeset">229018_at</field>
+        <field name="probeset">3424382</field>
+        <field name="probeset">3424387</field>
+        <field name="probeset">7957404</field>
+        <field name="seq_region_synonym">CM000674.2</field>
+        <field name="seq_region_synonym">NC_000012.12</field>
+        <field name="seq_region_synonym">chr12</field>
+        <field name="domain_description">Methyltransferase domain</field>
+        <field name="domain_description">S-adenosyl-L-methionine-dependent methyltransferase</field>
         <field name="transcript_version">ENST00000548569.5</field>
         <field name="database">core</field>
         <field name="peptide_version">ENSP00000248306.3</field>
