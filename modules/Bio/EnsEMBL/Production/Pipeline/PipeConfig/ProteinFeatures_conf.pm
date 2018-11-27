@@ -840,7 +840,7 @@ sub pipeline_analyses {
                             unique_file => $self->o('unique_file'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => '4GB',
       -flow_into       => ['SpeciesFactoryForStoringInterPro'],
     },
     
