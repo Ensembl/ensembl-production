@@ -96,7 +96,7 @@ and m4.meta_key='genebuild.version'
 	           $genome_db->taxon_id($taxonomy_id);
 	           $genome_db->genebuild($genebuild);
 	           $genome_db->has_karyotype(0);
-	           $genome_db->is_high_coverage(0);
+               $genome_db->is_good_for_alignment(0);
 	           $genome_dba->store($genome_db);
 	           push @$genome_dbs, $genome_db;
                    push @$output_ids, {name=>$species};
