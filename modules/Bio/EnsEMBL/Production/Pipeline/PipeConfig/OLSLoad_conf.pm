@@ -192,15 +192,14 @@ sub pipeline_analyses {
         },
         {
             -logic_name  => 'add_subset_map',
-            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap',
-            -rc_name     => '32GB',
+            -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap'
             -meadow_type => 'LSF',
             -flow_into   => [ 'mart_load' ]
         },
         {
             -logic_name => 'mart_load',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad',
-            -rc_name    => 'default',
+            -meadow_type => 'LSF',
             -parameters => {
                 mart => $self->o('mart_db_name'),
                 srv  => $self->o('srv')

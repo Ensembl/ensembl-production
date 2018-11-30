@@ -48,12 +48,13 @@ sub write_output {
     my $optimize = <<"OPTIMIZE_TABLE";
 for table in \$($srv --skip-column-names $mart -e "show tables like 'closure%'"); do
 cnt=\$($srv $mart -e "SELECT COUNT(*) FROM \$table")
+d=\$(date +"[%Y/%m/%d %H:%M:%S]")
 if [ "\$cnt" == "0" ]; then
-    msg "Dropping table \$table from $mart"
-    $srv $mart -e \"drop table \$table\";
+    echo "\$d Dropping table \$table from $mart"
+    $srv $mart -e \"drop table \$table\"
 else
-    msg "Optimizing table \$table on $mart"
-    $srv $mart -e "optimize table \$table";
+    echo "\$d Dropping table \$table from $mart"
+    $srv $mart -e "optimize table \$table"
 fi
 done
 OPTIMIZE_TABLE
