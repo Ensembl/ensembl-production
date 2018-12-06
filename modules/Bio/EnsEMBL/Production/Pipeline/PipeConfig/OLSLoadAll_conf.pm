@@ -34,8 +34,8 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         'wipe_all'   => 1,
-        'ontologies'    => [ 'go', 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco',
-            'bfo', 'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo', 'mondo' ]
+        'ontologies' => [ 'go', 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco',
+            'bfo', 'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo', 'mondo', 'phi' ]
     }
 }
 
