@@ -76,8 +76,7 @@ sub pipeline_analyses {
                             chromosome_flow => 0,
                             variation_flow  => 0 },
            -flow_into     => { '2' => ['DumpGenomeJson'], },
-           -hive_capacity => 1,
-           -meadow_type   => 'LOCAL', }, {
+           -hive_capacity => 1 }, {
            -logic_name => 'DumpGenomeJson',
            -module =>
              'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',

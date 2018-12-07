@@ -47,13 +47,15 @@ sub write_output {
     $self->log("Cleaning up and optimizing tables in $mart");
     my $optimize = <<"OPTIMIZE_TABLE";
 for table in \$($srv --skip-column-names $mart -e "show tables like 'closure%'"); do
+echo Test Message inside
 cnt=\$($srv $mart -e "SELECT COUNT(*) FROM \$table")
+d=\$(date +"[%Y/%m/%d %H:%M:%S]")
 if [ "\$cnt" == "0" ]; then
-    msg "Dropping table \$table from $mart"
-    $srv $mart -e \"drop table \$table\";
+    echo "\$d Dropping table \$table from $mart"
+    $srv $mart -e \"drop table \$table\"
 else
-    msg "Optimizing table \$table on $mart"
-    $srv $mart -e "optimize table \$table";
+    echo "\$d Optimizing table \$table from $mart"
+    $srv $mart -e "optimize table \$table"
 fi
 done
 OPTIMIZE_TABLE
@@ -62,7 +64,7 @@ OPTIMIZE_TABLE
 
     $self->log("Creating the dataset_name table for mart database $mart");
     my $BASE_DIR=$self->param_required("base_dir");
-    if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl \$($srv details script) -mart $mart -div ensembl") != 0) {
+    if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl \$($srv details script) -mart $mart -div vertebrates") != 0) {
         $self->log("Failed to create dataset_name table");
         exit 1
     }

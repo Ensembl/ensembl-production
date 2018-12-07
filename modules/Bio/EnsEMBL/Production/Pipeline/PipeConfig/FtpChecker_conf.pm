@@ -78,8 +78,7 @@ sub pipeline_analyses {
 			      '5->A' => ['CheckComparaFtp'],
 			      'A->1' => ['ReportFailures'],
 			     },
-           -hive_capacity => 1,
-	   -meadow_type   => 'LOCAL', 
+           -hive_capacity => 1
 	  }, 
 	  {
 	   -logic_name => 'CheckCoreFtp',
@@ -139,7 +138,7 @@ sub pipeline_create_commands {
   my ($self) = @_;
   return [
 	  @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
-	  $self->db_cmd('CREATE TABLE failures (species varchar(64), division varchar(16), type varchar(16), format varchar(16), file_path text)')
+	  $self->db_cmd('CREATE TABLE failures (species varchar(128), division varchar(16), type varchar(16), format varchar(16), file_path text)')
 	 ];
 }
 

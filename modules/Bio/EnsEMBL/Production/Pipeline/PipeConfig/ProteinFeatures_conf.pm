@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.30-69.0',
+    interproscan_version => '5.31-70.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -161,7 +161,7 @@ sub default_options {
       {
         'logic_name'    => 'sfld',
         'db'            => 'SFLD',
-        'db_version'    => '3',
+        'db_version'    => '4',
         'ipscan_name'   => 'SFLD',
         'ipscan_xml'    => 'SFLD',
         'ipscan_lookup' => 1,
@@ -193,7 +193,7 @@ sub default_options {
       {
         'logic_name'    => 'mobidblite',
         'db'            => 'MobiDBLite',
-        'db_version'    => '1.5',
+        'db_version'    => '2.0',
         'ipscan_name'   => 'MobiDBLite',
         'ipscan_xml'    => 'MOBIDB_LITE',
         'ipscan_lookup' => 0,
@@ -339,8 +339,7 @@ sub pipeline_analyses {
                                           '#interpro_desc_source# eq "core_dbs"' =>
                                             ['SpeciesFactoryForDumpingInterPro']
                                         ),
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -360,14 +359,14 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2->A' => ['BackupTables'],
                               'A->2' => ['AnnotateProteinFeatures'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
       -logic_name        => 'BackupTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
       -max_retry_count   => 1,
+      -analysis_capacity => 20,
       -parameters        => {
                               table_list  => [
                                 'analysis',
@@ -379,10 +378,9 @@ sub pipeline_analyses {
                                 'protein_feature',
                                 'xref',
                               ],
-                              output_file => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
-      -analysis_capacity => 20,
       -flow_into         => ['AnalysisFactory'],
     },
     
@@ -397,24 +395,23 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2->A' => ['AnalysisSetup'],
                               'A->1' => ['RemoveOrphans'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
       -logic_name        => 'AnalysisSetup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count   => 0,
+      -analysis_capacity => 20,
       -parameters        => {
                               db_backup_required => 1,
-                              db_backup_file     => catdir($self->o('pipeline_dir'), '#species#', 'pre_pipeline_bkp.sql.gz'),
+                              db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => $self->o('linked_tables'),
                               production_lookup  => $self->o('production_lookup'),
                               program            => 'InterProScan',
                               program_version    => $self->o('interproscan_version'),
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -434,8 +431,7 @@ sub pipeline_analyses {
                                   'WHERE ox.object_xref_id IS NULL',
                               ]
                             },
-      -flow_into         => ['DeleteInterPro'],
-      -meadow_type       => 'LOCAL',
+      -flow_into         => ['DeleteInterPro']
     },
     
     {
@@ -487,6 +483,7 @@ sub pipeline_analyses {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
+      -analysis_capacity => 20,
       -parameters        => {
                               chromosome_flow    => 0,
                               otherfeatures_flow => 0,
@@ -495,8 +492,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '2' => ['DumpProteome'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -523,6 +519,7 @@ sub pipeline_analyses {
       -logic_name        => 'SplitDumpFile',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
+      -analysis_capacity => 50,
       -parameters        => {
                               fasta_file              => '#proteome_file#',
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
@@ -567,6 +564,7 @@ sub pipeline_analyses {
       -logic_name        => 'PartitionByChecksum',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::PartitionByChecksum',
       -max_retry_count   => 0,
+      -analysis_capacity => 50,
       -parameters        => {
                               fasta_file => '#proteome_file#',
                             },
@@ -581,6 +579,7 @@ sub pipeline_analyses {
       -logic_name        => 'SplitChecksumFile',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
+      -analysis_capacity => 50,
       -parameters        => {
                               fasta_file              => '#checksum_file#',
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
@@ -599,6 +598,7 @@ sub pipeline_analyses {
       -logic_name        => 'SplitNoChecksumFile',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
       -max_retry_count   => 0,
+      -analysis_capacity => 50,
       -parameters        => {
                               fasta_file              => '#nochecksum_file#',
                               max_seqs_per_file       => $self->o('max_seqs_per_file'),
@@ -616,7 +616,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanLookup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 10,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -639,7 +639,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanLookup_HighMem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 10,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -660,7 +660,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanNoLookup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 1,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -683,7 +683,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanNoLookup_HighMem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 1,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -704,7 +704,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanLocal',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 1,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -727,7 +727,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'InterProScanLocal_HighMem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-      -hive_capacity     => 50,
+      -hive_capacity     => 200,
       -batch_size        => 1,
       -max_retry_count   => 1,
       -can_be_empty      => 1,
@@ -761,7 +761,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'StoreGoXrefs',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreGoXrefs',
-      -hive_capacity     => 10,
+      -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
                               interpro2go_file => $self->o('interpro2go_file'),
@@ -777,7 +777,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'EmailReport',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
-      -hive_capacity     => 10,
+      -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
                               email   => $self->o('email'),
@@ -789,7 +789,6 @@ sub pipeline_analyses {
     {
       -logic_name      => 'FetchInterPro',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro',
-      -hive_capacity   => 10,
       -max_retry_count => 1,
       -parameters      => {
                             interpro_desc_ebi_path => $self->o('interpro_desc_ebi_path'),
@@ -820,8 +819,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '2->A' => ['DumpInterProXrefs'],
                             'A->1' => ['AggregateInterProXrefs'],
-                          },
-      -meadow_type     => 'LOCAL',
+                          }
     },
     
     {
@@ -831,7 +829,7 @@ sub pipeline_analyses {
                             filename => catdir($self->o('pipeline_dir'), '#species#.xrefs.txt'),
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -analysis_capacity => 10,
       -flow_into       => {
                             1 => [ '?accu_name=filename&accu_address=[]' ],
                           },
@@ -869,8 +867,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -flow_into       => {
                             '2' => ['StoreInterProXrefs'],
-                          },
-      -meadow_type     => 'LOCAL',
+                          }
     },
     
     {
@@ -887,7 +884,7 @@ sub pipeline_analyses {
                             ],
                           },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -analysis_capacity => 10,
       -rc_name         => 'normal',
     },
     

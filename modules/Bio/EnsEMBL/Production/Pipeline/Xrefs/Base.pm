@@ -46,13 +46,14 @@ sub parse_config {
 }
 
 sub create_db {
-  my ($self, $source_dir, $user, $pass, $db_url, $source_db, $host, $port) = @_;
+  my ($self, $source_dir, $source_url, $reuse_db_if_present) = @_;
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($source_url);
   my $dbconn = sprintf( "dbi:mysql:host=%s;port=%s", $host, $port);
   my $dbh = DBI->connect( $dbconn, $user, $pass, {'RaiseError' => 1}) or croak( "Can't connect to server: " . $DBI::errstr );
   my %dbs = map {$_->[0] => 1} @{$dbh->selectall_arrayref('SHOW DATABASES')};
-  if ($dbs{$source_db}) {
-    $dbh->do( "DROP DATABASE $source_db" );
-  }
+  return if $reuse_db_if_present and $dbs{$source_db};
+
+  $dbh->do( "DROP DATABASE IF EXISTS $source_db" );
   $dbh->do( 'CREATE DATABASE ' . $source_db);
   my $table_file = catfile( $source_dir, 'table.sql' );
   my $cmd = "mysql -u $user -p'$pass' -P $port -h $host $source_db < $table_file";
@@ -60,7 +61,7 @@ sub create_db {
 }
 
 sub download_file {
-  my ($self, $file, $base_path, $source_name, $db, $release) = @_;
+  my ($self, $file, $base_path, $source_name, $db, $skip_download_if_file_present, $release) = @_;
 
   my $uri = URI->new($file);
   if (!defined $uri->scheme) { return $file; }
@@ -70,7 +71,7 @@ sub download_file {
   if (defined $db and $db eq 'checksum') {
     $dest_dir = catdir($base_path, 'Checksum');
   }
-
+  make_path($dest_dir);
   if ($uri->scheme eq 'ftp') {
     my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
     if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
@@ -83,17 +84,17 @@ sub download_file {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
-      mkdir(dirname($file_path));
-      $ftp->get( $remote_file, $file_path );
+      $ftp->get( $remote_file, $file_path ) unless $skip_download_if_file_present and -f $file_path;
     }
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
-    mkdir(dirname($file_path));
-    open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
-    my $http = HTTP::Tiny->new();
-    my $response = $http->get($uri->as_string());
-    print OUT $response->{content};
-    close OUT;
+    unless ($skip_download_if_file_present and -f $file_path) {
+      open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+      my $http = HTTP::Tiny->new();
+      my $response = $http->get($uri->as_string());
+      print OUT $response->{content};
+      close OUT;
+    }
   }
   if (defined $release) {
     return $file_path;
@@ -145,7 +146,7 @@ sub load_checksum {
 }
 
 sub get_source_id {
-  my ($self, $dbi, $parser, $species_id, $name) = @_;
+  my ($self, $dbi, $parser, $species_id, $name, $division_id) = @_;
   $name = "%$name%";
   my $source_id;
   my $select_source_id_sth = $dbi->prepare("SELECT u.source_id FROM source_url u, source s WHERE s.source_id = u.source_id AND parser = ? and species_id = ?");
@@ -166,7 +167,7 @@ sub get_source_id {
   }
   # If no species-specific source, look for common sources
   if (!defined $source_id) {
-    $select_source_id_sth->execute($parser, 1, $name);
+    $select_source_id_sth->execute($parser, $division_id, $name);
     $source_id = ($select_source_id_sth->fetchrow_array())[0];
   }
   $select_source_id_sth->finish();
@@ -254,6 +255,23 @@ sub get_taxon_id {
   my $species_id = $meta_container->get_taxonomy_id();
 
   return $species_id;
+}
+
+sub get_division_id {
+  my $self = shift;
+  my $species = shift;
+  my $registry = 'Bio::EnsEMBL::Registry';
+  my $meta_container = $registry->get_adaptor($species,'core', 'MetaContainer');
+  my $division = $meta_container->get_division();
+  my %division_taxon = (
+    'Ensembl'            => 7742,
+    'EnsemblVertebrates' => 7742,
+    'Vertebrates'        => 7742,
+    'EnsemblMetazoa'     => 33208,
+    'Metazoa'            => 33208
+  );
+  my $division_id = $division_taxon{$division};
+  return $division_id;
 }
 
 

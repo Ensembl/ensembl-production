@@ -136,6 +136,9 @@ sub run {
       $division = lc ($division);
       $division =~ s/ensembl//i;
 		}
+		if ($division eq "vertebrates"){
+      $division = "";
+    }
     $vals->{division} = $division;
     $self->check_files($species, 'core', $base_path, $expected_files, $vals);
   }

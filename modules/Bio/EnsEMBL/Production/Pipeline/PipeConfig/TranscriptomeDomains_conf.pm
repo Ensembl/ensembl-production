@@ -94,8 +94,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2->A' => ['FastaSplit'],
                               'A->2' => ['MergeResults'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {
@@ -111,8 +110,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['InterProScan'],
-                            },
-      -meadow_type       => 'LOCAL',
+                            }
     },
     
     {

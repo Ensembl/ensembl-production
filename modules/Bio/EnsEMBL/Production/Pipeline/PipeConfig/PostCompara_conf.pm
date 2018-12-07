@@ -56,6 +56,14 @@ sub default_options {
             output_dir        => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
             email => $self->o('ENV', 'USER').'@ebi.ac.uk',
+
+            #analysis informations
+            logic_name => 'xref_projection',
+            description => 'Xrefs projected using the xref projection pipeline',
+            display_label => 'Projected xrefs',
+            displayable => 0,
+            production_lookup => 1,
+            delete_existing => 1,
             
             ## Flags controlling sub-pipeline to run
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
@@ -108,7 +116,7 @@ sub default_options {
             parallel_GeneDescription_projections => '1',
 
             # Tables to dump for GeneNames & GeneDescription projections subpipeline
-            g_dump_tables => ['gene', 'xref','object_xref','external_db','external_synonym'],
+            g_dump_tables => ['gene', 'xref','object_xref','external_db','external_synonym','analysis','analysis_description'],
             
  	    # Email Report subject
             gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
@@ -271,8 +279,7 @@ sub pipeline_analyses {
              -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
              -flow_into       => {                 '1->A' => ['DumpingCleaningSetup'],
                                                    'A->1' => ['backbone_fire_PostCompara'],
-                                 },
-             -meadow_type   => 'LOCAL',
+                                 }
           },
           
           { -logic_name     => 'DumpingCleaningSetup',
@@ -300,8 +307,7 @@ sub pipeline_analyses {
            -logic_name      => 'Iterator',
            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
            -flow_into       => {                 '1' => ['DumpingCleaningSetup'],
-                               },
-           -meadow_type   => 'LOCAL',
+                               }
           },
           {  -logic_name      => 'SpeciesFactory',
              -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -352,11 +358,25 @@ sub pipeline_analyses {
              -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
              -max_retry_count => 1,
              -flow_into      => {
-                                 2 => ['GNProjection']
+                                 '2->A' => ['AnalysisSetup'],
+                                 'A->2' => ['GNProjection'],
                                 },
              -rc_name         => 'default',
           },
-          
+          {
+            -logic_name        => 'AnalysisSetup',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
+            -max_retry_count   => 0,
+            -parameters        => {
+                                    db_backup_required => 0,
+                                    production_lookup  => $self->o('production_lookup'),
+                                    logic_name => $self->o('logic_name'),
+                                    description => $self->o('description'),
+                                    display_label => $self->o('display_label'),
+                                    displayable => $self->o('displayable'),
+                                    delete_existing => $self->o('delete_existing'),
+                                  },
+          },
           {  -logic_name    => 'GNProjection',
              -module        => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection',
              -parameters    => {
@@ -382,8 +402,7 @@ sub pipeline_analyses {
                                },
              -flow_into     => {
                                 1 => ['GNProjSourceFactory']
-                               },
-             -meadow_type   => 'LOCAL',
+                               }
           },
           
           ########################
@@ -438,8 +457,7 @@ sub pipeline_analyses {
                                  },
              -flow_into     => {
                                 1 => ['GDProjSourceFactory']
-                               },
-             -meadow_type   => 'LOCAL',
+                               }
           },
           ################
           ### GeneCoverage
@@ -474,8 +492,7 @@ sub pipeline_analyses {
                               'subject'    => $self->o('gcov_subject'),
                               'output_dir' => $self->o('output_dir'),
                               'compara'    => $self->o('division'),
-                             },
-             -meadow_type      => 'LOCAL',
+                             }
           },
           
          ];

@@ -58,9 +58,6 @@ sub default_options {
         # convert DNA from fasta to 2bit format
 #'blat_exe' => $self->o('exe_dir').'faToTwoBit',
        'blat_exe' => 'faToTwoBit',
-       # Set to '0' to skip intentions checking during dataflow of jobs
-       # default => OFF (0)
-       'check_intentions' => 0,
 	};
 }
 
