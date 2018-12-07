@@ -46,7 +46,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.31-70.0',
+    interproscan_version => '5.32-71.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -121,7 +121,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '31.0',
+        'db_version'    => '32.0',
         'ipscan_name'   => 'Pfam',
         'ipscan_xml'    => 'PFAM',
         'ipscan_lookup' => 1,
@@ -845,7 +845,7 @@ sub pipeline_analyses {
                             unique_file => $self->o('unique_file'),
                           },
       -max_retry_count => 1,
-      -rc_name         => 'normal',
+      -rc_name         => '4GB',
       -flow_into       => ['SpeciesFactoryForStoringInterPro'],
     },
     

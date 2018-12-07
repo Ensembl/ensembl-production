@@ -83,7 +83,7 @@ sub write_json {
 
   # work out compara division
   my $compara_name = $self->division();
-  if ( !defined $compara_name || $compara_name eq '' ) {
+  if ( !defined $compara_name || $compara_name eq 'vertebrates' ) {
     $compara_name = 'multi';
   }
   if ( $compara_name eq 'bacteria' ) {
