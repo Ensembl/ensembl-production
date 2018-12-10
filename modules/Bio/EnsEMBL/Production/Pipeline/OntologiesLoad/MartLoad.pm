@@ -47,6 +47,7 @@ sub write_output {
     $self->log("Cleaning up and optimizing tables in $mart");
     my $optimize = <<"OPTIMIZE_TABLE";
 for table in \$($srv --skip-column-names $mart -e "show tables like 'closure%'"); do
+echo Test Message inside
 cnt=\$($srv $mart -e "SELECT COUNT(*) FROM \$table")
 d=\$(date +"[%Y/%m/%d %H:%M:%S]")
 if [ "\$cnt" == "0" ]; then
