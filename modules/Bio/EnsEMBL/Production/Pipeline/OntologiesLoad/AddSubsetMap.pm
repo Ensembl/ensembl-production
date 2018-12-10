@@ -88,7 +88,7 @@ sub write_output {
     $droph->execute();
     while (my $drop_table_name = $droph->fetchrow_array()) {
         $self->warning('Dropping: ' . $drop_table_name);
-        $dbh->do('DROP TABLE '. $drop_table_name);
+        $dbh->do('DROP TABLE `'. $drop_table_name.'`');
     }
 
     my $sth = $dbc->prepare($statement);

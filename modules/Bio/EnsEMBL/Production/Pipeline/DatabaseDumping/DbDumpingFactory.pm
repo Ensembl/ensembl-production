@@ -21,9 +21,10 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-The factory will find all the databases on a given server. If run_all is set to 1,
-the module will dataflow all the databases. If db_pattern is defined, dataflow the databases
-matching the patterns
+The factory will use the metadata database to find databases for a given division and dataflow
+The database names and dumping location.
+If databases array is defined, the module will flow these databases directly without checks.
+Please note that you can only dump databases directly for one division. The metadata database won't be checked for this.
 
 =cut
 
@@ -33,50 +34,83 @@ use base ('Bio::EnsEMBL::Hive::Process');
 use strict;
 use warnings;
 use DBI;
+use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
+use List::MoreUtils qw(uniq);
 
 sub run {
   my ($self) = @_;
-  my $db_pattern      = $self->param_required('db_pattern') || [];
-  my @db_pattern = ( ref($db_pattern) eq 'ARRAY' ) ? @$db_pattern : ($db_pattern);
-  my $run_all = $self->param('run_all');
+  my $division = $self->param('division');
+  my $databases = $self->param('databases');
+  my $vertebrates_release = $self->param('vertebrates_release');
+  my $non_vertebrates_release = $self->param('non_vertebrates_release');
+  my $base_output_dir = $self->param('base_output_dir');
 
-  my $host  = $self->param('host');
-  my $user = $self->param('user');
-  my $password = $self->param('password');
-  my $port = $self->param('port');
-
-#Connect to the MySQL server
-  my $dsn=sprintf( "DBI:mysql:database=%s;host=%s;port=%d", 'information_schema', $host, $port );
-  my $dbh = DBI->connect( $dsn, $user, $password, {'PrintError' => 1,'AutoCommit' => 0 } );
-  if ( !defined($dbh) ) {
-    die "Failed to connect to the server $dsn";
+  #Connect to the metadata database
+  my $dba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
+          -USER=>$self->param('meta_user'),
+          -HOST=> $self->param('meta_host'),
+          -PORT=>$self->param('meta_port'),
+          -DBNAME=>$self->param('meta_database'),
+  );
+  #Get metadata adaptors
+  my $gcdba = $dba->get_GenomeComparaInfoAdaptor();
+  my $gdba = $dba->get_GenomeInfoAdaptor();
+  my $dbdba = $dba->get_DatabaseInfoAdaptor();
+  my $rdba = $dba->get_DataReleaseInfoAdaptor();
+  #set release by querying the metadata db
+  my $release;
+  my $release_dir;
+  if ($non_vertebrates_release){
+    $release = $rdba->fetch_by_ensembl_genomes_release($non_vertebrates_release);
+    $release_dir = $non_vertebrates_release;
   }
-# Get the list of databases from the infromation_schema database excluding generic MysQL or system databases
-  my $sth = $dbh->prepare('SELECT schema_name from SCHEMATA where schema_name not in ("performance_schema","mysql","information_schema","PERCONA_SCHEMA")') or die $dbh->errstr;
-  $sth->execute() or die $dbh->errstr;
-  my $server_databases = $sth->fetchall_arrayref;
-  # If run_all is set to 1, dataflow all the databases
-  if ($run_all){
-    foreach my $database (@$server_databases){
+  else{
+    $release = $rdba->fetch_by_ensembl_release($vertebrates_release);
+    $release_dir = $vertebrates_release;
+  }
+  $gdba->data_release($release);
+
+  # Either dump databases from databases array or loop through divisions
+  if (@$databases) {
+    #Dump given databases
+    foreach my $database (@$databases){
+      if (scalar @$division > 1) {
+        die "Please run a separare pipeline for each divisions";
+      }
       $self->dataflow_output_id({
-			       database=>$database->[0]
-			      }, 1);
+                  database=>$database,
+                  output_dir => $base_output_dir.$division->[0].'/release-'.$release_dir.'/mysql/',
+                  }, 1);
     }
   }
-  # If db_pattern is defined, find matching databases and dataflow them.
-  elsif(@db_pattern){
-    foreach my $database (@$server_databases){
-      foreach my $db_pattern (@db_pattern){
-        if ($database->[0] =~/$db_pattern/i){
+  else{
+    #Foreach divisions, get all the genomes and then databases associated.
+    # Get the compara databases and other databases like mart
+    foreach my $div (@$division){
+      my $division_databases;
+      my $genomes = $gdba->fetch_all_by_division($div);
+      #Genome databases
+      foreach my $genome (@$genomes){
+        foreach my $database (@{$genome->databases()}){
+          push (@$division_databases,$database->dbname);
+        }
+      }
+      #mart databases
+      foreach my $mart_database (@{$dbdba->fetch_databases_DataReleaseInfo($release,$div)}){
+        push (@$division_databases,$mart_database->dbname);
+      }
+      #compara databases
+      foreach my $compara_database (@{$gcdba->fetch_division_databases($div,$release)}){
+        push (@$division_databases,$compara_database);
+      }
+      foreach my $division_database (uniq(@$division_databases)){
           $self->dataflow_output_id({
-			       database=>$database->[0]
+          database=>$division_database,
+          output_dir => $base_output_dir.$div.'/release-'.$release_dir.'/mysql/',
 			      }, 1);
         }
       }
     }
-  }
   $dbh->disconnect;
- 
 }
-
 1;

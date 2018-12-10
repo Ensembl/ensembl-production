@@ -29,6 +29,7 @@ use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
 use JSON;
 use File::Path qw(make_path);
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
 
 sub fetch_input {
   my ($self) = @_;
@@ -82,7 +83,7 @@ sub write_json {
 
   # work out compara division
   my $compara_name = $self->division();
-  if ( !defined $compara_name || $compara_name eq '' ) {
+  if ( !defined $compara_name || $compara_name eq 'vertebrates' ) {
     $compara_name = 'multi';
   }
   if ( $compara_name eq 'bacteria' ) {
@@ -144,7 +145,6 @@ sub write_json {
     $remodeller->remodel_genome($genome);
     $remodeller->disconnect();
   }
-
   $dba->dbc()->disconnect_if_idle();
   my $json_file_path =
     $sub_dir . '/' . $self->production_name() . '.json';

@@ -85,7 +85,6 @@ sub pipeline_analyses {
         {
             -logic_name      => 'step_init',
             -input_ids       => [ {
-                # 'input_id_list' => [ { "ontology_name" => 'go' }, { "ontology_name" => 'fpo' } ] #[map { {ontology_name => $_} } ('go', )],
                 'input_id_list' => '#expr([map { {ontology_name => $_} } @{#ontologies#}])expr#',
             } ],
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
@@ -184,23 +183,24 @@ sub pipeline_analyses {
         {
             -logic_name      => 'compute_closure',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::ComputeClosure',
-            -max_retry_count => 1, # use per-analysis limiter
+            -max_retry_count => 1,
             -rc_name         => '32GB',
             -flow_into       => {
-                1 => [ 'add_subset_map' ],
+              1 => [ 'add_subset_map' ]
             },
         },
         {
             -logic_name  => 'add_subset_map',
             -module      => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::AddSubsetMap',
-            -rc_name     => '32GB',
             -meadow_type => 'LSF',
+            -rc_name     => '32GB',
             -flow_into   => [ 'mart_load' ]
         },
         {
             -logic_name => 'mart_load',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad',
-            -rc_name    => 'default',
+            -meadow_type => 'LSF',
+            -rc_name     => '32GB',
             -parameters => {
                 mart => $self->o('mart_db_name'),
                 srv  => $self->o('srv')
