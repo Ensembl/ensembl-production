@@ -110,6 +110,20 @@ sub run {
 			      }, 1);
         }
       }
+      #mart databases
+      foreach my $mart_database (@{$dbdba->fetch_databases_DataReleaseInfo($release,$div)}){
+        push (@$division_databases,$mart_database->dbname);
+      }
+      #compara databases
+      foreach my $compara_database (@{$gcdba->fetch_division_databases($div,$release)}){
+        push (@$division_databases,$compara_database);
+      }
+      foreach my $division_database (uniq(@$division_databases)){
+          $self->dataflow_output_id({
+          database=>$division_database,
+          output_dir => $base_output_dir.$div.'/release-'.$release_dir.'/mysql/',
+          }, 1);
+      }
     }
   $dbh->disconnect;
 }
