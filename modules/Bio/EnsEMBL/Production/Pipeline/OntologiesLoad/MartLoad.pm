@@ -65,28 +65,28 @@ OPTIMIZE_TABLE
     $self->log("Creating the dataset_name table for mart database $mart");
     my $BASE_DIR=$self->param_required("base_dir");
     if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_names.pl \$($srv details script) -mart $mart -div vertebrates") != 0) {
-        $self->log("Failed to create dataset_name table");
-        exit 1
+        $self->error("Failed to create dataset_name table");
+        
     }
     $self->log("Populating meta tables for mart database $mart");
     if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl \$($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_template_template.xml -template_name ontology") != 0) {
-        $self->log("Failed to populate meta table for mart database $mart");
-        exit 1
+        $self->error("Failed to populate meta table for mart database $mart");
+        
     }
     $self->log("Populating meta tables for mart database $mart SO mini template");
     if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl \$($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_mini_template_template.xml -template_name ontology_mini -ds_basename mini") != 0) {
-        $self->log("Failed to populate meta table for mart database $mart");
-        exit 1
+        $self->error("Failed to populate meta table for mart database $mart");
+        
     }
     $self->log("Populating meta tables for mart database $mart SO regulation template");
     if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl \$($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_regulation_template_template.xml -template_name ontology_regulation -ds_basename regulation") != 0) {
-        $self->log("Failed to populate meta table for mart database $mart");
-        exit 1
+        $self->error("Failed to populate meta table for mart database $mart");
+        
     }
     $self->log("Populating meta tables for mart database $mart SO motif template");
     if ($self->run_system_command("perl $BASE_DIR/ensembl-biomart/scripts/generate_meta.pl \$($srv details script) -dbname $mart -template $BASE_DIR/ensembl-biomart/scripts/templates/ontology_motif_template_template.xml -template_name ontology_motif -ds_basename motif") != 0) {
-        $self->log("Failed to populate meta table for mart database $mart");
-        exit 1
+        $self->error("Failed to populate meta table for mart database $mart");
+        
     }
     $self->log("Building mart database $mart complete");
 
