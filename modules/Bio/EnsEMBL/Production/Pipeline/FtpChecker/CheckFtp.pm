@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,14 @@ sub check_files {
   $DB::single = 1;
   while( my($format) = each %$expected_files) { 
     for my $file (@{$expected_files->{$format}->{expected}}) {
-      my $path = _expand_str($base_path.'/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
+      my $path =  _expand_str($base_path.'/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
+      if ($format eq "vep" and $vals->{division} eq ""){
+        $path = _expand_str($base_path.'/variation/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
+        $path =~ s/vep/VEP/;
+      }
+      else{
+        $path = _expand_str($base_path.'/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
+      }
       my @files = glob($path);
       if(scalar(@files) == 0) {
 	$self->{logger}->error("Could not find $path");

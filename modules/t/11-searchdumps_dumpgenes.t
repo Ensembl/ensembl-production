@@ -1,5 +1,5 @@
 #!perl
-# Copyright [2009-2017] EMBL-European Bioinformatics Institute
+# Copyright [2009-2018] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1136,8 +1136,8 @@ subtest "Checking protein_coding gene", sub {
                                                             'db_display' => 'RefSeq DNA',
                                                             'evalue' => undef,
                                                             'id' => 'NM_030903.3',
-                                                            'trans_id' => 'ENST00000377175',
-                                                            'analysis' => 'human_cdna2genome'
+                                                            'analysis' => 'human_cdna2genome',
+                                                            'analysis_display' => 'Human cDNAs (cdna2genome)'
                                                           },
                                                           {
                                                             'evalue' => undef,
@@ -1145,13 +1145,12 @@ subtest "Checking protein_coding gene", sub {
                                                             'start' => '1',
                                                             'end' => '963',
                                                             'db_name' => 'CCDS',
-                                                            'trans_id' => 'ENST00000377175',
                                                             'analysis' => 'ccds',
+                                                            'analysis_display' => 'CCDS set',
                                                             'id' => 'CCDS4656.1'
                                                           }
                                                         ],
                                'id' => 'ENST00000377175',
-                               'seq_region_synonyms' => undef,
                                'version' => '1',
                                'description' => undef,
                                'biotype' => 'protein_coding',
@@ -1167,14 +1166,14 @@ subtest "Checking protein_coding gene", sub {
                                                                   'version' => 'GRCh38',
                                                                   'name' => 'chromosome'
                                                                 },
-                                              'trans_id' => 'ENST00000377175',
                                               'version' => '1',
                                               'id' => 'ENSE00001691220',
                                               'ensembl_object_type' => 'exon',
                                               'rank' => '1'
                                             }
                                           ],
-                               'analysis' => 'Ensembl/Havana merge',
+                               'analysis' => 'ensembl_havana_transcript',
+                               'analysis_display' => 'Ensembl/Havana merge',
                                'coord_system' => {
                               'version' => 'GRCh38',
                               'name' => 'chromosome'
@@ -1191,12 +1190,14 @@ subtest "Checking protein_coding gene", sub {
                               'version' => 'GRCh38',
                               'name' => 'chromosome'
                             },
-          'analysis' => 'Ensembl/Havana merge',
+          'analysis' => 'ensembl_havana_gene',
+          'analysis_display' => 'Ensembl/Havana merge',
           'synonyms' => [
                           'hs6M1-15'
                         ]
         };
-	is_deeply( sort_gene($gene),
+	warn Dumper(sort_gene($gene));
+  is_deeply( sort_gene($gene),
 			   sort_gene($expected_gene),
 			   "Testing gene structure" );
 };
@@ -1206,17 +1207,18 @@ subtest "Checking ncRNA gene", sub {
 	ok( $gene, "Test gene found" );
 	my $expected_gene = $VAR1 = {
 		'id'           => 'ENSG00000261370',
-		'analysis'     => 'Havana',
+		'analysis'     => 'havana',
+    'analysis_display' => 'Havana',
 		'coord_system' => { 'name' => 'chromosome', 'version' => 'GRCh38' },
 		'transcripts'  => [ {
-			   'analysis'            => 'Havana',
+			   'analysis'            => 'havana',
+         'analysis_display'    => 'Havana',
 			   'strand'              => '-1',
 			   'biotype'             => 'processed_pseudogene',
 			   'version'             => '1',
 			   'description'         => undef,
 			   'gene_id'             => 'ENSG00000261370',
 			   'name'                => 'RPL14P5-001',
-			   'seq_region_synonyms' => undef,
 			   'xrefs'               => [ {
 						 'db_display'  => 'Vega transcript',
 						 'dbname'      => 'Vega_transcript',
@@ -1266,7 +1268,6 @@ subtest "Checking ncRNA gene", sub {
 			   'start'           => '969238',
 			   'seq_region_name' => 'HG480_HG481_PATCH',
 			   'end'             => '970836',
-			   'translations'    => undef,
 			   'exons'           => [ {
 					  'version'         => '1',
 					  'start'           => '970445',
@@ -1278,9 +1279,7 @@ subtest "Checking ncRNA gene", sub {
 					  'coord_system' =>
 						{ 'name' => 'chromosome', 'version' => 'GRCh38' },
 
-					  'ensembl_object_type' => 'exon',
-					  'trans_id'            => 'ENST00000569325' }, {
-					  'trans_id'            => 'ENST00000569325',
+					  'ensembl_object_type' => 'exon' }, {
 					  'ensembl_object_type' => 'exon',
 					  'coord_system' =>
 						{ 'name' => 'chromosome', 'version' => 'GRCh38' },
@@ -1292,7 +1291,6 @@ subtest "Checking ncRNA gene", sub {
 					  'start'           => '969827',
 					  'seq_region_name' => 'HG480_HG481_PATCH',
 					  'version'         => '1' }, {
-					  'trans_id'            => 'ENST00000569325',
 					  'ensembl_object_type' => 'exon',
 					  'rank'                => '3',
 					  'coord_system' =>

@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License.  You may
@@ -76,8 +76,7 @@ sub pipeline_analyses {
                             chromosome_flow => 0,
                             variation_flow  => 0 },
            -flow_into     => { '2' => ['DumpGenomeJson'], },
-           -hive_capacity => 1,
-           -meadow_type   => 'LOCAL', }, {
+           -hive_capacity => 1 }, {
            -logic_name => 'DumpGenomeJson',
            -module =>
              'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',

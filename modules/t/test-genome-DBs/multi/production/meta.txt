@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	90
+2	\N	schema_version	95
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
@@ -45,4 +45,11 @@
 51	\N	patch	patch_87_88_a.sql|schema_version
 52	\N	patch	patch_88_89_a.sql|schema_version
 53	\N	patch	patch_89_90_a.sql|schema_version
-54      \N      patch   patch_89_90_b.sql|Remove_species_prefix_uniqueness
+54	\N	patch	patch_89_90_b.sql|Remove_species_prefix_uniqueness
+55	\N	patch	patch_90_91_a.sql|schema_version
+56	\N	patch	patch_91_92_a.sql|schema_version
+57	\N	patch	patch_92_93_a.sql|schema_version
+58	\N	patch	patch_92_93_b.sql|biotype to master_biotype with new so_acc column
+59	\N	patch	patch_93_94_a.sql|schema_version
+60	\N	patch	patch_94_95_a.sql|schema_version
+61	\N	patch	patch_94_95_a.sql|vertebrate_division_rename

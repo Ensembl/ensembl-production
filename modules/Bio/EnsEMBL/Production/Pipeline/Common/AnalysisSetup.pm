@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -225,8 +225,7 @@ sub production_updates {
       $self->param($property, $properties{$property});
      }      
    }
-  
-   if ($dbc->user eq 'ensrw') {
+   if ($dbc->pass) {
      $sth = $dbh->prepare(
       'INSERT IGNORE INTO analysis_web_data '.
         '(analysis_description_id, web_data_id, species_id, db_type, '.
@@ -237,12 +236,11 @@ sub production_updates {
       'FROM analysis_description ad, species s '.
       'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
     );
-    
+
     $sth->execute($db_type, $logic_name, $species);
   } else {
     $self->warning("Insufficient permissions to link $species and $logic_name");
   }
-  
 }
 
 1;

@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ use Bio::EnsEMBL::Production::DBSQL::BulkFetcher;
 use JSON;
 use File::Path qw(make_path);
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
 
 sub fetch_input {
   my ($self) = @_;
@@ -82,8 +83,8 @@ sub write_json {
 
   # work out compara division
   my $compara_name = $self->division();
-  if ( !defined $compara_name || $compara_name eq '' ) {
-    $compara_name = 'ensembl';
+  if ( !defined $compara_name || $compara_name eq 'vertebrates' ) {
+    $compara_name = 'multi';
   }
   if ( $compara_name eq 'bacteria' ) {
     $compara_name = 'pan_homology';
@@ -91,7 +92,7 @@ sub write_json {
   # get genome
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ( $compara_name ne 'ensembl' ) {
+  if ( $compara_name ne 'multi' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
@@ -144,7 +145,6 @@ sub write_json {
     $remodeller->remodel_genome($genome);
     $remodeller->disconnect();
   }
-
   $dba->dbc()->disconnect_if_idle();
   my $json_file_path =
     $sub_dir . '/' . $self->production_name() . '.json';

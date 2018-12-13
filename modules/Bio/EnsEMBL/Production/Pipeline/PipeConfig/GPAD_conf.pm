@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2016] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,7 +67,17 @@ sub default_options {
 
     ## hive_capacity values for analysis
     'gpad_capacity'  => '50',
-		
+
+    #analysis informations
+    logic_name => 'goa_import',
+    db => 'GO',
+    program => 'goa_import',
+    description => 'Gene Ontology xrefs data from GOA',
+    display_label => 'GO xrefs from GOA',
+    displayable => 0,
+    production_lookup => 1,
+    delete_existing => 1,
+
     };
 }
 
@@ -141,9 +151,25 @@ sub pipeline_analyses {
        },
       -hive_capacity  => 10,
       -rc_name 	      => 'default',     
-      -flow_into      => { '2' => ['gpad_file_load'], }
-    },   
-    
+      -flow_into      => { '2->A' => ['AnalysisSetup'],
+                           'A->2' => ['gpad_file_load'], }
+    },
+    {
+      -logic_name        => 'AnalysisSetup',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              db_backup_required => 0,
+                              production_lookup  => $self->o('production_lookup'),
+                              logic_name => $self->o('logic_name'),
+                              description => $self->o('description'),
+                              display_label => $self->o('display_label'),
+                              displayable => $self->o('displayable'),
+                              delete_existing => $self->o('delete_existing'),
+                              db => $self->o('db'),
+                              program => $self->o('program'),
+                            },
+    },
     { -logic_name     => 'gpad_file_load',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
       -hive_capacity  => 10,
@@ -157,8 +183,7 @@ sub pipeline_analyses {
           	'subject'    => $self->o('email_subject'),
 			'output_dir' => $self->o('output_dir'),
        },
-      -rc_name 	      => 'default',     
-	  -meadow_type    => 'LOCAL',
+      -rc_name 	      => 'default'
     },  
     
   ];

@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,45 @@ use warnings;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 
+sub run {
+  my ($self) = @_;
+  my $species    = $self->param('species');
 
+  $self->dbc()->disconnect_if_idle() if defined $self->dbc();
+
+  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $aa  = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
+
+  my %attrib_codes = $self->get_attrib_codes();
+  $self->delete_old_attrib($dba, %attrib_codes);
+  $self->delete_old_stats($dba, %attrib_codes);
+  
+  my $count;
+  my $alt_count;
+
+  my %stats_hash;
+  my %stats_attrib;
+
+  my @all_sorted_slices =
+   sort( { $a->coord_system()->rank() <=> $b->coord_system()->rank()
+           || $b->seq_region_length() <=> $a->seq_region_length() } @{$self->get_all_slices($species)}) ;
+  while (my $slice = shift @all_sorted_slices) {
+    next unless $slice->is_reference; # no alt attribs ATMO
+    
+    foreach my $ref_code (keys %attrib_codes) {
+      $count = $self->get_feature_count($slice, $ref_code, $attrib_codes{$ref_code});
+      $self->store_attrib($slice, $count, $ref_code) if $count > 0;
+      $stats_hash{$ref_code} += $count;
+    }    
+  }
+  
+  $self->store_statistics($species, \%stats_hash, \%stats_attrib);
+
+  # disconnecting from the registry
+  $dba->dbc->disconnect_if_idle();
+  my $prod_dba    = $self->get_production_DBAdaptor();
+  $prod_dba->dbc()->disconnect_if_idle();
+}
 
 sub get_feature_count {
   my ($self, $slice, $key) = @_;
@@ -77,13 +115,6 @@ sub get_attrib_codes {
   my %attrib_codes = %{ $prod_helper->execute_into_hash(-SQL => $sql) };
   return %attrib_codes;
 }
-
-# Blank as I don't think there are any alt attrib codes for this ATMO
-sub get_alt_attrib_codes {
-  my ($self) = @_;
-  return;
-}
-
 
 1;
 

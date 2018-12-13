@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ sub write_output {
 
 	my $sp_config     = $self->param_required('species_config');
 	my $compara_param = $self->param('compara');
+	my $cleanup_dir = $self->param('cleanup_dir');
 
 	foreach my $pair ( keys $sp_config ) {
 		my $compara = $sp_config->{$pair}->{'compara'};
@@ -76,7 +77,11 @@ sub write_output {
 		if (!defined $division){
 			$self->throw("Division need to be defined");
 		}
-
+		# If cleanup_dir is set to 1
+		# cleanup the projection directory before running the pipeline
+		if ($cleanup_dir){
+			unlink glob "$dir_name/*";
+		}
 		$self->dataflow_output_id( {  'output_dir'     => $dir_name,
 					      'division'       => $division,
 					      'compara'        => $compara,
@@ -87,7 +92,9 @@ sub write_output {
 					      'antitaxons'     => $antitaxons,
  	 				      'homology_types' => $homology_types, },
                        2 );
-	    $self->dataflow_output_id( {  'output_dir'     => $dir_name, },
+			#Flowing all the species to figure out species without orthology-based projection
+	    $self->dataflow_output_id( {  'output_dir'     => $dir_name,
+					      'division'       => $division },
 					   1 );
 	}
 

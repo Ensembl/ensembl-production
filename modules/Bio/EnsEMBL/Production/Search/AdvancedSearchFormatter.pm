@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -245,7 +245,7 @@ sub collate_xrefs {
 			}
 			my $evidence = [];
 			for my $lt ( @{ $xref->{linkage_types} } ) {
-				push $evidence, $lt->{evidence};
+				push @$evidence, $lt->{evidence};
 			}
 			# add associated xrefs
 			if ( defined $xref->{associated_xrefs} &&
@@ -324,7 +324,7 @@ sub merge_xrefs {
 				$obj->{$dbname} = [];
 			}
 			for my $ann ( @{ $subobj->{$dbname} } ) {
-				push $obj->{$dbname}, $self->copy_hash($ann);
+				push @{$obj->{$dbname}}, $self->copy_hash($ann);
 			}
 		}
 	}

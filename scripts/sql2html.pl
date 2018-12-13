@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2017] EMBL-European Bioinformatics Institute
+# Copyright [2016-2018] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,23 +25,43 @@
 use strict;
 use warnings;
 
+use File::Basename ();
 use POSIX;
 use Getopt::Long;
-use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use Readonly;
 
+use Bio::EnsEMBL::DBSQL::DBConnection;
+
+
+#################
+### Constants ###
+#################
+
+Readonly my %diagram_format_params => (
+  'png'  => {
+    'extension'       => 'png',
+    'graphviz_method' => 'as_png',
+  },
+  'svg'  => {
+    'extension'       => 'svg',
+    'graphviz_method' => 'as_svg',
+  },
+);
 
 ###############
 ### Options ###
 ###############
 
-my ($sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
+my ($sql_file,$fk_sql_file,$html_file,$db_team,$show_colour,$version,$header_flag,$format_headers,$sort_headers,$sort_tables,$intro_file,$html_head_file,$include_css,$help,$help_format);
 my ($host,$port,$dbname,$user,$pass,$skip_conn,$db_handle,$hosts_list);
+my ($out_diagram_dir, $diagram_format);
 
 usage() if (!scalar(@ARGV));
  
 GetOptions(
     'i=s' => \$sql_file,
     'o=s' => \$html_file,
+    'fk=s' => \$fk_sql_file,
     'd=s' => \$db_team,
     'c=i' => \$show_colour,
     'v=i' => \$version,
@@ -49,6 +69,8 @@ GetOptions(
     'format_headers=i' => \$format_headers,
     'sort_headers=i'   => \$sort_headers,
     'sort_tables=i'    => \$sort_tables,
+    'out_diagram_dir=s'=> \$out_diagram_dir,
+    'diagram_format=s' => \$diagram_format,
     'host=s'           => \$host,
     'port=i'           => \$port,
     'dbname=s'         => \$dbname,
@@ -91,16 +113,23 @@ $skip_conn    ||= undef;
 
 $port ||= 3306;
 
+$diagram_format ||= 'png';
+
+if (!exists($diagram_format_params{$diagram_format})) {
+  print "> Error! Diagram format '$diagram_format' not supported\n";
+  usage();
+}
+
 # Dababase connection (optional)
 if (defined($host) && !defined($skip_conn)) {
-  my $db_adaptor = new Bio::EnsEMBL::DBSQL::DBAdaptor(
+  my $dbc = new Bio::EnsEMBL::DBSQL::DBConnection(
     -host => $host,
     -user => $user,
     -pass => $pass,
     -port => $port,
     -dbname => $dbname
   ) or die("DATABASE CONNECTION ERROR: Could not get a database adaptor for $dbname on $host:$port\n");
-  $db_handle = $db_adaptor->dbc->db_handle;
+  $db_handle = $dbc->db_handle;
 }
 
 
@@ -131,6 +160,7 @@ my $tag = '';
 my $display = 'Show';
 my $parenth_count = 0;
 my $header_colour;
+my $pk = [];
 
 my $SQL_LIMIT = 50;
 my $img_plus  = qq{<img src="/i/16/plus-button.png" class="sql_schema_icon" alt="show"/>};
@@ -222,6 +252,8 @@ $css_code
 ##############
 
 my $html_footer = qq{
+    </div>
+  </div>
 </body>
 </html>};
 
@@ -244,6 +276,7 @@ while (<$sql_fh>) {
   # Verifications
   if ($_ =~ /^\/\*\*/)  { $in_doc=1; next; }  # start of a table documentation
   if ($_ =~ /^\s*create\s+table\s+(if\s+not\s+exists\s+)?`?(\w+)`?/i) { # start to parse the content of the table
+    $pk = [];
     if ($table eq $2) { 
       $in_table=1;
       $parenth_count++;
@@ -283,7 +316,7 @@ while (<$sql_fh>) {
     }
     # Colour of the table header (used for both set, table) (optional)
     elsif ($doc =~ /^\@(colour)\s*(.+)$/i) {
-      fill_documentation ($1,$2) if ($show_colour);
+      fill_documentation ($1,uc($2)) if ($show_colour);
     }
     # Column
     elsif ($doc =~ /^\@(column)\s*(.+)$/i) {
@@ -335,6 +368,9 @@ while (<$sql_fh>) {
 
 
     if ($parenth_count == 0) { # End of the sql table definition
+    if (scalar(@$pk)) {
+      add_column_index('primary key', join(',', @$pk));
+    }
     if (scalar @{$documentation->{$header}{'tables'}{$table}{column}} > $count_sql_col) {
       print STDERR "Description of a non existant column in the table $table!\n";
     }
@@ -350,10 +386,17 @@ while (<$sql_fh>) {
       # INDEXES #
       #---------#
       
-      # Skip the FOREIGN KEY
-      next if ($doc =~ /^\s*foreign\s+key/i || $doc =~ /^\s+$/);
-      
-      if ($doc =~ /^\s*(primary\s+key)\s*\w*\s*\((.+)\)/i or $doc =~ /^\s*(unique)\s*\((.+)\)/i){ # Primary or unique;
+      # Remove the comments
+      $doc =~ s/--\s.*$//;
+
+      # Skip the blank lines
+      next if ($doc =~ /^\s+$/);
+
+      if ($doc =~ /FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\s*\((\S+)\)/i) { # foreign key
+        push @{$documentation->{$header}{'tables'}{$table}->{foreign_keys}}, [$1,$2,$3];
+        next;
+      }
+      elsif ($doc =~ /^\s*(primary\s+key)\s*\w*\s*\((.+)\)/i or $doc =~ /^\s*(unique)\s*\((.+)\)/i){ # Primary or unique;
         add_column_index($1,$2);
         next;
       }
@@ -424,12 +467,200 @@ while (<$sql_fh>) {
       }
 
       add_column_type_and_default_value($col_name,$col_type,$col_def);
+
+      if ($doc =~ /\bprimary\s+key\b/i) {
+        push @$pk, $col_name;
+      }
     }
   }
 }
 close($sql_fh);
 
+my %table_documentation;
+foreach my $c (keys %$documentation) {
+  my $h = $documentation->{$c};
+  foreach my $table_name (keys %{$h->{tables}}) {
+    $table_documentation{$table_name} = $h->{tables}->{$table_name};
+    $h->{tables}->{$table_name}->{category} = $c;
+  }
+}
 
+if ($fk_sql_file) {
+    open $sql_fh, '<', $fk_sql_file or die "Can't open $fk_sql_file : $!";
+    while (<$sql_fh>) {
+      chomp $_;
+      next if ($_ eq '');
+      my $doc = remove_char($_);
+      if ($doc =~ /ALTER\s+TABLE\s+(\S+)\s+ADD.*FOREIGN\s+KEY\s+\((\S+)\)\s+REFERENCES\s+(\S+)\s*\((\S+)\)/i) {
+          push @{$table_documentation{$1}->{foreign_keys}}, [$2,$3,$4];
+      } elsif ($doc =~ /ALTER.*FOREIGN/i) {
+          die "Unrecognized contruct: $doc";
+      }
+    }
+    close($sql_fh);
+}
+
+sub table_box {
+    my ($graph, $table_name) = @_;
+    my $table_doc = $table_documentation{$table_name};
+    my @rows = map {sprintf('<tr><td bgcolor="white" port="port%s">%s%s</td></tr>', $_->{name}, ($_->{index} =~ /\bprimary\b/i ? '<B>PK</B>&nbsp;&nbsp;' : ''), $_->{name})} @{$table_doc->{column}};
+    $graph->add_node($table_name,
+        'shape' => 'box',
+        'style' => 'filled,rounded',
+        'fillcolor' => $table_doc->{colour},
+        'label' => sprintf('<<table border="0"><th><td><font point-size="16">%s</font></td></th><hr/>%s</table>>', $table_name, join('', @rows)),
+    );
+}
+
+sub generate_whole_diagram {
+    my ($show_clusters, $column_links) = @_;
+    my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
+        'label' => "$db_team schema diagram",
+        'fontsize' => 20,
+        $column_links
+          ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
+          : ( 'splines' => 'ortho', ),
+    );
+    foreach my $table_name (sort keys %table_documentation) {
+        table_box($graph, $table_name);
+    }
+    foreach my $table_name (sort keys %table_documentation) {
+	my %seen_fk = ();
+        foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+	    next if( defined $seen_fk{ $fk->[1] } );
+	    $seen_fk{ $fk->[1] } = 1;
+            $graph->add_edge($table_name => $fk->[1],
+                'style' => 'dashed',
+                $column_links ? (
+                    'from_port' => "$fk->[0]:e",
+                    'to_port' => "$fk->[2]:w",
+                ) : (),
+            );
+        }
+    }
+
+    if ($show_clusters) {
+        foreach my $h (sort keys %$documentation) {
+            my $cluster_id = clean_name($h);
+            my $c = blend_colors($documentation->{$h}->{colour}, '#FFFFFF', 0.8);
+            $graph->cluster_2_attributes()->{$cluster_id} = {
+                'cluster_label' => $h,
+                'style' => 'rounded,filled,noborder',
+                'fill_colour_pair' => ["#$c"],
+            };
+            my @cluster_nodes;
+            $graph->cluster_2_nodes()->{$cluster_id} = \@cluster_nodes;
+            foreach my $t (sort keys %{$documentation->{$h}->{tables}}) {
+                push @cluster_nodes, $t;
+            }
+        }
+    }
+    return $graph;
+}
+
+
+sub blend_colors {
+    my ($color1, $color2, $alpha) = @_;
+    my @rgb1 = map {hex($_)} unpack("(A2)*", substr $color1, 1);
+    my @rgb2 = map {hex($_)} unpack("(A2)*", substr $color2, 1);
+    my @rgb = map {int($rgb1[$_] + $alpha * ($rgb2[$_]-$rgb1[$_]))}  0..2;
+    my $c = join('', map {sprintf('%X', $_)} @rgb);
+    return $c;
+}
+
+sub sub_table_box {
+    my ($graph, $table_name, $fields) = @_;
+    my $table_doc = $table_documentation{$table_name};
+    my @rows;
+    my $has_ellipsis;
+    foreach my $c (@{$table_doc->{column}}) {
+        if ($fields->{$c->{name}}) {
+            push @rows, sprintf('<tr><td bgcolor="white" port="port%s">%s%s</td></tr>', $c->{name}, ($c->{index} =~ /\bprimary\b/i ? '<B>PK</B>&nbsp;&nbsp;' : ''), $c->{name});
+            $has_ellipsis = 0;
+        } elsif (!$has_ellipsis) {
+            push @rows, '<tr><td bgcolor="white"><i>...</i></td></tr>';
+            $has_ellipsis = 1;
+        }
+    }
+    $graph->add_node($table_name,
+        'shape' => 'box',
+        'style' => 'filled,rounded',
+        'fillcolor' => $table_doc->{colour},
+        'label' => sprintf('<<table border="0"><th><td><font point-size="16">%s</font></td></th><hr/>%s</table>>', $table_name, join('', @rows)),
+    );
+}
+
+sub generate_sub_diagram {
+    my ($cluster, $column_links) = @_;
+    my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
+        'label' => "$db_team schema diagram: $cluster tables",
+        'fontsize' => 20,
+        $column_links
+          ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
+          : ( 'splines' => 'ortho', ),
+    );
+    foreach my $table_name (sort keys %{$documentation->{$cluster}->{tables}}) {
+        table_box($graph, $table_name);
+    }
+    my %clusters_to_draw = ($cluster => 1);
+    my %other_table_fields;
+    my @drawn_fks;
+    foreach my $table_name (sort keys %table_documentation) {
+	my %seen_fk = ();
+        foreach my $fk (@{$table_documentation{$table_name}->{foreign_keys}}) {
+	    next if( defined $seen_fk{ $fk->[1] } );
+	    $seen_fk{ $fk->[1] } = 1;
+
+            if ($table_documentation{$table_name}->{category} eq $cluster) {
+                $other_table_fields{$fk->[1]}->{$fk->[2]} = 1;
+                $clusters_to_draw{ $table_documentation{$fk->[1]}->{category} } = 1;
+                push @drawn_fks, [$table_name, @$fk];
+            } elsif ($table_documentation{$fk->[1]}->{category} eq $cluster) {
+                $other_table_fields{$table_name}->{$fk->[0]} = 1;
+                $clusters_to_draw{ $table_documentation{$table_name}->{category} } = 1;
+                push @drawn_fks, [$table_name, @$fk];
+            }
+        }
+    }
+    foreach my $table_name (sort keys %other_table_fields) {
+        sub_table_box($graph, $table_name, $other_table_fields{$table_name} || {}) if $cluster ne $table_documentation{$table_name}->{category};
+    }
+    foreach my $fk (@drawn_fks) {
+        my $table_name = shift @$fk;
+        $graph->add_edge($table_name => $fk->[1],
+            'style' => 'dashed',
+            $column_links ? (
+                'from_port' => $fk->[0].':e',
+                'to_port' => $fk->[2].':w',
+            ) : (),
+        );
+    }
+
+    foreach my $h (sort keys %clusters_to_draw) {
+        #next unless $h eq $cluster;
+        my $cluster_id = clean_name($h);
+        my $c = blend_colors($documentation->{$h}->{colour}, '#FFFFFF', 0.8);
+        $graph->cluster_2_attributes()->{$cluster_id} = {
+            'cluster_label' => $h,
+            ($h eq $cluster) ?
+                ( 'style' => 'rounded,filled,noborder', 'fill_colour_pair' => ["#$c"], )
+              : ( 'style' => 'filled,noborder', 'fill_colour_pair' => ['white'] ),
+        };
+        my @cluster_nodes;
+        $graph->cluster_2_nodes()->{$cluster_id} = \@cluster_nodes;
+        foreach my $t (sort keys %{$documentation->{$h}->{tables}}) {
+            push @cluster_nodes, $t if (($h eq $cluster) || $other_table_fields{$t});
+        }
+    }
+    return $graph;
+}
+
+sub clean_name {
+    my $n = shift;
+    $n =~ s/\s+/_/g;
+    $n =~ s/[\-\/]+/_/g;
+    return lc $n;
+}
 
 
 ###########
@@ -448,6 +679,33 @@ if ($sort_tables == 1) {
     @{$tables} = sort(@{$tables});
   }
 }
+
+# Remove the empty headers (e.g. "default")
+@header_names = grep {scalar(@{$tables_names->{$_}})} @header_names;
+
+
+#####################
+## Schema diagrams ##
+#####################
+if ($out_diagram_dir) {
+    require Bio::EnsEMBL::Hive::Utils::GraphViz;
+    my $full_diagram_dir = File::Basename::dirname($html_file) . "/$out_diagram_dir";
+    my $extension = $diagram_format_params{$diagram_format}->{'extension'};
+    my $file_generator = $diagram_format_params{$diagram_format}->{'graphviz_method'};
+
+    my $graph = generate_whole_diagram('show_clusters', 'column_links');
+    $graph->dot_input_filename("$full_diagram_dir/$db_team.dot");
+    $graph->$file_generator("$full_diagram_dir/$db_team.$extension");
+
+    foreach my $c (@header_names) {
+        my $filename = "$full_diagram_dir/$db_team." . clean_name($c) . ".$extension";
+        my $graph = generate_sub_diagram($c, 'column_links');
+        $graph->$file_generator($filename);
+        fetch_diagram_dimensions($c, $filename);
+    }
+}
+
+
 
 # Legend link
 if ($show_colour and scalar @colours > 1 and $header_flag != 1) {
@@ -481,6 +739,15 @@ foreach my $header_name (@header_names) {
     $header_id ++;
     my $header_desc = escape_html($documentation->{$header_name}{'desc'});
     $html_content .= qq{<p class="sql_schema_group_header_desc">$header_desc</p>} if (defined($header_desc));
+
+    if ($out_diagram_dir) {
+        my $l = clean_name($header_name);
+        my $w = get_best_width($header_name);
+        my $wt = $w ? qq{width="${w}px"} : '';
+        my $ext = $diagram_format_params{$diagram_format}->{'extension'};
+
+        $html_content .= qq{<div align="center"><a href="$out_diagram_dir/$db_team.$l.$ext"><img src="$out_diagram_dir/$db_team.$l.$ext" $wt /></a></div>};
+    }
   }
   
   #------------------------#
@@ -532,6 +799,29 @@ print $html_fh $html_content."\n";
 print $html_fh $html_footer."\n";
 close($html_fh);
 
+
+
+my %dimensions;
+sub fetch_diagram_dimensions {
+    my ($image_id, $filename) = @_;
+    if (`identify $filename` =~ /(?:PNG|SVG) (\d+)x(\d+) /) {
+        $dimensions{$image_id} = [$1,$2];
+    }
+}
+
+sub get_best_width {
+    my ($image_id) = @_;
+    my $def_w = 500;
+    my $def_h = 500;
+    if (my $a = $dimensions{$image_id}) {
+        if ($a->[1] > $def_h) {
+            return int($a->[0] * $def_h / $a->[1]);
+        } elsif ($a->[0] > $def_w) {
+            return $def_w;
+        }
+    }
+    return;
+}
 
 
 
@@ -1512,6 +1802,7 @@ sub usage {
 
     -i                A SQL file name (Required)
     -o                An HTML output file name (Required)
+    -fk               An external SQL file name with foreign keys statements (Optional)
     -d                The name of the database (e.g Core, Variation, Functional Genomics, ...)
     -c                A flag to display the colours associated with the tables (1) or not (0). By default, the value is set to 1.
     -v                Version of the schema. Replace the string ####DB_VERSION#### by the value of the parameter "-v", in the introduction text. (Optional)
@@ -1521,6 +1812,8 @@ sub usage {
     -format_headers   A flag to display formatted headers for a group of tables (1) or not (0) in the top menu list. By default, the value is set to 1.                
     -sort_headers     A flag to sort (1) or not (0) the headers by alphabetic order. By default, the value is set to 1.
     -sort_tables      A flag to sort (1) or not (0) the tables by alphabetic order. By default, the value is set to 1.
+    'out_diagram_dir  Where to generate schema diagrams (one for the whole schema, and one per category). By default, the value is not set, meaning no diagrams are generated.
+    -diagram_format   File format to be used for generated schema diagrams. Supported values: png (default), svg.
                      
     Other optional options:
     

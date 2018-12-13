@@ -10,6 +10,7 @@
       <name>METTL25</name>
       <description>methyltransferase like 25 [Source:HGNC Symbol;Acc:HGNC:26228]</description>
       <cross_references>
+        <ref dbname="ensembl_ortholog" dbkey="ENSG00000139618" /> 
         <ref dbname="UniParc" dbkey="UPI000013CC3E" />
         <ref dbname="GO" dbkey="GO:0032259" />
         <ref dbname="HGNC" dbkey="HGNC:26228" />

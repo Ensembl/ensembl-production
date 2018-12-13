@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,12 +39,13 @@ sub default_options {
     my $self = shift;
     return {
         %{$self->SUPER::default_options()},
-        species        => [],
-        division       => [],
-        antispecies    => [],
-        run_all        => 0, #always run every species
-        variant_length => 1000000,
-        probe_length   => 100000, };
+        species         => [],
+        division        => [],
+        antispecies     => [],
+        run_all         => 0, #always run every species
+        use_pan_compara => 0, 
+        variant_length  => 1000000,
+        probe_length    => 100000, };
 }
 
 sub pipeline_wide_parameters {
@@ -89,7 +90,9 @@ sub pipeline_analyses {
             -logic_name    => 'DumpGenesJson',
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
-            -parameters    => {},
+            -parameters    => {
+                use_pan_compara => $self->o('use_pan_compara')
+            },
             -hive_capacity => 8,
             -rc_name       => '32g',
             -flow_into     => {

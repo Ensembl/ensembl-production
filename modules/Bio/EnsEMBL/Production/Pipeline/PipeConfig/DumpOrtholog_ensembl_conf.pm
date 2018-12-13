@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ sub default_options {
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
 
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 0,
+
 		# orthologs cutoff
 		'perc_id'  => '30',
 		'perc_cov' => '66',
@@ -72,7 +75,7 @@ sub default_options {
                 # target species to exclude
                 'antispecies' => ['homo_sapiens','mus_musculus_129s1svimj', 'mus_musculus_aj', 'mus_musculus_akrj', 'mus_musculus_balbcj', 'mus_musculus_c3hhej', 'mus_musculus_c57bl6nj', 'mus_musculus_casteij', 'mus_musculus_cbaj', 'mus_musculus_dba2j', 'mus_musculus_fvbnj', 'mus_musculus_lpj', 'mus_musculus_nodshiltj', 'mus_musculus_nzohlltj', 'mus_musculus_pwkphj', 'mus_musculus_wsbeij'],
                 # target species division to project to
-                'division' => 'Ensembl',
+                'division' => 'EnsemblVertebrates',
 				# Taxon name of species to project to
                 'taxons'      => ['Amniota'],
                 # Taxon name of species to exclude
@@ -88,7 +91,7 @@ sub default_options {
                      # target species to exclude
                      'antispecies' => ['mus_musculus','mus_musculus_129s1svimj', 'mus_musculus_aj', 'mus_musculus_akrj', 'mus_musculus_balbcj', 'mus_musculus_c3hhej', 'mus_musculus_c57bl6nj', 'mus_musculus_casteij', 'mus_musculus_cbaj', 'mus_musculus_dba2j', 'mus_musculus_fvbnj', 'mus_musculus_lpj', 'mus_musculus_nodshiltj', 'mus_musculus_nzohlltj', 'mus_musculus_pwkphj', 'mus_musculus_wsbeij'],
                      # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
                      # Taxon name of species to project to
                      'taxons'      => ['Amniota'],
                      # Taxon name of species to exclude
@@ -105,9 +108,9 @@ sub default_options {
                      # target species to exclude
                      'antispecies' => ['danio_rerio'],
                      # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
                      # Taxon name of species to project to
-                     'taxons'      => ['Neopterygii','Cyclostomata','Coelacanthimorpha','Amphibia'],
+                     'taxons'      => ['Neopterygii','Cyclostomata','Coelacanthimorpha','Amphibia','Tunicata'],
                      # Taxon name of species to exclude
                      'antitaxons' => [],
 					 'exclude' => undef,
@@ -118,7 +121,7 @@ sub default_options {
 					 'source'  => 'rattus_norvegicus',
 					 'species'  => [ 'homo_sapiens', 'mus_musculus' ],
 					 # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
 					 'exclude' => undef,
 					 'homology_types' =>
 					   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
@@ -127,7 +130,7 @@ sub default_options {
 					 'source'         => 'xenopus_tropicalis',
 					 'species'         => ['danio_rerio'],
 					 # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
 					 'exclude'        => undef,
 					 'homology_types' => [
 								'ortholog_one2one', 'apparent_ortholog_one2one',

@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -134,7 +134,7 @@ sub _write_tsv {
 
     $self->info( "Compressing ENA tsv dump for " . $self->param('species'));
     my $unzip_out_file = $out_file;
-    `gzip $unzip_out_file`;
+    `gzip -n $unzip_out_file`;
 
 
 return;

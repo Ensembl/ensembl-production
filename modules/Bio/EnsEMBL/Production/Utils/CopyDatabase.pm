@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ sub copy_database {
     # If option drop enabled, drop database on target server.
     elsif ($drop){
       $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db->{dbname};") or die $target_dbh->errstr;
+      $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
@@ -162,12 +162,15 @@ sub copy_database {
 
   my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
 
-
-  #Check if we have enough space on target server before starting the db copy
-  check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+  #Only check space on target server when copying a database that don't exist on target server.
+  if ($target_db_exist != 0) {
+    #Check if we have enough space on target server before starting the db copy
+    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+  }
 
   my @tables;
   my @views;
+  my @tables_flush;
 
   my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS') or die $source_dbh->errstr;
 
@@ -204,6 +207,10 @@ sub copy_database {
         next TABLE;
       }
       push( @tables, $table );
+      # If the table exist in target db, add it to the tables_flush array
+      if (system("ssh $target_db->{host} ls ${destination_dir}/${table} >/dev/null 2>&1")==0){
+        push( @tables_flush, $table );
+      }
     } ## end while ( $table_sth->fetch...)
 
   #Flushing and locking source database
@@ -214,9 +221,9 @@ sub copy_database {
   flush_with_read_lock($source_dbh,\@tables);
 
   #Flushing and locking target database
-  if ($target_db_exist == 0) {
+  if ($target_db_exist == 0 and @tables_flush) {
     $logger->info("Flushing and locking target database");
-    flush_with_read_lock($target_dbh,\@tables);
+    flush_with_read_lock($target_dbh,\@tables_flush);
   }
 
   # Copying mysql database files

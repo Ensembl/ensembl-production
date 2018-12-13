@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ sub default_options {
         species => [],
 
         ### Allow pipeline to run on species without declarations. Use it with -species parameter
-        force => 0,
+        force => 1,
         
         release => software_version(),
 
-        run_all => 0,
+        run_all => 1,
 
         bin_count => '150',
 
@@ -97,7 +97,7 @@ sub pipeline_analyses {
           dbtype => 'core',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 
@@ -110,7 +110,7 @@ sub pipeline_analyses {
           dbtype => 'core',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'mem',
       },
 
@@ -143,7 +143,7 @@ sub pipeline_analyses {
         -logic_name => 'GeneCount',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'mem',
       },
 
@@ -151,7 +151,7 @@ sub pipeline_analyses {
         -logic_name => 'GenomeStats',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
       },
 
@@ -162,7 +162,7 @@ sub pipeline_analyses {
           logic_name => 'shortnoncodingdensity', value_type => 'sum',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
         -flow_into => ['PseudogeneDensity'],
@@ -175,7 +175,7 @@ sub pipeline_analyses {
           logic_name => 'longnoncodingdensity', value_type => 'sum',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
       },
@@ -187,7 +187,7 @@ sub pipeline_analyses {
           logic_name => 'pseudogenedensity', value_type => 'sum',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
       },
@@ -199,7 +199,7 @@ sub pipeline_analyses {
           logic_name => 'codingdensity', value_type => 'sum',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'normal',
         -can_be_empty     => 1,
         -flow_into  => {
@@ -211,8 +211,8 @@ sub pipeline_analyses {
         -logic_name => 'GeneGC',
         -module     => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGC',
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
-        -rc_name => 'normal',
+        -hive_capacity    => 50,
+        -rc_name => 'mem',
       },
 
       {
@@ -222,8 +222,8 @@ sub pipeline_analyses {
           table => 'repeat', logic_name => 'percentgc', value_type => 'ratio',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
-        -rc_name          => 'normal',
+        -hive_capacity    => 50,
+        -rc_name          => 'mem',
         -can_be_empty     => 1,
       },
 
@@ -234,7 +234,7 @@ sub pipeline_analyses {
           logic_name => 'percentagerepeat', value_type => 'ratio',
         },
         -max_retry_count  => 3,
-        -hive_capacity    => 5,
+        -hive_capacity    => 50,
         -rc_name          => 'mem',
         -can_be_empty     => 1,
         -flow_into  => {
@@ -278,7 +278,7 @@ sub resource_classes {
     return {
       'default' => { 'LSF' => ''},
       'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
+      'mem'     => { 'LSF' => '-q production-rh7 -M 3500 -R "rusage[mem=3500]"'},
     }
 }
 

@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,11 @@ sub log {
   if ( !defined $self->{log} ) {
     $self->{log} = get_logger();
     if ( !Log::Log4perl->initialized() ) {
-      Log::Log4perl->easy_init($DEBUG);
+      if($self->debug()==0) {
+	Log::Log4perl->easy_init($INFO);
+      } else {
+	Log::Log4perl->easy_init($DEBUG);
+      }
     }
   }
   return $self->{log};
@@ -766,6 +770,17 @@ sub has_genes {
   $dba->dbc->disconnect_if_idle();
 
   return $count;
+}
+
+sub get_biotype_group {
+  my ($self, $group) = @_;
+
+  my $ba = Bio::EnsEMBL::Registry->get_adaptor($self->param('species'), 'core', 'Biotype');
+
+  my $biotypes = $ba->fetch_all_by_group_object_db_type( $group, 'gene', 'core' );
+  my @names = map { $_->name } @{$biotypes};
+
+  return \@names;
 }
 
 1;

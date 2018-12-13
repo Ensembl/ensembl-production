@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,6 +70,15 @@ sub parse_match {
   
   my $signature = $match->{signature};
   
+  # These values are bound to Perl DBI SQL_DOUBLE constants by the store
+  # function in the ProteinFeatureAdaptor, which means that numbers in
+  # scientific E-notation will only be recognised if the 'E' is lowercased.
+  my $score = $match->{score};
+  $score =~ s/E/e/;
+  
+  my $evalue = $match->{evalue};
+  $evalue =~ s/E/e/;
+  
   my $feature_common =
   {
     'translation_id' => $translation_id,
@@ -79,8 +88,8 @@ sub parse_match {
     'interpro_ac'    => $signature->{entry}->{ac},
     'interpro_name'  => $signature->{entry}->{name},
     'interpro_desc'  => $signature->{entry}->{desc},
-    'score'          => $match->{score},
-    'evalue'         => $match->{evalue},
+    'score'          => $score,
+    'evalue'         => $evalue,
   };
   
   my @locs;
@@ -164,6 +173,10 @@ sub store_features {
     );
     
     my $protein_feature = Bio::EnsEMBL::ProteinFeature->new(%pf_args);
+    $protein_feature->{'align_type'} = undef;
+    $protein_feature->{'cigar_string'} = undef;
+    $protein_feature->{'external_data'} = undef;
+    
     $pfa->store($protein_feature, $$feature{'translation_id'});
     
     if (defined $interpro_ac && $interpro_ac ne '') {

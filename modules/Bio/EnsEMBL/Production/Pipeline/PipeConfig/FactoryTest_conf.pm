@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,9 +43,7 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
     
-    db_type => 'core',
-    
-    check_intentions => 0,
+    group => 'core',
   };
 }
 
@@ -88,7 +86,7 @@ sub pipeline_analyses {
                               division     => $self->o('division'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
-                              db_type      => $self->o('db_type'),
+                              group        => $self->o('group'),
                             },
       -flow_into         => {
                               '2->A' => ['DbFlow'],
@@ -111,7 +109,7 @@ sub pipeline_analyses {
                               division     => $self->o('division'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
-                              db_type      => $self->o('db_type'),
+                              group        => $self->o('group'),
                             },
       -flow_into         => {
                               '2->A' => ['CoreFlow'],
@@ -140,9 +138,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -batch_size        => 100,
       -max_retry_count   => 0,
-      -parameters        => {
-                              check_intentions => $self->o('check_intentions'),
-                            },
+      -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['CoreFlow'],

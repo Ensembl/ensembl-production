@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -139,6 +139,7 @@ sub store_go_xref {
     
         my $go_xref = Bio::EnsEMBL::OntologyXref->new(%go_xref_args);
         $go_xref->add_linkage_type('IEA', $interpro_xref);
+        $go_xref->{version} = undef;
         $dbea->store($go_xref, $transcript_id, 'Transcript', 1);
       }
     }
