@@ -1,5 +1,5 @@
 #!/bin/bash --
-# Copyright [2009-2014] EMBL-European Bioinformatics Institute
+# Copyright [2009-2019] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ else
 fi
 [ensgen@ebi-cli-001 ~]$ cat bin/get_release.sh
 #!/bin/bash --
-# Copyright [2009-2014] EMBL-European Bioinformatics Institute
+# Copyright [2009-2019] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
