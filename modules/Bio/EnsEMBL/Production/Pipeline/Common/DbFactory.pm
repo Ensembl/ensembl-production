@@ -59,6 +59,7 @@ sub param_defaults {
                     },
     meta_filters => {},
     group        => 'core',
+    registry_file => undef,
   };
 }
 
@@ -75,6 +76,9 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   my $reg = 'Bio::EnsEMBL::Registry';
+  if ($self->param_is_defined('registry_file')) {
+    $reg->load_all($self->param('registry_file'));
+  }
 
   my $species = $self->param('species') || [];
 
