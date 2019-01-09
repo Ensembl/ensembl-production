@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+use strict;
+use warnings;
 use Test::More;
 
 use Bio::EnsEMBL::Production::Search::GenomeFetcher;
@@ -22,8 +24,7 @@ BEGIN {
 	use_ok('Bio::EnsEMBL::Production::Search::GenomeFetcher');
 }
 
-diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
-);
+diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X");
 
 my %oargs = ( '-NAME'                => "test",
 			  '-DISPLAY_NAME'        => "Testus testa",
@@ -67,31 +68,15 @@ is( $genome->dbname(),     $genome_hash->{dbname},     "dbname correct" );
 is( $genome->species_id(), $genome_hash->{species_id}, "species_id correct" );
 is( $genome->division(),   $genome_hash->{division},   "division correct" );
 is( $genome->genebuild(),  $genome_hash->{genebuild},  "genebuild correct" );
-is( $genome->is_reference()==1?"true":"false",
-	$genome_hash->{is_reference},
-	"is_reference correct" );
-is( $genome->assembly_name(),
-	$genome_hash->{assembly}->{name},
-	"ass name correct" );
-is( $genome->assembly_accession(),
-	$genome_hash->{assembly}->{accession},
-	"ass ID correct" );
-is( $genome->assembly_level(),
-	$genome_hash->{assembly}->{level},
-	"ass level correct" );
+is( $genome->is_reference()==1?"true":"false", $genome_hash->{is_reference}, "is_reference correct" );
+is( $genome->assembly_name(), $genome_hash->{assembly}->{name},	"ass name correct" );
+is( $genome->assembly_accession(), $genome_hash->{assembly}->{accession}, "ass ID correct" );
+is( $genome->assembly_level(), $genome_hash->{assembly}->{level}, "ass level correct" );
 is( $genome->name(), $genome_hash->{organism}->{name}, "name correct" );
-is( $genome->display_name(),
-	$genome_hash->{organism}->{display_name},
-	"display_name ID correct" );
-is( $genome->taxonomy_id(),
-	$genome_hash->{organism}->{taxonomy_id},
-	"taxid correct" );
-is( $genome->species_taxonomy_id(),
-	$genome_hash->{organism}->{species_taxonomy_id},
-	"species taxid correct" );
+is( $genome->display_name(), $genome_hash->{organism}->{display_name}, "display_name ID correct" );
+is( $genome->taxonomy_id(),	$genome_hash->{organism}->{taxonomy_id}, "taxid correct" );
+is( $genome->species_taxonomy_id(),	$genome_hash->{organism}->{species_taxonomy_id}, "species taxid correct" );
 is( $genome->strain(), $genome_hash->{organism}->{strain}, "strain correct" );
-is( $genome->serotype(),
-	$genome_hash->{organism}->{serotype},
-	"serotype correct" );
+is( $genome->serotype(), $genome_hash->{organism}->{serotype}, "serotype correct" );
 
-done_testing;
+done_testing();

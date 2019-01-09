@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+use warnings;
+use strict;
 use Test::More;
 
 BEGIN {
@@ -26,15 +28,15 @@ use Bio::EnsEMBL::Test::MultiTestDB;
 
 my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
 my $core_dba = $test->get_DBAdaptor('core');
-
 my $fetcher = Bio::EnsEMBL::Production::Search::SequenceFetcher->new();
-
 my $seqs = $fetcher->_fetch_seq_regions($core_dba);
+
 is(scalar @$seqs, 28, "Expected number of sequences");
 is(scalar(grep {$_->{type} eq 'contig'} @{$seqs}), 22, "Expected number of contig sequences");
 is(scalar(grep {$_->{type} eq 'supercontig'} @{$seqs}),3, "Expected number of supercontig sequences");
 is(scalar(grep {$_->{type} eq 'chromosome'} @{$seqs}), 3, "Expected number of chromosome sequences");
 
 my $features = $fetcher->_fetch_misc_features($core_dba);
+
 is(scalar @$features, 54, "Expected number of features");
-done_testing;
+done_testing();

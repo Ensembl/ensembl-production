@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+use strict;
+use warnings;
 use Test::More;
+use JSON;
 
 BEGIN {
 	use_ok('Bio::EnsEMBL::Production::Search::LRGFetcher');
@@ -32,21 +35,23 @@ my $core_dba = $test->get_DBAdaptor('core');
 my $fetcher = Bio::EnsEMBL::Production::Search::IdFetcher->new();
 
 my $ids = $fetcher->fetch_ids_for_dba($core_dba);
+
 diag( Dumper($ids) );
-use JSON;
+
 is( scalar @$ids, 5, "Expected number of IDs" );
+
 my ($current) = grep { $_->{id} eq 'bananag' } @$ids;
+
 diag( Dumper($current) );
 ok( !defined $current->{deprecated_mappings} || scalar( @{ $current->{deprecated_mappings} } ) == 0, "Checking deprecated for a live entry" );
-ok( defined $current->{current_mappings} &&
-	  scalar( @{ $current->{current_mappings} } ) == 1,
-	"Checking current for an live entry" );
+ok( defined $current->{current_mappings} && scalar( @{ $current->{current_mappings} } ) == 1, "Checking current for an live entry" );
+
 my ($old) = grep { $_->{id} eq 'lychee' } @$ids;
+
 diag( Dumper($old) );
-ok( defined $old->{deprecated_mappings} &&
-	  scalar( @{ $old->{deprecated_mappings} } ) == 1,
-	"Checking deprecated for an old entry" );
+ok( defined $old->{deprecated_mappings} && scalar( @{ $old->{deprecated_mappings} } ) == 1,	"Checking deprecated for an old entry" );
 ok( !defined $old->{current_mappings} || scalar( @{ $current->{current_mappings} } ) == 0, "Checking current for an old entry" );
+
 my ($gone) = grep { $_->{id} eq 'mango' } @$ids;
 diag( Dumper($gone) );
 ok( !defined $gone->{deprecated_mappings}|| scalar( @{ $current->{deprecated_mappings} } ) == 0, "Checking deprecated for a vanished entry" );
