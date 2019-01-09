@@ -897,12 +897,12 @@ sub resource_classes {
   return {
     %{$self->SUPER::resource_classes},
     '4GB' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"'},
-    '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
-    '8GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 8000 -R "rusage[mem=8000,tmp=4000]"'},
-    '16GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 16000 -R "rusage[mem=16000,tmp=4000]"'},
-    '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,tmp=4000]"'},
-    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000,tmp=4000]"'},
-    '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,tmp=4000]"'},
+    '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
+    '8GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
+    '16GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
+    '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
+    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
+    '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
   }
 }
 
