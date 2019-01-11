@@ -12,14 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+use strict;
+use warnings;
 use Test::More;
 
 BEGIN {
 	use_ok('Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher');
 }
 
-diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
-);
+diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X");
 
 use Bio::EnsEMBL::Production::Search::ProbeFetcher;
 use Bio::EnsEMBL::Test::MultiTestDB;
@@ -30,8 +31,8 @@ Log::Log4perl->easy_init($DEBUG);
 use Data::Dumper;
 
 my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
-my $dba      = $test->get_DBAdaptor('funcgen');
 my $core_dba = $test->get_DBAdaptor('core');
+my $dba = $test->get_DBAdaptor('funcgen');
 my $fetcher = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new();
 
 my $out = $fetcher->fetch_regulatory_elements_for_dba( $dba, $core_dba );
@@ -83,4 +84,4 @@ is( scalar(@$out), 33 );
 		  'feature_name'    => 'TF binding site',
 		  'type'            => 'RegulatoryFeature' } );
 }
-done_testing;
+done_testing();

@@ -44,9 +44,9 @@ my %aargs = ( '-ASSEMBLY_NAME'      => "v2.0",
 my $assembly = Bio::EnsEMBL::MetaData::GenomeAssemblyInfo->new(%aargs);
 $assembly->sequences( [ { name => "a", acc => "xyz.1" } ] );
 
-my %rargs = ( -ENSEMBL_VERSION         => 99,
-			  -ENSEMBL_GENOMES_VERSION => 66,
-			  -RELEASE_DATE            => '2015-09-29' );
+my %rargs = ( -ENSEMBL_VERSION         => 999,
+			  -ENSEMBL_GENOMES_VERSION => 666,
+			  -RELEASE_DATE            => '2025-09-29' );
 my $release = Bio::EnsEMBL::MetaData::DataReleaseInfo->new(%rargs);
 
 my %args = ( '-DBNAME'       => "test_species_core_27_80_1",

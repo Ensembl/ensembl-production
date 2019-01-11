@@ -1,11 +1,4 @@
-1	\N	schema_type	variation
-3	\N	patch	patch_73_74_a.sql|schema version
-4	\N	patch	patch_73_74_b.sql|Add doi and UCSC id to publication table
-5	\N	patch	patch_73_74_c.sql|Add clinical_significance to variation_feature table
-6	\N	patch	patch_73_74_d.sql|Add data_types to source table
-7	\N	patch	patch_73_74_e.sql|Update indexes for the phenotype table
-10	\N	patch	patch_74_75_a.sql|schema version
-11	\N	patch	patch_74_75_b.sql|Drop read_coverage table
+54	\N	pairwise_ld.default_population	679
 12	\N	patch	patch_70_71_e.sql|create study_variation table
 13	\N	patch	patch_70_71_f.sql|add phenotype_feature and phenotype_feature_attrib
 14	\N	patch	patch_70_71_g.sql|add stable_id column to phenotype
@@ -27,6 +20,10 @@
 30	\N	patch	patch_72_73_c.sql|Add phased column to genotype_code table
 31	\N	patch	patch_72_73_d.sql| revert population_synonym.name and individual_synonym.name to varchars
 32	\N	patch	patch_72_73_e.sql|Add ESP to varition set in variation and variation_feature tables
+6	\N	patch	patch_73_74_d.sql|Add data_types to source table
+7	\N	patch	patch_73_74_e.sql|Update indexes for the phenotype table
+10	\N	patch	patch_74_75_a.sql|schema version
+11	\N	patch	patch_74_75_b.sql|Drop read_coverage table
 38	\N	patch	patch_75_76_a.sql|schema version
 39	\N	patch	patch_75_76_b.sql|Change evidence storage in Variation & Variation_feature table to attribs
 40	\N	patch	patch_75_76_c.sql|Add new table and extra column to population table to specify if population is to be displayed seperately on the PopulationGenetics page and if so with what priority
@@ -43,13 +40,11 @@
 51	\N	patch	patch_76_77_e.sql|add variation_attrib table
 52	\N	patch	patch_76_77_f.sql|Add new variation_set_id column to individual table
 53	\N	patch	patch_76_77_g.sql|Add new column to Variation_feature table to flag whether variants should be displayed or not
-54	\N	pairwise_ld.default_population	679
 55	\N	patch	patch_77_78_a.sql|schema version
 56	\N	patch	patch_77_78_b.sql|Add a column copy_number for CNV supporting structural variants
 57	\N	patch	patch_77_78_c.sql|Drop the table study_variation
 58	\N	patch	patch_77_78_d.sql|Extend the index type_val_idx in the table attrib
 59	\N	patch	patch_77_78_e.sql|add indexes on father_ and mother_individual_id and population name
-2	\N	schema_version	90
 60	\N	patch	patch_78_79_a.sql|schema version
 61	\N	patch	patch_78_79_b.sql|change the column attrib_type_id by attrib_id in the variation_attrib table
 62	\N	patch	patch_78_79_c.sql|Store more detailed Sift information
@@ -62,20 +57,20 @@
 69	\N	patch	patch_80_81_a.sql|schema version
 70	\N	patch	patch_80_81_b.sql|Create new sample table and update individual table. Copy individual data into new sample table.
 71	\N	patch	patch_80_81_c.sql|Update table, column and index names from individual to sample.
-72	\N	patch	patch_83_84_a.sql|schema version
 73	\N	patch	patch_81_82_a.sql|schema version
 74	\N	patch	patch_81_82_b.sql|update the description in the failed_description table
 75	\N	patch	patch_81_82_c.sql|new entry in the failed_description table
 76	\N	patch	patch_82_83_a.sql|schema version
 77	\N	patch	patch_82_83_b.sql|Add the evidence ExAC in variation and variation_feature
+72	\N	patch	patch_83_84_a.sql|schema version
 78	\N	patch	patch_83_84_a.sql|schema version
 79	\N	patch	patch_84_85_a.sql|schema version
+85	\N	patch	patch_84_85_b.sql|create sample_synonym
 80	\N	patch	patch_84_85_c.sql|drop column moltype from variation_synonym
 81	\N	patch	patch_84_85_d.sql|Making attrib_id auto_increment
 82	\N	patch	patch_84_85_e.sql|drop the table tagged_variation_feature
 83	\N	patch	patch_84_85_f.sql|add phenotype_ontology_accession
 84	\N	patch	patch_84_85_g.sql|allow the column description to store more text in the source table
-85	\N	patch	patch_84_85_b.sql|create sample_synonym
 86	\N	patch	patch_85_86_a.sql|schema version
 87	\N	patch	patch_85_86_b.sql|add qualifier & index to phenotype_onology_accession
 88	\N	patch	patch_85_86_c.sql|add index on study.external_reference
@@ -84,6 +79,29 @@
 91	\N	patch	patch_87_88_b.sql|seq_region_name_255
 92	\N	patch	patch_88_89_a.sql|schema version
 93	\N	patch	patch_88_89_b.sql|Drop strain_gtype_poly table
+3	\N	patch	patch_89_90_a.sql|schema version
 94	\N	patch	patch_89_90_a.sql|schema version
+4	\N	patch	patch_89_90_b.sql|add start_retained_variant to consequence_types in variation_feature and transcript_variation
 95	\N	patch	patch_89_90_b.sql|add start_retained_variant to consequence_types in variation_feature and transcript_variation
+5	\N	patch	patch_89_90_c.sql|remove regulatory and TFBS consequences from consequence_types in  transcript_variation
 96	\N	patch	patch_89_90_c.sql|remove regulatory and TFBS consequences from consequence_types in  transcript_variation
+97	\N	patch	patch_90_91_a.sql|schema version
+98	\N	patch	patch_90_91_b.sql|extend the characters supported in the publication.authors column
+99	\N	patch	patch_90_91_c.sql|Add new column zygosity in the table structural_variation_sample
+100	\N	patch	patch_91_92_a.sql|schema version
+101	\N	patch	patch_91_92_b.sql|Add index on feature_stable_id in regulatory_feature_variation and motif_feature_variation
+102	\N	patch	patch_91_92_c.sql|Change the column zygosity in the table structural_variation_sample
+103	\N	patch	patch_91_92_d.sql|create table to store names of submitters to ClinVar etc
+104	\N	patch	patch_92_93_a.sql|schema version
+105	\N	patch	patch_92_93_b.sql|Extend phenotype_ontology_accession mapped_by_attrib predefined set
+106	\N	patch	patch_92_93_c.sql|Add new evidence attribs to the variation and variation_feature tables
+107	\N	patch	patch_93_94_a.sql|schema version
+108	\N	patch	patch_94_95_a.sql|schema version
+109	\N	patch	patch_94_95_b.sql|create table to store allele synonyms
+110	\N	patch	patch_95_96_a.sql|schema version
+111	\N	patch	patch_95_96_b.sql|modify index on variation_synonym
+112	\N	patch	patch_95_96_c.sql|add new entries to the failed_description table
+113	\N	patch	patch_95_96_d.sql|create table to store failed variation features
+114	\N	patch	patch_95_96_e.sql|Rename motif_name to binding_matrix_stable_id.
+1	\N	schema_type	variation
+2	\N	schema_version	96

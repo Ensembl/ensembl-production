@@ -58,26 +58,25 @@ sub fetch_regulatory_elements {
 }
 
 sub fetch_regulatory_elements_for_dba {
-	my ( $self, $dba ) = @_;
+	my ( $self, $dba, $core_dba ) = @_;
 	my $elems = [];
 
 	my $h = $dba->dbc()->sql_helper();
 
-	(my $core = $dba->dbc()->dbname) =~ s/_funcgen_/_core_/;
+	my $core = $core_dba->dbc()->dbname;
 
 	$h->execute_no_return(
-		-SQL => qq/select 
-      rf.stable_id as id, 
-      sr.name as seq_region_name, 
-      (rf.seq_region_start - rf.bound_start_length) as start, 
-      (rf.seq_region_end + rf.bound_end_length) as end, 
-      ft.name as feature_name,
-      'RegulatoryFeature' as type
-    from 
-      regulatory_feature rf
-      join $core.seq_region sr using (seq_region_id)
-      join feature_type ft using (feature_type_id)
-      /,
+		-SQL => qq/
+		select 	rf.stable_id as id,
+				sr.name as seq_region_name,
+				(rf.seq_region_start - rf.bound_start_length) as start,
+				(rf.seq_region_end + rf.bound_end_length) as end,
+				ft.name as feature_name,
+				'RegulatoryFeature' as type
+    	from regulatory_feature rf
+    	join $core.seq_region sr using (seq_region_id)
+    	join feature_type ft using (feature_type_id)
+      	/,
 		-USE_HASHREFS => 1,
 		-CALLBACK     => sub {
 			my $feature = shift @_;

@@ -1,2 +1,2 @@
 1	10367	ENST00000569325	Test probe set mapping
-
+2	0		\N

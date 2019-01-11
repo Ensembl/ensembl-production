@@ -64,5 +64,7 @@ my ($probe_set) =
 is( $probe_set->{array},                 'HumanWG_6_V2' );
 is( $probe_set->{array_vendor},          'ILLUMINA' );
 is( $probe_set->{name},                  '214727_at' );
+use Data::Dumper;
+diag(Dumper($probe_set->{probes}));
 is( scalar( @{ $probe_set->{probes} } ), 12 );
 done_testing;

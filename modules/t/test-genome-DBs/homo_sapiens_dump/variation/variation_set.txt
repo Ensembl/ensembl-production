@@ -22,6 +22,7 @@
 34	Illumina_HumanOmni2.5	Variants from the Illumina HumanOmni2.5 4v1 whole genome genotyping array designed for association studies	341
 35	Illumina_Human610_Quad	Variants from the Illumina Human610_Quad v1_B whole genome genotyping array designed for association studies	342
 36	Illumina_HumanHap550	Variants from the Illumina Human550 v3.0 whole genome genotyping array designed for association studies	343
+37	Illumina_HumanOmni5	Variants from the Illumina HumanOmni5v1 whole genome genotyping array designed for association studies	354
 41	HapMap - CEU	Variations which have been assayed by The International HapMap Project from CEU individuals	257
 42	HapMap - HCB	Variations which have been assayed by The International HapMap Project from HCB individuals	258
 43	HapMap - JPT	Variations which have been assayed by The International HapMap Project from JPT individuals	259
@@ -38,4 +39,3 @@
 56	Seong-Jin Kim	Variants genotyped in Seong-Jin Kim	240
 57	YanHang	Variants genotyped in a Han Chinese individual (YanHuang Project)	241
 64	clinically associated	Variants described by ClinVar as being probable-pathogenic, pathogenic, drug-response or histocompatibility	345
-37	Illumina_HumanOmni5	Variants from the Illumina HumanOmni5v1 whole genome genotyping array designed for association studies	354
