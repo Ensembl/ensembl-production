@@ -1,4 +1,3 @@
-
 =head1 LICENSE
 
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
@@ -36,53 +35,51 @@ use Log::Log4perl qw/:easy/;
 use Data::Dumper;
 
 sub run {
-	my ($self) = @_;
-	if ( $self->debug() ) {
-		Log::Log4perl->easy_init($DEBUG);
-	}
-	else {
-		Log::Log4perl->easy_init($INFO);
-	}
-	$self->{logger} = get_logger();
+  my ($self) = @_;
+  if ($self->debug()) {
+    Log::Log4perl->easy_init($DEBUG);
+  }
+  else {
+    Log::Log4perl->easy_init($INFO);
+  }
+  $self->{logger} = get_logger();
 
-	my $genome_file = $self->param_required('genome_file');
-	my $type        = $self->param_required('type');
-	my $genome      = decode_json( read_file($genome_file) );
+  my $genome_file = $self->param_required('genome_file');
+  my $type = $self->param_required('type');
+  my $genome = decode_json(read_file($genome_file));
 
-	my $species = $self->param_required('species');
-	my $sub_dir = $self->get_data_path('ebeye');
+  my $species = $self->param_required('species');
+  my $sub_dir = $self->get_data_path('ebeye');
 
-	my $reformatter = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
+  my $reformatter = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
 
-        if($type eq 'core') {
-          my $genome_file_out = $sub_dir . '/' . $species . '_genome.xml';
-          $self->{logger}
-            ->info("Reformatting $genome_file into $genome_file_out");
-          $reformatter->reformat_genome( $genome_file, $genome_file_out );
-        }
-	my $dba = $self->get_DBAdaptor($type);
+  if ($type eq 'core') {
+    my $genome_file_out = $sub_dir . '/' . $species . '_genome.xml';
+    $self->{logger}->info("Reformatting $genome_file into $genome_file_out");
+    $reformatter->reformat_genome($genome_file, $genome_file_out);
+  }
+  my $dba = $self->get_DBAdaptor($type);
 
-	my $genes_file     = $self->param('genes_file');
-        if(defined $genes_file) {
-          my $genes_file_out = $sub_dir . '/' . $species . '_genes' .
-            ( $type ne 'core' ? "_${type}" : '' ) . '.xml';
-          $self->{logger}->info("Reformatting $genes_file into $genes_file_out");
-          $reformatter->reformat_genes( $genome_file, $dba->dbc()->dbname(),
-                                        $genes_file,  $genes_file_out );
-        }
-	
-	my $sequences_file     = $self->param('sequences_file');
-        if(defined $sequences_file) {
-          my $sequences_file_out = $sub_dir . '/' . $species . '_sequences' .
-            ( $type ne 'core' ? "_${type}" : '' ) . '.xml';
-          $self->{logger}
-            ->info("Reformatting $sequences_file into $sequences_file_out");
-          $reformatter->reformat_sequences( $genome_file,    $dba->dbc()->dbname(),
-                                            $sequences_file, $sequences_file_out
-                                          );
-        }
+  my $genes_file = $self->param('genes_file');
+  if (defined $genes_file) {
+    my $genes_file_out = $sub_dir . '/' . $species . '_genes' .
+        ($type ne 'core' ? "_${type}" : '') . '.xml';
+    $self->{logger}->info("Reformatting $genes_file into $genes_file_out");
+    $reformatter->reformat_genes($genome_file, $dba->dbc()->dbname(),
+        $genes_file, $genes_file_out);
+  }
 
-	return;
+  my $sequences_file = $self->param('sequences_file');
+  if (defined $sequences_file) {
+    my $sequences_file_out = $sub_dir . '/' . $species . '_sequences' .
+        ($type ne 'core' ? "_${type}" : '') . '.xml';
+    $self->{logger}->info("Reformatting $sequences_file into $sequences_file_out");
+    $reformatter->reformat_sequences($genome_file, $dba->dbc()->dbname(),
+        $sequences_file, $sequences_file_out
+    );
+  }
+
+  return;
 } ## end sub run
 
 1;

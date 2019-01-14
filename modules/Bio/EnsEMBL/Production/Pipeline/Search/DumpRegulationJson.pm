@@ -1,4 +1,3 @@
-
 =head1 LICENSE
 
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
@@ -34,23 +33,24 @@ use Log::Log4perl qw/:easy/;
 use Data::Dumper;
 
 sub dump {
-	my ( $self, $species ) = @_;
-	$self->{logger}->info("Dumping regulatory features for $species");
-	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' );
-	my $elems =
-	  Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()
-	  ->fetch_regulatory_elements_for_dba($dba);
-	$dba->dbc()->disconnect_if_idle();
-	$self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
-	if ( defined $elems && scalar(@$elems) > 0 ) {
-		$self->{logger}->info(
-			"Dumped " . scalar(@$elems) . " regulatory features for $species" );
-		my $file = $self->write_json( $species, 'regulatory_elements', $elems );
-		$self->dataflow_output_id( { dump_file => $file, species => $species, type => $self->param('type'), 
-					     genome_file=> $self->param('genome_file') },
-								   2 );
-	}
-	return;
+  my ($self, $species) = @_;
+  $self->{logger} = get_logger();
+  $self->{logger}->info("Dumping regulatory features for $species");
+  my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
+  my $elems = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()->fetch_regulatory_elements_for_dba($dba);
+  $dba->dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
+  if (defined $elems && scalar(@$elems) > 0) {
+    $self->{logger}->info("Dumped " . scalar(@$elems) . " regulatory features for $species");
+    my $file = $self->write_json($species, 'regulatory_elements', $elems);
+    $self->dataflow_output_id({
+        dump_file   => $file,
+        species     => $species,
+        type        => $self->param('type'),
+        genome_file => $self->param('genome_file') },
+        2);
+  }
+  return;
 }
 
 1;

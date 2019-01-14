@@ -35,7 +35,7 @@ use Log::Log4perl qw/:easy/;
 
 sub dump {
 	my ( $self, $species ) = @_;
-
+	$self->{logger} = get_logger();
 	$self->{logger}->debug("Fetching DBA for $species");
 	my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
 

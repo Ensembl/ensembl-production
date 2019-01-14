@@ -1,4 +1,3 @@
-
 =head1 LICENSE
 
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
@@ -34,61 +33,60 @@ use Log::Log4perl qw/:easy/;
 use Data::Dumper;
 
 sub run {
-	my ($self) = @_;
-	if ( $self->debug() ) {
-		Log::Log4perl->easy_init($DEBUG);
-	}
-	else {
-		Log::Log4perl->easy_init($INFO);
-	}
-	$self->{logger} = get_logger();
-	$self->dbc()->reconnect_when_lost(1) if defined $self->dbc();
-	my $species = $self->param_required('species');
-	my $type = $self->param('type') || 'core';
-	$self->dump( $species, $type );
+  my ($self) = @_;
+  if ($self->debug()) {
+    Log::Log4perl->easy_init($DEBUG);
+  }
+  else {
+    Log::Log4perl->easy_init($INFO);
+  }
+  $self->{logger} = get_logger();
+  $self->dbc()->reconnect_when_lost(1) if defined $self->dbc();
+  my $species = $self->param_required('species');
+  my $type = $self->param('type') || 'core';
+  $self->dump($species, $type);
 
-	return;
+  return;
 }
 
 sub dump {
-	my ( $self, $species, $type ) = @_;
-	throw "dump() must be implemented";
-	return;
+  my ($self, $species, $type) = @_;
+  throw "dump() must be implemented";
+  return;
 }
 
 sub write_json {
-	my ( $self, $species, $type, $data, $db_type ) = @_;
-	$self->build_base_directory();
-	my $sub_dir = $self->get_data_path('json');
-	if ( defined $db_type && $db_type ne '' && $db_type ne 'core' ) {
-		$type = "${db_type}_${type}";
-	}
-	my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
-	$self->write_json_to_file( $json_file_path, $data );
-	return $json_file_path;
+  my ($self, $species, $type, $data, $db_type) = @_;
+  $self->build_base_directory();
+  my $sub_dir = $self->get_data_path('json');
+  if (defined $db_type && $db_type ne '' && $db_type ne 'core') {
+    $type = "${db_type}_${type}";
+  }
+  my $json_file_path = $sub_dir . '/' . $species . '_' . $type . '.json';
+  $self->write_json_to_file($json_file_path, $data);
+  return $json_file_path;
 }
 
 sub write_json_to_file {
-	my ( $self, $json_file_path, $data, $no_brackets ) = @_;
-	croak "No data supplied for $json_file_path" unless defined $data;
-	$self->info("Writing to $json_file_path");
-	open my $json_file, '>', $json_file_path or
-	  throw "Could not open $json_file_path for writing";
-	if ($no_brackets) {
-	        croak "Data supplied for $json_file_path is not an array" unless ref($data) eq 'ARRAY';
-	        my $n = 0;
-		for my $elem (@$data) {
-			if ( $n++ > 0 ) {
-				print $json_file ',';
-			}
-			print $json_file encode_json($elem) || croak "Could not write data element $n to $json_file_path: $!";;
-		}
-	}
-	else {
-		print $json_file encode_json($data) || croak "Could not write data to $json_file_path: $!";
-	}
-	close $json_file;
-	$self->info("Write complete");
-	return;
+  my ($self, $json_file_path, $data, $no_brackets) = @_;
+  croak "No data supplied for $json_file_path" unless defined $data;
+  $self->info("Writing to $json_file_path");
+  open my $json_file, '>', $json_file_path or throw "Could not open $json_file_path for writing";
+  if ($no_brackets) {
+    croak "Data supplied for $json_file_path is not an array" unless ref($data) eq 'ARRAY';
+    my $n = 0;
+    for my $elem (@$data) {
+      if ($n++ > 0) {
+        print $json_file ',';
+      }
+      print $json_file encode_json($elem) || croak "Could not write data element $n to $json_file_path: $!";;
+    }
+  }
+  else {
+    print $json_file encode_json($data) || croak "Could not write data to $json_file_path: $!";
+  }
+  close $json_file;
+  $self->info("Write complete");
+  return;
 }
 1;

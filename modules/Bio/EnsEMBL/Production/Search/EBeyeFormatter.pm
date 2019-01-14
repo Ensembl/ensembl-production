@@ -113,7 +113,7 @@ sub reformat_genes {
 						  sprintf( "%s %s %s database",
 								   $genome->{division},
 								   $genome->{organism}{display_name},
-								   $type, $release ) );
+								   $type) );
 	$writer->dataElement( 'release', $release );
 	_print_dates($writer);
 	$writer->startTag('entries');
@@ -278,7 +278,7 @@ sub reformat_sequences {
 						  sprintf( "%s %s %s database",
 								   $genome->{division},
 								   $genome->{organism}{display_name},
-								   $type, $release ) );
+								   $type) );
 	$writer->dataElement( 'release', $release );
 	_print_dates($writer);
 	$writer->startTag('entries');
@@ -329,7 +329,7 @@ sub reformat_variants {
 						  sprintf( "%s %s %s database",
 								   $genome->{division},
 								   $genome->{organism}{display_name},
-								   $type, $release ) );
+								   $type) );
 	$writer->dataElement( 'release', $release );
 	_print_dates($writer);
 	$writer->startTag('entries');

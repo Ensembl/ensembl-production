@@ -1,4 +1,3 @@
-
 =head1 LICENSE
 
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
@@ -33,17 +32,17 @@ use Carp;
 use File::Slurp;
 
 sub new {
-  my ( $class, @args ) = @_;
-  my $self = bless( {}, ref($class) || $class );
+  my ($class, @args) = @_;
+  my $self = bless({}, ref($class) || $class);
   $self->{log} = get_logger();
-  my ( $tax_dba, $onto_dba ) =
-    rearrange( [qw/taxonomy_dba ontology_dba/], @args );
+  my ($tax_dba, $onto_dba) =
+      rearrange([ qw/taxonomy_dba ontology_dba/ ], @args);
   $self->{tax_dba} = $tax_dba;
-  if ( !defined $self->{tax_dba} ) {
+  if (!defined $self->{tax_dba}) {
     $self->log()->warn("No taxonomy DBA defined");
   }
   $self->{onto_dba} = $onto_dba;
-  if ( !defined $self->{onto_dba} ) {
+  if (!defined $self->{onto_dba}) {
     $self->log()->warn("No ontology DBA defined");
   }
   return $self;
@@ -62,43 +61,43 @@ sub disconnect {
 }
 
 sub remodel_variants {
-  my ( $self, $variants_file, $genomes_file, $variants_out ) = @_;
-  my $genome  = decode_json( read_file($genomes_file) );
+  my ($self, $variants_file, $genomes_file, $variants_out) = @_;
+  my $genome = decode_json(read_file($genomes_file));
   my $lineage = $genome->{organism}->{lineage} =
-    $self->expand_taxon( $genome->{organism}->{taxonomy_id} );
+      $self->expand_taxon($genome->{organism}->{taxonomy_id});
   my $name = $genome->{name};
 
   open my $out, ">",
-    $variants_out || croak "Could not open $variants_out for writing: $@";
+      $variants_out || croak "Could not open $variants_out for writing: $@";
   print $out "[";
 
   my $n = 0;
   process_json_file(
-    $variants_file,
-    sub {
-      my $variant = shift;
-      $variant->{genome}         = $genome->{organism}{name};
-      $variant->{genome_display} = $genome->{organism}{display_name};
-      $variant->{taxon_id}       = $genome->{organism}{taxonomy_id};
-      $variant->{lineage}        = $lineage;
-      # update parents of ontology terms
-      for my $phenotype ( @{ $variant->{phenotypes} } ) {
-        $phenotype->{parents} =
-          $self->expand_term( $phenotype->{ontology_accession} )
+      $variants_file,
+      sub {
+        my $variant = shift;
+        $variant->{genome} = $genome->{organism}{name};
+        $variant->{genome_display} = $genome->{organism}{display_name};
+        $variant->{taxon_id} = $genome->{organism}{taxonomy_id};
+        $variant->{lineage} = $lineage;
+        # update parents of ontology terms
+        for my $phenotype (@{$variant->{phenotypes}}) {
+          $phenotype->{parents} =
+              $self->expand_term($phenotype->{ontology_accession})
           ;
-      }
-      for my $loc ( @{ $variant->{locations} } ) {
-        for my $annotation ( @{ $loc->{annotations} } ) {
-          for my $con ( @{ $annotation->{consequences} } ) {
-            $con->{parents} = $self->expand_term( $con->{so_accession} );
+        }
+        for my $loc (@{$variant->{locations}}) {
+          for my $annotation (@{$loc->{annotations}}) {
+            for my $con (@{$annotation->{consequences}}) {
+              $con->{parents} = $self->expand_term($con->{so_accession});
+            }
           }
         }
-      }
-      if ( $n++ > 0 ) {
-        print $out ",";
-      }
-      print $out encode_json($variant);
-    } );
+        if ($n++ > 0) {
+          print $out ",";
+        }
+        print $out encode_json($variant);
+      });
 
   print $out "]";
   close $out;
@@ -106,19 +105,19 @@ sub remodel_variants {
 } ## end sub remodel_variants
 
 sub expand_term {
-  my ( $self, $term ) = @_;
+  my ($self, $term) = @_;
   return undef unless defined $term;
-  if ( !defined $self->{onto_dba} ) {
-    return [$term];
+  if (!defined $self->{onto_dba}) {
+    return [ $term ];
   }
   my $terms = $self->{term_parents}->{$term};
-  if ( !defined $terms ) {
+  if (!defined $terms) {
     $terms = $self->{onto_dba}->dbc()->sql_helper()->execute_simple(
-      -SQL => q/select distinct p.accession from term t
+        -SQL    => q/select distinct p.accession from term t
 join closure c on (t.term_id=c.child_term_id)
 join term p on (p.term_id=c.parent_term_id)
 where t.ontology_id=p.ontology_id and t.accession=?/,
-      -PARAMS => [$term] );
+        -PARAMS => [ $term ]);
     push @{$terms}, $term;
     $self->{term_parents}->{$term} = $terms;
   }
@@ -126,16 +125,16 @@ where t.ontology_id=p.ontology_id and t.accession=?/,
 }
 
 sub expand_taxon {
-  my ( $self, $taxon ) = @_;
+  my ($self, $taxon) = @_;
   my $taxons = [];
-  if ( defined $self->{tax_dba} ) {
+  if (defined $self->{tax_dba}) {
     $taxons = $self->{taxon_parents}->{$taxon};
-    if ( !defined $taxons ) {
+    if (!defined $taxons) {
       $taxons = $self->{tax_dba}->dbc()->sql_helper()->execute_simple(
-        -SQL => q/select n.taxon_id from ncbi_taxa_node n
+          -SQL    => q/select n.taxon_id from ncbi_taxa_node n
   join ncbi_taxa_node child on (child.left_index between n.left_index and n.right_index)
   where child.taxon_id=?/,
-        -PARAMS => [$taxon] );
+          -PARAMS => [ $taxon ]);
       $self->{taxon_parents}->{$taxon} = $taxons;
     }
   }
