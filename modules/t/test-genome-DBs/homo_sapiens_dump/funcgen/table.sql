@@ -178,7 +178,7 @@ CREATE TABLE `chance` (
   `error_message` text,
   PRIMARY KEY (`chance_id`),
   UNIQUE KEY `signal_control_alignment_unique` (`signal_alignment_id`,`control_alignment_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `data_file` (
   `data_file_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -210,7 +210,7 @@ CREATE TABLE `execution_plan` (
   `experiment_id` int(16) unsigned NOT NULL,
   `execution_plan` longtext NOT NULL,
   PRIMARY KEY (`execution_plan_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `experiment` (
   `experiment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -310,7 +310,7 @@ CREATE TABLE `fastqc` (
   `error_message` text,
   PRIMARY KEY (`fastqc_id`),
   UNIQUE KEY `read_file_id_unique` (`read_file_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `feature_set` (
   `feature_set_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -346,7 +346,7 @@ CREATE TABLE `frip` (
   `total_reads` int(14) DEFAULT NULL,
   PRIMARY KEY (`frip_id`),
   UNIQUE KEY `peak_calling_id_unique` (`peak_calling_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `identity_xref` (
   `object_xref_id` int(10) unsigned NOT NULL,
@@ -369,7 +369,7 @@ CREATE TABLE `idr` (
   `type` enum('on biological replicates','on technical replicates','no_idr') NOT NULL,
   `failed_idr_pairs` text,
   PRIMARY KEY (`idr_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `meta` (
   `meta_id` int(10) NOT NULL AUTO_INCREMENT,
@@ -507,7 +507,7 @@ CREATE TABLE `peak_calling_statistic` (
   `statistic` varchar(255) NOT NULL,
   `value` float unsigned DEFAULT NULL,
   PRIMARY KEY (`peak_calling_statistic_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `phantom_peak` (
   `phantom_peak_id` int(17) unsigned NOT NULL AUTO_INCREMENT,
@@ -531,7 +531,7 @@ CREATE TABLE `phantom_peak` (
   `error_message` text,
   PRIMARY KEY (`phantom_peak_id`),
   UNIQUE KEY `alignment_id_unique` (`alignment_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `probe` (
   `probe_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -587,7 +587,7 @@ CREATE TABLE `probe_mapping` (
   `release_version` varchar(255) DEFAULT NULL,
   `release_date` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`probe_mapping_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `probe_mapping_statistic` (
   `probe_mapping_statistic_id` int(29) unsigned NOT NULL AUTO_INCREMENT,
@@ -595,7 +595,7 @@ CREATE TABLE `probe_mapping_statistic` (
   `statistic` varchar(255) NOT NULL,
   `value` double unsigned DEFAULT NULL,
   PRIMARY KEY (`probe_mapping_statistic_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `probe_seq` (
   `probe_seq_id` int(10) NOT NULL AUTO_INCREMENT,
@@ -704,7 +704,7 @@ CREATE TABLE `regulatory_build_statistic` (
   `value` float unsigned DEFAULT NULL,
   PRIMARY KEY (`regulatory_build_statistic_id`),
   UNIQUE KEY `stats_uniq` (`statistic`,`regulatory_build_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `regulatory_evidence` (
   `regulatory_activity_id` int(10) unsigned NOT NULL,
@@ -739,7 +739,7 @@ CREATE TABLE `segmentation` (
   `superclass` varchar(255) NOT NULL,
   `class` varchar(255) NOT NULL,
   PRIMARY KEY (`segmentation_id`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `segmentation_cell_tables` (
   `superclass` varchar(255) NOT NULL,
@@ -749,7 +749,7 @@ CREATE TABLE `segmentation_cell_tables` (
   `feature_type_id` int(18) unsigned NOT NULL,
   `signal_alignment_id` int(23) unsigned NOT NULL,
   `control_alignment_id` int(23) unsigned NOT NULL
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `segmentation_file` (
   `segmentation_file_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -771,7 +771,7 @@ CREATE TABLE `segmentation_state_assignment` (
   `assignment` varchar(255) NOT NULL,
   PRIMARY KEY (`segmentation_state_assignment_id`),
   UNIQUE KEY `state` (`state`,`segmentation`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `segmentation_state_emission` (
   `segmentation_state_emission_id` int(27) unsigned NOT NULL AUTO_INCREMENT,
@@ -789,7 +789,7 @@ CREATE TABLE `segmentation_state_emission` (
   `H3K9me3` double DEFAULT NULL,
   PRIMARY KEY (`segmentation_state_emission_id`),
   UNIQUE KEY `state` (`state`,`segmentation`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `segmentation_statistic` (
   `segmentation_statistic_id` int(30) unsigned NOT NULL AUTO_INCREMENT,
@@ -801,7 +801,7 @@ CREATE TABLE `segmentation_statistic` (
   `value` float unsigned DEFAULT NULL,
   PRIMARY KEY (`segmentation_statistic_id`),
   UNIQUE KEY `stats_uniq` (`statistic`,`segmentation_id`,`epigenome_id`,`label`)
-) ENGINE=InnoDB ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `transcription_factor` (
   `transcription_factor_id` int(11) NOT NULL AUTO_INCREMENT,
