@@ -31,8 +31,8 @@ my $core_dba = $test->get_DBAdaptor('core');
 my $fetcher = Bio::EnsEMBL::Production::Search::SequenceFetcher->new();
 my $seqs = $fetcher->_fetch_seq_regions($core_dba);
 
-is(scalar @$seqs, 28, "Expected number of sequences");
-is(scalar(grep {$_->{type} eq 'contig'} @{$seqs}), 22, "Expected number of contig sequences");
+is(scalar @$seqs, 29, "Expected number of sequences");
+is(scalar(grep {$_->{type} eq 'contig'} @{$seqs}), 23, "Expected number of contig sequences");
 is(scalar(grep {$_->{type} eq 'supercontig'} @{$seqs}),3, "Expected number of supercontig sequences");
 is(scalar(grep {$_->{type} eq 'chromosome'} @{$seqs}), 3, "Expected number of chromosome sequences");
 
