@@ -39,7 +39,7 @@ ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do n
 my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf';
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatistics_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 # Override default sleep value (6 seconds) in order to allow a busy test machine to finish starting the workers
 # before beekeeper checks to see if they're running, finds nothing, and then spawns another
