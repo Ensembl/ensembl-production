@@ -58,6 +58,7 @@ sub default_options {
     max_run   => '100',
 
     pepstats_binary => 'pepstats',
+    pepstats_tmpdir => '/scratch',
 
     history_file => undef,
   };
@@ -259,7 +260,7 @@ sub pipeline_analyses {
       -logic_name      => 'PepStats',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::PepStatsBatch',
       -parameters      => {
-                            tmpdir          => '/scratch',
+                            tmpdir          => $self->o('pepstats_tmpdir'),
                             pepstats_binary => $self->o('pepstats_binary'),
                             dbtype          => 'core',
                           },
