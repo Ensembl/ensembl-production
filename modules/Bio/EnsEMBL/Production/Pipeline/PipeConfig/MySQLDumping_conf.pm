@@ -54,9 +54,10 @@ sub default_options {
         'pipeline_name'  => 'mysql_dumping',
         'division' => [],
         'base_output_dir'     	   => '/nfs/nobackup/dba/sysmysql/',
-        'release' => $self->o('release'),
+        'vertebrates_release' => $self->o('vertebrates_release'),
+        'non_vertebrates_release' => $self->o('non_vertebrates_release'),
         ## 'DbDumpingFactory' parameters
-        'database'    => [],
+        'databases'    => [],
     }
 }
 
@@ -85,17 +86,14 @@ sub pipeline_analyses {
       -input_ids         => [ {} ],
       -parameters        => {
                               division        => $self->o('division'),
-                              database         => $self->o('database'),
+                              databases         => $self->o('databases'),
                               meta_user      => $self->o('meta_user'),
                               meta_host      => $self->o('meta_host'),
                               meta_port      => $self->o('meta_port'),
                               meta_database => $self->o('meta_database'),
                               base_output_dir => $self->o('base_output_dir'),
-                              release => $self->o('release'),
-                              user      => $self->o('user'),
-                              password      => $self->o('pass'),
-                              host      => $self->o('host'),
-                              port      => $self->o('port'),
+                              vertebrates_release => $self->o('vertebrates_release'),
+                              non_vertebrates_release => $self->o('non_vertebrates_release'),
                             },
       -flow_into         => {
                               1 => 'DatabaseDump',

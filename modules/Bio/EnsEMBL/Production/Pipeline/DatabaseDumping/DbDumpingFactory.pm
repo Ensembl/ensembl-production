@@ -40,8 +40,9 @@ use List::MoreUtils qw(uniq);
 sub run {
   my ($self) = @_;
   my $division = $self->param('division');
-  my $database = $self->param('database');
-  my $release = $self->param('release');
+  my $databases = $self->param('databases');
+  my $vertebrates_release = $self->param('vertebrates_release');
+  my $non_vertebrates_release = $self->param('non_vertebrates_release');
   my $base_output_dir = $self->param('base_output_dir');
 
   #Connect to the metadata database
@@ -57,29 +58,28 @@ sub run {
   my $dbdba = $dba->get_DatabaseInfoAdaptor();
   my $rdba = $dba->get_DataReleaseInfoAdaptor();
   #set release by querying the metadata db
-  my $release_info;
+  my $release;
   my $release_dir;
-  $release_info = $rdba->fetch_by_ensembl_genomes_release($release);
-  if (!$release_info){
-    $release_info = $rdba->fetch_by_ensembl_release($release);
-    $release_dir = $release_info->{ensembl_version};
+  if ($non_vertebrates_release){
+    $release = $rdba->fetch_by_ensembl_genomes_release($non_vertebrates_release);
+    $release_dir = $non_vertebrates_release;
   }
   else{
-    $release_dir = $release_info->{ensembl_genomes_version};
+    $release = $rdba->fetch_by_ensembl_release($vertebrates_release);
+    $release_dir = $vertebrates_release;
   }
-  $gdba->data_release($release_info);
+  $gdba->data_release($release);
 
   # Either dump databases from databases array or loop through divisions
-  if (@$database) {
+  if (@$databases) {
     #Dump given databases
-    foreach my $db (@$database){
+    foreach my $database (@$databases){
       if (scalar @$division > 1) {
         die "Please run a separare pipeline for each divisions";
       }
-      my ($division_short_name,$division_name)=process_division_names($division->[0]);
       $self->dataflow_output_id({
-                  database=>$db,
-                  output_dir => $base_output_dir.$division_short_name.'/release-'.$release_dir.'/mysql/',
+                  database=>$database,
+                  output_dir => $base_output_dir.$division->[0].'/release-'.$release_dir.'/mysql/',
                   }, 1);
     }
   }
@@ -87,69 +87,44 @@ sub run {
     #Foreach divisions, get all the genomes and then databases associated.
     # Get the compara databases and other databases like mart
     foreach my $div (@$division){
-      my ($division_short_name,$division_name)=process_division_names($div);
       my $division_databases;
-      my $genomes = $gdba->fetch_all_by_division($division_name);
+      my $genomes = $gdba->fetch_all_by_division($div);
       #Genome databases
       foreach my $genome (@$genomes){
         foreach my $database (@{$genome->databases()}){
           push (@$division_databases,$database->dbname);
         }
       }
-      #release and mart databases
-      foreach my $release_database (@{$dbdba->fetch_databases_DataReleaseInfo($release_info,$division_name)}){
-        if ($division_short_name eq "pan"){
-          if (check_if_db_exists($self,$release_database)){
-            push (@$division_databases,$release_database->dbname);
-          }
-          else{
-            $self->warning("Can't find ".$release_database->dbname." on server: ".$self->param('host'));
-          }
-        }
-        else{
-          push (@$division_databases,$release_database->dbname);
-        }
+      #mart databases
+      foreach my $mart_database (@{$dbdba->fetch_databases_DataReleaseInfo($release,$div)}){
+        push (@$division_databases,$mart_database->dbname);
       }
       #compara databases
-      foreach my $compara_database (@{$gcdba->fetch_division_databases($division_name,$release_info)}){
+      foreach my $compara_database (@{$gcdba->fetch_division_databases($div,$release)}){
         push (@$division_databases,$compara_database);
       }
       foreach my $division_database (uniq(@$division_databases)){
           $self->dataflow_output_id({
           database=>$division_database,
-          output_dir => $base_output_dir.$division_short_name.'/release-'.$release_dir.'/mysql/',
+          output_dir => $base_output_dir.$div.'/release-'.$release_dir.'/mysql/',
+			      }, 1);
+        }
+      }
+      #mart databases
+      foreach my $mart_database (@{$dbdba->fetch_databases_DataReleaseInfo($release,$div)}){
+        push (@$division_databases,$mart_database->dbname);
+      }
+      #compara databases
+      foreach my $compara_database (@{$gcdba->fetch_division_databases($div,$release)}){
+        push (@$division_databases,$compara_database);
+      }
+      foreach my $division_database (uniq(@$division_databases)){
+          $self->dataflow_output_id({
+          database=>$division_database,
+          output_dir => $base_output_dir.$div.'/release-'.$release_dir.'/mysql/',
           }, 1);
       }
     }
-  }
-}
-# Check if a database exist on the mysql server
-sub check_if_db_exists {
-  my ($self,$database_name)=@_;
-  my $database=$database_name->dbname;
-  my $host = $self->param('host');
-  my $port = $self->param('port');
-  my $pass = $self->param('password');
-  my $user = $self->param('user');
-  return `mysql -ss -r --host=$host --port=$port --user=$user --password=$pass -e "show databases like '$database'"`;
-}
-
-#Process the division name, and return both division like metazoa and division name like EnsemblMetazoa
-sub process_division_names {
-  my ($div) = @_;
-  my $division;
-  my $division_name;
-  #Creating the Division name EnsemblBla and division bla variables
-  if ($div !~ m/[E|e]nsembl/){
-    $division = $div;
-    $division_name = 'Ensembl'.ucfirst($div) if defined $div;
-  }
-  else{
-    $division_name = $div;
-    $division = $div;
-    $division =~ s/Ensembl//;
-    $division = lc($division);
-  }
-  return ($division,$division_name)
+  $dbh->disconnect;
 }
 1;
