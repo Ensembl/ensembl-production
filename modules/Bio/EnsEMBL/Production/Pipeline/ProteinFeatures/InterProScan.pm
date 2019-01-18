@@ -68,16 +68,16 @@ sub run {
     unlink $outfile_xml if -e $outfile_xml;
     unlink $outfile_tsv if -e $outfile_tsv;
     
-    # Must use /tmp for short temporary file names; TMHMM can't cope with longer ones.
-    my $tmp_dir = tempdir(DIR => '/tmp', CLEANUP => 1);
+    # Must use /scratch for short temporary file names; TMHMM can't cope with longer ones.
+    my $scratch_dir = tempdir(DIR => '/scratch', CLEANUP => 1);
     
-    if (! -e $tmp_dir) {
-      $self->warning("Output directory '$tmp_dir' does not exist. I shall create it.");
-      make_path($tmp_dir) or $self->throw("Failed to create output directory '$tmp_dir'");
+    if (! -e $scratch_dir) {
+      $self->warning("Output directory '$scratch_dir' does not exist. I shall create it.");
+      make_path($scratch_dir) or $self->throw("Failed to create output directory '$scratch_dir'");
     }
     
     my $options = "--iprlookup --goterms --pathways ";
-    $options .= "-f TSV, XML -t $seq_type --tempdir $tmp_dir ";
+    $options .= "-f TSV, XML -t $seq_type --tempdir $scratch_dir ";
     $options .= '--applications '.join(',', @$applications).' ';
     my $input_option  = "-i $input_file ";
     my $output_option = "--output-file-base $outfile_base ";  
@@ -95,6 +95,8 @@ sub run {
     $self->dbc and $self->dbc->disconnect_if_idle();
     
     system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
+
+    unlink $scratch_dir if -e $scratch_dir;
   }
   
   if (! -e $outfile_xml) {
