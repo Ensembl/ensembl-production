@@ -1,0 +1,510 @@
+{
+    "required": [
+        "biotype",
+        "coord_system",
+        "end",
+        "genome",
+        "genome_display",
+        "id",
+        "lineage",
+        "seq_region_name",
+        "start",
+        "strand",
+        "taxon_id",
+        "transcripts",
+        "xrefs"
+    ],
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "version": {
+            "type": "number"
+        },
+        "description": {
+            "type": "string"
+        },
+        "strand": {
+            "type": "string"
+        },
+        "is_haplotype": {
+            "type": "boolean"
+        },
+        "homologues": {
+            "items": {
+                "required": [
+                    "description",
+                    "genome",
+                    "genome_display",
+                    "stable_id"
+                ],
+                "type": "object",
+                "properties": {
+                    "stable_id": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "genome_display": {
+                        "type": "string"
+                    },
+                    "genome": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "array"
+        },
+        "end": {
+            "type": "string"
+        },
+        "genome_display": {
+            "type": "string"
+        },
+        "start": {
+            "type": "string"
+        },
+        "taxon_id": {
+            "type": "string"
+        },
+        "genome": {
+            "type": "string"
+        },
+        "xrefs": {
+            "items": {
+                "required": [
+                    "dbname",
+                    "display_id",
+                    "info_text",
+                    "info_type",
+                    "primary_id"
+                ],
+                "type": "object",
+                "properties": {
+                    "associated_xrefs": {
+                        "items": {
+                            "type": "object"
+                        },
+                        "type": "array"
+                    },
+                    "display_id": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "info_text": {
+                        "type": "string"
+                    },
+                    "primary_id": {
+                        "type": "string"
+                    },
+                    "info_type": {
+                        "type": "string"
+                    },
+                    "dbname": {
+                        "type": "string"
+                    },
+                    "linkage_types": {
+                        "items": {
+                            "required": [
+                                "evidence",
+                                "source"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "source": {
+                                    "required": [
+                                        "dbname",
+                                        "description",
+                                        "display_id",
+                                        "primary_id"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "display_id": {
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        "primary_id": {
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        "description": {
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        "dbname": {
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "evidence": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    }
+                }
+            },
+            "type": "array"
+        },
+        "coord_system": {
+            "required": [
+                "name",
+                "version"
+            ],
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "biotype": {
+            "type": "string"
+        },
+        "lineage": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "name": {
+            "type": "string"
+        },
+        "synonyms": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "seq_region_name": {
+            "type": "string"
+        },
+        "transcripts": {
+            "items": {
+                "required": [
+                    "biotype",
+                    "end",
+                    "exons",
+                    "id",
+                    "seq_region_name",
+                    "start",
+                    "strand",
+                    "xrefs"
+                ],
+                "type": "object",
+                "properties": {
+                    "exons": {
+                        "items": {
+                            "required": [
+                                "end",
+                                "id",
+                                "seq_region_name",
+                                "start",
+                                "strand"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "seq_region_name": {
+                                    "type": "string"
+                                },
+                                "end": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "version": {
+                                    "type": "number"
+                                },
+                                "strand": {
+                                    "type": "string"
+                                },
+                                "start": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "number"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "end": {
+                        "type": "string"
+                    },
+                    "start": {
+                        "type": "string"
+                    },
+                    "xrefs": {
+                        "items": {
+                            "required": [
+                                "dbname",
+                                "display_id",
+                                "info_text",
+                                "info_type",
+                                "primary_id"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "associated_xrefs": {
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "display_id": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "info_text": {
+                                    "type": "string"
+                                },
+                                "primary_id": {
+                                    "type": "string"
+                                },
+                                "info_type": {
+                                    "type": "string"
+                                },
+                                "dbname": {
+                                    "type": "string"
+                                },
+                                "linkage_types": {
+                                    "items": {
+                                        "required": [
+                                            "evidence",
+                                            "source"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "source": {
+                                                "required": [
+                                                    "dbname",
+                                                    "description",
+                                                    "display_id",
+                                                    "primary_id"
+                                                ],
+                                                "type": "object",
+                                                "properties": {
+                                                    "display_id": {
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    "primary_id": {
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    "dbname": {
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "evidence": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "translations": {
+                        "items": {
+                            "required": [
+                                "id",
+                                "protein_features",
+                                "xrefs"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "protein_features": {
+                                    "items": {
+                                        "required": [
+                                            "dbname",
+                                            "end",
+                                            "name",
+                                            "start",
+                                            "translation_id"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "end": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "translation_id": {
+                                                "type": "string"
+                                            },
+                                            "start": {
+                                                "type": "string"
+                                            },
+                                            "interpro_ac": {
+                                                "type": "string"
+                                            },
+                                            "dbname": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "version": {
+                                    "type": "number"
+                                },
+                                "xrefs": {
+                                    "items": {
+                                        "required": [
+                                            "dbname",
+                                            "display_id",
+                                            "primary_id"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                            "associated_xrefs": {
+                                                "items": {
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "display_id": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "info_text": {
+                                                "type": "string"
+                                            },
+                                            "linkage_types": {
+                                                "items": {
+                                                    "required": [
+                                                        "evidence",
+                                                        "source"
+                                                    ],
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "source": {
+                                                            "required": [
+                                                                "dbname",
+                                                                "description",
+                                                                "display_id",
+                                                                "primary_id"
+                                                            ],
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "display_id": {
+                                                                    "type": [
+                                                                        "null",
+                                                                        "string"
+                                                                    ]
+                                                                },
+                                                                "primary_id": {
+                                                                    "type": [
+                                                                        "null",
+                                                                        "string"
+                                                                    ]
+                                                                },
+                                                                "description": {
+                                                                    "type": [
+                                                                        "null",
+                                                                        "string"
+                                                                    ]
+                                                                },
+                                                                "dbname": {
+                                                                    "type": [
+                                                                        "null",
+                                                                        "string"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "evidence": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "array"
+                                            },
+                                            "primary_id": {
+                                                "type": "string"
+                                            },
+                                            "info_type": {
+                                                "type": "string"
+                                            },
+                                            "dbname": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "type": "array"
+                    },
+                    "biotype": {
+                        "type": "string"
+                    },
+                    "strand": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "seq_region_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "array"
+        }
+    }
+}

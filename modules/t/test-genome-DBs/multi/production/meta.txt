@@ -53,3 +53,4 @@
 59	\N	patch	patch_93_94_a.sql|schema_version
 60	\N	patch	patch_94_95_a.sql|schema_version
 61	\N	patch	patch_94_95_a.sql|vertebrate_division_rename
+62	\N	patch	patch_94_95_b.sql|vertebrate_division_rename

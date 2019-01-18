@@ -1,0 +1,20 @@
+516	179033	73	DND-41 Segway_17 segmentation	segmentation	DND-41 Segway_17 segmentation	DND-41 segmentation
+517	179033	75	HUVEC Segway_17 segmentation	segmentation	HUVEC Segway_17 segmentation	HUVEC segmentation
+518	179033	72	A549 Segway_17 segmentation	segmentation	A549 Segway_17 segmentation	A549 segmentation
+519	179033	74	NHLF Segway_17 segmentation	segmentation	NHLF Segway_17 segmentation	NHLF segmentation
+520	179033	76	HSMM Segway_17 segmentation	segmentation	HSMM Segway_17 segmentation	HSMM segmentation
+521	179033	77	GM12878 Segway_17 segmentation	segmentation	GM12878 Segway_17 segmentation	GM12878 segmentation
+522	179033	78	HeLa-S3 Segway_17 segmentation	segmentation	HeLa-S3 Segway_17 segmentation	HeLa-S3 segmentation
+523	179033	79	H1ESC Segway_17 segmentation	segmentation	H1ESC Segway_17 segmentation	H1ESC segmentation
+524	179033	80	HepG2 Segway_17 segmentation	segmentation	HepG2 Segway_17 segmentation	HepG2 segmentation
+525	179033	82	Osteobl Segway_17 segmentation	segmentation	Osteobl Segway_17 segmentation	Osteobl segmentation
+526	179033	81	NHEK Segway_17 segmentation	segmentation	NHEK Segway_17 segmentation	NHEK segmentation
+527	179033	83	NH-A Segway_17 segmentation	segmentation	NH-A Segway_17 segmentation	NH-A segmentation
+528	179033	84	K562 Segway_17 segmentation	segmentation	K562 Segway_17 segmentation	K562 segmentation
+529	179033	85	HSMMtube Segway_17 segmentation	segmentation	HSMMtube Segway_17 segmentation	HSMMtube segmentation
+530	179033	86	HMEC Segway_17 segmentation	segmentation	HMEC Segway_17 segmentation	HMEC segmentation
+531	179033	87	Monocytes-CD14+ Segway_17 segmentation	segmentation	Monocytes-CD14+ Segway_17 segmentation	Monocytes-CD14+ segmentation
+532	179033	88	NHDF-AD Segway_17 segmentation	segmentation	NHDF-AD Segway_17 segmentation	NHDF-AD segmentation
+569	179284	71	FANTOM	external	FANTOM predictions	FANTOM predictions
+570	45	19	VISTA enhancer set	external	Experimentally validated enhancers	VISTA Enhancers
+571	179077	67	TarBase miRNA	mirna_target	TarBase miRNA target predictions	TarBase miRNA target predictions

@@ -101,14 +101,14 @@ sub run {
         if ($division_short_name eq "pan"){
           if (check_if_db_exists($self,$release_database)){
             push (@$division_databases,$release_database->dbname);
-          }
+      }
           else{
             $self->warning("Can't find ".$release_database->dbname." on server: ".$self->param('host'));
-          }
+      }
         }
         else{
           push (@$division_databases,$release_database->dbname);
-        }
+      }
       }
       #compara databases
       foreach my $compara_database (@{$gcdba->fetch_division_databases($division_name,$release_info)}){
