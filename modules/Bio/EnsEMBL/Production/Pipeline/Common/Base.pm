@@ -38,8 +38,6 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Scalar qw/check_ref/;
-use Bio::EnsEMBL::DBSQL::OntologyDBAdaptor;
-use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
 use File::Find;
 use File::Spec;
 use File::Path qw/mkpath/;
@@ -170,7 +168,7 @@ sub get_DBAdaptor {
   my ( $self, $type ) = @_;
   $type ||= 'core';
   my $species =
-    ( $type eq 'production' || $type eq 'taxonomy' || $type eq 'ontology' || $type eq 'metadata') ? 'multi' : $self->param_required('species');
+    ( $type eq 'production' ) ? 'multi' : $self->param_required('species');
 
   return Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 }
@@ -223,7 +221,6 @@ sub get_dir {
       push @extras, $fasta_type if ( defined $fasta_type );
       $dir = File::Spec->catdir( $base_dir, @extras );
     }
-    $mc->dbc()->disconnect_if_idle();
   }
   mkpath($dir);
 
@@ -531,49 +528,19 @@ sub get_production_DBAdaptor {
   return $self->production_dba();
 }
 
-sub ontology_dba {
-  my $self = shift;
-
-  my $dba = $self->get_DBAdaptor('ontology');
-  if ( !defined $dba ) {
-    my %ontology_db = %{ $self->param('ontology_db') };
-    $dba =
-      Bio::EnsEMBL::DBSQL::OntologyDBAdaptor->new(%ontology_db);
-  }
-  if ( !defined $dba ) {
-    my %ontology_db = %{ $self->param('onto_db') };
-    $dba = Bio::EnsEMBL::Ontology::DBSQL::OntologyDBAdaptor->new(%ontology_db);
-  }
-  confess('Type error!') unless ( $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
-
-  return $dba;
-}
-
-sub metadata_dba {
-  my $self = shift;
-
-  my $dba = $self->get_DBAdaptor('metadata');
-  if ( !defined $dba && defined $self->param('metadata_db') ) {
-    my %db = %{ $self->param('metadata_db') };
-    $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%db);
-  }
-  return $dba;
-}
-
-
 sub taxonomy_dba {
   my $self = shift;
 
   my $dba = $self->get_DBAdaptor('taxonomy');
-  if ( !defined $dba && defined $self->param('taxonomy_db') ) {
+  if ( !defined $dba ) {
     my %taxonomy_db = %{ $self->param('taxonomy_db') };
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
-  if ( !defined $dba && defined $self->param('tax_db') ) {
+  if ( !defined $dba ) {
     my %taxonomy_db = %{ $self->param('tax_db') };
     $dba = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(%taxonomy_db);
   }
-  confess('Type error!') unless ( defined $dba && $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
+  confess('Type error!') unless ( $dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor') );
 
   return $dba;
 }
