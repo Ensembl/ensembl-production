@@ -1,5 +1,0 @@
-bananag	1	ENSG00000204704	1	1	gene	100
-bananat	1	ENST00000377175	1	1	transcript	150
-bananap	1	ENSP00000366380	1	1	translation	200
-mango	1	\N	\N	1	gene	0
-lychee	1	gooseberry	1	1	gene	999

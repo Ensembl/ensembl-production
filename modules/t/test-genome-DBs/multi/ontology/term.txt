@@ -1708,4 +1708,3 @@
 44981	5	SOFA	SO:2000061	databank_entry	"The sequence referred to by an entry in a databank such as Genbank or SwissProt." [SO:ke]	0	0
 44982	5	\N	SO:3000000	gene_segment	"A gene component region which acts as a recombinational unit of a gene whose functional form is generated through somatic recombination." [GOC:add]	0	0
 60280	5	\N	SO:0002012	start_lost	"A codon variant that changes at least one base of the canonical start codon."	0	0
-99999	99	\N	OMIM:100800	Achondroplasia	"Achondroplasia is the most frequent form of short-limb dwarfism. Affected individuals exhibit short stature caused by rhizomelic shortening of the limbs, characteristic facies with frontal bossing and midface hypoplasia, exaggerated lumbar lordosis, limitation of elbow extension, genu varum, and trident hand"	0	0

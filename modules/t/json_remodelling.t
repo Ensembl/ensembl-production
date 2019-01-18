@@ -17,7 +17,7 @@ use warnings;
 
 use Data::Dumper;
 use Test::More;
-use Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter;
+use Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
 use JSON;
 
 use Log::Log4perl qw/:easy/;
@@ -96,7 +96,7 @@ my $gene = {
                        dbname     => "UniProtKB" } ] } ] } ] };
 
 my $remodeller =
-  Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
+  Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller->new();
 
 #diag( Dumper($gene) );
 

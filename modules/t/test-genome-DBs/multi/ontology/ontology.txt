@@ -14,4 +14,3 @@
 15	EFO	quality	NULL
 16	EFO	uberon	NULL
 17	EFO	uberon/phenoscape-anatomy	NULL
-99	OMIM	OMIM	NULL
