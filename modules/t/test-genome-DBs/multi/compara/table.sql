@@ -330,28 +330,27 @@ CREATE TABLE `gene_tree_root_attr`
 CREATE TABLE `gene_tree_root_tag`
 (
   `root_id` int(10) unsigned NOT NULL,
-  `tag`     varchar(255) DEFAULT NULL,
-  `value`   mediumtext NOT NULL,
-  KEY       `root_id_tag` (`root_id`,`tag`),
-  KEY       `root_id` (`root_id`),
-  KEY       `tag` (`tag`)
+  `tag` varchar(255) DEFAULT NULL,
+  `value` mediumtext NOT NULL,
+  KEY `root_id_tag` (`root_id`,`tag`),
+  KEY `root_id` (`root_id`),
+  KEY `tag` (`tag`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-CREATE TABLE `genome_db`
-(
-  `genome_db_id`        int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `taxon_id`            int(10) unsigned DEFAULT NULL,
-  `name`                varchar(128) NOT NULL DEFAULT '',
-  `assembly`            varchar(100) NOT NULL DEFAULT '',
-  `genebuild`           varchar(100) NOT NULL DEFAULT '',
-  `has_karyotype`       tinyint(1) NOT NULL DEFAULT '0',
-  is_good_for_alignment TINYINT(1) NOT NULL DEFAULT 0,
-  `genome_component`    varchar(5)            DEFAULT NULL,
-  `strain_name`         varchar(40)           DEFAULT NULL,
-  `display_name`        varchar(255)          DEFAULT NULL,
-  `locator`             varchar(400)          DEFAULT NULL,
-  `first_release`       smallint(5) unsigned DEFAULT NULL,
-  `last_release`        smallint(5) unsigned DEFAULT NULL,
+CREATE TABLE `genome_db` (
+  `genome_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `taxon_id` int(10) unsigned DEFAULT NULL,
+  `name` varchar(128) NOT NULL DEFAULT '',
+  `assembly` varchar(100) NOT NULL DEFAULT '',
+  `genebuild` varchar(100) NOT NULL DEFAULT '',
+  `has_karyotype` tinyint(1) NOT NULL DEFAULT '0',
+  `is_good_for_alignment` TINYINT(1) NOT NULL DEFAULT 0,
+  `genome_component` varchar(5) DEFAULT NULL,
+  `strain_name` varchar(40) DEFAULT NULL,
+  `display_name` varchar(255) DEFAULT NULL,
+  `locator` varchar(400) DEFAULT NULL,
+  `first_release` smallint(5) unsigned DEFAULT NULL,
+  `last_release` smallint(5) unsigned DEFAULT NULL,
   PRIMARY KEY (`genome_db_id`),
   UNIQUE KEY `name` (`name`,`assembly`,`genome_component`),
   KEY                   `taxon_id` (`taxon_id`)
