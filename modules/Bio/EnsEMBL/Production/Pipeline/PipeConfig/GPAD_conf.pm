@@ -57,7 +57,7 @@ sub default_options {
 
     ## Remove existing GO annotations
     # on '1' by default
-    'delete_existing' => 1,
+    'delete_existing_go' => 1,
 
     ## 'job_factory' parameters
     'species'     => [], 
@@ -76,7 +76,7 @@ sub default_options {
     display_label => 'GO xrefs from GOA',
     displayable => 0,
     production_lookup => 1,
-    delete_existing => 1,
+    delete_existing_analysis => 1,
 
     };
 }
@@ -116,7 +116,6 @@ sub pipeline_wide_parameters {
             %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
 		    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
 		    'output_dir'      => $self->o('output_dir'), 
-            'delete_existing' => $self->o('delete_existing'),		    
     };
 }
 
@@ -149,7 +148,16 @@ sub pipeline_analyses {
       -parameters     => {
             'gpad_directory' => $self->o('gpad_directory'),
        },
-      -hive_capacity  => 10,
+      -analysis_capacity  => 30,
+      -rc_name 	      => 'default',
+      -flow_into      => { '2' => ['CleanupGO'] }
+    },
+    { -logic_name     => 'CleanupGO',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::CleanupGO',
+      -parameters     => {
+                              delete_existing => $self->o('delete_existing_go')
+       },
+      -analysis_capacity  => 30,
       -rc_name 	      => 'default',     
       -flow_into      => { '2->A' => ['AnalysisSetup'],
                            'A->2' => ['gpad_file_load'], }
@@ -160,19 +168,22 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        => {
                               db_backup_required => 0,
+                              delete_existing => $self->o('delete_existing_analysis'),
                               production_lookup  => $self->o('production_lookup'),
                               logic_name => $self->o('logic_name'),
                               description => $self->o('description'),
                               display_label => $self->o('display_label'),
                               displayable => $self->o('displayable'),
-                              delete_existing => $self->o('delete_existing'),
                               db => $self->o('db'),
                               program => $self->o('program'),
                             },
     },
     { -logic_name     => 'gpad_file_load',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
-      -hive_capacity  => 10,
+      -parameters     => {
+                              delete_existing => $self->o('delete_existing_go')
+       },
+      -analysis_capacity  => 20,
       -rc_name 	      => 'default',     
     },   
 
