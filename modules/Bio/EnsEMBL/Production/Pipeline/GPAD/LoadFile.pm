@@ -39,15 +39,18 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::GPAD::Base/;
 sub run {
     my ($self)  = @_;
     # Parse filename to get $target_species
-    my $file    = $self->param_required('gpad_file');
     my $species = $self->param_required('species');
-
-    $self->log()->info("Loading $species from $file");
 
     my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
     my $hive_dbc = $self->dbc;
     $hive_dbc->disconnect_if_idle() if defined $self->dbc;
-    
+    my $division = $dba->get_MetaContainer->get_division();
+    $division =~ s/Ensembl//;
+    $division = lc($division);
+    my $file    = $self->param_required('gpad_directory').'/ensembl'.$division.'/annotations_ensembl-'.$species.'.gpa';
+
+    $self->log()->info("Loading $species from $file");
+
     # Remove existing projected GO annotations from GOA
     if ($self->param_required('delete_existing')) {
       $self->cleanup_GO($dba);
