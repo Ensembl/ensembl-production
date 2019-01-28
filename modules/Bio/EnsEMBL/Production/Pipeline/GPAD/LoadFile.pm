@@ -22,7 +22,7 @@ Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
 
 =head1 AUTHOR
 
-ckong@ebi.ac.uk
+ckong@ebi.ac.uk and maurel@ebi.ac.uk
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
@@ -40,14 +40,11 @@ sub run {
     my ($self)  = @_;
     # Parse filename to get $target_species
     my $species = $self->param_required('species');
+    my $file = $self->param_required('gpad_file');
 
     my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
     my $hive_dbc = $self->dbc;
     $hive_dbc->disconnect_if_idle() if defined $self->dbc;
-    my $division = $dba->get_MetaContainer->get_division();
-    $division =~ s/Ensembl//;
-    $division = lc($division);
-    my $file    = $self->param_required('gpad_directory').'/ensembl'.$division.'/annotations_ensembl-'.$species.'.gpa';
 
     $self->log()->info("Loading $species from $file");
 

@@ -46,7 +46,7 @@ sub default_options {
 	## General parameters
     'registry'      => $self->o('registry'),   
     'release'       => $self->o('release'),
-    'pipeline_name' => 'gpad_loader_'.$self-o('release'),
+    'pipeline_name' => 'gpad_loader_'.$self->o('release'),
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
     'output_dir'    => '/nfs/nobackup/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
@@ -217,7 +217,6 @@ sub pipeline_analyses {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
-      -analysis_capacity => 20,
       -parameters        => {
                               chromosome_flow    => 0,
                               otherfeatures_flow => 0,
@@ -225,19 +224,28 @@ sub pipeline_analyses {
                               variation_flow     => 0,
                             },
       -flow_into         => {
-                              '2' => ['gpad_file_load'],
+                              '2' => ['FindFile'],
                             }
+    },
+    { -logic_name     => 'FindFile',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
+      -analysis_capacity  => 30,
+      -rc_name 	      => 'default',
+      -parameters     => {
+                            gpad_directory => $self->o('gpad_directory')
+      },
+      -flow_into         => {
+                  '2' => ['gpad_file_load'],
+                }
     },
     { -logic_name     => 'gpad_file_load',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
       -parameters     => {
                               delete_existing => $self->o('delete_existing_go'),
-                              gpad_directory => $self->o('gpad_directory')
        },
       -analysis_capacity  => 20,
-      -rc_name 	      => 'default',     
-    },   
-
+      -rc_name 	      => 'default'
+    },
     { -logic_name     => 'email_notification',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
       -parameters     => {
