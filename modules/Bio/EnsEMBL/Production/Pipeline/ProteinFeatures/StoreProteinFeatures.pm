@@ -74,10 +74,10 @@ sub parse_match {
   # function in the ProteinFeatureAdaptor, which means that numbers in
   # scientific E-notation will only be recognised if the 'E' is lowercased.
   my $score = $match->{score};
-  $score =~ s/E/e/;
+  $score =~ s/E/e/ if defined $score;
   
   my $evalue = $match->{evalue};
-  $evalue =~ s/E/e/;
+  $evalue =~ s/E/e/ if defined $evalue;
   
   my $feature_common =
   {
