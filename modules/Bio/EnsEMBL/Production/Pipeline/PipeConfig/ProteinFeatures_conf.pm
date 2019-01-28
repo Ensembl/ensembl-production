@@ -262,6 +262,9 @@ sub default_options {
     # By default the pipeline won't email with a summary of the results.
     # If this is switched on, you get one email per species.
     email_report => 0,
+    
+    # History file for storing record of datacheck run.
+    history_file => undef,
   };
 }
 
@@ -507,6 +510,27 @@ sub pipeline_analyses {
                             },
       -rc_name           => '4GB',
       -flow_into         => {
+                             '-1' => ['DumpProteome_HighMem'],
+                              '1' => WHEN('#run_seg#' =>
+                                      ['SplitDumpFile', 'PartitionByChecksum'],
+                                    ELSE
+                                      ['PartitionByChecksum']
+                                    ),
+                            },
+    },
+    
+    {
+      -logic_name        => 'DumpProteome_HighMem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+      -max_retry_count   => 0,
+      -analysis_capacity => 20,
+      -parameters        => {
+                              proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
+                              header_style => 'dbID',
+                              overwrite    => 1,
+                            },
+      -rc_name           => '8GB',
+      -flow_into         => {
                               '1' => WHEN('#run_seg#' =>
                                       ['SplitDumpFile', 'PartitionByChecksum'],
                                     ELSE
@@ -627,7 +651,6 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_lookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
-        escape_branch             => -1,
       },
       -rc_name           => '8Gb_mem_4Gb_tmp',
       -flow_into         => {
@@ -671,7 +694,6 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
-        escape_branch             => -1,
       },
       -rc_name           => '8GB_4CPU',
       -flow_into         => {
@@ -715,7 +737,6 @@ sub pipeline_analyses {
         interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
-        escape_branch             => -1,
       },
       -rc_name           => '8GB_4CPU',
       -flow_into         => {
@@ -767,10 +788,23 @@ sub pipeline_analyses {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['RunDatachecks'],
+    },
+    
+    {
+      -logic_name        => 'RunDatachecks',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters        => {
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['protein_features'],
+                              history_file     => $self->o('history_file'),
+                              failures_fatal   => 1,
+                            },
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -rc_name           => 'normal',
       -flow_into         => {
-                              '1' => WHEN('#email_report#' =>
-                                      ['EmailReport']
-                                     ),
+                              '1' => WHEN('#email_report#' => ['EmailReport']),
                             },
     },
     
@@ -897,6 +931,7 @@ sub resource_classes {
   return {
     %{$self->SUPER::resource_classes},
     '4GB' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"'},
+    '8GB' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"'},
     '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
     '8GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
     '16GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
