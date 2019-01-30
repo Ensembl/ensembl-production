@@ -56,9 +56,9 @@ sub default_options {
 	## Email Report subject
     'email_subject'  => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
-    ## Remove existing GO annotations
+    ## Remove existing GO annotations and associated analysis
     # on '1' by default
-    'delete_existing_go' => 1,
+    'delete_existing' => 1,
 
     ## 'job_factory' parameters
     'species'     => [], 
@@ -75,7 +75,6 @@ sub default_options {
     'display_label' => 'GO xrefs from GOA',
     'displayable' => 0,
     'production_lookup' => 1,
-    'delete_existing_analysis' => 1,
     'linked_tables' => ['object_xref']
 
     };
@@ -188,7 +187,7 @@ sub pipeline_analyses {
       -analysis_capacity => 20,
       -parameters        => {
                               db_backup_required => 0,
-                              delete_existing => $self->o('delete_existing_analysis'),
+                              delete_existing => $self->o('delete_existing'),
                               production_lookup  => $self->o('production_lookup'),
                               logic_name => $self->o('logic_name'),
                               description => $self->o('description'),
@@ -241,7 +240,8 @@ sub pipeline_analyses {
     { -logic_name     => 'gpad_file_load',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
       -parameters     => {
-                              delete_existing => $self->o('delete_existing_go'),
+                              delete_existing => $self->o('delete_existing'),
+                              logic_name => $self->o('logic_name')
        },
       -analysis_capacity  => 20,
       -rc_name 	      => 'default'

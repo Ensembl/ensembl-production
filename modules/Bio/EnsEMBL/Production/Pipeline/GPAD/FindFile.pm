@@ -29,12 +29,9 @@ package Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile;
 
 use strict;
 use warnings;
-use Data::Dumper;
-use Bio::EnsEMBL::Analysis;
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
-use base qw/Bio::EnsEMBL::Production::Pipeline::GPAD::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
     my ($self)  = @_;
