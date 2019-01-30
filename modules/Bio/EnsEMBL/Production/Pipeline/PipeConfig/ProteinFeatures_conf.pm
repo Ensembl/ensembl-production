@@ -340,7 +340,7 @@ sub pipeline_analyses {
                                           '#interpro_desc_source# eq "file"' =>
                                             ['FetchInterPro'],
                                           '#interpro_desc_source# eq "core_dbs"' =>
-                                            ['SpeciesFactoryForDumpingInterPro']
+                                            ['DbFactoryForDumpingInterPro']
                                         ),
                             }
     },
@@ -788,21 +788,6 @@ sub pipeline_analyses {
                               interpro2go_file => $self->o('interpro2go_file'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['RunDatachecks'],
-    },
-    
-    {
-      -logic_name        => 'RunDatachecks',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_names  => ['ForeignKeys'],
-                              datacheck_groups => ['protein_features'],
-                              history_file     => $self->o('history_file'),
-                              failures_fatal   => 1,
-                            },
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -rc_name           => 'normal',
       -flow_into         => {
                               '1' => WHEN('#email_report#' => ['EmailReport']),
                             },
@@ -831,12 +816,12 @@ sub pipeline_analyses {
                             output_file            => $self->o('unique_file'),
                           },
       -rc_name         => 'normal',
-      -flow_into       => ['SpeciesFactoryForStoringInterPro'],
+      -flow_into       => ['DbFactoryForStoringInterPro'],
     },
     
     {
-      -logic_name      => 'SpeciesFactoryForDumpingInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name      => 'DbFactoryForDumpingInterPro',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -parameters      => {
                             species            => $self->o('species'),
                             antispecies        => $self->o('antispecies'),
@@ -860,7 +845,7 @@ sub pipeline_analyses {
       -logic_name      => 'DumpInterProXrefs',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::DumpInterProXrefs',
       -parameters      => {
-                            filename => catdir($self->o('pipeline_dir'), '#species#.xrefs.txt'),
+                            filename => catdir($self->o('pipeline_dir'), '#dbname#.xrefs.txt'),
                           },
       -max_retry_count => 1,
       -analysis_capacity => 10,
@@ -880,12 +865,12 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -rc_name         => '4GB',
-      -flow_into       => ['SpeciesFactoryForStoringInterPro'],
+      -flow_into       => ['DbFactoryForStoringInterPro'],
     },
     
     {
-      -logic_name      => 'SpeciesFactoryForStoringInterPro',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name      => 'DbFactoryForStoringInterPro',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -parameters      => {
                             species            => $self->o('species'),
                             antispecies        => $self->o('antispecies'),
@@ -900,7 +885,8 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -flow_into       => {
-                            '2' => ['StoreInterProXrefs'],
+                            '2->A' => ['StoreInterProXrefs'],
+                            'A->2' => ['RunDatachecks'],
                           }
     },
     
@@ -922,6 +908,19 @@ sub pipeline_analyses {
       -rc_name         => 'normal',
     },
     
+    {
+      -logic_name        => 'RunDatachecks',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters        => {
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['protein_features'],
+                              history_file     => $self->o('history_file'),
+                              failures_fatal   => 1,
+                            },
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -rc_name           => 'normal',
+    },
   ];
 }
 
