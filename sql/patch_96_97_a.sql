@@ -13,23 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_91_92_e.sql
+# patch_96_97_a.sql
 #
-# Title: Removal of unused species, db tables.
+# Title: Update schema version.
 #
 # Description:
-#   Remove tables used for tracking species etc.
-DROP TABLE changelog;
-DROP TABLE changelog_species;
-DROP TABLE division_species;
-DROP TABLE division_db;
-DROP TABLE division;
-DROP TABLE species_alias;
-DROP TABLE species;
-DROP VIEW db_list;
-DROP TABLE db;
+#   Update schema_version in meta table to 97
 
+UPDATE meta SET meta_value='96' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_91_92_e.sql|remove_species');
+  VALUES (NULL, 'patch', 'patch_96_97_a.sql|schema_version');
+

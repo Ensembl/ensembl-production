@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_91_92_d.sql
+# patch_96_97_d.sql
 #
 # Title: Analysis_description update
 #
@@ -42,4 +42,4 @@ ALTER TABLE analysis_description CHANGE COLUMN default_web_data_id web_data_id I
 ALTER TABLE analysis_description CHANGE COLUMN default_displayable displayable TINYINT(1) NOT NULL;
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_91_92_d.sql|analysis_description_update');
+  VALUES (NULL, 'patch', 'patch_96_97_d.sql|analysis_description_update');

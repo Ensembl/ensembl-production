@@ -13,15 +13,29 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_91_92_c.sql
+# patch_91_92_a.sql
 #
-# Title: Meta_key update
+# Title: Refactor biotype
 #
 # Description:
-#   Update meta_key to add is_multi_value and remove species link
-ALTER TABLE meta_key ADD COLUMN is_multi_value  BOOLEAN NOT NULL DEFAULT false;
-DROP TABLE meta_key_species;
+#   Change biotype into master_biotype and create a view for biotype
+#   This is to support the introduction of biotype as a table in the core schema
+
+RENAME TABLE biotype TO master_biotype;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW biotype AS
+SELECT
+  biotype_id,
+  name,
+  is_dumped,
+  object_type,
+  attrib_type_id,
+  description,
+  biotype_group        
+FROM    master_biotype
+WHERE   is_current = true
+ORDER BY biotype_id;
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_91_92_c.sql|meta_key_update');
+  VALUES (NULL, 'patch', 'patch_96_97_b.sql|biotype_rename');
