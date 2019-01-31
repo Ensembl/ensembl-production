@@ -1,12 +1,12 @@
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2017] EMBL-European Bioinformatics Institute
-# 
+# Copyright [2016-2019] EMBL-European Bioinformatics Institute
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ if(@ARGV) {
 else {
   $options = '-run_all 1';
 }
+$options .= ' -pepstats_tmpdir /tmp ';
 
 ok(1, 'Startup test');
 
@@ -39,7 +40,7 @@ ok($human_dba, 'Human is available') or BAIL_OUT 'Cannot get human core DB. Do n
 my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::Core_handover_conf';
+my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatistics_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 $pipeline->run();
 
@@ -149,7 +150,7 @@ my $long_noncoding_density = 0;
 foreach my $n (@long_noncoding_density) {
    $long_noncoding_density += $n->density_value;
 }
-is($long_noncoding_density, 7, "LongNonCoding density on chromosome 6");
+is($long_noncoding_density, 5, "LongNonCoding density on chromosome 6");
 
 # Check long noncoding density for all chromosomes
 @long_noncoding_density = @{ $dfa->fetch_all('longnoncodingdensity') };
@@ -165,7 +166,7 @@ my $long_noncoding_count = 0;
 foreach my $c (@long_noncoding_count) {
    $long_noncoding_count += $c->value;
 }
-is($long_noncoding_count, 7, "Long non coding count on chromosome 6");
+is($long_noncoding_count, 5, "Long non coding count on chromosome 6");
 
 # Check long noncoding count for all reference chromosomes
 @long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt_l') };
@@ -230,7 +231,7 @@ my $repeat_density = 0;
 foreach my $r (@repeat_density) {
    $repeat_density += $r->density_value;
 }
-is($repeat_density, '49.3626', "Repeat density for chromosome 6");
+cmp_ok($repeat_density, '==',49.3626, "Repeat density for chromosome 6");
 
 
 # Check gc density for chromosome 6
@@ -239,7 +240,7 @@ my $gc_density = 0;
 foreach my $gc (@gc_density) {
    $gc_density += $gc->density_value;
 }
-is($gc_density, '85.02', "GC density for chromosome 6");
+cmp_ok($gc_density,'==', 85.02, "GC density for chromosome 6");
 
 
 # Check gc count for ENSG00000167393
@@ -248,7 +249,7 @@ my $gc_count = 0;
 foreach my $c (@gc_count) {
    $gc_count += $c->value;
 }
-is($gc_count, 58.29, "GC count for ENSG00000167393");
+cmp_ok($gc_count,'==', 58.29, "GC count for ENSG00000167393");
 
 # Check total length and reference length
 my $ref_sql = "select sum(length) from seq_region sr, seq_region_attrib sra, coord_system cs

@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,16 +57,19 @@ sub run {
   my $outfile_tsv  = "$outfile_base.tsv";
   
   if ($run_interproscan) {
-    # Must use /tmp for short temporary file names; TMHMM can't cope with longer ones.
-    my $tmp_dir = tempdir(DIR => '/tmp', CLEANUP => 1);
+    unlink $outfile_xml if -e $outfile_xml;
+    unlink $outfile_tsv if -e $outfile_tsv;
     
-    if (! -e $tmp_dir) {
-      $self->warning("Output directory '$tmp_dir' does not exist. I shall create it.");
-      make_path($tmp_dir) or $self->throw("Failed to create output directory '$tmp_dir'");
+    # Must use /scratch for short temporary file names; TMHMM can't cope with longer ones.
+    my $scratch_dir = tempdir(DIR => '/scratch', CLEANUP => 1);
+    
+    if (! -e $scratch_dir) {
+      $self->warning("Output directory '$scratch_dir' does not exist. I shall create it.");
+      make_path($scratch_dir) or $self->throw("Failed to create output directory '$scratch_dir'");
     }
     
     my $options = "--iprlookup --goterms --pathways ";
-    $options .= "-f TSV, XML -t $seq_type --tempdir $tmp_dir ";
+    $options .= "-f TSV, XML -t $seq_type --tempdir $scratch_dir ";
     $options .= '--applications '.join(',', @$applications).' ';
     my $input_option  = "-i $input_file ";
     my $output_option = "--output-file-base $outfile_base ";  
@@ -77,12 +80,15 @@ sub run {
     
     my $interpro_cmd = qq($interproscan_exe $options $input_option $output_option);
     
-    if (! -e $outfile_xml) {
+    if ($self->param_is_defined('species')) {
       my $dba = $self->get_DBAdaptor('core');
       $dba->dbc && $dba->dbc->disconnect_if_idle();
-      $self->dbc and $self->dbc->disconnect_if_idle();
-      system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
     }
+    $self->dbc and $self->dbc->disconnect_if_idle();
+    
+    system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
+    
+    unlink $scratch_dir if -e $scratch_dir;
   }
   
   if (! -e $outfile_xml) {

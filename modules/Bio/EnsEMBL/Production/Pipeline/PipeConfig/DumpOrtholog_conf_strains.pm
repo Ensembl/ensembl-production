@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,6 +51,8 @@ sub default_options {
 
 		# hive_capacity values for analysis
 		'getOrthologs_capacity' => '50',
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 0,
 
 		# orthologs cutoff
 		'perc_id'  => '30',
@@ -62,12 +64,12 @@ sub default_options {
 
 			'1' => { 'compara' => 'multi',
 					 'source'  => 'mus_musculus',
-					 'antispecies' => ['mus_musculus','mus_spretus_spreteij','mus_pahari','mus_caroli'],
+					 'antispecies' => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'],
                       # project all the xrefs instead of display xref only. This is mainly used for the mouse strains at the moment.
                       # Taxon name of species to project to
                      'taxons'      => ['Mus'],
                       # target species division to project to
-                     'division' => 'Ensembl',
+                     'division' => 'EnsemblVertebrates',
 					 'homology_types' =>
 					   [ 'ortholog_one2one', 'apparent_ortholog_one2one' ], },
 

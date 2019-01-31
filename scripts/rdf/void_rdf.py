@@ -182,7 +182,7 @@ class VoidRDF(object):
             self.void.add( (speciesPart1, dct.description, Literal("Core gene models and orthologies for %s" % title)) )
         
             speciesPart2 = speciesVersion + "/" + speciesName + "_xref"
-            self.void.add( (speciesPart1, RDF.type, dct.Dataset) )
+            self.void.add( (speciesPart2, RDF.type, dct.Dataset) )
             self.void.add( (speciesPart2, VOID.dataDump, Literal(species["rdf"]["xrefs"])) ) # Include the ftp folder release strategy whatever
             self.void.add( (speciesPart2, dct.title, Literal(title)) )
             self.void.add( (speciesPart2, dct.description, Literal("External references for %s" % title)) )

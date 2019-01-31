@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -52,7 +52,8 @@ sub run {
 	next unless ($file =~ m/^annotations_ensembl.*gpa$/);	 
 	$file = $dir."/".$file;
 	print "Scheduling $file\n";
-	$self->dataflow_output_id( { 'gpad_file' => $file }, 2); 
+  my $species = $1 if($file=~/annotations_ensembl.*\-(.+)\.gpa/);
+	$self->dataflow_output_id( { 'gpad_file' => $file, 'species' => $species }, 2);
       }
       closedir(DIR);
     }

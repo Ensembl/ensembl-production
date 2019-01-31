@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2016] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -183,8 +183,7 @@ sub pipeline_analyses {
           	'subject'    => $self->o('email_subject'),
 			'output_dir' => $self->o('output_dir'),
        },
-      -rc_name 	      => 'default',     
-	  -meadow_type    => 'LOCAL',
+      -rc_name 	      => 'default'
     },  
     
   ];

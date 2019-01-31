@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -104,6 +104,7 @@ sub run {
 
   my $eg   = $self->param('eg');  
   my $abinitio = $self->param('abinitio');
+  my $gene = $self->param('gene');
   my $root = $self->data_path();
   if(-d $root) {
     $self->info('Directory "%s" already exists; removing', $root);
@@ -137,7 +138,7 @@ sub run {
 
   $self->info("Dumping GTF to %s", $out_file);
   my $unzipped_out_file;
-  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms)) {
+  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms) && $gene) {
     $self->print_to_file(\@chroms, $chr_out_file, 'Gene', 1);
     $self->print_to_file(\@scaff, $tmp_out_file, 'Gene');
     system("cat $chr_out_file $tmp_out_file > $out_file");
@@ -145,27 +146,29 @@ sub run {
     $unzipped_out_file = $out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_out_file");
-  } elsif (scalar(@chroms) > 0) {
+  } elsif (scalar(@chroms) > 0 && $gene) {
     # If species has only chromosomes, dump only one file
     $self->print_to_file(\@chroms, $out_file, 'Gene', 1);
-  } else {
+  } elsif ($gene) {
     $self->print_to_file(\@scaff, $out_file, 'Gene', 1);
   }
-  if (scalar(@alt) > 0) {
+  if (scalar(@alt) > 0 && $gene) {
     $self->print_to_file(\@alt, $tmp_alt_out_file, 'Gene');
     system("cat $out_file $tmp_alt_out_file > $alt_out_file");
     # To avoid multistream issues, we need to unzip then rezip the output file
     $unzipped_out_file = $alt_out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $alt_out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_alt_out_file");
   }
 
-  $self->info(sprintf "Checking GTF file %s", $out_file);
-  $self->_gene_pred_check($out_file) unless $eg;
+  if ($gene){
+    $self->info(sprintf "Checking GTF file %s", $out_file);
+    $self->_gene_pred_check($out_file) unless $eg;
+  }
 
   $self->info("Dumping GTF README for %s", $self->param('species'));
   $self->_create_README();
@@ -176,6 +179,8 @@ sub run {
     $self->print_to_file($slices, $abinitio_path, 'PredictionTranscript', 1);
   }
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
+
 }
 
 

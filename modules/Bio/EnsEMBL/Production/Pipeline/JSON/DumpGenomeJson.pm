@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -83,8 +83,8 @@ sub write_json {
 
   # work out compara division
   my $compara_name = $self->division();
-  if ( !defined $compara_name || $compara_name eq '' ) {
-    $compara_name = 'ensembl';
+  if ( !defined $compara_name || $compara_name eq 'vertebrates' ) {
+    $compara_name = 'multi';
   }
   if ( $compara_name eq 'bacteria' ) {
     $compara_name = 'pan_homology';
@@ -92,13 +92,12 @@ sub write_json {
   # get genome
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ( $compara_name ne 'ensembl' ) {
+  if ( $compara_name ne 'multi' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
   my $md = $genome_dba->fetch_by_name( $self->production_name() );
   die "Could not find genome " . $self->production_name()
     if !defined $md;
-  $genome_dba->dbc()->disconnect_if_idle();
 
   my $genome = {
             id           => $md->name(),
@@ -120,6 +119,7 @@ sub write_json {
                           accession => $md->assembly_accession(),
                           level     => $md->assembly_level() } };
 
+  $genome_dba->dbc()->disconnect_if_idle();
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
   # add compara

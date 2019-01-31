@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ sub default_options {
 # override the default method, to force an automatic loading of the registry in all workers
 sub beekeeper_extra_cmdline_options {
     my $self = shift;
-    return "-reg_conf ".$self->o("registry");
+    return "-reg_conf ".$self->o("reg_conf");
 }
 
 
@@ -76,7 +76,7 @@ sub resource_classes {
     return {
         %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
 
-        '500Mb_job'    => { 'LSF' => [' -q production-rh7 -C0 -M500 -R"select[mem>500] rusage[mem=500]"'], 'LOCAL' => [''] },
+        '500Mb_job'    => { 'LSF' => [' -q production-rh7 -C0 -M500 -R"select[mem>500] rusage[mem=500]"'] },
     };
 }
 

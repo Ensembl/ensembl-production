@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -128,7 +128,7 @@ sub _write_tsv {
   $self->core_dbc()->disconnect_if_idle();
   $self->info( "Compressing tsv dump for " . $self->param('species'));
   my $unzip_out_file = $out_file;
-  `gzip $unzip_out_file`;
+  `gzip -n $unzip_out_file`;
 
   if (-e $unzip_out_file) { `rm $unzip_out_file`; }
 

@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,9 +25,19 @@ use File::Basename;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
+sub param_defaults {
+  my ($self) = @_;
+  
+  return {
+    %{$self->SUPER::param_defaults},
+    skip_checksum_loading => 0,
+  };
+}
+
 sub run {
   my ($self) = @_;
-  my $md5_checksum_file = $self->param_required('md5_checksum_file');
+  my $md5_checksum_file     = $self->param_required('md5_checksum_file');
+  my $skip_checksum_loading = $self->param_required('skip_checksum_loading');
   
   if (! -e $md5_checksum_file) {
     $self->throw("Checksum file '$md5_checksum_file' does not exist");
@@ -50,9 +60,13 @@ sub run {
     $hive_dbh->do($load_sql) or $self->throw("Failed to execute: $load_sql");
   }
   
-  my $cmd = $self->mysqlimport_command_line($self->hive_dbc);
-  $cmd .= " $md5_checksum_file";
-  system($cmd) == 0 or $self->throw("Failed to run ".$cmd);
+  if ($skip_checksum_loading) {
+    $self->warning("Checksums not loaded; all computation will be done locally.");
+  } else {
+    my $cmd = $self->mysqlimport_command_line($self->hive_dbc);
+    $cmd .= " $md5_checksum_file";
+    system($cmd) == 0 or $self->throw("Failed to run ".$cmd);
+  }
 }
 
 sub write_output {

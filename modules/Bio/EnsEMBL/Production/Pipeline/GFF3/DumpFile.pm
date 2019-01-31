@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2015] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -112,8 +112,10 @@ sub run {
           my $slice_name = $chromosome_name . "." . $slice->seq_region_name;
           my $chr_file = $out_file;
           $chr_file =~ s/\.gff3/\.$slice_name\.gff3/;
-          $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
-          push @$out_files, $chr_file;
+          if ($self->param('gene')) {
+            $self->print_to_file([$slice], $chr_file, $feature_types, \%adaptors, 1);
+            push @$out_files, $chr_file;
+          }
         }
         push @chroms, $slice;
       }
@@ -126,7 +128,7 @@ sub run {
   }
 
   my $unzipped_out_file;
-  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms)) {
+  if (scalar(@chroms) > 0 && scalar(@$slices) > scalar(@chroms) && $self->param('gene')) {
     $self->print_to_file(\@chroms, $chr_out_file, $feature_types, \%adaptors, 1);
     $self->print_to_file(\@scaff, $tmp_out_file, $feature_types, \%adaptors);
     system("cat $chr_out_file $tmp_out_file > $out_file");
@@ -134,27 +136,27 @@ sub run {
     $unzipped_out_file = $out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_out_file");
     push @$out_files, $chr_out_file;
     push @$out_files, $out_file;
-  } elsif (scalar(@chroms) > 0) {
+  } elsif (scalar(@chroms) > 0 && $self->param('gene')) {
     # If species has only chromosomes, dump only one file
     $self->print_to_file(\@chroms, $out_file, $feature_types, \%adaptors, 1);
     push @$out_files, $out_file;
-  } else {
+  } elsif ($self->param('gene')) {
     # If species has only scaffolds, dump only one file
     $self->print_to_file(\@scaff, $out_file, $feature_types, \%adaptors, 1);
     push @$out_files, $out_file;
   }
-  if (scalar(@alt) > 0) {
+  if (scalar(@alt) > 0 && $self->param('gene')) {
     $self->print_to_file(\@alt, $tmp_alt_out_file, $feature_types, \%adaptors);
     system("cat $out_file $tmp_alt_out_file > $alt_out_file");
     # To avoid multistream issues, we need to unzip then rezip the output file
     $unzipped_out_file = $alt_out_file;
     $unzipped_out_file =~ s/\.gz$//;
     system("gunzip $alt_out_file");
-    system("gzip $unzipped_out_file");
+    system("gzip -n $unzipped_out_file");
     system("rm $tmp_alt_out_file");
     push @$out_files, $alt_out_file;
   }
@@ -169,6 +171,7 @@ sub run {
   $self->info("Dumping GFF3 README for %s", $self->param('species'));
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
 }
 
 sub print_to_file {

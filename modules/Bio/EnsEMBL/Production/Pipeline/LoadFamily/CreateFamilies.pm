@@ -1,6 +1,6 @@
 
 =head1 LICENSE
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,15 +36,18 @@ sub run {
   $self->SUPER::run;
 
   # get all unique databases
-  my $dbcs = {};
-  for my $core_dba (values %{$self->param('core_dbas')}) {
-    my $dbname = $core_dba->dbc()->dbname();
-    if(!defined $dbcs->{$dbname}) {
-      $dbcs->{$dbname} = $core_dba->dbc();
+  my $dbs = $self->param('dbs');
+  my %dbcs = ();
+  for my $dbname (keys %{$dbs}) {
+    if (! exists $dbcs{$dbname}) {
+      foreach my $species (keys %{$$dbs{$dbname}}) {
+        $dbcs{$dbname} = $$dbs{$dbname}{$species}->dbc();
+        last;
+      }
     }
   }
   
-  my @compara_dbas = values %{$self->param('compara_dbas')};
+  my @compara_dbas = values %{$self->param('compara_dbs')};
   if(scalar(@compara_dbas)!=1) {
     croak "Expecting one compara database only";  
   }
@@ -69,7 +72,7 @@ WHERE pfa.logic_name in ($logic_names)/;
   my $genome_dbs = [];
   my $output_ids = [];
 
-  for my $dbc ( values %$dbcs ) {
+  for my $dbc ( values %dbcs ) {
     print "Processing ".$dbc->dbname()."\n";
     
       $dbc->sql_helper()->execute_no_return(                                                                                                                                                                                              
@@ -93,7 +96,7 @@ and m4.meta_key='genebuild.version'
 	           $genome_db->taxon_id($taxonomy_id);
 	           $genome_db->genebuild($genebuild);
 	           $genome_db->has_karyotype(0);
-	           $genome_db->is_high_coverage(0);
+               $genome_db->is_good_for_alignment(0);
 	           $genome_dba->store($genome_db);
 	           push @$genome_dbs, $genome_db;
                    push @$output_ids, {name=>$species};
@@ -121,8 +124,10 @@ and m4.meta_key='genebuild.version'
   print "Found ".scalar(keys(%{$families}))." familes\n";
 
   # create and store MLSS
-  my $sso = Bio::EnsEMBL::Compara::SpeciesSet->new(-GENOME_DBS=>$genome_dbs);
-  $sso->add_tag('name',"collection-all_division");
+  my $sso = Bio::EnsEMBL::Compara::SpeciesSet->new(
+    -GENOME_DBS => $genome_dbs,
+    -NAME => "collection-all_division",
+  );
   $compara_dba->get_SpeciesSetAdaptor()->store($sso);
 
   my $mlss =
@@ -132,7 +137,7 @@ and m4.meta_key='genebuild.version'
                                              -type  => 'FAMILY',
                                              -class => 'Family.family'
                                             ),
-                                                     -species_set_obj => $sso );
+                                                     -species_set => $sso );
   
   $compara_dba->get_MethodLinkSpeciesSetAdaptor()->store($mlss);
   my $family_dba = $compara_dba->get_FamilyAdaptor();

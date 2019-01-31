@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -68,10 +68,6 @@ sub copy_database {
     croak "Target server $target_db->{host} is not valid";
   }
 
-  if (!defined($source_db->{pass}) || $source_db->{pass} eq ''){
-    croak "You need to run this script as the MySQL user that can write on $source_db->{host}"
-  }
-
   if (!defined($target_db->{pass}) || $target_db->{pass} eq ''){
     croak "You need to run this script as the MySQL user that can write on $target_db->{host}"
   }
@@ -135,7 +131,7 @@ sub copy_database {
     # If option drop enabled, drop database on target server.
     elsif ($drop){
       $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
-      $target_dbh->do("DROP DATABASE $target_db->{dbname};") or die $target_dbh->errstr;
+      $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
@@ -166,12 +162,19 @@ sub copy_database {
 
   my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
 
+  #Only check space on target server when copying a database that don't exist on target server.
+  if ($target_db_exist != 0) {
+    #Check if we have enough space on target server before starting the db copy
+    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+  }
+
   my @tables;
   my @views;
+  my @tables_flush;
 
-  my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS');
+  my $table_sth = $source_dbh->prepare('SHOW TABLE STATUS') or die $source_dbh->errstr;
 
-  $table_sth->execute();
+  $table_sth->execute() or die $source_dbh->errstr;
 
   my %row;
   # Fancy magic from DBI manual.
@@ -204,24 +207,24 @@ sub copy_database {
         next TABLE;
       }
       push( @tables, $table );
+      # If the table exist in target db, add it to the tables_flush array
+      if (system("ssh $target_db->{host} ls ${destination_dir}/${table} >/dev/null 2>&1")==0){
+        push( @tables_flush, $table );
+      }
     } ## end while ( $table_sth->fetch...)
 
   #Flushing and locking source database
-  $logger->info("Flushing and locking source database\n");
+  $logger->info("Flushing and locking source database");
 
   ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
 
   flush_with_read_lock($source_dbh,\@tables);
 
   #Flushing and locking target database
-  if ($target_db_exist == 0) {
-    $logger->info("Flushing and locking target database\n");
-    flush_with_read_lock($target_dbh,\@tables);
+  if ($target_db_exist == 0 and @tables_flush) {
+    $logger->info("Flushing and locking target database");
+    flush_with_read_lock($target_dbh,\@tables_flush);
   }
-
-  #Optimize source database
-  $logger->info("Optimizing tables on source database");
-  optimize_tables($source_dbh,\@tables,$source_db);
 
   # Copying mysql database files
   my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
@@ -614,7 +617,7 @@ sub copy_mysql_files {
 
   # Perform the copy and make sure it succeeds.
 
-  $logger->info( "Copying $source_db->{host}:$source_db->{port}/$source_db->{dbname}' to staging directory $staging_dir");
+  $logger->info( "Copying $source_db->{host}:$source_db->{port}/$source_db->{dbname} to staging directory $staging_dir");
 
   # For debugging:
   # print( join( ' ', @copy_cmd ), "\n" );
@@ -627,6 +630,40 @@ sub copy_mysql_files {
 
   return $copy_failed;
 } 
+
+# Subroutine to check source database size and target server space available.
+# Added 10% of server space to the calculation to make sure we don't completely fill up the server.
+sub check_space_before_copy {
+my ($source_db,$source_dir,$target_db,$staging_dir) = @_;
+my $threshold = 10;
+
+#Getting source database size
+my ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+
+#Getting target server space
+my @cmd = `ssh $target_db->{host} df -P $staging_dir`;
+my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+
+#Calculate extra space to make sure we don't fully fill up the server
+my $threshold_server = ($threshold * $available)/100;
+
+my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
+
+if ( $space_left_after_copy == abs($space_left_after_copy) ) {
+    $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
+} else {
+    croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
+}
+
+return;
+}
+
+#Subroutine to convert kilobytes in MB, GB, TB...
+sub scaledkbytes {
+   (sort { length $a <=> length $b }
+   map { sprintf '%.3g%s', $_[0]/1024**$_->[1], $_->[0] }
+   [KB => 0],[MB=>1],[GB=>2],[TB=>3],[PB=>4],[EB=>5])[0]
+}
 
 
 1;

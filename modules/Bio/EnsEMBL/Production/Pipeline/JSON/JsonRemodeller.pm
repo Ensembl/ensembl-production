@@ -1,7 +1,7 @@
 
 =head1 LICENSE
 
-Copyright [2009-2016] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -219,7 +219,7 @@ sub collate_xrefs {
       }
       my $evidence = [];
       for my $lt ( @{ $xref->{linkage_types} } ) {
-        push $evidence, $lt->{evidence};
+        push @$evidence, $lt->{evidence};
       }
       # add associated xrefs
       if ( defined $xref->{associated_xrefs} &&
@@ -501,14 +501,19 @@ sub find_genome_name {
   my ( $self, $genome ) = @_;
   my $name = $self->{genome_names}->{$genome};
   if ( !defined $name ) {
-    my $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
-                                                    'MetaContainer' );
+    my $meta;
+    eval {
+      $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
+						   'MetaContainer' );
+    };
     if ( !defined $meta ) {
-      throw "Cannot find genome $genome";
+      warn "Cannot find genome $genome - using original name";
+      $self->{genome_names}->{$genome} = $genome;
+    } else {
+      $name = $meta->get_display_name();
+      $meta->db()->dbc()->disconnect_if_idle();
+      $self->{genome_names}->{$genome} = $name;
     }
-    $name = $meta->get_display_name();
-    $meta->db()->dbc()->disconnect_if_idle();
-    $self->{genome_names}->{$genome} = $name;
   }
   return $name;
 }

@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,6 +47,8 @@ sub default_options {
 		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
 		'compara' => undef,
 		'release' => software_version(),
+		# Cleanup projection directory before running the pipeline
+		'cleanup_dir' => 0,
 
         # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
 	    # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
@@ -105,9 +107,11 @@ sub pipeline_analyses {
 		   -parameters => { 'species_config' => $self->o('species_config'),
 		   	 'compara' => $self->o('compara'),
 				    'output_dir'       => $self->o('output_dir'),
+						'cleanup_dir'     => $self->o('cleanup_dir')
 		   	 },
 		    -flow_into  => { '2->A'              => ['SpeciesFactory'],
-				    'A->1' => [ 'RunCreateReleaseFile'  ] },
+				    'A->1' => [ 'SpeciesFactoryAll'  ],
+						},
 		    -rc_name    => 'default',
 		 },
 
@@ -119,6 +123,25 @@ sub pipeline_analyses {
                                  },
              -rc_name         => 'default',
           },
+			{  -logic_name      => 'SpeciesFactoryAll',
+             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+             -max_retry_count => 1,
+             -flow_into       => {
+                                  '1' => ['SpeciesNoOrthologs'],
+                                 },
+             -rc_name         => 'default',
+          },
+
+		{  -logic_name => 'SpeciesNoOrthologs',
+		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs',
+		   -parameters => {
+			      'release' => $self->o('release'),
+       },
+		   -batch_size    => 1,
+			 -flow_into       => {
+				 '1' => ['RunCreateReleaseFile'],
+			 } ,
+		   -rc_name       => 'default',},
 
 		{  -logic_name => 'GetOrthologs',
 		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',

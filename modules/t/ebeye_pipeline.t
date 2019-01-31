@@ -1,5 +1,5 @@
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2017] EMBL-European Bioinformatics Institute
+# Copyright [2016-2019] EMBL-European Bioinformatics Institute
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,19 +52,7 @@ my $production_dba = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot 
 my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
 $pipeline->add_fake_binaries('fake_ebeye_binaries');
-
+$pipeline->beekeeper_sleep(0.2);
 $pipeline->run();
-
-#
-# NOTE
-#
-# Here we simply test that the expected files have been produced
-#
-my $core_dbname = $human_dba->dbc()->dbname();
-ok_directory_contents(
-  File::Spec->catdir($dir, 'ebeye'),
-  [qw/CHECKSUMS release_note.txt/, "Gene_${core_dbname}.xml.gz"],
-  "Dump dir has flatfile, release notes and CHECKSUM files"
-);
 
 done_testing();

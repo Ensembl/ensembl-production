@@ -1,0 +1,33 @@
+8465	2009-05-14 15:43:42	ensembl_havana_gene	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8466	2009-06-01 09:01:22	xrefexoneratedna	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8467	2009-05-14 15:43:42	ensembl_havana_transcript	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8468	2010-09-30 09:17:16	human_cdna2genome	\N	\N	\N	\N	\N	/nfs/users/nfs_j/jhv/bin/exonerate.hacked.cdna2genome	\N	Exonerate2Genes	\N	\N	\N
+8469	2007-09-07 12:01:22	uniprot_sw_havana	\N	2010_11	\N	\N	\N	\N	percentid_cutoff => 40, ori_analysis => Uniprot_raw, hit_db => Swissprot, mode => single	DepthFilter	\N	SwissProt	\N
+8470	2007-09-07 12:01:22	uniprot_tr_havana	\N	2010_11	\N	\N	\N	\N	percentid_cutoff => 40, ori_analysis => Uniprot_raw, hit_db => TrEMBL, mode => single	DepthFilter	\N	TrEMBL	\N
+8471	2009-06-01 09:01:22	xrefexonerateprotein	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8472	2012-09-03 17:48:15	xrefchecksum	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8473	2013-06-26 13:25:12	pfam	Pfam	\N	/data/blastdb/Ensembl/interpro_scan/Pfam-A.hmm	/software/ensembl/bin/hmmer3/hmmscan	\N	/software/ensembl/bin/hmmer3/hmmscan	--acc --noali --cut_ga --cpu 1	ProteinAnnotation/Hmmpfam	\N	Pfam	domain
+8474	2013-06-26 13:25:13	superfamily	Superfamily	\N	/data/blastdb/Ensembl/interpro_scan/superfamily.tab	/software/ensembl/bin/superfamily.pl	\N	/software/ensembl/bin/superfamily.pl	-t /tmp -m /data/blastdb/Ensembl/interpro_scan/superfamily.hmm -d /data/blastdb/Ensembl/interpro_scan/superfamily.tab -a /data/blastdb/Ensembl/interpro_scan/superfamily.acc -p /software/ensembl/bin/hmmpfam -s /software/ensembl/bin/ 1e-05 -r y	ProteinAnnotation/Superfamily	\N	Superfamily	domain
+8475	2013-06-26 13:25:12	tmhmm	transmembrane	\N	\N	decodeanhmm	\N	decodeanhmm	-modelfile => /usr/local/ensembl/lib/TMHMM2.0.model, -optionsfile => /usr/local/ensembl/lib/TMHMM2.0.options	ProteinAnnotation/Tmhmm	\N	Tmhmm	annotation
+8476	2013-06-26 13:25:12	seg	low_complexity	\N	\N	seg	\N	seg	\N	ProteinAnnotation/Seg	\N	Seg	annotation
+8477	2013-06-26 13:25:12	pfscan	Prosite_profiles	\N	/data/blastdb/Ensembl/interpro_scan/prosite.profiles	pfscan	\N	pfscan	\N	ProteinAnnotation/PrositeProfile	\N	Profile	domain
+8478	2013-06-26 13:25:12	prints	Prints	\N	/data/blastdb/Ensembl/interpro_scan/prints.pval	/software//ensembl/bin/FingerPRINTScan	\N	/software/ensembl/bin/FingerPRINTScan	-e 0.0001 -d 10 -E 257043 84355444 -fjR -a -o 15	ProteinAnnotation/Prints	\N	Prints	domain
+8479	2010-09-23 14:40:18	ccds	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8480	2009-05-14 15:43:42	havana	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8481	2007-09-07 12:01:22	vertrna_havana	\N	10-Nov-10 (105)	\N	\N	\N	\N	ori_analysis => vertrna_raw, mode => single, no_filter => 9606	ClusterDepthFilter	\N	vertebrate_mRNA	similarity
+8482	2009-03-11 17:25:55	human_protein	\N	refseq_40,uniprot_2010_07	\N	\N	\N	\N	\N	BestTargetted	\N	\N	\N
+8483	2007-09-07 12:01:22	est2genome_human_havana	\N	10-Nov-10 (105)	\N	\N	\N	\N	ori_analysis => Est2genome_human_raw, mode => single	ClusterDepthFilter	\N	EST_Human	similarity
+8484	2013-06-26 13:25:12	ensembl	\N	\N	\N	\N	\N	\N	\N	GeneBuilder	\N	\N	\N
+8485	0000-00-00 00:00:00	human_cdna	\N	\N	\N	exonerate	0.9.0	/usr/local/ensembl/bin/exonerate-0.9.0	\N	Exonerate2Genes	\N	Exonerate	similarity
+8486	2010-11-15 16:56:43	other_protein	\N	uniprot_2010_11	\N	\N	\N	\N	\N	BlastMiniGenewise	\N	\N	\N
+8487	2013-06-26 13:25:13	smart	Smart	\N	/data/blastdb/Ensembl/interpro_scan/smart.HMMs	hmmpfam	\N	hmmpfam	-E 0.01 -A 100 -Z 350000 --acc --cpu 1	ProteinAnnotation/Hmmpfam	\N	Smart	domain
+8488	2013-06-26 13:25:12	signalp	signal_peptide	\N	\N	signalp	\N	/software/worm/signalp/signalp	\N	ProteinAnnotation/Signalp	\N	Signalp	annotation
+8489	2013-06-26 13:25:12	ncoils	coiled_coil	\N	/usr/local/ensembl/data/coils	ncoils	\N	ncoils	\N	ProteinAnnotation/Coil	\N	ncoils	annotation
+8490	2009-05-12 18:26:57	ncrna	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8491	2009-05-20 12:21:05	rfamblast	Rfam	\N	/lustre/scratch1/ensembl/sw4/ncRNA/BLAST/high_copy.fasta	wublastn	\N	wublastn	lowcopy => /lustre/scratch1/ensembl/sw4/ncRNA/BLAST/low_copy.fasta	Bio::EnsEMBL::Analysis::RunnableDB::BlastRfam	\N	ensembl	gene
+8492	2013-06-26 13:25:13	pirsf	PIRSF	\N	/data/blastdb/Ensembl/interpro_scan/pirsf.dat	/software/ensembl/bin/pirsf.pl	\N	/software/ensembl/bin/pirsf.pl	-pirsf /data/blastdb/Ensembl/interpro_scan/pirsf.dat -sfhmm /data/blastdb/Ensembl/interpro_scan/sf_hmm.bin -subsf /data/blastdb/Ensembl/interpro_scan/sf_hmm_sub -sfseq /data/blastdb/Ensembl/interpro_scan/sf.seq -sftb /data/blastdb/Ensembl/interpro_scan/sf.tb -hmmer /software/ensembl/bin/hmmpfam -blast /software/ensembl/bin/blastall	ProteinAnnotation/PIRSF	\N	PIRSF	domain
+8493	2009-03-27 11:33:33	human_est	human_ests	\N	/lustre/work1/ensembl/jb16/NCBI37/ests/est_chunks	\N	\N	exonerate-0.9.0	\N	Exonerate2Genes	\N	\N	\N
+8494	2011-02-15 17:06:42	firstef	firstef	\N	\N	firstef	\N	\N	-repeatmasked	FirstEF	\N	firstef	exon
+8495	2011-02-15 17:06:42	cpg	cpg	\N	\N	cpg	\N	cpg	\N	CPG	\N	cpg	cpg_island
+8496	2011-02-15 17:06:42	eponine	Eponine	\N	\N	eponine-scan	1	/vol/software/linux-x86_64/jdk1.6.0_01/bin/java	-epojar => /usr/local/ensembl/lib/eponine-scan.jar, -threshold => 0.999	EponineTSS	\N	Eponine	TSS
+8497	2009-05-14 15:43:42	LRG_import	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N

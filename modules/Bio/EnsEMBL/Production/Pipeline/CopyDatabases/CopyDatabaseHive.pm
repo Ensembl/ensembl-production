@@ -1,6 +1,6 @@
 =head1 LICENSE
 
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,8 +34,7 @@ use Bio::EnsEMBL::Production::Utils::CopyDatabase
   qw/copy_database/;
 use JSON;
 use Time::Duration;
-
-
+use Log::Log4perl qw/:easy/;
 
 sub run{
 
@@ -49,6 +48,33 @@ my $skip_tables = $self->param('skip_tables');
 my $update = $self->param('update');
 my $drop = $self->param('drop');
 my $start_time = time();
+my $hive_dbc = $self->dbc;
+
+my $config = q{
+	log4perl.category = INFO, DB
+    log4perl.appender.DB                 = Log::Log4perl::Appender::DBI
+    log4perl.appender.DB.datasource=DBI:mysql:database=}.$hive_dbc->dbname().q{;host=}.$hive_dbc->host().q{;port=}.$hive_dbc->port().q{
+    log4perl.appender.DB.username        = }.$hive_dbc->user().q{
+    log4perl.appender.DB.password        = }.$hive_dbc->password().q{
+    log4perl.appender.DB.sql             = \
+        insert into job_progress                   \
+        (job_id, message) values (?,?)
+
+    log4perl.appender.DB.params.1        = }.$self->input_job->dbID().q{
+    log4perl.appender.DB.usePreparedStmt = 1
+
+    log4perl.appender.DB.layout          = Log::Log4perl::Layout::NoopLayout
+    log4perl.appender.DB.warp_message    = 0
+ };
+
+Log::Log4perl::init( \$config);
+
+my $logger = get_logger();
+if(!Log::Log4perl->initialized()) {
+  Log::Log4perl->easy_init($DEBUG);
+}
+
+$hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 
 copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop);
 

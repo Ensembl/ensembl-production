@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2017] EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -147,12 +147,6 @@ sub fetch_input {
   }
  
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type_list') };
-  # Skip dna dumps if 
-  # 'check_intentions' flag is 1
-  # AND 'requires_new_dna' is 0
-  if($self->param('check_intentions')==1 && $self->param('requires_new_dna')==0){ 
-     delete $sequence_types{'dna'};
-  }
   $self->param('sequence_types', \%sequence_types);
  
   my $dba = $self->get_DBAdaptor();
@@ -199,6 +193,7 @@ sub write_output {
     $self->dataflow_output_id(@{$flow});
   }
   $self->core_dbc()->disconnect_if_idle();
+  $self->hive_dbc()->disconnect_if_idle();
   return;
 }
 
@@ -568,7 +563,7 @@ sub tidy_file_handle {
       $self->throw("Cannot continue. The file %s has already been created this session. Fail!");
     }
   }
-  gzip $path => $target, %args or throw "GZip error compressing $path to $target: $GzipError";
+  gzip $path => $target, Minimal => 1, %args or throw "GZip error compressing $path to $target: $GzipError";
   $self->info('    Removing original file from filesystem');
   unlink $path or throw "Could not delete $path: $!";
   $self->info('    Finished');
@@ -842,7 +837,9 @@ PRIMARY ASSEMBLY
 -----------------
 Primary assembly contains all toplevel sequence regions excluding haplotypes
 and patches. This file is best used for performing sequence similarity searches
-where patch and haplotype sequences would confuse analysis.   
+where patch and haplotype sequences would confuse analysis. If the primary
+assembly file is not present, that indicates that there are no haplotype/patch
+regions, and the 'toplevel' file is equivalent.
 
 EXAMPLES
 

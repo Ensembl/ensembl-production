@@ -63,7 +63,7 @@ def main(argv):
     voidFile = 'void.ttl'
     zipped = False
     if project == 'ensemblgenomes':
-        voidFile = voidFile + '.gz'
+        voidFile = 'ensemblgenomes_' + voidFile + '.gz'
         zipped = True
     voidRdf = None
     

@@ -1,0 +1,103 @@
+{
+    "required": [
+        "assembly",
+        "is_reference",
+        "id",
+        "genebuild",
+        "organism",
+        "dbname",
+        "species_id"
+    ],
+    "type": [
+        "array",
+        "object"
+    ],
+    "properties": {
+        "species_id": {
+            "type": "string"
+        },
+        "division": {
+            "type": "string"
+        },
+        "is_reference": {
+            "type": "string"
+        },
+        "assembly": {
+            "required": [
+                "accession",
+                "level",
+                "name"
+            ],
+            "type": "object",
+            "properties": {
+                "accession": {
+                    "type": "null"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                }
+            }
+        },
+        "id": {
+            "type": "string"
+        },
+        "genebuild": {
+            "type": "string"
+        },
+        "organism": {
+            "required": [
+                "aliases",
+                "display_name",
+                "lineage",
+                "name",
+                "scientific_name",
+                "serotype",
+                "species_taxonomy_id",
+                "strain",
+                "taxonomy_id"
+            ],
+            "type": "object",
+            "properties": {
+                "lineage": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scientific_name": {
+                    "type": "string"
+                },
+                "serotype": {
+                    "type": "null"
+                },
+                "strain": {
+                    "type": "null"
+                },
+                "taxonomy_id": {
+                    "type": "string"
+                },
+                "species_taxonomy_id": {
+                    "type": "string"
+                },
+                "aliases": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            }
+        },
+        "dbname": {
+            "type": "string"
+        }
+    }
+}

@@ -32,3 +32,6 @@ a.out
 *.obj
 *.class
 MultiTestDB.conf
+.idea
+*.iml
+/_Deparsed_XSubs.pm
