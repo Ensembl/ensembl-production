@@ -210,11 +210,8 @@ sub copy_database {
   if ($copy_mysql_files){
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
-    #Only check space on target server when copying a database that doesn't exist on target server.
-    if (!defined($target_db_exist)) {
-      #Check if we have enough space on target server before starting the db copy
-      check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
-    }
+    #Check if we have enough space on target server before starting the db copy
+    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir);
     # Copying mysql database files
     $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
   }
@@ -678,13 +675,13 @@ sub copy_mysql_files {
   return $copy_failed;
 } 
 
-# Dump the database in /tmp
+# Dump the database in /nfs/nobackup/ensembl/ensprod/copy_service
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
   my ($source_dbh,$target_dbh,$source_db,$target_db) = @_;
   my $copy_failed=0;
-  my $file='/tmp/'.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
+  my $file='/nfs/nobackup/ensembl/ensprod/copy_service/'.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
   if (defined $source_db->{pass}){
     if ( system("mysqldump --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
@@ -714,11 +711,15 @@ sub copy_mysql_dump {
 # Subroutine to check source database size and target server space available.
 # Added 10% of server space to the calculation to make sure we don't completely fill up the server.
 sub check_space_before_copy {
-my ($source_db,$source_dir,$target_db,$staging_dir) = @_;
+my ($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir) = @_;
 my $threshold = 10;
-
 #Getting source database size
 my ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+# Getting target database size if target db exist.
+if (defined($target_db_exist)){
+  my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
+  $source_database_size = $source_database_size - $target_database_size;
+}
 
 #Getting target server space
 my @cmd = `ssh $target_db->{host} df -P $staging_dir`;
