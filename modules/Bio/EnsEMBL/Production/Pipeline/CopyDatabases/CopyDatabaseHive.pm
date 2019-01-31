@@ -79,7 +79,9 @@ $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop);
 
 my $runtime =  duration(time() - $start_time);
-
+#Clean up if job already exist in result.
+my $sql=q/DELETE FROM result WHERE job_id = ?/;
+$hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
 my $output = {
 		  source_db_uri=>$source_db_uri,
 		  target_db_uri=>$target_db_uri,
