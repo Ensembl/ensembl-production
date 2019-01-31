@@ -120,22 +120,19 @@ sub copy_database {
   my $destination_dir = catdir( $target_dir, $target_db->{dbname} );
   my $staging_dir;
   my $force=0;
-  
+  my $target_db_exist = $target_dbh->selectall_arrayref("show databases like ?",{},$target_db->{dbname})->[0][0];
   #Check if database exist on target server
-  if (system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1") == 0) {
-    # If we update the database, we don't need a tmp dir
-    # We will use the dest dir instead of staging dir.
-    if ($update || $opt_only_tables){
-      $staging_dir=$destination_dir;
-    }
+  if (defined($target_db_exist)) {
     # If option drop enabled, drop database on target server.
-    elsif ($drop){
+    if ($drop){
       $logger->info("Dropping database $target_db->{dbname} on $target_db->{host}");
       $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
-      # Create the staging dir in server temp directory
-      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
-    # If drop not enable, die
+    # If we update or copy some tables, we need the target database on target server
+    elsif ($update || $opt_only_tables){
+      1;
+    }
+    # If drop not enabled, die
     else
     {
       $logger->error("Destination directory $destination_dir already exists");
@@ -145,28 +142,8 @@ sub copy_database {
       croak "Database destination directory $destination_dir exist. You can use the --drop option to drop the database on the target server";
     }
   }
-  # If database don't exist on source server
-  else {
-    # If option update is defined, the database need to exist on target server.
-    if ($update || $opt_only_tables){
-      #disconnect from MySQL server
-      $source_dbh->disconnect();
-      $target_dbh->disconnect();
-      croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
-    }
-    else {
-      # Create the staging dir in server temp directory
-      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
-    }
-  }
-
-  my $target_db_exist=system("ssh $target_db->{host} ls $destination_dir >/dev/null 2>&1");
-
-  #Only check space on target server when copying a database that don't exist on target server.
-  if ($target_db_exist != 0) {
-    #Check if we have enough space on target server before starting the db copy
-    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
-  }
+  #Check if target database still exists on the target server
+  $target_db_exist = $target_dbh->selectall_arrayref("show databases like ?",{},$target_db->{dbname})->[0][0];
 
   my @tables;
   my @views;
@@ -179,6 +156,7 @@ sub copy_database {
   my %row;
   # Fancy magic from DBI manual.
   $table_sth->bind_columns( \( @row{ @{ $table_sth->{'NAME_lc'} } } ) );
+  my $innodb=0;
 
   TABLE:
     while ( $table_sth->fetch() ) {
@@ -196,10 +174,7 @@ sub copy_database {
 
       if ( defined($engine) ) {
         if ( $engine eq 'InnoDB' ) {
-          #disconnect from MySQL server
-          $source_dbh->disconnect();
-          $target_dbh->disconnect();
-          croak "FAILED: can not copy InnoDB tables. Please convert $source_db->{dbname}.${table} to MyISAM";
+          $innodb=1;
         }
       }
       else {
@@ -221,20 +196,46 @@ sub copy_database {
   flush_with_read_lock($source_dbh,\@tables);
 
   #Flushing and locking target database
-  if ($target_db_exist == 0 and @tables_flush) {
+  if (defined($target_db_exist) and @tables_flush) {
     $logger->info("Flushing and locking target database");
     flush_with_read_lock($target_dbh,\@tables_flush);
   }
 
-  # Copying mysql database files
-  my $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
+  my $copy_failed;
+  my $copy_mysql_files=0;
+  #Check if we have access to the server filesystem:
+  if (system("ssh $source_db->{host} ls $source_dir >/dev/null 2>&1") == 0 and system("ssh $target_db->{host} ls $target_dir >/dev/null 2>&1") == 0 and !$innodb)  {
+    $copy_mysql_files=1;
+  }
+  if ($copy_mysql_files){
+    # Create the temp directories on server filesystem
+    ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
+    #Only check space on target server when copying a database that doesn't exist on target server.
+    if (!defined($target_db_exist)) {
+      #Check if we have enough space on target server before starting the db copy
+      check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir);
+    }
+    # Copying mysql database files
+    $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
+  }
+  #Using MySQL dump if the database is innodb or we don't have access to the MySQL server filesystem
+  else{
+    if ($update || $opt_only_tables){
+      #disconnect from MySQL server
+      $source_dbh->disconnect();
+      $target_dbh->disconnect();
+      croak "We don't have file system access on these server so we can't use the --update or --only_tables options";
+    }
+    else{
+      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db);
+    }
+  }
 
   # Unlock tables source and target
   $logger->info("Unlocking tables on source database");
-
   unlock_tables($source_dbh);
 
-  if ($target_db_exist == 0){
+  if (defined($target_db_exist)){
     $logger->info("Unlocking tables on target database");
     unlock_tables($target_dbh);
   }
@@ -247,18 +248,23 @@ sub copy_database {
     croak "FAILED: copy failed (cleanup of $staging_dir may be needed).";
   }
   
-  # Repair views
-  view_repair($source_db,$target_db,\@views,$staging_dir,$source_dbh,$target_dbh);
-
-  $logger->info("Checking/repairing tables on target database");
-
-  # Check target database
-  myisamchk_db(\@tables,$staging_dir,$source_dbh,$target_dbh);
+  if ($copy_mysql_files){
+    # Repair views
+    view_repair($source_db,$target_db,\@views,$staging_dir,$source_dbh,$target_dbh);
+    $logger->info("Checking/repairing tables on target database");
+    # Check target database
+    myisamchk_db(\@tables,$staging_dir,$source_dbh,$target_dbh);
+  }
+  else{
+    $logger->info("Checking/repairing tables on target database");
+    # Check target database
+    mysqlcheck_db($target_db);
+  }
 
   #move database from tmp dir to data dir
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
-  if ($target_db_exist != 0) {
+  if (!defined($target_db_exist) and $copy_mysql_files) {
       move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh);
   }
  
@@ -266,8 +272,10 @@ sub copy_database {
   $logger->info("Flushing tables on target database");
   flush_tables($target_dbh,\@tables,$target_db);
 
-  # Copy functions and procedures if exists
-  copy_functions_and_procedures($source_dbh,$target_dbh,$source_db,$target_db);
+  if ($copy_mysql_files){
+    # Copy functions and procedures if exists
+    copy_functions_and_procedures($source_dbh,$target_dbh,$source_db,$target_db);
+  }
 
   #Optimize target
   $logger->info("Optimizing tables on target database");
@@ -312,6 +320,37 @@ sub create_staging_db_tmp_dir {
       #disconnect from MySQL server
       $dbh->disconnect();
       croak "Cannot create staging directory $staging_dir";
+    }
+  }
+  return ($force,$staging_dir);
+}
+
+sub create_temp_dir {
+  my ($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh) = @_;
+  #Check if database exist on target server
+  if (defined($target_db_exist)) {
+    # If we update the database, we don't need a tmp dir
+    # We will use the dest dir instead of staging dir.
+    if ($update || $opt_only_tables){
+      $staging_dir=$destination_dir;
+    }
+    else{
+      # Create the staging dir in server temp directory
+      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
+    }
+  }
+  # If database don't exist on source server
+  else {
+    # If option update is defined, the database need to exist on target server.
+    if ($update || $opt_only_tables){
+      #disconnect from MySQL server
+      $source_dbh->disconnect();
+      $target_dbh->disconnect();
+      croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
+    }
+    else {
+      # Create the staging dir in server temp directory
+      ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
   }
   return ($force,$staging_dir);
@@ -440,6 +479,14 @@ sub myisamchk_db {
       }
     }
   } ## end foreach my $table (@tables)
+  return;
+}
+
+sub mysqlcheck_db {
+  my ($target_db) = @_;
+  if ( system("mysqlcheck --auto-repair --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname}") != 0 ) {
+    croak "Issue when checking or repairing $target_db->{dbname} on $target_db->{host}";
+  }
   return;
 }
 
@@ -630,6 +677,39 @@ sub copy_mysql_files {
 
   return $copy_failed;
 } 
+
+# Dump the database in /tmp
+# Create database on target server
+# Load the database to the target server
+sub copy_mysql_dump {
+  my ($source_dbh,$target_dbh,$source_db,$target_db) = @_;
+  my $copy_failed=0;
+  my $file='/tmp/'.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
+  $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
+  if (defined $source_db->{pass}){
+    if ( system("mysqldump --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
+      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
+      $copy_failed = 1;
+    }
+  }
+  else{
+    if ( system("mysqldump --host=$source_db->{host} --user=$source_db->{user} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
+      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
+      $copy_failed = 1;
+    }
+  }
+  $logger->info("Creating database $target_db->{dbname} on $target_db->{host}");
+  $target_dbh->do("CREATE DATABASE $target_db->{dbname}") or die $target_dbh->errstr;
+  $logger->info("Loading file $file into $target_db->{dbname} on $target_db->{host}");
+  if ( system("mysql --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname} < $file") != 0 ) {
+    $logger->info("Cannot load file into $target_db->{dbname} on $target_db->{host}");
+    $copy_failed = 1;
+  }
+  if ( system("rm -f $file") != 0 ) {
+    $logger->info("Cannot cleanup $file");
+  }
+  return $copy_failed;
+}
 
 # Subroutine to check source database size and target server space available.
 # Added 10% of server space to the calculation to make sure we don't completely fill up the server.
