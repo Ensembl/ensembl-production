@@ -36,6 +36,7 @@ use warnings;
 use DBI;
 use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
 use List::MoreUtils qw(uniq);
+use Bio::EnsEMBL::MetaData::Base qw(process_division_names fetch_and_set_release);
 
 sub run {
   my ($self) = @_;
@@ -56,18 +57,9 @@ sub run {
   my $gdba = $dba->get_GenomeInfoAdaptor();
   my $dbdba = $dba->get_DatabaseInfoAdaptor();
   my $rdba = $dba->get_DataReleaseInfoAdaptor();
-  #set release by querying the metadata db
-  my $release_info;
-  my $release_dir;
-  $release_info = $rdba->fetch_by_ensembl_genomes_release($release);
-  if (!$release_info){
-    $release_info = $rdba->fetch_by_ensembl_release($release);
-    $release_dir = $release_info->{ensembl_version};
-  }
-  else{
-    $release_dir = $release_info->{ensembl_genomes_version};
-  }
-  $gdba->data_release($release_info);
+  #Get and set release
+  my ($release_dir,$release_info);
+  ($rdba,$gdba,$release_dir,$release_info) = fetch_and_set_release($release,$rdba,$gdba);
 
   # Either dump databases from databases array or loop through divisions
   if (@$database) {
@@ -134,22 +126,4 @@ sub check_if_db_exists {
   return `mysql -ss -r --host=$host --port=$port --user=$user --password=$pass -e "show databases like '$database'"`;
 }
 
-#Process the division name, and return both division like metazoa and division name like EnsemblMetazoa
-sub process_division_names {
-  my ($div) = @_;
-  my $division;
-  my $division_name;
-  #Creating the Division name EnsemblBla and division bla variables
-  if ($div !~ m/[E|e]nsembl/){
-    $division = $div;
-    $division_name = 'Ensembl'.ucfirst($div) if defined $div;
-  }
-  else{
-    $division_name = $div;
-    $division = $div;
-    $division =~ s/Ensembl//;
-    $division = lc($division);
-  }
-  return ($division,$division_name)
-}
 1;
