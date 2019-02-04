@@ -44,6 +44,8 @@ if(!Log::Log4perl->initialized()) {
 sub copy_database {
   my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
 
+  # Path for MySQL dump
+  my $dump_path='/nfs/nobackup/ensembl/ensprod/copy_service/';
   # Get list of tables that we want to copy or skip
   my %only_tables;
   my %skip_tables;
@@ -224,7 +226,7 @@ sub copy_database {
       croak "We don't have file system access on these server so we can't use the --update or --only_tables options";
     }
     else{
-      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db);
+      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path);
     }
   }
 
@@ -679,18 +681,18 @@ sub copy_mysql_files {
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
-  my ($source_dbh,$target_dbh,$source_db,$target_db) = @_;
+  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path) = @_;
   my $copy_failed=0;
-  my $file='/nfs/nobackup/ensembl/ensprod/copy_service/'.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
+  my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
   if (defined $source_db->{pass}){
-    if ( system("mysqldump --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
+    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
       $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
       $copy_failed = 1;
     }
   }
   else{
-    if ( system("mysqldump --host=$source_db->{host} --user=$source_db->{user} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
+    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
       $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
       $copy_failed = 1;
     }
