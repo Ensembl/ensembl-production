@@ -15,13 +15,31 @@
 
 # patch_96_97_c.sql
 #
-# Title: Meta_key update
+# Title: Analysis_description update
 #
 # Description:
-#   Update meta_key to add is_multi_value and remove species link
-ALTER TABLE meta_key ADD COLUMN is_multi_value  BOOLEAN NOT NULL DEFAULT false;
-DROP TABLE meta_key_species;
+#   Remove species association from analysis_description and rework how web_data is stored
+ALTER TABLE web_data ADD COLUMN description varchar(255);
+CREATE TABLE web_data_element (
+  web_data_id               INTEGER UNSIGNED NOT NULL,
+  data_key                  VARCHAR(32) NOT NULL,
+  data_value               TEXT,
 
+  -- Columns for the web interface:
+  created_by    INTEGER,
+  created_at    DATETIME,
+  modified_by   INTEGER,
+  modified_at   DATETIME   
+);
+
+INSERT INTO web_data_element(web_data_id,data_key,data_value) (SELECT web_data_id,"hash",data FROM web_data);
+DROP VIEW full_analysis_description;
+DROP VIEW logic_name_overview;
+DROP VIEW unconnected_analyses;
+DROP TABLE analysis_web_data;
+ALTER TABLE web_data DROP COLUMN data;
+ALTER TABLE analysis_description CHANGE COLUMN default_web_data_id web_data_id INT(1);
+ALTER TABLE analysis_description CHANGE COLUMN default_displayable displayable TINYINT(1) NOT NULL;
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_96_97_c.sql|meta_key_update');
+  VALUES (NULL, 'patch', 'patch_96_97_c.sql|analysis_description_update');
