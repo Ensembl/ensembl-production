@@ -14,12 +14,14 @@
 # limitations under the License.
 
 
-srv=$(get_staging_server.sh)
+srv="mysql-ens-sta-3"
 for division in EPl EPr EF EG EM; do
     process_division.sh $division echo | while read db; do
         set_table_checksums.sh $srv $db
     done
 done
+srv="mysql-ens-sta-4"
+
 process_division.sh EB echo | while read db; do
     set_table_checksums.sh ${srv}b $db
 done
