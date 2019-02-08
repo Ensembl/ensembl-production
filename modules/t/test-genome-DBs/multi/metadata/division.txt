@@ -1,0 +1,7 @@
+1	EnsemblVertebrates	EV
+2	EnsemblProtists	EPr
+3	EnsemblFungi	EF
+4	EnsemblMetazoa	EM
+5	EnsemblPlants	EPl
+6	EnsemblBacteria	EB
+7	EnsemblPan	EP
