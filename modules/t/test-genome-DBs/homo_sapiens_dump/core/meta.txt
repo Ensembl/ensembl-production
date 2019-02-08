@@ -240,3 +240,4 @@
 2196	\N	patch	patch_94_95_a.sql|schema_version
 2197	\N	patch	patch_94_95_b.sql|vertebrate_division_rename
 2198	\N	patch	patch_95_96_a.sql|schema_version
+2199	\N	patch	patch_95_96_b.sql|biotype_so_term
