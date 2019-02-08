@@ -32,7 +32,7 @@ before_install:
 - make
 - export HTSLIB_DIR=$(pwd -P)
 - cd ..
-- git clone --branch bioperl-release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+- git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
 
 install:
 - cpanm -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
