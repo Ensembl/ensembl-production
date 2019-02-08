@@ -1,5 +1,5 @@
 2124	1	xref.timestamp	2013-07-22 11:20:10
-1	\N	schema_version	95
+1	\N	schema_version	96
 2	\N	patch	patch_52_53_a.sql|schema_version
 3	\N	patch	patch_52_53_b.sql|external_db_type_enum
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -238,3 +238,5 @@
 2194	\N	patch	patch_93_94_b.sql|nullable_ox_analysis
 2195	\N	patch	patch_93_94_c.sql|default_aln_type
 2196	\N	patch	patch_94_95_a.sql|schema_version
+2197	\N	patch	patch_94_95_b.sql|vertebrate_division_rename
+2198	\N	patch	patch_95_96_a.sql|schema_version
