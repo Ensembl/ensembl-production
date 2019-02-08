@@ -41,6 +41,8 @@ INSERT INTO meta (species_id, meta_key, meta_value)
 INSERT INTO meta (species_id, meta_key, meta_value)
   VALUES (NULL, 'patch', 'patch_94_95_b.sql|vertebrate_division_rename');
 
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_95_96_b.sql|biotype_so_term');
 
 -- The 'species' table.
 -- Lists the species for which there is a Core database.
@@ -129,6 +131,7 @@ CREATE TABLE master_biotype (
   description     TEXT,
   biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
   so_acc          VARCHAR(64),
+  so_term         VARCHAR(1023),
 
   -- Columns for the web interface:
   created_by      INT,
@@ -542,7 +545,8 @@ SELECT
   attrib_type_id AS attrib_type_id,
   description AS description,
   biotype_group AS biotype_group,
-  so_acc AS so_acc
+  so_acc AS so_acc,
+  so_term AS so_term
 FROM master_biotype
 WHERE is_current = true
 ORDER BY biotype_id;
