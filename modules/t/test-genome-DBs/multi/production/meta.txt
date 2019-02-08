@@ -54,3 +54,4 @@
 60	\N	patch	patch_94_95_a.sql|schema_version
 61	\N	patch	patch_94_95_a.sql|vertebrate_division_rename
 62	\N	patch	patch_94_95_b.sql|vertebrate_division_rename
+63	\N	patch	patch_95_96_b.sql|biotype_so_term

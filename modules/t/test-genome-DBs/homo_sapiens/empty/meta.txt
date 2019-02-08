@@ -102,3 +102,4 @@
 152	\N	patch	patch_94_95_a.sql|schema_version
 153	\N	patch	patch_94_95_b.sql|vertebrate_division_rename
 154	\N	patch	patch_95_96_a.sql|schema_version
+155	\N	patch	patch_95_96_b.sql|biotype_so_term
