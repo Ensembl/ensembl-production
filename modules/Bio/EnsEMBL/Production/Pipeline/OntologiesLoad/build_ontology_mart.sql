@@ -1,3 +1,18 @@
+-- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+-- Copyright [2016-2019] EMBL-European Bioinformatics Institute
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--      http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
 create table %MART_NAME%.TEMP_CLOSURE as select a.parent_term_id as parent_term_id_301,a.distance as distance_301,a.subparent_term_id as subparent_term_id_301,a.child_term_id as child_term_id_301,a.closure_id as closure_id_301_key from %ONTOLOGY_DB%.closure as a;
 create index I_0 on %MART_NAME%.TEMP_CLOSURE(child_term_id_301);
 create table %MART_NAME%.TEMP_ONTOLOGY as select a.*,b.ontology_id as ontology_id_305,b.name as name_305,b.definition as definition_305,b.accession as accession_305,b.subsets as subsets_305 from %MART_NAME%.TEMP_CLOSURE as a inner join %ONTOLOGY_DB%.term as b on a.child_term_id_301=b.term_id;
