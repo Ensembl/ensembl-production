@@ -205,6 +205,10 @@ sub pipeline_analyses {
       -analysis_capacity => 20,
       -parameters        => {
                               sql => [
+                                'DELETE dx.* FROM '.
+                                  'dependent_xref dx LEFT OUTER JOIN '.
+                                  'object_xref ox USING (object_xref_id) '.
+                                  'WHERE ox.object_xref_id IS NULL',
                                 'DELETE onx.* FROM '.
                                   'ontology_xref onx LEFT OUTER JOIN '.
                                   'object_xref ox USING (object_xref_id) '.
