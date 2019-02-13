@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset;
 use strict;
 use warnings;
 use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
-use Bio::EnsEMBL::MetaData::Base qw(process_division_names fetch_and_set_release);
+use Bio::EnsEMBL::MetaData::Base qw(process_division_names fetch_and_set_release check_assembly_update check_genebuild_update);
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub write_output {
@@ -78,9 +78,11 @@ sub write_output {
   }
   # Check if the assembly or genebuild has changed
   else{
-    if ($genome->assembly_default() ne $prev_genome->assembly_default()) {
+    my $updated_assembly=check_assembly_update($genome,$prev_genome);
+    my $updated_genebuild=check_genebuild_update($genome,$prev_genome);
+    if ($updated_assembly) {
       $new_assembly=1;
-    } elsif ($genome->genebuild() ne $prev_genome->genebuild()) {
+    } elsif ($updated_genebuild) {
       $new_genebuild=1;
     }
   }
