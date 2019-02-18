@@ -57,6 +57,9 @@ sub default_options {
        'division' 	 => [], 
 	   'run_all'     => 0,	
 
+     ## Flag to skip metadata database check for dumping DNA only for species with update assembly
+     'skip_metadata_check' => 0,
+
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
        #  affect: dump_gtf
@@ -471,7 +474,7 @@ sub pipeline_analyses {
     { -logic_name  => 'CheckAssemblyGeneset',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
       -parameters  => {
-          run_all => $self->o('run_all'),
+          skip_metadata_check => $self->o('skip_metadata_check'),
           release => $self->o('release')
        },
       -can_be_empty    => 1,
