@@ -58,6 +58,8 @@ sub default_options {
     bin_count => '150',
     max_run   => '100',
 
+    skip_metadata_check => 0,
+
     pepstats_binary => 'pepstats',
     pepstats_tmpdir => '/scratch',
 
@@ -113,7 +115,7 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '3->A' => ['CheckAssemblyGenesetChromosomeTasks'],
+                            '3->A' => ['CheckAssemblyGeneset_ChromosomeRelatedTasks'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
       -rc_name         => 'normal',
@@ -130,27 +132,21 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '2' => ['CheckAssemblyGenesetGeneTasks'],
+                            '2' => ['CheckAssemblyGeneset_GeneRelatedTasks'],
                           },
       -rc_name         => 'normal',
     },
-    { -logic_name  => 'CheckAssemblyGenesetGeneTasks',
-      -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
+    {
+      -logic_name      => 'CheckAssemblyGeneset_GeneRelatedTasks',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
       -parameters  => {
-          run_all => $self->o('run_all'),
+          skip_metadata_check => $self->o('skip_metadata_check'),
           release => $self->o('release')
        },
-      -can_be_empty    => 1,
-      -flow_into       => ['GeneRelatedTasks'],
       -max_retry_count => 1,
       -hive_capacity   => 10,
       -priority        => 5,
       -rc_name         => 'normal',
-    },
-    {
-      -logic_name      => 'GeneRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 1,
       -flow_into       => {
                             '1->A' => WHEN( '#new_assembly# >= 1 or #new_genebuild# >=1' => [
                                         'ConstitutiveExons',
@@ -161,24 +157,17 @@ sub pipeline_analyses {
                             'A->1' => WHEN('#new_assembly# >= 1 or #new_genebuild# >=1' => ['GenomeStats']),
                           },
     },
-    { -logic_name  => 'CheckAssemblyGenesetChromosomeTasks',
-      -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
+    {
+      -logic_name      => 'CheckAssemblyGeneset_ChromosomeRelatedTasks',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
       -parameters  => {
-          run_all => $self->o('run_all'),
+          skip_metadata_check => $self->o('skip_metadata_check'),
           release => $self->o('release')
-       },
-      -can_be_empty    => 1,
-      -flow_into       => [ 'ChromosomeRelatedTasks'],
+      },
       -max_retry_count => 1,
       -hive_capacity   => 10,
       -priority        => 5,
       -rc_name         => 'normal',
-    },
-
-    {
-      -logic_name      => 'ChromosomeRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count => 1,
       -flow_into       => [ WHEN(
                         '#new_assembly# >= 1 or #new_genebuild# >=1' =>[
                             'CodingDensity',
