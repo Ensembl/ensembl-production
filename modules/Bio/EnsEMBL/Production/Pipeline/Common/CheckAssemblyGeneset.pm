@@ -39,52 +39,58 @@ sub write_output {
   my ($self) = @_;
   my $release = $self->param_required('release');
   my $species = $self->param_required('species');
-  my $run_all = $self->param('run_all');
+  my $skip_metadata_check = $self->param('skip_metadata_check');
   my $metadatadba = Bio::EnsEMBL::Registry->get_DBAdaptor("multi", "metadata");
   my $gdba = $metadatadba->get_GenomeInfoAdaptor();
   my $rdba = $metadatadba->get_DataReleaseInfoAdaptor();
   my ($division,$division_name)=process_division_names($self->division());
-
-  #Get the release
-  my $release_info;
-  ($rdba,$gdba,$release,$release_info) = fetch_and_set_release($release,$rdba,$gdba);
-  # Get the genome for the given species, release and division
-  my $genomes = $gdba->fetch_by_name($species);
-  my $genome;
-  foreach my $gen (@{$genomes}){
-    $genome = $gen if ($gen->division() eq $division_name);
-  }
-  #Get the previous release
-  if ($division eq "vertebrates") {
-    my $prev_ens = $gdba->data_release()->ensembl_version()-1;
-    $gdba->set_ensembl_release($prev_ens);
-  } else {
-    my $prev_eg = $gdba->data_release()->ensembl_genomes_version()-1;
-    $gdba->set_ensembl_genomes_release($gdba->data_release()->ensembl_genomes_version()-1);
-  }
-  #Get the genome of the previous release for the given species and division
-  my $prev_genomes = $gdba->fetch_by_name($species);
-  my $prev_genome;
-  foreach my $prev_gen (@{$prev_genomes}){
-    $prev_genome = $prev_gen if ($prev_gen->division() eq $division_name);
-  }
-  $metadatadba->dbc()->disconnect_if_idle();
   my $new_assembly = 0;
   my $new_genebuild = 0;
-  # If can't find last release genome then it's a new species.
-  if (!defined($prev_genome) or $run_all==1){
-    $new_assembly=1;
-    $new_genebuild=1;
-  }
-  # Check if the assembly or genebuild has changed
-  else{
-    my $updated_assembly=check_assembly_update($genome,$prev_genome);
-    my $updated_genebuild=check_genebuild_update($genome,$prev_genome);
-    if ($updated_assembly) {
+  if (!$skip_metadata_check){
+    #Get the release
+    my $release_info;
+    ($rdba,$gdba,$release,$release_info) = fetch_and_set_release($release,$rdba,$gdba);
+    # Get the genome for the given species, release and division
+    my $genomes = $gdba->fetch_by_name($species);
+    my $genome;
+    foreach my $gen (@{$genomes}){
+      $genome = $gen if ($gen->division() eq $division_name);
+    }
+    #Get the previous release
+    if ($division eq "vertebrates") {
+      my $prev_ens = $gdba->data_release()->ensembl_version()-1;
+      $gdba->set_ensembl_release($prev_ens);
+    } else {
+      my $prev_eg = $gdba->data_release()->ensembl_genomes_version()-1;
+      $gdba->set_ensembl_genomes_release($gdba->data_release()->ensembl_genomes_version()-1);
+    }
+    #Get the genome of the previous release for the given species and division
+    my $prev_genomes = $gdba->fetch_by_name($species);
+    my $prev_genome;
+    foreach my $prev_gen (@{$prev_genomes}){
+      $prev_genome = $prev_gen if ($prev_gen->division() eq $division_name);
+    }
+    $metadatadba->dbc()->disconnect_if_idle();
+
+    # If can't find last release genome then it's a new species.
+    if (!defined($prev_genome)){
       $new_assembly=1;
-    } elsif ($updated_genebuild) {
       $new_genebuild=1;
     }
+    # Check if the assembly or genebuild has changed
+    else{
+      my $updated_assembly=check_assembly_update($genome,$prev_genome);
+      my $updated_genebuild=check_genebuild_update($genome,$prev_genome);
+      if ($updated_assembly) {
+        $new_assembly=1;
+      } elsif ($updated_genebuild) {
+        $new_genebuild=1;
+      }
+    }
+  }
+  else{
+    $new_assembly=1;
+    $new_genebuild=1;
   }
   $self->dataflow_output_id( {species => $species,new_assembly => $new_assembly,new_genebuild =>$new_genebuild} );
 }
