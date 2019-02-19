@@ -36,7 +36,21 @@ sub old_path {
   my $prod = $self->production_name($species);
   my $release = $self->param('previous_release');
   $directory='dna' if !defined $directory;
-  my $dir = File::Spec->catdir($base, "release-$release", 'fasta', $prod, $directory);
+  my $dir;
+  if ($self->division() ne "vertebrates"){
+    my $mc = $self->get_DBAdaptor()->get_MetaContainer();
+    if ( $mc->is_multispecies() == 1 ) {
+      my $collection_db;
+      $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
+      $dir = File::Spec->catdir($base, "release-$release",$self->division(), 'fasta', $collection_db, $prod, $directory);
+    }
+    else{
+      $dir = File::Spec->catdir($base, "release-$release",$self->division(), 'fasta', $prod, $directory);
+    }
+  }
+  else{
+    $dir = File::Spec->catdir($base, "release-$release", 'fasta', $prod, $directory);
+  }
 }
 
 # Filter a FASTA dump for reference regions only and parse names from the

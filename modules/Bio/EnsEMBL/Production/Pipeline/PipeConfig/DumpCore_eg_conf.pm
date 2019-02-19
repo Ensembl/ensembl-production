@@ -45,6 +45,8 @@ sub default_options {
       ## dump_gff3 & dump_gtf parameter
       'abinitio'        => 0,
       'eg' => 1,
+      # Previous release FASTA DNA files location
+      'prev_rel_dir' => '/nfs/ensemblgenomes/ftp/pub/',
       };
 }
 
@@ -95,7 +97,7 @@ sub tweak_analyses {
 
     $analyses_by_name->{'job_factory'}->{'-flow_into'} = {
                 '2'    => $pipeline_flow,
-							  '2->A' => ['dump_fasta_dna','dump_fasta_pep'],
+							  '2->A' => ['CheckAssemblyGeneset','dump_fasta_pep'],
 							  'A->2' => ['convert_fasta'],
 							 };   
 

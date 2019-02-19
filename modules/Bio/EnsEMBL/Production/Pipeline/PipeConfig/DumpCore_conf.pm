@@ -57,6 +57,9 @@ sub default_options {
        'division' 	 => [], 
 	   'run_all'     => 0,	
 
+     ## Flag to skip metadata database check for dumping DNA only for species with update assembly
+     'skip_metadata_check' => 0,
+
 	   ## Set to '1' for eg! run 
        #  default => OFF (0)
        #  affect: dump_gtf
@@ -181,7 +184,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_fasta_dna', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
+          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'CheckAssemblyGeneset', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
         }
         
     return [
@@ -468,8 +471,35 @@ sub pipeline_analyses {
       -priority        => 5,
       -rc_name         => 'default',
     },
-
+    { -logic_name  => 'CheckAssemblyGeneset',
+      -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
+      -parameters  => {
+          skip_metadata_check => $self->o('skip_metadata_check'),
+          release => $self->o('release')
+       },
+      -can_be_empty    => 1,
+      -flow_into       => {1 => 'dump_fasta_dna'},
+      -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -priority        => 5,
+      -rc_name         => 'default',
+    },
     { -logic_name  => 'dump_fasta_dna',
+      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -parameters  => {
+       },
+      -can_be_empty    => 1,
+      -flow_into       => {
+                            1 => WHEN(
+                        '#new_assembly# >= 1' => 'dump_dna',
+                        ELSE 'copy_dna',
+                    )},
+      -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -priority        => 5,
+      -rc_name         => 'default',
+    },
+    { -logic_name  => 'dump_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
       -parameters  => {
             sequence_type_list  => $self->o('dna_sequence_type_list'),
@@ -483,7 +513,18 @@ sub pipeline_analyses {
       -priority        => 5,
       -rc_name         => 'default',
     },
-
+    {
+      -logic_name => 'copy_dna',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
+      -can_be_empty => 1,
+      -hive_capacity => 10,
+      -priority        => 5,
+      -parameters => {
+        ftp_dir => $self->o('prev_rel_dir'),
+        release => $self->o('release'),
+        previous_release => $self->o('previous_release'),
+      },
+    },
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 
     { -logic_name      => 'concat_fasta',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',

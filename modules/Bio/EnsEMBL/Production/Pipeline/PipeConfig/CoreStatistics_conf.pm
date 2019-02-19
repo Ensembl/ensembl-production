@@ -38,6 +38,7 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
   my ($self) = @_;
@@ -56,6 +57,8 @@ sub default_options {
 
     bin_count => '150',
     max_run   => '100',
+
+    skip_metadata_check => 0,
 
     pepstats_binary => 'pepstats',
     pepstats_tmpdir => '/scratch',
@@ -112,12 +115,11 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '3->A' => ['ChromosomeRelatedTasks'],
+                            '3->A' => ['CheckAssemblyGeneset_ChromosomeRelatedTasks'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
       -rc_name         => 'normal',
     },
-
     {
       -logic_name      => 'SpeciesFactory_All',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -130,38 +132,52 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '2' => ['GeneRelatedTasks'],
+                            '2' => ['CheckAssemblyGeneset_GeneRelatedTasks'],
                           },
       -rc_name         => 'normal',
     },
-
     {
-      -logic_name      => 'GeneRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -logic_name      => 'CheckAssemblyGeneset_GeneRelatedTasks',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
+      -parameters  => {
+          skip_metadata_check => $self->o('skip_metadata_check'),
+          release => $self->o('release')
+       },
       -max_retry_count => 1,
+      -hive_capacity   => 10,
+      -priority        => 5,
+      -rc_name         => 'normal',
       -flow_into       => {
-                            '1->A' => [
+                            '1->A' => WHEN( '#new_assembly# >= 1 or #new_genebuild# >=1' => [
                                         'ConstitutiveExons',
                                         'GeneCount',
                                         'GeneGC',
                                         'PepStats',
-                                      ],
-                            'A->1' => ['GenomeStats'],
+                                      ]),
+                            'A->1' => WHEN('#new_assembly# >= 1 or #new_genebuild# >=1' => ['GenomeStats']),
                           },
     },
-
     {
-      -logic_name      => 'ChromosomeRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -logic_name      => 'CheckAssemblyGeneset_ChromosomeRelatedTasks',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
+      -parameters  => {
+          skip_metadata_check => $self->o('skip_metadata_check'),
+          release => $self->o('release')
+      },
       -max_retry_count => 1,
-      -flow_into       => [
+      -hive_capacity   => 10,
+      -priority        => 5,
+      -rc_name         => 'normal',
+      -flow_into       => [ WHEN(
+                        '#new_assembly# >= 1 or #new_genebuild# >=1' =>[
                             'CodingDensity',
                             'PseudogeneDensity',
                             'ShortNonCodingDensity',
                             'LongNonCodingDensity',
                             'PercentGC',
                             'PercentRepeat',
-                          ],
+                          ])
+      ],
     },
 
     {
