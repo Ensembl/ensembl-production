@@ -115,8 +115,7 @@ sub fetch_probes_for_dba {
         push @{$probe_transcripts->{ $row->[0] }}, { %{$t}, description => $row->[2] } if defined $t;
         return;
       });
-  $logger->info("Fetched details for " .
-      scalar(keys %$probe_transcripts) . " probe_transcripts");
+  $logger->info("Fetched details for " . scalar(keys %$probe_transcripts) . " probe_transcripts");
 
   # load probes
   $logger->info("Fetching probes");
@@ -172,19 +171,20 @@ sub fetch_probes_for_dba {
       "Fetched details for " . scalar(keys %$probes) . " probes");
   my $probe_sets = [];
   $h->execute_no_return(
-      -SQL          => q/SELECT
-      distinct ps.probe_set_id as id,
-      ps.name as name,
-      ps.family as family,
-      array_chip.name as array_chip,
-      array.name as array,
-      array.vendor as array_vendor
-    FROM
-      probe_set ps
-      join probe p using (probe_set_id)
-      join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
-      join array using (array_id)
-      WHERE p.probe_id between ? AND ?/,
+      -SQL          => q/
+      SELECT
+        distinct ps.probe_set_id as id,
+        ps.name as name,
+        ps.family as family,
+        array_chip.name as array_chip,
+        array.name as array,
+        array.vendor as array_vendor
+      FROM
+        probe_set ps
+        join probe p using (probe_set_id)
+        join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
+        join array using (array_id)
+        WHERE p.probe_id between ? AND ?/,
       -PARAMS       => [ $min, $max ],
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
@@ -196,8 +196,7 @@ sub fetch_probes_for_dba {
         push @{$probe_sets}, $row;
         return;
       });
-  $logger->info(
-      "Fetched details for " . scalar(@$probe_sets) . " probe sets");
+  $logger->info("Fetched details for " . scalar(@$probe_sets) . " probe sets");
   return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
 } ## end sub fetch_probes_for_dba
 
