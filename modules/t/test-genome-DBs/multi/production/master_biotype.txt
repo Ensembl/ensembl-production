@@ -142,7 +142,8 @@
 152	ncbigene	1	0	gene	otherfeatures	0	Imported annotation from RefSeq	undefined	\N	5132	2011-08-06 09:04:25	0	0000-00-00 00:00:00
 153	non_stop_decay	1	1	transcript	core,vega,presite	0	A new transcript biotype from Havana.	coding	SO:0000234	9335	2011-10-11 12:28:06	104957	2014-03-21 15:08:18
 154	pre_miRNA	1	1	transcript	core	0	This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.	snoncoding	SO:0001244	98587	2011-10-13 13:29:27	5132	2013-07-09 18:42:54
-155	tmRNA	1	1	gene	core	357	One of the classes of ncRNA genes that is only found in bacteria.\
+155	tmRNA	1	1	gene	core	357	One of the classes of ncRNA genes that is only found in bacteria.
+\
 Hence only required for EnsemblBacteria.	snoncoding	SO:0001263	101255	2011-10-24 16:20:33	105967	2013-10-08 11:25:14
 156	tmRNA	1	1	transcript	core	0	One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.	snoncoding	SO:0000584	101255	2011-10-24 16:21:47	105967	2013-10-08 11:25:26
 157	SRP_RNA	1	1	gene	core	194	The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.	snoncoding	SO:0001263	101255	2011-10-24 16:25:07	105967	2013-10-08 11:24:01

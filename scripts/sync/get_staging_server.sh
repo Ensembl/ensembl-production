@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash --
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # Copyright [2016-2019] EMBL-European Bioinformatics Institute
 #
@@ -14,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-srv=$1
-file=$(mktemp)
-$srv --column-names=false -e "show databases" > $file
-for db_type in otherfeatures cdna rnaseq; do
-    echo "Looking for $db_type dbs"
-    for db in $(grep $db_type $file); do 
-        core=${db/$db_type/core}
-        echo "Syncing assembly from $core to $db"
-        ./sync_tables.sh $srv $core $db assembly assembly_exception coord_system seq_region seq_region_synonym seq_region_attrib karyotype mapping_set seq_region_mapping
-    done
-done
-rm -f $file
+release=$(get_release.sh)
+release=${release/_[0-9]*/}
+rem=$(( $release % 2 ))
+if [ "$rem" -eq 0 ]
+then
+  echo "mysql-staging-2"
+else
+  echo "mysql-staging-1"
+fi

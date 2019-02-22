@@ -1,541 +1,588 @@
--- MySQL dump 10.13  Distrib 5.5.57, for debian-linux-gnu (x86_64)
+-- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+-- Copyright [2016-2019] EMBL-European Bioinformatics Institute
 --
--- Host: localhost    Database: ensembl_production
--- ------------------------------------------------------
--- Server version	5.5.57-0ubuntu0.14.04.1
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
 --
--- Table structure for table `analysis_description`
+--      http://www.apache.org/licenses/LICENSE-2.0
 --
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
 
-DROP TABLE IF EXISTS `analysis_description`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `analysis_description` (
-  `analysis_description_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `logic_name` varchar(128) NOT NULL,
-  `description` text,
-  `display_label` varchar(256) NOT NULL,
-  `db_version` tinyint(1) NOT NULL DEFAULT '1',
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  `web_data_id` int(1) DEFAULT NULL,
-  `displayable` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`analysis_description_id`),
-  UNIQUE KEY `logic_name_idx` (`logic_name`)
-) ENGINE=MyISAM AUTO_INCREMENT=3050 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- Table schema for the production database
 
---
--- Temporary table structure for view `attrib`
---
+-- The 'meta' table.
+CREATE TABLE IF NOT EXISTS meta (
 
-DROP TABLE IF EXISTS `attrib`;
-/*!50001 DROP VIEW IF EXISTS `attrib`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `attrib` (
-  `attrib_id` tinyint NOT NULL,
-  `attrib_type_id` tinyint NOT NULL,
-  `value` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+  meta_id                     INT NOT NULL AUTO_INCREMENT,
+  species_id                  INT UNSIGNED DEFAULT 1,
+  meta_key                    VARCHAR(40) NOT NULL,
+  meta_value                  TEXT NOT NULL,
 
---
--- Temporary table structure for view `attrib_set`
---
+  PRIMARY   KEY (meta_id),
+  UNIQUE    KEY species_key_value_idx (species_id, meta_key, meta_value(255)),
+            KEY species_value_idx (species_id, meta_value(255))
 
-DROP TABLE IF EXISTS `attrib_set`;
-/*!50001 DROP VIEW IF EXISTS `attrib_set`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `attrib_set` (
-  `attrib_set_id` tinyint NOT NULL,
-  `attrib_id` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
---
--- Temporary table structure for view `attrib_type`
---
+# Add schema type and schema version to the meta table
+INSERT INTO meta (species_id, meta_key, meta_value) VALUES
+  (NULL, 'schema_type', 'production'),
+  (NULL, 'schema_version', 95);
 
-DROP TABLE IF EXISTS `attrib_type`;
-/*!50001 DROP VIEW IF EXISTS `attrib_type`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `attrib_type` (
-  `attrib_type_id` tinyint NOT NULL,
-  `code` tinyint NOT NULL,
-  `name` tinyint NOT NULL,
-  `description` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+# Patches included in this schema file
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_94_95_a.sql|schema version');
 
---
--- Temporary table structure for view `biotype`
---
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_94_95_b.sql|vertebrate_division_rename');
 
-DROP TABLE IF EXISTS `biotype`;
-/*!50001 DROP VIEW IF EXISTS `biotype`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `biotype` (
-  `biotype_id` tinyint NOT NULL,
-  `name` tinyint NOT NULL,
-  `is_dumped` tinyint NOT NULL,
-  `object_type` tinyint NOT NULL,
-  `attrib_type_id` tinyint NOT NULL,
-  `description` tinyint NOT NULL,
-  `biotype_group` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+INSERT INTO meta (species_id, meta_key, meta_value)
+  VALUES (NULL, 'patch', 'patch_95_96_b.sql|biotype_so_term');
 
---
--- Temporary table structure for view `external_db`
---
+-- The 'species' table.
+-- Lists the species for which there is a Core database.
+CREATE TABLE species (
+  species_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  db_name         VARCHAR(255) NOT NULL, -- Name used in database names.
+  common_name     VARCHAR(255) NOT NULL, -- What we often refer to it as.
+  web_name        VARCHAR(255) NOT NULL, -- Name that the web site is using.
+  scientific_name VARCHAR(255) NOT NULL, -- Full name of the species
+  production_name VARCHAR(255) NOT NULL, -- Name that production processes use
+  url_name        VARCHAR(255) NOT NULL DEFAULT '', -- Name that is used in URLs
+  taxon           VARCHAR(8) NOT NULL,
+  species_prefix  VARCHAR(20) NOT NULL,
+  is_current      TINYINT NOT NULL DEFAULT '1',
+  attrib_type_id  SMALLINT(5) UNSIGNED DEFAULT NULL,
 
-DROP TABLE IF EXISTS `external_db`;
-/*!50001 DROP VIEW IF EXISTS `external_db`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `external_db` (
-  `external_db_id` tinyint NOT NULL,
-  `db_name` tinyint NOT NULL,
-  `db_release` tinyint NOT NULL,
-  `status` tinyint NOT NULL,
-  `priority` tinyint NOT NULL,
-  `db_display_name` tinyint NOT NULL,
-  `type` tinyint NOT NULL,
-  `secondary_db_name` tinyint NOT NULL,
-  `secondary_db_table` tinyint NOT NULL,
-  `description` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Table structure for table `master_attrib`
---
+  PRIMARY KEY (species_id),
+  UNIQUE KEY db_name_idx (db_name),
+  UNIQUE KEY production_name_idx (production_name)
+);
 
-DROP TABLE IF EXISTS `master_attrib`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_attrib` (
-  `attrib_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `attrib_type_id` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `value` text NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`attrib_id`),
-  UNIQUE KEY `type_val_idx` (`attrib_type_id`,`value`(80))
-) ENGINE=MyISAM AUTO_INCREMENT=587 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- The 'species_alias' table
+-- Lists all aliases for all species including those no longer active
 
---
--- Table structure for table `master_attrib_set`
---
+CREATE TABLE species_alias (
+  species_alias_id  INT UNSIGNED NOT NULL AUTO_INCREMENT, -- surrogate key
+  species_id        INT UNSIGNED NOT NULL,      -- FK into species
+  alias             varchar(255) NOT NULL,          -- alias
+  is_current        TINYINT NOT NULL DEFAULT '1',  -- if it's still current
 
-DROP TABLE IF EXISTS `master_attrib_set`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_attrib_set` (
-  `attrib_set_id` int(11) unsigned NOT NULL DEFAULT '0',
-  `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  UNIQUE KEY `set_idx` (`attrib_set_id`,`attrib_id`),
-  KEY `attrib_idx` (`attrib_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Table structure for table `master_attrib_type`
---
+  PRIMARY KEY (species_alias_id),
+  UNIQUE KEY (alias, is_current),             -- aliases MUST be unique for
+                                                -- the current set. A certain
+                                                -- amount of duplication is
+                                                -- allowed if an alias moved
+                                                -- once
+  KEY sa_speciesid_idx (species_id)
+);
 
-DROP TABLE IF EXISTS `master_attrib_type`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_attrib_type` (
-  `attrib_type_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `code` varchar(20) NOT NULL DEFAULT '',
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `description` text,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`attrib_type_id`),
-  UNIQUE KEY `code_idx` (`code`)
-) ENGINE=MyISAM AUTO_INCREMENT=526 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `master_biotype`
---
+-- The 'db' table.
+-- This table contains all species-specific databases for this release.
+CREATE TABLE db (
+  db_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  species_id    INT UNSIGNED NOT NULL,  -- FK into 'species'.
+  is_current    TINYINT NOT NULL DEFAULT '0',
+  db_type       ENUM('cdna', 'core', 'coreexpressionatlas',
+                     'coreexpressionest', 'coreexpressiongnf',
+                     'funcgen', 'otherfeatures', 'rnaseq',
+                     'variation', 'vega') NOT NULL DEFAULT 'core',
+  db_release    VARCHAR(8) NOT NULL,
+  db_assembly   VARCHAR(8) NOT NULL,
+  db_suffix     CHAR(1) DEFAULT '',
+  db_host       VARCHAR(32) DEFAULT NULL,
 
-DROP TABLE IF EXISTS `master_biotype`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_biotype` (
-  `biotype_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `is_dumped` tinyint(1) NOT NULL DEFAULT '1',
-  `object_type` enum('gene','transcript') NOT NULL DEFAULT 'gene',
-  `db_type` set('cdna','core','coreexpressionatlas','coreexpressionest','coreexpressiongnf','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') NOT NULL DEFAULT 'core',
-  `attrib_type_id` int(11) DEFAULT NULL,
-  `description` text,
-  `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`biotype_id`),
-  UNIQUE KEY `name_type_idx` (`name`,`object_type`,`db_type`)
-) ENGINE=MyISAM AUTO_INCREMENT=219 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (db_id),
+  UNIQUE KEY species_release_idx (species_id, db_type, db_release)
+);
 
---
--- Table structure for table `master_external_db`
---
 
-DROP TABLE IF EXISTS `master_external_db`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_external_db` (
-  `external_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `db_name` varchar(100) NOT NULL,
-  `db_release` varchar(255) DEFAULT NULL,
-  `status` enum('KNOWNXREF','KNOWN','XREF','PRED','ORTH','PSEUDO') NOT NULL,
-  `priority` int(11) NOT NULL,
-  `db_display_name` varchar(255) NOT NULL,
-  `type` enum('ARRAY','ALT_TRANS','ALT_GENE','MISC','LIT','PRIMARY_DB_SYNONYM','ENSEMBL') DEFAULT NULL,
-  `secondary_db_name` varchar(255) DEFAULT NULL,
-  `secondary_db_table` varchar(255) DEFAULT NULL,
-  `description` text,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`external_db_id`),
-  UNIQUE KEY `db_name_idx` (`db_name`,`db_release`,`is_current`)
-) ENGINE=MyISAM AUTO_INCREMENT=50848 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- The 'master_biotype' table.
+-- Contains all the valid biotypes used for genes and transcripts.
+CREATE TABLE master_biotype (
+  biotype_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name            VARCHAR(64) NOT NULL,
+  is_current      TINYINT NOT NULL DEFAULT '1',
+  is_dumped       TINYINT NOT NULL DEFAULT '1',
+  object_type     ENUM('gene', 'transcript') NOT NULL DEFAULT 'gene',
+  db_type         SET('cdna', 'core', 'coreexpressionatlas',
+                      'coreexpressionest', 'coreexpressiongnf', 'funcgen',
+                      'otherfeatures', 'rnaseq', 'variation', 'vega',
+                      'presite', 'sangervega') NOT NULL DEFAULT 'core',
+  attrib_type_id  INT(11) DEFAULT NULL,
+  description     TEXT,
+  biotype_group   ENUM('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
+  so_acc          VARCHAR(64),
+  so_term         VARCHAR(1023),
 
---
--- Table structure for table `master_misc_set`
---
+  -- Columns for the web interface:
+  created_by      INT,
+  created_at      DATETIME,
+  modified_by     INT,
+  modified_at     DATETIME,
 
-DROP TABLE IF EXISTS `master_misc_set`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_misc_set` (
-  `misc_set_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `code` varchar(25) NOT NULL DEFAULT '',
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `description` text NOT NULL,
-  `max_length` int(10) unsigned NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`misc_set_id`),
-  UNIQUE KEY `code_idx` (`code`)
-) ENGINE=MyISAM AUTO_INCREMENT=91 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (biotype_id),
+  UNIQUE KEY name_type_idx (name, object_type)
+);
 
---
--- Table structure for table `master_unmapped_reason`
---
+-- The 'meta_key' table.
+-- Contains the meta keys that may or must be available in the 'meta'
+-- table in the Core databases.
+CREATE TABLE meta_key (
+  meta_key_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name              VARCHAR(64) NOT NULL,
+  is_optional       TINYINT NOT NULL DEFAULT '0',
+  is_current        TINYINT NOT NULL DEFAULT '1',
+  db_type           SET('cdna', 'core', 'funcgen', 'otherfeatures',
+                        'rnaseq', 'variation', 'vega') NOT NULL DEFAULT 'core',
+  description       TEXT,
 
-DROP TABLE IF EXISTS `master_unmapped_reason`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `master_unmapped_reason` (
-  `unmapped_reason_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `summary_description` varchar(255) DEFAULT NULL,
-  `full_description` varchar(255) DEFAULT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`unmapped_reason_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=139 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Table structure for table `meta`
---
+  PRIMARY KEY (meta_key_id),
+  UNIQUE KEY name_type_idx (name, db_type)
+);
 
-DROP TABLE IF EXISTS `meta`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `meta` (
-  `meta_id` int(11) NOT NULL AUTO_INCREMENT,
-  `species_id` int(10) unsigned DEFAULT '1',
-  `meta_key` varchar(40) NOT NULL,
-  `meta_value` text NOT NULL,
-  PRIMARY KEY (`meta_id`),
-  UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
-  KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=59 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- The 'meta_key_species' table.
+-- Connects the 'meta_key' and the 'species' tables.
+CREATE TABLE meta_key_species (
+  meta_key_id       INT UNSIGNED NOT NULL,
+  species_id        INT UNSIGNED NOT NULL,
 
---
--- Table structure for table `meta_key`
---
+  UNIQUE KEY uniq_idx (meta_key_id, species_id)
+);
 
-DROP TABLE IF EXISTS `meta_key`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `meta_key` (
-  `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) NOT NULL,
-  `is_optional` tinyint(1) NOT NULL DEFAULT '0',
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `db_type` set('cdna','core','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') NOT NULL DEFAULT 'core',
-  `description` text,
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  `is_multi_value` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`meta_key_id`),
-  KEY `name_type_idx` (`name`,`db_type`)
-) ENGINE=MyISAM AUTO_INCREMENT=107 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- The 'analysis_description' table.
+-- Contains the analysis logic name along with the data that should
+-- be available in the 'analysis_description' table, except for the
+-- 'web_data' and 'displayable' columns.
+CREATE TABLE analysis_description (
+  analysis_description_id   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  logic_name                VARCHAR(128) NOT NULL,
+  description               TEXT,
+  display_label             VARCHAR(256) NOT NULL,
+  db_version                TINYINT(1) NOT NULL DEFAULT '1',
+  is_current                TINYINT NOT NULL DEFAULT '1',
+  default_web_data_id       INT(10) UNSIGNED DEFAULT NULL,
+  default_displayable       TINYINT DEFAULT NULL,
 
---
--- Temporary table structure for view `misc_set`
---
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
-DROP TABLE IF EXISTS `misc_set`;
-/*!50001 DROP VIEW IF EXISTS `misc_set`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `misc_set` (
-  `misc_set_id` tinyint NOT NULL,
-  `code` tinyint NOT NULL,
-  `name` tinyint NOT NULL,
-  `description` tinyint NOT NULL,
-  `max_length` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+  PRIMARY KEY (analysis_description_id),
+  UNIQUE KEY logic_name_idx (logic_name)
+);
 
---
--- Temporary table structure for view `unmapped_reason`
---
+-- The 'analysis_web_data' table.
+-- Many-to-many connection table.
+-- Contains the data for the 'displayable' columns in the
+-- 'analysis_description' table.  Ties together species,
+-- analysis_description, and the web_data.
+CREATE TABLE analysis_web_data (
+  analysis_web_data_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  analysis_description_id   INT UNSIGNED NOT NULL,
+  web_data_id               INT UNSIGNED DEFAULT NULL,
+  species_id                INT UNSIGNED NOT NULL,
 
-DROP TABLE IF EXISTS `unmapped_reason`;
-/*!50001 DROP VIEW IF EXISTS `unmapped_reason`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE TABLE `unmapped_reason` (
-  `unmapped_reason_id` tinyint NOT NULL,
-  `summary_description` tinyint NOT NULL,
-  `full_description` tinyint NOT NULL
-) ENGINE=MyISAM */;
-SET character_set_client = @saved_cs_client;
+  db_type                   ENUM('cdna', 'core', 'funcgen',
+                                'otherfeatures', 'rnaseq', 'vega',
+                                'presite', 'sangervega', 'grch37_archive') NOT NULL DEFAULT 'core',
 
---
--- Table structure for table `web_data`
---
+  displayable               TINYINT NOT NULL DEFAULT '1',
 
-DROP TABLE IF EXISTS `web_data`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `web_data` (
-  `web_data_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `comment` text,
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`web_data_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1850 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Table structure for table `web_data_element`
---
+  PRIMARY KEY (analysis_web_data_id),
+  UNIQUE KEY uniq_idx (species_id, db_type, analysis_description_id),
+  KEY ad_idx (analysis_description_id),
+  KEY wd_idx (web_data_id)
+);
 
-DROP TABLE IF EXISTS `web_data_element`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `web_data_element` (
-  `web_data_id` int(10) unsigned NOT NULL,
-  `data_key` varchar(32) NOT NULL,
-  `data_value` text,
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`web_data_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- The 'web_data' table.
+-- Contains the unique web_data.
+CREATE TABLE web_data (
+  web_data_id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  data                      TEXT,
 
---
--- Final view structure for view `attrib`
---
+  -- Columns for internal documentation
+  comment TEXT,
 
-/*!50001 DROP TABLE IF EXISTS `attrib`*/;
-/*!50001 DROP VIEW IF EXISTS `attrib`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Final view structure for view `attrib_set`
---
+  PRIMARY KEY (web_data_id)
+);
 
-/*!50001 DROP TABLE IF EXISTS `attrib_set`*/;
-/*!50001 DROP VIEW IF EXISTS `attrib_set`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+-- The 'master_attrib_type' table.
+-- Lists the existing attrib_types
+CREATE TABLE master_attrib_type (
+  attrib_type_id            SMALLINT(5) unsigned NOT NULL AUTO_INCREMENT,
+  code                      VARCHAR(20) NOT NULL DEFAULT '',
+  name                      VARCHAR(255) NOT NULL DEFAULT '',
+  description               TEXT,
+  is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
---
--- Final view structure for view `attrib_type`
---
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
-/*!50001 DROP TABLE IF EXISTS `attrib_type`*/;
-/*!50001 DROP VIEW IF EXISTS `attrib_type`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+  PRIMARY KEY (attrib_type_id),
+  UNIQUE KEY code_idx (code)
+);
 
---
--- Final view structure for view `biotype`
---
+-- The 'master_attrib' table.
+-- Lists the existing variation attrib data
+CREATE TABLE master_attrib (
+  attrib_id           INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  attrib_type_id      SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
+  value               TEXT NOT NULL,
+  is_current          TINYINT(1) NOT NULL DEFAULT '1',
 
-/*!50001 DROP TABLE IF EXISTS `biotype`*/;
-/*!50001 DROP VIEW IF EXISTS `biotype`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensrw`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`is_dumped` AS `is_dumped`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
---
--- Final view structure for view `external_db`
---
+  PRIMARY KEY (attrib_id),
+  UNIQUE KEY type_val_idx (attrib_type_id, value(80))
+);
 
-/*!50001 DROP TABLE IF EXISTS `external_db`*/;
-/*!50001 DROP VIEW IF EXISTS `external_db`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `external_db` AS select `master_external_db`.`external_db_id` AS `external_db_id`,`master_external_db`.`db_name` AS `db_name`,`master_external_db`.`db_release` AS `db_release`,`master_external_db`.`status` AS `status`,`master_external_db`.`priority` AS `priority`,`master_external_db`.`db_display_name` AS `db_display_name`,`master_external_db`.`type` AS `type`,`master_external_db`.`secondary_db_name` AS `secondary_db_name`,`master_external_db`.`secondary_db_table` AS `secondary_db_table`,`master_external_db`.`description` AS `description` from `master_external_db` where (`master_external_db`.`is_current` = 1) order by `master_external_db`.`external_db_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+-- The 'master_attrib_set' table.
+-- Lists the existing variation attrib_set data
+CREATE TABLE master_attrib_set (
+  attrib_set_id       INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  attrib_id           INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  is_current          TINYINT(1) NOT NULL DEFAULT '1',
 
---
--- Final view structure for view `misc_set`
---
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
-/*!50001 DROP TABLE IF EXISTS `misc_set`*/;
-/*!50001 DROP VIEW IF EXISTS `misc_set`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+  UNIQUE KEY set_idx (attrib_set_id, attrib_id),
+  KEY attrib_idx (attrib_id)
+);
 
---
--- Final view structure for view `unmapped_reason`
---
+-- The 'master_external_db' table.
+-- Lists the existing external_dbs
+CREATE TABLE master_external_db (
+  external_db_id            INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  db_name                   VARCHAR(100) NOT NULL,
+  db_release                VARCHAR(255) DEFAULT NULL,
+  status                    ENUM('KNOWNXREF','KNOWN','XREF','PRED','ORTH','PSEUDO') NOT NULL,
+  priority                  INT(11) NOT NULL,
+  db_display_name           VARCHAR(255) NOT NULL,
+  type                      ENUM('ARRAY','ALT_TRANS','ALT_GENE','MISC','LIT','PRIMARY_DB_SYNONYM','ENSEMBL') DEFAULT NULL,
+  secondary_db_name         VARCHAR(255) DEFAULT NULL,
+  secondary_db_table        VARCHAR(255) DEFAULT NULL,
+  description               TEXT,
+  is_current                TINYINT(1) NOT NULL DEFAULT '1',
 
-/*!50001 DROP TABLE IF EXISTS `unmapped_reason`*/;
-/*!50001 DROP VIEW IF EXISTS `unmapped_reason`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = latin1 */;
-/*!50001 SET character_set_results     = latin1 */;
-/*!50001 SET collation_connection      = latin1_swedish_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER */
-/*!50001 VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+  PRIMARY KEY (external_db_id),
+  UNIQUE KEY db_name_idx (db_name,db_release,is_current)
+);
+
+-- The 'master_misc_set' table
+-- Lists the existing misc_sets
+CREATE TABLE master_misc_set (
+  misc_set_id               SMALLINT(5) UNSIGNED NOT NULL AUTO_INCREMENT,
+  code                      VARCHAR(25) NOT NULL DEFAULT '',
+  name                      VARCHAR(255) NOT NULL DEFAULT '',
+  description               TEXT NOT NULL,
+  max_length                INT(10) UNSIGNED NOT NULL,
+  is_current                TINYINT(1) NOT NULL DEFAULT '1',
+
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
+
+  PRIMARY KEY (misc_set_id),
+  UNIQUE KEY code_idx (code)
+);
+
+
+-- The 'master_unmapped_reason' table
+-- Lists the existing unmapped_reasons
+CREATE TABLE master_unmapped_reason (
+  unmapped_reason_id        INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  summary_description       VARCHAR(255) DEFAULT NULL,
+  full_description          VARCHAR(255) DEFAULT NULL,
+  is_current                TINYINT(1) NOT NULL DEFAULT '1',
+
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
+
+  PRIMARY KEY (unmapped_reason_id)
+);
+
+
+-- The 'changelog' and 'changelog_species' tables
+-- Used for web purposes to store release related information
+CREATE TABLE changelog (
+  changelog_id              INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  release_id                INT(11) DEFAULT NULL,
+  title                     VARCHAR(128) DEFAULT NULL,
+  content                   TEXT,
+  notes                     TEXT,
+  status                    ENUM('declared','handed_over','postponed','cancelled') NOT NULL DEFAULT 'declared',
+  team                      ENUM('Compara','Core','Funcgen','Genebuild','Outreach','Variation','Web','EnsemblGenomes','Wormbase','Production') DEFAULT NULL,
+  assembly                  ENUM('N','Y') NOT NULL DEFAULT 'N',
+  gene_set                  ENUM('N','Y') NOT NULL DEFAULT 'N',
+  repeat_masking            ENUM('N','Y') NOT NULL DEFAULT 'N',
+  stable_id_mapping         ENUM('N','Y') NOT NULL DEFAULT 'N',
+  affy_mapping              ENUM('N','Y') NOT NULL DEFAULT 'N',
+  biomart_affected          ENUM('N','Y') NOT NULL DEFAULT 'N',
+  variation_pos_changed     ENUM('N','Y') NOT NULL DEFAULT 'N',
+  mitochondrion             ENUM('N','Y', 'changed') NOT NULL DEFAULT 'N',
+  db_status                 ENUM('N/A','unchanged','patched','new') NOT NULL DEFAULT 'N/A',
+  db_type_affected          SET('cdna','core','funcgen','otherfeatures','rnaseq','variation','vega','presite','sangervega') DEFAULT NULL,
+  priority                  TINYINT(1) NOT NULL DEFAULT '2',
+  is_current                TINYINT(1) NOT NULL DEFAULT '1',
+
+  -- Columns for the web interface:
+  created_by    INT,
+  created_at    DATETIME,
+  modified_by   INT,
+  modified_at   DATETIME,
+
+  PRIMARY KEY (changelog_id)
+);
+
+-- Connects the 'changelog' and the 'species' tables.
+CREATE TABLE changelog_species (
+  changelog_id              INT(11) NOT NULL DEFAULT '0',
+  species_id                INT(11) NOT NULL DEFAULT '0',
+
+  PRIMARY KEY (changelog_id,species_id)
+);
+
+-- Tables to store species divisions
+CREATE TABLE division (
+  division_id           int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name                  VARCHAR(32) NOT NULL,
+  shortname             VARCHAR(4) NOT NULL,
+
+  PRIMARY KEY (division_id),
+  UNIQUE KEY name_idx (name),
+  UNIQUE KEY shortname_idx (shortname)
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
+
+CREATE TABLE division_species (
+  division_id           INT(10) DEFAULT NULL,
+  species_id            INT(10) DEFAULT NULL,
+
+  UNIQUE KEY division_species_idx (division_id,species_id)
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
+
+CREATE TABLE division_db (
+  division_id           INT(10) DEFAULT NULL,
+  db_name               VARCHAR(64) NOT NULL,
+  db_type               ENUM('COMPARA','GENE_MART','SEQ_MART','SNP_MART','FEATURES_MART','ONTOLOGY_MART','ONTOLOGY','TAXONOMY','ANCESTRAL','WEBSITE','INFO') NOT NULL,
+  is_current            TINYINT(1) NOT NULL DEFAULT '1',
+  update_type           ENUM('NEW_GENOME','NEW_ASSEMBLY','NEW_GENEBUILD','PATCHED','OTHER') DEFAULT 'PATCHED',
+  release_status        ENUM('NOT_READY','COMPARA_READY','WEB_READY') DEFAULT 'NOT_READY',
+
+  UNIQUE KEY division_db_idx (division_id,db_name,is_current)
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
+
+-- VIEWS
+
+-- The 'db_list' view provides the full database names for all databases
+-- in the 'db' table that are current.
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW db_list AS
+SELECT  db_id AS db_id,
+        CONCAT(
+          CONCAT_WS('_', db_name, db_type, db_release, db_assembly),
+        db_suffix) AS full_db_name
+FROM    species
+  JOIN  db USING (species_id)
+WHERE species.is_current = true;
+
+-- The 'full_analysis_description' view provides, for each database,
+-- /nearly/ exactly what should go into the 'analysis_description'
+-- table, apart from the fact that it uses 'analysis.logic_name' rather
+-- than 'analysis.analysis_id'.
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW full_analysis_description AS
+SELECT  list.full_db_name AS full_db_name,
+        ad.logic_name AS logic_name,
+        ad.description AS description,
+        ad.display_label AS display_label,
+        awd.displayable AS displayable,
+        wd.data AS web_data
+FROM db_list list
+  JOIN db USING (db_id)
+  JOIN analysis_web_data awd
+    ON ( db.species_id = awd.species_id
+    AND  db.db_type = awd.db_type )
+  JOIN analysis_description ad USING (analysis_description_id)
+  LEFT JOIN web_data wd USING (web_data_id)
+WHERE   db.is_current = true
+  AND   ad.is_current = true;
+
+-- The 'logic_name_overview' is a helper view for people trying to
+-- make sense of the 'analysis_description', 'analysis_web_data', and
+-- 'web_data' tables.
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW logic_name_overview AS
+SELECT
+  awd.analysis_web_data_id AS analysis_web_data_id,
+  ad.logic_name AS logic_name,
+  ad.analysis_description_id AS analysis_description_id,
+  s.db_name AS species,
+  s.species_id AS species_id,
+  awd.db_type AS db_type,
+  wd.web_data_id AS web_data_id,
+  awd.displayable AS displayable
+FROM   analysis_description ad
+  JOIN analysis_web_data awd USING (analysis_description_id)
+  JOIN species s USING (species_id)
+  LEFT JOIN web_data wd USING (web_data_id)
+WHERE   s.is_current = true
+  AND   ad.is_current = true;
+
+-- The 'unconnected_analyses' view gives back the analyses from
+-- 'analysis_description' that are unused in 'analysis_web_data'.
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW unconnected_analyses AS
+SELECT  ad.analysis_description_id AS analysis_description_id,
+        ad.logic_name AS logic_name
+FROM    analysis_description ad
+  LEFT JOIN analysis_web_data awd USING (analysis_description_id)
+WHERE   awd.species_id IS NULL
+  AND   ad.is_current = true;
+
+-- The 'unused_web_data' view gives back the entries in 'web_data' that
+-- are not connected to any analysis in 'analysis_web_data'.
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW unused_web_data AS
+SELECT  wd.web_data_id
+FROM    web_data wd
+  LEFT JOIN analysis_web_data awd USING (web_data_id)
+WHERE   awd.analysis_web_data_id IS NULL;
+
+
+-- Views for the master tables.  These views are simply selecting the
+-- entries from the corresponding master table that have is_current
+-- set to true.
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib_type AS
+SELECT
+  attrib_type_id AS attrib_type_id,
+  code AS code,
+  name AS name,
+  description AS description
+FROM    master_attrib_type
+WHERE   is_current = true
+ORDER BY attrib_type_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib AS
+SELECT
+  attrib_id AS attrib_id,
+  attrib_type_id AS attrib_type_id,
+  value AS value
+FROM    master_attrib
+WHERE   is_current = true
+ORDER BY attrib_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW attrib_set AS
+SELECT
+  attrib_set_id AS attrib_set_id,
+  attrib_id AS attrib_id
+FROM    master_attrib_set
+WHERE   is_current = true
+ORDER BY attrib_set_id,attrib_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW biotype AS
+SELECT
+  biotype_id AS biotype_id,
+  name AS name,
+  object_type AS object_type,
+  db_type AS db_type,
+  attrib_type_id AS attrib_type_id,
+  description AS description,
+  biotype_group AS biotype_group,
+  so_acc AS so_acc,
+  so_term AS so_term,
+FROM master_biotype
+WHERE is_current = true
+ORDER BY biotype_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW external_db AS
+SELECT
+  external_db_id AS external_db_id,
+  db_name AS db_name,
+  db_release AS db_release,
+  status AS status,
+  priority AS priority,
+  db_display_name AS db_display_name,
+  type AS type,
+  secondary_db_name AS secondary_db_name,
+  secondary_db_table AS secondary_db_table,
+  description AS description
+FROM    master_external_db
+WHERE   is_current = true
+ORDER BY external_db_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW misc_set AS
+SELECT
+  misc_set_id AS misc_set_id,
+  code AS code,
+  name AS name,
+  description AS description,
+  max_length AS max_length
+FROM    master_misc_set
+WHERE   is_current = true
+ORDER BY misc_set_id;
+
+CREATE DEFINER = CURRENT_USER SQL SECURITY INVOKER VIEW unmapped_reason AS
+SELECT
+  unmapped_reason_id AS unmapped_reason_id,
+  summary_description AS summary_description,
+  full_description AS full_description
+FROM    master_unmapped_reason
+WHERE   is_current = true
+ORDER BY unmapped_reason_id;
