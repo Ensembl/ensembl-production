@@ -13,15 +13,23 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_96_97_d.sql
+# patch_96_97_e.sql
 #
-# Title: Meta_key update
+# Title: Removal of unused species, db tables.
 #
 # Description:
-#   Update meta_key to add is_multi_value and remove species link
-ALTER TABLE meta_key ADD COLUMN is_multi_value  BOOLEAN NOT NULL DEFAULT false;
-DROP TABLE meta_key_species;
+#   Remove tables used for tracking species etc.
+DROP TABLE changelog;
+DROP TABLE changelog_species;
+DROP TABLE division_species;
+DROP TABLE division_db;
+DROP TABLE division;
+DROP TABLE species_alias;
+DROP TABLE species;
+DROP VIEW db_list;
+DROP TABLE db;
+
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_96_97_c.sql|meta_key_update');
+  VALUES (NULL, 'patch', 'patch_96_97_e.sql|remove_species');

@@ -15,21 +15,31 @@
 
 # patch_96_97_d.sql
 #
-# Title: Removal of unused species, db tables.
+# Title: Analysis_description update
 #
 # Description:
-#   Remove tables used for tracking species etc.
-DROP TABLE changelog;
-DROP TABLE changelog_species;
-DROP TABLE division_species;
-DROP TABLE division_db;
-DROP TABLE division;
-DROP TABLE species_alias;
-DROP TABLE species;
-DROP VIEW db_list;
-DROP TABLE db;
+#   Remove species association from analysis_description and rework how web_data is stored
+ALTER TABLE web_data ADD COLUMN description varchar(255);
+CREATE TABLE web_data_element (
+  web_data_id               INTEGER UNSIGNED NOT NULL,
+  data_key                  VARCHAR(32) NOT NULL,
+  data_value               TEXT,
 
+  -- Columns for the web interface:
+  created_by    INTEGER,
+  created_at    DATETIME,
+  modified_by   INTEGER,
+  modified_at   DATETIME   
+);
 
+INSERT INTO web_data_element(web_data_id,data_key,data_value) (SELECT web_data_id,"hash",data FROM web_data);
+DROP VIEW full_analysis_description;
+DROP VIEW logic_name_overview;
+DROP VIEW unconnected_analyses;
+DROP TABLE analysis_web_data;
+ALTER TABLE web_data DROP COLUMN data;
+ALTER TABLE analysis_description CHANGE COLUMN default_web_data_id web_data_id INT(1);
+ALTER TABLE analysis_description CHANGE COLUMN default_displayable displayable TINYINT(1) NOT NULL;
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_96_97_d.sql|remove_species');
+  VALUES (NULL, 'patch', 'patch_96_97_d.sql|analysis_description_update');
