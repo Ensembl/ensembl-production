@@ -27,17 +27,17 @@ before_install:
   - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git
   - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-metadata.git
   - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-funcgen.git
-  - git clone --branch 1.3.2 --depth 1 https://github.com/samtools/htslib.git
+  - git clone --branch 1.9 --depth=1 https://github.com/samtools/htslib.git
+  - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
   - cd htslib
   - make
   - export HTSLIB_DIR=$(pwd -P)
   - cd ..
-  - wget https://github.com/bioperl/bioperl-live/archive/release-1-6-924.zip
-  - unzip release-1-6-924.zip
 
 install:
   - cpanm -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
   - cpanm -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
+  - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
   - cpanm -v --installdeps --notest .
   - cpanm -n Devel::Cover::Report::Coveralls
   - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
