@@ -65,37 +65,23 @@ sub pipeline_analyses {
                            },
       -max_retry_count  => 0,
       -flow_into        => {
-                             '4->A' => [
-                                         'GenomeStats',
-                                         'SnpCount',
-                                         'SnpDensity',
-                                       ],
+                             '4->A' => ['VariationTasks'],
                              'A->1' => ['Notify'],
                            },
       -rc_name          => 'normal',
     },
 
     {
-      -logic_name      => 'GenomeStats',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
+      -logic_name      => 'VariationTasks',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 1,
-      -hive_capacity   => 50,
-      -rc_name         => 'normal',
-      -flow_into       => ['GenomeStats_Datacheck'],
-    },
-
-    {
-      -logic_name      => 'GenomeStats_Datacheck',
-      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters      => {
-                            datacheck_names => ['GenomeStatistics'],
-                            history_file    => $self->o('history_file'),
-                            failures_fatal  => 1,
+      -flow_into       => {
+                            '1->A' => [
+                                        'SnpCount',
+                                        'SnpDensity',
+                                      ],
+                            'A->1' => ['GenomeStats'],
                           },
-      -max_retry_count => 1,
-      -hive_capacity   => 50,
-      -batch_size      => 10,
-      -rc_name         => 'normal',
     },
 
     {
@@ -117,6 +103,29 @@ sub pipeline_analyses {
       -max_retry_count  => 1,
       -hive_capacity    => 50,
       -rc_name          => 'normal',
+    },
+
+    {
+      -logic_name      => 'GenomeStats',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
+      -flow_into       => ['GenomeStats_Datacheck'],
+      -rc_name         => 'normal',
+    },
+
+    {
+      -logic_name      => 'GenomeStats_Datacheck',
+      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters      => {
+                            datacheck_names => ['GenomeStatistics'],
+                            history_file    => $self->o('history_file'),
+                            failures_fatal  => 1,
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -rc_name         => 'normal',
     },
 
     {
