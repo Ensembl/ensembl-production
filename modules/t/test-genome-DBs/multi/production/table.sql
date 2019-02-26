@@ -10,7 +10,7 @@ CREATE TABLE `analysis_description` (
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   `web_data_id` int(1) unsigned DEFAULT NULL,
-  `displayable` tinyint(1) DEFAULT NOT NULL,
+  `displayable` tinyint(1) NOT NULL,
   PRIMARY KEY (`analysis_description_id`),
   UNIQUE KEY `logic_name_idx` (`logic_name`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1074 DEFAULT CHARSET=latin1;
