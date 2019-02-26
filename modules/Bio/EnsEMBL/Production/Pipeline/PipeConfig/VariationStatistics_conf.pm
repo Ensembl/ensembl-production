@@ -81,7 +81,7 @@ sub pipeline_analyses {
                                         'SnpDensity',
                                       ],
                             'A->1' => ['GenomeStats'],
-                          },
+      -rc_name         => 'normal',
     },
 
     {
@@ -110,15 +110,15 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -flow_into       => ['GenomeStats_Datacheck'],
+      -flow_into       => ['RunDataChecks'],
       -rc_name         => 'normal',
     },
 
     {
-      -logic_name      => 'GenomeStats_Datacheck',
+      -logic_name      => 'RunDataChecks',
       -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters      => {
-                            datacheck_names => ['GenomeStatistics'],
+                            datacheck_names => ['DensitySNPs', 'GenomeStatistics', 'SNPCounts'],
                             history_file    => $self->o('history_file'),
                             failures_fatal  => 1,
                           },
