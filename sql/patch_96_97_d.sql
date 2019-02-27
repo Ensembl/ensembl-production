@@ -19,26 +19,14 @@
 # Title: Analysis_description update
 #
 # Description:
-#   Remove species association from analysis_description and rework how web_data is stored
+#   Remove species association from analysis_description and minro changes to web_data
 ALTER TABLE web_data ADD COLUMN description varchar(255);
-CREATE TABLE web_data_element (
-  web_data_id               INTEGER UNSIGNED NOT NULL,
-  data_key                  VARCHAR(32) NOT NULL,
-  data_value               TEXT,
-
-  -- Columns for the web interface:
-  created_by    INTEGER,
-  created_at    DATETIME,
-  modified_by   INTEGER,
-  modified_at   DATETIME   
-);
-
-INSERT INTO web_data_element(web_data_id,data_key,data_value) (SELECT web_data_id,"hash",data FROM web_data);
 DROP VIEW full_analysis_description;
 DROP VIEW logic_name_overview;
 DROP VIEW unconnected_analyses;
+DROP VIEW unused_web_data;
 DROP TABLE analysis_web_data;
-ALTER TABLE web_data DROP COLUMN data;
+UPDATE analysis_description set default_displayable=0 where default_displayable is null;
 ALTER TABLE analysis_description CHANGE COLUMN default_web_data_id web_data_id INT(1);
 ALTER TABLE analysis_description CHANGE COLUMN default_displayable displayable TINYINT(1) NOT NULL;
 # Patch identifier
