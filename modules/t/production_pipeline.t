@@ -29,7 +29,7 @@ if(@ARGV) {
 else {
   $options = '-run_all 1';
 }
-$options .= ' -pepstats_tmpdir /tmp ';
+$options .= ' -pepstats_tmpdir /scratch ';
 
 ok(1, 'Startup test');
 
