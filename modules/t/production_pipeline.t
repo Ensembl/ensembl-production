@@ -31,6 +31,7 @@ else {
 }
 $options .= ' -pepstats_tmpdir /scratch ';
 
+
 ok(1, 'Startup test');
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
