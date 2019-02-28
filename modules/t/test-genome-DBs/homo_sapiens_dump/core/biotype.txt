@@ -1,0 +1,207 @@
+1	IG_C_gene	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	\N
+2	IG_C_gene	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000478	\N
+3	IG_D_gene	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	\N
+4	IG_D_gene	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000458	\N
+5	IG_J_gene	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	\N
+6	IG_J_gene	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000470	\N
+7	IG_J_pseudogene	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	\N
+8	IG_J_pseudogene	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	\N
+9	IG_V_gene	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	\N
+10	IG_V_gene	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000466	\N
+11	IG_V_pseudogene	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	\N
+12	IG_V_pseudogene	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	\N
+13	IG_gene	gene	vega	\N	\N	coding	SO:0001217	\N
+14	IG_gene	transcript	vega	\N	\N	coding	SO:3000000	\N
+15	IG_pseudogene	gene	core,vega,presite	67	\N	pseudogene	SO:0000336	\N
+16	IG_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+17	LRG_gene	gene	core	\N	\N	LRG	\N	\N
+18	LRG_gene	transcript	core	\N	\N	LRG	\N	\N
+19	Mt_rRNA	gene	core,presite	73	\N	snoncoding	SO:0001263	\N
+20	Mt_rRNA	transcript	core,presite	\N	\N	snoncoding	SO:0000252	\N
+21	Mt_tRNA	gene	core,presite	74	\N	snoncoding	SO:0001263	\N
+22	Mt_tRNA	transcript	core,presite	\N	\N	snoncoding	SO:0000253	\N
+23	Mt_tRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+24	Mt_tRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+25	RNA-Seq_gene	gene	otherfeatures	\N	\N	undefined	\N	\N
+26	RNA-Seq_gene	transcript	otherfeatures	\N	\N	undefined	\N	\N
+27	TEC	gene	core,vega,sangervega	0	\N	undefined	\N	\N
+28	TEC	transcript	core,vega,sangervega	\N	\N	undefined	SO:0002139	\N
+29	TR_gene	gene	vega	\N	\N	coding	SO:0001217	\N
+30	TR_gene	transcript	core,vega	\N	\N	coding	SO:3000000	\N
+31	TR_pseudogene	gene	vega	\N	\N	pseudogene	SO:0000336	\N
+32	TR_pseudogene	transcript	vega	0	\N	pseudogene	SO:0000516	\N
+33	ambiguous_orf	transcript	core,vega	\N	\N	lnoncoding	SO:0001877	\N
+35	cdna_update	gene	cdna	\N	\N	undefined	\N	\N
+36	cdna_update	transcript	cdna	\N	\N	undefined	\N	\N
+37	cdna	gene	otherfeatures	\N	\N	undefined	SO:0000756	\N
+38	cdna	transcript	otherfeatures	\N	\N	undefined	SO:0000756	\N
+39	disrupted_domain	transcript	core,vega	\N	\N	pseudogene	SO:0000516	\N
+40	est	gene	otherfeatures	\N	\N	undefined	\N	\N
+41	est	transcript	otherfeatures	\N	\N	undefined	SO:0000345	\N
+42	lincRNA	gene	core,vega,presite	190	\N	lnoncoding	SO:0001263	\N
+43	lincRNA	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	\N
+44	miRNA	gene	core,otherfeatures,vega,presite	70	From RefSeq import.	snoncoding	SO:0001263	\N
+45	miRNA	transcript	core,otherfeatures,presite	\N	From RefSeq import.	snoncoding	SO:0000276	\N
+46	miRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+47	miRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+48	misc_RNA	gene	core,otherfeatures,presite	\N	\N	mnoncoding	SO:0001263	\N
+49	misc_RNA	transcript	core,otherfeatures,presite	\N	\N	mnoncoding	SO:0000655	\N
+50	misc_RNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+51	misc_RNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+52	ncRNA	gene	core,otherfeatures	99	\N	snoncoding	SO:0001263	\N
+53	ncRNA	transcript	core,otherfeatures	\N	\N	snoncoding	SO:0000655	\N
+54	non_coding	gene	core,otherfeatures,rnaseq,vega,presite	353	\N	lnoncoding	SO:0001263	\N
+55	non_coding	transcript	core,otherfeatures,rnaseq,vega,presite	\N	\N	lnoncoding	SO:0001877	\N
+56	nonsense_mediated_decay	transcript	core,vega,presite	\N	\N	coding	SO:0000234	\N
+57	polymorphic	gene	vega	\N	\N	coding	SO:0001217	\N
+58	polymorphic_pseudogene	gene	core,vega,presite	67	\N	coding	SO:0001217	\N
+59	polymorphic_pseudogene	transcript	core,vega,presite	\N	\N	coding	SO:0000234	\N
+60	processed_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+61	processed_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+62	processed_transcript	gene	core,vega,presite	79	\N	lnoncoding	SO:0001263	\N
+63	processed_transcript	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	\N
+64	protein_coding	gene	core,otherfeatures,rnaseq,vega,presite	\N	\N	coding	SO:0001217	\N
+65	protein_coding	transcript	core,otherfeatures,rnaseq,vega,presite	\N	\N	coding	SO:0000234	\N
+66	pseudogene	gene	core,otherfeatures,vega,presite	67	\N	pseudogene	SO:0000336	\N
+67	pseudogene	transcript	core,otherfeatures,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+68	rRNA	gene	core,otherfeatures,vega,presite	\N	\N	snoncoding	SO:0001263	\N
+69	rRNA	transcript	core,otherfeatures,vega,presite	\N	\N	snoncoding	SO:0000252	\N
+70	rRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+71	rRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+72	retained_intron	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	\N
+75	scRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+76	scRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+77	snRNA	gene	core,otherfeatures,vega,presite	68	From Havana manual annotation.	snoncoding	SO:0001263	\N
+78	snRNA	transcript	core,otherfeatures,vega,presite	\N	From Havana manual annotation.	snoncoding	SO:0000274	\N
+79	snRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+80	snRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+81	snlRNA	gene	core	78	\N	snoncoding	SO:0001263	\N
+82	snlRNA	transcript	core	\N	\N	snoncoding	SO:0000274	\N
+83	snoRNA	gene	core,otherfeatures,vega,presite	69	small nucleolar RNA.	snoncoding	SO:0001263	\N
+84	snoRNA	transcript	core,otherfeatures,vega,presite	\N	small nucleolar RNA.	snoncoding	SO:0000275	\N
+85	snoRNA_pseudogene	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+86	snoRNA_pseudogene	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+87	tRNA	gene	core,otherfeatures,presite	76	\N	snoncoding	SO:0001263	\N
+88	tRNA	transcript	core,otherfeatures,presite	76	\N	snoncoding	SO:0000253	\N
+89	tRNA_pseudogene	gene	core,otherfeatures	\N	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+90	tRNA_pseudogene	transcript	core,otherfeatures	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+91	transcribed_processed_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+92	transcribed_processed_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+93	transcribed_unitary_pseudogene	gene	core,vega	\N	\N	pseudogene	SO:0000336	\N
+94	transcribed_unprocessed_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+95	transcribed_unprocessed_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+96	unitary_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+97	unitary_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+98	unprocessed_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+99	unprocessed_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+100	ccds_gene	gene	otherfeatures	\N	Imported CCDS gene models	undefined	\N	\N
+101	protein_coding_in_progress	gene	vega	\N	occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation	undefined	\N	\N
+102	IG_Z_gene	gene	core,vega	100	\N	coding	SO:0001217	\N
+103	IG_M_gene	gene	core,vega	100	\N	coding	SO:0001217	\N
+104	ncRNA_host	transcript	core,vega	\N	\N	lnoncoding	\N	\N
+105	TR_V_pseudogene	gene	core,presite	67	\N	pseudogene	SO:0000336	\N
+106	TR_V_gene	gene	core,presite	100	\N	coding	SO:0001217	\N
+107	IG_C_pseudogene	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	\N
+108	TR_C_gene	gene	core,presite	100	\N	coding	SO:0001217	\N
+109	TR_J_gene	gene	core,presite	100	\N	coding	SO:0001217	\N
+110	TR_V_pseudogene	transcript	core,presite	\N	\N	pseudogene	SO:0000516	\N
+111	TR_V_gene	transcript	core,presite	\N	\N	coding	SO:0000466	\N
+112	IG_C_pseudogene	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	\N
+113	TR_C_gene	transcript	core,presite	\N	\N	coding	SO:0000478	\N
+114	TR_J_gene	transcript	core,presite	\N	\N	coding	SO:0000470	\N
+115	protein_coding_in_progress	transcript	vega	\N	occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation	undefined	\N	\N
+116	IG_M_gene	transcript	core	\N	\N	coding	SO:3000000	\N
+117	IG_Z_gene	transcript	core	\N	\N	coding	SO:3000000	\N
+118	3prime_overlapping_ncRNA	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0002120	\N
+123	antisense_RNA	gene	core,otherfeatures	\N	From RefSeq import	lnoncoding	SO:0001263	\N
+124	antisense_RNA	transcript	core,otherfeatures	\N	From RefSeq import	lnoncoding	SO:0001877	\N
+125	scRNA	gene	core,otherfeatures,vega	\N	From RefSeq import or Havana manual annotation.	snoncoding	SO:0001263	\N
+126	scRNA	transcript	core,otherfeatures,vega	\N	From RefSeq import or Havana manual annotation.	snoncoding	SO:0000013	\N
+127	RNase_MRP_RNA	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	\N
+128	RNase_MRP_RNA	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000385	\N
+129	RNase_P_RNA	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	\N
+130	RNase_P_RNA	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000386	\N
+131	telomerase_RNA	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	\N
+132	telomerase_RNA	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000390	\N
+133	sense_intronic	transcript	core,vega,presite	0	\N	lnoncoding	SO:0001877	\N
+135	sense_overlapping	transcript	core,vega,presite	0	\N	lnoncoding	SO:0001877	\N
+138	sense_intronic	gene	core,vega,presite	350	\N	lnoncoding	SO:0001263	\N
+139	ambiguous_orf	gene	core,vega	351	\N	lnoncoding	SO:0001263	\N
+140	retained_intron	gene	core,vega,presite	352	\N	lnoncoding	SO:0001263	\N
+142	3prime_overlapping_ncRNA	gene	core,vega,presite	\N	\N	lnoncoding	\N	\N
+143	ncRNA_host	gene	core,vega	\N	\N	lnoncoding	\N	\N
+144	sense_overlapping	gene	core,vega,presite	355	\N	lnoncoding	SO:0001263	\N
+146	TR_D_gene	transcript	core,presite	\N	\N	coding	SO:0000458	\N
+147	TR_J_pseudogene	transcript	core,presite	\N	\N	pseudogene	SO:0000516	\N
+148	TR_D_gene	gene	core,presite	100	\N	coding	SO:0001217	\N
+149	TR_J_pseudogene	gene	core,presite	67	\N	pseudogene	SO:0000336	\N
+150	ncbi_pseudogene	gene	otherfeatures	\N	Imported annotation from RefSeq	pseudogene	SO:0000336	\N
+151	ncbi_pseudogene	transcript	otherfeatures	\N	Imported annotation from RefSeq	pseudogene	SO:0000516	\N
+152	ncbigene	gene	otherfeatures	\N	Imported annotation from RefSeq	undefined	\N	\N
+153	non_stop_decay	transcript	core,vega,presite	0	A new transcript biotype from Havana.	coding	SO:0000234	\N
+154	pre_miRNA	transcript	core	0	This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.	snoncoding	SO:0001244	\N
+155	tmRNA	gene	core	\N	One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.	snoncoding	SO:0001263	\N
+156	tmRNA	transcript	core	0	One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.	snoncoding	SO:0000584	\N
+157	SRP_RNA	gene	core,otherfeatures	\N	The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.	snoncoding	SO:0001263	\N
+158	SRP_RNA	transcript	core,otherfeatures	0	The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.	snoncoding	SO:0000590	\N
+160	ribozyme	transcript	core,otherfeatures,presite	\N	\N	lnoncoding	SO:0001877	\N
+163	ncRNA_pseudogene	gene	otherfeatures	99	noncoding RNA pseudogene	pseudogene	SO:0000336	\N
+164	ncRNA_pseudogene	transcript	otherfeatures	99	noncoding RNA pseudogene	pseudogene	SO:0000516	\N
+165	IG_LV_gene	gene	core	100	\N	coding	SO:0001217	\N
+166	IG_LV_gene	transcript	core	\N	\N	coding	SO:3000000	\N
+167	translated_processed_pseudogene	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	\N
+168	translated_processed_pseudogene	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	\N
+169	nontranslating_CDS	gene	core,otherfeatures	\N	An imported 'protein-coding' gene that does not translate due to one or more unannotated stop codons.	coding	SO:0001217	\N
+170	nontranslating_CDS	transcript	core,otherfeatures	\N	An imported 'protein-coding' transcript that does not translate due to one or more unannotated stop codons.	coding	SO:0000234	\N
+171	translated_unprocessed_pseudogene	gene	core,vega	\N	\N	pseudogene	SO:0000336	\N
+172	translated_unprocessed_pseudogene	transcript	core,vega	\N	\N	pseudogene	SO:0000516	\N
+173	mRNA	gene	otherfeatures	\N	From RefSeq import	coding	SO:0001217	\N
+174	mRNA	transcript	otherfeatures	\N	From RefSeq import	coding	SO:0000234	\N
+175	pre_miRNA	gene	core	\N	This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.	snoncoding	SO:0001263	\N
+176	artifact	gene	vega	\N	Should not see this biotype in core db	undefined	\N	\N
+177	artifact	transcript	vega	\N	Should not see this biotype in core db	undefined	\N	\N
+178	lncRNA	gene	core,otherfeatures,vega,presite	190	\N	lnoncoding	SO:0001263	\N
+179	class_I_RNA	gene	core	\N	Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0001263	\N
+180	class_I_RNA	transcript	core	\N	Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0000990	\N
+181	class_II_RNA	gene	core	\N	Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0001263	\N
+182	class_II_RNA	transcript	core	\N	Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0000989	\N
+183	known_ncRNA	gene	core,otherfeatures,vega,sangervega	\N	\N	snoncoding	\N	\N
+184	known_ncRNA	transcript	core,otherfeatures,vega,sangervega	\N	\N	snoncoding	SO:0000655	\N
+185	transcribed_unitary_pseudogene	transcript	core,vega	\N	\N	pseudogene	SO:0000516	\N
+186	piRNA	gene	core	\N	A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.	snoncoding	SO:0001263	\N
+187	piRNA	transcript	core	\N	A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.	snoncoding	SO:0001035	\N
+188	IG_D_pseudogene	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	\N
+189	macro_lncRNA	gene	core,vega	388	Unspliced lncRNAs that are several kb in size	lnoncoding	SO:0001263	\N
+191	vaultRNA	gene	core,otherfeatures,vega	388	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001263	\N
+192	scaRNA	gene	core,otherfeatures,presite	440	\N	snoncoding	SO:0001263	\N
+193	scaRNA	transcript	core,otherfeatures,presite	\N	\N	snoncoding	SO:0000013	\N
+194	sRNA	transcript	core,otherfeatures,presite	\N	\N	snoncoding	SO:0000274	\N
+195	sRNA	gene	core,otherfeatures,presite	441	\N	snoncoding	SO:0001263	\N
+198	antitoxin	transcript	core,otherfeatures,presite	\N	\N	lnoncoding	SO:0001877	\N
+199	antitoxin	gene	core,otherfeatures,presite	443	\N	lnoncoding	SO:0001263	\N
+200	ribozyme	gene	core,otherfeatures,presite	359	\N	lnoncoding	SO:0001263	\N
+202	vaultRNA	transcript	core,otherfeatures,vega	388	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0002040	\N
+203	macro_lncRNA	transcript	core,vega	388	Unspliced lncRNAs that are several kb in size	lnoncoding	SO:0001877	\N
+204	IG_D_pseudogene	transcript	core,otherfeatures,presite	67	\N	pseudogene	SO:0000516	\N
+205	guide_RNA	gene	otherfeatures	\N	From RefSeq import	snoncoding	SO:0001263	\N
+206	guide_RNA	transcript	otherfeatures	\N	From RefSeq import	snoncoding	SO:0000602	\N
+207	Y_RNA	gene	otherfeatures	\N	From RefSeq import	snoncoding	SO:0001263	\N
+208	Y_RNA	transcript	otherfeatures	\N	From RefSeq import	snoncoding	SO:0000405	\N
+209	transposable_element	transcript	core	\N	\N	no_group	SO:0000101	\N
+210	transposable_element	gene	core	\N	\N	no_group	SO:0000111	\N
+211	bidirectional_promoter_lncRNA	transcript	core,vega,presite	\N	\N	lnoncoding	\N	\N
+212	bidirectional_promoter_lncRNA	gene	core,vega,presite	\N	\N	lnoncoding	SO:0002185	\N
+215	unknown_likely_coding	gene	core	\N	Biotype introduced by UCSC in the mouse strains, for genes/transcripts that were not in the mouse reference but are likely to be new protein coding models.	coding	\N	\N
+216	unknown_likely_coding	transcript	core	\N	Biotype introduced by UCSC in the mouse strains, for genes/transcripts that were not in the mouse reference but are likely to be new protein coding models.	coding	\N	\N
+217	other	gene	otherfeatures	\N	\N	undefined	\N	\N
+218	lncRNA	transcript	core,otherfeatures,vega,presite	\N	\N	lnoncoding	SO:0001877	\N
+219	aligned_transcript	gene	otherfeatures	\N	Capture Long Seq (CLS) on human and mouse	undefined	\N	\N
+220	aligned_transcript	transcript	otherfeatures	\N	Capture Long Seq (CLS) on human and mouse	undefined	\N	\N
+221	antisense	gene	core,presite	\N	\N	lnoncoding	SO:0001263	\N
+222	antisense	transcript	core,presite	\N	\N	lnoncoding	SO:0001877	\N
+223	vault_RNA	gene	core,otherfeatures,vega	\N	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001263	\N
+224	vault_RNA	transcript	core,otherfeatures,vega	\N	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001877	\N
+225	rnaseq_putative_cds	transcript	core	\N	A biotype for gene/transcripts with transcriptomic data and some very weak support for the cds. This currently means that the cds is less than < 1500bp, is composed of less than 3 coding exons and has less than 40 percent coverage from an alignment of a protein existence level 1 or 2 vertebrate protein from UniProt. We believe there is potentially a cds at these positions, but the evidence is not strong enough to include it directly in the protein coding gene set 	coding	\N	\N
+226	rnaseq_putative_cds	gene	core	\N	A biotype for gene/transcripts with transcriptomic data and some very weak support for the cds. This currently means that the cds is less than < 1500bp, is composed of less than 3 coding exons and has less than 40 percent coverage from an alignment of a protein existence level 1 or 2 vertebrate protein from UniProt. We believe there is potentially a cds at these positions, but the evidence is not strong enough to include it directly in the protein coding gene set	coding	\N	\N
+227	transcribed_pseudogene	gene	otherfeatures	\N	This is for the RefSeq GFF3 import	pseudogene	\N	\N
+228	transcribed_pseudogene	transcript	otherfeatures	\N	This is for the RefSeq GFF3 import	pseudogene	\N	\N

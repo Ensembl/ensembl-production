@@ -114,6 +114,7 @@ CREATE TABLE `biotype` (
   `description` text,
   `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
   `so_acc` varchar(64) DEFAULT NULL,
+  `so_term` varchar(1023) DEFAULT NULL,
   PRIMARY KEY (`biotype_id`),
   UNIQUE KEY `name_type_idx` (`name`,`object_type`)
 ) ENGINE=MyISAM AUTO_INCREMENT=204 DEFAULT CHARSET=latin1;

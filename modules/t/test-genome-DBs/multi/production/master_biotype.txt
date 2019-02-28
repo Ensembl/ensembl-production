@@ -1,177 +1,211 @@
-1,"IG_C_gene",1,1,"gene","core,otherfeatures,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,101214,"2014-11-06 15:42:50"
-2,"IG_C_gene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"coding","SO:0000478","C_gene_segment",NULL,NULL,101214,"2014-11-06 15:43:12"
-3,"IG_D_gene",1,1,"gene","core,otherfeatures,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,101214,"2014-11-06 15:43:42"
-4,"IG_D_gene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"coding","SO:0000458","D_gene_segment",NULL,NULL,101214,"2014-11-06 15:43:59"
-5,"IG_J_gene",1,1,"gene","core,otherfeatures,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,101214,"2014-11-06 15:44:21"
-6,"IG_J_gene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"coding","SO:0000470","J_gene_segment",NULL,NULL,101214,"2014-11-06 15:44:35"
-7,"IG_J_pseudogene",1,1,"gene","core,otherfeatures,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,101214,"2018-11-07 10:56:03"
-8,"IG_J_pseudogene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,101214,"2018-11-07 10:56:10"
-9,"IG_V_gene",1,1,"gene","core,otherfeatures,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,101214,"2014-11-06 15:45:02"
-10,"IG_V_gene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"coding","SO:0000466","V_gene_segment",NULL,NULL,101214,"2014-11-06 15:45:24"
-11,"IG_V_pseudogene",1,1,"gene","core,otherfeatures,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,101214,"2018-11-07 10:55:39"
-12,"IG_V_pseudogene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,101214,"2018-11-07 10:55:48"
-13,"IG_gene",1,1,"gene","vega",NULL,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,NULL,NULL
-14,"IG_gene",1,1,"transcript","vega",NULL,NULL,"coding","SO:3000000","gene_segment",NULL,NULL,NULL,NULL
-15,"IG_pseudogene",1,1,"gene","core,vega,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,107110,"2014-12-11 10:51:12"
-16,"IG_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,107110,"2014-12-11 10:51:29"
-17,"LRG_gene",1,1,"gene","core",NULL,NULL,"LRG",NULL,NULL,NULL,NULL,97245,"2014-08-27 10:46:00"
-18,"LRG_gene",1,1,"transcript","core",NULL,NULL,"LRG",NULL,NULL,NULL,NULL,97245,"2014-08-27 10:46:09"
-19,"Mt_rRNA",1,1,"gene","core,presite",73,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:18:04"
-20,"Mt_rRNA",1,1,"transcript","core,presite",NULL,NULL,"snoncoding","SO:0000252","rRNA",NULL,NULL,104957,"2014-03-21 15:18:10"
-21,"Mt_tRNA",1,1,"gene","core,presite",74,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:15:39"
-22,"Mt_tRNA",1,1,"transcript","core,presite",NULL,NULL,"snoncoding","SO:0000253","tRNA",NULL,NULL,104957,"2014-03-21 15:15:44"
-23,"Mt_tRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-24,"Mt_tRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-25,"RNA-Seq_gene",1,1,"gene","otherfeatures",NULL,NULL,"undefined",NULL,NULL,NULL,NULL,NULL,NULL
-26,"RNA-Seq_gene",1,1,"transcript","otherfeatures",NULL,NULL,"undefined",NULL,NULL,NULL,NULL,NULL,NULL
-27,"TEC",1,1,"gene","core,vega,sangervega",0,NULL,"undefined",NULL,NULL,NULL,NULL,104991,"2014-08-26 11:44:53"
-28,"TEC",1,0,"transcript","core,vega,sangervega",NULL,NULL,"undefined","SO:0002139","unconfirmed_transcript",NULL,NULL,104991,"2014-08-26 11:45:14"
-29,"TR_gene",1,1,"gene","vega",NULL,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,NULL,NULL
-30,"TR_gene",1,1,"transcript","core,vega",NULL,NULL,"coding","SO:3000000","gene_segment",NULL,NULL,NULL,NULL
-31,"TR_pseudogene",1,1,"gene","vega",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2013-07-08 12:44:42"
-32,"TR_pseudogene",1,1,"transcript","vega",0,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2013-07-08 12:44:42"
-33,"ambiguous_orf",1,1,"transcript","core,vega",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",NULL,NULL,5132,"2013-07-08 12:33:27"
-35,"cdna_update",1,1,"gene","cdna",NULL,NULL,"undefined",NULL,NULL,NULL,NULL,97245,"2011-10-26 08:58:38"
-36,"cdna_update",1,1,"transcript","cdna",NULL,NULL,"undefined",NULL,NULL,NULL,NULL,97245,"2011-10-26 08:58:49"
-37,"cdna",1,1,"gene","otherfeatures",NULL,NULL,"undefined","SO:0000756","cDNA",NULL,NULL,NULL,NULL
-38,"cdna",1,1,"transcript","otherfeatures",NULL,NULL,"undefined","SO:0000756","cDNA",NULL,NULL,NULL,NULL
-39,"disrupted_domain",1,1,"transcript","core,vega",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,NULL,NULL
-40,"est",1,1,"gene","otherfeatures",NULL,NULL,"undefined",NULL,NULL,NULL,NULL,NULL,NULL
-41,"est",1,1,"transcript","otherfeatures",NULL,NULL,"undefined","SO:0000345","EST",NULL,NULL,NULL,NULL
-42,"lincRNA",1,1,"gene","core,vega,presite",190,NULL,"lnoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:17:05"
-43,"lincRNA",1,1,"transcript","core,vega,presite",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",NULL,NULL,104957,"2014-03-21 15:17:09"
-44,"miRNA",1,1,"gene","core,otherfeatures,vega,presite",70,"From RefSeq import.","snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104991,"2014-11-12 12:04:54"
-45,"miRNA",1,1,"transcript","core,otherfeatures,presite",NULL,"From RefSeq import.","snoncoding","SO:0000276","miRNA",NULL,NULL,104957,"2014-03-21 15:16:09"
-46,"miRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-47,"miRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-48,"misc_RNA",1,1,"gene","core,otherfeatures,presite",NULL,NULL,"mnoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2015-01-15 11:50:46"
-49,"misc_RNA",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"mnoncoding","SO:0000655","ncRNA",NULL,NULL,104957,"2015-01-15 11:51:00"
-50,"misc_RNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-51,"misc_RNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-52,"ncRNA",1,1,"gene","core,otherfeatures",99,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,5132,"2013-07-08 13:03:50"
-53,"ncRNA",1,1,"transcript","core,otherfeatures",NULL,NULL,"snoncoding","SO:0000655","ncRNA",NULL,NULL,5132,"2013-07-08 13:03:50"
-54,"non_coding",1,1,"gene","core,otherfeatures,rnaseq,vega,presite",353,NULL,"lnoncoding","SO:0001263","ncRNA_gene",NULL,NULL,5132,"2013-07-08 12:33:27"
-55,"non_coding",1,1,"transcript","core,otherfeatures,rnaseq,vega,presite",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",NULL,NULL,5132,"2013-07-08 12:33:27"
-56,"nonsense_mediated_decay",1,1,"transcript","core,vega,presite",NULL,NULL,"coding","SO:0000234","mRNA",NULL,NULL,104957,"2014-03-21 15:10:43"
-57,"polymorphic",1,1,"gene","vega",NULL,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,NULL,NULL
-58,"polymorphic_pseudogene",1,1,"gene","core,vega,presite",67,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,104957,"2014-03-21 15:16:51"
-59,"polymorphic_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"coding","SO:0000234","mRNA",NULL,NULL,104957,"2014-03-21 15:16:56"
-60,"processed_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:08:54"
-61,"processed_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:09:02"
-62,"processed_transcript",1,1,"gene","core,vega,presite",79,NULL,"lnoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:17:48"
-63,"processed_transcript",1,1,"transcript","core,vega,presite",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",NULL,NULL,104957,"2014-03-21 15:17:53"
-64,"protein_coding",1,1,"gene","core,otherfeatures,rnaseq,vega,presite",NULL,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,97245,"2012-07-11 12:29:28"
-65,"protein_coding",1,1,"transcript","core,otherfeatures,rnaseq,vega,presite",NULL,NULL,"coding","SO:0000234","mRNA",NULL,NULL,NULL,NULL
-66,"pseudogene",1,1,"gene","core,otherfeatures,vega,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:18:57"
-67,"pseudogene",1,1,"transcript","core,otherfeatures,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:19:04"
-68,"rRNA",1,1,"gene","core,otherfeatures,vega,presite",NULL,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,106182,"2015-01-29 10:50:48"
-69,"rRNA",1,1,"transcript","core,otherfeatures,vega,presite",NULL,NULL,"snoncoding","SO:0000252","rRNA",NULL,NULL,9335,"2015-01-29 13:17:28"
-70,"rRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-71,"rRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-72,"retained_intron",1,1,"transcript","core,vega,presite",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",NULL,NULL,104957,"2014-03-21 15:14:10"
-73,"retrotransposed",0,1,"gene","core",77,NULL,"pseudogene","SO:0000569","retrotransposed",NULL,NULL,5132,"2012-10-30 17:53:09"
-74,"retrotransposed",0,1,"transcript","core",NULL,NULL,"pseudogene","SO:0000569","retrotransposed",NULL,NULL,5132,"2012-10-30 17:53:26"
-75,"scRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-76,"scRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-77,"snRNA",1,1,"gene","core,otherfeatures,vega,presite",68,"From Havana manual annotation.","snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:05:32"
-78,"snRNA",1,1,"transcript","core,otherfeatures,vega,presite",NULL,"From Havana manual annotation.","snoncoding","SO:0000274","snRNA",NULL,NULL,104957,"2014-03-21 15:05:40"
-79,"snRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-80,"snRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-81,"snlRNA",1,1,"gene","core",78,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,5132,"2013-07-08 13:03:50"
-82,"snlRNA",1,1,"transcript","core",NULL,NULL,"snoncoding","SO:0000274","snRNA",NULL,NULL,5132,"2013-07-08 13:03:50"
-83,"snoRNA",1,1,"gene","core,otherfeatures,vega,presite",69,"small nucleolar RNA.","snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:16:36"
-84,"snoRNA",1,1,"transcript","core,otherfeatures,vega,presite",NULL,"small nucleolar RNA.","snoncoding","SO:0000275","snoRNA",NULL,NULL,104957,"2014-03-21 15:16:41"
-85,"snoRNA_pseudogene",1,1,"gene","core",75,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,5132,"2014-10-28 12:19:45"
-86,"snoRNA_pseudogene",1,1,"transcript","core",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,5132,"2014-10-28 12:19:45"
-87,"tRNA",1,1,"gene","core,otherfeatures,presite",76,NULL,"snoncoding","SO:0001263","ncRNA_gene",NULL,NULL,104957,"2014-03-21 15:08:32"
-88,"tRNA",1,1,"transcript","core,otherfeatures,presite",76,NULL,"snoncoding","SO:0000253","tRNA",NULL,NULL,104957,"2014-03-21 15:08:38"
-89,"tRNA_pseudogene",1,1,"gene","core,otherfeatures",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",NULL,NULL,105967,"2018-06-11 11:38:24"
-90,"tRNA_pseudogene",1,1,"transcript","core,otherfeatures",NULL,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,105967,"2018-06-11 11:38:41"
-91,"transcribed_processed_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:14:43"
-92,"transcribed_processed_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:14:48"
-93,"transcribed_unitary_pseudogene",1,1,"gene","core,vega",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-08-15 13:48:10"
-94,"transcribed_unprocessed_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:12:59"
-95,"transcribed_unprocessed_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:13:05"
-96,"unitary_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:11:13"
-97,"unitary_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:11:20"
-98,"unprocessed_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:11:32"
-99,"unprocessed_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:11:38"
-100,"ccds_gene",1,0,"gene","otherfeatures",NULL,"Imported CCDS gene models","undefined",NULL,NULL,NULL,NULL,NULL,NULL
-101,"protein_coding_in_progress",1,1,"gene","vega",NULL,"occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation","undefined",NULL,NULL,NULL,NULL,NULL,NULL
-102,"IG_Z_gene",1,1,"gene","core,vega",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,NULL,NULL
-103,"IG_M_gene",1,1,"gene","core,vega",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,NULL,NULL
-104,"ncRNA_host",1,1,"transcript","core,vega",NULL,NULL,"lnoncoding",NULL,NULL,NULL,NULL,161,"2016-01-15 17:05:38"
-105,"TR_V_pseudogene",1,1,"gene","core,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,104957,"2014-03-21 15:15:12"
-106,"TR_V_gene",1,1,"gene","core,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,104957,"2014-03-21 15:14:59"
-107,"IG_C_pseudogene",1,1,"gene","core,otherfeatures,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",NULL,NULL,101214,"2018-11-07 10:54:53"
-108,"TR_C_gene",1,1,"gene","core,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,104957,"2014-03-21 15:14:25"
-109,"TR_J_gene",1,1,"gene","core,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",NULL,NULL,104957,"2014-03-21 15:18:37"
-110,"TR_V_pseudogene",1,1,"transcript","core,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,104957,"2014-03-21 15:15:18"
-111,"TR_V_gene",1,1,"transcript","core,presite",NULL,NULL,"coding","SO:0000466","V_gene_segment",NULL,NULL,104957,"2014-03-21 15:15:06"
-112,"IG_C_pseudogene",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",NULL,NULL,101214,"2018-11-07 10:55:17"
-113,"TR_C_gene",1,1,"transcript","core,presite",NULL,NULL,"coding","SO:0000478","C_gene_segment",NULL,NULL,104957,"2014-03-21 15:14:31"
-114,"TR_J_gene",1,1,"transcript","core,presite",NULL,NULL,"coding","SO:0000470","J_gene_segment",NULL,NULL,104957,"2014-03-21 15:18:41"
-115,"protein_coding_in_progress",1,1,"transcript","vega",NULL,"occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation","undefined",NULL,NULL,NULL,NULL,NULL,NULL
-116,"IG_M_gene",1,1,"transcript","core",NULL,NULL,"coding","SO:3000000","gene_segment",NULL,NULL,NULL,NULL
-117,"IG_Z_gene",1,1,"transcript","core",NULL,NULL,"coding","SO:3000000","gene_segment",NULL,NULL,NULL,NULL
-118,"3prime_overlapping_ncRNA",1,1,"transcript","core,vega,presite",NULL,NULL,"lnoncoding","SO:0002120","three_prime_overlapping_ncrna",NULL,NULL,161,"2016-01-15 17:04:07"
-123,"antisense_RNA",1,0,"gene","core,otherfeatures",NULL,"From RefSeq import","lnoncoding","SO:0001263","ncRNA_gene",5132,"2011-06-02 07:12:32",105967,"2018-04-30 13:47:03"
-124,"antisense_RNA",1,0,"transcript","core,otherfeatures",NULL,"From RefSeq import","lnoncoding","SO:0001877","lnc_RNA",5132,"2011-06-02 07:12:40",105967,"2018-04-30 13:47:24"
-125,"scRNA",1,1,"gene","core,otherfeatures,vega",NULL,"From RefSeq import or Havana manual annotation.","snoncoding","SO:0001263","ncRNA_gene",5132,"2011-06-02 07:13:08",161,"2016-01-18 12:47:37"
-126,"scRNA",1,1,"transcript","core,otherfeatures,vega",NULL,"From RefSeq import or Havana manual annotation.","snoncoding","SO:0000013","scRNA",5132,"2011-06-02 07:13:15",161,"2016-01-18 12:47:59"
-127,"RNase_MRP_RNA",1,0,"gene","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0001263","ncRNA_gene",5132,"2011-06-02 07:14:03",104957,"2014-03-21 15:11:55"
-128,"RNase_MRP_RNA",1,0,"transcript","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0000385","RNase_MRP_RNA",5132,"2011-06-02 07:14:09",104957,"2014-03-21 15:12:01"
-129,"RNase_P_RNA",1,0,"gene","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0001263","ncRNA_gene",5132,"2011-06-02 07:14:40",104957,"2014-03-21 15:12:06"
-130,"RNase_P_RNA",1,0,"transcript","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0000386","RNase_P_RNA",5132,"2011-06-02 07:14:46",104957,"2014-03-21 15:12:12"
-131,"telomerase_RNA",1,0,"gene","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0001263","ncRNA_gene",5132,"2011-06-02 07:15:54",128421,"2018-05-29 13:31:23"
-132,"telomerase_RNA",1,0,"transcript","core,otherfeatures,presite",NULL,"From RefSeq import or Rfamscan","snoncoding","SO:0000390","telomerase_RNA",5132,"2011-06-02 07:16:03",128421,"2018-05-29 13:31:50"
-133,"sense_intronic",1,1,"transcript","core,vega,presite",0,NULL,"lnoncoding","SO:0001877","lnc_RNA",97245,"2011-07-18 10:14:50",104957,"2014-03-21 15:10:23"
-135,"sense_overlapping",1,1,"transcript","core,vega,presite",0,NULL,"lnoncoding","SO:0001877","lnc_RNA",97245,"2011-07-19 13:29:37",104957,"2014-03-21 15:12:37"
-138,"sense_intronic",1,1,"gene","core,vega,presite",350,NULL,"lnoncoding","SO:0001263","ncRNA_gene",97245,"2011-07-19 13:31:24",104957,"2014-03-21 15:10:31"
-139,"ambiguous_orf",1,1,"gene","core,vega",351,NULL,"lnoncoding","SO:0001263","ncRNA_gene",97245,"2011-07-19 13:31:27",5132,"2013-07-08 12:33:27"
-140,"retained_intron",1,1,"gene","core,vega,presite",352,NULL,"lnoncoding","SO:0001263","ncRNA_gene",97245,"2011-07-19 13:31:31",104957,"2014-03-21 15:14:16"
-142,"3prime_overlapping_ncRNA",1,1,"gene","core,vega,presite",NULL,NULL,"lnoncoding",NULL,NULL,97245,"2011-07-19 13:31:38",161,"2016-01-15 17:04:20"
-143,"ncRNA_host",1,1,"gene","core,vega",NULL,NULL,"lnoncoding",NULL,NULL,97245,"2011-07-19 13:31:42",161,"2016-01-15 17:05:50"
-144,"sense_overlapping",1,1,"gene","core,vega,presite",355,NULL,"lnoncoding","SO:0001263","ncRNA_gene",97245,"2011-07-19 13:31:47",104957,"2014-03-21 15:12:43"
-146,"TR_D_gene",1,1,"transcript","core,presite",NULL,NULL,"coding","SO:0000458","D_gene_segment",97245,"2011-07-20 10:10:01",104957,"2014-03-21 15:12:22"
-147,"TR_J_pseudogene",1,1,"transcript","core,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",97245,"2011-07-20 10:10:01",104957,"2014-03-21 15:04:14"
-148,"TR_D_gene",1,1,"gene","core,presite",100,NULL,"coding","SO:0001217","protein_coding_gene",97245,"2011-07-20 10:10:01",104957,"2014-03-21 15:12:27"
-149,"TR_J_pseudogene",1,1,"gene","core,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",97245,"2011-07-20 10:10:01",104957,"2014-03-21 15:04:57"
-150,"ncbi_pseudogene",1,0,"gene","otherfeatures",NULL,"Imported annotation from RefSeq","pseudogene","SO:0000336","pseudogene",5132,"2011-08-06 09:03:27",NULL,NULL
-151,"ncbi_pseudogene",1,0,"transcript","otherfeatures",NULL,"Imported annotation from RefSeq","pseudogene","SO:0000516","pseudogenic_transcript",5132,"2011-08-06 09:04:11",NULL,NULL
-152,"ncbigene",1,0,"gene","otherfeatures",NULL,"Imported annotation from RefSeq","undefined",NULL,NULL,5132,"2011-08-06 09:04:25",NULL,NULL
-153,"non_stop_decay",1,1,"transcript","core,vega,presite",0,"A new transcript biotype from Havana.","coding","SO:0000234","mRNA",9335,"2011-10-11 12:28:06",104957,"2014-03-21 15:08:18"
-154,"pre_miRNA",1,1,"transcript","core",0,"This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.","snoncoding","SO:0001244","pre_miRNA",98587,"2011-10-13 13:29:27",5132,"2013-07-09 18:42:54"
-155,"tmRNA",1,1,"gene","core",NULL,"One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.","snoncoding","SO:0001263","ncRNA_gene",101255,"2011-10-24 16:20:33",97245,"2018-06-12 17:59:13"
-156,"tmRNA",1,1,"transcript","core",0,"One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.","snoncoding","SO:0000584","tmRNA",101255,"2011-10-24 16:21:47",105967,"2013-10-08 11:25:26"
-157,"SRP_RNA",1,1,"gene","core,otherfeatures",NULL,"The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.","snoncoding","SO:0001263","ncRNA_gene",101255,"2011-10-24 16:25:07",101214,"2015-04-08 16:27:17"
-158,"SRP_RNA",1,1,"transcript","core,otherfeatures",0,"The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.","snoncoding","SO:0000590","SRP_RNA",101255,"2011-10-24 16:25:22",101214,"2015-04-08 16:27:31"
-160,"ribozyme",1,1,"transcript","core,otherfeatures,presite",NULL,NULL,"lnoncoding","SO:0001877","lnc_RNA",101255,"2012-04-04 15:52:41",104957,"2015-01-20 14:37:05"
-163,"ncRNA_pseudogene",1,1,"gene","otherfeatures",99,"noncoding RNA pseudogene","pseudogene","SO:0000336","pseudogene",5132,"2012-09-23 21:23:20",5132,"2014-10-28 12:19:45"
-164,"ncRNA_pseudogene",1,1,"transcript","otherfeatures",99,"noncoding RNA pseudogene","pseudogene","SO:0000516","pseudogenic_transcript",5132,"2012-09-23 21:23:39",5132,"2014-10-28 12:19:45"
-165,"IG_LV_gene",1,1,"gene","core",100,NULL,"coding","SO:0001217","protein_coding_gene",5132,"2012-11-14 18:01:19",NULL,NULL
-166,"IG_LV_gene",1,1,"transcript","core",NULL,NULL,"coding","SO:3000000","gene_segment",5132,"2012-11-14 18:01:46",NULL,NULL
-167,"translated_processed_pseudogene",1,1,"gene","core,vega,presite",NULL,NULL,"pseudogene","SO:0000336","pseudogene",102717,"2013-03-20 13:24:11",104957,"2014-03-21 15:06:29"
-168,"translated_processed_pseudogene",1,1,"transcript","core,vega,presite",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",102717,"2013-03-20 13:24:42",104957,"2014-03-21 15:06:36"
-169,"nontranslating_CDS",1,0,"gene","core,otherfeatures",NULL,"An imported 'protein-coding' gene that does not translate due to one or more unannotated stop codons.","coding","SO:0001217","protein_coding_gene",105967,"2013-04-24 11:44:22",104897,"2018-05-29 14:46:57"
-170,"nontranslating_CDS",1,0,"transcript","core,otherfeatures",NULL,"An imported 'protein-coding' transcript that does not translate due to one or more unannotated stop codons.","coding","SO:0000234","mRNA",105967,"2013-04-24 11:45:31",104897,"2018-05-29 14:47:17"
-171,"translated_unprocessed_pseudogene",1,1,"gene","core,vega",NULL,NULL,"pseudogene","SO:0000336","pseudogene",104957,"2013-08-07 12:42:12",NULL,NULL
-172,"translated_unprocessed_pseudogene",1,1,"transcript","core,vega",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",104957,"2013-08-07 12:42:27",NULL,NULL
-173,"mRNA",1,1,"gene","otherfeatures",NULL,"From RefSeq import","coding","SO:0001217","protein_coding_gene",102717,"2014-01-06 11:04:29",NULL,NULL
-174,"mRNA",1,1,"transcript","otherfeatures",NULL,"From RefSeq import","coding","SO:0000234","mRNA",102717,"2014-01-06 11:48:30",NULL,NULL
-175,"pre_miRNA",1,1,"gene","core",NULL,"This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.","snoncoding","SO:0001263","ncRNA_gene",105967,"2014-01-14 13:02:47",NULL,NULL
-176,"artifact",1,0,"gene","vega",NULL,"Should not see this biotype in core db","undefined",NULL,NULL,106182,"2014-06-02 08:50:01",5132,"2014-06-10 06:56:58"
-177,"artifact",1,0,"transcript","vega",NULL,"Should not see this biotype in core db","undefined",NULL,NULL,106182,"2014-06-02 08:50:24",5132,"2014-06-10 06:57:13"
-178,"lncRNA",1,1,"gene","core,otherfeatures,vega,presite",190,NULL,"lnoncoding","SO:0001263","ncRNA_gene",102717,"2014-06-09 13:14:33",102717,"2014-08-31 11:51:02"
-179,"class_I_RNA",1,1,"gene","core",NULL,"Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.","snoncoding","SO:0001263","ncRNA_gene",101216,"2014-08-07 13:41:46",NULL,NULL
-180,"class_I_RNA",1,1,"transcript","core",NULL,"Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.","snoncoding","SO:0000990","class_I_RNA",101216,"2014-08-07 13:42:10",NULL,NULL
-181,"class_II_RNA",1,1,"gene","core",NULL,"Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.","snoncoding","SO:0001263","ncRNA_gene",101216,"2014-08-07 13:42:41",NULL,NULL
-182,"class_II_RNA",1,1,"transcript","core",NULL,"Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.","snoncoding","SO:0000989","class_II_RNA",101216,"2014-08-07 13:43:18",NULL,NULL
-183,"known_ncRNA",1,1,"gene","core,otherfeatures,vega,sangervega",NULL,NULL,"snoncoding",NULL,NULL,104957,"2014-08-15 13:33:26",161,"2016-01-15 17:05:04"
-184,"known_ncRNA",1,1,"transcript","core,otherfeatures,vega,sangervega",NULL,NULL,"snoncoding","SO:0000655","ncRNA",104957,"2014-08-15 13:33:44",161,"2016-01-15 17:05:20"
-185,"transcribed_unitary_pseudogene",1,1,"transcript","core,vega",NULL,NULL,"pseudogene","SO:0000516","pseudogenic_transcript",104957,"2014-08-15 13:49:12",NULL,NULL
-186,"piRNA",1,1,"gene","core",NULL,"A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.","snoncoding","SO:0001263","ncRNA_gene",104856,"2014-10-17 15:51:11",NULL,NULL
-187,"piRNA",1,1,"transcript","core",NULL,"A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.","snoncoding","SO:0001035","piRNA",104856,"2014-10-19 20:08:35",NULL,NULL
-188,"IG_D_pseudogene",1,1,"gene","core,otherfeatures,presite",67,NULL,"pseudogene","SO:0000336","pseudogene",101214,"2014-10-22 15:18:32",101214,"2018-11-07 11:19:51"
-189,"macro_lncRNA",1,1,"gene","core,vega",388,"Unspliced lncRNAs that are several kb in size","lnoncoding","SO:0001263","ncRNA_gene",104991,"2014-10-28 11:46:17",104957,"2015-01-20 09:33:36"
-191,"vaultRNA",1,1,"gene","core,otherfeatures,vega",388,"short non coding RNA genes that form part of the vault ribonucleoprotein complex","snoncoding","SO:0001263","ncRNA_gene",104991,"2014-10-28 11:47:09",104957,"2018-01-17 15:07:41"
+1	IG_C_gene	1	1	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	101214	2014-11-06 15:42:50
+2	IG_C_gene	1	1	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000478	C_gene_segment	\N	\N	101214	2014-11-06 15:43:12
+3	IG_D_gene	1	1	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	101214	2014-11-06 15:43:42
+4	IG_D_gene	1	1	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000458	D_gene_segment	\N	\N	101214	2014-11-06 15:43:59
+5	IG_J_gene	1	1	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	101214	2014-11-06 15:44:21
+6	IG_J_gene	1	1	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000470	J_gene_segment	\N	\N	101214	2014-11-06 15:44:35
+7	IG_J_pseudogene	1	1	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	101214	2018-11-07 10:56:03
+8	IG_J_pseudogene	1	1	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	101214	2018-11-07 10:56:10
+9	IG_V_gene	1	1	gene	core,otherfeatures,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	101214	2014-11-06 15:45:02
+10	IG_V_gene	1	1	transcript	core,otherfeatures,presite	\N	\N	coding	SO:0000466	V_gene_segment	\N	\N	101214	2014-11-06 15:45:24
+11	IG_V_pseudogene	1	1	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	101214	2018-11-07 10:55:39
+12	IG_V_pseudogene	1	1	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	101214	2018-11-07 10:55:48
+13	IG_gene	1	1	gene	vega	\N	\N	coding	SO:0001217	protein_coding_gene	\N	\N	\N	\N
+14	IG_gene	1	1	transcript	vega	\N	\N	coding	SO:3000000	gene_segment	\N	\N	\N	\N
+15	IG_pseudogene	1	1	gene	core,vega,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	107110	2014-12-11 10:51:12
+16	IG_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	107110	2014-12-11 10:51:29
+17	LRG_gene	1	1	gene	core	\N	\N	LRG	\N	\N	\N	\N	97245	2014-08-27 10:46:00
+18	LRG_gene	1	1	transcript	core	\N	\N	LRG	\N	\N	\N	\N	97245	2014-08-27 10:46:09
+19	Mt_rRNA	1	1	gene	core,presite	73	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:18:04
+20	Mt_rRNA	1	1	transcript	core,presite	\N	\N	snoncoding	SO:0000252	rRNA	\N	\N	104957	2014-03-21 15:18:10
+21	Mt_tRNA	1	1	gene	core,presite	74	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:15:39
+22	Mt_tRNA	1	1	transcript	core,presite	\N	\N	snoncoding	SO:0000253	tRNA	\N	\N	104957	2014-03-21 15:15:44
+23	Mt_tRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+24	Mt_tRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+25	RNA-Seq_gene	1	1	gene	otherfeatures	\N	\N	undefined	\N	\N	\N	\N	\N	\N
+26	RNA-Seq_gene	1	1	transcript	otherfeatures	\N	\N	undefined	\N	\N	\N	\N	\N	\N
+27	TEC	1	1	gene	core,vega,sangervega	0	\N	undefined	\N	\N	\N	\N	104991	2014-08-26 11:44:53
+28	TEC	1	0	transcript	core,vega,sangervega	\N	\N	undefined	SO:0002139	unconfirmed_transcript	\N	\N	104991	2014-08-26 11:45:14
+29	TR_gene	1	1	gene	vega	\N	\N	coding	SO:0001217	protein_coding_gene	\N	\N	\N	\N
+30	TR_gene	1	1	transcript	core,vega	\N	\N	coding	SO:3000000	gene_segment	\N	\N	\N	\N
+31	TR_pseudogene	1	1	gene	vega	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2013-07-08 12:44:42
+32	TR_pseudogene	1	1	transcript	vega	0	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2013-07-08 12:44:42
+33	ambiguous_orf	1	1	transcript	core,vega	\N	\N	lnoncoding	SO:0001877	lnc_RNA	\N	\N	5132	2013-07-08 12:33:27
+35	cdna_update	1	1	gene	cdna	\N	\N	undefined	\N	\N	\N	\N	97245	2011-10-26 08:58:38
+36	cdna_update	1	1	transcript	cdna	\N	\N	undefined	\N	\N	\N	\N	97245	2011-10-26 08:58:49
+37	cdna	1	1	gene	otherfeatures	\N	\N	undefined	SO:0000756	cDNA	\N	\N	\N	\N
+38	cdna	1	1	transcript	otherfeatures	\N	\N	undefined	SO:0000756	cDNA	\N	\N	\N	\N
+39	disrupted_domain	1	1	transcript	core,vega	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	\N	\N
+40	est	1	1	gene	otherfeatures	\N	\N	undefined	\N	\N	\N	\N	\N	\N
+41	est	1	1	transcript	otherfeatures	\N	\N	undefined	SO:0000345	EST	\N	\N	\N	\N
+42	lincRNA	1	1	gene	core,vega,presite	190	\N	lnoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:17:05
+43	lincRNA	1	1	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	\N	\N	104957	2014-03-21 15:17:09
+44	miRNA	1	1	gene	core,otherfeatures,vega,presite	70	From RefSeq import.	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104991	2014-11-12 12:04:54
+45	miRNA	1	1	transcript	core,otherfeatures,presite	\N	From RefSeq import.	snoncoding	SO:0000276	miRNA	\N	\N	104957	2014-03-21 15:16:09
+46	miRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+47	miRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+48	misc_RNA	1	1	gene	core,otherfeatures,presite	\N	\N	mnoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2015-01-15 11:50:46
+49	misc_RNA	1	1	transcript	core,otherfeatures,presite	\N	\N	mnoncoding	SO:0000655	ncRNA	\N	\N	104957	2015-01-15 11:51:00
+50	misc_RNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+51	misc_RNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+52	ncRNA	1	1	gene	core,otherfeatures	99	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	5132	2013-07-08 13:03:50
+53	ncRNA	1	1	transcript	core,otherfeatures	\N	\N	snoncoding	SO:0000655	ncRNA	\N	\N	5132	2013-07-08 13:03:50
+54	non_coding	1	1	gene	core,otherfeatures,rnaseq,vega,presite	353	\N	lnoncoding	SO:0001263	ncRNA_gene	\N	\N	5132	2013-07-08 12:33:27
+55	non_coding	1	1	transcript	core,otherfeatures,rnaseq,vega,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	\N	\N	5132	2013-07-08 12:33:27
+56	nonsense_mediated_decay	1	1	transcript	core,vega,presite	\N	\N	coding	SO:0000234	mRNA	\N	\N	104957	2014-03-21 15:10:43
+57	polymorphic	1	1	gene	vega	\N	\N	coding	SO:0001217	protein_coding_gene	\N	\N	\N	\N
+58	polymorphic_pseudogene	1	1	gene	core,vega,presite	67	\N	coding	SO:0001217	protein_coding_gene	\N	\N	104957	2014-03-21 15:16:51
+59	polymorphic_pseudogene	1	1	transcript	core,vega,presite	\N	\N	coding	SO:0000234	mRNA	\N	\N	104957	2014-03-21 15:16:56
+60	processed_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:08:54
+61	processed_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:09:02
+62	processed_transcript	1	1	gene	core,vega,presite	79	\N	lnoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:17:48
+63	processed_transcript	1	1	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	\N	\N	104957	2014-03-21 15:17:53
+64	protein_coding	1	1	gene	core,otherfeatures,rnaseq,vega,presite	\N	\N	coding	SO:0001217	protein_coding_gene	\N	\N	97245	2012-07-11 12:29:28
+65	protein_coding	1	1	transcript	core,otherfeatures,rnaseq,vega,presite	\N	\N	coding	SO:0000234	mRNA	\N	\N	\N	\N
+66	pseudogene	1	1	gene	core,otherfeatures,vega,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:18:57
+67	pseudogene	1	1	transcript	core,otherfeatures,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:19:04
+68	rRNA	1	1	gene	core,otherfeatures,vega,presite	\N	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	106182	2015-01-29 10:50:48
+69	rRNA	1	1	transcript	core,otherfeatures,vega,presite	\N	\N	snoncoding	SO:0000252	rRNA	\N	\N	9335	2015-01-29 13:17:28
+70	rRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+71	rRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+72	retained_intron	1	1	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	\N	\N	104957	2014-03-21 15:14:10
+73	retrotransposed	0	1	gene	core	77	\N	pseudogene	SO:0000569	retrotransposed	\N	\N	5132	2012-10-30 17:53:09
+74	retrotransposed	0	1	transcript	core	\N	\N	pseudogene	SO:0000569	retrotransposed	\N	\N	5132	2012-10-30 17:53:26
+75	scRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+76	scRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+77	snRNA	1	1	gene	core,otherfeatures,vega,presite	68	From Havana manual annotation.	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:05:32
+78	snRNA	1	1	transcript	core,otherfeatures,vega,presite	\N	From Havana manual annotation.	snoncoding	SO:0000274	snRNA	\N	\N	104957	2014-03-21 15:05:40
+79	snRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+80	snRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+81	snlRNA	1	1	gene	core	78	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	5132	2013-07-08 13:03:50
+82	snlRNA	1	1	transcript	core	\N	\N	snoncoding	SO:0000274	snRNA	\N	\N	5132	2013-07-08 13:03:50
+83	snoRNA	1	1	gene	core,otherfeatures,vega,presite	69	small nucleolar RNA.	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:16:36
+84	snoRNA	1	1	transcript	core,otherfeatures,vega,presite	\N	small nucleolar RNA.	snoncoding	SO:0000275	snoRNA	\N	\N	104957	2014-03-21 15:16:41
+85	snoRNA_pseudogene	1	1	gene	core	75	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	5132	2014-10-28 12:19:45
+86	snoRNA_pseudogene	1	1	transcript	core	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	5132	2014-10-28 12:19:45
+87	tRNA	1	1	gene	core,otherfeatures,presite	76	\N	snoncoding	SO:0001263	ncRNA_gene	\N	\N	104957	2014-03-21 15:08:32
+88	tRNA	1	1	transcript	core,otherfeatures,presite	76	\N	snoncoding	SO:0000253	tRNA	\N	\N	104957	2014-03-21 15:08:38
+89	tRNA_pseudogene	1	1	gene	core,otherfeatures	\N	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	\N	\N	105967	2018-06-11 11:38:24
+90	tRNA_pseudogene	1	1	transcript	core,otherfeatures	\N	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	105967	2018-06-11 11:38:41
+91	transcribed_processed_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:14:43
+92	transcribed_processed_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:14:48
+93	transcribed_unitary_pseudogene	1	1	gene	core,vega	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-08-15 13:48:10
+94	transcribed_unprocessed_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:12:59
+95	transcribed_unprocessed_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:13:05
+96	unitary_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:11:13
+97	unitary_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:11:20
+98	unprocessed_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:11:32
+99	unprocessed_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:11:38
+100	ccds_gene	1	0	gene	otherfeatures	\N	Imported CCDS gene models	undefined	\N	\N	\N	\N	\N	\N
+101	protein_coding_in_progress	1	1	gene	vega	\N	occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation	undefined	\N	\N	\N	\N	\N	\N
+102	IG_Z_gene	1	1	gene	core,vega	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	\N	\N
+103	IG_M_gene	1	1	gene	core,vega	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	\N	\N
+104	ncRNA_host	1	1	transcript	core,vega	\N	\N	lnoncoding	\N	\N	\N	\N	161	2016-01-15 17:05:38
+105	TR_V_pseudogene	1	1	gene	core,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	104957	2014-03-21 15:15:12
+106	TR_V_gene	1	1	gene	core,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	104957	2014-03-21 15:14:59
+107	IG_C_pseudogene	1	1	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	pseudogene	\N	\N	101214	2018-11-07 10:54:53
+108	TR_C_gene	1	1	gene	core,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	104957	2014-03-21 15:14:25
+109	TR_J_gene	1	1	gene	core,presite	100	\N	coding	SO:0001217	protein_coding_gene	\N	\N	104957	2014-03-21 15:18:37
+110	TR_V_pseudogene	1	1	transcript	core,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	104957	2014-03-21 15:15:18
+111	TR_V_gene	1	1	transcript	core,presite	\N	\N	coding	SO:0000466	V_gene_segment	\N	\N	104957	2014-03-21 15:15:06
+112	IG_C_pseudogene	1	1	transcript	core,otherfeatures,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	\N	\N	101214	2018-11-07 10:55:17
+113	TR_C_gene	1	1	transcript	core,presite	\N	\N	coding	SO:0000478	C_gene_segment	\N	\N	104957	2014-03-21 15:14:31
+114	TR_J_gene	1	1	transcript	core,presite	\N	\N	coding	SO:0000470	J_gene_segment	\N	\N	104957	2014-03-21 15:18:41
+115	protein_coding_in_progress	1	1	transcript	vega	\N	occurs where the ORF is lost when remapping to a different assembly and the gene is awaiting reannotation	undefined	\N	\N	\N	\N	\N	\N
+116	IG_M_gene	1	1	transcript	core	\N	\N	coding	SO:3000000	gene_segment	\N	\N	\N	\N
+117	IG_Z_gene	1	1	transcript	core	\N	\N	coding	SO:3000000	gene_segment	\N	\N	\N	\N
+118	3prime_overlapping_ncRNA	1	1	transcript	core,vega,presite	\N	\N	lnoncoding	SO:0002120	three_prime_overlapping_ncrna	\N	\N	161	2016-01-15 17:04:07
+123	antisense_RNA	1	0	gene	core,otherfeatures	\N	From RefSeq import	lnoncoding	SO:0001263	ncRNA_gene	5132	2011-06-02 07:12:32	105967	2018-04-30 13:47:03
+124	antisense_RNA	1	0	transcript	core,otherfeatures	\N	From RefSeq import	lnoncoding	SO:0001877	lnc_RNA	5132	2011-06-02 07:12:40	105967	2018-04-30 13:47:24
+125	scRNA	1	1	gene	core,otherfeatures,vega	\N	From RefSeq import or Havana manual annotation.	snoncoding	SO:0001263	ncRNA_gene	5132	2011-06-02 07:13:08	161	2016-01-18 12:47:37
+126	scRNA	1	1	transcript	core,otherfeatures,vega	\N	From RefSeq import or Havana manual annotation.	snoncoding	SO:0000013	scRNA	5132	2011-06-02 07:13:15	161	2016-01-18 12:47:59
+127	RNase_MRP_RNA	1	0	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	ncRNA_gene	5132	2011-06-02 07:14:03	104957	2014-03-21 15:11:55
+128	RNase_MRP_RNA	1	0	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000385	RNase_MRP_RNA	5132	2011-06-02 07:14:09	104957	2014-03-21 15:12:01
+129	RNase_P_RNA	1	0	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	ncRNA_gene	5132	2011-06-02 07:14:40	104957	2014-03-21 15:12:06
+130	RNase_P_RNA	1	0	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000386	RNase_P_RNA	5132	2011-06-02 07:14:46	104957	2014-03-21 15:12:12
+131	telomerase_RNA	1	0	gene	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0001263	ncRNA_gene	5132	2011-06-02 07:15:54	128421	2018-05-29 13:31:23
+132	telomerase_RNA	1	0	transcript	core,otherfeatures,presite	\N	From RefSeq import or Rfamscan	snoncoding	SO:0000390	telomerase_RNA	5132	2011-06-02 07:16:03	128421	2018-05-29 13:31:50
+133	sense_intronic	1	1	transcript	core,vega,presite	0	\N	lnoncoding	SO:0001877	lnc_RNA	97245	2011-07-18 10:14:50	104957	2014-03-21 15:10:23
+135	sense_overlapping	1	1	transcript	core,vega,presite	0	\N	lnoncoding	SO:0001877	lnc_RNA	97245	2011-07-19 13:29:37	104957	2014-03-21 15:12:37
+138	sense_intronic	1	1	gene	core,vega,presite	350	\N	lnoncoding	SO:0001263	ncRNA_gene	97245	2011-07-19 13:31:24	104957	2014-03-21 15:10:31
+139	ambiguous_orf	1	1	gene	core,vega	351	\N	lnoncoding	SO:0001263	ncRNA_gene	97245	2011-07-19 13:31:27	5132	2013-07-08 12:33:27
+140	retained_intron	1	1	gene	core,vega,presite	352	\N	lnoncoding	SO:0001263	ncRNA_gene	97245	2011-07-19 13:31:31	104957	2014-03-21 15:14:16
+142	3prime_overlapping_ncRNA	1	1	gene	core,vega,presite	\N	\N	lnoncoding	\N	\N	97245	2011-07-19 13:31:38	161	2016-01-15 17:04:20
+143	ncRNA_host	1	1	gene	core,vega	\N	\N	lnoncoding	\N	\N	97245	2011-07-19 13:31:42	161	2016-01-15 17:05:50
+144	sense_overlapping	1	1	gene	core,vega,presite	355	\N	lnoncoding	SO:0001263	ncRNA_gene	97245	2011-07-19 13:31:47	104957	2014-03-21 15:12:43
+146	TR_D_gene	1	1	transcript	core,presite	\N	\N	coding	SO:0000458	D_gene_segment	97245	2011-07-20 10:10:01	104957	2014-03-21 15:12:22
+147	TR_J_pseudogene	1	1	transcript	core,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	97245	2011-07-20 10:10:01	104957	2014-03-21 15:04:14
+148	TR_D_gene	1	1	gene	core,presite	100	\N	coding	SO:0001217	protein_coding_gene	97245	2011-07-20 10:10:01	104957	2014-03-21 15:12:27
+149	TR_J_pseudogene	1	1	gene	core,presite	67	\N	pseudogene	SO:0000336	pseudogene	97245	2011-07-20 10:10:01	104957	2014-03-21 15:04:57
+150	ncbi_pseudogene	1	0	gene	otherfeatures	\N	Imported annotation from RefSeq	pseudogene	SO:0000336	pseudogene	5132	2011-08-06 09:03:27	\N	\N
+151	ncbi_pseudogene	1	0	transcript	otherfeatures	\N	Imported annotation from RefSeq	pseudogene	SO:0000516	pseudogenic_transcript	5132	2011-08-06 09:04:11	\N	\N
+152	ncbigene	1	0	gene	otherfeatures	\N	Imported annotation from RefSeq	undefined	\N	\N	5132	2011-08-06 09:04:25	\N	\N
+153	non_stop_decay	1	1	transcript	core,vega,presite	0	A new transcript biotype from Havana.	coding	SO:0000234	mRNA	9335	2011-10-11 12:28:06	104957	2014-03-21 15:08:18
+154	pre_miRNA	1	1	transcript	core	0	This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.	snoncoding	SO:0001244	pre_miRNA	98587	2011-10-13 13:29:27	5132	2013-07-09 18:42:54
+155	tmRNA	1	1	gene	core	\N	One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.	snoncoding	SO:0001263	ncRNA_gene	101255	2011-10-24 16:20:33	97245	2018-06-12 17:59:13
+156	tmRNA	1	1	transcript	core	0	One of the classes of ncRNA genes that is only found in bacteria. Hence only required for EnsemblBacteria.	snoncoding	SO:0000584	tmRNA	101255	2011-10-24 16:21:47	105967	2013-10-08 11:25:26
+157	SRP_RNA	1	1	gene	core,otherfeatures	\N	The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.	snoncoding	SO:0001263	ncRNA_gene	101255	2011-10-24 16:25:07	101214	2015-04-08 16:27:17
+158	SRP_RNA	1	1	transcript	core,otherfeatures	0	The signal recognition particle (SRP) RNA is one of the classes of ncRNA genes.	snoncoding	SO:0000590	SRP_RNA	101255	2011-10-24 16:25:22	101214	2015-04-08 16:27:31
+160	ribozyme	1	1	transcript	core,otherfeatures,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	101255	2012-04-04 15:52:41	104957	2015-01-20 14:37:05
+163	ncRNA_pseudogene	1	1	gene	otherfeatures	99	noncoding RNA pseudogene	pseudogene	SO:0000336	pseudogene	5132	2012-09-23 21:23:20	5132	2014-10-28 12:19:45
+164	ncRNA_pseudogene	1	1	transcript	otherfeatures	99	noncoding RNA pseudogene	pseudogene	SO:0000516	pseudogenic_transcript	5132	2012-09-23 21:23:39	5132	2014-10-28 12:19:45
+165	IG_LV_gene	1	1	gene	core	100	\N	coding	SO:0001217	protein_coding_gene	5132	2012-11-14 18:01:19	\N	\N
+166	IG_LV_gene	1	1	transcript	core	\N	\N	coding	SO:3000000	gene_segment	5132	2012-11-14 18:01:46	\N	\N
+167	translated_processed_pseudogene	1	1	gene	core,vega,presite	\N	\N	pseudogene	SO:0000336	pseudogene	102717	2013-03-20 13:24:11	104957	2014-03-21 15:06:29
+168	translated_processed_pseudogene	1	1	transcript	core,vega,presite	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	102717	2013-03-20 13:24:42	104957	2014-03-21 15:06:36
+169	nontranslating_CDS	1	0	gene	core,otherfeatures	\N	An imported 'protein-coding' gene that does not translate due to one or more unannotated stop codons.	coding	SO:0001217	protein_coding_gene	105967	2013-04-24 11:44:22	104897	2018-05-29 14:46:57
+170	nontranslating_CDS	1	0	transcript	core,otherfeatures	\N	An imported 'protein-coding' transcript that does not translate due to one or more unannotated stop codons.	coding	SO:0000234	mRNA	105967	2013-04-24 11:45:31	104897	2018-05-29 14:47:17
+171	translated_unprocessed_pseudogene	1	1	gene	core,vega	\N	\N	pseudogene	SO:0000336	pseudogene	104957	2013-08-07 12:42:12	\N	\N
+172	translated_unprocessed_pseudogene	1	1	transcript	core,vega	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	104957	2013-08-07 12:42:27	\N	\N
+173	mRNA	1	1	gene	otherfeatures	\N	From RefSeq import	coding	SO:0001217	protein_coding_gene	102717	2014-01-06 11:04:29	\N	\N
+174	mRNA	1	1	transcript	otherfeatures	\N	From RefSeq import	coding	SO:0000234	mRNA	102717	2014-01-06 11:48:30	\N	\N
+175	pre_miRNA	1	1	gene	core	\N	This is the pre miRNA information extracted from FlyBase annotations distinctive from the miRNA form for the same gene model.Gautier is happy for this to be in the short noncoding group.	snoncoding	SO:0001263	ncRNA_gene	105967	2014-01-14 13:02:47	\N	\N
+176	artifact	1	0	gene	vega	\N	Should not see this biotype in core db	undefined	\N	\N	106182	2014-06-02 08:50:01	5132	2014-06-10 06:56:58
+177	artifact	1	0	transcript	vega	\N	Should not see this biotype in core db	undefined	\N	\N	106182	2014-06-02 08:50:24	5132	2014-06-10 06:57:13
+178	lncRNA	1	1	gene	core,otherfeatures,vega,presite	190	\N	lnoncoding	SO:0001263	ncRNA_gene	102717	2014-06-09 13:14:33	102717	2014-08-31 11:51:02
+179	class_I_RNA	1	1	gene	core	\N	Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0001263	ncRNA_gene	101216	2014-08-07 13:41:46	\N	\N
+180	class_I_RNA	1	1	transcript	core	\N	Small non-coding RNA (55-65 nt long) containing highly conserved 5' and 3' ends (16 and 8 nt, respectively) that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0000990	class_I_RNA	101216	2014-08-07 13:42:10	\N	\N
+181	class_II_RNA	1	1	gene	core	\N	Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0001263	ncRNA_gene	101216	2014-08-07 13:42:41	\N	\N
+182	class_II_RNA	1	1	transcript	core	\N	Small non-coding RNA (59-60 nt long) containing 5' and 3' ends that are predicted to come together to form a stem structure. Identified in the social amoeba Dictyostelium discoideum and localized in the cytoplasm.	snoncoding	SO:0000989	class_II_RNA	101216	2014-08-07 13:43:18	\N	\N
+183	known_ncRNA	1	1	gene	core,otherfeatures,vega,sangervega	\N	\N	snoncoding	\N	\N	104957	2014-08-15 13:33:26	161	2016-01-15 17:05:04
+184	known_ncRNA	1	1	transcript	core,otherfeatures,vega,sangervega	\N	\N	snoncoding	SO:0000655	ncRNA	104957	2014-08-15 13:33:44	161	2016-01-15 17:05:20
+185	transcribed_unitary_pseudogene	1	1	transcript	core,vega	\N	\N	pseudogene	SO:0000516	pseudogenic_transcript	104957	2014-08-15 13:49:12	\N	\N
+186	piRNA	1	1	gene	core	\N	A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.	snoncoding	SO:0001263	ncRNA_gene	104856	2014-10-17 15:51:11	\N	\N
+187	piRNA	1	1	transcript	core	\N	A small non coding RNA, part of a silencing system that prevents the spreading of selfish genetic elements.	snoncoding	SO:0001035	piRNA	104856	2014-10-19 20:08:35	\N	\N
+188	IG_D_pseudogene	1	1	gene	core,otherfeatures,presite	67	\N	pseudogene	SO:0000336	pseudogene	101214	2014-10-22 15:18:32	101214	2018-11-07 11:19:51
+189	macro_lncRNA	1	1	gene	core,vega	388	Unspliced lncRNAs that are several kb in size	lnoncoding	SO:0001263	ncRNA_gene	104991	2014-10-28 11:46:17	104957	2015-01-20 09:33:36
+191	vaultRNA	1	1	gene	core,otherfeatures,vega	388	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001263	ncRNA_gene	104991	2014-10-28 11:47:09	104957	2018-01-17 15:07:41
+192	scaRNA	1	1	gene	core,otherfeatures,presite	440	\N	snoncoding	SO:0001263	ncRNA_gene	104957	2014-12-02 14:02:42	104957	2014-12-03 15:03:54
+193	scaRNA	1	1	transcript	core,otherfeatures,presite	\N	\N	snoncoding	SO:0000013	scRNA	104957	2014-12-02 14:02:56	\N	\N
+194	sRNA	1	1	transcript	core,otherfeatures,presite	\N	\N	snoncoding	SO:0000274	snRNA	104957	2014-12-02 14:04:57	104957	2014-12-03 15:05:06
+195	sRNA	1	1	gene	core,otherfeatures,presite	441	\N	snoncoding	SO:0001263	ncRNA_gene	104957	2014-12-02 14:05:38	104957	2014-12-03 15:05:18
+196	CRISPR	0	1	gene	core,otherfeatures,presite	442	\N	snoncoding	SO:0001263	ncRNA_gene	104957	2014-12-02 14:06:35	101214	2018-09-19 14:19:44
+197	CRISPR	0	1	transcript	core,otherfeatures,presite	\N	\N	snoncoding	SO:0001459	CRISPR	104957	2014-12-02 14:06:52	101214	2018-09-19 14:19:48
+198	antitoxin	1	1	transcript	core,otherfeatures,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	104957	2014-12-02 14:07:48	104957	2014-12-03 14:59:20
+199	antitoxin	1	1	gene	core,otherfeatures,presite	443	\N	lnoncoding	SO:0001263	ncRNA_gene	104957	2014-12-02 14:08:01	104957	2014-12-03 14:59:44
+200	ribozyme	1	1	gene	core,otherfeatures,presite	359	\N	lnoncoding	SO:0001263	ncRNA_gene	104957	2014-12-02 14:08:13	104957	2014-12-03 15:03:29
+202	vaultRNA	1	1	transcript	core,otherfeatures,vega	388	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0002040	vaultRNA_primary_transcript	104957	2014-12-09 09:53:29	104957	2018-01-17 15:07:53
+203	macro_lncRNA	1	1	transcript	core,vega	388	Unspliced lncRNAs that are several kb in size	lnoncoding	SO:0001877	lnc_RNA	104957	2014-12-09 09:54:17	104957	2015-01-20 09:33:45
+204	IG_D_pseudogene	1	1	transcript	core,otherfeatures,presite	67	\N	pseudogene	SO:0000516	pseudogenic_transcript	107111	2015-03-25 17:00:11	101214	2018-11-07 11:19:59
+205	guide_RNA	1	0	gene	otherfeatures	\N	From RefSeq import	snoncoding	SO:0001263	ncRNA_gene	106182	2015-04-09 09:30:42	\N	\N
+206	guide_RNA	1	0	transcript	otherfeatures	\N	From RefSeq import	snoncoding	SO:0000602	guide_RNA	106182	2015-04-09 09:30:57	\N	\N
+207	Y_RNA	1	0	gene	otherfeatures	\N	From RefSeq import	snoncoding	SO:0001263	ncRNA_gene	106182	2015-04-09 09:32:55	\N	\N
+208	Y_RNA	1	0	transcript	otherfeatures	\N	From RefSeq import	snoncoding	SO:0000405	Y_RNA	106182	2015-04-09 09:33:18	\N	\N
+209	transposable_element	1	1	transcript	core	\N	\N	no_group	SO:0000101	transposable_element	97245	2015-07-10 15:09:35	97245	2015-07-10 15:25:21
+210	transposable_element	1	1	gene	core	\N	\N	no_group	SO:0000111	transposable_element_gene	97245	2015-07-10 15:21:28	97245	2015-07-10 15:25:31
+211	bidirectional_promoter_lncRNA	1	1	transcript	core,vega,presite	\N	\N	lnoncoding	\N	\N	107110	2015-08-06 14:37:17	161	2016-01-15 17:04:34
+212	bidirectional_promoter_lncRNA	1	1	gene	core,vega,presite	\N	\N	lnoncoding	SO:0002185	bidirectional_promoter_lncRNA	107110	2015-08-07 08:23:32	161	2016-01-15 17:04:45
+215	unknown_likely_coding	1	1	gene	core	\N	Biotype introduced by UCSC in the mouse strains, for genes/transcripts that were not in the mouse reference but are likely to be new protein coding models.	coding	\N	\N	106182	2016-08-04 10:17:33	\N	\N
+216	unknown_likely_coding	1	1	transcript	core	\N	Biotype introduced by UCSC in the mouse strains, for genes/transcripts that were not in the mouse reference but are likely to be new protein coding models.	coding	\N	\N	106182	2016-08-04 10:17:44	\N	\N
+217	other	1	1	gene	otherfeatures	\N	\N	undefined	\N	\N	107110	\N	107110	2016-08-04 14:07:01
+218	lncRNA	1	1	transcript	core,otherfeatures,vega,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	105967	2017-01-17 10:45:41	105967	2017-01-17 10:45:41
+219	aligned_transcript	1	0	gene	otherfeatures	\N	Capture Long Seq (CLS) on human and mouse	undefined	\N	\N	124316	2017-10-30 15:55:01	124316	2017-10-30 15:55:01
+220	aligned_transcript	1	0	transcript	otherfeatures	\N	Capture Long Seq (CLS) on human and mouse	undefined	\N	\N	124316	2017-10-30 15:55:16	124316	2017-10-30 15:55:16
+221	antisense	1	1	gene	core,presite	\N	\N	lnoncoding	SO:0001263	ncRNA_gene	104957	2018-01-17 15:09:41	104957	2018-01-17 15:09:41
+222	antisense	1	1	transcript	core,presite	\N	\N	lnoncoding	SO:0001877	lnc_RNA	104957	2018-01-17 15:10:09	104957	2018-01-17 15:10:09
+223	vault_RNA	1	1	gene	core,otherfeatures,vega	\N	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001263	ncRNA_gene	105967	2018-04-30 13:45:37	105967	2018-04-30 13:45:37
+224	vault_RNA	1	1	transcript	core,otherfeatures,vega	\N	short non coding RNA genes that form part of the vault ribonucleoprotein complex	snoncoding	SO:0001877	lnc_RNA	105967	2018-04-30 13:46:03	105967	2018-04-30 13:46:03
+225	rnaseq_putative_cds	1	1	transcript	core	\N	A biotype for gene/transcripts with transcriptomic data and some very weak support for the cds. This currently means that the cds is less than < 1500bp, is composed of less than 3 coding exons and has less than 40 percent coverage from an alignment of a protein existence level 1 or 2 vertebrate protein from UniProt. We believe there is potentially a cds at these positions, but the evidence is not strong enough to include it directly in the protein coding gene set 	coding	\N	\N	106182	2018-10-02 12:02:21	106182	2018-10-02 12:02:21
+226	rnaseq_putative_cds	1	1	gene	core	\N	A biotype for gene/transcripts with transcriptomic data and some very weak support for the cds. This currently means that the cds is less than < 1500bp, is composed of less than 3 coding exons and has less than 40 percent coverage from an alignment of a protein existence level 1 or 2 vertebrate protein from UniProt. We believe there is potentially a cds at these positions, but the evidence is not strong enough to include it directly in the protein coding gene set	coding	\N	\N	106182	2018-10-02 12:02:32	106182	2018-10-02 12:02:32
+227	transcribed_pseudogene	1	0	gene	otherfeatures	\N	This is for the RefSeq GFF3 import	pseudogene	\N	\N	101214	2018-11-07 10:59:36	101214	2018-11-07 10:59:36
+228	transcribed_pseudogene	1	0	transcript	otherfeatures	\N	This is for the RefSeq GFF3 import	pseudogene	\N	\N	101214	2018-11-07 11:00:00	101214	2018-11-07 11:00:00
