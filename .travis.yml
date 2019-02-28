@@ -17,16 +17,17 @@ addons:
     - emboss
 
 before_install:
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-test.git
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl.git
+- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-test.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-test.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-test.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl.git;fi)
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-hive.git
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-compara.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-datacheck.git
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-variation.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-orm.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-metadata.git
-- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-funcgen.git
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-compara.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-compara.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-compara.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-datacheck.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-datacheck.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-datacheck.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-variation.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-variation.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-variation.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-orm.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-orm.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-orm.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-taxonomy.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-metadata.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-metadata.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-metadata.git;fi)
+- $(git ls-remote --exit-code https://github.com/Ensembl/ensembl-funcgen.git refs/heads/$BRANCH >/dev/null 2>&1;if [ $? -eq 0 ]; then git clone --branch $BRANCH --depth 1 https://github.com/Ensembl/ensembl-funcgen.git; else git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-funcgen.git;fi)
 - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
 - cd htslib
 - make
