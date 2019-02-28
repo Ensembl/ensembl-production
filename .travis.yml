@@ -17,17 +17,17 @@ addons:
     - emboss
 
 before_install:
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-test.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-test.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-hive.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-compara.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-compara.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-datacheck.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-variation.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-variation.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-orm.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-metadata.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-funcgen.git
-- git clone --branch develop --depth 1 https://github.com/samtools/htslib.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-metadata.git
+- git clone --branch release/96 --depth 1 https://github.com/Ensembl/ensembl-funcgen.git
+- git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
 - cd htslib
 - make
 - export HTSLIB_DIR=$(pwd -P)
