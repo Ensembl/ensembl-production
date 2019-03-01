@@ -37,7 +37,7 @@ is_deeply($manager->fetch_all_biotype_groups,
 	  'fetch all biotype groups');
 
 my @got = sort @{$manager->group_members('lnoncoding')};
-my @expected = sort qw /ambiguous_orf lincRNA non_coding processed_transcript rRNA retained_intron ncrna_host 3prime_overlapping_ncrna antisense_RNA sense_intronic sense_overlapping ribozyme lncRNA macro_lncRNA antitoxin/;
+my @expected = sort qw /ambiguous_orf lincRNA non_coding processed_transcript rRNA retained_intron ncrna_host 3prime_overlapping_ncRNA antisense_RNA sense_intronic sense_overlapping ribozyme lncRNA macro_lncRNA antitoxin/;
 is_deeply(\@got, \@expected, 'long non-coding biotype group members');
 throws_ok { $manager->group_members('dummy_group') }
   qr /Invalid biotype group/, 'request for group members with non existant group throws exception';
