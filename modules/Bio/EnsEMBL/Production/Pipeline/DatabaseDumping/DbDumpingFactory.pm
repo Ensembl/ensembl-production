@@ -40,7 +40,7 @@ use Bio::EnsEMBL::MetaData::Base qw(process_division_names fetch_and_set_release
 
 sub run {
   my ($self) = @_;
-  my $division = $self->param('division');
+  my $division = $self->param_required('division');
   my $database = $self->param('database');
   my $release = $self->param('release');
   my $base_output_dir = $self->param('base_output_dir');
