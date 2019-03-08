@@ -75,7 +75,7 @@ sub default_options {
         'rel_with_suffix'       => $self->o('release').$self->o('release_suffix'),
         'pipeline_name'         => 'pairalign_'.$self->o('rel_with_suffix'),   # name the pipeline to differentiate the submitted processes
 
-        'host'        => 'mysql-eg-hive.ebi.ac.uk',                        #separate parameter to use the resources aswell
+        'host'        => 'mysql-ens-hive-prod-2',                        #separate parameter to use the resources aswell
         'pipeline_db' => {                                  # connection parameters
             -host   => $self->o('host'),
             -port   => 4411,
@@ -85,7 +85,7 @@ sub default_options {
             -driver => 'mysql',
         },
 
-	    'master_db' => 'mysql://ensro@mysql-eg-staging-2.ebi.ac.uk:4275/ensembl_compara_metazoa_24_77',
+	    'master_db' => 'mysql://ensro@mysql-ens-mirror-3.ebi.ac.uk:4275/ensembl_compara_metazoa_24_77',
 
 	# 'staging_loc1' => {
         #     -host   => 'ens-staging1',
@@ -95,7 +95,7 @@ sub default_options {
         # },
 
 	    'staging_loc2' => {
-			       -host   => 'mysql-eg-staging-2.ebi.ac.uk',
+			       -host   => 'mysql-ens-mirror-3.ebi.ac.uk',
 			       -port   => 4275,
 			       -user   => 'ensro',
 			       -pass   => '',
@@ -104,7 +104,7 @@ sub default_options {
 			      },
 
 	    'main_core_dbs' => [{
-			       -host   => 'mysql-eg-staging-2.ebi.ac.uk',
+			       -host   => 'mysql-ens-mirror-3.ebi.ac.uk',
 			       -port   => 4275,
 			       -user   => 'ensro',
 			       -pass   => '',
@@ -131,7 +131,7 @@ sub default_options {
 	'curr_core_sources_locs'    => [ $self->o('staging_loc2'), ],
 	#'curr_core_sources_locs'    => [ $self->o('livemirror_loc') ],
 	'curr_core_dbs_locs'        => '', #if defining core dbs with config file. Define in Lastz_conf.pm or TBlat_conf.pm
-	    'core_db_urls' => {}, #'mysql://ensro@mysql-eg-staging-2.ebi.ac.uk:4275/77',
+	    'core_db_urls' => {}, #'mysql://ensro@mysql-ens-mirror-3.ebi.ac.uk:4275/77',
 	# executable locations:
 	'populate_new_database_exe' => $self->o('ensembl_cvs_root_dir')."/ensembl-compara/scripts/pipeline/populate_new_database.pl",
 	'dump_features_exe' => $self->o('ensembl_cvs_root_dir')."/ensembl-compara/scripts/dumps/dump_features.pl",
