@@ -95,7 +95,12 @@ sub write_json {
   if ( $compara_name ne 'multi' ) {
     $genome_dba->set_ensembl_genomes_release();
   }
-  my $md = $genome_dba->fetch_by_name( $self->production_name() );
+  my $mds = $genome_dba->fetch_by_name( $self->production_name() );
+  my $md;
+  my $division='Ensembl'.ucfirst($self->division());
+  foreach my $genome (@{$mds}){
+    $md = $genome if ($genome->division() eq $division);
+  }
   die "Could not find genome " . $self->production_name()
     if !defined $md;
 
