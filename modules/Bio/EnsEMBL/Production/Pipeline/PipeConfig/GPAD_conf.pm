@@ -61,7 +61,7 @@ sub default_options {
 
     ## 'job_factory' parameters
     'species'     => [], 
-    'antispecies' => [],
+    'antispecies' => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
     'division' 	 => [], 
     'run_all'     => 0,	
 
