@@ -1,4 +1,4 @@
-#!/bin/bash --
+#!/bin/bash
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 # Copyright [2016-2019] EMBL-European Bioinformatics Institute
 #
@@ -12,13 +12,12 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License
 
-if [[ "$USER" == "ensgen" ]]
-then
-    release=$(mysql-ens-meta-prod-1 ensembl_metadata --column-names=false -e "select ensembl_genomes_version from data_release where is_current=1")
-else
-    release=$(mysql-ens-meta-prod-1 ensembl_metadata --column-names=false -e "select ensembl_version from data_release where is_current=1")
-fi
+srv="mysql-ens-staging-3"
 
-echo $release
+${srv} mysqlcheck  --all-databases --optimize --auto-repair
+
+srv="mysql-ens-staging-4"
+
+${srv} mysqlcheck  --all-databases --optimize --auto-repair

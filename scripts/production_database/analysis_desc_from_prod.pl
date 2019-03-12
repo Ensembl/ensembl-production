@@ -80,4 +80,4 @@ my $new_dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new
                      
 Log::Log4perl->easy_init($DEBUG);
 
-$updater->update_analysis_description($new_dba->dbc(), $species, $type, \@logic_names);
+$updater->update_analysis_description($new_dba->dbc(), \@logic_names);
