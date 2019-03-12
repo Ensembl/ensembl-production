@@ -592,8 +592,9 @@ sub sub_table_box {
 
 sub generate_sub_diagram {
     my ($cluster, $column_links) = @_;
+    my $cluster_label = ($cluster =~ /tables$/) ? $cluster : "$cluster tables";
     my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
-        'label' => "$db_team schema diagram: $cluster tables",
+        'label' => "$db_team schema diagram: $cluster_label",
         'fontsize' => 20,
         $column_links
           ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
