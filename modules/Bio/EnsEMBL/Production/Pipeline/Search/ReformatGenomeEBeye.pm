@@ -80,7 +80,7 @@ sub run {
     $reformatter->reformat_sequences($genome_file, $dba->dbc()->dbname(),
         $sequences_file, $sequences_file_out
     );
-    output->{sequences_xml_file} = $sequences_file_out;
+    $output->{sequences_xml_file} = $sequences_file_out;
   }
 
   $self->dataflow_output_id( $output, 1 );
