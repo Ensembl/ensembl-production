@@ -1,6 +1,7 @@
 =head1 LICENSE
 
-Copyright [2009-2019] EMBL-European Bioinformatics Institute
+Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,14 +38,6 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  
-  if (defined $self->param('escape_branch') and 
-      $self->input_job->retry_count >= $self->input_job->analysis->max_retry_count) 
-  {
-    $self->dataflow_output_id($self->input_id, $self->param('escape_branch'));
-    $self->input_job->autoflow(0);
-    $self->complete_early("Job failed, retrying with higher memory limit.");
-  }
   
   my $input_file = $self->param_required('input_file');
   $self->throw("File '$input_file' does not exist") if (! -e $input_file);

@@ -1,6 +1,7 @@
 =head1 LICENSE
 
-Copyright [2019] EMBL-European Bioinformatics Institute
+Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -255,14 +256,14 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -rc_name         => 'normal',
-      -flow_into       => ['GenomeStats_Datacheck'],
+      -flow_into       => ['RunDataChecks'],
     },
 
     {
-      -logic_name      => 'GenomeStats_Datacheck',
+      -logic_name      => 'RunDataChecks',
       -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters      => {
-                            datacheck_names => ['GenomeStatistics'],
+                            datacheck_names => ['DensityFeatures', 'GenomeStatistics'],
                             history_file    => $self->o('history_file'),
                             failures_fatal  => 1,
                           },

@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+# Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+# Copyright [2016-2019] EMBL-European Bioinformatics Institute
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License
+
 """Module providing a function which allows to push a project (i.e. Ensembl, EnsemblGenomes)
 VOID file to the respective branch in the EBI SPOT GitHub repository."""
 
@@ -15,14 +30,14 @@ def push_to_repo_branch(gitHubFileName, fileName, branch, user, token):
     if not r.ok:
         print("Error when retrieving branch info from %s" % path)
         print("Reason: %s [%d]" % (r.text, r.status_code))
-        raise
+        raise RuntimeError((r.text, r.status_code))
     rjson = r.json()
     treeurl = rjson['commit']['commit']['tree']['url']
     r2 = requests.get(treeurl, auth=(user,token))
     if not r2.ok:
         print("Error when retrieving commit tree from %s" % treeurl)
         print("Reason: %s [%d]" % (r2.text, r2.status_code))
-        raise
+        raise RuntimeError((r.text, r.status_code))
     r2json = r2.json()
     sha = None
 

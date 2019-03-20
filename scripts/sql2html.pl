@@ -592,8 +592,9 @@ sub sub_table_box {
 
 sub generate_sub_diagram {
     my ($cluster, $column_links) = @_;
+    my $cluster_label = ($cluster =~ /tables$/) ? $cluster : "$cluster tables";
     my $graph = Bio::EnsEMBL::Hive::Utils::GraphViz->new(
-        'label' => "$db_team schema diagram: $cluster tables",
+        'label' => "$db_team schema diagram: $cluster_label",
         'fontsize' => 20,
         $column_links
           ? ( 'rankdir' => 'LR', 'concentrate' => 'true', )
@@ -694,12 +695,13 @@ if ($out_diagram_dir) {
     my $file_generator = $diagram_format_params{$diagram_format}->{'graphviz_method'};
 
     my $graph = generate_whole_diagram('show_clusters', 'column_links');
-    $graph->dot_input_filename("$full_diagram_dir/$db_team.dot");
+    #$graph->dot_input_filename("$full_diagram_dir/$db_team.dot");
     $graph->$file_generator("$full_diagram_dir/$db_team.$extension");
 
     foreach my $c (@header_names) {
         my $filename = "$full_diagram_dir/$db_team." . clean_name($c) . ".$extension";
         my $graph = generate_sub_diagram($c, 'column_links');
+        #$graph->dot_input_filename("$full_diagram_dir/$db_team." . clean_name($c) . ".dot");
         $graph->$file_generator($filename);
         fetch_diagram_dimensions($c, $filename);
     }
