@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+set -e
 database=$1
 output_dir=$2
 host=$3
