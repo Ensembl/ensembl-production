@@ -1,6 +1,7 @@
 =head1 LICENSE
 
-Copyright [2009-2019] EMBL-European Bioinformatics Institute
+Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+Copyright [2016-2019] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -74,10 +75,10 @@ sub parse_match {
   # function in the ProteinFeatureAdaptor, which means that numbers in
   # scientific E-notation will only be recognised if the 'E' is lowercased.
   my $score = $match->{score};
-  $score =~ s/E/e/;
+  $score =~ s/E/e/ if defined $score;
   
   my $evalue = $match->{evalue};
-  $evalue =~ s/E/e/;
+  $evalue =~ s/E/e/ if defined $evalue;
   
   my $feature_common =
   {

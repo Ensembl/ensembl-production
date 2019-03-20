@@ -1,478 +1,0 @@
-93	60	Fix duplicate transcript attributes	<p>Duplicate transcript attributes removed</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2010-08-31 09:48:23	5132	2010-09-01 17:09:03	1
-114	60	Structural Variation tab	<p>Structural variations are now displayed in their own <a href="http://www.ensembl.org/Homo_sapiens/StructuralVariation/Summary?sv=nsv455827">tab.</a>Currently this dispays a context iamge and tables of overlapping features. The number of available view for this feature type will be extended in release 61</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	2	121	2010-11-05 13:03:27	\N	\N	1
-119	61	Human cDNA update	<p>Updated set of cDNA alignments to the human genome.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	new	\N	N	2	14183	2010-11-10 13:51:16	14183	2010-11-30 17:12:59	1
-124	61	Haplotype correction	<p>Correction of an error that added one extra N to the end of the alternative versions of the chromosomes for five of the haplotypes. The altered alternative chromosomes are: HSCHR6_MHC_MANN, HSCHR6_MHC_MCF, HSCHR6_MHC_SSTO, HSCHR4_1 and HSCHR17_1.</p>	This will be updated in all databases containing the human assembly (core, otherfeatures, cdna and rnaseq).	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	14183	2010-11-10 14:20:26	14183	2010-12-06 13:25:35	1
-159	61	Chromosome and haplotype synonyms	<p>Addition of synonyms for the human chromosomes and haplotypes in the seq_region_synonym tables of the human databases.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	14183	2010-12-06 13:29:14	\N	\N	1
-189	62	Human Vega annotation	Manual annotation of human from Havana has been updated. This represents the annotation presented in Vega release 42	Vega 42 has yet to be released (but will be released before Ensembl)	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	101273	2011-02-04 11:52:12	101273	2011-02-21 15:30:32	1
-195	62	ResultFeature DBFile Collections	Where possible data from the result_feature table has been moved outside of the database to indexed binary  '.col' files. The ResultFeatureAdaptor now uses the new core DBFile::CollectionAdaptor and DBFile::FileAdaptor to access these data directly.	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2011-02-08 11:17:32	1273	2011-03-09 11:05:39	1
-198	62	Array Mapping	<p>Genomic and transcript alignments and transcript xref annotation has been re-run for all species with new genome assemblies or genebuilds.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2011-02-08 11:33:29	1273	2011-04-04 14:26:14	1
-205	62	Human otherfeatures	Removed EST alignments with hcoverage <90 and perc_ident <94.	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2011-02-08 21:05:36	5132	2011-02-16 13:04:28	1
-206	62	GENCODE gene set update (release 7)	Update to the Ensembl/Havana GENCODE gene set based on a complete re-annotation of the Ensembl gene set and combined with the latest Vega gene set	\N	handed_over	Genebuild	N	Y	N	Y	N	N	N	new	\N	N	2	9335	2011-02-09 10:09:18	9335	2011-02-23 09:39:02	1
-207	62	Human cDNA update	New cDNA db for human.	\N	handed_over	Genebuild	N	N	N	N	N	N	N	new	\N	N	2	14183	2011-02-09 10:33:01	14183	2011-02-23 09:20:36	1
-208	62	GRCh37.p3	Adding the third patch release for the human assembly. This alters the assembly information in all human databases.	\N	handed_over	Genebuild	N	N	Y	N	N	N	N	patched	\N	N	2	14183	2011-02-09 10:34:57	14183	2011-02-18 17:55:08	1
-209	62	GRCh37.p3 annotation	Annotation of the patches in the other features db.	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	2	14183	2011-02-09 10:36:15	14183	2011-03-07 09:21:23	1
-212	62	Update of Human functional genomics data	<p>New datasets from ENCODE and the Epigenomics Roadmap, covering existing cell lines. The Regulatory Build was rerun for cell lines with new data.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-02-09 10:51:58	100304	2011-04-04 14:06:45	1
-220	62	Import of LRG sequences	Newly published LRG sequences will be imported	\N	handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-02-09 13:16:45	99616	2011-03-08 13:32:07	1
-228	62	Human Body Map missing liver	Add the liver models	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	101214	2011-02-10 10:18:58	101214	2011-03-04 15:51:32	1
-230	62	Updated human otherfeatures db: new CCDS import	Update to CCDS set for human	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	102717	2011-02-10 11:20:19	102717	2011-03-08 13:51:01	1
-259	62	xrefs	Update human external database references.	\N	handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	23	2011-02-14 16:14:35	23	2011-03-07 10:35:38	1
-235	62	New variation database	<p>The human variation database will be built fresh from dbSNP release 132 due to data updates by dbSNP.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	new	\N	N	2	99616	2011-02-10 14:56:43	99616	2011-03-21 10:22:04	1
-236	62	Data import/update from external sources	<p>Allele frequencies from 1000 Genomes Project. Variation submissions on LRGs from UniProt. Structural variation data from DGVa. Somatic mutation data from Cosmic. Variation phenotype data from OMIM, NHGRI, UniProt and EGA. Variation synonyms from UniProt.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	patched	\N	N	2	99616	2011-02-10 15:03:00	99616	2011-03-21 10:23:31	1
-252	62	SIFT and PolyPhen consequences	<p>Non-synonymous coding consequences evaluated by SIFT and PolyPhen will be calculated</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-02-10 16:01:24	99616	2011-03-21 10:22:55	1
-294	63	Human Vega annotation	<p>Manual annotation of human from Havana has been updated. This represents the annotation presented in Vega release 43.&nbsp;Annotation by Havana of chromosome 12 has been completed  and that of chromosome 14 is nearly finished.</p>\
-<p>&nbsp;</p>		handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	161	2011-04-26 12:21:29	100304	2011-05-26 15:37:58	1
-296	63	GRCh37.p4	<p>GRCh37.p4 added to the human databases.</p>	This adds the sequence and assembly data associated with GRCh37.p4 to the human databases.	postponed	Genebuild	Y	N	Y	N	N	N	N	N/A	\N	N	2	14183	2011-04-26 13:20:38	14183	2011-05-10 10:54:54	1
-297	63	GRCh37.p4 annotation	<p>Gene annotation of the patches in the otherfeatures db.</p>	Addition of assembly patch gene annotation using a 'light-weight' annotation strategy, instead of the full genebuild process.	postponed	Genebuild	N	N	N	Y	N	N	N	patched	\N	N	2	14183	2011-04-26 13:25:03	14183	2011-05-10 10:55:46	1
-298	63	Human cDNA update	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;">The latest set of cDNAs for human (as of 05/May/2011) from the&nbsp;<br />European Nucleotide Archive and NCBI RefSeq were aligned to the&nbsp;<br />current genome using&nbsp;<a style="color: #3366bb;" title="Exonerate" href="http://www.ebi.ac.uk/~guy/exonerate/" target="_blank">Exonerate</a>. There are 1104 new cDNA alignments for Ensembl 63</span></p>\
-<p>&nbsp;</p>		handed_over	Genebuild	N	N	N	N	N	N	N	new	\N	N	2	14183	2011-04-26 13:27:02	100304	2011-05-26 10:30:35	1
-305	63	Update to Ensembl-Havana GENCODE gene set (release 8)	<p>Update to Ensembl-Havana GENCODE gene set (release 8) - this is based on updated Ensembl gene set and latest Havana gene annotation.</p>	The database will contains the latest GRC patches (p4) declared by Susan.	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	new	\N	N	2	9335	2011-05-03 10:04:27	9335	2011-05-23 16:13:51	1
-306	63	Updates to human phenotype associations	<p>OMIM, UniProt, NHGRI GWAS catalog, HGMD mutations, COSMIC</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-05-03 10:07:23	99616	2011-06-03 14:22:06	1
-308	63	Import of new LRGs			handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-05-03 10:11:55	99616	2011-06-03 14:27:02	1
-311	63	Update structural variation data from DGVa	<p>Update done only for Human, Mouse, Pig and Dog.</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-05-03 13:27:14	102503	2011-06-08 13:14:38	1
-322	63	Added Motif Features for Missing Jaspar Matrices	<p>Motif Features were added for the following Jaspar Matrices:&nbsp;</p>\
-<p><span style="font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 17px;"> </span></p>\
-<ul style="font-size: 10pt; line-height: 13pt; list-style-type: disc;">\
-<li style="font-size: 10pt; line-height: 13pt; padding: 0px; margin: 0px;">E2F1: MA0024.1 (2315 sites)</li>\
-<li style="font-size: 10pt; line-height: 13pt; padding: 0px; margin: 0px;">NFKB: MA0105.1 (2040)</li>\
-<li style="font-size: 10pt; line-height: 13pt; padding: 0px; margin: 0px;">BHLHE40: PB0111.1 (46); PB0007.1 (276)</li>\
-<li style="font-size: 10pt; line-height: 13pt; padding: 0px; margin: 0px;">Nrsf: MA0138.1 (4321)</li>\
-</ul>\
-<p>&nbsp;</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-05-03 15:16:41	100304	2011-05-31 10:45:44	1
-324	63	Changed Motif Features score to [0-1] relative affinity scale	<p>Instead of showing the absolute score from the MOODs software, we now display a [0-1] linear relative value between the maximum (1) and minimum (0) score. This is to make it coherent with the API BindingMatrix::relative_affinity function and to make it easier for the user to interpret the score.&nbsp;</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-05-03 15:27:26	100304	2011-05-31 10:50:08	1
-326	63	Added species-specific thresholds to Binding Matrices	<p>Added to each Binding Matrix the lowest score for Motif Features belonging to that matrix and that species. This will make it easier for people using the API to know if the potential binding affinity for a given sequence goes above the currently used threshold (ie would be classified as a binding site).&nbsp;</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-05-03 15:41:13	100304	2011-05-31 10:53:57	1
-328	63	Cleaned Regulatory Regions in chromosomal boundaries	<p>In some rare cases, regulatory regions can pass the boundaries of sequence regions (chromosomes or scaffolds). These cases will be removed as they are likely to be artifactual. For release 63, 18 mouse regulatory features were removed.</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-05-03 15:59:00	100304	2011-05-31 10:54:38	1
-329	63	LRG data	<p>import LRG variant data</p>\
-<p>add LRG consequences to the database</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	3	2011-05-03 16:01:34	99616	2011-06-03 14:24:25	1
-331	63	New individual genotypes	<p>Individual genotypes from Penn State                      University:</p>\
-<ul>\
-<li>Han Chinese Individual (YanHuang Project)</li>\
-<li>Seong-Jin Kim (SJK, GUMS/KOBIC)</li>\
-<li>Anonymous Irish Male</li>\
-<li>Individual from the Extinct Palaeo-Eskimo Saqqaq (Saqqaq Genome Project)</li>\
-<li>Individual from the Extinct Palaeo-Eskimo Saqqaq, high confidence SNPs (Saqqaq Genome Project)</li>\
-<li>Anonymous Korean individual, AK1 (Genomic Medicine Institute) : Individual genotype</li>\
-<li>Misha Angrist (Personal Genome Project)</li>\
-<li>Henry Louis Gates Jr (Personal Genome Project) </li>\
-<li>Henry Louis Gates Sr (Personal Genome Project) </li>\
-<li>Rosalynn Gill (Personal Genome Project)</li>\
-<li>Marjolein Kriek (Leiden University Medical Centre)</li>\
-<li>Stephen Quake (Stanford)</li>\
-</ul>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-05-03 16:03:37	99616	2011-06-03 14:24:58	1
-359	63	CAGE-defined TSS (K562)	<p>CAGE-defined transcription start sites for K562 cell line imported into the human otherfeatures database. Data provided by Riken as part of the ENCODE collaboration. Data from additional cell lines expected in due course.</p>		cancelled	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2011-06-09 10:49:20	5132	2011-06-10 08:50:25	1
-342	63	update variation consequences	<p>update variation consequences on human, zebrafish and cow due to new gene sets</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	3	2011-05-05 16:08:12	99616	2011-06-03 14:25:24	1
-346	63	Update ancestral alleles	<p>Update of the ancestral allele annotation for variations to primarily use data from the Ensembl Compara Ortheus calls. The ancestral allele data source priority is::</p>\
-<p>1. Compara high confidence</p>\
-<p>2. Compara low confidence</p>\
-<p>3. Ancestral allele calls reported by Dr Jim Mullikin (http://www.ncbi.nlm.nih.gov/books/NBK44409/)</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-05-24 15:31:54	99616	2011-06-03 14:25:42	1
-348	63	Update to CCDS and RefSeq models in human otherfeatures database	<p>Imported CCDS models into human otherfeatures databases. (CCDS Data freeze 9 February 2011).</p>\
-<p>Imported RefSeq models into human otherfeatures database.</p>		handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2011-05-25 13:34:51	5132	2011-06-02 13:39:46	1
-364	64	Human: updated cDNA alignments	<p>A new cdna database was created for e64: The latest set of cDNAs for human (as of 14/July/2011) from the European Nucleotide Archive and NCBI RefSeq were aligned to the current genome using Exonerate. A total of 245,557 cDNAs were aligned to the genome, showing an increase of 2,770 compared to release 63.</p>		handed_over	Genebuild	N	N	N	N	N	N	N	new	\N	N	4	14183	2011-07-01 13:41:40	5132	2011-09-09 13:22:02	1
-365	64	Human: assembly updated to GRCh37.p5	<p>The human genome assembly was updated to GRCh37.p5 and the assembly infomation in all human databases has been altered accordingly. This minor assembly update contains 105 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>		handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	4	14183	2011-07-01 13:44:01	5132	2011-09-09 13:22:28	1
-366	64	Human: GRCh37.p5 gene annotation	<p>The patches for GRCh37.p5 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the otherfeatures database.</p>		handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	4	14183	2011-07-01 13:45:26	5132	2011-09-09 13:23:41	1
-373	64	Human: gene set updated	<p>The human gene set for e64 was updated and is equivalent to GENCODE (http://www.gencodegenes.org/) version 9. Annotation from HAVANA was retrieved from the Vega database release 44 (http://vega.sanger.ac.uk/Homo_sapiens/Info/Index). This includes the ABO gene on a GRC patch that has been annotated by HAVANA as well as the completed manual annotation of chromosome 14. This release of GENCODE contains 20900 protein-coding genes. The human set also includes an updated set (May 2011) of the CCDS (http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi) set of 25521 transcripts models.</p>	Note that this core database will contain the new GRC patches, hence the declaration for assembly change and the required repeat masking. These modifications have been declared by Susan already.	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	new	\N	N	4	9335	2011-07-06 09:30:09	5132	2011-09-09 13:25:14	1
-375	64	GENCODE RNA-Seq			postponed	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2011-07-06 09:54:57	5132	2011-08-17 15:28:04	1
-376	64	Human: Vega annotation updated	<p>Manual annotation of human from Havana has been updated. This represents  the annotation presented in Vega release 44.&nbsp;Annotation by Havana of  chromosome 14 has been completed.</p>		handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	161	2011-07-06 10:23:13	5132	2011-09-09 13:26:29	1
-379	64	New Regulatory Data	<ul>\
-<li>New Mouse MEL cell-line regulatory build, including <a href="http://genome.ucsc.edu/cgi-bin/hgTrackUi?db=mm9&amp;g=wgEncodeUwDnase">Dnase-Seq</a>, and <a href="http://genome.ucsc.edu/cgi-bin/hgTrackUi?db=mm9&amp;g=wgEncodeSydhTfbs">ChIP-Seq</a> for CTCF, p300, cMyb, USF2, Rad21, NELFe and Max. All data is from ENCODE, following their <a href="http://genome.ucsc.edu/ENCODE/terms.html">data policies</a>.</li>\
-<li>New Human CD4 ChIP-Seq data for CBP, p300, MOF, PCAF, Tip60, HDAC1, HDAC2, HDAC3 and HDAC6 (<a href="http://www.ncbi.nlm.nih.gov/pubmed?term=19698979">Wang et al, 2009</a>). A new regulatory build was made to incorporate this data.&nbsp;</li>\
-</ul>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	100304	2011-07-06 15:38:07	1273	2011-09-09 12:52:02	1
-388	64	LRG variant import	<p>There was an import of variation data from LRGs for CRTAP, FKBP10, LEPRE1 and PPIB. These come from an LSDB for Osteogenesis Imperfecta.</p>		handed_over	Variation	N	N	N	N	N	N	Y	patched	\N	N	2	3	2011-07-06 16:28:08	102503	2011-09-14 14:17:00	1
-389	64	Phenotype annotations	<p>All (non-structural) somatic mutations were imported from the latest release 54 of COSMIC, increasing the number of mutations imported from 46080 in release 63 to 49692 for release 64. There have been some minor changes in COSMIC sample names. Variation data was updated with new human phenotype annotations from COSMIC, OMIM, NHGRI GWAS catalog, UniProt and EGA.</p>		handed_over	Variation	N	N	N	N	N	N	Y	patched	\N	N	2	3	2011-07-06 16:30:16	25629	2011-09-09 10:17:44	1
-392	64	Updated consequences for transcript alleles	<p>The variation consequences were recalculated for human and mouse as a result of changes to the gene sets.</p>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	3	3	2011-07-06 16:36:39	102503	2011-09-13 16:00:07	1
-393	64	LRG import	<p>Import of new LRG sequences&nbsp;</p>		handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	99616	2011-07-06 16:50:32	99616	2011-08-15 09:30:52	1
-394	64	Structural variation	<ul>\
-<li>Update structural variation data from DGVa for Human, Mouse, Dog and Pig.</li>\
-</ul>		handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-07-07 07:31:50	3	2011-08-12 10:16:24	1
-395	64	MicroArray Mapping	<p>Micro array mapping has been performed for those species with new assemblies or updated gene builds.</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2011-07-07 09:43:45	1273	2011-08-19 14:21:26	1
-396	64	DNA methylation DAS tracks	<p>We have updated the set of DNA methylation DAS tracks using data for over 40 cell lines &nbsp;available from the ENCODE project.</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	1273	2011-07-07 09:48:20	1273	2011-09-15 14:28:40	1
-411	64	Update human otherfeatures db: new CCDS import			handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	2	102717	2011-08-01 10:19:26	102717	2011-08-01 15:33:23	1
-412	64	Human: updated RefSeq gene import	<p>The imported RefSeq gene set was updated in the human otherfeatures database. The RefSeq gene count increased from 23733 in e63 to 24435 in e64. Please note that RefSeq annotates gene models on cDNA sequence and not on the reference genome, meaning that when users choose to translate the RefSeq transcripts off the reference genome that the translations may contain stop codons.</p>		handed_over	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	4	5132	2011-08-05 15:57:39	5132	2011-09-09 13:29:16	1
-414	64	New H3K36me3 Peak Calls using CCAT	<p>We have changed the peak calling method for H3K36me3 datasets.&nbsp;The new method uses CCAT (Xu et al, 2010), configured for histone marks and with a sliding window of 1000bp.&nbsp;This method has enabled an increase in the number and length of H3K36me3 calls.</p>		handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	100304	2011-08-10 09:39:21	100304	2011-08-11 16:00:56	1
-416	64	structural	<p>&nbsp;</p>\
-<ul>\
-<li>Add COSMIC structural variation data (Human). CANCELLED</li>\
-</ul>		cancelled	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	3	2011-08-12 10:15:40	\N	\N	1
-428	65	LRG Import	<p>Import of new LRG sequences</p>	\N	handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	97804	2011-09-27 10:58:44	97804	2011-10-25 14:53:19	1
-434	65	Human cdna update	<p>Cdna alignments for human using the most up-to-date set of cDNAs from the European Nucleotide Archive and NCBI RefSeq</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	97245	2011-09-27 13:53:06	5132	2011-11-11 09:39:53	1
-448	65	Update human otherfeatures db: new CCDS import	<pre>Update to CCDS set for human</pre>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	patched	\N	N	3	102717	2011-09-28 15:19:47	5132	2011-11-11 09:41:31	1
-451	65	Projection of annotation to GRC assembly patches	<p>Annotation from the primary assembly is projected to the assembly patches. The projected annotation is then supplemented with annotation based on evidence alignment. This annotation is stored in the human otherfeatures database.</p>	\N	handed_over	Genebuild	N	N	N	Y	N	N	N	patched	\N	N	3	14183	2011-09-29 09:38:22	5132	2011-11-11 09:41:48	1
-455	65	Structural variations	<p>Updates data and adds new studies</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	3	102503	2011-09-29 10:10:54	102503	2011-11-01 11:33:50	1
-456	65	Human dbSNP 134 import	<p>Imports of the dbSNP Build 134 for human.</p>\
-<p>&nbsp;</p>\
-<p>Import new data types:</p>\
-<ul>\
-<li>Global minor allele frequencies</li>\
-<li>Clinical significance</li>\
-<li>Suspect variants (will be failed with a new reason code)</li>\
-</ul>\
-<p>Co-locating dbSNP variants will not be merged.</p>\
-<ul>\
-</ul>\
-<div style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10px; background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: #ffffff; background-position: initial initial; background-repeat: initial initial; margin: 8px;">\
-<p>&nbsp;</p>\
-</div>\
-<p>&nbsp;</p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	4	102503	2011-09-29 10:12:28	102503	2011-11-09 08:52:24	1
-457	65	Phenotype annotations	<p>Updates from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>		declared	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-09-29 10:15:07	102503	2011-09-29 10:15:59	0
-458	65	Phenotype annotations	<p>Updates from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-09-29 10:17:11	102503	2011-10-27 15:11:52	1
-460	65	New Human Regulation Build	<ul>\
-<li>150 New ChIP-Seq and Dnase-Seq datasets from ENCODE    \
-<ul>\
-<li>Including 3 new cell lines: HMEC, HSMM, NH-A</li>\
-<li>Including 4 new Transcription Factors with available Jaspar PWMs:    \
-<ul>\
-<li>FoxA1:&nbsp;MA0148.1</li>\
-<li>FoxA2:&nbsp;MA0047.1; MA0047.2; PB0015.1;</li>\
-<li>HNF4A:&nbsp;MA0114.1; PB0030.1; PB0134.1</li>\
-<li>MEF2C:&nbsp;MA0005.1</li>\
-</ul>\
-</li>\
-</ul>\
-</li>\
-<li>K562b sets are now part of the K562 regulatory build</li>\
-<li>H3K27me3 sets are now built using CCAT, like H3K36me3&nbsp;</li>\
-<li>Some sets were deprecated:    \
-<ul>\
-<li>K562 Nfya and Nfyb were deprecated in ENCODE</li>\
-<li>HepG2 PolII, Srebp1, Srebp2 were removed from the HepG2 regulatory build as these experiments are annotated with treatments.&nbsp;</li>\
-</ul>\
-</li>\
-</ul>	Postponed due to unforeseen classification issues of larger number of data sets. Will be new and improved in v66.\
-\
-v65 will maintain regulatory build version 11 i.e. v64 data.	postponed	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	100304	2011-09-29 10:24:18	1273	2011-11-04 13:28:28	1
-468	65	Import COSMIC release 55	<p>Import COSMIC's latest release</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	101213	2011-09-29 15:22:11	101213	2011-10-31 13:25:48	1
-469	65	New data from dbSNP	<p>Import new data from dbSNP 134:</p>\
-<p>- Global minor allele frequencies</p>\
-<p>- Clinical significance</p>\
-<p>- Suspect variants (will be failed with a new reason code)</p>\
-<p>&nbsp;</p>\
-<p>Schema changes to support this data (currently under design)</p>		declared	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	101213	2011-09-29 15:25:07	101213	2011-09-29 15:39:19	0
-470	65	Update to Ensembl-Havana GENCODE gene set (release 10)	<p>Updated Ensembl-Havana gene set (GENCODE release 10) based on updated Ensembl gene set and latest Havana gene annotation.</p>\
-<p>&nbsp;</p>	\N	handed_over	Genebuild	N	Y	N	Y	N	N	N	new	\N	N	3	9335	2011-09-29 15:25:17	5132	2011-11-11 09:42:29	1
-471	65	Protein function predictions for new human genes	<p>We will do an 'update' run of the protein function prediction pipeline to compute predictions for new and updated human transcripts.</p>\
-<p>&nbsp;</p>\
-<p><span style="text-decoration: line-through;">We will also attempt a complete new run using Compara alignments in place of SIFT and PolyPhen's own alignment pipelines, depending on how this goes we may release this set or the update set described above.</span></p>\
-<p>&nbsp;</p>\
-<p>The attempt to use Compara alignments didn't work out this release (for a number of reasons), so we're going with the previous approach. We will investigate this further for future releases.</p>\
-<p>&nbsp;</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	101213	2011-09-29 15:28:27	101213	2011-11-01 09:35:20	1
-472	65	Vega human annotation updated	<p>Manual annotation of human from Havana has been updated. The data represent   the annotation presented in Vega release 45.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	161	2011-09-29 16:05:16	161	2011-11-17 16:49:53	1
-474	65	Karyotype bands for patches	<p>Store karyoptype bands on the patches so they can be displayed in the browser.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	1	14183	2011-09-29 16:58:55	5132	2011-11-11 09:42:53	1
-475	65	Splicing events	<p>The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)<br /><br />Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:<br />&nbsp;&nbsp;&nbsp; - Homo sapiens,<br />&nbsp;&nbsp;&nbsp; - Mus musculus,<br />&nbsp;&nbsp;&nbsp; - Rattus norvegicus,<br />&nbsp;&nbsp;&nbsp; - Danio rerio,<br />&nbsp;&nbsp;&nbsp; - Caenorhabditis elegans,<br />&nbsp;&nbsp;&nbsp; - Drosophila melanogaster</p>\
-<p>These data have been updated for this release for the species listed above.</p>	\N	handed_over	Core	N	N	N	N	N	N	N	N/A	\N	N	2	25629	2011-09-30 10:40:18	25629	2011-11-02 14:10:09	1
-479	65	update variation predictions	\N	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	3	2011-09-30 16:17:22	101213	2011-10-31 13:30:28	1
-499	65	LRG variation	<p>Submitted variation data for the gene CYBB (LRG_53)</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	104595	2011-10-03 13:00:33	102503	2011-11-24 10:26:31	1
-500	65	Experiment View	<p>An Experiment view has been developed to improve access and visualisation of experimental meta data. &nbsp;This will include archive IDs and source projects&nbsp;used as input for the Human and Mouse Regulatory builds.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	1273	2011-10-04 14:25:37	1273	2011-11-24 14:16:17	1
-504	65	Regulatory Genome Segmentation	<p>Data and API support has been added for genome segmentation data, based on a combination of chromhmm and segway analyses from the ENCODE project.</p>\
-<p>Segmentation feature tracks are now available in the Regulation section of the configuration panel under 'Regulatory features'.</p>\
-<p>&nbsp;</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	4	1273	2011-11-04 13:37:01	1273	2011-11-09 10:56:37	1
-505	65	Segmentation Features	<p>Displaying segmentation track for the functional genomic display.&nbsp; Also available on the location and gene display.</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	2	99923	2011-11-07 11:05:58	99923	2011-11-17 13:56:25	1
-513	66	Human dbSNP 135 import	<p>Imports of the dbSNP Build 135 for human.</p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	4	102503	2011-12-08 08:57:15	101213	2012-01-26 13:15:43	1
-512	66	Human dbSNP 135 import	<p>Imports of the dbSNP Build 135 for human.</p>	\N	declared	Variation	N	N	N	N	N	N	Y	N/A	\N	N	4	102503	2011-12-08 08:56:26	102503	2011-12-08 08:56:36	0
-515	66	Structural variations	<p>Updates data and adds new studies.</p>\
-<p>Adds COSMIC structural variations for Human.</p>	\N	postponed	Variation	N	N	N	N	N	N	N	N/A	\N	N	3	102503	2011-12-08 09:01:59	102503	2011-12-13 17:03:32	1
-516	66	Phenotype annotations	<ul>\
-</ul>\
-<p>Updated the annotations from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-12-08 09:03:11	102503	2012-02-16 10:42:00	1
-517	66	Import COSMIC release 56	<p>Import COSMIC's latest release</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2011-12-08 09:05:09	101213	2012-01-26 13:16:29	1
-521	66	Vega human annotation updated	<p>Manual annotation of human from Havana has been updated and includes annotation of the GRCh37.p5 fix patches. The data is that released in Vega 46.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	161	2011-12-08 11:34:25	102717	2012-02-14 14:12:21	1
-523	66	VISTA Enhancers updated	<p>The VISTA Enhancer set (http://enhancer.lbl.gov/) has been updated, more than doubling the available sites for human (1447) and adding an entirely new small set for mouse (212).</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	1	1273	2011-12-08 11:38:33	1273	2012-02-03 10:56:41	1
-524	66	New Human Regulatory Build	<p><span style="font-family: Times; font-size: medium;"> </span></p>\
-<div style="color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10px; background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: #ffffff; background-position: initial initial; background-repeat: initial initial; margin: 8px;">\
-<div>We have integrated new ENCODE data sets into the human regualtory vuild as follows:</div>\
-<ul>\
-<li>150 New ChIP-Seq and Dnase-Seq datasets from ENCODE \
-<ul>\
-<li>Including 3 new cell lines: HMEC, HSMM, NH-A</li>\
-<li>Including 4 new Transcription Factors with available Jaspar PWMs: \
-<ul>\
-<li>FoxA1:&nbsp;MA0148.1</li>\
-<li>FoxA2:&nbsp;MA0047.1; MA0047.2; PB0015.1;</li>\
-<li>HNF4A:&nbsp;MA0114.1; PB0030.1; PB0134.1</li>\
-<li>MEF2C:&nbsp;MA0005.1</li>\
-</ul>\
-</li>\
-</ul>\
-</li>\
-<li>K562b sets are now part of the K562 regulatory build</li>\
-<li>H3K27me3 sets are now built using CCAT, like H3K36me3&nbsp;</li>\
-<li>Some sets were deprecated: \
-<ul>\
-<li>K562 Nfya and Nfyb were deprecated in ENCODE</li>\
-<li>HepG2 PolII, Srebp1, Srebp2 were removed from the HepG2 regulatory build as these experiments are annotated with treatments.&nbsp;</li>\
-</ul>\
-</li>\
-</ul>\
-</div>\
-<p>&nbsp;</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	1273	2011-12-08 11:55:40	1273	2012-02-03 10:57:01	1
-525	66	MicroArray Mapping	<p>MicroArray mapping has been updated for all species which have had gene build or genome assembly updates. In addition to this we have also added some 'SurePrint' array from Agilent.&nbsp;</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2011-12-08 12:02:26	1273	2012-02-03 10:57:22	1
-538	66	Human: updated cDNA alignments	<p>A new cdna database was created for e66: The latest set of cDNAs for  human (as of 18/Jan/2011) from the European Nucleotide Archive and NCBI  RefSeq were aligned to the current genome using Exonerate. A total of 224,907 cDNAs were aligned to the genome, showing an increase of 491 cDNAs  compared to release 65.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	102717	2011-12-08 16:38:26	5132	2012-02-09 11:44:28	1
-540	66	Updated human otherfeatures db: New CCDS import (Human)	<p>This release of the mouse gene set also includes 26,437 transcript models as part of an updated version (Mon YYYY) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2011-12-08 16:40:31	5132	2012-02-09 11:45:56	1
-541	66	Human: GRCh37.p6 gene annotation	<p>The patches for GRCh37.p6 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the otherfeatures database.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2011-12-08 16:41:58	5132	2012-02-09 11:48:58	1
-542	66	Human: assembly updated to GRCh37.p6	<p>The human genome assembly was updated to GRCh37.p6 and the assembly infomation in all human databases has been altered accordingly. This minor assembly update contains 124 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	3	102717	2011-12-08 16:42:56	5132	2012-02-09 11:54:35	1
-543	66	Human: GRCh37.p6 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2011-12-08 16:44:20	5132	2012-02-09 11:54:45	1
-549	66	Update to Ensembl-Havana GENCODE gene set (release 11)	<p>Updated Ensembl-Havana gene set (GENCODE release 11) based on updated Ensembl gene set and latest Havana gene annotation.</p>	\N	handed_over	Genebuild	N	Y	N	Y	N	N	N	new	\N	N	3	9335	2011-12-08 17:18:51	5132	2012-02-09 11:48:47	1
-556	66	human vs chimpanzee lastz	\N	\N	declared	Compara	N	N	Y	N	N	N	N	N/A	\N	N	2	104596	2011-12-13 09:55:41	104596	2011-12-13 09:57:04	0
-553	66	Categorisation of long non-coding RNA gene types	<p>Categorisation of long non-coding RNA genes for display on the 'Genome Statistics' page for human.</p>	\N	postponed	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	1	9335	2011-12-09 11:26:49	9335	2012-02-16 14:33:39	1
-558	66	human vs human lastz self alignment	<p>Alignments imported from UCSC</p>	\N	declared	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	104596	2011-12-13 10:01:04	104596	2011-12-13 10:02:29	0
-559	66	Lastz imports from UCSC	<p>human vs human lastz import from UCSC</p>	\N	declared	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	104596	2011-12-13 11:06:20	104596	2011-12-13 11:08:09	0
-598	66	Web display	<ul>\
-<li>Added new tracks for the structural variation sets (1000 Genomes sets).</li>\
-<li>New "Regulatory consequences" table in the Gene/Transcript page (renamed "Genes and regulation"). Now you can see the SIFT and PolyPhen scores in the Gene and Transcript consequences table.</li>\
-<li>Added the Clinical significance in the Variation summary panel </li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-02-06 15:14:24	102503	2012-02-13 14:00:58	1
-593	66	Import HGMD-PUBLIC	<p>Import the HGMD-PUBLIC data from the release 2011.3</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-01-05 13:52:17	102503	2012-02-16 10:42:33	1
-596	66	ENSSNP IDs	<p>ENSSNP IDs in human and mouse will no longer be imported and have been deleted from those two databases.</p>\
-<p>Mapping files between  the ENSSNP IDs and dbSNP rsIDs are provided here:</p>\
-<ul>\
-<li>Human: ftp://ftp.ebi.ac.uk/pub/databases/ensembl/snp/human/human_ENSEMBL_IDs.txt.gz</li>\
-<li>Mouse: ftp://ftp.ebi.ac.uk/pub/databases/ensembl/snp/mouse/mouse_ENSEMBL_IDs.txt.gz</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	1	102503	2012-01-19 15:32:58	102503	2012-01-24 15:38:25	1
-600	66	Patch alignments on Multi-species view	<p>You can now view alignments between patches and the reference sequence in Multi-species view for Human. Navigate to the region of a patch and select it from the species selector.</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	2	97803	2012-02-06 15:23:21	97803	2012-02-06 15:23:31	1
-606	67	Vega human annotation updated	<p>Manual annotation of human from Havana has been updated and includes  annotation of the GRCh37.p5 fix and novel patches. The data is that released in  Vega 47.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	161	2012-02-24 12:34:06	161	2012-04-05 14:02:30	1
-608	67	Splicing events	<p>&nbsp;</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:<br />&nbsp;&nbsp;&nbsp; - Homo sapiens,<br />&nbsp;&nbsp;&nbsp; - Mus musculus,<br />&nbsp;&nbsp;&nbsp; - Rattus norvegicus,<br />&nbsp;&nbsp;&nbsp; - Danio rerio,<br />&nbsp;&nbsp;&nbsp; - Caenorhabditis elegans,<br />&nbsp;&nbsp;&nbsp; - Drosophila melanogaster</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">These data have been updated for this release for the species listed above.</p>\
-<p>&nbsp;</p>	\N	handed_over	Production	N	N	N	N	N	N	N	N/A	\N	N	2	101593	2012-02-24 13:16:20	101593	2012-04-04 09:54:05	1
-614	67	Phenotype annotations	<p>Updated the annotations from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-02-27 13:23:03	102503	2012-04-12 13:00:46	1
-615	67	Import HGMD-PUBLIC	<p>Import the HGMD-PUBLIC data from the release 2012.1, with regulatory data.</p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2012-02-27 13:24:08	102503	2012-04-12 13:00:58	1
-616	67	Structural variations	<ul>\
-<li>Update structural variation data from DGVa for Human.</li>\
-<li>Add structural variation data from DGVa for Macaque.</li>\
-<li>Add COSMIC structural variations for Human, through DGVa.</li>\
-<li>Remove structural variation for Pig (new assembly).</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-02-27 13:29:58	102503	2012-04-12 13:03:03	1
-617	67	Import COSMIC release 58	<p>Import COSMIC's latest release</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-02-27 13:32:12	102503	2012-04-12 13:03:23	1
-626	67	1000 genomes data	<p>Imported the genotypes of the 1000 Genomes - Phase 1</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	96712	2012-02-29 13:39:27	102503	2012-04-13 15:59:23	1
-631	67	Human: updated cDNA alignments	<p>A new cdna database was created for e67: The latest set of cDNAs for human from the European Nucleotide Archive and NCBI   RefSeq were  aligned to the current genome using Exonerate.</p>	\N	declared	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	5132	2012-02-29 16:47:58	102717	2012-03-01 17:30:56	0
-634	67	Update to Ensembl-Havana GENCODE gene set (release 12)	<p>Updated Ensembl-Havana gene set (GENCODE release 12) based on updated Ensembl gene set and latest Havana gene annotation.</p>	\N	handed_over	Genebuild	N	Y	N	Y	N	N	N	new	\N	N	3	9335	2012-03-01 13:36:51	9335	2012-03-30 15:14:01	1
-635	67	Human: GRCh37.p7 gene annotation	<p>The patches for GRCh37.p7 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the otherfeatures database.</p>	\N	declared	Genebuild	N	Y	Y	Y	N	N	N	patched	\N	N	3	9335	2012-03-01 13:40:30	102717	2012-03-01 17:22:58	0
-636	67	Update to the Human BodyMap	<p>The Human BodyMap will be reanalysed using the recently updated RNASeq pipeline.</p>	\N	postponed	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	9335	2012-03-01 13:44:35	9335	2012-03-30 15:14:25	1
-638	67	Updated human otherfeatures db: New CCDS import (Human)	\N	\N	declared	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	9335	2012-03-01 13:49:30	102717	2012-03-01 17:23:14	0
-645	67	Categorisation of long non-coding RNA gene types	<p>Categorisation of long non-coding RNA genes for display on the 'Genome Statistics' page for human.</p>	\N	declared	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	1	9335	2012-03-01 15:38:10	\N	\N	1
-646	67	Human: updated cDNA alignments	<p>A new cdna database was created for e67: The latest set of cDNAs for  human (as of DD/Mon/2011) from the European Nucleotide Archive and NCBI  RefSeq were aligned to the current genome using Exonerate. A total of nnn,nnn cDNAs were aligned to the genome, showing an increase of nnn cDNAs  compared to release 66.</p>	\N	declared	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	102717	2012-03-01 17:17:13	102717	2012-03-20 16:20:33	0
-647	67	Human: updated cDNA alignments	<p>A new cdna database was created for e67: The latest set of cDNAs for  human (as of 21/Mar/2012) from the European Nucleotide Archive and NCBI  RefSeq (release 51) were aligned to the current genome using Exonerate. A total of 221,544 cDNAs were aligned to the genome.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	102717	2012-03-01 17:17:59	102717	2012-03-29 10:10:36	1
-649	67	Updated human otherfeatures db: New CCDS import (Human)	<p>This release of the human gene set also includes 26,425 transcript models as part of an updated version (January 2012) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-03-01 17:19:33	102717	2012-03-21 09:53:34	1
-650	67	Human: GRCh37.p7 gene annotation	<p>The patches for GRCh37.p7 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the core database.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-03-01 17:20:12	102717	2012-03-20 16:21:04	1
-651	67	Human: assembly updated to GRCh37.p7	<p>The human genome assembly was updated to GRCh37.p7 and the assembly infomation in all human databases has been altered accordingly. This minor assembly update contains 130 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	3	102717	2012-03-01 17:25:39	102717	2012-03-20 16:21:44	1
-652	67	Human: GRCh37.p7 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-03-01 17:26:07	102717	2012-03-20 16:22:09	1
-655	67	Signal collection (.col) file storage	<p>To reduce redundancy and simply the organisation of the signal collection (.col) files, an assembly centric directory structure has been adopted. This is now inline with how other data files are stored.</p>\
-<p>Note: This declaration was originally, 'Collector::ResultFeature and .col files'&nbsp;</p>\
-<p>Changes to the Collector::ResultFeature have been post-poned.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-03-02 10:23:54	1273	2012-04-13 13:34:48	1
-656	67	Gene Annotations based on proximity	<p>We have developed a 'nearest_Gene' method to identify the most proximal genes to a given feature. This has been used to generate Gene xrefs for the RegulatoryFeatures.</p>	\N	postponed	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-03-02 10:38:09	1273	2012-04-13 13:24:01	1
-689	67	Patch alignments	<p>Alignments between the reference genome and patches are now viewable in Region Comparison. These are currently only configurable by starting from a patch location; click on the 'Select species or regions' button in the left-hand menu and choose 'Human' from the list of species:</p>\
-<p><a href="http://www.ensembl.org/Homo_sapiens/Location/Multi?db=core;r=1:31841223-32051223;r1=HG989_PATCH:31843534-32053534:1;s1=Homo_sapiens--HG989_PATCH">Example region in human</a> (chromosome 1, patch HG989)</p>\
-<p>Data is currently available for human only, but mouse patches are expected in future releases.</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	4	2	2012-05-02 08:37:36	2	2012-05-02 08:49:37	1
-693	68	Human: updated cDNA alignments	<p>A new cdna database was created for e68: The latest set of cDNAs for  human (as of Jun 2012) from the European Nucleotide Archive and NCBI  RefSeq (release 52) were aligned to the current genome using Exonerate. A total of 227,153 cDNAs were aligned to the genome.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	102717	2012-05-18 12:55:33	102717	2012-06-22 10:11:35	1
-695	68	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 26,395 transcript models as part of an updated version (Apr 2012) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-05-18 12:57:46	2	2012-07-12 10:47:47	1
-696	68	Human: GRCh37.p8 gene annotation	<p>The patches for GRCh37.p8 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the core database.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-05-18 12:58:23	102717	2012-06-20 13:46:05	1
-697	68	Human: assembly updated to GRCh37.p8	<p>The human genome assembly was updated to GRCh37.p8 and the assembly infomation in all human databases has been altered accordingly. This minor assembly update contains 140 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	3	102717	2012-05-18 12:59:13	102717	2012-06-20 13:46:44	1
-698	68	Human: GRCh37.p8 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-05-18 12:59:40	102717	2012-06-20 13:47:19	1
-702	68	Splicing events	<p>&nbsp;</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:<br />&nbsp;&nbsp;&nbsp; - Homo sapiens,<br />&nbsp;&nbsp;&nbsp; - Mus musculus,<br />&nbsp;&nbsp;&nbsp; - Rattus norvegicus,<br />&nbsp;&nbsp;&nbsp; - Danio rerio,<br />&nbsp;&nbsp;&nbsp; - Caenorhabditis elegans,<br />&nbsp;&nbsp;&nbsp; - Drosophila melanogaster</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">These data have been updated for this release for the species listed above.</p>\
-<p>&nbsp;</p>	\N	handed_over	Production	N	N	N	N	N	N	N	N/A	\N	N	2	25629	2012-05-18 13:10:43	101593	2012-07-13 12:46:42	1
-717	68	Import ESP data set	<p>Import the Exome Sequencing Project data set ESP5400.</p>	\N	postponed	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-05-21 10:02:03	105020	2012-07-03 15:50:40	1
-711	68	Phenotype annotations	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;"> </span></p>\
-<p style="font-size: 1em; padding: 0px; margin: 0px;">Updated the annotations from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>\
-<p>&nbsp;</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-05-21 09:31:09	105020	2012-07-06 15:27:26	1
-712	68	Import HGMD-PUBLIC	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;">Import the HGMD-PUBLIC data from the release 2012.2, with regulatory data.</span></p>	\N	postponed	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-05-21 09:32:57	102503	2012-06-11 08:03:57	1
-713	68	Import COSMIC release 59	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;">Import COSMIC's latest release.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-05-21 09:34:35	105020	2012-07-03 15:59:05	1
-719	68	Vega human annotation updated	<p>Manual annotation of human from Havana has been updated and contains the data released in  Vega 48.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	new	\N	N	3	161	2012-05-21 13:13:40	161	2012-07-18 09:24:10	1
-722	68	Structural variations	<p>The structural variations are imported from DGVa:</p>\
-<ul>\
-<li>New structural variations for Cow, Horse and Zebrafish.</li>\
-<li>Updated structural variations and new studies for Human and Mouse.</li>\
-<li>Removed the structural variations for Dog, because of the new assembly (no remapping available).</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-05-22 09:07:27	105020	2012-07-06 15:28:03	1
-726	68	Human miRanda miRNA targets	<p>This set has been re-imported using a revised pipeline which aims to clean/filter annotations made on previously gene builds.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-05-23 12:09:38	1273	2012-07-18 08:44:51	1
-730	68	Update to Ensembl-Havana GENCODE gene set (release 13)	<p>Updated Ensembl-Havana gene set (GENCODE release 13). This gene set is a merge of complete Ensembl gene models and the latest Havana gene annotation. All CCDS genes are included in this gene set. Please note that, compared to GENCODE 12, genes contributed by Ensembl have been filtered to remove 7231 transcripts believed to be poorly supported.</p>	\N	handed_over	Genebuild	N	Y	N	Y	N	N	N	new	\N	N	4	9335	2012-05-23 13:01:13	9335	2012-06-18 15:31:06	1
-731	68	Update to the Human BodyMap	<p>The Human BodyMap will be reanalysed using the recently updated RNASeq pipeline.</p>	This will replace the rnaseq database for human.	postponed	Genebuild	N	N	N	N	N	N	N	N/A	\N	N	2	9335	2012-05-23 13:23:17	9335	2012-06-18 15:31:22	1
-780	69	Karyotype_rank	<p>A karyotype_rank attribute has been added for species with chromosomes. This allows us to store an ordered list of the seq regions (i.e. chromosomes) that should be drawn in an Ensembl karyotype.</p>\
-<p>Previously this variable (ENSEMBL_CHROMOSOMES) was stored in the species' .ini file, and Ensembl-based sites can continue to use this configuration as an alternative. However if you do switch to using the karyotype_rank attrib in your databases, you will need to comment out the version in the ini file, as it will get added to the chromosome array rather than merged into it.</p>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	\N	N	1	97245	2012-08-03 09:21:17	2	2012-09-26 14:53:58	1
-782	69	Human: updated cDNA alignments	<p>A new cdna database was created for e69: The latest set of cDNAs for  human (as of Sep 2012) from the European Nucleotide Archive and NCBI  RefSeq (release 54) were aligned to the current genome using Exonerate. A total of 228,168 cDNAs were aligned to the genome.</p>	Thibaut will be doing this.\
-And he did!	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	3	102717	2012-08-03 09:27:10	101214	2012-09-11 12:53:22	1
-784	69	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 26,387 transcript models as part of an updated version (Aug 2012) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	102717	2012-08-03 09:32:04	102717	2012-09-11 12:50:30	1
-785	69	DNA Methylation Bisulphite Sequencing	<p>Numerous DNA methylation bisulphite sequencing data sets have been integrated into the funcgen database. This is a mixture of new data and data which was being handled via an external DAS server (details below).</p>\
-<p>These data will be represented as ResultSet, with the individual features being handled by the new DNAMethylationFeature and DNAMethylationFeatureAdaptor classes. The underlying data storage is handled via bigBed files, which are available within the set 'data files', now part of the regular Ensembl release (see ftp://ftp.ensembl.org/pub/data_files/).</p>\
-<p>Configuration of the new integrated DNA Methylation data will be handled in the same way as the old external data, i.e. via the DNA Methylation configuration panel menu.&nbsp;</p>\
-<p>Summary of data sets:</p>\
-<ul>\
-<li>Whole-genome bisulphite maps for human h1ESC and IMR90 cell types from Lister et, al., Nature 2009. &nbsp;</li>\
-<li>44 human ENCODE RRBS set (previously available via DAS).</li>\
-<li>Two mouse whole-genome bisulphite data sets are provided for ES and NP cell lines from Stadler et. al., Nature 2011.</li>\
-</ul>\
-<p>All the above were filtered for a minimum of 10 reads (coverage).</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	3	1273	2012-08-03 09:33:02	102019	2012-10-10 15:43:56	1
-786	69	external database references update	<p>xrefs will be updated for:</p>\
-<ul>\
-<li>Ferret</li>\
-<li> Platyfish</li>\
-<li> Human</li>\
-<li>Zebrafish</li>\
-<li>Pig</li>\
-<li>Opossum</li>\
-<li>Platypus</li>\
-<li>Orangutan</li>\
-<li>Horse</li>\
-<li>Gibbon</li>\
-<li>C. intestinalis</li>\
-<li>Cow</li>\
-<li>Panda</li>\
-<li>Tetraodon</li>\
-<li>Xenopus</li>\
-<li>Macaque</li>\
-<li>Rabbit</li>\
-</ul>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	\N	N	2	97245	2012-08-03 09:40:03	102019	2012-10-10 15:43:18	1
-788	69	Import HGMD-PUBLIC	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;">Import the HGMD-PUBLIC data from the release 2012.2, with regulatory data.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2012-08-03 10:01:46	102503	2012-09-19 08:17:12	1
-789	69	Phenotype annotations	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;"> </span></p>\
-<p style="font-size: 1em; padding: 0px; margin: 0px;">Updated the annotations from the following sources:</p>\
-<ul>\
-<li>NHGRI GWAS catalog</li>\
-<li>EGA</li>\
-<li>OMIM</li>\
-<li>UniProt</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-08-03 10:02:32	105020	2012-09-26 15:49:34	1
-791	69	Import COSMIC release 60	<p><span style="color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif; font-size: 13px;">Import COSMIC's latest release.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2012-08-03 12:00:44	102503	2012-09-19 08:17:50	1
-792	69	Human dbSNP 137 import	<p>Import of dbSNP Build 137 for human.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	new	\N	N	4	105020	2012-08-06 08:26:50	102503	2012-09-19 08:18:11	1
-794	69	Import ESP data set	<p>Import the Exome Sequencing Project data set ESP6500.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-08-06 08:45:59	102503	2012-09-19 08:18:42	1
-795	69	Structural variations	<ul>\
-<li>Import 1000 Genomes phase 1 structural variation set + other studies (Human).</li>\
-<li>Import a new mouse study.</li>\
-</ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2012-08-06 09:01:35	102019	2012-10-10 15:46:54	1
-803	69	Splicing events	<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)</p>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:</p>\
-<ul>\
-<li>Homo sapiens,</li>\
-<li>Mus musculus,</li>\
-<li>Rattus norvegicus,</li>\
-<li>Danio rerio,</li>\
-<li>Caenorhabditis elegans,</li>\
-<li>Drosophila melanogaster</li>\
-</ul>\
-<p style="font-size: 13px; margin-top: 0.6em; margin-right: 0px; margin-bottom: 0.6em; margin-left: 0px; color: #555555; font-family: 'Luxi Sans', Helvetica, Arial, Geneva, sans-serif;">These data have been updated for this release for the species listed above.</p>	\N	handed_over	Production	N	N	N	N	N	N	N	N/A	\N	N	2	101593	2012-08-06 11:48:14	102019	2012-10-10 15:48:40	1
-810	69	LASTZ pairwise alignments	<p>New alignments with ferret</p>\
-<ul>\
-<li>human vs ferret lastz&nbsp;</li>\
-<li>mouse vs ferret lastz</li>\
-</ul>	\N	handed_over	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	22288	2012-08-07 09:22:16	102019	2012-10-10 15:40:35	1
-811	69	TBlat pairwise alignments	<p>New alignments with platyfish</p>\
-<ul>\
-<li>platyfish vs danio tblat</li>\
-<li>platyfish vs medaka tblat</li>\
-<li>platyfish vs human tblat</li>\
-</ul>	\N	handed_over	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	22288	2012-08-07 09:27:11	102019	2012-10-10 15:41:09	1
-817	69	Vega human annotation updated	<p>Manual annotation of human from Havana has been updated and contains the data released in  Vega 49.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	N/A	\N	N	2	104991	2012-08-08 10:17:01	104991	2012-09-13 14:39:06	1
-818	69	RegulatoryBuild Analysis	<p>Updates have been made to the data contained in the analysis and analysis_description table which represents the 'Regulatory Build'.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-08-08 11:34:07	105772	2012-09-12 09:53:50	1
-819	69	RegulatoryBuild Analysis	<p>Updates have been made to the data contained in the analysis and analysis_description table which represents the 'Regulatory Build'.</p>	\N	declared	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-08-08 11:39:16	1273	2012-08-08 11:40:27	0
-836	68	Update to the Human BodyMap - RNASeq database with associated BAM files	<p>The Human BodyMap will be re-analysed using the recently updated RNASeq pipeline.</p>	Let's try this once more!\
-\
-This will replace the rnaseq database for human, including BAM files.	declared	Genebuild	N	Y	N	N	N	N	N	new	\N	N	4	9335	2012-08-08 16:01:30	\N	\N	1
-838	69	Update to Ensembl-Havana GENCODE gene set (release 14)	<p>Updated Ensembl-Havana gene set (GENCODE release 14). This gene set is a  merge of complete Ensembl gene models and the latest Havana gene  annotation. All CCDS genes are included in this gene set.</p>	\N	handed_over	Genebuild	N	Y	N	Y	Y	N	Y	N/A	\N	N	4	9335	2012-08-08 16:09:04	9335	2012-08-21 08:35:18	1
-839	69	Update to the Human BodyMap - RNASeq database with associated BAM files	<p>The Human BodyMap will be reanalysed using the recently updated RNASeq pipeline.</p>	This will replace the rnaseq database for human and will include BAM files.	postponed	Genebuild	N	Y	N	N	N	N	N	N/A	\N	N	4	9335	2012-08-08 16:10:04	102717	2012-09-13 14:48:17	1
-857	69	New display: All Phenotypes	<p>We have a <a href="http://www.ensembl.org/Homo_sapiens/Phenotype/All">new display</a> for species with phenotype data (currently only human) which lists all available phenotypes in alphabetical order. In due course we hope to have a more comprehensive page displaying phenotype ontologies, but in the meantime this should help you to explore the wide variety of phenotypes available within Ensembl variation data.</p>\
-<p>The new page is accessible from the lefthand menu on any phenotype location page.</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	2	2	2012-09-19 09:55:26	\N	\N	1
-868	70	Update to Ensembl-Havana GENCODE gene set (release 15)	<p>Updated Ensembl-Havana gene set (GENCODE release 15). This gene set is a   merge of complete Ensembl gene models and the latest Havana gene   annotation. All CCDS genes are included in this gene set.</p><p>The human GRCh37.p10 gene annotation is also included:</p><p>The patches for GRCh37.p10 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the core database.</p>	New core database.	handed_over	Genebuild	N	Y	N	Y	Y	N	Y	new	\N	N	4	104957	2012-10-29 09:54:16	101214	2012-11-29 16:46:15	1
-871	70	Human: GRCh37.p10 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	104957	2012-10-29 09:55:35	101214	2012-11-29 16:47:14	1
-872	70	Update to the Human BodyMap - RNASeq database with associated BAM files	<p>The Human BodyMap will be reanalysed using the recently updated RNASeq pipeline. PLEASE NOTE: gene and transcript model identifiers are not stable identifiers and therefore have not been mapped between release 70 and previous releases.</p><p>Gene models and introns for kidney are not available for release 70 but will be added for a future release. Kidney data are included in the merged BAM file.</p>	This work was done by Simon White and will replace the rnaseq database for human and will include BAM files.	handed_over	Genebuild	N	Y	N	N	N	N	N	N/A	\N	N	4	9335	2012-10-29 09:55:57	101214	2012-12-17 11:37:55	1
-873	70	Human: assembly updated to GRCh37.p10	<p>The human genome assembly was updated to GRCh37.p10 and the assembly information in all human databases has been altered accordingly. This minor assembly update contains 182 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	4	104957	2012-10-29 11:35:50	101214	2013-01-10 10:02:16	1
-877	70	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 26,387 transcript models as part of an updated version (Oct 2012) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	104957	2012-10-29 12:45:22	9335	2012-11-29 15:33:04	1
-882	70	Vega human annotation updated	<p>Manual annotation of human  from Havana has been updatedand contains the data released in Vega release 50.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	N/A	\N	N	3	104991	2012-10-29 12:51:41	101214	2013-01-10 09:57:27	1
-885	70	External database references update	<p>External database references will be updated for:</p><ul><li>Human</li><li> Mouse</li><li>Pig</li><li>Zebrafish</li><li> Chicken</li><li>Marmoset</li><li>Turkey</li><li>Zebra finch</li><li>Elephant</li><li>Tilapia</li><li>Microbat</li><li>Rat</li></ul>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	\N	N	1	97245	2012-10-29 16:15:40	97804	2012-11-23 11:10:27	1
-895	70	Human: updated cDNA alignments	<p>A new cdna database was created for e70: The latest set of cDNAs for  human (as of Nov 2012) from the European Nucleotide Archive and NCBI  RefSeq (release 56) were aligned to the current genome using Exonerate. A total of 228,542 cDNAs were aligned to the genome.</p>	Someone beside me will be doing this... And Someone did...	handed_over	Genebuild	N	Y	N	N	N	N	N	new	cdna	N	3	9335	2012-10-30 16:40:36	101214	2013-01-08 14:25:15	1
-912	70	Regulatory Build Analysis	<p>A change been made to the regulatory build analysis (build_regulatory_features.pl), to address an issue where&nbsp;core evidence from adjacent RegulatoryFeatures was included. This manifested in the browser as MotifFeatures appearing outside the core region.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-10-31 13:16:57	1273	2012-11-14 11:31:11	1
-913	70	MotifFeature (PWM) revision	<p>PWM alignment is now restricted to species specific binding matrices where possible. If no PWM is available for a given species, then the closest species will be chosen.</p><p>This has been patched in the existing human and mouse AnnotatedFeature associations, and also in the human RegulatoryFeatures. (Mouse regulatory build has been fully updated).</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-10-31 13:22:59	1273	2012-12-10 17:10:50	1
-914	70	Phenotype annotations	<p><span></span></p><p>Updated the annotations from the following sources:</p><ul><li>NHGRI GWAS catalog</li><li>EGA</li><li>OMIM</li><li>UniProt</li></ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-10-31 13:27:24	102503	2012-11-16 16:23:19	1
-915	70	New ENCODE WGBS data	<p>A new whole genome bisulphite sequencing data set has been incoprorated for the GM12878 lymphoblastoid cell line.</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-10-31 13:27:40	1273	2012-12-10 17:10:11	1
-916	70	Import HGMD-PUBLIC	<p><span>Import the HGMD-PUBLIC data from the release 2012.3, with regulatory data.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2012-10-31 13:28:32	102503	2012-11-08 15:54:15	1
-917	70	Import COSMIC variants	<p><span>Import COSMIC&#39;s version 61.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2012-10-31 13:29:34	102503	2012-11-20 16:14:00	1
-921	70	Structural variations	<ul><li>Update data for COSMIC structural variants (Human).</li><li>Update several studies (Human, Mouse, Cow, Macaque).</li><li>Import new studies (Human).</li></ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2012-10-31 13:51:16	102503	2012-12-17 11:41:31	1
-936	70	LASTZ pairwise alignments	<p>New alignments with rat and cat</p><ul><li>human vs rat lastz&nbsp;</li><li>mouse vs rat lastz</li><li>human vs cat lastz</li></ul>	\N	handed_over	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	22288	2012-11-01 11:49:00	22288	2012-12-19 10:27:44	1
-940	70	Syntenies	<p>Updated syntenies with dog and mouse</p><ul><li>human cat synteny</li><li>human rat synteny</li><li>mouse rat synteny</li></ul>	\N	handed_over	Compara	N	N	N	N	N	N	N	N/A	\N	N	2	22288	2012-11-01 13:20:41	22288	2012-12-19 10:32:41	1
-948	70	Updated human otherfeatures database	<p>Update due to GRCh37 patch 10</p>	\N	handed_over	Genebuild	Y	N	N	N	N	N	N	patched	\N	N	3	101214	2012-11-05 13:52:07	101214	2013-01-10 09:55:29	1
-956	70	Regulatory Build: Human	<p>The human regulatory build has been patched to remove unfiltered blacklisted features from the Y chromosome, and to remove some anomalous MotfiFeatures (See &#39;Regulatory Build Analysis&#39; item).</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2012-11-14 11:33:40	1273	2012-12-10 16:37:49	1
-957	70	Black list filtering	<p>Peak calls based on ChIP-Seq and DNase1 date are filtered using a list of black list regions curated by the ENCODE project. &nbsp;In&nbsp;releases 64-69, a bug was introduced caused by the addition of filtering support for the Y pseudo-autosomal regions in human. This resulted in all black list regions on the human Y chromosome&nbsp;(including the PARs)&nbsp;being omitted from the filtering. The effect of this is two fold: PAR regions appear to have duplicate data at a given location, as data from the corresponding X PAR is projected across; a small amount of low quality regulatory features (~150-200) and associated supporting evidence have not been filtered out.&nbsp;This will be rectified in the following script:</p><p><span></span>ensembl-functgenomics/scripts/miscellaneous/check_overlaps_with_encode_blacklist.pl</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	1	1273	2012-11-14 11:36:33	\N	\N	1
-963	70	Pilot and strict 1000Genomes Accessible Genome Data Import	<p>1000Genomes&#39; accessible genome data,&nbsp;ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase1/analysis_results/supporting/accessible_genome_masks/, has been imported as a set of SimpleFeature in the otherfeatures human database. The pilot and strict datasets have been used.</p>	\N	handed_over	Core	N	N	N	N	N	N	N	unchanged	otherfeatures	N	2	97804	2012-11-21 12:10:15	97804	2012-11-29 17:00:56	1
-978	71	LRG Import	<p>Importing the latest version of Locus Reference Genomic dataset</p>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	core	N	2	97804	2013-01-24 10:37:16	97245	2013-02-20 13:57:12	1
-982	71	External database references update	<p>External database references will be updated for:</p><ul><li>Human</li><li>Zebrafish</li><li> Ciona intestinalis</li><li>Anole lizard</li><li>Dolphin</li><li>Guinea pig</li><li>Wallaby</li><li>Coelacanth</li><li>Tarsier</li><li>Rock hyrax</li><li>Pika</li><li>Fugu</li><li>Sloth</li><li>Megabat</li><li>Alpaca</li><li>Kangaroo rat</li><li>Stickleback</li><li>Medaka</li><li>Shrew</li></ul>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	core	N	1	97804	2013-01-25 16:48:20	97245	2013-02-20 13:57:59	1
-983	71	Human: updated cDNA alignments	<p>A new cdna database was created for e71: The latest set of cDNAs for  human (as of Feb 2013) from the European Nucleotide Archive and NCBI  RefSeq (release 57) were aligned to the current genome using Exonerate.</p>	DB versions have to be updated in the "Content" box.\
-Someone beside me will be doing this...	handed_over	Genebuild	N	Y	N	N	N	N	N	new	cdna	N	3	104957	2013-01-28 12:04:34	101214	2013-02-27 16:46:34	1
-984	71	Update to Ensembl-Havana GENCODE gene set (release 16)	<p>Updated Ensembl-Havana gene set (GENCODE release 16). This gene set is a   merge of complete Ensembl gene models and the latest Havana gene   annotation. All CCDS genes are included in this gene set.</p>	New core database.	handed_over	Genebuild	N	Y	N	Y	Y	N	Y	new	core	N	4	104957	2013-01-28 12:09:03	104957	2013-02-14 14:55:21	1
-985	71	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 27,480 transcript models as part of an updated version (Jan 2013) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	otherfeatures	N	3	104957	2013-01-28 12:15:24	102717	2013-02-28 11:13:31	1
-986	71	VISTA Enhancer update	<p>The Human and Mouse VISTA Enhancers have been updated to the latest release (28/1/2013).&nbsp;</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2013-01-28 14:16:53	1273	2013-03-11 11:30:00	1
-991	71	Added Kidney RNASeq models and intron supporting features	<p>Due to computational problems, models and supporting evidence for the kidney were missing from the RNASeq database</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	rnaseq	N	4	101214	2013-01-28 14:59:37	101214	2013-02-28 11:03:07	1
-993	71	Protein consequence data	<p class="MsoNormal"><span>Sift results will be provided for human, mouse, zebrafish, pig, cow, chicken, rat and dog.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105021	2013-01-28 16:00:33	105021	2013-02-26 10:04:20	1
-1005	71	Splicing events	<p>The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)</p><p>Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:</p><ul><li>Homo sapiens,</li><li>Mus musculus,</li><li>Rattus norvegicus,</li><li>Danio rerio,</li><li>Caenorhabditis elegans,</li><li>Drosophila melanogaster</li></ul><p>These data have been updated for this release for the species listed above.</p>	\N	handed_over	Production	N	N	N	N	N	N	N	N/A	\N	N	2	101593	2013-01-30 10:17:16	101593	2013-02-26 14:09:44	1
-1006	71	Vega human annotation updated	<p>Manual annotation of human  from Havana has been updated and contains the data released in Vega release 51.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	161	2013-01-30 10:17:59	161	2013-02-20 16:45:28	1
-1007	71	DNA Methylation data	<p>A new WGBS sperm data set (Molaro et al, &nbsp;PMID: 21925323)&nbsp;has been imported for human, and several RRBS sets for mouse (Smith et al, PMID: 22456710).</p>	\N	postponed	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2013-01-30 10:46:19	1273	2013-03-11 11:30:53	1
-1019	71	Import HGMD-PUBLIC	<p><span>Import the HGMD-PUBLIC data from the release 2012.4, with regulatory data.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2013-01-31 09:43:55	105021	2013-02-26 10:07:16	1
-1020	71	Import COSMIC variants	<p><span>Import COSMIC&#39;s version 63.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2013-01-31 09:45:26	105021	2013-02-26 10:10:34	1
-1021	71	Structural variations	<ul><li>Update data for COSMIC structural variants (Human).</li><li>Update studies </li><li>Import new studies.</li></ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2013-01-31 09:49:20	105021	2013-02-26 10:10:09	1
-1024	71	INSDC accession added	<p>INSDC accessions were added as synonyms for chromosomes.</p>	Chnages to seq_region_synonym table only.	handed_over	Genebuild	N	N	N	N	N	N	N	patched	core	N	1	5132	2013-01-31 12:06:04	5132	2013-03-03 19:08:44	1
-1027	71	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes new transcript models as part of an updated version of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	declared	Genebuild	N	N	N	N	N	N	N	patched	otherfeatures	N	3	102717	2013-01-31 17:01:39	101214	2013-01-31 23:26:37	0
-1042	71	New Expression view listing RNASeq data	<p>We have added a new view to the set of gene-based displays, listing the available RNASeq data for that species, with links through to Region in Detail that turn on a set of RNAseq tracks for a given tissue. You can find this page in the lefthand menu on Gene pages, above the Comparative Genomics submenu.</p><p><a href="http://www.ensembl.org/Homo_sapiens/Gene/Expression?db=core;g=ENSG00000139618">Sample link</a> (Human BRCA2)</p><p>We hope this will provide a useful way into the data for users mainly interested in a single gene, but we plan to develop more views in future to allow alternative data selections to be made.</p>	\N	handed_over	Web	N	N	N	N	N	N	N	N/A	\N	N	2	2	2013-02-01 12:07:23	2	2013-02-01 13:40:44	1
-1050	71	Regulation GFF updates	<p>Updates have been made to the various GFF dumps from the funcgen DBs. These have addressed some minor format and content issues which now bring these in line with the GFF3 specification. Namely removal of spaces between attribute fields and addition of sequence ontology terms in the &#39;type&#39; field. Additionally, scores have been added to the MotifFeature dumps (more info here&nbsp;http://www.ensembl.org/info/docs/funcgen/regulatory_build.html#tfbs).</p>	\N	handed_over	Funcgen	N	N	N	N	N	N	N	N/A	\N	N	2	1273	2013-03-08 16:18:12	\N	\N	1
-1051	71	New Structural Variant View	<p>There is a new structural variants view under Genetic Variation on the location view page. The view will show all the structural variants track at the current location.</p><p>All the structural variants tracks are turned off by default on the region in detail view except for larger structural variant track. There is a new link (Expanded structural variant view) in the ZMenu for the larger structural variant track to expand/view all the structural variant tracks on that specific location.</p>	\N	cancelled	Web	N	N	N	N	N	N	N	N/A	\N	N	2	99923	2013-03-19 10:01:02	99923	2013-03-21 11:11:49	1
-1057	72	Splicing events	<p>The ASTD project computationally predicted genes in a similar way to Ensembl every release with a focus on alternative mRNA structures (splicing events, poly(A) sites, TSS) and features (ppt, exon-exon junction types)</p><p>Since 2010, the storage and display of the alternative information is now an entire part of Ensembl for the following species:</p><ul><li>Homo sapiens,</li><li>Mus musculus,</li><li>Rattus norvegicus,</li><li>Danio rerio,</li><li>Caenorhabditis elegans,</li><li>Drosophila melanogaster</li></ul><p>These data have been updated for this release for the species listed above.</p>	\N	handed_over	Production	N	N	N	N	N	N	N	N/A	\N	N	2	101593	2013-04-11 09:43:20	25629	2013-05-29 13:08:16	1
-1060	72	Update to Ensembl-Havana GENCODE gene set (release 17)	<p>Updated Ensembl-Havana gene set (GENCODE release 17). This gene set is a   merge of complete Ensembl gene models and the latest Havana gene   annotation. All CCDS genes are included in this gene set.</p><p>The human GRCh37.p11 gene annotation is also included:</p><p>The patches for GRCh37.p11 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the core database.</p>	New core database.	handed_over	Genebuild	N	Y	N	Y	Y	N	Y	new	core	N	4	104957	2013-04-11 09:50:02	104957	2013-04-25 13:05:37	1
-1061	72	Human: GRCh37.p11 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	104957	2013-04-11 09:51:13	104957	2013-04-25 13:05:54	1
-1062	72	Human: assembly updated to GRCh37.p11	<p>The human genome assembly was updated to GRCh37.p11 and the assembly information in all human databases has been altered accordingly. This minor assembly update contains 187 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	4	104957	2013-04-11 09:55:15	104957	2013-04-25 13:06:22	1
-1063	72	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 27,440 transcript models as part of an updated version (Mar 2013) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	104957	2013-04-11 10:03:49	104957	2013-05-09 14:34:42	1
-1065	72	LRG Import	<p>Importing the latest version of Locus Reference Genomic dataset</p>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	core	N	2	97245	2013-04-12 10:56:39	97245	2013-06-27 08:46:33	1
-1067	72	Phenotype data	<p>Add phenotype associations from OMIM and Orphanet to variation PhenotypeFeature schema.</p><p>Also add data from GIANT and MAGIC association studies.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	variation	N	2	96712	2013-04-15 09:32:45	102503	2013-05-29 13:03:29	1
-1068	72	Import HGMD-PUBLIC	<p><span>Import the HGMD-PUBLIC data from the release 2013.1, with regulatory data.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2013-04-15 09:40:01	102503	2013-05-29 13:03:42	1
-1069	72	Import COSMIC variants	<p><span>Import COSMIC&#39;s version 64.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	102503	2013-04-15 09:42:07	102503	2013-05-29 13:03:56	1
-1071	72	Structural variations	<ul><li>Update studies </li><li>Import new studies.</li><li>Create a set for the hight-quality structural variant from the 1000 Genomes - phase 1 study (human, study estd199).</li><li>Add studies for pig.</li></ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2013-04-15 09:44:27	102503	2013-05-29 13:04:26	1
-1074	72	Vega Human annotation updated	<p>Manual annotation of human  from Havana has been updated and contains the data released in Vega release 52.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	161	2013-04-15 09:57:46	104991	2013-05-10 10:24:39	1
-1077	72	Import ClinVar	<p>Import of ClinVar release version 20130226</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105021	2013-04-15 10:07:14	105021	2013-05-20 13:11:33	1
-1079	72	Import EPMC data	<p>Import variation data mined by Europe PMC</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	patched	variation	N	2	105021	2013-04-15 15:38:22	105021	2013-05-20 13:12:05	1
-1082	72	External database references update	<p>External database references will be updated for:</p><ul><li>Human</li><li>Mouse</li><li>Pig</li><li>Ciona savigny</li><li>Hedgehog</li><li>Mouse lemur</li><li>Gorilla</li><li>Shrew</li><li>Lamprey</li><li>Tenrec</li></ul>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	core	N	1	97245	2013-04-15 16:08:07	97245	2013-05-09 16:07:15	1
-1096	72	Human: updated cDNA alignments	<p>A new cdna database was created for e72: The latest set of cDNAs for  human (as of May 2013) from the European Nucleotide Archive and NCBI  RefSeq (release 59) were aligned to the current genome using Exonerate.</p>	DB versions have to be updated in the "Content" box.\
-Someone beside me will be doing this...	handed_over	Genebuild	N	Y	N	N	N	N	N	new	cdna	N	3	104979	2013-04-17 10:11:50	104979	2013-05-09 13:43:45	1
-1109	72	Beta cell transcriptome	<p>Anonymised beta cell transcriptome data have been made available.</p>	Will patch the rnaseq database and hand over 23 bam files	handed_over	Genebuild	N	N	N	N	N	N	N	patched	rnaseq	N	2	5132	2013-05-01 12:54:22	5132	2013-05-02 06:44:15	1
-1122	73	Vega Human annotation updated	<p>Manual annotation of human  from Havana has been updated and contains the data released in Vega release 53.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	\N	N	2	104991	2013-06-21 09:44:19	161	2013-07-31 09:29:46	1
-1129	73	Update to Ensembl-Havana GENCODE gene set (release 18)	<p>Updated Ensembl-Havana gene set (GENCODE release 18). This gene set is a   merge of complete Ensembl gene models and the latest Havana gene   annotation. All CCDS genes are included in this gene set.</p><p>The human GRCh37.p12 gene annotation is also included:</p><p>The patches for GRCh37.p12 were annotated using a combination of manual annotation, annotation  projected from the primary assembly and annotation derived from cDNA and  protein alignment evidence. Annotation of the patches is stored in the core database.</p>	New core database.	handed_over	Genebuild	Y	Y	Y	Y	Y	N	Y	new	core	Y	4	104957	2013-06-25 09:41:08	104957	2013-07-10 15:41:50	1
-1130	73	Human: GRCh37.p12 Karyotype Bands	<p>Karyotype bands were updated in regions overlapping patches</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	\N	N	3	104957	2013-06-25 09:41:37	104957	2013-07-10 15:42:12	1
-1131	73	Human: assembly updated to GRCh37.p12	<p>The human genome assembly was updated to GRCh37.p12 and the assembly information in all human databases has been altered accordingly. This minor assembly update contains 194 assembly patches. The DNA sequence for the primary assembly (chromosomes 1-22, X, Y,  unlocalized scaffolds and unplaced scaffolds) remains unchanged.</p>	\N	handed_over	Genebuild	Y	Y	Y	Y	N	N	N	patched	\N	N	4	104957	2013-06-25 09:42:10	104957	2013-07-10 15:42:30	1
-1132	73	Updated human otherfeatures db: New CCDS import	<p>This release of the human gene set also includes 27,747 transcript models as part of an updated version (Jul 2013) of <a href="http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi">CCDS</a></p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	patched	otherfeatures	N	3	104957	2013-06-25 09:43:08	104957	2013-07-11 14:25:22	1
-1134	73	Add new value to evidence classification	<p>A new evidence value &#39;ESP&#39; will be added to our current list of classifications for summarising the data supporting a variant. The new evidence value indicates that the variant was dicovered in the NHLBI GO Exome Sequencing Project.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2013-06-25 12:40:59	105020	2013-07-22 15:21:33	1
-1135	73	Schema changes	<p>-&nbsp;add column phased_gt to genotype tables to indicate that data is phased</p><p>- add column year to publication table to store year of publication</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2013-06-25 12:41:35	105020	2013-07-22 15:21:05	1
-1136	73	Update ESP data	<p>We update data from NHLBI GO Exome Sequencing Project (ESP) to EVS-v.0.0.20.</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2013-06-25 12:43:16	105020	2013-07-24 08:50:14	1
-1137	73	Import HGMD-PUBLIC	<p><span>Import the HGMD-PUBLIC data from the release 2013.2, with regulatory data.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	105020	2013-06-25 13:05:10	105020	2013-07-22 15:21:51	1
-1138	73	Import COSMIC variants	<p><span>Import COSMIC&#39;s version 65.</span></p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	105020	2013-06-25 13:06:32	105020	2013-07-22 15:22:25	1
-1139	73	Structural variations	<ul><li>Update studies </li><li>Import new studies.</li></ul>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	105020	2013-06-25 13:16:08	105020	2013-07-22 15:22:12	1
-1150	73	Odds ratio data	<p>We add odds ratio data from the NHGRI GWAS catalog.</p>	Add in odds ratio data from the NHGRI GWAS catalog	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	3	2013-06-26 17:54:30	105020	2013-07-24 10:18:36	1
-1146	73	Human: updated cDNA alignments	<p>A new cdna database was created for e73: The latest set of cDNAs for human&nbsp; (as of July 2013) from the European Nucleotide Archive and NCBI  RefSeq (release 56) were aligned to the current genome using Exonerate.</p>	\N	handed_over	Genebuild	N	Y	N	N	N	N	N	new	cdna	N	3	102717	2013-06-26 09:21:24	102717	2013-07-25 12:57:44	1
-1149	73	External database references update	<p>Xref updates for</p><ul><li>homo sapiens</li><li>danio rerio</li></ul><ul><li>pan troglodytes</li><li>otolemur garnettii</li><li>gadus morhua</li><li>dasypus novemcinctus</li><li>taeniopygia guttata</li><li>ictidomys tridecemlineatus</li><li>pelodiscus sinensis</li><li>canis familiaris</li><li>sus scrofa</li></ul>	\N	handed_over	Core	N	N	N	N	N	N	N	patched	core	N	1	103988	2013-06-26 10:24:50	97245	2013-07-31 09:32:13	1
-1157	73	Human: updated RefSeq gene import	<p>The imported RefSeq gene set was updated in the human otherfeatures database. Please note that RefSeq annotates gene models on cDNA sequence and not on the reference genome, meaning that when users choose to translate the RefSeq transcripts off the reference genome that the translations may contain stop codons.</p>	\N	handed_over	Genebuild	N	N	N	N	N	N	N	N/A	otherfeatures	N	4	102717	2013-06-27 11:38:38	102717	2013-07-29 12:33:53	1
-1169	73	PhenCode import	<p>Variant data from the PhenCode project will be imported and presented as a new variation_set and track</p>	\N	handed_over	Variation	N	N	N	N	N	N	Y	N/A	\N	N	2	105021	2013-07-10 10:29:11	105020	2013-07-24 10:19:06	1
-1172	73	dbGaP phenotype data	<p>Phenotype data associated with the dbSNP variants from dbGaP</p>	\N	handed_over	Variation	N	N	N	N	N	N	N	N/A	\N	N	2	102503	2013-07-16 15:38:23	105020	2013-07-24 10:19:23	1
