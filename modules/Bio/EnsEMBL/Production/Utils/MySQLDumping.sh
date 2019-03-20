@@ -1,5 +1,5 @@
 #!/bin/bash --
-
+set -e
 database=$1
 output_dir=$2
 host=$3
