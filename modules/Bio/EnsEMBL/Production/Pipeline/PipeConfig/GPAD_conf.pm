@@ -23,7 +23,7 @@ limitations under the License.
 
 =head1 AUTHOR 
 
- ckong@ebi.ac.uk 
+maurel@ebi.ac.uk and ckong@ebi.ac.uk
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GPAD_conf;
@@ -31,9 +31,10 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GPAD_conf;
 use strict;
 use warnings;
 use File::Spec;
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::Version 2.5;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+use File::Spec::Functions qw(catdir);
 
 sub default_options {
     my ($self) = @_;
@@ -45,17 +46,17 @@ sub default_options {
 	## General parameters
     'registry'      => $self->o('registry'),   
     'release'       => $self->o('release'),
-    'pipeline_name' => 'gpad_loader',       
+    'pipeline_name' => 'gpad_loader_'.$self->o('release'),
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
+    'output_dir'    => '/nfs/nobackup/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
     ## Location of GPAD files
-    'gpad_directory' => [],
+    'gpad_directory' => '',
 
 	## Email Report subject
-    'email_subject'       	   => $self->o('pipeline_name').' GPAD loading pipeline has finished',
+    'email_subject'  => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
-    ## Remove existing GO annotations
+    ## Remove existing GO annotations and associated analysis
     # on '1' by default
     'delete_existing' => 1,
 
@@ -64,19 +65,17 @@ sub default_options {
     'antispecies' => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
     'division' 	 => [], 
     'run_all'     => 0,	
-
-    ## hive_capacity values for analysis
-    'gpad_capacity'  => '50',
+    'meta_filters' => {},
 
     #analysis informations
-    logic_name => 'goa_import',
-    db => 'GO',
-    program => 'goa_import',
-    description => 'Gene Ontology xrefs data from GOA',
-    display_label => 'GO xrefs from GOA',
-    displayable => 0,
-    production_lookup => 1,
-    delete_existing => 1,
+    'logic_name' => 'goa_import',
+    'db' => 'GO',
+    'program' => 'goa_import',
+    'description' => 'Gene Ontology xrefs data from GOA',
+    'display_label' => 'GO xrefs from GOA',
+    'displayable' => 0,
+    'production_lookup' => 1,
+    'linked_tables' => ['object_xref']
 
     };
 }
@@ -116,7 +115,6 @@ sub pipeline_wide_parameters {
             %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
 		    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
 		    'output_dir'      => $self->o('output_dir'), 
-            'delete_existing' => $self->o('delete_existing'),		    
     };
 }
 
@@ -139,43 +137,115 @@ sub pipeline_analyses {
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids  => [ {} ] , 
        -flow_into  => {
-		                 '1->A' => ['process_gpad_directory'],
+		                 '1->A' => ['DbFactory'],
 		                 'A->1' => ['email_notification'],		                       
                        },          
-    },   
-
-    { -logic_name     => 'process_gpad_directory',
-  	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::ProcessDirectory',
-      -parameters     => {
-            'gpad_directory' => $self->o('gpad_directory'),
-       },
-      -hive_capacity  => 10,
-      -rc_name 	      => 'default',     
-      -flow_into      => { '2->A' => ['AnalysisSetup'],
-                           'A->2' => ['gpad_file_load'], }
+    },
+    {
+      -logic_name        => 'DbFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              species         => $self->o('species'),
+                              antispecies     => $self->o('antispecies'),
+                              division        => $self->o('division'),
+                              run_all         => $self->o('run_all'),
+                              meta_filters    => $self->o('meta_filters'),
+                              chromosome_flow => 0,
+                              regulation_flow => 0,
+                              variation_flow  => 0,
+                            },
+      -flow_into         => {
+                              '2->A' => ['BackupTables'],
+                              'A->2' => ['SpeciesFactory'],
+                            }
+    },
+    {
+      -logic_name        => 'BackupTables',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => {
+                              table_list  => [
+                                'analysis',
+                                'analysis_description',
+                                'object_xref',
+                                'ontology_xref',
+                              ],
+                              output_file => catdir($self->o('output_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                            },
+      -rc_name           => 'default',
+      -flow_into         => {
+                              '1->A' => ['AnalysisSetup'],
+                              'A->1' => ['RemoveOrphans'],
+      }
     },
     {
       -logic_name        => 'AnalysisSetup',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
       -max_retry_count   => 0,
+      -analysis_capacity => 20,
       -parameters        => {
                               db_backup_required => 0,
+                              delete_existing => $self->o('delete_existing'),
                               production_lookup  => $self->o('production_lookup'),
                               logic_name => $self->o('logic_name'),
                               description => $self->o('description'),
                               display_label => $self->o('display_label'),
                               displayable => $self->o('displayable'),
-                              delete_existing => $self->o('delete_existing'),
                               db => $self->o('db'),
                               program => $self->o('program'),
+                              linked_tables => $self->o('linked_tables')
+                            }
+    },
+    {
+      -logic_name        => 'RemoveOrphans',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
+      -max_retry_count   => 0,
+      -analysis_capacity => 20,
+      -parameters        => {
+                              sql => [
+                                'DELETE onx.* FROM '.
+                                  'ontology_xref onx LEFT OUTER JOIN '.
+                                  'object_xref ox USING (object_xref_id) '.
+                                  'WHERE ox.object_xref_id IS NULL',
+                              ]
                             },
+    },
+        {
+      -logic_name        => 'SpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              chromosome_flow    => 0,
+                              otherfeatures_flow => 0,
+                              regulation_flow    => 0,
+                              variation_flow     => 0,
+                            },
+      -flow_into         => {
+                              '2' => ['FindFile'],
+                            }
+    },
+    { -logic_name     => 'FindFile',
+      -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
+      -analysis_capacity  => 30,
+      -rc_name 	      => 'default',
+      -parameters     => {
+                            gpad_directory => $self->o('gpad_directory')
+      },
+      -flow_into         => {
+                  '2' => ['gpad_file_load'],
+                }
     },
     { -logic_name     => 'gpad_file_load',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
-      -hive_capacity  => 10,
-      -rc_name 	      => 'default',     
-    },   
-
+      -parameters     => {
+                              delete_existing => $self->o('delete_existing'),
+                              logic_name => $self->o('logic_name')
+       },
+      -analysis_capacity  => 20,
+      -rc_name 	      => 'default'
+    },
     { -logic_name     => 'email_notification',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
       -parameters     => {

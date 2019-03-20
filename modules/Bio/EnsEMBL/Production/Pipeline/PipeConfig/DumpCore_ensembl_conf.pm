@@ -58,6 +58,8 @@ sub default_options {
         # convert DNA from fasta to 2bit format
 #'blat_exe' => $self->o('exe_dir').'faToTwoBit',
        'blat_exe' => 'faToTwoBit',
+       # Previous release FASTA DNA files location
+       'prev_rel_dir' => '/nfs/ensemblftp/PUBLIC/pub/',
 	};
 }
 

@@ -101,7 +101,18 @@ sub fetch_metadata {
 	my ( $self, $name ) = @_;
 	$logger->debug("Fetching metadata for genome $name");
 	croak "No metadata DB adaptor found" unless defined $self->{info_adaptor};
-	return $self->{info_adaptor}->fetch_by_name($name);
+	my $orgs = $self->{info_adaptor}->fetch_by_name($name);
+	my $meta = Bio::EnsEMBL::Registry->get_adaptor( $name, 'core',
+															'MetaContainer' );
+	if ( !defined $meta ) {
+		croak "Cannot find genome $name";
+	}
+	my $division = $meta->get_division();
+  my $org;
+  foreach my $genome (@{$orgs}){
+    $org = $genome if ($genome->division() eq $division);
+  }
+	return $org;
 }
 
 sub metadata_to_hash {

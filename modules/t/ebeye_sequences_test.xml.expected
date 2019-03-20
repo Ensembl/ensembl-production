@@ -2,13 +2,9 @@
 <!DOCTYPE database>
 
 <database>
-  <name>homo_sapiens_core_89_38</name>
+  <name>Ensembl</name>
   <description>Ensembl Homo sapiens core database</description>
   <release>89</release>
-  <dates>
-    <date type="creation" value="2017-07-10" />
-    <date type="last_modification" value="2017-07-10" />
-  </dates>
   <entries>
     <entry id="7270026">
       <name>7270026</name>
@@ -16,8 +12,9 @@
         <ref dbname="ncbi_taxonomy_id" dbkey="9606" />
       </cross_references>
       <additional_fields>
-        <field name="system_name">homo_sapiens</field>
+        <field name="production_name">homo_sapiens</field>
         <field name="location">7270026:101111537-101292795</field>
+	<field name="genomic_unit">Ensembl</field>
         <field name="coord_system">Tilepath</field>
         <field name="species">Homo sapiens</field>
         <field name="length">181259</field>
@@ -29,7 +26,8 @@
         <ref dbname="ncbi_taxonomy_id" dbkey="9606" />
       </cross_references>
       <additional_fields>
-        <field name="system_name">homo_sapiens</field>
+        <field name="production_name">homo_sapiens</field>
+	<field name="genomic_unit">Ensembl</field>
         <field name="coord_system">chromosome</field>
         <field name="species">Homo sapiens</field>
         <field name="location">X:1-156040895</field>
@@ -43,7 +41,8 @@
       </cross_references>
       <additional_fields>
         <field name="length">171</field>
-        <field name="system_name">homo_sapiens</field>
+        <field name="production_name">homo_sapiens</field>
+	<field name="genomic_unit">Ensembl</field>
         <field name="location">DAAF01080952.1:1-171</field>
         <field name="coord_system">contig</field>
         <field name="species">Homo sapiens</field>

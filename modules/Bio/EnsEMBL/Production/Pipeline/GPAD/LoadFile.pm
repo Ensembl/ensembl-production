@@ -23,7 +23,7 @@ Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
 
 =head1 AUTHOR
 
-ckong@ebi.ac.uk
+ckong@ebi.ac.uk and maurel@ebi.ac.uk
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
@@ -37,101 +37,63 @@ use Bio::EnsEMBL::Utils::SqlHelper;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
-sub param_defaults {
-    return {
-     delete_existing => 1,
-    };
-}
-
 sub run {
     my ($self)  = @_;
     # Parse filename to get $target_species
-    my $file    = $self->param_required('gpad_file');
     my $species = $self->param_required('species');
+    my $file = $self->param_required('gpad_file');
+    my $logic_name = $self->param_required('logic_name');
+
+    my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
+    my $hive_dbc = $self->dbc;
+    $hive_dbc->disconnect_if_idle() if defined $self->dbc;
 
     $self->log()->info("Loading $species from $file");
 
-    my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
-
     # Remove existing projected GO annotations from GOA
     if ($self->param_required('delete_existing')) {
-
       $self->log()->info("Deleting existing terms");
-         # Delete by xref.info_type='PROJECTION' OR 'DEPENDENT'
-         my $sqls = 
-	   ['DELETE ox.*,onx.*,dx.*  FROM xref x
-            JOIN object_xref ox USING (xref_id)
-            LEFT JOIN ontology_xref onx USING (object_xref_id)
-            LEFT JOIN dependent_xref dx USING (object_xref_id)
-            JOIN analysis a USING (analysis_id)
-            JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
-            JOIN transcript tf USING (transcript_id)
-            JOIN seq_region s USING (seq_region_id)
-            JOIN coord_system c USING (coord_system_id)
-            WHERE x.external_db_id=1000
-            AND c.species_id=?
-            AND (x.info_type="PROJECTION"
-            OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")',
+      # Delete by analysis.logic_name='goa_import' for GOs mapped to translation
+      my $translation_go_sql=qq/
+        DELETE ox.*,onx.*,dx.*  FROM xref x
+          JOIN object_xref ox USING (xref_id)
+          LEFT JOIN ontology_xref onx USING (object_xref_id)
+          LEFT JOIN dependent_xref dx USING (object_xref_id)
+          JOIN analysis a USING (analysis_id)
+          JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
+          JOIN transcript tf USING (transcript_id)
+          JOIN seq_region s USING (seq_region_id)
+          JOIN coord_system c USING (coord_system_id)
+        WHERE x.external_db_id=1000
+          AND c.species_id=?
+          AND a.logic_name=?/;
+      # Same deletes but for GOs mapped to transcripts
+      my $transcript_go_sql=qq/
+        DELETE ox.*,onx.*,dx.*  FROM xref x
+          JOIN object_xref ox USING (xref_id)
+          LEFT JOIN ontology_xref onx USING (object_xref_id)
+          LEFT JOIN dependent_xref dx USING (object_xref_id)
+          JOIN analysis a USING (analysis_id)
+          JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
+          JOIN seq_region s USING (seq_region_id)
+          JOIN coord_system c USING (coord_system_id)
+        WHERE x.external_db_id=1000
+          AND c.species_id=?
+          AND a.logic_name=?/;
 
-        # Delete by analysis.logic_name='go_projection' & 'interpro2go'
-        # interpro2go annotations should be superceded by GOA annotation
-        'DELETE ox.*,onx.*,dx.*  FROM xref x
-                      JOIN object_xref ox USING (xref_id)
-                      LEFT JOIN ontology_xref onx USING (object_xref_id)
-                      LEFT JOIN dependent_xref dx USING (object_xref_id)
-                      JOIN analysis a USING (analysis_id)
-                      JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
-                      JOIN transcript tf USING (transcript_id)
-                      JOIN seq_region s USING (seq_region_id)
-                      JOIN coord_system c USING (coord_system_id)
-                      WHERE x.external_db_id=1000
-                      AND c.species_id=?
-          AND (a.logic_name="goa_import"
-          OR a.logic_name="interpro2go")',
-
-        # Same deletes but for GOs mapped to transcripts
-       'DELETE ox.*,onx.*,dx.*  FROM xref x
-                      JOIN object_xref ox USING (xref_id)
-                      LEFT JOIN ontology_xref onx USING (object_xref_id)
-                      LEFT JOIN dependent_xref dx USING (object_xref_id)
-                      JOIN analysis a USING (analysis_id)
-                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
-                      JOIN seq_region s USING (seq_region_id)
-                      JOIN coord_system c USING (coord_system_id)
-                      WHERE x.external_db_id=1000
-                      AND c.species_id=?
-                      AND (x.info_type="PROJECTION"
-                      OR  x.info_type="DIRECT" OR x.info_type = "DEPENDENT")',
-
-        'DELETE ox.*,onx.*,dx.*  FROM xref x
-                      JOIN object_xref ox USING (xref_id)
-                      LEFT JOIN ontology_xref onx USING (object_xref_id)
-                      LEFT JOIN dependent_xref dx USING (object_xref_id)
-                      JOIN analysis a USING (analysis_id)
-                      JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
-                      JOIN seq_region s USING (seq_region_id)
-                      JOIN coord_system c USING (coord_system_id)
-                      WHERE x.external_db_id=1000
-                      AND c.species_id=?
-                      AND (a.logic_name="goa_import"
-                      OR a.logic_name="interpro2go")'];
-
-      for my $sql (@$sqls) {
-	$self->log()->debug("Executing $sql");
-	$dba->dbc()->sql_helper()->execute_update(-SQL=>$sql);
-      }
+      $self->log()->debug("Deleting GO mapped to translation");
+      $dba->dbc()->sql_helper()->execute_update(-SQL=>$translation_go_sql,-PARAMS=>[$dba->species_id(),$logic_name]);
+      $self->log()->debug("Deleting GO mapped to transcript");
+      $dba->dbc()->sql_helper()->execute_update(-SQL=>$transcript_go_sql,-PARAMS=>[$dba->species_id(),$logic_name]);
     }
-    
-    my $hive_dbc = $self->dbc;
-    $hive_dbc->disconnect_if_idle() if defined $self->dbc;
-    
+
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
     $odba->dbc->disconnect_if_idle();
     
     # Retrieve existing or create new analysis object
     my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($species , "core", "analysis" );
-    my $analysis = $analysis_adaptor->fetch_by_logic_name('goa_import');
+    my $analysis = $analysis_adaptor->fetch_by_logic_name($logic_name);
 
     my $tl_adaptor  = $dba->get_TranslationAdaptor();
     my $dbe_adaptor = $dba->get_DBEntryAdaptor();
@@ -181,7 +143,7 @@ sub run {
           $go_evidence=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/tgt_protein/){
-          $annotation_propertie =~ s/tgt_protein=\w+://;
+          $annotation_propertie =~ s/tgt_protein=[\w\-]+://;
           $tgt_protein=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/tgt_transcript/){
@@ -189,7 +151,7 @@ sub run {
           $tgt_transcript=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/src_protein/){
-          $annotation_propertie =~ s/src_protein=\w+://;
+          $annotation_propertie =~ s/src_protein=[\w\-]+://;
           $src_protein=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/src_species/){

@@ -53,11 +53,13 @@ sub run {
   my $sub_dir = $self->get_data_path('ebeye');
 
   my $reformatter = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
+  my $output = { species => $species };
 
   if ($type eq 'core') {
     my $genome_file_out = $sub_dir . '/' . $species . '_genome.xml';
     $self->{logger}->info("Reformatting $genome_file into $genome_file_out");
     $reformatter->reformat_genome($genome_file, $genome_file_out);
+    $output->{genome_xml_file} = $genome_file_out;
   }
   my $dba = $self->get_DBAdaptor($type);
 
@@ -68,6 +70,7 @@ sub run {
     $self->{logger}->info("Reformatting $genes_file into $genes_file_out");
     $reformatter->reformat_genes($genome_file, $dba->dbc()->dbname(),
         $genes_file, $genes_file_out);
+    $output->{genes_xml_file} = $genes_file_out;
   }
 
   my $sequences_file = $self->param('sequences_file');
@@ -78,8 +81,10 @@ sub run {
     $reformatter->reformat_sequences($genome_file, $dba->dbc()->dbname(),
         $sequences_file, $sequences_file_out
     );
+    $output->{sequences_xml_file} = $sequences_file_out;
   }
 
+  $self->dataflow_output_id( $output, 1 );
   return;
 } ## end sub run
 
