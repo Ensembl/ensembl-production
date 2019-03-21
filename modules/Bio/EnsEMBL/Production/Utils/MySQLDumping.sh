@@ -22,7 +22,9 @@ user=$4
 password=$5
 port=$6
 
-rm -r "$output_dir/$database"
+if [ -d "$output_dir/$database" ]; then
+    rm -r "$output_dir/$database"
+fi
 mkdir -m 777 -p "$output_dir/$database"
 cd "$output_dir/$database"
 echo "Dumping $database";
