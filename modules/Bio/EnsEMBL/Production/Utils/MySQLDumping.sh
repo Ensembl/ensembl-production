@@ -1,5 +1,5 @@
 #!/bin/bash --
-set -e
+set -euo pipefail
 database=$1
 output_dir=$2
 host=$3
