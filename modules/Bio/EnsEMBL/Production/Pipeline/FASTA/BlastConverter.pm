@@ -47,18 +47,7 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
-
-    my $eg     = $self->param_required('eg');
-    $self->param('eg', $eg);
-    $self->param('blast_path',$self->param('base_path')); 
-
-    if($eg){
-       my $base_path = $self->build_base_directory();
-       my $release   = $self->param('eg_version');
-       $self->param('base_path', $base_path);
-       $self->param('release', $release);
-    }
-
+    $self->param('blast_path',$self->param('base_path'));
 return;
 }
 
@@ -116,13 +105,12 @@ return;
 sub _get_file_name {
     my ($self, $data_type, $type, $subtype ) = @_;
     # File name format looks like:
-    # <species>.<assembly>.<eg_version>.<sequence type>.<id type>.fa
+    # <species>.<assembly>.<sequence type>.<id type>.fa
     # e.g. Fusarium_oxysporum.FO2.dna.toplevel.fa    
     #      Fusarium_oxysporum.FO2.dna_rm.toplevel.fa    
     my @name_bits;
     push @name_bits, $self->web_name();
     push @name_bits, $self->assembly();
-    #push @name_bits, $self->param('eg_version');
     push @name_bits, lc($type);
     push @name_bits, $subtype if(defined $subtype);
     push @name_bits, 'fa';

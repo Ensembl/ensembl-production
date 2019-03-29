@@ -44,7 +44,7 @@ sub run {
 	return unless defined $genes_file;
 
 	my $species         = $self->param_required('species');
-	my $sub_dir         = $self->get_data_path('adv_search');
+	my $sub_dir         = $self->get_dir('adv_search');
 	my $genes_file_out  = $sub_dir . '/' . $species . '_genes.json';
 	my $genome_file_out = $sub_dir . '/' . $species . '_genome.json';
 	my $genome_file     = $self->param_required('genome_file');

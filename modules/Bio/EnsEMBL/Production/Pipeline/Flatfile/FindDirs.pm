@@ -58,7 +58,6 @@ use File::Spec;
 
 sub fetch_input {
   my ($self) = @_;
-  $self->throw("No 'species' parameter specified") unless $self->param('species');
   $self->param('path', $self->data_path());
   $self->SUPER::fetch_input();
   return;

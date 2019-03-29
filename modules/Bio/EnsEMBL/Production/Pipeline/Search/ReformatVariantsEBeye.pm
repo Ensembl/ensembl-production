@@ -49,7 +49,7 @@ sub run {
 	my $type        = $self->param_required('type');
 
 	my $species = $self->param_required('species');
-	my $sub_dir = $self->get_data_path('ebeye');
+	my $sub_dir = $self->get_dir('ebeye');
 
 	my $reformatter   = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
 	my $dump_file     = $self->param('dump_file');

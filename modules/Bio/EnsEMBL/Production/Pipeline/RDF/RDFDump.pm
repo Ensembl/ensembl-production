@@ -52,16 +52,6 @@ sub fetch_input {
     $self->param_required('species');   # just make sure it has been passed
     $self->param_required('config_file');
     $self->param_required('release');
-    my $eg = $self->param('eg');
-    $self->param('eg', $eg);
-
-    if($eg){
-      my $base_path  = $self->build_base_directory();
-      $self->param('base_path', $base_path);
-      my $release = $self->param('eg_version');
-      $self->param('release', $release);
-    }
-
 }
 
 
@@ -78,7 +68,7 @@ sub run {
   my $bulk = Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(-level => 'protein_feature');
   my $dba = $self->get_DBAdaptor;
   my $genes = $bulk->export_genes($dba, undef, 'protein_feature', $self->param('xref'));
-  my $compara_name = $self->param('eg')?$self->division():'Multi';
+  my $compara_name = $self->division() ne "vertebrates"?$self->division():'Multi';
   eval {
     my $compara_dba =
       Bio::EnsEMBL::Registry->get_adaptor($compara_name, 'compara', 'GenomeDB');
@@ -143,11 +133,7 @@ sub write_output {  # store and dataflow
 
 sub data_path {
   my ($self) = @_;
-
-  $self->throw("No 'species' parameter specified")
-    unless $self->param('species');
-
-  return $self->get_dir('rdf', $self->param('species'));
+  return $self->get_dir('rdf');
 }
 
 # encapsulate the details of RDF writing
@@ -185,7 +171,7 @@ sub dump_core_rdf {
   # finally write connecting triple to master RDF file
   $core_writer->write(Bio::EnsEMBL::IO::Object::RDF->dataset(
     version         => $self->param('release'),
-    project         => $self->param('eg')?'ensemblgenomes':'ensembl',
+    project         => $self->division() ne "vertebrates"?'ensemblgenomes':'ensembl',
     production_name => $self->production_name
   ));
   $core_writer->close();
@@ -223,7 +209,7 @@ sub create_virtuoso_file {
   my $self = shift;
   my $path = shift; # a .graph file, named after the rdf file.
 
-  my $version_graph_uri = sprintf "http://rdf.ebi.ac.uk/dataset/%s/%d", $self->param('eg')?'ensemblgenomes':'ensembl', $self->param('release');
+  my $version_graph_uri = sprintf "http://rdf.ebi.ac.uk/dataset/%s/%d", $self->division() ne 'vertebrates'?'ensemblgenomes':'ensembl', $self->param('release');
   my $graph_uri = sprintf "%s/%s", $version_graph_uri, $self->production_name;
 
   my $graph_fh = IO::File->new($path, 'w') or die "Cannot open virtuoso file $path: $!\n";

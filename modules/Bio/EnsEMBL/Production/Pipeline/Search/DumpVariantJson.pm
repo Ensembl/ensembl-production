@@ -58,7 +58,7 @@ sub dump {
 sub write_variants {
 	my ( $self, $dba, $offset, $length ) = @_;
 
-	my $sub_dir = $self->get_data_path('json');
+	my $sub_dir = $self->get_dir('json');
 	my $json_file_path;
 	if ( defined $offset ) {
 		$json_file_path =
