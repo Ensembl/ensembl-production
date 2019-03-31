@@ -50,12 +50,11 @@ use warnings FATAL => 'all';
 
 sub default_options {
     my ($self) = @_;
-    #TODO RELEASE 96: add mondo ontology for
     return {
         %{$self->SUPER::default_options},
         'wipe_all'   => 1,
-        'ontologies'    => [ 'go', 'so', 'pato', 'hp', 'vt', 'efo', 'po', 'eo', 'to', 'chebi', 'pr', 'fypo', 'peco',
-                            'bfo', 'bto', 'cl', 'cmo', 'eco', 'mp', 'ogms', 'uo', 'mondo', 'phi' ]
+        'ontologies'    => ['GO', 'SO', 'PATO', 'HP', 'VT', 'EFO', 'PO', 'EO', 'TO', 'CHEBI', 'PR', 'FYPO', 'PECO', 'BFO',
+                          'BTO', 'CL', 'CMO', 'ECO', 'MOD', 'MP', 'OGMS', 'UO', 'MONDO', 'PHI']
     }
 }
 
