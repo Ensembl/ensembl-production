@@ -42,11 +42,15 @@ for TABLE in "${EXCLUDED_TABLES[@]}"
 do :
    IGNORED_TABLES_STRING+=" --ignore-table=${database}.${TABLE}"
 done
-mysqldump -T ${output_dir}/${database} ${IGNORED_TABLES_STRING} --host=$host --user=$user --password=$password --port=$port $database;
+cmd_line_options=""
+if [[ $database =~ .*mart.* ]]; then
+    cmd_line_options=" --skip-lock-tables"
+fi
+mysqldump -T ${output_dir}/${database} ${IGNORED_TABLES_STRING} ${cmd_line_options} --host=$host --user=$user --password=$password --port=$port $database;
 echo "Removing the individual table sql files for $database"
 rm -f *.sql
 echo "Dumping sql file for $database";
-mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} -d $database > ${output_dir}/$database/$database.sql;
+mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database > ${output_dir}/$database/$database.sql;
 echo "Gzipping txt files";
 ls -1 | grep .txt | grep -v LOADER-LOG | while read file; do
         gzip -nc "$file" > "$output_dir/$database/$file.gz"

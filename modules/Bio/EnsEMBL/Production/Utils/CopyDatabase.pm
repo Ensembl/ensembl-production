@@ -192,17 +192,18 @@ sub copy_database {
       }
     } ## end while ( $table_sth->fetch...)
 
-  #Flushing and locking source database
-  $logger->info("Flushing and locking source database");
+  if ($source_db->{dbname} !~ /mart/){
+    #Flushing and locking source database
+    $logger->info("Flushing and locking source database");
 
-  ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
+    ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
+    flush_with_read_lock($source_dbh,\@tables);
 
-  flush_with_read_lock($source_dbh,\@tables);
-
-  #Flushing and locking target database
-  if (defined($target_db_exist) and @tables_flush) {
-    $logger->info("Flushing and locking target database");
-    flush_with_read_lock($target_dbh,\@tables_flush);
+    #Flushing and locking target database
+    if (defined($target_db_exist) and @tables_flush) {
+      $logger->info("Flushing and locking target database");
+      flush_with_read_lock($target_dbh,\@tables_flush);
+    }
   }
 
   my $copy_failed;
@@ -231,14 +232,15 @@ sub copy_database {
       $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path);
     }
   }
+  if ($source_db->{dbname} !~ /mart/){
+    # Unlock tables source and target
+    $logger->info("Unlocking tables on source database");
+    unlock_tables($source_dbh);
 
-  # Unlock tables source and target
-  $logger->info("Unlocking tables on source database");
-  unlock_tables($source_dbh);
-
-  if (defined($target_db_exist)){
-    $logger->info("Unlocking tables on target database");
-    unlock_tables($target_dbh);
+    if (defined($target_db_exist)){
+      $logger->info("Unlocking tables on target database");
+      unlock_tables($target_dbh);
+    }
   }
 
   # Die if copy failed
