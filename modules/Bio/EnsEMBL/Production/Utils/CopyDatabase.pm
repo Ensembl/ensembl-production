@@ -46,6 +46,7 @@ if(!Log::Log4perl->initialized()) {
 sub copy_database {
   my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
 
+  $logger->info("Pre-Copy Checks");
   # Path for MySQL dump
   my $dump_path='/nfs/nobackup/ensembl/ensprod/copy_service/';
   # Get list of tables that we want to copy or skip
@@ -120,6 +121,12 @@ sub copy_database {
 
   $logger->debug("Using source server datadir: $source_dir");
   $logger->debug("Using target server datadir: $target_dir");
+
+  #Check that taget database name doesn't exceed MySQL limit of 64 char
+  if (length($target_db->{dbname}) > 64){
+    $logger->error("Target database name $target_db->{dbname} is exceeding MySQL limit of 64 characters");
+    croak "Target database name $target_db->{dbname} is exceeding MySQL limit of 64 characters";
+  }
 
   my $destination_dir = catdir( $target_dir, $target_db->{dbname} );
   my $staging_dir;
@@ -212,11 +219,11 @@ sub copy_database {
   if (system("ssh $source_db->{host} ls $source_dir >/dev/null 2>&1") == 0 and system("ssh $target_db->{host} ls $target_dir >/dev/null 2>&1") == 0 and !$innodb)  {
     $copy_mysql_files=1;
   }
+  #Check if we have enough space on target server before starting the db copy and make sure that there is 20% free space left after copy
+  check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh);
   if ($copy_mysql_files){
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
-    #Check if we have enough space on target server before starting the db copy
-    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir);
     # Copying mysql database files
     $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
   }
@@ -715,32 +722,45 @@ sub copy_mysql_dump {
 }
 
 # Subroutine to check source database size and target server space available.
-# Added 10% of server space to the calculation to make sure we don't completely fill up the server.
+# Added 20% of server space to the calculation to make sure we don't completely fill up the server.
 sub check_space_before_copy {
-my ($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir) = @_;
-my $threshold = 10;
-#Getting source database size
-my ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
-# Getting target database size if target db exist.
-if (defined($target_db_exist)){
-  my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
-  $source_database_size = $source_database_size - $target_database_size;
-}
+  my ($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh) = @_;
+  my $threshold = 20;
+  my ($source_database_size,$source_database_dir);
+  # If system file copy, get the database file size, else get an estimate of the database size.
+  if ($copy_mysql_files){
+    #Getting source database size
+    ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+    # Getting target database size if target db exist.
+    if (defined($target_db_exist)){
+      my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
+      $source_database_size = $source_database_size - $target_database_size;
+    }
+  }
+  else{
+    $source_database_size = $source_dbh->selectall_arrayref("SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?",{},$source_db->{dbname})->[0][0] or die $source_dbh->errstr;
+  }
 
-#Getting target server space
-my @cmd = `ssh $target_db->{host} df -P $staging_dir`;
-my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+  #Getting target server space
+  my @cmd;
+  if ($copy_mysql_files){
+    @cmd = `ssh $target_db->{host} df -P $staging_dir`;
+  }
+  else{
+    @cmd = `ssh $target_db->{host} df -P /instances/`;
+  }
+  my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
 
-#Calculate extra space to make sure we don't fully fill up the server
-my $threshold_server = ($threshold * $available)/100;
+  #Calculate extra space to make sure we don't fully fill up the server
+  my $threshold_server = ($threshold * $available)/100;
 
-my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
+  my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
 
-if ( $space_left_after_copy == abs($space_left_after_copy) ) {
-    $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
-} else {
-    croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
-}
+  if ( $space_left_after_copy == abs($space_left_after_copy) ) {
+      $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
+  } else {
+      croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
+  }
 
 return;
 }
