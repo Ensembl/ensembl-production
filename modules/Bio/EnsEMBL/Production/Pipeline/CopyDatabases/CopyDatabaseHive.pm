@@ -83,6 +83,9 @@ my $runtime =  duration(time() - $start_time);
 #Clean up if job already exist in result.
 my $sql=q/DELETE FROM result WHERE job_id = ?/;
 $hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
+#Same for job_progress
+my $sql=q/DELETE FROM job_progress WHERE job_id = ?/;
+$hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
 my $output = {
 		  source_db_uri=>$source_db_uri,
 		  target_db_uri=>$target_db_uri,
