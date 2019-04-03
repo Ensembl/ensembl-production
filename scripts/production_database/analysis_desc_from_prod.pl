@@ -14,26 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-# Usage
-# Update a new database with analysis descriptions from the production
-# database.
-
-# Default is to update all analyses
-#perl analysis_desc_from_prod.pl \
-#  $(mysql-devel-1-ensrw details script) \
-#  $(mysql-pan-prod-ensrw details prefix_m) \
-#  --dbname bombyx_mori_core_29_82_1
-  
-# A subset of analyses can be specfied by repeated use of the -logic_name parameter
-#perl analysis_desc_from_prod.pl \
-#  $(mysql-devel-1-ensrw details script) \
-#  $(mysql-pan-prod-ensrw details prefix_m) \
-#  --dbname bombyx_mori_core_29_82_1 \
-#  --logic_name dust \
-#  --logic_name trf
-
-# https://www.ebi.ac.uk/seqdb/confluence/display/EnsGen/Defining+track+display
-
 use strict;
 use warnings;
 
@@ -95,8 +75,6 @@ my $dbc = $new_dba->dbc();
 
 my ($insert, $update, $delete) = (1, 1, 1);
 my $backup = 0;
-
-#Log::Log4perl->easy_init($DEBUG);
 
 my $controlled_tables = {
 external_db => {
@@ -238,11 +216,9 @@ sub update_controlled_table {
 sub update_analysis_description {
   my ( $dbc, $logic_names ) = @_;
 
-  #throw "type is required" if ( !$type );
-
   my $dbname = $dbc->dbname();
 
-  my ( $species, $type ) = ( $dbname =~ m/^amonida_([^_]+_[^_]+)_([^_]+)/ );
+  my ( $species, $type ) = ( $dbname =~ m/^([^_]+_[^_]+)_([^_]+)/ );
 
   throw "Could not determine type from $dbname"
     unless ( $type );
