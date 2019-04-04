@@ -62,7 +62,7 @@ if [ -e "$database.sql" ]; then
     rm -f $database.sql
 fi
 echo "Creating CHECKSUM for $database"
-ls -1 *.gz | while read file; do
+find  -type f -name '*.gz' -printf '%P\n' | while read file; do
     sum=$(sum $file)
     echo -ne "$sum\t$file\n" >> CHECKSUMS
 done
