@@ -75,6 +75,12 @@ sub fetch_input {
   throw "Need a release" unless $self->param('release');
   throw "Need a base_path" unless $self->param('base_path');
 
+  if ($self->division eq 'vertebrates'){
+    throw "No gtfToGenePred executable given" unless $self->param('gtf_to_genepred');
+    $self->assert_executable($self->param('gtf_to_genepred'));
+    throw "No genePredCheck executable given" unless $self->param('gene_pred_check');
+    $self->assert_executable($self->param('gene_pred_check'));
+  }
   return;
 }
 
@@ -145,7 +151,7 @@ sub run {
 
   if ($gene){
     $self->info(sprintf "Checking GTF file %s", $out_file);
-    $self->_gene_pred_check($out_file) unless $self->division ne 'vertebrates';
+    $self->_gene_pred_check($out_file) if $self->division eq 'vertebrates';
   }
 
   $self->info("Dumping GTF README for %s", $self->param('species'));
