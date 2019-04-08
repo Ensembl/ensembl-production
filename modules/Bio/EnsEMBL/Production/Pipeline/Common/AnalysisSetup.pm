@@ -102,7 +102,7 @@ sub fetch_input {
 
 sub run {
     my $self = shift @_;
-    my $species    = $self->param_required('species');
+    #my $species    = $self->param_required('species');
     my $logic_name = $self->param_required('logic_name');
   
     my $dba      = $self->get_DBAdaptor($self->param('db_type'));
@@ -173,8 +173,8 @@ sub production_updates {
     my ($self) = @_;
   
     my $logic_name = $self->param('logic_name');
-    my $species    = $self->param('species'),
-    my $db_type    = $self->param('db_type'),
+    #my $species    = $self->param('species'),
+    #my $db_type    = $self->param('db_type'),
     my $dbc        = $self->production_dbc();
     my $dbh        = $dbc->db_handle();
     my %properties;
@@ -183,7 +183,7 @@ sub production_updates {
     my $sth = $dbh->prepare(
      'SELECT ad.description, ad.display_label, 1, wd.data '.
      'FROM analysis_description ad '.
-     'LEFT OUTER JOIN web_data wd ON ad.default_web_data_id = wd.web_data_id '.
+     'LEFT OUTER JOIN web_data wd ON ad.web_data_id = wd.web_data_id '.
      'WHERE ad.is_current = 1 '.
      'AND ad.logic_name = ? '
    );
@@ -197,51 +197,23 @@ sub production_updates {
    ));
    $sth->fetch();
   
-   # Load species-specific analyses, overwriting the generic info
-   $sth = $dbh->prepare(
-     'SELECT ad.description, ad.display_label, aw.displayable, wd.data '.
-     'FROM analysis_description ad, species s, analysis_web_data aw '.
-     'LEFT OUTER JOIN web_data wd ON aw.web_data_id = wd.web_data_id '.
-     'WHERE ad.analysis_description_id = aw.analysis_description_id '.
-     'AND aw.species_id = s.species_id '.
-     'AND ad.logic_name = ? '.
-     'AND s.db_name = ? '.
-     'AND aw.db_type = ? '
-   );
-   $sth->execute($logic_name, $species, $db_type);
-  
-   $sth->bind_columns(\(
-     $properties{'description'},
-     $properties{'display_label'},
-     $properties{'displayable'},
-     $properties{'web_data'},
-   ));
-  
-   $sth->fetch();
    $properties{'web_data'} = eval ($properties{'web_data'}) if defined $properties{'web_data'};
   
    # Explicitly passed parameters do not get overwritten.
-   foreach my $property (keys %properties) {
-     if (! $self->param_is_defined($property)) {
-      $self->param($property, $properties{$property});
-     }      
-   }
-   if ($dbc->pass) {
-     $sth = $dbh->prepare(
-      'INSERT IGNORE INTO analysis_web_data '.
-        '(analysis_description_id, web_data_id, species_id, db_type, '.
-          'displayable, created_at, modified_at) '.
-      'SELECT '.
-        'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.
-          'ad.default_displayable, NOW(), NOW() '.
-      'FROM analysis_description ad, species s '.
-      'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
-    );
-
-    $sth->execute($db_type, $logic_name, $species);
-  } else {
-    $self->warning("Insufficient permissions to link $species and $logic_name");
-  }
+#   foreach my $property (keys %properties) {
+#     if (! $self->param_is_defined($property)) {
+#      $self->param($property, $properties{$property});
+#     }      
+#   }
+#   if ($dbc->pass) {
+#     $sth = $dbh->prepare(
+#      'INSERT IGNORE INTO analysis_web_data '.  '(analysis_description_id, web_data_id, species_id, db_type, '.  'displayable, created_at, modified_at) '.  'SELECT '.  'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.  'ad.default_displayable, NOW(), NOW() '.  'FROM analysis_description ad, species s '.  'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
+#    );
+#
+#    $sth->execute($db_type, $logic_name, $species);
+#  } else {
+#    $self->warning("Insufficient permissions to link $species and $logic_name");
+#  }
 }
 
 1;
