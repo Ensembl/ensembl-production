@@ -78,14 +78,6 @@ sub param_defaults {
 sub fetch_input {
   my ($self) = @_;
  
-  my $eg = $self->param('eg');
-  $self->param('eg', $eg);
-
-  if($eg){
-     my $base_path  = $self->build_base_directory();
-     $self->param('base_path', $base_path);
-  } 
-
   my $type = $self->param('type');
   throw "No type specified" unless $type;
   throw "Unsupported type '$type' specified" unless $self->param('supported_types')->{$type};

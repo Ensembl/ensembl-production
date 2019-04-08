@@ -77,16 +77,9 @@ sub fetch_input {
   foreach my $key (@required) {
     $self->throw("Need to define a $key parameter") unless $self->param($key);
   }
-  my $eg = $self->param('eg');
-  $self->param('eg', $eg);
-  if($eg){
-    my $base_path  = $self->build_base_directory();
-    $self->param('base_path', $base_path);
-    my $release = $self->param('eg_version');
-    $self->param('release', $release);
-    my $prev_release = $release - 1;
-    $self->param('previous_release', $prev_release);
-  }
+  my $release = $self->param('release');
+  my $prev_release = $release - 1;
+  $self->param('previous_release', $prev_release);
   return;
 }
 

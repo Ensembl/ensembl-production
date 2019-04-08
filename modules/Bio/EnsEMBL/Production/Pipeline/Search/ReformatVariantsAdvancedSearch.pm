@@ -43,7 +43,7 @@ sub run {
   return unless defined $variants_file;
 
   my $species          = $self->param_required('species');
-  my $sub_dir          = $self->get_data_path('adv_search');
+  my $sub_dir          = $self->get_dir('adv_search');
   my $variants_file_out = $sub_dir . '/' . $species . '_variants.json';
   my $genome_file      = $self->param_required('genome_file');
   my $reformatter =
