@@ -220,7 +220,7 @@ sub copy_database {
     $copy_mysql_files=1;
   }
   #Check if we have enough space on target server before starting the db copy and make sure that there is 20% free space left after copy
-  check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh);
+  check_space_before_copy($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh);
   if ($copy_mysql_files){
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
@@ -724,7 +724,7 @@ sub copy_mysql_dump {
 # Subroutine to check source database size and target server space available.
 # Added 20% of server space to the calculation to make sure we don't completely fill up the server.
 sub check_space_before_copy {
-  my ($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh) = @_;
+  my ($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh) = @_;
   my $threshold = 20;
   my ($source_database_size,$source_database_dir);
   # If system file copy, get the database file size, else get an estimate of the database size.
@@ -742,13 +742,7 @@ sub check_space_before_copy {
   }
 
   #Getting target server space
-  my @cmd;
-  if ($copy_mysql_files){
-    @cmd = `ssh $target_db->{host} df -P $staging_dir`;
-  }
-  else{
-    @cmd = `ssh $target_db->{host} df -P /instances/`;
-  }
+  my @cmd = `ssh $target_db->{host} df -P /instances/`;
   my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
 
   #Calculate extra space to make sure we don't fully fill up the server
