@@ -208,12 +208,14 @@ sub pipeline_analyses {
              -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'process_alignment',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ProcessAlignment',
              -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'rnacentral_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::RNAcentralMapping',
@@ -236,12 +238,14 @@ sub pipeline_analyses {
              -rc_name    => 'mem',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping',
              -rc_name    => 'mem',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'notify_by_email',
              -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
