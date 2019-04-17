@@ -82,34 +82,35 @@ sub param_defaults {
 
 sub fetch_input {
     my $self = shift @_;
-  
+
     my $logic_name = $self->param_required('logic_name');
-    $self->param('program', $logic_name) unless $self->param_is_defined('program');
-  
-    if (!$self->param('delete_existing')) {
-      $self->param('logic_rename', "$logic_name\_bkp") unless $self->param_is_defined('logic_rename');
+    $self->param( 'program', $logic_name )
+      unless $self->param_is_defined('program');
+
+    if ( !$self->param('delete_existing') ) {
+        $self->param( 'logic_rename', "$logic_name\_bkp" )
+          unless $self->param_is_defined('logic_rename');
     }
-  
-    if ($self->param('db_backup_required')) {
-      my $db_backup_file = $self->param_required('db_backup_file');
-    
-      if (!-e $db_backup_file) {
-        $self->throw("Database backup file '$db_backup_file' does not exist");
-      }
+
+    if ( $self->param('db_backup_required') ) {
+        my $db_backup_file = $self->param_required('db_backup_file');
+
+        if ( !-e $db_backup_file ) {
+            $self->throw(
+                "Database backup file '$db_backup_file' does not exist");
+        }
     }
-  
 }
 
 sub run {
     my $self = shift @_;
-    #my $species    = $self->param_required('species');
     my $logic_name = $self->param_required('logic_name');
-  
+
     my $dba      = $self->get_DBAdaptor($self->param('db_type'));
     my $dbh      = $dba->dbc->db_handle;
     my $aa       = $dba->get_adaptor('Analysis');
     my $analysis = $aa->fetch_by_logic_name($logic_name);
-  
+
     if (defined $analysis) {
       if ($self->param('delete_existing')) {
         my $analysis_id = $analysis->dbID;
@@ -133,20 +134,20 @@ sub run {
         }
       }
     }
-  
+
     if ($self->param('production_lookup')) {
       $self->production_updates;
     }
-  
+
     my $new_analysis = $self->create_analysis;
     $aa->store($new_analysis);
- 
+
    $dba->dbc->disconnect_if_idle(); 
 }
 
 sub create_analysis {
     my ($self) = @_;
-  
+
     my $analysis = Bio::EnsEMBL::Analysis->new(
      -logic_name      => $self->param('logic_name'),
      -db              => $self->param('db'),
@@ -165,20 +166,17 @@ sub create_analysis {
      -displayable     => $self->param('displayable'),
      -web_data        => $self->param('web_data'),
    );
-  
+
 return $analysis;
 }
 
 sub production_updates {
     my ($self) = @_;
-  
     my $logic_name = $self->param('logic_name');
-    #my $species    = $self->param('species'),
-    #my $db_type    = $self->param('db_type'),
     my $dbc        = $self->production_dbc();
     my $dbh        = $dbc->db_handle();
     my %properties;
-  
+
     # Load generic, non-species-specific, analyses
     my $sth = $dbh->prepare(
      'SELECT ad.description, ad.display_label, 1, wd.data '.
@@ -188,7 +186,7 @@ sub production_updates {
      'AND ad.logic_name = ? '
    );
    $sth->execute($logic_name);
-  
+
    $sth->bind_columns(\(
      $properties{'description'},
      $properties{'display_label'},
@@ -196,24 +194,15 @@ sub production_updates {
      $properties{'web_data'},
    ));
    $sth->fetch();
-  
+
    $properties{'web_data'} = eval ($properties{'web_data'}) if defined $properties{'web_data'};
-  
+
    # Explicitly passed parameters do not get overwritten.
-#   foreach my $property (keys %properties) {
-#     if (! $self->param_is_defined($property)) {
-#      $self->param($property, $properties{$property});
-#     }      
-#   }
-#   if ($dbc->pass) {
-#     $sth = $dbh->prepare(
-#      'INSERT IGNORE INTO analysis_web_data '.  '(analysis_description_id, web_data_id, species_id, db_type, '.  'displayable, created_at, modified_at) '.  'SELECT '.  'ad.analysis_description_id, ad.default_web_data_id, s.species_id, ?, '.  'ad.default_displayable, NOW(), NOW() '.  'FROM analysis_description ad, species s '.  'WHERE ad.logic_name = ? AND ad.is_current = 1 AND s.db_name = ?;'
-#    );
-#
-#    $sth->execute($db_type, $logic_name, $species);
-#  } else {
-#    $self->warning("Insufficient permissions to link $species and $logic_name");
-#  }
+   foreach my $property (keys %properties) {
+     if (! $self->param_is_defined($property)) {
+      $self->param($property, $properties{$property});
+     }
+   }
 }
 
 1;
