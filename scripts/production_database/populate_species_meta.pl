@@ -236,15 +236,15 @@ SQL
 
 sub _meta {
   my ( $self, $db ) = @_;
-  my $production = $self->_metadata($db);
+  my $metadata = $self->_metadata($db);
   my $taxonomy   = $self->_taxonomy($db);
-  $production->{'species.classification'} = $taxonomy;
+  $metadata->{'species.classification'} = $taxonomy;
 
   $self->v('Updating meta');
   my $dba = $self->_core_dba($db);
   my $mc  = $dba->get_MetaContainer();
-  foreach my $key ( keys %{$production} ) {
-    my $array = wrap_array( $production->{$key} );
+  foreach my $key ( keys %{$metadata} ) {
+    my $array = wrap_array( $metadata->{$key} );
     $mc->delete_key($key);
     foreach my $value ( @{$array} ) {
       $mc->store_key_value( $key, $value );
