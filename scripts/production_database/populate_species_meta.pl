@@ -52,13 +52,13 @@ sub args {
     mhost     => '',
     mport     => '',
     muser     => '',
-    mdatabase => '',
+    mdatabase => 'ensembl_metadata',
 
     # Taxonomy database location:
     thost => '',
     tuser => '',
     tport => '',
-    tdatabase => '',
+    tdatabase => 'ncbi_taxonomy',
 
     # User database location (default values):
     port => '',
@@ -150,9 +150,9 @@ sub databases {
   return $dbs;
 }
 
-sub _query_production {
+sub _query_metadata {
     my ( $self, $sql, @arguments ) = @_;
-    my $dbc   = $self->_production_dbc();
+    my $dbc   = $self->_metadata_dbc();
     my $h     = $dbc->sql_helper();
     
     my %hash;
@@ -163,30 +163,27 @@ sub _query_production {
       -CALLBACK => sub {
         my ($row) = @_;
         my $i = 0;
-        $hash{'species.common_name'}      = $row->[ $i++ ];
         $hash{'species.display_name'}     = $row->[ $i++ ];
         $hash{'species.scientific_name'}  = $row->[ $i++ ];
         $hash{'species.production_name'}  = $row->[ $i++ ];
         $hash{'species.url'}              = $row->[ $i++ ];
         $hash{'species.taxonomy_id'}      = $row->[ $i++ ];
-        $hash{'species.stable_id_prefix'} = $row->[ $i++ ];
-        $hash{'species.division'} = $row->[ $i++ ];
         return;
       }
     );
     return \%hash;
 }
 
-sub _production {
+sub _metadata {
   my ( $self, $db ) = @_;
-  $self->v('Querying production');
-  my $dbc   = $self->_production_dbc();
+  $self->v('Querying Metadata');
+  my $dbc   = $self->_metadata_dbc();
   my $h     = $dbc->sql_helper();
     
   my $taxon = $self->_db_to_taxon($db);
   my $production_name = $self->_db_to_production_name($db);
-  my $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where production_name =?';
-  my $hash_ref = $self->_query_production($sql,$production_name);
+  my $sql = 'select o.display_name, o.scientific_name, o.name, o.url_name, o.taxonomy_id from organism o JOIN genome g USING(organism_id) JOIN data_release r USING(data_release_id) where r.is_current=1 and o.name=?';
+  my $hash_ref = $self->_query_metadata($sql,$production_name);
   
   if (!exists $hash_ref->{'species.production_name'}) {
       warning("Failed to find original taxon id for $db. Attempting to obtain by DB name instead");
@@ -194,8 +191,8 @@ sub _production {
       # regex chops tail end off core-like databases. This must be extended if new naming schemes are used.                               
       $db_name =~ s/_(core|otherfeatures|vega|rnaseq|cdna)_.+?_.+?$//;
       warning ("Guessed db_name: ".$db_name);
-      $sql = 'select s.common_name, s.web_name, s.scientific_name, s.production_name, s.url_name, s.taxon, s.species_prefix, d.name from species s JOIN division_species sd USING(species_id) JOIN division d USING(division_id) where taxon =?';
-      $hash_ref = $self->_query_production($sql,$db_name);
+      $sql = 'select o.display_name, o.scientific_name, o.name, o.url_name, o.taxonomy_id from organism o JOIN genome g USING(organism_id) JOIN data_release r USING(data_release_id) where r.is_current=1 and taxononomy_id=?';
+      $hash_ref = $self->_query_metadata($sql,$db_name);
       # Update $taxon to reflect new guessed id
       $taxon = $hash_ref->{'species.taxonomy_id'};
       warning("Chosen taxon id: ".$taxon);
@@ -205,7 +202,7 @@ sub _production {
   
   
   $hash_ref->{'species.alias'} = $h->execute_simple(
-    -SQL => 'select sa.alias from species_alias sa join species s using (species_id) where sa.is_current = 1 and s.production_name =?',
+    -SQL => 'select oa.alias from organism_alias oa join organism o using (organism_id) where o.name =?',
     -PARAMS => [$hash_ref->{'species.production_name'}],
   );
   return $hash_ref;
@@ -239,7 +236,7 @@ SQL
 
 sub _meta {
   my ( $self, $db ) = @_;
-  my $production = $self->_production($db);
+  my $production = $self->_metadata($db);
   my $taxonomy   = $self->_taxonomy($db);
   $production->{'species.classification'} = $taxonomy;
 
@@ -395,7 +392,7 @@ sub _core_dbc {
   return Bio::EnsEMBL::DBSQL::DBConnection->new(%args);
 }
 
-sub _production_dbc {
+sub _metadata_dbc {
   my ($self) = @_;
   my $o      = $self->{opts};
   my %args   = (
@@ -482,23 +479,23 @@ Password for the core database(s)
 
 =item B<-mh|--mhost>
 
-Host for the production database
+Host for the metadata database
 
 =item B<-mP|--mport>
 
-Port for the production database
+Port for the metadata database
 
 =item B<-mu|--muser>
 
-User for the production database
+User for the metadata database
 
 =item B<-mp|--mpass>
 
-Pass for the production database
+Pass for the metadata database
 
 =item B<-md|--mdatabase>
 
-Database name for the production database
+Database name for the metadata database
 
 =item B<-th|--thost>
 
