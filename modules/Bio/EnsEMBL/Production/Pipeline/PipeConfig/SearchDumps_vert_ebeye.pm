@@ -30,7 +30,7 @@ and at least 100 GB of scratch space.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_ebeye_only;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_vert_ebeye;
 use strict;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 #use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
@@ -192,7 +192,6 @@ sub pipeline_analyses {
             -flow_into  =>
                 {
                     1 => [
-                        'ReformatGenomeEBeye',
                         'ReformatVariantsEBeye',
                     ]
                 }

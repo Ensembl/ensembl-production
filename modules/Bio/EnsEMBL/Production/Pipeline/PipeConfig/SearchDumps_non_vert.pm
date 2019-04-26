@@ -30,7 +30,7 @@ and at least 100 GB of scratch space.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_eg_ebeye;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_non_vert;
 use strict;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 #use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
