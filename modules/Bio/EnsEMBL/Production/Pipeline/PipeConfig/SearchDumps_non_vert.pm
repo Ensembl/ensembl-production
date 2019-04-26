@@ -387,11 +387,11 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-        '32g' => { LSF => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' },
-        '16g' => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"' },
-        '8g'  => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=8000]"' },
-        '4g'  => { LSF => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"' },
-        '1g'  => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' } };
+        '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
+        '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
+        '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
+        '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
+        '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
 }
 
 1;

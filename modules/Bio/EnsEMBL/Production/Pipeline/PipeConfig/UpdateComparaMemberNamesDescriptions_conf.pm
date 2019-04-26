@@ -76,7 +76,7 @@ sub resource_classes {
     return {
         %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
 
-        '500Mb_job'    => { 'LSF' => [' -q production-rh7 -C0 -M500 -R"select[mem>500] rusage[mem=500]"'] },
+        '500Mb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M500 -R"select[mem>500] rusage[mem=500]"'] },
     };
 }
 

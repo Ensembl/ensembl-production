@@ -499,18 +499,25 @@ sub pipeline_analyses {
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-      'default'                 => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'                     => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"'},
-      '2Gb_mem'         => {'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"' },
-      '24Gb_mem'        => {'LSF' => '-q production-rh7 -M 24000 -R "rusage[mem=24000]"' },
-      '250Mb_mem'       => {'LSF' => '-q production-rh7 -M 250 -R "rusage[mem=250]"' },
-      '500Mb_mem'       => {'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"' },
-      '1Gb_mem'             => {'LSF' => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' },
-      '8Gb_mem'             => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"' },
-      'urgent_hcluster' => {'LSF' => '-q production-rh7' },
-    }
+  my $self = shift;
+  return {
+    'default' =>
+      { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"' },
+    'mem' => { 'LSF' => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' },
+    '2Gb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"' },
+    '24Gb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 24000 -R "rusage[mem=24000]"' },
+    '250Mb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 250 -R "rusage[mem=250]"' },
+    '500Mb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"' },
+    '1Gb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' },
+    '8Gb_mem' =>
+      { 'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"' },
+    'urgent_hcluster' => { 'LSF' => '-q production-rh74' },
+  };
 }
 
 1;
