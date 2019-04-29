@@ -391,8 +391,8 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'mem_high'    => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"'},
-    'mem_scratch' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
+    'mem_high'    => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
+    'mem_scratch' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
   }
 }
 

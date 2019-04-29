@@ -257,9 +257,9 @@ sub resource_classes {
     my $self = shift;
     return {
       'default' => { 'LSF' => ''},
-      'small'   => { 'LSF' => '-q production-rh7 -M 200 -R "rusage[mem=200]"'},
-      'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
+      'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
+      'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
+      'mem'     => { 'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"'},
     }
 }
 
