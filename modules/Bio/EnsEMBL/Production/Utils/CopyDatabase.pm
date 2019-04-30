@@ -78,8 +78,8 @@ sub copy_database {
   }
 
 
-  if ((defined $update && defined $drop) || (defined $opt_only_tables && defined $drop)) {
-    croak "You can't drop the target database when using the --update and --only_tables options.";
+  if (defined $update && defined $drop) {
+    croak "You can't drop the target database when using the --update options.";
   }
 
   if (!defined($source_db->{dbname}) || !defined($target_db->{dbname})) {
@@ -140,7 +140,7 @@ sub copy_database {
       $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
     }
     # If we update or copy some tables, we need the target database on target server
-    elsif ($update || $opt_only_tables){
+    elsif ($update){
       1;
     }
     # If drop not enabled, die
@@ -176,6 +176,11 @@ sub copy_database {
 
       if ( defined($opt_only_tables) && !exists( $only_tables{$table} ) )
       {
+        if ( defined($engine) ) {
+          if ( $engine eq 'InnoDB' ) {
+            $innodb=1;
+          }
+        }
         next TABLE;
       }
       elsif ( defined($opt_skip_tables) && exists( $skip_tables{$table} ) )
@@ -229,14 +234,14 @@ sub copy_database {
   }
   #Using MySQL dump if the database is innodb or we don't have access to the MySQL server filesystem
   else{
-    if ($update || $opt_only_tables){
+    if ($update){
       #disconnect from MySQL server
       $source_dbh->disconnect();
       $target_dbh->disconnect();
-      croak "We don't have file system access on these server so we can't use the --update or --only_tables options";
+      croak "We don't have file system access on these server so we can't use the --update options";
     }
     else{
-      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path);
+      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables);
     }
   }
   if ($source_db->{dbname} !~ /mart/){
@@ -275,7 +280,7 @@ sub copy_database {
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
   if (!defined($target_db_exist) and $copy_mysql_files) {
-      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh);
+      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, \%only_tables);
   }
  
   #Flush tables
@@ -341,7 +346,7 @@ sub create_temp_dir {
   if (defined($target_db_exist)) {
     # If we update the database, we don't need a tmp dir
     # We will use the dest dir instead of staging dir.
-    if ($update || $opt_only_tables){
+    if ($update){
       $staging_dir=$destination_dir;
     }
     else{
@@ -352,11 +357,11 @@ sub create_temp_dir {
   # If database don't exist on source server
   else {
     # If option update is defined, the database need to exist on target server.
-    if ($update || $opt_only_tables){
+    if ($update){
       #disconnect from MySQL server
       $source_dbh->disconnect();
       $target_dbh->disconnect();
-      croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
+      croak "The database need to exist on $target_db->{host} if you want to use the --update options"
     }
     else {
       # Create the staging dir in server temp directory
@@ -501,7 +506,7 @@ sub mysqlcheck_db {
 }
 
 sub move_database {
-  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh)=@_;
+  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, $only_tables)=@_;
 
   # Move table files into place in and remove the staging directory.  We already
   # know that the destination directory does not exist.
@@ -523,23 +528,33 @@ sub move_database {
     croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
   }
 
-  # Moving tables
-  foreach my $table (@{$tables}) {
-    my @files;
-    foreach my $file_extention ("MYD", "MYI", "frm"){
-      push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
+  my @files;
+  # Generating list of MYISAM tables
+  if (defined($opt_only_tables)){
+    foreach my $key (sort(keys %{$only_tables})) {
+      foreach my $file_extention ("MYD", "MYI", "frm"){
+        push @files, catfile( $staging_dir, sprintf( "%s.%s", $key, $file_extention));
+      }
     }
+  }
+  else{
+    foreach my $table (@{$tables}) {
+      foreach my $file_extention ("MYD", "MYI", "frm"){
+        push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
+      }
+    }
+  }
 
-    $logger->debug( "Moving $table");
 
   FILE:
     foreach my $file (@files) {
+      #Moving tables
+      $logger->debug( "Moving $file");
       if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
         croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
         next FILE;
       }
     }
-  }
 
   # Moving views
   foreach my $view (@{$views}) {
@@ -630,7 +645,9 @@ sub copy_mysql_files {
   # Add TCP with arcfour encryption, TCP does go pretty fast (~110 MB/s) and is a better choice in LAN situation.
   push(@copy_cmd, '-e ssh');
 
+  # If we have a subset of tables to copy
   if ( defined($opt_only_tables) ) {
+    push( @copy_cmd, '--include=db.opt' );
     push( @copy_cmd, '--ignore-times' );
 
     push( @copy_cmd,
@@ -643,6 +660,7 @@ sub copy_mysql_files {
 
     push( @copy_cmd, "--exclude=*" );
   }
+  # If we have a subset of tables to skip
   elsif ( defined($opt_skip_tables) ) {
     push( @copy_cmd, '--include=db.opt' );
 
@@ -692,21 +710,28 @@ sub copy_mysql_files {
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
-  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path) = @_;
+  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables) = @_;
   my $copy_failed=0;
   my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
+  my @dump_cmd = ("mysqldump", "--max_allowed_packet=1024M", "--skip-lock-tables", "--host=$source_db->{host}", "--user=$source_db->{user}", "--port=$source_db->{port}");
+  # IF we have specified a password
   if (defined $source_db->{pass}){
-    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
-      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
-      $copy_failed = 1;
-    }
+    push (@dump_cmd, "--password=$source_db->{pass}");
   }
-  else{
-    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
-      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
-      $copy_failed = 1;
-    }
+  # If we have a list of tables to skip
+  if ( defined($opt_skip_tables)){
+    push( @dump_cmd, map { sprintf( "--ignore-table=%s.%s", $source_db->{dbname},$_ ) } keys(%{$skip_tables}) );
+  }
+  # Adding database name
+  push (@dump_cmd, "$source_db->{dbname}");
+  # If we have defined a list of table to copy
+  if ( defined($opt_only_tables) ) {
+    push( @dump_cmd, map { sprintf( "%s", $_ ) } keys(%{$only_tables}) );
+  }
+  if ( system("@dump_cmd > $file") != 0 ) {
+    $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
+    $copy_failed = 1;
   }
   $logger->info("Creating database $target_db->{dbname} on $target_db->{host}");
   $target_dbh->do("CREATE DATABASE $target_db->{dbname}") or die $target_dbh->errstr;
