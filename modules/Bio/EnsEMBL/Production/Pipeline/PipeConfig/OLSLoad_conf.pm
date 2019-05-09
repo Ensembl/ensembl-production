@@ -65,7 +65,8 @@ sub default_options {
       'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
       'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
       'db_url'        => $self->o('db_host') . $self->o('db_name'),
-      'ontologies'    => []
+      'ontologies'    => [],
+      'skip_phi'      => 0
   }
 }
 
@@ -140,7 +141,7 @@ sub pipeline_analyses {
           -flow_into  => {
               # To "fold", the fan requires access to its parent's parameters, via either INPUT_PLUS or the parameter stack
               '2->A' => { 'ontology_load' => INPUT_PLUS },
-              'A->1' => WHEN('#_list_exhausted#' => [ 'compute_closure' ], ELSE [ 'ontologies_factory' ])
+              'A->1' => WHEN('#_list_exhausted#' => [ 'phibase_init' ], ELSE [ 'ontologies_factory' ])
           }
       },
       {
@@ -170,11 +171,6 @@ sub pipeline_analyses {
           },
       },
       {
-          -logic_name      => 'dummy',
-          -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-          -max_retry_count => 1,
-      },
-      {
           -logic_name        => 'ontology_term_load',
           -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
           -language          => 'python3',
@@ -194,6 +190,43 @@ sub pipeline_analyses {
           -rc_name         => 'default',
           -parameters      => {
               -output_dir => $self->o('output_dir')
+          }
+      },
+      {
+          -logic_name      => 'phibase_init',
+          -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+          -max_retry_count => 1,
+          -flow_into       => {
+              1 => WHEN(
+                  '#skip_phi#' => [ 'compute_closure' ],
+                  ELSE [ 'phibase_load_factory' ]
+              )
+          }
+      },
+      {
+          -logic_name => 'phibase_load_factory',
+          -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+          -parameters => {
+              'inputlist'     => [ 0 .. 9999 ],
+              'step'          => 2000,
+              'ontology_name' => "PHI",
+              'column_names'  => [ 'term_index' ]
+          },
+          -flow_into  => {
+              '2->A' => [ 'phibase_load' ],
+              'A->1' => [ 'compute_closure' ]
+          }
+      },
+      {
+          -logic_name      => 'phibase_load',
+          -module          => 'bio.ensembl.ontology.hive.OLSLoadPhiBaseIdentifier',
+          -language        => 'python3',
+          -max_retry_count => 1,
+          -rc_name         => 'default',
+          -parameters      => {
+              'ontology_name' => "PHI",
+              'db_url'        => $self->o('db_url'),
+              'output_dir'    => $self->o('output_dir')
           }
       },
       {
