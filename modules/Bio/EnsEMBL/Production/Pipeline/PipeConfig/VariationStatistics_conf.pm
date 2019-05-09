@@ -81,6 +81,7 @@ sub pipeline_analyses {
                                         'SnpDensity',
                                       ],
                             'A->1' => ['GenomeStats'],
+                          },
       -rc_name         => 'normal',
     },
 
