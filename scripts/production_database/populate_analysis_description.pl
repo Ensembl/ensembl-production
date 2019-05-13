@@ -164,49 +164,32 @@ if ( $do_drop_backup_table && !defined($dumppath) ) {
 }
 
 # Fetch all data from the master database.
-my %data;
+my %mdata;
 {
-  my $dsn = sprintf( 'DBI:mysql:host=%s;port=%d;database=%s',
-                     $mhost, $mport, $mdbname );
-  my $dbh = DBI->connect( $dsn, $muser, $mpass,
-                          { 'PrintError' => 1, 'RaiseError' => 1 } );
+  my ($logic_name, %properties);
+  my $dsn = "DBI:mysql:host=$mhost;port=$mport;database=$mdbname";
+  my $dbh = DBI->connect($dsn, $muser, $mpass, { 'PrintError'=>1, 'RaiseError'=>1 });
 
-  my $sth =
-    $dbh->prepare( 'SELECT full_db_name, logic_name, ' .
-                  'description, display_label, displayable, web_data ' .
-                  'FROM full_analysis_description' );
-
+  my $sth = $dbh->prepare(
+    'SELECT ad.logic_name, ad.description, ad.display_label, wd.data, ad.displayable '.
+    'FROM analysis_description ad '.
+    'LEFT OUTER JOIN web_data wd ON ad.web_data_id = wd.web_data_id '.
+    'WHERE ad.is_current = 1;'
+  );
   $sth->execute();
 
-  my ( $full_db_name, $logic_name, %hash );
-  $sth->bind_columns( \( $full_db_name,        $logic_name,
-                         $hash{'description'}, $hash{'display_label'},
-                         $hash{'displayable'}, $hash{'web_data'} ) );
+  $sth->bind_columns(\(
+    $logic_name,
+    $properties{'description'},
+    $properties{'display_label'},
+    $properties{'web_data'},
+    $properties{'displayable'}
+  ));
 
   while ( $sth->fetch() ) {
-    $data{$full_db_name}{$logic_name} = { %{ \%hash } };
+    $mdata{$logic_name} = { %properties };
   }
 
-  if (defined $dbtype) {
-    my $sth =
-        $dbh->prepare( 'SELECT db_name, logic_name, '
-                    . 'description, display_label, displayable, data '
-                    . 'FROM analysis_description ad, species s, analysis_web_data aw '
-                    . 'LEFT JOIN web_data wd '
-                    . 'ON wd.web_data_id = aw.web_data_id '
-                    . 'WHERE ad.analysis_description_id = aw.analysis_description_id AND '
-                    . 'aw.species_id = s.species_id AND '
-                    . 'aw.db_type = "' . $dbtype . '" AND '
-                    . 'db_name =?' );
-    $sth->execute($species) ;
-    my ( $db_name, $logic_name, %hash) ;
-    $sth->bind_columns( \( $db_name,        $logic_name,
-                         $hash{'description'}, $hash{'display_label'},
-                         $hash{'displayable'}, $hash{'web_data'} ) );
-    while ( $sth->fetch() ) {
-      $data{$db_name}{$logic_name} = { %{ \%hash } };
-    }
-  }
   $dbh->disconnect();
 }
 
@@ -231,17 +214,6 @@ my %data;
 
   while ( $sth->fetch() ) {
     if ( defined($dbpattern) && $dbname !~ /$dbpattern/ ) { next }
-
-    my $dbdata = $data{$dbname};
-    if (defined $species) {
-      $dbdata = $data{$species};
-    }
-    if ( !defined($dbdata) ) {
-      printf( "ERROR: Can not find data for database '%s' " .
-                "(skipping it)!\n",
-              $dbname );
-      next;
-    }
 
     print( '=' x 80, "\n" );
     printf( "\t%s\n", $dbname );
@@ -304,7 +276,7 @@ my %data;
     $sth2->bind_columns( \( $logic_name, $analysis_id ) );
 
     while ( $sth2->fetch() ) {
-      $dbdata->{ lc($logic_name) }{'analysis_id'} = $analysis_id;
+      $mdata{ lc($logic_name) }{'analysis_id'} = $analysis_id;
     }
 
     # Insert into the empty analysis_description table.
@@ -314,27 +286,27 @@ my %data;
                    'displayable, web_data) ' . 'VALUES (?, ?, ?, ?, ?)',
                  $full_table_name ) );
 
-    foreach my $logic_name ( keys( %{$dbdata} ) ) {
-      if ( !exists( $dbdata->{$logic_name}{'description'} ) ) {
+    foreach my $logic_name ( keys( %mdata ) ) {
+      if ( !exists( $mdata{$logic_name}{'description'} ) ) {
         printf( "ERROR: Missing production database entry " .
                   "for logic name '%s'\n",
                 $logic_name );
       }
-      elsif ( !exists( $dbdata->{$logic_name}{'analysis_id'} ) ) {
+      elsif ( !exists( $mdata{$logic_name}{'analysis_id'} ) ) {
         printf( "WARNING: Expected to find analysis entry " .
                   "for logic name '%s'\n",
                 $logic_name );
       }
       else {
-        $sth2->bind_param( 1, $dbdata->{$logic_name}{'analysis_id'},
+        $sth2->bind_param( 1, $mdata{$logic_name}{'analysis_id'},
                            SQL_INTEGER );
-        $sth2->bind_param( 2, $dbdata->{$logic_name}{'description'},
+        $sth2->bind_param( 2, $mdata{$logic_name}{'description'},
                            SQL_VARCHAR );
-        $sth2->bind_param( 3, $dbdata->{$logic_name}{'display_label'},
+        $sth2->bind_param( 3, $mdata{$logic_name}{'display_label'},
                            SQL_VARCHAR );
-        $sth2->bind_param( 4, $dbdata->{$logic_name}{'displayable'},
+        $sth2->bind_param( 4, $mdata{$logic_name}{'displayable'},
                            SQL_INTEGER );
-        $sth2->bind_param( 5, $dbdata->{$logic_name}{'web_data'},
+        $sth2->bind_param( 5, $mdata{$logic_name}{'web_data'},
                            SQL_VARCHAR );
 
         $sth2->execute();
