@@ -41,29 +41,31 @@ MTMP_variation_set_variation
 for TABLE in "${EXCLUDED_TABLES[@]}"
 do :
    IGNORED_TABLES_STRING+=" --ignore-table=${database}.${TABLE}"
+   IGNORED_TABLES_SHOW+="'${TABLE}',"
 done
+IGNORED_TABLES_SHOW=${IGNORED_TABLES_SHOW%?}
 cmd_line_options=""
+
 if [[ $database =~ .*mart.* ]]; then
     cmd_line_options=" --skip-lock-tables"
 fi
-mysqldump -T ${output_dir}/${database} ${IGNORED_TABLES_STRING} ${cmd_line_options} --host=$host --user=$user --password=$password --port=$port $database;
-echo "Removing the individual table sql files for $database"
-rm -f *.sql
+
+query="show tables WHERE tables_in_${database} NOT IN (${IGNORED_TABLES_SHOW})"
+echo $query
 echo "Dumping sql file for $database";
-mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database > ${output_dir}/$database/$database.sql;
-echo "Gzipping txt files";
-ls -1 | grep .txt | grep -v LOADER-LOG | while read file; do
-        gzip -nc "$file" > "$output_dir/$database/$file.gz"
-        rm -f $file
+
+mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database | gzip > ${output_dir}/$database/$database.sql.gz
+
+for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
+do
+    echo "DUMPING TABLE: $database.$t"
+    mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --silent --raw --skip-column-names > ${output_dir}/$database/$t.txt
+    sed -i -e 's/NULL/\\N/g' ${output_dir}/$database/$t.txt
+    gzip ${output_dir}/$database/$t.txt
 done
-if [ -e "$database.sql" ]; then
-    echo "Gzipping existing $database.sql file"
-    gzip -nc $database.sql > "$output_dir/$database/$database.sql.gz"
-    rm -f $database.sql
-fi
+
 echo "Creating CHECKSUM for $database"
 find  -type f -name '*.gz' -printf '%P\n' | while read file; do
     sum=$(sum $file)
     echo -ne "$sum\t$file\n" >> CHECKSUMS
 done
-

@@ -53,7 +53,7 @@ sub default_options {
         'base_dir'  => $self->o('ensembl_cvs_root_dir'),
         'pipeline_name'  => 'mysql_dumping',
         'division' => [],
-        'base_output_dir'     	   => '/nfs/nobackup/dba/sysmysql/',
+        'base_output_dir' => '/nfs/production/ensembl/production/',
         'release' => $self->o('release'),
         ## 'DbDumpingFactory' parameters
         'database'    => [],
