@@ -140,7 +140,7 @@ sub copy_database {
       $target_dbh->do("DROP DATABASE IF EXISTS $target_db->{dbname};") or die $target_dbh->errstr;
     }
     # If we update or copy some tables, we need the target database on target server
-    elsif ($update){
+    elsif ($update || $opt_only_tables){
       1;
     }
     # If drop not enabled, die
@@ -346,7 +346,7 @@ sub create_temp_dir {
   if (defined($target_db_exist)) {
     # If we update the database, we don't need a tmp dir
     # We will use the dest dir instead of staging dir.
-    if ($update){
+    if ($update || $opt_only_tables){
       $staging_dir=$destination_dir;
     }
     else{
@@ -354,7 +354,7 @@ sub create_temp_dir {
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
   }
-  # If database don't exist on source server
+  # If database doesn't exist on target server
   else {
     # If option update is defined, the database need to exist on target server.
     if ($update){
