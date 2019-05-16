@@ -21,12 +21,17 @@ user=$4
 password=$5
 port=$6
 
-if [ -d "$output_dir/$database" ]; then
+if [ -d "$output_dir/$database" ]
+ then
     rm -r "$output_dir/$database"
 fi
+
 mkdir -m 777 -p "$output_dir/$database"
+
 cd "$output_dir/$database"
+
 echo "Dumping $database";
+
 EXCLUDED_TABLES=(
 MTMP_probestuff_helper
 MTMP_evidence
@@ -51,7 +56,7 @@ if [[ $database =~ .*mart.* ]]; then
 fi
 
 query="show tables WHERE tables_in_${database} NOT IN (${IGNORED_TABLES_SHOW})"
-echo $query
+# echo $query
 echo "Dumping sql file for $database";
 
 mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database | gzip > ${output_dir}/$database/$database.sql.gz
@@ -60,8 +65,10 @@ for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$por
 do
     echo "DUMPING TABLE: $database.$t"
     mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --silent --raw --skip-column-names > ${output_dir}/$database/$t.txt
-    sed -i -e 's/NULL/\\N/g' ${output_dir}/$database/$t.txt
-    gzip ${output_dir}/$database/$t.txt
+    sed -i -e '/NULL/ s//\\N/g' ${output_dir}/$database/$t.txt
+    gzip < ${output_dir}/$database/$t.txt > ${output_dir}/$database/$t.txt.gz
+    # Remove the txt file if it exists
+    rm ${output_dir}/$database/$t.txt 2> /dev/null
 done
 
 echo "Creating CHECKSUM for $database"
