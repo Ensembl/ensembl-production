@@ -64,11 +64,11 @@ mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_
 for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
 do
     echo "DUMPING TABLE: $database.$t"
-    mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --silent --raw --skip-column-names > ${output_dir}/$database/$t.txt
+    mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --raw --skip-column-names > ${output_dir}/$database/$t.txt
     sed -i -e '/NULL/ s//\\N/g' ${output_dir}/$database/$t.txt
-    gzip < ${output_dir}/$database/$t.txt > ${output_dir}/$database/$t.txt.gz
-    # Remove the txt file if it exists
-    rm ${output_dir}/$database/$t.txt 2> /dev/null
+    echo "GZipping text files"
+    gzip -nc "$output_dir/$database/$t.txt" > "$output_dir/$database/$t.txt.gz"
+    rm -f "$output_dir/$database/$t.txt" 2> /dev/null
 done
 
 echo "Creating CHECKSUM for $database"
