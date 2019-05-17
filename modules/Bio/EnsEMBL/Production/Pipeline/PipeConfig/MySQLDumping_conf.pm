@@ -31,11 +31,6 @@ use Data::Dumper;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf'); # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
 use Cwd;
 
-sub resource_classes {
-  my ($self) = @_;
-  return { 'default' => { 'LSF' => '-q production-rh74' } };
-}
-
 
 sub default_options {
   my ($self) = @_;
