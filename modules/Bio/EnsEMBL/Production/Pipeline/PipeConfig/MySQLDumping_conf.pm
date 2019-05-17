@@ -114,7 +114,7 @@ sub pipeline_analyses {
               'port'     => $self->o('port'),
               'base_dir' => $self->o('base_dir')
           },
-          -rc_name           => '16GB',
+          -rc_name           => 'default',
           -analysis_capacity => 10
       },
   ];
