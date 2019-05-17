@@ -56,7 +56,7 @@ if [[ $database =~ .*mart.* ]]; then
 fi
 
 query="show tables WHERE tables_in_${database} NOT IN (${IGNORED_TABLES_SHOW})"
-# echo $query
+
 echo "Dumping sql file for $database";
 
 mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database | gzip > ${output_dir}/$database/$database.sql.gz
@@ -64,11 +64,7 @@ mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_
 for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
 do
     echo "DUMPING TABLE: $database.$t"
-    mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --raw --skip-column-names > ${output_dir}/$database/$t.txt
-    sed -i -e '/NULL/ s//\\N/g' ${output_dir}/$database/$t.txt
-    echo "GZipping text files"
-    gzip -nc "$output_dir/$database/$t.txt" > "$output_dir/$database/$t.txt.gz"
-    rm -f "$output_dir/$database/$t.txt" 2> /dev/null
+    mysql --host=$host --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --raw --skip-column-names | sed '/NULL/ s//\\N/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
 done
 
 echo "Creating CHECKSUM for $database"
