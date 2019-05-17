@@ -28,7 +28,7 @@ my $opts = {};
 GetOptions( $opts,                 'source_db_uri=s',
             'target_db_uri=s',     'only_tables=s',
             'skip_tables=s',       'update|u',
-            'drop|d', 'verbose' );
+            'drop|d', 'convert_innodb|c', 'verbose' );
 
 if ( $opts->{verbose} ) {
   Log::Log4perl->easy_init($DEBUG);
@@ -40,9 +40,9 @@ else {
 my $logger = get_logger;
 
 if ( !defined $opts->{source_db_uri} || !defined $opts->{target_db_uri} ) {
-  croak "Usage: copy_database.pl -source_db_uri <mysql://user:password\@host:port/db_name> -target_db_uri <mysql://user:password\@host:port/db_name> [-only_tables=table1,table2] [-skip_tables=table1,table2] [-update] [-drop] [-verbose]";
+  croak "Usage: copy_database.pl -source_db_uri <mysql://user:password\@host:port/db_name> -target_db_uri <mysql://user:password\@host:port/db_name> [-only_tables=table1,table2] [-skip_tables=table1,table2] [-update] [-drop] [-convert_innodb] [-verbose]";
 }
 
 $logger->debug("Copying $opts->{source_db_uri} to $opts->{target_db_uri}");
 
-copy_database($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{verbose});
+copy_database($opts->{source_db_uri}, $opts->{target_db_uri}, $opts->{only_tables}, $opts->{skip_tables}, $opts->{update}, $opts->{drop}, $opts->{convert_innodb}, $opts->{verbose});
