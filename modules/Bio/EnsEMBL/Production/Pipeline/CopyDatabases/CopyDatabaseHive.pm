@@ -48,6 +48,7 @@ my $only_tables = $self->param('only_tables');
 my $skip_tables = $self->param('skip_tables');
 my $update = $self->param('update');
 my $drop = $self->param('drop');
+my $convert_innodb = $self->param('convert_innodb');
 my $start_time = time();
 my $hive_dbc = $self->dbc;
 
@@ -77,7 +78,7 @@ if(!Log::Log4perl->initialized()) {
 
 $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 
-copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop);
+copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb);
 
 my $runtime =  duration(time() - $start_time);
 #Clean up if job already exist in result.

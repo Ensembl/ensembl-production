@@ -44,7 +44,7 @@ if(!Log::Log4perl->initialized()) {
 }
 
 sub copy_database {
-  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
+  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop,$convert_innodb_to_myisam,$verbose) = @_;
 
   $logger->info("Pre-Copy Checks");
   # Path for MySQL dump
@@ -176,11 +176,6 @@ sub copy_database {
 
       if ( defined($opt_only_tables) && !exists( $only_tables{$table} ) )
       {
-        if ( defined($engine) ) {
-          if ( $engine eq 'InnoDB' ) {
-            $innodb=1;
-          }
-        }
         next TABLE;
       }
       elsif ( defined($opt_skip_tables) && exists( $skip_tables{$table} ) )
@@ -241,7 +236,7 @@ sub copy_database {
       croak "We don't have file system access on these server so we can't use the --update options";
     }
     else{
-      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables);
+      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$convert_innodb_to_myisam);
     }
   }
   if ($source_db->{dbname} !~ /mart/){
@@ -710,7 +705,7 @@ sub copy_mysql_files {
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
-  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables) = @_;
+  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$convert_innodb_to_myisam) = @_;
   my $copy_failed=0;
   my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
@@ -728,6 +723,10 @@ sub copy_mysql_dump {
   # If we have defined a list of table to copy
   if ( defined($opt_only_tables) ) {
     push( @dump_cmd, map { sprintf( "%s", $_ ) } keys(%{$only_tables}) );
+  }
+  if ($convert_innodb_to_myisam){
+  # Convert InnoDB databases to MyISAM by changing the ENGINE in the dump file
+    push (@dump_cmd, "|sed", q{'s/ENGINE=InnoDB/ENGINE=MyISAM/'});
   }
   if ( system("@dump_cmd > $file") != 0 ) {
     $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
