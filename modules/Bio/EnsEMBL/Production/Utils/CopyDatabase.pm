@@ -611,9 +611,7 @@ sub copy_mysql_files {
 
   push(@copy_cmd, '--whole-file', '--archive');
 
-  if ($verbose){
-    push (@copy_cmd, '--progress');
-  }
+  push (@copy_cmd, '--progress');
 
   if ($force) {
     push( @copy_cmd, '--delete', '--delete-excluded' );
@@ -627,8 +625,19 @@ sub copy_mysql_files {
   # Set files permission to 755 (rwxr-xr-x)
   push (@copy_cmd, '--chmod=Du=rwx,go=rx,Fu=rwx,go=rx');  
 
-  # Add TCP with arcfour encryption, TCP does go pretty fast (~110 MB/s) and is a better choice in LAN situation.
-  push(@copy_cmd, '-e ssh');
+  # -o disable compression, -x disable X11 forwarding and -T option lower CPU usage
+  # Use aes128-gcm@openssh.com cipher which goes pretty fast (~205 MB/s) compared to (~129 MB/s)
+  if (system("ssh -c aes128-gcm\@openssh.com $target_db->{host}  df -P /instances/ >/dev/null 2>&1") == 0){
+    push(@copy_cmd, '-e', q{'ssh -T -c aes128-gcm@openssh.com -o Compression=no -x'});
+  }
+  # On older server use aes128-ctr cipher instead
+  elsif (system("ssh -c aes128-ctr $target_db->{host}  df -P /instances/ >/dev/null 2>&1") == 0){
+    push(@copy_cmd, '-e', q{'ssh -T -c aes128-ctr -o Compression=no -x'});
+  }
+  # Finally on other server, do not use any ciphers
+  else{
+    push(@copy_cmd, '-e', q{'ssh -T -o Compression=no -x'});
+  }
 
   if ( defined($opt_only_tables) ) {
     push( @copy_cmd, '--ignore-times' );
@@ -678,7 +687,6 @@ sub copy_mysql_files {
 
   # For debugging:
   # print( join( ' ', @copy_cmd ), "\n" );
-
   my $copy_failed = 0;
   if ( system(@copy_cmd) != 0 ) {
      $logger->info("Failed to copy database. Please clean up $staging_dir (if needed).");
