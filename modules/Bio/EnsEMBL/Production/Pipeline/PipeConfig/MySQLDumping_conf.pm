@@ -48,7 +48,7 @@ sub default_options {
       'base_dir'        => $self->o('ensembl_cvs_root_dir'),
       'pipeline_name'   => 'mysql_dumping',
       'division'        => [],
-      'base_output_dir' => '/nfs/production/ensembl/production/',
+      'base_output_dir' => '/hps/nobackup2/production/ensembl/ensprod/release_dumps/',
       'release'         => $self->o('release'),
       ## 'DbDumpingFactory' parameters
       'database'        => [],
