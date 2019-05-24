@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.33-72.0',
+    interproscan_version => '5.34-73.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -106,7 +106,7 @@ sub default_options {
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '2018_03',
+        'db_version'    => '2019_01',
         'ipscan_name'   => 'Hamap',
         'ipscan_xml'    => 'HAMAP',
         'ipscan_lookup' => 1,
@@ -114,7 +114,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '12.0',
+        'db_version'    => '14.1',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -130,7 +130,7 @@ sub default_options {
       {
         'logic_name'    => 'pfscan',
         'db'            => 'Prosite_profiles',
-        'db_version'    => '2018_02',
+        'db_version'    => '2019_01',
         'ipscan_name'   => 'ProSiteProfiles',
         'ipscan_xml'    => 'PROSITE_PROFILES',
         'ipscan_lookup' => 1,
@@ -154,7 +154,7 @@ sub default_options {
       {
         'logic_name'    => 'scanprosite',
         'db'            => 'Prosite_patterns',
-        'db_version'    => '2018_02',
+        'db_version'    => '2019_01',
         'ipscan_name'   => 'ProSitePatterns',
         'ipscan_xml'    => 'PROSITE_PATTERNS',
         'ipscan_lookup' => 1,
@@ -930,14 +930,14 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '4GB' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"'},
-    '8GB' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000]"'},
-    '4GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
-    '8GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
-    '16GB_4CPU' => {'LSF' => '-q production-rh7 -n 4 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
-    '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
-    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
-    '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh7 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
+    '4GB' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"'},
+    '8GB' => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
+    '4GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
+    '8GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
+    '16GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
+    '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
+    '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
+    '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
   }
 }
 

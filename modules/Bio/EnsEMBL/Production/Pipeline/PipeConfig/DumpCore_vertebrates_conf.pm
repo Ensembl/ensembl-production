@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_ensembl_conf;
+ Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_vertebrates_conf;
 
 =head1 DESCRIPTION
 
@@ -26,7 +26,7 @@ limitations under the License.
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_ensembl_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_vertebrates_conf;
 
 use strict;
 use warnings;
@@ -47,8 +47,6 @@ sub default_options {
        'skip_ncbiblast'         => 0,
        'skip_blat_masking'      => 1,
        'skip_ncbiblast_masking' => 0,
-
-       'division'    => 'Ensembl',
 
 #'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
        'gt_exe'       => '/nfs/software/ensembl/RHEL7/linuxbrew/Cellar/genometools/1.5.8/bin/gt',
@@ -141,4 +139,3 @@ sub tweak_analyses {
 
 
 1;
-

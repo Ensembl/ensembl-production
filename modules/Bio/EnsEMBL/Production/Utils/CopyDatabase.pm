@@ -44,8 +44,9 @@ if(!Log::Log4perl->initialized()) {
 }
 
 sub copy_database {
-  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop, $verbose) = @_;
+  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop,$convert_innodb_to_myisam,$verbose) = @_;
 
+  $logger->info("Pre-Copy Checks");
   # Path for MySQL dump
   my $dump_path='/nfs/nobackup/ensembl/ensprod/copy_service/';
   # Get list of tables that we want to copy or skip
@@ -77,8 +78,8 @@ sub copy_database {
   }
 
 
-  if ((defined $update && defined $drop) || (defined $opt_only_tables && defined $drop)) {
-    croak "You can't drop the target database when using the --update and --only_tables options.";
+  if (defined $update && defined $drop) {
+    croak "You can't drop the target database when using the --update options.";
   }
 
   if (!defined($source_db->{dbname}) || !defined($target_db->{dbname})) {
@@ -120,6 +121,12 @@ sub copy_database {
 
   $logger->debug("Using source server datadir: $source_dir");
   $logger->debug("Using target server datadir: $target_dir");
+
+  #Check that taget database name doesn't exceed MySQL limit of 64 char
+  if (length($target_db->{dbname}) > 64){
+    $logger->error("Target database name $target_db->{dbname} is exceeding MySQL limit of 64 characters");
+    croak "Target database name $target_db->{dbname} is exceeding MySQL limit of 64 characters";
+  }
 
   my $destination_dir = catdir( $target_dir, $target_db->{dbname} );
   my $staging_dir;
@@ -192,17 +199,18 @@ sub copy_database {
       }
     } ## end while ( $table_sth->fetch...)
 
-  #Flushing and locking source database
-  $logger->info("Flushing and locking source database");
+  if ($source_db->{dbname} !~ /mart/){
+    #Flushing and locking source database
+    $logger->info("Flushing and locking source database");
 
-  ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
+    ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
+    flush_with_read_lock($source_dbh,\@tables);
 
-  flush_with_read_lock($source_dbh,\@tables);
-
-  #Flushing and locking target database
-  if (defined($target_db_exist) and @tables_flush) {
-    $logger->info("Flushing and locking target database");
-    flush_with_read_lock($target_dbh,\@tables_flush);
+    #Flushing and locking target database
+    if (defined($target_db_exist) and @tables_flush) {
+      $logger->info("Flushing and locking target database");
+      flush_with_read_lock($target_dbh,\@tables_flush);
+    }
   }
 
   my $copy_failed;
@@ -211,34 +219,35 @@ sub copy_database {
   if (system("ssh $source_db->{host} ls $source_dir >/dev/null 2>&1") == 0 and system("ssh $target_db->{host} ls $target_dir >/dev/null 2>&1") == 0 and !$innodb)  {
     $copy_mysql_files=1;
   }
+  #Check if we have enough space on target server before starting the db copy and make sure that there is 20% free space left after copy
+  check_space_before_copy($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables);
   if ($copy_mysql_files){
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
-    #Check if we have enough space on target server before starting the db copy
-    check_space_before_copy($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir);
     # Copying mysql database files
     $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
   }
   #Using MySQL dump if the database is innodb or we don't have access to the MySQL server filesystem
   else{
-    if ($update || $opt_only_tables){
+    if ($update){
       #disconnect from MySQL server
       $source_dbh->disconnect();
       $target_dbh->disconnect();
-      croak "We don't have file system access on these server so we can't use the --update or --only_tables options";
+      croak "We don't have file system access on these server so we can't use the --update options";
     }
     else{
-      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path);
+      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$convert_innodb_to_myisam);
     }
   }
+  if ($source_db->{dbname} !~ /mart/){
+    # Unlock tables source and target
+    $logger->info("Unlocking tables on source database");
+    unlock_tables($source_dbh);
 
-  # Unlock tables source and target
-  $logger->info("Unlocking tables on source database");
-  unlock_tables($source_dbh);
-
-  if (defined($target_db_exist)){
-    $logger->info("Unlocking tables on target database");
-    unlock_tables($target_dbh);
+    if (defined($target_db_exist)){
+      $logger->info("Unlocking tables on target database");
+      unlock_tables($target_dbh);
+    }
   }
 
   # Die if copy failed
@@ -266,7 +275,7 @@ sub copy_database {
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
   if (!defined($target_db_exist) and $copy_mysql_files) {
-      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh);
+      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, \%only_tables);
   }
  
   #Flush tables
@@ -340,14 +349,14 @@ sub create_temp_dir {
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
     }
   }
-  # If database don't exist on source server
+  # If database doesn't exist on target server
   else {
     # If option update is defined, the database need to exist on target server.
-    if ($update || $opt_only_tables){
+    if ($update){
       #disconnect from MySQL server
       $source_dbh->disconnect();
       $target_dbh->disconnect();
-      croak "The database need to exist on $target_db->{host} if you want to use the --update or --only_tables options"
+      croak "The database need to exist on $target_db->{host} if you want to use the --update options"
     }
     else {
       # Create the staging dir in server temp directory
@@ -492,7 +501,7 @@ sub mysqlcheck_db {
 }
 
 sub move_database {
-  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh)=@_;
+  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, $only_tables)=@_;
 
   # Move table files into place in and remove the staging directory.  We already
   # know that the destination directory does not exist.
@@ -514,23 +523,33 @@ sub move_database {
     croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
   }
 
-  # Moving tables
-  foreach my $table (@{$tables}) {
-    my @files;
-    foreach my $file_extention ("MYD", "MYI", "frm"){
-      push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
+  my @files;
+  # Generating list of MYISAM tables
+  if (defined($opt_only_tables)){
+    foreach my $key (sort(keys %{$only_tables})) {
+      foreach my $file_extention ("MYD", "MYI", "frm"){
+        push @files, catfile( $staging_dir, sprintf( "%s.%s", $key, $file_extention));
+      }
     }
+  }
+  else{
+    foreach my $table (@{$tables}) {
+      foreach my $file_extention ("MYD", "MYI", "frm"){
+        push @files, catfile( $staging_dir, sprintf( "%s.%s", $table, $file_extention));
+      }
+    }
+  }
 
-    $logger->debug( "Moving $table");
 
   FILE:
     foreach my $file (@files) {
+      #Moving tables
+      $logger->debug( "Moving $file");
       if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
         croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
         next FILE;
       }
     }
-  }
 
   # Moving views
   foreach my $view (@{$views}) {
@@ -621,7 +640,9 @@ sub copy_mysql_files {
   # Add TCP with arcfour encryption, TCP does go pretty fast (~110 MB/s) and is a better choice in LAN situation.
   push(@copy_cmd, '-e ssh');
 
+  # If we have a subset of tables to copy
   if ( defined($opt_only_tables) ) {
+    push( @copy_cmd, '--include=db.opt' );
     push( @copy_cmd, '--ignore-times' );
 
     push( @copy_cmd,
@@ -634,6 +655,7 @@ sub copy_mysql_files {
 
     push( @copy_cmd, "--exclude=*" );
   }
+  # If we have a subset of tables to skip
   elsif ( defined($opt_skip_tables) ) {
     push( @copy_cmd, '--include=db.opt' );
 
@@ -683,21 +705,32 @@ sub copy_mysql_files {
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
-  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path) = @_;
+  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$convert_innodb_to_myisam) = @_;
   my $copy_failed=0;
   my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
+  my @dump_cmd = ("mysqldump", "--max_allowed_packet=1024M", "--skip-lock-tables", "--host=$source_db->{host}", "--user=$source_db->{user}", "--port=$source_db->{port}");
+  # IF we have specified a password
   if (defined $source_db->{pass}){
-    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --password=$source_db->{pass} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
-      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
-      $copy_failed = 1;
-    }
+    push (@dump_cmd, "--password=$source_db->{pass}");
   }
-  else{
-    if ( system("mysqldump --max_allowed_packet=1024M --skip-lock-tables --host=$source_db->{host} --user=$source_db->{user} --port=$source_db->{port} $source_db->{dbname} > $file") != 0 ) {
-      $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
-      $copy_failed = 1;
-    }
+  # If we have a list of tables to skip
+  if ( defined($opt_skip_tables)){
+    push( @dump_cmd, map { sprintf( "--ignore-table=%s.%s", $source_db->{dbname},$_ ) } keys(%{$skip_tables}) );
+  }
+  # Adding database name
+  push (@dump_cmd, "$source_db->{dbname}");
+  # If we have defined a list of table to copy
+  if ( defined($opt_only_tables) ) {
+    push( @dump_cmd, map { sprintf( "%s", $_ ) } keys(%{$only_tables}) );
+  }
+  if ($convert_innodb_to_myisam){
+  # Convert InnoDB databases to MyISAM by changing the ENGINE in the dump file
+    push (@dump_cmd, "|sed", q{'s/ENGINE=InnoDB/ENGINE=MyISAM/'});
+  }
+  if ( system("@dump_cmd > $file") != 0 ) {
+    $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
+    $copy_failed = 1;
   }
   $logger->info("Creating database $target_db->{dbname} on $target_db->{host}");
   $target_dbh->do("CREATE DATABASE $target_db->{dbname}") or die $target_dbh->errstr;
@@ -713,34 +746,86 @@ sub copy_mysql_dump {
 }
 
 # Subroutine to check source database size and target server space available.
-# Added 10% of server space to the calculation to make sure we don't completely fill up the server.
+# Added 20% of server space to the calculation to make sure we don't completely fill up the server.
 sub check_space_before_copy {
-my ($source_db,$source_dir,$target_db,$staging_dir,$target_db_exist,$destination_dir) = @_;
-my $threshold = 10;
-#Getting source database size
-my ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
-# Getting target database size if target db exist.
-if (defined($target_db_exist)){
-  my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
-  $source_database_size = $source_database_size - $target_database_size;
-}
+  my ($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables) = @_;
+  my $threshold = 20;
+  my ($source_database_size,$source_database_dir);
+  # If system file copy, get the database file size, else get an estimate of the database size.
+  if ($copy_mysql_files){
+    # If we have a list of tables to copy, check the size only for these tables
+    if ($opt_only_tables){
+      my @command = ("ssh $source_db->{host}", "du -c");
+      push( @command, map { sprintf( "${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$only_tables}) );
+      push ( @command, "| tail -1 | cut -f 1");
+      $source_database_size = `@command`;
+    }
+    # If we have a list of tables to skip, exclude them from the space calculation
+    elsif ($opt_skip_tables){
+      my @command = ("ssh $source_db->{host}", "du -c", "${source_dir}/$source_db->{dbname}/*");
+      push( @command, map { sprintf( "--exclude=${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$skip_tables}) );
+      push ( @command, "| tail -1 | cut -f 1");
+      $source_database_size = `@command`;
+    }
+    else{
+      #Getting source database size
+      ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+    }
+    # Getting target database size if target db exist.
+    if (defined($target_db_exist)){
+      my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
+      $source_database_size = $source_database_size - $target_database_size;
+    }
+  }
+  else{
+    # If we have a list of tables to copy, check the size only for these tables
+    if ($opt_only_tables){
+      my @bind = ("$source_db->{dbname}");
+      my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ? and (";
+      my $size = keys %$only_tables;
+      my $count = 1;
+      foreach my $table (keys %{$only_tables}){
+        if ($count == $size){
+          $sql = $sql."table_name = ?";
+        }
+        else{
+          $sql = $sql."table_name = ? or ";
+        }
+        push (@bind,$table);
+        $count ++;
+      }
+      $sql = $sql.");";
+      $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
+    }
+    # If we have a list of tables to skip, exclude them from the space calculation
+    elsif ($opt_skip_tables){
+      my @bind = ("$source_db->{dbname}");
+      my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?";
+      foreach my $table (keys %{$skip_tables}){
+        $sql = $sql." and table_name != ?";
+        push (@bind,$table);
+      }
+      $sql = $sql.";";
+      $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
+    }
+    else{
+      $source_database_size = $source_dbh->selectall_arrayref("SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?",{},$source_db->{dbname})->[0][0] or die $source_dbh->errstr;
+    }
+  }
 
-#Getting target server space
-my @cmd = `ssh $target_db->{host} df -P $staging_dir`;
-my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+  #Getting target server space
+  my @cmd = `ssh $target_db->{host} df -P /instances/`;
+  my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+  #Calculate extra space to make sure we don't fully fill up the server
+  my $threshold_server = ($threshold * $available)/100;
+  my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
 
-#Calculate extra space to make sure we don't fully fill up the server
-my $threshold_server = ($threshold * $available)/100;
-
-my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
-
-if ( $space_left_after_copy == abs($space_left_after_copy) ) {
-    $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
-} else {
-    croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
-}
-
-return;
+  if ( $space_left_after_copy == abs($space_left_after_copy) ) {
+      $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
+  } else {
+      croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
+  }
+  return;
 }
 
 #Subroutine to convert kilobytes in MB, GB, TB...

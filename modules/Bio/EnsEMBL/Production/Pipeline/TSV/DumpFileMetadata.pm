@@ -61,17 +61,6 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
-
-    my $eg     = $self->param_required('eg');
-    $self->param('eg', $eg);
-
-    if($eg){
-       my $base_path = $self->build_base_directory();
-       my $release   = $self->param('eg_version');
-       $self->param('base_path', $base_path);
-       $self->param('release', $release);
-    }
-
     throw "Need a species" unless $self->param('species');
     throw "Need a release" unless $self->param('release');
     throw "Need a base_path" unless $self->param('base_path');

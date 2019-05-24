@@ -58,8 +58,8 @@ sub run {
   my $dbdba = $dba->get_DatabaseInfoAdaptor();
   my $rdba = $dba->get_DataReleaseInfoAdaptor();
   #Get and set release
-  my ($release_dir,$release_info);
-  ($rdba,$gdba,$release_dir,$release_info) = fetch_and_set_release($release,$rdba,$gdba);
+  my ($release_num,$release_info);
+  ($rdba,$gdba,$release_num,$release_info) = fetch_and_set_release($release,$rdba,$gdba);
 
   # Either dump databases from databases array or loop through divisions
   if (@$database) {
@@ -69,10 +69,11 @@ sub run {
         die "Please run a separare pipeline for each divisions";
       }
       my ($division_short_name,$division_name)=process_division_names($division->[0]);
+      my $dir_release = directory_release($division_short_name,$release_info);
       $self->dataflow_output_id({
-                  database=>$db,
-                  output_dir => $base_output_dir.$division_short_name.'/release-'.$release_dir.'/mysql/',
-                  }, 1);
+            database=>$db,
+            output_dir => $base_output_dir.'/release-'.$dir_release.'/'.$division_short_name.'/mysql/',
+            }, 1);
     }
   }
   else{
@@ -82,6 +83,7 @@ sub run {
       my ($division_short_name,$division_name)=process_division_names($div);
       my $division_databases;
       my $genomes = $gdba->fetch_all_by_division($division_name);
+      my $dir_release = directory_release($division_short_name,$release_info);
       #Genome databases
       foreach my $genome (@$genomes){
         foreach my $database (@{$genome->databases()}){
@@ -102,6 +104,17 @@ sub run {
           push (@$division_databases,$release_database->dbname);
         }
       }
+      # For vertebrates, we want the pan databases in the same directory
+      if ($division_short_name eq "vertebrates"){
+        foreach my $release_database (@{$dbdba->fetch_databases_DataReleaseInfo($release_info,"EnsemblPan")}){
+          if (check_if_db_exists($self,$release_database)){
+            push (@$division_databases,$release_database->dbname);
+          }
+          else{
+            $self->warning("Can't find ".$release_database->dbname." on server: ".$self->param('host'));
+          }
+        }
+      }
       #compara databases
       foreach my $compara_database (@{$gcdba->fetch_division_databases($division_name,$release_info)}){
         push (@$division_databases,$compara_database);
@@ -109,7 +122,7 @@ sub run {
       foreach my $division_database (uniq(@$division_databases)){
           $self->dataflow_output_id({
           database=>$division_database,
-          output_dir => $base_output_dir.$division_short_name.'/release-'.$release_dir.'/mysql/',
+          output_dir => $base_output_dir.'/release-'.$dir_release.'/'.$division_short_name.'/mysql/',
           }, 1);
       }
     }
@@ -124,6 +137,20 @@ sub check_if_db_exists {
   my $pass = $self->param('password');
   my $user = $self->param('user');
   return `mysql -ss -r --host=$host --port=$port --user=$user --password=$pass -e "show databases like '$database'"`;
+}
+
+# Get the directory release number for each division
+# E.g 97 for vertebrates and 44 for non-vertebrates
+sub directory_release {
+  my ($division,$release) = @_;
+  my $dir_release;
+  if ($division eq 'vertebrates'){
+    $dir_release = $release->ensembl_version;
+  }
+  else{
+    $dir_release = $release->ensembl_genomes_version;
+  }
+  return $dir_release;
 }
 
 1;

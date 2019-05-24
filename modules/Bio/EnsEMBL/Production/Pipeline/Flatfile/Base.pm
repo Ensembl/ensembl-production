@@ -25,7 +25,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub data_path {
   my ($self) = @_;
-  return $self->get_dir($self->param('type'), $self->param('species'));
+  return $self->get_dir($self->param('type'));
 }
 
 1;

@@ -51,16 +51,6 @@ sub fetch_input {
     my $external_db = $self->param('external_db');
     $self->param('type', $type);
     $self->param('external_db', $external_db);
-
-    my $eg     = $self->param_required('eg');
-    $self->param('eg', $eg);
-
-    if($eg){
-       my $base_path = $self->build_base_directory();
-       my $release   = $self->param('eg_version');
-       $self->param('base_path', $base_path);
-       $self->param('release', $release);
-    }
     $self->param('dba', $self->get_DBAdaptor());
 
 return;
@@ -177,7 +167,7 @@ File are named Species.assembly.release.$type.tsv.gz
 
 README
 
-    my $data_path = $self->get_data_path('tsv');
+    my $data_path = $self->get_dir('tsv');
     mkpath($data_path);
     my $file      = 'README_'.$type.'.tsv';
     my $path      = File::Spec->catfile($data_path, $file);

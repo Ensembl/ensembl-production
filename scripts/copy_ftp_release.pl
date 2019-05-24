@@ -67,7 +67,7 @@ my $gzip_files = [
     qr/.*\.(${old_rel})\.gtf\.gz/,
     qr/.*\.(${old_rel})\.emf\.gz/,
     qr/.*\.(${old_rel})\.[a-z]+\.tsv\.gz/,
-    qr/.*\.(${old_rel})\.dat\.gz/,
+    qr/.*\.(${old_rel})\..*\.dat\.gz/,
     qr/.*\.gz/
 ];
 

@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_eg_conf;
+ Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_non_vertebrates_conf;
 
 =head1 DESCRIPTION
 
@@ -26,7 +26,7 @@ limitations under the License.
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_eg_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_non_vertebrates_conf;
 
 use strict;
 use warnings;
@@ -45,7 +45,6 @@ sub default_options {
 	   'blast_header_prefix' => 'EG:',
       ## dump_gff3 & dump_gtf parameter
       'abinitio'        => 0,
-      'eg' => 1,
       # Previous release FASTA DNA files location
       'prev_rel_dir' => '/nfs/ensemblgenomes/ftp/pub/',
       };
@@ -95,10 +94,9 @@ sub tweak_analyses {
     ## Removed unused dataflow
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
-
     $analyses_by_name->{'job_factory'}->{'-flow_into'} = {
                 '2'    => $pipeline_flow,
-							  '2->A' => ['CheckAssemblyGeneset','dump_fasta_pep'],
+							  '2->A' => ['dump_fasta_dna','dump_fasta_pep'],
 							  'A->2' => ['convert_fasta'],
 							 };   
 

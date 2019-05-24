@@ -169,7 +169,19 @@ sub has_variation {
   my $dbva =
     Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
 
-  my $has_variation = defined $dbva ? 1 : 0;
+  my $has_variation;
+  if (defined $dbva){
+    my $source_database = $dbva->get_MetaContainer->list_value_by_key('variation.source.database')->[0];
+    if(defined($source_database)){
+      $has_variation = $source_database == 1 ? 1 : 0;
+    }
+    else{
+      $has_variation = 1;
+    }
+  }
+  else{
+    $has_variation = 0;
+  }
   
   $has_variation && $dbva->dbc->disconnect_if_idle();
 

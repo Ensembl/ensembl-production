@@ -30,7 +30,7 @@ and at least 100 GB of scratch space.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_eg_ebeye;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_non_vert;
 use strict;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 #use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
@@ -387,11 +387,11 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-        '32g' => { LSF => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' },
-        '16g' => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"' },
-        '8g'  => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=8000]"' },
-        '4g'  => { LSF => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"' },
-        '1g'  => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' } };
+        '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
+        '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
+        '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
+        '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
+        '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
 }
 
 1;

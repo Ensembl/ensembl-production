@@ -49,10 +49,10 @@ my $compara_adap = $multi_db->get_DBAdaptor("compara");
 ok($compara_adap,"Test compara database successfully contacted") or BAIL_OUT 'Cannot get compara DB. Do not continue';
 my $production_dba = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get production DB. Do not continue';
 
-my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf';
-my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
-$pipeline->add_fake_binaries('fake_ebeye_binaries');
-$pipeline->beekeeper_sleep(0.2);
-$pipeline->run();
+#my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::EBeye_conf';
+#my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
+#$pipeline->add_fake_binaries('fake_ebeye_binaries');
+#$pipeline->beekeeper_sleep(0.2);
+#$pipeline->run();
 
 done_testing();

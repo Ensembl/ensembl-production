@@ -51,7 +51,6 @@ sub fetch_input {
                                               -taxonomy_dba => $tax_dba,
                                               -ontology_dba => $onto_dba
           ) );
-  $self->param( 'base_path', $self->build_base_directory() );
   return;
 }
 
@@ -70,8 +69,7 @@ sub run {
 
 sub write_json {
   my ($self) = @_;
-  $self->build_base_directory();
-  my $sub_dir = $self->get_data_path('json');
+  my $sub_dir = $self->get_dir('json');
   $self->info(
           "Processing " . $self->production_name() . " into $sub_dir" );
   my $dba = $self->core_dba();
