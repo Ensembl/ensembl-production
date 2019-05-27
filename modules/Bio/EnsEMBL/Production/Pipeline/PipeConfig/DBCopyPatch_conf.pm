@@ -110,16 +110,16 @@ sub resource_classes {
     ,    # inherit 'default' from the parent class
     '8GB_64GBTmp' => {
       'LSF' =>
-'-q production-rh7 -n 4 -M 8000  -R "rusage[mem=8000]" -R "rusage[tmp=64000]"'
+        '-q production-rh74 -n 4 -M 8000  -R "rusage[mem=8000]" -R "rusage[tmp=64000]"'
     },
     '32GB' => {
-      'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'
+      'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'
     },
     '64GB' => {
-      'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'
+      'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'
     },
     '92GBTmp' =>
-      { 'LSF' => '-q production-rh7 -n 4 -R "rusage[tmp=92000]"' }, };
+      { 'LSF' => '-q production-rh74 -n 4 -R "rusage[tmp=92000]"' }, };
 }
 
 sub pipeline_analyses {

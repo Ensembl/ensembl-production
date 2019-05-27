@@ -41,7 +41,7 @@ sub dump {
   my $offset = $self->param('offset');
   my $length = $self->param('length');
 
-  my $sub_dir = $self->get_data_path('json');
+  my $sub_dir = $self->get_dir('json');
   my $probes_json_file_path;
   my $probesets_json_file_path;
   if (defined $offset) {

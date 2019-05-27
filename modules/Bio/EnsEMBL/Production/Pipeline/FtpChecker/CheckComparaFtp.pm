@@ -39,7 +39,7 @@ my $expected_files = {
 							  ]},
 		      "xml" => {"dir" => "{division}xml/ensembl-compara/homologies/", "expected" =>[
 						       'Compara.*.xml.gz',
-						       'Compara.*.phyloxml.xml.tar.gz',
+						       'Compara.*.phyloxml.xml.*.tar.gz',
 						       'README.*',
 						       'MD5SUM*'
 						      ]},

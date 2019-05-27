@@ -40,7 +40,7 @@ sub run {
 	}
 	my $logger  = get_logger();
 	my $species = $self->param_required('species');
-	my $sub_dir = $self->get_data_path('json');
+	my $sub_dir = $self->get_dir('json');
 	my $type    = $self->param_required('type');
 	{
 		my $file_names = $self->param('probes_dump_file');

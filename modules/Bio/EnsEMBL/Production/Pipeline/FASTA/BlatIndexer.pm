@@ -177,7 +177,7 @@ sub target_file {
 
 sub target_dir {
   my ($self) = @_;
-  return $self->get_dir('blat', $self->param('index'));
+  return $self->index_path('blat', $self->param('index'));
 }
 
 1;

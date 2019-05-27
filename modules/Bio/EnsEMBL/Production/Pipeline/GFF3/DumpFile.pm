@@ -35,18 +35,6 @@ my $add_xrefs = 0;
 
 sub fetch_input {
   my ($self) = @_;
-
-  my $eg = $self->param('eg');
-  $self->param('eg', $eg);
-
-  if($eg){
-     my $base_path  = $self->build_base_directory();
-     $self->param('base_path', $base_path);
-
-     my $release = $self->param('eg_version');
-     $self->param('release', $release);
-  }
-
   my $base_path     = $self->param('base_path');
   my $out_file_stem = $self->param('out_file_stem');
   my $species       = $self->param('species');
@@ -354,11 +342,7 @@ sub _generate_abinitio_file_name {
 
 sub data_path {
   my ($self) = @_;
-
-  $self->throw("No 'species' parameter specified")
-    unless $self->param('species');
-
-  return $self->get_dir('gff3', $self->param('species'));
+  return $self->get_dir('gff3');
 }
 
 sub write_output {

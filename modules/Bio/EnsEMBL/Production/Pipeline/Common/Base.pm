@@ -175,15 +175,6 @@ sub get_DBAdaptor {
   return Bio::EnsEMBL::Registry->get_DBAdaptor( $species, $type );
 }
 
-# Called from
-#  GTF, GFF3, TSV, Chainfile/DumpFile.pm
-sub build_base_directory {
-  my ( $self, @extras ) = @_;
-  my @dirs = ( $self->param('base_path'), $self->division() );
-
-  return File::Spec->catdir(@dirs);
-}
-
 sub division {
   my ($self) = @_;
   my $dba = $self->get_DBAdaptor();
@@ -195,36 +186,22 @@ sub division {
   return lc($division);
 }
 
-# New function to replace data_path, in TSV & ChainFile/DumpFile.pm
-sub get_data_path {
-  my ( $self, $format ) = @_;
-
-  $self->throw("No 'species' parameter specified")
-    unless $self->param('species');
-
-  return $self->get_dir( $format, $self->param('species') );
-}
-
 sub get_dir {
-  my ( $self, @extras ) = @_;
+  my ( $self, $format, @extras ) = @_;
   my $base_dir = $self->param('base_path');
-  my $dir = File::Spec->catdir( $base_dir, @extras );
-
-  if ( $self->param('species') ) {
-    my $mc = $self->get_DBAdaptor()->get_MetaContainer();
-
-    if ( $mc->is_multispecies() == 1 ) {
-      my $collection_db;
-      $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
-      my $fasta_type = pop(@extras) if ( $extras[0] eq 'fasta' );
-      my $species = pop(@extras);
-      push @extras, $collection_db;
-      push @extras, $species;
-      push @extras, $fasta_type if ( defined $fasta_type );
-      $dir = File::Spec->catdir( $base_dir, @extras );
-    }
-    $mc->dbc()->disconnect_if_idle();
+  $self->throw("No 'species' parameter specified") unless $self->param('species');
+  my $dir = File::Spec->catdir( $base_dir, $self->division(), $format, $self->param('species'), @extras);
+  my $mc = $self->get_DBAdaptor()->get_MetaContainer();
+  if ( $mc->is_multispecies() == 1 ) {
+    my $collection_db;
+    $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
+    my $fasta_type = pop(@extras) if ( $format eq 'fasta' );
+    push @extras, $collection_db;
+    push @extras, $self->param('species');
+    push @extras, $fasta_type if ( defined $fasta_type );
+    $dir = File::Spec->catdir( $base_dir, $self->division(), $format, @extras );
   }
+  $mc->dbc()->disconnect_if_idle();
   mkpath($dir);
 
   return $dir;

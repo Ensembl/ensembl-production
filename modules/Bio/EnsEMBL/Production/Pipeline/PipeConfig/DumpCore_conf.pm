@@ -46,7 +46,6 @@ sub default_options {
 	   ## General parameters
        'registry'      => $self->o('registry'),   
        'release'       => $self->o('release'),
-       'eg_version'    => $self->o('release'),
        'pipeline_name' => "ftp_pipeline",
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
@@ -60,11 +59,6 @@ sub default_options {
 
      ## Flag to skip metadata database check for dumping DNA only for species with update assembly
      'skip_metadata_check' => 0,
-
-	   ## Set to '1' for eg! run 
-       #  default => OFF (0)
-       #  affect: dump_gtf
-	   'eg' => 0,
 
 	   #  'fasta' - cdna, cds, dna, ncrna, pep
 	   #  'chain' - assembly chain files
@@ -101,7 +95,6 @@ sub default_options {
        # Previous release FASTA DNA files location
        # Previous release number
        'prev_rel_dir' => '/nfs/ensemblftp/PUBLIC/pub/',
-       'previous_release' => (software_version() - 1),
 
        ## dump_chain parameters
        #  default => ON (1)
@@ -150,24 +143,17 @@ sub pipeline_wide_parameters {
 		    'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
             'base_path'     => $self->o('ftp_dir'),
             'release'       => $self->o('release'),
-	    'eg'			=> $self->o('eg'),
-
-            # eg_version & sub_dir parameter in Production/Pipeline/GTF/DumpFile.pm 
-            # needs to be change , maybe removing the need to eg flag
-            'eg_version'    => $self->o('eg_version'),
-            'sub_dir'       => $self->o('ftp_dir'),
-                        
     };
 }
 
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	=> {'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+      'default'  	=> {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+      '32GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
+      '64GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
+      '128GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
+      '256GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"'},
 	}
 }
 
@@ -185,7 +171,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'CheckAssemblyGeneset', 'dump_fasta_pep', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
+          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_fasta_dna','dump_fasta_pep', 'dump_genbank', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
         }
         
     return [
@@ -218,20 +204,8 @@ sub pipeline_analyses {
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
-#       -wait_for   => [$pipeline_flow],
        -hive_capacity => 10,
     },
-
-    {  -logic_name    => 'email_report',
-  	   -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -parameters    => {
-#          	'email'      			 => $self->o('email'),
-#          	'subject'    			 => $self->o('subject'),
-       },
-       -hive_capacity  => -1,
-       -rc_name 	   => 'default'
-    },
-
 ### GTF
 	{ -logic_name     => 'dump_gtf',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile',
@@ -472,29 +446,18 @@ sub pipeline_analyses {
       -priority        => 5,
       -rc_name         => 'default',
     },
-    { -logic_name  => 'CheckAssemblyGeneset',
+    { -logic_name  => 'dump_fasta_dna',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
       -parameters  => {
           skip_metadata_check => $self->o('skip_metadata_check'),
           release => $self->o('release')
        },
       -can_be_empty    => 1,
-      -flow_into       => {1 => 'dump_fasta_dna'},
-      -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'default',
-    },
-    { -logic_name  => 'dump_fasta_dna',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -parameters  => {
-       },
-      -can_be_empty    => 1,
       -flow_into       => {
-                            1 => WHEN(
-                        '#new_assembly# >= 1' => 'dump_dna',
-                        ELSE 'copy_dna',
-                    )},
+                      1 => WHEN(
+                  '#new_assembly# >= 1' => 'dump_dna',
+                  ELSE 'copy_dna',
+              )},
       -max_retry_count => 1,
       -hive_capacity   => 10,
       -priority        => 5,
@@ -522,8 +485,7 @@ sub pipeline_analyses {
       -priority        => 5,
       -parameters => {
         ftp_dir => $self->o('prev_rel_dir'),
-        release => $self->o('release'),
-        previous_release => $self->o('previous_release'),
+        release => $self->o('release')
       },
     },
     # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm' 

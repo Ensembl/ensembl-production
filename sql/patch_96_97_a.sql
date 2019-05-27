@@ -21,7 +21,7 @@
 # Description:
 #   Update schema_version in meta table to 97
 
-UPDATE meta SET meta_value='96' WHERE meta_key='schema_version';
+UPDATE meta SET meta_value='97' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
