@@ -45,7 +45,7 @@ use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 sub run {
     my ($self) = @_;
     #Getting the list of all species, output dir and release
-    my $all_species = $self->param('species');
+    my $all_species = $self->param('all_species');
     my @all_projected_species=();
     my $datestring  = localtime();
     my $output_dir  = $self->param('output_dir');
@@ -83,6 +83,10 @@ sub run {
       $meta_container->dbc->disconnect_if_idle()
     }
     close FILE;
+    my $count_line = `wc -l < $output_file`;
+    if ($count_line <= 3 and scalar @species_without_orthologs != 0){
+      $self->throw("$output_file is empty");
+    }
 	  $self->dataflow_output_id( {  'output_dir'     => $output_dir },
 				   1 );
 return;
