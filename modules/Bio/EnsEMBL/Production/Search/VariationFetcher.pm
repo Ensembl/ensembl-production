@@ -118,7 +118,7 @@ sub fetch_variations_callback {
                 v.evidence_attribs as evidence_attribs,
                 v.clinical_significance as clinical_significance
         FROM variation v
-         INNER JOIN variation_feature vf using (variation_id)
+         LEFT JOIN variation_feature vf using (variation_id)
         WHERE variation_id BETWEEN ? and ?/,
       -PARAMS       => [ $min, $max ],
       -USE_HASHREFS => 1,
