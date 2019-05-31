@@ -105,14 +105,21 @@ sub fetch_variations_callback {
   where code='SO_term'/);
 
   $h->execute_no_return(
-      -SQL          =>
-          q/SELECT v.variation_id as id, v.name as name, v.class_attrib_id as class, v.source_id as source_id, v.somatic as somatic,
-     v.minor_allele_freq as minor_allele_freq, v.minor_allele as minor_allele, v.minor_allele_count as minor_allele_count,
-     v.ancestral_allele as ancestral_allele,
-    v.evidence_attribs as evidence_attribs,
-    v.clinical_significance as clinical_significance
-
-      FROM variation v WHERE variation_id BETWEEN ? and ?/,
+      -SQL          => q/
+        SELECT  v.variation_id as id,
+                v.name as name,
+                v.class_attrib_id as class,
+                v.source_id as source_id,
+                v.somatic as somatic,
+                v.minor_allele_freq as minor_allele_freq,
+                v.minor_allele as minor_allele,
+                v.minor_allele_count as minor_allele_count,
+                vf.ancestral_allele as ancestral_allele,
+                v.evidence_attribs as evidence_attribs,
+                v.clinical_significance as clinical_significance
+        FROM variation v
+         INNER JOIN variation_feature using (variation_id)
+        WHERE variation_id BETWEEN ? and ?/,
       -PARAMS       => [ $min, $max ],
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
