@@ -150,6 +150,7 @@ sub resource_classes {
     my $self = shift;
     return {
       'default'  	=> {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+      '15GB'      => {'LSF' => '-q production-rh74 -n 4 -M 15000   -R "rusage[mem=15000]"'},
       '32GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
       '64GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
       '128GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
@@ -205,6 +206,7 @@ sub pipeline_analyses {
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -wait_for   => $pipeline_flow,
        -hive_capacity => 10,
+       -rc_name       => '15GB'
     },
 ### GTF
 	{ -logic_name     => 'dump_gtf',
