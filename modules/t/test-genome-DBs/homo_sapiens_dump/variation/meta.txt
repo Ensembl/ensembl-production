@@ -104,4 +104,7 @@
 113	\N	patch	patch_95_96_d.sql|create table to store failed variation features
 114	\N	patch	patch_95_96_e.sql|Rename motif_name to binding_matrix_stable_id.
 1	\N	schema_type	variation
-2	\N	schema_version	96
+2	\N	schema_version	97
+115	\N	patch	patch_96_97_a.sql|schema version
+116	\N	patch	patch_96_97_b.sql|move ancestral allele column to variation_feature
+117	\N	patch	patch_96_97_c.sql|add an unique index on the name column
