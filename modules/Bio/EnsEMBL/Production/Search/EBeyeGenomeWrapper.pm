@@ -40,86 +40,83 @@ our @EXPORT = qw(_array_nonempty _id_ver _base);
 my $date = strftime '%Y-%m-%d', localtime;
 
 sub new {
-	my ( $class, @args ) = @_;
-	my $self = bless( {}, ref($class) || $class );
-	$self->{log} = get_logger();
+  my ($class, @args) = @_;
+  my $self = bless({}, ref($class) || $class);
+  $self->{log} = get_logger();
 
-	return $self;
+  return $self;
 }
 
 sub log {
-	my ($self) = @_;
-	return $self->{log};
+  my ($self) = @_;
+  return $self->{log};
 }
 
 sub wrap_genomes {
 
-	my ( $self, $ebeye_xml_dir, $division, $release_version ) = @_;
-	my $out_path = File::Spec->catfile($ebeye_xml_dir,'ebeye');
+  my ($self, $ebeye_xml_dir, $division, $release_version) = @_;
+  my $out_path = File::Spec->catfile($ebeye_xml_dir, $division, 'ebeye');
 
-        my $genome_file_out = File::Spec->catfile($out_path,'Genome_Ensembl' . $division . '.xml');
+  my $genome_file_out = File::Spec->catfile($out_path, 'Genome_Ensembl' . $division . '.xml');
 
-        my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in($out_path);
+  my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in($out_path);
 
-        open my $fh, '>', $genome_file_out or croak "Could not open $genome_file_out for writing";
+  open my $fh, '>', $genome_file_out or croak "Could not open $genome_file_out for writing";
 
-        my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2, UNSAFE => 1 );
-        $writer->xmlDecl("ISO-8859-1");
-        $writer->doctype("database");
-        $writer->startTag("database");
-        $writer->dataElement(name => $division);
-        $writer->dataElement(release => $release_version);
-        $writer->startTag("entries");
+  my $writer = XML::Writer->new(OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2, UNSAFE => 1);
+  $writer->xmlDecl("ISO-8859-1");
+  $writer->doctype("database");
+  $writer->startTag("database");
+  $writer->dataElement(name => $division);
+  $writer->dataElement(release => $release_version);
+  $writer->startTag("entries");
 
-       
-        foreach my $genome_xml (@genome_xml_files)
-                {
-                 
-                my $genome_dom = XML::LibXML->load_xml(location => $genome_xml);
-                my @genome_entry_nodes = $genome_dom->findnodes('entry');
-                $writer->raw($genome_entry_nodes[0]);
-                }
+  foreach my $genome_xml (@genome_xml_files) {
 
-        $writer->endTag("entries");
-        $writer->endTag("database");
-        $writer->end();
-        close $fh;
-	return $genome_file_out;
+    my $genome_dom = XML::LibXML->load_xml(location => $genome_xml);
+    my @genome_entry_nodes = $genome_dom->findnodes('entry');
+    $writer->raw($genome_entry_nodes[0]);
+  }
 
-} 
+  $writer->endTag("entries");
+  $writer->endTag("database");
+  $writer->end();
+  close $fh;
+  return $genome_file_out;
+
+}
 
 sub wrap_genome_files {
 
-        my ( $self, $ebeye_xml_dir, %genome_xml_files, $division, $release_version ) = @_;
-        my $out_path = File::Spec->catfile($ebeye_xml_dir,'ebeye');
+  my ($self, $ebeye_xml_dir, %genome_xml_files, $division, $release_version) = @_;
+  my $out_path = File::Spec->catfile($ebeye_xml_dir, 'ebeye');
 
-        my $genome_file_out = File::Spec->catfile($out_path,'Genome_Ensembl' . $division . '.xml');
+  my $genome_file_out = File::Spec->catfile($out_path, 'Genome_Ensembl' . $division . '.xml');
 
-        #my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in($out_path);
+  #my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in($out_path);
 
-        open my $fh, '>', $genome_file_out or croak "Could not open $genome_file_out for writing";
+  open my $fh, '>', $genome_file_out or croak "Could not open $genome_file_out for writing";
 
-        my $writer = XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2, UNSAFE => 1 );
-        $writer->xmlDecl("ISO-8859-1");
-        $writer->doctype("database");
-        $writer->startTag("database");
-        $writer->dataElement(name => $division);
-        $writer->dataElement(release => $release_version);
-        $writer->startTag("entries");
-	warn Dumper("IN FUNC", %genome_xml_files);
+  my $writer = XML::Writer->new(OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2, UNSAFE => 1);
+  $writer->xmlDecl("ISO-8859-1");
+  $writer->doctype("database");
+  $writer->startTag("database");
+  $writer->dataElement(name => $division);
+  $writer->dataElement(release => $release_version);
+  $writer->startTag("entries");
+  warn Dumper("IN FUNC", %genome_xml_files);
 
-        foreach my $genome_xml (values %genome_xml_files)
-                {
+  foreach my $genome_xml (values %genome_xml_files) {
 
-                my $genome_dom = XML::LibXML->load_xml(location => $genome_xml);
-                my @genome_entry_nodes = $genome_dom->findnodes('entry');
-                $writer->raw($genome_entry_nodes[0]);
-                }
+    my $genome_dom = XML::LibXML->load_xml(location => $genome_xml);
+    my @genome_entry_nodes = $genome_dom->findnodes('entry');
+    $writer->raw($genome_entry_nodes[0]);
+  }
 
-        $writer->endTag("entries");
-        $writer->endTag("database");
-        $writer->end();
-        close $fh;
-        return $genome_file_out;
+  $writer->endTag("entries");
+  $writer->endTag("database");
+  $writer->end();
+  close $fh;
+  return $genome_file_out;
 
 }
