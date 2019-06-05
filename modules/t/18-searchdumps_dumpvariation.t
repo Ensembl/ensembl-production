@@ -40,9 +40,9 @@ my $fetcher = Bio::EnsEMBL::Production::Search::VariationFetcher->new();
 
 subtest "Testing variant fetching", sub {
   my $out = $fetcher->fetch_variations_for_dba($dba, $onto_dba);
-  is(scalar(@$out), 899, "Testing correct numbers of variants");
+  is(scalar(@$out), 932, "Testing correct numbers of variants");
   my @som = grep {$_->{somatic} eq 'false'} @{$out};
-  is(scalar(@som), 898, "Testing correct numbers of non-somatic variants");
+  is(scalar(@som), 931, "Testing correct numbers of non-somatic variants");
   {
     my ($var) = grep {$_->{id} eq 'rs7569578'} @som;
     is_deeply(
