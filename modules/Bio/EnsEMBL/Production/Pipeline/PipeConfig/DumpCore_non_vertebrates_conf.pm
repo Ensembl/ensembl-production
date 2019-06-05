@@ -43,7 +43,7 @@ sub default_options {
        %{ $self->SUPER::default_options() }, 
 	   'perl_command'  		 => 'perl',
 	   'blast_header_prefix' => 'EG:',
-      ## dump_gff3 & dump_gtf parameter
+      ## gff3 & gtf parameter
       'abinitio'        => 0,
       # Previous release FASTA DNA files location
       'prev_rel_dir' => '/nfs/ensemblgenomes/ftp/pub/',
@@ -67,7 +67,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['dump_json','dump_gtf', 'dump_gff3', 'dump_embl', 'dump_genbank', 'dump_chain', 'dump_tsv_uniprot', 'dump_tsv_ena', 'dump_tsv_metadata', 'dump_tsv_refseq', 'dump_tsv_entrez', 'dump_rdf'];
+          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'genbank', 'assembly_chain', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
         }
     
     my %analyses_by_name = map {$_->{'-logic_name'} => $_} @$super_analyses;
@@ -94,10 +94,12 @@ sub tweak_analyses {
     ## Removed unused dataflow
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
-    $analyses_by_name->{'job_factory'}->{'-flow_into'} = {
-                '2'    => $pipeline_flow,
-							  '2->A' => ['dump_fasta_dna','dump_fasta_pep'],
-							  'A->2' => ['convert_fasta'],
+    $analyses_by_name->{'checksum_generator'}->{'-wait_for'} = ['convert_fasta'];
+    $analyses_by_name->{'backbone_job_pipeline'}->{'-flow_into'} = {
+                '1->A' => $pipeline_flow,
+                'A->1' => ['checksum_generator'],
+                '1->B' => ['fasta_dna','fasta_pep'],
+							  'B->1' => ['convert_fasta'],
 							 };   
 
     return;
