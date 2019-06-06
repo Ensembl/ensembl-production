@@ -125,6 +125,35 @@ sub pipeline_analyses {
         -can_be_empty => 1,
       },
 
+      {
+          -logic_name        => 'ChecksumGeneratorBLAT',
+          -parameters => {
+                            dir => $self->o('ftp_dir')."/vertebrates/blat/dna/"
+          },
+          -wait_for => 'checksum_generator',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
+          -analysis_capacity => 10,
+      },
+      {
+          -logic_name        => 'ChecksumGeneratorBLASTGENE',
+                    -parameters => {
+                            dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genes/"
+          },
+          -wait_for => 'checksum_generator',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
+          -analysis_capacity => 10,
+      },
+            {
+          -logic_name        => 'ChecksumGeneratorBLASTGENOMIC',
+                    -parameters => {
+                            dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genomic/"
+          },
+          -wait_for => 'checksum_generator',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
+          -analysis_capacity => 10,
+      },
+
+
     ];
 }
 
@@ -134,7 +163,8 @@ sub tweak_analyses {
 
     ## Extend this section to redefine portion some analysis
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/] };
-    $analyses_by_name->{'dump_fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
+    $analyses_by_name->{'fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
+    $analyses_by_name->{'job_factory'}->{'-flow_into'} = { '2' => 'backbone_job_pipeline', '1' => ['ChecksumGeneratorBLAT','ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
 }
 
 
