@@ -75,6 +75,27 @@ use File::stat;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
+#A hash of species names and their port numbers. The latter is
+#needed to create the final file name.
+my $species_port = {
+  'lates_calcarifer'  => 30080,
+  'Homo_sapiens'          => 30001,
+  'Mus_musculus'          => 30002,
+  'Danio_rerio'           => 30003,
+  'Rattus_norvegicus'     => 30005,
+  'Gallus_gallus'         => 30010,
+  'Canis_familiaris'      => 30013,
+  'Bos_taurus'            => 30017,
+  'Oryctolagus_cuniculus' => 30025,
+  'Oryzias_latipes'       => 30026,
+  'Sus_scrofa'            => 30039,
+  'Meleagris_gallopavo'   => 30064,
+  'Anas_platyrhynchos'    => 30066,
+  'Ovis_aries'            => 30068,
+  'Oreochromis_niloticus' => 30072,
+  'Gadus_morhua'          => 30071,
+};
+
 sub param_defaults {
   my ($self) = @_;
   return {
@@ -159,12 +180,19 @@ sub decompress {
   return $target;
 }
 
-#Filename like Homo_sapiens.GRCh37.2bit
+#Filename like 30001.Homo_sapiens.GRCh38.2bit
 sub target_filename {
   my ($self) = @_;
-  my $name = $self->web_name();
-  my $assembly = $self->assembly();
-  return join(q{.}, $name, $assembly, '2bit');
+
+  my ($name, $port, $assembly);
+  foreach my $species (keys $species_port) {
+    next if $species =! $self->web_name();
+    $name = $species;
+    $port = $species_port->{$species};
+    $assembly = $self->assembly();
+  }
+
+  return join(q{.}, $port, $name, $assembly, '2bit');
 }
 
 sub target_file {
