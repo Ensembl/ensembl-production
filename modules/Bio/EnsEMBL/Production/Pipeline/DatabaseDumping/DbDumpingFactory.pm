@@ -132,7 +132,7 @@ sub run {
       foreach my $division_database (uniq(@$division_databases)) {
         if ($isGrch37 == 1) {
           $self->dataflow_output_id({
-              database   => $db,
+              database   => $division_database,
               output_dir => $base_output_dir . '/grch37/release-' . $dir_release . '/mysql/',
           }, 1);
 
