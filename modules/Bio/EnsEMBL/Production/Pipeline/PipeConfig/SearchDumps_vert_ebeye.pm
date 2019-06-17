@@ -41,20 +41,20 @@ use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use Data::Dumper;
 
 sub default_options {
-    my $self = shift;
-    return {
-        %{$self->SUPER::default_options()},
-        species         => [],
-        division        => [],
-        antispecies     => [],
-        run_all         => 0, #always run every species
-        use_pan_compara => 0, 
-        variant_length  => 1000000,
-        probe_length    => 100000, 
-        dump_variant    => 0,
-        release => software_version(),
-        eg_release => $self->o('eg_release')
-    };
+  my $self = shift;
+  return {
+      %{$self->SUPER::default_options()},
+      species         => [],
+      division        => [],
+      antispecies     => [],
+      run_all         => 0, #always run every species
+      use_pan_compara => 0,
+      variant_length  => 1000000,
+      probe_length    => 100000,
+      dump_variant    => 0,
+      release         => $self->o('ens_release'),
+      #eg_release => $self->o('eg_release')
+  };
 }
 
 # sub process_options {
@@ -63,169 +63,170 @@ sub default_options {
 # }
 
 sub pipeline_wide_parameters {
-    my $self = shift;
-    return { %{$self->SUPER::pipeline_wide_parameters()},
-        base_path => $self->o('base_path')}; 
+  my $self = shift;
+  return { %{$self->SUPER::pipeline_wide_parameters()},
+      base_path => $self->o('base_path') };
 }
 
 sub pipeline_analyses {
-    my $self = shift;
-    my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory'] : [ ] ;
-    
-    return [
-        {
-            -logic_name => 'SpeciesFactory',
-            -module     =>
-                'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-            -input_ids  => [ {} ], # required for automatic seeding
-            -parameters => { species => $self->o('species'),
-                antispecies          => $self->o('antispecies'),
-                division             => $self->o('division'),
-                run_all              => $self->o('run_all') },
-            -rc_name    => '4g',
-            -flow_into  => {
-                        '2->A' => [ 'DumpGenomeJson' ],
-                        'A->1' => [ 'WrapGenomeEBeye' ]
-                        }
-        },
-        {
-            -logic_name => 'WrapGenomeEBeye',
-            -module     =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::WrapGenomeEBeye',
-            -rc_name    => '1g',
-            -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('eg_release'),
-                        },
-            #-flow_into  => 'CompressXML'
-        },
-        {
-            -logic_name    => 'DumpGenomeJson',
-            -module        =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
-            -parameters    => {},
-            -hive_capacity => 8,
-            -rc_name       => '1g',
-            -flow_into     => {
-                2 => [ 'DumpGenesJson' ],
-                7 => [ 'DumpGenesJson' ],
-                4 => @variant_analyses
-            }
-        },
-        {
-            -logic_name => 'ValidateXMLFileEBeye',
-            -module     =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
-            -rc_name    => '1g',
-            -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('eg_release'),
-                        },
-            -flow_into  => 
-                        {
-                    1 => ['CompressEBeyeXMLFile'], 
-                2 => [ '?accu_name=genome_files&accu_address={species}&accu_input_variable=genome_valid_file']
-                        },
-        },
-        {
-             -logic_name => 'CompressEBeyeXMLFile',
-             -module =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
-             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('eg_release'),
-                        },
-             -analysis_capacity => 4,
-        },
-        {
-            -logic_name    => 'DumpGenesJson',
-            -module        =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
-            -parameters    => {
-                use_pan_compara => $self->o('use_pan_compara')
-            },
-            -hive_capacity => 8,
-            -rc_name       => '32g',
-            -flow_into     => {
-                1 => [
-                    'ReformatGenomeEBeye'
-                ]
-            }
-        },
-        {
-            -logic_name => 'VariantDumpFactory',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
-            -parameters => {
-                type   => 'variation',
-                table  => 'variation',
-                column => 'variation_id',
-                length => $self->o('variant_length') },
-            -rc_name    => '1g',
-            -flow_into  =>
-                { 
-                '2->A' => 'DumpVariantJson', 
-                'A->1' => 'VariantDumpMerge' 
-            }
-        },
-        {
-            -logic_name    => 'DumpVariantJson',
-            -hive_capacity => 8,
-            -module        =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
-            -rc_name       => '32g',
-            -flow_into     => {
-                2 => [
-                    '?accu_name=dump_file&accu_address=[]',
-                    '?accu_name=species'
-                ],
+  my $self = shift;
+  my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory' ] : [];
 
-            }
-        },
-        {
-            -logic_name => 'VariantDumpMerge',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
-            -parameters => { file_type => 'variants' },
-            -rc_name    => '1g',
-            -flow_into  =>
-                {
-                    1 => [
-                        'ReformatVariantsEBeye',
-                    ]
-                }
-        },
-        {
-            -logic_name => 'ReformatGenomeEBeye',
-            -module     =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
-            -rc_name    => '1g',
-            -flow_into  => 'ValidateXMLFileEBeye'
-        },
-        {
-            -logic_name => 'ReformatVariantsEBeye',
-            -module     =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsEBeye',
-            -rc_name    => '1g',
-            -flow_into  => {}
-        }
-    ];
+  return [
+      {
+          -logic_name => 'SpeciesFactory',
+          -module     =>
+              'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+          -input_ids  => [ {} ], # required for automatic seeding
+          -parameters => { species => $self->o('species'),
+              antispecies          => $self->o('antispecies'),
+              division             => $self->o('division'),
+              run_all              => $self->o('run_all') },
+          -rc_name    => '4g',
+          -flow_into  => {
+              '2->A' => [ 'DumpGenomeJson' ],
+              'A->1' => [ 'WrapGenomeEBeye' ]
+          }
+      },
+      {
+          -logic_name => 'WrapGenomeEBeye',
+          -module     =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::WrapGenomeEBeye',
+          -rc_name    => '1g',
+          -parameters =>
+              {
+                  division => $self->o('division'),
+                  release  => $self->o('release'),
+              },
+          #-flow_into  => 'CompressXML'
+      },
+      {
+          -logic_name    => 'DumpGenomeJson',
+          -module        =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
+          -parameters    => {},
+          -hive_capacity => 8,
+          -rc_name       => '1g',
+          -flow_into     => {
+              2 => [ 'DumpGenesJson' ],
+              7 => [ 'DumpGenesJson' ],
+              4 => @variant_analyses
+          }
+      },
+      {
+          -logic_name => 'ValidateXMLFileEBeye',
+          -module     =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
+          -rc_name    => '1g',
+          -parameters =>
+              {
+                  division => $self->o('division'),
+                  release  => $self->o('release'),
+              },
+          -flow_into  =>
+              {
+                  1 => [ 'CompressEBeyeXMLFile' ],
+                  2 => [ '?accu_name=genome_files&accu_address={species}&accu_input_variable=genome_valid_file' ]
+              },
+      },
+      {
+          -logic_name        => 'CompressEBeyeXMLFile',
+          -module            =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
+          -parameters        =>
+              {
+                  division => $self->o('division'),
+                  release  => $self->o('release'),
+              },
+          -analysis_capacity => 4,
+      },
+      {
+          -logic_name    => 'DumpGenesJson',
+          -module        =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+          -parameters    => {
+              use_pan_compara => $self->o('use_pan_compara')
+          },
+          -hive_capacity => 8,
+          -rc_name       => '32g',
+          -flow_into     => {
+              1 => [
+                  'ReformatGenomeEBeye'
+              ]
+          }
+      },
+      {
+          -logic_name => 'VariantDumpFactory',
+          -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
+          -parameters => {
+              type   => 'variation',
+              table  => 'variation',
+              column => 'variation_id',
+              length => $self->o('variant_length') },
+          -rc_name    => '1g',
+          -flow_into  =>
+              {
+                  '2->A' => 'DumpVariantJson',
+                  'A->1' => 'VariantDumpMerge'
+              }
+      },
+      {
+          -logic_name    => 'DumpVariantJson',
+          -hive_capacity => 8,
+          -module        =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
+          -rc_name       => '32g',
+          -flow_into     => {
+              2 => [
+                  '?accu_name=dump_file&accu_address=[]',
+                  '?accu_name=species'
+              ],
+
+          }
+      },
+      {
+          -logic_name => 'VariantDumpMerge',
+          -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
+          -parameters => { file_type => 'variants' },
+          -rc_name    => '1g',
+          -flow_into  =>
+              {
+                  1 => [
+                      'ReformatGenomeEBeye',
+                      'ReformatVariantsEBeye',
+                  ]
+              }
+      },
+      {
+          -logic_name => 'ReformatGenomeEBeye',
+          -module     =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
+          -rc_name    => '1g',
+          -flow_into  => 'ValidateXMLFileEBeye'
+      },
+      {
+          -logic_name => 'ReformatVariantsEBeye',
+          -module     =>
+              'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsEBeye',
+          -rc_name    => '1g',
+          -flow_into  => {}
+      }
+  ];
 } ## end sub pipeline_analyses
 
 sub beekeeper_extra_cmdline_options {
-    my $self = shift;
-    return "-reg_conf " . $self->o("registry");
+  my $self = shift;
+  return "-reg_conf " . $self->o("registry");
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-        '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
-        '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
-        '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
-        '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
-        '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
+  my $self = shift;
+  return {
+      '32g' => { LSF => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' },
+      '16g' => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"' },
+      '8g'  => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=8000]"' },
+      '4g'  => { LSF => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"' },
+      '1g'  => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' } };
 }
 
 1;

@@ -52,6 +52,7 @@ sub default_options {
       'release'         => $self->o('release'),
       ## 'DbDumpingFactory' parameters
       'database'        => [],
+      'isGrch37'        => 0
   }
 }
 
@@ -91,6 +92,7 @@ sub pipeline_analyses {
               password        => $self->o('pass'),
               host            => $self->o('host'),
               port            => $self->o('port'),
+              isGrch37        => $self->o('isGrch37')
           },
           -flow_into       => {
               1 => 'DatabaseDump',
