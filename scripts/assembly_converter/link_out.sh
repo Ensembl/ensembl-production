@@ -39,10 +39,10 @@ do
     do
         if test ${file} !=  "CHECKSUMS"
         then
-            echo "ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${file} ${base_dest}/vertebrates/${dir}/"
+            echo "ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}/${file} ${base_dest}/vertebrates/${dir}/"
             if test ${test} !=  "true"
             then
-                ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${file} ${base_dest}/vertebrates/${dir}/
+                ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}/${file} ${base_dest}/vertebrates/${dir}/
             fi
         fi
     done
@@ -55,10 +55,10 @@ do
     do
         if test ${file} !=  "CHECKSUMS"
         then
-            echo "ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${file} ${base_dest}/vertebrates/${dir}/"
+            echo "ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/"
             if test ${test} !=  "true"
             then
-                ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${file} ${base_dest}/vertebrates/${dir}/
+                ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/
             fi
         fi
     done
@@ -96,10 +96,10 @@ do
             do
                 if test ${file} !=  "CHECKSUMS"
                 then
-                    echo "ln -s ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${file} ${base_dest}/${division}/${dir}/"
+                    echo "ln -s ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}/${file} ${base_dest}/${division}/${dir}/"
                     if test ${test} !=  "true"
                     then
-                        ln -s ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${file} ${base_dest}/${division}/${dir}/
+                        ln -s ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}/${file} ${base_dest}/${division}/${dir}/
                     fi
 
                 fi
