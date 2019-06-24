@@ -45,6 +45,10 @@ sub default_options {
     run_all      => 0,
     antispecies  => [],
     meta_filters => {},
+    production_db => 'ensembl_production',
+    production_host => 'mysql-ens-meta-prod-1-ensprod',
+    compara_db => '',
+    compara_host => 'mysql-ens-sta-3',
 
     ## Allow division of compara database to be explicitly specified
     compara_division => undef,
@@ -60,9 +64,21 @@ sub pipeline_analyses {
 
     return [
 
+    {   -logic_name => 'sync_external_db',
+        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        -parameters        => {
+            'cmd'      => 'set -o pipefail;#production_host# mysqldump #production_db# master_external_db | sed -e "s/master_external_db/external_db/g" | #compara_host# #compara_db#',
+            'production_db'     => $self->o('production_db'),
+            'production_host' => $self->o('production_host'),
+            'compara_db'     => $self->o('compara_db'),
+            'compara_host'     => $self->o('compara_host')
+        },
+        -flow_into  => [ 'job_factory' ],
+        -input_ids  => [ {} ] ,
+        -rc_name 	       => 'default',
+    },
     { -logic_name  => 'job_factory',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-       -input_ids  => [ {} ] ,
        -parameters => {
                         species      => $self->o('species'),
                         antispecies  => $self->o('antispecies'),
