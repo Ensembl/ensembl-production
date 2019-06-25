@@ -46,9 +46,8 @@ sub default_options {
     antispecies  => [],
     meta_filters => {},
     production_db => 'ensembl_production',
-    production_host => 'mysql-ens-meta-prod-1-ensprod',
-    compara_db => '',
-    compara_host => 'mysql-ens-sta-3',
+    production_host => 'meta1',
+    compara_host => 'st3-w',
 
     ## Allow division of compara database to be explicitly specified
     compara_division => undef,
