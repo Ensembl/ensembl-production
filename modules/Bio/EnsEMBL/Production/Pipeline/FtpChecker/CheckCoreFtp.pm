@@ -51,7 +51,7 @@ my $expected_files = {
 							 'README*',
 							 'CHECKSUMS*'
 						       ]},
-		      "vep" => {"dir" => "{division}/vep/{collection_dir}", "expected" =>[
+		      "vep" => {"dir" => "{division}/variation/vep/{collection_dir}", "expected" =>[
 							'{species}_vep*.tar.gz',
 							 'CHECKSUMS*'
 						       ]},
@@ -93,11 +93,6 @@ my $expected_files = {
 							 'README*',
 							 'CHECKSUMS*'
 						       ]},
-#		      "fasta_ncrna" => {"dir" => "{division}/fasta/{species_dir}/ncrna/", "expected" =>[
-#							'{species_uc}.*.fa.gz',
-#							 'README*',
-#							 'CHECKSUMS*'
-#						       ]},
 		      "fasta_dna" => {"dir" => "{division}/fasta/{species_dir}/dna/", "expected" =>[
 							'{species_uc}.*.fa.gz',
 							 'README*',
