@@ -69,10 +69,20 @@ do
     do
         if test ${file} !=  "CHECKSUMS"
         then
-            echo "ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/"
             if test ${test} !=  "true"
             then
-                ln -s ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/
+                if [[ "${file}" = *".fa.gz.fai" ]]
+                then
+                    echo "cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/"
+                    cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/
+                    mv "${base_dest}/vertebrates/${dir}/${file}" "${base_dest}/vertebrates/${dir}/${file/.fa.gz.fai/.fa.fai}"
+                elif [[ "${file}" = *".fa.gz" ]]
+                then
+                   echo "cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/"
+                   cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/vertebrates/${dir}/
+                   echo "Unzipping files ${file}"
+                   gunzip ${base_dest}/vertebrates/${dir}/${file}
+                fi
             fi
         fi
     done
@@ -126,10 +136,20 @@ do
             do
                 if test ${file} !=  "CHECKSUMS"
                 then
-                    echo "ln -s ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/"
                     if test ${test} !=  "true"
                     then
-                        ln -s ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/
+                        if [[ "${file}" = *".fa.gz.fai" ]]
+                        then
+                            echo "cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/"
+                            cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/
+                            mv "${base_dest}/${division}/${dir}/${file}" "${base_dest}/${division}/${dir}/${file/.fa.gz.fai/.fa.fai}"
+                        elif [[ "${file}" = *".fa.gz" ]]
+                        then
+                            echo "cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/"
+                            cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/
+                            echo "Unzipping files ${file}"
+                            gunzip ${base_dest}/${division}/${dir}/${file}
+                        fi
                     fi
                 fi
             done
