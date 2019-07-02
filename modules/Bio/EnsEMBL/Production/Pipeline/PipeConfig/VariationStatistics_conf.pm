@@ -111,7 +111,9 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -flow_into       => ['RunDataChecks'],
+      -flow_into       => {
+                            1 => { 'RunDataChecks' => {'group' => 'core'} }
+                          },
       -rc_name         => 'normal',
     },
 
@@ -121,6 +123,7 @@ sub pipeline_analyses {
       -parameters      => {
                             datacheck_names => ['DensitySNPs', 'GenomeStatistics', 'SNPCounts'],
                             history_file    => $self->o('history_file'),
+                            registry_file   => $self->o('registry_file'),
                             failures_fatal  => 1,
                           },
       -max_retry_count => 1,
