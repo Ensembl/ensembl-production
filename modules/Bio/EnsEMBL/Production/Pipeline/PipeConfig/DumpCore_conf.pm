@@ -102,7 +102,29 @@ sub default_options {
 	   'ucsc' 		 => 1,
        ## rdf parameters
        'xref' => 1,
-       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json'
+       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json',
+
+       ## BLAT
+       # A list of vertebrates species for which we have Blast server running with their associated port number
+       # We use this hash to filter our species which we don't need BLAT data and to have the port number in the file name
+       'blat_species' => {
+        'lates_calcarifer'      => 30080,
+        'homo_sapiens'          => 30001,
+        'mus_musculus'          => 30002,
+        'danio_rerio'           => 30003,
+        'rattus_norvegicus'     => 30005,
+        'gallus_gallus'         => 30010,
+        'canis_familiaris'      => 30013,
+        'bos_taurus'            => 30017,
+        'oryctolagus_cuniculus' => 30025,
+        'oryzias_latipes'       => 30026,
+        'sus_scrofa'            => 30039,
+        'meleagris_gallopavo'   => 30064,
+        'anas_platyrhynchos_platyrhynchos'    => 30066,
+        'ovis_aries'            => 30068,
+        'oreochromis_niloticus' => 30072,
+        'gadus_morhua'          => 30071,
+       },
 
 	};
 }
@@ -482,6 +504,9 @@ sub pipeline_analyses {
     { -logic_name      => 'concat_fasta',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::ConcatFiles',
       -can_be_empty    => 1,
+      -parameters      => {
+        blat_species => $self->o('blat_species'),
+      },
       -max_retry_count => 5,
       -priority        => 5,
       -flow_into  	   => {
