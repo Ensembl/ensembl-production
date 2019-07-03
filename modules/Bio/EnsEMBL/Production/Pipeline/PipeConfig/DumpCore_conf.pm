@@ -108,7 +108,6 @@ sub default_options {
        # A list of vertebrates species for which we have Blast server running with their associated port number
        # We use this hash to filter our species which we don't need BLAT data and to have the port number in the file name
        'blat_species' => {
-        'lates_calcarifer'      => 30080,
         'homo_sapiens'          => 30001,
         'mus_musculus'          => 30002,
         'danio_rerio'           => 30003,
