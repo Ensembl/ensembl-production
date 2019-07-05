@@ -171,7 +171,6 @@ sub print_to_file {
   my $logic_names = $self->param_required('logic_name');
 
   my $reg = 'Bio::EnsEMBL::Registry';
-  my $oa = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
 
   my $mc = $dba->get_MetaContainer();
   my $providers = $mc->list_value_by_key('provider.name') || '';
@@ -180,7 +179,7 @@ sub print_to_file {
   gz_work_with_file($file, 'w', sub {
     my ($fh) = @_;
 
-    my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $fh);
+    my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($fh);
 
     $serializer->print_main_header(undef, $dba) if $include_header;
 
