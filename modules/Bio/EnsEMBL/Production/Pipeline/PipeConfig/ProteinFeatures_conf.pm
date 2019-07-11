@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.34-73.0',
+    interproscan_version => '5.36-75.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
@@ -80,17 +80,9 @@ sub default_options {
     analyses =>
     [
       {
-        'logic_name'    => 'blastprodom',
-        'db'            => 'ProDom',
-        'db_version'    => '2006.1',
-        'ipscan_name'   => 'ProDom',
-        'ipscan_xml'    => 'PRODOM',
-        'ipscan_lookup' => 1,
-      },
-      {
         'logic_name'    => 'cdd',
         'db'            => 'CDD',
-        'db_version'    => '3.16',
+        'db_version'    => '3.17',
         'ipscan_name'   => 'CDD',
         'ipscan_xml'    => 'CDD',
         'ipscan_lookup' => 1,
