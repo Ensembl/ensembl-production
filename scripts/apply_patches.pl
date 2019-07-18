@@ -62,7 +62,7 @@ my $patch_dirs = {
     variation     => "$opts->{basedir}/ensembl-variation/sql",
     funcgen       => "$opts->{basedir}/ensembl-funcgen/sql",
     compara       => "$opts->{basedir}/ensembl-compara/sql",
-    ontology      => "$opts->{basedir}/ols-ensembl-loader/sql",
+    ontology      => "$opts->{basedir}/ensembl-ontology-schema/sql",
     production    => "$opts->{basedir}/ensembl-production/sql" };
 
 while (my ($type, $dir) = each %$patch_dirs) {
