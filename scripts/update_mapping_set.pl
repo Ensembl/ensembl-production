@@ -358,7 +358,8 @@ sub get_previous_dbname {
     my $previous_dbname;
     $dbname =~ /(^([a-z]+_){2,3}[a-z0-9]+_)/;
     if (!$1) { throw("Database name $dbname is not in the right format"); }
-    my $previous_release_name = $1 . (--$release);
+    my $prev_release = $release - 1;
+    (my $previous_release_name = $dbname) =~ s/_$release\_/_$prev_release\_/;
     my $previous_sth = $dbh->prepare("show databases like \'%$previous_release_name%\'");
     $previous_sth->execute();
     ($previous_dbname) = $previous_sth->fetchrow_array() ;
