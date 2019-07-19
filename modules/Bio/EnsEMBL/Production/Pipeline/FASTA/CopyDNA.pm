@@ -77,6 +77,9 @@ sub fetch_input {
   foreach my $key (@required) {
     $self->throw("Need to define a $key parameter") unless $self->param($key);
   }
+  my $release = $self->param('release');
+  my $prev_release = $release - 1;
+  $self->param('previous_release', $prev_release);
   return;
 }
 

@@ -43,7 +43,7 @@ sub run {
 
 	my $type       = $self->param_required('type');
 	my $file_type  = $self->param_required('file_type');
-	my $sub_dir    = $self->get_data_path('json');
+	my $sub_dir    = $self->get_dir('json');
 	my $file_names = $self->param('dump_file');
 	if ( defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0]) {
 		my $outfile =

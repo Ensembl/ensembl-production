@@ -28,36 +28,32 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::MySQLDumping_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');  # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf'); # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
 use Cwd;
-
-sub resource_classes {
-    my ($self) = @_;
-    return { 'default' => { 'LSF' => '-q production-rh7' }};
-}
 
 
 sub default_options {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::default_options},
-        	   ## General parameters
-        'user'     => $self->o('user'),
-        'pass'     => $self->o('pass'),
-        'host'     => $self->o('host'),
-        'port'     => $self->o('port'),
-        'meta_user'     => $self->o('meta_user'),
-        'meta_host'     => $self->o('meta_host'),
-        'meta_port'     => $self->o('meta_port'),
-        'meta_database' => $self->o('meta_database'),
-        'base_dir'  => $self->o('ensembl_cvs_root_dir'),
-        'pipeline_name'  => 'mysql_dumping',
-        'division' => [],
-        'base_output_dir'     	   => '/nfs/nobackup/dba/sysmysql/',
-        'release' => $self->o('release'),
-        ## 'DbDumpingFactory' parameters
-        'database'    => [],
-    }
+  my ($self) = @_;
+  return {
+      %{$self->SUPER::default_options},
+      ## General parameters
+      'user'            => $self->o('user'),
+      'pass'            => $self->o('pass'),
+      'host'            => $self->o('host'),
+      'port'            => $self->o('port'),
+      'meta_user'       => $self->o('meta_user'),
+      'meta_host'       => $self->o('meta_host'),
+      'meta_port'       => $self->o('meta_port'),
+      'meta_database'   => $self->o('meta_database'),
+      'base_dir'        => $self->o('ensembl_cvs_root_dir'),
+      'pipeline_name'   => 'mysql_dumping',
+      'division'        => [],
+      'base_output_dir' => '/hps/nobackup2/production/ensembl/ensprod/release_dumps/',
+      'release'         => $self->o('release'),
+      ## 'DbDumpingFactory' parameters
+      'database'        => [],
+      'isGrch37'        => 0
+  }
 }
 
 =head2 pipeline_wide_parameters
@@ -66,8 +62,8 @@ sub default_options {
 sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
-    %{ $self->SUPER::pipeline_wide_parameters
-      } # here we inherit anything from the base class, then add our own stuff
+      %{$self->SUPER::pipeline_wide_parameters
+        } # here we inherit anything from the base class, then add our own stuff
   };
 }
 
@@ -76,47 +72,60 @@ sub pipeline_wide_parameters {
 =cut
 
 sub pipeline_analyses {
-    my ($self) = @_;
-    return [
-    {
-      -logic_name        => 'DbDumpingFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::DatabaseDumping::DbDumpingFactory',
-      -max_retry_count   => 1,
-      -input_ids         => [ {} ],
-      -parameters        => {
-                              division        => $self->o('division'),
-                              database         => $self->o('database'),
-                              meta_user      => $self->o('meta_user'),
-                              meta_host      => $self->o('meta_host'),
-                              meta_port      => $self->o('meta_port'),
-                              meta_database => $self->o('meta_database'),
-                              base_output_dir => $self->o('base_output_dir'),
-                              release => $self->o('release'),
-                              user      => $self->o('user'),
-                              password      => $self->o('pass'),
-                              host      => $self->o('host'),
-                              port      => $self->o('port'),
-                            },
-      -flow_into         => {
-                              1 => 'DatabaseDump',
-                            }
-    },
-     {
-      -logic_name  => 'DatabaseDump',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -meadow_type => 'LSF',
-      -parameters  => {
-        'cmd' =>
-'#base_dir#/ensembl-production/modules/Bio/EnsEMBL/Production/Utils/MySQLDumping.sh  #database# #output_dir# #host# #user# #password# #port#',
-        'user'      => $self->o('user'),
-        'password'      => $self->o('pass'),
-        'host'      => $self->o('host'),
-        'port'      => $self->o('port'),
-        'base_dir'  => $self->o('base_dir')
-        },
-      -rc_name          => 'default',
-      -analysis_capacity => 10
-    },
-   ];
+  my ($self) = @_;
+  return [
+      {
+          -logic_name      => 'DbDumpingFactory',
+          -module          => 'Bio::EnsEMBL::Production::Pipeline::DatabaseDumping::DbDumpingFactory',
+          -max_retry_count => 1,
+          -input_ids       => [ {} ],
+          -parameters      => {
+              division        => $self->o('division'),
+              database        => $self->o('database'),
+              meta_user       => $self->o('meta_user'),
+              meta_host       => $self->o('meta_host'),
+              meta_port       => $self->o('meta_port'),
+              meta_database   => $self->o('meta_database'),
+              base_output_dir => $self->o('base_output_dir'),
+              release         => $self->o('release'),
+              user            => $self->o('user'),
+              password        => $self->o('pass'),
+              host            => $self->o('host'),
+              port            => $self->o('port'),
+              isGrch37        => $self->o('isGrch37')
+          },
+          -flow_into       => {
+              1 => 'DatabaseDump',
+          }
+      },
+      {
+          -logic_name        => 'DatabaseDump',
+          -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+          -meadow_type       => 'LSF',
+          -parameters        => {
+              'cmd'      =>
+                  '#base_dir#/ensembl-production/modules/Bio/EnsEMBL/Production/Utils/MySQLDumping.sh  #database# #output_dir# #host# #user# #password# #port#',
+              'user'     => $self->o('user'),
+              'password' => $self->o('pass'),
+              'host'     => $self->o('host'),
+              'port'     => $self->o('port'),
+              'base_dir' => $self->o('base_dir')
+          },
+          -rc_name           => 'default',
+          -analysis_capacity => 10
+      },
+  ];
+}
+
+sub resource_classes {
+  my $self = shift;
+  return {
+      'default' => { 'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"' },
+      '16GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 16000  -R "rusage[mem=16000]"' },
+      '32GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"' },
+      '64GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"' },
+      '128GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"' },
+      '256GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"' },
+  }
 }
 1;

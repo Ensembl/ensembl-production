@@ -58,6 +58,12 @@ sub reformat_genome {
 
 	my $genome = read_json($genome_file);
 
+	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
+        # Ensembl -> Ensembl for e!
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
 	my $writer =
@@ -66,12 +72,12 @@ sub reformat_genome {
 	$writer->doctype("entry");
 
 	_print_entry_start( $writer, $genome->{id} );
-	_print_dates($writer);
 	_print_crossrefs( $writer,
 					 { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} } );
 	_print_additional_fields(
 				 $writer, {
-				   'genomic_unit'       => $genome->{division},
+				   'division'		=> $genome->{division},
+				   'genomic_unit'       => $genomic_unit_val,
 				   'display_name'       => $genome->{organism}{display_name},
 				   'scientific_name'    => $genome->{organism}{scientific_name},
 				   'production_name'    => $genome->{organism}{production_name},
@@ -100,6 +106,12 @@ sub reformat_genome {
 sub reformat_genes {
 	my ( $self, $genome_file, $database, $genes_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
+        # Ensembl -> Ensembl for e!
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
@@ -116,7 +128,6 @@ sub reformat_genes {
 								   $genome->{organism}{display_name},
 								   $type) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$genes_file,
@@ -138,7 +149,7 @@ sub reformat_genes {
 					 ( defined $gene->{haplotype} && $gene->{haplotype} eq '1' )
 					 ? 'haplotype' :
 					   'reference' ),
-				 genomic_unit => $genome->{division},
+				 genomic_unit => $genomic_unit_val,
 				 location =>
 				   sprintf( '%s:%s-%s',
 							$gene->{seq_region_name}, $gene->{start},
@@ -169,12 +180,15 @@ sub reformat_genes {
 			}
 
 			if ( defined $gene->{seq_region_synonyms} ) {
-				for my $sr ( @{ $gene->{seq_region_synonym} } ) {
+				for my $sr ( @{ $gene->{seq_region_synonyms} } ) {
 					push @{ $fields->{seq_region_synonym} }, $sr->{id};
 				}
 			}
 
 			my $exons = {};
+			my $all_protein_domain = {};
+ 			my $all_protein_domain_description = {};
+			my $all_probeset = {};
 			for my $transcript ( @{ $gene->{transcripts} } ) {
 				$fields->{transcript_count}++;
 				push @{ $fields->{transcript} }, $transcript->{id};
@@ -191,17 +205,29 @@ sub reformat_genes {
 					  $translation->{version} > 0;
 					_add_xrefs( $xrefs, $translation );
 					for my $pf ( @{ $translation->{protein_features} } ) {
-						$fields->{domains}++;
-						push @{ $fields->{domain} }, $pf->{name};
+						#$fields->{domains}++;
+						#push @{ $fields->{domain} }, $pf->{name};
+						$all_protein_domain->{ $pf->{name} }++;
+ 						$all_protein_domain_description->{ $pf->{description} }++
+ 							if defined $pf->{description} and $pf->{name} ne $pf->{description};
 
 					}
 				}
 				for my $exon ( @{ $transcript->{exons} } ) {
 					$exons->{ $exon->{id} }++;
 				}
+	
+				for my $probeset ( @{ $transcript->{probes} } ) {
+ 					$all_probeset->{ $probeset->{probe} }++;
+ 				}
+
 			} ## end for my $transcript ( @{...})
 			$fields->{exon}       = [ keys %$exons ];
 			$fields->{exon_count} = scalar values %$exons;
+			$fields->{domain}     = [ keys %$all_protein_domain ];
+ 			$fields->{domains}    = scalar values %$all_protein_domain;
+ 			$fields->{domain_description} = [ keys %$all_protein_domain_description ];
+			$fields->{probeset}   = [ keys %$all_probeset ];
 			_print_crossrefs( $writer, $xrefs );
 			_print_additional_fields( $writer, $fields );
 			_print_entry_end($writer);
@@ -265,13 +291,20 @@ sub _add_xrefs {
 sub reformat_sequences {
 	my ( $self, $genome_file, $database, $sequences_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+	
+	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
+        # Ensembl -> Ensembl for e!
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
-	$writer->dataElement( 'name', $database );
+	$writer->dataElement( 'name', $genome->{division} ); #$database );
 	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
 	my $type    = $1;
 	my $release = $2;
@@ -281,7 +314,6 @@ sub reformat_sequences {
 								   $genome->{organism}{display_name},
 								   $type) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$sequences_file,
@@ -296,7 +328,8 @@ sub reformat_sequences {
 			_print_additional_fields(
 								$writer, {
 								  species => $genome->{organism}{display_name},
-								  system_name  => $genome->{organism}{name},
+								  genomic_unit => $genomic_unit_val, 
+								  production_name  => $genome->{organism}{name},
 								  coord_system => $seq->{type},
 								  length       => $seq->{length},
 								  location =>
@@ -316,13 +349,20 @@ sub reformat_sequences {
 sub reformat_variants {
 	my ( $self, $genome_file, $database, $variants_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
+
+	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
+        # Ensembl -> Ensembl for e!
+        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	my $genome_division = $genome->{division};
+	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
 	  XML::Writer->new( OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2 );
 	$writer->xmlDecl("ISO-8859-1");
 	$writer->doctype("database");
 	$writer->startTag('database');
-	$writer->dataElement( 'name', $database );
+	$writer->dataElement( 'name', $genome->{division} );
 	$database =~ m/.*_([a-z]+)_([0-9]+)_([0-9]+)(_([0-9]+))?/;
 	my $type    = $1;
 	my $release = $2;
@@ -332,7 +372,6 @@ sub reformat_variants {
 								   $genome->{organism}{display_name},
 								   $type) );
 	$writer->dataElement( 'release', $release );
-	_print_dates($writer);
 	$writer->startTag('entries');
 	process_json_file(
 		$variants_file,
@@ -345,8 +384,9 @@ sub reformat_variants {
 								   $genome->{organism}{taxonomy_id} } );
 			_print_additional_fields(
 								$writer, {
-								  species => $genome->{organism}{display_name},
-								  system_name      => $genome->{organism}{name},
+								  species 	   => $genome->{organism}{display_name},
+								  genomic_unit 	   => $genomic_unit_val,
+								  production_name  => $genome->{organism}{name},
 								  variation_source => $var->{source}{name},
 								  description =>
 									sprintf( 'A %s Variant', $var->{source}{name} ) }

@@ -55,7 +55,7 @@ sub write_output {
           subset_term_id    INT UNSIGNED NOT NULL,
           distance          TINYINT UNSIGNED NOT NULL,
           UNIQUE INDEX map_idx (term_id, subset_term_id)
-        )
+        ) ENGINE=MyISAM
         SELECT  child_term.term_id AS term_id,
                 parent_term.term_id AS subset_term_id,
                 MIN(distance) AS distance

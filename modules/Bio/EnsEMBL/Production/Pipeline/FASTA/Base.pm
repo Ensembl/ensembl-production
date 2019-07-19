@@ -24,10 +24,19 @@ use warnings;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use File::Spec;
+use File::Path qw/mkpath/;
 
 sub fasta_path {
   my ( $self, @extras ) = @_;
-  return $self->get_dir('fasta', $self->param('species'), @extras);
+  return $self->get_dir('fasta', @extras);
+}
+
+sub index_path {
+  my ( $self, $format, @extras ) = @_;
+  my $base_dir = $self->param('base_path');
+  my $dir = File::Spec->catdir( $base_dir, $self->division(), $format, @extras);
+  mkpath($dir);
+  return $dir;
 }
 
 sub old_path {
@@ -36,7 +45,21 @@ sub old_path {
   my $prod = $self->production_name($species);
   my $release = $self->param('previous_release');
   $directory='dna' if !defined $directory;
-  my $dir = File::Spec->catdir($base, "release-$release", 'fasta', $prod, $directory);
+  my $dir;
+  if ($self->division() ne "vertebrates"){
+    my $mc = $self->get_DBAdaptor()->get_MetaContainer();
+    if ( $mc->is_multispecies() == 1 ) {
+      my $collection_db;
+      $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
+      $dir = File::Spec->catdir($base, "release-$release",$self->division(), 'fasta', $collection_db, $prod, $directory);
+    }
+    else{
+      $dir = File::Spec->catdir($base, "release-$release",$self->division(), 'fasta', $prod, $directory);
+    }
+  }
+  else{
+    $dir = File::Spec->catdir($base, "release-$release", 'fasta', $prod, $directory);
+  }
 }
 
 # Filter a FASTA dump for reference regions only and parse names from the

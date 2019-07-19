@@ -28,7 +28,7 @@ use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');  # All Hive datab
 
 sub resource_classes {
     my ($self) = @_;
-    return { 'default' => { 'LSF' => '-q production-rh7' }};
+    return { 'default' => { 'LSF' => '-q production-rh74' }};
 }
 
 sub default_options {

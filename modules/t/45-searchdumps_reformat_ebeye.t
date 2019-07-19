@@ -34,7 +34,6 @@ subtest "EBEye genome", sub {
 	$formatter->reformat_genome( $genome_in_file, $out_file );
 	my $genome = XMLin( $out_file, ForceArray => 1 );
 	my $genome_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
-	$genome_expected->{dates} = $genome->{dates};
 	is_deeply( $genome, $genome_expected, "Testing structure" );
 	unlink $out_file;
 };
@@ -48,7 +47,6 @@ subtest "EBEye genes", sub {
 		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
 	}
 	my $genes_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
-	$genes_expected->{dates} = $genes->{dates};
 		for my $entry (@{$genes_expected->{entries}}) {
 		$entry->{entry}[0]{cross_references}[0]{ref} = [sort {$a->{dbkey} cmp $b->{dbkey}} @{$entry->{entry}[0]{cross_references}[0]{ref}}];
 	}
@@ -61,7 +59,6 @@ subtest "EBEye sequences", sub {
 	$formatter->reformat_sequences( $genome_in_file, 'homo_sapiens_core_89_38', $in_file, $out_file );
 	my $seqs = XMLin( $out_file, ForceArray => 1 );
 	my $seqs_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
-	$seqs_expected->{dates} = $seqs->{dates};
 	is_deeply( $seqs, $seqs_expected, "Testing structure" );
 	unlink $out_file;
 };
@@ -71,7 +68,6 @@ subtest "EBEye variants", sub {
 	$formatter->reformat_variants( $genome_in_file, 'homo_sapiens_variation_89_38', $in_file, $out_file );
 	my $vars = XMLin( $out_file, ForceArray => 1 );
 	my $vars_expected = XMLin( $out_file . '.expected', ForceArray => 1 );
-	$vars_expected->{dates} = $vars->{dates};
 	is_deeply( $vars, $vars_expected, "Testing structure" );
 	unlink $out_file;
 };

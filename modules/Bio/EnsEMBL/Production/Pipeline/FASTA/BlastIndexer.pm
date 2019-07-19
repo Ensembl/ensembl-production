@@ -123,7 +123,7 @@ sub target_file {
 # Produce a dir like /nfs/path/to/<blast_dir>/genes/XXX && /nfs/path/to/<blast_dir>/dna/XXX
 sub target_dir {
   my ($self) = @_;
-  return $self->get_dir($self->param('blast_dir'), $self->param('type'));
+  return $self->index_path($self->param('blast_dir'), $self->param('type'));
 }
 
 sub db_title {

@@ -9,99 +9,12 @@ CREATE TABLE `analysis_description` (
   `created_at` datetime DEFAULT NULL,
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
-  `default_web_data_id` int(10) unsigned DEFAULT NULL,
-  `default_displayable` tinyint(1) DEFAULT NULL,
+  `web_data_id` int(1) unsigned DEFAULT NULL,
+  `displayable` tinyint(1) NOT NULL,
   PRIMARY KEY (`analysis_description_id`),
   UNIQUE KEY `logic_name_idx` (`logic_name`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1074 DEFAULT CHARSET=latin1;
 
-CREATE TABLE `analysis_web_data` (
-  `analysis_web_data_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `analysis_description_id` int(10) unsigned NOT NULL,
-  `web_data_id` int(10) unsigned DEFAULT NULL,
-  `species_id` int(10) unsigned NOT NULL,
-  `db_type` enum('cdna','core','funcgen','otherfeatures','rnaseq','vega','presite','sangervega','grch37_archive') NOT NULL DEFAULT 'core',
-  `displayable` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`analysis_web_data_id`),
-  UNIQUE KEY `uniq_idx` (`species_id`,`db_type`,`analysis_description_id`),
-  KEY `ad_idx` (`analysis_description_id`),
-  KEY `wd_idx` (`web_data_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4509 DEFAULT CHARSET=latin1;
-
-CREATE TABLE `changelog` (
-  `changelog_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `release_id` int(11) DEFAULT NULL,
-  `title` varchar(128) DEFAULT NULL,
-  `content` text,
-  `notes` text,
-  `status` enum('declared','handed_over','postponed','cancelled') NOT NULL DEFAULT 'declared',
-  `team` enum('Compara','Core','Funcgen','Genebuild','Outreach','Variation','Web','EnsemblGenomes','Wormbase','Production') DEFAULT NULL,
-  `assembly` enum('N','Y') NOT NULL DEFAULT 'N',
-  `gene_set` enum('N','Y') NOT NULL DEFAULT 'N',
-  `repeat_masking` enum('N','Y') NOT NULL DEFAULT 'N',
-  `stable_id_mapping` enum('N','Y') NOT NULL DEFAULT 'N',
-  `affy_mapping` enum('N','Y') NOT NULL DEFAULT 'N',
-  `biomart_affected` enum('N','Y') NOT NULL DEFAULT 'N',
-  `variation_pos_changed` enum('N','Y') NOT NULL DEFAULT 'N',
-  `db_status` enum('N/A','unchanged','patched','new') NOT NULL DEFAULT 'N/A',
-  `db_type_affected` set('cdna','core','funcgen','otherfeatures','rnaseq','variation','vega') DEFAULT NULL,
-  `mitochondrion` enum('Y','N','changed') NOT NULL DEFAULT 'N',
-  `priority` tinyint(1) NOT NULL DEFAULT '2',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  `is_current` int(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`changelog_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1173 DEFAULT CHARSET=latin1;
-
-CREATE TABLE `changelog_species` (
-  `changelog_id` int(11) NOT NULL DEFAULT '0',
-  `species_id` int(11) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`changelog_id`,`species_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE `db` (
-  `db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `species_id` int(10) unsigned NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '0',
-  `db_type` enum('cdna','core','coreexpressionatlas','coreexpressionest','coreexpressiongnf','funcgen','otherfeatures','rnaseq','variation','vega') NOT NULL DEFAULT 'core',
-  `db_release` varchar(8) NOT NULL,
-  `db_assembly` int(11) NOT NULL,
-  `db_suffix` char(1) DEFAULT '',
-  `db_host` varchar(32) DEFAULT NULL,
-  PRIMARY KEY (`db_id`),
-  UNIQUE KEY `species_release_idx` (`species_id`,`db_type`,`db_release`)
-) ENGINE=MyISAM AUTO_INCREMENT=2038 DEFAULT CHARSET=latin1;
-
-CREATE TABLE `division` (
-  `division_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  `shortname` varchar(4) NOT NULL,
-  PRIMARY KEY (`division_id`),
-  UNIQUE KEY `name_idx` (`name`),
-  UNIQUE KEY `shortname_idx` (`shortname`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE `division_db` (
-  `division_id` int(10) DEFAULT NULL,
-  `db_name` varchar(64) NOT NULL,
-  `db_type` enum('COMPARA','GENE_MART','SEQ_MART','SNP_MART','FEATURES_MART','ONTOLOGY_MART','ONTOLOGY','TAXONOMY','ANCESTRAL','WEBSITE','INFO') NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `update_type` enum('NEW_GENOME','NEW_ASSEMBLY','NEW_GENEBUILD','PATCHED','OTHER') DEFAULT 'PATCHED',
-  `release_status` enum('NOT_READY','COMPARA_READY','WEB_READY') DEFAULT 'NOT_READY',
-  UNIQUE KEY `division_db_idx` (`division_id`,`db_name`,`is_current`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE `division_species` (
-  `division_id` int(10) DEFAULT NULL,
-  `species_id` int(10) DEFAULT NULL,
-  UNIQUE KEY `division_species_idx` (`division_id`,`species_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_attrib` (
   `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
@@ -153,6 +66,7 @@ CREATE TABLE `master_biotype` (
   `description` text,
   `biotype_group` enum('coding','pseudogene','snoncoding','lnoncoding','mnoncoding','LRG','undefined','no_group') DEFAULT NULL,
   `so_acc` varchar(64) DEFAULT NULL,
+  `so_term` VARCHAR(1023) DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `modified_by` int(11) DEFAULT NULL,
@@ -216,7 +130,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=63 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=64 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -233,47 +147,6 @@ CREATE TABLE `meta_key` (
   KEY `name_type_idx` (`name`,`db_type`)
 ) ENGINE=MyISAM AUTO_INCREMENT=95 DEFAULT CHARSET=latin1;
 
-CREATE TABLE `meta_key_species` (
-  `meta_key_id` int(10) unsigned NOT NULL,
-  `species_id` int(10) unsigned NOT NULL,
-  UNIQUE KEY `uniq_idx` (`meta_key_id`,`species_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-CREATE TABLE `species` (
-  `species_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `db_name` varchar(255) NOT NULL,
-  `common_name` varchar(255) NOT NULL,
-  `web_name` varchar(255) NOT NULL,
-  `scientific_name` varchar(255) NOT NULL,
-  `production_name` varchar(255) NOT NULL,
-  `url_name` varchar(255) NOT NULL DEFAULT '',
-  `taxon` varchar(8) NOT NULL,
-  `species_prefix` varchar(20) NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  `attrib_type_id` smallint(5) unsigned DEFAULT NULL,
-  PRIMARY KEY (`species_id`),
-  UNIQUE KEY `db_name_idx` (`db_name`),
-  UNIQUE KEY `production_name_idx` (`production_name`)
-) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;
-
-CREATE TABLE `species_alias` (
-  `species_alias_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `species_id` int(10) unsigned NOT NULL,
-  `alias` varchar(255) NOT NULL,
-  `is_current` tinyint(1) NOT NULL DEFAULT '1',
-  `created_by` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL,
-  `modified_by` int(11) DEFAULT NULL,
-  `modified_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`species_alias_id`),
-  UNIQUE KEY `alias` (`alias`,`is_current`),
-  KEY `sa_speciesid_idx` (`species_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=219 DEFAULT CHARSET=latin1;
-
 CREATE TABLE `web_data` (
   `web_data_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `data` text,
@@ -282,30 +155,20 @@ CREATE TABLE `web_data` (
   `created_at` datetime DEFAULT NULL,
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`web_data_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=111 DEFAULT CHARSET=latin1;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`test_user`@`localhost` SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc`, `master_biotype`.`so_term` AS `so_term` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `db_list` AS select `db`.`db_id` AS `db_id`,concat(concat_ws('_',`species`.`db_name`,`db`.`db_type`,`db`.`db_release`,`db`.`db_assembly`),`db`.`db_suffix`) AS `full_db_name` from (`species` join `db` on((`species`.`species_id` = `db`.`species_id`))) where (`species`.`is_current` = 1);
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `external_db` AS select `master_external_db`.`external_db_id` AS `external_db_id`,`master_external_db`.`db_name` AS `db_name`,`master_external_db`.`db_release` AS `db_release`,`master_external_db`.`status` AS `status`,`master_external_db`.`priority` AS `priority`,`master_external_db`.`db_display_name` AS `db_display_name`,`master_external_db`.`type` AS `type`,`master_external_db`.`secondary_db_name` AS `secondary_db_name`,`master_external_db`.`secondary_db_table` AS `secondary_db_table`,`master_external_db`.`description` AS `description` from `master_external_db` where (`master_external_db`.`is_current` = 1) order by `master_external_db`.`external_db_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `external_db` AS select `master_external_db`.`external_db_id` AS `external_db_id`,`master_external_db`.`db_name` AS `db_name`,`master_external_db`.`db_release` AS `db_release`,`master_external_db`.`status` AS `status`,`master_external_db`.`priority` AS `priority`,`master_external_db`.`db_display_name` AS `db_display_name`,`master_external_db`.`type` AS `type`,`master_external_db`.`secondary_db_name` AS `secondary_db_name`,`master_external_db`.`secondary_db_table` AS `secondary_db_table`,`master_external_db`.`description` AS `description` from `master_external_db` where (`master_external_db`.`is_current` = 1) order by `master_external_db`.`external_db_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `full_analysis_description` AS select `list`.`full_db_name` AS `full_db_name`,`ad`.`logic_name` AS `logic_name`,`ad`.`description` AS `description`,`ad`.`display_label` AS `display_label`,`awd`.`displayable` AS `displayable`,`wd`.`data` AS `web_data` from ((((`db_list` `list` join `db` on((`list`.`db_id` = `db`.`db_id`))) join `analysis_web_data` `awd` on(((`db`.`species_id` = `awd`.`species_id`) and (`db`.`db_type` = `awd`.`db_type`)))) join `analysis_description` `ad` on((`awd`.`analysis_description_id` = `ad`.`analysis_description_id`))) left join `web_data` `wd` on((`awd`.`web_data_id` = `wd`.`web_data_id`))) where ((`db`.`is_current` = 1) and (`ad`.`is_current` = 1));
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `logic_name_overview` AS select `awd`.`analysis_web_data_id` AS `analysis_web_data_id`,`ad`.`logic_name` AS `logic_name`,`ad`.`analysis_description_id` AS `analysis_description_id`,`s`.`db_name` AS `species`,`s`.`species_id` AS `species_id`,`awd`.`db_type` AS `db_type`,`wd`.`web_data_id` AS `web_data_id`,`awd`.`displayable` AS `displayable` from (((`analysis_description` `ad` join `analysis_web_data` `awd` on((`ad`.`analysis_description_id` = `awd`.`analysis_description_id`))) join `species` `s` on((`awd`.`species_id` = `s`.`species_id`))) left join `web_data` `wd` on((`awd`.`web_data_id` = `wd`.`web_data_id`))) where ((`s`.`is_current` = 1) and (`ad`.`is_current` = 1));
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `unconnected_analyses` AS select `ad`.`analysis_description_id` AS `analysis_description_id`,`ad`.`logic_name` AS `logic_name` from (`analysis_description` `ad` left join `analysis_web_data` `awd` on((`ad`.`analysis_description_id` = `awd`.`analysis_description_id`))) where (isnull(`awd`.`species_id`) and (`ad`.`is_current` = 1));
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `unused_web_data` AS select `wd`.`web_data_id` AS `web_data_id` from (`web_data` `wd` left join `analysis_web_data` `awd` on((`wd`.`web_data_id` = `awd`.`web_data_id`))) where isnull(`awd`.`analysis_web_data_id`);
-
+CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;

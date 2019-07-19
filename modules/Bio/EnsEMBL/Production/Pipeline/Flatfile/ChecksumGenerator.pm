@@ -59,7 +59,6 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::ChecksumGenerator Bio::EnsEMBL::
 
 sub fetch_input {
   my ($self) = @_;
-  $self->throw("No 'species' parameter specified") unless $self->param('species');
   $self->throw("No 'type' parameter specified") unless $self->param('type');
   my $dir = $self->data_path();
   $self->param('dir', $dir);

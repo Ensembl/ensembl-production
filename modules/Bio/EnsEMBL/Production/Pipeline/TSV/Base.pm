@@ -46,7 +46,7 @@ sub _generate_file_name {
     push @name_bits, 'tsv';
 
     my $file_name = join( '.', @name_bits );
-    my $data_path = $self->get_data_path('tsv');
+    my $data_path = $self->get_dir('tsv');
  
 return File::Spec->catfile($data_path, $file_name);
 }

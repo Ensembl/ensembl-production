@@ -31,6 +31,7 @@ else {
 }
 $options .= ' -pepstats_tmpdir /tmp ';
 
+
 ok(1, 'Startup test');
 
 my $human = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens');
@@ -150,7 +151,7 @@ my $long_noncoding_density = 0;
 foreach my $n (@long_noncoding_density) {
    $long_noncoding_density += $n->density_value;
 }
-is($long_noncoding_density, 5, "LongNonCoding density on chromosome 6");
+is($long_noncoding_density, 7, "LongNonCoding density on chromosome 6");
 
 # Check long noncoding density for all chromosomes
 @long_noncoding_density = @{ $dfa->fetch_all('longnoncodingdensity') };
@@ -166,7 +167,7 @@ my $long_noncoding_count = 0;
 foreach my $c (@long_noncoding_count) {
    $long_noncoding_count += $c->value;
 }
-is($long_noncoding_count, 5, "Long non coding count on chromosome 6");
+is($long_noncoding_count, 7, "Long non coding count on chromosome 6");
 
 # Check long noncoding count for all reference chromosomes
 @long_noncoding_count = @{ $aa->fetch_all_by_Slice(undef, 'noncoding_cnt_l') };

@@ -520,22 +520,35 @@ sub find_genome_name {
 	my $name = $self->{genome_names}->{$genome};
 	if ( !defined $name ) {
 		if ( defined $self->{meta_dba} ) {
-			my $org =
+      my $meta = $self->get_metacontainer($genome);
+			my $division = $meta->get_division();
+			$meta->db()->dbc()->disconnect_if_idle();
+			my $orgs =
 			  $self->{meta_dba}->get_GenomeOrganismInfoAdaptor()
 			  ->fetch_by_name($genome);
+			my $org;
+      foreach my $genome (@{$orgs}){
+        $org = $genome if ($genome->division() eq $division);
+      }
 			$name = $org->display_name() if defined $org;
 		}
 		if ( !defined $name ) {
-			my $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
-															'MetaContainer' );
-			if ( !defined $meta ) {
-				throw "Cannot find genome $genome";
-			}
+			my $meta = $self->get_metacontainer($genome);
 			$name = $meta->get_display_name();
 			$meta->db()->dbc()->disconnect_if_idle();
 		}
 		$self->{genome_names}->{$genome} = $name;
 	}
 	return $name;
+}
+
+sub get_metacontainer {
+	my ($self, $genome) = @_;
+	my $meta = Bio::EnsEMBL::Registry->get_adaptor( $genome, 'core',
+															'MetaContainer' );
+	if ( !defined $meta ) {
+		throw "Cannot find genome $genome";
+	}
+	return $meta
 }
 1;

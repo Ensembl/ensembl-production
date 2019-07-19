@@ -45,7 +45,7 @@ sub dump {
     my $compara = $self->param('compara');
     if (!defined $compara) {
       $compara = $self->division();
-      if (!defined $compara || $compara eq '') {
+      if (!defined $compara || $compara eq '' || lc($compara) eq 'vertebrates') {
         $compara = 'multi';
       }
     }

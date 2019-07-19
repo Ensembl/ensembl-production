@@ -34,8 +34,8 @@ sub get_density {
   my $sql = q{
      SELECT count(*) FROM variation_feature
      WHERE seq_region_id = ?
-     AND seq_region_start <= ?
-     AND seq_region_end >= ? };
+     AND LEAST(seq_region_start, seq_region_end) <= ?
+     AND GREATEST(seq_region_start, seq_region_end) >= ? };
   my @params = [$block->get_seq_region_id, $block->end, $block->start];
   my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => @params);
   return $count;

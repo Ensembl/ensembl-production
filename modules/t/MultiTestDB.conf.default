@@ -16,7 +16,8 @@
       'web' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
       'production' => 'Bio::EnsEMBL::Production::DBSQL::DBAdaptor',
       'compara' => 'Bio::EnsEMBL::Compara::DBSQL::DBAdaptor',
-      'ontology' => 'Bio::EnsEMBL::DBSQL::OntologyDBAdaptor'
+      'ontology' => 'Bio::EnsEMBL::DBSQL::OntologyDBAdaptor',
+      'metadata' => 'Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor'
     },
     'hive' => {
       'hive' => 'Bio::EnsEMBL::Hive::DBSQL::DBAdaptor',

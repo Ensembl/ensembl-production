@@ -54,21 +54,11 @@ my %ucsc_name_cache;
 
 sub fetch_input {
     my ($self) = @_;
-
-    my $eg       = $self->param_required('eg');
     my $compress = $self->param_required('compress');
     my $ucsc     = $self->param_required('ucsc');
 
-    $self->param('eg', $eg);
     $self->param('compress', $compress);
     $self->param('ucsc', $ucsc);
-
-    if($eg){
-       my $base_path = $self->build_base_directory();
-       my $release   = $self->param('eg_version');
-       $self->param('base_path', $base_path);
-       $self->param('release', $release);
-    }
 
 return;
 }
@@ -82,7 +72,7 @@ sub run {
     my $core_dba  = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     confess('Type error!') unless($core_dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 
-    my $chain_path = $self->get_data_path('assembly_chain');
+    my $chain_path = $self->get_dir('assembly_chain');
     my $prod_name  = $core_dba->get_MetaContainer->get_production_name();
     $prod_name   //= $core_dba->species();
     my $liftovers  = get_liftover_mappings($core_dba);

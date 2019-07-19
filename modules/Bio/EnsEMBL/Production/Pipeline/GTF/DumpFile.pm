@@ -70,39 +70,23 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  
-  my $eg = $self->param('eg');
-  $self->param('eg', $eg);
 
-  if($eg){
-     my $base_path  = $self->build_base_directory();
-     $self->param('base_path', $base_path);
- 
-     my $release = $self->param('eg_version');    
-     $self->param('release', $release);
-  } 
-  
   throw "Need a species" unless $self->param('species');
   throw "Need a release" unless $self->param('release');
   throw "Need a base_path" unless $self->param('base_path');
 
-  if(!$eg){
-   throw "No gtfToGenePred executable given" 
-    unless $self->param('gtf_to_genepred');
-   $self->assert_executable($self->param('gtf_to_genepred'));
-
-   throw "No genePredCheck executable given" 
-    unless $self->param('gene_pred_check');
-   $self->assert_executable($self->param('gene_pred_check'));
+  if ($self->division eq 'vertebrates'){
+    throw "No gtfToGenePred executable given" unless $self->param('gtf_to_genepred');
+    $self->assert_executable($self->param('gtf_to_genepred'));
+    throw "No genePredCheck executable given" unless $self->param('gene_pred_check');
+    $self->assert_executable($self->param('gene_pred_check'));
   }
-
   return;
 }
 
 sub run {
   my ($self) = @_;
 
-  my $eg   = $self->param('eg');  
   my $abinitio = $self->param('abinitio');
   my $gene = $self->param('gene');
   my $root = $self->data_path();
@@ -167,7 +151,7 @@ sub run {
 
   if ($gene){
     $self->info(sprintf "Checking GTF file %s", $out_file);
-    $self->_gene_pred_check($out_file) unless $eg;
+    $self->_gene_pred_check($out_file) if $self->division eq 'vertebrates';
   }
 
   $self->info("Dumping GTF README for %s", $self->param('species'));

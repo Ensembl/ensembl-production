@@ -60,22 +60,24 @@ return;
 }
 
 sub run {
-    my ($self) = @_;
-    my $dirs   = get_dirs($self, $self->param_required('base_path'));
+  my ($self) = @_;
+  my $base_path = $self->param_required('base_path');
+  my $species = $self->param_required('species');
+  my $dumps = $self->param_required('dumps');
+  my $dirs   = get_dirs($self, $base_path, $species, $dumps );
 
-    foreach my $dir (@{$dirs}) {
-      $self->info('Producing CHECKSUM on directory %s', $dir);
+  foreach my $dir (@{$dirs}) {
+    $self->info('Producing CHECKSUM on directory %s', $dir);
 
-      my $contents = get_contents($self, $dir);
+    my $contents = get_contents($self, $dir);
 
-      if(leaf_directory($self, $contents)) {
-        $self->info('Directory is a leaf; Will generate checksum');
-        remove_checksums($self, $dir, $contents);
-        generate_checksums($self, $dir, $contents);
-      }
+    if(leaf_directory($self, $contents)) {
+      $self->info('Directory is a leaf; Will generate checksum');
+      remove_checksums($self, $dir, $contents);
+      generate_checksums($self, $dir, $contents);
     }
-    $self->info('CHECKSUM generating done');
-
+  }
+  $self->info('CHECKSUM generating done');
 return;
 }
 
@@ -86,11 +88,33 @@ return;
 }
 
 sub get_dirs {
-    my ($self, $base_path) = @_;
-   
-    my $output    = `find $base_path -type d`;
-    my @dirs      = map { chomp $_; $_ } split /\n/, $output;
-
+  my ($self, $base_path, $species, $dumps) = @_;
+  my @dirs;
+  foreach my $dump (@{$dumps}){
+    if ($dump =~ m/fasta/ ){
+      next;
+    }
+    elsif ($dump =~ m/tsv/){
+      $dump = "tsv";
+    }
+    my $dump_dir = $self->get_dir($dump);
+    push @dirs, $dump_dir
+  }
+  #Taking care of blast_fasta for non-vertebrates
+  if ($self->division() ne "vertebrates"){
+    my $mc = $self->get_DBAdaptor()->get_MetaContainer();
+    if ( $mc->is_multispecies() == 1 ) {
+      my $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
+      push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $collection_db, $species);
+    }
+    else{
+      push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $species);
+    }
+  }
+  # Taking care of fasta dumps because these have subdirectories fasta/dna,...
+  my $fasta_path = $self->get_dir('fasta');
+  my $fasta_dirs = `find $fasta_path -type d`;
+  push @dirs, map { chomp $_; $_ } split /\n/, $fasta_dirs;
 return \@dirs;
 }
 
@@ -173,8 +197,8 @@ sub generate_checksums {
     }
 
     close $fh or die "Cannot close $checksum_file: $!";
-    # User rw, Group r, Others r
-    chmod 0644, $checksum_file or die "Couldn't change the permission to $checksum_file: $!";
+    # User rw, Group rw, Others r
+    chmod 0664, $checksum_file or die "Couldn't change the permission to $checksum_file: $!";
     #chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, $checksum_file;
     $self->info("Finished writing checksum file $checksum_file");
 

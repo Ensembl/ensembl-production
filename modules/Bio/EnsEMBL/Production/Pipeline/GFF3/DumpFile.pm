@@ -35,18 +35,6 @@ my $add_xrefs = 0;
 
 sub fetch_input {
   my ($self) = @_;
-
-  my $eg = $self->param('eg');
-  $self->param('eg', $eg);
-
-  if($eg){
-     my $base_path  = $self->build_base_directory();
-     $self->param('base_path', $base_path);
-
-     my $release = $self->param('eg_version');
-     $self->param('release', $release);
-  }
-
   my $base_path     = $self->param('base_path');
   my $out_file_stem = $self->param('out_file_stem');
   my $species       = $self->param('species');
@@ -183,7 +171,6 @@ sub print_to_file {
   my $logic_names = $self->param_required('logic_name');
 
   my $reg = 'Bio::EnsEMBL::Registry';
-  my $oa = $reg->get_adaptor('multi', 'ontology', 'OntologyTerm');
 
   my $mc = $dba->get_MetaContainer();
   my $providers = $mc->list_value_by_key('provider.name') || '';
@@ -192,7 +179,7 @@ sub print_to_file {
   gz_work_with_file($file, 'w', sub {
     my ($fh) = @_;
 
-    my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($oa, $fh);
+    my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($fh);
 
     $serializer->print_main_header(undef, $dba) if $include_header;
 
@@ -354,11 +341,7 @@ sub _generate_abinitio_file_name {
 
 sub data_path {
   my ($self) = @_;
-
-  $self->throw("No 'species' parameter specified")
-    unless $self->param('species');
-
-  return $self->get_dir('gff3', $self->param('species'));
+  return $self->get_dir('gff3');
 }
 
 sub write_output {

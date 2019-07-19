@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
-
+set -euo pipefail
 database=$1
 output_dir=$2
 host=$3
@@ -21,10 +21,17 @@ user=$4
 password=$5
 port=$6
 
-rm -r "$output_dir/$database"
+if [ -d "$output_dir/$database" ]
+ then
+    rm -r "$output_dir/$database"
+fi
+
 mkdir -m 777 -p "$output_dir/$database"
+
 cd "$output_dir/$database"
+
 echo "Dumping $database";
+
 EXCLUDED_TABLES=(
 MTMP_probestuff_helper
 MTMP_evidence
@@ -39,25 +46,29 @@ MTMP_variation_set_variation
 for TABLE in "${EXCLUDED_TABLES[@]}"
 do :
    IGNORED_TABLES_STRING+=" --ignore-table=${database}.${TABLE}"
+   IGNORED_TABLES_SHOW+="'${TABLE}',"
 done
-mysqldump -T ${output_dir}/${database} ${IGNORED_TABLES_STRING} --host=$host --user=$user --password=$password --port=$port $database;
-echo "Removing the individual table sql files for $database"
-rm -f *.sql
-echo "Dumping sql file for $database";
-mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} -d $database > ${output_dir}/$database/$database.sql;
-echo "Gzipping txt files";
-ls -1 | grep .txt | grep -v LOADER-LOG | while read file; do
-        gzip -nc "$file" > "$output_dir/$database/$file.gz"
-        rm -f $file
-done
-if [ -e "$database.sql" ]; then
-    echo "Gzipping existing $database.sql file"
-    gzip -nc $database.sql > "$output_dir/$database/$database.sql.gz"
-    rm -f $database.sql
+IGNORED_TABLES_SHOW=${IGNORED_TABLES_SHOW%?}
+cmd_line_options=""
+
+if [[ $database =~ .*mart.* ]]; then
+    cmd_line_options=" --skip-lock-tables"
 fi
+
+query="show tables WHERE tables_in_${database} NOT IN (${IGNORED_TABLES_SHOW})"
+
+echo "Dumping sql file for $database";
+
+mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database | gzip > ${output_dir}/$database/$database.sql.gz
+
+for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
+do
+    echo "DUMPING TABLE: $database.$t"
+    mysql --host=$host --max_allowed_packet=512M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --raw --skip-column-names | sed '/NULL/ s//\\N/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
+done
+
 echo "Creating CHECKSUM for $database"
-ls -1 *.gz | while read file; do
+find  -type f -name '*.gz' -printf '%P\n' | while read file; do
     sum=$(sum $file)
     echo -ne "$sum\t$file\n" >> CHECKSUMS
 done
-

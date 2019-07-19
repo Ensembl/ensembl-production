@@ -208,12 +208,14 @@ sub pipeline_analyses {
              -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'process_alignment',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ProcessAlignment',
              -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'rnacentral_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::RNAcentralMapping',
@@ -236,12 +238,14 @@ sub pipeline_analyses {
              -rc_name    => 'mem',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping',
              -rc_name    => 'mem',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+            -analysis_capacity => 30
             },
             {-logic_name => 'notify_by_email',
              -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
@@ -257,9 +261,9 @@ sub resource_classes {
     my $self = shift;
     return {
       'default' => { 'LSF' => ''},
-      'small'   => { 'LSF' => '-q production-rh7 -M 200 -R "rusage[mem=200]"'},
-      'normal'  => { 'LSF' => '-q production-rh7 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh7 -M 2000 -R "rusage[mem=2000]"'},
+      'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
+      'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
+      'mem'     => { 'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"'},
     }
 }
 
