@@ -38,7 +38,8 @@ sub dump {
   $self->{logger} = get_logger();
   $self->{logger}->info("Dumping regulatory features for $species");
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
-  my $elems = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()->fetch_regulatory_elements_for_dba($dba);
+  my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $elems = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()->fetch_regulatory_elements_for_dba($dba,$core_dba);
   $dba->dbc()->disconnect_if_idle();
   $self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
   if (defined $elems && scalar(@$elems) > 0) {

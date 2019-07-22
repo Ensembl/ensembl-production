@@ -52,8 +52,9 @@ sub new {
 sub fetch_regulatory_elements {
   my ($self, $name) = @_;
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($name, 'funcgen');
+  my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($name, 'core');
   croak "Could not find database adaptor for $name" unless defined $dba;
-  return $self->fetch_regulatory_elements_for_dba($dba);
+  return $self->fetch_regulatory_elements_for_dba($dba, $core_dba);
 }
 
 sub fetch_regulatory_elements_for_dba {
@@ -145,8 +146,9 @@ sub fetch_regulatory_elements_for_dba {
         'TarBase miRNA' as type
      FROM mirna_target_feature mrf
      JOIN feature_type ft USING (feature_type_id)
-     JOIN feature_set fs USING (feature_set_id)
-     JOIN $core.seq_region sr USING (seq_region_id)/,
+     JOIN feature_set fs
+     JOIN $core.seq_region sr USING (seq_region_id)
+     WHERE mrf.analysis_id = fs.analysis_id/,
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
         my $f = shift @_;
