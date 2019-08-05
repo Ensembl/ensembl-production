@@ -50,8 +50,10 @@ sub default_options {
         run_all         => 0, #always run every species
         use_pan_compara => 0, 
         variant_length  => 1000000,
-        probe_length    => 100000, 
+        probe_length    => 100000,
+        regulatory_length => 100000,
         dump_variant    => 0,
+        dump_regulation => 0,
         release => software_version(),
         eg_release => $self->o('eg_release')
     };
@@ -71,6 +73,7 @@ sub pipeline_wide_parameters {
 sub pipeline_analyses {
     my $self = shift;
     my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory', 'StructuralVariantDumpFactory', 'DumpPhenotypesJson' ] : [ 'DumpPhenotypesJson' ] ;
+    my @regulation_analyses = $self->o('dump_regulation') == 1 ? [ 'RegulationDumpFactory', 'ProbeDumpFactory' ] : [ 'ProbeDumpFactory' ];
     
     return [
         {
@@ -111,7 +114,7 @@ sub pipeline_analyses {
                 2 => [ 'DumpGenesJson' ],
                 7 => [ 'DumpGenesJson' ],
                 4 => @variant_analyses, 
-                6 => [ 'ProbeDumpFactory' ]
+                6 => @regulation_analyses,
             }
         },
         {
@@ -164,10 +167,28 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
             -parameters    => {},
             -hive_capacity => 8,
-            -rc_name       => '8g',
+            -rc_name       => '32g',
             -flow_into     => {
-                2 => 'ReformatRegulationSolr'
+                2 => [
+                    '?accu_name=motifs_dump_file&accu_address=[]',
+                    '?accu_name=regulatory_features_dump_file&accu_address=[]',
+                    '?accu_name=mirna_dump_file&accu_address=[]',
+                    '?accu_name=external_features_dump_file&accu_address=[]',
+                    '?accu_name=peaks_dump_file&accu_address=[]',
+                    '?accu_name=transcription_factors_dump_file&accu_address=[]',
+                    '?accu_name=species'
+                ],
             }
+        },
+        {
+            -logic_name => 'RegulationDumpMerge',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationMerge',
+            -rc_name    => '1g',
+            -flow_into  =>
+                {
+                    2 => ['ReformatRegulationSolr','ReformatRegulationAdvancedSearch'],
+                }
         },
         {
             -logic_name => 'VariantDumpFactory',
@@ -275,6 +296,19 @@ sub pipeline_analyses {
                 }
         },
         {
+            -logic_name => 'RegulationDumpFactory',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
+            -parameters => { type => 'funcgen',
+                table             => 'motif_feature',
+                column            => 'motif_feature_id',
+                length            => $self->o('regulatory_length') },
+            -rc_name    => '1g',
+            -flow_into  =>
+                {
+                    '2->A' => 'DumpRegulationJson', 'A->1' => 'RegulationDumpMerge'
+                }
+        },
+        {
             -logic_name    => 'DumpProbeJson',
             -hive_capacity => 8,
             -module        =>
@@ -295,8 +329,8 @@ sub pipeline_analyses {
             -rc_name    => '1g',
             -flow_into  =>
                 {
-                    2 => 'ReformatProbesSolr',
-                    3 => 'ReformatProbeSetsSolr',
+                    2 => ['ReformatProbesSolr','ReformatProbesAdvancedSearch'],
+                    3 => ['ReformatProbeSetsSolr','ReformatProbesetsAdvancedSearch'],
                 }
         },
         {
@@ -310,6 +344,27 @@ sub pipeline_analyses {
             -logic_name => 'ReformatVariantsAdvancedSearch',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatVariantsAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
+            -logic_name => 'ReformatRegulationAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatRegulationAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
+            -logic_name => 'ReformatProbesAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
+            -logic_name => 'ReformatProbesetsAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesetsAdvancedSearch',
             -rc_name    => '1g',
             -flow_into  => {}
         },

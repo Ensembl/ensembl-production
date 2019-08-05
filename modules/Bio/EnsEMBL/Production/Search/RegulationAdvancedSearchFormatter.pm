@@ -61,84 +61,77 @@ sub disconnect {
   return;
 }
 
-sub remodel_variants {
-  my ( $self, $variants_file, $genomes_file, $variants_out ) = @_;
+sub remodel_regulation {
+  my ( $self, $regulation_file, $genomes_file, $regulation_out ) = @_;
   my $genome  = decode_json( read_file($genomes_file) );
-  my $lineage = $genome->{organism}->{lineage} =
-    $self->expand_taxon( $genome->{organism}->{taxonomy_id} );
-  my $name = $genome->{name};
 
-  open my $out, ">", $variants_out || croak "Could not open $variants_out for writing: $@";
+  open my $out, ">", $regulation_out || croak "Could not open $regulation_out for writing: $@";
   print $out "[";
 
   my $n = 0;
   process_json_file(
-    $variants_file,
+    $regulation_file,
     sub {
-      my $variant = shift;
-      $variant->{genome}         = $genome->{organism}{name};
-      $variant->{genome_display} = $genome->{organism}{display_name};
-      $variant->{taxon_id}       = $genome->{organism}{taxonomy_id};
-      $variant->{lineage}        = $lineage;
-      # update parents of ontology terms
-      for my $phenotype ( @{ $variant->{phenotypes} } ) {
-        $phenotype->{parents} =
-          $self->expand_term( $phenotype->{ontology_accession} )
-          ;
-      }
-      for my $loc ( @{ $variant->{locations} } ) {
-        for my $annotation ( @{ $loc->{annotations} } ) {
-          for my $con ( @{ $annotation->{consequences} } ) {
-            $con->{parents} = $self->expand_term( $con->{so_accession} );
-          }
-        }
-      }
+      my $feature = shift;
+      $feature->{genome}         = $genome->{organism}{name};
       if ( $n++ > 0 ) {
         print $out ",";
       }
-      print $out encode_json($variant);
+      print $out encode_json($feature);
     } );
 
   print $out "]";
   close $out;
   return;
-} ## end sub remodel_variants
+} ## end sub remodel_regulation
 
-sub expand_term {
-  my ( $self, $term ) = @_;
-  return undef unless defined $term;
-  if ( !defined $self->{onto_dba} ) {
-    return [$term];
-  }
-  my $terms = $self->{term_parents}->{$term};
-  if ( !defined $terms ) {
-    $terms = $self->{onto_dba}->dbc()->sql_helper()->execute_simple(
-      -SQL => q/select distinct p.accession from term t
-join closure c on (t.term_id=c.child_term_id)
-join term p on (p.term_id=c.parent_term_id)
-where t.ontology_id=p.ontology_id and t.accession=?/,
-      -PARAMS => [$term] );
-    push @{$terms}, $term;
-    $self->{term_parents}->{$term} = $terms;
-  }
-  return $terms;
-}
+sub remodel_probes {
+  my ( $self, $probes_file, $genomes_file, $probes_file_out ) = @_;
+  my $genome  = decode_json( read_file($genomes_file) );
+  my $name = $genome->{name};
 
-sub expand_taxon {
-  my ( $self, $taxon ) = @_;
-  my $taxons = [];
-  if ( defined $self->{tax_dba} ) {
-    $taxons = $self->{taxon_parents}->{$taxon};
-    if ( !defined $taxons ) {
-      $taxons = $self->{tax_dba}->dbc()->sql_helper()->execute_simple(
-        -SQL => q/select n.taxon_id from ncbi_taxa_node n
-  join ncbi_taxa_node child on (child.left_index between n.left_index and n.right_index)
-  where child.taxon_id=?/,
-        -PARAMS => [$taxon] );
-      $self->{taxon_parents}->{$taxon} = $taxons;
-    }
-  }
-  return $taxons;
-}
+  open my $out, ">", $probes_file_out || croak "Could not open $probes_file_out for writing: $@";
+  print $out "[";
 
+  my $n = 0;
+  process_json_file(
+    $probes_file,
+    sub {
+      my $probe = shift;
+      $probe->{genome} = $genome->{organism}{name};
+      if ( $n++ > 0 ) {
+        print $out ",";
+      }
+      print $out encode_json($probe);
+    } );
+
+  print $out "]";
+  close $out;
+  return;
+} ## end sub remodel_probes
+
+sub remodel_probesets {
+  my ( $self, $probesets_file, $genomes_file, $probesets_file_out ) = @_;
+  my $genome  = decode_json( read_file($genomes_file) );
+  my $name = $genome->{name};
+
+  open my $out, ">", $probesets_file_out || croak "Could not open $probesets_file_out for writing: $@";
+  print $out "[";
+
+  my $n = 0;
+  process_json_file(
+    $probesets_file,
+    sub {
+      my $probeset = shift;
+      $probeset->{genome} = $genome->{organism}{name};
+      if ( $n++ > 0 ) {
+        print $out ",";
+      }
+      print $out encode_json($probeset);
+    } );
+
+  print $out "]";
+  close $out;
+  return;
+} ## end sub remodel_probesets
 1;

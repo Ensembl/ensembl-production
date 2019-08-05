@@ -62,7 +62,7 @@ sub reformat_regulatory_features {
               $f->{id},
               $f->{set_name});
         }
-        else {
+        elsif ($f->{type} eq 'Regulatory Features') {
           $desc = sprintf("%s regulatory feature", $f->{feature_name});
           $url = sprintf("%s/Regulation/Summary?rf=%s",
               $genome->{organism}->{url_name},

@@ -17,9 +17,10 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Search::ReformatRegulationAdvancedSearch;
+package Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesetsAdvancedSearch;
+
 use strict;
-use warnings FATAL => 'all';
+use warnings;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
@@ -27,7 +28,12 @@ use Bio::EnsEMBL::Utils::Exception qw(throw);
 
 use Bio::EnsEMBL::Production::Search::RegulationAdvancedSearchFormatter;
 
+use JSON;
+use File::Slurp qw/read_file/;
+use Carp qw(croak);
+
 use Log::Log4perl qw/:easy/;
+use Data::Dumper;
 
 sub run {
   my ($self) = @_;
@@ -39,11 +45,12 @@ sub run {
   }
   $self->{logger} = get_logger();
 
-  my $regulation_files = $self->param('dump_file');
-  return unless defined $regulation_files;
+  my $probesets_file = $self->param('dump_file');
+  return unless defined $probesets_file;
 
   my $species = $self->param_required('species');
   my $sub_dir = $self->get_dir('adv_search');
+  my $probesets_file_out = $sub_dir . '/' . $species . '_probesets.json';
   my $genome_file = $self->param_required('genome_file');
   my $reformatter =
       Bio::EnsEMBL::Production::Search::RegulationAdvancedSearchFormatter->new(
@@ -51,14 +58,9 @@ sub run {
           -metadata_dba => $self->metadata_dba(),
           -ontology_dba => $self->ontology_dba()
       );
-  foreach my $reg (keys %$regulation_files) {
-    my $file = $regulation_files->{$reg};
-    my $regulation_file_out = $sub_dir . '/' . $species . '_' . $reg . '.json';
-    $self->{logger}->info("Reformatting $file into $regulation_file_out");
-    $reformatter->remodel_regulation(
-                $file, $genome_file, $regulation_file_out );
-  }
+  $reformatter->remodel_probes($probesets_file, $genome_file,
+      $probesets_file_out
+  );
   return;
 } ## end sub run
-
 1;
