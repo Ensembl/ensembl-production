@@ -43,6 +43,7 @@ use Carp qw/croak/;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Data::Dumper;
+use List::Util qw(first);
 
 my $logger = get_logger();
 
@@ -123,7 +124,7 @@ sub fetch_probes_for_dba {
         push @{$probesets_transcripts->{ $row->[0] }}, { %{$t}, description => $row->[2] } if defined $t;
         return;
       });
-  $logger->info("Fetched details for " . scalar(keys %$probesets_transcripts) . " probe_transcripts");
+  $logger->info("Fetched details for " . scalar(keys %$probesets_transcripts) . " probeset_transcripts");
   # load probes
   $logger->info("Fetching probes");
   my $probes = {};
@@ -169,6 +170,13 @@ sub fetch_probes_for_dba {
           delete $p->{start};
           delete $p->{end};
           delete $p->{strand};
+          delete $p->{array_chip};
+          delete $p->{design_id};
+          delete $p->{array};
+          delete $p->{array_vendor};
+          delete $p->{array_format};
+          delete $p->{array_class};
+          delete $p->{array_type};
           delete $p->{probe_set_id};
           delete $p->{class} unless defined $p->{class};
           delete $p->{description} unless defined $p->{description};
@@ -181,17 +189,27 @@ sub fetch_probes_for_dba {
             $probes->{$id} = $p;
           }
         }
-        push @{$p->{locations}}, {
-            seq_region_name => $row->{seq_region_name},
-            start           => $row->{start},
-            end             => $row->{end},
-            strand          => $row->{strand} };
+        if (!first { $row->{seq_region_name} == $_->{seq_region_name} } @{$p->{locations}} and !first { $row->{start} == $_->{start} } @{$p->{locations}} and !first { $row->{end} == $_->{end} } @{$p->{locations}} and !first { $row->{strand} == $_->{strand} } @{$p->{locations}}){
+          push @{$p->{locations}}, {
+              seq_region_name => $row->{seq_region_name},
+              start           => $row->{start},
+              end             => $row->{end},
+              strand          => $row->{strand} };
+        }
+        push @{$p->{arrays}},{
+              array_chip => $row->{array_chip},
+              design_id  => $row->{design_id},
+              array      => $row->{array},
+              array_vendor => $row->{array_vendor},
+              array_format => $row->{array_format},
+              array_class  => $row->{array_class},
+              array_type   => $row->{array_type}};
         return;
       });
   # probe sets
   $logger->info(
       "Fetched details for " . scalar(keys %$probes) . " probes");
-  my $probe_sets = [];
+  my $probe_sets = {};
   $h->execute_no_return(
       -SQL          => q/
       SELECT
@@ -213,16 +231,27 @@ sub fetch_probes_for_dba {
       -CALLBACK     => sub {
         my $row = shift @_;
         my $id = $species . '_probeset_' . $row->{id};
-        $row->{probes} = $probes_by_set->{ $row->{id} };
-        $row->{id} = $id;
-        my $transcripts = $probesets_transcripts->{ $row->{id} };
-        $row->{transcripts} = $transcripts if defined $transcripts;
-        delete $row->{family} unless defined $row->{family};
-        push @{$probe_sets}, $row;
+        my $ps = $probe_sets->{$id};
+        if (!defined $ps) {
+          $ps = { %$row };
+          $ps->{probes} = $probes_by_set->{ $row->{id} };
+          $ps->{id} = $id;
+          my $transcripts = $probesets_transcripts->{ $row->{id} };
+          $ps->{transcripts} = $transcripts if defined $transcripts;
+          delete $ps->{family} unless defined $ps->{family};
+          delete $ps->{array_chip};
+          delete $ps->{array};
+          delete $ps->{array_vendor};
+          $probe_sets->{$id}=$ps;
+        }
+        push @{$ps->{arrays}},{
+              array_chip => $row->{array_chip},
+              array      => $row->{array},
+              array_vendor => $row->{array_vendor}};
         return;
       });
-  $logger->info("Fetched details for " . scalar(@$probe_sets) . " probe sets");
-  return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
+  $logger->info("Fetched details for " . scalar(keys %$probe_sets) . " probe sets");
+  return { probes => [ values %{$probes} ], probe_sets => [ values %{$probe_sets} ] };
 } ## end sub fetch_probes_for_dba
 
 1;
