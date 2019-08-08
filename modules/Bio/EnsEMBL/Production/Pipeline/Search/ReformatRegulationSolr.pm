@@ -58,7 +58,7 @@ sub run {
 			my $file = $dump_files->{$reg};
 			my $json_file_path = $sub_dir . '/' . $species . '_' . $reg . '.json';
 			$self->{logger}->info("Reformatting $file into $json_file_path");
-		  $reformatter->reformat_regulatory_features(
+		  $reformatter->reformat_regulation(
 							   $file, $json_file_path, $genome,
 							   $type );
     }

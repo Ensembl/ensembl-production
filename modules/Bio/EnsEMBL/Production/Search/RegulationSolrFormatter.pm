@@ -41,17 +41,18 @@ sub new {
   return $self;
 }
 
-sub reformat_regulatory_features {
+sub reformat_regulation {
   my ($self, $infile, $outfile, $genome, $type) = @_;
   $type ||= 'funcgen';
   reformat_json(
       $infile, $outfile,
       sub {
         my ($f) = @_;
-        return undef if defined $f->{set_name} && $f->{set_name} =~ m/FANTOM/;
         my $desc;
         my $url;
+        my $id;
         if ($f->{type} eq 'TarBase miRNA') {
+          $id = $f->{id};
           $desc = sprintf("%s is a %s from %s which hits the genome in %d locations",
               $f->{name},
               $f->{class},
@@ -63,21 +64,52 @@ sub reformat_regulatory_features {
               $f->{set_name});
         }
         elsif ($f->{type} eq 'Regulatory Features') {
+          $id = $f->{id};
           $desc = sprintf("%s regulatory feature", $f->{feature_name});
           $url = sprintf("%s/Regulation/Summary?rf=%s",
               $genome->{organism}->{url_name},
               $f->{id});
         }
+        elsif ($f->{type} eq 'Binding Motifs') {
+          $id = $f->{id};
+          $desc = sprintf("Binding motif with stable id %s and a score of %d which hits the genome in %d:%d-%d:%d locations", $f->{stable_id},
+              $f->{score},
+              $f->{seq_region_name},
+              $f->{seq_region_start},
+              $f->{seq_region_end},
+              $f->{seq_region_strand});
+        }
+        elsif ($f->{type} eq 'Other Regulatory Regions') {
+          $id = $f->{name};
+          $desc = sprintf("Other regulatory region with name %s is a %s from %s which hits the genome in %d locations", $f->{name},
+              $f->{class},
+              $f->{description},
+              scalar(@{$f->{locations}}));
+        }
+        elsif ($f->{type} eq 'Regulatory Evidence') {
+          $id = $f->{feature_name};
+          $desc = sprintf("Regulatory Evidence with name %s is a %s from %s with epigenome %s which hits the genome in %d locations", $f->{feature_name},
+              $f->{class},
+              $f->{description},
+              $f->{epigenome_name},
+              scalar(@{$f->{locations}}));
+        }
+        elsif ($f->{type} eq 'Transcription Factor') {
+          $id = $f->{name};
+          $desc = sprintf("Transcription factor with name %s is a %s which hits Ensembl gene id %s", $f->{name},
+              $f->{description},
+              $f->{gene_stable_id});
+          $desc = $desc . sprintf(" with %d Binding matrix", scalar(@{$f->{binding_matrix}})) if defined $f->{binding_matrix};
+        }
         return {
-            %{_base($genome, $type, 'RegulatoryFeature')},
-            id          => $f->{id},
+            %{_base($genome, $type, $f->{type})},
+            id          => $id,
             description => $desc,
             domain_url  => $url };
       }
   );
   return;
 }
-
 sub reformat_probes {
   my ($self, $infile, $outfile, $genome, $type) = @_;
   $type ||= 'funcgen';
