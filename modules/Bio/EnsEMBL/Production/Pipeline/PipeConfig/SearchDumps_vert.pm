@@ -102,7 +102,7 @@ sub pipeline_analyses {
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
             -parameters    => {},
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '1g',
             -flow_into     => {
                 2 => [ 'DumpGenesJson' ],
@@ -145,7 +145,7 @@ sub pipeline_analyses {
             -parameters    => {
                 use_pan_compara => $self->o('use_pan_compara')
             },
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '32g',
             -flow_into     => {
                 1 => [
@@ -160,7 +160,7 @@ sub pipeline_analyses {
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
             -parameters    => {},
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '32g',
             -flow_into     => {
                 2 => [
@@ -198,7 +198,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name    => 'DumpVariantJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 8,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
             -rc_name       => '32g',
@@ -242,7 +242,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name    => 'DumpStructuralVariantJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson',
             -rc_name       => '32g',
@@ -267,7 +267,7 @@ sub pipeline_analyses {
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpPhenotypesJson',
             -parameters    => {},
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '1g',
             -flow_into     => {
                 2 => 'ReformatPhenotypesSolr'
@@ -301,7 +301,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name    => 'DumpProbeJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
             -rc_name       => '32g',

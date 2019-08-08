@@ -105,7 +105,7 @@ sub pipeline_analyses {
           -module        =>
               'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
           -parameters    => {},
-          -hive_capacity => 8,
+          -analysis_capacity => 10,
           -rc_name       => '1g',
           -flow_into     => {
               2 => [ 'DumpGenesJson' ],
@@ -147,7 +147,7 @@ sub pipeline_analyses {
           -parameters    => {
               use_pan_compara => $self->o('use_pan_compara')
           },
-          -hive_capacity => 8,
+          -analysis_capacity => 10,
           -rc_name       => '32g',
           -flow_into     => {
               1 => [
@@ -172,7 +172,7 @@ sub pipeline_analyses {
       },
       {
           -logic_name    => 'DumpVariantJson',
-          -hive_capacity => 8,
+          -analysis_capacity => 10,
           -module        =>
               'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
           -rc_name       => '32g',
