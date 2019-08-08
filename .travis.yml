@@ -44,6 +44,7 @@ before_install:
 install:
 - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
 - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
+- cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
 - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
 - cpanm --sudo -v --installdeps --notest .
 - cpanm --sudo -n Devel::Cover::Report::Coveralls
