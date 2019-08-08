@@ -28,6 +28,7 @@ diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
 use Bio::EnsEMBL::Production::Search::ProbeFetcher;
 use Bio::EnsEMBL::Test::MultiTestDB;
 use Log::Log4perl qw/:easy/;
+use List::Util qw(first);
 
 Log::Log4perl->easy_init($DEBUG);
 
@@ -37,36 +38,97 @@ my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
 my $dba      = $test->get_DBAdaptor('funcgen');
 my $core_dba = $test->get_DBAdaptor('core');
 my $fetcher  = Bio::EnsEMBL::Production::Search::ProbeFetcher->new();
-
-my $out = $fetcher->fetch_probes_for_dba( $dba, $core_dba );
-is( scalar( @{ $out->{probes} } ), 851 );
-my ($probe) = grep { $_->{id} eq '23633' } @{ $out->{probes} };
-
+my $out = $fetcher->fetch_probes_for_dba( $dba, $core_dba, 0, 21000000);
+is( scalar( @{ $out->{probes} } ), 25 ,'Expected number of probes');
+my ($probe) = first { $_->{id} eq '55599' } @{ $out->{probes} };
 my $expected_probe = { 'transcripts' => [ {
-										 'description' => 'Test probe mapping',
-										 'gene_name'   => 'RPL14P5',
-										 'gene_id'     => 'ENSG00000261370',
-										 'id'          => 'ENST00000569325' } ],
-					   'id'           => '23633',
-					   'array_vendor' => 'AGILENT',
-					   'name'         => 'A_14_P100214',
-					   'array'        => 'CGH_44b',
+										 'description' => 'Matches 3\' flank. Matches 3 other transcripts.',
+										 'gene_name'   => 'OR2W1',
+										 'gene_id'     => 'ENSG00000204704',
+										 'id'          => 'ENST00000377175' } ],
+					   'id'           => '55599',
+					   'name'         => 'A_23_P99452',
+						 'sequence' => 'TATGTTGCACAATGAGAAAAGAAATTAGTTTCAAATTTACCTCAGCGTTTGTGTATCGGG',
+						 'length' => 60,
+						 'class'  => 'EXPERIMENTAL',
 					   'locations'    => [ {
-										  'start'           => '32890549',
-										  'end'             => '32890608',
+										  'start'           => '32972996',
+										  'end'             => '32973055',
 										  'seq_region_name' => '13',
-										  'strand'          => '1' } ],
-					   'array_chip' => 'CGH_44b' };
-is_deeply( $probe, $expected_probe );
-
-is( scalar( @{ $out->{probe_sets} } ), 1 );
+										  'strand'          => '1' }],
+						 'arrays'  => [
+							 {   'array' => 'SurePrint_G3_GE_8x60k',
+										'array_chip' => 'SurePrint_G3_GE_8x60k',
+										'array_class' => 'AGILENT',
+										'array_format' => 'EXPRESSION',
+										'array_type' => 'OLIGO',
+										'array_vendor' => 'AGILENT',
+										'design_id' => 'SurePrint_G3_GE_8x60k'},
+							{   'array' => 'WholeGenome_4x44k_v1',
+							'array_chip' => 'WholeGenome_4x44k_v1',
+							'array_class' => 'AGILENT',
+							'array_format' => 'EXPRESSION',
+							'array_type' => 'OLIGO',
+							'array_vendor' => 'AGILENT',
+							'design_id' => 'WholeGenome_4x44k_v1'},
+							{   'array' => 'WholeGenome_4x44k_v2',
+							'array_chip' => 'WholeGenome_4x44k_v2',
+							'array_class' => 'AGILENT',
+							'array_format' => 'EXPRESSION',
+							'array_type' => 'OLIGO',
+							'array_vendor' => 'AGILENT',
+							'design_id' => 'WholeGenome_4x44k_v2'},
+							{   'array' => 'SurePrint_G3_GE_8x60k_v2',
+							'array_chip' => 'SurePrint_G3_GE_8x60k_v2',
+							'array_class' => 'AGILENT',
+							'array_format' => 'EXPRESSION',
+							'array_type' => 'OLIGO',
+							'array_vendor' => 'AGILENT',
+							'design_id' => 'SurePrint_G3_GE_8x60k_v2'}] };
+is_deeply( $probe, $expected_probe , 'Testing Probe structure' );
+is( scalar( @{ $out->{probe_sets} } ), 118 ,'Expected number of Probe Sets');
 my ($probe_set) =
-  grep { $_->{id} eq 'homo_sapiens_dump_probeset_10367' }
+  first { $_->{id} eq 'homo_sapiens_dump_probeset_10367' }
   @{ $out->{probe_sets} };
-is( $probe_set->{array},                 'HumanWG_6_V2' );
-is( $probe_set->{array_vendor},          'ILLUMINA' );
-is( $probe_set->{name},                  '214727_at' );
-use Data::Dumper;
-diag(Dumper($probe_set->{probes}));
-is( scalar( @{ $probe_set->{probes} } ), 12 );
+is( $probe_set->{name},                  '214727_at', 'Expected probe Set name' );
+is( $probe_set->{size},                  '45' , 'Expected Probe Set size' );
+is( scalar( @{ $probe_set->{probes} } ), 45 , 'Expected number of probes for this probe set');
+is( scalar( @{ $probe_set->{arrays} } ), 1 , 'Expected number of arrays for this probe set');
+my $expected_probeset = {     'arrays' => [{'array' => 'U133_X3P',
+															'array_chip' => 'U133_X3P',
+															'array_vendor' => 'AFFY'}],
+															'transcripts' => [ {
+																		'description' => 'Matches 3\' flank. Matches 3 other transcripts.',
+																		'gene_name'   => 'OR2W1',
+																		'gene_id'     => 'ENSG00000204704',
+																		'id'          => 'ENST00000377175' } ],
+															'id' => 'homo_sapiens_dump_probeset_15818',
+															'name' => '215182_3p_x_at',
+															'probes' => [{
+																			   'arrays' => [ {  'array' => 'U133_X3P',
+																												'array_chip' => 'U133_X3P',
+																												'array_class' => 'AFFY_UTR',
+																												'array_format' => 'EXPRESSION',
+																												'array_type' => 'OLIGO',
+																												'array_vendor' => 'AFFY',
+																												'design_id' => 'U133_X3P'}],
+																					'class' => 'EXPERIMENTAL',
+																					'id' => 774125,
+																					'length' => 25,
+																					'locations' => [{
+																						   'end' => 32926090,
+																						   'seq_region_name' => 13,
+																								'start' => 32926066,
+																								'strand' => 1,
+																					}
+																					],
+																					'name' => '580:725;',
+																					'sequence' => 'GTAGGATGGGTTCAACTGCACAAAA'
+															}
+															],
+															'size' => 1 };
+my ($probe_set_2) =
+  first { $_->{id} eq 'homo_sapiens_dump_probeset_15818' }
+  @{ $out->{probe_sets} };
+is_deeply( $probe_set_2, $expected_probeset , 'Testing Probe Set structure' );
 done_testing;
