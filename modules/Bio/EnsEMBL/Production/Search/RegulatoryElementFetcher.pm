@@ -42,6 +42,7 @@ use Carp qw/croak/;
 
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
+use List::Util qw(first);
 
 my $logger = get_logger();
 
@@ -88,7 +89,7 @@ sub fetch_motifs {
     -SQL          => qq/
        SELECT
     mf.score,
-    mf.stable_id as display_label,
+    mf.stable_id as id,
     sr.name as seq_region_name,
     mf.seq_region_start,
     mf.seq_region_end,
@@ -141,7 +142,7 @@ sub fetch_regulatory_features {
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
         my $feature = shift @_;
-       push @$regulatory_features,$feature;
+        push @$regulatory_features,$feature;
         return;
       });
   return $regulatory_features;
@@ -248,10 +249,6 @@ sub fetch_external_features {
         if (!defined $features->{ $f->{name} }) {
           $m = $f;
           $f->{id} = $m->{name};
-
-          for my $id (split ',', $f->{set_name}) {
-            push @{$f->{synonyms}}, $id unless $id eq 'display_label';
-          }
           $features->{ $f->{name} } = $m;
           delete $m->{seq_region_name};
           delete $m->{start};
@@ -302,6 +299,7 @@ sub fetch_peaks {
             seq_region_name => $peak->{seq_region_name}
         };
         if (!defined $peaks->{ $peak->{feature_name} }) {
+          $peak->{id} = $peak->{feature_name};
           $peaks->{ $peak->{feature_name} } = $peak;
           delete $peak->{seq_region_name};
           delete $peak->{start};
@@ -343,10 +341,13 @@ sub fetch_transcription_factors {
         my $m = $transcription_factors->{ $tf->{name} };
         my $binding_matrix = $tf->{stable_id};
         if (!defined $transcription_factors->{ $tf->{name} }) {
+          $tf->{id} = $tf->{name};
           $transcription_factors->{ $tf->{name} } = $tf;
           delete $tf->{stable_id};
         }
-        push @{$m->{binding_matrix}}, $binding_matrix;
+        if (!first { $binding_matrix eq $_ } @{$m->{binding_matrix}}) {
+          push @{$m->{binding_matrix}}, $binding_matrix;
+        }
         return;
       });
   return $transcription_factors;
