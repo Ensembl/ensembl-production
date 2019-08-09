@@ -197,14 +197,16 @@ sub fetch_probes_for_dba {
               end             => $row->{end},
               strand          => $row->{strand} };
         }
-        push @{$p->{arrays}},{
-              array_chip => $row->{array_chip},
-              design_id  => $row->{design_id},
-              array      => $row->{array},
-              array_vendor => $row->{array_vendor},
-              array_format => $row->{array_format},
-              array_class  => $row->{array_class},
-              array_type   => $row->{array_type}};
+        if (!first { $row->{array_chip} == $_->{array_chip} } @{$p->{arrays}}){
+          push @{$p->{arrays}},{
+                array_chip => $row->{array_chip},
+                design_id  => $row->{design_id},
+                array      => $row->{array},
+                array_vendor => $row->{array_vendor},
+                array_format => $row->{array_format},
+                array_class  => $row->{array_class},
+                array_type   => $row->{array_type}};
+        }
         return;
       });
   # probe sets
@@ -245,10 +247,12 @@ sub fetch_probes_for_dba {
           delete $ps->{array_vendor};
           $probe_sets->{$id}=$ps;
         }
-        push @{$ps->{arrays}},{
-              array_chip => $row->{array_chip},
-              array      => $row->{array},
-              array_vendor => $row->{array_vendor}};
+        if (!first { $row->{array_chip} == $_->{array_chip} } @{$ps->{arrays}}){
+          push @{$ps->{arrays}},{
+                array_chip => $row->{array_chip},
+                array      => $row->{array},
+                array_vendor => $row->{array_vendor}};
+        }
         return;
       });
   $logger->info("Fetched details for " . scalar(keys %$probe_sets) . " probe sets");
