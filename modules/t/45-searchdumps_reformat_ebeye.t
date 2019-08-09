@@ -19,6 +19,8 @@ use File::Slurp;
 use FindBin qw( $Bin );
 use JSON;
 use XML::Simple;
+use Log::Log4perl qw/:easy/;
+Log::Log4perl->easy_init($DEBUG);
 
 BEGIN {
 	use_ok('Bio::EnsEMBL::Production::Search::EBeyeFormatter');

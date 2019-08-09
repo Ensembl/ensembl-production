@@ -2,9 +2,9 @@
 <!DOCTYPE database>
 
 <database>
-  <name>homo_sapiens_core_89_38</name>
-  <description>Ensembl Homo sapiens core database</description>
-  <release>89</release>
+  <name>homo_sapiens_core_97_38</name>
+  <description>EnsemblVertebrates Homo sapiens core database</description>
+  <release>97</release>
   <entries>
     <entry id="ENSG00000127720">
       <name>METTL25</name>
@@ -30,7 +30,7 @@
         <field name="gene_synonyms">C12orf26</field>
         <field name="gene_synonyms">FLJ22789</field>
         <field name="system_name">homo_sapiens</field>
-        <field name="genomic_unit">Ensembl</field>
+        <field name="genomic_unit">vertebrates</field>
         <field name="transcript">ENST00000248306</field>
         <field name="transcript">ENST00000548569</field>
         <field name="species">Homo sapiens</field>

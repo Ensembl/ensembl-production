@@ -58,11 +58,10 @@ sub reformat_genome {
 
 	my $genome = read_json($genome_file);
 
-	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
-        # Ensembl -> Ensembl for e!
-        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	# Extract only the division name and make it lowercase for all the divisions
+  # EnsemblVertebrates -> vertebrates, EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists
 	my $genome_division = $genome->{division};
-	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	my $genomic_unit_val = lc substr($genome_division,7);
 
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 
@@ -106,11 +105,10 @@ sub reformat_genome {
 sub reformat_genes {
 	my ( $self, $genome_file, $database, $genes_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
-	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
-        # Ensembl -> Ensembl for e!
-        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	# Extract only the division name and make it lowercase for all the divisions
+  # EnsemblVertebrates -> vertebrates, EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists
 	my $genome_division = $genome->{division};
-	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	my $genomic_unit_val = lc substr($genome_division,7);
 	
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
@@ -292,11 +290,10 @@ sub reformat_sequences {
 	my ( $self, $genome_file, $database, $sequences_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
 	
-	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
-        # Ensembl -> Ensembl for e!
-        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	# Extract only the division name and make it lowercase for all the divisions
+  # EnsemblVertebrates -> vertebrates, EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists
 	my $genome_division = $genome->{division};
-	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	my $genomic_unit_val = lc substr($genome_division,7);
 	
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
@@ -350,11 +347,10 @@ sub reformat_variants {
 	my ( $self, $genome_file, $database, $variants_file, $outfile ) = @_;
 	my $genome = read_json($genome_file);
 
-	# Extract only the division name and make it lowercase for e!g. Keep it as it is (Ensembl) for e!
-        # Ensembl -> Ensembl for e!
-        # EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists for e!g
+	# Extract only the division name and make it lowercase for all the divisions
+  # EnsemblVertebrates -> vertebrates, EnsemblPlants -> Plants -> plants, EnsemblFungi -> Fungi -> fungi, EnsemblProtists -> Protists -> protists
 	my $genome_division = $genome->{division};
-	my $genomic_unit_val = ( $genome_division ne 'Ensembl' ) ? lc substr($genome_division,7) : 'Ensembl';
+	my $genomic_unit_val = lc substr($genome_division,7);
 
 	open my $fh, '>', $outfile or croak "Could not open $outfile for writing";
 	my $writer =
