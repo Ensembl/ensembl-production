@@ -540,7 +540,7 @@ CREATE TABLE `probe` (
   `probe_set_id` int(10) unsigned DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `length` smallint(6) unsigned NOT NULL,
-  `array_chip_id` int(10) unsigned DEFAULT NULL,
+  `array_chip_id` int(10) unsigned NOT NULL,
   `class` varchar(20) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   `probe_seq_id` int(10) DEFAULT NULL,
@@ -550,7 +550,7 @@ CREATE TABLE `probe` (
   KEY `array_chip_idx` (`array_chip_id`),
   KEY `name_idx` (`name`),
   KEY `probe_seq_idx` (`probe_seq_id`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM ;
 
 CREATE TABLE `probe_feature` (
   `probe_feature_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
