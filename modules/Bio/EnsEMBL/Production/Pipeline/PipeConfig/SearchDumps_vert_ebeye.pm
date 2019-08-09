@@ -172,7 +172,7 @@ sub pipeline_analyses {
       },
       {
           -logic_name    => 'DumpVariantJson',
-          -analysis_capacity => 10,
+          -analysis_capacity => 20,
           -module        =>
               'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
           -rc_name       => '32g',
