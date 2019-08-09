@@ -545,6 +545,7 @@ CREATE TABLE `probe` (
   `description` varchar(255) DEFAULT NULL,
   `probe_seq_id` int(10) DEFAULT NULL,
   PRIMARY KEY (`probe_id`,`name`,`array_chip_id`),
+  UNIQUE KEY `probe_idx` (`probe_id`),
   KEY `probe_set_idx` (`probe_set_id`),
   KEY `array_chip_idx` (`array_chip_id`),
   KEY `name_idx` (`name`),
