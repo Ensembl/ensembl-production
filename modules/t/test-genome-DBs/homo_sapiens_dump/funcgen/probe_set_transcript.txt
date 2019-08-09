@@ -1,2 +1,2 @@
 1	10367	ENST00000569325	Test probe set mapping
-2	15818	ENST00000377175	Matches 3' flank. Matches 3 other transcripts.
+2	15818	ENST00000376891	Matches 3' flank. Matches 3 other transcripts.
