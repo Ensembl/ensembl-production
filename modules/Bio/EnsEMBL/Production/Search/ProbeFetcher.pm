@@ -114,9 +114,10 @@ sub fetch_probes_for_dba {
   my $probesets_transcripts = {};
   $h->execute_no_return(
       -SQL      => q/
-          SELECT probe_set_id, stable_id, description
-          FROM probe_set_transcript
-          WHERE probe_set_id between ? and ?/,
+          SELECT ps.probe_set_id, ps.stable_id, ps.description
+          FROM probe_set_transcript ps
+          join probe p using (probe_set_id)
+          WHERE p.probe_id between ? AND ?/,
       -PARAMS   => [ $min, $max ],
       -CALLBACK => sub {
         my $row = shift @_;
