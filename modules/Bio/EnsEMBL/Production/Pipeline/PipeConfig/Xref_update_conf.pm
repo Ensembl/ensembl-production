@@ -156,7 +156,7 @@ sub pipeline_analyses {
             },
             {-logic_name => 'parse_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ParseSource',
-             -rc_name    => 'mem',
+             -rc_name    => 'large',
              -hive_capacity => 300,
              -analysis_capacity => 50,
              -batch_size => 30,
@@ -188,7 +188,7 @@ sub pipeline_analyses {
             {-logic_name => 'align',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Alignment',
              -parameters => {'base_path'   => $self->o('base_path')},
-             -rc_name    => 'normal',
+             -rc_name    => 'large',
              -hive_capacity => 300,
              -analysis_capacity => 300,
              -batch_size => 5,
@@ -264,6 +264,7 @@ sub resource_classes {
       'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
       'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
       'mem'     => { 'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"'},
+      'large'   => { 'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
     }
 }
 
