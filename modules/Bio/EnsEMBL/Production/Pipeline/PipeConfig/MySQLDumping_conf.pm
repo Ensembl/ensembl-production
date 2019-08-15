@@ -112,6 +112,21 @@ sub pipeline_analyses {
               'base_dir' => $self->o('base_dir')
           },
           -rc_name           => 'default',
+          -analysis_capacity => 10,
+          -flow_into       => {
+              1 => 'DumpCheck',
+          }
+      },
+      {
+          -logic_name        => 'DumpCheck',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::DatabaseDumping::MySQLDumpsCheck',
+          -rc_name           => 'default',
+          -parameters        => {
+              'user'     => $self->o('user'),
+              'password' => $self->o('pass'),
+              'host'     => $self->o('host'),
+              'port'     => $self->o('port')
+          },
           -analysis_capacity => 10
       },
   ];
