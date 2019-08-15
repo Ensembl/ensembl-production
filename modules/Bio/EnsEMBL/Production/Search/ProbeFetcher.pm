@@ -32,6 +32,8 @@ Module for fetching probes and rendering as hashes
 
 package Bio::EnsEMBL::Production::Search::ProbeFetcher;
 
+use base qw/Bio::EnsEMBL::Production::Search::BaseFetcher/;
+
 use strict;
 use warnings;
 
@@ -41,6 +43,7 @@ use Carp qw/croak/;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Data::Dumper;
+use List::Util qw(first);
 
 my $logger = get_logger();
 
@@ -65,18 +68,9 @@ sub fetch_probes_for_dba {
 
   my $h = $dba->dbc()->sql_helper();
 
-  my $min;
-  my $max;
-  if (defined $offset && defined $length) {
-    $min = $offset;
-    $max = $offset + $length - 1;
-  }
-  else {
-    $min = $h->execute_single_result(
-        -SQL => "select min(probe_id) from probe");
-    $max = $h->execute_single_result(
-        -SQL => "select max(probe_id) from probe");
-  }
+  my ($min, $max) =
+      $self->calculate_min_max($h, $offset, $length, 'probe',
+          'probe_id');
 
   $logger->info("Dumping probe.probe_id from $min-$max");
 
@@ -115,9 +109,23 @@ sub fetch_probes_for_dba {
         push @{$probe_transcripts->{ $row->[0] }}, { %{$t}, description => $row->[2] } if defined $t;
         return;
       });
-  $logger->info("Fetched details for " .
-      scalar(keys %$probe_transcripts) . " probe_transcripts");
-
+  $logger->info("Fetched details for " . scalar(keys %$probe_transcripts) . " probe_transcripts");
+  $logger->info("Fetching probeset transcripts");
+  my $probesets_transcripts = {};
+  $h->execute_no_return(
+      -SQL      => q/
+          SELECT ps.probe_set_id, ps.stable_id, ps.description
+          FROM probe_set_transcript ps
+          join probe p using (probe_set_id)
+          WHERE p.probe_id between ? AND ?/,
+      -PARAMS   => [ $min, $max ],
+      -CALLBACK => sub {
+        my $row = shift @_;
+        my $t = $transcripts->{ $row->[1] };
+        push @{$probesets_transcripts->{ $row->[0] }}, { %{$t}, description => $row->[2] } if defined $t;
+        return;
+      });
+  $logger->info("Fetched details for " . scalar(keys %$probesets_transcripts) . " probeset_transcripts");
   # load probes
   $logger->info("Fetching probes");
   my $probes = {};
@@ -127,19 +135,28 @@ sub fetch_probes_for_dba {
       SELECT  p.probe_id as id,
           p.name as name,
           p.probe_set_id as probe_set_id,
+          p.length as length,
+          p.class as class,
+          p.description as description,
           array_chip.name as array_chip,
+          array_chip.design_id as design_id,
           array.name as array,
           array.vendor as array_vendor,
+          array.format as array_format,
+          array.class as array_class,
+          array.type as array_type,
           sr.name as seq_region_name,
           pf.seq_region_start as start,
           pf.seq_region_end as end,
-          pf.seq_region_strand as strand
+          pf.seq_region_strand as strand,
+          ps.sequence_upper as sequence
         FROM
           probe p
           JOIN probe_feature pf USING (probe_id)
           JOIN $core.seq_region sr USING (seq_region_id)
           JOIN array_chip ON (p.array_chip_id=array_chip.array_chip_id)
           JOIN array USING (array_id)
+          JOIN probe_seq ps USING (probe_seq_id)
         WHERE
             p.probe_id BETWEEN ? AND ?/,
           -PARAMS       => [ $min, $max ],
@@ -154,51 +171,92 @@ sub fetch_probes_for_dba {
           delete $p->{start};
           delete $p->{end};
           delete $p->{strand};
+          delete $p->{array_chip};
+          delete $p->{design_id};
+          delete $p->{array};
+          delete $p->{array_vendor};
+          delete $p->{array_format};
+          delete $p->{array_class};
+          delete $p->{array_type};
           delete $p->{probe_set_id};
-          $probes->{$id} = $p;
+          delete $p->{class} unless defined $p->{class};
+          delete $p->{description} unless defined $p->{description};
           my $transcripts = $probe_transcripts->{ $row->{id} };
           $p->{transcripts} = $transcripts if defined $transcripts;
-          push @{$probes_by_set->{ $row->{probe_set_id} }}, $p if defined $row->{probe_set_id};
+          if (defined $row->{probe_set_id}){
+            push @{$probes_by_set->{ $row->{probe_set_id} }}, $p;
+          }
+          else{
+            $probes->{$id} = $p;
+          }
         }
-        push @{$p->{locations}}, {
-            seq_region_name => $row->{seq_region_name},
-            start           => $row->{start},
-            end             => $row->{end},
-            strand          => $row->{strand} };
+        if (!first { $row->{seq_region_name} == $_->{seq_region_name} } @{$p->{locations}} and !first { $row->{start} == $_->{start} } @{$p->{locations}} and !first { $row->{end} == $_->{end} } @{$p->{locations}} and !first { $row->{strand} == $_->{strand} } @{$p->{locations}}){
+          push @{$p->{locations}}, {
+              seq_region_name => $row->{seq_region_name},
+              start           => $row->{start},
+              end             => $row->{end},
+              strand          => $row->{strand} };
+        }
+        if (!first { $row->{array_chip} == $_->{array_chip} } @{$p->{arrays}}){
+          push @{$p->{arrays}},{
+                array_chip => $row->{array_chip},
+                design_id  => $row->{design_id},
+                array      => $row->{array},
+                array_vendor => $row->{array_vendor},
+                array_format => $row->{array_format},
+                array_class  => $row->{array_class},
+                array_type   => $row->{array_type}};
+        }
         return;
       });
   # probe sets
   $logger->info(
       "Fetched details for " . scalar(keys %$probes) . " probes");
-  my $probe_sets = [];
+  my $probe_sets = {};
   $h->execute_no_return(
-      -SQL          => q/SELECT
-      distinct ps.probe_set_id as id,
-      ps.name as name,
-      ps.family as family,
-      array_chip.name as array_chip,
-      array.name as array,
-      array.vendor as array_vendor
-    FROM
-      probe_set ps
-      join probe p using (probe_set_id)
-      join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
-      join array using (array_id)
-      WHERE p.probe_id between ? AND ?/,
+      -SQL          => q/
+      SELECT
+        distinct ps.probe_set_id as id,
+        ps.name as name,
+        ps.family as family,
+        ps.size as size,
+        array_chip.name as array_chip,
+        array.name as array,
+        array.vendor as array_vendor
+      FROM
+        probe_set ps
+        join probe p using (probe_set_id)
+        join array_chip on (ps.array_chip_id=array_chip.array_chip_id)
+        join array using (array_id)
+        WHERE p.probe_id between ? AND ?/,
       -PARAMS       => [ $min, $max ],
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
         my $row = shift @_;
         my $id = $species . '_probeset_' . $row->{id};
-        $row->{probes} = $probes_by_set->{ $row->{id} };
-        $row->{id} = $id;
-        delete $row->{family} unless defined $row->{family};
-        push @{$probe_sets}, $row;
+        my $ps = $probe_sets->{$id};
+        if (!defined $ps) {
+          $ps = { %$row };
+          $ps->{probes} = $probes_by_set->{ $row->{id} };
+          $ps->{id} = $id;
+          my $transcripts = $probesets_transcripts->{ $row->{id} };
+          $ps->{transcripts} = $transcripts if defined $transcripts;
+          delete $ps->{family} unless defined $ps->{family};
+          delete $ps->{array_chip};
+          delete $ps->{array};
+          delete $ps->{array_vendor};
+          $probe_sets->{$id}=$ps;
+        }
+        if (!first { $row->{array_chip} == $_->{array_chip} } @{$ps->{arrays}}){
+          push @{$ps->{arrays}},{
+                array_chip => $row->{array_chip},
+                array      => $row->{array},
+                array_vendor => $row->{array_vendor}};
+        }
         return;
       });
-  $logger->info(
-      "Fetched details for " . scalar(@$probe_sets) . " probe sets");
-  return { probes => [ values %{$probes} ], probe_sets => $probe_sets };
+  $logger->info("Fetched details for " . scalar(keys %$probe_sets) . " probe sets");
+  return { probes => [ values %{$probes} ], probe_sets => [ values %{$probe_sets} ] };
 } ## end sub fetch_probes_for_dba
 
 1;

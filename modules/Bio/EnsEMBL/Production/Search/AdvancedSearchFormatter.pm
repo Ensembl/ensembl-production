@@ -523,13 +523,9 @@ sub find_genome_name {
       my $meta = $self->get_metacontainer($genome);
 			my $division = $meta->get_division();
 			$meta->db()->dbc()->disconnect_if_idle();
-			my $orgs =
+			my $org =
 			  $self->{meta_dba}->get_GenomeOrganismInfoAdaptor()
 			  ->fetch_by_name($genome);
-			my $org;
-      foreach my $genome (@{$orgs}){
-        $org = $genome if ($genome->division() eq $division);
-      }
 			$name = $org->display_name() if defined $org;
 		}
 		if ( !defined $name ) {

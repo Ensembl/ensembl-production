@@ -78,7 +78,7 @@ sub _db_boost {
 	return $type eq 'core' ? 40 : 1;
 }
 
-my $sites = { Ensembl         => "http://www.ensembl.org/",
+my $sites = { EnsemblVertebrates         => "http://www.ensembl.org/",
 			  EnsemblBacteria => "http://bacteria.ensembl.org/",
 			  EnsemblProtists => "http://protists.ensembl.org/",
 			  EnsemblFungi    => "http://fungi.ensembl.org/",
