@@ -225,7 +225,7 @@ sub fetch_structural_variations_callback {
      WHERE 
        v.is_evidence = 0
        AND v.structural_variation_id between ? AND ?
-       GROUP BY v.structural_variation_id/,
+       GROUP BY v.structural_variation_id,r.name,vf.seq_region_start,vf.seq_region_end/,
       -PARAMS       => [ $min, $max ],
       -USE_HASHREFS => 1,
       -CALLBACK     => sub {
