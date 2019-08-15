@@ -26,12 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_protists
 
 =head1 DESCRIPTION
 
-Configuration for running the Post Compara pipeline, which
-run the Gene name, description and GO projections as well as Gene coverage.
-
-=head1 Author
-
-ckong
+Gene name and description projection
 
 =cut
 
@@ -49,7 +44,6 @@ sub default_options {
           %{ $self->SUPER::default_options() },
           flag_GeneNames    => '1',
           flag_GeneDescr    => '1',
-          flag_GeneCoverage => '1',
           gn_config => { 
                         '1'=>{
                               'source'       => 'dictyostelium_discoideum',

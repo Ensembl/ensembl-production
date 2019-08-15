@@ -26,12 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_conf
 
 =head1 DESCRIPTION
 
-Configuration for running the Post Compara pipeline, which
-run the Gene name, description and GO projections as well as Gene coverage.
-
-=head1 Author
-
-Thomas Maurel
+Gene name and description projection
 
 =cut
 
@@ -58,7 +53,6 @@ sub default_options {
     	flag_GeneNames    => '1',
     	flag_GeneDescr    => '1',
     	flag_GO           => '0',     
-    	flag_GeneCoverage => '0',
 
     ## Flags controlling dependency between GeneNames & GeneDescr projections
         # '0' by default, 
@@ -76,7 +70,6 @@ sub default_options {
         geneNameproj_capacity  =>  '20',
         geneDescproj_capacity  =>  '20',
         goProj_capacity        =>  '20',
-        geneCoverage_capacity  =>  '100',
 
     ## Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
     ## If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db

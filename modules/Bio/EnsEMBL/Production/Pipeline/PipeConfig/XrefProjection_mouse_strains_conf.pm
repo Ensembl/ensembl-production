@@ -21,13 +21,7 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_mouse_strains_con
 
 =head1 DESCRIPTION
 
-Configuration for running the Post Compara pipeline, which
-run the Gene name, description and GO projections as well as Gene coverage for the 
-mouse strains
-
-=head1 Author
-
-Thomas Maurel
+Gene name and description projection
 
 =cut
 
@@ -54,7 +48,6 @@ sub default_options {
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
     	flag_GeneNames    => '1',
     	flag_GeneDescr    => '1',
-    	flag_GeneCoverage => '0',
 
     ## Flags controlling dependency between GeneNames & GeneDescr projections
         # '0' by default, 
