@@ -26,8 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
 
 =head1 DESCRIPTION
 
-Base configuration for running the Post Compara pipeline, which
-run the Gene name, description projections as well as Gene coverage.
+Gene name and description projection
 
 =head1 Author
 
@@ -40,9 +39,8 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
 use strict;
 use warnings;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
- # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
     my ($self) = @_;
@@ -69,7 +67,6 @@ sub default_options {
 	    # '0' by default, set to '1' if this sub-pipeline is needed to be run
             flag_GeneNames    => '0',
             flag_GeneDescr    => '0',
-            flag_GeneCoverage => '0',
             
             ## Flags controlling dependency between GeneNames & GeneDescr projections
 	    # '0' by default, 
@@ -122,12 +119,6 @@ sub default_options {
             gd_subject    => $self->o('pipeline_name').' subpipeline GeneDescriptionProjection has finished',
             gn_subject    => $self->o('pipeline_name').' subpipeline GeneNamesProjection has finished',
 
-            ## Gene Coverage
-	    gcov_division          => $self->o('division'), 
-            
-            # Email Report subject
-            gcov_subject           => $self->o('pipeline_name').' subpipeline GeneCoverage has finished',
-	    
             ## For all pipelines
             #  on by default. Control the storing of projections into database.
             flag_store_projections => '1',
@@ -247,7 +238,6 @@ sub pipeline_wide_parameters {  # these parameter values are visible to all anal
 
         'flag_GeneNames'     => $self->o('flag_GeneNames'),
         'flag_GeneDescr'       => $self->o('flag_GeneDescr'),
-        'flag_GeneCoverage'      => $self->o('flag_GeneCoverage')
     };
 }
 
@@ -261,15 +251,7 @@ sub pipeline_analyses {
            {  -logic_name    => 'backbone_PostCompara',
              -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
              -input_ids     => [ {} ], # Needed to create jobs
-             -flow_into   => {
-                                1  => WHEN(
-                                   '!#flag_GeneCoverage#' => [ 'DumpingCleaning' ],
-                                   '#flag_GeneCoverage# and #flag_GeneNames# and #flag_GeneDescr#' => [ 'DumpingCleaning', 'GeneCoverageFactory'],
-                                   '#flag_GeneCoverage# and #flag_GeneNames# and !#flag_GeneDescr#' =>  [ 'DumpingCleaning', 'GeneCoverageFactory'],
-                                   '#flag_GeneCoverage# and !#flag_GeneNames# and #flag_GeneDescr#' => [ 'DumpingCleaning', 'GeneCoverageFactory'],
-                                   '#flag_GeneCoverage# and !#flag_GeneNames# and !#flag_GeneDescr#' => [ 'GeneCoverageFactory'],
-                                  ),
-                             },
+             -flow_into   => [ 'DumpingCleaning' ],
           },
 
           ########################
@@ -458,41 +440,6 @@ sub pipeline_analyses {
              -flow_into     => {
                                 1 => ['GDProjSourceFactory']
                                }
-          },
-          ################
-          ### GeneCoverage
-          
-          {  -logic_name  => 'GeneCoverageFactory',
-             -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageFactory',
-             -parameters  => {
-                              division      => $self->o('gcov_division'),
-                             },
-             -flow_into 	=> { 
-                                    '2->A' => ['GeneCoverage'],
-                                    'A->1' => ['GeneCoverageEmailReport'],
-      				   },
-             -rc_name     => 'default',
-          },
-          
-          {  -logic_name  => 'GeneCoverage',
-             -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverage',
-             -parameters  => {
-                              'division'     => $self->o('gcov_division'),
-                             },
-             -batch_size  => 100,
-             -rc_name     => 'default',
-             -analysis_capacity => 20,
-             -rc_name       => '8Gb_mem',
-          },
-          
-          {  -logic_name  => 'GeneCoverageEmailReport',
-             -module      => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneCoverageEmailReport',
-             -parameters  => {
-                              'email'      => $self->o('email'),
-                              'subject'    => $self->o('gcov_subject'),
-                              'output_dir' => $self->o('output_dir'),
-                              'compara'    => $self->o('division'),
-                             }
           },
           
          ];
