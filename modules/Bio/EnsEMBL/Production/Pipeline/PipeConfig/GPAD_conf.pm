@@ -71,9 +71,6 @@ sub default_options {
     'logic_name' => 'goa_import',
     'db' => 'GO',
     'program' => 'goa_import',
-    'description' => 'Gene Ontology xrefs data from GOA',
-    'display_label' => 'GO xrefs from GOA',
-    'displayable' => 0,
     'production_lookup' => 1,
     'linked_tables' => ['object_xref']
 
@@ -190,9 +187,6 @@ sub pipeline_analyses {
                               delete_existing => $self->o('delete_existing'),
                               production_lookup  => $self->o('production_lookup'),
                               logic_name => $self->o('logic_name'),
-                              description => $self->o('description'),
-                              display_label => $self->o('display_label'),
-                              displayable => $self->o('displayable'),
                               db => $self->o('db'),
                               program => $self->o('program'),
                               linked_tables => $self->o('linked_tables')
