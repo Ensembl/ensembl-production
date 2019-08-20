@@ -145,10 +145,10 @@ sub write_output {
 sub project_display_xrefs_genenames {
     my ($self, $to_geneAdaptor, $to_transcriptAdaptor, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $db_to_type, $analysis)  = @_;
 
-    my $flag_store_proj  = $self->param_required('flag_store_projections');
+    my $store_projections  = $self->param_required('store_projections');
     my $from_species     = $self->param_required('source');
     my $to_species       = $self->param_required('species');
-    my $geneName_source  = $self->param_required('geneName_source');
+    my $gene_name_source  = $self->param_required('gene_name_source');
     my $compara          = $self->param_required('compara');
 
     # Decide if a gene name should be overwritten
@@ -169,7 +169,7 @@ sub project_display_xrefs_genenames {
        # Get all DBEntries for 'source gene' base on the dbname of display_xref  
        foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
 
-          if($dbEntry->display_id=~/$from_gene_display_id/  && $flag_store_proj==1 && grep (/$from_gene_dbname/, @$geneName_source)){
+          if($dbEntry->display_id=~/$from_gene_display_id/  && $store_projections==1 && grep (/$from_gene_dbname/, @$gene_name_source)){
 
              print $log "\t\tProject display xref from:".$from_gene->stable_id()."\t";
              print $log "to:".$to_gene->stable_id()."\t";
@@ -206,7 +206,7 @@ sub project_display_xrefs_genenames {
 sub project_xrefs_genenames {
     my ($self, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $source_db_to_type, $analysis)  = @_;
 
-    my $flag_store_proj  = $self->param_required('flag_store_projections');
+    my $store_projections  = $self->param_required('store_projections');
     my $from_species     = $self->param_required('source');
     my $white_list  = $self->param('white_list');
 
@@ -220,7 +220,7 @@ sub project_xrefs_genenames {
       # Skip xref if it's not in the white list. Only project xrefs from the white list.
       next if (!grep (/$dbname/, @$white_list));
 
-      if ($flag_store_proj==1){
+      if ($store_projections==1){
         
         print $log "\t\tProject xref from:".$from_gene->stable_id()."\t";
         print $log "to:".$to_gene->stable_id()."\t";

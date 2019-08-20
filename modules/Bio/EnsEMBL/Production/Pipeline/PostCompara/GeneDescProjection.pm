@@ -128,24 +128,23 @@ return;
 sub project_genedesc {
     my ($self,$to_geneAdaptor, $to_dbea, $from_gene, $to_gene, $log) = @_;
 
-    my $flag_store_proj        = $self->param_required('flag_store_projections');
-    my $flag_filter            = $self->param_required('flag_filter');
+    my $store_projections        = $self->param_required('store_projections');
     my $from_species           = $self->param_required('source');
-    my $geneName_source        = $self->param_required('geneName_source');
-    my $geneDesc_rules         = $self->param_required('geneDesc_rules');
-    my $geneDesc_rules_target  = $self->param_required('geneDesc_rules_target');
+    my $gene_name_source        = $self->param_required('gene_name_source');
+    my $geneDesc_rules         = $self->param_required('gene_desc_rules');
+    my $geneDesc_rules_target  = $self->param_required('gene_desc_rules_target');
     my $compara                = $self->param_required('compara');
 
     #Checking that source passed the rules
     if($self->is_source_ok($from_gene,$geneDesc_rules))
     {
       #Checking that target passed the rules
-      if($self->is_target_ok($to_gene,$geneDesc_rules_target,$flag_filter))
+      if($self->is_target_ok($to_gene,$geneDesc_rules_target))
       {
         # Finally check if the from gene dbname is in the allowed gene name source
         # This is to avoid projecting things that are not part of the allowed gene name source
         my $from_gene_dbname = $from_gene->display_xref->dbname();
-        if (grep (/$from_gene_dbname/, @$geneName_source)) {
+        if (grep (/$from_gene_dbname/, @$gene_name_source)) {
           # For e! species, project source description
           my $gene_desc;
           if ($compara eq "Multi"){
@@ -163,7 +162,7 @@ sub project_genedesc {
           print $log "to: ".$to_gene->stable_id()."\t";
           print $log "Gene Description: $gene_desc\n";
 
-          if($flag_store_proj==1){
+          if($store_projections==1){
              $to_gene->description($gene_desc);
              $to_geneAdaptor->update($to_gene);
           }
@@ -193,13 +192,13 @@ return $ok;
 # its description didn't passed the filtering rules AND
 # the flag to check for filtering rules is ON
 sub is_target_ok {
-  my ($self,$to_gene,$geneDesc_rules_target,$flag_filter) = @_;
+  my ($self,$to_gene,$geneDesc_rules_target) = @_;
   my $ok=0;
   if (defined $to_gene->description()){
-    my $part_of_genedesc_target_rule = grep {$to_gene->description() =~/$_/} @$geneDesc_rules_target;
-    if ($part_of_genedesc_target_rule==1 && $flag_filter==1){
-      $ok=1;
-    }
+    #my $part_of_genedesc_target_rule = grep {$to_gene->description() =~/$_/} @$geneDesc_rules_target;
+    #if ($part_of_genedesc_target_rule==1){
+    #  $ok=1;
+    #}
   }
   else{
     $ok=1;
