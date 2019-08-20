@@ -59,9 +59,9 @@ sub default_options {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	=> {'LSF' => '-q production-rh7 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh7 -n 4 -M 64000  -R "rusage[mem=64000]"'},
+      'default'  	=> {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+      '32GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
+      '64GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
 	}
 }
 
