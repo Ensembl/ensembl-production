@@ -35,48 +35,33 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_protist
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 sub default_options {
-  my ($self) = @_;    
+  my ($self) = @_;
+
   return {
-          # inherit other stuff from the base class
-          %{ $self->SUPER::default_options() },
-          flag_GeneNames    => '1',
-          flag_GeneDescr    => '1',
-          gn_config => { 
-                        '1'=>{
-                              'source'       => 'dictyostelium_discoideum',
-                              'division'     => '',
-                              'run_all'      =>  0, # 1/0
-                              'antispecies'  => ['dictyostelium_discoideum'],
-                               # Taxon name of species to project to
-                              'taxons'      => ['Amoebozoa'],
-                              'geneName_source' 		 => ['UniProtKB/Swiss-Prot', 'Uniprot_gn'],
-                              'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                              'homology_types_allowed' => ['ortholog_one2one'],
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             },
-                       },
-          ## GeneDescription Projection 
-          gd_config => { 
-                        '1'=>{
-                              'source'          => 'dictyostelium_discoideum',
-                              'division'        => '',
-                              'run_all'         =>  0, # 1/0
-                              'antispecies'     => '',
-                              'taxons'      => ['Amoebozoa'],
-                              'geneName_source' => ['UniProtKB/Swiss-Prot', 'Uniprot_gn'],
-                              'geneDesc_rules'   	     => ['hypothetical', 'putative', 'unknown protein'] , 
-                              'geneDesc_rules_target'  => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'] ,
-                              'method_link_type'       => 'ENSEMBL_ORTHOLOGUES',
-                              'homology_types_allowed' => ['ortholog_one2one'],
-                              'percent_id_filter'      => '30',
-                              'percent_cov_filter'     => '66',
-                             },
-                       }
-         };
+    %{ $self->SUPER::default_options() },
+
+    compara_division => 'protists',
+
+    gene_name_source => [ 'ENA_GENE', 'Uniprot/SWISSPROT', 'Uniprot_gn' ],
+
+    gn_config => [
+      {
+        source      => 'dictyostelium_discoideum',
+        taxons      => ['Amoebozoa'],
+        antispecies => ['dictyostelium_discoideum'],
+      },
+    ],
+    
+    gd_config => [
+      {
+        source      => 'dictyostelium_discoideum',
+        taxons      => ['Amoebozoa'],
+        antispecies => ['dictyostelium_discoideum'],
+      },
+    ],
+  };
 }
 
 1;
