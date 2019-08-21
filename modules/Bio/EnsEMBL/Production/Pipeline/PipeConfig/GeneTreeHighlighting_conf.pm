@@ -50,7 +50,7 @@ sub default_options {
     compara_division => undef,
 
     # hive_capacity values for analysis
-    highlighting_capacity => 50,
+    highlighting_capacity => 20,
 
   }
 }
@@ -79,7 +79,7 @@ sub pipeline_analyses {
 
     { -logic_name     => 'highlight_go',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
-      -hive_capacity   => $self->o('highlighting_capacity'),
+      -analysis_capacity => $self->o('highlighting_capacity'),
       -parameters      => {
                             compara_division => $self->o('compara_division'),
                           },
@@ -88,7 +88,7 @@ sub pipeline_analyses {
 
     { -logic_name     => 'highlight_interpro',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
-      -hive_capacity   => $self->o('highlighting_capacity'),
+      -analysis_capacity => $self->o('highlighting_capacity'),
       -parameters      => {
                             compara_division => $self->o('compara_division'),
                           },
