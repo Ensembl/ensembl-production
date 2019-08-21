@@ -53,8 +53,6 @@ sub default_options {
     # Analysis associated with gene name projection
     logic_name => 'xref_projection',
 
-    is_tree_compliant => 1,
-
     store_projections => 1,
 
     backup_tables => [
@@ -74,6 +72,7 @@ sub default_options {
     # hashes in sub-classes of this pipeline config.
     method_link_type       => 'ENSEMBL_ORTHOLOGUES',
     homology_types_allowed => ['ortholog_one2one'],
+    is_tree_compliant      => 1,
     percent_id_filter      => 30,
     percent_cov_filter     => 66,
     gene_name_source       => [],
@@ -245,10 +244,10 @@ sub pipeline_analyses {
                               compara                => $self->o('compara_division'),
                               release                => $self->o('ensembl_release'),
                               output_dir             => $self->o('output_dir'),
-                              is_tree_compliant      => $self->o('is_tree_compliant'),
                               store_projections      => $self->o('store_projections'),
                               method_link_type       => $self->o('method_link_type'),
                               homology_types_allowed => $self->o('homology_types_allowed'),
+                              is_tree_compliant      => $self->o('is_tree_compliant'),
                               percent_id_filter      => $self->o('percent_id_filter'),
                               percent_cov_filter     => $self->o('percent_cov_filter'),
                               gene_name_source       => $self->o('gene_name_source'),
@@ -288,15 +287,13 @@ sub pipeline_analyses {
                                 compara                => $self->o('compara_division'),
                                 release                => $self->o('ensembl_release'),
                                 output_dir             => $self->o('output_dir'),
-                                is_tree_compliant      => $self->o('is_tree_compliant'),
                                 store_projections      => $self->o('store_projections'),
                                 method_link_type       => $self->o('method_link_type'),
                                 homology_types_allowed => $self->o('homology_types_allowed'),
+                                is_tree_compliant      => $self->o('is_tree_compliant'),
                                 percent_id_filter      => $self->o('percent_id_filter'),
                                 percent_cov_filter     => $self->o('percent_cov_filter'),
                                 gene_name_source       => $self->o('gene_name_source'),
-                                project_xrefs          => $self->o('project_xrefs'),
-                                white_list             => $self->o('white_list'),
                                 gene_desc_rules   	   => $self->o('gene_desc_rules'),
                                 gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                               },
