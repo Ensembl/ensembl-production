@@ -121,6 +121,7 @@ sub pipeline_analyses {
       -parameters      => {
                             datacheck_names => ['DensitySNPs', 'GenomeStatistics', 'SNPCounts'],
                             history_file    => $self->o('history_file'),
+                            registry_file   => $self->o('registry'),
                             failures_fatal  => 1,
                           },
       -max_retry_count => 1,
