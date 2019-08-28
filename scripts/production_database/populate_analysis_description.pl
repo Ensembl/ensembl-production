@@ -272,11 +272,12 @@ my %mdata;
 
     $sth2->execute();
 
+    my %data;
     my ( $logic_name, $analysis_id );
     $sth2->bind_columns( \( $logic_name, $analysis_id ) );
 
     while ( $sth2->fetch() ) {
-      $mdata{ lc($logic_name) }{'analysis_id'} = $analysis_id;
+      $data{ lc($logic_name) }{'analysis_id'} = $analysis_id;
     }
 
     # Insert into the empty analysis_description table.
@@ -286,19 +287,14 @@ my %mdata;
                    'displayable, web_data) ' . 'VALUES (?, ?, ?, ?, ?)',
                  $full_table_name ) );
 
-    foreach my $logic_name ( keys( %mdata ) ) {
+    foreach my $logic_name ( keys( %data ) ) {
       if ( !exists( $mdata{$logic_name}{'description'} ) ) {
         printf( "ERROR: Missing production database entry " .
                   "for logic name '%s'\n",
                 $logic_name );
       }
-      elsif ( !exists( $mdata{$logic_name}{'analysis_id'} ) ) {
-        printf( "WARNING: Expected to find analysis entry " .
-                  "for logic name '%s'\n",
-                $logic_name );
-      }
       else {
-        $sth2->bind_param( 1, $mdata{$logic_name}{'analysis_id'},
+        $sth2->bind_param( 1, $data{$logic_name}{'analysis_id'},
                            SQL_INTEGER );
         $sth2->bind_param( 2, $mdata{$logic_name}{'description'},
                            SQL_VARCHAR );

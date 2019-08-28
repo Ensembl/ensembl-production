@@ -50,7 +50,7 @@ sub default_options {
     compara_division => undef,
 
     # hive_capacity values for analysis
-    highlighting_capacity => 50,
+    highlighting_capacity => 20,
 
   }
 }
