@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesEmailReport
+Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneNamesEmailReport
 
 =head1 DESCRIPTION
 
@@ -26,7 +26,7 @@ Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesEmailReport
 ckong
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesEmailReport;
+package Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneNamesEmailReport;
 
 use strict;
 use warnings;

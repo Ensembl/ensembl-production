@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection
+Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneNamesProjection
 
 =cut
 
@@ -27,7 +27,7 @@ Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection
  by using the homologies derived from the Compara ProteinTree pipeline. 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection;
+package Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneNamesProjection;
 
 use strict;
 use warnings;
@@ -35,7 +35,7 @@ use warnings;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::Base');
 
 sub run {
   my ($self) = @_;

@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_mouse_strains_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_mouse_strains_conf
 
 =head1 DESCRIPTION
 
@@ -25,11 +25,11 @@ Gene name and description projection
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::XrefProjection_mouse_strains_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_mouse_strains_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf');
 
 sub default_options {
   my ($self) = @_;

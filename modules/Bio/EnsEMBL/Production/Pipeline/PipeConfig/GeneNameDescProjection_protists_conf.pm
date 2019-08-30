@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_protists
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_protists_conf
 
 =head1 DESCRIPTION
 
@@ -30,11 +30,11 @@ Gene name and description projection
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf_protists;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_protists_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf');
 
 sub default_options {
   my ($self) = @_;

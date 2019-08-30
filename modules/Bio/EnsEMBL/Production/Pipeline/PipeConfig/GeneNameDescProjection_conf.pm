@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf
 
 =head1 DESCRIPTION
 
@@ -30,7 +30,7 @@ Gene name and description projection
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::PostCompara_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf;
 
 use strict;
 use warnings;
@@ -148,7 +148,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'SourceFactory_Backup_Names',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
       -parameters        => {
                               config      => $self->o('gn_config'),
                               config_type => 'names',
@@ -161,7 +161,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'SourceFactory_Backup_Descs',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
       -parameters        => {
                               config      => $self->o('gd_config'),
                               config_type => 'descs',
@@ -194,7 +194,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'DeleteExisting',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::DeleteExisting',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::DeleteExisting',
       -analysis_capacity => 5,
       -max_retry_count   => 0,
       -parameters        => {
@@ -226,7 +226,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'SourceFactory_Names',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
       -parameters        => {
                               config      => $self->o('gn_config'),
                               config_type => 'names',
@@ -247,7 +247,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'GeneNamesProjection',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneNamesProjection',
       -analysis_capacity => 20,
       -parameters        => {
                               compara                => $self->o('compara_division'),
@@ -270,7 +270,7 @@ sub pipeline_analyses {
       },
       {
         -logic_name        => 'SourceFactory_Descs',
-        -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory',
+        -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
         -parameters        => {
                                 config      => $self->o('gd_config'),
                                 config_type => 'descs',
@@ -291,7 +291,7 @@ sub pipeline_analyses {
       },
       {
         -logic_name        => 'GeneDescProjection',
-        -module            => 'Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneDescProjection',
+        -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneDescProjection',
         -analysis_capacity => 20,
         -parameters        => {
                                 compara                => $self->o('compara_division'),

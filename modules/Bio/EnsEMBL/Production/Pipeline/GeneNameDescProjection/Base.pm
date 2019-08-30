@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::Base;
+package Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::Base;
 
 use strict;
 use warnings;

@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory;
+Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory;
 
 =head1 DESCRIPTION
 
@@ -27,7 +27,7 @@ in the given order, by recursively flowing, removing one config
 from the hash each time.
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::PostCompara::SourceFactory;
+package Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory;
 
 use strict;
 use warnings;
