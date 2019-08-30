@@ -83,7 +83,8 @@ sub pipeline_analyses {
           index_masked_files => $self->o('skip_blat_masking'),
         },
         -can_be_empty => 1,
-        -hive_capacity => 5,
+        -analysis_capacity => 10,
+        -priority => 5,
         -rc_name => 'default',
       },
 
@@ -96,7 +97,8 @@ sub pipeline_analyses {
                           skip               => $self->o('skip_ncbiblast'), 
                           index_masked_files => $self->o('skip_ncbiblast_masking'),
                         },
-       -hive_capacity => 10,
+       -analysis_capacity => 10,
+       -priority => 5,
        -can_be_empty  => 1,
        -rc_name 	   => 'default',     
       },  
@@ -109,7 +111,8 @@ sub pipeline_analyses {
                           program  => $self->o('ncbiblast_exe'), 
                           skip     => $self->o('skip_ncbiblast'),
         },
-        -hive_capacity => 5,
+        -analysis_capacity => 10,
+        -priority => 5,
         -can_be_empty  => 1,
       },
       
@@ -121,7 +124,8 @@ sub pipeline_analyses {
                           program  => $self->o('ncbiblast_exe'), 
                           skip     => $self->o('skip_ncbiblast'),
         },
-        -hive_capacity => 5,
+        -analysis_capacity => 10,
+        -priority => 5,
         -can_be_empty => 1,
       },
 
@@ -133,6 +137,7 @@ sub pipeline_analyses {
           -wait_for => 'checksum_generator',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
+          -priority => 5,
       },
       {
           -logic_name        => 'ChecksumGeneratorBLASTGENE',
@@ -142,6 +147,7 @@ sub pipeline_analyses {
           -wait_for => 'checksum_generator',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
+          -priority => 5,
       },
             {
           -logic_name        => 'ChecksumGeneratorBLASTGENOMIC',
@@ -151,6 +157,7 @@ sub pipeline_analyses {
           -wait_for => 'checksum_generator',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
+          -priority => 5,
       },
 
 
