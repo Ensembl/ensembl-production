@@ -42,7 +42,7 @@ sub default_options {
 
     is_tree_compliant => 0,
 
-    gene_name_source => [ 'MGI', 'MGI_trans_name' ]
+    gene_name_source => ['MGI']
 
     project_xrefs => 1,
     white_list    => [
@@ -72,9 +72,10 @@ sub default_options {
 
     gn_config => [
       {
-        source      => 'mus_musculus',
-        taxons      => ['Mus'],
-        antispecies => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'],
+        source              => 'mus_musculus',
+        taxons              => ['Mus'],
+        antispecies         => ['mus_musculus','mus_spretus','mus_pahari','mus_caroli'],
+        project_trans_names => 1,
       },
     ],
     

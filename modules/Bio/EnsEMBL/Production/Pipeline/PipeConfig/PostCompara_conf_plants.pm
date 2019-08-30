@@ -44,7 +44,7 @@ sub default_options {
 
     compara_division => 'plants',
 
-    gene_name_source => [ 'UniProtKB/Swiss-Prot', 'Uniprot_gn', 'TAIR_SYMBOL' ],
+    gene_name_source => [ 'TAIR_SYMBOL', 'UniProtKB/Swiss-Prot', 'Uniprot_gn' ],
 
     gd_config => [
       {
