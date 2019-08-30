@@ -23,221 +23,150 @@ Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection
 
 =head1 DESCRIPTION
 
- Pipeline to project gene display_xref 
- from one species to another by using the homologies derived 
- from the Compara ProteinTree pipeline. 
-
- Normally this is used to project from a well annotated species to one which is not.
-
-=head1 AUTHOR 
-
-ckong
+ Pipeline to project gene names from one species to another 
+ by using the homologies derived from the Compara ProteinTree pipeline. 
 
 =cut
 package Bio::EnsEMBL::Production::Pipeline::PostCompara::GeneNamesProjection;
 
 use strict;
 use warnings;
-use Data::Dumper;
+
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::SqlHelper;
+
 use base ('Bio::EnsEMBL::Production::Pipeline::PostCompara::Base');
 
 sub run {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    my $to_species 	 = $self->param_required('species');
-    my $from_species     = $self->param_required('source');
-    my $compara          = $self->param_required('compara');
-    my $release          = $self->param_required('release');
-    my $method_link_type = $self->param_required('method_link_type');
-    my $output_dir             = $self->param_required('output_dir');
+  my $to_species             = $self->param_required('species');
+  my $from_species           = $self->param_required('source');
+  my $compara                = $self->param_required('compara');
+  my $release                = $self->param_required('release');
+  my $output_dir             = $self->param_required('output_dir');
+  my $method_link_type       = $self->param_required('method_link_type');
+  my $homology_types_allowed = $self->param_required('homology_types_allowed');
+  my $is_tree_compliant      = $self->param_required('is_tree_compliant');
+  my $percent_id_filter      = $self->param_required('percent_id_filter');
+  my $percent_cov_filter     = $self->param_required('percent_cov_filter');
+  my $project_xrefs          = $self->param_required('project_xrefs');
 
-    print "Processing names projection from $from_species to $to_species\n";
+  my $reg = 'Bio::EnsEMBL::Registry';
 
-    # Creating adaptors
-    my $from_ga   = Bio::EnsEMBL::Registry->get_adaptor($from_species, 'core', 'Gene');
-    my $to_ga     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Gene');
-    my $to_ta     = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'Transcript');
-    my $to_dbea   = Bio::EnsEMBL::Registry->get_adaptor($to_species  , 'core', 'DBEntry');
-    die("Problem getting DBadaptor(s) - check database connection details\n") if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea);
+  my $from_ga = $reg->get_adaptor($from_species, 'core', 'Gene');
+  my $to_ga   = $reg->get_adaptor($to_species  , 'core', 'Gene');
+  my $to_ta   = $reg->get_adaptor($to_species  , 'core', 'Transcript');
+  my $to_dbea = $reg->get_adaptor($to_species  , 'core', 'DBEntry');
+  my $aa      = $reg->get_adaptor($to_species  , 'core', 'Analysis');
+  if (!$from_ga || !$to_ga || !$to_ta || !$to_dbea) {
+    die("Problem getting core db adaptor(s)");
+  }
+  my $analysis = $aa->fetch_by_logic_name('xref_projection');
 
-    my $mlssa = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet');
-    my $ha    = Bio::EnsEMBL::Registry->get_adaptor($compara, 'compara', 'Homology');
-    my $gdba  = Bio::EnsEMBL::Registry->get_adaptor($compara, "compara", 'GenomeDB');
-    die "Can't connect to Compara database specified by $compara - check command-line and registry file settings" if (!$mlssa || !$ha ||!$gdba);
+  my $mlssa = $reg->get_adaptor($compara, 'compara', 'MethodLinkSpeciesSet'); 
+  my $ha    = $reg->get_adaptor($compara, 'compara', 'Homology'); 
+  my $gdba  = $reg->get_adaptor($compara, 'compara', 'GenomeDB'); 
+  if (!$mlssa || !$ha || !$gdba) {
+    die("Problem getting compara db adaptor(s)");
+  }
 
-    # Retrieve analysis
-    my $analysis_adaptor = Bio::EnsEMBL::Registry->get_adaptor($to_species , "core", "analysis" );
-    my $analysis = $analysis_adaptor->fetch_by_logic_name('xref_projection');
+  $self->check_directory($output_dir);
+  my $log_file  = "$output_dir/$from_species-$to_species\_GeneNamesProjection_logs.txt";
+  open my $log, ">", "$log_file" or die $!;
+  print $log "\n\tProjection log :\n";
+  print $log "\t\tsoftware release :$release\n";
+  print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
 
-    # Write projection info metadata
-    $self->check_directory($output_dir);
-    my $log_file  = $output_dir."/".$from_species."-".$to_species."_GeneNamesProjection_logs.txt";
-    open my $log,">","$log_file" or die $!;
-    print $log "\n\tProjection log :\n";
-    print $log "\t\tsoftware release :$release\n";
-    print $log "\t\tfrom :".$from_ga->dbc()->dbname()." to :".$to_ga->dbc()->dbname()."\n";
+  my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
+  if (!defined $from_GenomeDB) {
+    print $log "Aborting: Genome DB not found for $from_species";
+    return;
+  }
+  my $to_GenomeDB = $gdba->fetch_by_registry_name($to_species);
+  if (!defined $to_GenomeDB) {
+    print $log "Aborting: Genome DB not found for $to_species";
+    return;
+  }
+  my $mlss = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
+  if (!defined $mlss) {
+    print $log "Aborting: No orthology found for $from_species to $to_species";
+    return;
+  }
+  my $mlss_id = $mlss->dbID();
 
-    # Build Compara GenomeDB objects
-    my $from_GenomeDB = $gdba->fetch_by_registry_name($from_species);
-    if(!defined $from_GenomeDB) {
-      warn "Genome DB not found for $from_species";
-      return;
-    }
-    my $to_GenomeDB   = $gdba->fetch_by_registry_name($to_species);
-    if(!defined $to_GenomeDB) {
-      warn "Genome DB not found for $to_species";
-      return;
-    }
-    my $mlss          = $mlssa->fetch_by_method_link_type_GenomeDBs($method_link_type, [$from_GenomeDB, $to_GenomeDB]);
-    if(!defined $mlss) {
-      print "No $method_link_type found between $from_species and $to_species";
-      return;
-    }
+  # build hash of external db name -> ensembl object type mappings
+  my $source_db_to_type = $self->build_db_to_type($from_ga);
 
-    my $mlss_id       = $mlss->dbID();
-    # build hash of external db name -> ensembl object type mappings
-    my $db_to_type = build_db_to_type($to_ga);
-    my $source_db_to_type = build_db_to_type($from_ga);
+  # Get homologies from compara - comes back as a hash of arrays
+  print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
+  my $homologies = $self->fetch_homologies(
+    $ha, $mlss, $from_species, $log, $gdba, $homology_types_allowed, $is_tree_compliant, $percent_id_filter, $percent_cov_filter
+  );
 
-    # Get homologies from compara - comes back as a hash of arrays
-    print $log "\n\tRetrieving homologies of method link type $method_link_type for mlss_id $mlss_id \n";
-    my $homologies    = $self->fetch_homologies($ha, $mlss, $from_species, $log, $gdba, $self->param('homology_types_allowed'), $self->param('is_tree_compliant'), $self->param('percent_id_filter'), $self->param('percent_cov_filter'));
+  print $log "\n\tProjecting Gene Names from $from_species to $to_species\n\n";
 
-    print $log "\n\tProjecting Gene Names & descriptions from $from_species to $to_species\n\n";
+  while (my ($from_stable_id, $to_genes) = each %{$homologies}) {
+    my $from_gene = $from_ga->fetch_by_stable_id($from_stable_id);
+    next if (!$from_gene);
 
-    my $total_genes   = scalar(keys %$homologies);
+    my $to_gene_count = scalar(@{$to_genes});
 
-    while (my ($from_stable_id, $to_genes) = each %{$homologies}) {
-       my $from_gene  = $from_ga->fetch_by_stable_id($from_stable_id);
-       next if (!$from_gene);
-       my $gene_nbr=1;
-       foreach my $to_stable_id (@{$to_genes}) {
-            my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
-            next if (!$to_gene);
-            if (defined $self->param('project_xrefs') and $self->param('project_xrefs')==1)
-            {
-              $self->project_xrefs_genenames($to_dbea, $from_gene, $to_gene, $log, scalar(@{$to_genes}), $source_db_to_type, $analysis);
-              
-            }
-            $self->project_display_xrefs_genenames($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $log, scalar(@{$to_genes}),  $db_to_type, $analysis);
-       }
-        $gene_nbr++;
-    }
-    close($log);
+    foreach my $to_stable_id (@{$to_genes}) {
+      my $to_gene  = $to_ga->fetch_by_stable_id($to_stable_id);
+      next if (!$to_gene);
 
-    #Disconnecting from the registry
-    $from_ga->dbc->disconnect_if_idle();
-    $to_ga->dbc->disconnect_if_idle();
-    $mlssa->dbc->disconnect_if_idle();
-return;
-}
-
-sub write_output {
-    my ($self) = @_;
-
-}
-
-######################
-## internal methods
-######################
-sub project_display_xrefs_genenames {
-    my ($self, $to_geneAdaptor, $to_transcriptAdaptor, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $db_to_type, $analysis)  = @_;
-
-    my $store_projections  = $self->param_required('store_projections');
-    my $from_species     = $self->param_required('source');
-    my $to_species       = $self->param_required('species');
-    my $gene_name_source  = $self->param_required('gene_name_source');
-    my $compara          = $self->param_required('compara');
-
-    # Decide if a gene name should be overwritten
-    # Criteria: overwrite if:
-    #    - no existing display_xref
-    # or
-    #    - existing display_xref is RefSeq_*_predicted
-    #      AND from_gene is from "best" source external db,
-    #      e.g. HGNC in homo_sapiens, MGI in mus_musculus
-
-    if(defined $from_gene->display_xref() && check_overwrite_display_xref($from_gene, $to_gene, $from_species, $to_species)) {
-       my $from_gene_dbname     = $from_gene->display_xref->dbname();
-       my $from_gene_display_id = $from_gene->display_xref->display_id();
-
-       # Skip clone names if projecting all sources
-       return if (lc($from_gene_dbname) =~ /clone/);
-
-       # Get all DBEntries for 'source gene' base on the dbname of display_xref  
-       foreach my $dbEntry (@{$from_gene->get_all_DBEntries($from_gene_dbname)}) { 
-
-          if($dbEntry->display_id=~/$from_gene_display_id/  && $store_projections==1 && grep (/$from_gene_dbname/, @$gene_name_source)){
-
-             print $log "\t\tProject display xref from:".$from_gene->stable_id()."\t";
-             print $log "to:".$to_gene->stable_id()."\t";
-             print $log "GeneName:".$from_gene_display_id."\t";
-             print $log "DB:".$from_gene_dbname."\n";
-
-             # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
-             my $info_txt = "from $from_species gene " . $from_gene->stable_id();
-
-             # modify the display_id to have "(1 of many)" if this is a one-to-many ortholog
-             my $tuple_txt = "";
-             if ($total_gene_number > 1) {
-               $tuple_txt = " (1 of many)";
-               my $existing = $dbEntry->display_id();
-               $existing =~ s/ \(1 of many\)//;
-               $dbEntry->display_id($existing . $tuple_txt);
-               $info_txt .= $tuple_txt;
-             }
-             $dbEntry->analysis($analysis);
-             # For the Ensembl species, logic for Gene and Transcript
-             if ($compara eq "Multi"){
-               $self->project_display_xrefs_ensembl($to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor, $log, $from_gene, $from_gene_dbname, $analysis);
-             }
-            # For EG species
-            else {
-              $self->project_display_xrefs_ensembl_genomes($dbEntry, $from_gene, $to_dbea, $to_gene, $to_geneAdaptor, $from_species);
-            }
-         }
+      if ($project_xrefs) {
+        $self->project_all_xrefs($to_dbea, $from_gene, $to_gene, $to_gene_count, $source_db_to_type, $analysis, $log);
       }
-   }
+
+      $self->project_gene_names($to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $to_gene_count, $analysis, $log);
+    }
+  }
+
+  close($log);
+
+  # Explicit disconnect to free up database connections
+  $from_ga->dbc->disconnect_if_idle();
+  $to_ga->dbc->disconnect_if_idle();
+  $mlssa->dbc->disconnect_if_idle();
 }
 
-# Project all the xrefs from a species to another and store them as type PROJECTION
-sub project_xrefs_genenames {
-    my ($self, $to_dbea, $from_gene, $to_gene, $log, $total_gene_number, $source_db_to_type, $analysis)  = @_;
+# Project all the xrefs from one species to another
+sub project_all_xrefs {
+  my ($self, $to_dbea, $from_gene, $to_gene, $to_gene_count, $source_db_to_type, $analysis, $log)  = @_;
 
-    my $store_projections  = $self->param_required('store_projections');
-    my $from_species     = $self->param_required('source');
-    my $white_list  = $self->param('white_list');
+  my $from_species      = $self->param_required('source');
+  my $store_projections = $self->param_required('store_projections');
+  my $white_list        = $self->param_required('white_list');
 
-    foreach my $dbEntry (@{$from_gene->get_all_DBLinks()}) {
-      my @to_transcripts = @{$to_gene->get_all_Transcripts};
-      my $to_transcript = $to_transcripts[0];
+  foreach my $dbEntry (@{$from_gene->get_all_DBLinks()}) {
+    my @to_transcripts = @{$to_gene->get_all_Transcripts};
+    my $to_transcript = $to_transcripts[0];
 
-      my $dbname = $dbEntry->dbname();
-      my $type = $source_db_to_type->{$dbname};
+    my $from_gene_dbname = $dbEntry->dbname();
+    my $type = $source_db_to_type->{$from_gene_dbname};
 
-      # Skip xref if it's not in the white list. Only project xrefs from the white list.
-      next if (!grep (/$dbname/, @$white_list));
+    # Only project xrefs from the white list.
+    if (grep (/$from_gene_dbname/, @$white_list)) {
+      print $log "\t\tProject xref from:".$from_gene->stable_id()."\t";
+      print $log "to: ".$to_gene->stable_id()."\t";
+      print $log "Xref: ".$dbEntry->display_id()."\t";
+      print $log "Source: ".$from_gene_dbname."\n";
 
-      if ($store_projections==1){
-        
-        print $log "\t\tProject xref from:".$from_gene->stable_id()."\t";
-        print $log "to:".$to_gene->stable_id()."\t";
-        print $log "Xref:".$dbEntry->display_id()."\t";
-        print $log "DB:".$dbname."\n";
-
-        # Modify the dbEntry to indicate it's not from this species - set info_type & info_text
+      if ($store_projections) {
+        # Modify the dbEntry to indicate it's not from this species
         my $info_txt = "from $from_species gene " . $from_gene->stable_id();
 
-        # modify the display_id to have "(1 of many)" if this is a one-to-many ortholog
-        my $tuple_txt = "";
-        if ($total_gene_number > 1) {
-          $tuple_txt = " (1 of many)";
-          my $existing = $dbEntry->display_id();
-          $existing =~ s/ \(1 of many\)//;
-          $dbEntry->display_id($existing . $tuple_txt);
+        # Modify the display_id to have "(1 of many)" if this is a one-to-many ortholog
+        if ($to_gene_count > 1) {
+          my $tuple_txt = " (1 of many)";
           $info_txt .= $tuple_txt;
+
+          my $existing = $dbEntry->display_id();
+          if ($existing !~ / \(1 of many\)/) {
+            $dbEntry->display_id($existing . $tuple_txt);
+          }
         }
 
         $dbEntry->info_type("PROJECTION");
@@ -247,12 +176,10 @@ sub project_xrefs_genenames {
         if ($type eq "Gene") {
           $to_gene->add_DBEntry($dbEntry);
           $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
-        }
-        elsif ($type eq "Transcript") {
+        } elsif ($type eq "Transcript") {
           $to_transcript->add_DBEntry($dbEntry);
           $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
-        }
-        elsif ($type eq "Translation") {
+        } elsif ($type eq "Translation") {
           my $to_translation = $to_transcript->translation();
           return if (!$to_translation);
           $to_translation->add_DBEntry($dbEntry);
@@ -260,42 +187,153 @@ sub project_xrefs_genenames {
         }
       }
     }
+  }
 }
-# ----------------------------------------------------------------------
 
-# Decide if a gene name should be overwritten
-# Criteria: overwrite if:
-#    - no existing display_xref
-# or
-#    - existing display_xref is RefSeq_*_predicted
-#      AND from_gene is from "best" source external db,
-#      e.g. HGNC in homo_sapiens, MGI in mus_musculus
+sub project_gene_names {
+  my ($self, $to_ga, $to_ta, $to_dbea, $from_gene, $to_gene, $to_gene_count, $analysis, $log)  = @_;
 
-sub check_overwrite_display_xref {
-  #To means target & from means the projection source e.g. to == sus_scrofa & from  == homo_sapiens
-  my ($from_gene, $to_gene, $from_species, $to_species) = @_;
-  
-  my $from_dbname= $from_gene->display_xref->dbname();
-  my $to_dbname = $to_gene->display_xref->dbname() if ($to_gene->display_xref());
+  my $from_species        = $self->param_required('source');
+  my $to_species          = $self->param_required('species');
+  my $compara             = $self->param_required('compara');
+  my $store_projections   = $self->param_required('store_projections');
+  my $gene_name_source    = $self->param_required('gene_name_source');
+  my $project_trans_names = $self->param_required('project_trans_names');
+
+  # Checking that source passed the rules
+  if (defined $from_gene->display_xref()) {
+    if ($self->is_target_ok($from_gene, $to_gene, $from_species, $to_species)) {
+      my $from_gene_dbname     = $from_gene->display_xref->dbname();
+      my $from_gene_display_id = $from_gene->display_xref->display_id();
+
+      if (grep (/$from_gene_dbname/, @$gene_name_source)) {
+        print $log "\t\tProject name from:".$from_gene->stable_id()."\t";
+        print $log "to: ".$to_gene->stable_id()."\t";
+        print $log "Gene Name: $from_gene_display_id\t";
+        print $log "Source: $from_gene_dbname\n";
+
+        if ($store_projections) {
+          my $to_gene_display_id = $from_gene_display_id;
+          my $info_txt = "from $from_species gene " . $from_gene->stable_id();
+          my $description = $from_gene->display_xref->description();
+
+          if ($to_gene_count > 1) {
+            my $tuple_txt = " (1 of many)";
+            $to_gene_display_id .= $tuple_txt;
+            $info_txt .= $tuple_txt;
+          }
+
+          my $dbEntry = Bio::EnsEMBL::DBEntry->new(
+            -PRIMARY_ID  => $from_gene_display_id,
+            -DISPLAY_ID  => $from_gene_display_id,
+            -DBNAME      => $from_gene_dbname,
+            -INFO_TYPE   => 'PROJECTION',
+            -INFO_TEXT   => $info_txt,
+            -DESCRIPTION => $description,
+            -ANALYSIS    => $analysis,
+          );
+
+          $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
+          $to_gene->display_xref($dbEntry);
+
+          if ($project_trans_names) {
+            $self->project_transcript_names($to_dbea, $to_ta, $dbEntry, $to_gene, $log);
+          }
+
+          $to_ga->update($to_gene);
+        }
+      }
+    }
+  }
+}
+
+sub project_transcript_names {
+  my ($self, $to_dbea, $to_ta, $dbEntry, $to_gene, $log)  = @_;
+
+  # Force loading of external synonyms for the xref
+  $dbEntry->get_all_synonyms();
+
+  my $from_gene_dbname = $dbEntry->dbname();
+  my $dbname = "$from_gene_dbname\_trans_name";
+
+  my $base_name = $dbEntry->display_id();
+  my $offset = 201;
+
+  foreach my $transcript (@{$to_gene->get_all_Transcripts}) {
+    my $name = sprintf('%s-%03d', $base_name, $offset);
+
+    print $log "\t\t\tProject transcript names\t";
+    print $log "to: ".$transcript->stable_id()."\t";
+    print $log "Transcript Name: $name\t";
+    print $log "DB: $from_gene_dbname\n";
+
+    my $t_dbEntry = Bio::EnsEMBL::DBEntry->new(
+      -PRIMARY_ID  => $name,
+      -DISPLAY_ID  => $name,
+      -DBNAME      => $dbname,
+      -INFO_TYPE   => 'PROJECTION',
+      -INFO_TEXT   => $dbEntry->info_text(),
+      -DESCRIPTION => $dbEntry->description(),
+      -ANALYSIS    => $dbEntry->analysis(),
+    );
+    $to_dbea->store($t_dbEntry, $transcript->dbID(), 'Transcript', 1);
+    $transcript->display_xref($t_dbEntry);
+    $to_ta->update($transcript);
+
+    $offset++;
+  }
+}
+
+sub build_db_to_type {
+  my ($self, $to_ga) = @_;
+
+  my $db_to_type;
+
+  my $sql = q/
+    SELECT DISTINCT
+      db_name,
+      ensembl_object_type
+    FROM
+      external_db INNER JOIN
+      xref USING (external_db_id) INNER JOIN
+      object_xref ox USING (xref_id)  
+  /;
+  my $sth = $to_ga->dbc()->prepare($sql);
+  $sth->execute();
+  my ($db_name, $type);
+  $sth->bind_columns(\$db_name, \$type);
+  while($sth->fetch()){
+    $db_to_type->{$db_name} = $type;
+  }
+  $sth->finish;
+
+  return $db_to_type;
+}
+
+sub is_target_ok {
+  my ($self, $from_gene, $to_gene, $from_species, $to_species) = @_;
+
+  my $from_dbname = $from_gene->display_xref->dbname();
+  my $to_dbname   = $to_gene->display_xref->dbname() if ($to_gene->display_xref());
   $to_dbname ||= q{}; #can be empty; this stops warning messages
 
-  #Exit early if we had an external name & the species was not danio_rerio, sus_scrofa or mouse
+  # Exit early if we have a gene name & the species was not danio_rerio, sus_scrofa or mouse
   return 1 if (!$to_gene->external_name() && $to_species ne "danio_rerio" && $to_species ne 'sus_scrofa' && $to_species ne 'mus_musculus');
 
-  #Exit early if it was a RefSeq predicted name & source was a vetted good symbol
+  # Exit early if it was a RefSeq predicted name & source was a vetted good symbol
   if ($to_dbname eq "RefSeq_mRNA_predicted" || $to_dbname eq "RefSeq_ncRNA_predicted" || $to_dbname eq "RefSeq_peptide_predicted") {
-    if (  ($from_species eq "homo_sapiens" && $from_dbname =~ /HGNC/) ||
-          ($from_species eq "mus_musculus" && $from_dbname =~ /MGI/) ||
-          ($from_species eq "danio_rerio" && $from_dbname =~ /ZFIN_ID/)) {
-      if ($to_species eq "danio_rerio" and is_in_blacklist($from_gene->display_xref)){
+    if (($from_species eq "homo_sapiens" && $from_dbname =~ /HGNC/) ||
+        ($from_species eq "mus_musculus" && $from_dbname =~ /MGI/) ||
+        ($from_species eq "danio_rerio" && $from_dbname =~ /ZFIN_ID/))
+    {
+      if ($to_species eq "danio_rerio" and $self->is_in_blacklist($from_gene->display_xref)) {
         return 0;
       }
       return 1;
     }
   }
-  #Zebrafish specific logic; do not re-write!
+  # Zebrafish specific logic; do not re-write!
   elsif ($to_species eq "danio_rerio"){
-
     my $to_dbEntry = $to_gene->display_xref();
     my $from_dbEntry = $from_gene->display_xref();
     my $to_seq_region_name = $to_gene->seq_region_name();
@@ -306,19 +344,14 @@ sub check_overwrite_display_xref {
     $name =~ /(\w+)/; # remove (x of y) in name.
     $name = $1;
 
-     if ( $name =~ /C(\w+)orf(\w+)/){
-         my $new_name = "C".$to_seq_region_name."H".$1."orf".$2;
-        $from_gene->display_xref->display_id($new_name);
-        return 1;
+    if ($name =~ /C(\w+)orf(\w+)/) {
+      my $new_name = "C".$to_seq_region_name."H".$1."orf".$2;
+      $from_gene->display_xref->display_id($new_name);
+      return 1;
     }
 
-    if (!defined ($to_dbEntry) || (($to_dbEntry->display_id =~ /:/) and $to_dbname eq "ZFIN_ID") ){
-      if (is_in_blacklist($from_dbEntry)){
-              return 0;
-      }
-      else{
-              return 1;
-      }
+    if (!defined ($to_dbEntry) || (($to_dbEntry->display_id =~ /:/) and $to_dbname eq "ZFIN_ID")) {
+      return !($self->is_in_blacklist($from_dbEntry));
     }
   }
   #Pig specific logic; 
@@ -354,143 +387,21 @@ sub check_overwrite_display_xref {
     }
   }
   return 0;
-
-}
-
-# create a hash of external_db_name -> ensembl_object_type
-# used to assign projected xrefs to the "correct" type
-
-sub build_db_to_type {
-
-  my ($to_ga) = @_;
-
-  my $db_to_type;
-
-  my $sth = $to_ga->dbc()->prepare("SELECT DISTINCT e.db_name, ox.ensembl_object_type FROM external_db e, xref x, object_xref ox WHERE x.xref_id=ox.xref_id AND e.external_db_id=x.external_db_id");
-  $sth->execute();
-  my ($db_name, $type);
-  $sth->bind_columns(\$db_name, \$type);
-  while($sth->fetch()){
-    $db_to_type->{$db_name} = $type;
-  }
-  $sth->finish;
-
-  return $db_to_type;
-
-}
-
-# Loop through the transcripts, set the expected SYMBOL-201 for all the target transcripts
-# Attach the DBEntry and leave until later which will store the entry on the transcript
-sub overwrite_transcript_display_xrefs {
-  my ($ref_dbEntry, $info_txt, $offset, $transcripts, $analysis) = @_;
-  my $from_dbname = $ref_dbEntry->dbname();
-  my $base_name  = $ref_dbEntry->display_id();
-  foreach my $t (@{$transcripts}) {
-    my $name = sprintf('%s-%03d', $base_name, $offset);
-    my $dbname = "${from_dbname}_trans_name";
-    my $xref = Bio::EnsEMBL::DBEntry->new(
-      -PRIMARY_ID => $name, -DISPLAY_ID => $name, -DBNAME => $dbname,
-      -INFO_TYPE => 'PROJECTION', -INFO_TEXT => $info_txt,
-      -DESCRIPTION => $ref_dbEntry->description(), -ANALYSIS => $analysis,
-    );
-    $t->display_xref($xref);
-    $offset++;
-  }
-  return;
 }
 
 sub is_in_blacklist{
-    #catches clones and analyses when projecting display xrefs.
-    my ($dbentry) = shift;
+  # Catches clones and analyses when projecting display xrefs.
+  my ($self, $dbentry) = @_;
 
-    if (($dbentry->display_id =~ /KIAA/) || ( $dbentry->display_id =~ /LOC/)){
-       return 1; # return yes that have found gene names that match the regular expression
-    }
-    elsif ($dbentry->display_id =~ /\-/){
-       return 1;
-    }
-    elsif ($dbentry->display_id =~ /\D{2}\d{6}\.\d+/){
-       #print "black listed item found ".$dbentry->display_id."\n";
-        return 1;
-    }
-    else{
-        return 0;
-    }
-    
-}
-
-###Ensembl species
-# Add the xref to the "to" gene, or transcript or translation depending on what the
-# other xrefs from this dbname as assigned to (see build_db_to_type)
-# Note that if type is not found, it means that we're dealing with a db that has no
-# xrefs in the target database, e.g. MarkerSymbol in mus_musculus -> rattus_norvegicus
-# In this case just assign to genes
-
-sub project_display_xrefs_ensembl{
-  my ($self, $to_dbea, $to_gene, $dbEntry, $db_to_type, $info_txt, $to_geneAdaptor, $to_transcriptAdaptor, $log, $from_gene, $from_gene_dbname, $analysis )  = @_;
-  # Adding projection source information
-  $dbEntry->info_type("PROJECTION");
-  $dbEntry->info_text($info_txt);
-
-  my @to_transcripts = @{$to_gene->get_all_Transcripts};
-  my $to_transcript = $to_transcripts[0];
-
-  # Force loading of external synonyms for the xref
-  $dbEntry->get_all_synonyms();
-
-  my $dbname = $dbEntry->dbname();
-
-  my $type = $db_to_type->{$dbname};
-
-  if ($type eq "Gene" || $dbname eq 'HGNC' || !$type) {
-    $to_gene->add_DBEntry($dbEntry);
-    $to_dbea->store($dbEntry, $to_gene->dbID(), 'Gene', 1);
-  }
-  elsif ($type eq "Transcript" || $dbname eq 'HGNC_trans_name') {
-    $to_transcript->add_DBEntry($dbEntry);
-    $to_dbea->store($dbEntry, $to_transcript->dbID(), 'Transcript', 1);
-  }
-  elsif ($type eq "Translation") {
-    my $to_translation = $to_transcript->translation();
-    return if (!$to_translation);
-    $to_translation->add_DBEntry($dbEntry);
-    $to_dbea->store($dbEntry, $to_translation->dbID(), 'Translation',1);
-  }
-  else {
-    warn("Can't deal with xrefs assigned to $type (dbname=" . $dbEntry->dbname . ")\n");
-    return;
-  }
-
-  # Update display_xref
-  $to_gene->display_xref($dbEntry);
-  # Set SYMBOL-201 for all the target Transcripts
-  overwrite_transcript_display_xrefs($dbEntry, $info_txt, 201, \@to_transcripts, $analysis);
-  # update the gene so that the display_xref_id is set and the
-  $to_geneAdaptor->update($to_gene);
-  foreach my $transcript (@to_transcripts) {
-    #Now assign names to the transcripts;
-    my $display = $transcript->display_xref();
-    if ($display){
-      $transcript->add_DBEntry($display);
-      $to_dbea->store($display, $transcript->dbID(), 'Transcript', 1);
-    }
-    # Set the display xref if applicable for the gene's transcripts
-    $to_transcriptAdaptor->update($transcript);
-    print $log "\t\t\tProject display xref from:".$from_gene->stable_id()."\t";
-    print $log "to:".$transcript->stable_id()."\t";
-    print $log "TranscriptName:".$transcript->display_xref->display_id()."\t";
-    print $log "DB:".$from_gene_dbname."\n";
+  if (($dbentry->display_id =~ /KIAA/) || ( $dbentry->display_id =~ /LOC/)) {
+    return 1;
+  } elsif ($dbentry->display_id =~ /\-/) {
+    return 1;
+  } elsif ($dbentry->display_id =~ /\D{2}\d{6}\.\d+/) {
+    return 1;
+  } else {
+    return 0;
   }
 }
 
-sub project_display_xrefs_ensembl_genomes{
-  my ($self, $dbEntry, $from_gene, $to_dbea, $to_gene, $to_geneAdaptor, $from_species) = @_;
-  $dbEntry->info_type("PROJECTION");
-  $dbEntry->info_text("projected from $from_species,".$from_gene->stable_id());
-
-  $to_dbea->store($dbEntry,$to_gene->dbID(), 'Gene', 1);
-  $to_gene->display_xref($dbEntry);
-  $to_geneAdaptor->update($to_gene);
-}
-
-1
+1;
