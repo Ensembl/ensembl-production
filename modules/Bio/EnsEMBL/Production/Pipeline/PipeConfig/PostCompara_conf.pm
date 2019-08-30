@@ -77,6 +77,7 @@ sub default_options {
     percent_cov_filter     => 66,
     gene_name_source       => [],
     project_xrefs          => 0,
+    project_trans_names    => 0,
     white_list             => [],
     gene_desc_rules   	   => ['hypothetical', 'putative', 'unknown protein'],
     gene_desc_rules_target => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
@@ -105,6 +106,14 @@ sub pipeline_create_commands {
   ];
 }
 
+sub pipeline_wide_parameters {  
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    'store_projections' => $self->o('store_projections'),
+  };
+}
+
 sub pipeline_analyses {
   my ($self) = @_;
   
@@ -124,7 +133,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -rc_name           => 'default',
       -flow_into         => {
-                              '1->A' => ['Backup'],
+                              '1->A' => WHEN('#store_projections#' => ['Backup']),
                               'A->1' => ['Project'],
                             },
     },
@@ -252,6 +261,7 @@ sub pipeline_analyses {
                               percent_cov_filter     => $self->o('percent_cov_filter'),
                               gene_name_source       => $self->o('gene_name_source'),
                               project_xrefs          => $self->o('project_xrefs'),
+                              project_trans_names    => $self->o('project_trans_names'),
                               white_list             => $self->o('white_list'),
                               gene_desc_rules   	   => $self->o('gene_desc_rules'),
                               gene_desc_rules_target => $self->o('gene_desc_rules_target'),
