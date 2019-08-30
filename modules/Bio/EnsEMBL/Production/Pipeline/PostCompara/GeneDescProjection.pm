@@ -143,7 +143,11 @@ sub project_genedesc {
           my $species_text = ucfirst($from_species);
           $species_text    =~ s/_/ /g;
           my $source_id    = $from_gene->stable_id();
-          $gene_desc       =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
+          if ($gene_desc =~ /\[Source:/) {
+            $gene_desc =~ s/(\[Source:)/$1Projected from $species_text ($source_id) /;
+          } else {
+            $gene_desc .= " [Source: Projected from $species_text ($source_id)]";
+          }
         }
 
         print $log "\t\tProject from: ".$from_gene->stable_id()."\t";
