@@ -61,7 +61,9 @@ echo "Dumping sql file for $database";
 
 mysqldump --host=$host --user=$user --password=$password --port=$port ${IGNORED_TABLES_STRING} ${cmd_line_options} -d $database | gzip > ${output_dir}/$database/$database.sql.gz
 
-for t in $(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
+tables=$(mysql -NBA --host=$host --user=$user --password=$password --port=$port -D $database -e "${query}")
+
+for t in $tables
 do
     echo "DUMPING TABLE: $database.$t"
     mysql --host=$host --max_allowed_packet=512M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed '/NULL/ s//\\N/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
