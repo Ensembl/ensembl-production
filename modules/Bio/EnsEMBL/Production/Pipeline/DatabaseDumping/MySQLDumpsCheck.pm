@@ -40,6 +40,7 @@ sub run {
   my $table_list_sql = qq/SELECT TABLE_NAME FROM 
                  information_schema.tables WHERE 
                  table_schema = '$database_name'
+                 AND TABLE_NAME not like 'MTMP_%'
   /;
   my $dbc = Bio::EnsEMBL::DBSQL::DBConnection->new(
     -user   => $self->param('user'),
