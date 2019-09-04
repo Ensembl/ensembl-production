@@ -42,6 +42,9 @@ MTMP_supporting_structural_variation
 MTMP_transcript_variation
 MTMP_variation_set_structural_variation
 MTMP_variation_set_variation
+MTMP_population_genotype
+MTMP_sample_genotype
+MTMP_variation_annotation
 )
 for TABLE in "${EXCLUDED_TABLES[@]}"
 do :
