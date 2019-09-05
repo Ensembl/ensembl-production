@@ -76,7 +76,12 @@ sub run {
             database   => $db,
             output_dir => $base_output_dir . '/grch37/release-' . $dir_release . '/mysql/',
         }, 1);
-
+      }
+      elsif ($division_short_name eq "pan") {
+          $self->dataflow_output_id({
+              database   => $db,
+              output_dir => $base_output_dir . '/release-' . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
+          }, 1);
       }
       else {
         $self->dataflow_output_id({
@@ -136,6 +141,12 @@ sub run {
               output_dir => $base_output_dir . '/grch37/release-' . $dir_release . '/mysql/',
           }, 1);
 
+        }
+        elsif ($division_short_name eq "pan") {
+          $self->dataflow_output_id({
+              database   => $division_database,
+              output_dir => $base_output_dir . '/release-' . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
+          }, 1);
         }
         else {
           $self->dataflow_output_id({
