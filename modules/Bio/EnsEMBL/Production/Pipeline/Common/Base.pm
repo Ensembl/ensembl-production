@@ -264,6 +264,7 @@ q{Cannot continue as %s's coordinate system %s is not the expected %s },
       } @slices;
     } ## end if ( $production_name ...)
   } ## end if ($filter_human)
+  $dba->dbc()->disconnect_if_idle();
 
   return [ sort { $b->length() <=> $a->length() } @slices ];
 } ## end sub get_Slices
