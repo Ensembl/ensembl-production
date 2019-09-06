@@ -149,12 +149,13 @@ sub pipeline_wide_parameters {
 sub resource_classes {
     my $self = shift;
     return {
-      'default'  	=> {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '15GB'      => {'LSF' => '-q production-rh74 -n 4 -M 15000   -R "rusage[mem=15000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+      'default'  	=> {'LSF' => '-q production-rh74 -M 4000   -R "rusage[mem=4000]"'},
+      '8GB'       => {'LSF' => '-q production-rh74 -M 8000   -R "rusage[mem=8000]"'},
+      '15GB'      => {'LSF' => '-q production-rh74 -M 15000  -R "rusage[mem=15000]"'},
+      '32GB'  	 	=> {'LSF' => '-q production-rh74 -M 32000  -R "rusage[mem=32000]"'},
+      '64GB'  	 	=> {'LSF' => '-q production-rh74 -M 64000  -R "rusage[mem=64000]"'},
+      '128GB'  	 	=> {'LSF' => '-q production-rh74 -M 128000 -R "rusage[mem=128000]"'},
+      '256GB'  	 	=> {'LSF' => '-q production-rh74 -M 256000 -R "rusage[mem=256000]"'},
 	}
 }
 
@@ -432,7 +433,7 @@ sub pipeline_analyses {
        },
       -can_be_empty    => 1,
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => 20,
       -priority        => 5,
       -rc_name         => 'default',
     },
@@ -449,7 +450,7 @@ sub pipeline_analyses {
                   ELSE 'copy_dna',
               )},
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => 20,
       -priority        => 5,
       -rc_name         => 'default',
     },
@@ -463,7 +464,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -flow_into       => { 1 => 'concat_fasta' },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
+      -hive_capacity   => 20,
       -priority        => 5,
       -rc_name         => 'default',
     },
@@ -471,7 +472,7 @@ sub pipeline_analyses {
       -logic_name => 'copy_dna',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA',
       -can_be_empty => 1,
-      -hive_capacity => 10,
+      -hive_capacity => 20,
       -priority        => 5,
       -parameters => {
         ftp_dir => $self->o('prev_rel_dir'),
@@ -526,7 +527,8 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
-      -rc_name => 'default',
+  	  -hive_capacity  => 50,
+      -rc_name => '8GB',
       # Validate both output files
       -flow_into => { '-1' => 'rdf_15GB', 2 => ['validate_rdf'], }
     },
@@ -537,6 +539,7 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
+  	  -hive_capacity  => 50,
       -rc_name => '15GB',
       # Validate both output files
       -flow_into => { '-1' => 'rdf_32GB', 2 => ['validate_rdf'], }
@@ -548,6 +551,7 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
+  	  -hive_capacity  => 50,
       -rc_name => '32GB',
       # Validate both output files
       -flow_into => { '-1' => 'rdf_64GB', 2 => ['validate_rdf'], }
@@ -559,6 +563,7 @@ sub pipeline_analyses {
           release => $self->o('ensembl_release'),
           config_file => $self->o('config_file'),
        },
+  	  -hive_capacity  => 50,
       -rc_name => '64GB',
       # Validate both output files
       -flow_into => { 2 => ['validate_rdf'], }
