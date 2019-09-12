@@ -155,7 +155,7 @@ sub generate_checksums {
   }
   close $fh or die "Cannot close $checksum_file: $!";
 
-  chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, $checksum_file;
+  chmod S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH, $checksum_file;
 
   print STDERR "Finished writing the checksum file $checksum_file\n";
   return;
