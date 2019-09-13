@@ -18,6 +18,7 @@ use strict;
 use warnings;
 use Test::More;
 
+
 BEGIN {
   use_ok('Bio::EnsEMBL::Production::Search::GeneFetcher');
 }
@@ -27,6 +28,9 @@ diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
 
 use Bio::EnsEMBL::Production::Search::GeneFetcher;
 use Bio::EnsEMBL::Test::MultiTestDB;
+use Log::Log4perl qw/:easy/;
+
+Log::Log4perl->easy_init($DEBUG);
 
 sub sort_gene {
   my ($gene) = @_;
@@ -1299,11 +1303,6 @@ subtest "Checking ncRNA gene", sub {
                   'probe'  => '214727_at',
                   'array'  => 'HG-Focus',
                   'vendor' => 'AFFY_HG_Focus'
-              },
-              {
-                  'array'  => 'HG-U133_Plus_2',
-                  'probe'  => '214727_at',
-                  'vendor' => 'AFFY_HG_U133_Plus_2'
               }
           ],
 

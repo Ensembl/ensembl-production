@@ -45,26 +45,24 @@ sub run {
 	}
 	$self->{logger} = get_logger();
 
-	my $dump_file = $self->param('dump_file');
-	if ( defined $dump_file ) {
-
+	my $dump_files = $self->param('dump_file');
+	if ( defined $dump_files ) {
 		my $genome_file = $self->param_required('genome_file');
 		my $type        = $self->param_required('type');
 		my $genome      = decode_json( read_file($genome_file) );
-
 		my $species = $self->param_required('species');
 		my $sub_dir = $self->get_dir('solr');
-
 		my $reformatter =
 		  Bio::EnsEMBL::Production::Search::RegulationSolrFormatter->new();
-
-		my $dump_file_out = $sub_dir . '/' . $species . '_regulatory_elements.json';
-		$self->{logger}->info("Reformatting $dump_file into $dump_file_out");
-		$reformatter->reformat_regulatory_features(
-							   $dump_file, $dump_file_out, $genome,
+		foreach my $reg (keys %$dump_files) {
+			my $file = $dump_files->{$reg};
+			my $json_file_path = $sub_dir . '/' . $species . '_' . $reg . '.json';
+			$self->{logger}->info("Reformatting $file into $json_file_path");
+		  $reformatter->reformat_regulation(
+							   $file, $json_file_path, $genome,
 							   $type );
-
-	}
+    }
+  }
 	return;
 } ## end sub run
 

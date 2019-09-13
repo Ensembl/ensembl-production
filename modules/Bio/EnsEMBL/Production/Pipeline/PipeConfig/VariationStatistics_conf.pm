@@ -111,7 +111,9 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -flow_into       => ['RunDataChecks'],
+      -flow_into       => {
+                            1 => { 'RunDataChecks' => {'group' => 'core'} }
+                          },
       -rc_name         => 'normal',
     },
 

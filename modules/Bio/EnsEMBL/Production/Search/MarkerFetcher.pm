@@ -34,6 +34,8 @@ Module for rendering a genomic metadata object as a hash
 
 package Bio::EnsEMBL::Production::Search::MarkerFetcher;
 
+use base qw/Bio::EnsEMBL::Production::Search::BaseFetcher/;
+
 use strict;
 use warnings;
 

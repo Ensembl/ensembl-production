@@ -42,37 +42,38 @@ sub run {
 	my $species = $self->param_required('species');
 	my $sub_dir = $self->get_dir('json');
 	my $type    = $self->param_required('type');
+	my $outfile_probes = $sub_dir . '/' . $species . '_probes.json';
+	my $outfile_probesets = $sub_dir . '/' . $species . '_probesets.json';
+	my $nbr_items;
 	{
 		my $file_names = $self->param('probes_dump_file');
 		if ( defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0]) {
-			my $outfile = $sub_dir . '/' . $species . '_probes.json';
-			$logger->info("Merging probes files for $species into $outfile");
-			$self->merge_files( $outfile, $file_names );
+			$logger->info("Merging probes files for $species into $outfile_probes");
+			$nbr_items = $self->merge_files( $outfile_probes, $file_names );
 			# write output
 			$self->dataflow_output_id( {  species   => $species,
 										  type      => $type,
-										  dump_file => $outfile,
+										  dump_file => $outfile_probes,
 										  genome_file =>
 											$self->param_required('genome_file')
 									   },
-									   2 );
+									   2 ) if $nbr_items > 0;
 		}
 	}
 	{
 		my $file_names = $self->param('probesets_dump_file');
-		if (defined $file_names && scalar(@$file_names) > 0  && defined $file_names->[0])
+		if (defined $file_names && scalar(@$file_names) > 0)
 		{
-			my $outfile = $sub_dir . '/' . $species . '_probesets.json';
-			$logger->info("Merging probesets files for $species into $outfile");
-			$self->merge_files( $outfile, $file_names );
+			$logger->info("Merging probesets files for $species into $outfile_probesets");
+			$nbr_items = $self->merge_files( $outfile_probesets, $file_names );
 			# write output
 			$self->dataflow_output_id( {  species   => $species,
 										  type      => $type,
-										  dump_file => $outfile,
+										  dump_file => $outfile_probesets,
 										  genome_file =>
 											$self->param_required('genome_file')
 									   },
-									   3 );
+									   3 ) if $nbr_items > 0;
 		}
 	}
 	return;

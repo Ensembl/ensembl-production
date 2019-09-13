@@ -80,12 +80,12 @@ sub merge_files {
 	    }
 	    system("cat $file >>$outfile") == 0 ||
 	      throw "Could not concatenate $file to $outfile";
-	    #unlink $file || throw "Could not remove $file";
+	    unlink $file || throw "Could not remove $file";
 	  }
 	}
 	system("echo ']'>>$outfile") == 0 || throw "Could not write to $outfile";
 	$logger->info("Completed writing $n files to $outfile");
-	return;
+	return $n;
 }
 
 1;

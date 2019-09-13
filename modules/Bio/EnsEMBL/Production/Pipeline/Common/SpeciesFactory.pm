@@ -170,7 +170,7 @@ sub has_variation {
     Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' );
   my $has_variation;
   if (defined $dbva){
-    my $source_database = $dbva->get_MetaContainer->single_value_by_key('variation.source.database');
+    my $source_database = $dbva->get_MetaContainer->single_value_by_key('variation_source.database');
     if(defined($source_database)){
       $has_variation = $source_database == 1 ? 1 : 0;
     }

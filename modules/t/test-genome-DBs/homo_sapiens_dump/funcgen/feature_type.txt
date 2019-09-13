@@ -240,3 +240,7 @@
 179519	Predicted heterochromatin	Segmentation State	88	Predicted heterochromatin	\N	\N	\N
 179520	Predicted Enhancer	Segmentation State	88	Predicted enhancer	\N	\N	\N
 179522	Predicted Promoter with TSS	Segmentation State	88	Predicted promoter region including transcription start site	\N	\N	\N
+180523	RFX5	Transcription Factor	\N	RFX5 TF binding	SO:0000235	TF_binding_site	\N
+180537	ELK1	Transcription Factor	\N	ELK1 TF binding	SO:0000235	TF_binding_site	\N
+180573	CEBPB	Transcription Factor	\N	CEBPB TF binding	SO:0000235	TF_binding_site	\N
+180641	ETV4	Transcription Factor	\N	ETV4 TF binding	SO:0000235	TF_binding_site	\N

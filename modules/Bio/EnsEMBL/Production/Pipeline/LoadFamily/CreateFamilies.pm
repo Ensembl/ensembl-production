@@ -64,10 +64,10 @@ sub run {
       join( ',', map { "'$_'" } @{ $self->param('logic_names') } );
   
   my $sql = qq/
-select distinct pf.hit_name,pf.hit_description 
-FROM protein_feature pf
-JOIN analysis pfa ON (pf.analysis_id=pfa.analysis_id)
-WHERE pfa.logic_name in ($logic_names)/;
+      select distinct pf.hit_name,pf.hit_description
+      FROM protein_feature pf
+      JOIN analysis pfa ON (pf.analysis_id=pfa.analysis_id)
+      WHERE pfa.logic_name in ($logic_names)/;
 
   my $dbnames = {};
   my $genome_dbs = [];
@@ -75,50 +75,54 @@ WHERE pfa.logic_name in ($logic_names)/;
 
   for my $dbc ( values %dbcs ) {
     print "Processing ".$dbc->dbname()."\n";
-    
-      $dbc->sql_helper()->execute_no_return(                                                                                                                                                                                              
-                                            -SQL => q/
-select m1.meta_value, m2.meta_value, m3.meta_value, m4.meta_value
-from meta m1
-join meta m2 using (species_id)
-join meta m3 using (species_id)
-join meta m4 using (species_id)
-where m1.meta_key='species.production_name'
-and m2.meta_key='assembly.default'
-and m3.meta_key='species.taxonomy_id'
-and m4.meta_key='genebuild.version'
-/,                                                                                                                                                                                                                      
-	   -CALLBACK => sub {      
-	       my ($species, $assembly_id, $taxonomy_id, $genebuild) = @{ shift @_ }; 
-                   my $genome_db = Bio::EnsEMBL::Compara::GenomeDB->new();
-                   print "Creating genome_db for $species\n";
-	           $genome_db->name($species);
-	           $genome_db->assembly($assembly_id);
-	           $genome_db->taxon_id($taxonomy_id);
-	           $genome_db->genebuild($genebuild);
-	           $genome_db->has_karyotype(0);
-               $genome_db->is_good_for_alignment(0);
-	           $genome_dba->store($genome_db);
-	           push @$genome_dbs, $genome_db;
-                   push @$output_ids, {name=>$species};
-                   $dbnames->{$dbc->dbname()} = 1;
-	       return;
+    $dbc->sql_helper()->execute_no_return(
+        -SQL => q/
+          select m1.meta_value, m2.meta_value, m3.meta_value, m4.meta_value, m5.meta_value
+          from meta m1
+          join meta m2 using (species_id)
+          join meta m3 using (species_id)
+          join meta m4 using (species_id)
+          join meta m5 using (species_id)
+          where m1.meta_key='species.production_name'
+          and m2.meta_key='assembly.default'
+          and m3.meta_key='species.taxonomy_id'
+          and m4.meta_key='genebuild.version'
+          and m5.meta_key='species.display_name'
+          /,
+        -CALLBACK => sub {
+          my ($species, $assembly_id, $taxonomy_id, $genebuild, $display_name) = @{ shift @_ };
+          # Check if genome already exists in the genome_db table
+          my $genome_db = $genome_dba->fetch_by_name_assembly($species);
+          if (!defined $genome_db){
+            $genome_db = Bio::EnsEMBL::Compara::GenomeDB->new();
+            print "Creating genome_db for $species\n";
+            $genome_db->name($species);
+            $genome_db->assembly($assembly_id);
+            $genome_db->taxon_id($taxonomy_id);
+            $genome_db->genebuild($genebuild);
+            $genome_db->has_karyotype(0);
+            $genome_db->is_good_for_alignment(0);
+            $genome_db->display_name($display_name);
+            $genome_dba->store($genome_db);
           }
-          );
-
-      if($dbnames->{$dbc->dbname()}) {
-        print "Adding families for ".$dbc->dbname()."\n";
-        $dbc->sql_helper()->execute_no_return(
-                                              -SQL => $sql,
-                                              -CALLBACK => sub {
-                                                my @row = @{ shift @_ };
-                                                if ( !exists $families->{ $row[0] } ) {
-                                                  $families->{ $row[0] } = $row[1];
-                                                }
-                                                return;
-                                              } );
-      }
-    
+          push @$genome_dbs, $genome_db;
+          push @$output_ids, {name=>$species};
+          $dbnames->{$dbc->dbname()} = 1;
+          return;
+        }
+    );
+    if($dbnames->{$dbc->dbname()}) {
+      print "Adding families for ".$dbc->dbname()."\n";
+      $dbc->sql_helper()->execute_no_return(
+        -SQL => $sql,
+        -CALLBACK => sub {
+          my @row = @{ shift @_ };
+          if ( !exists $families->{ $row[0] } ) {
+            $families->{ $row[0] } = $row[1];
+          }
+          return;
+        } );
+    }
     $dbc->disconnect_if_idle(1);
   }
   
@@ -136,7 +140,8 @@ and m4.meta_key='genebuild.version'
 	  -method =>
 	  Bio::EnsEMBL::Compara::Method->new(
                                              -type  => 'FAMILY',
-                                             -class => 'Family.family'
+                                             -class => 'Family.family',
+                                             -display_name => 'families'
                                             ),
                                                      -species_set => $sso );
   
