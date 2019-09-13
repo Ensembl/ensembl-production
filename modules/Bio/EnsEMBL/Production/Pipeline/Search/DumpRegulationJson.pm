@@ -37,19 +37,32 @@ sub dump {
   my ($self, $species) = @_;
   $self->{logger} = get_logger();
   $self->{logger}->info("Dumping regulatory features for $species");
+  my $offset = $self->param('offset');
+  my $length = $self->param('length');
+  my $sub_dir = $self->get_dir('json');
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen');
-  my $elems = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()->fetch_regulatory_elements_for_dba($dba);
+  my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $reg_elems = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new()->fetch_regulatory_elements_for_dba($dba,$core_dba,$offset,$length);
   $dba->dbc()->disconnect_if_idle();
+  $core_dba->dbc()->disconnect_if_idle();
   $self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
-  if (defined $elems && scalar(@$elems) > 0) {
-    $self->{logger}->info("Dumped " . scalar(@$elems) . " regulatory features for $species");
-    my $file = $self->write_json($species, 'regulatory_elements', $elems);
+  foreach my $reg (keys %$reg_elems) {
+    my $reg_elem = $reg_elems->{$reg};
+    my $json_file_path;
+    if (defined $offset) {
+      $json_file_path = $sub_dir . '/' . $species . '_' . $offset . '_' . $reg .'.json';
+    }
+    else{
+      $json_file_path = $sub_dir . '/' . $species . '_' . $reg . '.json';
+    }
+    if (defined $reg_elem && scalar(@$reg_elem) > 0) {
+    $self->{logger}->info("Dumped " . scalar(@$reg_elem) . " $reg for $species");
+    $self->write_json_to_file($json_file_path, $reg_elem, 1);
     $self->dataflow_output_id({
-        dump_file   => $file,
-        species     => $species,
-        type        => $self->param('type'),
-        genome_file => $self->param('genome_file') },
+        $reg.'_dump_file'   => $json_file_path,
+        species     => $species },
         2);
+    }
   }
   return;
 }

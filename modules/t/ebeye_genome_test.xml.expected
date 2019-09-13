@@ -7,7 +7,7 @@
   </cross_references>
   <additional_fields>
     <field name="scientific_name">Homo sapiens</field>
-    <field name="division">Ensembl</field>
+    <field name="division">EnsemblVertebrates</field>
     <field name="assembly_default">GRCh38</field>
     <field name="has_pan_compara">false</field>
     <field name="display_name">Homo sapiens</field>
@@ -59,7 +59,7 @@
     <field name="has_genome_alignments">true</field>
     <field name="has_synteny">true</field>
     <field name="has_variations">true</field>
-    <field name="genomic_unit">Ensembl</field>
+    <field name="genomic_unit">vertebrates</field>
     <field name="is_reference">false</field>
   </additional_fields>
 </entry>

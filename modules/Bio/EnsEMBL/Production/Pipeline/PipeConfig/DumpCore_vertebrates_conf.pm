@@ -33,7 +33,8 @@ use warnings;
 use File::Spec;
 use Data::Dumper;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf');     
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf');
    
 sub default_options {
     my ($self) = @_;
@@ -81,6 +82,7 @@ sub pipeline_analyses {
           'index' => 'dna',
           skip => $self->o('skip_blat'),
           index_masked_files => $self->o('skip_blat_masking'),
+          blat_species => $self->o('blat_species'),
         },
         -can_be_empty => 1,
         -analysis_capacity => 10,
@@ -128,17 +130,6 @@ sub pipeline_analyses {
         -priority => 5,
         -can_be_empty => 1,
       },
-
-      {
-          -logic_name        => 'ChecksumGeneratorBLAT',
-          -parameters => {
-                            dir => $self->o('ftp_dir')."/vertebrates/blat/dna/"
-          },
-          -wait_for => 'checksum_generator',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
-          -analysis_capacity => 10,
-          -priority => 5,
-      },
       {
           -logic_name        => 'ChecksumGeneratorBLASTGENE',
                     -parameters => {
@@ -169,9 +160,9 @@ sub tweak_analyses {
     my $analyses_by_name = shift;
 
     ## Extend this section to redefine portion some analysis
-    $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/] };
+    $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => WHEN( '#blat_species#->{#species#}' => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/], ELSE [qw/index_ncbiblastDNA primary_assembly/],)};
     $analyses_by_name->{'fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
-    $analyses_by_name->{'job_factory'}->{'-flow_into'} = { '2' => 'backbone_job_pipeline', '1' => ['ChecksumGeneratorBLAT','ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
+    $analyses_by_name->{'job_factory'}->{'-flow_into'} = { '2' => 'backbone_job_pipeline', '1' => ['ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
 }
 
 

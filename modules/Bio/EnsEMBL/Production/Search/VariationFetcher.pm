@@ -30,6 +30,8 @@ limitations under the License.
 
 package Bio::EnsEMBL::Production::Search::VariationFetcher;
 
+use base qw/Bio::EnsEMBL::Production::Search::BaseFetcher/;
+
 use strict;
 use warnings;
 
@@ -81,7 +83,7 @@ sub fetch_variations_callback {
   my ($dbsnp) = grep {$_->{name} eq 'dbSNP'} values %{$sources};
 
   # slice data
-  my ($min, $max) = $self->_calculate_min_max($h, $offset, $length);
+  my ($min, $max) = $self->calculate_min_max($h, $offset, $length);
   my $features = $self->_fetch_features($h, $onto_dba, $min, $max);
   my $hgvs = $self->_fetch_hgvs($h, $min, $max);
   my $sets = $self->_fetch_sets($h, $min, $max);
@@ -203,7 +205,7 @@ sub fetch_structural_variations_callback {
   $dba->dbc()->db_handle()->{mysql_use_result} = 1; # streaming
   my $h = $dba->dbc()->sql_helper();
   my ($min, $max) =
-      $self->_calculate_min_max($h, $offset, $length, 'structural_variation',
+      $self->calculate_min_max($h, $offset, $length, 'structural_variation',
           'structural_variation_id');
   $h->execute_no_return(
       -SQL          => q/SELECT
@@ -243,26 +245,6 @@ sub fetch_structural_variations_callback {
       });
   return;
 } ## end sub fetch_structural_variations_callback
-
-sub _calculate_min_max {
-  my ($self, $h, $offset, $length, $table, $key) = @_;
-  $table ||= 'variation';
-  $key ||= 'variation_id';
-  if (!defined $offset) {
-    $offset =
-        $h->execute_single_result(-SQL => qq/select min($key) from $table/);
-  }
-  if (!defined $length) {
-    $length =
-        ($h->execute_single_result(-SQL => qq/select max($key) from $table/))
-            - $offset + 1;
-  }
-  $logger->debug("Calculating $offset/$length");
-  my $max = $offset + $length - 1;
-
-  $logger->debug("Current ID range $offset -> $max");
-  return($offset, $max);
-}
 
 sub _fetch_hgvs {
   my ($self, $h, $min, $max) = @_;

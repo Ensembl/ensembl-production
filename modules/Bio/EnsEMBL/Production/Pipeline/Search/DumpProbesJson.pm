@@ -45,15 +45,12 @@ sub dump {
   my $probes_json_file_path;
   my $probesets_json_file_path;
   if (defined $offset) {
-    $probes_json_file_path =
-        $sub_dir . '/' . $species . '_' . $offset . '_probes.json';
-    $probesets_json_file_path =
-        $sub_dir . '/' . $species . '_' . $offset . '_probesets.json';
+    $probes_json_file_path = $sub_dir . '/' . $species . '_' . $offset . '_probes.json';
+    $probesets_json_file_path = $sub_dir . '/' . $species . '_' . $offset . '_probesets.json';
   }
   else {
     $probes_json_file_path = $sub_dir . '/' . $species . '_probes.json';
-    $probesets_json_file_path =
-        $sub_dir . '/' . $species . '_probesets.json';
+    $probesets_json_file_path = $sub_dir . '/' . $species . '_probesets.json';
   }
 
   $self->{logger}->info("Dumping probes for $species");
@@ -69,7 +66,6 @@ sub dump {
     $self->write_json_to_file($probes_json_file_path, $probes, 1);
     $output->{probes_dump_file} = $probes_json_file_path;
   }
-
   my $probe_sets = $all_probes->{probe_sets};
   $self->{logger}->info("Dumped " . scalar(@{$probe_sets}) . " probe sets for $species");
   if (scalar @$probe_sets > 0) {

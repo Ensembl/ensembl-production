@@ -75,6 +75,7 @@ use File::stat;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 
+
 sub param_defaults {
   my ($self) = @_;
   return {
@@ -159,17 +160,24 @@ sub decompress {
   return $target;
 }
 
-#Filename like Homo_sapiens.GRCh37.2bit
+# Create filename like 30001.Homo_sapiens.GRCh38.2bit
 sub target_filename {
   my ($self) = @_;
+  my $blat_species = $self->param('blat_species');
+  my $species = $self->param('species');
   my $name = $self->web_name();
   my $assembly = $self->assembly();
-  return join(q{.}, $name, $assembly, '2bit');
+  my $port = $blat_species->{$species};
+  return join(q{.}, $port, $name, $assembly, '2bit');
 }
 
 sub target_file {
   my ($self) = @_;
   my $target_dir = $self->target_dir();
+  my $release = $self->param('release');
+  my $division = $self->division();
+  # Remove release and division from the path as we don't want to sync these files to the FTP site.
+  $target_dir =~ s/release-${release}\/${division}//;
   my $target_filename = $self->target_filename();
   return File::Spec->catfile($target_dir, $target_filename);
   return;

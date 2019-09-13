@@ -33,7 +33,7 @@ package Bio::EnsEMBL::Production::Search::JSONReformatter;
 use strict;
 use warnings;
 
-use Exporter 'import'; 
+use Exporter 'import';
 our @EXPORT = qw(process_json_file reformat_json);
 
 use Log::Log4perl qw/get_logger/;
@@ -43,68 +43,68 @@ use JSON;
 my $logger = get_logger();
 
 sub process_json_file {
-	my ( $file, $callback ) = @_;
-	$logger->info("Processing $file");
-	# open filehandle
-	open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
-	# seek through whitespace
-	my $c;
-	while ( ( $c = getc($fh) ) =~ m/\s/ ) { }
-	if ( $c ne '[' ) {
-		croak "JSON file must contain an array only";
-	}
-	my $n    = 0;
-	my $json = new JSON;
-	{
-		local $/ = '}';
-		while (<$fh>) {
-			my $obj = $json->incr_parse($_);
-			if ( defined $obj ) {
-				$n++;
-				$callback->($obj);
-				$json->incr_reset();
-				my $c = getc($fh);
-				last if $c eq ']';
-			}
-		}
-	}
-	close $fh;
-	$logger->info("Completed processing $n elements from $file");
-	return;
+  my ( $file, $callback ) = @_;
+  $logger->info("Processing $file");
+  # open filehandle
+  open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
+  # seek through whitespace
+  my $c;
+  while ( ( $c = getc($fh) ) =~ m/\s/ ) { }
+  if ( $c ne '[' ) {
+    croak "JSON file must contain an array only";
+  }
+  my $n    = 0;
+  my $json = new JSON;
+  {
+    local $/ = '}';
+    while (<$fh>) {
+      my $obj = $json->incr_parse($_);
+      if ( defined $obj ) {
+        $n++;
+        $callback->($obj);
+        $json->incr_reset();
+        my $c = getc($fh);
+        last if $c eq ']';
+      }
+    }
+  }
+  close $fh;
+  $logger->info("Completed processing $n elements from $file");
+  return;
 } ## end sub process_json_file
 
 sub reformat_json {
-	my ( $infile, $outfile, $callback ) = @_;
-	open my $fh, ">", $outfile || croak "Could not open $outfile for writing";
-	print $fh '[';
-	my $n = 0;
+  my ( $infile, $outfile, $callback ) = @_;
+  open my $fh, ">", $outfile || croak "Could not open $outfile for writing";
+  print $fh '[';
+  my $n = 0;
 
-	process_json_file(
-		$infile,
-		sub {
-			my ($obj) = @_;
-			my $new_obj = $callback->($obj);
-			return if !defined $new_obj;
-			if ( ref($new_obj) eq 'ARRAY' ) {
-				for my $o (@$new_obj) {
-					if ( $n++ > 0 ) {
-						print $fh ",";
-					}
-					print $fh encode_json($o);
-				}
-			}
-			else {
-				if ( $n++ > 0 ) {
-					print $fh ",";
-				}
-				print $fh encode_json($new_obj);
-			}
-			return;
-		} );
+  process_json_file(
+      $infile,
+      sub {
+        my ($obj) = @_;
+        my $new_obj = $callback->($obj);
+        return if !defined $new_obj;
+        if ( ref($new_obj) eq 'ARRAY' ) {
+          for my $o (@$new_obj) {
+            if ( $n++ > 0 ) {
+              print $fh ",";
+            }
+            print $fh encode_json($o);
+          }
+        }
+        else {
+          if ( $n++ > 0 ) {
+            print $fh ",";
+          }
+          print $fh encode_json($new_obj);
+        }
+        return;
+      } );
 
-	print $fh ']';
-	close $fh;
-	return;
+  print $fh ']';
+  close $fh;
+  return;
 } ## end sub reformat_json
 
 1;

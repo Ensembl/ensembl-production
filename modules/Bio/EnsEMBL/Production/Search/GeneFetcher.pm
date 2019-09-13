@@ -30,6 +30,8 @@ limitations under the License.
 
 package Bio::EnsEMBL::Production::Search::GeneFetcher;
 
+use base qw/Bio::EnsEMBL::Production::Search::BaseFetcher/;
+
 use strict;
 use warnings;
 

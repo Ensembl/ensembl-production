@@ -37,14 +37,20 @@ my $expected_files = {
 							   'README.*',
 							   'MD5SUM*'
 							  ]},
+          "emf" =>{"dir" => "{division}emf/ensembl-compara/homologies/", "expected" =>[
+							   'Compara.*.fasta.gz',
+                 'Compara.*.emf.gz',
+							   'README.*',
+							   'MD5SUM'
+							  ]},
 		      "xml" => {"dir" => "{division}xml/ensembl-compara/homologies/", "expected" =>[
 						       'Compara.*.xml.gz',
-						       'Compara.*.phyloxml.xml.*.tar.gz',
+						       'Compara.*phyloxml.xml.tar',
+                   'Compara.*.orthoxml.xml.tar',
 						       'README.*',
 						       'MD5SUM*'
 						      ]},
 		     };
-
 sub run {
   my ($self) = @_;
   my $species = $self->param('species');
@@ -57,6 +63,9 @@ sub run {
     $division = "";
   }elsif($species eq 'pan_homology') {
     $division = "pan_ensembl/";
+  }elsif($species eq 'bacteria'){
+    #Bacteria compara is only a subset of data, we don't generate dumps for this database
+    return;
   }else {
     $division = "$species/";
   }

@@ -86,13 +86,6 @@ sub copy_database {
     croak "You need to specify a database name in source and target URI";
   }
 
-  # Check executable
-  $logger->debug("Checking myisamchk exist");
-  check_executables("myisamchk",$target_db);
-  $logger->debug("Checking rsync exist");
-  check_executables("rsync",$target_db);
-
-
   #Connect to source database
   my $source_dsn = create_dsn($source_db,$source_db_uri);
   my $source_dbh = create_dbh($source_dsn,$source_db);
@@ -106,16 +99,10 @@ sub copy_database {
   my $target_dir = $target_dbh->selectall_arrayref("SHOW VARIABLES LIKE 'datadir'")->[0][1];
 
   if ( !defined($source_dir) ) {
-      #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
     croak "Failed to find data directory for source server at $source_db->{host}";
   }
 
   if ( !defined($target_dir) ) {
-      #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
     croak "Failed to find data directory for target server at $target_db->{host}";
   }
 
@@ -147,9 +134,6 @@ sub copy_database {
     else
     {
       $logger->error("Destination directory $destination_dir already exists");
-      #disconnect from MySQL server
-      $source_dbh->disconnect();
-      $target_dbh->disconnect();
       croak "Database destination directory $destination_dir exist. You can use the --drop option to drop the database on the target server";
     }
   }
@@ -213,7 +197,6 @@ sub copy_database {
     }
   }
 
-  my $copy_failed;
   my $copy_mysql_files=0;
   #Check if we have access to the server filesystem:
   if (system("ssh $source_db->{host} ls $source_dir >/dev/null 2>&1") == 0 and system("ssh $target_db->{host} ls $target_dir >/dev/null 2>&1") == 0 and !$innodb)  {
@@ -222,21 +205,23 @@ sub copy_database {
   #Check if we have enough space on target server before starting the db copy and make sure that there is 20% free space left after copy
   check_space_before_copy($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables);
   if ($copy_mysql_files){
+    # Check executable
+    $logger->debug("Checking myisamchk exist");
+    check_executables("myisamchk",$target_db);
+    $logger->debug("Checking rsync exist");
+    check_executables("rsync",$target_db);
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
     # Copying mysql database files
-    $copy_failed = copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
+    copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
   }
   #Using MySQL dump if the database is innodb or we don't have access to the MySQL server filesystem
   else{
     if ($update){
-      #disconnect from MySQL server
-      $source_dbh->disconnect();
-      $target_dbh->disconnect();
       croak "We don't have file system access on these server so we can't use the --update options";
     }
     else{
-      $copy_failed = copy_mysql_dump($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$convert_innodb_to_myisam);
+      copy_mysql_dump($source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$convert_innodb_to_myisam);
     }
   }
   if ($source_db->{dbname} !~ /mart/){
@@ -248,14 +233,6 @@ sub copy_database {
       $logger->info("Unlocking tables on target database");
       unlock_tables($target_dbh);
     }
-  }
-
-  # Die if copy failed
-  if ($copy_failed) {
-    #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
-    croak "FAILED: copy failed (cleanup of $staging_dir may be needed).";
   }
   
   if ($copy_mysql_files){
@@ -309,9 +286,7 @@ sub create_staging_db_tmp_dir {
   $logger->debug("creating database tmp dir on target server");
   my $tmp_dir = $dbh->selectall_arrayref("SHOW VARIABLES LIKE 'tmpdir'")->[0][1];
   if ( system("ssh $db->{host} ls $tmp_dir >/dev/null 2>&1") != 0 ) {
-    #disconnect from MySQL server
-    $dbh->disconnect();
-    croak "Can not find the temporary directory $tmp_dir";
+    croak "Cannot find the temporary directory $tmp_dir: $!";
   }
   $logger->debug("Using tmp dir: $tmp_dir");
 
@@ -327,9 +302,7 @@ sub create_staging_db_tmp_dir {
     system("ssh $db->{host} mkdir -p $staging_dir >/dev/null 2>&1");
     if ( system("ssh $db->{host} ls $staging_dir >/dev/null 2>&1") != 0) {
       $logger->info("Failed to create staging directory $staging_dir");
-      #disconnect from MySQL server
-      $dbh->disconnect();
-      croak "Cannot create staging directory $staging_dir";
+      croak "Cannot create staging directory $staging_dir: $!";
     }
   }
   return ($force,$staging_dir);
@@ -353,9 +326,6 @@ sub create_temp_dir {
   else {
     # If option update is defined, the database need to exist on target server.
     if ($update){
-      #disconnect from MySQL server
-      $source_dbh->disconnect();
-      $target_dbh->disconnect();
       croak "The database need to exist on $target_db->{host} if you want to use the --update options"
     }
     else {
@@ -386,7 +356,7 @@ sub create_dbh {
   my ($dsn,$db) = @_;
   my $dbh = DBI->connect( $dsn, $db->{user}, $db->{pass}, {'PrintError' => 1,'AutoCommit' => 0 } );
   if ( !defined($dbh) ) {
-    croak "Failed to connect to the server $dsn";
+    croak "Failed to connect to the server $dsn: $!";
   }
   
   return $dbh;
@@ -400,7 +370,7 @@ sub check_executables {
 
   if($rc != 0) {
     chomp $output;
-    croak "Could not find $executable in PATH";
+    croak "Could not find $executable in PATH: $!";
   }
   return;
 }
@@ -456,10 +426,7 @@ sub view_repair {
       $logger->info("Processing $current_view");
       my $view_frm_loc = catfile( $staging_dir, "${current_view}.frm" );
       if ( system("ssh $target_db->{host} sed -i -e 's/$source_db->{dbname}/$target_db->{dbname}/g' $view_frm_loc >/dev/null 2>&1") != 0 ) {
-        #disconnect from MySQL server
-        $source_dbh->disconnect();
-        $target_dbh->disconnect();
-        croak "Failed to repair view $current_view in $staging_dir.";
+        croak "Failed to repair view $current_view in $staging_dir: $!";
       }
     }
   }
@@ -481,10 +448,7 @@ sub myisamchk_db {
         $index );
 
       if ( system(@check_cmd) != 0 ) {
-        #disconnect from MySQL server
-        $source_dbh->disconnect();
-        $target_dbh->disconnect();
-        croak "Failed to check $table table. Please clean up $staging_dir";
+        croak "Failed to check $table table: $!. Please clean up $staging_dir";
         last;
       }
     }
@@ -495,7 +459,7 @@ sub myisamchk_db {
 sub mysqlcheck_db {
   my ($target_db) = @_;
   if ( system("mysqlcheck --auto-repair --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname}") != 0 ) {
-    croak "Issue when checking or repairing $target_db->{dbname} on $target_db->{host}";
+    croak "Issue when checking or repairing $target_db->{dbname} on $target_db->{host}: $!";
   }
   return;
 }
@@ -509,18 +473,12 @@ sub move_database {
   $logger->info("Moving $staging_dir to $destination_dir");
 
   if ( system("ssh $target_db->{host} mkdir -p $destination_dir >/dev/null 2>&1") != 0 ) {
-    #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
-    croak "Failed to create destination directory $destination_dir. Please clean up $staging_dir.";
+    croak "Failed to create destination directory $destination_dir: $! Please clean up $staging_dir.";
   }
   
   my @mv_db_opt = ('ssh', $target_db->{host},'mv',catfile( $staging_dir, 'db.opt' ), $destination_dir);
   if ( system(@mv_db_opt) != 0 ) {
-    #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
-    croak "Failed to move db.opt to $destination_dir. Please clean up $staging_dir.";
+    croak "Failed to move db.opt to $destination_dir: $! Please clean up $staging_dir.";
   }
 
   my @files;
@@ -546,7 +504,7 @@ sub move_database {
       #Moving tables
       $logger->debug( "Moving $file");
       if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
-        croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
+        croak "Failed to move $file: $! Please clean up $staging_dir and $destination_dir";
         next FILE;
       }
     }
@@ -558,19 +516,13 @@ sub move_database {
     $logger->debug( "Moving $view");
 
     if ( system('ssh', $target_db->{host}, 'mv', $file, $destination_dir) != 0 ) {
-      #disconnect from MySQL server
-      $source_dbh->disconnect();
-      $target_dbh->disconnect();
-      croak "Failed to move $file. Please clean up $staging_dir and $destination_dir";
+      croak "Failed to move $file: $! Please clean up $staging_dir and $destination_dir";
     }
   }
 
   # Remove the now empty staging directory.
   if ( system("ssh $target_db->{host} rm -r  $staging_dir") != 0 ) {
-    #disconnect from MySQL server
-    $source_dbh->disconnect();
-    $target_dbh->disconnect();
-    croak "Failed to unlink the staging directory $staging_dir. Clean this up manually.";
+    croak "Failed to unlink the staging directory $staging_dir: $! Clean this up manually.";
   }
   return;
 }
@@ -692,21 +644,18 @@ sub copy_mysql_files {
   # For debugging:
   # print( join( ' ', @copy_cmd ), "\n" );
 
-  my $copy_failed = 0;
   if ( system(@copy_cmd) != 0 ) {
-     $logger->info("Failed to copy database. Please clean up $staging_dir (if needed).");
-    $copy_failed = 1;
+     croak "Failed to copy database: $!, Please clean up $staging_dir (if needed).";
   }
 
-  return $copy_failed;
+  return;
 } 
 
 # Dump the database in /nfs/nobackup/ensembl/ensprod/copy_service
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
-  my ($source_dbh,$target_dbh,$source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$convert_innodb_to_myisam) = @_;
-  my $copy_failed=0;
+  my ($source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$convert_innodb_to_myisam) = @_;
   my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
   my @dump_cmd = ("mysqldump", "--max_allowed_packet=1024M", "--skip-lock-tables", "--host=$source_db->{host}", "--user=$source_db->{user}", "--port=$source_db->{port}");
@@ -729,20 +678,20 @@ sub copy_mysql_dump {
     push (@dump_cmd, "|sed", q{'s/ENGINE=InnoDB/ENGINE=MyISAM/'});
   }
   if ( system("@dump_cmd > $file") != 0 ) {
-    $logger->info("Cannot dump $source_db->{dbname} from $source_db->{host} to file");
-    $copy_failed = 1;
+    croak "Cannot dump $source_db->{dbname} from $source_db->{host} to file: $!";
   }
   $logger->info("Creating database $target_db->{dbname} on $target_db->{host}");
-  $target_dbh->do("CREATE DATABASE $target_db->{dbname}") or die $target_dbh->errstr;
+  if ( system("mysql --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} -e 'CREATE DATABASE $target_db->{dbname};'") !=0 ) {
+    cleanup_file($file);
+    croak "Cannot create database $target_db->{dbname} on $target_db->{host}: $!";
+  }
   $logger->info("Loading file $file into $target_db->{dbname} on $target_db->{host}");
   if ( system("mysql --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname} < $file") != 0 ) {
-    $logger->info("Cannot load file into $target_db->{dbname} on $target_db->{host}");
-    $copy_failed = 1;
+    cleanup_file($file);
+    croak "Cannot load file into $target_db->{dbname} on $target_db->{host}: $!";
   }
-  if ( system("rm -f $file") != 0 ) {
-    $logger->info("Cannot cleanup $file");
-  }
-  return $copy_failed;
+  cleanup_file($file);
+  return;
 }
 
 # Subroutine to check source database size and target server space available.
@@ -751,79 +700,84 @@ sub check_space_before_copy {
   my ($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables) = @_;
   my $threshold = 20;
   my ($source_database_size,$source_database_dir);
-  # If system file copy, get the database file size, else get an estimate of the database size.
-  if ($copy_mysql_files){
-    # If we have a list of tables to copy, check the size only for these tables
-    if ($opt_only_tables){
-      my @command = ("ssh $source_db->{host}", "du -c");
-      push( @command, map { sprintf( "${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$only_tables}) );
-      push ( @command, "| tail -1 | cut -f 1");
-      $source_database_size = `@command`;
-    }
-    # If we have a list of tables to skip, exclude them from the space calculation
-    elsif ($opt_skip_tables){
-      my @command = ("ssh $source_db->{host}", "du -c", "${source_dir}/$source_db->{dbname}/*");
-      push( @command, map { sprintf( "--exclude=${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$skip_tables}) );
-      push ( @command, "| tail -1 | cut -f 1");
-      $source_database_size = `@command`;
+  #Check if we can ssh to the server
+  if (system("ssh $target_db->{host} ls /instances/ >/dev/null 2>&1") == 0){
+    # If system file copy, get the database file size, else get an estimate of the database size.
+    if ($copy_mysql_files){
+      # If we have a list of tables to copy, check the size only for these tables
+      if ($opt_only_tables){
+        my @command = ("ssh $source_db->{host}", "du -c");
+        push( @command, map { sprintf( "${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$only_tables}) );
+        push ( @command, "| tail -1 | cut -f 1");
+        $source_database_size = `@command`;
+      }
+      # If we have a list of tables to skip, exclude them from the space calculation
+      elsif ($opt_skip_tables){
+        my @command = ("ssh $source_db->{host}", "du -c", "${source_dir}/$source_db->{dbname}/*");
+        push( @command, map { sprintf( "--exclude=${source_dir}/$source_db->{dbname}/%s.*", $_ ) } keys(%{$skip_tables}) );
+        push ( @command, "| tail -1 | cut -f 1");
+        $source_database_size = `@command`;
+      }
+      else{
+        #Getting source database size
+        ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+      }
+      # Getting target database size if target db exist.
+      if (defined($target_db_exist)){
+        my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
+        $source_database_size = $source_database_size - $target_database_size;
+      }
     }
     else{
-      #Getting source database size
-      ($source_database_size,$source_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $source_db->{host} du ${source_dir}/$source_db->{dbname}`;
+      # If we have a list of tables to copy, check the size only for these tables
+      if ($opt_only_tables){
+        my @bind = ("$source_db->{dbname}");
+        my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ? and (";
+        my $size = keys %$only_tables;
+        my $count = 1;
+        foreach my $table (keys %{$only_tables}){
+          if ($count == $size){
+            $sql = $sql."table_name = ?";
+          }
+          else{
+            $sql = $sql."table_name = ? or ";
+          }
+          push (@bind,$table);
+          $count ++;
+        }
+        $sql = $sql.");";
+        $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
+      }
+      # If we have a list of tables to skip, exclude them from the space calculation
+      elsif ($opt_skip_tables){
+        my @bind = ("$source_db->{dbname}");
+        my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?";
+        foreach my $table (keys %{$skip_tables}){
+          $sql = $sql." and table_name != ?";
+          push (@bind,$table);
+        }
+        $sql = $sql.";";
+        $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
+      }
+      else{
+        $source_database_size = $source_dbh->selectall_arrayref("SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?",{},$source_db->{dbname})->[0][0] or die $source_dbh->errstr;
+      }
     }
-    # Getting target database size if target db exist.
-    if (defined($target_db_exist)){
-      my ($target_database_size,$target_database_dir) = map { m!(\d+)\s+(.*)! } `ssh $target_db->{host} du ${destination_dir}`;
-      $source_database_size = $source_database_size - $target_database_size;
+    #Getting target server space
+    my @cmd = `ssh $target_db->{host} df -P /instances/`;
+    my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
+    #Calculate extra space to make sure we don't fully fill up the server
+    my $threshold_server = ($threshold * $available)/100;
+    my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
+
+    if ( $space_left_after_copy == abs($space_left_after_copy) ) {
+        $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
+    } else {
+        croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
     }
   }
   else{
-    # If we have a list of tables to copy, check the size only for these tables
-    if ($opt_only_tables){
-      my @bind = ("$source_db->{dbname}");
-      my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ? and (";
-      my $size = keys %$only_tables;
-      my $count = 1;
-      foreach my $table (keys %{$only_tables}){
-        if ($count == $size){
-          $sql = $sql."table_name = ?";
-        }
-        else{
-          $sql = $sql."table_name = ? or ";
-        }
-        push (@bind,$table);
-        $count ++;
-      }
-      $sql = $sql.");";
-      $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
-    }
-    # If we have a list of tables to skip, exclude them from the space calculation
-    elsif ($opt_skip_tables){
-      my @bind = ("$source_db->{dbname}");
-      my $sql = "SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?";
-      foreach my $table (keys %{$skip_tables}){
-        $sql = $sql." and table_name != ?";
-        push (@bind,$table);
-      }
-      $sql = $sql.";";
-      $source_database_size = $source_dbh->selectall_arrayref($sql,{},@bind)->[0][0] or die $source_dbh->errstr;
-    }
-    else{
-      $source_database_size = $source_dbh->selectall_arrayref("SELECT ROUND(SUM(data_length + index_length) / 1024) FROM information_schema.TABLES WHERE table_schema = ?",{},$source_db->{dbname})->[0][0] or die $source_dbh->errstr;
-    }
-  }
-
-  #Getting target server space
-  my @cmd = `ssh $target_db->{host} df -P /instances/`;
-  my ($filesystem,$blocks,$used,$available,$used_percent,$mounted_on) = split('\s+',$cmd[1]);
-  #Calculate extra space to make sure we don't fully fill up the server
-  my $threshold_server = ($threshold * $available)/100;
-  my $space_left_after_copy = $available - ($source_database_size + $threshold_server);
-
-  if ( $space_left_after_copy == abs($space_left_after_copy) ) {
-      $logger->debug("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, we can copy the database.")
-  } else {
-      croak("The database is ".scaledkbytes($source_database_size)." and there is ".scaledkbytes($available)." available on the $target_db->{host}, please clean up the server before copying this database.")
+    $logger->debug("We can't ssh to the target MySQL server so skipping space check");
   }
   return;
 }
@@ -833,6 +787,14 @@ sub scaledkbytes {
    (sort { length $a <=> length $b }
    map { sprintf '%.3g%s', $_[0]/1024**$_->[1], $_->[0] }
    [KB => 0],[MB=>1],[GB=>2],[TB=>3],[PB=>4],[EB=>5])[0]
+}
+
+sub cleanup_file {
+  my ($file) = @_;
+  if ( system("rm -f $file") != 0 ) {
+    croak "Cannot cleanup $file: $!";
+  }
+  return;
 }
 
 

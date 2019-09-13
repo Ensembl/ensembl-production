@@ -33,8 +33,11 @@ Check and compute terms closure.
     Unless required by applicable law or agreed to in writing, software distributed under the License
     is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and limitations under the License.
+
 =head1 CONTACT
+
     Please subscribe to the Hive mailing list:  http://listserver.ebi.ac.uk/mailman/listinfo/ehive-users  to discuss Hive-related questions or to be notified of our updates
+
 =cut
 
 
@@ -61,8 +64,8 @@ sub default_options {
       'verbosity'     => 2,
       'ols_load'      => 50,
       'ens_version'   => $self->o('ENV', 'ENS_VERSION'),
-      'db_name'       => "ensembl_ontology_" . $self->o('ens_version'),
-      'mart_db_name'  => 'ontology_mart_' . $self->o('ens_version'),
+      'db_name'       => 'ensembl_ontology',
+      'mart_db_name'  => 'ontology_mart',
       'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
       'db_url'        => $self->o('db_host') . $self->o('db_name'),
       'ontologies'    => [],

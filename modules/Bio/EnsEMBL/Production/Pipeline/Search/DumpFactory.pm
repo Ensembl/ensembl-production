@@ -50,8 +50,23 @@ sub run {
 	  ->execute(
 							-SQL => 'select '.$column.' from '.$table.' limit 1' );
 	if(!scalar @$cnt) {
-		$self->log()->info("$table is empty - not spawning any jobs");
-		return;
+		# For regulation, we also have data for drosophila but only in external_feature
+		if ($type eq 'funcgen'){
+			$cnt = $dba->dbc()->sql_helper()->execute(
+							-SQL => 'select external_feature_id from external_feature limit 1' );
+			if (scalar @$cnt) {
+				$table='external_feature';
+				$column='external_feature_id';
+			}
+			else{
+				$self->log()->info("external_feature is empty - not spawning any jobs");
+				return;
+			}
+		}
+		else{
+			$self->log()->info("$table is empty - not spawning any jobs");
+			return;
+	  }
 	}
 
 	my $min_id =
