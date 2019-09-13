@@ -37,6 +37,12 @@ my $expected_files = {
 							   'README.*',
 							   'MD5SUM*'
 							  ]},
+          "emf" =>{"dir" => "{division}emf/ensembl-compara/homologies/", "expected" =>[
+							   'Compara.*.fasta.gz',
+                 'Compara.*.emf.gz',
+							   'README.*',
+							   'MD5SUM'
+							  ]},
 		      "xml" => {"dir" => "{division}xml/ensembl-compara/homologies/", "expected" =>[
 						       'Compara.*.xml.gz',
 						       'Compara.*phyloxml.xml.tar',
@@ -45,7 +51,6 @@ my $expected_files = {
 						       'MD5SUM*'
 						      ]},
 		     };
-
 sub run {
   my ($self) = @_;
   my $species = $self->param('species');
