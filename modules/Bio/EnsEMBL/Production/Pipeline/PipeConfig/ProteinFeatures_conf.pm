@@ -905,7 +905,7 @@ sub pipeline_analyses {
       -logic_name        => 'RunDatachecks',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
-                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_names  => ['ForeignKeys', 'PepstatsAttributes'],
                               datacheck_groups => ['protein_features'],
                               history_file     => $self->o('history_file'),
                               failures_fatal   => 1,
