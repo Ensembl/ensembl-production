@@ -1,1 +1,0 @@
-1	hs	Homo_sapiens	Human	Y		Y
