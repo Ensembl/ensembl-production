@@ -107,7 +107,6 @@ subtest "Testing variant fetching", sub {
                 'annotations'     => [
                     {
                         'hgvs_transcript' => 'ENST00000427020.4:n.255+5130A>T',
-                        'hgvs_protein'    => 'NULL',
                         'stable_id'       => 'ENST00000427020',
                         'consequences'    => [
                             {
