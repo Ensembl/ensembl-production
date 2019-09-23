@@ -228,40 +228,47 @@ sub copy_database {
     # Unlock tables source and target
     $logger->info("Unlocking tables on source database");
     unlock_tables($source_dbh);
+    # Diconnect from the source once the copy is complete
+    $source_dbh->disconnect();
 
     if (defined($target_db_exist)){
       $logger->info("Unlocking tables on target database");
       unlock_tables($target_dbh);
     }
   }
-  
+
   if ($copy_mysql_files){
     # Repair views
-    view_repair($source_db,$target_db,\@views,$staging_dir,$source_dbh,$target_dbh);
+    view_repair($source_db,$target_db,\@views,$staging_dir);
     $logger->info("Checking/repairing tables on target database");
     # Check target database
-    myisamchk_db(\@tables,$staging_dir,$source_dbh,$target_dbh);
+    myisamchk_db(\@tables,$staging_dir);
   }
   else{
     $logger->info("Checking/repairing tables on target database");
     # Check target database
     mysqlcheck_db($target_db);
   }
-
   #move database from tmp dir to data dir
   # Only move the database from the temp directory to live directory if
   # we are not using the update option
   if (!defined($target_db_exist) and $copy_mysql_files) {
-      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, \%only_tables);
+      move_database($staging_dir, $destination_dir, \@tables, \@views, $target_db, $opt_only_tables, \%only_tables);
   }
  
+  #Reconnect to target database after copy if it was not an update
+  if (!defined($target_db_exist) and $copy_mysql_files){
+    $target_dbh = create_dbh($target_dsn,$target_db);
+  }
   #Flush tables
   $logger->info("Flushing tables on target database");
   flush_tables($target_dbh,\@tables,$target_db);
 
   if ($copy_mysql_files){
-    # Copy functions and procedures if exists
+    # Re-connect to source dbh, then Copy functions and procedures if exists
+    $source_dbh = create_dbh($source_dsn,$source_db);
     copy_functions_and_procedures($source_dbh,$target_dbh,$source_db,$target_db);
+    $source_dbh->disconnect();
   }
 
   #Optimize target
@@ -269,7 +276,6 @@ sub copy_database {
   optimize_tables($target_dbh,\@tables,$target_db);
 
   #disconnect from MySQL server
-  $source_dbh->disconnect();
   $target_dbh->disconnect();
 
   $logger->info("Copy of $target_db->{dbname} from $source_db->{host} to $target_db->{host} successfull");
@@ -320,6 +326,7 @@ sub create_temp_dir {
     else{
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
+      $target_dbh->disconnect();
     }
   }
   # If database doesn't exist on target server
@@ -331,6 +338,7 @@ sub create_temp_dir {
     else {
       # Create the staging dir in server temp directory
       ($force,$staging_dir)=create_staging_db_tmp_dir($target_dbh,$target_db,$staging_dir,$force);
+      $target_dbh->disconnect();
     }
   }
   return ($force,$staging_dir);
@@ -414,7 +422,7 @@ sub flush_tables {
 }
 
 sub view_repair {
-  my ($source_db,$target_db,$views,$staging_dir, $source_dbh, $target_dbh) =@_;
+  my ($source_db,$target_db,$views,$staging_dir) =@_;
 
   $logger->info("Processing views");
 
@@ -434,7 +442,7 @@ sub view_repair {
 }
 
 sub myisamchk_db {
-  my ($tables,$staging_dir,$source_dbh,$target_dbh) = @_;
+  my ($tables,$staging_dir) = @_;
   # Check the copied table files with myisamchk.  Let myisamchk
   # automatically repair any broken or un-closed tables.
 
@@ -465,7 +473,7 @@ sub mysqlcheck_db {
 }
 
 sub move_database {
-  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $source_dbh, $target_dbh, $opt_only_tables, $only_tables)=@_;
+  my ($staging_dir, $destination_dir, $tables, $views, $target_db, $opt_only_tables, $only_tables)=@_;
 
   # Move table files into place in and remove the staging directory.  We already
   # know that the destination directory does not exist.
