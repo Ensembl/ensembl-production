@@ -49,7 +49,7 @@ sub run {
   return unless defined $probes_file;
 
   my $species = $self->param_required('species');
-  my $sub_dir = $self->get_dir('adv_search');
+  my $sub_dir = $self->create_dir('adv_search');
   my $probes_file_out = $sub_dir . '/' . $species . '_probes.json';
   my $genome_file = $self->param_required('genome_file');
   my $reformatter =

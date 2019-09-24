@@ -55,7 +55,7 @@ package Bio::EnsEMBL::Production::Pipeline::GTF::DumpFile;
 use strict;
 use warnings;
 
-use base qw(Bio::EnsEMBL::Production::Pipeline::GTF::Base);
+use base qw(Bio::EnsEMBL::Production::Pipeline::Common::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file gz_work_with_file/;
@@ -89,7 +89,7 @@ sub run {
 
   my $abinitio = $self->param('abinitio');
   my $gene = $self->param('gene');
-  my $root = $self->data_path();
+  my $root = $self->get_dir('gtf');
   if(-d $root) {
     $self->info('Directory "%s" already exists; removing', $root);
     rmtree($root);
@@ -197,8 +197,8 @@ sub print_to_file {
 
 sub _gene_pred_check {
   my ($self, $gtf_file) = @_;
-  my $info_out = File::Spec->catfile($self->data_path(), 'info.out');
-  my $genepred_out = File::Spec->catfile($self->data_path(), 'info.gp');
+  my $info_out = File::Spec->catfile($self->get_dir('gtf'), 'info.out');
+  my $genepred_out = File::Spec->catfile($self->get_dir('gtf'), 'info.gp');
 
   my $cmd = sprintf(q{%s -infoOut=%s -genePredExt %s %s}, 
     $self->param('gtf_to_genepred'), $info_out, $gtf_file, $genepred_out);
@@ -229,7 +229,7 @@ sub _generate_file_name {
   push @name_bits, 'gtf', 'gz';
 
   my $file_name = join( '.', @name_bits );
-  my $path = $self->data_path();
+  my $path = $self->create_dir('gtf');
 
   return File::Spec->catfile($path, $file_name);
 
@@ -248,7 +248,7 @@ sub _generate_abinitio_file_name {
   push @name_bits, 'abinitio', 'gtf', 'gz';
 
   my $file_name = join( '.', @name_bits );
-  my $path = $self->data_path();
+  my $path = $self->create_dir('gtf');
 
   return File::Spec->catfile($path, $file_name);
 
@@ -430,7 +430,7 @@ LRG data are freely available in several formats (FASTA, BED, XML, Tabulated) at
     ";
   }
   
-  my $path = File::Spec->catfile($self->data_path(), 'README');
+  my $path = File::Spec->catfile($self->get_dir('gtf'), 'README');
   work_with_file($path, 'w', sub {
     my ($fh) = @_;
     print $fh $readme;

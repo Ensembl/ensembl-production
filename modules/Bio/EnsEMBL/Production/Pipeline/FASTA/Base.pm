@@ -26,11 +26,6 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use File::Spec;
 use File::Path qw/mkpath/;
 
-sub fasta_path {
-  my ( $self, @extras ) = @_;
-  return $self->get_dir('fasta', @extras);
-}
-
 sub index_path {
   my ( $self, $format, @extras ) = @_;
   my $base_dir = $self->param('base_path');

@@ -69,7 +69,7 @@ sub run {
 
 sub write_json {
   my ($self) = @_;
-  my $sub_dir = $self->get_dir('json');
+  my $sub_dir = $self->create_dir('json');
   $self->info(
           "Processing " . $self->production_name() . " into $sub_dir" );
   my $dba = $self->core_dba();

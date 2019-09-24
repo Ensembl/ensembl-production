@@ -115,7 +115,7 @@ sub new_filename {
 
 sub new_path {
   my ($self,$directory) = @_;
-  return $self->fasta_path($directory);
+  return $self->create_dir('fasta',$directory);
 }
 
 sub get_dna_files {

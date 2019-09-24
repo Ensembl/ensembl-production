@@ -97,8 +97,13 @@ sub get_dirs {
     elsif ($dump =~ m/tsv/){
       $dump = "tsv";
     }
+    elsif ($dump =~ m/assembly_chain_datacheck/){
+      $dump = "assembly_chain";
+    }
     my $dump_dir = $self->get_dir($dump);
-    push @dirs, $dump_dir
+    if (-d $dump_dir){
+      push @dirs, $dump_dir
+    }
   }
   #Taking care of blast_fasta for non-vertebrates
   if ($self->division() ne "vertebrates"){

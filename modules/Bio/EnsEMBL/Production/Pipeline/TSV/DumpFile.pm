@@ -161,7 +161,6 @@ File are named Species.assembly.release.uniprot.tsv.gz
 README
 
     my $data_path = $self->get_dir('tsv');
-    mkpath($data_path);
     my $path      = File::Spec->catfile($data_path, 'README_UNIPROT.tsv');
 
     work_with_file($path, 'w', sub {

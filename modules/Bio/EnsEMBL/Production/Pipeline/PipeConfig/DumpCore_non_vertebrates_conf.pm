@@ -67,7 +67,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'genbank', 'assembly_chain', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
+          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
         }
     
     my %analyses_by_name = map {$_->{'-logic_name'} => $_} @$super_analyses;
