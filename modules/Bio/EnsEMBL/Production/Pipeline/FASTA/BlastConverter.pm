@@ -81,16 +81,16 @@ sub _convert {
 
     my $prefix      = $self->param('header_prefix');
     my $file_name   = $self->_get_file_name($dir, $type, $subtype);
-    my $source_dir  = $self->fasta_path($dir);
+    my $source_dir  = $self->get_dir('fasta',$dir);
     my $source_file = File::Spec->catdir($source_dir, $file_name).q{.gz};
-    my $species     = $self->_species_dir();
-    my @target_dirs = ($self->param('blast_path'), $self->param('directory_name'), $self->division(), $species);    
-    my $target_dir  = File::Spec->catdir(@target_dirs);
-    mkpath($target_dir);
 
     if(-f $source_file) {
       $self->info( "Processing file $file_name");
-      my $target_file       = File::Spec->catdir($target_dir, $file_name).q{.gz};
+      my $species     = $self->_species_dir();
+      my @target_dirs = ($self->param('blast_path'), $self->param('directory_name'), $self->division(), $species);
+      my $target_dir  = File::Spec->catdir(@target_dirs);
+      mkpath($target_dir);
+      my $target_file = File::Spec->catdir($target_dir, $file_name).q{.gz};
       my $target_file_unzip = File::Spec->catdir($target_dir, $file_name);
 
       `cp $source_file $target_dir`;

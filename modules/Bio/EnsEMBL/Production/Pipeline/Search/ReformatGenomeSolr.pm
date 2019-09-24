@@ -50,7 +50,7 @@ sub run {
 	my $genome      = decode_json( read_file($genome_file) );
 
 	my $species = $self->param_required('species');
-	my $sub_dir = $self->get_dir('solr');
+	my $sub_dir = $self->create_dir('solr');
 
 	my $reformatter =
 	  Bio::EnsEMBL::Production::Search::GenomeSolrFormatter->new();

@@ -219,7 +219,6 @@ File are named Species.assembly.release.ena.tsv.gz
 README
 
     my $data_path = $self->get_dir('tsv');
-    mkpath($data_path);
     my $path      = File::Spec->catfile($data_path, 'README_ENA.tsv');
 
     work_with_file($path, 'w', sub {

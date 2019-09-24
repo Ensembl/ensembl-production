@@ -168,7 +168,6 @@ File are named Species.assembly.release.$type.tsv.gz
 README
 
     my $data_path = $self->get_dir('tsv');
-    mkpath($data_path);
     my $file      = 'README_'.$type.'.tsv';
     my $path      = File::Spec->catfile($data_path, $file);
 

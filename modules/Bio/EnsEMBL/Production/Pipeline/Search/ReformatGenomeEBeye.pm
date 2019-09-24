@@ -50,7 +50,7 @@ sub run {
   my $genome = decode_json(read_file($genome_file));
 
   my $species = $self->param_required('species');
-  my $sub_dir = $self->get_dir('ebeye');
+  my $sub_dir = $self->create_dir('ebeye');
 
   my $reformatter = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
   my $output = { species => $species };

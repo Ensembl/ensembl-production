@@ -43,7 +43,7 @@ sub run {
   return unless defined $regulation_files;
 
   my $species = $self->param_required('species');
-  my $sub_dir = $self->get_dir('adv_search');
+  my $sub_dir = $self->create_dir('adv_search');
   my $genome_file = $self->param_required('genome_file');
   my $reformatter =
       Bio::EnsEMBL::Production::Search::RegulationAdvancedSearchFormatter->new(

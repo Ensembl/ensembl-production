@@ -61,7 +61,7 @@ package Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile;
 use strict;
 use warnings;
 
-use base qw(Bio::EnsEMBL::Production::Pipeline::Flatfile::Base);
+use base qw(Bio::EnsEMBL::Production::Pipeline::Common::Base);
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::SeqDumper;
@@ -92,7 +92,7 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   
-  my $root = $self->data_path();
+  my $root = $self->get_dir($self->param('type'));
   if(-d $root) {
     $self->info('Directory "%s" already exists; removing', $root);
     rmtree($root);
@@ -188,7 +188,7 @@ sub _generate_file_name {
   push @name_bits, 'dat';
 
   my $file_name = join( '.', @name_bits );
-  my $path = $self->data_path();
+  my $path = $self->create_dir($self->param('type'));
   return File::Spec->catfile($path, $file_name);
 }
 
@@ -265,7 +265,7 @@ access if you want to do something serious with the data.
 
 README
   
-  my $path = File::Spec->catfile($self->data_path(), 'README');
+  my $path = File::Spec->catfile($self->get_dir($self->param('type')), 'README');
   work_with_file($path, 'w', sub {
     my ($fh) = @_;
     print $fh $readme;

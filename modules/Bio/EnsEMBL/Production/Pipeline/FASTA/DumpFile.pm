@@ -134,7 +134,6 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
- 
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type_list') };
   $self->param('sequence_types', \%sequence_types);
  
@@ -217,9 +216,20 @@ sub run_type {
     $self->_create_README('cds') if $peptide;
   }
   if ( $sequence_types->{ncrna} ) {
-    $self->info( "Starting ncRNA dump for " . $species );
-    my ($ncrna_transcripts) = $self->_dump_transcripts('ncrna', $type);
-    $self->_create_README('ncrna') if $ncrna_transcripts;
+    my $species_id = $dba->species_id();
+    # Check for ncRNA dumps since many species don't have them
+    my $ncrna_sql = qq/SELECT COUNT(*) FROM transcript INNER JOIN
+                          seq_region sr USING (seq_region_id) INNER JOIN
+                          coord_system cs USING (coord_system_id)
+                    WHERE biotype IN (select name from biotype where biotype_group in ('snoncoding', 'lnoncoding', 'mnoncoding')) AND
+                          cs.species_id = $species_id;
+    /;
+    my $ncrna_count = $dba->dbc->sql_helper->execute_single_result( -SQL => $ncrna_sql);
+    if ($ncrna_count){
+      $self->info( "Starting ncRNA dump for " . $species );
+      my ($ncrna_transcripts) = $self->_dump_transcripts('ncrna', $type);
+      $self->_create_README('ncrna') if $ncrna_transcripts;
+    }
   }
 
   $self->cleanup_DBAdaptor($type);
@@ -615,7 +625,7 @@ sub _generate_file_name {
   my $file_name = join( '.', @name_bits );
 
   $data_type =~ s/_[rs]m$//;    # remove repeatmask or softmask designation from path component
-  my $data_type_dir = $self->fasta_path($data_type);
+  my $data_type_dir = $self->create_dir('fasta',$data_type);
   $self->_remove_files_from_dir($data_type_dir);
   return File::Spec->catfile( $data_type_dir, $file_name );
 }
@@ -1078,7 +1088,7 @@ http://www.ebi.ac.uk/biomart/ for more information.
 README
 
   my ( $self, $data_type ) = @_;
-  my $base_path = $self->fasta_path($data_type);
+  my $base_path = $self->get_dir('fasta',$data_type);
   my $path      = File::Spec->catfile( $base_path, 'README' );
   my $accession = $self->assembly_accession();
   my $txt       = $text{$data_type};

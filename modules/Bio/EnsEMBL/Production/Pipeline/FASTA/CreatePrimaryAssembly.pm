@@ -131,7 +131,7 @@ sub file_pattern {
 
 sub get_dna_files {
   my ($self) = @_;
-  my $path = $self->fasta_path('dna');
+  my $path = $self->create_dir('fasta','dna');
   my $data_type = $self->param('data_type');
 
   my $regex = $self->file_pattern($data_type);

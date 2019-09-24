@@ -53,7 +53,7 @@ package Bio::EnsEMBL::Production::Pipeline::Flatfile::CheckFlatfile;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Flatfile::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use Bio::EnsEMBL::Utils::IO qw(filter_dir);
 use Bio::EnsEMBL::Production::Pipeline::Flatfile::ValidatorFactoryMethod;
@@ -70,7 +70,7 @@ sub run {
   my ($self) = @_;
 
   # select dat.gz files in the directory
-  my $data_path = $self->data_path();
+  my $data_path = $self->get_dir($self->param('type'));
   my $files = filter_dir($data_path, sub { 
 			   my $file = shift;
 			   return $file if $file =~ /\.dat\.gz$/; 

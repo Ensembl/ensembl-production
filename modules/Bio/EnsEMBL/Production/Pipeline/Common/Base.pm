@@ -186,6 +186,7 @@ sub division {
   return lc($division);
 }
 
+# Get the directory for the given format and extras (e.g fasta types dna, ncrna)
 sub get_dir {
   my ( $self, $format, @extras ) = @_;
   my $base_dir = $self->param('base_path');
@@ -202,8 +203,14 @@ sub get_dir {
     $dir = File::Spec->catdir( $base_dir, $self->division(), $format, @extras );
   }
   $mc->dbc()->disconnect_if_idle();
-  mkpath($dir);
+  return $dir;
+}
 
+# User get_dir to get the dir location for a given format and extras. Then create the directory and return it.
+sub create_dir {
+  my ( $self, $format, @extras ) = @_;
+  my $dir = $self->get_dir($format, @extras);
+  mkpath($dir);
   return $dir;
 }
 
