@@ -261,11 +261,6 @@ and cs.species_id = 1 and cs.name != 'lrg'
 and sr.seq_region_id not in (select distinct seq_region_id from assembly_exception ae where ae.exc_type != 'par')";
 my $ref_length = $sql_helper->execute_single_result(-SQL => $ref_sql);
 is($ref_length, $genome_container->get_ref_length(), "Ref length is correct");
-my $total_sql = "select sum(length(sequence)) from dna
-join seq_region using (seq_region_id) join coord_system using (coord_system_id)
-where species_id = 1";
-my $total_length = $sql_helper->execute_single_result(-SQL => $total_sql);
-is($total_length, $genome_container->get_total_length(), "Total length is correct");
 
 # Check transcript counts
 my $transcript_sql = "select count(*) from transcript t, seq_region s
