@@ -21,6 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::Production::GeneCount;
 
 use strict;
 use warnings;
+use Bio::EnsEMBL::Utils::Exception qw( deprecate );
 use Bio::EnsEMBL::Utils::Scalar qw(assert_ref assert_integer wrap_array);
 
 
@@ -163,8 +164,10 @@ sub get_ref_length {
   return $ref_length;
 }
 
+# Deprecated. Please use get_ref_length(), i.e. the golden path, instead.
 sub get_total_length {
   my ($self) = @_;
+  deprecate('GeneCount::get_total_length() is deprecated due to inaccuracy and will be removed in e102. Use golden path (GeneCount::get_ref_length()) instead');
   my $species = $self->param('species');
   my @slices = @{ Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'slice')->fetch_all('seqlevel') };
   my $total_length = 0;

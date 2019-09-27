@@ -23,7 +23,7 @@ use strict;
 use warnings;
 
 use Bio::EnsEMBL::Attribute;
-use Bio::EnsEMBL::Utils::Exception qw/throw/;
+use Bio::EnsEMBL::Utils::Exception qw/deprecate throw/;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
@@ -214,7 +214,10 @@ sub store_statistics {
 }
 
 sub get_ref_length {}
-sub get_total_length {}
+# Deprecated. Please use get_ref_length(), i.e. the golden path, instead.
+sub get_total_length {
+  deprecate('StatsGenerator::get_total_length() is deprecated due to inaccuracy and will be removed in e102. Use golden path (StatsGenerator::get_ref_length()) instead');
+}
 
 
 
