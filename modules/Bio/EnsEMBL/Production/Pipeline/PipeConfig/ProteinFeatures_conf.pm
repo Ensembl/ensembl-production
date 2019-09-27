@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
     
     # InterPro settings
-    interproscan_version => '5.36-75.0',
+    interproscan_version => '5.37-76.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
     
