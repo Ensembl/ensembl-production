@@ -358,7 +358,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -370,7 +370,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {

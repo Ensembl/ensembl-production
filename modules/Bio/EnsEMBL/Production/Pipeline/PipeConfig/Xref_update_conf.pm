@@ -263,7 +263,7 @@ sub resource_classes {
       'default' => { 'LSF' => ''},
       'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
       'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"'},
+      'mem'     => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
       'large'   => { 'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
     }
 }
