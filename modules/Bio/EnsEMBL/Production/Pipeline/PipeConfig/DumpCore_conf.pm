@@ -121,11 +121,18 @@ sub default_options {
         'meleagris_gallopavo'   => 30064,
         'anas_platyrhynchos_platyrhynchos'    => 30066,
         'ovis_aries'            => 30068,
-        'oreochromis_niloticus' => 30072,
+        'oreochromis_niloticus' => 30073,
         'gadus_morhua'          => 30071,
        },
       # History file for storing record of datacheck run.
       history_file => undef,
+      ## Indexing parameters
+      'skip_blat'              => 0,
+      'skip_ncbiblast'         => 0,
+      'skip_blat_masking'      => 1,
+      'skip_ncbiblast_masking' => 0,
+      ## Indexing parameters
+      'skip_convert_fasta' => 0,
 
 	};
 }
@@ -226,7 +233,8 @@ sub pipeline_analyses {
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -parameters     => {
-                      dumps     => $pipeline_flow
+                      dumps     => $pipeline_flow,
+                      skip_convert_fasta => $self->o('skip_convert_fasta')
                   },
        -hive_capacity => 10,
        -rc_name       => 'default'

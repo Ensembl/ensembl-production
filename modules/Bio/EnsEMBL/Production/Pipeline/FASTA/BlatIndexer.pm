@@ -74,6 +74,7 @@ use File::Spec;
 use File::stat;
 use Bio::EnsEMBL::Utils::IO qw/work_with_file/;
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
+use File::Path qw/mkpath/;
 
 
 sub param_defaults {
@@ -174,18 +175,25 @@ sub target_filename {
 sub target_file {
   my ($self) = @_;
   my $target_dir = $self->target_dir();
-  my $release = $self->param('release');
-  my $division = $self->division();
-  # Remove release and division from the path as we don't want to sync these files to the FTP site.
-  $target_dir =~ s/release-${release}\/${division}//;
   my $target_filename = $self->target_filename();
   return File::Spec->catfile($target_dir, $target_filename);
-  return;
 }
 
 sub target_dir {
   my ($self) = @_;
-  return $self->index_path('blat', $self->param('index'));
+  my $target_dir = $self->index_path('blat', $self->param('index'));
+  return $target_dir;
+}
+
+sub index_path {
+  my ( $self, $format, @extras ) = @_;
+  my $release = $self->param('release');
+  my $base_dir = $self->param('base_path');
+  # Remove release and division from the path as we don't want to sync these files to the FTP site.
+  $base_dir =~ s/release-${release}//;
+  my $dir = File::Spec->catdir( $base_dir, $format, @extras);
+  mkpath($dir);
+  return $dir;
 }
 
 1;
