@@ -107,13 +107,15 @@ sub get_dirs {
   }
   #Taking care of blast_fasta for non-vertebrates
   if ($self->division() ne "vertebrates"){
-    my $mc = $self->get_DBAdaptor()->get_MetaContainer();
-    if ( $mc->is_multispecies() == 1 ) {
-      my $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
-      push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $collection_db, $species);
-    }
-    else{
-      push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $species);
+    if (not $self->param('skip_convert_fasta')){
+      my $mc = $self->get_DBAdaptor()->get_MetaContainer();
+      if ( $mc->is_multispecies() == 1 ) {
+        my $collection_db = $1 if ( $mc->dbc->dbname() =~ /(.+)\_core/ );
+        push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $collection_db, $species);
+      }
+      else{
+        push @dirs, File::Spec->catdir($base_path, 'blast_fasta', $self->division(), $species);
+      }
     }
   }
   # Taking care of fasta dumps because these have subdirectories fasta/dna,...

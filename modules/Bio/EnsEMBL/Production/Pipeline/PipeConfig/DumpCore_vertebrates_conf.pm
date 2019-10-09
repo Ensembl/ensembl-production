@@ -41,13 +41,7 @@ sub default_options {
     
     return {
        # inherit other stuff from the base class
-       %{ $self->SUPER::default_options() }, 
-
-       ## Indexing parameters
-       'skip_blat'              => 0,
-       'skip_ncbiblast'         => 0,
-       'skip_blat_masking'      => 1,
-       'skip_ncbiblast_masking' => 0,
+       %{ $self->SUPER::default_options() },
 
 #'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
        'gt_exe'       => '/nfs/software/ensembl/RHEL7/linuxbrew/Cellar/genometools/1.5.8/bin/gt',
@@ -135,7 +129,6 @@ sub pipeline_analyses {
                     -parameters => {
                             dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genes/"
           },
-          -wait_for => 'checksum_generator',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
           -priority => 5,
@@ -145,7 +138,6 @@ sub pipeline_analyses {
                     -parameters => {
                             dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genomic/"
           },
-          -wait_for => 'checksum_generator',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
           -priority => 5,
@@ -160,10 +152,21 @@ sub tweak_analyses {
     my $analyses_by_name = shift;
 
     ## Extend this section to redefine portion some analysis
-    $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => WHEN( '#blat_species#->{#species#}' => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/], ELSE [qw/index_ncbiblastDNA primary_assembly/],)};
-    $analyses_by_name->{'fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
-    $analyses_by_name->{'job_factory'}->{'-flow_into'} = { '2' => 'backbone_job_pipeline', '1' => ['ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
+    if (not $self->o('skip_blat')){
+        if ($self->o('skip_ncbiblast')){
+          $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => WHEN( '#blat_species#->{#species#}' => [qw/index_BlatDNAIndex primary_assembly/], ELSE ['primary_assembly'],)};
+        }
+        else{
+          $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => WHEN( '#blat_species#->{#species#}' => [qw/index_ncbiblastDNA index_BlatDNAIndex primary_assembly/], ELSE [qw/index_ncbiblastDNA primary_assembly/],)};
+        }
+    }
+    if (not $self->o('skip_ncbiblast')){
+        if ($self->o('skip_blat')){
+          $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA primary_assembly/]};
+        }
+        $analyses_by_name->{'fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
+        $analyses_by_name->{'checksum_generator'}->{'-flow_into'} = { '1' => ['ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
+    }
 }
-
 
 1;
