@@ -69,7 +69,7 @@ tables=$(mysql -NBA --host=$host --user=$user --password=$password --port=$port 
 for t in $tables
 do
     echo "DUMPING TABLE: $database.$t"
-    mysql --host=$host --max_allowed_packet=1024M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed '/\tNULL/ s//\t\\N/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
+    mysql --host=$host --max_allowed_packet=1024M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed -r -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
 done
 
 echo "Creating CHECKSUM for $database"
