@@ -72,8 +72,8 @@ do
     mysql --host=$host --max_allowed_packet=1024M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed -r -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
 done
 
-echo "Creating CHECKSUM for $database"
-find  -type f -name '*.gz' -printf '%P\n' | while read file; do
-    sum=$(sum $file)
-    echo -ne "$sum\t$file\n" >> CHECKSUMS
-done
+#echo "Creating CHECKSUM for $database"
+#find  -type f -name '*.gz' -printf '%P\n' | while read file; do
+#    sum=$(sum $file)
+#    echo -ne "$sum\t$file\n" >> CHECKSUMS
+#done
