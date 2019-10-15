@@ -114,6 +114,18 @@ sub pipeline_analyses {
           -rc_name           => 'default',
           -analysis_capacity => 10,
           -flow_into       => {
+              1 => 'DbCheckSum',
+          }
+      },
+      {
+          -logic_name        => 'DbCheckSum',
+          -parameters => {
+                dir => "#output_dir#/#database#"
+          },
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
+          -analysis_capacity => 10,
+          -priority => 5,
+            -flow_into       => {
               1 => 'DumpCheck',
           }
       },
