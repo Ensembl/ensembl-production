@@ -84,6 +84,7 @@ sub _write_tsv {
     $self->info('Working with %s toplevel slices', scalar(@$slices));
 
     my $type = $self->param('type');
+    my $xrefs_exist = 0;
 
     foreach my $slice (@$slices) {
        my @genes = @{$slice->get_all_Genes};
@@ -117,17 +118,23 @@ sub _write_tsv {
                    }
 		   $linkage_type = join(' ', @{$dbentry->get_all_linkage_types()})if($dbentry->isa('Bio::EnsEMBL::OntologyXref'));
                    print $fh "$g_id\t$tr_id\t$tl_id\t$xref_id\t$xref_db\t$xref_info_type\t$src_identity\t$xref_identity\t$linkage_type\n";
+                   $xrefs_exist = 1;
 	       }#dbentry
          }#transcript
       }#gene
   }#slice 
   close $fh; 
 
-  $self->info( "Compressing tsv dump for " . $self->param('species'));
-  my $unzip_out_file = $out_file;
-  `gzip -n $unzip_out_file`;
+  if ($xrefs_exist == 1) {
+    $self->info( "Compressing tsv dump for " . $self->param('species'));
+    my $unzip_out_file = $out_file;
+    `gzip -n $unzip_out_file`;
 
-  if (-e $unzip_out_file) { `rm $unzip_out_file`; }
+    if (-e $unzip_out_file) { `rm $unzip_out_file`; }
+  } else {
+    # If we have no xrefs, delete the file (which will just have a header).
+    unlink $out_file  or die "failed to delete $out_file!";
+  }
 
 return;
 }
@@ -162,6 +169,7 @@ Provides mappings from Gene, Transcript and Translation stable identifiers to
 $type accessions with reports as to the % identity of the hit where 
 applicable. Dumps contain all Ensembl exeternal database names which started
 with $type so duplication of hits is possible.
+If there are no such mappings in the database, the file will not exist.
 
 File are named Species.assembly.release.$type.tsv.gz
 
