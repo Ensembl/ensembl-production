@@ -477,7 +477,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -flow_into       => {
                       1 => WHEN(
-                  '#new_assembly# >= 1' => 'dna',
+                  '#new_assembly# >= 1 || #new_genebuild# >= 1' => 'dna',
                   ELSE 'copy_dna',
               )},
       -max_retry_count => 1,
