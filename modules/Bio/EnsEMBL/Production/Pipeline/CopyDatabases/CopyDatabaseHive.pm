@@ -49,6 +49,7 @@ my $skip_tables = $self->param('skip_tables');
 my $update = $self->param('update');
 my $drop = $self->param('drop');
 my $convert_innodb = $self->param('convert_innodb');
+my $skip_optimize = $self->param('skip_optimize');
 my $start_time = time();
 my $hive_dbc = $self->dbc;
 
@@ -75,18 +76,19 @@ my $logger = get_logger();
 if(!Log::Log4perl->initialized()) {
   Log::Log4perl->easy_init($DEBUG);
 }
-
-$hive_dbc->disconnect_if_idle() if defined $hive_dbc;
-
-copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb);
-
-my $runtime =  duration(time() - $start_time);
 #Clean up if job already exist in result.
 my $sql=q/DELETE FROM result WHERE job_id = ?/;
 $hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
 #Same for job_progress
-my $sql=q/DELETE FROM job_progress WHERE job_id = ?/;
+$sql=q/DELETE FROM job_progress WHERE job_id = ?/;
 $hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
+
+$hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+
+copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb, $skip_optimize);
+
+my $runtime =  duration(time() - $start_time);
+
 my $output = {
 		  source_db_uri=>$source_db_uri,
 		  target_db_uri=>$target_db_uri,

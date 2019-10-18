@@ -44,7 +44,7 @@ if(!Log::Log4perl->initialized()) {
 }
 
 sub copy_database {
-  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop,$convert_innodb_to_myisam,$verbose) = @_;
+  my ($source_db_uri,$target_db_uri,$opt_only_tables,$opt_skip_tables,$update,$drop,$convert_innodb_to_myisam,$skip_optimize,$verbose) = @_;
 
   $logger->info("Pre-Copy Checks");
   # Path for MySQL dump
@@ -272,8 +272,10 @@ sub copy_database {
   }
 
   #Optimize target
-  $logger->info("Optimizing tables on target database");
-  optimize_tables($target_dbh,\@tables,$target_db);
+  if (not $skip_optimize){
+    $logger->info("Optimizing tables on target database");
+    optimize_tables($target_dbh,\@tables,$target_db);
+  }
 
   #disconnect from MySQL server
   $target_dbh->disconnect();
