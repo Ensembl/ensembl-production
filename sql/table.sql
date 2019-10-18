@@ -195,7 +195,7 @@ CREATE TABLE master_external_db (
   status                    ENUM('KNOWNXREF','KNOWN','XREF','PRED','ORTH','PSEUDO') NOT NULL,
   priority                  INT(11) NOT NULL,
   db_display_name           VARCHAR(255) NOT NULL,
-  type                      ENUM('ARRAY','ALT_TRANS','ALT_GENE','MISC','LIT','PRIMARY_DB_SYNONYM','ENSEMBL') DEFAULT NULL,
+  type                      ENUM('ARRAY','ALT_TRANS','ALT_GENE','MISC','LIT','PRIMARY_DB_SYNONYM','ENSEMBL') NOT NULL,
   secondary_db_name         VARCHAR(255) DEFAULT NULL,
   secondary_db_table        VARCHAR(255) DEFAULT NULL,
   description               TEXT,
