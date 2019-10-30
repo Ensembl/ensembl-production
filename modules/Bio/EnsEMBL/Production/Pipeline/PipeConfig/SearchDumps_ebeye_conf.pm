@@ -144,9 +144,25 @@ sub pipeline_analyses {
           -flow_into     => {
               1 => [
                   'ReformatGenomeEBeye'
-              ]
-          }
-      },
+              ],
+              -1 => 'DumpGenesJsonHighmem'
+             }
+        },
+        {
+            -logic_name    => 'DumpGenesJsonHighmem',
+            -module        =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+            -parameters    => {
+                use_pan_compara => $self->o('use_pan_compara')
+            },
+            -analysis_capacity => 10,
+            -rc_name       => '100g',
+            -flow_into     => {
+                1 => [
+                    'ReformatGenomeEBeye'
+                ]
+            }
+        },
       {
           -logic_name => 'VariantDumpFactory',
           -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -216,6 +232,7 @@ sub resource_classes {
   return {
       '32g' => { LSF => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' },
       '16g' => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"' },
+      '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
       '8g'  => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=8000]"' },
       '4g'  => { LSF => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"' },
       '1g'  => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' } };

@@ -92,7 +92,6 @@ sub pipeline_analyses {
                         division        => $self->o('division'),
                         release         => $self->o('release'),
                         },
-            #-flow_into  => 'CompressXML'
         },
         {
             -logic_name    => 'DumpGenomeJson',
@@ -144,6 +143,24 @@ sub pipeline_analyses {
             },
             -analysis_capacity => 10,
             -rc_name       => '32g',
+            -flow_into     => {
+                1 => [
+                    'ReformatGenomeAdvancedSearch',
+                    'ReformatGenomeSolr',
+                    'ReformatGenomeEBeye'
+                ],
+                -1 => 'DumpGenesJsonHighmem'
+             }
+        },
+        {
+            -logic_name    => 'DumpGenesJsonHighmem',
+            -module        =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+            -parameters    => {
+                use_pan_compara => $self->o('use_pan_compara')
+            },
+            -analysis_capacity => 10,
+            -rc_name       => '100g',
             -flow_into     => {
                 1 => [
                     'ReformatGenomeAdvancedSearch',
@@ -216,7 +233,6 @@ sub pipeline_analyses {
                 {
                     1 => [
                         'ReformatVariantsSolr',
-                        'ReformatGenomeEBeye',
                         'ReformatVariantsEBeye',
                         'ReformatVariantsAdvancedSearch'
                     ]
@@ -431,6 +447,7 @@ sub resource_classes {
     my $self = shift;
     return {
         '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
+        '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
         '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
         '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
         '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
