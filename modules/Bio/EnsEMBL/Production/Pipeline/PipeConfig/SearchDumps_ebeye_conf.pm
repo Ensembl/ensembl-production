@@ -21,20 +21,18 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::RDF::Pipeline::PipeConfig::SearchDumps_non_vert_ebeye
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_ebeye_conf
 
 =head1 DESCRIPTION
 
-Simple pipeline to dump json for EBEYE search for all core species. Need at least 100 GB of scratch space.
+Pipeline to generate search dumps for ebeye
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_non_vert_ebeye;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_ebeye_conf;
 use strict;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-#use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
-# use base ('Bio::EnsEMBL::Hive::PipeConfig::Base_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 use Data::Dumper;
@@ -51,15 +49,10 @@ sub default_options {
       variant_length  => 1000000,
       probe_length    => 100000,
       dump_variant    => 0,
-      release         => software_version(),
-      eg_release      => $self->o('eg_release')
+      release         => $self->o('ens_release'),
   };
 }
 
-# sub process_options {
-#     warn Dumper(">>>>>>> In process_options");
-#     return;
-# }
 
 sub pipeline_wide_parameters {
   my $self = shift;
@@ -95,7 +88,7 @@ sub pipeline_analyses {
           -parameters =>
               {
                   division => $self->o('division'),
-                  release  => $self->o('eg_release'),
+                  release  => $self->o('release'),
               },
           #-flow_into  => 'CompressXML'
       },
@@ -120,7 +113,7 @@ sub pipeline_analyses {
           -parameters =>
               {
                   division => $self->o('division'),
-                  release  => $self->o('eg_release'),
+                  release  => $self->o('release'),
               },
           -flow_into  =>
               {
@@ -135,7 +128,7 @@ sub pipeline_analyses {
           -parameters        =>
               {
                   division => $self->o('division'),
-                  release  => $self->o('eg_release'),
+                  release  => $self->o('release'),
               },
           -analysis_capacity => 4,
       },
@@ -147,13 +140,29 @@ sub pipeline_analyses {
               use_pan_compara => $self->o('use_pan_compara')
           },
           -analysis_capacity => 10,
-          -rc_name       => '16g',
+          -rc_name       => '32g',
           -flow_into     => {
               1 => [
                   'ReformatGenomeEBeye'
-              ]
-          }
-      },
+              ],
+              -1 => 'DumpGenesJsonHighmem'
+             }
+        },
+        {
+            -logic_name    => 'DumpGenesJsonHighmem',
+            -module        =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+            -parameters    => {
+                use_pan_compara => $self->o('use_pan_compara')
+            },
+            -analysis_capacity => 10,
+            -rc_name       => '100g',
+            -flow_into     => {
+                1 => [
+                    'ReformatGenomeEBeye'
+                ]
+            }
+        },
       {
           -logic_name => 'VariantDumpFactory',
           -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
@@ -174,7 +183,7 @@ sub pipeline_analyses {
           -analysis_capacity => 20,
           -module        =>
               'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
-          -rc_name       => '16g',
+          -rc_name       => '32g',
           -flow_into     => {
               2 => [
                   '?accu_name=dump_file&accu_address=[]',
@@ -191,6 +200,7 @@ sub pipeline_analyses {
           -flow_into  =>
               {
                   1 => [
+                      'ReformatGenomeEBeye',
                       'ReformatVariantsEBeye',
                   ]
               }
@@ -220,11 +230,12 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
   my $self = shift;
   return {
-      '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
-      '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
-      '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
-      '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
-      '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
+      '32g' => { LSF => '-q production-rh7 -M 32000 -R "rusage[mem=32000]"' },
+      '16g' => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=16000]"' },
+      '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
+      '8g'  => { LSF => '-q production-rh7 -M 16000 -R "rusage[mem=8000]"' },
+      '4g'  => { LSF => '-q production-rh7 -M 4000 -R "rusage[mem=4000]"' },
+      '1g'  => { LSF => '-q production-rh7 -M 1000 -R "rusage[mem=1000]"' } };
 }
 
 1;

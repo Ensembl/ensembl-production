@@ -37,6 +37,8 @@ use warnings;
 
 use Bio::EnsEMBL::Registry;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::DbFactory/;
+use Exporter qw/import/;
+our @EXPORT_OK = qw(has_variation);
 
 sub param_defaults {
   my ($self) = @_;

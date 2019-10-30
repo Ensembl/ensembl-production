@@ -21,19 +21,21 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::RDF::Pipeline::PipeConfig::RDF_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_conf
 
 =head1 DESCRIPTION
 
-Simple pipeline to dump RDF for all core species. Needs a LOD mapping file to function,
-and at least 100 GB of scratch space.
+Pipeline to generate the Solr search, EBeye search and Advanced search indexes
 
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_conf;
 use strict;
-use parent 'Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf';
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
+
+use Data::Dumper;
 
 sub default_options {
     my $self = shift;
@@ -45,7 +47,12 @@ sub default_options {
         run_all         => 0, #always run every species
         use_pan_compara => 0, 
         variant_length  => 1000000,
-        probe_length    => 100000, };
+        probe_length    => 100000,
+        regulatory_length => 100000,
+        dump_variant    => 1,
+        dump_regulation => 1,
+        release => software_version()
+	};
 }
 
 sub pipeline_wide_parameters {
@@ -56,6 +63,9 @@ sub pipeline_wide_parameters {
 
 sub pipeline_analyses {
     my $self = shift;
+    my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory', 'StructuralVariantDumpFactory', 'DumpPhenotypesJson' ] : [ 'DumpPhenotypesJson' ] ;
+    my @regulation_analyses = $self->o('dump_regulation') == 1 ? [ 'RegulationDumpFactory', 'ProbeDumpFactory' ] : [ 'ProbeDumpFactory' ];
+
     return [
         {
             -logic_name => 'SpeciesFactory',
@@ -67,24 +77,62 @@ sub pipeline_analyses {
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') },
             -rc_name    => '4g',
-            -flow_into  => { 2 => [ 'DumpGenomeJson' ],
-            }
+	    -flow_into  => {
+                        '2->A' => [ 'DumpGenomeJson' ],
+                        'A->1' => [ 'WrapGenomeEBeye' ]
+                        }
+        },
+        {
+            -logic_name => 'WrapGenomeEBeye',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::WrapGenomeEBeye',
+            -rc_name    => '1g',
+            -parameters =>
+                        {
+                        division        => $self->o('division'),
+                        release         => $self->o('release'),
+                        },
         },
         {
             -logic_name    => 'DumpGenomeJson',
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
             -parameters    => {},
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '1g',
             -flow_into     => {
                 2 => [ 'DumpGenesJson' ],
                 7 => [ 'DumpGenesJson' ],
-                4 => [ 'VariantDumpFactory', 'StructuralVariantDumpFactory',
-                    'DumpPhenotypesJson' ],
-                6 => [ 'DumpRegulationJson', 'ProbeDumpFactory' ]
-
+                4 => @variant_analyses, 
+                6 => @regulation_analyses,
             }
+        },
+        {
+            -logic_name => 'ValidateXMLFileEBeye',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
+            -rc_name    => '1g',
+            -parameters =>
+                        {
+                        division        => $self->o('division'),
+                        release         => $self->o('release'),
+                        },
+            -flow_into  => 
+                        {
+                	1 => ['CompressEBeyeXMLFile'], 
+		       	2 => [ '?accu_name=genome_files&accu_address={species}&accu_input_variable=genome_valid_file']
+                        },
+        },
+        {
+             -logic_name => 'CompressEBeyeXMLFile',
+             -module =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
+             -parameters =>
+                        {
+                        division        => $self->o('division'),
+                        release         => $self->o('release'),
+                        },
+             -analysis_capacity => 4,
         },
         {
             -logic_name    => 'DumpGenesJson',
@@ -93,8 +141,26 @@ sub pipeline_analyses {
             -parameters    => {
                 use_pan_compara => $self->o('use_pan_compara')
             },
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '32g',
+            -flow_into     => {
+                1 => [
+                    'ReformatGenomeAdvancedSearch',
+                    'ReformatGenomeSolr',
+                    'ReformatGenomeEBeye'
+                ],
+                -1 => 'DumpGenesJsonHighmem'
+             }
+        },
+        {
+            -logic_name    => 'DumpGenesJsonHighmem',
+            -module        =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
+            -parameters    => {
+                use_pan_compara => $self->o('use_pan_compara')
+            },
+            -analysis_capacity => 10,
+            -rc_name       => '100g',
             -flow_into     => {
                 1 => [
                     'ReformatGenomeAdvancedSearch',
@@ -108,11 +174,29 @@ sub pipeline_analyses {
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
             -parameters    => {},
-            -hive_capacity => 8,
-            -rc_name       => '8g',
+            -analysis_capacity => 10,
+            -rc_name       => '32g',
             -flow_into     => {
-                2 => 'ReformatRegulationSolr'
+                2 => [
+                    '?accu_name=motifs_dump_file&accu_address=[]',
+                    '?accu_name=regulatory_features_dump_file&accu_address=[]',
+                    '?accu_name=mirna_dump_file&accu_address=[]',
+                    '?accu_name=external_features_dump_file&accu_address=[]',
+                    '?accu_name=peaks_dump_file&accu_address=[]',
+                    '?accu_name=transcription_factors_dump_file&accu_address=[]',
+                    '?accu_name=species'
+                ],
             }
+        },
+        {
+            -logic_name => 'RegulationDumpMerge',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationMerge',
+            -rc_name    => '1g',
+            -flow_into  =>
+                {
+                    2 => ['ReformatRegulationSolr','ReformatRegulationAdvancedSearch'],
+                }
         },
         {
             -logic_name => 'VariantDumpFactory',
@@ -128,7 +212,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name    => 'DumpVariantJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 20,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
             -rc_name       => '32g',
@@ -149,7 +233,6 @@ sub pipeline_analyses {
                 {
                     1 => [
                         'ReformatVariantsSolr',
-                        'ReformatGenomeEBeye',
                         'ReformatVariantsEBeye',
                         'ReformatVariantsAdvancedSearch'
                     ]
@@ -172,7 +255,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name    => 'DumpStructuralVariantJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson',
             -rc_name       => '32g',
@@ -197,7 +280,7 @@ sub pipeline_analyses {
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpPhenotypesJson',
             -parameters    => {},
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -rc_name       => '1g',
             -flow_into     => {
                 2 => 'ReformatPhenotypesSolr'
@@ -217,8 +300,21 @@ sub pipeline_analyses {
                 }
         },
         {
+            -logic_name => 'RegulationDumpFactory',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpFactory',
+            -parameters => { type => 'funcgen',
+                table             => 'motif_feature',
+                column            => 'motif_feature_id',
+                length            => $self->o('regulatory_length') },
+            -rc_name    => '1g',
+            -flow_into  =>
+                {
+                    '2->A' => 'DumpRegulationJson', 'A->1' => 'RegulationDumpMerge'
+                }
+        },
+        {
             -logic_name    => 'DumpProbeJson',
-            -hive_capacity => 8,
+            -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
             -rc_name       => '32g',
@@ -237,8 +333,8 @@ sub pipeline_analyses {
             -rc_name    => '1g',
             -flow_into  =>
                 {
-                    2 => 'ReformatProbesSolr',
-                    3 => 'ReformatProbeSetsSolr',
+                    2 => ['ReformatProbesSolr','ReformatProbesAdvancedSearch'],
+                    3 => ['ReformatProbeSetsSolr','ReformatProbesetsAdvancedSearch'],
                 }
         },
         {
@@ -256,6 +352,27 @@ sub pipeline_analyses {
             -flow_into  => {}
         },
         {
+            -logic_name => 'ReformatRegulationAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatRegulationAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
+            -logic_name => 'ReformatProbesAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
+            -logic_name => 'ReformatProbesetsAdvancedSearch',
+            -module     =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::ReformatProbesetsAdvancedSearch',
+            -rc_name    => '1g',
+            -flow_into  => {}
+        },
+        {
             -logic_name => 'ReformatGenomeSolr',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeSolr',
@@ -267,7 +384,7 @@ sub pipeline_analyses {
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
             -rc_name    => '1g',
-            -flow_into  => {}
+            -flow_into  => 'ValidateXMLFileEBeye'
         },
         {
             -logic_name => 'ReformatVariantsSolr',
@@ -330,6 +447,7 @@ sub resource_classes {
     my $self = shift;
     return {
         '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
+        '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
         '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
         '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
         '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
