@@ -35,6 +35,7 @@ use Bio::EnsEMBL::Production::Search::SequenceFetcher;
 use Bio::EnsEMBL::Production::Search::MarkerFetcher;
 use Bio::EnsEMBL::Production::Search::LRGFetcher;
 use Bio::EnsEMBL::Production::Search::IdFetcher;
+use Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory qw(has_variation);
 
 use Log::Log4perl qw/:easy/;
 
@@ -73,7 +74,7 @@ sub dump {
 									  type        => 'variation',
 									  genome_file => $genome_file },
 								   4 )
-		  if ( Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'variation' ) );
+		  if ( $self->has_variation($species) );
 
 		$self->dataflow_output_id( {  species     => $species,
 									  type        => 'funcgen',
