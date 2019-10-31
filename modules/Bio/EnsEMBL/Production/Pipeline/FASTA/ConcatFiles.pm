@@ -149,7 +149,7 @@ sub bgzip_and_index_toplevel {
   $self->info('extracting fasta toplevel file');
   system("gunzip $target_bgzip_file")
     and $self->throw( sprintf('Cannot gunzip %s. RC %d', $target_bgzip_file, ($?>>8)));
-  $target_bgzip_file=~ s/\.gz//;
+  $target_bgzip_file=~ s/\.gz$//;
   $self->info('bgziping toplevel file');
   system("bgzip $target_bgzip_file")
     and $self->throw( sprintf('Cannot bgzip %s. RC %d', $target_bgzip_file, ($?>>8)));
