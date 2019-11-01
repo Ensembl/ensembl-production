@@ -53,7 +53,7 @@ sub run {
 
 	my $reformatter   = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
 	my $dump_file     = $self->param('dump_file');
-	my $dump_file_out = $sub_dir . '/' . $species . '_variants.xml';
+	my $dump_file_out = $sub_dir . '/Variation_' . $species . '_variants.xml';
 	my $output = { species => $species };
 	my $dba = $self->get_DBAdaptor($type);
 	$self->{logger}->info("Reformatting $dump_file into $dump_file_out");

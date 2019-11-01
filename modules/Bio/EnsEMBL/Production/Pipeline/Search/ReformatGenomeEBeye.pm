@@ -65,7 +65,7 @@ sub run {
 
   my $genes_file = $self->param('genes_file');
   if (defined $genes_file) {
-    my $genes_file_out = $sub_dir . '/' . $species . '_genes' .
+    my $genes_file_out = $sub_dir . '/Gene_' . $species . '_genes' .
         ($type ne 'core' ? "_${type}" : '') . '.xml';
     $self->{logger}->info("Reformatting $genes_file into $genes_file_out");
     $reformatter->reformat_genes($genome_file, $dba->dbc()->dbname(),
@@ -75,7 +75,7 @@ sub run {
 
   my $sequences_file = $self->param('sequences_file');
   if (defined $sequences_file) {
-    my $sequences_file_out = $sub_dir . '/' . $species . '_sequences' .
+    my $sequences_file_out = $sub_dir . '/Seqregion_Ensembl_' . $species . '_sequences' .
         ($type ne 'core' ? "_${type}" : '') . '.xml';
     $self->{logger}->info("Reformatting $sequences_file into $sequences_file_out");
     $reformatter->reformat_sequences($genome_file, $dba->dbc()->dbname(),
