@@ -58,31 +58,40 @@ sub run {
 
 	my $division = $self->param_required('division');
 	my $release = $self->param_required('release');
-	my $species = $self->param_required('species');
 	my $bpath = $self->param('base_path');
 	my $xml_validator = $self->param('validator');
-        # my $validator = Bio::EnsEMBL::Production::Search::EBeyeXMLValidator->new();
-        # $validator->validate_xml($bpath, $division->[0], 42, $xml_validator);
 	my $genome_file = $self->param('genome_xml_file');
 	my $genes_file = $self->param('genes_xml_file');
 	my $sequences_file = $self->param('sequences_xml_file');
-	my ($valid_genome, $valid_genes, $valid_sequences) = (0, 0, 0);
+	my $variants_file = $self->param('variants_xml_file');
+	my $wrapped_genomes_file = $self->param('wrapped_genomes_file');
+	my ($valid_genome, $valid_genes, $valid_sequences, $valid_variants, $valid_wrapped_genomes) = (0, 0, 0, 0, 0);
 	
-	my $output = { species => $species };
+	my $output;
+	$output = { species => $self->param('species') } if !defined $wrapped_genomes_file;
+	$output = { division => $division } if defined $wrapped_genomes_file;
 
-	$valid_genome = $self->validate_xml_file($genome_file, $xml_validator);
-	$valid_genes = $self->validate_xml_file($genes_file, $xml_validator);
-	$valid_sequences = $self->validate_xml_file($sequences_file, $xml_validator);
-	
-	if ( $valid_genome  == 0) {
+	$valid_genome = $self->validate_xml_file($genome_file, $xml_validator) if defined  $genome_file;
+	$valid_genes = $self->validate_xml_file($genes_file, $xml_validator) if defined  $genes_file;
+	$valid_sequences = $self->validate_xml_file($sequences_file, $xml_validator) if defined  $sequences_file;
+	$valid_variants = $self->validate_xml_file($variants_file, $xml_validator) if defined  $variants_file;
+  $valid_wrapped_genomes = $self->validate_xml_file($wrapped_genomes_file, $xml_validator) if defined  $wrapped_genomes_file;
+
+	if ( $valid_genome  == 0 and defined $genome_file) {
 		$output->{genome_valid_file} = $genome_file;
-		}
-	if ( $valid_genes == 0) {
+	}
+	if ( $valid_genes == 0 and defined $genes_file) {
 		$output->{genes_valid_file} = $genes_file;
-		}
-	if ( $valid_sequences == 0) {
+	}
+	if ( $valid_sequences == 0 and defined $sequences_file) {
 		$output->{sequences_valid_file} = $sequences_file;
-		}
+	}
+	if ( $valid_variants == 0 and defined $variants_file) {
+		$output->{variants_valid_file} = $variants_file;
+	}
+	if ( $valid_wrapped_genomes == 0 and defined $wrapped_genomes_file) {
+		$output->{wrapped_genomes_valid_file} = $wrapped_genomes_file;
+	}
 	$self->dataflow_output_id( $output, 1 );
 	$self->dataflow_output_id( $output, 2 );
 	return;

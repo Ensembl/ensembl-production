@@ -50,9 +50,10 @@ sub run {
         my $bpath = $self->param('base_path');
 	my $valid_gene_xml = $self->param('genes_valid_file');
 	my $valid_sequences_xml = $self->param('sequences_valid_file');
-	if ($valid_gene_xml && (-e $valid_gene_xml))
+        my $valid_variants_xml = $self->param('variants_valid_file');
+        my $valid_wrapped_genomes_xml = $self->param('wrapped_genomes_valid_file');
+	if ($valid_gene_xml && (-e $valid_gene_xml) && defined $valid_gene_xml)
 		{
-		# my $valid_gene_xml = $self->param('genes_valid_file');
 		my $err_file = $valid_gene_xml . 'compress.err';
                 my $cmd = sprintf(q{gzip %s 2> %s},
                         $valid_gene_xml,
@@ -62,15 +63,36 @@ sub run {
                         if $rc != 0;
                 unlink $err_file;
 		}
-	if ($valid_sequences_xml && (-e $valid_sequences_xml)) 
+	if ($valid_sequences_xml && (-e $valid_sequences_xml) && defined $valid_sequences_xml)
 		{
-		# my $valid_sequences_xml = $self->param('sequences_valid_file');
 		my $err_file = $valid_sequences_xml . 'compress.err';
                 my $cmd = sprintf(q{gzip %s 2> %s},
                         $valid_sequences_xml,
                         $err_file);
                 my ($rc, $output) = $self->run_cmd($cmd);
                 throw sprintf "gzip reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
+                        if $rc != 0;
+                unlink $err_file;
+		}
+        if ($valid_variants_xml && (-e $valid_variants_xml) && defined $valid_variants_xml)
+		{
+		my $err_file = $valid_variants_xml . 'compress.err';
+                my $cmd = sprintf(q{gzip %s 2> %s},
+                        $valid_variants_xml,
+                        $err_file);
+                my ($rc, $output) = $self->run_cmd($cmd);
+                throw sprintf "gzip reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $self->param('species'), $err_file
+                        if $rc != 0;
+                unlink $err_file;
+		}
+        if ($valid_wrapped_genomes_xml && (-e $valid_wrapped_genomes_xml) && defined $valid_wrapped_genomes_xml)
+		{
+		my $err_file = $valid_wrapped_genomes_xml . 'compress.err';
+                my $cmd = sprintf(q{gzip %s 2> %s},
+                        $valid_wrapped_genomes_xml,
+                        $err_file);
+                my ($rc, $output) = $self->run_cmd($cmd);
+                throw sprintf "gzip reports failure(s) for %s EB-eye dump.\nSee error log at file %s", $valid_wrapped_genomes_xml, $err_file
                         if $rc != 0;
                 unlink $err_file;
 		}
