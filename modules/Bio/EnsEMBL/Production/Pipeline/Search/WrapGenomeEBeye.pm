@@ -50,11 +50,14 @@ sub run {
 	$self->{logger} = get_logger();
 
 	my $division = $self->param_required('division');
+  my @division = ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
 	my $release = $self->param_required('release');
 	my $ebeye_base_path = $self->param('base_path');
-        my $wrapper = Bio::EnsEMBL::Production::Search::EBeyeGenomeWrapper->new();
-        $wrapped_genomes_file = $wrapper->wrap_genomes($ebeye_base_path, $division->[0], $release);
-        $self->dataflow_output_id( {  filename     => $wrapped_genomes_file }, 1 );
+  my $wrapper = Bio::EnsEMBL::Production::Search::EBeyeGenomeWrapper->new();
+  foreach my $division (@division) {
+    $wrapped_genomes_file = $wrapper->wrap_genomes($ebeye_base_path, $division, $release);
+    $self->dataflow_output_id( {  wrapped_genomes_file     => $wrapped_genomes_file }, 1 );
+	}
 	return;
 } ## end sub run
 
