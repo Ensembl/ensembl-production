@@ -63,7 +63,8 @@ sub pipeline_wide_parameters {
 
 sub pipeline_analyses {
     my $self = shift;
-    my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory', 'StructuralVariantDumpFactory', 'DumpPhenotypesJson' ] : [ 'DumpPhenotypesJson' ] ;
+    #my @variant_analyses = $self->o('dump_variant') == 1 ? [ 'VariantDumpFactory', 'StructuralVariantDumpFactory', 'DumpPhenotypesJson' ] : [ 'DumpPhenotypesJson' ] ;
+    my @variant_analyses = [ 'VariantDumpFactory' ] if $self->o('dump_variant') == 1;
     my @regulation_analyses = $self->o('dump_regulation') == 1 ? [ 'RegulationDumpFactory', 'ProbeDumpFactory' ] : [ 'ProbeDumpFactory' ];
 
     return [
@@ -199,7 +200,7 @@ sub pipeline_analyses {
             -flow_into     => {
                 1 => [
                     'ReformatGenomeAdvancedSearch',
-                    'ReformatGenomeSolr',
+                    #'ReformatGenomeSolr',
                     'ReformatGenomeEBeye'
                 ],
                 -1 => 'DumpGenesJsonHighmem'
@@ -217,7 +218,7 @@ sub pipeline_analyses {
             -flow_into     => {
                 1 => [
                     'ReformatGenomeAdvancedSearch',
-                    'ReformatGenomeSolr',
+                    #'ReformatGenomeSolr',
                     'ReformatGenomeEBeye'
                 ]
             }
@@ -248,7 +249,8 @@ sub pipeline_analyses {
             -rc_name    => '1g',
             -flow_into  =>
                 {
-                    2 => ['ReformatRegulationSolr','ReformatRegulationAdvancedSearch'],
+                    #2 => ['ReformatRegulationSolr','ReformatRegulationAdvancedSearch'],
+                    2 => ['ReformatRegulationAdvancedSearch'],
                 }
         },
         {
@@ -285,7 +287,7 @@ sub pipeline_analyses {
             -flow_into  =>
                 {
                     1 => [
-                        'ReformatVariantsSolr',
+                        #'ReformatVariantsSolr',
                         'ReformatVariantsEBeye',
                         'ReformatVariantsAdvancedSearch'
                     ]
@@ -325,8 +327,8 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
             -parameters => { file_type => 'structuralvariants' },
             -rc_name    => '1g',
-            -flow_into  => {
-                1 => 'ReformatStructuralVariantsSolr' }
+           # -flow_into  => {
+           #     1 => 'ReformatStructuralVariantsSolr' }
         },
         {
             -logic_name    => 'DumpPhenotypesJson',
@@ -335,9 +337,9 @@ sub pipeline_analyses {
             -parameters    => {},
             -analysis_capacity => 10,
             -rc_name       => '1g',
-            -flow_into     => {
-                2 => 'ReformatPhenotypesSolr'
-            }
+            #-flow_into     => {
+            #    2 => 'ReformatPhenotypesSolr'
+            #}
         },
         {
             -logic_name => 'ProbeDumpFactory',
@@ -386,8 +388,10 @@ sub pipeline_analyses {
             -rc_name    => '1g',
             -flow_into  =>
                 {
-                    2 => ['ReformatProbesSolr','ReformatProbesAdvancedSearch'],
-                    3 => ['ReformatProbeSetsSolr','ReformatProbesetsAdvancedSearch'],
+                    #2 => ['ReformatProbesSolr','ReformatProbesAdvancedSearch'],
+                    #3 => ['ReformatProbeSetsSolr','ReformatProbesetsAdvancedSearch'],
+                    2 => ['ReformatProbesAdvancedSearch'],
+                    3 => ['ReformatProbesetsAdvancedSearch'],
                 }
         },
         {
