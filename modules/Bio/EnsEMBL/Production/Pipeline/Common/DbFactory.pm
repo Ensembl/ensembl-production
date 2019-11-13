@@ -333,9 +333,8 @@ sub process_division {
         $db_division = $dba->get_MetaContainer->get_division();
       } else {
         my $dna_dba = $dba->dnadb();
-        if ($dna_dba->group eq 'core') {
-          $db_division = $dna_dba->get_MetaContainer->get_division();
-        } else {
+        $db_division = $dna_dba->get_MetaContainer->get_division();
+        unless ($db_division) {
           $self->throw("Could not retrieve DNA database for $dbname");
         }
       }
