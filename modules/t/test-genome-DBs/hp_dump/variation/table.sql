@@ -146,11 +146,12 @@ CREATE TABLE variation_feature (
   seq_region_end INT NOT NULL,
   seq_region_strand TINYINT NOT NULL,
   variation_id INT(10) UNSIGNED NOT NULL,
-  allele_string VARCHAR(50000),
+  allele_string TEXT DEFAULT NULL,
   ancestral_allele VARCHAR(50) DEFAULT NULL,
   variation_name VARCHAR(255),
   map_weight INT NOT NULL,
   flags SET('genotyped'),
+
   source_id INT(10) UNSIGNED NOT NULL,
   consequence_types SET(
         'intergenic_variant',
