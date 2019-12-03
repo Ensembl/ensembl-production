@@ -1257,7 +1257,7 @@ subtest "Checking ncRNA gene", sub {
               'info_text'   => '',
               'description' => 'ribosomal protein L14 pseudogene 5',
               'primary_id'  => 'RPL14P5-001',
-              'db_display'  => 'HGNC transcript name',
+              'db_display'  => 'HGNC transcript name',/usr/
               'dbname'      => 'HGNC_trans_name' } ],
           'coord_system'        =>
               { 'version' => 'GRCh38', 'name' => 'chromosome' },
