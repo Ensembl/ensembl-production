@@ -240,8 +240,7 @@ sub _add_orthologue_xrefs {
     return unless _genome_orthologue_dbname($source_genome->{organism}->{name});
     my @orthologues = grep {_include_orthologue($_)} @$homologues;
     foreach my $orthologue (@orthologues) {
-        my $dbname = _genome_orthologue_dbname($orthologue->{genome},
-            $source_genome->{division});
+        my $dbname = _genome_orthologue_dbname($orthologue->{genome}, $source_genome->{division});
         next unless $dbname;
         push @{$xrefs->{ $dbname }}, $orthologue->{stable_id};
     }
