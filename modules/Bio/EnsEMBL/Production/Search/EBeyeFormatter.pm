@@ -69,7 +69,6 @@ sub reformat_genome {
         XML::Writer->new(OUTPUT => $fh, DATA_MODE => 1, DATA_INDENT => 2);
     $writer->xmlDecl("ISO-8859-1");
     $writer->doctype("entry");
-
     _print_entry_start($writer, $genome->{id});
     _print_crossrefs($writer,
         { ncbi_taxonomy_id => $genome->{organism}{taxonomy_id} });
@@ -166,14 +165,12 @@ sub reformat_genes {
                     push @{$fields->{probes}}, $probe->{probe};
                 }
             }
-
             if (defined $gene->{homologues}) {
                 my $gts = {};
                 for my $homologue (@{$gene->{homologues}}) {
                     $gts->{ $homologue->{gene_tree_id} }++ if defined $homologue->{gene_tree_id};
                 }
                 $fields->{genetree} = [ keys %$gts ];
-
                 _add_orthologue_xrefs($xrefs, $genome, $gene->{homologues});
             }
 
@@ -248,6 +245,7 @@ sub _add_orthologue_xrefs {
         next unless $dbname;
         push @{$xrefs->{ $dbname }}, $orthologue->{stable_id};
     }
+
 }
 
 sub _include_orthologue {
