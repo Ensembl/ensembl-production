@@ -34,7 +34,7 @@ Log::Log4perl->easy_init($DEBUG);
 my $test_onto = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
 my $onto_dba = $test_onto->get_DBAdaptor('ontology');
 
-my $test = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
+my $test = Bio::EnsEMBL::Test::MultiTestDB->new('hp_dump');
 my $dba = $test->get_DBAdaptor('variation');
 my $fetcher = Bio::EnsEMBL::Production::Search::VariationFetcher->new();
 

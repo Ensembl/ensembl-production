@@ -27,7 +27,7 @@ diag("Testing ensembl-production Bio::EnsEMBL::Production::Search, Perl $], $^X"
 use Bio::EnsEMBL::Production::Search::MarkerFetcher;
 use Bio::EnsEMBL::Test::MultiTestDB;
 
-my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
+my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('hp_dump');
 my $core_dba = $test->get_DBAdaptor('core');
 
 my $fetcher = Bio::EnsEMBL::Production::Search::MarkerFetcher->new();

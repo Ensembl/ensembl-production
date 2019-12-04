@@ -32,7 +32,7 @@ Log::Log4perl->easy_init($DEBUG);
 
 use Data::Dumper;
 
-my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
+my $test     = Bio::EnsEMBL::Test::MultiTestDB->new('hp_dump');
 my $core_dba = $test->get_DBAdaptor('core');
 my $dba = $test->get_DBAdaptor('funcgen');
 my $fetcher = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new();
