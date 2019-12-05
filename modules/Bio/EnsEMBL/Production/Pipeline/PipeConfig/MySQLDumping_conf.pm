@@ -38,7 +38,7 @@ sub default_options {
       %{$self->SUPER::default_options},
       ## General parameters
       'user'            => $self->o('user'),
-      'pass'            => $self->o('pass'),
+      'pass'            => "",
       'host'            => $self->o('host'),
       'port'            => $self->o('port'),
       'meta_user'       => $self->o('meta_user'),
@@ -104,7 +104,7 @@ sub pipeline_analyses {
           -meadow_type       => 'LSF',
           -parameters        => {
               'cmd'      =>
-                  '#base_dir#/ensembl-production/modules/Bio/EnsEMBL/Production/Utils/MySQLDumping.sh  #database# #output_dir# #host# #user# #password# #port#',
+                  '#base_dir#/ensembl-production/modules/Bio/EnsEMBL/Production/Utils/MySQLDumping.sh  #database# #output_dir# #host# #user# #port# #password#',
               'user'     => $self->o('user'),
               'password' => $self->o('pass'),
               'host'     => $self->o('host'),
