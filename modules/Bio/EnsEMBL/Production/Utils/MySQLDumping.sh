@@ -18,8 +18,8 @@ database=$1
 output_dir=$2
 host=$3
 user=$4
-password=$5
-port=$6
+port=$5
+password=${6:-''}
 
 if [ -d "$output_dir/$database" ]
  then
@@ -54,7 +54,7 @@ done
 IGNORED_TABLES_SHOW=${IGNORED_TABLES_SHOW%?}
 cmd_line_options=""
 
-if [[ $database =~ .*mart.* ]]; then
+if [[ $database =~ .*mart.*  || $database =~ ensembl_archive.*  || $database =~ ensembl_account.* ]]; then
     cmd_line_options=" --skip-lock-tables"
 fi
 

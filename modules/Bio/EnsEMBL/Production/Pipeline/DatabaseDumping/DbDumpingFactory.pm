@@ -67,7 +67,7 @@ sub run {
     #Dump given databases
     foreach my $db (@$database) {
       if (scalar @$division > 1) {
-        die "Please run a separare pipeline for each divisions";
+        die "Please run a separate pipeline for each divisions";
       }
       my ($division_short_name, $division_name) = process_division_names($division->[0]);
       my $dir_release = directory_release($division_short_name, $release_info);
