@@ -9,7 +9,7 @@
       'funcgen' => 'Bio::EnsEMBL::Funcgen::DBSQL::DBAdaptor',
       'variation' => 'Bio::EnsEMBL::Variation::DBSQL::DBAdaptor'
     },
-    'saccharomyces_cerevisiae' => {
+    's_cerevisiae' => {
       'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
     },
     'multi' => {
