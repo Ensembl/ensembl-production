@@ -165,6 +165,7 @@ sub pipeline_analyses {
                         release         => $self->o('release'),
                         },
              -analysis_capacity => 4,
+             -rc_name    => '1g'
         },
         {
              -logic_name => 'CompressWrappedGenomesEBeyeXMLFile',
@@ -399,6 +400,7 @@ sub pipeline_analyses {
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
             -rc_name    => '1g',
+            -analysis_capacity => 10,
             -flow_into  => {}
         },
         {
@@ -440,7 +442,8 @@ sub pipeline_analyses {
             -logic_name => 'ReformatGenomeEBeye',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
-            -rc_name    => '1g',
+            -rc_name    => '4g',
+            -analysis_capacity => 10,
             -flow_into  => 'ValidateXMLFileEBeye'
         },
         {
