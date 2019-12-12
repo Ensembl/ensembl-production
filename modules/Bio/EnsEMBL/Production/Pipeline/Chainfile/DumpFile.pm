@@ -65,26 +65,23 @@ return;
 
 sub run {
     my ($self) = @_;
-
     my $species   = $self->param_required('species');
     my $release   = $self->param_required('release');
     my $base_path = $self->param_required('base_path');
     my $core_dba  = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     confess('Type error!') unless($core_dba->isa('Bio::EnsEMBL::DBSQL::DBAdaptor'));
 
-    my $chain_path = $self->get_dir('assembly_chain');
     my $prod_name  = $core_dba->get_MetaContainer->get_production_name();
     $prod_name   //= $core_dba->species();
     my $liftovers  = get_liftover_mappings($core_dba);
  
     if(scalar(@{$liftovers})==0){
       $self->info('NO assembly to chain file available for %s', $prod_name);
-      $self->info('Removing empty species directory for %s', $prod_name);
-      rmtree($chain_path) if(-d $chain_path);
-    return; 
+      return;
     }
    
     $self->info('Producing assembly to chain file for %s', $prod_name);
+    my $chain_path = $self->create_dir('assembly_chain');
 
     foreach my $mappings (@{$liftovers}) {
       my ($asm_cs, $cmp_cs) = @{$mappings};

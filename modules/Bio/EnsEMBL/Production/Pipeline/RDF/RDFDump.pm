@@ -85,8 +85,7 @@ sub run {
 
   ### Dump RDF
   #
-  my $path = $self->data_path();
-  $path = $self->get_dir($release) unless defined $path && $path ne '';
+  my $path = $self->create_dir('rdf');
 
   my $core_rdf_file = catdir($path, $species . ".ttl");
   $self->dump_core_rdf($core_rdf_file, $slices, $genes);
@@ -100,7 +99,7 @@ sub run {
   ### Add a graph file for Virtuoso loading.
   my $graph_path = $path;
   $self->param('dir', $graph_path);
-  $graph_path = $self->get_dir($release) unless $graph_path;
+  $graph_path = $self->get_dir('rdf') unless $graph_path;
 
   # graph files need to be named exactly the same as the underlying
   # data for Virtuoso to correctly namespace the data
@@ -129,11 +128,6 @@ sub write_output {  # store and dataflow
         $self->dataflow_output_id({filename => $file},2);
     }
     $self->dataflow_output_id({dir => $dir},3);
-}
-
-sub data_path {
-  my ($self) = @_;
-  return $self->get_dir('rdf');
 }
 
 # encapsulate the details of RDF writing

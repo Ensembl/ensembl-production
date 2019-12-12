@@ -58,7 +58,7 @@ sub dump {
 
 sub write_json {
   my ($self, $species, $type, $data, $db_type) = @_;
-  my $sub_dir = $self->get_dir('json');
+  my $sub_dir = $self->create_dir('json');
   if (defined $db_type && $db_type ne '' && $db_type ne 'core') {
     $type = "${db_type}_${type}";
   }

@@ -47,7 +47,7 @@ sub default_options {
        'registry'      => $self->o('registry'),   
        'release'       => $self->o('release'),
        'pipeline_name' => "ftp_pipeline",
-	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
+	     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
        'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
        'dumps'     	   => [],
 
@@ -121,9 +121,18 @@ sub default_options {
         'meleagris_gallopavo'   => 30064,
         'anas_platyrhynchos_platyrhynchos'    => 30066,
         'ovis_aries'            => 30068,
-        'oreochromis_niloticus' => 30072,
+        'oreochromis_niloticus' => 30073,
         'gadus_morhua'          => 30071,
        },
+      # History file for storing record of datacheck run.
+      history_file => undef,
+      ## Indexing parameters
+      'skip_blat'              => 0,
+      'skip_ncbiblast'         => 0,
+      'skip_blat_masking'      => 1,
+      'skip_ncbiblast_masking' => 0,
+      ## Indexing parameters
+      'skip_convert_fasta' => 0,
 
 	};
 }
@@ -194,7 +203,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
+          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
         }
         
     return [
@@ -224,7 +233,8 @@ sub pipeline_analyses {
     {  -logic_name => 'checksum_generator',
        -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::ChksumGenerator',
        -parameters     => {
-                      dumps     => $pipeline_flow
+                      dumps     => $pipeline_flow,
+                      skip_convert_fasta => $self->o('skip_convert_fasta')
                   },
        -hive_capacity => 10,
        -rc_name       => 'default'
@@ -467,7 +477,7 @@ sub pipeline_analyses {
       -can_be_empty    => 1,
       -flow_into       => {
                       1 => WHEN(
-                  '#new_assembly# >= 1' => 'dna',
+                  '#new_assembly# >= 1 || #new_genebuild# >= 1' => 'dna',
                   ELSE 'copy_dna',
               )},
       -max_retry_count => 1,
@@ -521,7 +531,21 @@ sub pipeline_analyses {
       -priority        => 5,
     },
         
-### ASSEMBLY CHAIN	
+### ASSEMBLY CHAIN
+  {
+    -logic_name        => 'assembly_chain_datacheck',
+    -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+    -parameters        => {
+                            datacheck_names  => ['MetaKeyAssembly'],
+                            history_file     => $self->o('history_file'),
+                            failures_fatal   => 0,
+                          },
+    -max_retry_count   => 1,
+    -analysis_capacity => 10,
+    -rc_name           => 'default',
+    -flow_into      => { '3' => 'assembly_chain',
+                         '4' => 'report_failed_assembly_chain' }
+  },
 	{ -logic_name       => 'assembly_chain',
 	  -module           => 'Bio::EnsEMBL::Production::Pipeline::Chainfile::DumpFile',
 	  -parameters       => {  
@@ -531,8 +555,7 @@ sub pipeline_analyses {
 	  -hive_capacity  => 50,
 	  -rc_name        => 'default',
 	  -flow_into      => { '-1' => 'assembly_chain_32GB', },
-	}, 
-
+	},
 	{ -logic_name       => 'assembly_chain_32GB',
 	  -module           => 'Bio::EnsEMBL::Production::Pipeline::Chainfile::DumpFile',
 	  -parameters       => {
@@ -542,6 +565,14 @@ sub pipeline_analyses {
 	  -hive_capacity  => 50,
 	  -rc_name        => '32GB',
 	},
+  {
+    -logic_name        => 'report_failed_assembly_chain',
+    -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+    -parameters       => {'email' => $self->o('email')},
+    -max_retry_count   => 1,
+    -analysis_capacity => 10,
+    -rc_name           => 'default',
+  },
 
 ### RDF dumps
     { -logic_name => 'rdf',

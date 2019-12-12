@@ -91,7 +91,7 @@ sub _make_karyotype_file {
 
     my $slices = $sa->fetch_all_karyotype();
     # If we don't have any slices (ie. chromosomes), don't make the file
-    return unless($slices);
+    return unless(scalar(@$slices));
  
     my $file = $self->_generate_file_name();
   

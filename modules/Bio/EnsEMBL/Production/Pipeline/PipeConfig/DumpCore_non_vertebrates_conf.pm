@@ -33,6 +33,7 @@ use warnings;
 use File::Spec;
 use Data::Dumper;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf');     
    
 sub default_options {
@@ -47,6 +48,8 @@ sub default_options {
       'abinitio'        => 0,
       # Previous release FASTA DNA files location
       'prev_rel_dir' => '/nfs/ensemblgenomes/ftp/pub/',
+      ## Indexing parameters
+      'skip_convert_fasta' => 0,
       };
 }
 
@@ -57,19 +60,21 @@ sub pipeline_analyses {
     my $super_analyses   = $self->SUPER::pipeline_analyses;
 
    	my $pipeline_flow;
-        # Getting list of dumps from argument
-        my $dumps = $self->o('dumps');
-        # Checking if the list of dumps is an array
-        my @dumps = ( ref($dumps) eq 'ARRAY' ) ? @$dumps : ($dumps);
-        #Pipeline_flow will contain the dumps from the dumps list
-        if (scalar @dumps) {
-          $pipeline_flow  = $dumps;
-        }
-        # Else, we run all the dumps
-        else {
-          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'genbank', 'assembly_chain', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
-        }
-    
+    # Getting list of dumps from argument
+    my $dumps = $self->o('dumps');
+    # Checking if the list of dumps is an array
+    my @dumps = ( ref($dumps) eq 'ARRAY' ) ? @$dumps : ($dumps);
+    #Pipeline_flow will contain the dumps from the dumps list
+    if (scalar @dumps) {
+      $pipeline_flow  = $dumps;
+    }
+    # Else, we run all the dumps
+    else {
+      $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
+    }
+    if (not $self->o('skip_convert_fasta')){
+      @$pipeline_flow = grep {$_ ne 'fasta_dna' and $_ ne 'fasta_pep'} @$pipeline_flow;
+    }
     my %analyses_by_name = map {$_->{'-logic_name'} => $_} @$super_analyses;
     $self->tweak_analyses(\%analyses_by_name, $pipeline_flow);
     
@@ -94,14 +99,21 @@ sub tweak_analyses {
     ## Removed unused dataflow
     $analyses_by_name->{'concat_fasta'}->{'-flow_into'} = { };
     $analyses_by_name->{'primary_assembly'}->{'-wait_for'} = [];
-    $analyses_by_name->{'checksum_generator'}->{'-wait_for'} = ['convert_fasta'];
-    $analyses_by_name->{'backbone_job_pipeline'}->{'-flow_into'} = {
-                '1->A' => $pipeline_flow,
-                'A->1' => ['checksum_generator'],
-                '1->B' => ['fasta_dna','fasta_pep'],
-							  'B->1' => ['convert_fasta'],
-							 };   
-
+    if ($self->o('skip_convert_fasta')){
+      $analyses_by_name->{'backbone_job_pipeline'}->{'-flow_into'} = {
+                  '1->A' => $pipeline_flow,
+                  'A->1' => ['checksum_generator'],
+                };
+    }
+    else{
+      $analyses_by_name->{'backbone_job_pipeline'}->{'-flow_into'} = {
+                  '1->A' => $pipeline_flow,
+                  'A->1' => ['checksum_generator'],
+                  '1->B' => ['fasta_dna','fasta_pep'],
+                  'B->1' => ['convert_fasta'],
+                };
+      $analyses_by_name->{'checksum_generator'}->{'-wait_for'} = ['convert_fasta'];
+    }
     return;
  
 }

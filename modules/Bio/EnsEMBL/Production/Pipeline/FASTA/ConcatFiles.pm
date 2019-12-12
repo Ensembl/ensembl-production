@@ -149,7 +149,7 @@ sub bgzip_and_index_toplevel {
   $self->info('extracting fasta toplevel file');
   system("gunzip $target_bgzip_file")
     and $self->throw( sprintf('Cannot gunzip %s. RC %d', $target_bgzip_file, ($?>>8)));
-  $target_bgzip_file=~ s/\.gz//;
+  $target_bgzip_file=~ s/\.gz$//;
   $self->info('bgziping toplevel file');
   system("bgzip $target_bgzip_file")
     and $self->throw( sprintf('Cannot bgzip %s. RC %d', $target_bgzip_file, ($?>>8)));
@@ -161,7 +161,7 @@ sub bgzip_and_index_toplevel {
 
 sub get_dna_files {
   my ($self) = @_;
-  my $path = $self->fasta_path('dna');
+  my $path = $self->create_dir('fasta','dna');
   my $data_type = $self->param('data_type'); 
   
   my $regex = $self->file_pattern($data_type);
@@ -227,7 +227,7 @@ sub target_file {
   push @name_bits, 'toplevel';
   push @name_bits, 'fa', 'gz';
   my $file_name = join( '.', @name_bits );
-  my $dir = $self->fasta_path($fasta_type);
+  my $dir = $self->create_dir('fasta',$fasta_type);
   return File::Spec->catfile( $dir, $file_name );
 }
 

@@ -35,7 +35,7 @@ use Bio::EnsEMBL::Test::MultiTestDB;
 use Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter;
 use Bio::EnsEMBL::Production::Search::RegulationAdvancedSearchFormatter;
 
-my $test = Bio::EnsEMBL::Test::MultiTestDB->new('homo_sapiens_dump');
+my $test = Bio::EnsEMBL::Test::MultiTestDB->new('hp_dump');
 my $core_dba = $test->get_DBAdaptor('core');
 my $funcgen_dba = $test->get_DBAdaptor('funcgen');
 my $fetcher = Bio::EnsEMBL::Production::Search::GeneFetcher->new();

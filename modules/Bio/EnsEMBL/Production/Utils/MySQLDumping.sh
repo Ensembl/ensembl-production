@@ -18,8 +18,8 @@ database=$1
 output_dir=$2
 host=$3
 user=$4
-password=$5
-port=$6
+port=$5
+password=${6:-''}
 
 if [ -d "$output_dir/$database" ]
  then
@@ -54,7 +54,7 @@ done
 IGNORED_TABLES_SHOW=${IGNORED_TABLES_SHOW%?}
 cmd_line_options=""
 
-if [[ $database =~ .*mart.* ]]; then
+if [[ $database =~ .*mart.*  || $database =~ ensembl_archive.*  || $database =~ ensembl_account.* ]]; then
     cmd_line_options=" --skip-lock-tables"
 fi
 
@@ -69,11 +69,6 @@ tables=$(mysql -NBA --host=$host --user=$user --password=$password --port=$port 
 for t in $tables
 do
     echo "DUMPING TABLE: $database.$t"
-    mysql --host=$host --max_allowed_packet=1024M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed '/NULL/ s//\\N/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
+    mysql --host=$host --max_allowed_packet=1024M --user=$user --password=$password --port=$port -e "SELECT * FROM ${database}.${t}" --quick --silent --skip-column-names | sed -r -e 's/\r//g' -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' -e 's/(^|\t)NULL($|\t)/\1\\N\2/g' |  gzip -1nc > ${output_dir}/$database/$t.txt.gz
 done
 
-echo "Creating CHECKSUM for $database"
-find  -type f -name '*.gz' -printf '%P\n' | while read file; do
-    sum=$(sum $file)
-    echo -ne "$sum\t$file\n" >> CHECKSUMS
-done

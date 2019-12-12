@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::GFF3::DumpFile;
 use strict;
 use warnings;
 no  warnings 'redefine';
-use base ('Bio::EnsEMBL::Production::Pipeline::GFF3::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 use Bio::EnsEMBL::Utils::Exception qw/throw/;
 use Bio::EnsEMBL::Utils::IO::GFFSerializer;
@@ -314,7 +314,7 @@ sub _generate_file_name {
   push @name_bits, 'gff3', 'gz';
 
   my $file_name = join( '.', @name_bits );
-  my $path = $self->data_path();
+  my $path = $self->create_dir('gff3');
 
   return File::Spec->catfile($path, $file_name);
 
@@ -333,15 +333,10 @@ sub _generate_abinitio_file_name {
   push @name_bits, 'abinitio', 'gff3', 'gz';
 
   my $file_name = join( '.', @name_bits );
-  my $path = $self->data_path();
+  my $path = $self->create_dir('gff3');
 
   return File::Spec->catfile($path, $file_name);
 
-}
-
-sub data_path {
-  my ($self) = @_;
-  return $self->get_dir('gff3');
 }
 
 sub write_output {
@@ -554,7 +549,7 @@ LRG data are freely available in several formats (FASTA, BED, XML, Tabulated) at
     ";
   }
 
-  my $path = File::Spec->catfile($self->data_path(), 'README');
+  my $path = File::Spec->catfile($self->get_dir('gff3'), 'README');
   work_with_file($path, 'w', sub {
     my ($fh) = @_;
     print $fh $readme;

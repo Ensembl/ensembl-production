@@ -134,7 +134,7 @@ sub process {
       $self->_process_dba($dba, $schema_type);
     }
   }
-  
+
   $self->_process_missing_ftp_links;
   return;
 }
@@ -150,6 +150,7 @@ sub _process_dba {
   }
   else {
 
+    my @emission_files_done;
     foreach my $df (@{$datafiles}) {
       next if $df->absolute();
 
@@ -157,7 +158,18 @@ sub _process_dba {
         $self->_process_datafile($df, $self->_target_species_root($df));
       }
 
-      $self->_process_datafile($df, $self->_target_datafiles_root($df));
+      my $datafiles_root = $self->_target_datafiles_root($df);
+      $self->_process_datafile($df, $datafiles_root);
+
+      #emissions files for funcgen
+      if($schema_type eq 'funcgen'){
+        if (index($datafiles_root, 'segmentation_file') != -1) {
+          if (! grep { $_ eq $datafiles_root } @emission_files_done){
+            push @emission_files_done, $datafiles_root;
+            $self->_process_datafile($df,$self->_target_datafiles_root($df), 'emissions_25.txt');
+          }
+        }
+      }
     }
     # Creating symlinks for README and md5sum files
     if($schema_type eq 'core_like'){
@@ -359,7 +371,7 @@ sub _target_datafiles_root {
   my ($self, $datafile) = @_;
   my $base = File::Spec->catdir($self->opts()->{ftp_dir}, 'data_files');
   my $target_location = $datafile->path($base);
-  $target_location =~ s/funcgen\///;  
+  $target_location =~ s/funcgen\///;
   my ($volume, $dir, $file) = File::Spec->splitpath($target_location);
   return $dir;
 }

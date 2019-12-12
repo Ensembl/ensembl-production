@@ -49,17 +49,19 @@ sub run {
 	my $type        = $self->param_required('type');
 
 	my $species = $self->param_required('species');
-	my $sub_dir = $self->get_dir('ebeye');
+	my $sub_dir = $self->create_dir('ebeye');
 
 	my $reformatter   = Bio::EnsEMBL::Production::Search::EBeyeFormatter->new();
 	my $dump_file     = $self->param('dump_file');
-	my $dump_file_out = $sub_dir . '/' . $species . '_variants.xml';
-
+	my $dump_file_out = $sub_dir . '/Variation_' . $species . '_variants.xml';
+	my $output = { species => $species };
 	my $dba = $self->get_DBAdaptor($type);
 	$self->{logger}->info("Reformatting $dump_file into $dump_file_out");
 	$reformatter->reformat_variants(
 			$genome_file, $dba->dbc()->dbname(), $dump_file,
 			$dump_file_out );
+	$output->{variants_xml_file} = $dump_file_out;
+	$self->dataflow_output_id( $output, 1 );
 
 	return;
 } ## end sub run

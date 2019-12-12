@@ -78,6 +78,8 @@ sub _write_tsv {
     my $taxon_id   = $self->core_dba()->get_MetaContainer()->get_taxonomy_id();
     my $name       = $self->web_name();
 
+    my $xrefs_exist = 0;
+
     my $helper     = $self->core_dbc()->sql_helper();
     my $sql        = 'SELECT g.stable_id, t.stable_id, tr.stable_id, srs.synonym, NULL
                 	FROM coord_system cs
@@ -113,14 +115,19 @@ sub _write_tsv {
             $row->[6] =~ s/\.[0-9]+$// if (defined $row->[6]);
 	    print $fh join "\t", @$row;
 	    print $fh "\n";
+      $xrefs_exist = 1;
         }
     }
     close $fh;
 
-    $self->info( "Compressing ENA tsv dump for " . $self->param('species'));
-    my $unzip_out_file = $out_file;
-    `gzip -n $unzip_out_file`;
-
+    if ($xrefs_exist == 1) {
+      $self->info( "Compressing ENA tsv dump for " . $self->param('species'));
+      my $unzip_out_file = $out_file;
+      `gzip -n $unzip_out_file`;
+    } else {
+      # If we have no xrefs, delete the file (which will just have a header).
+      unlink $out_file  or die "failed to delete $out_file!";
+    }
 
 return;
 }
@@ -213,13 +220,13 @@ Stable ID to ENA Ac
 
 Provides mappings from Gene, Transcript and Translation stable identifiers to 
 ENA accessions.
+If there are no such mappings in the database, the file will not exist.
 
 File are named Species.assembly.release.ena.tsv.gz
 
 README
 
     my $data_path = $self->get_dir('tsv');
-    mkpath($data_path);
     my $path      = File::Spec->catfile($data_path, 'README_ENA.tsv');
 
     work_with_file($path, 'w', sub {
