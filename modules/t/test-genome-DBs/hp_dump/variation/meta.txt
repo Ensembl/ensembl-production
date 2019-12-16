@@ -1,3 +1,6 @@
+1	\N	schema_type	variation
+2	\N	schema_version	100
+3	\N	patch	patch_98_99_a.sql|schema version
 54	\N	pairwise_ld.default_population	679
 12	\N	patch	patch_70_71_e.sql|create study_variation table
 13	\N	patch	patch_70_71_f.sql|add phenotype_feature and phenotype_feature_attrib
@@ -79,7 +82,6 @@
 91	\N	patch	patch_87_88_b.sql|seq_region_name_255
 92	\N	patch	patch_88_89_a.sql|schema version
 93	\N	patch	patch_88_89_b.sql|Drop strain_gtype_poly table
-3	\N	patch	patch_89_90_a.sql|schema version
 94	\N	patch	patch_89_90_a.sql|schema version
 4	\N	patch	patch_89_90_b.sql|add start_retained_variant to consequence_types in variation_feature and transcript_variation
 95	\N	patch	patch_89_90_b.sql|add start_retained_variant to consequence_types in variation_feature and transcript_variation
@@ -103,10 +105,15 @@
 112	\N	patch	patch_95_96_c.sql|add new entries to the failed_description table
 113	\N	patch	patch_95_96_d.sql|create table to store failed variation features
 114	\N	patch	patch_95_96_e.sql|Rename motif_name to binding_matrix_stable_id.
-1	\N	schema_type	variation
-2	\N	schema_version	99
 115	\N	patch	patch_96_97_a.sql|schema version
 116	\N	patch	patch_96_97_b.sql|move ancestral allele column to variation_feature
 117	\N	patch	patch_96_97_c.sql|add an unique index on the name column
 118	\N	patch	patch_97_98_a.sql|schema version
 119	\N	patch	patch_98_99_a.sql|schema version
+120	\N	patch	patch_98_99_b.sql|Add the column data_source_attrib in the table variation_citation
+121	\N	patch	patch_98_99_c.sql|Increase the size of the title and doi columns in the publication table
+122	\N	patch	patch_98_99_d.sql|add key data_source_attrib
+123	\N	patch	patch_98_99_e.sql|Fix attrib ids in table variation_citation
+124	\N	patch	patch_99_100_a.sql|schema version
+125	\N	patch	patch_99_100_b.sql|add frequency to structural variation
+126	\N	patch	patch_99_100_c.sql|add class_attrib_id column to phenotype
