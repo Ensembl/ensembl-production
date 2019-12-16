@@ -67,7 +67,7 @@ my $expected_probe = { 'transcripts' => [ {
 is_deeply( $probe, $expected_probe , 'Testing Probe structure' );
 is( scalar( @{ $out->{probe_sets} } ), 118 ,'Expected number of Probe Sets');
 my ($probe_set) =
-  first { $_->{id} eq 'homo_sapiens_dump_probeset_10367' }
+  first { $_->{id} eq 'hp_dump_probeset_10367' }
   @{ $out->{probe_sets} };
 is( $probe_set->{name},                  '214727_at', 'Expected probe Set name' );
 is( $probe_set->{size},                  '12' , 'Expected Probe Set size' );

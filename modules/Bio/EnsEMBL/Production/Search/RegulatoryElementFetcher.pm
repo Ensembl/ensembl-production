@@ -128,7 +128,7 @@ sub fetch_regulatory_features {
           ft.name as feature_name,
           ft.description as description,
           ft.so_accession as so_accession,
-          ft.so_name as so_name,
+          ft.so_term as so_name,
           e.name as epigenome_name,
           e.description as epigenome_description,
           'Regulatory Features' as type
@@ -277,7 +277,7 @@ sub fetch_peaks {
           ft.name as feature_name,
           ft.description as description,
           ft.so_accession as so_accession,
-          ft.so_name as so_name,
+          ft.so_term as so_name,
           ft.class as class,
           e.name as epigenome_name,
           e.description as epigenome_description,
