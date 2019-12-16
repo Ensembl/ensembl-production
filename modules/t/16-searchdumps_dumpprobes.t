@@ -81,7 +81,7 @@ my $expected_probeset = {     'arrays' => [{'array' => 'U133_X3P',
 																		'gene_name'   => 'MOG',
 																		'gene_id'     => 'ENSG00000204655',
 																		'id'          => 'ENST00000376891' } ],
-															'id' => 'homo_sapiens_dump_probeset_15818',
+															'id' => 'hp_dump_probeset_15818',
 															'name' => '215182_3p_x_at',
 															'probes' => [{
 																			   'arrays' => [ {  'array' => 'U133_X3P',
@@ -107,7 +107,7 @@ my $expected_probeset = {     'arrays' => [{'array' => 'U133_X3P',
 															],
 															'size' => 1 };
 my ($probe_set_2) =
-  first { $_->{id} eq 'homo_sapiens_dump_probeset_15818' }
+  first { $_->{id} eq 'hp_dump_probeset_15818' }
   @{ $out->{probe_sets} };
 is_deeply( $probe_set_2, $expected_probeset , 'Testing Probe Set structure' );
 done_testing;
