@@ -195,8 +195,6 @@ sub production_updates {
    ));
    $sth->fetch();
 
-   $properties{'web_data'} = eval ($properties{'web_data'}) if defined $properties{'web_data'};
-
    # Explicitly passed parameters do not get overwritten.
    foreach my $property (keys %properties) {
      if (! $self->param_is_defined($property)) {
