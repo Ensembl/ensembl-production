@@ -264,7 +264,7 @@ sub resource_classes {
       'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
       'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
       'mem'     => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
-      'large'   => { 'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
+      'large'   => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
     }
 }
 
