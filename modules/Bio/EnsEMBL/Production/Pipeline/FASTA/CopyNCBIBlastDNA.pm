@@ -30,13 +30,13 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::FASTA::CopyDNA
+Bio::EnsEMBL::Production::Pipeline::FASTA::CopyNCBIBlastDNA
 
 =head1 DESCRIPTION
 
-Performs a find in the DNA dumps directory, for the given species, in the
-previous release FTP dump directory. Any files matching the normal gzipped
-fasta extension will be copied over to this release's directory.
+Performs a find in the ncbi_blast dumps directory, for the given species, in the
+previous release FTP dump directory. Any files starting with the given species name
+will be copied over to this release's directory.
 
 Previous release is defined as V<release-1>; override this class if your
 definition of the previous release is different. 
@@ -55,6 +55,10 @@ Allowed parameters are:
 =item species - Species to work with
 
 =item base_path - The base of the dumps; reused files will be copied to here
+
+=item type - the ncbi_blast type. Here we only want to copy genomic data
+
+=item blast_dir - This is ncbi_blast at the moment. This information is used by BlastIndexer to create current dir
 
 =back
 
@@ -85,7 +89,6 @@ sub fetch_input {
 
 sub run {
   my ($self) = @_;
-  $DB::single = 1;
   my $new_path = $self->target_dir();
   my $files = $self->get_blast_files();
   foreach my $file (@{$files}) {
