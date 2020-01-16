@@ -183,20 +183,6 @@ sub copy_database {
       }
     } ## end while ( $table_sth->fetch...)
 
-  if ($source_db->{dbname} !~ /mart/){
-    #Flushing and locking source database
-    $logger->info("Flushing and locking source database");
-
-    ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
-    flush_with_read_lock($source_dbh,\@tables);
-
-    #Flushing and locking target database
-    if (defined($target_db_exist) and @tables_flush) {
-      $logger->info("Flushing and locking target database");
-      flush_with_read_lock($target_dbh,\@tables_flush);
-    }
-  }
-
   my $copy_mysql_files=0;
   #Check if we have access to the server filesystem:
   if (system("ssh $source_db->{host} ls $source_dir >/dev/null 2>&1") == 0 and system("ssh $target_db->{host} ls $target_dir >/dev/null 2>&1") == 0 and !$innodb)  {
@@ -205,6 +191,19 @@ sub copy_database {
   #Check if we have enough space on target server before starting the db copy and make sure that there is 20% free space left after copy
   check_space_before_copy($source_db,$source_dir,$target_db,$target_db_exist,$destination_dir,$copy_mysql_files,$source_dbh,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables);
   if ($copy_mysql_files){
+    if ($source_db->{dbname} !~ /mart/){
+      #Flushing and locking source database
+      $logger->info("Flushing and locking source database");
+
+      ## Checking MySQL version on the server. For MySQL version 5.6 and above,  FLUSH TABLES is not permitted when there is an active READ LOCK.
+      flush_with_read_lock($source_dbh,\@tables);
+
+      #Flushing and locking target database
+      if (defined($target_db_exist) and @tables_flush) {
+        $logger->info("Flushing and locking target database");
+        flush_with_read_lock($target_dbh,\@tables_flush);
+      }
+    }
     # Check executable
     $logger->debug("Checking myisamchk exist");
     check_executables("myisamchk",$target_db);
@@ -213,7 +212,19 @@ sub copy_database {
     # Create the temp directories on server filesystem
     ($force,$staging_dir) = create_temp_dir($target_db_exist,$update,$opt_only_tables,$staging_dir,$destination_dir,$force,$target_dbh,$target_db,$source_dbh);
     # Copying mysql database files
-    copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose); 
+    copy_mysql_files($force,$update,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$source_db,$target_db,$staging_dir,$source_dir,$verbose);
+    if ($source_db->{dbname} !~ /mart/){
+      # Unlock tables source and target
+      $logger->info("Unlocking tables on source database");
+      unlock_tables($source_dbh);
+      # Diconnect from the source once the copy is complete
+      $source_dbh->disconnect();
+
+      if (defined($target_db_exist)){
+        $logger->info("Unlocking tables on target database");
+        unlock_tables($target_dbh);
+      }
+    }
   }
   #Using MySQL dump if the database is innodb or we don't have access to the MySQL server filesystem
   else{
@@ -221,19 +232,9 @@ sub copy_database {
       croak "We don't have file system access on these server so we can't use the --update options";
     }
     else{
+      # Diconnect from the source before doing a MySQL dump
+      $source_dbh->disconnect();
       copy_mysql_dump($source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,\%only_tables,\%skip_tables,$convert_innodb_to_myisam);
-    }
-  }
-  if ($source_db->{dbname} !~ /mart/){
-    # Unlock tables source and target
-    $logger->info("Unlocking tables on source database");
-    unlock_tables($source_dbh);
-    # Diconnect from the source once the copy is complete
-    $source_dbh->disconnect();
-
-    if (defined($target_db_exist)){
-      $logger->info("Unlocking tables on target database");
-      unlock_tables($target_dbh);
     }
   }
 
@@ -668,7 +669,11 @@ sub copy_mysql_dump {
   my ($source_db,$target_db,$dump_path,$opt_only_tables,$opt_skip_tables,$only_tables,$skip_tables,$convert_innodb_to_myisam) = @_;
   my $file=$dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
   $logger->info("Dumping $source_db->{dbname} from $source_db->{host} to file $file");
-  my @dump_cmd = ("mysqldump", "--max_allowed_packet=1024M", "--skip-lock-tables", "--host=$source_db->{host}", "--user=$source_db->{user}", "--port=$source_db->{port}");
+  my @dump_cmd = ("mysqldump", "--max_allowed_packet=1024M", "--host=$source_db->{host}", "--user=$source_db->{user}", "--port=$source_db->{port}");
+  # If we are copying a mart database, skip the lock
+  if ($source_db->{dbname} =~ /mart/){
+    push (@dump_cmd, "--skip-lock-tables");
+  }
   # IF we have specified a password
   if (defined $source_db->{pass}){
     push (@dump_cmd, "--password=$source_db->{pass}");
