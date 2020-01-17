@@ -102,7 +102,7 @@ sub default_options {
 	   'ucsc' 		 => 1,
        ## rdf parameters
        'xref' => 1,
-       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json',
+       'config_file' => $self->o('ensembl_cvs_root_dir') . '/ensembl-production/conf/xref_LOD_mapping.json',
 
        ## BLAT
        # A list of vertebrates species for which we have Blast server running with their associated port number
