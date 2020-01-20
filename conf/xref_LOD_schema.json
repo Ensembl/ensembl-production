@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Xref config schema",
+  "type": "object",
+  "required": ["mappings"],
+  "properties": {
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["db_name","feature_type"]
+      },
+      "properties": {
+        "db_name": {
+          "description": "The name string describing a bioinformatics data repository",
+          "type": "string"
+        },
+        "canonical_LOD": {
+          "description": "A URI root that describes the semantic/RDF namespace of data from this resource",
+          "type": "string"
+        },
+        "id_namespace": {
+          "description": "Append to http://identifiers.org/ to use their link resolver to reach the original resource",
+          "type": "string"
+        },
+        "feature_type": {
+          "description": "What type of entity is the accession labeling? gene, transcript, translation, annotation",
+          "type": "string",
+          "enum": ["gene","transcript","translation","annotation"]
+        },
+        "example_id": {
+          "description": "Sample ID from that resource",
+          "type": "string"
+        },
+        "URI_type": {
+          "description": "A more formal definition of what kind of entity is described by the accession",
+          "type": "string"
+        },
+        "ignore": {
+          "description": "A vestigial flag describing whether a source is significant or not. Probably should be repurposed to show sources whose links we wish to overlook, e.g. links back to Ensembl",
+          "type": "boolean"
+        },
+        "bidirectional": {
+          "description": "Vestigial mechanism for determining whether to allow queries both in and out of this source. Intended to constrain xref islands to single feature types. Largely taken care of now by feature_type field",
+          "type": "boolean"
+        },
+        "priority": {
+          "description": "A score weighting used to determine which sources to use for naming. High score means to favour this source over others. No score means ignore this source and do not use it for names or descriptions",
+          "type": "integer"
+        },
+        "ensembl_db_name": {
+          "description": "The db_name used by Ensembl to refer to this resource. Required for mapping back into old xref schema",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
