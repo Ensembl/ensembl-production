@@ -88,7 +88,7 @@ sub default_options {
       },
       {
         source                 => 'danio_rerio',
-        taxons                 => ['Neopterygii','Cyclostomata','Coelacanthimorpha'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
         antispecies            => ['danio_rerio'],
         gene_name_source       => ['ZFIN_ID'],
         project_trans_names    => 1,
@@ -96,7 +96,7 @@ sub default_options {
       },
       {
         source                 => 'homo_sapiens',
-        taxons                 => ['Neopterygii','Cyclostomata'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
         antispecies            => ['homo_sapiens'],
         gene_name_source       => ['HGNC'],
         project_trans_names    => 1,
@@ -145,7 +145,7 @@ sub default_options {
       },
       {
         source                 => 'danio_rerio',
-        taxons                 => ['Neopterygii','Cyclostomata','Coelacanthimorpha'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
         antispecies            => ['danio_rerio'],
         gene_name_source       => ['ZFIN_ID'],
         gene_desc_rules        => [], 
@@ -153,7 +153,7 @@ sub default_options {
       },
       {
         source                 => 'homo_sapiens',
-        taxons                 => ['Neopterygii','Cyclostomata'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
         antispecies            => ['homo_sapiens'],
         gene_name_source       => ['HGNC'],
         gene_desc_rules        => [], 
