@@ -96,7 +96,7 @@ sub default_options {
       },
       {
         source                 => 'homo_sapiens',
-        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Chondrichthyes'],
         antispecies            => ['homo_sapiens'],
         gene_name_source       => ['HGNC'],
         project_trans_names    => 1,
@@ -153,7 +153,7 @@ sub default_options {
       },
       {
         source                 => 'homo_sapiens',
-        taxons                 => ['Actinopterygii','Cyclostomata','Coelacanthimorpha','Chondrichthyes'],
+        taxons                 => ['Actinopterygii','Cyclostomata','Chondrichthyes'],
         antispecies            => ['homo_sapiens'],
         gene_name_source       => ['HGNC'],
         gene_desc_rules        => [], 
