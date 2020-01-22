@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2019] EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ sub run {
             a.logic_name != "estgene" AND
             a.logic_name NOT LIKE "%refseq%" AND
             ad.displayable = 1 AND
-            (web_data NOT LIKE "%{'gene'}->{'do_not_display'}%" or web_data is null)/);
+            (web_data NOT LIKE '%"gene":"do_not_display"%' or web_data is null)/);
   my $ids = join ',', map { $_->[0] } @{$analysis_ids};
   return unless $ids;
   # Get a list of stable_ids, display_label (gene name), seq_region name, start and end

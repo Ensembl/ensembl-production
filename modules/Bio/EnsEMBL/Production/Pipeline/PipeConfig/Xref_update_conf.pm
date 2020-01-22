@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2019] EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -264,7 +264,7 @@ sub resource_classes {
       'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
       'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
       'mem'     => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
-      'large'   => { 'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
+      'large'   => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
     }
 }
 

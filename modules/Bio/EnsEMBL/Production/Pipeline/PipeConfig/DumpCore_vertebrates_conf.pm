@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2019] EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -126,24 +126,36 @@ sub pipeline_analyses {
       },
       {
           -logic_name        => 'ChecksumGeneratorBLASTGENE',
-                    -parameters => {
+          -parameters => {
                             dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genes/"
           },
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
+          -flow_into       => { '1' => 'ChecksumGeneratorBLASTGENOMIC', },
           -analysis_capacity => 10,
           -priority => 5,
       },
             {
           -logic_name        => 'ChecksumGeneratorBLASTGENOMIC',
-                    -parameters => {
+          -parameters => {
                             dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genomic/"
           },
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::ChecksumGenerator',
           -analysis_capacity => 10,
           -priority => 5,
       },
-
-
+      {
+          -logic_name        => 'copy_ncbiblastDNA',
+          -parameters => {
+                          ftp_dir => $self->o('prev_rel_dir'),
+                          dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genomic/",
+                          release => $self->o('release'),
+                          type    => 'genomic',
+                          blast_dir => 'ncbi_blast',
+          },
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyNCBIBlastDNA',
+          -analysis_capacity => 10,
+          -priority => 5,
+      },
     ];
 }
 
@@ -165,7 +177,8 @@ sub tweak_analyses {
           $analyses_by_name->{'concat_fasta'}->{'-flow_into'}   = { 1 => [qw/index_ncbiblastDNA primary_assembly/]};
         }
         $analyses_by_name->{'fasta_pep'}->{'-flow_into'} = { 2 => ['index_ncbiblastPEP'], 3 => ['index_ncbiblastGENE'] };
-        $analyses_by_name->{'checksum_generator'}->{'-flow_into'} = { '1' => ['ChecksumGeneratorBLASTGENE','ChecksumGeneratorBLASTGENOMIC'] };
+        $analyses_by_name->{'job_factory'}->{'-flow_into'} = { '2->A' => ['backbone_job_pipeline'], 'A->1' => 'ChecksumGeneratorBLASTGENE', };
+        $analyses_by_name->{'copy_dna'}->{'-flow_into'} = { 1 => ['copy_ncbiblastDNA']};
     }
 }
 

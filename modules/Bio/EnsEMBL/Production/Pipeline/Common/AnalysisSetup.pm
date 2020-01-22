@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2019] EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -194,8 +194,6 @@ sub production_updates {
      $properties{'web_data'},
    ));
    $sth->fetch();
-
-   $properties{'web_data'} = eval ($properties{'web_data'}) if defined $properties{'web_data'};
 
    # Explicitly passed parameters do not get overwritten.
    foreach my $property (keys %properties) {
