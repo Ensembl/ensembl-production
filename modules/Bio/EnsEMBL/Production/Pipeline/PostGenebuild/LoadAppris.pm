@@ -19,6 +19,10 @@ limitations under the License.
 
 Bio::EnsEMBL::Production::Pipeline::PostGenebuild::LoadAppris
 
+=head1 DESCRIPTION
+
+Load the APPRIS annotation from a given text file into the core database Transcript attrib table.
+
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::PostGenebuild::LoadAppris;
@@ -31,13 +35,12 @@ use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
   my ($self) = @_;
-
   my $db = $self->core_dba();
-
   my $file = $self->param_required('file');
-
   my $sa = $db->get_SliceAdaptor();
   my $aa = $db->get_AttributeAdaptor();
+  my $coord_system_name = 'toplevel';
+  my $coord_system_version = $self->param_required('coord_system_version');
 
   # # #
   # hard code the mapping
@@ -58,9 +61,9 @@ sub run {
       -SQL => q/DELETE ta
     FROM transcript_attrib ta
     JOIN attrib_type att USING (attrib_type_id)
-    WHERE att.code = ?/
+    WHERE att.code = ?/,
         -PARAMS => [ $code->[0] ] );
-    $attribs->{$code} = $aa->fetch_by_code($code);
+    $attribs->{$code->[0]} = $aa->fetch_by_code($code->[0]);
   }
 
   # read in file containing new attributes
@@ -115,28 +118,21 @@ sub run {
       $gene_cnt++;
       foreach my $transcript ( @{ $gene->get_all_Transcripts } ) {
         $transc_cnt++;
-
-        if (
-          exists $appris_results{ $gene->stable_id }{ $transcript->stable_id } )
-        {
+        if (exists $appris_results{ $gene->stable_id }{ $transcript->stable_id } ){
           # oh good, found this stable ID
           $stable_id_in_file++;
-
-          my %res =
-            $appris_results{ $gene->stable_id }{ $transcript->stable_id };
-
-          my $attrib = $attribs->{ $res{attrib_type_code} };
-
+          my $res = {};
+          $res = $appris_results{ $gene->stable_id }->{ $transcript->stable_id };
+          my $attrib = $attribs->{ $res->{attrib_type_code} };
           $aa->store_on_Transcript( $transcript, [
                                       Bio::EnsEMBL::Attribute->new(
                                                    -NAME  => $attrib->[2],
                                                    -CODE  => $attrib->[1],
-                                                   -VALUE => $res{attrib_value},
+                                                   -VALUE => $res->{attrib_value},
                                                    -DESCRIPTION => $attrib->[3]
-                                      ) ] )
-
-            print STDERR "  writing gene " . $gene->stable_id . " transcript" .
-            $transcript->stable_id . " APPRIS " . $res{attrib_type_code} . "\n";
+                                      ) ] );
+            print STDERR "  writing gene " . $gene->stable_id . " transcript " .
+            $transcript->stable_id . " APPRIS " . $res->{attrib_type_code} . " value " . $res->{attrib_value} .  "\n";
         }
         else {
             # this is likely a new transcript that wasn't annotated last release

@@ -19,6 +19,10 @@ limitations under the License.
 
 Bio::EnsEMBL::Production::Pipeline::PostGenebuild::LoadTsl
 
+=head1 DESCRIPTION
+
+Load the TSL annotation from a given tsv file into the core database Transcript attrib table.
+
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::PostGenebuild::LoadTsl;
@@ -33,9 +37,9 @@ sub run {
   my ($self) = @_;
 
   my $db = $self->core_dba();
-
   my $file = $self->param_required('file');
-
+  my $coord_system_name = 'toplevel';
+  my $coord_system_version = $self->param_required('coord_system_version');
   my $sa = $db->get_SliceAdaptor();
   my $aa = $db->get_AttributeAdaptor();
 
@@ -47,7 +51,7 @@ sub run {
     -SQL => q/DELETE ta
     FROM transcript_attrib ta
     JOIN attrib_type att USING (attrib_type_id)
-    WHERE att.code = ?/
+    WHERE att.code = ?/,
       -PARAMS => [$code] );
 
   my $attrib = $aa->fetch_by_code($code);
@@ -96,8 +100,7 @@ sub run {
 
         if ( exists $support_levels{ $transcript->stable_id } ) {
           # oh good, found this stable ID
-          if ( $transcript->version == $support_levels{ $transcript->stable_id }
-               {'version'} )
+          if ( $transcript->version == $support_levels{ $transcript->stable_id }{'version'} )
           {
             # up to date
             $transc_uptodate++;
@@ -119,10 +122,10 @@ sub run {
             # annotation likely changed since last release
             $transc_updated++;
             $stable_id_in_file++;
-            warning("Transcript annotation mismatch " . $transcript->stable_id .
+           print STDERR "Transcript annotation mismatch " . $transcript->stable_id .
                       " version in Ensembl=" . $transcript->version .
                       " vs version in file=" .
-                      $support_levels{ $transcript->stable_id }{'version'} );
+                      $support_levels{ $transcript->stable_id }{'version'};
 
             $aa->store_on_Transcript(
               $transcript, [
@@ -143,7 +146,7 @@ sub run {
         else {
           # this is likely a new transcript that wasn't annotated last release
           $transc_no_data++;
-          warning( "No data in file for " . $transcript->stable_id );
+          print STDERR "No data in file for " . $transcript->stable_id;
         }
       } ## end foreach my $transcript ( @{...})
     } ## end foreach my $gene ( @{ $slice...})
