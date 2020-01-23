@@ -44,7 +44,6 @@ use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use Bio::EnsEMBL::Hive::Version 2.5;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
-
 =head2 default_options
 
  Description: It returns a hashref containing the default options for HiveGeneric_conf
@@ -71,6 +70,7 @@ sub default_options {
         mhost     => undef,
         mport     => undef,
         division => [],
+        history_file => undef,
         production_dir => catdir($self->o('base_dir'), 'ensembl-production'),
         tsl_ftp_base => 'http://hgwdev.gi.ucsc.edu/~markd/gencode/tsl-handoff/',
         appris_ftp_base => 'http://apprisws.bioinfo.cnio.es/forEnsembl',
@@ -110,8 +110,11 @@ sub pipeline_analyses {
       -input_ids         => [ {} ],
       -max_retry_count => 1,
       -flow_into => {
-          '1' => ['load_appris'],
-          '2' => ['load_tsl']
+         '2->A' => WHEN(
+                    '#analysis# eq "appris"' => [ 'load_appris' ],
+                    '#analysis# eq "tsl"' => [ 'load_tsl' ]
+                 ),
+        'A->1' => [ 'APPRIS_TSL_Datachecks'],
       },
     },
 
@@ -121,13 +124,45 @@ sub pipeline_analyses {
       -rc_name => 'default',
       -max_retry_count => 1
     },
-
     {
       -logic_name => 'load_tsl',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::PostGenebuild::LoadTsl',
       -rc_name => 'default',
       -max_retry_count => 1
     },
+    {  -logic_name => 'APPRIS_TSL_Datachecks',
+       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -flow_into  => {
+		                 '1->A' => ['APPRIS_TSL_Critical_Datachecks'],
+		                 'A->1' => ['APPRIS_TSL_Advisory_Datachecks'],		                       
+                       },          
+    },
+    {
+      -logic_name      => 'APPRIS_TSL_Critical_Datachecks',
+      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters      => {
+                            datacheck_names => ['AttribValuesExist'],
+                            history_file    => $self->o('history_file'),
+                            failures_fatal  => 1,
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -rc_name         => 'normal',
+    },
+    {
+      -logic_name      => 'APPRIS_TSL_Advisory_Datachecks',
+      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters      => {
+                            datacheck_names => ['AttribValuesCoverage'],
+                            history_file    => $self->o('history_file'),
+                            failures_fatal  => 0,
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -rc_name         => 'normal',
+    }
   ];
 }
 
@@ -149,5 +184,4 @@ sub resource_classes {
       '4GB' => { LSF => '-q production-rh74 -M4000 -R"select[mem>4000] rusage[mem=4000]"'},
     };
 }
-
 1;

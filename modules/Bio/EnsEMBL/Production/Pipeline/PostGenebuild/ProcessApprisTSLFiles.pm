@@ -136,7 +136,8 @@ sub run {
         # Check that the file is matching current species assembly
         my $assembly_default = $gen->assembly_default();
         if ($file =~ /$assembly_default/) {
-          $self->dataflow_output_id( { 'species'=> $species, 'file' => $appris_dir."/".$file, 'coord_system_version' => $assembly_default },1 );
+          $self->dataflow_output_id( { 'species'=> $species, 'file' => $appris_dir."/".$file, 'coord_system_version' => $assembly_default, 'analysis' => 'appris' },2 );
+          $self->dataflow_output_id( { 'species'=> $species}, 1);
         }
       }
     }
@@ -152,7 +153,8 @@ sub run {
       my ($div,$division_name)=process_division_names($gen->division());
       # Check that species division
       if ( grep( /$div/, @{$division})){
-        $self->dataflow_output_id( {  'species'     => $species, 'file' => $tsl_dir."/".$file, 'coord_system_version' => $gen->assembly_default() },2 );
+        $self->dataflow_output_id( { 'species'=> $species, 'file' => $tsl_dir."/".$file, 'coord_system_version' => $gen->assembly_default(), 'analysis' => 'tsl' },2 );
+        $self->dataflow_output_id( { 'species'=> $species}, 1);
       }
     }
   }
