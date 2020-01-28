@@ -73,9 +73,7 @@ sub default_options {
         history_file => undef,
         production_dir => catdir($self->o('base_dir'), 'ensembl-production'),
         tsl_ftp_base => 'http://hgwdev.gi.ucsc.edu/~markd/gencode/tsl-handoff/',
-        appris_ftp_base => 'http://apprisws.bioinfo.cnio.es/forEnsembl',
-        load_tsl_script => catfile($self->o('production_dir'), 'scripts', 'import_transcript_support_levels.pl'),
-        load_appris_script => catfile($self->o('production_dir'), 'scripts', 'import_appris.pl'),
+        appris_ftp_base => 'http://apprisws.bioinfo.cnio.es/forEnsembl'
     };
 }
 
@@ -161,8 +159,17 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
+      -flow_into       => {'4' => 'report_failed_APPRIS_TSL_Advisory_Datachecks'},
       -rc_name         => 'normal',
-    }
+    },
+    {
+      -logic_name        => 'report_failed_APPRIS_TSL_Advisory_Datachecks',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+      -parameters       => {'email' => $self->o('email')},
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -rc_name           => 'default',
+   },
   ];
 }
 
