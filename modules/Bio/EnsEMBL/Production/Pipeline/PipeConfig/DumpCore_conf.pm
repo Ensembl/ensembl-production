@@ -113,7 +113,7 @@ sub default_options {
         'danio_rerio'           => 30003,
         'rattus_norvegicus'     => 30005,
         'gallus_gallus'         => 30010,
-        'canis_familiaris'      => 30013,
+        'canis_lupus_familiaris' => 30013,
         'bos_taurus'            => 30017,
         'oryctolagus_cuniculus' => 30025,
         'oryzias_latipes'       => 30026,
