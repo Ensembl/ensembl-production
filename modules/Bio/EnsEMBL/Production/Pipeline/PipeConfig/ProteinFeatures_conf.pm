@@ -649,6 +649,7 @@ sub pipeline_analyses {
       -flow_into         => {
                                '1' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanLookup_HighMem'],
+                              '-2' => ['InterProScanLookup_HighMem'],
                             },
     },
 
@@ -734,7 +735,7 @@ sub pipeline_analyses {
       -rc_name           => '8GB_4CPU',
       -flow_into         => {
                                '1' => ['StoreProteinFeatures'],
-                              '-1' => ['InterProScanLocal_HighMem'],
+                               '0' => ['InterProScanLocal_HighMem'],
                             },
     },
 
@@ -753,7 +754,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '16GB_4CPU',
+      -rc_name           => '32GB_4CPU',
       -flow_into         => {
                                '1' => ['StoreProteinFeatures'],
                             },
@@ -930,6 +931,7 @@ sub resource_classes {
     '4Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
     '8Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=4000]"'},
     '16Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
+    '32Gb_mem_4Gb_tmp' => {'LSF' => '-q production-rh74 -M 32000 -R "rusage[mem=32000,scratch=4000]"'},
   }
 }
 
