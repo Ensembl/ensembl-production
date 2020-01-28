@@ -649,7 +649,6 @@ sub pipeline_analyses {
       -flow_into         => {
                                '1' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanLookup_HighMem'],
-                              '-2' => ['InterProScanLookup_HighMem'],
                             },
     },
 
