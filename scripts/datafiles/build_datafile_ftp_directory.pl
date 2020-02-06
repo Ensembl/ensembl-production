@@ -166,7 +166,7 @@ sub _process_dba {
         if (index($datafiles_root, 'segmentation_file') != -1) {
           if (! grep { $_ eq $datafiles_root } @emission_files_done){
             push @emission_files_done, $datafiles_root;
-            $self->_process_datafile($df,$self->_target_datafiles_root($df), 'emissions_25.txt');
+            $self->_process_datafile($df, $datafiles_root, 'emissions_25.txt');
           }
         }
       }
@@ -201,7 +201,7 @@ sub _get_funcgen_DataFiles {
   my $all_coord_systems = $coord_system_adaptor->fetch_all;
   my $coord_system = $all_coord_systems->[0];
 
-  if ($species eq 'homo_sapiens') {
+  if ($species =~ /^(homo_sapiens|mus_musculus)$/) {
   
     my $crispr_adaptor = $dba->get_CrisprSitesFileAdaptor;
     my $crispr_file    = $crispr_adaptor->fetch_file;
@@ -242,12 +242,12 @@ sub _get_funcgen_DataFiles {
     # We don't have bigwigs for all alignments, e.g.: technical replicates.
     next ALIGNMENT if (! $current_alignment->has_bigwig_DataFile);
     
-    my $bigwig_data_file = $current_alignment->fetch_bigwig_DataFile;
+    my $bigwig_data_file = $current_alignment->get_bigwig_DataFile;
     
     my $data_file = Bio::EnsEMBL::DataFile->new(
         -adaptor      => $data_file_adaptor,
         -coord_system => $coord_system,
-        -analysis     => $current_alignment->fetch_Analysis,
+        -analysis     => $current_alignment->get_Analysis,
         -name         => $current_alignment->name,
         -url          => $bigwig_data_file->path,
         -file_type    => $bigwig_data_file->file_type,
@@ -255,24 +255,18 @@ sub _get_funcgen_DataFiles {
     push @funcgen_datafiles_found, $data_file;
   }
 
-  ############################################
-  #MotifFetureFile API code is not implemented 
-  ############################################
-  #my $motifs_file_adaptor = $dba->get_MotifFeatureFileAdaptor;
-  #my $all_motifs_files = $motifs_file_adaptor->fetch_all;
+  if ($species =~ /^(homo_sapiens)$/) {
+    my $motifs_file_adaptor = $dba->get_MotifFeatureFileAdaptor;
+    my $motifs_file = $motifs_file_adaptor->fetch_file;
 
-  #foreach my $current_motif_file (@$all_motifs_files) {
-  #
-  #  my $data_file = Bio::EnsEMBL::DataFile->new(
-  #      -adaptor      => $data_file_adaptor,
-  #      -coord_system => $coord_system,
-  #      -analysis     => $current_motif_file->get_Analysis,
-  #      -name         => $current_motif_file->name,
-  #      -url          => $current_motif_file->file,
-  #      -file_type    => $current_motif_file->file_type,
-  #  );
-  #  push @funcgen_datafiles_found, $data_file;
-  #}
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -url          => $motifs_file->path,
+        -file_type    => $motifs_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
+  }
 
   my $methylation_file_adaptor = $dba->get_DNAMethylationFileAdaptor;
   my $all_methylation_files = $methylation_file_adaptor->fetch_all;
@@ -495,6 +489,7 @@ sub _get_dbs {
 sub _files {
   my ($self, $datafile, $file) = @_;
   my $source_file = $datafile->path($self->opts->{datafile_dir});
+
   $source_file =~ s/funcgen\///;   
   my ($volume, $dir, $name) = File::Spec->splitpath($source_file);
   if (defined $file){
