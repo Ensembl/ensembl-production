@@ -255,6 +255,39 @@ sub _get_funcgen_DataFiles {
     push @funcgen_datafiles_found, $data_file;
   }
 
+  my $motifs_file_adaptor = $dba->get_MotifFeatureFileAdaptor;
+  my $all_motifs_files = $motifs_file_adaptor->fetch_all;
+
+  foreach my $current_motif_file (@$all_motifs_files) {
+
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -analysis     => $current_motif_file->get_Analysis,
+        -name         => $current_motif_file->name,
+        -url          => $current_motif_file->file,
+        -file_type    => $current_motif_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
+  }
+
+  my $methylation_file_adaptor = $dba->get_DNAMethylationFileAdaptor;
+  my $all_methylation_files = $methylation_file_adaptor->fetch_all;
+
+  foreach my $current_methylation_file (@$all_methylation_files) {
+
+    my $data_file = Bio::EnsEMBL::DataFile->new(
+        -adaptor      => $data_file_adaptor,
+        -coord_system => $coord_system,
+        -analysis     => $current_methylation_file->get_Analysis,
+        -name         => $current_methylation_file->name,
+        -url          => $current_methylation_file->file,
+        -file_type    => $current_methylation_file->file_type,
+    );
+    push @funcgen_datafiles_found, $data_file;
+  }
+
+
   # Uiuiui
   Bio::EnsEMBL::Registry->add_adaptor($dba->species, 'funcgen', 'datafile', $data_file_adaptor);
   return \@funcgen_datafiles_found;
