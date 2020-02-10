@@ -61,6 +61,15 @@ sub default_options {
     out_file    => undef,
     unique_rows => 1,
     
+    run_datachecks     => 0,
+    history_file       => undef,
+    output_dir         => undef,
+    config_file        => undef,
+    datacheck_names    => [],
+    datacheck_patterns => [],
+    datacheck_groups   => [],
+    datacheck_types    => [],
+    old_server_uri     => undef,
   };
 }
 
@@ -69,8 +78,9 @@ sub pipeline_wide_parameters {
  
  return {
    %{$self->SUPER::pipeline_wide_parameters},
-   'out_file'    => $self->o('out_file'),
-   'unique_rows' => $self->o('unique_rows'),
+   'out_file'       => $self->o('out_file'),
+   'unique_rows'    => $self->o('unique_rows'),
+   'run_datachecks' => $self->o('run_datachecks'),
  };
 }
 
@@ -103,18 +113,38 @@ sub pipeline_analyses {
     },
     
     {
-      -logic_name      => 'DbCmd',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbCmd',
-      -max_retry_count => 0,
-      -parameters      => {
-                            append      => [qw(-N)],
-                            db_type     => $self->o('db_type'),
-                            input_file  => $self->o('sql_file'),
-                            output_file => $output_file,
-                          },
-      -batch_size      => 10,
-      -hive_capacity   => 10,
-      -rc_name         => 'normal',
+      -logic_name        => 'DbCmd',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbCmd',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              append      => [qw(-N)],
+                              db_type     => $self->o('db_type'),
+                              input_file  => $self->o('sql_file'),
+                              output_file => $output_file,
+                            },
+      -batch_size        => 10,
+      -rc_name           => 'normal',
+      -flow_into         => WHEN('#run_datachecks#' => ['RunDataChecks']),
+    },
+    
+    {
+      -logic_name        => 'RunDataChecks',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+                              history_file       => $self->o('history_file'),
+                              output_dir         => $self->o('output_dir'),
+                              config_file        => $self->o('config_file'),
+                              datacheck_names    => $self->o('datacheck_names'),
+                              datacheck_patterns => $self->o('datacheck_patterns'),
+                              datacheck_groups   => $self->o('datacheck_groups'),
+                              datacheck_types    => $self->o('datacheck_types'),
+                              old_server_uri     => $self->o('old_server_uri'),
+                              failures_fatal     => 1,
+                            },
+      -rc_name           => 'normal',
     },
     
     {
