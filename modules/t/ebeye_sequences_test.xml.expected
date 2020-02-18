@@ -13,8 +13,9 @@
       </cross_references>
       <additional_fields>
         <field name="production_name">homo_sapiens</field>
+        <field name="system_name">homo_sapiens</field>
         <field name="location">7270026:101111537-101292795</field>
-	<field name="genomic_unit">vertebrates</field>
+	      <field name="genomic_unit">vertebrates</field>
         <field name="coord_system">Tilepath</field>
         <field name="species">Homo sapiens</field>
         <field name="length">181259</field>
@@ -27,7 +28,8 @@
       </cross_references>
       <additional_fields>
         <field name="production_name">homo_sapiens</field>
-	<field name="genomic_unit">vertebrates</field>
+        <field name="system_name">homo_sapiens</field>
+	      <field name="genomic_unit">vertebrates</field>
         <field name="coord_system">chromosome</field>
         <field name="species">Homo sapiens</field>
         <field name="location">X:1-156040895</field>
@@ -42,7 +44,8 @@
       <additional_fields>
         <field name="length">171</field>
         <field name="production_name">homo_sapiens</field>
-	<field name="genomic_unit">vertebrates</field>
+        <field name="system_name">homo_sapiens</field>
+	      <field name="genomic_unit">vertebrates</field>
         <field name="location">DAAF01080952.1:1-171</field>
         <field name="coord_system">contig</field>
         <field name="species">Homo sapiens</field>
