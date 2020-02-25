@@ -41,7 +41,8 @@ sub default_options {
     pattern => undef,
     dumppath => undef,
     dropbaks => 0,
-    populate_controlled_tables => 1,
+
+    populate_controlled_tables    => 1,
     populate_analysis_description => 1,
     # DB Factory
     species      => [],
@@ -51,7 +52,7 @@ sub default_options {
     division     => [],
     run_all      => 0,
     meta_filters => {},
-    group => 'core',
+    group        => 'core',
     #datacheck
     history_file => undef 
   };
@@ -81,37 +82,29 @@ sub pipeline_analyses {
   my $self = shift @_;
 
   return [
-
-    {
-      -logic_name => 'Dummy Node ',
-      -comment    => 'this is the first analysis in this pipeline',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -input_ids  => [ {} ],
-      -flow_into  => ['DbFactory']
-    },
     {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
+      -input_ids         => [ {} ],
       -parameters        => {
-                              species         => $self->o('species'),
-                              antispecies     => $self->o('antispecies'),
-                              division        => $self->o('division'),
-                              registry        => $self->o('registry'),
-                              run_all         => $self->o('run_all'),
-                              meta_filters    => $self->o('meta_filters'),
+                              species      => $self->o('species'),
+                              antispecies  => $self->o('antispecies'),
+                              division     => $self->o('division'),
+                              registry     => $self->o('registry'),
+                              run_all      => $self->o('run_all'),
+                              meta_filters => $self->o('meta_filters'),
+                              group        => $self->o('group'),
                             },
- 
-      -flow_into        =>     {
+       -flow_into        => {
                               '2' =>
-                                WHEN('#populate_controlled_tables#' =>
-                                  ['populatecontroltable'],
-                                '#populate_analysis_description#' =>
-                                  ['populateanalysisdescription'],
+                                WHEN(
+                                  '#populate_controlled_tables#' =>
+                                    ['populatecontroltable'],
+                                  '#populate_analysis_description#' =>
+                                    ['populateanalysisdescription'],
                                 )
-
                             }
-                                            # #['core','otherfeatures', 'rnaseq', 'cdna', 'variation']
     },
     {
       -logic_name => 'populatecontroltable',
