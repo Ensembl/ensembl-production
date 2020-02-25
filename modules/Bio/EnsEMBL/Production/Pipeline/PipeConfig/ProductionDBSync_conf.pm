@@ -1,5 +1,5 @@
 =head1 LICENSE
-Copyright [2018-2019] EMBL-European Bioinformatics Institute
+Copyright [2018-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 =head1 NAME
-Bio::EnsEMBL::DataCheck::Pipeline::synchronising_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProductionDBSync_conf
 
 =head1 DESCRIPTION
-A pipeline for executing datachecks.
+A pipeline for synchronising controlled tables and analysis descriptions from
+the production database to core, core-like, funcgen, and variation databases.
 
 =cut
 
-package synchronising_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProductionDBSync_conf;
 
 use strict;
 use warnings;
@@ -36,7 +37,6 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_name => 'synchronising',
     mdatabase => undef,
     pattern => undef,
     dumppath => undef,
