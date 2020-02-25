@@ -172,17 +172,4 @@ sub pipeline_analyses {
   ];
 }
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    'normal' => {'LSF' => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"'}, 
-    'default' => {LSF => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
-    '2GB'     => {LSF => '-q production-rh74 -M 2000 -R "rusage[mem=2000]"'},
-    '4GB'     => {LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"'},
-  }
-}
-
 1;
-
-
