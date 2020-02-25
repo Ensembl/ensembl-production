@@ -88,7 +88,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -input_ids         => [ {} ],
       -parameters        => {
-                              inputlist => $self->o('group'),
+                              inputlist    => $self->o('group'),
                               column_names => ['group'],
                             },
        -flow_into        => {
