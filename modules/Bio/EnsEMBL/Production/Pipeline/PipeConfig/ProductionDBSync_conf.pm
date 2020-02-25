@@ -44,14 +44,16 @@ sub default_options {
 
     populate_controlled_tables    => 1,
     populate_analysis_description => 1,
+    group => [],
+
     # DB Factory
     species      => [],
     antispecies  => [],
     division     => [],
     run_all      => 0,
     meta_filters => {},
-    group        => 'core',
-    #datacheck
+
+    # Datachecks
     history_file => undef 
   };
 }
@@ -81,17 +83,28 @@ sub pipeline_analyses {
 
   return [
     {
+      -logic_name        => 'GroupFactory',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+      -max_retry_count   => 1,
+      -input_ids         => [ {} ],
+      -parameters        => {
+                              inputlist => $self->o('group'),
+                              column_names => ['group'],
+                            },
+       -flow_into        => {
+                              '2' => ['DbFactory'],
+                            }
+    },
+    {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
-      -input_ids         => [ {} ],
       -parameters        => {
                               species      => $self->o('species'),
                               antispecies  => $self->o('antispecies'),
                               division     => $self->o('division'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
-                              group        => $self->o('group'),
                             },
        -flow_into        => {
                               '2' =>
