@@ -47,8 +47,6 @@ sub default_options {
     # DB Factory
     species      => [],
     antispecies  => [],
-    taxons       => [],
-    antitaxons   => [],
     division     => [],
     run_all      => 0,
     meta_filters => {},
@@ -91,7 +89,6 @@ sub pipeline_analyses {
                               species      => $self->o('species'),
                               antispecies  => $self->o('antispecies'),
                               division     => $self->o('division'),
-                              registry     => $self->o('registry'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
                               group        => $self->o('group'),
@@ -118,7 +115,7 @@ sub pipeline_analyses {
 
     },
     {
-      -logic_name        => 'SpeciesFactory_ControlledTables',
+      -logic_name        => 'SpeciesFactoryControlledTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -analysis_capacity => 10,
       -batch_size        => 100,
@@ -126,12 +123,12 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => ['RunDatachecks_ControlledTables'],
-                              '4' => ['RunDatachecks_ControlledTables'],
+                              '2' => ['RunDatachecksControlledTables'],
+                              '4' => ['RunDatachecksControlledTables'],
                             },
     },
     {
-      -logic_name        => 'SpeciesFactory_AnalysisDescription',
+      -logic_name        => 'SpeciesFactoryAnalysisDescription',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -analysis_capacity => 10,
       -batch_size        => 100,
@@ -139,12 +136,12 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => ['RunDatachecks_AnalysisDescription'],
-                              '4' => ['RunDatachecks_AnalysisDescription'],
+                              '2' => ['RunDatachecksAnalysisDescription'],
+                              '4' => ['RunDatachecksAnalysisDescription'],
                             },
     },
     {
-      -logic_name        => 'RunDatachecks_ControlledTables',
+      -logic_name        => 'RunDatachecksControlledTables',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
                               datacheck_names  => ['ForeignKeys', 'ControlledTablesCore' , 'ControlledTablesVariation'],
@@ -156,7 +153,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
     },
     {
-      -logic_name        => 'RunDatachecks_AnalysisDescription',
+      -logic_name        => 'RunDatachecksAnalysisDescription',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
                               datacheck_names  => ['AnalysisDescription', 'ControlledAnalysis', 'DisplayableGenes', 'DisplayableSampleGene', 'ForeignKeys', 'FuncgenAnalysisDescription'],
