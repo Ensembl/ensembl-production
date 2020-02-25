@@ -96,9 +96,9 @@ sub pipeline_analyses {
        -flow_into        => {
                               '2' =>
                                 WHEN(
-                                  '#populate_controlled_tables#' =>
+                                  '#populate_controlled_tables# && #group# != "funcgen"' =>
                                     ['PopulateControlledTables'],
-                                  '#populate_analysis_description#' =>
+                                  '#populate_analysis_description# && #group# != "variation"' =>
                                     ['PopulateAnalysisDescription'],
                                 )
                             }
@@ -106,12 +106,12 @@ sub pipeline_analyses {
     {
       -logic_name => 'PopulateControlledTables',
       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['SpeciesFactory_ControlledTables']
+      -flow_into  => ['SpeciesFactoryControlledTables']
     },
     {
       -logic_name => 'PopulateAnalysisDescription',
       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['SpeciesFactory_AnalysisDescription']
+      -flow_into  => ['SpeciesFactoryAnalysisDescription']
 
     },
     {
@@ -124,7 +124,6 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['RunDatachecksControlledTables'],
-                              '4' => ['RunDatachecksControlledTables'],
                             },
     },
     {
@@ -137,7 +136,6 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['RunDatachecksAnalysisDescription'],
-                              '4' => ['RunDatachecksAnalysisDescription'],
                             },
     },
     {
