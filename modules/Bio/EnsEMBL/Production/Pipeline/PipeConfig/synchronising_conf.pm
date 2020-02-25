@@ -41,8 +41,8 @@ sub default_options {
     pattern => undef,
     dumppath => undef,
     dropbaks => 0,
-    populate_production_db => 1,
-    populate_analysis_description => 0,
+    populate_controlled_tables => 1,
+    populate_analysis_description => 1,
     # DB Factory
     species      => [],
     antispecies  => [],
@@ -67,13 +67,14 @@ sub hive_meta_table {
   };
 }
 
+sub pipeline_wide_parameters {
+ my ($self) = @_;
 
-sub pipeline_create_commands {
-  my ($self) = @_;
-
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-  ];
+ return {
+   %{$self->SUPER::pipeline_wide_parameters},
+   'populate_controlled_tables' => $self->o('populate_controlled_tables'),
+   'populate_analysis_description' => $self->o('populate_analysis_description'),
+ };
 }
 
 sub pipeline_analyses {
@@ -99,9 +100,6 @@ sub pipeline_analyses {
                               registry        => $self->o('registry'),
                               run_all         => $self->o('run_all'),
                               meta_filters    => $self->o('meta_filters'),
-                              populate_controlled_tables => $self->o('populate_controlled_tables'),
-                              populate_analysis_description  => $self->o('populate_analysis_description'),
- 
                             },
  
       -flow_into        =>     {
