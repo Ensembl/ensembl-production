@@ -100,25 +100,25 @@ sub pipeline_analyses {
                               '2' =>
                                 WHEN(
                                   '#populate_controlled_tables#' =>
-                                    ['populatecontroltable'],
+                                    ['PopulateControlledTables'],
                                   '#populate_analysis_description#' =>
-                                    ['populateanalysisdescription'],
+                                    ['PopulateAnalysisDescription'],
                                 )
                             }
     },
     {
-      -logic_name => 'populatecontroltable',
+      -logic_name => 'PopulateControlledTables',
       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['DbAwareSpeciesFactory_db']
+      -flow_into  => ['SpeciesFactory_ControlledTables']
     },
     {
-       -logic_name => 'populateanalysisdescription',
+      -logic_name => 'PopulateAnalysisDescription',
       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['DbAwareSpeciesFactory_description']
+      -flow_into  => ['SpeciesFactory_AnalysisDescription']
 
     },
     {
-      -logic_name        => 'DbAwareSpeciesFactory_db',
+      -logic_name        => 'SpeciesFactory_ControlledTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -analysis_capacity => 10,
       -batch_size        => 100,
@@ -126,12 +126,12 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => ['RunDatachecksContolTables'],
-                              '4' => ['RunDatachecksContolTables'],
+                              '2' => ['RunDatachecks_ControlledTables'],
+                              '4' => ['RunDatachecks_ControlledTables'],
                             },
     },
     {
-      -logic_name        => 'DbAwareSpeciesFactory_description',
+      -logic_name        => 'SpeciesFactory_AnalysisDescription',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -analysis_capacity => 10,
       -batch_size        => 100,
@@ -139,12 +139,12 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => ['RunDatachecksAnalysisDescription'],
-                              '4' => ['RunDatachecksAnalysisDescription'],
+                              '2' => ['RunDatachecks_AnalysisDescription'],
+                              '4' => ['RunDatachecks_AnalysisDescription'],
                             },
     },
     {
-      -logic_name        => 'RunDatachecksContolTables',
+      -logic_name        => 'RunDatachecks_ControlledTables',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
                               datacheck_names  => ['ForeignKeys', 'ControlledTablesCore' , 'ControlledTablesVariation'],
@@ -156,7 +156,7 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
     },
     {
-      -logic_name        => 'RunDatachecksAnalysisDescription',
+      -logic_name        => 'RunDatachecks_AnalysisDescription',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
                               datacheck_names  => ['AnalysisDescription', 'ControlledAnalysis', 'DisplayableGenes', 'DisplayableSampleGene', 'ForeignKeys', 'FuncgenAnalysisDescription'],
