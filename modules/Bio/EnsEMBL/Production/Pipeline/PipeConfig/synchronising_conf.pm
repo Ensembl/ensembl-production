@@ -26,12 +26,10 @@ package synchronising_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf', 'Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-
 
 sub default_options {
   my ($self) = @_;
