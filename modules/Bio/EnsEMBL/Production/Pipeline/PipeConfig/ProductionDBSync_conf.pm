@@ -37,11 +37,6 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    mdatabase => undef,
-    pattern => undef,
-    dumppath => undef,
-    dropbaks => 0,
-
     populate_controlled_tables    => 1,
     populate_analysis_description => 1,
     group => [],
@@ -98,6 +93,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+      -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
                               species      => $self->o('species'),
@@ -109,23 +105,26 @@ sub pipeline_analyses {
        -flow_into        => {
                               '2' =>
                                 WHEN(
-                                  '#populate_controlled_tables# && #group# != "funcgen"' =>
+                                  '#populate_controlled_tables# && #group# ne "funcgen"' =>
                                     ['PopulateControlledTables'],
-                                  '#populate_analysis_description# && #group# != "variation"' =>
+                                  '#populate_analysis_description# && #group# ne "variation"' =>
                                     ['PopulateAnalysisDescription'],
                                 )
                             }
     },
     {
-      -logic_name => 'PopulateControlledTables',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['SpeciesFactoryControlledTables']
+      -logic_name        => 'PopulateControlledTables',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProductionDBSync::PopulateControlledTables',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -flow_into         => ['SpeciesFactoryControlledTables']
     },
     {
-      -logic_name => 'PopulateAnalysisDescription',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -flow_into  => ['SpeciesFactoryAnalysisDescription']
-
+      -logic_name        => 'PopulateAnalysisDescription',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProductionDBSync::PopulateAnalysisDescription',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -flow_into         => ['SpeciesFactoryAnalysisDescription']
     },
     {
       -logic_name        => 'SpeciesFactoryControlledTables',
@@ -154,25 +153,38 @@ sub pipeline_analyses {
     {
       -logic_name        => 'RunDatachecksControlledTables',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_names  => ['ForeignKeys', 'ControlledTablesCore' , 'ControlledTablesVariation'],
-                              history_file     => $self->o('history_file'),
-                              failures_fatal   => 1,
-                            },
-      -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_names => [
+                                'ControlledTablesCore',
+                                'ControlledTablesVariation',
+                                'ForeignKeys',
+                              ],
+                              registry_file   => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
       -rc_name           => 'normal',
     },
     {
       -logic_name        => 'RunDatachecksAnalysisDescription',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_names  => ['AnalysisDescription', 'ControlledAnalysis', 'DisplayableGenes', 'DisplayableSampleGene', 'ForeignKeys', 'FuncgenAnalysisDescription'],
-                              history_file     => $self->o('history_file'),
-                              failures_fatal   => 1,
-                            },
-      -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_names => [
+                                'AnalysisDescription',
+                                'ControlledAnalysis',
+                                'DisplayableGenes',
+                                'DisplayableSampleGene',
+                                'ForeignKeys',
+                                'FuncgenAnalysisDescription'
+                              ],
+                              registry_file   => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
       -rc_name           => 'normal',
     },
 
