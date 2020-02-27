@@ -31,6 +31,8 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
+use File::Spec::Functions qw(catdir);
+
 
 sub default_options {
   my ($self) = @_;
@@ -48,8 +50,13 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
 
+    #Backup
+    backup_dir => '', 
+
     # Datachecks
     history_file => undef 
+    
+
   };
 }
 
@@ -106,12 +113,47 @@ sub pipeline_analyses {
                               '2' =>
                                 WHEN(
                                   '#populate_controlled_tables# && #group# ne "funcgen"' =>
-                                    ['PopulateControlledTables'],
+                                    ['BackupControlledTables'],
                                   '#populate_analysis_description# && #group# ne "variation"' =>
-                                    ['PopulateAnalysisDescription'],
+                                    ['BackupAnalysisDescription'],
                                 )
                             }
     },
+    {
+      -logic_name        => 'BackupControlledTables',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => {
+                              table_list  => [
+                                        'attrib_type',
+                                        'biotype',
+                                        'external_db',
+                                        'misc_set',
+                                        'unmapped_reason',
+					'attrib',
+                                        'attrib_set'
+                              ],
+                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['PopulateControlledTables'],
+    },
+    {
+      -logic_name        => 'BackupAnalysisDescription',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => {
+                             table_list  => [
+                                'analysis_description',
+                              ],
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => ['PopulateAnalysisDescription'],
+    },
+
     {
       -logic_name        => 'PopulateControlledTables',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::ProductionDBSync::PopulateControlledTables',
