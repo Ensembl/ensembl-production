@@ -129,14 +129,15 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => {
+                              db_type     => '#group#',
                               table_list  => [
-                                        'attrib_type',
-                                        'biotype',
-                                        'external_db',
-                                        'misc_set',
-                                        'unmapped_reason',
-                                        'attrib',
-                                        'attrib_set'
+                                'attrib_type',
+                                'biotype',
+                                'external_db',
+                                'misc_set',
+                                'unmapped_reason',
+                                'attrib',
+                                'attrib_set'
                               ],
                               output_file => catdir($self->o('backup_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
                             },
@@ -149,7 +150,8 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => {
-                             table_list  => [
+                              db_type     => '#group#',
+                              table_list  => [
                                 'analysis_description',
                               ],
                               output_file => catdir($self->o('backup_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
