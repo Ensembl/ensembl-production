@@ -65,6 +65,15 @@ sub hive_meta_table {
   };
 }
 
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('backup_dir'),
+  ];
+}
+
 sub pipeline_wide_parameters {
  my ($self) = @_;
 
@@ -129,7 +138,7 @@ sub pipeline_analyses {
                                         'attrib',
                                         'attrib_set'
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['PopulateControlledTables'],
@@ -143,7 +152,7 @@ sub pipeline_analyses {
                              table_list  => [
                                 'analysis_description',
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['PopulateAnalysisDescription'],
