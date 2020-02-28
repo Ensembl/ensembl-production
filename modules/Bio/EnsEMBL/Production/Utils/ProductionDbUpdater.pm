@@ -180,10 +180,14 @@ sub update_analysis_description {
   my $core_select_sql = qq/
     SELECT logic_name FROM analysis
   /;
-  my $core_update_sql = qq/
-	UPDATE
-	  analysis_description INNER JOIN analysis USING (analysis_id) 
-    SET description = ?, display_label = ?, displayable = ?, web_data = ?
+  my $core_delete_sql = qq/
+    DELETE FROM analysis_description
+  /;
+  my $core_insert_sql = qq/
+    INSERT INTO analysis_description
+      (analysis_id, description, display_label, displayable, web_data)
+    SELECT analysis_id, ?, ?, ?, ?
+    FROM analysis
     WHERE logic_name = ?
   /;
 
@@ -193,11 +197,13 @@ sub update_analysis_description {
   my $logic_names =
     $dbc->sql_helper()->execute_simple( -SQL => $core_select_sql );
 
+  $dbc->sql_helper()->execute_update( -SQL => $core_delete_sql );
+
   foreach my $logic_name (@$logic_names) {
     if ( exists $analyses->{$logic_name} ) {
-	  my $analysis = $analyses->{$logic_name};
-	  $dbc->sql_helper()->execute_update(
-        -SQL => $core_update_sql,
+      my $analysis = $analyses->{$logic_name};
+      $dbc->sql_helper()->execute_update(
+        -SQL => $core_insert_sql,
         -PARAMS => [ $analysis->{description}, $analysis->{display_label},
                      $analysis->{displayable}, $analysis->{web_data},
                      $logic_name ] );
