@@ -134,6 +134,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 0,
       -parameters        => {
+                              registry_file      => $self->o('registry'),
                               history_file       => $self->o('history_file'),
                               output_dir         => $self->o('output_dir'),
                               config_file        => $self->o('config_file'),
