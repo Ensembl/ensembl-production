@@ -126,6 +126,7 @@ sub default_options {
        },
       # History file for storing record of datacheck run.
       history_file => undef,
+      datacheck_output_dir => undef,
       ## Indexing parameters
       'skip_blat'              => 0,
       'skip_ncbiblast'         => 0,
@@ -538,6 +539,7 @@ sub pipeline_analyses {
     -parameters        => {
                             datacheck_names  => ['MetaKeyAssembly'],
                             history_file     => $self->o('history_file'),
+                            output_dir       => $self->o('datacheck_output_dir'),
                             failures_fatal   => 0,
                           },
     -max_retry_count   => 1,
