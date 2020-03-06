@@ -32,6 +32,8 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_conf
 
 =head1 DESCRIPTION
 
+Pipeline will update sample data in the core database of new/updated species with gene/transcript
+found using compara gene trees, xrefs and supporting evidences.
 
 =cut
 

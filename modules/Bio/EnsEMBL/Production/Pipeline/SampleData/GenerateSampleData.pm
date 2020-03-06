@@ -19,6 +19,21 @@ limitations under the License.
 
 Bio::EnsEMBL::Production::Pipeline::SampleData::GenerateSampleData
 
+=head1 DESCRIPTION
+
+This module is based on this script from the Genebuild team: https://github.com/Ensembl/ensembl-analysis/blob/dev/hive_master/scripts/genebuild/get_sample_genes.pl
+The module will update the sample data in the core database meta table.
+To select new sample data, the module will do the following:
+1) get a list of good gene trees from compara
+2) pick out trees with human (for vertebrates only)
+3) Filter gene by length, maximum 100000 and minimum 75000 (for vertebrates only since Non-vert genes are smaller and we have less candidates)
+4) Then the pipeline will select the best candidate by looking at:
+a) presence of xrefs
+b) presence of supporting evidence
+c) still store every candidate even without support
+5) If no candidate were found, the pipeline will fall back on getting transcript for the 10 longest seq_region then check for supporting evidence
+6) If still no candidate found, stop here
+
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::SampleData::GenerateSampleData;
