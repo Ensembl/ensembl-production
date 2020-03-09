@@ -191,7 +191,8 @@ sub pipeline_analyses {
       -parameters        => {},
       -rc_name           => 'normal',
       -flow_into         => {
-                              '2' => ['RunDatachecksAnalysisDescription'],
+                              '2->A' => ['RunDatachecksADCritical'],
+                              'A->2' => ['RunDatachecksADAdvisory'],
                             },
     },
     {
@@ -212,25 +213,47 @@ sub pipeline_analyses {
       -rc_name           => 'normal',
     },
     {
-      -logic_name        => 'RunDatachecksAnalysisDescription',
+      -logic_name        => 'RunDatachecksADCritical',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              datacheck_names => [
-                                'AnalysisDescription',
-                                'ControlledAnalysis',
-                                'DisplayableGenes',
-                                'DisplayableSampleGene',
-                                'ForeignKeys',
-                                'FuncgenAnalysisDescription'
-                              ],
-                              registry_file   => $self->o('registry'),
-                              history_file    => $self->o('history_file'),
-                              failures_fatal  => 1,
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              failures_fatal   => 1,
                             },
       -rc_name           => 'normal',
     },
+    {
+      -logic_name        => 'RunDatachecksADAdvisory',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              failures_fatal   => 0,
+                            },
+      -rc_name           => 'normal',
+      -flow_into         => {
+                              '4' => 'EmailReportADAdvisory'
+                            },
+    },
+    {
+      -logic_name        => 'EmailReportADAdvisory',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              email => $self->o('email'),
+                            },
+      -rc_name           => 'normal',
+   },
 
   ];
 }
