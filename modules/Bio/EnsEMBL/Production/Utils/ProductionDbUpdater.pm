@@ -135,12 +135,12 @@ sub update_controlled_table {
           if (
               join(
                 '',
-                map { $mdata->{$row_id}{$_} || '' } @{ $tables->{$table}{cols} }
+                map { defined $mdata->{$row_id}{$_} ? $mdata->{$row_id}{$_} : 'undef' } @{ $tables->{$table}{cols} }
               )
               ne
               join(
                 '',
-                map { $data->{$row_id}{$_} || '' } @{ $tables->{$table}{cols} }
+                map { defined $data->{$row_id}{$_} ? $data->{$row_id}{$_} : 'undef' } @{ $tables->{$table}{cols} }
               )
             )
           {
