@@ -171,46 +171,18 @@ sub run {
 #Populate the sample meta keys
 sub populate_sample_data_meta_table {
   my ($self, $sample_transcript,$db) = @_;
-  my $species_id = $db->species_id();
+  my $mca = $db->get_adaptor('MetaContainer');
   my $sample_gene=$sample_transcript->get_Gene;
   my $sample_coord=$sample_gene->seq_region_name().':'.$sample_gene->seq_region_start().'-'.$sample_gene->seq_region_end();
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.location_param'
-      AND species_id = ?;/,
-      -PARAMS => [$sample_coord,$species_id] );
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.location_text'
-      AND species_id = ?;/,
-      -PARAMS => [$sample_coord,$species_id] );
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.gene_param'
-      AND species_id = ?;/,
-      -PARAMS => [$sample_gene->stable_id(),$species_id] );
+  $mca->update_key_value('sample.location_param',$sample_coord);
+  $mca->update_key_value('sample.location_text',$sample_coord);
+  $mca->update_key_value('sample.gene_param',$sample_gene->stable_id());
   my $gene_text = defined $sample_gene->external_name() ? $sample_gene->external_name() : $sample_gene->stable_id();
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.gene_text'
-      AND species_id = ?;/,
-      -PARAMS => [$gene_text,$species_id] );
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.transcript_param'
-      AND species_id = ?;/,
-      -PARAMS => [$sample_transcript->stable_id(),$species_id] );
+  $mca->update_key_value('sample.gene_text',$gene_text);
+  $mca->update_key_value('sample.transcript_param',$sample_transcript->stable_id());
   my $transcript_text = defined $sample_transcript->external_name() ? $sample_transcript->external_name() : $sample_transcript->stable_id();
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.transcript_text'
-      AND species_id = ?;/,
-      -PARAMS => [$transcript_text,$species_id] );
-  $db->dbc()->sql_helper()->execute_update(
-    -SQL => qq/UPDATE meta set meta_value=?
-      WHERE meta_key='sample.search_text'
-      AND species_id = ?;/,
-      -PARAMS => ['glycoprotein',$species_id] );
+  $mca->update_key_value('sample.transcript_text',$transcript_text);
+  $mca->update_key_value('sample.search_text','glycoprotein');
   return;
 }
 #Find sample data without using Compara nor the xrefs
