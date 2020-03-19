@@ -179,7 +179,7 @@ sub production_updates {
 
     # Load generic, non-species-specific, analyses
     my $sth = $dbh->prepare(
-     'SELECT ad.description, ad.display_label, 1, wd.data '.
+     'SELECT ad.description, ad.display_label, ad.displayable, wd.data '.
      'FROM analysis_description ad '.
      'LEFT OUTER JOIN web_data wd ON ad.web_data_id = wd.web_data_id '.
      'WHERE ad.is_current = 1 '.

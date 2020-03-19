@@ -271,7 +271,7 @@ sub process_species {
   }
 
   if ( ! $loaded ) {
-    $self->throw("Database not found for $species; check registry parameters.");
+    $self->warning("Database not found for $species; check registry parameters.");
   }
 }
 
