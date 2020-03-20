@@ -60,7 +60,8 @@ sub default_options {
     return {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
-        antispecies   => [],
+	# plants with curated sample genes
+        antispecies   => ['triticum_aestivum','triticum_turgidum','triticum_dicoccoides','aegilops_tauschii','triticum_urartu','hordeum_vulgare','arabidopsis_thaliana','brassica_napus','brassica_oleracea','brassica_rapa','chara_braunii','chondrus_crispus','coffea_canephora','cyanidioschyzon_merolae','cynara_cardunculus','galdieria_sulphuraria','helianthus_annuus','medicago_truncatula','prunus_dulcis','vitis_vinifera','zea_mays'],
     };
 }
 
