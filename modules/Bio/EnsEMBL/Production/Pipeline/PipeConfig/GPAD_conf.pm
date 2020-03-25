@@ -221,7 +221,7 @@ sub pipeline_analyses {
                               variation_flow     => 0,
                             },
       -flow_into         => {
-                              '1->A' => ['Xref_Datacheck']
+                              '2->A' => ['Xref_Datacheck'],
                               'A->2' => ['FindFile'],
                             }
     },
