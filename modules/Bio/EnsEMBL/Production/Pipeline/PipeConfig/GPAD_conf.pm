@@ -221,8 +221,21 @@ sub pipeline_analyses {
                               variation_flow     => 0,
                             },
       -flow_into         => {
-                              '2' => ['FindFile'],
+                              '1->A' => ['Xref_Datacheck']
+                              'A->2' => ['FindFile'],
                             }
+    },
+    {
+      -logic_name        => 'Xref_Datacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters        => {
+                              datacheck_groups => ['xref'],
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
     },
     { -logic_name     => 'FindFile',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
