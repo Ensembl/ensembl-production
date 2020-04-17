@@ -57,7 +57,10 @@ sub default_options {
         'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
         'ontologies'    => [],
-        'skip_phi'      => 0
+        'skip_phi'      => 0,
+        'old_server'    => 'mysql://ensro@mysql-ens-mirror-1:4240',
+        'history_file'  => 'foo',
+        'reg_file'      => 'bar'
     }
 }
 
@@ -112,8 +115,7 @@ sub pipeline_analyses {
                 sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name') ]
             },
             -max_retry_count => 1,
-            -flow_into       => [ 'create_db' ],
-            -max_retry_count => 1,
+            -flow_into       => [ 'create_db' ]
         },
         {
             -logic_name      => 'create_db',
@@ -123,8 +125,7 @@ sub pipeline_analyses {
                 sql     => [ 'CREATE DATABASE IF NOT EXISTS ' . $self->o('db_name') ]
             },
             -max_retry_count => 1,
-            -flow_into       => [ 'init_meta' ],
-            -max_retry_count => 1,
+            -flow_into       => [ 'init_meta' ]
         },
         {
             -logic_name      => 'init_meta',
@@ -134,8 +135,7 @@ sub pipeline_analyses {
                 -db_url => $self->o('db_url'),
             },
             -max_retry_count => 1,
-            -flow_into       => [ 'ontologies_factory' ],
-            -max_retry_count => 1,
+            -flow_into       => [ 'ontologies_factory' ]
         },
         {
             -logic_name => 'ontologies_factory',
@@ -168,7 +168,7 @@ sub pipeline_analyses {
                 'column_names' => [ 'term_index' ]
             },
             -flow_into  => {
-                '2->A' => { 'ontology_term_load' => INPUT_PLUS },
+                '2->A' =>  WHEN('#ontology_name# == "PR" ' => [ {'ontology_term_load_light' => INPUT_PLUS }], ELSE [ { 'ontology_term_load' => INPUT_PLUS } ]),
                 'A->1' => [ 'ontology_report' ]
             },
         },
@@ -177,6 +177,19 @@ sub pipeline_analyses {
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
             -language          => 'python3',
             -analysis_capacity => $self->o('ols_load'),
+            -rc_name           => 'default',
+            -parameters        => {
+                -db_url     => $self->o('db_url'),
+                -output_dir => $self->o('output_dir'),
+                -verbosity  => $self->o('verbosity'),
+            }
+        },
+        ,
+        {
+            -logic_name        => 'ontology_term_load_light',
+            -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
+            -language          => 'python3',
+            -analysis_capacity => 5,
             -rc_name           => 'default',
             -parameters        => {
                 -db_url     => $self->o('db_url'),
@@ -257,6 +270,17 @@ sub pipeline_analyses {
             -parameters  => {
                 mart => $self->o('mart_db_name'),
                 srv  => $self->o('srv')
+            }
+        },
+        {
+            -logic_name => 'CompareOntologyTerm_Datacheck',
+            -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -parameters => {
+                datacheck_names => [ 'CompareOntologyTerm' ],
+                history_file    => $self->o('history_file'),
+                old_server_uri  => $self->o('old_server'),
+                registry_file   => $self->o('reg_file'),
+                failures_fatal  => 1
             }
         }
     ];
