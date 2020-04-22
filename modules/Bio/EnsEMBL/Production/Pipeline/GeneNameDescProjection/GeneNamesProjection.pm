@@ -204,6 +204,7 @@ sub project_gene_names {
   if (defined $from_gene->display_xref()) {
     if ($self->is_target_ok($from_gene, $to_gene, $from_species, $to_species)) {
       my $from_gene_dbname     = $from_gene->display_xref->dbname();
+      my $from_gene_primary_id = $from_gene->display_xref->primary_id();
       my $from_gene_display_id = $from_gene->display_xref->display_id();
 
       if (grep (/$from_gene_dbname/, @$gene_name_source)) {
@@ -224,7 +225,7 @@ sub project_gene_names {
           }
 
           my $dbEntry = Bio::EnsEMBL::DBEntry->new(
-            -PRIMARY_ID  => $from_gene_display_id,
+            -PRIMARY_ID  => $from_gene_primary_id,
             -DISPLAY_ID  => $from_gene_display_id,
             -DBNAME      => $from_gene_dbname,
             -INFO_TYPE   => 'PROJECTION',
