@@ -58,9 +58,7 @@ sub default_options {
         'db_url'        => $self->o('db_host') . $self->o('db_name'),
         'ontologies'    => [],
         'skip_phi'      => 0,
-        'old_server'    => 'mysql://ensro@mysql-ens-mirror-1:4240',
-        'history_file'  => 'foo',
-        'reg_file'      => 'bar'
+        'history_file'  => undef
     }
 }
 
