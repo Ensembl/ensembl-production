@@ -135,7 +135,7 @@ sub pipeline_analyses {
        -input_ids  => [ {} ] , 
        -flow_into  => {
 		                 '1->A' => ['DbFactory'],
-		                 'A->1' => ['RunXrefCriticalDatacheck'],		                       
+		                 'A->1' => ['email_notification'],		                       
                        },          
     },
     {
@@ -241,6 +241,7 @@ sub pipeline_analyses {
                               delete_existing => $self->o('delete_existing'),
                               logic_name => $self->o('logic_name')
        },
+      -flow_into         => 'RunXrefCriticalDatacheck',
       -analysis_capacity  => 20,
       -rc_name 	      => 'default'
     },
@@ -269,7 +270,6 @@ sub pipeline_analyses {
                               history_file    => $self->o('history_file'),
                               failures_fatal  => 1,
                             },
-      -flow_into         => 'email_notification',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
       -batch_size        => 10,
