@@ -135,7 +135,7 @@ sub pipeline_analyses {
        -input_ids  => [ {} ] , 
        -flow_into  => {
 		                 '1->A' => ['DbFactory'],
-		                 'A->1' => ['email_notification'],		                       
+		                 'A->1' => ['RunXrefCriticalDatacheck'],		                       
                        },          
     },
     {
@@ -221,21 +221,8 @@ sub pipeline_analyses {
                               variation_flow     => 0,
                             },
       -flow_into         => {
-                              '2->A' => ['Xref_Datacheck'],
-                              'A->2' => ['FindFile'],
+                              '2' => ['FindFile'],
                             }
-    },
-    {
-      -logic_name        => 'Xref_Datacheck',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_groups => ['xref'],
-                              history_file    => $self->o('history_file'),
-                              failures_fatal  => 1,
-                            },
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -batch_size        => 10,
     },
     { -logic_name     => 'FindFile',
       -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
@@ -257,6 +244,38 @@ sub pipeline_analyses {
       -analysis_capacity  => 20,
       -rc_name 	      => 'default'
     },
+    {
+      -logic_name        => 'RunXrefCriticalDatacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters        => {
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
+      -flow_into         => 'RunXrefAdvisoryDatacheck', 
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+    },
+    {
+      -logic_name        => 'RunXrefAdvisoryDatacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters        => {
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
+      -flow_into         => 'email_notification',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+    },
+
+
     { -logic_name     => 'email_notification',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
       -parameters     => {
