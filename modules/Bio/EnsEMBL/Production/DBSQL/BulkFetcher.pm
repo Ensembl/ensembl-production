@@ -78,7 +78,7 @@ sub _append_biotype_sql {
 sub _append_analysis_sql {
     my ($self, $dba, $sql, $table) = @_;
     my $analysis_ids = $dba->dbc()->sql_helper()->execute_simple(
-        -SQL => q/select analysis_id from analysis_description where web_data rlike '"gene" *=> *{"do_not_display" *=> *1}'/
+        -SQL => q/select analysis_id from analysis_description where web_data rlike '"gene" *: *{"do_not_display" *: *"1"}'/
     );
     if (scalar @{$analysis_ids} > 0) {
         $sql .= ' and ' . $table . '.analysis_id not in (' . join(',', @$analysis_ids) . ')';
@@ -105,8 +105,7 @@ sub get_genes {
   join coord_system c using (coord_system_id)
   join analysis a using (analysis_id)
   left join analysis_description ad using (analysis_id)
-  where c.species_id = ? AND
-  ad.web_data NOT LIKE '%"gene"%"do_not_display"%'
+  where c.species_id = ?
   /;
         $sql = $self->_append_biotype_sql($sql, $biotypes);
         $sql = $self->_append_analysis_sql($dba, $sql, 'f');
@@ -210,8 +209,7 @@ sub get_transcripts {
     join coord_system c using (coord_system_id)
     join analysis a on (t.analysis_id=a.analysis_id)
     left join analysis_description ad on (a.analysis_id=ad.analysis_id)
-    where c.species_id = ? AND
-    ad.web_data NOT LIKE '%"gene"%"do_not_display"%'
+    where c.species_id = ?
     /;
     $sql = $self->_append_biotype_sql($sql, $biotypes, 't');
     $sql = $self->_append_analysis_sql($dba, $sql, 't');
