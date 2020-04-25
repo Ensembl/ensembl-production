@@ -63,6 +63,10 @@ sub default_options {
 
            # Don't need lots of retries for most analyses
            'hive_default_max_retry_count' => 1,
+           
+           # Datachecks
+           'history_file' => undef,
+           'old_server_uri' => undef
         };
 }
 
@@ -243,17 +247,66 @@ sub pipeline_analyses {
             {-logic_name => 'mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping',
              -rc_name    => 'mem',
+             -flow_into  => 'RunXrefCriticalDatacheck',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
             -analysis_capacity => 30
             },
-            {-logic_name => 'notify_by_email',
+ 
+            {
+             -logic_name        => 'RunXrefCriticalDatacheck',
+             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+             -parameters        => {
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
+             -flow_into         => 'RunXrefAdvisoryDatacheck',
+             -max_retry_count   => 1,
+             -analysis_capacity => 10,
+             -batch_size        => 10,
+           },
+           { 
+             -logic_name        => 'RunXrefAdvisoryDatacheck',
+             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+             -parameters        => {
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              old_server_uri  => $self->o('old_server_uri'),
+                              failures_fatal  => 0,
+                            },
+              -max_retry_count   => 1,
+              -batch_size        => 10,
+              -analysis_capacity => 10,
+              -max_retry_count   => 1,
+              -flow_into         => {
+                              '4' => 'EmailReportXrefAdvisory'
+                            },
+           },
+           {
+              -logic_name        => 'EmailReportXrefAdvisory',
+              -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+              -analysis_capacity => 10,
+              -max_retry_count   => 1,
+              -parameters        => {
+                                 email => $self->o('email'),
+                            },
+              -rc_name           => 'default',
+          },
+
+          {
+             -logic_name => 'notify_by_email',
              -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
              -parameters => {'email'   => $self->o('email'),
                              'subject' => 'Xref update finished',
                              'text'    => 'completed run'},
              -rc_name    => 'small',
-            },
+          },
     ];
 }
 
