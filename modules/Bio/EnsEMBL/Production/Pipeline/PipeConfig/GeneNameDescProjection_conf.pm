@@ -85,7 +85,9 @@ sub default_options {
     # Configuration for gene name projection must be defined in sub classes
     gn_config => [],
     gd_config => [],
-
+    # Datachecks
+    'history_file' => undef,
+    'old_server_uri' => undef
   };
 }
 
@@ -267,6 +269,7 @@ sub pipeline_analyses {
                               gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                             },
       -rc_name           => 'mem',
+      -flow_into         => 'RunXrefCriticalDatacheck', 
       },
       {
         -logic_name        => 'SourceFactory_Descs',
@@ -307,8 +310,56 @@ sub pipeline_analyses {
                                 gene_desc_rules   	   => $self->o('gene_desc_rules'),
                                 gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                               },
+        -flow_into         => 'RunXrefCriticalDatacheck',
         -rc_name           => 'mem',
         },
+        {
+             -logic_name        => 'RunXrefCriticalDatacheck',
+             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+             -parameters        => {
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              failures_fatal  => 1,
+                            },
+             -flow_into         => 'RunXrefAdvisoryDatacheck',
+             -max_retry_count   => 1,
+             -analysis_capacity => 10,
+             -batch_size        => 10,
+           },
+           {
+             -logic_name        => 'RunXrefAdvisoryDatacheck',
+             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+             -parameters        => {
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file    => $self->o('history_file'),
+                              old_server_uri  => $self->o('old_server_uri'),
+                              failures_fatal  => 0,
+                            },
+              -max_retry_count   => 1,
+              -batch_size        => 10,
+              -analysis_capacity => 10,
+              -max_retry_count   => 1,
+              -flow_into         => {
+                              '4' => 'EmailReportXrefAdvisory'
+                            },
+           },
+           {
+              -logic_name        => 'EmailReportXrefAdvisory',
+              -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+              -analysis_capacity => 10,
+              -max_retry_count   => 1,
+              -parameters        => {
+                                 email => $self->o('email'),
+                            },
+              -rc_name           => 'default',
+          },
+
+
         {
           -logic_name      => 'EmailReport',
           -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::EmailReport',
