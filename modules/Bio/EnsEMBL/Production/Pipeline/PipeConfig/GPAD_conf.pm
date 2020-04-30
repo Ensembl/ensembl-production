@@ -76,6 +76,7 @@ sub default_options {
 
    # Datachecks
     'history_file' => undef,
+    'config_file' => undef,
     'old_server_uri' => undef
    
 
@@ -259,7 +260,9 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['critical'],
                               registry_file    => $self->o('registry'),
+                              config_file    => $self->o('config_file'),
                               history_file    => $self->o('history_file'),
+                              old_server_uri  => $self->o('old_server_uri'),
                               failures_fatal  => 1,
                             },
       -flow_into         => 'RunXrefAdvisoryDatacheck', 
@@ -274,6 +277,7 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['advisory'],
                               registry_file    => $self->o('registry'),
+                              config_file    => $self->o('config_file'),
                               history_file    => $self->o('history_file'),
                               old_server_uri  => $self->o('old_server_uri'),
                               failures_fatal  => 0,
