@@ -241,41 +241,9 @@ sub pipeline_analyses {
                               delete_existing => $self->o('delete_existing'),
                               logic_name => $self->o('logic_name')
        },
-      -flow_into         => 'RunXrefCriticalDatacheck',
       -analysis_capacity  => 20,
       -rc_name 	      => 'default'
     },
-    {
-      -logic_name        => 'RunXrefCriticalDatacheck',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_groups => ['xref'],
-                              datacheck_types  => ['critical'],
-                              registry_file    => $self->o('registry'),
-                              history_file    => $self->o('history_file'),
-                              failures_fatal  => 1,
-                            },
-      -flow_into         => 'RunXrefAdvisoryDatacheck', 
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -batch_size        => 10,
-    },
-    {
-      -logic_name        => 'RunXrefAdvisoryDatacheck',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters        => {
-                              datacheck_groups => ['xref'],
-                              datacheck_types  => ['advisory'],
-                              registry_file    => $self->o('registry'),
-                              history_file    => $self->o('history_file'),
-                              failures_fatal  => 1,
-                            },
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -batch_size        => 10,
-    },
-
-
     { -logic_name     => 'email_notification',
   	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
       -parameters     => {
