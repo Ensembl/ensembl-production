@@ -37,13 +37,13 @@ use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return {
-        # inherit other stuff from the base class
-        %{ $self->SUPER::default_options() },      
+  return {
+    # inherit other stuff from the base class
+    %{ $self->SUPER::default_options() },
 
-	## General parameters
+    ## General parameters
     'registry'      => $self->o('registry'),   
     'release'       => $self->o('release'),
     'pipeline_name' => 'gpad_loader_'.$self->o('release'),
@@ -53,7 +53,7 @@ sub default_options {
     ## Location of GPAD files
     'gpad_directory' => '',
 
-	## Email Report subject
+    ## Email Report subject
     'email_subject'  => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
     ## Remove existing GO annotations and associated analysis
@@ -63,8 +63,8 @@ sub default_options {
     ## 'job_factory' parameters
     'species'     => [], 
     'antispecies' => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
-    'division' 	 => [], 
-    'run_all'     => 0,	
+    'division'    => [],
+    'run_all'     => 0,
     'meta_filters' => {},
 
     #analysis informations
@@ -74,23 +74,21 @@ sub default_options {
     'production_lookup' => 1,
     'linked_tables' => ['object_xref'],
 
-   # Datachecks
+    # Datachecks
     'history_file' => undef,
     'config_file' => undef,
     'old_server_uri' => undef
-   
 
-    };
-
+  };
 }
 
 sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-      # inheriting database and hive tables' creation
-      @{$self->SUPER::pipeline_create_commands},
-      'mkdir -p '.$self->o('output_dir'),
-    ];
+  my ($self) = @_;
+  return [
+    # inheriting database and hive tables' creation
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('output_dir'),
+  ];
 }
 
 # Ensures output parameters gets propagated implicitly
@@ -107,43 +105,44 @@ sub hive_meta_table {
 sub beekeeper_extra_cmdline_options {
   my ($self) = @_;
   return 
-      ' -reg_conf ' . $self->o('registry'),
+    ' -reg_conf ' . $self->o('registry'),
   ;
 }
 
 # these parameter values are visible to all analyses, 
 # can be overridden by parameters{} and input_id{}
 sub pipeline_wide_parameters {  
-    my ($self) = @_;
-    return {
-            %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
-		    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
-		    'output_dir'      => $self->o('output_dir'), 
-    };
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
+    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
+    'output_dir'      => $self->o('output_dir'),
+  };
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-      'default'  	=> {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-      '32GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-      '64GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-      '128GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-      '256GB'  	 	=> {'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"'},
-	}
+  my $self = shift;
+  return {
+    'default' => {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
+    '32GB'    => {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
+    '64GB'    => {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
+    '128GB'   => {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
+    '256GB'   => {'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+  }
 }
 
 sub pipeline_analyses {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return [
-    {  -logic_name => 'backbone_fire_GPADLoad',
+  return [
+    {
+       -logic_name => 'backbone_fire_GPADLoad',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids  => [ {} ] , 
        -flow_into  => {
-		                 '1->A' => ['DbFactory'],
-		                 'A->1' => ['email_notification'],		                       
-                       },          
+                        '1->A' => ['DbFactory'],
+                        'A->1' => ['email_notification'],
+                      },
     },
     {
       -logic_name        => 'DbFactory',
@@ -182,7 +181,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '1->A' => ['AnalysisSetup'],
                               'A->1' => ['RemoveOrphans'],
-      }
+                            }
     },
     {
       -logic_name        => 'AnalysisSetup',
@@ -217,7 +216,7 @@ sub pipeline_analyses {
                               ]
                             },
     },
-        {
+    {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
@@ -231,28 +230,30 @@ sub pipeline_analyses {
                               '2' => ['FindFile'],
                             }
     },
-    { -logic_name     => 'FindFile',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
-      -analysis_capacity  => 30,
-      -rc_name 	      => 'default',
-      -parameters     => {
-                            gpad_directory => $self->o('gpad_directory')
-      },
+    {
+      -logic_name        => 'FindFile',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
+      -analysis_capacity => 30,
+      -rc_name           => 'default',
+      -parameters        => {
+                              gpad_directory => $self->o('gpad_directory')
+                            },
       -flow_into         => {
-                  '2' => ['gpad_file_load'],
-                }
+                              '2' => ['gpad_file_load'],
+                            }
     },
-    { -logic_name     => 'gpad_file_load',
-  	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
-      -parameters     => {
+    {
+      -logic_name        => 'gpad_file_load',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
+      -parameters        => {
                               delete_existing => $self->o('delete_existing'),
                               logic_name => $self->o('logic_name')
-       },
+                            },
       -flow_into         => 'RunXrefCriticalDatacheck',
-      -analysis_capacity  => 20,
-      -rc_name 	      => 'default'
+      -analysis_capacity => 20,
+      -rc_name           => 'default'
     },
-    {	
+    {
       -logic_name        => 'RunXrefCriticalDatacheck',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters        => {
@@ -260,10 +261,10 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['critical'],
                               registry_file    => $self->o('registry'),
-                              config_file    => $self->o('config_file'),
-                              history_file    => $self->o('history_file'),
-                              old_server_uri  => $self->o('old_server_uri'),
-                              failures_fatal  => 1,
+                              config_file      => $self->o('config_file'),
+                              history_file     => $self->o('history_file'),
+                              old_server_uri   => $self->o('old_server_uri'),
+                              failures_fatal   => 1,
                             },
       -flow_into         => 'RunXrefAdvisoryDatacheck', 
       -max_retry_count   => 1,
@@ -277,10 +278,10 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['advisory'],
                               registry_file    => $self->o('registry'),
-                              config_file    => $self->o('config_file'),
-                              history_file    => $self->o('history_file'),
-                              old_server_uri  => $self->o('old_server_uri'),
-                              failures_fatal  => 0,
+                              config_file      => $self->o('config_file'),
+                              history_file     => $self->o('history_file'),
+                              old_server_uri   => $self->o('old_server_uri'),
+                              failures_fatal   => 0,
                             },
       -max_retry_count   => 1,
       -batch_size        => 10,
@@ -299,21 +300,18 @@ sub pipeline_analyses {
                               email => $self->o('email'),
                             },
       -rc_name           => 'default',
-   },
-
-
-    { -logic_name     => 'email_notification',
-  	  -module         => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
-      -parameters     => {
-          	'email'      => $self->o('email'),
-          	'subject'    => $self->o('email_subject'),
-			'output_dir' => $self->o('output_dir'),
-       },
-      -rc_name 	      => 'default'
-    },  
-    
+    },
+    {
+      -logic_name        => 'email_notification',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
+      -parameters        => {
+                              email      => $self->o('email'),
+                              subject    => $self->o('email_subject'),
+                              output_dir => $self->o('output_dir'),
+                            },
+      -rc_name           => 'default'
+    },
   ];
 }
-
 
 1;
