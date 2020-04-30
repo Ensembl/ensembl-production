@@ -231,7 +231,10 @@ sub pipeline_analyses {
                               delete_existing => $self->o('delete_existing'),
                               logic_name      => $self->o('logic_name')
                             },
-      -flow_into         => 'RunXrefCriticalDatacheck',
+      -flow_into         => {
+                              '1->A' => ['RunXrefCriticalDatacheck'],
+                              'A->1' => ['RunXrefAdvisoryDatacheck']
+                            },
       -rc_name           => '4GB'
     },
     {
@@ -250,7 +253,6 @@ sub pipeline_analyses {
                               old_server_uri   => $self->o('old_server_uri'),
                               failures_fatal   => 1,
                             },
-      -flow_into         => 'RunXrefAdvisoryDatacheck',
     },
     {
       -logic_name        => 'RunXrefAdvisoryDatacheck',
