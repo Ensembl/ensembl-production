@@ -21,7 +21,7 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR 
+=head1 AUTHOR
 
 maurel@ebi.ac.uk and ckong@ebi.ac.uk
 
@@ -30,62 +30,55 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GPAD_conf;
 
 use strict;
 use warnings;
-use File::Spec;
+
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
 use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');  
+
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
   my ($self) = @_;
 
   return {
-    # inherit other stuff from the base class
     %{ $self->SUPER::default_options() },
 
+    species      => [],
+    antispecies  => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
+    division     => [],
+    run_all      => 0,
+    meta_filters => {},
+
     ## General parameters
-    'registry'      => $self->o('registry'),   
-    'release'       => $self->o('release'),
-    'pipeline_name' => 'gpad_loader_'.$self->o('release'),
-    'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    'output_dir'    => '/nfs/nobackup/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
+    output_dir => '/nfs/nobackup/ensembl/'.$self->o('user').'/workspace/'.$self->o('pipeline_name'),
 
     ## Location of GPAD files
-    'gpad_directory' => '',
+    gpad_directory => '',
 
     ## Email Report subject
-    'email_subject'  => $self->o('pipeline_name').' GPAD loading pipeline has finished',
+    email_subject => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
     ## Remove existing GO annotations and associated analysis
-    # on '1' by default
-    'delete_existing' => 1,
+    delete_existing => 1,
 
-    ## 'job_factory' parameters
-    'species'     => [], 
-    'antispecies' => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
-    'division'    => [],
-    'run_all'     => 0,
-    'meta_filters' => {},
-
-    #analysis informations
-    'logic_name' => 'goa_import',
-    'db' => 'GO',
-    'program' => 'goa_import',
-    'production_lookup' => 1,
-    'linked_tables' => ['object_xref'],
+    # Analysis information
+    logic_name        => 'goa_import',
+    db                => 'GO',
+    program           => 'goa_import',
+    production_lookup => 1,
+    linked_tables     => ['object_xref'],
 
     # Datachecks
-    'history_file' => undef,
-    'config_file' => undef,
-    'old_server_uri' => undef
-
+    history_file   => undef,
+    config_file    => undef,
+    old_server_uri => undef
   };
 }
 
 sub pipeline_create_commands {
   my ($self) = @_;
+
   return [
-    # inheriting database and hive tables' creation
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('output_dir'),
   ];
@@ -94,40 +87,29 @@ sub pipeline_create_commands {
 # Ensures output parameters gets propagated implicitly
 sub hive_meta_table {
   my ($self) = @_;
-  
+
   return {
     %{$self->SUPER::hive_meta_table},
     'hive_use_param_stack'  => 1,
   };
 }
 
-# override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
+sub pipeline_wide_parameters {
   my ($self) = @_;
-  return 
-    ' -reg_conf ' . $self->o('registry'),
-  ;
-}
 
-# these parameter values are visible to all analyses, 
-# can be overridden by parameters{} and input_id{}
-sub pipeline_wide_parameters {  
-  my ($self) = @_;
   return {
-    %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
-    'pipeline_name'   => $self->o('pipeline_name'), # This must be defined for the beekeeper to work properly
-    'output_dir'      => $self->o('output_dir'),
+    %{$self->SUPER::pipeline_wide_parameters},
+    'pipeline_name' => $self->o('pipeline_name'),
+    'output_dir'    => $self->o('output_dir'),
   };
 }
 
 sub resource_classes {
-  my $self = shift;
+  my ($self) = @_;
+
   return {
-    'default' => {'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"'},
-    '32GB'    => {'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"'},
-    '64GB'    => {'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"'},
-    '128GB'   => {'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"'},
-    '256GB'   => {'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"'},
+    %{$self->SUPER::resource_classes},
+    '4GB' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"'},
   }
 }
 
@@ -138,7 +120,7 @@ sub pipeline_analyses {
     {
        -logic_name => 'backbone_fire_GPADLoad',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids  => [ {} ] , 
+       -input_ids  => [ {} ],
        -flow_into  => {
                         '1->A' => ['DbFactory'],
                         'A->1' => ['email_notification'],
@@ -177,7 +159,6 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('output_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -rc_name           => 'default',
       -flow_into         => {
                               '1->A' => ['AnalysisSetup'],
                               'A->1' => ['RemoveOrphans'],
@@ -190,12 +171,12 @@ sub pipeline_analyses {
       -analysis_capacity => 20,
       -parameters        => {
                               db_backup_required => 0,
-                              delete_existing => $self->o('delete_existing'),
+                              delete_existing    => $self->o('delete_existing'),
                               production_lookup  => $self->o('production_lookup'),
-                              logic_name => $self->o('logic_name'),
-                              db => $self->o('db'),
-                              program => $self->o('program'),
-                              linked_tables => $self->o('linked_tables')
+                              logic_name         => $self->o('logic_name'),
+                              db                 => $self->o('db'),
+                              program            => $self->o('program'),
+                              linked_tables      => $self->o('linked_tables')
                             }
     },
     {
@@ -234,28 +215,31 @@ sub pipeline_analyses {
       -logic_name        => 'FindFile',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
       -analysis_capacity => 30,
-      -rc_name           => 'default',
       -parameters        => {
                               gpad_directory => $self->o('gpad_directory')
                             },
       -flow_into         => {
                               '2' => ['gpad_file_load'],
-                            }
+                            },
+      -rc_name           => '4GB',
     },
     {
       -logic_name        => 'gpad_file_load',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
+      -analysis_capacity => 20,
       -parameters        => {
                               delete_existing => $self->o('delete_existing'),
-                              logic_name => $self->o('logic_name')
+                              logic_name      => $self->o('logic_name')
                             },
       -flow_into         => 'RunXrefCriticalDatacheck',
-      -analysis_capacity => 20,
-      -rc_name           => 'default'
+      -rc_name           => '4GB'
     },
     {
       -logic_name        => 'RunXrefCriticalDatacheck',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
       -parameters        => {
                               datacheck_names  => ['ForeignKeys'],
                               datacheck_groups => ['xref'],
@@ -266,14 +250,14 @@ sub pipeline_analyses {
                               old_server_uri   => $self->o('old_server_uri'),
                               failures_fatal   => 1,
                             },
-      -flow_into         => 'RunXrefAdvisoryDatacheck', 
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -batch_size        => 10,
+      -flow_into         => 'RunXrefAdvisoryDatacheck',
     },
     {
       -logic_name        => 'RunXrefAdvisoryDatacheck',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
       -parameters        => {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['advisory'],
@@ -283,10 +267,6 @@ sub pipeline_analyses {
                               old_server_uri   => $self->o('old_server_uri'),
                               failures_fatal   => 0,
                             },
-      -max_retry_count   => 1,
-      -batch_size        => 10,
-      -analysis_capacity => 10,
-      -max_retry_count   => 1,
       -flow_into         => {
                               '4' => 'EmailReportXrefAdvisory'
                             },
@@ -294,12 +274,11 @@ sub pipeline_analyses {
     {
       -logic_name        => 'EmailReportXrefAdvisory',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-      -analysis_capacity => 10,
       -max_retry_count   => 1,
+      -analysis_capacity => 10,
       -parameters        => {
                               email => $self->o('email'),
                             },
-      -rc_name           => 'default',
     },
     {
       -logic_name        => 'email_notification',
@@ -309,7 +288,6 @@ sub pipeline_analyses {
                               subject    => $self->o('email_subject'),
                               output_dir => $self->o('output_dir'),
                             },
-      -rc_name           => 'default'
     },
   ];
 }
