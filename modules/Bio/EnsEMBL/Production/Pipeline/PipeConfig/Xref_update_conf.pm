@@ -22,22 +22,18 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::Xref_update_conf;
 use strict;
 use warnings;
 
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
 use Bio::EnsEMBL::Hive::Version 2.5;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-
 
 sub default_options {
     my ($self) = @_;
 
     return {
            %{ $self->SUPER::default_options() },
-           'email'            => $self->o('ENV', 'USER').'@ebi.ac.uk',
-           'release'          => software_version(),
-           'pipeline_name'    => 'xref_update_'.$self->o('release'),
-
+           'release'          => $self->o('ensembl_release'),
            'work_dir'         => $self->o('ENV', 'HOME')."/work/lib",
            'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
  
@@ -66,14 +62,9 @@ sub default_options {
            
            # Datachecks
            history_file   => undef,
-           config_file    => undef,
+           dc_config_file => undef,
            old_server_uri => undef
         };
-}
-
-sub beekeeper_extra_cmdline_options {
-  my $self = shift;
-  return "-reg_conf " . $self->o("registry");
 }
 
 sub pipeline_analyses {
@@ -268,7 +259,7 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['critical'],
                               registry_file    => $self->o('registry'),
-                              config_file      => $self->o('config_file'),
+                              config_file      => $self->o('dc_config_file'),
                               history_file    => $self->o('history_file'),
                               old_server_uri  => $self->o('old_server_uri'),
                               failures_fatal  => 1,
@@ -284,7 +275,7 @@ sub pipeline_analyses {
                               datacheck_groups => ['xref'],
                               datacheck_types  => ['advisory'],
                               registry_file    => $self->o('registry'),
-                              config_file      => $self->o('config_file'),
+                              config_file      => $self->o('dc_config_file'),
                               history_file    => $self->o('history_file'),
                               old_server_uri  => $self->o('old_server_uri'),
                               failures_fatal  => 0,
@@ -316,15 +307,14 @@ sub pipeline_analyses {
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-      'default' => { 'LSF' => ''},
-      'small'   => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
-      'normal'  => { 'LSF' => '-q production-rh74 -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
-      'large'   => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
-    }
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::resource_classes},
+    'small' => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
+    'mem'   => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
+    'large' => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
+  }
 }
 
 1;
-
