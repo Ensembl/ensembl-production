@@ -290,8 +290,9 @@ sub pipeline_analyses {
                               subject    => $self->o('email_subject'),
                               output_dir => $self->o('output_dir'),
                             },
+      -analysis_capacity  => 20,
+      -rc_name 	      => 'default'
     },
   ];
 }
-
 1;
