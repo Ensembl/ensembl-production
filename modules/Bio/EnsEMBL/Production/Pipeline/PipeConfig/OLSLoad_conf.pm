@@ -44,23 +44,24 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         ## General parameters
-        'output_dir'    => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
-        'base_dir'      => $self->o('ENV', 'BASE_DIR'),
-        'srv_cmd'       => undef,
-        'wipe_all'      => 0,
-        'wipe_one'      => 1,
-        'verbosity'     => 2,
-        'ols_load'      => 50,
-        'ens_version'   => $self->o('ENV', 'ENS_VERSION'),
-        'db_name'       => 'ensembl_ontology',
-        'mart_db_name'  => 'ontology_mart',
-        'pipeline_name' => 'ols_ontology_' . $self->o('ens_version'),
-        'db_url'        => $self->o('db_host') . $self->o('db_name'),
-        'ontologies'    => [],
-        'skip_phi'      => 0,
-        'old_server'    => 'mysql://ensro@mysql-ens-mirror-1:4240',
-        'history_file'  => 'foo',
-        'reg_file'      => 'bar'
+        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
+        'base_dir'         => $self->o('ENV', 'BASE_DIR'),
+        'srv_cmd'          => undef,
+        'wipe_all'         => 0,
+        'wipe_one'         => 1,
+        'verbosity'        => 2,
+        'ols_load'         => 50,
+        'ens_version'      => $self->o('ENV', 'ENS_VERSION'),
+        'db_name'          => 'ensembl_ontology',
+        'mart_db_name'     => 'ontology_mart',
+        'pipeline_name'    => 'ols_ontology_' . $self->o('ens_version'),
+        'db_url'           => $self->o('db_host') . $self->o('db_name'),
+        'ontologies'       => [],
+        'skip_phi'         => 0,
+        'old_server'       => 'mysql://ensro@mysql-ens-mirror-1:4240',
+        'history_file'     => '/nfs/panda/ensembl/production/datachecks/history/general.pm',
+        'reg_file'         => '/nfs/panda/ensembl/production/registries/meta1.pm',
+        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/"
     }
 }
 
@@ -168,7 +169,10 @@ sub pipeline_analyses {
                 'column_names' => [ 'term_index' ]
             },
             -flow_into  => {
-                '2->A' =>  WHEN('#ontology_name# == "PR" ' => [ {'ontology_term_load_light' => INPUT_PLUS }], ELSE [ { 'ontology_term_load' => INPUT_PLUS } ]),
+                '2->A' => WHEN(
+                    '#ontology_name# eq PR' => { 'ontology_term_load_light' => INPUT_PLUS },
+                    ELSE { 'ontology_term_load' => INPUT_PLUS },
+                ),
                 'A->1' => [ 'ontology_report' ]
             },
         },
@@ -270,10 +274,11 @@ sub pipeline_analyses {
             -parameters  => {
                 mart => $self->o('mart_db_name'),
                 srv  => $self->o('srv')
-            }
+            },
+            -flow_into   => [ 'ontology_dc' ]
         },
         {
-            -logic_name => 'CompareOntologyTerm_Datacheck',
+            -logic_name => 'ontology_dc',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
                 datacheck_names => [ 'CompareOntologyTerm' ],
