@@ -40,19 +40,6 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_vertebrates_c
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_conf');
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-
-
-=head2 default_options
-
- Description: It returns a hashref containing the default options for HiveGeneric_conf
- Returntype : Hashref
- Exceptions : None
-
-
-=cut
 
 sub default_options {
     my ($self) = @_;
