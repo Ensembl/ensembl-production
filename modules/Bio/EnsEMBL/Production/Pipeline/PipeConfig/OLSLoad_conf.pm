@@ -58,10 +58,8 @@ sub default_options {
         'db_url'           => $self->o('db_host') . $self->o('db_name'),
         'ontologies'       => [],
         'skip_phi'         => 0,
-        'old_server'       => 'mysql://ensro@mysql-ens-mirror-1:4240',
-        'history_file'     => '/nfs/panda/ensembl/production/datachecks/history/general.pm',
-        'reg_file'         => '/nfs/panda/ensembl/production/registries/meta1.pm',
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/"
+        'history_file'  => undef
     }
 }
 
