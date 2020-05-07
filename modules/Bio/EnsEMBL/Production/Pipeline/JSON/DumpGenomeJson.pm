@@ -130,10 +130,8 @@ sub write_json {
   print "Looking for $compara_name\n";
   my $compara =
     Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' );
-  if ( !defined $compara ) {
-    die "No compara!\n";
-  }
-  if ( defined $compara ) {
+
+ if ( defined $compara ) {
     $self->info( "Adding " . $compara->species() . " compara" );
     $exporter->add_compara( $self->production_name(),
                             $genome->{genes}, $compara );
