@@ -688,12 +688,20 @@ sub copy_mysql_dump {
   if ( defined($opt_only_tables) ) {
     push( @dump_cmd, map { sprintf( "%s", $_ ) } keys(%{$only_tables}) );
   }
-  if ($convert_innodb_to_myisam){
-  # Convert InnoDB databases to MyISAM by changing the ENGINE in the dump file
-    push (@dump_cmd, "|sed", q{'s/ENGINE=InnoDB/ENGINE=MyISAM/'});
-  }
   if ( system("@dump_cmd > $file") != 0 ) {
     croak "Cannot dump $source_db->{dbname} from $source_db->{host} to file: $!";
+  }
+  # Convert InnoDB databases to MyISAM by changing the ENGINE in the dump file
+  if ($convert_innodb_to_myisam){
+    $logger->info("Converting database to MyISAM");
+    my $updated_file = $dump_path.$source_db->{host}.'_'.$source_db->{dbname}.'_'.time().'.sql';
+    if ( system("cat $file | sed 's/ENGINE=InnoDB/ENGINE=MyISAM/' > $updated_file") !=0 ){
+      cleanup_file($file);
+      cleanup_file($updated_file);
+      croak "Failed to transform InnoDB database to MyISAM";
+    }
+    cleanup_file($file);
+    $file = $updated_file;
   }
   $logger->info("Creating database $target_db->{dbname} on $target_db->{host}");
   if ( system("mysql --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} -e 'CREATE DATABASE $target_db->{dbname};'") !=0 ) {
