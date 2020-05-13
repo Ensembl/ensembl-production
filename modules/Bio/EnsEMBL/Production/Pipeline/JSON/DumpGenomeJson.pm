@@ -30,6 +30,7 @@ use JSON;
 use File::Path qw(make_path);
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
+use Try::Catch;
 
 sub fetch_input {
   my ($self) = @_;
@@ -126,19 +127,17 @@ sub write_json {
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
   # add compara
-  $self->info("Trying to find compara for '$compara_name'");
-  print "Looking for $compara_name\n";
-  my $compara =
-    Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' );
-  if ( !defined $compara ) {
-    die "No compara!\n";
-  }
-  if ( defined $compara ) {
-    $self->info( "Adding " . $compara->species() . " compara" );
-    $exporter->add_compara( $self->production_name(),
-                            $genome->{genes}, $compara );
-    $compara->dbc()->disconnect_if_idle();
-  }
+  try {
+     $self->info("Trying to find compara for '$compara_name'");
+     my $compara = Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' );
+     if ( defined $compara ) {
+          $self->info( "Adding " . $compara->species() . " compara" );
+          $exporter->add_compara( $self->production_name(), $genome->{genes}, $compara );
+          $compara->dbc()->disconnect_if_idle();
+     } 
+  } catch {
+     $self->warning("Compara '$compara_name' not found ");
+  };
   # remodel
   my $remodeller = $self->param('remodeller');
   my $hive_dbc = $self->dbc;
