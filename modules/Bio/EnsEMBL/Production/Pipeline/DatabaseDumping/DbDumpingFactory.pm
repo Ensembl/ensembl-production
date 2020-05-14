@@ -70,23 +70,23 @@ sub run {
         die "Please run a separate pipeline for each divisions";
       }
       my ($division_short_name, $division_name) = process_division_names($division->[0]);
-      my $dir_release = directory_release($division_short_name, $release_info);
+      my $dir_release = '/release-'. directory_release($division_short_name, $release_info) unless $self->param('with_release') == 0;
       if ($isGrch37 == 1) {
         $self->dataflow_output_id({
             database   => $db,
-            output_dir => $base_output_dir . '/grch37/release-' . $dir_release . '/mysql/',
+            output_dir => $base_output_dir . '/grch37' . $dir_release . '/mysql/',
         }, 1);
       }
       elsif ($division_short_name eq "pan") {
           $self->dataflow_output_id({
               database   => $db,
-              output_dir => $base_output_dir . '/release-' . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
+              output_dir => $base_output_dir . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
           }, 1);
       }
       else {
         $self->dataflow_output_id({
             database   => $db,
-            output_dir => $base_output_dir . '/release-' . $dir_release . '/' . $division_short_name . '/mysql/',
+            output_dir => $base_output_dir . $dir_release . '/' . $division_short_name . '/mysql/',
         }, 1);
       }
     }
@@ -98,7 +98,7 @@ sub run {
       my ($division_short_name, $division_name) = process_division_names($div);
       my $division_databases;
       my $genomes = $gdba->fetch_all_by_division($division_name);
-      my $dir_release = directory_release($division_short_name, $release_info);
+      my $dir_release = '/release-'. directory_release($division_short_name, $release_info) unless $self->param('with_release') == 0;
       #Genome databases
       foreach my $genome (@$genomes) {
         foreach my $database (@{$genome->databases()}) {
@@ -138,20 +138,20 @@ sub run {
         if ($isGrch37 == 1) {
           $self->dataflow_output_id({
               database   => $division_database,
-              output_dir => $base_output_dir . '/grch37/release-' . $dir_release . '/mysql/',
+              output_dir => $base_output_dir . '/grch37' . $dir_release . '/mysql/',
           }, 1);
 
         }
         elsif ($division_short_name eq "pan") {
           $self->dataflow_output_id({
               database   => $division_database,
-              output_dir => $base_output_dir . '/release-' . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
+              output_dir => $base_output_dir . $dir_release . '/' . 'pan_ensembl' . '/mysql/',
           }, 1);
         }
         else {
           $self->dataflow_output_id({
               database   => $division_database,
-              output_dir => $base_output_dir . '/release-' . $dir_release . '/' . $division_short_name . '/mysql/',
+              output_dir => $base_output_dir . $dir_release . '/' . $division_short_name . '/mysql/',
           }, 1);
         }
       }
