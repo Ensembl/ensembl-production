@@ -254,7 +254,6 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -batch_size        => 10,
       -parameters        => {
                               datacheck_names  => ['ForeignKeys'],
                               datacheck_groups => ['xref'],
