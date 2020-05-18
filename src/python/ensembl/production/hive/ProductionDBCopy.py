@@ -15,21 +15,15 @@ import os
 from urllib import parse
 
 import eHive
+from ensembl.hive.HiveRESTClient import HiveRESTClient
 
 
 
-class ProductionDBCopy(eHive.BaseRunnable):
+class ProductionDBCopy(HiveRESTClient):
     """ OLS MySQL loader: initialise basics info in Ontology DB """
-
-    def param_defaults(self):
-        parents = super().param_defaults()
-        defaults =  dict(entrypoint= 'http://localhost/api',
-                    src_db= '')
-        defaults.update(parents)
-        return defaults
 
     def run(self):
         pass
 
-    def process_response(self, default):
+    def process_response(self, response):
         pass

@@ -58,8 +58,14 @@ sub default_options {
         'db_url'           => $self->o('db_host') . $self->o('db_name'),
         'ontologies'       => [],
         'skip_phi'         => 0,
-        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/"
-        'history_file'  => undef
+        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
+        'history_file'  => undef,
+        'tgt_host'      => undef,
+        'host'          => undef,
+        'port'          => undef,
+        'pass'          => undef,
+        'user'          => undef,
+        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('db_name').','.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').','.$self->o('mart_db_name').'_'.$self->o('ens_version').'"}',
     }
 }
 
@@ -82,7 +88,7 @@ sub pipeline_wide_parameters {
         'mart_db_name' => $self->o('mart_db_name'),
         'output_dir'   => $self->o('output_dir'),
         'verbosity'    => $self->o('verbosity'),
-        'ontologies'   => $self->o('ontologies')
+        'ontologies'   => $self->o('ontologies'),
     };
 }
 
@@ -284,8 +290,21 @@ sub pipeline_analyses {
                 old_server_uri  => $self->o('old_server'),
                 registry_file   => $self->o('reg_file'),
                 failures_fatal  => 1
-            }
-        }
+            },
+            -flow_into   => [ 'copy_database' ]
+        },
+        {
+            -logic_name        => 'copy_database',
+            -module            => 'ensembl.production.hive.ProductionDBCopy',
+            -language          => 'python3',
+            -analysis_capacity => 20,
+            -rc_name           => 'default',
+            -parameters        => {
+                'endpoint'     => $self->o('copy_service_uri'),
+                'payload'      => $self->o('payload'),
+                'method'       => 'post',
+            },
+        },
     ];
 }
 
