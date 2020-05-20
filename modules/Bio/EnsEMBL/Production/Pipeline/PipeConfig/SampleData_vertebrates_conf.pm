@@ -48,7 +48,13 @@ sub default_options {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
 	    # species with curated sample genes
-        antispecies   => ['homo_sapiens'],
+        antispecies => ['homo_sapiens',
+                        'danio_rerio',
+                        'equus_caballus',
+                        'bos_taurus',
+                        'ovis_aries',
+                        'sus_scrofa',
+                        'mus_musculus']
     };
 }
 
