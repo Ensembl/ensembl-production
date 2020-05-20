@@ -65,7 +65,7 @@ sub default_options {
         'port'          => undef,
         'pass'          => undef,
         'user'          => undef,
-        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('db_name').','.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').','.$self->o('mart_db_name').'_'.$self->o('ens_version').'"}',
+        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('db_name').','.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').','.$self->o('mart_db_name').'_'.$self->o('ens_version').'","user" : "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
     }
 }
 
