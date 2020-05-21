@@ -48,11 +48,9 @@ sub default_options {
 
     return {
         %{$self->SUPER::default_options},
-        vert_server     => 'st1',
-        non_vert_server => 'st3',
-        bacteria_server => 'st4',
-        db_name         => 'ensembl_stable_ids',
-        db_url          => $self->o('srv_url') . $self->o('db_name'),
+        run_from => [], # 'st1', 'st2', 'st4'
+        db_name  => 'ensembl_stable_ids',
+        db_url   => $self->o('srv_url') . $self->o('db_name')
     }
 }
 
@@ -61,6 +59,7 @@ sub resource_classes {
     return {
         'default' => { 'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"' },
         '32GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"' },
+        '16GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 16000  -R "rusage[mem=16000]"' },
         '64GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"' },
     }
 }
@@ -76,8 +75,7 @@ sub pipeline_analyses {
             -input_ids  => [ {} ],
             -parameters => {
                 db_conn => $self->o('srv_url'),
-                sql     => [
-                    'DROP DATABASE IF EXISTS ' . $self->o('db_name') . ';' ],
+                sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name') . ';' ],
             },
             -rc_name    => 'default',
             -flow_into  => [ 'create_db' ]
@@ -112,48 +110,34 @@ sub pipeline_analyses {
                     "INSERT INTO meta(species_id,meta_key,meta_value) VALUES (NULL,'schema_version','" . $self->o('release') . "')" ],
             },
             -rc_name    => 'default',
-            -flow_into  => [ 'stable_id_non_vert' ],
+            -flow_into  => [ 'stable_id_script_factory' ],
+
         },
-        { -logic_name    => "stable_id_non_vert",
+        {
+            -logic_name  => "stable_id_script_factory",
+            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+            -meadow_type => 'LSF',
+            -parameters  => {
+                inputlist    => $self->o('run_from'),
+                column_names => [ 'species_server' ]
+            },
+            -flow_into   => {
+                '2->A' => [ 'stable_id_script' ],
+                'A->1' => [ 'index' ],
+            },
+        },
+        {
+            -logic_name  => "stable_id_script",
             -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -meadow_type => 'LSF',
             -parameters  => {
-                'cmd'            =>
+                'cmd'      =>
                     'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
-                'db_srv'         => $self->o('db_srv'),
-                'dbname'         => $self->o('db_name'),
-                'species_server' => $self->o('non_vert_server'),
-                'release'        => $self->o('release'),
-                'base_dir'       => $self->o('base_dir') },
-            -flow_into   => [ 'stable_id_vert' ],
-            -rc_name     => '32GB',
-        },
-        { -logic_name    => "stable_id_vert",
-            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -meadow_type => 'LSF',
-            -parameters  => {
-                'cmd'            =>
-                    'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
-                'db_srv'         => $self->o('db_srv'),
-                'dbname'         => $self->o('db_name'),
-                'species_server' => $self->o('vert_server'),
-                'release'        => $self->o('release'),
-                'base_dir'       => $self->o('base_dir') },
-            -flow_into   => [ 'stable_id_bacteria' ],
-            -rc_name     => '32GB',
-        },
-        { -logic_name    => "stable_id_bacteria",
-            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -meadow_type => 'LSF',
-            -parameters  => {
-                'cmd'            =>
-                    'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script)  -dbname #dbname# -version #release#',
-                'db_srv'         => $self->o('db_srv'),
-                'dbname'         => $self->o('db_name'),
-                'species_server' => $self->o('bacteria_server'),
-                'release'        => $self->o('release'),
-                'base_dir'       => $self->o('base_dir') },
-            -flow_into   => [ 'index' ],
+                'db_srv'   => $self->o('db_srv'),
+                'dbname'   => $self->o('db_name'),
+                'release'  => $self->o('release'),
+                'base_dir' => $self->o('base_dir')
+            },
             -rc_name     => '32GB',
         },
         {
@@ -164,7 +148,7 @@ sub pipeline_analyses {
                 input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/indices.sql',
             },
             -rc_name    => 'default',
-        },
+        }
     ];
 }
 
