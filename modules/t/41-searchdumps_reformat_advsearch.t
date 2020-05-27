@@ -101,7 +101,7 @@ unlink $probe_sets_file_out;
 unlink $probe_sets_file_in;
 
 my $regulation_fetcher  = Bio::EnsEMBL::Production::Search::RegulatoryElementFetcher->new();
-my $out = $regulation_fetcher->fetch_regulatory_elements_for_dba( $funcgen_dba, $core_dba);
+$out = $regulation_fetcher->fetch_regulatory_elements_for_dba( $funcgen_dba, $core_dba);
 my $motifs_file_in = "41-searchdumps_reformat_advsearch_motifs_in.json";
 open my $motifs_file, ">", $motifs_file_in;
 print $motifs_file encode_json($out->{motifs});
