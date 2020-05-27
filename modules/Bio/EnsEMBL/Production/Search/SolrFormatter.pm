@@ -62,15 +62,13 @@ sub _base {
 		feature_type     => $obj_type,
 		species          => $genome->{organism}{name},
 		species_name     => $genome->{organism}{display_name},
-		reference_strain => (
-			defined $genome->{is_reference} && $genome->{is_reference} eq 'true'
-		  ) ? 1 : 0,
+		reference_strain => $genome->{reference},
 		database_type => $db_type };
 }
 
 sub _ref_boost {
 	my ($genome) = @_;
-	return $genome->{is_reference} ? 10 : 1;
+	return $genome->{reference} ? 10 : 1;
 }
 
 sub _db_boost {

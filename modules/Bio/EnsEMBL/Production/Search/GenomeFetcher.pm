@@ -126,7 +126,7 @@ sub metadata_to_hash {
 		   species_id      => $md->species_id(),
 		   division        => $md->division(),
 		   genebuild       => $md->genebuild(),
-		   is_reference    => $md->is_reference() == 1 ? "true" : "false",
+		   reference    => $md->reference(),
 		   has_pan_compara => $md->has_pan_compara() == 1 ? "true" : "false",
 		   has_peptide_compara => $md->has_peptide_compara() == 1 ? "true" :
 			 "false",
