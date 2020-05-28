@@ -43,11 +43,11 @@ subtest "Variation reformat", sub {
 			$var, {
 			   'species'          => 'homo_sapiens',
 			   'species_name'     => 'Homo sapiens',
-			   'reference_strain' => 0,
+			   'reference_strain' => undef,
 			   'hgvs_names'       => [ 'c.1881+3399G>A', 'n.99+25766C>T' ],
 			   'domain_url'    => 'Homo_sapiens/Variation/Summary?v=rs7569578',
 			   'id'            => 'rs7569578',
-			   'ref_boost'     => 10,
+			   'ref_boost'     => 1,
 			   'database_type' => 'variation',
 			   'description' =>
 'A dbSNP Variant. Gene Association(s): banana, mango. HGVS Name(s): c.1881+3399G>A, n.99+25766C>T.',
@@ -74,7 +74,7 @@ subtest "Variation reformat", sub {
 			   'ont_term'         => 'Achondroplasia',
 			   'db_boost'         => 1,
 			   'hgvs_names'       => undef,
-			   'reference_strain' => 0,
+			   'reference_strain' => undef,
 			   'database_type'    => 'variation',
 			   'synonyms'         => [
 							   'rs17765152',  'rs60739517',
@@ -95,7 +95,7 @@ subtest "Variation reformat", sub {
 			   'ont_acc'      => 'OMIM:100800',
 			   'id'           => 'rs2299222',
 			   'feature_type' => 'Variant',
-			   'ref_boost'    => 10 },
+			   'ref_boost'    => 1 },
 			"Variant with GWAS & phenotype" );
 	}
 	{
@@ -106,8 +106,8 @@ subtest "Variation reformat", sub {
 				'species_name'     => 'Homo sapiens',
 				'database_type'    => 'variation',
 				'db_boost'         => 1,
-				'reference_strain' => 0,
-				'ref_boost'        => 10,
+				'reference_strain' => undef,
+				'ref_boost'        => 1,
 				'feature_type'     => 'Variant',
 				'species'          => 'homo_sapiens',
 				'website'          => 'http://www.ensembl.org/',
@@ -130,8 +130,8 @@ subtest "Somatic Mutation test", sub {
 	is( scalar @{$new_variations}, 1, "1 somatic" );
 	my ($var) = grep { $_->{id} eq 'COSM946275' } @$new_variations;
 	is_deeply( $var, {
-				 'reference_strain' => 0,
-				 'ref_boost'        => 10,
+				 'reference_strain' => undef,
+				 'ref_boost'        => 1,
 				 'domain_url'  => 'Homo_sapiens/Variation/Summary?v=COSM946275',
 				 'description' => 'A COSMIC Somatic Mutation.',
 				 'species_name'  => 'Homo sapiens',
@@ -158,8 +158,8 @@ subtest "Structural variants test", sub {
 		is_deeply(
 			$v, {
 			   'database_type'       => 'variation',
-			   'ref_boost'           => 10,
-			   'reference_strain'    => 0,
+			   'ref_boost'           => 1,
+			   'reference_strain'    => undef,
 			   'species'             => 'homo_sapiens',
 			   'id'                  => 'esv93078',
 			   'website'             => 'http://www.ensembl.org/',
@@ -177,9 +177,9 @@ subtest "Structural variants test", sub {
 		is_deeply(
 			$v, {
 			   'species'          => 'homo_sapiens',
-			   'reference_strain' => 0,
+			   'reference_strain' => undef,
 			   'id'               => 'CN_674347',
-			   'ref_boost'        => 10,
+			   'ref_boost'        => 1,
 			   'database_type'    => 'variation',
 			   'domain_url' =>
 				 'Homo_sapiens/StructuralVariation/Explore?sv=CN_674347',
@@ -202,13 +202,13 @@ subtest "Phenotype test", sub {
 	{
 		my ($p) = grep { $_->{id} eq 2 } @$new_phenotypes;
 		is_deeply( $p, {
-					 'ref_boost'        => 10,
+					 'ref_boost'        => 1,
 					 'website'          => 'http://www.ensembl.org/',
 					 'database_type'    => 'variation',
 					 'id'               => '2',
 					 'description'      => 'COSMIC:tumour_site:skin',
 					 'species_name'     => 'Homo sapiens',
-					 'reference_strain' => 0,
+					 'reference_strain' => undef,
 					 'feature_type'     => 'Phenotype',
 					 'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=2',
 					 'species'    => 'homo_sapiens',
@@ -224,12 +224,12 @@ subtest "Phenotype test", sub {
 					 'ontology_term'      => 'Achondroplasia',
 					 'website'            => 'http://www.ensembl.org/',
 					 'ontology_accession' => 'OMIM:100800',
-					 'ref_boost'          => 10,
+					 'ref_boost'          => 1,
 					 'db_boost'           => 1,
 					 'ontology_name'      => 'OMIM',
 					 'species'            => 'homo_sapiens',
 					 'feature_type'       => 'Phenotype',
-					 'reference_strain'   => 0,
+					 'reference_strain'   => undef,
 					 'domain_url'   => 'Homo_sapiens/Phenotypes/Locations?ph=1',
 					 'species_name' => 'Homo sapiens' } );
 	}
@@ -239,12 +239,12 @@ subtest "Phenotype test", sub {
 			$p,
 
 			{  'species_name'     => 'Homo sapiens',
-			   'reference_strain' => 0,
+			   'reference_strain' => undef,
 			   'feature_type'     => 'Phenotype',
 			   'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=17889',
 			   'species'    => 'homo_sapiens',
 			   'db_boost'   => 1,
-			   'ref_boost'  => 10,
+			   'ref_boost'  => 1,
 			   'ontology_accession' => 'EFO:0005193',
 			   'id'                 => '17889',
 			   'description'        => 'IgG glycosylation',

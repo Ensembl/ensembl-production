@@ -108,7 +108,7 @@ sub write_json {
             species_id   => $md->species_id(),
             division     => $md->division(),
             genebuild    => $md->genebuild(),
-            is_reference => $md->is_reference() == 1 ? "true" : "false",
+            reference => $md->reference(),
             organism     => {
                       name                => $md->name(),
                       display_name        => $md->display_name(),
