@@ -43,7 +43,7 @@ subtest "Variation reformat", sub {
 			$var, {
 			   'species'          => 'homo_sapiens',
 			   'species_name'     => 'Homo sapiens',
-			   'reference_strain' => null,
+			   'reference_strain' => undef,
 			   'hgvs_names'       => [ 'c.1881+3399G>A', 'n.99+25766C>T' ],
 			   'domain_url'    => 'Homo_sapiens/Variation/Summary?v=rs7569578',
 			   'id'            => 'rs7569578',
@@ -74,7 +74,7 @@ subtest "Variation reformat", sub {
 			   'ont_term'         => 'Achondroplasia',
 			   'db_boost'         => 1,
 			   'hgvs_names'       => undef,
-			   'reference_strain' => null,
+			   'reference_strain' => undef,
 			   'database_type'    => 'variation',
 			   'synonyms'         => [
 							   'rs17765152',  'rs60739517',
@@ -106,7 +106,7 @@ subtest "Variation reformat", sub {
 				'species_name'     => 'Homo sapiens',
 				'database_type'    => 'variation',
 				'db_boost'         => 1,
-				'reference_strain' => null,
+				'reference_strain' => undef,
 				'ref_boost'        => 1,
 				'feature_type'     => 'Variant',
 				'species'          => 'homo_sapiens',
@@ -130,7 +130,7 @@ subtest "Somatic Mutation test", sub {
 	is( scalar @{$new_variations}, 1, "1 somatic" );
 	my ($var) = grep { $_->{id} eq 'COSM946275' } @$new_variations;
 	is_deeply( $var, {
-				 'reference_strain' => null,
+				 'reference_strain' => undef,
 				 'ref_boost'        => 1,
 				 'domain_url'  => 'Homo_sapiens/Variation/Summary?v=COSM946275',
 				 'description' => 'A COSMIC Somatic Mutation.',
@@ -159,7 +159,7 @@ subtest "Structural variants test", sub {
 			$v, {
 			   'database_type'       => 'variation',
 			   'ref_boost'           => 1,
-			   'reference_strain'    => null,
+			   'reference_strain'    => undef,
 			   'species'             => 'homo_sapiens',
 			   'id'                  => 'esv93078',
 			   'website'             => 'http://www.ensembl.org/',
@@ -177,7 +177,7 @@ subtest "Structural variants test", sub {
 		is_deeply(
 			$v, {
 			   'species'          => 'homo_sapiens',
-			   'reference_strain' => null,
+			   'reference_strain' => undef,
 			   'id'               => 'CN_674347',
 			   'ref_boost'        => 1,
 			   'database_type'    => 'variation',
@@ -208,7 +208,7 @@ subtest "Phenotype test", sub {
 					 'id'               => '2',
 					 'description'      => 'COSMIC:tumour_site:skin',
 					 'species_name'     => 'Homo sapiens',
-					 'reference_strain' => null,
+					 'reference_strain' => undef,
 					 'feature_type'     => 'Phenotype',
 					 'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=2',
 					 'species'    => 'homo_sapiens',
@@ -229,7 +229,7 @@ subtest "Phenotype test", sub {
 					 'ontology_name'      => 'OMIM',
 					 'species'            => 'homo_sapiens',
 					 'feature_type'       => 'Phenotype',
-					 'reference_strain'   => null,
+					 'reference_strain'   => undef,
 					 'domain_url'   => 'Homo_sapiens/Phenotypes/Locations?ph=1',
 					 'species_name' => 'Homo sapiens' } );
 	}
@@ -239,7 +239,7 @@ subtest "Phenotype test", sub {
 			$p,
 
 			{  'species_name'     => 'Homo sapiens',
-			   'reference_strain' => null,
+			   'reference_strain' => undef,
 			   'feature_type'     => 'Phenotype',
 			   'domain_url' => 'Homo_sapiens/Phenotypes/Locations?ph=17889',
 			   'species'    => 'homo_sapiens',
