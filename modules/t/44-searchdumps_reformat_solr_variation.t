@@ -47,7 +47,7 @@ subtest "Variation reformat", sub {
 			   'hgvs_names'       => [ 'c.1881+3399G>A', 'n.99+25766C>T' ],
 			   'domain_url'    => 'Homo_sapiens/Variation/Summary?v=rs7569578',
 			   'id'            => 'rs7569578',
-			   'ref_boost'     => 10,
+			   'ref_boost'     => 1,
 			   'database_type' => 'variation',
 			   'description' =>
 'A dbSNP Variant. Gene Association(s): banana, mango. HGVS Name(s): c.1881+3399G>A, n.99+25766C>T.',
@@ -95,7 +95,7 @@ subtest "Variation reformat", sub {
 			   'ont_acc'      => 'OMIM:100800',
 			   'id'           => 'rs2299222',
 			   'feature_type' => 'Variant',
-			   'ref_boost'    => 10 },
+			   'ref_boost'    => 1 },
 			"Variant with GWAS & phenotype" );
 	}
 	{
