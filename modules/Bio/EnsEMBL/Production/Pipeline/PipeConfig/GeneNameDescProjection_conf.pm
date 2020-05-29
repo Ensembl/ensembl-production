@@ -90,6 +90,7 @@ sub default_options {
     history_file   => undef,
     config_file    => undef,
     old_server_uri => undef
+
   };
 }
 
@@ -115,6 +116,7 @@ sub pipeline_wide_parameters {
   return {
     %{$self->SUPER::pipeline_wide_parameters},
     'store_projections' => $self->o('store_projections'),
+    'compara_db' => $self->o('compara_db')
   };
 }
 
@@ -374,6 +376,60 @@ sub pipeline_analyses {
                             subject => $self->o('pipeline_name').' has completed',
                             text    => 'Log files: '.$self->o('output_dir'),
                           },
+      -flow_into => [ 'species_update_factory' ],
+    },
+    {
+        -logic_name => 'species_update_factory',
+        -module     => 'Bio::EnsEMBL::Compara::RunnableDB::GenomeDBFactory',
+        -rc_name           => 'default',
+        -parameters => {
+            'compara_db'    => $self->o('compara_db'),
+        },
+        -flow_into => {
+            2   => [ 'update_member_display_labels' ],
+        },
+    },
+    {
+        -logic_name => 'update_member_display_labels',
+        -module => 'Bio::EnsEMBL::Compara::RunnableDB::MemberDisplayLabelUpdater',
+        -analysis_capacity => 10,
+        -parameters => {
+            'die_if_no_core_adaptor'  => 1,
+            'replace'                 => 1,
+            'mode'                    => 'display_label',
+            'source_name'             => 'ENSEMBLGENE',
+            'genome_db_ids'           => [ '#genome_db_id#' ],
+        },
+        -flow_into => [ 'update_seq_member_display_labels' ],
+        -rc_name => 'mem',
+    },
+
+    {
+        -logic_name => 'update_seq_member_display_labels',
+        -module => 'Bio::EnsEMBL::Compara::RunnableDB::MemberDisplayLabelUpdater',
+        -analysis_capacity => 10,
+        -parameters => {
+            'die_if_no_core_adaptor'  => 1,
+            'replace'                 => 1,
+            'mode'                    => 'display_label',
+            'source_name'             => 'ENSEMBLPEP',
+            'genome_db_ids'           => [ '#genome_db_id#' ],
+        },
+        -flow_into => [ 'update_member_descriptions' ],
+        -rc_name => 'mem',
+    },
+
+    {
+        -logic_name => 'update_member_descriptions',
+        -module => 'Bio::EnsEMBL::Compara::RunnableDB::MemberDisplayLabelUpdater',
+        -analysis_capacity => 10,
+        -parameters => {
+            'die_if_no_core_adaptor'  => 1,
+            'replace'                 => 1,
+            'mode'                    => 'description',
+            'genome_db_ids'           => [ '#genome_db_id#' ],
+        },
+        -rc_name => 'mem',
     },
   ];
 }
