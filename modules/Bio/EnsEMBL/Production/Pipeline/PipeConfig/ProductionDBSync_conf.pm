@@ -250,7 +250,8 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              email => $self->o('email'),
+                              email         => $self->o('email'),
+                              pipeline_name => $self->o('pipeline_name'),
                             },
       -rc_name           => 'normal',
    },
