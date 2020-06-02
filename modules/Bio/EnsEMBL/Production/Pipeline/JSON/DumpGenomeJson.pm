@@ -32,68 +32,68 @@ use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
 
 sub fetch_input {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  $self->param( 'dba', $self->core_dba() );
+    $self->param('dba', $self->core_dba());
 
-  my $tax_dba =
-    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
-  my $onto_dba =
-    Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "ontology" );
-  $self->param( 'metadata_dba',
-                Bio::EnsEMBL::Registry->get_DBAdaptor(
-                                                     "multi", "metadata"
-                ) );
+    my $tax_dba =
+        Bio::EnsEMBL::Registry->get_DBAdaptor("multi", "taxonomy");
+    my $onto_dba =
+        Bio::EnsEMBL::Registry->get_DBAdaptor("multi", "ontology");
+    $self->param('metadata_dba',
+        Bio::EnsEMBL::Registry->get_DBAdaptor(
+            "multi", "metadata"
+        ));
 
-  $self->param(
-          'remodeller',
-          Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller->new(
-                                              -taxonomy_dba => $tax_dba,
-                                              -ontology_dba => $onto_dba
-          ) );
-  return;
+    $self->param(
+        'remodeller',
+        Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller->new(
+            -taxonomy_dba => $tax_dba,
+            -ontology_dba => $onto_dba
+        ));
+    return;
 }
 
 sub param_defaults {
-  return {};
+    return {};
 }
 
 sub run {
-  my ($self) = @_;
-  print $self->param('species');
-  if ( $self->param('species') ne "Ancestral sequences" ) {
-    $self->write_json();
-  }
-  return;
+    my ($self) = @_;
+    print $self->param('species');
+    if ($self->param('species') ne "Ancestral sequences") {
+        $self->write_json();
+    }
+    return;
 }
 
 sub write_json {
   my ($self) = @_;
   my $sub_dir = $self->create_dir('json');
   $self->info(
-          "Processing " . $self->production_name() . " into $sub_dir" );
+    "Processing " . $self->production_name() . " into $sub_dir");
   my $dba = $self->core_dba();
   my $exporter =
     Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
-                                            -LEVEL => 'protein_feature',
-                                            -LOAD_EXONS => 1,
-                                            -LOAD_XREFS => 1 );
+      -LEVEL => 'protein_feature',
+      -LOAD_EXONS => 1,
+      -LOAD_XREFS => 1);
 
   # work out compara division
   my $compara_name = $self->division();
-  if ( !defined $compara_name || $compara_name eq 'vertebrates' ) {
+  if (!defined $compara_name || $compara_name eq 'vertebrates') {
     $compara_name = 'multi';
   }
-  if ( $compara_name eq 'bacteria' ) {
+  if ($compara_name eq 'bacteria') {
     $compara_name = 'pan_homology';
   }
   # get genome
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ( $compara_name ne 'multi' ) {
+  if ($compara_name ne 'multi') {
     $genome_dba->set_ensembl_genomes_release();
   }
-  my $mds = $genome_dba->fetch_by_name( $self->production_name() );
+  my $mds = $genome_dba->fetch_by_name($self->production_name());
   my $md;
   my $division='Ensembl'.ucfirst($self->division());
   foreach my $genome (@{$mds}){
@@ -118,32 +118,31 @@ sub write_json {
                       taxonomy_id         => $md->taxonomy_id(),
                       species_taxonomy_id => $md->species_taxonomy_id(),
                       aliases             => $md->aliases() },
-            assembly => { name      => $md->assembly_name(),
+            assembly => { name => $md->assembly_name(),
                           accession => $md->assembly_accession(),
-                          level     => $md->assembly_level() } };
+                          level => $md->assembly_level() } };
 
   $genome_dba->dbc()->disconnect_if_idle();
   $self->info("Exporting genes");
   $genome->{genes} = $exporter->export_genes($dba);
   # add compara
   $self->info("Trying to find compara for '$compara_name'");
-  print "Looking for $compara_name\n";
-  my $compara =
-    Bio::EnsEMBL::Registry->get_DBAdaptor( $compara_name, 'compara' );
-  if ( !defined $compara ) {
-    die "No compara!\n";
+  my $compara = eval {
+      Bio::EnsEMBL::Registry->get_DBAdaptor($compara_name, 'compara')
+  };
+  if (defined $compara) {
+      $self->info("Adding " . $compara->species() . " compara");
+      $exporter->add_compara($self->production_name(), $genome->{genes}, $compara);
+      $compara->dbc()->disconnect_if_idle();
   }
-  if ( defined $compara ) {
-    $self->info( "Adding " . $compara->species() . " compara" );
-    $exporter->add_compara( $self->production_name(),
-                            $genome->{genes}, $compara );
-    $compara->dbc()->disconnect_if_idle();
-  }
+  else {
+      $self->warning("Compara '$compara_name' not found ");
+  };
   # remodel
   my $remodeller = $self->param('remodeller');
   my $hive_dbc = $self->dbc;
   $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
-  if ( defined $remodeller ) {
+  if (defined $remodeller) {
     $self->info("Remodelling genes");
     $remodeller->remodel_genome($genome);
     $remodeller->disconnect();

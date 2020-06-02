@@ -72,7 +72,7 @@
     {
       "name" : "MIM2GENE",
       "parser" : "Mim2GeneParser",
-      "file" : "https://omim.org/static/omim/data/mim2gene.txt",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen",
       "priority" : 2
     },
     {

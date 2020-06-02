@@ -142,7 +142,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '2->A' => ['BackupTables'],
-                              'A->2' => ['SpeciesFactory'],
+                              'A->2' => ['LoadAndDatacheck'],
                             }
     },
     {
@@ -198,6 +198,14 @@ sub pipeline_analyses {
                             },
     },
     {
+       -logic_name       => 'LoadAndDatacheck',
+       -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -flow_into        => {
+                              '1->A' => ['SpeciesFactory'],
+                              'A->1' => ['RunXrefDatacheck'],
+                            },
+    },
+    {
       -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
       -max_retry_count   => 1,
@@ -231,18 +239,21 @@ sub pipeline_analyses {
                               delete_existing => $self->o('delete_existing'),
                               logic_name      => $self->o('logic_name')
                             },
-      -flow_into         => {
+      -rc_name           => '4GB'
+    },
+    {
+       -logic_name       => 'RunXrefDatacheck',
+       -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -flow_into        => {
                               '1->A' => ['RunXrefCriticalDatacheck'],
                               'A->1' => ['RunXrefAdvisoryDatacheck']
                             },
-      -rc_name           => '4GB'
     },
     {
       -logic_name        => 'RunXrefCriticalDatacheck',
       -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -batch_size        => 10,
       -parameters        => {
                               datacheck_names  => ['ForeignKeys'],
                               datacheck_groups => ['xref'],
