@@ -51,6 +51,7 @@ sub default_options {
         regulatory_length => 100000,
         dump_variant    => 1,
         dump_regulation => 1,
+        gene_search_reformat => 0,
         release => software_version()
 	};
 }
@@ -58,7 +59,8 @@ sub default_options {
 sub pipeline_wide_parameters {
     my $self = shift;
     return { %{$self->SUPER::pipeline_wide_parameters()},
-        base_path => $self->o('base_path') };
+        base_path => $self->o('base_path'),
+        gene_search_reformat => $self->o('gene_search_reformat') };
 }
 
 sub pipeline_analyses {
@@ -199,11 +201,14 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -rc_name       => '32g',
             -flow_into     => {
-                1 => [
+                1 => WHEN ('#gene_search_reformat#' =>
+                    [
                     'ReformatGenomeAdvancedSearch',
                     #'ReformatGenomeSolr',
                     'ReformatGenomeEBeye'
-                ],
+                    ],
+                    ELSE ['ReformatGenomeEBeye'],
+                ),
                 -1 => 'DumpGenesJsonHighmem'
              }
         },
@@ -217,11 +222,14 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -rc_name       => '100g',
             -flow_into     => {
-                1 => [
+                1 => WHEN ('#gene_search_reformat#' =>
+                    [
                     'ReformatGenomeAdvancedSearch',
                     #'ReformatGenomeSolr',
                     'ReformatGenomeEBeye'
-                ]
+                    ],
+                    ELSE ['ReformatGenomeEBeye'],
+                ),
             }
         },
         {
@@ -251,7 +259,7 @@ sub pipeline_analyses {
             -flow_into  =>
                 {
                     #2 => ['ReformatRegulationSolr','ReformatRegulationAdvancedSearch'],
-                    2 => ['ReformatRegulationAdvancedSearch'],
+                    2 => WHEN ('#gene_search_reformat#' => ['ReformatRegulationAdvancedSearch'],),
                 }
         },
         {
@@ -287,11 +295,13 @@ sub pipeline_analyses {
             -rc_name    => '1g',
             -flow_into  =>
                 {
-                    1 => [
+                    1 => WHEN ('#gene_search_reformat#' => [
                         #'ReformatVariantsSolr',
                         'ReformatVariantsEBeye',
                         'ReformatVariantsAdvancedSearch'
-                    ]
+                    ],
+                    ELSE ['ReformatVariantsEBeye',],
+                    ),
                 }
         },
         {
@@ -391,8 +401,8 @@ sub pipeline_analyses {
                 {
                     #2 => ['ReformatProbesSolr','ReformatProbesAdvancedSearch'],
                     #3 => ['ReformatProbeSetsSolr','ReformatProbesetsAdvancedSearch'],
-                    2 => ['ReformatProbesAdvancedSearch'],
-                    3 => ['ReformatProbesetsAdvancedSearch'],
+                    2 => WHEN ('#gene_search_reformat#' => ['ReformatProbesAdvancedSearch'],),
+                    3 => WHEN ('#gene_search_reformat#' => ['ReformatProbesetsAdvancedSearch'],),
                 }
         },
         {

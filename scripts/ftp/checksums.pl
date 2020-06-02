@@ -66,6 +66,11 @@ sub run {
       remove_checksums($dir, $contents);
       generate_checksums($dir, $contents);
     }
+    elsif(directory_contents($contents)){
+      print STDERR "Directory is not a leaf but we have files in it; will generate checksums\n";
+      remove_checksums($dir, $contents);
+      generate_checksums($dir, $contents);
+    }
   }
   print STDERR "Done\n";
   return;
@@ -135,6 +140,11 @@ sub remove_file {
 sub leaf_directory {
   my ($contents) = @_;
   return (scalar(@{$contents->{dirs}}) == 0) ? 1 : 0;
+}
+
+sub directory_contents {
+  my ($contents) = @_;
+  return (scalar(@{$contents->{files}}) != 0) ? 1 : 0;
 }
 
 sub generate_checksums {

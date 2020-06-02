@@ -25,7 +25,7 @@ Questions may also be sent to the Ensembl help desk at
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_non_vertebrates_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_vertebrates_conf
 
 =head1 SYNOPSIS
 
@@ -35,24 +35,11 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_non_vertebrates_conf
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_non_vertebrates_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_vertebrates_conf;
 
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::SampleData_conf');
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-
-
-=head2 default_options
-
- Description: It returns a hashref containing the default options for HiveGeneric_conf
- Returntype : Hashref
- Exceptions : None
-
-
-=cut
 
 sub default_options {
     my ($self) = @_;
@@ -60,8 +47,14 @@ sub default_options {
     return {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
-	# plants with curated sample genes
-        antispecies   => ['triticum_aestivum','triticum_turgidum','triticum_dicoccoides','aegilops_tauschii','triticum_urartu','hordeum_vulgare','arabidopsis_thaliana','brassica_napus','brassica_oleracea','brassica_rapa','chara_braunii','chondrus_crispus','coffea_canephora','cyanidioschyzon_merolae','cynara_cardunculus','galdieria_sulphuraria','helianthus_annuus','medicago_truncatula','prunus_dulcis','vitis_vinifera','zea_mays','cucumis_melo'],
+	    # species with curated sample genes
+        antispecies => ['homo_sapiens',
+                        'danio_rerio',
+                        'equus_caballus',
+                        'bos_taurus',
+                        'ovis_aries',
+                        'sus_scrofa',
+                        'mus_musculus']
     };
 }
 
