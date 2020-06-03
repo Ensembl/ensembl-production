@@ -92,9 +92,30 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name       => 'SpeciesFactory',
-      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name        => 'RunSamples',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -input_ids        => [ {} ],
+      -flow_into         => {
+                              '1' => ['SpeciesFactoryGeneSample','SpeciesFactoryVEPSample'],
+                            },
+    },
+    {
+      -logic_name       => 'SpeciesFactoryVEPSample',
+      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -parameters       => {
+                             division     => $self->o('division'),
+                             run_all      => $self->o('run_all'),
+                             meta_filters => $self->o('meta_filters'),
+                           },
+      -max_retry_count  => 0,
+      -flow_into        => {
+                             '2' => ['GenerateVEPSample']
+                           },
+      -rc_name          => 'mem',
+    },
+    {
+      -logic_name       => 'SpeciesFactoryGeneSample',
+      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters       => {
                              species      => $self->o('species'),
                              division     => $self->o('division'),
@@ -106,7 +127,7 @@ sub pipeline_analyses {
       -flow_into        => {
                              '2' => ['CheckMetadata']
                            },
-      -rc_name          => 'normal',
+      -rc_name          => 'mem',
     },
     { -logic_name  => 'CheckMetadata',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
@@ -139,6 +160,23 @@ sub pipeline_analyses {
       -rc_name          => 'mem_high',
     },
     {
+      -logic_name  => "GenerateVEPSample",
+      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -meadow_type => 'LSF',
+      -parameters  => {
+          'cmd'      =>
+              'perl #base_dir#/ensembl-variation/scripts/misc/generate_vep_examples.pl $(#db_srv# details script) -species #species# -version #release#',
+          'db_srv'   => $self->o('db_srv'),
+          'release'  => $self->o('release'),
+          'base_dir' => $self->o('base_dir')
+      },
+      -rc_name     => 'mem',
+      -analysis_capacity => 30,
+      -flow_into        => {
+                            '1' => ['RunDataChecks']
+                           },
+    },
+    {
       -logic_name      => 'RunDataChecks',
       -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters      => {
@@ -160,7 +198,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'mem_high'    => {'LSF' => '-q production-rh74 -M 15000 -R "rusage[mem=15000]"'},
+    'mem_high'    => {'LSF' => '-q production-rh74 -M 25000 -R "rusage[mem=25000]"'},
   }
 }
 
