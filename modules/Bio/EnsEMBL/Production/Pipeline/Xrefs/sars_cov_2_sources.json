@@ -1,0 +1,37 @@
+[
+    {
+      "name" : "EntrezGene",
+      "parser" : "EntrezGeneParser",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "RefSeq_peptide",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/009/858/895/GCF_009858895.2_ASM985889v3/GCF_009858895.2_ASM985889v3_protein.gpff.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 99,
+      "target_cutoff" : 99,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "Uniprot/SPTREMBL",
+      "parser" : "UniProtParser",
+      "file" : "Database",
+      "db" : "checksum",
+      "method" : "--bestn 1",
+      "query_cutoff" : 99,
+      "target_cutoff" : 99,
+      "priority" : 1
+    },
+    {
+      "name" : "Uniprot/SWISSPROT",
+      "parser" : "UniProtParser",
+      "file" : "ftp://ftp.uniprot.org/pub/databases/uniprot/pre_release/covid-19.dat",
+      "method" : "--bestn 1",
+      "query_cutoff" : 99,
+      "target_cutoff" : 99,
+      "priority" : 1
+    }
+]
