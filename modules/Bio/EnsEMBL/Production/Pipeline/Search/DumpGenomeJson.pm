@@ -41,7 +41,7 @@ use Log::Log4perl qw/:easy/;
 
 sub dump {
 	my ( $self, $species ) = @_;
-	if ( $species ne "Ancestral sequences" ) {
+	if ( $species !~ /Ancestral sequences/ ) {
 		my $compara = $self->param('compara');
 		if ( !defined $compara ) {
 			$compara = $self->division();
@@ -83,7 +83,7 @@ sub dump {
 		  if ( Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' ) )
 		  ;
 
-	} ## end if ( $species ne "Ancestral sequences")
+	} ## end if ( $species !~ /Ancestral sequences/)
 	return;
 } ## end sub dump
 
