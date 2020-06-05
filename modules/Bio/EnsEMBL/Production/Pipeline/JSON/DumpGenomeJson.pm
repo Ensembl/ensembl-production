@@ -61,7 +61,7 @@ sub param_defaults {
 sub run {
     my ($self) = @_;
     print $self->param('species');
-    if ($self->param('species') ne "Ancestral sequences") {
+    if ($self->param('species') !~ /Ancestral sequences/) {
         $self->write_json();
     }
     return;

@@ -40,7 +40,7 @@ use Log::Log4perl qw/:easy/;
 sub dump {
   my ($self, $species, $type) = @_;
   $self->{logger} = get_logger();
-  if ($species ne "Ancestral sequences") {
+  if ($species !~ /Ancestral sequences/) {
 
     my $compara = $self->param('compara');
     if (!defined $compara) {
@@ -78,7 +78,7 @@ sub dump {
     $self->{logger}->info("Completed dumping $species $type");
     $dba->dbc()->disconnect_if_idle(1);
     $self->dataflow_output_id($output, 1);
-  } ## end if ( $species ne "Ancestral sequences")
+  } ## end if ( $species !~ /Ancestral sequences/)
   return;
 } ## end sub dump
 
