@@ -51,7 +51,7 @@ my $expected_files = {
 sub run {
   my ($self) = @_;
   my $species = $self->param('species');
-  if ( $species ne "Ancestral sequences" ) {
+  if ( $species !~ /Ancestral sequences/ ) {
     Log::Log4perl->easy_init($DEBUG);
     $self->{logger} = get_logger();
     my $base_path = $self->param('base_path');

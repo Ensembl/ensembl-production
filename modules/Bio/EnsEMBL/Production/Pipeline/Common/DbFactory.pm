@@ -144,7 +144,7 @@ sub run {
 
     if ($run_all) {
       foreach my $dba (@$all_dbas) {
-        unless ($dba->species eq 'Ancestral sequences') {
+        unless ($dba->species =~ /Ancestral sequences/) {
           $self->add_species($dba, \%dbs);
         }
       }
