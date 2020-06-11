@@ -37,6 +37,8 @@ use warnings;
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use File::Spec::Functions qw(catdir);
+use Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions;
+
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
@@ -89,7 +91,11 @@ sub default_options {
     # Datachecks
     history_file   => undef,
     config_file    => undef,
-    old_server_uri => undef
+    old_server_uri => undef,
+
+    # Compara update parameters
+    update_capacity => '5',
+
   };
 }
 
@@ -115,6 +121,7 @@ sub pipeline_wide_parameters {
   return {
     %{$self->SUPER::pipeline_wide_parameters},
     'store_projections' => $self->o('store_projections'),
+    'compara_db' => $self->o('compara_db')
   };
 }
 
@@ -374,8 +381,18 @@ sub pipeline_analyses {
                             subject => $self->o('pipeline_name').' has completed',
                             text    => 'Log files: '.$self->o('output_dir'),
                           },
+      -flow_into => ['species_update_factory'],
     },
+    @{Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self)},
   ];
+}
+
+sub resource_classes {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
+        '1Gb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M1000 -R"select[mem>1000] rusage[mem=1000]"'] },
+    };
 }
 
 1;
