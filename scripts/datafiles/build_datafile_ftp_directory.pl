@@ -464,7 +464,7 @@ sub _get_dbs {
 
   while(my $dba = shift @{$dbas}) {
     next if $dba->species() eq 'multi';
-    next if lc($dba->species()) eq 'ancestral sequences';
+    next if lc($dba->species()) =~ /ancestral sequences/;
     next if $dba->dbc()->dbname() =~ /^.+_userdata$/xms;
     
     my $type = $dba->get_MetaContainer()->single_value_by_key('schema_type');
