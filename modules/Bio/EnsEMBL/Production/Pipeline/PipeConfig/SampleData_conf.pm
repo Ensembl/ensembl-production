@@ -62,7 +62,7 @@ sub default_options {
     return {
         # inherit other stuff from the base class
         %{ $self->SUPER::default_options() },
-        pipeline_name => 'sample_data_'.$self->o('release'),
+        pipeline_name => 'sample_data_'.$self->o('ensembl_release'),
         ## 'job_factory' parameters
         species       => [],
         antispecies   => [],
@@ -71,7 +71,11 @@ sub default_options {
         meta_filters  => {},
         history_file => undef,
         skip_metadata_check => 0,
-        release => software_version(),
+        vep_species => $self->o('species'),
+        gene_species => $self->o('species'),
+        vep_division => $self->o('division'),
+        gene_division => $self->o('division'),
+        base_dir => $ENV{'BASE_DIR'},
         # Only used for vertebrates at the moment
         maximum_gene_length => 100000,
     };
@@ -92,12 +96,34 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name       => 'SpeciesFactory',
-      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name        => 'RunSamples',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -input_ids        => [ {} ],
+      -flow_into         => {
+                              '1' => ['SpeciesFactoryGeneSample','SpeciesFactoryVEPSample'],
+                            },
+    },
+    {
+      -logic_name       => 'SpeciesFactoryVEPSample',
+      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters       => {
-                             species      => $self->o('species'),
-                             division     => $self->o('division'),
+                             division     => $self->o('vep_division'),
+                             species      => $self->o('vep_species'),
+                             run_all      => $self->o('run_all'),
+                             meta_filters => $self->o('meta_filters'),
+                           },
+      -max_retry_count  => 0,
+      -flow_into        => {
+                             '2' => ['GenerateVEPSample']
+                           },
+      -rc_name          => 'mem',
+    },
+    {
+      -logic_name       => 'SpeciesFactoryGeneSample',
+      -module           => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -parameters       => {
+                             species      => $self->o('gene_species'),
+                             division     => $self->o('gene_division'),
                              run_all      => $self->o('run_all'),
                              antispecies  => $self->o('antispecies'),
                              meta_filters => $self->o('meta_filters'),
@@ -106,13 +132,13 @@ sub pipeline_analyses {
       -flow_into        => {
                              '2' => ['CheckMetadata']
                            },
-      -rc_name          => 'normal',
+      -rc_name          => 'mem',
     },
     { -logic_name  => 'CheckMetadata',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
       -parameters  => {
           skip_metadata_check => $self->o('skip_metadata_check'),
-          release => $self->o('release')
+          release => $self->o('ensembl_release')
        },
       -can_be_empty    => 1,
       -flow_into       => {
@@ -134,9 +160,41 @@ sub pipeline_analyses {
       -hive_capacity   => 50,
       -batch_size      => 10,
       -flow_into        => {
-                             '1' => ['RunDataChecks']
+                             '1' => ['RunDataChecks'],
+                             '-1' => ['GenerateSampleData_25GB'],
+                           },
+      -rc_name          => 'mem',
+    },
+    {
+      -logic_name       => 'GenerateSampleData_25GB',
+      -module           => 'Bio::EnsEMBL::Production::Pipeline::SampleData::GenerateSampleData',
+      -max_retry_count  => 1,
+      -parameters      =>  {
+                              maximum_gene_length => $self->o('maximum_gene_length'),
+                           },
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -flow_into        => {
+                             '1' => ['RunDataChecks'],
                            },
       -rc_name          => 'mem_high',
+    },
+    {
+      -logic_name  => "GenerateVEPSample",
+      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -meadow_type => 'LSF',
+      -parameters  => {
+          'cmd'      =>
+              'perl #base_dir#/ensembl-variation/scripts/misc/generate_vep_examples.pl $(#db_srv# details script) -species #species# -version #release#',
+          'db_srv'   => $self->o('db_srv'),
+          'release'  => $self->o('ensembl_release'),
+          'base_dir' => $self->o('base_dir')
+      },
+      -rc_name     => 'mem',
+      -analysis_capacity => 30,
+      -flow_into        => {
+                            '1' => ['RunDataChecks']
+                           },
     },
     {
       -logic_name      => 'RunDataChecks',
@@ -160,7 +218,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'mem_high'    => {'LSF' => '-q production-rh74 -M 15000 -R "rusage[mem=15000]"'},
+    'mem_high'    => {'LSF' => '-q production-rh74 -M 25000 -R "rusage[mem=25000]"'},
   }
 }
 
