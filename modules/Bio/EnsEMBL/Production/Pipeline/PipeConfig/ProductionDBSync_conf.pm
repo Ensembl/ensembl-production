@@ -43,6 +43,7 @@ sub default_options {
     species      => [],
     antispecies  => [],
     division     => [],
+    dbname       => [],
     run_all      => 0,
     meta_filters => {},
 
@@ -107,6 +108,7 @@ sub pipeline_analyses {
                               species      => $self->o('species'),
                               antispecies  => $self->o('antispecies'),
                               division     => $self->o('division'),
+                              dbname       => $self->o('dbname'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
                             },
@@ -250,7 +252,8 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              email => $self->o('email'),
+                              email         => $self->o('email'),
+                              pipeline_name => $self->o('pipeline_name'),
                             },
       -rc_name           => 'normal',
    },
