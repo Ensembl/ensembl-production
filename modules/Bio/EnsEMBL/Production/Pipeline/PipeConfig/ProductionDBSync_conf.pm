@@ -207,6 +207,7 @@ sub pipeline_analyses {
                                 'ControlledTablesCore',
                                 'ControlledTablesVariation',
                                 'ForeignKeys',
+                                'GeneBiotypes',
                               ],
                               registry_file   => $self->o('registry'),
                               history_file    => $self->o('history_file'),
