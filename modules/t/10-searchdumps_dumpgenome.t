@@ -70,7 +70,7 @@ is( $genome->dbname(),     $genome_hash->{dbname},     "dbname correct" );
 is( $genome->species_id(), $genome_hash->{species_id}, "species_id correct" );
 is( $genome->division(),   $genome_hash->{division},   "division correct" );
 is( $genome->genebuild(),  $genome_hash->{genebuild},  "genebuild correct" );
-is( $genome->is_reference()==1?"true":"false", $genome_hash->{is_reference}, "is_reference correct" );
+is( $genome->reference(), $genome_hash->{reference}, "reference correct" );
 is( $genome->assembly_name(), $genome_hash->{assembly}->{name},	"ass name correct" );
 is( $genome->assembly_accession(), $genome_hash->{assembly}->{accession}, "ass ID correct" );
 is( $genome->assembly_level(), $genome_hash->{assembly}->{level}, "ass level correct" );

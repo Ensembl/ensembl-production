@@ -44,6 +44,7 @@ sub param_defaults {
     run_all      => 0,
     antispecies  => [],
     antitaxons   => [],
+    dbname       => [],
     all_dbs_flow => 1,
     db_flow      => 2,
     compara_flow => 5, # compara_flow moved here from SpeciesFactory; retain former flow #5 here, to avoid bugs
@@ -90,88 +91,108 @@ sub run {
   my $division = $self->param('division') || [];
   my @division = ( ref($division) eq 'ARRAY' ) ? @$division : ($division);
 
-  my $run_all      = $self->param('run_all');
+  my $run_all = $self->param('run_all');
 
   my $antitaxons = $self->param('antitaxons') || [];
   my @antitaxons = ( ref($antitaxons) eq 'ARRAY' ) ? @$antitaxons : ($antitaxons);
 
   my $antispecies = $self->param('antispecies') || [];
-  my @antispecies =
-    ( ref($antispecies) eq 'ARRAY' ) ? @$antispecies : ($antispecies);
+  my @antispecies = ( ref($antispecies) eq 'ARRAY' ) ? @$antispecies : ($antispecies);
+
+  my $dbnames = $self->param('dbname') || [];
+  my @dbnames = ( ref($dbnames) eq 'ARRAY' ) ? @$dbnames : ($dbnames);
 
   my %meta_filters = %{ $self->param('meta_filters') };
 
   my $group = $self->param('group');
 
-  my $taxonomy_dba;
-  if (scalar(@taxons) || scalar(@antitaxons)) {
-    $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
-  }
-
-  my $all_dbas = $reg->get_all_DBAdaptors( -GROUP => $group );
   my %dbs;
-
-  my $all_compara_dbas;
-  if ($self->param('compara_flow')) {
-    $all_compara_dbas = $reg->get_all_DBAdaptors( -GROUP => 'compara' );
-  }
   my %compara_dbs;
+  my @all_species;
 
-  if ( ! scalar(@$all_dbas) && ! scalar(@$all_compara_dbas) ) {
-    $self->throw("No $group or compara databases found in the registry");
-  }
-
-  if ($run_all) {
-    foreach my $dba (@$all_dbas) {
-      unless ($dba->species =~ /Ancestral sequences/) {
-        $self->add_species($dba, \%dbs);
+  # If dbnames are provided, they trump every other parameter,
+  # only those are loaded; it's complicated to be be able to use
+  # them in conjunction with species/division parameters, and it's
+  # not clear if that's a use case worth supporting.
+  if (scalar(@dbnames)) {
+    foreach my $dbname (@dbnames) {
+      my $dbas = $reg->get_all_DBAdaptors_by_dbname($dbname);
+      if (scalar(@$dbas)) {
+        foreach my $dba (@$dbas) {
+          $self->add_species($dba, \%dbs);
+        }
+      } else {
+        $self->warning("Database $dbname not found in registry.");
       }
     }
-    $self->warning("All species in " . scalar(keys %dbs) . " databases loaded");
-    
-    %compara_dbs = map { $_->species => $_ } @$all_compara_dbas;
-  }
-  elsif ( scalar(@species) ) {
-    foreach my $species (@species) {
-      $self->process_species( $all_dbas, $species, \%dbs );
+  } else {
+    my $taxonomy_dba;
+    if (scalar(@taxons) || scalar(@antitaxons)) {
+      $taxonomy_dba = $reg->get_DBAdaptor( 'multi', 'taxonomy' );
     }
-  }
-  elsif ( scalar(@taxons) ) {
-    foreach my $taxon (@taxons) {
-      $self->process_taxon( $all_dbas , $taxonomy_dba, $taxon, "add", \%dbs );
-    }
-  }
-  elsif ( scalar(@division) ) {
-    foreach my $division (@division) {
-      $self->process_division( $all_dbas, $division, \%dbs );
-      $self->process_division_compara( $all_compara_dbas, $division, \%compara_dbs );
-    }
-  }
 
-  if ( scalar(@antitaxons) ) {
-    foreach my $antitaxon (@antitaxons) {
-      $self->process_taxon( $all_dbas, $taxonomy_dba, $antitaxon, "remove", \%dbs );
-      $self->warning("$antitaxon taxon removed");
+    my $all_dbas = $reg->get_all_DBAdaptors( -GROUP => $group );
+
+    my $all_compara_dbas;
+    if ($self->param('compara_flow')) {
+      $all_compara_dbas = $reg->get_all_DBAdaptors( -GROUP => 'compara' );
     }
-  }  
-  if ( scalar(@antispecies) ) {
-    foreach my $antispecies (@antispecies) {
-      foreach my $dbname ( keys %dbs ) {
-        if (exists $dbs{$dbname}{$antispecies}) {
-          $self->remove_species($dbname, $antispecies, \%dbs);
-          $self->warning("$antispecies removed");
+
+    if ( ! scalar(@$all_dbas) && ! scalar(@$all_compara_dbas) ) {
+      $self->throw("No $group or compara databases found in the registry");
+    }
+
+    if ($run_all) {
+      foreach my $dba (@$all_dbas) {
+        unless ($dba->species =~ /Ancestral sequences/) {
+          $self->add_species($dba, \%dbs);
+        }
+      }
+      $self->warning("All species in " . scalar(keys %dbs) . " databases loaded");
+      
+      %compara_dbs = map { $_->species => $_ } @$all_compara_dbas;
+    }
+    elsif ( scalar(@species) ) {
+      foreach my $species (@species) {
+        $self->process_species( $all_dbas, $species, \%dbs );
+      }
+    }
+    elsif ( scalar(@taxons) ) {
+      foreach my $taxon (@taxons) {
+        $self->process_taxon( $all_dbas , $taxonomy_dba, $taxon, "add", \%dbs );
+      }
+    }
+    elsif ( scalar(@division) ) {
+      foreach my $division (@division) {
+        $self->process_division( $all_dbas, $division, \%dbs );
+        $self->process_division_compara( $all_compara_dbas, $division, \%compara_dbs );
+      }
+    }
+
+    if ( scalar(@antitaxons) ) {
+      foreach my $antitaxon (@antitaxons) {
+        $self->process_taxon( $all_dbas, $taxonomy_dba, $antitaxon, "remove", \%dbs );
+        $self->warning("$antitaxon taxon removed");
+      }
+    }  
+    if ( scalar(@antispecies) ) {
+      foreach my $antispecies (@antispecies) {
+        foreach my $dbname ( keys %dbs ) {
+          if (exists $dbs{$dbname}{$antispecies}) {
+            $self->remove_species($dbname, $antispecies, \%dbs);
+            $self->warning("$antispecies removed");
+          }
         }
       }
     }
-  }
 
-  if ( scalar( keys %meta_filters ) ) {
-    foreach my $meta_key ( keys %meta_filters ) {
-      $self->filter_species( $meta_key, $meta_filters{$meta_key}, \%dbs );
+    if ( scalar( keys %meta_filters ) ) {
+      foreach my $meta_key ( keys %meta_filters ) {
+        $self->filter_species( $meta_key, $meta_filters{$meta_key}, \%dbs );
+      }
     }
   }
 
-  my @all_species;
   foreach my $db_name (keys %dbs) {
     push @all_species, keys %{ $dbs{$db_name} };
   }

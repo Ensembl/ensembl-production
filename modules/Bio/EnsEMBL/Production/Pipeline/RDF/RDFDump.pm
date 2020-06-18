@@ -78,6 +78,7 @@ sub run {
   };
   my $hive_dbc = $self->dbc;
   $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+  $dba->dbc->disconnect_if_idle();
 
   my $slices = $self->get_Slices(undef, ($species eq 'homo_sapiens')?1:0);
   #

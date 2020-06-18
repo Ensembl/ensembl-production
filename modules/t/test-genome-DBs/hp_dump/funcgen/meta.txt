@@ -1,5 +1,5 @@
 1	1	schema_type	funcgen
-2	\N	schema_version	100
+2	\N	schema_version	101
 3	\N	patch	patch_88_89_a.sql|schema_version
 4	\N	patch	patch_88_89_b.sql|Created probe_seq table
 5	\N	patch	patch_88_89_c.sql|created probe_feature_transcript table
@@ -11,7 +11,7 @@
 11	\N	patch	patch_88_89_i.sql|New columns for array table
 12	\N	patch	patch_88_89_j.sql|Added array_chip_id column to probe_set table
 13	\N	patch	patch_88_89_k.sql|Added probe_seq_id column to probe table
-534	\N	schema_version	100
+534	\N	schema_version	101
 156	1	species.production_name	homo_sapiens
 223	\N	schema_type	funcgen
 589	\N	patch	patch_78_79_a.sql|schema_version
@@ -185,3 +185,4 @@
 762	\N	patch	patch_99_100_c.sql|remove default values from text data type
 763	\N	patch	patch_99_100_d.sql|update type column on external_db table
 764	\N	patch	patch_99_100_e.sql|Make some foreign keys not mandatory
+765	\N	patch	patch_100_101_a.sql|schema_version

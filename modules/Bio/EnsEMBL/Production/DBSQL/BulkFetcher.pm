@@ -78,7 +78,7 @@ sub _append_biotype_sql {
 sub _append_analysis_sql {
     my ($self, $dba, $sql, $table) = @_;
     my $analysis_ids = $dba->dbc()->sql_helper()->execute_simple(
-        -SQL => q/select analysis_id from analysis_description where web_data rlike '"gene" *=> *{"do_not_display" *=> *1}'/
+        -SQL => q/select analysis_id from analysis_description where web_data rlike '"gene" *: *{"do_not_display" *: *"1"}'/
     );
     if (scalar @{$analysis_ids} > 0) {
         $sql .= ' and ' . $table . '.analysis_id not in (' . join(',', @$analysis_ids) . ')';

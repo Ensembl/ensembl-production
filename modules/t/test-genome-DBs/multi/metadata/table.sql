@@ -355,7 +355,7 @@ DROP TABLE IF EXISTS `organism`;
 CREATE TABLE `organism` (
   `organism_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `taxonomy_id` int(10) unsigned NOT NULL,
-  `is_reference` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `reference` varchar(128) DEFAULT NULL,
   `species_taxonomy_id` int(10) unsigned NOT NULL,
   `name` varchar(128) NOT NULL,
   `url_name` varchar(128) NOT NULL,

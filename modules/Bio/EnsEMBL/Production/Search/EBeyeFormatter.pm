@@ -86,7 +86,7 @@ sub reformat_genome {
         'assembly_default'      => $genome->{assembly}{'default'},
         'assembly_accession'    => $genome->{assembly}{accession},
         'genebuild'             => $genome->{genebuild},
-        'is_reference'          => $genome->{is_reference},
+        'reference'             => $genome->{reference},
         'has_pan_compara'       => $genome->{has_pan_compara},
         'has_peptide_compara'   => $genome->{has_peptide_compara},
         'has_synteny'           => $genome->{has_synteny},

@@ -37,6 +37,8 @@ use warnings;
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use File::Spec::Functions qw(catdir);
+use Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions;
+
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
@@ -79,12 +81,20 @@ sub default_options {
     project_xrefs          => 0,
     project_trans_names    => 0,
     white_list             => [],
-    gene_desc_rules   	   => ['hypothetical', 'putative', 'unknown protein'],
+    gene_desc_rules        => ['hypothetical', 'putative', 'unknown protein'],
     gene_desc_rules_target => ['Uncharacterized protein', 'Predicted protein', 'Gene of unknown', 'hypothetical protein'],
 
     # Configuration for gene name projection must be defined in sub classes
     gn_config => [],
     gd_config => [],
+
+    # Datachecks
+    history_file   => undef,
+    config_file    => undef,
+    old_server_uri => undef,
+
+    # Compara update parameters
+    update_capacity => '5',
 
   };
 }
@@ -106,17 +116,18 @@ sub pipeline_create_commands {
   ];
 }
 
-sub pipeline_wide_parameters {  
+sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
     %{$self->SUPER::pipeline_wide_parameters},
     'store_projections' => $self->o('store_projections'),
+    'compara_db' => $self->o('compara_db')
   };
 }
 
 sub pipeline_analyses {
   my ($self) = @_;
-  
+
   return [
     {
       -logic_name        => 'ProjectionPipeline',
@@ -230,11 +241,11 @@ sub pipeline_analyses {
       -parameters        => {
                               config      => $self->o('gn_config'),
                               config_type => 'names',
-                            }, 
+                            },
       -flow_into         => {
                               '4->A' => ['TargetFactory_Names'],
                               'A->3' => ['SourceFactory_Names'],
-                            },          
+                            },
     },
     {
       -logic_name        => 'TargetFactory_Names',
@@ -263,62 +274,126 @@ sub pipeline_analyses {
                               project_xrefs          => $self->o('project_xrefs'),
                               project_trans_names    => $self->o('project_trans_names'),
                               white_list             => $self->o('white_list'),
-                              gene_desc_rules   	   => $self->o('gene_desc_rules'),
+                              gene_desc_rules        => $self->o('gene_desc_rules'),
                               gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                             },
       -rc_name           => 'mem',
-      },
-      {
-        -logic_name        => 'SourceFactory_Descs',
-        -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
-        -parameters        => {
-                                config      => $self->o('gd_config'),
-                                config_type => 'descs',
-                              }, 
-        -flow_into         => {
-                                '4->A' => ['TargetFactory_Descs'],
-                                'A->3' => ['SourceFactory_Descs'],
-                              },          
-      },
-      {
-        -logic_name        => 'TargetFactory_Descs',
-        -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-        -analysis_capacity => 5,
-        -rc_name           => 'default',
-        -flow_into         => {
-                                '2' => ['GeneDescProjection'],
-                              },
-      },
-      {
-        -logic_name        => 'GeneDescProjection',
-        -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneDescProjection',
-        -analysis_capacity => 20,
-        -parameters        => {
-                                compara                => $self->o('compara_division'),
-                                release                => $self->o('ensembl_release'),
-                                output_dir             => $self->o('output_dir'),
-                                store_projections      => $self->o('store_projections'),
-                                method_link_type       => $self->o('method_link_type'),
-                                homology_types_allowed => $self->o('homology_types_allowed'),
-                                is_tree_compliant      => $self->o('is_tree_compliant'),
-                                percent_id_filter      => $self->o('percent_id_filter'),
-                                percent_cov_filter     => $self->o('percent_cov_filter'),
-                                gene_name_source       => $self->o('gene_name_source'),
-                                gene_desc_rules   	   => $self->o('gene_desc_rules'),
-                                gene_desc_rules_target => $self->o('gene_desc_rules_target'),
-                              },
-        -rc_name           => 'mem',
-        },
-        {
-          -logic_name      => 'EmailReport',
-          -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::EmailReport',
-          -parameters      => {
-                                email   => $self->o('email'),
-                                subject => $self->o('pipeline_name').' has completed',
-                                text 	  => 'Log files: '.$self->o('output_dir'),
-                              },
-        },
+      -flow_into         => {
+                              '1->A' => ['RunXrefCriticalDatacheck'],
+                              'A->1' => ['RunXrefAdvisoryDatacheck']
+                            }
+    },
+    {
+      -logic_name        => 'SourceFactory_Descs',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::SourceFactory',
+      -parameters        => {
+                              config      => $self->o('gd_config'),
+                              config_type => 'descs',
+                            },
+      -flow_into         => {
+                              '4->A' => ['TargetFactory_Descs'],
+                              'A->3' => ['SourceFactory_Descs'],
+                            },
+    },
+    {
+      -logic_name        => 'TargetFactory_Descs',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -analysis_capacity => 5,
+      -rc_name           => 'default',
+      -flow_into         => {
+                              '2' => ['GeneDescProjection'],
+                            },
+    },
+    {
+      -logic_name        => 'GeneDescProjection',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneNameDescProjection::GeneDescProjection',
+      -analysis_capacity => 20,
+      -parameters        => {
+                              compara                => $self->o('compara_division'),
+                              release                => $self->o('ensembl_release'),
+                              output_dir             => $self->o('output_dir'),
+                              store_projections      => $self->o('store_projections'),
+                              method_link_type       => $self->o('method_link_type'),
+                              homology_types_allowed => $self->o('homology_types_allowed'),
+                              is_tree_compliant      => $self->o('is_tree_compliant'),
+                              percent_id_filter      => $self->o('percent_id_filter'),
+                              percent_cov_filter     => $self->o('percent_cov_filter'),
+                              gene_name_source       => $self->o('gene_name_source'),
+                              gene_desc_rules        => $self->o('gene_desc_rules'),
+                              gene_desc_rules_target => $self->o('gene_desc_rules_target'),
+                            },
+      -rc_name           => 'mem',
+      -flow_into         => {
+                              '1->A' => ['RunXrefCriticalDatacheck'],
+                              'A->1' => ['RunXrefAdvisoryDatacheck']
+                            }
+    },
+    {
+      -logic_name        => 'RunXrefCriticalDatacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              datacheck_names  => ['ForeignKeys'],
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              config_file      => $self->o('config_file'),
+                              history_file     => $self->o('history_file'),
+                              old_server_uri   => $self->o('old_server_uri'),
+                              failures_fatal   => 1,
+                            },
+    },
+    {
+      -logic_name        => 'RunXrefAdvisoryDatacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -batch_size        => 10,
+      -analysis_capacity => 10,
+      -parameters        => {
+                              datacheck_groups => ['xref'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              config_file      => $self->o('config_file'),
+                              history_file     => $self->o('history_file'),
+                              old_server_uri   => $self->o('old_server_uri'),
+                              failures_fatal   => 0,
+                            },
+      -flow_into         => {
+                              '4' => 'EmailReportXrefAdvisory'
+                            },
+    },
+    {
+      -logic_name        => 'EmailReportXrefAdvisory',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              email         => $self->o('email'),
+                              pipeline_name => $self->o('pipeline_name'),
+                            },
+    },
+    {
+      -logic_name      => 'EmailReport',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::EmailReport',
+      -parameters      => {
+                            email   => $self->o('email'),
+                            subject => $self->o('pipeline_name').' has completed',
+                            text    => 'Log files: '.$self->o('output_dir'),
+                          },
+      -flow_into => ['species_update_factory'],
+    },
+    @{Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self)},
   ];
+}
+
+sub resource_classes {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
+        '1Gb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M1000 -R"select[mem>1000] rusage[mem=1000]"'] },
+    };
 }
 
 1;

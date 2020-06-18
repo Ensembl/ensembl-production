@@ -102,7 +102,7 @@ sub default_options {
 	   'ucsc' 		 => 1,
        ## rdf parameters
        'xref' => 1,
-       'config_file' => $self->o('ensembl_cvs_root_dir').'/VersioningService/conf/xref_LOD_mapping.json',
+       'config_file' => $self->o('ensembl_cvs_root_dir') . '/ensembl-production/conf/xref_LOD_mapping.json',
 
        ## BLAT
        # A list of vertebrates species for which we have Blast server running with their associated port number
@@ -126,6 +126,7 @@ sub default_options {
        },
       # History file for storing record of datacheck run.
       history_file => undef,
+      datacheck_output_dir => undef,
       ## Indexing parameters
       'skip_blat'              => 0,
       'skip_ncbiblast'         => 0,
@@ -538,6 +539,7 @@ sub pipeline_analyses {
     -parameters        => {
                             datacheck_names  => ['MetaKeyAssembly'],
                             history_file     => $self->o('history_file'),
+                            output_dir       => $self->o('datacheck_output_dir'),
                             failures_fatal   => 0,
                           },
     -max_retry_count   => 1,

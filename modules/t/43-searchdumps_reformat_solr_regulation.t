@@ -47,10 +47,10 @@ subtest "Probes reformat", sub {
 		my $expected = {
 			'website'          => 'http://www.ensembl.org/',
 			'db_boost'         => 1,
-			'reference_strain' => 0,
+			'reference_strain' => undef,
 			'id'               => '1165690',
 			'species'          => 'homo_sapiens',
-			'ref_boost'        => 10,
+			'ref_boost'        => 1,
 			'domain_url' =>
 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=1165690',
 			'database_type' => 'funcgen',
@@ -64,11 +64,11 @@ subtest "Probes reformat", sub {
 		my ($probe) = grep { $_->{id} eq '1086121' } @$new_probes;
 		my $expected = {
 			'id'               => '1086121',
-			'reference_strain' => 0,
+			'reference_strain' => undef,
 			'db_boost'         => 1,
 			'website'          => 'http://www.ensembl.org/',
 			'species'          => 'homo_sapiens',
-			'ref_boost'        => 10,
+			'ref_boost'        => 1,
 			'domain_url' =>
 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=1086121',
 			'description' =>
@@ -87,11 +87,11 @@ subtest "Probes reformat", sub {
 'PHALANX probe PH_hs_0020454 (OneArray array) hits the genome in 1 location(s).',
 			'species_name' => 'Homo sapiens',
 			'feature_type' => 'OligoProbe',
-			'ref_boost'    => 10,
+			'ref_boost'    => 1,
 			'domain_url' =>
 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=13396',
 			'species'          => 'homo_sapiens',
-			'reference_strain' => 0,
+			'reference_strain' => undef,
 			'website'          => 'http://www.ensembl.org/',
 			'db_boost'         => 1,
 			'id'               => '13396' };
@@ -114,14 +114,14 @@ subtest "Probesets reformat", sub {
 			'db_boost'         => 1,
 			'database_type'    => 'funcgen',
 			'feature_type'     => 'OligoProbe',
-			'reference_strain' => 0,
+			'reference_strain' => undef,
 			'species'          => 'homo_sapiens',
 			'description' =>
 'AFFY probeset 1000_at (HC-G110 array) hits the genome in 30 location(s). They hit transcripts in the following gene: MAPK3 (ENST00000263025, ENST00000322266, ENST00000461737, ENST00000466521, ENST00000484663, ENST00000485579, ENST00000490298, ENST00000494643)',
 			'domain_url' =>
 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=homo_sapiens_probeset_1;ptype=pset',
 			'website'   => 'http://www.ensembl.org/',
-			'ref_boost' => 10 };
+			'ref_boost' => 1 };
 		is_deeply( $probe, $expected );
 	}
 	{
@@ -129,11 +129,11 @@ subtest "Probesets reformat", sub {
 		  grep { $_->{id} eq 'homo_sapiens_probeset_201' } @$new_probes;
 		my $expected = {
 			'id'               => 'homo_sapiens_probeset_201',
-			'reference_strain' => 0,
+			'reference_strain' => undef,
 			'species_name'     => 'Homo sapiens',
 			'description' =>
 'AFFY probeset 1059_at (HC-G110 array) hits the genome in 23 location(s).',
-			'ref_boost' => 10,
+			'ref_boost' => 1,
 			'species'   => 'homo_sapiens',
 			'domain_url' =>
 'Homo_sapiens/Location/Genome?fdb=funcgen;ftype=ProbeFeature;id=homo_sapiens_probeset_201;ptype=pset',
@@ -162,8 +162,8 @@ subtest "Regulatory features reformat", sub {
 								'domain_url' => 'Homo_sapiens/Regulation/Summary?rf=ENSR00000999056',
 								'feature_type' => 'Regulatory Features',
 								'id' => 'ENSR00000999056',
-								'ref_boost' => 10,
-								'reference_strain' => 0,
+								'ref_boost' => 1,
+								'reference_strain' => undef,
 								'species' => 'homo_sapiens',
 								'species_name' => 'Homo sapiens',
 								'website' => 'http://www.ensembl.org/' };
@@ -177,8 +177,8 @@ subtest "Regulatory features reformat", sub {
 									'domain_url' => 'Homo_sapiens/Regulation/Summary?rf=ENSR00000530121',
 									'feature_type' => 'Regulatory Features',
 									'id' => 'ENSR00000530121',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/' };
@@ -192,8 +192,8 @@ subtest "Regulatory features reformat", sub {
 								'domain_url' => 'Homo_sapiens/Regulation/Summary?rf=ENSR00000673436',
 								'feature_type' => 'Regulatory Features',
 								'id' => 'ENSR00000673436',
-								'ref_boost' => 10,
-								'reference_strain' => 0,
+								'ref_boost' => 1,
+								'reference_strain' => undef,
 								'species' => 'homo_sapiens',
 								'species_name' => 'Homo sapiens',
 								'website' => 'http://www.ensembl.org/' };
@@ -207,8 +207,8 @@ subtest "Regulatory features reformat", sub {
 								'domain_url' => 'Homo_sapiens/Regulation/Summary?rf=ENSR00000917529',
 								'feature_type' => 'Regulatory Features',
 								'id' => 'ENSR00000917529',
-								'ref_boost' => 10,
-								'reference_strain' => 0,
+								'ref_boost' => 1,
+								'reference_strain' => undef,
 								'species' => 'homo_sapiens',
 								'species_name' => 'Homo sapiens',
 								'website' => 'http://www.ensembl.org/'};
@@ -233,8 +233,8 @@ subtest "Motifs reformat", sub {
 										'domain_url' => undef,
 										'feature_type' => 'Binding Motifs',
 										'id' => 'ENSM00166647826',
-										'ref_boost' => 10,
-										'reference_strain' => 0,
+										'ref_boost' => 1,
+										'reference_strain' => undef,
 										'species' => 'homo_sapiens',
 										'species_name' => 'Homo sapiens',
 										'website' => 'http://www.ensembl.org/' };
@@ -248,8 +248,8 @@ subtest "Motifs reformat", sub {
 										'domain_url' => undef,
 										'feature_type' => 'Binding Motifs',
 										'id' => 'ENSM00521793739',
-										'ref_boost' => 10,
-										'reference_strain' => 0,
+										'ref_boost' => 1,
+										'reference_strain' => undef,
 										'species' => 'homo_sapiens',
 										'species_name' => 'Homo sapiens',
 										'website' => 'http://www.ensembl.org/' };
@@ -263,8 +263,8 @@ subtest "Motifs reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Binding Motifs',
 									'id' => 'ENSM00521793740',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -278,8 +278,8 @@ subtest "Motifs reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Binding Motifs',
 									'id' => 'ENSM00521793741',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -294,8 +294,8 @@ subtest "Motifs reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Binding Motifs',
 									'id' => 'ENSM00207470375',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -310,8 +310,8 @@ subtest "Motifs reformat", sub {
 										'domain_url' => undef,
 										'feature_type' => 'Binding Motifs',
 										'id' => 'ENSM00482444211',
-										'ref_boost' => 10,
-										'reference_strain' => 0,
+										'ref_boost' => 1,
+										'reference_strain' => undef,
 										'species' => 'homo_sapiens',
 										'species_name' => 'Homo sapiens',
 										'website' => 'http://www.ensembl.org/'};
@@ -335,8 +335,8 @@ subtest "TarBase miRNA reformat", sub {
 										'domain_url' => 'Homo_sapiens/Location/Genome?ftype=RegulatoryFactor;id=hsa-miR-4524a-5p;fset=TarBase miRNA',
 										'feature_type' => 'TarBase miRNA',
 										'id' => 'hsa-miR-4524a-5p',
-										'ref_boost' => 10,
-										'reference_strain' => 0,
+										'ref_boost' => 1,
+										'reference_strain' => undef,
 										'species' => 'homo_sapiens',
 										'species_name' => 'Homo sapiens',
 										'website' => 'http://www.ensembl.org/' };
@@ -360,8 +360,8 @@ subtest "External features reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Other Regulatory Regions',
 									'id' => 'p@chr12:133109321..133109323,+,0.1677',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/' };
@@ -375,8 +375,8 @@ subtest "External features reformat", sub {
 										'domain_url' => undef,
 										'feature_type' => 'Other Regulatory Regions',
 										'id' => 'p12@APOM,0.1654',
-										'ref_boost' => 10,
-										'reference_strain' => 0,
+										'ref_boost' => 1,
+										'reference_strain' => undef,
 										'species' => 'homo_sapiens',
 										'species_name' => 'Homo sapiens',
 										'website' => 'http://www.ensembl.org/' };
@@ -390,8 +390,8 @@ subtest "External features reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Other Regulatory Regions',
 									'id' => 'p@chr11:134253749..134253754,+,0.2358',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/' };
@@ -415,8 +415,8 @@ subtest "Peaks reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Regulatory Evidence',
 									'id' => 'H3K4me3',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -440,8 +440,8 @@ subtest "Transcription factors reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Transcription Factor',
 									'id' => 'VDR',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/' };
@@ -455,8 +455,8 @@ subtest "Transcription factors reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Transcription Factor',
 									'id' => 'PKNOX1',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -470,8 +470,8 @@ subtest "Transcription factors reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Transcription Factor',
 									'id' => 'CLOCK',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -485,8 +485,8 @@ subtest "Transcription factors reformat", sub {
 								'domain_url' => undef,
 								'feature_type' => 'Transcription Factor',
 								'id' => 'CREB3L1',
-								'ref_boost' => 10,
-								'reference_strain' => 0,
+								'ref_boost' => 1,
+								'reference_strain' => undef,
 								'species' => 'homo_sapiens',
 								'species_name' => 'Homo sapiens',
 								'website' => 'http://www.ensembl.org/'};
@@ -500,8 +500,8 @@ subtest "Transcription factors reformat", sub {
 								'domain_url' => undef,
 								'feature_type' => 'Transcription Factor',
 								'id' => 'E2F7',
-								'ref_boost' => 10,
-								'reference_strain' => 0,
+								'ref_boost' => 1,
+								'reference_strain' => undef,
 								'species' => 'homo_sapiens',
 								'species_name' => 'Homo sapiens',
 								'website' => 'http://www.ensembl.org/'};
@@ -515,8 +515,8 @@ subtest "Transcription factors reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Transcription Factor',
 									'id' => 'ZBTB7B',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};
@@ -530,8 +530,8 @@ subtest "Transcription factors reformat", sub {
 									'domain_url' => undef,
 									'feature_type' => 'Transcription Factor',
 									'id' => 'IRF4',
-									'ref_boost' => 10,
-									'reference_strain' => 0,
+									'ref_boost' => 1,
+									'reference_strain' => undef,
 									'species' => 'homo_sapiens',
 									'species_name' => 'Homo sapiens',
 									'website' => 'http://www.ensembl.org/'};

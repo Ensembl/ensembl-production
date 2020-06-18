@@ -226,12 +226,6 @@
       "priority" : 1
     },
     {
-      "name" : "cint_aniseed_v1",
-      "parser" : "JGI_ProteinParser",
-      "file" : "ftp://ftp.ensembl.org/pub/misc/cint_jgi/v1/ciona.prot.fasta.gz",
-      "priority" : 1
-    },
-    {
       "name" : "cint_jgi_v1",
       "parser" : "JGI_ProteinParser",
       "file" : "ftp://ftp.ensembl.org/pub/misc/cint_jgi/v1/ciona.prot.fasta.gz",

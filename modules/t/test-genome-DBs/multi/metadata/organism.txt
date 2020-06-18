@@ -1,1 +1,1 @@
-170	9606	0	9606	homo_sapiens	Homo_sapiens	Human	Homo sapiens	\N	\N	\N	\N
+170	9606	\N	9606	homo_sapiens	Homo_sapiens	Human	Homo sapiens	\N	\N	\N	\N

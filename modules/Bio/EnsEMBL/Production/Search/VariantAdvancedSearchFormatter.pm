@@ -122,6 +122,7 @@ where t.ontology_id=p.ontology_id and t.accession=?/,
         -PARAMS => [ $term ]);
     push @{$terms}, $term;
     $self->{term_parents}->{$term} = $terms;
+    $self->{onto_dba}->dbc()->disconnect_if_idle();
   }
   return $terms;
 }

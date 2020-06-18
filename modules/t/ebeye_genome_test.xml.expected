@@ -60,6 +60,5 @@
     <field name="has_synteny">true</field>
     <field name="has_variations">true</field>
     <field name="genomic_unit">vertebrates</field>
-    <field name="is_reference">false</field>
   </additional_fields>
 </entry>
