@@ -40,66 +40,70 @@ use Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory qw(has_variation)
 use Log::Log4perl qw/:easy/;
 
 sub dump {
-	my ( $self, $species ) = @_;
-	if ( $species !~ /Ancestral sequences/ ) {
-		my $compara = $self->param('compara');
-		if ( !defined $compara ) {
-			$compara = $self->division();
-			if ( !defined $compara || $compara eq '' ) {
-				$compara = 'multi';
-			}
-		}
-		if ( defined $compara ) {
-			$self->{logger}->info("Using compara $compara");
-		}
-		# dump the genome file
-		$self->{logger}->info( "Dumping genome for " . $species );
-		my $genome_file = $self->dump_genome( $species, $compara );
-		$self->{logger}->info( "Completed dumping " . $species );
+    my ($self, $species) = @_;
+    if ($species !~ /Ancestral sequences/) {
+        my $compara = $self->param('compara');
+        if (!defined $compara) {
+            $compara = $self->division();
+            if (!defined $compara || $compara eq '') {
+                $compara = 'multi';
+            }
+        }
+        if (defined $compara) {
+            $self->{logger}->info("Using compara $compara");
+        }
+        # dump the genome file
+        $self->{logger}->info("Dumping genome for " . $species);
+        my $genome_file = $self->dump_genome($species, $compara);
+        $self->{logger}->info("Completed dumping " . $species);
 
-		# figure out output
-		$self->dataflow_output_id( {  species     => $species,
-									  type        => 'core',
-									  genome_file => $genome_file },
-								   2 );
+        # figure out output
+        $self->dataflow_output_id({
+            species     => $species,
+            type        => 'core',
+            genome_file => $genome_file },
+            2);
 
-		$self->dataflow_output_id( {  species     => $species,
-									  type        => 'otherfeatures',
-									  genome_file => $genome_file },
-								   7 )
-		  if (Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'otherfeatures' )
-		  );
+        $self->dataflow_output_id({
+            species     => $species,
+            type        => 'otherfeatures',
+            genome_file => $genome_file },
+            7)
+            if (Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'otherfeatures')
+            );
 
-		$self->dataflow_output_id( {  species     => $species,
-									  type        => 'variation',
-									  genome_file => $genome_file },
-								   4 )
-		  if ( $self->has_variation($species) );
+        $self->dataflow_output_id({
+            species     => $species,
+            type        => 'variation',
+            genome_file => $genome_file },
+            4)
+            if ($self->has_variation($species));
 
-		$self->dataflow_output_id( {  species     => $species,
-									  type        => 'funcgen',
-									  genome_file => $genome_file },
-								   6 )
-		  if ( Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'funcgen' ) )
-		  ;
+        $self->dataflow_output_id({
+            species     => $species,
+            type        => 'funcgen',
+            genome_file => $genome_file },
+            6)
+            if (Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'funcgen'))
+        ;
 
-	} ## end if ( $species !~ /Ancestral sequences/)
-	return;
+    } ## end if ( $species !~ /Ancestral sequences/)
+    return;
 } ## end sub dump
 
 sub dump_genome {
-	my ( $self, $species, $compara ) = @_;
-	my $genome;
-	if ( $compara && $compara ne 'multi' ) {
-		$genome =
-		  Bio::EnsEMBL::Production::Search::GenomeFetcher->new( -EG => 1 )
-		  ->fetch_genome($species);
-	}
-	else {
-		$genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new()
-		  ->fetch_genome($species);
-	}
-	return $self->write_json( $species, 'genome', $genome );
+    my ($self, $species, $compara) = @_;
+    my $genome;
+    if ($compara && $compara ne 'multi') {
+        $genome =
+            Bio::EnsEMBL::Production::Search::GenomeFetcher->new(-EG => 1)
+                ->fetch_genome($species);
+    }
+    else {
+        $genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new()
+            ->fetch_genome($species);
+    }
+    return $self->write_json($species, 'genome', $genome);
 }
 
 1;
