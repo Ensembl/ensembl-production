@@ -41,19 +41,20 @@ sub default_options {
     my $self = shift;
     return {
         %{$self->SUPER::default_options()},
-        species         => [],
-        division        => [],
-        antispecies     => [],
-        run_all         => 0, #always run every species
-        use_pan_compara => 0, 
-        variant_length  => 1000000,
-        probe_length    => 100000,
+        species           => [],
+        division          => [],
+        antispecies       => [],
+        run_all           => 0, #always run every species
+        use_pan_compara   => 0,
+        variant_length    => 1000000,
+        probe_length      => 100000,
         regulatory_length => 100000,
-        dump_variant    => 1,
-        dump_regulation => 1,
+        dump_variant      => 1,
+        dump_regulation   => 1,
+        resource_class    => '32g',
         gene_search_reformat => 0,
-        release => software_version()
-	};
+        release           => software_version()
+    };
 }
 
 sub pipeline_wide_parameters {
@@ -80,10 +81,10 @@ sub pipeline_analyses {
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') },
             -rc_name    => '4g',
-	    -flow_into  => {
-                        '2->A' => [ 'DumpGenomeJson' ],
-                        'A->1' => [ 'WrapGenomeEBeye' ]
-                        }
+            -flow_into  => {
+                '2->A' => [ 'DumpGenomeJson' ],
+                'A->1' => [ 'WrapGenomeEBeye' ]
+            }
         },
         {
             -logic_name => 'WrapGenomeEBeye',
@@ -91,23 +92,23 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::WrapGenomeEBeye',
             -rc_name    => '1g',
             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-            -flow_into => 'ValidateXMLFileWrappedGenomesEBeye'
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -flow_into  => 'ValidateXMLFileWrappedGenomesEBeye'
         },
         {
-            -logic_name    => 'DumpGenomeJson',
-            -module        =>
+            -logic_name        => 'DumpGenomeJson',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
-            -parameters    => {},
+            -parameters        => {},
             -analysis_capacity => 10,
-            -rc_name       => '1g',
-            -flow_into     => {
+            -rc_name           => '1g',
+            -flow_into         => {
                 2 => [ 'DumpGenesJson' ],
                 7 => [ 'DumpGenesJson' ],
-                4 => @variant_analyses, 
+                4 => @variant_analyses,
                 6 => @regulation_analyses,
             }
         },
@@ -117,15 +118,15 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
             -rc_name    => '1g',
             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-            -flow_into  => 
-                        {
-                	1 => ['CompressEBeyeXMLFile'], 
-		       	2 => [ '?accu_name=genome_files&accu_address={species}&accu_input_variable=genome_valid_file']
-                        },
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -flow_into  =>
+                {
+                    1 => [ 'CompressEBeyeXMLFile' ],
+                    2 => [ '?accu_name=genome_files&accu_address={species}&accu_input_variable=genome_valid_file' ]
+                },
         },
         {
             -logic_name => 'ValidateXMLFileVariantEBeye',
@@ -133,14 +134,14 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
             -rc_name    => '1g',
             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
             -flow_into  =>
-                        {
-                          1 => ['CompressVariantEBeyeXMLFile'],
-                        },
+                {
+                    1 => [ 'CompressVariantEBeyeXMLFile' ],
+                },
         },
         {
             -logic_name => 'ValidateXMLFileWrappedGenomesEBeye',
@@ -148,58 +149,58 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
             -rc_name    => '1g',
             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-            -flow_into  =>
-                        {
-                          1 => ['CompressWrappedGenomesEBeyeXMLFile']
-                    },
-        },
-        {
-             -logic_name => 'CompressEBeyeXMLFile',
-             -module =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
-             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-             -analysis_capacity => 4,
-             -rc_name    => '1g'
-        },
-        {
-             -logic_name => 'CompressWrappedGenomesEBeyeXMLFile',
-             -module =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
-             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-             -analysis_capacity => 4,
-        },
                 {
-             -logic_name => 'CompressVariantEBeyeXMLFile',
-             -module =>
-                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
-             -parameters =>
-                        {
-                        division        => $self->o('division'),
-                        release         => $self->o('release'),
-                        },
-             -analysis_capacity => 4,
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -flow_into  =>
+                {
+                    1 => [ 'CompressWrappedGenomesEBeyeXMLFile' ]
+                },
         },
         {
-            -logic_name    => 'DumpGenesJson',
-            -module        =>
+            -logic_name        => 'CompressEBeyeXMLFile',
+            -module            =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
+            -parameters        =>
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -analysis_capacity => 4,
+            -rc_name           => '1g'
+        },
+        {
+            -logic_name        => 'CompressWrappedGenomesEBeyeXMLFile',
+            -module            =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
+            -parameters        =>
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -analysis_capacity => 4,
+        },
+        {
+            -logic_name        => 'CompressVariantEBeyeXMLFile',
+            -module            =>
+                'Bio::EnsEMBL::Production::Pipeline::Search::CompressEBeyeXMLFile',
+            -parameters        =>
+                {
+                    division => $self->o('division'),
+                    release  => $self->o('release'),
+                },
+            -analysis_capacity => 4,
+        },
+        {
+            -logic_name        => 'DumpGenesJson',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
-            -parameters    => {
+            -parameters        => {
                 use_pan_compara => $self->o('use_pan_compara')
             },
             -analysis_capacity => 10,
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 1 => WHEN ('#gene_search_reformat#' =>
                     [
@@ -210,13 +211,13 @@ sub pipeline_analyses {
                     ELSE ['ReformatGenomeEBeye'],
                 ),
                 -1 => 'DumpGenesJsonHighmem'
-             }
+            }
         },
         {
-            -logic_name    => 'DumpGenesJsonHighmem',
-            -module        =>
+            -logic_name        => 'DumpGenesJsonHighmem',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
-            -parameters    => {
+            -parameters        => {
                 use_pan_compara => $self->o('use_pan_compara')
             },
             -analysis_capacity => 10,
@@ -233,13 +234,13 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name    => 'DumpRegulationJson',
-            -module        =>
+            -logic_name        => 'DumpRegulationJson',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
-            -parameters    => {},
+            -parameters        => {},
             -analysis_capacity => 10,
-            -rc_name       => '32g',
-            -flow_into     => {
+            -rc_name           => $self->o('resource_class'),
+            -flow_into         => {
                 2 => [
                     '?accu_name=motifs_dump_file&accu_address=[]',
                     '?accu_name=regulatory_features_dump_file&accu_address=[]',
@@ -275,12 +276,12 @@ sub pipeline_analyses {
                 { '2->A' => 'DumpVariantJson', 'A->1' => 'VariantDumpMerge' }
         },
         {
-            -logic_name    => 'DumpVariantJson',
+            -logic_name        => 'DumpVariantJson',
             -analysis_capacity => 20,
-            -module        =>
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
-            -rc_name       => '32g',
-            -flow_into     => {
+            -rc_name           => $self->o('resource_class'),
+            -flow_into         => {
                 2 => [
                     '?accu_name=dump_file&accu_address=[]',
                     '?accu_name=species'
@@ -320,12 +321,12 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name    => 'DumpStructuralVariantJson',
+            -logic_name        => 'DumpStructuralVariantJson',
             -analysis_capacity => 10,
-            -module        =>
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson',
-            -rc_name       => '32g',
-            -flow_into     => {
+            -rc_name           => $self->o('resource_class'),
+            -flow_into         => {
                 2 => [
                     '?accu_name=dump_file&accu_address=[]',
                     '?accu_name=species'
@@ -338,16 +339,16 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpMerge',
             -parameters => { file_type => 'structuralvariants' },
             -rc_name    => '1g',
-           # -flow_into  => {
-           #     1 => 'ReformatStructuralVariantsSolr' }
+            # -flow_into  => {
+            #     1 => 'ReformatStructuralVariantsSolr' }
         },
         {
-            -logic_name    => 'DumpPhenotypesJson',
-            -module        =>
+            -logic_name        => 'DumpPhenotypesJson',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpPhenotypesJson',
-            -parameters    => {},
+            -parameters        => {},
             -analysis_capacity => 10,
-            -rc_name       => '1g',
+            -rc_name           => '1g',
             #-flow_into     => {
             #    2 => 'ReformatPhenotypesSolr'
             #}
@@ -379,12 +380,12 @@ sub pipeline_analyses {
                 }
         },
         {
-            -logic_name    => 'DumpProbeJson',
+            -logic_name        => 'DumpProbeJson',
             -analysis_capacity => 10,
-            -module        =>
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
-            -rc_name       => '32g',
-            -flow_into     => {
+            -rc_name           => $self->o('resource_class'),
+            -flow_into         => {
                 2 => [
                     '?accu_name=probes_dump_file&accu_address=[]',
                     '?accu_name=probesets_dump_file&accu_address=[]',
@@ -406,12 +407,12 @@ sub pipeline_analyses {
                 }
         },
         {
-            -logic_name => 'ReformatGenomeAdvancedSearch',
-            -module     =>
+            -logic_name        => 'ReformatGenomeAdvancedSearch',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeAdvancedSearch',
-            -rc_name    => '1g',
+            -rc_name           => '1g',
             -analysis_capacity => 10,
-            -flow_into  => {}
+            -flow_into         => {}
         },
         {
             -logic_name => 'ReformatVariantsAdvancedSearch',
@@ -449,12 +450,12 @@ sub pipeline_analyses {
             -flow_into  => {}
         },
         {
-            -logic_name => 'ReformatGenomeEBeye',
-            -module     =>
+            -logic_name        => 'ReformatGenomeEBeye',
+            -module            =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
-            -rc_name    => '4g',
+            -rc_name           => '4g',
             -analysis_capacity => 10,
-            -flow_into  => 'ValidateXMLFileEBeye'
+            -flow_into         => 'ValidateXMLFileEBeye'
         },
         {
             -logic_name => 'ReformatVariantsSolr',
@@ -516,12 +517,12 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
     my $self = shift;
     return {
-        '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
+        '32g'  => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
         '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
-        '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
-        '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
-        '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
-        '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
+        '16g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
+        '8g'   => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
+        '4g'   => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
+        '1g'   => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
 }
 
 1;
