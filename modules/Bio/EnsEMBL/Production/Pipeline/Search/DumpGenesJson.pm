@@ -91,7 +91,9 @@ sub dump_genes {
 
   if ($type eq 'core') {
     $funcgen_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($dba->species(), 'funcgen');
-    $compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($compara, 'compara') if defined $compara;
+    my $compara_dba = eval {
+      Bio::EnsEMBL::Registry->get_DBAdaptor($compara, 'compara') if defined $compara;
+    };
     $pan_compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('pan_homology', 'compara') if $use_pan_compara;
   }
 
