@@ -51,6 +51,7 @@ sub default_options {
         regulatory_length => 100000,
         dump_variant    => 1,
         dump_regulation => 1,
+        resource_class    => '32g',
         gene_search_reformat => 0,
         release => software_version()
 	};
@@ -199,7 +200,7 @@ sub pipeline_analyses {
                 use_pan_compara => $self->o('use_pan_compara')
             },
             -analysis_capacity => 10,
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 1 => WHEN ('#gene_search_reformat#' =>
                     [
@@ -238,7 +239,7 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpRegulationJson',
             -parameters    => {},
             -analysis_capacity => 10,
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 2 => [
                     '?accu_name=motifs_dump_file&accu_address=[]',
@@ -279,7 +280,7 @@ sub pipeline_analyses {
             -analysis_capacity => 20,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpVariantJson',
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 2 => [
                     '?accu_name=dump_file&accu_address=[]',
@@ -324,7 +325,7 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpStructuralVariantJson',
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 2 => [
                     '?accu_name=dump_file&accu_address=[]',
@@ -383,7 +384,7 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpProbesJson',
-            -rc_name       => '32g',
+            -rc_name           => $self->o('resource_class'),
             -flow_into     => {
                 2 => [
                     '?accu_name=probes_dump_file&accu_address=[]',
