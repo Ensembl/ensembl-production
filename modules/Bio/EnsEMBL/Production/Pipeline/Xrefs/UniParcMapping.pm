@@ -46,7 +46,9 @@ sub run {
 
   my $target = $mapper->target;
   my $object_type = $mapper->object_type;
-  my $source_id = $mapper->source_id;
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my $source_id = $self->get_source_id_from_name($dbi, 'UniParc');
 
   my $method = XrefMapper::Methods::MySQLChecksum->new( -MAPPER => $mapper);
   my $results = $method->run($target, $source_id, $object_type, $db_url);

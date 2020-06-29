@@ -85,6 +85,9 @@ sub download_file {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
+      if (defined $db and $db eq 'checksum') {
+        $file_path = catfile($dest_dir, $source_name."-".basename($remote_file));
+      }
       $ftp->get( $remote_file, $file_path ) unless $skip_download_if_file_present and -f $file_path;
     }
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
@@ -121,6 +124,7 @@ sub load_checksum {
   my $checksum_dir = catdir($path, 'Checksum');
   make_path($checksum_dir);
   my $counter = 1;
+  my $source_id = 1;
 
   my @files = `ls $checksum_dir`;
   my $checksum_file = catfile($checksum_dir, 'checksum.txt');
@@ -129,11 +133,14 @@ sub load_checksum {
     $file =~ s/\n//;
     if ($file =~ /checksum/) { next; }
     my $input_file = catfile($checksum_dir, $file);
+    $input_file =~ /\/([A-Za-z]*)-.*$/;
+    my $source_name = $1;
+    $source_id = $self->get_source_id_from_name($dbi, $source_name);
     my $input_fh = XrefParser::BaseParser->get_filehandle($input_file);
     while(my $line = <$input_fh>) {
       chomp $line;
       my ($id, $checksum) = split(/\s+/, $line);
-      my @output = ($counter++, 1, $id, $checksum);
+      my @output = ($counter++, $source_id, $id, $checksum);
       print $output_fh join("\t", @output);
       print $output_fh "\n";
     }
@@ -144,6 +151,15 @@ sub load_checksum {
   $load_checksum_sth->execute($checksum_file);
   $load_checksum_sth->finish();
 
+}
+
+sub get_source_id_from_name {
+  my ($self, $dbi, $source_name) = @_;
+  my $select_source_id_sth = $dbi->prepare("SELECT source_id FROM source WHERE name = ?");
+  $select_source_id_sth->execute($source_name);
+  my $source_id = ($select_source_id_sth->fetchrow_array());
+  $select_source_id_sth->finish();
+  return $source_id;
 }
 
 sub get_source_id {
