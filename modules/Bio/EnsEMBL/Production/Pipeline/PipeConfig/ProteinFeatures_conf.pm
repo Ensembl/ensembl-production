@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version => '5.44-79.0',
+    interproscan_version => '5.45-80.0',
     interproscan_exe     => 'interproscan.sh',
    	run_interproscan     => 1,
 
@@ -114,7 +114,7 @@ sub default_options {
       {
         'logic_name'    => 'pfam',
         'db'            => 'Pfam',
-        'db_version'    => '32.0',
+        'db_version'    => '33.1',
         'ipscan_name'   => 'Pfam',
         'ipscan_xml'    => 'PFAM',
         'ipscan_lookup' => 1,
@@ -130,7 +130,7 @@ sub default_options {
       {
         'logic_name'    => 'pirsf',
         'db'            => 'PIRSF',
-        'db_version'    => '3.02',
+        'db_version'    => '3.10',
         'ipscan_name'   => 'PIRSF',
         'ipscan_xml'    => 'PIRSF',
         'ipscan_lookup' => 1,
