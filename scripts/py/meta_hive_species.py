@@ -38,7 +38,8 @@ parser = argparse.ArgumentParser(
                 ' init_pipeline command')
 parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
 parser.add_argument('-d', '--division', help='Restrict to a single division', type=str)
-parser.add_argument('-f', '--file_output', help='Overwrite default output file name', required=False, type=str)
+parser.add_argument('-f', '--output_name', help='Overwrite default output file name', required=False, type=str,
+                    default='species.txt')
 parser.add_argument('-t', '--genomes_types', help='List genomes events (n,r,ua,ug)', required=False, type=str,
                     default='n,r,ua,ug')
 
@@ -90,7 +91,8 @@ if __name__ == '__main__':
 
     logging.info("Retrieved species:")
     logging.info(species)
-    with open(join(home_dir, 'species.txt'), 'w') as f:
+    out_file_path = join(home_dir, args.output_name)
+    with open(out_file_path, 'w') as f:
         for spec in species:
             f.write('-species {} '.format(spec))
-    logging.info("File generated in {}".format(join(home_dir, 'species.txt')))
+    logging.info("File generated in {}".format(out_file_path))
