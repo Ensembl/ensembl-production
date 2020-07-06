@@ -38,8 +38,7 @@ parser = argparse.ArgumentParser(
                 ' init_pipeline command')
 parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
 parser.add_argument('-d', '--division', help='Restrict to a single division', type=str)
-parser.add_argument('-f', '--output_file', help='Overwrite default output file name', required=False,
-                    action='store_true')
+parser.add_argument('-f', '--output_file', help='Overwrite default output file name', required=False)
 parser.add_argument('-t', '--genomes_types', help='List genomes events (n,r,ua,ug)', required=False, type=str,
                     default='n,r,ua,ug')
 parser.add_argument('-o', '--output', help='species,dbname', required=False, type=str,
