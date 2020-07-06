@@ -70,7 +70,8 @@ if __name__ == '__main__':
         logger.info("Process all divisions")
 
     home_dir = getenv("HOME")
-    assert isdir(args.input_dir), "Input dir is mandatory when not running report_genomes.pl"
+    if not isdir(args.input_dir):
+        sys.exit("Input dir is mandatory when not running report_genomes.pl")
     scan_dir = realpath(args.input_dir)
     logger.info("Input Dir: {}".format(realpath(scan_dir)))
 
