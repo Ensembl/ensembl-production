@@ -75,7 +75,7 @@ if __name__ == '__main__':
     logger.info("Input Dir: {}".format(realpath(scan_dir)))
 
     species = []
-    expected_files_names = [names[n] for n in args.genomes_types.split(',')]
+    expected_files_names = [names[n] for n in args.genomes_types]
 
     for div in divisions:
         logger.info("Division: {}".format(div))
