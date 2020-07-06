@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(
     description='Parse outputs from `~ensemble-metadata/misc_scripts/genomes_report.pl to get species_list for hive'
                 ' init_pipeline command')
 parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
-parser.add_argument('-d', '--division', help='Restrict to a single division', type=str)
+parser.add_argument('-d', '--division', help='Restrict to a single division', type=str, choices=divisions)
 parser.add_argument('-f', '--output_file', help='Overwrite default output file name', required=False)
 parser.add_argument('-t', '--genomes_types', help='List genomes events (n,r,ua,ug)', required=False, type=str,
                     default='n,r,ua,ug')
@@ -104,4 +104,3 @@ if __name__ == '__main__':
         for spec in species:
             print('-species {} '.format(spec), end="", flush=True) if args.output == 'species' else print(
                 '{},'.format(spec), end="", flush=True)
-
