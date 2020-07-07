@@ -31,11 +31,14 @@ class Failure(NamedTuple):
     tests: List[FailedTests]
 
 
-def collect_failures(dc_label: str, dc_data: dict) -> List[Failure]:
+def collect_failures(dc_label: str, dc_data: dict, filter_species: set = None) -> List[Failure]:
     valid_test_func = ANALYSIS_MAP[dc_label]
     failures_list: List[Failure] = []
     for db_labels, dc_tests_elems in dc_data.items():
         db_params = DBParams(*db_labels.split(', '))
+        if filter_species:
+            if db_params.species not in filter_species:
+                continue
         failures = []
         for test_label, test_lines in dc_tests_elems['tests'].items():
             if not valid_test_func(test_lines):  # type: ignore
@@ -110,11 +113,11 @@ ANALYSIS_MAP = {
 }
 
 
-def dc_stats(data: dict) -> list:
+def dc_stats(data: dict, filter_species: set = None) -> list:
     lines = []
     for dc_label, dc_data in data.items():
         if dc_label in ANALYSIS_MAP:
-            collected_failures = collect_failures(dc_label, dc_data)
+            collected_failures = collect_failures(dc_label, dc_data, filter_species)
             lines.append(f'{dc_label:<30}{len(dc_data):<20}\t{len(collected_failures):<10}')
         else:
             lines.append(f'{dc_label:<30}{len(dc_data):<20}{"DUNNO":<10}')
@@ -124,11 +127,8 @@ def dc_stats(data: dict) -> list:
 def dc_failures(data: dict, dc_label: str, verbosity: int = 1, filter_species: set = None) -> list:
     lines = []
     if dc_label in ANALYSIS_MAP:
-        collected_failures = collect_failures(dc_label, data[dc_label])
+        collected_failures = collect_failures(dc_label, data[dc_label], filter_species)
         for failure in collected_failures:
-            if filter_species:
-                if failure.db_params.species not in filter_species:
-                    continue
             if verbosity >= 1:
                 lines.append(f'{failure.db_params.db_name:<50}')
             if verbosity >= 2:
@@ -157,20 +157,25 @@ def main():
     with open(args.dc_file, 'r') as f:
         dcs = json.load(f)
 
-    stats = dc_stats(dcs)
+    filter_species = None
+    if args.filter_species:
+        filter_species = set(args.filter_species)
+
+    stats = dc_stats(dcs, filter_species)
     print(f'{"DATACHECK":<30}{"REPORTED":<20}{"SUSPICIOUS":<10}')
+
+    dc_filter_labels = None
+    if args.dc:
+        dc_filter_labels = set(args.dc)
+
     for line in stats:
-        if args.dc:
-            dc_filter_labels = set(args.dc)
+        if dc_filter_labels:
             if not line.split()[0] in dc_filter_labels:
                 continue
         print(line)
 
     if args.dc:
         for dc_label in args.dc:
-            filter_species = None
-            if args.filter_species:
-                filter_species = set(args.filter_species)
             failures = dc_failures(dcs, dc_label, args.verbosity, filter_species)
             print('\n\n')
             print(f'{dc_label}:\n')
