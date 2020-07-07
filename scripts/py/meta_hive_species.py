@@ -66,7 +66,6 @@ if __name__ == '__main__':
     if not args.output_file:
         logger.setLevel(logging.ERROR)
     if args.division:
-        assert args.division in divisions, "Unknown Division name, please chose in {}".format(divisions)
         logger.info("Process only division %s", args.division)
         divisions = [args.division]
     else:
