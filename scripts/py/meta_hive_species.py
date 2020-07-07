@@ -30,9 +30,18 @@ import logging
 from os import getenv
 from os.path import isdir
 from os.path import join, isfile, realpath
+import sys
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
+
+divisions = (
+    'vertebrates',
+    'metazoa',
+    'fungi',
+    'protists',
+    'plants'
+)
 parser = argparse.ArgumentParser(
     description='Parse outputs from `~ensemble-metadata/misc_scripts/genomes_report.pl to get species_list for hive'
                 ' init_pipeline command')
@@ -44,13 +53,7 @@ parser.add_argument('-t', '--genomes_types', help='List genomes events (n r ua u
 parser.add_argument('-o', '--output', help='species,dbname', required=False, type=str,
                     default='species')
 
-divisions = (
-    'vertebrates',
-    'metazoa',
-    'fungi',
-    'protists',
-    'plants'
-)
+
 names = {
     'n': '{}-new_genomes.txt',
     'r': '{}-renamed_genomes.txt',
@@ -64,34 +67,34 @@ if __name__ == '__main__':
         logger.setLevel(logging.ERROR)
     if args.division:
         assert args.division in divisions, "Unknown Division name, please chose in {}".format(divisions)
-        logger.info("Process only division {}".format(args.division))
+        logger.info("Process only division %s", args.division)
         divisions = [args.division]
     else:
         logger.info("Process all divisions")
 
     home_dir = getenv("HOME")
     if not isdir(args.input_dir):
-        sys.exit("Input dir is mandatory when not running report_genomes.pl")
+        sys.exit("Input dir is mandatory")
     scan_dir = realpath(args.input_dir)
-    logger.info("Input Dir: {}".format(realpath(scan_dir)))
+    logger.info("Input Dir: %s", realpath(scan_dir))
 
     species = []
     expected_files_names = [names[n] for n in args.genomes_types]
 
     for div in divisions:
-        logger.info("Division: {}".format(div))
+        logger.info("Division: %s", div)
         expected_files = [ex.format(div) for ex in expected_files_names]
         for file in expected_files:
             file_path = join(scan_dir, file)
             if isfile(file_path):
                 with open(file_path, 'r') as f:
-                    logger.info("Current File: {}".format(f.name))
+                    logger.info("Current File: %s",f.name)
                     reader = csv.reader(f, delimiter="\t")
                     next(reader)
                     for row in reader:
                         species.append(row[0]) if args.output == 'species' else species.append(row[2])
             else:
-                logger.info("File not found: {}".format(file_path))
+                logger.info("File not found: %s", file_path)
 
     logger.info("Retrieved species:")
     logger.info(species)
@@ -100,7 +103,7 @@ if __name__ == '__main__':
         with open(out_file_path, 'w') as f:
             for spec in species:
                 f.write('-species {} '.format(spec)) if args.output == 'species' else f.write('{},'.format(spec))
-        logger.info("File generated in {}".format(out_file_path))
+        logger.info("File generated in %s", out_file_path)
     else:
         for spec in species:
             print('-species {} '.format(spec), end="", flush=True) if args.output == 'species' else print(
