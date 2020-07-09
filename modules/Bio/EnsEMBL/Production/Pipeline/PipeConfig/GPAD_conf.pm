@@ -272,7 +272,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -batch_size        => 10,
       -parameters        => {
-                              datacheck_groups => ['xref'],
+                              datacheck_groups => ['xref_go_projection'],
                               datacheck_types  => ['advisory'],
                               registry_file    => $self->o('registry'),
                               config_file      => $self->o('config_file'),
