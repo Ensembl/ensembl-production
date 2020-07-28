@@ -45,11 +45,7 @@ sub default_options {
         division        => [],
         antispecies     => [],
         run_all         => 0, #always run every species
-        step_transcript   => 0,
-        step_contigs      => 0,
-        step_gc           => 0,
-        step_variation    => 0,
-        all_steps         => 0,
+        step             => [],  
         genomeinfo_yml    => undef,
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
@@ -60,11 +56,6 @@ sub default_options {
 sub pipeline_wide_parameters {
     my $self = shift;
     return { %{$self->SUPER::pipeline_wide_parameters()},
-        step_transcript   => $self->o('step_transcript'),
-        step_contigs      => $self->o('step_contigs'),
-        step_gc           => $self->o('step_gc'),
-        step_variation    => $self->o('step_variation'),
-        all_steps         => $self->o('all_steps'),
         output_path       => $self->o('output_path'),
         app_path          => $self->o('app_path'),
         genomeinfo_yml    => $self->o('genomeinfo_yml')
@@ -113,26 +104,14 @@ sub pipeline_analyses {
         {    
             -logic_name => 'StepBootstrap',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
-            -parameters => { step       => 'bootstrap'}, 
+            -parameters => { current_step       => 'bootstrap',
+                             step => $self->o('step',)
+                           }, 
             -flow_into        => {
-                      '1' =>
-                       WHEN(
-                             '#step_transcript# || #all_steps#' =>
-                                   ['StepGeneAndTranscript'],
-                       ),
-                    '2' => WHEN(
-                             '#step_contigs# || #all_steps#' =>
-                                   ['StepContigs'],
-                       ),
-                    '3' =>  WHEN(
-                             '#step_gc# || #all_steps#' =>
-                                   ['StepGC'],
-                       ),
-                     '4' => WHEN(
-                             '#step_variation# || #all_steps#' =>
-                                   ['StepVariation'],
-                       ),
-
+                      '1' =>  ['StepGeneAndTranscript'],
+                      '2' =>  ['StepContigs'],
+                      '3' =>  ['StepGC'],
+                      '4' =>  ['StepVariation'],
             },
 
         },
