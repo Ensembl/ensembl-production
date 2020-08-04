@@ -46,7 +46,7 @@ init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_con
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf;
 use strict;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 
 use Data::Dumper;
@@ -156,20 +156,5 @@ sub pipeline_analyses {
     ];
 } ## end sub pipeline_analyses
 
-sub beekeeper_extra_cmdline_options {
-    my $self = shift;
-    return "-reg_conf " . $self->o("registry");
-}
-
-sub resource_classes {
-    my $self = shift;
-    return {
-        '32g' => { LSF => '-q production-rh74 -M 32000 -R "rusage[mem=32000]"' },
-        '100g' => { LSF => '-q production-rh74 -M 100000 -R "rusage[mem=100000]"' },
-        '16g' => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"' },
-        '8g'  => { LSF => '-q production-rh74 -M 16000 -R "rusage[mem=8000]"' },
-        '4g'  => { LSF => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"' },
-        '1g'  => { LSF => '-q production-rh74 -M 1000 -R "rusage[mem=1000]"' } };
-}
 
 1;
