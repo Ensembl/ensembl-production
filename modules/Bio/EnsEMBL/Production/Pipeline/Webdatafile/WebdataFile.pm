@@ -53,7 +53,6 @@ sub run {
   my $app_path = $self->param('app_path'); 
   my $log_file =  "$output/WebFiles_$current_step.log";
   my $cmd = "$app_path/bin/prepare_all_datafiles.pl $species -output $output -step $current_step &> $log_file";
-  #my ($rc, $sysoutput)=$self->run_cmd($cmd);
   system($cmd);
   my $status = $? >> 8;
   if($status){
@@ -83,11 +82,9 @@ sub write_output {
              'variants'    => 4,
         );
   
-        #my @all_steps = (['transcripts', 1], ['contigs', 2], ['gc', 3], ['variants', 4]);
         my @existing_steps = keys %each_flow;
         my @all_steps = scalar intersect(@steps, @existing_steps) ? intersect(@steps, @existing_steps) : @existing_steps;
         for my $each_step (@all_steps){
-            #$self->warning($each_step);
             $self->dataflow_output_id(
               {
                  species => $species,

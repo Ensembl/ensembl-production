@@ -91,10 +91,6 @@ sub pipeline_analyses {
                          },
           -flow_into   =>  {  '2->A' => ['StepBootstrap'],
                               '3->A'  => ['SpeciesFactory'],   
-                               # WHEN(
-                               #   '#genomeinfo_yml#' =>  ['StepBootstrap'],
-                               #    ELSE                  ['SpeciesFactory'],
-                               # ),
                               'A->1' => ['email_notification'],   
                            }
 
@@ -104,14 +100,12 @@ sub pipeline_analyses {
             -logic_name => 'SpeciesFactory',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-            #-input_ids  => [ {} ], # required for automatic seeding
             -parameters => { species => $self->o('species'),
                 antispecies          => $self->o('antispecies'),
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') 
              },
             -flow_into  => { '2' => [ 'StepBootstrap' ],
-                             #'A->1' => ['email_notification']
                            },
              
         },
@@ -119,7 +113,7 @@ sub pipeline_analyses {
             -logic_name => 'StepBootstrap',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
             -parameters => { current_step       => 'bootstrap',
-                             step => $self->o('step',)
+                             step => $self->o('step'),
                            }, 
             -flow_into        => {
                       '1' =>  ['StepGeneAndTranscript'],
