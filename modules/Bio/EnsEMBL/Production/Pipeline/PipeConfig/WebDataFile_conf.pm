@@ -21,11 +21,25 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::SearchDumps_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf
 
 =head1 DESCRIPTION
 
-Pipeline to generate the Solr search, EBeye search and Advanced search indexes
+This pipeline automate current manual processing of the 7 species (https://2020.ensembl.org/app/species-selector) currently available on 2020 website.
+
+registry=${BASR_DIR}/ensembl-production_private/release_coordination/registries/reg_ens-sta-1_rw.pm
+HIVE_SRV=mysql-ens-hive-prod-1-ensadmin
+init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf \
+ -registry ${registry} \
+ $($HIVE_SRV details hive) \
+ -pipeline_name Webdatafile_${ENS_VERSION} \
+ -release ${ENS_VERSION} \
+ -output_path /hps/nobackup2/production/ensembl/${USER}/test_webdatafile \
+ -hive_force_init 1 \
+ -run_all 1 \
+ -app_path ${BASE_DIR}/e2020_march_datafiles/ \
+ -genomeinfo_yml ${BASE_DIR}/e2020_march_datafiles/common_files/genome_id_info.yml \
+ -email ${USER}@ebi.ac.uk
 
 =cut
 

@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebSpeciesFactory;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile;
 
 =head1 DESCRIPTION
   Compute each step for webdatafile dumps
