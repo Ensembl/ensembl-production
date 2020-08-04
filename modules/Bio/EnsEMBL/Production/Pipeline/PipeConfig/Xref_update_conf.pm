@@ -146,7 +146,7 @@ sub pipeline_analyses {
                              xref_pass     => $self->o('xref_pass'),
                             },
              -flow_into  => { '2->A' => 'parse_source',
-                              'A->2' => 'schedule_tertiary_source',
+                              'A->1' => 'schedule_tertiary_source',
                              },
              -rc_name    => 'small',
             },
@@ -215,7 +215,7 @@ sub pipeline_analyses {
                              'release'     => $self->o('release'),
                              'source_url'  => $self->o('source_url')},
              -rc_name    => 'small',
-             -flow_into  => { '2->A' => ['direct_xrefs', 'process_alignment', 'rnacentral_mapping', 'uniparc_mapping', 'coordinate_mapping'],
+             -flow_into  => { '2->A' => ['direct_xrefs', 'rnacentral_mapping'],
                               'A->1' => 'mapping'
                             },
             },
@@ -224,6 +224,7 @@ sub pipeline_analyses {
              -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
+             -flow_into  => { 1 => 'process_alignment' },
              -analysis_capacity => 30
             },
             {-logic_name => 'process_alignment',
@@ -239,6 +240,7 @@ sub pipeline_analyses {
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -hive_capacity => 300,
+             -flow_into  => { 1 => 'uniparc_mapping' },
              -analysis_capacity => 30
             },
             {-logic_name => 'uniparc_mapping',
@@ -247,6 +249,7 @@ sub pipeline_analyses {
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -hive_capacity => 300,
+             -flow_into  => { 1 => 'coordinate_mapping' },
              -analysis_capacity => 30
             },
             {-logic_name => 'coordinate_mapping',
