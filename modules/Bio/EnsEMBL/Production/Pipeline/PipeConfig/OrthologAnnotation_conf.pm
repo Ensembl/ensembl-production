@@ -27,7 +27,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OrthologAnnotation_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpSpeciesForGOA_conf;
 
 use strict;
 use warnings;
