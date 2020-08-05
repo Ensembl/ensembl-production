@@ -21,7 +21,7 @@ limitations under the License.
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR 
+=head1 AUTHOR
 
  mchakiachvili@ebi.ac.uk
 
