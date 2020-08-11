@@ -101,9 +101,8 @@ if __name__ == '__main__':
         out_file_path = join(home_dir, args.output_file)
         with open(out_file_path, 'w') as f:
             for spec in species:
-                f.write('-species {} '.format(spec)) if args.output == 'species' else f.write('{},'.format(spec))
+                f.write('-species {} '.format(spec)) if args.output == 'species' else f.write('-database {} '.format(spec)) if args.output == 'dbname' else f.write('{},'.format(spec))
         logger.info("File generated in %s", out_file_path)
     else:
         for spec in species:
-            print('-species {} '.format(spec), end="", flush=True) if args.output == 'species' else print(
-                '{},'.format(spec), end="", flush=True)
+            print('-species {} '.format(spec), end='', flush=True) if args.output == 'species' else print('-database {} '.format(spec), end='', flush=True) if args.output == 'dbname' else print('{},'.format(spec), end='', flush=True)
