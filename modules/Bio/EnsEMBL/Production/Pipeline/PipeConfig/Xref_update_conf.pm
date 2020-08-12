@@ -278,7 +278,7 @@ sub pipeline_analyses {
              -batch_size        => 10,
              -parameters        => {
                                      datacheck_names  => ['ForeignKeys'],
-                                     datacheck_groups => ['xref'],
+                                     datacheck_groups => ['xref_mapping'],
                                      datacheck_types  => ['critical'],
                                      registry_file    => $self->o('registry'),
                                      config_file      => $self->o('dc_config_file'),
@@ -294,7 +294,7 @@ sub pipeline_analyses {
             -batch_size        => 10,
             -analysis_capacity => 10,
             -parameters        => {
-                                    datacheck_groups => ['xref'],
+                                    datacheck_groups => ['xref_mapping'],
                                     datacheck_types  => ['advisory'],
                                     registry_file    => $self->o('registry'),
                                     config_file      => $self->o('dc_config_file'),
