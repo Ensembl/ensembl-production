@@ -47,9 +47,10 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version => '5.45-80.0',
-    interproscan_exe     => 'interproscan.sh',
-   	run_interproscan     => 1,
+    interproscan_version    => '5.45-80.0',
+    interproscan_exe        => 'interproscan.sh',
+    ignore_service_mismatch => 0,
+   	run_interproscan        => 1,
 
     # A file with md5 sums of translations that are in the lookup service
     md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
@@ -301,8 +302,9 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -input_ids         => [ {} ],
       -parameters        => {
-                              interproscan_version => $self->o('interproscan_version'),
-                              interproscan_exe     => $self->o('interproscan_exe'),
+                              interproscan_version    => $self->o('interproscan_version'),
+                              interproscan_exe        => $self->o('interproscan_exe'),
+                              ignore_service_mismatch => $self->o('ignore_service_mismatch'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['LoadChecksums'],
