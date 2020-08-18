@@ -28,10 +28,10 @@ use Path::Tiny;
 
 sub run {
   my ($self) = @_;
-  my $interproscan_version    = $self->param_required('interproscan_version');
-  my $interproscan_exe        = $self->param_required('interproscan_exe');
-  my $ignore_service_mismatch = $self->param_required('ignore_service_mismatch');
-  my $service_version_file    = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
+  my $interproscan_version  = $self->param_required('interproscan_version');
+  my $interproscan_exe      = $self->param_required('interproscan_exe');
+  my $skip_checksum_loading = $self->param_required('skip_checksum_loading');
+  my $service_version_file  = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
 
   my $interpro_cmd = "$interproscan_exe --version";
   my $version_info = `$interpro_cmd` or $self->throw("Failed to run ".$interpro_cmd);
@@ -40,7 +40,7 @@ sub run {
     my $cmd_version = $1;
     if ($cmd_version ne $interproscan_version) {
       $self->throw("InterProScan version mismatch\nConf file: $interproscan_version\n$interproscan_exe: $cmd_version");
-    } else {
+    } elsif (! $skip_checksum_loading) {
       my $temp_dir = Path::Tiny->tempdir();
       my $ff = File::Fetch->new(uri => $service_version_file);
       my $file = $ff->fetch(to => $temp_dir->stringify);
@@ -48,11 +48,7 @@ sub run {
       if ($data =~ /SERVER:(\S+)/) {
         my $service_version = $1;
         if ($service_version ne $cmd_version) {
-          if ($ignore_service_mismatch) {
-            $self->dataflow_output_id({'skip_checksum_loading' => 1}, 1);
-          } else {
-            $self->throw("InterProScan version mismatch\n$interproscan_exe: $cmd_version\n$service_version_file: $service_version");
-          }
+          $self->throw("InterProScan version mismatch\n$interproscan_exe: $cmd_version\n$service_version_file: $service_version");
         }
       } else {
         $self->throw("Could not find version in service file:\n$service_version_file\n$data");

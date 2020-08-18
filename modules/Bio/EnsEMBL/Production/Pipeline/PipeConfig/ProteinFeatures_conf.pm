@@ -49,7 +49,6 @@ sub default_options {
     # InterPro settings
     interproscan_version    => '5.45-80.0',
     interproscan_exe        => 'interproscan.sh',
-    ignore_service_mismatch => 0,
    	run_interproscan        => 1,
 
     # A file with md5 sums of translations that are in the lookup service
@@ -302,9 +301,9 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -input_ids         => [ {} ],
       -parameters        => {
-                              interproscan_version    => $self->o('interproscan_version'),
-                              interproscan_exe        => $self->o('interproscan_exe'),
-                              ignore_service_mismatch => $self->o('ignore_service_mismatch'),
+                              interproscan_version  => $self->o('interproscan_version'),
+                              interproscan_exe      => $self->o('interproscan_exe'),
+                              skip_checksum_loading => $self->o('skip_checksum_loading'),
                             },
       -rc_name           => 'normal',
       -flow_into         => ['LoadChecksums'],
