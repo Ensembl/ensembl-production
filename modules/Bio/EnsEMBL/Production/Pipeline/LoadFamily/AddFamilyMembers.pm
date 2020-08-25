@@ -107,24 +107,33 @@ sub run {
     # create and store gene member
     my $gene_member =
       Bio::EnsEMBL::Compara::GeneMember->new_from_Gene(
-                                                       -GENE      => $gene,
-												-GENOME_DB => $genome_db
-                                                      );
-    $gene_member_dba->store($gene_member);
-    for my $hit (@$hits) {
-      my $transcript =
-        $transcript_adaptor->fetch_by_dbID( $hit->[0] );
-	      my $seq_member =
-                Bio::EnsEMBL::Compara::SeqMember->new_from_Transcript(
-                                                                      -TRANSCRIPT => $transcript,
-                                                                      -TRANSLATE  => 'yes',
-                                                                      -GENOME_DB  => $genome_db
-                                                                     );
-      # TODO store CDS too?
-      $seq_member->gene_member_id( $gene_member->dbID );
-      $seq_member_dba->store($seq_member);
-      $seq_member_dba->_set_member_as_canonical($seq_member);
-      push @{ $family_members->{ $hit->[1] } }, $seq_member->dbID();
+        -GENE      => $gene,
+        -GENOME_DB => $genome_db
+      );
+    # If there are duplicate stable IDs, trap fatal error from compara
+    # method, so we can skip it and carry on with others.
+    eval {
+      $gene_member_dba->store($gene_member);
+    };
+    if ($@) {
+      my ($msg) = $@ =~ /MSG:\s+([^\n]+)/m;
+      $self->warning('Duplicate stable ID: '.$msg);
+    } else {
+      for my $hit (@$hits) {
+        my $transcript =
+          $transcript_adaptor->fetch_by_dbID( $hit->[0] );
+          my $seq_member =
+            Bio::EnsEMBL::Compara::SeqMember->new_from_Transcript(
+              -TRANSCRIPT => $transcript,
+              -TRANSLATE  => 'yes',
+              -GENOME_DB  => $genome_db
+            );
+        # TODO store CDS too?
+        $seq_member->gene_member_id( $gene_member->dbID );
+        $seq_member_dba->store($seq_member);
+        $seq_member_dba->_set_member_as_canonical($seq_member);
+        push @{ $family_members->{ $hit->[1] } }, $seq_member->dbID();
+      }
     }
   } ## end while ( my ( $gene_id, $hits...))
   print "Saving familes for ".$dba->species()."\n";
@@ -135,8 +144,8 @@ sub run {
     # get family ID for this
     my $family_id =
       $helper->execute_single_result(
-                                     -SQL => 'select family_id from family where stable_id=?',
-                                     -PARAMS => [$family] );
+        -SQL => 'select family_id from family where stable_id=?',
+        -PARAMS => [$family] );
     # store in batches of 1000
     my $it = natatime 1000, @{$members};
     while ( my @vals = $it->() ) {
