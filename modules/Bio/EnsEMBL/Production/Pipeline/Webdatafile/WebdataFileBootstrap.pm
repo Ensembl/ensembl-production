@@ -37,9 +37,6 @@ use Path::Tiny qw(path);
 use Carp qw/croak/;
 use JSON qw/decode_json/;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
-#use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::Genome;
-#use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeReport;
-#use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::ChromReport;
 sub param_defaults {
   my ($self) = @_;
   return {
