@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebSpeciesFactory;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile;
 
 =head1 DESCRIPTION
   Compute each step for webdatafile dumps
@@ -48,11 +48,11 @@ sub run {
 
   my ($self) = @_;
   my $species = $self->param('species');
-  my $step = $self->param('step') ;
+  my $current_step = $self->param('current_step') ;
   my $output = $self->param('output_path');
   my $app_path = $self->param('app_path'); 
-  my $log_file =  "$output/WebFiles_$step.log";
-  my $cmd = "$app_path/bin/prepare_all_datafiles.pl $species -output $output -step $step &> $output/Webdatafile_$step.log";
+  my $log_file =  "$output/WebFiles_$current_step.log";
+  my $cmd = "$app_path/bin/prepare_all_datafiles.pl $species -output $output -step $current_step &> $log_file";
   #my ($rc, $sysoutput)=$self->run_cmd($cmd);
   system($cmd);
   my $status = $? >> 8;
@@ -60,7 +60,7 @@ sub run {
     my $log;
     {
       local($/) = undef;
-      open (FILE, "$output/Webdatafile_$step.log");
+      open (FILE, $log_file);
       $log = <FILE>;
       close FILE;
    }
@@ -72,18 +72,28 @@ sub write_output {
   my ($self) = @_;
   my $species        = $self->param('species');
   my $group          = $self->param('group');
-  my $step           = $self->param('step');
+  my $current_step   = $self->param('current_step');
   
-  if ($step eq 'bootstrap') {
-        my @all_steps = (['transcripts', 1], ['contigs', 2], ['gc', 3], ['variants', 4]);
+  if ($current_step eq 'bootstrap') {
+        my @steps     = @{$self->param('step')};
+        my %each_flow = (
+             'transcripts' => 1,
+             'contigs'     => 2,
+             'gc'          => 3,
+             'variants'    => 4,
+        );
+  
+        #my @all_steps = (['transcripts', 1], ['contigs', 2], ['gc', 3], ['variants', 4]);
+        my @existing_steps = keys %each_flow;
+        my @all_steps = scalar intersect(@steps, @existing_steps) ? intersect(@steps, @existing_steps) : @existing_steps;
         for my $each_step (@all_steps){
-
+            #$self->warning($each_step);
             $self->dataflow_output_id(
               {
                  species => $species,
                  group   => $group,
-                 step    => @{$each_step}[0]
-              },@{$each_step}[1] 
+                 current_step => $each_step
+              }, $each_flow{$each_step}
             );
         }  
   }
