@@ -95,7 +95,7 @@ do
     echo "Copying, unzipping and indexing previous assembly ${dir} dna.toplevel.fa"
     echo "------------------------"
 
-    for assembly in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}| xargs -n 1 basename | sed s/_to.*// | uniq`
+    for assembly in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir} | xargs -n 1 basename | sed s/_to.*// | uniq`
     do
         if test ${assembly} !=  "CHECKSUMS"
         then
@@ -104,32 +104,34 @@ do
                 if [[ "${assembly}" = 'GRCh37' && "${dir}" = 'homo_sapiens' ]]
                 then
                     file_path=`find ${vert_ftp}/grch37/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
-                    file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                 elif [[ "${assembly}" = 'NCBI35' && "${dir}" = 'homo_sapiens' ]]
                 then
                     file_path=`find ${vert_ftp}/release-*/homo_sapiens*/data/fasta/dna/ -type f -name "${dir^}.*.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
-                    file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                 elif [[ "${assembly}" = 'NCBI34' && "${dir}" = 'homo_sapiens' ]]
-                then 
+                then
                     file_path=`find ${vert_ftp}/release-*/human*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
-                    file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                 elif [[ "${assembly}" = 'NCBIM36' && "${dir}" = 'mus_musculus' ]]
-                then 
+                then
                     file_path=`find ${vert_ftp}/release-*/mus_musculus*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.seqlevel.fa.gz" | sort -r | head -n1`
-                    file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                 else
                     file_path=`find ${vert_ftp}/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
+                fi
+                if [[ -n "$file_path" ]]
+                then
                     file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
+                else
+                    echo "WARNING: Cannot find file for assembly '$assembly'"
+                    continue
                 fi
                 if [ ! -f "${base_dest}/www/${dir}/$file" ]
-                then 
+                then
                     echo "cp $file_path ${base_dest}/www/${dir}"
                     cp $file_path ${base_dest}/www/${dir}
                     echo "Unzipping file ${file}.gz"
                     gunzip -f ${base_dest}/www/${dir}/${file}.gz
                     echo "indexing ${file}"
                     samtools faidx ${base_dest}/www/${dir}/${file}
-                fi                
+                fi
             fi
         fi
     done
@@ -210,16 +212,22 @@ do
                     if test ${test} !=  "true"
                     then
                         file_path=`find ${non_vert_ftp}/release-*/${division}/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
-                        file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
+                        if [[ -n "$file_path" ]]
+                        then
+                            file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
+                        else
+                            echo "WARNING: Cannot find file for assembly '$assembly'"
+                            continue
+                        fi
                         if [ ! -f "${base_dest}/${division}/${dir}/$file" ]
-                        then 
+                        then
                             echo "cp $file_path ${base_dest}/${division}/${dir}"
                             cp $file_path ${base_dest}/${division}/${dir}
                             echo "Unzipping file ${file}.gz"
                             gunzip -f ${base_dest}/${division}/${dir}/${file}.gz
                             echo "indexing ${file}"
-                            samtools faidx ${base_dest}/${division}/${dir}/${file} 
-                        fi                  
+                            samtools faidx ${base_dest}/${division}/${dir}/${file}
+                        fi
                     fi
                 fi
             done
