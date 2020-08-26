@@ -59,13 +59,14 @@ sub default_options {
         'ontologies'       => [],
         'skip_phi'         => 0,
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
-        'history_file'  => undef,
-        'tgt_host'      => undef,
-        'host'          => undef,
-        'port'          => undef,
-        'pass'          => undef,
-        'user'          => undef,
-        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('db_name').','.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').','.$self->o('mart_db_name').'_'.$self->o('ens_version').'","user" : "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'history_file'     => undef,
+        'tgt_host'         => undef,
+        'host'             => undef,
+        'port'             => undef,
+        'pass'             => undef,
+        'user'             => undef,
+        'copy_service_payload'  => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_mart_payload'  => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
     }
 }
 
@@ -192,7 +193,6 @@ sub pipeline_analyses {
                 -verbosity  => $self->o('verbosity'),
             }
         },
-        ,
         {
             -logic_name        => 'ontology_term_load_light',
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
@@ -291,17 +291,27 @@ sub pipeline_analyses {
                 registry_file   => $self->o('reg_file'),
                 failures_fatal  => 1
             },
-            -flow_into   => [ 'copy_database' ]
+            -flow_into   => [ 'copy_database', 'copy_mart_database' ]
         },
         {
             -logic_name        => 'copy_database',
             -module            => 'ensembl.production.hive.ProductionDBCopy',
             -language          => 'python3',
-            -analysis_capacity => 20,
             -rc_name           => 'default',
             -parameters        => {
                 'endpoint'     => $self->o('copy_service_uri'),
-                'payload'      => $self->o('payload'),
+                'payload'      => $self->o('copy_service_payload'),
+                'method'       => 'post',
+            },
+        },
+        {
+            -logic_name        => 'copy_mart_database',
+            -module            => 'ensembl.production.hive.ProductionDBCopy',
+            -language          => 'python3',
+            -rc_name           => 'default',
+            -parameters        => {
+                'endpoint'     => $self->o('copy_service_uri'),
+                'payload'      => $self->o('copy_service_mart_payload'),
                 'method'       => 'post',
             },
         },
