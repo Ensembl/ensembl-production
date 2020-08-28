@@ -34,6 +34,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 use strict;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use warnings FATAL => 'all';
+no warnings 'experimental::smartmatch';
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -57,7 +58,6 @@ sub default_options {
         'pipeline_name'    => 'ols_ontology_' . $self->o('ens_version'),
         'db_url'           => $self->o('db_host') . $self->o('db_name'),
         'ontologies'       => [],
-        'skip_phi'         => 0,
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
         'history_file'     => undef,
         'tgt_host'         => undef,
@@ -65,8 +65,8 @@ sub default_options {
         'port'             => undef,
         'pass'             => undef,
         'user'             => undef,
-        'copy_service_payload'  => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
-        'copy_service_mart_payload'  => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
     }
 }
 
@@ -222,8 +222,8 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                    '#skip_phi#' => [ 'compute_closure' ],
-                    ELSE [ 'phibase_load_factory' ]
+                    '("PHI" ~~ #ontologies# and (#wipe_one# == 1 or #wipe_all# == 1))' => [ 'phibase_load_factory' ],
+                    ELSE [ 'compute_closure' ]
                 )
             }
         },
@@ -285,7 +285,7 @@ sub pipeline_analyses {
             -logic_name => 'ontology_dc',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
-                datacheck_names => [ 'CompareOntologyTerm' ],
+                datacheck_names => [ 'CompareOntologyTerm', 'CheckOntologyTerm' ],
                 history_file    => $self->o('history_file'),
                 old_server_uri  => $self->o('old_server'),
                 registry_file   => $self->o('reg_file'),
