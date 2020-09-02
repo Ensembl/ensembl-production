@@ -70,7 +70,7 @@ sub pipeline_analyses {
     }
     # Else, we run all the dumps
     else {
-      $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
+      $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez'];
     }
     if (not $self->o('skip_convert_fasta')){
       @$pipeline_flow = grep {$_ ne 'fasta_dna' and $_ ne 'fasta_pep'} @$pipeline_flow;
