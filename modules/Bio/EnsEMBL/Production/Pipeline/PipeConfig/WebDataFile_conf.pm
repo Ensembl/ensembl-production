@@ -112,7 +112,7 @@ sub pipeline_analyses {
             #-module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap',
             -parameters => { current_step       => 'bootstrap',
-                             step => $self->o('step',)
+                             step => $self->o('step'),
                            }, 
             -flow_into        => {
                       '1' =>  ['StepGeneAndTranscript'],
