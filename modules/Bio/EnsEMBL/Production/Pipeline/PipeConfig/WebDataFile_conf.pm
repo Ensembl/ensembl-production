@@ -27,7 +27,6 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf
 
 This pipeline automate current manual processing of the 7 species (https://2020.ensembl.org/app/species-selector) currently available on 2020 website.
 
-
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf;
@@ -68,39 +67,52 @@ sub pipeline_analyses {
 
     return [
         
-        { 
-          -logic_name  => 'GeneInfo_logic',
-          -input_ids  => [ {} ],
-          -module      =>  'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeInfoYml',
-          -parameters => { species => $self->o('species'),
-                           genomeinfo_yml => $self->o('genomeinfo_yml'), 
-                           run_all        => $self->o('run_all'),   
-                         },
-          -flow_into   =>  {  '2->A' => ['StepBootstrap'],
-                              '3->A'  => ['SpeciesFactory'],   
-                              'A->1' => ['email_notification'],   
-                           }
+        #{ 
+          #-logic_name  => 'GeneInfo_logic',
+          #-input_ids  => [ {} ],
+          #-module      =>  'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeInfoYml',
+          #-parameters => { species => $self->o('species'),
+          #                 genomeinfo_yml => $self->o('genomeinfo_yml'), 
+          #                 run_all        => $self->o('run_all'),   
+          #               },
+          #-flow_into   =>  {  '2->A' => ['StepBootstrap'],
+          #                    '3->A'  => ['SpeciesFactory'],   
+          #                     # WHEN(
+          #                     #   '#genomeinfo_yml#' =>  ['StepBootstrap'],
+          #                     #    ELSE                  ['SpeciesFactory'],
+          #                     # ),
+          #                    'A->1' => ['email_notification'],   
+          #                 }
 
-        }, 
+       # }, 
 
         {
             -logic_name => 'SpeciesFactory',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -input_ids  => [ {} ], # required for automatic seeding
             -parameters => { species => $self->o('species'),
                 antispecies          => $self->o('antispecies'),
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') 
              },
-            -flow_into  => { '2' => [ 'StepBootstrap' ],
+            -flow_into  => { '2->A' => [ 'GenomeInfo' ],
+                             'A->1' => ['email_notification']
                            },
              
         },
+        {
+          -logic_name => 'GenomeInfo',          
+          -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeInfo',
+          -flow_into  => {'1' => ['StepBootstrap']},
+          
+        },
         {    
             -logic_name => 'StepBootstrap',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+            #-module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap',
             -parameters => { current_step       => 'bootstrap',
-                             step => $self->o('step'),
+                             step => $self->o('step',)
                            }, 
             -flow_into        => {
                       '1' =>  ['StepGeneAndTranscript'],
