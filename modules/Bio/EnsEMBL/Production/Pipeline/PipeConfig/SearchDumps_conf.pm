@@ -41,20 +41,20 @@ sub default_options {
     my $self = shift;
     return {
         %{$self->SUPER::default_options()},
-        species           => [],
-        division          => [],
-        antispecies       => [],
-        run_all           => 0, #always run every species
-        use_pan_compara   => 0,
-        variant_length    => 1000000,
-        probe_length      => 100000,
+        species         => [],
+        division        => [],
+        antispecies     => [],
+        run_all         => 0, #always run every species
+        use_pan_compara => 0, 
+        variant_length  => 1000000,
+        probe_length    => 100000,
         regulatory_length => 100000,
-        dump_variant      => 1,
-        dump_regulation   => 1,
+        dump_variant    => 1,
+        dump_regulation => 1,
         resource_class    => '32g',
         gene_search_reformat => 0,
-        release           => software_version()
-    };
+        release => software_version()
+	};
 }
 
 sub pipeline_wide_parameters {
@@ -81,10 +81,10 @@ sub pipeline_analyses {
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') },
             -rc_name    => '4g',
-            -flow_into  => {
-                '2->A' => [ 'DumpGenomeJson' ],
-                'A->1' => [ 'WrapGenomeEBeye' ]
-            }
+	    -flow_into  => {
+                        '2->A' => [ 'DumpGenomeJson' ],
+                        'A->1' => [ 'WrapGenomeEBeye' ]
+                        }
         },
         {
             -logic_name => 'WrapGenomeEBeye',
@@ -92,23 +92,23 @@ sub pipeline_analyses {
                 'Bio::EnsEMBL::Production::Pipeline::Search::WrapGenomeEBeye',
             -rc_name    => '1g',
             -parameters =>
-                {
-                    division => $self->o('division'),
-                    release  => $self->o('release'),
-                },
-            -flow_into  => 'ValidateXMLFileWrappedGenomesEBeye'
+                        {
+                        division        => $self->o('division'),
+                        release         => $self->o('release'),
+                        },
+            -flow_into => 'ValidateXMLFileWrappedGenomesEBeye'
         },
         {
-            -logic_name        => 'DumpGenomeJson',
-            -module            =>
+            -logic_name    => 'DumpGenomeJson',
+            -module        =>
                 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
-            -parameters        => {},
+            -parameters    => {},
             -analysis_capacity => 10,
-            -rc_name           => '1g',
-            -flow_into         => {
+            -rc_name       => '1g',
+            -flow_into     => {
                 2 => [ 'DumpGenesJson' ],
                 7 => [ 'DumpGenesJson' ],
-                4 => @variant_analyses,
+                4 => @variant_analyses, 
                 6 => @regulation_analyses,
             }
         },
