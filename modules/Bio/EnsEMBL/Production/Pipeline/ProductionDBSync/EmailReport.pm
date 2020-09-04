@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 =head1 NAME
-Bio::EnsEMBL::DataCheck::Pipeline::EmailReport
+Bio::EnsEMBL::Production::Pipeline::ProductionDBSync::EmailReport
 
 =head1 DESCRIPTION
 Send an email with the overall result of the datachecks,
