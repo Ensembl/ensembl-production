@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	102
+2	\N	schema_version	103	
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
