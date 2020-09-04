@@ -1,5 +1,5 @@
 1	\N	schema_type	core
-2	\N	schema_version	102
+2	\N	schema_version	103
 3	\N	patch	patch_98_99_a.sql|schema_version
 2124	1	xref.timestamp	2013-07-22 11:20:10
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -252,3 +252,4 @@
 2208	\N	patch	patch_99_100_c.sql|alter_mapping_session_assembly_length
 2209	\N	patch	patch_100_101_a.sql|schema_version
 2210	\N	patch	patch_101_102_a.sql|schema_version
+2211	\N	patch	patch_102_103_a.sql|schema_version
