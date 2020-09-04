@@ -64,3 +64,4 @@
 70	\N	patch	patch_100_101_a.sql|schema_version
 71	\N	patch	patch_101_102_a.sql|schema_version
 72	\N	patch	patch_101_102_a.sql|schema_version
+73	\N	patch	patch_102_103_a.sql|schema_version
