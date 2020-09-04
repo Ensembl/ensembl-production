@@ -1,5 +1,5 @@
 1	\N	schema_type	production
-2	\N	schema_version	96
+2	\N	schema_version	102
 3	\N	patch	patch_71_72a.sql|meta table, schema type, schema version
 4	\N	patch	patch_71_72b.sql|add default_displayable to analysis_description
 5	\N	patch	patch_72_73a.sql|schema version
@@ -55,3 +55,12 @@
 61	\N	patch	patch_94_95_a.sql|vertebrate_division_rename
 62	\N	patch	patch_94_95_b.sql|vertebrate_division_rename
 63	\N	patch	patch_95_96_a.sql|schema_version
+64	\N	patch	patch_96_97_a.sql|schema_version
+65	\N	patch	patch_96_97_f.sql|update_meta_keys
+66	\N	patch	patch_97_98_a.sql|schema_version
+67	\N	patch	patch_98_99_a.sql|schema_version
+68	\N	patch	patch_98_99_b.sql|schema_version
+69	\N	patch	patch_99_100_a.sql|schema_version
+70	\N	patch	patch_100_101_a.sql|schema_version
+71	\N	patch	patch_101_102_a.sql|schema_version
+72	\N	patch	patch_101_102_a.sql|schema_version
