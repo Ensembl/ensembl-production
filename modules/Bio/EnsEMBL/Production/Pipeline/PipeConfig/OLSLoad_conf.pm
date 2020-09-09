@@ -33,8 +33,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
-use warnings FATAL => 'all';
-no warnings 'experimental::smartmatch';
+# use warnings FATAL => 'all';
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -175,7 +174,7 @@ sub pipeline_analyses {
             },
             -flow_into  => {
                 '2->A' => WHEN(
-                    '#ontology_name# eq PR' => { 'ontology_term_load_light' => INPUT_PLUS },
+                    '#ontology_name# eq "PR"' => { 'ontology_term_load_light' => INPUT_PLUS },
                     ELSE { 'ontology_term_load' => INPUT_PLUS },
                 ),
                 'A->1' => [ 'ontology_report' ]
