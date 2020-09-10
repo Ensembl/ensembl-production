@@ -221,7 +221,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                    '("PHI" ~~ #ontologies# and (#wipe_one# == 1 or #wipe_all# == 1))' => [ 'phibase_load_factory' ],
+                   '( #expr(grep {/PHI/} @{#ontologies#})expr# and (#wipe_one# == 1 or #wipe_all# == 1) )' => [ 'phibase_load_factory' ],
                     ELSE [ 'compute_closure' ]
                 )
             }
