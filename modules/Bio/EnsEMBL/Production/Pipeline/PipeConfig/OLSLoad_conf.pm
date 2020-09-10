@@ -32,8 +32,8 @@ Check and compute terms closure.
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
-# use warnings FATAL => 'all';
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use warnings FATAL => 'all';
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -44,14 +44,14 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         ## General parameters
-        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
+        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('user') . '/ols_loader/' . $self->o('pipeline_name'),
         'base_dir'         => $self->o('ENV', 'BASE_DIR'),
         'srv_cmd'          => undef,
         'wipe_all'         => 0,
         'wipe_one'         => 1,
         'verbosity'        => 2,
         'ols_load'         => 50,
-        'ens_version'      => $self->o('ENV', 'ENS_VERSION'),
+        'ens_version'      => $self->o('ensembl_release'),
         'db_name'          => 'ensembl_ontology',
         'mart_db_name'     => 'ontology_mart',
         'pipeline_name'    => 'ols_ontology_' . $self->o('ens_version'),
@@ -62,10 +62,8 @@ sub default_options {
         'tgt_host'         => undef,
         'host'             => undef,
         'port'             => undef,
-        'pass'             => undef,
-        'user'             => undef,
-        'copy_service_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
-        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_payload'      => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('user').'", "email": "'.$self->o('email').'"}',
+        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('user').'","email": "'.$self->o('email').'"}',
     }
 }
 
@@ -320,11 +318,11 @@ sub pipeline_analyses {
 sub resource_classes {
     my $self = shift;
     return {
-        'default' => { 'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"' },
-        '32GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"' },
-        '64GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"' },
-        '128GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"' },
-        '256GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"' },
+        'default' => { 'LSF' => '-q production-rh74 -M 4000   -R "rusage[mem=4000]"' },
+        '32GB'    => { 'LSF' => '-q production-rh74 -M 32000  -R "rusage[mem=32000]"' },
+        '64GB'    => { 'LSF' => '-q production-rh74 -M 64000  -R "rusage[mem=64000]"' },
+        '128GB'   => { 'LSF' => '-q production-rh74 -M 128000 -R "rusage[mem=128000]"' },
+        '256GB'   => { 'LSF' => '-q production-rh74 -M 256000 -R "rusage[mem=256000]"' },
     }
 }
 1;
