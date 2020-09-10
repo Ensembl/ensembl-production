@@ -53,6 +53,15 @@ sub default_options {
   }
 }
 
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('output_dir')
+  ];
+}
+
 sub resource_classes {
   my ($self) = @_;
 
@@ -121,11 +130,11 @@ sub pipeline_analyses {
       -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -meadow_type => 'LSF',
       -parameters  => {
-        'cmd'      => 'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
-        'db_srv'   => $self->o('db_srv'),
-        'dbname'   => $self->o('db_name'),
-        'release'  => $self->o('release'),
-        'base_dir' => $self->o('base_dir')
+        cmd      => 'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
+        db_srv   => $self->o('db_srv'),
+        dbname   => $self->o('db_name'),
+        release  => $self->o('release'),
+        base_dir => $self->o('base_dir')
       },
       -rc_name     => '32GB',
     },
@@ -136,6 +145,18 @@ sub pipeline_analyses {
         db_conn    => $self->o('db_url'),
         input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/indices.sql',
       },
+      -flow_into  => [ 'duplicates_report' ],
+    },
+    {
+      -logic_name => 'duplicates_report',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::StableID::EmailReport',
+      -parameters => {
+        db_conn       => $self->o('db_url'),
+        email         => $self->o('email'),
+        pipeline_name => $self->o('pipeline_name'),
+        output_dir    => $self->o('output_dir'),
+      },
+      -rc_name    => '32GB',
     }
   ];
 }
