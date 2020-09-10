@@ -32,7 +32,7 @@ Check and compute terms closure.
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use warnings FATAL => 'all';
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
@@ -44,14 +44,14 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         ## General parameters
-        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('user') . '/ols_loader/' . $self->o('pipeline_name'),
+        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
         'base_dir'         => $self->o('ENV', 'BASE_DIR'),
         'srv_cmd'          => undef,
         'wipe_all'         => 0,
         'wipe_one'         => 1,
         'verbosity'        => 2,
         'ols_load'         => 50,
-        'ens_version'      => $self->o('ensembl_release'),
+        'ens_version'      => $self->o('ENV', 'ENS_VERSION'),
         'db_name'          => 'ensembl_ontology',
         'mart_db_name'     => 'ontology_mart',
         'pipeline_name'    => 'ols_ontology_' . $self->o('ens_version'),
@@ -62,8 +62,10 @@ sub default_options {
         'tgt_host'         => undef,
         'host'             => undef,
         'port'             => undef,
-        'copy_service_payload'      => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('user').'", "email": "'.$self->o('email').'"}',
-        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('user').'","email": "'.$self->o('email').'"}',
+        'pass'             => undef,
+        'user'             => undef,
+        'copy_service_payload'      => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
     }
 }
 
@@ -219,7 +221,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                   '( #expr(grep {/PHI/} @{#ontologies#})expr# and (#wipe_one# == 1 or #wipe_all# == 1) )' => [ 'phibase_load_factory' ],
+                    '("PHI" ~~ #ontologies# and (#wipe_one# == 1 or #wipe_all# == 1))' => [ 'phibase_load_factory' ],
                     ELSE [ 'compute_closure' ]
                 )
             }
@@ -283,33 +285,33 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
                 datacheck_groups => [ 'ontologies' ],
-                history_file    => $self->o('history_file'),
-                old_server_uri  => $self->o('old_server'),
-                registry_file   => $self->o('reg_file'),
-                failures_fatal  => 1
+                history_file     => $self->o('history_file'),
+                old_server_uri   => $self->o('old_server'),
+                registry_file    => $self->o('reg_file'),
+                failures_fatal   => 1
             },
-            -flow_into   => [ 'copy_database', 'copy_mart_database' ]
+            -flow_into => [ 'copy_database', 'copy_mart_database' ]
         },
         {
-            -logic_name        => 'copy_database',
-            -module            => 'ensembl.production.hive.ProductionDBCopy',
-            -language          => 'python3',
-            -rc_name           => 'default',
-            -parameters        => {
-                'endpoint'     => $self->o('copy_service_uri'),
-                'payload'      => $self->o('copy_service_payload'),
-                'method'       => 'post',
+            -logic_name    => 'copy_database',
+            -module        => 'ensembl.production.hive.ProductionDBCopy',
+            -language      => 'python3',
+            -rc_name       => 'default',
+            -parameters    => {
+                'endpoint' => $self->o('copy_service_uri'),
+                'payload'  => $self->o('copy_service_payload'),
+                'method'   => 'post',
             },
         },
         {
-            -logic_name        => 'copy_mart_database',
-            -module            => 'ensembl.production.hive.ProductionDBCopy',
-            -language          => 'python3',
-            -rc_name           => 'default',
-            -parameters        => {
-                'endpoint'     => $self->o('copy_service_uri'),
-                'payload'      => $self->o('copy_service_mart_payload'),
-                'method'       => 'post',
+            -logic_name    => 'copy_mart_database',
+            -module        => 'ensembl.production.hive.ProductionDBCopy',
+            -language      => 'python3',
+            -rc_name       => 'default',
+            -parameters    => {
+                'endpoint' => $self->o('copy_service_uri'),
+                'payload'  => $self->o('copy_service_mart_payload'),
+                'method'   => 'post',
             },
         },
     ];
