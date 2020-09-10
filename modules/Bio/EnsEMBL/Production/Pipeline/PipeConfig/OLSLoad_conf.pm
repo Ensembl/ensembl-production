@@ -284,7 +284,7 @@ sub pipeline_analyses {
             -logic_name => 'ontology_dc',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
-                datacheck_names => [ 'CompareOntologyTerm', 'CheckOntologyTerm' ],
+                datacheck_groups => [ 'ontologies' ],
                 history_file    => $self->o('history_file'),
                 old_server_uri  => $self->o('old_server'),
                 registry_file   => $self->o('reg_file'),
