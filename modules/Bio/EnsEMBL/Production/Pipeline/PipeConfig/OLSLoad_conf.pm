@@ -219,7 +219,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                    '("PHI" ~~ #ontologies# and (#wipe_one# == 1 or #wipe_all# == 1))' => [ 'phibase_load_factory' ],
+                   '( #expr(grep {/PHI/} @{#ontologies#})expr# and (#wipe_one# == 1 or #wipe_all# == 1) )' => [ 'phibase_load_factory' ],
                     ELSE [ 'compute_closure' ]
                 )
             }
@@ -282,7 +282,7 @@ sub pipeline_analyses {
             -logic_name => 'ontology_dc',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
-                datacheck_names => [ 'CompareOntologyTerm', 'CheckOntologyTerm' ],
+                datacheck_groups => [ 'ontologies' ],
                 history_file    => $self->o('history_file'),
                 old_server_uri  => $self->o('old_server'),
                 registry_file   => $self->o('reg_file'),
