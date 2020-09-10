@@ -35,3 +35,4 @@ MultiTestDB.conf
 .idea
 *.iml
 /_Deparsed_XSubs.pm
+__pycache__/
