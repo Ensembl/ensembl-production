@@ -36,7 +36,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::StableIDs_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -50,6 +50,7 @@ sub default_options {
     db_name  => 'ensembl_stable_ids',
     db_url   => $self->o('srv_url') . $self->o('db_name'),
     release  => $self->o('ensembl_release'),
+    email    => $ENV{'USER'}.'@ebi.ac.uk'
   }
 }
 
