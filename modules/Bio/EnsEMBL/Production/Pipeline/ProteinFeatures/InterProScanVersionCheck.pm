@@ -23,17 +23,36 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
+use File::Fetch;
+use Path::Tiny;
+
 sub run {
   my ($self) = @_;
-  my $interproscan_version = $self->param_required('interproscan_version');
-  my $interproscan_exe     = $self->param_required('interproscan_exe');
-  
+  my $interproscan_version  = $self->param_required('interproscan_version');
+  my $interproscan_exe      = $self->param_required('interproscan_exe');
+  my $skip_checksum_loading = $self->param_required('skip_checksum_loading');
+  my $service_version_file  = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
+
   my $interpro_cmd = "$interproscan_exe --version";
   my $version_info = `$interpro_cmd` or $self->throw("Failed to run ".$interpro_cmd);
-  
+
   if ($version_info =~ /InterProScan version (\S+)/) {
-    if ($1 ne $interproscan_version) {
-      $self->throw("InterProScan version mismatch\nConf file: $interproscan_version\n$interproscan_exe: $1");
+    my $cmd_version = $1;
+    if ($cmd_version ne $interproscan_version) {
+      $self->throw("InterProScan version mismatch\nConf file: $interproscan_version\n$interproscan_exe: $cmd_version");
+    } elsif (! $skip_checksum_loading) {
+      my $temp_dir = Path::Tiny->tempdir();
+      my $ff = File::Fetch->new(uri => $service_version_file);
+      my $file = $ff->fetch(to => $temp_dir->stringify);
+      my $data = path($file)->slurp;
+      if ($data =~ /SERVER:(\S+)/) {
+        my $service_version = $1;
+        if ($service_version ne $cmd_version) {
+          $self->throw("InterProScan version mismatch\n$interproscan_exe: $cmd_version\n$service_version_file: $service_version");
+        }
+      } else {
+        $self->throw("Could not find version in service file:\n$service_version_file\n$data");
+      }
     }
   } else {
     $self->throw("Could not find version in output from $interpro_cmd:\n$version_info");

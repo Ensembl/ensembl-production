@@ -33,6 +33,7 @@ use XrefParser::BaseParser;
 use IO::File;
 use JSON;
 use Bio::EnsEMBL::Hive::Utils::URL;
+use Bio::EnsEMBL::DBSQL::DBConnection;
 use Text::Glob qw( match_glob );
 use Bio::EnsEMBL::Utils::IO qw/slurp/;
 use Bio::EnsEMBL::Utils::URI qw(parse_uri);
@@ -202,6 +203,17 @@ sub get_dbi {
   }
   my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
   return $dbi;
+}
+
+sub get_dbc {
+  my ($self, $host, $port, $user, $pass, $dbname) = @_;
+  my $dbconn = Bio::EnsEMBL::DBSQL::DBConnection->new(
+        -HOST   => $host,
+        -DBNAME => $dbname,
+        -USER   => $user,
+        -PASS   => $pass,
+        -PORT   => $port);
+  return $dbconn;
 }
 
 sub get_path {

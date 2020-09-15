@@ -205,7 +205,7 @@ sub run {
         my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
         my @master_xref = grep { $_->dbname =~ m/uniprot/i } @$uniprot_xrefs;
         if (scalar(@master_xref) !=0 ) {
-          my $master_xref = $master_xref[0];
+          $master_xref = $master_xref[0];
           $go_xref->add_linkage_type($go_evidence, $master_xref);
         } else {
           $unmatched_uniprot{$tgt_species}++;
@@ -315,30 +315,34 @@ sub run {
       # This is slower, hence only used if nothing better is available
       else {
 	$self->log()->debug("Finding tgt_feature");
-	if ($is_protein) {
-	  $self->log()->debug("Finding protein $db_object_id");
-	  $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id);
-	  if(scalar @$translations == 0) {
-	    $self->log()->debug("Could not find translation for $db_object_id");
-	  }
-	  # Protein xref is attached to translation
-	  # But GO term should be attached to transcript
-	  foreach my $translation (@$translations) {
-	    $self->log()->debug("Attaching via translation to transcript ".$translation->transcript()->dbID());
-           $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
-	    $species_added_via_xref{$tgt_species}++;
-	  }
-	} elsif ($is_transcript) {
-	  $self->log()->debug("Finding transcript $db_object_id");
-	  $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
-	  foreach my $transcript (@$transcripts) {
-	    $self->log()->debug("Attaching to transcript ".$transcript->dbID());
-	    $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
-	    $species_added_via_xref{$tgt_species}++;
-         }
-	} else {
-	  $self->log()->debug("Couldn't figure out how to find target feature");
-	}
+  if (defined $master_xref) {
+    if ($is_protein) {
+      $self->log()->debug("Finding protein $db_object_id");
+      $translations = $tl_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
+      if(scalar @$translations == 0) {
+        $self->log()->debug("Could not find translation for $db_object_id");
+      }
+      # Protein xref is attached to translation
+      # But GO term should be attached to transcript
+      foreach my $translation (@$translations) {
+        $self->log()->debug("Attaching via translation to transcript ".$translation->transcript()->dbID());
+             $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
+        $species_added_via_xref{$tgt_species}++;
+      }
+    } elsif ($is_transcript) {
+      $self->log()->debug("Finding transcript $db_object_id");
+      $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id, $master_xref->dbname);
+      foreach my $transcript (@$transcripts) {
+        $self->log()->debug("Attaching to transcript ".$transcript->dbID());
+        $dbe_adaptor->store($go_xref, $transcript->dbID(), 'Transcript', 1, $master_xref);
+        $species_added_via_xref{$tgt_species}++;
+           }
+    } else {
+      $self->log()->debug("Couldn't figure out how to find target feature");
+    }
+  } else {
+    $self->log()->debug("Source xref not in core database");
+  }
       }
     }
     
