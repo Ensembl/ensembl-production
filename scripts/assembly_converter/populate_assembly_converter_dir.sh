@@ -125,7 +125,7 @@ if [ "$do_verts" = true ]; then
                     then
                         file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                     else
-                        echo "WARNING: Cannot find file for assembly '$assembly'"
+                        echo "INFO: Cannot find file for assembly '$assembly'"
                         continue
                     fi
                     if [ ! -f "${base_dest}/www/${dir}/$file" ]
@@ -220,7 +220,7 @@ if [ "$do_nonverts" = true ]; then
                             then
                                 file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
                             else
-                                echo "WARNING: Cannot find file for assembly '$assembly'"
+                                echo "INFO: Cannot find file for assembly '$assembly'"
                                 continue
                             fi
                             if [ ! -f "${base_dest}/${division}/${dir}/$file" ]
@@ -242,8 +242,11 @@ if [ "$do_nonverts" = true ]; then
     done
 fi
 
-
-echo "All Done!!..."
+if [[ "$do_verts" = true || "$do_nonverts" = true ]]; then
+    echo "All Done!!..."
+else
+    echo "Nothing done. Either '-V' and/or '-N' must be used."
+fi
 
 
 
