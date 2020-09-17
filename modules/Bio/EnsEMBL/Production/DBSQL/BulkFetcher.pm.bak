@@ -51,16 +51,61 @@ sub new {
 }
 
 sub export_genes {
+    my ($self, $dba, $transcript_adaptor, $biotypes, $level, $load_xrefs) = @_;
 
-    my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;
+=head
+    my $transcripts = $transcript_adaptor->fetch_all;
+    print("transcript.........................................\n");
 
+    while (my $transcript = shift @$transcripts) {
+      my $translation = $transcript->translation;
+      next unless $translation;
+      my $start = $translation->start;
+      my $end = $translation->end;
+
+      my $transcript_slice = $transcript->feature_Slice;
+      my $cds_feats = $transcript->get_all_CDS();
+     
+      if (@$cds_feats > 1) {
+        my ($relative_first_cds) = $cds_feats->[0]->transfer($transcript_slice);
+        my ($relative_last_cds) = $cds_feats->[-1]->transfer($transcript_slice);
+        print("in if .........\n");
+        print($transcript->stable_id);
+        print("\n");
+        print($cds_feats->[0]->start);
+        print("\n");  
+        print($cds_feats->[-1]->end);
+        print("\n");
+        print($relative_first_cds->start);
+        print("\n");  
+        print($relative_last_cds->end);
+      } else {
+        print("in elese.....\n");
+        my ($relative_cds) = $cds_feats->[0]->transfer($transcript_slice);
+        print("\n");
+        print($transcript->stable_id);
+        print("\n");
+        print($cds_feats->[0]->start);
+        print("\n");
+        print($cds_feats->[0]->end);
+        print("\n");
+        print($relative_cds->start);
+        print("\n");
+        print($relative_cds->end);
+        print("\n");
+        print($cds_feats->[0]->length);
+        print("\n");
+      } 
+
+    }
+=cut
     $biotypes = $self->{biotypes} unless defined $biotypes;
     $level = $self->{level} unless defined $level;
     $load_xrefs = $self->{load_xrefs} unless defined $load_xrefs;
 
     # query for all genes, hash by ID
     $log->info("Exporting genes for " . $dba->species());
-    my $genes = $self->get_genes($dba, $biotypes, $level, $load_xrefs);
+    my $genes = $self->get_genes($dba, $transcript_adaptor, $biotypes, $level, $load_xrefs);
     my @genes_l = values %$genes;
     $log->info("Completed exporting " . scalar(@genes_l) . " genes for " . $dba->species());
     return \@genes_l;
@@ -88,7 +133,7 @@ sub _append_analysis_sql {
 }
 
 sub get_genes {
-    my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;
+    my ($self, $dba, $transcript_adaptor, $biotypes, $level, $load_xrefs) = @_;
 
     my $genes_hash = {};
 
@@ -172,7 +217,7 @@ sub get_genes {
             $level eq 'protein_feature') {
             $log->debug("Adding transcripts");
             # query for transcripts, hash by gene ID
-            my $transcripts = $self->get_transcripts($dba, $biotypes, $level, $load_xrefs);
+            my $transcripts = $self->get_transcripts($dba, $transcript_adaptor, $biotypes, $level, $load_xrefs);
             $log->debug("Found transcripts for " . scalar(values %{$transcripts}) . " gene IDs");
             while (my ($gene_id, $transcript) = each %$transcripts) {
                 my $g = $genes_hash->{$gene_id};
@@ -186,7 +231,7 @@ sub get_genes {
 } ## end sub get_genes
 
 sub get_transcripts {
-    my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;
+    my ($self, $dba, $transcript_adaptor, $biotypes, $level, $load_xrefs) = @_;
 
     my $sql = q/
     select ifnull(g.stable_id, g.gene_id) as gene_id,
@@ -262,9 +307,62 @@ sub get_transcripts {
     }
 
     {
+        $log->debug("Getting CDS for transcripts");
+        my $transcripts_api = $transcript_adaptor->fetch_all;
+        print("transcript.........................................\n");
+    while (my $transcript = shift @$transcripts_api) {
+      #my $translation = $transcript->translation;
+      #next unless $translation;
+      #my $start = $translation->start;
+      #my $end = $translation->end;
 
-        my $exons_list = {};
-        my $temp_transcript_id = '';  
+      my $transcript_slice = $transcript->feature_Slice;
+      my $cds_feats = $transcript->get_all_CDS();
+
+      if (@$cds_feats > 1) {
+        my ($relative_first_cds) = $cds_feats->[0]->transfer($transcript_slice);
+        my ($relative_last_cds) = $cds_feats->[-1]->transfer($transcript_slice);
+
+         
+        print("in if .........\n");
+        print($transcript->stable_id);
+        print("\n");
+        print($cds_feats->[0]->start);
+        print("\n");
+        print($cds_feats->[-1]->end);
+        print("\n");
+        print($relative_first_cds->start);
+        print("\n");
+        print($relative_last_cds->end);
+        push @{$transcripts->{$transcript->stable_id}{'api_cds'}}, { 'start' => $cds_feats->[0]->start , 'end' => $cds_feats->[-1]->end, 'id' => $transcript->stable_id};
+
+
+      } else {
+        print("in elese.....\n");
+        my ($relative_cds) = $cds_feats->[0]->transfer($transcript_slice);
+        print("\n");
+        print($transcript->stable_id);
+        print("\n");
+        print($cds_feats->[0]->start);
+        print("\n");
+        print($cds_feats->[0]->end);
+        print("\n");
+        print($relative_cds->start);
+        print("\n");
+        print($relative_cds->end);
+        print("\n");
+        print($cds_feats->[0]->length);
+        print("\n");
+        push @{$transcripts->{$transcript->stable_id}{'api_cds'}}, { 'start' => $cds_feats->[0]->start , 'end' => $cds_feats->[0]->end, 'id' => $transcript->stable_id};
+      }
+
+    }
+        
+    }
+
+    {
+
+        my $exons_list = {};   
         my $exon_sql = q/
 		SELECT
 		ifnull(t.stable_id, t.transcript_id) AS trans_id,
@@ -293,67 +391,29 @@ sub get_transcripts {
             -PARAMS       => [ $dba->species_id ],
             -USE_HASHREFS => 1,
             -CALLBACK     => sub {
-
                 my ($row) = @_;
+
+                push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;  
                 my $transcript = $transcripts->{$row->{trans_id}};
                 $row->{coord_system} = $transcript->{coord_system};
-
-                if($temp_transcript_id ne $row->{trans_id}) {
-
-                  if ( $temp_transcript_id ne '') {
-                    print(".............................................."); 
-                               
-                    print("\n trans: $temp_transcript_id");
-                    print("\n row: ");
-                    print($row->{trans_id});
-                   
-                    print("\n");
-                    print(@{$exons_list->{$temp_transcript_id}});
-                    print("\n");  
-                      
-                    $self->set_cds($exons_list, $transcript, $row->{trans_id}); 
-                    $exons_list = {};  
-
-                  }
-
-                  push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
-                  $temp_transcript_id = $row->{trans_id};
-
-                } else {
-                  push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
-                }  
-                
                 delete $row->{trans_id};
                 push @{$transcript->{exons}}, $row;
+                push @{$transcript->{cds}}, {'start'=> $row->{start}, 'end' => $row->{end}}; 
                 return;
             });
 
-            $self->set_cds($exons_list, $transcripts->{$temp_transcript_id}, $temp_transcript_id);
-    
-=head
            foreach my $transcript_id (keys %$exons_list) {
 
               my $arraylength = @{$exons_list->{$transcript_id}};
 
-              if( $arraylength > 1 ){
-
-                print("\n start: \n");
-                print(${$exons_list->{$transcript_id}}[0]->{start});
-                print("\n end: \n");
-                print(${$exons_list->{$transcript_id}}[-1]->{end});
-                print("\n..........\n");
+              if( $arraylength > 1   ){
 
               }else{
-
-                print("\nelse  start: \n");
-                print(${$exons_list->{$transcript_id}}[0]->{start});
-                print("\n");
 
               }
 
 
            }
-=cut
 
     }
 
@@ -448,25 +508,6 @@ sub get_transcripts {
     }
     return $transcript_hash;
 } ## end sub get_transcripts
-
-
-sub set_cds {
-
-  my ($self, $exons_list, $transcript, $transcript_id ) = @_;
-
-  print("\ncds ...function ....$transcript_id\n");
-  print($exons_list->{$transcript_id});
-  print("\n");  
-  my $arraylength = @{$exons_list->{$transcript_id}};
-
-  if( $arraylength > 1 ){
-    push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[-1]->{end} };  
-  }else{
-    push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[0]->{end} };
-  }
-
-}
-
 
 sub get_translations {
     my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;

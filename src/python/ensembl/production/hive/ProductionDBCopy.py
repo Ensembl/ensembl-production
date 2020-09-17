@@ -17,14 +17,17 @@ import time
 
 import eHive
 from ensembl.hive.HiveRESTClient import HiveRESTClient
+import sys
 
-
-
+'''
 class ProductionDBCopy(HiveRESTClient):
     """ OLS MySQL loader: initialise basics info in Ontology DB """
 
     def run(self):
+        self.warning(self.param('payload'))
+        sys.exit()   
         if self.response.status_code != 201:
+            self.warning(self.param('payload'))    
             raise Exception('The Copy submission failed: '+self.response.raise_for_status)
         submitted_time=time.time()
         while True:
@@ -46,3 +49,12 @@ class ProductionDBCopy(HiveRESTClient):
 
     def process_response(self, response):
         pass
+'''
+
+class ProductionDBCopy(eHive.BaseRunnable):
+    """ OLS MySQL loader: initialise basics info in Ontology DB """
+
+    def run(self):
+        self.warning(self.param('payload'))
+        sys.exit()   
+

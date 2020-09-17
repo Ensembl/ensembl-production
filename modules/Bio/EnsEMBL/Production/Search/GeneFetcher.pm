@@ -78,9 +78,11 @@ sub fetch_genes {
 
 sub fetch_genes_for_dba {
   my ($self, $dba, $compara_dba, $funcgen_dba, $pan_compara_dba) = @_;
+   
   $logger->debug("Retrieving genes for " . $dba->species());
-  $dba->dbc()->db_handle()->{mysql_use_result} = 1;
+  $dba->dbc()->db_handle()->{mysql_store_result} = 1;
   my @genes = grep {_include_gene($_)} @{$self->{fetcher}->export_genes($dba)};
+  $dba->dbc()->db_handle()->{mysql_use_result} = 1;
   $self->{fetcher}->add_funcgen(\@genes, $funcgen_dba) if defined $funcgen_dba;
   $self->{fetcher}->add_compara($dba->species(), \@genes, $compara_dba) if defined $compara_dba;
   $self->{fetcher}->add_pan_compara($dba->species(), \@genes, $pan_compara_dba) if defined $pan_compara_dba;

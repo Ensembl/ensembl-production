@@ -95,6 +95,8 @@ sub new {
 sub fetch_genome {
 	my ( $self, $name ) = @_;
 	my $md = $self->fetch_metadata($name);
+        $logger->debug("heloooo.......");
+        $logger->debug($name);
 	croak "Could not find genome $name" unless defined $md;
 	return $self->metadata_to_hash($md);
 }

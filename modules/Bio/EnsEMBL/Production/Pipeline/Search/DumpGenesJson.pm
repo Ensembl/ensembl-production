@@ -56,7 +56,6 @@ sub dump {
 
     $type ||= 'core';
     my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, $type);
-
     my $output = {
         species     => $species,
         type        => $type,
@@ -65,7 +64,8 @@ sub dump {
     $self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
     $self->{logger}->info("Dumping data for $species $type");
     $self->{logger}->info("Dumping genes");
-    $output->{genes_file} = $self->dump_genes($dba, $compara, $type, $self->param('use_pan_compara'));
+    $output->{genes_file} = $self->dump_genes($dba,  $compara, $type, $self->param('use_pan_compara'));
+
     $self->{logger}->info("Dumping sequences");
     $output->{sequences_file} = $self->dump_sequences($dba, $type);
     $self->{logger}->info("Dumping LRGs");
@@ -88,6 +88,7 @@ sub dump_genes {
   my $funcgen_dba;
   my $compara_dba;
   my $pan_compara_dba;
+  $self->warning($dba->species()) ;
 
   if ($type eq 'core') {
     $funcgen_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($dba->species(), 'funcgen');
@@ -96,7 +97,6 @@ sub dump_genes {
     };
     $pan_compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('pan_homology', 'compara') if $use_pan_compara;
   }
-
   my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()->fetch_genes_for_dba($dba, $compara_dba, $funcgen_dba, $pan_compara_dba);
   if (defined $genes && scalar(@$genes) > 0) {
     $self->{logger}->info("Writing " . scalar(@$genes) . " genes to JSON");
