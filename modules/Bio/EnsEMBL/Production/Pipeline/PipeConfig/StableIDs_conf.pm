@@ -68,6 +68,7 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
+    '8GB'  => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=1000]"'},
     '32GB' => {'LSF' => '-q production-rh74 -M 32000 -R "rusage[mem=32000,scratch=1000]"'},
   }
 }
@@ -157,7 +158,7 @@ sub pipeline_analyses {
         pipeline_name => $self->o('pipeline_name'),
         output_dir    => $self->o('output_dir'),
       },
-      -rc_name    => '32GB',
+      -rc_name    => '8GB',
     }
   ];
 }
