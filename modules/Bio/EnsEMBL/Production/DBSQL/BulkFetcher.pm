@@ -226,6 +226,7 @@ sub get_transcripts {
         -CALLBACK     => sub {
             my ($row) = @_;
             $transcripts->{$row->{id}} = $row;
+            $transcripts->{$row->{id}}{translations} = [];
             return;
         });
 
@@ -264,7 +265,7 @@ sub get_transcripts {
     {
 
         my $exons_list = {};
-        my $temp_transcript_id = '';  
+        my $current_transcript_id = '';  
         my $exon_sql = q/
 		SELECT
 		ifnull(t.stable_id, t.transcript_id) AS trans_id,
@@ -298,26 +299,16 @@ sub get_transcripts {
                 my $transcript = $transcripts->{$row->{trans_id}};
                 $row->{coord_system} = $transcript->{coord_system};
 
-                if($temp_transcript_id ne $row->{trans_id}) {
+                if($current_transcript_id ne $row->{trans_id}) {
 
-                  if ( $temp_transcript_id ne '') {
-                    print(".............................................."); 
+                  if ( $current_transcript_id ne '') {
                                
-                    print("\n trans: $temp_transcript_id");
-                    print("\n row: ");
-                    print($row->{trans_id});
-                   
-                    print("\n");
-                    print(@{$exons_list->{$temp_transcript_id}});
-                    print("\n");  
-                      
-                    $self->set_cds($exons_list, $transcript, $row->{trans_id}); 
+                    $self->set_cds($exons_list, $transcripts->{$current_transcript_id}, $current_transcript_id); 
                     $exons_list = {};  
-
                   }
 
                   push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
-                  $temp_transcript_id = $row->{trans_id};
+                  $current_transcript_id = $row->{trans_id};
 
                 } else {
                   push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
@@ -328,32 +319,7 @@ sub get_transcripts {
                 return;
             });
 
-            $self->set_cds($exons_list, $transcripts->{$temp_transcript_id}, $temp_transcript_id);
-    
-=head
-           foreach my $transcript_id (keys %$exons_list) {
-
-              my $arraylength = @{$exons_list->{$transcript_id}};
-
-              if( $arraylength > 1 ){
-
-                print("\n start: \n");
-                print(${$exons_list->{$transcript_id}}[0]->{start});
-                print("\n end: \n");
-                print(${$exons_list->{$transcript_id}}[-1]->{end});
-                print("\n..........\n");
-
-              }else{
-
-                print("\nelse  start: \n");
-                print(${$exons_list->{$transcript_id}}[0]->{start});
-                print("\n");
-
-              }
-
-
-           }
-=cut
+            $self->set_cds($exons_list, $transcripts->{$current_transcript_id}, $current_transcript_id);
 
     }
 
@@ -452,16 +418,15 @@ sub get_transcripts {
 
 sub set_cds {
 
-  my ($self, $exons_list, $transcript, $transcript_id ) = @_;
+  my ($self , $exons_list, $transcript, $transcript_id ) = @_;
 
-  print("\ncds ...function ....$transcript_id\n");
-  print($exons_list->{$transcript_id});
-  print("\n");  
+  $log->debug("Getting CDS Data"); 
+
   my $arraylength = @{$exons_list->{$transcript_id}};
-
+  
   if( $arraylength > 1 ){
     push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[-1]->{end} };  
-  }else{
+  } else{
     push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[0]->{end} };
   }
 
