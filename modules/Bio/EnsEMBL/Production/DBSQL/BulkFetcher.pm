@@ -51,6 +51,7 @@ sub new {
 }
 
 sub export_genes {
+
     my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;
 
     $biotypes = $self->{biotypes} unless defined $biotypes;
@@ -225,6 +226,7 @@ sub get_transcripts {
         -CALLBACK     => sub {
             my ($row) = @_;
             $transcripts->{$row->{id}} = $row;
+            $transcripts->{$row->{id}}{translations} = [];
             return;
         });
 
@@ -261,27 +263,30 @@ sub get_transcripts {
     }
 
     {
-        my $exon_sql = q/
-  SELECT
-  ifnull(t.stable_id, t.transcript_id) AS trans_id,
-  ifnull(e.stable_id, e.exon_id) AS id,
-  e.version AS version,
-  s.name as seq_region_name,
-  e.seq_region_start as start, 
-  e.seq_region_end as end,
-  e.seq_region_strand as strand,
-  et.rank as rank,
-  'exon' as ensembl_object_type
-  FROM transcript t
-  JOIN exon_transcript et ON t.transcript_id = et.`transcript_id`
-  JOIN exon e ON et.exon_id = e.`exon_id`
-  JOIN seq_region s ON e.seq_region_id = s.seq_region_id
-  JOIN coord_system c ON c.coord_system_id = s.coord_system_id
-  WHERE c.species_id = ?
-  ORDER BY `id`
-  /;
-        $exon_sql = $self->_append_analysis_sql($dba, $exon_sql, 't');
 
+        my $exons_list = {};
+        my $current_transcript_id = '';  
+        my $exon_sql = q/
+		SELECT
+		ifnull(t.stable_id, t.transcript_id) AS trans_id,
+		ifnull(e.stable_id, e.exon_id) AS id,
+		e.version AS version,
+		s.name as seq_region_name,
+		e.seq_region_start as start, 
+		e.seq_region_end as end,
+		e.seq_region_strand as strand,
+		et.rank as rank,
+		'exon' as ensembl_object_type
+		FROM transcript t
+		JOIN exon_transcript et ON t.transcript_id = et.`transcript_id`
+		JOIN exon e ON et.exon_id = e.`exon_id`
+		JOIN seq_region s ON e.seq_region_id = s.seq_region_id
+		JOIN coord_system c ON c.coord_system_id = s.coord_system_id
+		WHERE c.species_id = ?
+		ORDER BY `id`
+	/;
+
+        $exon_sql = $self->_append_analysis_sql($dba, $exon_sql, 't');
         $log->debug("Getting exons for transcripts");
         $log->trace($sql);
         $dba->dbc->sql_helper->execute_no_return(
@@ -289,13 +294,33 @@ sub get_transcripts {
             -PARAMS       => [ $dba->species_id ],
             -USE_HASHREFS => 1,
             -CALLBACK     => sub {
+
                 my ($row) = @_;
                 my $transcript = $transcripts->{$row->{trans_id}};
                 $row->{coord_system} = $transcript->{coord_system};
+
+                if($current_transcript_id ne $row->{trans_id}) {
+
+                  if ( $current_transcript_id ne '') {
+                               
+                    $self->set_cds($exons_list, $transcripts->{$current_transcript_id}, $current_transcript_id); 
+                    $exons_list = {};  
+                  }
+
+                  push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
+                  $current_transcript_id = $row->{trans_id};
+
+                } else {
+                  push @{ $exons_list->{ $row->{trans_id} } } , { 'start' =>  $row->{start}, 'end' => $row->{end} } ;
+                }  
+                
                 delete $row->{trans_id};
                 push @{$transcript->{exons}}, $row;
                 return;
             });
+
+            $self->set_cds($exons_list, $transcripts->{$current_transcript_id}, $current_transcript_id);
+
     }
 
     {
@@ -389,6 +414,24 @@ sub get_transcripts {
     }
     return $transcript_hash;
 } ## end sub get_transcripts
+
+
+sub set_cds {
+
+  my ($self , $exons_list, $transcript, $transcript_id ) = @_;
+
+  $log->debug("Getting CDS Data"); 
+
+  my $arraylength = @{$exons_list->{$transcript_id}};
+  
+  if( $arraylength > 1 ){
+    push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[-1]->{end} };  
+  } else{
+    push @{$transcript->{cds}}, {'start'=> ${$exons_list->{$transcript_id}}[0]->{start}, 'end' => ${$exons_list->{$transcript_id}}[0]->{end} };
+  }
+
+}
+
 
 sub get_translations {
     my ($self, $dba, $biotypes, $level, $load_xrefs) = @_;
