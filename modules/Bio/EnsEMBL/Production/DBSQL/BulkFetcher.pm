@@ -420,7 +420,7 @@ sub set_cds {
 
   my ($self , $exons_list, $transcript, $transcript_id ) = @_;
 
-  $log->debug("Getting CDS start and end cords for transcript"); 
+  #"Getting CDS start and end cords for transcript" 
   my $arraylength = @{$exons_list->{$transcript_id}};
   
   if( $arraylength > 1 ){
