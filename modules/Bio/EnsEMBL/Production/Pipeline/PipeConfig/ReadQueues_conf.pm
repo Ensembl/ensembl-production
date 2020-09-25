@@ -47,7 +47,7 @@ sub default_options {
     'release'       => $self->o('release'),
     'pipeline_name' => $self->o('hive_dbname'),       
     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-    'output_dir'    => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),     
+    'output_dir'    => '/hps/nobackup2/production/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name'),
 
     ## Messaging Queue Server
     'queue_host'  => 'ebi-007.ebi.ac.uk',

@@ -37,7 +37,7 @@ sub default_options {
     'registry'      => '',
     'pipeline_name' => $self->o( 'ENV', 'USER' ) . '_DBCopyPatch_' .
       $self->o('ensembl_release'),
-    'output_dir' => '/nfs/nobackup/ensemblgenomes/' .
+    'output_dir' => '/hps/nobackup2/production/ensembl/' .
       $self->o( 'ENV', 'USER' ) . '/workspace/' .
       $self->o('pipeline_name'),
 

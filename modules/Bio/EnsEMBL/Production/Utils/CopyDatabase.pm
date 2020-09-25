@@ -48,7 +48,7 @@ sub copy_database {
 
   $logger->info("Pre-Copy Checks");
   # Path for MySQL dump
-  my $dump_path='/nfs/nobackup/ensembl/ensprod/copy_service/';
+  my $dump_path='/hps/nobackup2/production/ensembl/ensprod/copy_service/';
   # Get list of tables that we want to copy or skip
   my %only_tables;
   my %skip_tables;
@@ -662,7 +662,7 @@ sub copy_mysql_files {
   return;
 } 
 
-# Dump the database in /nfs/nobackup/ensembl/ensprod/copy_service
+# Dump the database in /hps/nobackup2/production/ensembl/ensprod/copy_service
 # Create database on target server
 # Load the database to the target server
 sub copy_mysql_dump {
