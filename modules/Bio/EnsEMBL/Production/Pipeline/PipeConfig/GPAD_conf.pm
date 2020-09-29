@@ -50,7 +50,7 @@ sub default_options {
     meta_filters => {},
 
     ## General parameters
-    output_dir => '/nfs/nobackup/ensembl/'.$self->o('user').'/workspace/'.$self->o('pipeline_name'),
+    output_dir => '/nfs/production/ensembl/nobackup/production/'.$self->o('user').'/workspace/'.$self->o('pipeline_name'),
 
     ## Location of GPAD files
     gpad_directory => '',

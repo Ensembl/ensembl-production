@@ -19,7 +19,7 @@ src=$1
 tgt=$2
 db=$3
 if [ -z "$TMP_DIR" ]; then
-    TMP_DIR=/nfs/nobackup/ensemblgenomes/$USER/dbcopy
+    TMP_DIR=/nfs/production/ensembl/production/$USER/dbcopy
     mkdir -p $TMP_DIR
 fi
 

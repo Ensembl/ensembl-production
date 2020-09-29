@@ -48,7 +48,7 @@ sub default_options {
        'release'       => $self->o('release'),
        'pipeline_name' => "ftp_pipeline",
 	     'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-       'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
+       'ftp_dir'       => '/nfs/production/ensembl/production/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
        'dumps'     	   => [],
 
 	   ## 'job_factory' parameters
