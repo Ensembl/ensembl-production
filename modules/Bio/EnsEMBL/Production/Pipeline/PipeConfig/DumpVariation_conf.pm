@@ -51,8 +51,8 @@ sub default_options {
        'eg_version'    => $self->o('release'),
        'pipeline_name' => $self->o('hive_dbname'),       
 	   'email'         => $self->o('ENV', 'USER').'@ebi.ac.uk',
-       'ftp_dir'       => '/hps/nobackup2/production/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
-       'temp_dir'      => '/hps/nobackup2/production/ensembl/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/temp_dir/release-'.$self->o('release'),
+       'ftp_dir'       => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/ftp_site/release-'.$self->o('release'),
+       'temp_dir'      => '/nfs/nobackup/ensemblgenomes/'.$self->o('ENV', 'USER').'/workspace/'.$self->o('pipeline_name').'/temp_dir/release-'.$self->o('release'),
        'dumps'     	   => [],
 
 	   ## 'job_factory' parameters
