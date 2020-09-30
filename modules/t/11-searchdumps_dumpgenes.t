@@ -1222,6 +1222,7 @@ subtest "Checking ncRNA gene", sub {
             'description'         => undef,
             'gene_id'             => 'ENSG00000261370',
             'name'                => 'RPL14P5-001',
+            'translations'        => [],  
             'xrefs'               => [ {
                 'db_display'  => 'Vega transcript',
                 'dbname'      => 'Vega_transcript',
