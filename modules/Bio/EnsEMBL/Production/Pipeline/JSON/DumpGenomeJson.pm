@@ -117,10 +117,14 @@ sub write_json {
             serotype            => $md->serotype(),
             taxonomy_id         => $md->taxonomy_id(),
             species_taxonomy_id => $md->species_taxonomy_id(),
-            aliases             => $md->aliases() },
-        assembly   => { name => $md->assembly_name(),
-            accession        => $md->assembly_accession(),
-            level            => $md->assembly_level() } };
+            aliases             => $md->aliases()
+        },
+        assembly   => {
+            name      => $md->assembly_name(),
+            accession => $md->assembly_accession(),
+            level     => $md->assembly_level()
+        }
+    };
 
     $genome_dba->dbc()->disconnect_if_idle();
     $self->info("Exporting genes");
