@@ -65,9 +65,10 @@ sub run {
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
-  my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
-  my $job_sth = $dbi->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?)");
-  my $mapping_sth = $dbi->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
+  my $dbc = $self->get_dbc($host, $port, $user, $pass, $dbname);
+  $dbc->disconnect_if_idle();
+  my $job_sth = $dbc->prepare("insert into mapping_jobs (map_file, status, out_file, err_file, array_number, job_id) values (?,?,?,?,?,?)");
+  my $mapping_sth = $dbc->prepare("insert into mapping (job_id, method, percent_query_cutoff, percent_target_cutoff) values (?,?,?,?)");
 
   my $out_file = "xref_".$seq_type.".".$max_chunks."-".$chunk.".out";
   my $job_id = $source_id . $job_index . $chunk;

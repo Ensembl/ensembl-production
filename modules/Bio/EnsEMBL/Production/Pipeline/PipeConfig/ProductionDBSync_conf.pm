@@ -1,15 +1,20 @@
 =head1 LICENSE
+
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 Copyright [2016-2020] EMBL-European Bioinformatics Institute
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
      http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 =head1 NAME
 Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProductionDBSync_conf
 
@@ -38,6 +43,7 @@ sub default_options {
     populate_controlled_tables    => 1,
     populate_analysis_description => 1,
     group => [],
+    email_on_completion => 0,
 
     # DB Factory
     species      => [],
@@ -48,8 +54,8 @@ sub default_options {
     meta_filters => {},
 
     # Datachecks
-    history_file => undef 
-
+    history_file         => undef,
+    datacheck_output_dir => undef,
   };
 }
 
@@ -66,9 +72,16 @@ sub hive_meta_table {
 sub pipeline_create_commands {
   my ($self) = @_;
 
+  my @cmds = (
+    'mkdir -p '.$self->o('backup_dir')
+  );
+  if (defined $self->o('datacheck_output_dir')) {
+    push @cmds, 'mkdir -p '.$self->o('datacheck_output_dir');
+  }
+
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('backup_dir'),
+    @cmds
   ];
 }
 
@@ -96,8 +109,19 @@ sub pipeline_analyses {
                               column_names => ['group'],
                             },
        -flow_into        => {
-                              '2' => ['DbFactory'],
+                              '2->A' => ['DbFactory'],
+                              'A->1' => ['ProductionDBSyncEmail'],
                             }
+    },
+    {
+      -logic_name        => 'ProductionDBSyncEmail',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 1,
+      -analysis_capacity => 1,
+      -parameters        => {
+                              email_on_completion => $self->o('email_on_completion')
+                            },
+      -flow_into         => WHEN('#email_on_completion#' => ['EmailReport']),
     },
     {
       -logic_name        => 'DbFactory',
@@ -211,6 +235,7 @@ sub pipeline_analyses {
                               ],
                               registry_file   => $self->o('registry'),
                               history_file    => $self->o('history_file'),
+                              output_file     => catdir($self->o('datacheck_output_dir'), '#species#_ControlledTables.txt'),
                               failures_fatal  => 1,
                             },
       -rc_name           => 'normal',
@@ -226,6 +251,7 @@ sub pipeline_analyses {
                               datacheck_types  => ['critical'],
                               registry_file    => $self->o('registry'),
                               history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#species#_ADCritical.txt'),
                               failures_fatal   => 1,
                             },
       -rc_name           => 'normal',
@@ -240,6 +266,7 @@ sub pipeline_analyses {
                               datacheck_types  => ['advisory'],
                               registry_file    => $self->o('registry'),
                               history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#species#_ADAdvisory.txt'),
                               failures_fatal   => 0,
                             },
       -rc_name           => 'normal',
@@ -257,7 +284,20 @@ sub pipeline_analyses {
                               pipeline_name => $self->o('pipeline_name'),
                             },
       -rc_name           => 'normal',
-   },
+    },
+    {
+      -logic_name        => 'EmailReport',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProductionDBSync::EmailReport',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              email         => $self->o('email'),
+                              pipeline_name => $self->o('pipeline_name'),
+                              history_file  => $self->o('history_file'),
+                              output_dir    => $self->o('datacheck_output_dir'),
+                            },
+      -rc_name           => 'normal',
+    },
 
   ];
 }

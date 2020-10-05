@@ -1,101 +1,223 @@
-1	1	0	0	funcgen	\N	\N	\N	\N	\N
-2	2007-11-Ensembl	0	0	otherfeatures	\N	\N	\N	\N	\N
-3	assembly.accession	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	GCA (Genome Collections Accession)	\N	\N	5132	2011-11-09 16:39:53
-4	assembly.coverage_depth	0	1	cdna,core,otherfeatures,rnaseq,presite	Historical meta key, indicating depth of capillary sequencing. Given to Compara as an estimate of how fragmented a genome is.	\N	\N	104991	2013-04-29 11:33:02
-5	assembly.date	0	1	cdna,core,otherfeatures,rnaseq,presite	Date that the assembly was submitted to the INSDC, date found in ASSEMBLY.INFO file on NCBI FTP	\N	\N	5132	2011-11-09 16:41:26
-6	assembly.default	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Assembly name found in coord_system table and assembly.mapping meta keys. Preferably the assembly name provided by the submitter if it is less than 16 characters long	\N	\N	5132	2011-11-09 16:42:14
-7	assembly.long_name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Unsure, probably the full assembly name if it is longer than 16 chars and cannot be used as assembly.default. For example, see platyfish.	\N	\N	5132	2012-01-18 19:49:29
-8	assembly.mapping	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-9	assembly.name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Must be less than 16 characters long for web display	\N	\N	5132	2011-11-09 16:42:42
-10	assembly.ncbi_build	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-11	assembly.num_toplevel_seqs	0	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-12	assembly.overlapping_regions	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-13	assembly.prefix	0	0	otherfeatures	\N	\N	\N	\N	\N
-14	assembly.version	0	0	core,otherfeatures	\N	\N	\N	\N	\N
-15	date.copied_from_ens-staging	0	0	otherfeatures	\N	\N	\N	\N	\N
-16	dna_align_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-17	exonbuild.level	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-18	genebuild.id	0	1	cdna,core,otherfeatures,rnaseq,presite	Identifies the genebuilder responsible for the database	\N	\N	97245	2012-01-24 10:51:26
-19	genebuild.initial_release_date	0	1	core,rnaseq	This is the date that the current build was first released on our website. This date will remain unchanged until there is a new genebuild.	\N	\N	97245	2012-05-28 15:37:36
-20	genebuild.last_geneset_update	0	1	core,rnaseq,vega	This is the date that the build's latest gene set was released on our website. This date will be updated every time that there have been changes to the geneset	\N	\N	161	2012-08-28 14:03:33
-21	genebuild.last_otherfeatures_update	0	1	otherfeatures	\N	\N	\N	\N	\N
-22	genebuild.last_update	0	0	otherfeatures	\N	\N	\N	\N	\N
-23	genebuild.level	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-24	genebuild.method	0	1	core,rnaseq	full_genebuild,projection_build,import,mixed_stragegy_build.\
-Full genebuild is use of standard annotation system. Projection build is use of projection pipeline from a reference (usually human) to either a low coverage or higher primate genome. Import used only for ensembl-genomes species. Mixed strategy covers other combinations for example a projection build combined with full genebuild method.	\N	\N	101214	2013-01-24 10:19:34
-25	genebuild.start_date	0	1	core,rnaseq,vega,presite	This is the date when the genebuild was started. The date roughly corresponds to the date when the supporting evidence were downloaded. This date will remain unchanged until there is a new genebuild	\N	\N	101214	2013-01-24 10:27:27
-26	genebuild.version	0	0	core,otherfeatures,vega	\N	\N	\N	\N	\N
-27	genebuild_id	0	0	cdna	\N	\N	\N	97245	2012-01-24 10:54:35
-28	individual.default_strain	0	1	variation	\N	\N	\N	\N	\N
-29	individual.display_strain	0	1	variation	\N	\N	\N	\N	\N
-30	individual.reference_strain	0	1	variation	\N	\N	\N	\N	\N
-31	liftover.mapping	0	1	cdna,core,otherfeatures,rnaseq,presite	\N	\N	\N	97804	2012-11-30 09:49:40
-32	marker.priority	0	1	core	when marker data is available, can set a cutoff for the number of markers displayed in a given location\
-usually set to 1 for most species, set to 80 for human	\N	\N	97245	2012-05-28 15:44:03
-33	pairwise_ld.default_population	0	1	variation	\N	\N	\N	\N	\N
-34	patch	0	1	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	\N	\N	\N	\N	\N
-35	pipeline.lock	0	0	core,otherfeatures	\N	\N	\N	\N	\N
-36	prediction_exonbuild.level	1	1	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-37	prediction_transcriptbuild.level	1	1	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-38	protein_align_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	101214	2012-04-12 08:38:28
-39	provider.name	0	0	core,otherfeatures	\N	\N	\N	\N	\N
-40	provider.url	0	0	core,otherfeatures	\N	\N	\N	\N	\N
-41	read_coverage.coverage_level	0	1	variation	\N	\N	\N	\N	\N
-42	regbuild.feature_set_ids	0	1	funcgen	\N	\N	\N	\N	\N
-43	regbuild.feature_set_ids_v4	0	1	funcgen	\N	\N	\N	\N	\N
-44	regbuild.feature_set_ids_v5	0	1	funcgen	\N	\N	\N	\N	\N
-45	regbuild.feature_type_ids	0	1	funcgen	\N	\N	\N	\N	\N
-46	regbuild.feature_type_ids_v4	0	1	funcgen	\N	\N	\N	\N	\N
-47	regbuild.feature_type_ids_v5	0	1	funcgen	\N	\N	\N	\N	\N
-48	regbuild.focus_feature_set_ids	0	1	funcgen	\N	\N	\N	\N	\N
-49	regbuild.initial_release_date	0	1	funcgen	\N	\N	\N	\N	\N
-50	regbuild.last_annotation_update	0	1	funcgen	\N	\N	\N	\N	\N
-51	regbuild.version	0	1	funcgen	\N	\N	\N	\N	\N
-52	repeat.analysis	0	1	core,presite	Includes dust, trf and any repeatmasker analyses that were used in the genebuild ie. defined in General.pm	\N	\N	101214	2013-03-12 13:04:11
-53	repeat_featurebuild.level	1	1	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-54	sample.gene_param	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-55	sample.gene_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-56	sample.location_param	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-57	sample.location_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-58	sample.search_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-59	sample.transcript_param	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-60	sample.transcript_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N
-61	schema_version	0	1	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	The version of the schema in this database.	\N	\N	\N	\N
-62	simple_featurebuild.level	1	1	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N
-63	species.alias	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	An alias for the species name, will be read by the Registry and may be used when getting adaptors using $registry->get_adpator(...)	\N	\N	\N	\N
-64	species.classification	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Full classification for every level, from our copy of NCBI taxonomy database	\N	\N	\N	\N
-65	species.common_name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Usually genbank common name, from ncbi taxonomy database	\N	\N	\N	\N
-66	species.description	0	0	core,otherfeatures	\N	\N	\N	\N	\N
-67	species.ensembl_alias_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Used by web for dropdown menu	\N	\N	97804	2012-04-05 10:59:27
-68	species.ensembl_common_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	97804	2012-04-05 10:59:31
-69	species.stable_id_prefix	0	1	cdna,core,otherfeatures,rnaseq,vega	\N	\N	\N	101214	2013-01-24 10:22:16
-70	species.system_name	0	1	funcgen	\N	\N	\N	\N	\N
-71	species.taxonomy_id	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Taxonomy ID from NCBI taxonomy database. Usually provided by INSDC who provides assembly.	\N	\N	\N	\N
-72	species.three_letter_code	0	0	otherfeatures	\N	\N	\N	\N	\N
-73	transcriptbuild.level	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N
-74	xref.timestamp	0	1	core,otherfeatures	timestamp created when running xrefs\
-should exist in all core databases and in otherfeatures databases for mouse and human where refseq and ccds import get xrefs	\N	\N	97245	2012-05-28 15:36:17
-75	species.production_name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	The name of the species in a form suitable for use in, e.g., database table names or file names.	\N	\N	\N	\N
-76	schema_type	0	1	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	The type of schema in this database, e.g., 'core' in a Core database or 'variation' in a Variation database.	\N	\N	\N	\N
-77	genebuild.vega_merge_db	0	0	core	Database name for Vega database used for GENCODE gene merge	\N	\N	\N	\N
-78	genebuild.projection_source_db	0	1	core	Database name for Reference database used for the low_coverage projection build. The reference database is usually human.	\N	\N	101214	2012-11-14 09:59:55
-79	species.scientific_name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	From NCBI taxonomy db, string directly associated to taxonomy ID, can be trinomial	\N	\N	\N	\N
-80	species.short_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	A name which is short enough to be used in space constraint areas	\N	\N	97804	2012-04-05 10:59:36
-81	genebuild.havana_datafreeze_date	0	1	core,vega	Date of Havana annotation data freeze	\N	\N	9335	2012-08-24 08:59:49
-83	removed_evidence_flag.uniprot_dbversion	0	1	core	Uniprot database used to flag transcripts whose transcript_supporting_feature has been removed from Uniprot	\N	\N	\N	\N
-84	removed_evidence_flag.ensembl_dbversion	0	1	core	Ensembl human database used to flag transcripts whose transcript_supporting_feature has been removed from the reference since the projection genebuild	\N	\N	97245	2011-10-26 08:57:51
-86	lrg	1	1	cdna,core,otherfeatures,rnaseq,vega,presite	Indicates the presence of LRG seq_regions in the database	\N	2011-05-26 12:02:41	97245	2011-10-26 09:15:10
-87	assembly.web_accession_source	0	1	core,presite	For Web team. Choose only ENA, NCBI, DDBJ. This meta key tells the Web code which website to link out to on the species home page for the GCA assembly accession. They have hard-coded the link based on the meta key's value. \
-The concatenation of "assembly.accession_link" (stored in web code, derived from assembly.web_accession_source) and "assembly.accession" should get a valid path.	5132	2012-04-03 14:28:19	101214	2013-01-24 10:26:57
-88	assembly.web_accession_type	0	1	core,presite	For web. \
+1	1	0	0	funcgen	\N	\N	\N	\N	\N	0
+2	2007-11-Ensembl	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+3	assembly.accession	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	GCA (Genome Collections Accession)	\N	\N	5132	2011-11-09 16:39:53	0
+4	assembly.coverage_depth	0	0	cdna,core,otherfeatures,rnaseq,presite	Historical meta key, indicating depth of capillary sequencing. Given to Compara as an estimate of how fragmented a genome is.	\N	\N	104991	2013-04-29 11:33:02	0
+5	assembly.date	0	0	cdna,core,otherfeatures,rnaseq,presite	Date that the assembly was submitted to the INSDC, date found in ASSEMBLY.INFO file on NCBI FTP	\N	\N	5132	2011-11-09 16:41:26	0
+6	assembly.default	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Assembly name found in coord_system table and assembly.mapping meta keys. Preferably the assembly name provided by the submitter if it is less than 16 characters long	\N	\N	5132	2011-11-09 16:42:14	0
+7	assembly.long_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Unsure, probably the full assembly name if it is longer than 16 chars and cannot be used as assembly.default. For example, see platyfish.	\N	\N	5132	2012-01-18 19:49:29	0
+8	assembly.mapping	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+9	assembly.name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Must be less than 16 characters long for web display	\N	\N	5132	2011-11-09 16:42:42	0
+10	assembly.ncbi_build	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+11	assembly.num_toplevel_seqs	0	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+12	assembly.overlapping_regions	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+13	assembly.prefix	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+14	assembly.version	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
+15	date.copied_from_ens-staging	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+16	dna_align_featurebuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+17	exonbuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+18	genebuild.id	0	0	cdna,core,otherfeatures,rnaseq,presite	Identifies the genebuilder responsible for the database	\N	\N	97245	2012-01-24 10:51:26	0
+19	genebuild.initial_release_date	0	0	core,rnaseq	This is the date that the current build was first released on our website. This date will remain unchanged until there is a new genebuild.	\N	\N	97245	2012-05-28 15:37:36	0
+20	genebuild.last_geneset_update	0	0	core,rnaseq,vega	This is the date that the build's latest gene set was released on our website. This date will be updated every time that there have been changes to the geneset	\N	\N	161	2012-08-28 14:03:33	0
+21	genebuild.last_otherfeatures_update	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+22	genebuild.last_update	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+23	genebuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+24	genebuild.method	0	0	core,rnaseq	full_genebuild,projection_build,import,mixed_stragegy_build.\
+Full genebuild is use of standard annotation system. Projection build is use of projection pipeline from a reference (usually human) to either a low coverage or higher primate genome. Import used only for ensembl-genomes species. Mixed strategy covers other combinations for example a projection build combined with full genebuild method.	\N	\N	101214	2013-01-24 10:19:34	0
+25	genebuild.start_date	0	0	core,rnaseq,vega,presite	This is the date when the genebuild was started. The date roughly corresponds to the date when the supporting evidence were downloaded. This date will remain unchanged until there is a new genebuild	\N	\N	101214	2013-01-24 10:27:27	0
+26	genebuild.version	0	0	core,otherfeatures,vega	\N	\N	\N	\N	\N	0
+27	genebuild_id	0	0	cdna	\N	\N	\N	97245	2012-01-24 10:54:35	0
+28	individual.default_strain	0	0	variation	\N	\N	\N	\N	\N	0
+29	individual.display_strain	0	0	variation	\N	\N	\N	\N	\N	0
+30	individual.reference_strain	0	0	variation	\N	\N	\N	\N	\N	0
+31	liftover.mapping	0	0	cdna,core,otherfeatures,rnaseq,presite	\N	\N	\N	97804	2012-11-30 09:49:40	0
+32	marker.priority	0	0	core	when marker data is available, can set a cutoff for the number of markers displayed in a given location\
+usually set to 1 for most species, set to 80 for human	\N	\N	97245	2012-05-28 15:44:03	0
+33	pairwise_ld.default_population	0	0	variation	\N	\N	\N	\N	\N	0
+34	patch	0	0	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	\N	\N	\N	\N	\N	0
+35	pipeline.lock	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
+36	prediction_exonbuild.level	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+37	prediction_transcriptbuild.level	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+38	protein_align_featurebuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	101214	2012-04-12 08:38:28	0
+39	provider.name	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
+40	provider.url	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
+41	read_coverage.coverage_level	0	0	variation	\N	\N	\N	\N	\N	0
+42	regbuild.feature_set_ids	0	0	funcgen	\N	\N	\N	\N	\N	0
+43	regbuild.feature_set_ids_v4	0	0	funcgen	\N	\N	\N	\N	\N	0
+44	regbuild.feature_set_ids_v5	0	0	funcgen	\N	\N	\N	\N	\N	0
+45	regbuild.feature_type_ids	0	0	funcgen	\N	\N	\N	\N	\N	0
+46	regbuild.feature_type_ids_v4	0	0	funcgen	\N	\N	\N	\N	\N	0
+47	regbuild.feature_type_ids_v5	0	0	funcgen	\N	\N	\N	\N	\N	0
+48	regbuild.focus_feature_set_ids	0	0	funcgen	\N	\N	\N	\N	\N	0
+49	regbuild.initial_release_date	0	0	funcgen	\N	\N	\N	\N	\N	0
+50	regbuild.last_annotation_update	0	0	funcgen	\N	\N	\N	\N	\N	0
+51	regbuild.version	0	0	funcgen	\N	\N	\N	\N	\N	0
+52	repeat.analysis	0	0	core,presite	Includes dust, trf and any repeatmasker analyses that were used in the genebuild ie. defined in General.pm	\N	\N	101214	2013-03-12 13:04:11	0
+53	repeat_featurebuild.level	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+54	sample.gene_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+55	sample.gene_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+56	sample.location_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+57	sample.location_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+58	sample.search_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+59	sample.transcript_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+60	sample.transcript_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	\N	\N	\N	\N	0
+61	schema_version	0	0	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	The version of the schema in this database.	\N	\N	\N	\N	0
+62	simple_featurebuild.level	1	0	cdna,core,otherfeatures,vega,presite	\N	\N	\N	\N	\N	0
+63	species.alias	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	An alias for the species name, will be read by the Registry and may be used when getting adaptors using $registry->get_adpator(...)	\N	\N	\N	\N	0
+64	species.classification	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Full classification for every level, from our copy of NCBI taxonomy database	\N	\N	\N	\N	0
+65	species.common_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Usually genbank common name, from ncbi taxonomy database	\N	\N	\N	\N	0
+66	species.description	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
+67	species.ensembl_alias_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Used by web for dropdown menu	\N	\N	97804	2012-04-05 10:59:27	0
+68	species.ensembl_common_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	97804	2012-04-05 10:59:31	0
+69	species.stable_id_prefix	0	0	cdna,core,otherfeatures,rnaseq,vega	\N	\N	\N	101214	2013-01-24 10:22:16	0
+70	species.system_name	0	0	funcgen	\N	\N	\N	\N	\N	0
+71	species.taxonomy_id	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Taxonomy ID from NCBI taxonomy database. Usually provided by INSDC who provides assembly.	\N	\N	\N	\N	0
+72	species.three_letter_code	0	0	otherfeatures	\N	\N	\N	\N	\N	0
+73	transcriptbuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
+74	xref.timestamp	0	0	core,otherfeatures	timestamp created when running xrefs\
+should exist in all core databases and in otherfeatures databases for mouse and human where refseq and ccds import get xrefs	\N	\N	97245	2012-05-28 15:36:17	0
+75	species.production_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	The name of the species in a form suitable for use in, e.g., database table names or file names.	\N	\N	\N	\N	0
+76	schema_type	0	0	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	The type of schema in this database, e.g., 'core' in a Core database or 'variation' in a Variation database.	\N	\N	\N	\N	0
+77	genebuild.vega_merge_db	0	0	core	Database name for Vega database used for GENCODE gene merge	\N	\N	\N	\N	0
+78	genebuild.projection_source_db	0	0	core	Database name for Reference database used for the low_coverage projection build. The reference database is usually human.	\N	\N	101214	2012-11-14 09:59:55	0
+79	species.scientific_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	From NCBI taxonomy db, string directly associated to taxonomy ID, can be trinomial	\N	\N	\N	\N	0
+80	species.short_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	A name which is short enough to be used in space constraint areas	\N	\N	97804	2012-04-05 10:59:36	0
+81	genebuild.havana_datafreeze_date	0	0	core,vega	Date of Havana annotation data freeze	\N	\N	9335	2012-08-24 08:59:49	0
+83	removed_evidence_flag.uniprot_dbversion	0	0	core	Uniprot database used to flag transcripts whose transcript_supporting_feature has been removed from Uniprot	\N	\N	\N	\N	0
+84	removed_evidence_flag.ensembl_dbversion	0	0	core	Ensembl human database used to flag transcripts whose transcript_supporting_feature has been removed from the reference since the projection genebuild	\N	\N	97245	2011-10-26 08:57:51	0
+86	lrg	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	Indicates the presence of LRG seq_regions in the database	\N	2011-05-26 12:02:41	97245	2011-10-26 09:15:10	0
+87	assembly.web_accession_source	0	0	core,presite	For Web team. Choose only ENA, NCBI, DDBJ. This meta key tells the Web code which website to link out to on the species home page for the GCA assembly accession. They have hard-coded the link based on the meta key's value. \
+The concatenation of "assembly.accession_link" (stored in web code, derived from assembly.web_accession_source) and "assembly.accession" should get a valid path.	5132	2012-04-03 14:28:19	101214	2013-01-24 10:26:57	0
+88	assembly.web_accession_type	0	0	core,presite	For web. \
 When assembly.accession_souce = NCBI, then set assembly.accession_type = 'GenBank Assembly ID'.\
 When assembly.accession_souce = ENA, then set assembly.accession_type = 'EMBL-Bank WGS Master'.\
 \
 Web code can then concat the text\
-"The genome assembly represented here corresponds to ".assembly.accession_type." ".assembly.accession.""	5132	2012-04-04 14:29:53	101214	2013-01-24 10:27:07
-89	species.url	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Derived from species.production_name and is used in the URL of a species on the Ensembl website. It conforms to the web rules of upper-cased first letter, remainder is lowercased and no bad names.	97804	2012-04-05 09:48:33	97804	2012-04-05 11:43:30
-90	species.display_name	0	1	cdna,core,otherfeatures,rnaseq,vega,presite	Meta key originally named species.ensembl_alias_name. This is meant for display on the website or anywhere we need a more readable name. Used on drop down menus and species pages	97804	2012-04-05 09:52:56	97804	2012-04-05 11:42:58
-91	sample.regulation_param	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:49:24	101593	2013-02-21 10:57:22
-92	sample.regulation_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:49:42	101593	2013-02-21 10:57:33
-93	sample.variation_param	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:50:06	101593	2013-02-21 10:57:45
-94	sample.variation_text	1	1	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:50:23	101593	2013-02-21 10:57:56
+"The genome assembly represented here corresponds to ".assembly.accession_type." ".assembly.accession.""	5132	2012-04-04 14:29:53	101214	2013-01-24 10:27:07	0
+89	species.url	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Derived from species.production_name and is used in the URL of a species on the Ensembl website. It conforms to the web rules of upper-cased first letter, remainder is lowercased and no bad names.	97804	2012-04-05 09:48:33	97804	2012-04-05 11:43:30	0
+90	species.display_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Meta key originally named species.ensembl_alias_name. This is meant for display on the website or anywhere we need a more readable name. Used on drop down menus and species pages	97804	2012-04-05 09:52:56	97804	2012-04-05 11:42:58	0
+91	sample.regulation_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:49:24	101593	2013-02-21 10:57:22	0
+92	sample.regulation_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:49:42	101593	2013-02-21 10:57:33	0
+93	sample.variation_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:50:06	101593	2013-02-21 10:57:45	0
+94	sample.variation_text	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:50:23	101593	2013-02-21 10:57:56	0
+95	patch	0	1	cdna,compara,core,funcgen,otherfeatures,rnaseq,variation	\N	\N	\N	\N	\N	0
+96	schema_type	0	1	cdna,compara,core,funcgen,otherfeatures,rnaseq,variation	\N	\N	\N	\N	\N	0
+97	schema_version	0	1	cdna,compara,core,funcgen,otherfeatures,rnaseq,variation	\N	\N	\N	\N	\N	0
+98	species.production_name	0	1	cdna,core,funcgen,otherfeatures,rnaseq,variation	\N	\N	\N	\N	\N	0
+99	assembly.default	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+100	assembly.name	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+101	genebuild.method	0	1	core	\N	\N	\N	\N	\N	0
+102	genebuild.start_date	0	1	core	\N	\N	\N	\N	\N	0
+103	provider.name	0	1	core	\N	\N	\N	\N	\N	0
+104	provider.url	0	1	core	\N	\N	\N	\N	\N	0
+105	sample.gene_param	0	1	core	\N	\N	\N	\N	\N	0
+106	sample.gene_text	0	1	core	\N	\N	\N	\N	\N	0
+107	sample.location_param	0	1	core	\N	\N	\N	\N	\N	0
+108	sample.location_text	0	1	core	\N	\N	\N	\N	\N	0
+109	sample.search_text	0	1	core	\N	\N	\N	\N	\N	0
+110	sample.transcript_param	0	1	core	\N	\N	\N	\N	\N	0
+111	sample.transcript_text	0	1	core	\N	\N	\N	\N	\N	0
+112	species.classification	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+113	species.display_name	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+114	species.division	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+115	species.scientific_name	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+116	species.taxonomy_id	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+117	species.url	0	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+118	genebuild.method	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+119	genebuild.start_date	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+120	provider.name	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+121	provider.url	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+122	sample.gene_param	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+123	sample.gene_text	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+124	sample.location_param	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+125	sample.location_text	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+126	sample.search_text	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+127	sample.transcript_param	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+128	sample.transcript_text	1	1	cdna,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+129	assembly.accession	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+130	assembly.coverage_depth	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+131	assembly.date	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+132	assembly.description	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+133	assembly.long_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+134	assembly.mapping	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+135	assembly.master_accession	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+136	assembly.ucsc_alias	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+137	assembly.version	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+138	assembly.web_accession_source	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+139	assembly.web_accession_type	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+140	dna_align_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+141	exonbuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+142	gencode.version	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+143	genebuild.hash	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+144	genebuild.havana_datafreeze_date	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+145	genebuild.id	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+146	genebuild.initial_release_date	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+147	genebuild.last_geneset_update	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+148	genebuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+149	genebuild.projection_source_db	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+150	genebuild.version	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+151	liftover.mapping	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+152	lrg	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+153	ploidy	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+154	prediction_exonbuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+155	prediction_transcriptbuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+156	protein_align_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+157	repeat.analysis	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+158	repeat_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+159	sample.structural_param	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+160	sample.structural_text	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+161	sample.variation_param	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+162	sample.variation_text	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+163	sample.vep_ensembl	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+164	sample.vep_hgvs	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+165	sample.vep_id	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+166	sample.vep_pileup	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+167	sample.vep_vcf	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+168	schema.copy_src	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+169	schema.load_complete	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+170	schema.load_started	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+171	simple_featurebuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+172	species.alias	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+173	species.biomart_dataset	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+174	species.bioproject_id	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+175	species.common_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+176	species.db_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+177	species.nematode_clade	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+178	species.serotype	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+179	species.species_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+180	species.species_taxonomy_id	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+181	species.stable_id_prefix	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+182	species.strain	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+183	species.strain_collection	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+184	species.substrain	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+185	species.vectorbase_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+186	species.wikipedia_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+187	species.wikipedia_url	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+188	species.wormbase_name	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+189	transcriptbuild.level	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+190	uniprot_proteome.id	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+191	uniprot_proteome.status	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+192	xref.timestamp	1	1	cdna,core,otherfeatures,rnaseq	\N	\N	\N	\N	\N	0
+193	genebuild.last_otherfeatures_update	1	1	otherfeatures	\N	\N	\N	\N	\N	0
+194	ancestral_allele_source	1	1	variation	\N	\N	\N	\N	\N	0
+195	ancestral_allele_update	1	1	variation	\N	\N	\N	\N	\N	0
+196	cadd_version	1	1	variation	\N	\N	\N	\N	\N	0
+197	ClinGen_Allele_Registry_CAR_version	1	1	variation	\N	\N	\N	\N	\N	0
+198	ClinGen_Allele_Registry_source	1	1	variation	\N	\N	\N	\N	\N	0
+199	ClinGen_Allele_Registry_update	1	1	variation	\N	\N	\N	\N	\N	0
+200	dbnsfp_version	1	1	variation	\N	\N	\N	\N	\N	0
+201	EPMC citation_update	1	1	variation	\N	\N	\N	\N	\N	0
+202	EquivalentAlleles_run_date	1	1	variation	\N	\N	\N	\N	\N	0
+203	HGVS_version	1	1	variation	\N	\N	\N	\N	\N	0
+204	individual.displayable_strain	1	1	variation	\N	\N	\N	\N	\N	0
+205	pairwise_ld.default_population	1	1	variation	\N	\N	\N	\N	\N	0
+206	ploidy	1	1	variation	\N	\N	\N	\N	\N	0
+207	polyphen_version	1	1	variation	\N	\N	\N	\N	\N	0
+208	sample.default_strain	1	1	variation	\N	\N	\N	\N	\N	0
+209	sample.reference_strain	1	1	variation	\N	\N	\N	\N	\N	0
+210	sift_protein_db_version	1	1	variation	\N	\N	\N	\N	\N	0
+211	sift_version	1	1	variation	\N	\N	\N	\N	\N	0
+212	TranscriptEffect_run_date	1	1	variation	\N	\N	\N	\N	\N	0
+213	UCSC citation_update	1	1	variation	\N	\N	\N	\N	\N	0
+214	USCS citation_update	1	1	variation	\N	\N	\N	\N	\N	0
+215	VariationClass_run_date	1	1	variation	\N	\N	\N	\N	\N	0
+216	web_config	1	1	variation	\N	\N	\N	\N	\N	0

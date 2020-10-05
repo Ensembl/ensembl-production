@@ -164,7 +164,9 @@ sub run {
     }
     elsif ( scalar(@division) ) {
       foreach my $division (@division) {
-        $self->process_division( $all_dbas, $division, \%dbs );
+        if ($group ne 'compara') {
+          $self->process_division( $all_dbas, $division, \%dbs );
+        }
         $self->process_division_compara( $all_compara_dbas, $division, \%compara_dbs );
       }
     }
@@ -225,10 +227,13 @@ sub write_output {
     $self->dataflow_output_id( $dataflow_params, $db_flow );
   }
 
-  if ($group eq 'core') {
+  if ($group eq 'core' || $group eq 'compara') {
     foreach my $division ( keys %$compara_dbs ) {
+      my $dbname = $$compara_dbs{$division}->dbc->dbname;
+      push @dbnames, $dbname;
+
       my $dataflow_params = {
-        dbname  => $$compara_dbs{$division}->dbc->dbname,
+        dbname  => $dbname,
         species => $division,
       };
 

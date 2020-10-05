@@ -55,6 +55,7 @@ sub default_options {
 	   'species'     => [], 
 	   'antispecies' => [],
        'division' 	 => [], 
+       'dbname' => undef,
 	   'run_all'     => 0,	
 
      ## Flag to skip metadata database check for dumping DNA only for species with update assembly
@@ -100,9 +101,6 @@ sub default_options {
        #  default => ON (1)
        'compress' 	 => 1,
 	   'ucsc' 		 => 1,
-       ## rdf parameters
-       'xref' => 1,
-       'config_file' => $self->o('ensembl_cvs_root_dir') . '/ensembl-production/conf/xref_LOD_mapping.json',
 
        ## BLAT
        # A list of vertebrates species for which we have Blast server running with their associated port number
@@ -204,7 +202,7 @@ sub pipeline_analyses {
         }
         # Else, we run all the dumps
         else {
-          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez', 'rdf'];
+          $pipeline_flow  = ['json','gtf', 'gff3', 'embl', 'fasta_dna','fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez'];
         }
         
     return [
@@ -214,6 +212,7 @@ sub pipeline_analyses {
                              species     => $self->o('species'),
                              antispecies => $self->o('antispecies'),
                              division    => $self->o('division'),
+                             dbname      => $self->o('dbname'),
                              run_all     => $self->o('run_all'),
                           },
       -input_ids      => [ {} ],
@@ -575,65 +574,6 @@ sub pipeline_analyses {
     -analysis_capacity => 10,
     -rc_name           => 'default',
   },
-
-### RDF dumps
-    { -logic_name => 'rdf',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
-      -parameters => {
-          xref => $self->o('xref'),
-          release => $self->o('ensembl_release'),
-          config_file => $self->o('config_file'),
-       },
-  	  -hive_capacity  => 50,
-      -rc_name => '8GB',
-      # Validate both output files
-      -flow_into => { '-1' => 'rdf_15GB', 2 => ['validate_rdf'], }
-    },
-    { -logic_name => 'rdf_15GB',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
-      -parameters => {
-          xref => $self->o('xref'),
-          release => $self->o('ensembl_release'),
-          config_file => $self->o('config_file'),
-       },
-  	  -hive_capacity  => 50,
-      -rc_name => '15GB',
-      # Validate both output files
-      -flow_into => { '-1' => 'rdf_32GB', 2 => ['validate_rdf'], }
-    },
-    { -logic_name => 'rdf_32GB',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
-      -parameters => {
-          xref => $self->o('xref'),
-          release => $self->o('ensembl_release'),
-          config_file => $self->o('config_file'),
-       },
-  	  -hive_capacity  => 50,
-      -rc_name => '32GB',
-      # Validate both output files
-      -flow_into => { '-1' => 'rdf_64GB', 2 => ['validate_rdf'], }
-    },
-    { -logic_name => 'rdf_64GB',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::RDFDump',
-      -parameters => {
-          xref => $self->o('xref'),
-          release => $self->o('ensembl_release'),
-          config_file => $self->o('config_file'),
-       },
-  	  -hive_capacity  => 50,
-      -rc_name => '64GB',
-      # Validate both output files
-      -flow_into => { 2 => ['validate_rdf'], }
-    },
-### RDF dumps checks
-    { -logic_name => 'validate_rdf',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::RDF::ValidateRDF',
-      -rc_name => 'default',
-      # All the jobs can fail since it's a validation step
-      -failed_job_tolerance => 100,
-      # Only retry to run the job once
-      -max_retry_count => 1,
-    },
 
 ### JSON dumps
     { -logic_name => 'json',

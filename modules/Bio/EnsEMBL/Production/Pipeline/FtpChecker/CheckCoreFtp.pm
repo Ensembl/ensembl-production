@@ -59,13 +59,6 @@ my $expected_files = {
 							'{species}*.json',
 							 'CHECKSUMS*'
 						       ]},
-		      "rdf" => {"dir" => "{division}/rdf/{species_dir}/", "expected" =>[
-							'{species}*.ttl.gz',
-							'{species}*.ttl.gz.graph',
-							'{species}_xrefs*.ttl.gz',
-							'{species}_xrefs*.ttl.gz.graph',
-							 'CHECKSUMS*'
-						       ]},
 		      "tsv" => {"dir" => "{division}/tsv/{species_dir}/", "expected" =>[
 							'{species_uc}*.ena.tsv.gz',
 							'{species_uc}*.entrez.tsv.gz',

@@ -53,6 +53,7 @@ sub run {
     croak "Expecting one compara database only";  
   }
   my $compara_dba = $compara_dbas[0];
+  my $schema_version = $compara_dba->get_MetaContainer->get_schema_version();
   $compara_dba->dbc()->sql_helper()->execute_update(-SQL=>'delete family.*,family_member.* from family left join family_member using (family_id)');
   # get compara
   my $genome_dba = $compara_dba->get_GenomeDBAdaptor();
@@ -103,6 +104,7 @@ sub run {
             $genome_db->has_karyotype(0);
             $genome_db->is_good_for_alignment(0);
             $genome_db->display_name($display_name);
+            $genome_db->first_release($schema_version);
             $genome_dba->store($genome_db);
           }
           push @$genome_dbs, $genome_db;
@@ -133,18 +135,20 @@ sub run {
     -GENOME_DBS => $genome_dbs,
     -NAME => "collection-all_division",
   );
+  $sso->first_release($schema_version);
   $compara_dba->get_SpeciesSetAdaptor()->store($sso);
 
   my $mlss =
     Bio::EnsEMBL::Compara::MethodLinkSpeciesSet->new(
-	  -method =>
-	  Bio::EnsEMBL::Compara::Method->new(
-                                             -type  => 'FAMILY',
-                                             -class => 'Family.family',
-                                             -display_name => 'families'
-                                            ),
-                                                     -species_set => $sso );
-  
+      -method =>
+        Bio::EnsEMBL::Compara::Method->new(
+          -type  => 'FAMILY',
+          -class => 'Family.family',
+          -display_name => 'families'
+        ),
+      -species_set => $sso );
+  $mlss->first_release($schema_version);
+
   $compara_dba->get_MethodLinkSpeciesSetAdaptor()->store($mlss);
   my $family_dba = $compara_dba->get_FamilyAdaptor();
   while ( my ( $id, $name ) = each %$families ) {
