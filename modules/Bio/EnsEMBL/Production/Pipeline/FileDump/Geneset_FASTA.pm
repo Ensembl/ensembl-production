@@ -36,7 +36,7 @@ sub param_defaults {
     data_type       => 'sequence',
     data_types      => ['cdna', 'cds', 'pep'],
     file_type       => 'fa',
-    chunk_size      => 17000,
+    chunk_size      => 10000,
     line_width      => 80,
     blast_index     => 0,
     blastdb_exe     => 'makeblastdb',

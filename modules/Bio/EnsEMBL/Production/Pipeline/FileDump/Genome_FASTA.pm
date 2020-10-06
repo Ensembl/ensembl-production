@@ -39,7 +39,7 @@ sub param_defaults {
     file_type      => 'fa',
     timestamped    => 1,
     per_chromosome => 0,
-    chunk_size     => 17000,
+    chunk_size     => 30000,
     line_width     => 60,
     blast_index    => 0,
     blastdb_exe    => 'makeblastdb',
