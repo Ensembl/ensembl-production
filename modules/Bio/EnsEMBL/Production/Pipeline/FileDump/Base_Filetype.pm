@@ -50,23 +50,31 @@ sub pre_cleanup {
 sub fetch_input {
   my ($self) = @_;
 
-  my $overwrite = $self->param_required('overwrite');
+  my $filenames;
 
-  my $filenames = $self->filenames();
-  $self->param('output_filenames', []);
+  my $custom_filenames = $self->param('custom_filenames');
 
-  if (! $overwrite) {
-    # All files should be compressed - if there is an uncompressed file,
-    # it's likely that it is partial, the result of an aborted
-    # previous run. So safest approach is to recreate in that case.
-    my $compressed = 0;
-    foreach my $filename ( values %{$filenames} ) {
-      if (-s "$filename.gz") {
-        $compressed++;
+  if (defined $custom_filenames) {
+    $filenames = $custom_filenames;
+  } else {
+    my $overwrite = $self->param_required('overwrite');
+
+    $filenames = $self->filenames();
+    $self->param('output_filenames', []);
+
+    if (! $overwrite) {
+      # All files should be compressed - if there is an uncompressed file,
+      # it's likely that it is partial, the result of an aborted
+      # previous run. So safest approach is to recreate in that case.
+      my $compressed = 0;
+      foreach my $filename ( values %{$filenames} ) {
+        if (-s "$filename.gz") {
+          $compressed++;
+        }
       }
-    }
-    if (scalar(keys %{$filenames}) == $compressed) {
-      $self->complete_early('Files exist and will not be overwritten');
+      if (scalar(keys %{$filenames}) == $compressed) {
+        $self->complete_early('Files exist and will not be overwritten');
+      }
     }
   }
 
