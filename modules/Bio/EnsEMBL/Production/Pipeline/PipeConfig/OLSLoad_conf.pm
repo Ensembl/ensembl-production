@@ -57,15 +57,15 @@ sub default_options {
         'pipeline_name'    => 'ols_ontology_' . $self->o('ens_version'),
         'db_url'           => $self->o('db_host') . $self->o('db_name'),
         'ontologies'       => [],
-        'skip_phi'         => 0,
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
-        'history_file'  => undef,
-        'tgt_host'      => undef,
-        'host'          => undef,
-        'port'          => undef,
-        'pass'          => undef,
-        'user'          => undef,
-        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('db_name').','.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').','.$self->o('mart_db_name').'_'.$self->o('ens_version').'","user" : "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'history_file'     => undef,
+        'tgt_host'         => undef,
+        'host'             => undef,
+        'port'             => undef,
+        'pass'             => undef,
+        'user'             => undef,
+        'copy_service_payload'      => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'", "email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
+        'copy_service_mart_payload' => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db": "'.$self->o('mart_db_name').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.$self->o('mart_db_name').'_'.$self->o('ens_version').'", "user": "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}',
     }
 }
 
@@ -192,7 +192,6 @@ sub pipeline_analyses {
                 -verbosity  => $self->o('verbosity'),
             }
         },
-        ,
         {
             -logic_name        => 'ontology_term_load_light',
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
@@ -222,8 +221,8 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -flow_into       => {
                 1 => WHEN(
-                    '#skip_phi#' => [ 'compute_closure' ],
-                    ELSE [ 'phibase_load_factory' ]
+                    '("PHI" ~~ #ontologies# and (#wipe_one# == 1 or #wipe_all# == 1))' => [ 'phibase_load_factory' ],
+                    ELSE [ 'compute_closure' ]
                 )
             }
         },
@@ -285,24 +284,34 @@ sub pipeline_analyses {
             -logic_name => 'ontology_dc',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
-                datacheck_names => [ 'CompareOntologyTerm' ],
-                history_file    => $self->o('history_file'),
-                old_server_uri  => $self->o('old_server'),
-                registry_file   => $self->o('reg_file'),
-                failures_fatal  => 1
+                datacheck_groups => [ 'ontologies' ],
+                history_file     => $self->o('history_file'),
+                old_server_uri   => $self->o('old_server'),
+                registry_file    => $self->o('reg_file'),
+                failures_fatal   => 1
             },
-            -flow_into   => [ 'copy_database' ]
+            -flow_into => [ 'copy_database', 'copy_mart_database' ]
         },
         {
-            -logic_name        => 'copy_database',
-            -module            => 'ensembl.production.hive.ProductionDBCopy',
-            -language          => 'python3',
-            -analysis_capacity => 20,
-            -rc_name           => 'default',
-            -parameters        => {
-                'endpoint'     => $self->o('copy_service_uri'),
-                'payload'      => $self->o('payload'),
-                'method'       => 'post',
+            -logic_name    => 'copy_database',
+            -module        => 'ensembl.production.hive.ProductionDBCopy',
+            -language      => 'python3',
+            -rc_name       => 'default',
+            -parameters    => {
+                'endpoint' => $self->o('copy_service_uri'),
+                'payload'  => $self->o('copy_service_payload'),
+                'method'   => 'post',
+            },
+        },
+        {
+            -logic_name    => 'copy_mart_database',
+            -module        => 'ensembl.production.hive.ProductionDBCopy',
+            -language      => 'python3',
+            -rc_name       => 'default',
+            -parameters    => {
+                'endpoint' => $self->o('copy_service_uri'),
+                'payload'  => $self->o('copy_service_mart_payload'),
+                'method'   => 'post',
             },
         },
     ];
@@ -311,11 +320,11 @@ sub pipeline_analyses {
 sub resource_classes {
     my $self = shift;
     return {
-        'default' => { 'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"' },
-        '32GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"' },
-        '64GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"' },
-        '128GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 128000 -R "rusage[mem=128000]"' },
-        '256GB'   => { 'LSF' => '-q production-rh74 -n 4 -M 256000 -R "rusage[mem=256000]"' },
+        'default' => { 'LSF' => '-q production-rh74 -M 4000   -R "rusage[mem=4000]"' },
+        '32GB'    => { 'LSF' => '-q production-rh74 -M 32000  -R "rusage[mem=32000]"' },
+        '64GB'    => { 'LSF' => '-q production-rh74 -M 64000  -R "rusage[mem=64000]"' },
+        '128GB'   => { 'LSF' => '-q production-rh74 -M 128000 -R "rusage[mem=128000]"' },
+        '256GB'   => { 'LSF' => '-q production-rh74 -M 256000 -R "rusage[mem=256000]"' },
     }
 }
 1;
