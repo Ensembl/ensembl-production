@@ -213,7 +213,7 @@ sub pipeline_analyses {
       -logic_name        => 'Assembly_Chain',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               ucsc => $self->o('chain_ucsc'),
                             },
@@ -226,7 +226,7 @@ sub pipeline_analyses {
       -logic_name        => 'Genome_FASTA',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               blast_index    => $self->o('blast_index'),
                               blastdb_exe    => $self->o('blastdb_exe'),
@@ -243,7 +243,7 @@ sub pipeline_analyses {
       -logic_name        => 'Chromosome_TSV',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {},
 	    -rc_name           => '1GB',
       -flow_into         => {
@@ -254,7 +254,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_EMBL',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome => $self->o('embl_per_chromosome'),
                             },
@@ -268,7 +268,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_FASTA',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_FASTA',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               blast_index => $self->o('blast_index'),
                               blastdb_exe => $self->o('blastdb_exe'),
@@ -283,7 +283,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_GFF3',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome       => $self->o('gff3_per_chromosome'),
                               gt_gff3_exe          => $self->o('gt_gff3_exe'),
@@ -299,7 +299,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_GTF',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome      => $self->o('gtf_per_chromosome'),
                               gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
@@ -315,7 +315,7 @@ sub pipeline_analyses {
       -logic_name        => 'Xref_TSV',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Xref_TSV',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               external_dbs => $self->o('xref_external_dbs'),
                             },
@@ -330,7 +330,7 @@ sub pipeline_analyses {
       -logic_name        => 'MySQL_TXT',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::MySQL_TXT',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               dump_dir => $self->o('dump_dir'),
                             },
@@ -344,7 +344,7 @@ sub pipeline_analyses {
       -logic_name        => 'Genome_FASTA_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               blast_index    => $self->o('blast_index'),
                               blastdb_exe    => $self->o('blastdb_exe'),
@@ -360,7 +360,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_EMBL_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome => $self->o('embl_per_chromosome'),
                             },
@@ -373,7 +373,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_FASTA_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_FASTA',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               blast_index => $self->o('blast_index'),
                               blastdb_exe => $self->o('blastdb_exe'),
@@ -387,7 +387,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_GFF3_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome       => $self->o('gff3_per_chromosome'),
                               gt_gff3_exe          => $self->o('gt_gff3_exe'),
@@ -402,7 +402,7 @@ sub pipeline_analyses {
       -logic_name        => 'Geneset_GTF_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome      => $self->o('gtf_per_chromosome'),
                               gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
@@ -417,7 +417,7 @@ sub pipeline_analyses {
       -logic_name        => 'Xref_TSV_mem',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Xref_TSV',
       -max_retry_count   => 1,
-      -hive_capacity     => 100,
+      -hive_capacity     => 10,
       -parameters        => {
                               external_dbs => $self->o('xref_external_dbs'),
                             },
