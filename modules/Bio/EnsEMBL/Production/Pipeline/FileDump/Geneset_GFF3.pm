@@ -27,6 +27,7 @@ use base qw(Bio::EnsEMBL::Production::Pipeline::FileDump::Base_Filetype);
 use Bio::EnsEMBL::Exon;
 use Bio::EnsEMBL::Gene;
 use Bio::EnsEMBL::Transcript;
+use Bio::EnsEMBL::CDS;
 use Bio::EnsEMBL::Utils::IO::GFFSerializer;
 use Path::Tiny;
 
@@ -216,18 +217,18 @@ sub validate {
 sub Bio::EnsEMBL::Gene::summary_as_hash {
   my $self = shift;
   my %summary;
-  
+
   $summary{'seq_region_name'} = $self->seq_region_name;
   $summary{'source'}          = $self->source;
   $summary{'start'}           = $self->seq_region_start;
   $summary{'end'}             = $self->seq_region_end;
   $summary{'strand'}          = $self->strand;
   $summary{'id'}              = $self->display_id;
-  $summary{'Name'}            = $self->external_name;
   $summary{'gene_id'}         = $self->display_id;
+  $summary{'version'}         = $self->version;
+  $summary{'Name'}            = $self->external_name;
   $summary{'biotype'}         = $self->biotype;
   $summary{'description'}     = $self->description;
-  $summary{'version'}         = $self->version;
   
   return \%summary;
 }
@@ -245,10 +246,10 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'strand'}                   = $self->strand;
   $summary{'id'}                       = $self->display_id;
   $summary{'Parent'}                   = $parent_gene->stable_id;
-  $summary{'biotype'}                  = $self->biotype;
+  $summary{'transcript_id'}            = $self->display_id;
   $summary{'version'}                  = $self->version;
   $summary{'Name'}                     = $self->external_name;
-  $summary{'transcript_id'}            = $self->display_id;
+  $summary{'biotype'}                  = $self->biotype;
   my $havana_transcript = $self->havana_transcript();
   $summary{'havana_transcript'}        = $havana_transcript->display_id() if $havana_transcript;
   $summary{'havana_version'}           = $havana_transcript->version() if $havana_transcript;
@@ -287,9 +288,27 @@ sub Bio::EnsEMBL::Exon::summary_as_hash {
   $summary{'start'}           = $self->seq_region_start;
   $summary{'end'}             = $self->seq_region_end;
   $summary{'strand'}          = $self->strand;
-  $summary{'id'}              = $self->display_id;
   $summary{'exon_id'}         = $self->display_id;
+  $summary{'version'}         = $self->version;
   $summary{'constitutive'}    = $self->is_constitutive;
+
+  return \%summary;
+}
+
+sub Bio::EnsEMBL::CDS::summary_as_hash {
+  my $self = shift;
+  my %summary;
+
+  $summary{'seq_region_name'} = $self->seq_region_name;
+  $summary{'source'}          = $self->transcript->source;
+  $summary{'start'}           = $self->seq_region_start;
+  $summary{'end'}             = $self->seq_region_end;
+  $summary{'strand'}          = $self->strand;
+  $summary{'phase'}           = $self->phase;
+  $summary{'id'}              = $self->translation_id;
+  $summary{'Parent'}          = $self->transcript->display_id;
+  $summary{'protein_id'}      = $self->translation_id;
+  $summary{'version'}         = $self->transcript->translation->version;
 
   return \%summary;
 }
