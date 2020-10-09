@@ -52,10 +52,8 @@ sub fetch_input {
 
   my $filenames;
 
-  my $custom_filenames = $self->param('custom_filenames');
-
-  if (defined $custom_filenames) {
-    $filenames = $custom_filenames;
+  if ($self->param_is_defined('custom_filenames')) {
+    $filenames = $self->param('custom_filenames');
   } else {
     my $overwrite = $self->param_required('overwrite');
 
