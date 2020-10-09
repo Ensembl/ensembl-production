@@ -241,7 +241,7 @@ sub get_xref_mapper {
     -port    => $core_dbc->port,
     -user    => $core_dbc->user,
     -pass    => $core_dbc->pass,
-    -disconnect_when_inactive => 1
+    -disconnect_if_idle => 1
   );
   $core_db->dir("$base_path/$species");
   $core_db->species($species);
@@ -256,7 +256,7 @@ sub get_xref_mapper {
     -port    => $port,
     -user    => $user,
     -pass    => $pass,
-    -disconnect_when_inactive => 1
+    -disconnect_if_idle => 1
   );
 
   # Look for species-specific mapper
