@@ -85,10 +85,16 @@ sub species_name {
   if (! defined $species_name or $species_name eq '') {
     $species_name = $mca->single_value_by_key('species.db_name');
     if (! defined $species_name or $species_name eq '') {
-      $species_name = $mca->single_value_by_key('species.production_name');
+      $species_name = $mca->single_value_by_key('species.display_name');
+      if (defined $species_name and $species_name ne '') {
+        $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
+        $species_name =~ s/ /_/g;
+      } else {
+        $species_name = $mca->single_value_by_key('species.production_name');
+      }
     }
   }
-  $species_name =~ s/_?gca_?\d+$//;
+  $species_name =~ s/_?gca_?.+$//;
 
   return ucfirst($species_name);
 }
