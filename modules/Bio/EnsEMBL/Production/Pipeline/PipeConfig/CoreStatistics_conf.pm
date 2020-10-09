@@ -117,7 +117,7 @@ sub pipeline_analyses {
                             '3->A' => ['CheckStatistics_Chromosome'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -134,7 +134,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '2' => ['CheckStatistics_All'],
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -159,7 +159,7 @@ sub pipeline_analyses {
                               'PercentRepeat',
                             ]
                           ),
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -173,7 +173,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
       -flow_into       => {
                             '1->A' => WHEN(
                               '#datachecks_failed#' => [
@@ -255,7 +255,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -278,7 +278,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
