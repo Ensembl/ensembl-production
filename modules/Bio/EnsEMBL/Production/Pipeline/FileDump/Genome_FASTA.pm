@@ -65,13 +65,16 @@ sub run {
   my $hm_filename = $$filenames{'hardmasked'};
 
   if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $um_filename, $sm_filename, $hm_filename, '>', $repeat_analyses);
+    $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
     if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $um_filename, $sm_filename, $hm_filename, '>>', $repeat_analyses);
+      $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
     }
   } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $um_filename, $sm_filename, $hm_filename, '>', $repeat_analyses);
+    $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
   }
+
+  $self->unmask($sm_filename, $um_filename);
+  $self->hardmask($sm_filename, $hm_filename);
 
   if (scalar(@$non_ref)) {
     my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
@@ -79,7 +82,10 @@ sub run {
     my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
     path($sm_filename)->copy($sm_non_ref_filename);
 
-    $self->print_to_file($non_ref, undef, $um_non_ref_filename, $sm_non_ref_filename, $hm_non_ref_filename, '>>', $repeat_analyses);
+    $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
+
+    $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
+    $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
   }
 
   if ($blast_index) {
@@ -96,7 +102,7 @@ sub timestamp {
 }
 
 sub print_to_file {
-  my ($self, $slices, $region, $um_filename, $sm_filename, $hm_filename, $mode, $repeat_analyses) = @_;
+  my ($self, $slices, $region, $sm_filename, $mode, $repeat_analyses) = @_;
 
   my $serializer = $self->fasta_serializer($sm_filename, $mode);
 
@@ -125,9 +131,6 @@ sub print_to_file {
       $non_chr_serializer->print_Seq($padded_slice);
     }
   }
-
-  $self->unmask($sm_filename, $um_filename);
-  $self->hardmask($sm_filename, $hm_filename);
 }
 
 sub fasta_serializer {
@@ -164,49 +167,50 @@ sub header_function {
     } else {
       $data_type = 'unmasked';
     }
-    my $name     = $slice->seq_region_name;
-    my $cs_name  = $slice->coord_system->name;
+    my $name = $slice->seq_region_name;
+    my $cs_name = $slice->coord_system->name;
+    if ($slice->is_chromosome && $cs_name eq 'primary_assembly') {
+      $cs_name = 'chromosome';
+    }
     my $location = $slice->name;
-    my $ref      = $slice->assembly_exception_type;
+    my $ref = $slice->assembly_exception_type;
     if ($ref ne 'REF') {
-      $location = $slice->seq_region_Slice->name;
+      $location = $slice->seq_region_Slice->name . ' ' . $ref;
     }
     $location =~ s/^$cs_name://;
 
-    return "$name $data_type:$cs_name $location $ref";
+    return "$name $data_type:$cs_name $location";
   };
 }
 
 sub unmask {
   my ($self, $sm_filename, $um_filename) = @_;
 
-  my $sm_fh = path($sm_filename)->filehandle('<');
-  my $um_fh = path($um_filename)->filehandle('>');
-
-  while (my $line = <$sm_fh>) {
-    if (index($line, '>') == 0) {
-      $line =~ s/softmasked/unmasked/;
+  my $convert = sub {
+    if (index($_, '>') == 0) {
+      $_ =~ s/softmasked/unmasked/;
     } else {
-      $line =~ tr/[a-z]/[A-Z]/;
+      $_ =~ tr/[a-z]/[A-Z]/;
     }
-    print $um_fh $line;
-  }
+  };
+
+  path($sm_filename)->copy($um_filename);
+  path($um_filename)->edit_lines($convert);
 }
 
 sub hardmask {
   my ($self, $sm_filename, $hm_filename) = @_;
 
-  my $sm_fh = path($sm_filename)->filehandle('<');
-  my $hm_fh = path($hm_filename)->filehandle('>');
-
-  while (my $line = <$sm_fh>) {
-    if (index($line, '>') == 0) {
-      $line =~ s/softmasked/hardmasked/;
+  my $convert = sub {
+    if (index($_, '>') == 0) {
+      $_ =~ s/softmasked/hardmasked/;
     } else {
-      $line =~ tr/[a-z]/N/;
+      $_ =~ tr/[a-z]/N/;
     }
-    print $hm_fh $line;
-  }
+  };
+
+  path($sm_filename)->copy($hm_filename);
+  path($hm_filename)->edit_lines($convert);
 }
 
 sub blast_index {
