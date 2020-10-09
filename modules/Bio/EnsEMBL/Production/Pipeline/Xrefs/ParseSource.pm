@@ -47,6 +47,7 @@ sub run {
             port    => $port,
             user    => $user,
             pass    => $pass });
+  $xref_dbc->disconnect_if_idle();
 
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
 
