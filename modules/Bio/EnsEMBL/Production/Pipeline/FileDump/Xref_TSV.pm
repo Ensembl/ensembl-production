@@ -74,8 +74,9 @@ sub print_header {
   
   say $fh join("\t",
     qw(
-      gene_stable_id transcript_stable_id protein_stable_id xref
-      db_name info_type source_identity xref_identity linkage_type
+      gene_stable_id transcript_stable_id protein_stable_id
+      xref_id xref_label description db_name info_type
+      dependent_sources ensembl_identity xref_identity linkage_type
     )
   );
 }
@@ -106,25 +107,34 @@ sub print_xrefs {
     foreach my $tt_id (sort keys %{$xrefs{$g_id}}) {
       foreach my $tn_id (sort keys %{$xrefs{$g_id}{$tt_id}}) {
         foreach my $xref (sort {$a->primary_id cmp $b->primary_id} @{$xrefs{$g_id}{$tt_id}{$tn_id}}) {
-          my $xref_id   = $xref->primary_id;
-          my $xref_db   = $xref->db_display_name;
-          my $info_type = $xref->info_type;
+          my $xref_id    = $xref->primary_id;
+          my $xref_label = $xref->display_id;
+          my $xref_db    = $xref->db_display_name;
+          my $xref_desc  = $xref->description;
+          my $info_type  = $xref->info_type;
 
-          my $src_identity  ='-';
-          my $xref_identity ='-';
-          if ($xref->isa('Bio::EnsEMBL::IdentityXref')) { 
-            $src_identity  = $xref->ensembl_identity; 
+          my $ensembl_identity = '';
+          my $xref_identity    = '';
+          if ($xref->isa('Bio::EnsEMBL::IdentityXref')) {
+            $ensembl_identity = $xref->ensembl_identity;
             $xref_identity = $xref->xref_identity; 
           }
 
-          my $linkage_type = '-';
-          if ($xref->isa('Bio::EnsEMBL::OntologyXref')) { 
-            $linkage_type = join(' ', @{$xref->get_all_linkage_types});
+          my @master_xrefs;
+          my $linkage_type = '';
+          if ($xref->isa('Bio::EnsEMBL::OntologyXref')) {
+            @master_xrefs = map { $_->[1] } @{ $xref->get_all_linkage_info };
+            $linkage_type = join('; ', @{$xref->get_all_linkage_types});
+          } else {
+            @master_xrefs = @{ $xref->get_all_masters };
           }
+          my @sources = map { $_->db_display_name . ':' . $_->primary_id } @master_xrefs;
+          my $sources = '' . join('; ', @sources);
 
           say $fh join("\t",
-            $g_id, $tt_id, $tn_id, $xref_id, $xref_db, $info_type,
-            $src_identity, $xref_identity, $linkage_type
+            $g_id, $tt_id, $tn_id,
+            $xref_id, $xref_label, $xref_desc, $xref_db, $info_type,
+            $sources, $ensembl_identity, $xref_identity, $linkage_type
           );
         }
       }
