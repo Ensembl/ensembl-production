@@ -43,7 +43,7 @@ sub default_options {
       'Xref_TSV',
     ],
 
-    blast_index         => 1,
+    blast_index => 1,
 	};
 }
 
