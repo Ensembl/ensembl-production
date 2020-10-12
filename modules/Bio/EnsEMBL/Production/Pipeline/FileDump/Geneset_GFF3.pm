@@ -69,18 +69,18 @@ sub run {
   my $filename = $$filenames{$data_type};
 
   if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $filename, '>', \%adaptors, $provider);
+    $self->print_to_file($chr, 'chr', $filename, '>', $dba, \%adaptors, $provider);
     if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $filename, '>>', \%adaptors, $provider);
+      $self->print_to_file($non_chr, 'non_chr', $filename, '>>', $dba, \%adaptors, $provider);
     }
   } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $filename, '>', \%adaptors, $provider);
+    $self->print_to_file([@$chr, @$non_chr], undef, $filename, '>', $dba, \%adaptors, $provider);
   }
 
   if (scalar(@$non_ref)) {
     my $non_ref_filename = $self->generate_non_ref_filename($filename);
     path($filename)->copy($non_ref_filename);
-    $self->print_to_file($non_ref, undef, $non_ref_filename, '>>', \%adaptors, $provider);
+    $self->print_to_file($non_ref, undef, $non_ref_filename, '>>', $dba, \%adaptors, $provider);
   }
 
   my $output_filenames = $self->param('output_filenames');
@@ -91,22 +91,22 @@ sub run {
 }
 
 sub print_to_file {
-  my ($self, $slices, $region, $filename, $mode, $adaptors, $provider) = @_;
+  my ($self, $slices, $region, $filename, $mode, $dba, $adaptors, $provider) = @_;
 
   my $header = $mode eq '>' ? 1 : 0;
-  my $serializer = $self->gff3_serializer($filename, $mode, $header);
+  my $serializer = $self->gff3_serializer($filename, $mode, $header, $slices, $dba);
 
   my $non_chr_serializer;
   if ($region && $region eq 'non_chr') {
     my $non_chr_filename = $self->generate_non_chr_filename($filename);
-    $non_chr_serializer = $self->gff3_serializer($non_chr_filename, $mode, 1);
+    $non_chr_serializer = $self->gff3_serializer($non_chr_filename, $mode, 1, $slices, $dba);
   }
 
   while (my $slice = shift @{$slices}) {
     my $chr_serializer;
     if ($region && $region eq 'chr') {
       my $chr_filename = $self->generate_chr_filename($filename, $slice);
-      $chr_serializer = $self->gff3_serializer($chr_filename, $mode, 1);
+      $chr_serializer = $self->gff3_serializer($chr_filename, $mode, 1, $slices, $dba);
     }
 
     $slice->source($provider) if defined $provider;
@@ -130,12 +130,12 @@ sub print_to_file {
 }
 
 sub gff3_serializer {
-  my ($self, $filename, $mode, $header) = @_;
+  my ($self, $filename, $mode, $header, $slices, $dba) = @_;
 
   my $fh = path($filename)->filehandle($mode);
   my $serializer = Bio::EnsEMBL::Utils::IO::GFFSerializer->new($fh);
   if ($header) {
-    $serializer->print_main_header();
+    $serializer->print_main_header($slices, $dba);
   }
 
   return $serializer;
