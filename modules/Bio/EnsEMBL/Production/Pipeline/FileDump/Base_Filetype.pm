@@ -146,7 +146,21 @@ sub filenames {
 sub timestamp {
   my ($self, $dba) = @_;
 
-  return Time::Piece->new->date("");;
+  $self->throw("Missing dba parameter: timestamp method") unless defined $dba;
+
+  my $sql = qq/
+    SELECT MAX(DATE_FORMAT(update_time, "%Y%m%d")) FROM
+      nformation_schema.tables
+    WHERE
+      table_schema = database()
+  /;
+  my $result = $dba->dbc->sql_helper->execute_simple(-SQL => $sql);
+
+  if (scalar(@$result)) {
+    return $result->[0];
+  } else {
+    return Time::Piece->new->date("");
+  }
 }
 
 sub generate_chr_filename {
