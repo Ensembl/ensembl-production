@@ -24,6 +24,8 @@ Species
                   |-- <species>-<assembly>-<geneset>-xref.tsv.gz
           |-- genome
               |-- README
+              |-- [assembly_mapping]
+                  |-- *.chain.gz
               |-- [<species>-<assembly>-chromosomes.tsv.gz]
               |-- <species>-<assembly>-hardmasked.fa.gz
               |-- <species>-<assembly>-softmasked.fa.gz
@@ -33,45 +35,6 @@ Species
               |-- *.bam
               |-- *.bam.bai
               |-- *.bam.bw
-
-
-========================================================================
- genome | [<species>-<assembly>-chromosomes.tsv.gz]
-========================================================================
-A tab-delimited file with chromosome names and lengths. This file is
-absent if the assembly does not have chromosomes.
-
-
-========================================================================
- genome | <species>-<assembly>-unmasked.fa.gz
- genome | <species>-<assembly>-softmasked.fa.gz
- genome | <species>-<assembly>-hardmasked.fa.gz
-========================================================================
-Genomic DNA in FASTA format. The 'unmasked' file has no repeat masking,
-the 'softmasked' file uses lower case letters for repeat regions, and
-the 'hardmasked' file has Ns for repeat regions. Repeat features are
-annotated with dust, TRF, and RepeatMasker, the latter using a
-combination of RepBase and taxonomically-relevant repeat libraries.
-
-The headers in the FASTA files have the format:
-><seq_name> <masking>:<seq_type> <assembly_name>:<seq_name>:<start>:<end>:<strand>
-
-Example 'softmasked' header:
->LG1 softmasked:chromosome UG_Zviv_1:LG1:1:131769443:1
-
-The <seq_type> will be 'chromosome' for chromosomal regions, and will
-be 'primary_assembly' for non-chromosomal regions.
-
-
-========================================================================
- [rnaseq] | *.bam
- [rnaseq] | *.bam.bai
- [rnaseq] | *.bam.bw
-========================================================================
-BAM and bigWig files of RNA-seq data aligned against a genome. A README
-file in the [rnaseq] directory contains details of the samples used in
-the alignments. This directory is absent if there are no RNA-seq
-alignments.
 
 
 ========================================================================
@@ -269,3 +232,51 @@ UniProt. The file has the following columns:
  * xref_identity: For alignment-derived cross-references, the
    percentage of the external sequence that matches the Ensembl sequence
  * linkage_type: for GO terms, the method of inference, e.g. IEA
+
+
+========================================================================
+ genome | [assembly_mapping] | *.chain.gz
+========================================================================
+Chain files for mapping between asemblies. (Specification: https://genome.ucsc.edu/goldenPath/help/chain.html)
+Such files can be used to project annotation between assemblies, using,
+for example, CrossMap (https://crossmap.readthedocs.io/en/latest/)
+
+
+========================================================================
+ genome | [<species>-<assembly>-chromosomes.tsv.gz]
+========================================================================
+A tab-delimited file with chromosome names and lengths. This file is
+absent if the assembly does not have chromosomes.
+
+
+========================================================================
+ genome | <species>-<assembly>-unmasked.fa.gz
+ genome | <species>-<assembly>-softmasked.fa.gz
+ genome | <species>-<assembly>-hardmasked.fa.gz
+========================================================================
+Genomic DNA in FASTA format. The 'unmasked' file has no repeat masking,
+the 'softmasked' file uses lower case letters for repeat regions, and
+the 'hardmasked' file has Ns for repeat regions. Repeat features are
+annotated with dust, TRF, and RepeatMasker, the latter using a
+combination of RepBase and taxonomically-relevant repeat libraries.
+
+The headers in the FASTA files have the format:
+><seq_name> <masking>:<seq_type> <assembly_name>:<seq_name>:<start>:<end>:<strand>
+
+Example 'softmasked' header:
+>LG1 softmasked:chromosome UG_Zviv_1:LG1:1:131769443:1
+
+The <seq_type> will be 'chromosome' for chromosomal regions, and will
+be 'primary_assembly' for non-chromosomal regions.
+
+
+========================================================================
+ [rnaseq] | *.bam
+ [rnaseq] | *.bam.bai
+ [rnaseq] | *.bam.bw
+========================================================================
+BAM and bigWig files of RNA-seq data aligned against a genome. A README
+file in the [rnaseq] directory contains details of the samples used in
+the alignments. This directory is absent if there are no RNA-seq
+alignments.
+
