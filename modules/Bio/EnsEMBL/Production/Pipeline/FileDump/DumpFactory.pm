@@ -76,7 +76,6 @@ sub directories {
   my ($self, $gene_related) = @_;
 
   my $dump_dir            = $self->param_required('dump_dir');
-  my $ftp_root            = $self->param_required('ftp_root');
   my $species_dirname     = $self->param_required('species_dirname');
   my $timestamped_dirname = $self->param_required('timestamped_dirname');
   my $tools_dirname       = $self->param_required('tools_dirname');
@@ -115,15 +114,18 @@ sub directories {
     $subdirs
   );
 
-  my $ftp_dir = catdir(
-    $ftp_root,
-    $subdirs
-  );
-
   my $tools_dir = catdir(
     $dump_dir,
     $tools_dirname
   );
+
+  my $ftp_dir;
+  if ($self->param_is_defined('ftp_root')) {
+    $ftp_dir = catdir(
+      $self->param('ftp_root'),
+      $subdirs
+    );
+  }
 
   return ($output_dir, $timestamped_dir, $tools_dir, $ftp_dir);
 }

@@ -51,8 +51,6 @@ sub default_options {
 
     per_chromosome => 0,
 
-    sync_to_live => 0,
-
     # External programs
     blastdb_exe          => 'makeblastdb',
     gtf_to_genepred_exe  => 'gtfToGenePred',
@@ -470,10 +468,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::README',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
-      -flow_into         => {
-                              '1->A' => ['Checksum'],
-                              'A->1' => ['Sync'],
-                            },
+      -flow_into         => ['Checksum'],
     },
     {
       -logic_name        => 'Checksum',
@@ -491,19 +486,10 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -flow_into         => WHEN('defined #ftp_dir#' => ['Sync'])
     },
     {
       -logic_name        => 'Sync',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count   => 1,
-      -analysis_capacity => 1,
-      -parameters        => {
-                              sync_to_live => $self->o('sync_to_live'),
-                            },
-      -flow_into         => WHEN('#sync_to_live#' => ['SyncToLive'])
-    },
-    {
-      -logic_name        => 'SyncToLive',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
