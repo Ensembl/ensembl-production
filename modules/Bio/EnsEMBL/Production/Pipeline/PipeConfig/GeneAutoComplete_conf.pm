@@ -52,70 +52,64 @@ sub default_options {
   }
 }
 
-
 sub pipeline_analyses {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return [
+  return [
     {
-        -logic_name => 'create_db',
-        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-        -input_ids  => [ {} ] ,
-        -parameters => {
-            db_conn => $self->o('srv_url'),
-            sql => [
-                'CREATE DATABASE IF NOT EXISTS '.$self->o('db_name').';' ],
-        },
-        -rc_name    => 'default',
-        -flow_into  => ['setup_db']
+      -logic_name => 'create_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -input_ids  => [ {} ],
+      -parameters => {
+                       db_conn => $self->o('srv_url'),
+                       sql => ['CREATE DATABASE IF NOT EXISTS '.$self->o('db_name').';'],
+                     },
+      -flow_into  => ['setup_db']
     },
     {
-        -logic_name => 'setup_db',
-        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
-        -parameters => {
-            db_conn => $self->o('db_url'),
-            input_file  => $self->o('base_dir').'/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/GeneAutocomplete/sql/table.sql',
-        },
-        -rc_name    => 'default',
-        -flow_into  => ['job_factory']
+      -logic_name => 'setup_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+      -parameters => {
+                       db_conn => $self->o('db_url'),
+                       input_file => $self->o('base_dir').'/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/GeneAutocomplete/sql/table.sql',
+                     },
+      -flow_into  => ['job_factory']
     },
-    { -logic_name  => 'job_factory',
-       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-       -parameters => {
-                        species      => $self->o('species'),
-                        antispecies  => $self->o('antispecies'),
-                        division     => $self->o('division'),
-                        run_all      => $self->o('run_all'),
-                        meta_filters => $self->o('meta_filters'),
-                      },
-      -rc_name 	       => 'default',
+    {
+      -logic_name      => 'job_factory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -max_retry_count => 1,
-      -flow_into      => {'2->A' => ['gene_auto_complete_core'],
-                          'A->1' => ['optimize'],
-                         }
+      -parameters      => {
+                            species      => $self->o('species'),
+                            antispecies  => $self->o('antispecies'),
+                            division     => $self->o('division'),
+                            run_all      => $self->o('run_all'),
+                            meta_filters => $self->o('meta_filters'),
+                          },
+      -flow_into       => {
+                            '2->A' => ['gene_auto_complete_core'],
+                            'A->1' => ['optimize'],
+                          }
     },
     {
-          -logic_name      => "gene_auto_complete_core",
-          -module          => 'Bio::EnsEMBL::Production::Pipeline::GeneAutocomplete::CreateGeneAutoComplete',
-          -max_retry_count => 1,
-          -parameters      => {
-            db_uri => $self->o('db_url')
-          }
-      },
-      {
-          -logic_name      => "optimize",
-          -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-          -max_retry_count => 1,
-          -parameters      => {
-              db_conn => $self->o('db_url'),
-                            sql => [
-                  qq/OPTIMIZE TABLE gene_autocomplete;/
-              ],
-          }
-      },
-
+      -logic_name        => "gene_auto_complete_core",
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneAutocomplete::CreateGeneAutoComplete',
+      -analysis_capacity => 25,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              db_uri => $self->o('db_url')
+                            }
+    },
+    {
+      -logic_name      => "optimize",
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_conn => $self->o('db_url'),
+                            sql => ['OPTIMIZE TABLE gene_autocomplete;'],
+                          }
+    },
   ];
 }
-
 
 1;
