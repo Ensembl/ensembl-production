@@ -150,7 +150,7 @@ sub timestamp {
 
   my $sql = qq/
     SELECT MAX(DATE_FORMAT(update_time, "%Y%m%d")) FROM
-      nformation_schema.tables
+      information_schema.tables
     WHERE
       table_schema = database()
   /;
