@@ -332,6 +332,7 @@ sub pipeline_analyses {
                               blast_index    => $self->o('blast_index'),
                               blastdb_exe    => $self->o('blastdb_exe'),
                               per_chromosome => $self->o('dna_per_chromosome'),
+                              overwrite      => 1,
                             },
 	    -rc_name           => '8GB',
       -flow_into         => {
@@ -346,6 +347,7 @@ sub pipeline_analyses {
       -hive_capacity     => 10,
       -parameters        => {
                               per_chromosome => $self->o('embl_per_chromosome'),
+                              overwrite      => 1,
                             },
 	    -rc_name           => '4GB',
       -flow_into         => {
@@ -360,6 +362,7 @@ sub pipeline_analyses {
       -parameters        => {
                               blast_index => $self->o('blast_index'),
                               blastdb_exe => $self->o('blastdb_exe'),
+                              overwrite   => 1,
                             },
 	    -rc_name           => '4GB',
       -flow_into         => {
@@ -375,6 +378,7 @@ sub pipeline_analyses {
                               per_chromosome       => $self->o('gff3_per_chromosome'),
                               gt_gff3_exe          => $self->o('gt_gff3_exe'),
                               gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+                              overwrite            => 1,
                             },
 	    -rc_name           => '8GB',
       -flow_into         => {
@@ -390,6 +394,7 @@ sub pipeline_analyses {
                               per_chromosome      => $self->o('gtf_per_chromosome'),
                               gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
                               genepred_check_exe  => $self->o('genepred_check_exe'),
+                              overwrite           => 1,
                             },
 	    -rc_name           => '4GB',
       -flow_into         => {
@@ -403,6 +408,7 @@ sub pipeline_analyses {
       -hive_capacity     => 10,
       -parameters        => {
                               external_dbs => $self->o('xref_external_dbs'),
+                              overwrite    => 1,
                             },
 	    -rc_name           => '2GB',
       -flow_into         => {
@@ -431,6 +437,20 @@ sub pipeline_analyses {
                               cmd => 'if [ -s "#output_filename#" ]; then gzip -n -f "#output_filename#"; fi',
                             },
 	    -rc_name           => '1GB',
+      -flow_into         => {
+                              '-1' => ['Genome_Compress_mem'],
+                            },
+    },
+    {
+      -logic_name        => 'Genome_Compress_mem',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              cmd => 'if [ -s "#output_filename#" ]; then gzip -n -f "#output_filename#"; fi',
+                            },
+	    -rc_name           => '4GB',
     },
     {
       -logic_name        => 'Geneset_Compress',
@@ -442,6 +462,20 @@ sub pipeline_analyses {
                               cmd => 'if [ -s "#output_filename#" ]; then gzip -n -f "#output_filename#"; fi',
                             },
 	    -rc_name           => '1GB',
+      -flow_into         => {
+                              '-1' => ['Geneset_Compress_mem'],
+                            },
+    },
+    {
+      -logic_name        => 'Geneset_Compress_mem',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              cmd => 'if [ -s "#output_filename#" ]; then gzip -n -f "#output_filename#"; fi',
+                            },
+	    -rc_name           => '4GB',
     },
     {
       -logic_name        => 'Symlink_Genome_FASTA',
