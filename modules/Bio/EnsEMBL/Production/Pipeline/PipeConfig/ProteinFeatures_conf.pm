@@ -52,7 +52,7 @@ sub default_options {
    	run_interproscan        => 1,
 
     # A file with md5 sums of translations that are in the lookup service
-    md5_checksum_file => '/nfs/nobackup/interpro/ensembl_precalc/precalc_md5s',
+    md5_checksum_file => '/nfs/panda/ensembl/production/ensprod/precalc_md5s',
 
     # Allow the checksum loading to be skipped (not recommended)
     skip_checksum_loading => 0,
