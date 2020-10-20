@@ -43,10 +43,7 @@ sub default_options {
     meta_filters => {},
 
     # Directory for pre-pipeline database backups
-    output_dir => catdir('/nfs/nobackup/ensembl', $self->o('user'), $self->o('pipeline_name')),
-
-    # Email Report subject
-    email_subject => $self->o('pipeline_name').' GPAD loading pipeline has finished',
+    output_dir => catdir('hps/nobackup2/production/ensembl', $self->o('user'), $self->o('pipeline_name')),
 
     # Remove existing GO annotations and associated analysis
     delete_existing => 1,
@@ -89,18 +86,10 @@ sub pipeline_analyses {
 
   return [
     {
-       -logic_name => 'GPADLoad',
-       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-       -input_ids  => [ {} ],
-       -flow_into  => {
-                        '1->A' => ['DbFactory'],
-                        'A->1' => ['GPADEmailReport'],
-                      },
-    },
-    {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
+      -input_ids         => [ {} ],
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
@@ -265,17 +254,6 @@ sub pipeline_analyses {
                               email         => $self->o('email'),
                               pipeline_name => $self->o('pipeline_name'),
                             },
-    },
-    {
-      -logic_name        => 'GPADEmailReport',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
-      -parameters        => {
-                              email      => $self->o('email'),
-                              subject    => $self->o('email_subject'),
-                              output_dir => $self->o('output_dir'),
-                            },
-      -analysis_capacity  => 20,
-      -rc_name 	      => 'default'
     },
   ];
 }
