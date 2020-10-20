@@ -15,17 +15,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
- Bio::EnsEMBL::Production::Pipeline::PipeConfig::GPAD_conf;
-
-=head1 DESCRIPTION
-
-=head1 AUTHOR
-
-maurel@ebi.ac.uk and ckong@ebi.ac.uk
-
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::GPAD_conf;
 
 use strict;
@@ -34,7 +25,6 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::Version 2.5;
-
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -43,22 +33,22 @@ sub default_options {
   return {
     %{ $self->SUPER::default_options() },
 
+    gpad_directory => '/ebi/ftp/pub/contrib/goa/ensembl_projections',
+    gpad_dirname   => undef,
+
     species      => [],
     antispecies  => [qw/mus_musculus_129s1svimj mus_musculus_aj mus_musculus_akrj mus_musculus_balbcj mus_musculus_c3hhej mus_musculus_c57bl6nj mus_musculus_casteij mus_musculus_cbaj mus_musculus_dba2j mus_musculus_fvbnj mus_musculus_lpj mus_musculus_nodshiltj mus_musculus_nzohlltj mus_musculus_pwkphj mus_musculus_wsbeij/],
     division     => [],
     run_all      => 0,
     meta_filters => {},
 
-    ## General parameters
-    output_dir => '/nfs/nobackup/ensembl/'.$self->o('user').'/workspace/'.$self->o('pipeline_name'),
+    # Directory for pre-pipeline database backups
+    output_dir => catdir('/nfs/nobackup/ensembl', $self->o('user'), $self->o('pipeline_name')),
 
-    ## Location of GPAD files
-    gpad_directory => '',
-
-    ## Email Report subject
+    # Email Report subject
     email_subject => $self->o('pipeline_name').' GPAD loading pipeline has finished',
 
-    ## Remove existing GO annotations and associated analysis
+    # Remove existing GO annotations and associated analysis
     delete_existing => 1,
 
     # Analysis information
@@ -94,36 +84,17 @@ sub hive_meta_table {
   };
 }
 
-sub pipeline_wide_parameters {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::pipeline_wide_parameters},
-    'pipeline_name' => $self->o('pipeline_name'),
-    'output_dir'    => $self->o('output_dir'),
-  };
-}
-
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '4GB' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000]"'},
-  }
-}
-
 sub pipeline_analyses {
   my ($self) = @_;
 
   return [
     {
-       -logic_name => 'backbone_fire_GPADLoad',
+       -logic_name => 'GPADLoad',
        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
        -input_ids  => [ {} ],
        -flow_into  => {
                         '1->A' => ['DbFactory'],
-                        'A->1' => ['email_notification'],
+                        'A->1' => ['GPADEmailReport'],
                       },
     },
     {
@@ -154,6 +125,7 @@ sub pipeline_analyses {
                               table_list  => [
                                 'analysis',
                                 'analysis_description',
+                                'dependent_xref',
                                 'object_xref',
                                 'ontology_xref',
                               ],
@@ -224,22 +196,22 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile',
       -analysis_capacity => 30,
       -parameters        => {
-                              gpad_directory => $self->o('gpad_directory')
+                              gpad_directory => $self->o('gpad_directory'),
+                              gpad_dirname   => $self->o('gpad_dirname'),
                             },
       -flow_into         => {
-                              '2' => ['gpad_file_load'],
+                              '2' => ['LoadFile'],
                             },
-      -rc_name           => '4GB',
+      -rc_name           => 'mem',
     },
     {
-      -logic_name        => 'gpad_file_load',
+      -logic_name        => 'LoadFile',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile',
       -analysis_capacity => 20,
       -parameters        => {
-                              delete_existing => $self->o('delete_existing'),
-                              logic_name      => $self->o('logic_name')
+                              logic_name => $self->o('logic_name')
                             },
-      -rc_name           => '4GB'
+      -rc_name           => 'mem'
     },
     {
        -logic_name       => 'RunXrefDatacheck',
@@ -295,7 +267,7 @@ sub pipeline_analyses {
                             },
     },
     {
-      -logic_name        => 'email_notification',
+      -logic_name        => 'GPADEmailReport',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GPAD::GPADEmailReport',
       -parameters        => {
                               email      => $self->o('email'),
@@ -307,4 +279,5 @@ sub pipeline_analyses {
     },
   ];
 }
+
 1;
