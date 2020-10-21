@@ -27,7 +27,6 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf
 
 This pipeline automate current manual processing of the 7 species (https://2020.ensembl.org/app/species-selector) currently available on 2020 website.
 
-
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf;
@@ -50,7 +49,6 @@ sub default_options {
         genomeinfo_yml    => undef,
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
-        release => software_version()
 	};
 }
 
@@ -58,8 +56,8 @@ sub pipeline_wide_parameters {
     my $self = shift;
     return { %{$self->SUPER::pipeline_wide_parameters()},
         output_path       => $self->o('output_path'),
-        app_path          => $self->o('app_path'),
-        genomeinfo_yml    => $self->o('genomeinfo_yml')
+        ENS_VERSION       => software_version(),  
+        EG_VERSION        => $self->o('EG_VERSION')
     };
 }
 
@@ -67,40 +65,33 @@ sub pipeline_analyses {
     my $self = shift;
 
     return [
-        
-        { 
-          -logic_name  => 'GeneInfo_logic',
-          -input_ids  => [ {} ],
-          -module      =>  'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeInfoYml',
-          -parameters => { species => $self->o('species'),
-                           genomeinfo_yml => $self->o('genomeinfo_yml'), 
-                           run_all        => $self->o('run_all'),   
-                         },
-          -flow_into   =>  {  '2->A' => ['StepBootstrap'],
-                              '3->A'  => ['SpeciesFactory'],   
-                              'A->1' => ['email_notification'],   
-                           }
-
-        }, 
 
         {
             -logic_name => 'SpeciesFactory',
             -module     =>
                 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -input_ids  => [ {} ], # required for automatic seeding
             -parameters => { species => $self->o('species'),
                 antispecies          => $self->o('antispecies'),
                 division             => $self->o('division'),
                 run_all              => $self->o('run_all') 
              },
-            -flow_into  => { '2' => [ 'StepBootstrap' ],
+            -flow_into  => { '2->A' => [ 'GenomeInfo' ],
+                             'A->1' => ['email_notification']
                            },
              
         },
+        {
+          -logic_name => 'GenomeInfo',          
+          -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeInfo',
+          -flow_into  => {'1' => ['StepBootstrap']},
+          
+        },
         {    
             -logic_name => 'StepBootstrap',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap',
             -parameters => { current_step       => 'bootstrap',
-                             step => $self->o('step'),
+                             step => $self->o('step')
                            }, 
             -flow_into        => {
                       '1' =>  ['StepGeneAndTranscript'],
@@ -111,16 +102,19 @@ sub pipeline_analyses {
 
         },
         {   -logic_name => 'StepGeneAndTranscript',
-              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGeneAndTranscript',
+             -rc_name    => 'large', 
         },
         {   -logic_name => 'StepContigs',
-              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileContigs',
         },
         {   -logic_name => 'StepGC',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGenerateGC',
+             -rc_name    => 'mem',
 	},
         {   -logic_name => 'StepVariation',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFile',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileVariation',
+            -rc_name     => 'large', 
         },
         {
            -logic_name => 'email_notification',
@@ -136,6 +130,18 @@ sub pipeline_analyses {
 
     ];
 } ## end sub pipeline_analyses
+
+sub resource_classes {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::resource_classes},
+    'small' => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
+    'mem'   => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
+    'large' => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
+  }
+}
+
 
 
 1;
