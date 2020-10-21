@@ -49,6 +49,7 @@ sub default_options {
         genomeinfo_yml    => undef,
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
+         
 	};
 }
 
@@ -56,7 +57,7 @@ sub pipeline_wide_parameters {
     my $self = shift;
     return { %{$self->SUPER::pipeline_wide_parameters()},
         output_path       => $self->o('output_path'),
-        ENS_VERSION       => software_version(),  
+        ENS_VERSION       => $self->o('ENS_VERSION'),  
         EG_VERSION        => $self->o('EG_VERSION')
     };
 }
