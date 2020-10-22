@@ -20,7 +20,7 @@ limitations under the License.
  Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGenerateGC;
 
 =head1 DESCRIPTION
-  Compute GC percentage  step for webdatafile dumps
+  Compute Gene and Transcript  step for webdatafile dumps
 
 =cut
 
@@ -35,6 +35,7 @@ use Path::Tiny qw(path);
 use Carp qw/croak/;
 use JSON qw/decode_json/;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
+use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexWig;
 use Capture::Tiny qw/capture/;
 use Path::Tiny qw/path tempfile/;
 
@@ -62,14 +63,38 @@ sub run {
     type       => $self->param('type'),  
     root_path  => path($self->param('root_path'))
   };
-  my $lookup = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup->new("genome_data" => $genome_data); 
+  my $lookup = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup->new("genome_data" => $genome_data); #"root_path"=> path("/hps/nobackup2/production/ensembl/vinay/test_webdatafile"));
   my $genome = $lookup->get_genome('1');
   my $chrom_report = $genome->get_chrom_report();
-  $self->generate_gc($genome, $chrom_report);
+  #$self->generate_gc($genome, $chrom_report);
+  $self->wig_index($genome);
   
 }
 
+sub wig_index{
 
+  my ($self, $genome) = @_;
+  my $gc_path = $genome->gc_path(); 
+  my $chrom_report = $genome->get_chrom_report('sortbyname');
+  my @paths;
+  my $indexer = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexWig->new(genome => $genome);
+  print STDERR "Finding GC wig files for ".$genome->genome_id()."\n";
+  while(my $report = shift @{$chrom_report}) {
+      my $sub_path = $gc_path->child($genome->to_seq_id($report).".wig.gz");
+      next unless $sub_path->exists();
+      print STDERR "Indexing wig file ${sub_path} ... ";
+      my $bw_path = $indexer->index_gzip_wig($sub_path);
+      push(@paths, $bw_path);
+      print STDERR "Done\n";
+    }
+    my $target_bw = $genome->gc_bw_path();
+    print STDERR "Found ".scalar(@paths)." bigwigs. Concat into a single bigwig ${target_bw} ... ";
+    $indexer->bigwig_cat(\@paths, $target_bw);
+    print STDERR "DONE\n";
+ 
+
+
+}
 sub generate_gc {
 
   my ($self, $genome, $chrom_report) = @_;
