@@ -39,13 +39,6 @@ use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexWig;
 use Capture::Tiny qw/capture/;
 use Path::Tiny qw/path tempfile/;
 
-sub param_defaults {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::param_defaults},
-  };
-}
-
 
 sub run {
 

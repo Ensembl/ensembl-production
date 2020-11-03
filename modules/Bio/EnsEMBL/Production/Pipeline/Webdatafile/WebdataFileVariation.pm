@@ -42,14 +42,6 @@ use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::variants::VariationBed
 use CoordinateConverter qw(to_zero_based);
 
 
-sub param_defaults {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::param_defaults},
-  };
-}
-
-
 sub run {
 
   my ($self) = @_;

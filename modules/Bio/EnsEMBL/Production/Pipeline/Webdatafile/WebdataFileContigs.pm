@@ -38,14 +38,6 @@ use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
 use Error ':try';
 
-sub param_defaults {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::param_defaults},
-  };
-}
-
-
 sub run {
 
   my ($self) = @_;
