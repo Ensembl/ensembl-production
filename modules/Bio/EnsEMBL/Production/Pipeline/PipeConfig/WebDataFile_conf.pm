@@ -47,7 +47,8 @@ sub default_options {
         run_all         => 0, #always run every species
         step             => [],  
         genomeinfo_yml    => undef,
-        ftp_pub_path     =>  '/nfs/panda/ensembl/production/ensemblftp',   
+        ftp_pub_path     =>  '/nfs/panda/ensembl/production/ensemblftp',
+        ENS_BIN_NUMBER   => 150,   
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
          
@@ -61,6 +62,7 @@ sub pipeline_wide_parameters {
         ENS_VERSION       => $self->o('ENS_VERSION'),  
         EG_VERSION        => $self->o('EG_VERSION'),
         ftp_pub_path      => $self->o('ftp_pub_path'),
+        ENS_BIN_NUMBER    => $self->o('ENS_BIN_NUMBER'),  
     };
 }
 

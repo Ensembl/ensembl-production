@@ -34,7 +34,6 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use Path::Tiny qw(path);
 use Array::Utils qw(intersect);
 use Path::Tiny qw(path);
-use Carp qw/croak/;
 use JSON qw/decode_json/;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
 
@@ -72,7 +71,6 @@ sub get_assembly_report {
   my $target_path = $genome->genome_report_path()->stringify;
   open(my $fh, ">", $target_path);
 
-  my $statement = $self->prepare_sql($genome->species_id());
 
   my $query_result = $dba->dbc->sql_helper()->execute( -SQL => $self->prepare_sql(1) ); 
   $self->write_column_headers($fh);
@@ -83,7 +81,7 @@ sub report_to_chrom_lookups{
 
    my ($self, $genome) = @_;
    my $genome_report = $genome->get_genome_report();
-   my $write_seqs_out = (exists $ENV{ENS_WRITE_SEQS}) ? $ENV{ENS_WRITE_SEQS} : 1; # its temporary one
+   my $write_seqs_out =  1; # its temporary one
    my @chrom_hashes;
    my @chrom_sizes;
    while(my $report = shift @{$genome_report}) {  
@@ -110,10 +108,7 @@ sub report_to_chrom_lookups{
 sub generate_genome_summary_bed{
    my ($self, $genome) = @_;
    my @bed;
-   my $bin_number = 150;
-   if(exists $ENV{ENS_BIN_NUMBER}) {
-     $bin_number = $ENV{ENS_BIN_NUMBER};
-   }
+   my $bin_number = $self->param('ENS_BIN_NUMBER');
    my $chrom_reports = $genome->get_chrom_report('sortbyname');
   foreach my $chrom (@{$chrom_reports}) {
     my $name = $chrom->name();
