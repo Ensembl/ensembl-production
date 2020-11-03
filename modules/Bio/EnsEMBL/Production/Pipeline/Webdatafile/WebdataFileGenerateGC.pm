@@ -63,10 +63,10 @@ sub run {
     type       => $self->param('type'),  
     root_path  => path($self->param('root_path'))
   };
-  my $lookup = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup->new("genome_data" => $genome_data); #"root_path"=> path("/hps/nobackup2/production/ensembl/vinay/test_webdatafile"));
+  my $lookup = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup->new("genome_data" => $genome_data); 
   my $genome = $lookup->get_genome('1');
   my $chrom_report = $genome->get_chrom_report();
-  #$self->generate_gc($genome, $chrom_report);
+  $self->generate_gc($genome, $chrom_report);
   $self->wig_index($genome);
   
 }
@@ -78,19 +78,19 @@ sub wig_index{
   my $chrom_report = $genome->get_chrom_report('sortbyname');
   my @paths;
   my $indexer = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexWig->new(genome => $genome);
-  print STDERR "Finding GC wig files for ".$genome->genome_id()."\n";
+  $self->warning(  "Finding GC wig files for ".$genome->genome_id() );
   while(my $report = shift @{$chrom_report}) {
       my $sub_path = $gc_path->child($genome->to_seq_id($report).".wig.gz");
       next unless $sub_path->exists();
-      print STDERR "Indexing wig file ${sub_path} ... ";
+      $self->warning("Indexing wig file ${sub_path} ... ");
       my $bw_path = $indexer->index_gzip_wig($sub_path);
       push(@paths, $bw_path);
-      print STDERR "Done\n";
+      $self->warning("Done");
     }
     my $target_bw = $genome->gc_bw_path();
-    print STDERR "Found ".scalar(@paths)." bigwigs. Concat into a single bigwig ${target_bw} ... ";
+    $self->warning("Found ".scalar(@paths)." bigwigs. Concat into a single bigwig ${target_bw} ... ");
     $indexer->bigwig_cat(\@paths, $target_bw);
-    print STDERR "DONE\n";
+    $self->warning("DONE\n");
  
 
 
@@ -103,7 +103,7 @@ sub generate_gc {
     my $seq_ref = $report->get_seq_ref();
     my $name = $report->name();
 
-    print STDERR "======> Processing ${name} for GC content\n";
+    $self->warning( "======> Processing ${name} for GC content\n");
 
     my $gc_fasta = tempfile('gcwriter_XXXXXXXX');
     my $fh = $gc_fasta->openw();
@@ -127,13 +127,13 @@ sub generate_gc {
     my ($stdout, $stderr, $exit) = capture {
       system($cmd, @args);
     };
-    print STDERR "GC STDOUT:\n";
-    print STDERR "${stdout}\n";
+    $self->warning("GC STDOUT:\n");
+    $self->warning("${stdout}\n");
     if($exit != 0) {
       die "Return code was ${exit}. Failed to execute command $cmd: $!";
     }
 
-    print STDERR "======> DONE\n";
+    $self->warning( "======> DONE\n");
   }
 
 }

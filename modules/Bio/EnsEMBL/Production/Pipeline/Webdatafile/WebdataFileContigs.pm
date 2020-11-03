@@ -36,6 +36,7 @@ use Carp qw/croak/;
 use JSON qw/decode_json/;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
+use Error ':try';
 
 sub param_defaults {
   my ($self) = @_;
@@ -119,9 +120,10 @@ sub map_data {
   my $old_version = $slice->coord_system()->version();
 
   my @decoded_segments;
-  my $projection = $slice->project('contig'); 
+  try {
+    my $projection = $slice->project('contig'); 
   
-  foreach my $segment ( @{$projection} ) {
+    foreach my $segment ( @{$projection} ) {
       my $mapped_slice = $segment->to_Slice;
       my $mapped_data = {
         original => {
@@ -145,6 +147,9 @@ sub map_data {
     }
 
    return \@decoded_segments;
+  } catch {
+   return \@decoded_segments; 
+  }
 }
 
 1;

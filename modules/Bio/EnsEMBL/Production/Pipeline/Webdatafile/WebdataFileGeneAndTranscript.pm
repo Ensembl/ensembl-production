@@ -115,7 +115,7 @@ sub process_chromosome_by_chunck {
   my $finished = 0; 
   while($finished == 0) {
     my $new_end = ($start + $chunk)-1;
-    print STDERR "Processing $chr : $start -> $new_end\n";
+    $self->warning("Processing $chr : $start -> $new_end\n");
 
     if($new_end >= $end) {
       $new_end = $end;

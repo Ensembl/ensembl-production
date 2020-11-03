@@ -70,7 +70,6 @@ sub run {
   my $lookup = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup->new("genome_data" => $genome_data); 
   my $genome = $lookup->get_genome('1');
   my $variation_bed_writer = Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::variants::VariationBedWriter->new(root_path => path($self->param('root_path')));
-  ##my $release = get_release_versions();
 
   $self->clear_output_folder($variation_bed_writer, $genome);
   my $vcf_files = $self->get_vcf_files($genome);
@@ -126,11 +125,11 @@ sub get_vcf_files {
   my $species = $genome->species();
   my $ensembl_release = $self->param('ENS_VERSION');
   my $ensembl_genomes_release = $self->param('EG_VERSION');
-  my $base_ftp_dir = '/nfs/production/panda/ensembl/production/ensemblftp/';
+  my $base_ftp_dir = $self->param('ftp_pub_path');
   if( $genome->type eq	'EnsemblVertebrates' ||  $genome->assembly_default eq 'GRCH37'){
-       $base_ftp_dir = $base_ftp_dir . "release-$ensembl_release/variation/vcf/$species";
+       $base_ftp_dir = $base_ftp_dir . "/release-$ensembl_release/variation/vcf/$species";
   }else{
-       $base_ftp_dir = $base_ftp_dir . "release-$ensembl_genomes_release/$genome_type/variation/vcf/$species";    
+       $base_ftp_dir = $base_ftp_dir . "/release-$ensembl_genomes_release/$genome_type/variation/vcf/$species";    
   }
 
   my $vcf_file_name_pattern_string = "${species}_incl_consequences.*.vcf.gz";

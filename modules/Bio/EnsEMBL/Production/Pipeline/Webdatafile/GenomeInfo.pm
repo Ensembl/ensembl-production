@@ -61,15 +61,8 @@ sub run {
 sub genome_info {
 	my ( $self, $species, $compara ) = @_;
 	my $genome;
-	if ( $compara && $compara ne 'multi' ) {
-		$genome =
-		  Bio::EnsEMBL::Production::Search::GenomeFetcher->new(  -ENS_VERSION => $self->param('ENS_VERSION'), -EG_VERSION => $self->param('EG_VERSION') )
-		  ->fetch_genome($species);
-	}
-	else {
-		$genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new()
-		  ->fetch_genome($species);
-	}
+        $genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new( -EG => 1,  -ENS_VERSION => $self->param('ENS_VERSION'), -EG_VERSION => $self->param('EG_VERSION') )
+                  ->fetch_genome($species);    
 	return $genome;
 }
 

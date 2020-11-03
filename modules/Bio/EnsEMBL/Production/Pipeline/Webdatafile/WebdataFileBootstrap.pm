@@ -191,10 +191,10 @@ sub write_output {
   if ($current_step eq 'bootstrap') {
         my @steps     = @{$self->param('step')};
         my %each_flow = (
-             'transcripts' => 1,
-             'contigs'     => 2,
-             'gc'          => 3,
-             'variants'    => 4,
+             'transcripts' => 2,
+             'contigs'     => 3,
+             'gc'          => 4,
+             'variants'    => 5,
         );
   
         my @existing_steps = keys %each_flow;

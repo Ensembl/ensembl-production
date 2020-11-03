@@ -47,6 +47,7 @@ sub default_options {
         run_all         => 0, #always run every species
         step             => [],  
         genomeinfo_yml    => undef,
+        ftp_pub_path     =>  '/nfs/panda/ensembl/production/ensemblftp',   
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
          
@@ -58,7 +59,8 @@ sub pipeline_wide_parameters {
     return { %{$self->SUPER::pipeline_wide_parameters()},
         output_path       => $self->o('output_path'),
         ENS_VERSION       => $self->o('ENS_VERSION'),  
-        EG_VERSION        => $self->o('EG_VERSION')
+        EG_VERSION        => $self->o('EG_VERSION'),
+        ftp_pub_path      => $self->o('ftp_pub_path'),
     };
 }
 
@@ -111,7 +113,7 @@ sub pipeline_analyses {
         },
         {   -logic_name => 'StepGC',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGenerateGC',
-             -rc_name    => 'mem',
+             -rc_name    => 'large',
 	},
         {   -logic_name => 'StepVariation',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileVariation',
