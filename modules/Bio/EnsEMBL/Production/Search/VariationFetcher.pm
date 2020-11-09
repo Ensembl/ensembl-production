@@ -77,6 +77,9 @@ sub fetch_variations_callback {
   $dba->dbc()->db_handle()->{mysql_use_result} = 1; # streaming
   my $h = $dba->dbc()->sql_helper();
 
+  $dba->dbc()->disconnect_if_idle();
+  $onto_dba->dbc()->disconnect_if_idle();
+
   # global data
   my $gwas = $self->_fetch_all_gwas($h);
   my $sources = $self->_fetch_all_sources($h);
