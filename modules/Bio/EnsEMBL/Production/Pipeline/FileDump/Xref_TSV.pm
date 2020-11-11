@@ -111,7 +111,7 @@ sub print_xrefs {
           my $xref_id    = $xref->primary_id;
           my $xref_label = $xref->display_id;
           my $xref_db    = $xref->db_display_name;
-          my $xref_desc  = $xref->description;
+          my $xref_desc  = $xref->description || '';
           my $info_type  = $xref->info_type;
 
           my $ensembl_identity = '';
