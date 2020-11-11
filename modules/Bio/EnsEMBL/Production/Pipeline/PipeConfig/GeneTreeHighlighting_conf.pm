@@ -45,72 +45,69 @@ sub default_options {
     run_all      => 0,
     antispecies  => [],
     meta_filters => {},
-    production_db => 'ensembl_production',
-    production_host => 'meta1',
-    compara_host => 'st3-w',
 
     ## Allow division of compara database to be explicitly specified
     compara_division => undef,
 
-    # hive_capacity values for analysis
-    highlighting_capacity => 20,
+    external_db_sql =>
+      'insert ignore into external_db '.
+        '(external_db_id, db_name, status, priority, db_display_name, type) '.
+      'values '.
+        '(1000, "GO", "XREF", 5, "GO", "MISC"), '.
+        '(1200, "Interpro", "XREF", 5, "InterPro", "MISC");',
 
+    highlighting_capacity => 20,
   }
 }
 
 sub pipeline_analyses {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return [
+  return [
 
-    {   -logic_name => 'sync_external_db',
-        -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        -parameters        => {
-            'cmd'      => 'set -o pipefail;#production_host# mysqldump #production_db# master_external_db | sed -e "s/master_external_db/external_db/g" | #compara_host# #compara_db#',
-            'production_db'     => $self->o('production_db'),
-            'production_host' => $self->o('production_host'),
-            'compara_db'     => $self->o('compara_db'),
-            'compara_host'     => $self->o('compara_host')
+    { -logic_name   => 'populate_external_db',
+        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        -input_ids  => [ {} ],
+        -parameters => {
+          cmd => '#compara_host# #compara_db# -e \'#external_db_sql#\'',
+          compara_db      => $self->o('compara_db'),
+          compara_host    => $self->o('compara_host'),
+          external_db_sql => $self->o('external_db_sql')
         },
         -flow_into  => [ 'job_factory' ],
-        -input_ids  => [ {} ] ,
-        -rc_name 	       => 'default',
     },
-    { -logic_name  => 'job_factory',
-       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-       -parameters => {
+
+    { -logic_name => 'job_factory',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -parameters => {
                         species      => $self->o('species'),
                         antispecies  => $self->o('antispecies'),
                         division     => $self->o('division'),
                         run_all      => $self->o('run_all'),
                         meta_filters => $self->o('meta_filters'),
                       },
-      -rc_name 	       => 'default',
-      -max_retry_count => 1,
-      -flow_into      => {'2->A' => ['highlight_go'],
-                          'A->2' => ['highlight_interpro'],
-                         }
+      -flow_into   => {
+                        '2->A' => ['highlight_go'],
+                        'A->2' => ['highlight_interpro'],
+                      }
     },
 
-    { -logic_name     => 'highlight_go',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
-      -hive_capacity   => $self->o('highlighting_capacity'),
-      -parameters      => {
-                            compara_division => $self->o('compara_division'),
-                          },
-      -rc_name 	      => 'default',
+    { -logic_name    => 'highlight_go',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
+      -hive_capacity => $self->o('highlighting_capacity'),
+      -parameters    => {
+                          compara_division => $self->o('compara_division'),
+                        },
     },
 
-    { -logic_name     => 'highlight_interpro',
-      -module         => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
-      -hive_capacity   => $self->o('highlighting_capacity'),
-      -parameters      => {
-                            compara_division => $self->o('compara_division'),
-                          },
-      -rc_name 	      => 'default',
+    { -logic_name    => 'highlight_interpro',
+      -module        => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
+      -hive_capacity => $self->o('highlighting_capacity'),
+      -parameters    => {
+                          compara_division => $self->o('compara_division'),
+                        },
     },
   ];
 }
-
 
 1;
