@@ -138,6 +138,7 @@ sub pipeline_analyses {
                 'release'  => $self->o('release'),
                 'base_dir' => $self->o('base_dir')
             },
+            -analysis_capacity => 1,
             -rc_name     => '32GB',
         },
         {
