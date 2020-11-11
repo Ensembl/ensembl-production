@@ -70,6 +70,27 @@ sub run {
   }
 }
 
+sub timestamp {
+  my ($self, $dba) = @_;
+
+  $self->throw("Missing dba parameter: timestamp method") unless defined $dba;
+
+  my $sql = qq/
+    SELECT MAX(DATE_FORMAT(update_time, "%Y%m%d")) FROM
+      information_schema.tables
+    WHERE
+      table_schema = database() AND
+      table_name LIKE "%xref"
+  /;
+  my $result = $dba->dbc->sql_helper->execute_simple(-SQL => $sql);
+
+  if (scalar(@$result)) {
+    return $result->[0];
+  } else {
+    return Time::Piece->new->date("");
+  }
+}
+
 sub print_header {
   my ($self, $fh) = @_;
   
