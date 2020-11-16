@@ -28,8 +28,6 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    dump_dir => '/hps/nobackup2/production/ensembl/ensprod/release_dumps',
-
     genome_types => [
       'Assembly_Chain',
       'Chromosome_TSV',

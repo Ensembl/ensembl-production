@@ -164,32 +164,32 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'GenomeFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DumpFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => {
-                              dump_dir     => $self->o('dump_dir'),
-                              ftp_root     => $self->o('ftp_root'),
-                              gene_related => 0,
+                              dump_dir      => $self->o('dump_dir'),
+                              ftp_root      => $self->o('ftp_root'),
+                              data_category => 'genome',
                             },
       -flow_into         => {
-                              '2->A' => $self->o('genome_types'),
-                              'A->2' => ['README']
+                              '1->A' => $self->o('genome_types'),
+                              'A->1' => ['README']
                             },
     },
     {
       -logic_name        => 'GenesetFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DumpFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => {
-                              dump_dir     => $self->o('dump_dir'),
-                              ftp_root     => $self->o('ftp_root'),
-                              gene_related => 1,
+                              dump_dir      => $self->o('dump_dir'),
+                              ftp_root      => $self->o('ftp_root'),
+                              data_category => 'geneset',
                             },
       -flow_into         => {
-                              '2->A' => $self->o('geneset_types'),
-                              'A->2' => ['README']
+                              '1->A' => $self->o('geneset_types'),
+                              'A->1' => ['README']
                             },
     },
     {
