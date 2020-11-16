@@ -81,7 +81,7 @@ sub report_to_chrom_lookups{
 
    my ($self, $genome) = @_;
    my $genome_report = $genome->get_genome_report();
-   my $write_seqs_out =  1; # its temporary one
+   my $write_seqs_out =  $self->param('write_seqs_out'); 
    my @chrom_hashes;
    my @chrom_sizes;
    while(my $report = shift @{$genome_report}) {  

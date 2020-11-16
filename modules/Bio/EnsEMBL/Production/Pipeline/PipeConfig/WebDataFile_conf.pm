@@ -19,7 +19,7 @@ limitations under the License.
 
 =pod
 
-=head1 NAME
+=head1 NAME  
 
 Bio::EnsEMBL::Production::Pipeline::PipeConfig::WebDataFile_conf
 
@@ -48,7 +48,8 @@ sub default_options {
         step             => [],  
         genomeinfo_yml    => undef,
         ftp_pub_path     =>  '/nfs/panda/ensembl/production/ensemblftp',
-        ENS_BIN_NUMBER   => 150,   
+        ENS_BIN_NUMBER   => 150, 
+        write_seqs_out   => 1,
         # Email Report subject
         email_subject => $self->o('pipeline_name').'  pipeline has finished',
          
