@@ -180,7 +180,7 @@ sub header {
 sub blast_index {
   my ($self, $filename, $dbtype) = @_;
 
-  my $tools_dir = $self->param_required('tools_dir');
+  my $web_dir = $self->param_required('web_dir');
   my $blast_dirname = $self->param_required('blast_dirname');
   my $file_type = $self->param_required('file_type');
 
@@ -190,7 +190,7 @@ sub blast_index {
   $basename =~ s/\-[^-]+(\-[^-]+\.$file_type)$/$1/;
 
   my $blast_filename = catdir(
-    $tools_dir,
+    $web_dir,
     $blast_dirname,
     'genes',
     $basename

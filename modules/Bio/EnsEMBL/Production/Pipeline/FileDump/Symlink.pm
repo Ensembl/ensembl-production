@@ -30,7 +30,7 @@ sub run {
   my ($self) = @_;
 
   my $dump_dir        = $self->param_required('dump_dir');
-  my $gene_related    = $self->param_required('gene_related');
+  my $data_category   = $self->param_required('data_category');
   my $output_dir      = $self->param_required('output_dir');
   my $output_filename = $self->param_required('output_filename');
 
@@ -40,7 +40,7 @@ sub run {
   }
 
   my $relative_dir;
-  if ($gene_related) {
+  if ($data_category eq 'geneset') {
     $relative_dir = catdir('..', '..', '..', '..', '..');
   } else {
     $relative_dir = catdir('..', '..', '..', '..');

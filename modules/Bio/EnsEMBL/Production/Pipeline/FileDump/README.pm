@@ -36,12 +36,12 @@ sub param_defaults {
 
 sub run {
   my ($self) = @_;
-  my $root_readmes = $self->param_required('root_readmes');
-  my $gene_related = $self->param_required('gene_related');
-  my $output_dir   = $self->param_required('output_dir');
+  my $root_readmes  = $self->param_required('root_readmes');
+  my $data_category = $self->param_required('data_category');
+  my $output_dir    = $self->param_required('output_dir');
 
   my $relative_dir;
-  if ($gene_related) {
+  if ($data_category eq 'geneset') {
     $relative_dir = catdir('..', '..', '..', '..', '..');
   } else {
     $relative_dir= catdir('..', '..', '..', '..');

@@ -61,7 +61,7 @@ sub run {
   my ($self) = @_;
 
   my $file_type    = $self->param_required('file_type');
-  my $tools_dir    = $self->param_required('tools_dir');
+  my $web_dir      = $self->param_required('web_dir');
   my $species_name = $self->param_required('species_name');
   my $chain_dir    = $self->param_required('chain_dir');
 
@@ -71,9 +71,6 @@ sub run {
  
   if (scalar(@{$liftovers})) {
     path($chain_dir)->mkpath();
-
-    my $tools_chain_dir = catdir($tools_dir, $species_name);
-    path($tools_chain_dir)->mkpath();
 
     $self->param('ucsc_name_cache', {});
 

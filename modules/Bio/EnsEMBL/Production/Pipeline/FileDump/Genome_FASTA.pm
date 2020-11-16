@@ -216,11 +216,11 @@ sub hardmask {
 sub blast_index {
   my ($self, $filename, $dbtype) = @_;
 
-  my $tools_dir = $self->param_required('tools_dir');
+  my $web_dir = $self->param_required('web_dir');
   my $blast_dirname = $self->param_required('blast_dirname');
 
   my $blast_filename = catdir(
-    $tools_dir,
+    $web_dir,
     $blast_dirname,
     'genomes',
     path($filename)->basename

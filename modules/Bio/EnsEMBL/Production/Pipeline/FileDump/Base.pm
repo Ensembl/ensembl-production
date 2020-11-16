@@ -30,11 +30,12 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     db_type             => 'core',
-    species_dirname     => 'Species',
-    timestamped_dirname => 'Timestamped',
-    tools_dirname       => 'Tools',
+    species_dirname     => 'species',
+    timestamped_dirname => 'timestamped',
+    web_dirname         => 'web',
     genome_dirname      => 'genome',
     geneset_dirname     => 'geneset',
+    rnaseq_dirname      => 'rnaseq',
   };
 }
 
