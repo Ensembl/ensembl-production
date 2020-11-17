@@ -41,19 +41,6 @@ sub run {
   my ($output_dir, $timestamped_dir, $web_dir, $ftp_dir) =
     $self->directories($data_category);
 
-  if (! -e $output_dir) {
-    path($output_dir)->mkpath();
-    path($output_dir)->chmod("g+w");
-  }
-  if (! -e $timestamped_dir) {
-    path($timestamped_dir)->mkpath();
-    path($timestamped_dir)->chmod("g+w");
-  }
-  if (! -e $web_dir) {
-    path($web_dir)->mkpath();
-    path($web_dir)->chmod("g+w");
-  }
-
   $self->param('output_dir', $output_dir);
   $self->param('timestamped_dir', $timestamped_dir);
   $self->param('web_dir', $web_dir);

@@ -112,6 +112,7 @@ sub filenames {
     $dir = $self->param('output_dir');
   }
   path($dir)->mkpath();
+  path($dir)->chmod("g+w");
 
   my %filenames;
 
