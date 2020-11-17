@@ -37,7 +37,7 @@ sub param_defaults {
     data_types      => ['cdna', 'cds', 'pep'],
     file_type       => 'fa',
     chunk_size      => 10000,
-    line_width      => 80,
+    line_width      => 60,
     blast_index     => 0,
     blastdb_exe     => 'makeblastdb',
     blast_dirname   => 'ncbi_blast',
