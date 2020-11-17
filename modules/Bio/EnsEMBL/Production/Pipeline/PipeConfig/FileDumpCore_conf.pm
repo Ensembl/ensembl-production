@@ -40,6 +40,9 @@ sub default_options {
       'Geneset_GTF',
       'Xref_TSV',
     ],
+    rnaseq_types => [
+      'Symlink_RNASeq',
+    ],
 
     blast_index => 1,
 	};

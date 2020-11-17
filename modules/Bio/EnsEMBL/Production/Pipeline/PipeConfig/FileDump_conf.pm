@@ -43,6 +43,7 @@ sub default_options {
 
     genome_types  => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
     geneset_types => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'
+    rnaseq_types  => [], # Possible values: 'Symlink_RNASeq'
     mysql_types   => ['MySQL_TXT'],
 
     dump_mysql => 0,
@@ -159,11 +160,15 @@ sub pipeline_analyses {
       -analysis_capacity => 20,
       -parameters        => {},
       -flow_into         => {
-                              '2' => ['GenomeFactory', 'GenesetFactory'],
+                              '2' => [
+                                'GenomeDirectoryPaths',
+                                'GenesetDirectoryPaths',
+                                'RNASeqDirectoryPaths'
+                              ],
                             }
     },
     {
-      -logic_name        => 'GenomeFactory',
+      -logic_name        => 'GenomeDirectoryPaths',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
       -max_retry_count   => 1,
       -analysis_capacity => 20,
@@ -178,7 +183,7 @@ sub pipeline_analyses {
                             },
     },
     {
-      -logic_name        => 'GenesetFactory',
+      -logic_name        => 'GenesetDirectoryPaths',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
       -max_retry_count   => 1,
       -analysis_capacity => 20,
@@ -190,6 +195,20 @@ sub pipeline_analyses {
       -flow_into         => {
                               '1->A' => $self->o('geneset_types'),
                               'A->1' => ['README']
+                            },
+    },
+    {
+      -logic_name        => 'RNASeqDirectoryPaths',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => {
+                              dump_dir      => $self->o('dump_dir'),
+                              ftp_root      => $self->o('ftp_root'),
+                              data_category => 'rnaseq',
+                            },
+      -flow_into         => {
+                              '1' => $self->o('rnaseq_types'),
                             },
     },
     {
@@ -488,6 +507,16 @@ sub pipeline_analyses {
                             },
     },
     {
+      -logic_name        => 'Symlink_RNASeq',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink_RNASeq',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              dump_dir => $self->o('dump_dir'),
+                            },
+    },
+    {
       -logic_name        => 'Symlink_Xref_TSV',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink',
       -max_retry_count   => 1,
@@ -502,6 +531,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::README',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -batch_size        => 10,
       -flow_into         => ['Checksum'],
     },
     {
@@ -520,6 +550,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -batch_size        => 10,
       -flow_into         => WHEN('defined #ftp_dir#' => ['Sync'])
     },
     {
@@ -527,6 +558,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
       -analysis_capacity => 10,
+      -batch_size        => 10,
       -parameters        => {
                               cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
                             },
