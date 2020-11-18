@@ -46,7 +46,6 @@ sub default_options {
         antispecies     => [],
         run_all         => 0, #always run every species
         step             => [],  
-        genomeinfo_yml    => undef,
         ftp_pub_path     =>  '/nfs/panda/ensembl/production/ensemblftp',
         ENS_BIN_NUMBER   => 150, 
         write_seqs_out   => 1,
