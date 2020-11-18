@@ -63,7 +63,8 @@ sub pipeline_wide_parameters {
         ENS_VERSION       => $self->o('ENS_VERSION'),  
         EG_VERSION        => $self->o('EG_VERSION'),
         ftp_pub_path      => $self->o('ftp_pub_path'),
-        ENS_BIN_NUMBER    => $self->o('ENS_BIN_NUMBER'),  
+        ENS_BIN_NUMBER    => $self->o('ENS_BIN_NUMBER'),
+        write_seqs_out    => $self->o('write_seqs_out'),     
     };
 }
 
@@ -100,10 +101,10 @@ sub pipeline_analyses {
                              step => $self->o('step')
                            }, 
             -flow_into        => {
-                      '1' =>  ['StepGeneAndTranscript'],
-                      '2' =>  ['StepContigs'],
-                      '3' =>  ['StepGC'],
-                      '4' =>  ['StepVariation'],
+                      '2' =>  ['StepGeneAndTranscript'],
+                      '3' =>  ['StepContigs'],
+                      '4' =>  ['StepGC'],
+                      '5' =>  ['StepVariation'],
             },
 
         },
