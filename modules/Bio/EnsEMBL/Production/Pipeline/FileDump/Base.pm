@@ -30,18 +30,19 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     db_type             => 'core',
-    species_dirname     => 'Species',
-    timestamped_dirname => 'Timestamped',
-    tools_dirname       => 'Tools',
+    species_dirname     => 'species',
+    timestamped_dirname => 'timestamped',
+    web_dirname         => 'web',
     genome_dirname      => 'genome',
     geneset_dirname     => 'geneset',
+    rnaseq_dirname      => 'rnaseq',
   };
 }
 
 sub dba {
-  my ($self) = @_;
-  my $species = $self->param_required('species');
-  my $db_type = $self->param_required('db_type');
+  my ($self, $species, $db_type) = @_;
+  $species = $self->param_required('species') unless defined $species;
+  $db_type = $self->param_required('db_type') unless defined $db_type;
 
   my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, $db_type);
   unless (defined $dba) {
@@ -81,22 +82,15 @@ sub species_name {
   $self->throw("Missing dba parameter: species_name method") unless defined $dba;
 
   my $mca = $dba->get_adaptor("MetaContainer");
-  my $species_name = $mca->single_value_by_key('species.strain_group');
-  if (! defined $species_name or $species_name eq '') {
-    $species_name = $mca->single_value_by_key('species.db_name');
-    if (! defined $species_name or $species_name eq '') {
-      $species_name = $mca->single_value_by_key('species.display_name');
-      if (defined $species_name and $species_name ne '') {
-        $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
-        $species_name =~ s/ /_/g;
-      } else {
-        $species_name = $mca->single_value_by_key('species.production_name');
-      }
-    }
+  my $species_name = $mca->single_value_by_key('species.display_name');
+  if (defined $species_name and $species_name ne '') {
+    $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
+    $species_name =~ s/ /_/g;
+  } else {
+    $self->throw("No species.display_name");
   }
-  $species_name =~ s/_?gca_?.+$//;
 
-  return ucfirst($species_name);
+  return $species_name;
 }
 
 sub repeat_mask_date {

@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink;
+package Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink_RNASeq;
 
 use strict;
 use warnings;
@@ -29,29 +29,30 @@ use Path::Tiny;
 sub run {
   my ($self) = @_;
 
-  my $dump_dir        = $self->param_required('dump_dir');
-  my $data_category   = $self->param_required('data_category');
-  my $output_dir      = $self->param_required('output_dir');
-  my $output_filename = $self->param_required('output_filename');
+  my $dump_dir   = $self->param_required('dump_dir');
+  my $output_dir = $self->param_required('output_dir');
+  my $web_dir    = $self->param_required('web_dir');
 
-  my $source_file = "$output_filename.gz";
-  if (! -e $source_file) {
-    $self->throw("Source file does not exist: $source_file");
+  if (-e $output_dir) {
+    my $dba = $self->dba;
+    my $mca = $dba->get_adaptor('MetaContainer');
+    my $production_name = $mca->get_production_name;
+    my $assembly_default = $mca->single_value_by_key('assembly.default');
+
+    my $data_files_dir = catdir(
+      $web_dir,
+      'data_files',
+      $production_name,
+      $assembly_default
+    );
+    path($data_files_dir)->mkpath();
+    path($data_files_dir)->chmod("g+w");
+
+    my $relative_dir = catdir('..', '..', '..', '..');
+    $output_dir =~ s/$dump_dir/$relative_dir/;
+
+    $self->create_symlink($output_dir, catdir($data_files_dir, 'rnaseq'));
   }
-
-  my $relative_dir;
-  if ($data_category eq 'geneset') {
-    $relative_dir = catdir('..', '..', '..', '..', '..');
-  } else {
-    $relative_dir = catdir('..', '..', '..', '..');
-  }
-
-  $source_file =~ s/$dump_dir/$relative_dir/;
-
-  my $basename = path($source_file)->basename;
-  my $target_file = catdir($output_dir, $basename);
-
-  $self->create_symlink($source_file, $target_file);
 }
 
 1;

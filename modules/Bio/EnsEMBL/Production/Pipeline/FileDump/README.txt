@@ -9,7 +9,7 @@ The structure of the FTP directory is show below.
 Square brackets indicate directories or files that are not available
 for all species.
 
-Species
+species
   |-- <species>
       |-- <assembly>
           |-- geneset

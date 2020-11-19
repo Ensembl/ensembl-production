@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::FileDump::DumpFactory;
+package Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths;
 
 use strict;
 use warnings;
@@ -29,64 +29,73 @@ use Path::Tiny;
 sub run {
   my ($self) = @_;
 
-  my $gene_related = $self->param_required('gene_related');
+  my $analysis_types = $self->param_required('analysis_types');
+  my $data_category  = $self->param_required('data_category');
+
+  if (scalar(@$analysis_types) == 0) {
+    $self->complete_early("No $data_category analyses specified");
+  }
 
   my $dba = $self->dba;
   $self->param('species_name', $self->species_name($dba));
   $self->param('assembly', $self->assembly($dba));
-  if ($gene_related) {
+  if ($data_category eq 'geneset') {
     $self->param('geneset', $self->geneset($dba));
   }
 
-  my ($output_dir, $timestamped_dir, $tools_dir, $ftp_dir) =
-    $self->directories($gene_related);
-
-  path($output_dir)->mkpath();
-  path($timestamped_dir)->mkpath();
-  path($tools_dir)->mkpath();
+  my ($output_dir, $timestamped_dir, $web_dir, $ftp_dir) =
+    $self->directories($data_category);
 
   $self->param('output_dir', $output_dir);
   $self->param('timestamped_dir', $timestamped_dir);
-  $self->param('tools_dir', $tools_dir);
+  $self->param('web_dir', $web_dir);
   $self->param('ftp_dir', $ftp_dir);
 }
 
 sub write_output {
   my ($self) = @_;
 
-  my $gene_related = $self->param_required('gene_related');
+  my $data_category = $self->param_required('data_category');
 
   my %output = (
-    gene_related    => $gene_related,
+    data_category   => $data_category,
     species_name    => $self->param('species_name'),
     assembly        => $self->param('assembly'),
     output_dir      => $self->param('output_dir'),
     timestamped_dir => $self->param('timestamped_dir'),
-    tools_dir       => $self->param('tools_dir'),
+    web_dir         => $self->param('web_dir'),
     ftp_dir         => $self->param('ftp_dir')
   );
-  if ($gene_related) {
+  if ($data_category eq 'geneset') {
     $output{'geneset'} = $self->param_required('geneset');
   }
 
-  $self->dataflow_output_id(\%output, 2);
+  $self->dataflow_output_id(\%output, 3);
 }
 
 sub directories {
-  my ($self, $gene_related) = @_;
+  my ($self, $data_category) = @_;
 
   my $dump_dir            = $self->param_required('dump_dir');
   my $species_dirname     = $self->param_required('species_dirname');
   my $timestamped_dirname = $self->param_required('timestamped_dirname');
-  my $tools_dirname       = $self->param_required('tools_dirname');
+  my $web_dirname         = $self->param_required('web_dirname');
   my $genome_dirname      = $self->param_required('genome_dirname');
   my $geneset_dirname     = $self->param_required('geneset_dirname');
+  my $rnaseq_dirname      = $self->param_required('rnaseq_dirname');
 
   my $species_name = $self->param('species_name');
   my $assembly = $self->param('assembly');
 
   my $subdirs;
-  if ($gene_related) {
+  if ($data_category eq 'genome') {
+    $subdirs = catdir(
+      $species_dirname,
+      $species_name,
+      $assembly,
+      $genome_dirname
+    );
+  } elsif ($data_category eq 'geneset') {
     $subdirs = catdir(
       $species_dirname,
       $species_name,
@@ -94,12 +103,12 @@ sub directories {
       $geneset_dirname,
       $self->param('geneset')
     );
-  } else {
+  } elsif ($data_category eq 'rnaseq') {
     $subdirs = catdir(
       $species_dirname,
       $species_name,
       $assembly,
-      $genome_dirname
+      $rnaseq_dirname
     );
   }
 
@@ -114,9 +123,9 @@ sub directories {
     $subdirs
   );
 
-  my $tools_dir = catdir(
+  my $web_dir = catdir(
     $dump_dir,
-    $tools_dirname
+    $web_dirname
   );
 
   my $ftp_dir;
@@ -127,7 +136,7 @@ sub directories {
     );
   }
 
-  return ($output_dir, $timestamped_dir, $tools_dir, $ftp_dir);
+  return ($output_dir, $timestamped_dir, $web_dir, $ftp_dir);
 }
 
 1;

@@ -70,6 +70,27 @@ sub run {
   }
 }
 
+sub timestamp {
+  my ($self, $dba) = @_;
+
+  $self->throw("Missing dba parameter: timestamp method") unless defined $dba;
+
+  my $sql = qq/
+    SELECT MAX(DATE_FORMAT(update_time, "%Y%m%d")) FROM
+      information_schema.tables
+    WHERE
+      table_schema = database() AND
+      table_name LIKE "%xref"
+  /;
+  my $result = $dba->dbc->sql_helper->execute_simple(-SQL => $sql);
+
+  if (scalar(@$result)) {
+    return $result->[0];
+  } else {
+    return Time::Piece->new->date("");
+  }
+}
+
 sub print_header {
   my ($self, $fh) = @_;
   
@@ -111,7 +132,7 @@ sub print_xrefs {
           my $xref_id    = $xref->primary_id;
           my $xref_label = $xref->display_id;
           my $xref_db    = $xref->db_display_name;
-          my $xref_desc  = $xref->description;
+          my $xref_desc  = $xref->description || '';
           my $info_type  = $xref->info_type;
 
           my $ensembl_identity = '';

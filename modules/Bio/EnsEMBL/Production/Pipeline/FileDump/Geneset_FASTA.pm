@@ -37,7 +37,7 @@ sub param_defaults {
     data_types      => ['cdna', 'cds', 'pep'],
     file_type       => 'fa',
     chunk_size      => 10000,
-    line_width      => 80,
+    line_width      => 60,
     blast_index     => 0,
     blastdb_exe     => 'makeblastdb',
     blast_dirname   => 'ncbi_blast',
@@ -180,7 +180,7 @@ sub header {
 sub blast_index {
   my ($self, $filename, $dbtype) = @_;
 
-  my $tools_dir = $self->param_required('tools_dir');
+  my $web_dir = $self->param_required('web_dir');
   my $blast_dirname = $self->param_required('blast_dirname');
   my $file_type = $self->param_required('file_type');
 
@@ -190,7 +190,7 @@ sub blast_index {
   $basename =~ s/\-[^-]+(\-[^-]+\.$file_type)$/$1/;
 
   my $blast_filename = catdir(
-    $tools_dir,
+    $web_dir,
     $blast_dirname,
     'genes',
     $basename
