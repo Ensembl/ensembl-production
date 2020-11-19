@@ -52,7 +52,12 @@ sub run {
 
       foreach my $path (@paths){
         if (! -e $path) {
-          push @missing, $path;
+          # .csi files are permitted in place of .bai files, but
+          # this is not encoded in the core API.
+          (my $new_path = $path) =~ s/bai$/csi/;
+          if (! -e $new_path) {
+            push @missing, $path;
+          }
         }
       }
     }
