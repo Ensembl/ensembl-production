@@ -29,7 +29,12 @@ use Path::Tiny;
 sub run {
   my ($self) = @_;
 
-  my $data_category = $self->param_required('data_category');
+  my $analysis_types = $self->param_required('analysis_types');
+  my $data_category  = $self->param_required('data_category');
+
+  if (scalar(@$analysis_types) == 0) {
+    $self->complete_early("No $data_category analyses specified");
+  }
 
   my $dba = $self->dba;
   $self->param('species_name', $self->species_name($dba));
@@ -65,7 +70,7 @@ sub write_output {
     $output{'geneset'} = $self->param_required('geneset');
   }
 
-  $self->dataflow_output_id(\%output, 1);
+  $self->dataflow_output_id(\%output, 3);
 }
 
 sub directories {

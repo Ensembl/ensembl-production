@@ -23,10 +23,20 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::FileDump::Base');
 
+sub param_defaults {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::param_defaults},
+    check_unzipped => 1,
+  };
+}
+
 sub run {
   my ($self) = @_;
 
-  my $output_dir = $self->param_required('output_dir');
+  my $output_dir     = $self->param_required('output_dir');
+  my $check_unzipped = $self->param_required('check_unzipped');
 
   my @errors;
 
@@ -38,13 +48,15 @@ sub run {
   my (undef, $empty_file) = $self->run_cmd($empty_file_cmd);
   push @errors, map { "Empty file: $_" } split(/\n/, $empty_file);
 
-  my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'md5sum.txt' ! -name '*.gz*'";
-  my (undef, $unzipped_file) = $self->run_cmd($unzipped_file_cmd);
-  push @errors, map { "Unzipped file: $_" } split(/\n/, $unzipped_file);
-
   my $broken_symlink_cmd = "find '$output_dir' -xtype l";
   my (undef, $broken_symlink) = $self->run_cmd($broken_symlink_cmd);
   push @errors, map { "Broken symlink: $_" } split(/\n/, $broken_symlink);
+
+  if ($check_unzipped) {
+    my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'md5sum.txt' ! -name '*.gz*'";
+    my (undef, $unzipped_file) = $self->run_cmd($unzipped_file_cmd);
+    push @errors, map { "Unzipped file: $_" } split(/\n/, $unzipped_file);
+  }
 
   if (scalar(@errors)) {
     $self->throw(join("\n", @errors));

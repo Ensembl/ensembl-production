@@ -41,8 +41,10 @@ sub default_options {
       'Xref_TSV',
     ],
     rnaseq_types => [
-      'Symlink_RNASeq',
+      'RNASeq_Exists',
     ],
+
+    dump_metadata => 1,
 
     blast_index => 1,
 	};
