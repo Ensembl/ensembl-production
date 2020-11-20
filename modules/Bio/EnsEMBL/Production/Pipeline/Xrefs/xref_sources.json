@@ -30,13 +30,13 @@
     {
       "name" : "DBASS3",
       "parser" : "DBASSParser",
-      "file" : "http://www.dbass.soton.ac.uk/dbass3/download.aspx?item=genes",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass3/DownloadCsv",
       "priority" : 1
     },
     {
       "name" : "DBASS5",
       "parser" : "DBASSParser",
-      "file" : "http://www.dbass.soton.ac.uk/dbass5/download.aspx?item=genes",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass5/DownloadCsv",
       "priority" : 1
     },
     {
