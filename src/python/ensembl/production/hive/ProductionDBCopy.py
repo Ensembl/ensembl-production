@@ -11,13 +11,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import os
-from urllib import parse
 import time
 
-import eHive
 from ensembl.hive.HiveRESTClient import HiveRESTClient
-
 
 
 class ProductionDBCopy(HiveRESTClient):
@@ -25,20 +21,21 @@ class ProductionDBCopy(HiveRESTClient):
 
     def run(self):
         if self.response.status_code != 201:
-            raise Exception('The Copy submission failed: '+self.response.raise_for_status)
-        submitted_time=time.time()
+            raise Exception('The Copy submission failed: ' + self.response.raise_for_status)
+        submitted_time = time.time()
         while True:
             with self._session_scope() as http:
                 job_response = http.request(method='get',
-                                         url=self.param('endpoint')+'/'+self.response.json()['job_id'],
-                                         headers=self.param('headers'),
-                                         timeout=self.param('timeout'))
+                                            url=self.param('endpoint') + '/' + self.response.json()['job_id'],
+                                            headers=self.param('headers'),
+                                            timeout=self.param('timeout'))
             if job_response.json()['overall_status'] == 'Failed':
-                raise Exception('The Copy failed, check: '+self.param('endpoint')+'/'+self.response.json()['job_id'])
+                raise Exception(
+                    'The Copy failed, check: ' + self.param('endpoint') + '/' + self.response.json()['job_id'])
             elif job_response.json()['overall_status'] == 'Complete':
                 break
             # If the copy takes more than 2 hours then kill the job
-            elif time.time()-submitted_time > 7200:
+            elif time.time() - submitted_time > 10800:
                 raise Exception('The Copy seems to be stuck')
             # Pause for 1min before checking copy status again
             time.sleep(60)
