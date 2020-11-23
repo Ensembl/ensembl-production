@@ -17,14 +17,14 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGeneAndTranscript;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::GeneAndTranscript;
 
 =head1 DESCRIPTION
   Compute Gene and Transcript  step for webdatafile dumps
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGeneAndTranscript;
+package Bio::EnsEMBL::Production::Pipeline::Webdatafile::GeneAndTranscript;
 
 use strict;
 use warnings;

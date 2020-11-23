@@ -17,14 +17,14 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeAssemblyInfo;
 
 =head1 DESCRIPTION
   Compute bootstrap step for webdatafile dumps
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap;
+package Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeAssemblyInfo;
 
 use strict;
 use warnings;

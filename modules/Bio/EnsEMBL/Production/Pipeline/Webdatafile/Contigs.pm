@@ -17,14 +17,14 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileContigs;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::Contigs;
 
 =head1 DESCRIPTION
   Compute Contigs for webdatafile dumps
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileContigs;
+package Bio::EnsEMBL::Production::Pipeline::Webdatafile::Contigs;
 
 use strict;
 use warnings;

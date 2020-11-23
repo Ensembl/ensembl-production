@@ -17,14 +17,14 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileVariation;
+ Bio::EnsEMBL::Production::Pipeline::Webdatafile::Variation;
 
 =head1 DESCRIPTION
   Process vcf file for webdatafile dumps
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileVariation;
+package Bio::EnsEMBL::Production::Pipeline::Webdatafile::Variation;
 
 use strict;
 use warnings;
