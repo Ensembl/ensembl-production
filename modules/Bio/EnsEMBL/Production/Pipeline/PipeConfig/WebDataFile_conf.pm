@@ -95,7 +95,7 @@ sub pipeline_analyses {
         },
         {    
             -logic_name => 'StepBootstrap',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileBootstrap',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenomeAssemblyInfo',
             -parameters => { current_step       => 'bootstrap',
                              step => $self->o('step')
                            }, 
@@ -108,18 +108,18 @@ sub pipeline_analyses {
 
         },
         {   -logic_name => 'StepGeneAndTranscript',
-              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGeneAndTranscript',
+              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GeneAndTranscript',
              -rc_name    => 'large', 
         },
         {   -logic_name => 'StepContigs',
-              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileContigs',
+              -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::Contigs',
         },
         {   -logic_name => 'StepGC',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileGenerateGC',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::GenerateGC',
              -rc_name    => 'large',
 	},
         {   -logic_name => 'StepVariation',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::WebdataFileVariation',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Webdatafile::Variation',
             -rc_name     => 'large', 
         },
         {
