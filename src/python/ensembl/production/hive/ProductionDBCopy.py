@@ -28,7 +28,7 @@ class ProductionDBCopy(HiveRESTClient):
             self.param('payload', {
                 "src_host": ':'.join((src_db.hostname, src_db.port)),
                 "src_incl_db": src_db.path[1:],
-                "tgt_host": tgt_db.hostname,
+                "tgt_host": ':'.join((tgt_db.hostname, tgt_db.port)),
                 "tgt_db_name": src_db.path[1:],
                 "user": "ensprod"
             })
