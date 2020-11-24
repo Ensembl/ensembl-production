@@ -91,7 +91,7 @@ sub write_json {
   my $genome_dba =
     $self->param('metadata_dba')->get_GenomeInfoAdaptor();
   if ($compara_name ne 'multi') {
-    $genome_dba->set_ensembl_genomes_release();
+        $genome_dba->set_ensembl_genomes_release($self->param('release'));
   }
   my $mds = $genome_dba->fetch_by_name($self->production_name());
   my $md;
