@@ -106,12 +106,13 @@ sub print_header {
 sub print_xrefs {
   my ($self, $fh, $genes, $external_dbs) = @_;
 
-  my %xrefs;
-
   while (my $gene = shift @{$genes}) {
+    my $g_id = $gene->stable_id;
+    my %xrefs;
+
     foreach my $external_db (@$external_dbs) {
       my $xref_list = $gene->get_all_DBEntries($external_db);
-      push @{$xrefs{$gene->stable_id}{'-'}{'-'}}, @$xref_list;
+      push @{$xrefs{'-'}{'-'}}, @$xref_list;
     }
 
     my $transcripts = $gene->get_all_Transcripts;
@@ -120,15 +121,12 @@ sub print_xrefs {
 
       foreach my $external_db (@$external_dbs) {
         my $xref_list = $transcript->get_all_DBLinks($external_db);
-        push @{$xrefs{$gene->stable_id}{$transcript->stable_id}{$tn_id}}, @$xref_list;
+        push @{$xrefs{$transcript->stable_id}{$tn_id}}, @$xref_list;
       }
     }
-  }
-
-  foreach my $g_id (sort keys %xrefs) {
-    foreach my $tt_id (sort keys %{$xrefs{$g_id}}) {
-      foreach my $tn_id (sort keys %{$xrefs{$g_id}{$tt_id}}) {
-        foreach my $xref (sort {$a->primary_id cmp $b->primary_id} @{$xrefs{$g_id}{$tt_id}{$tn_id}}) {
+    foreach my $tt_id (sort keys %xrefs) {
+      foreach my $tn_id (sort keys %{$xrefs{$tt_id}}) {
+        foreach my $xref (sort {$a->primary_id cmp $b->primary_id} @{$xrefs{$tt_id}{$tn_id}}) {
           my $xref_id    = $xref->primary_id;
           my $xref_label = $xref->display_id;
           my $xref_db    = $xref->db_display_name;
