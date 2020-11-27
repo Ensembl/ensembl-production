@@ -72,36 +72,57 @@ sub run {
 
   my @metadata;
 
+  # Common names are not stored in the metadata db,
+  # so need to look them up in the taxonomy db.
+  my $tba = $self->dba('multi', 'taxonomy');
+  my $tna = $tba->get_adaptor('TaxonomyNode');
+
   my $genomes = $gia->fetch_all;
   foreach my $genome (@$genomes) {
     my $production_name = $genome->name;
-    my $dba = $self->dba($production_name, 'core');
 
-    my $species_name = $self->species_name($dba);
-    $species_name =~ s/_/ /g;
+    my $species_name = $genome->display_name;
+    # Replicate the trimming done in FileDump::Base:species_name
+    $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
 
     my $strain = $genome->organism->strain;
     $strain = undef if defined $strain && $strain eq 'reference';
 
-    my $mca = $dba->get_adaptor('MetaContainer');
-    my $common_name = $mca->single_value_by_key('species.common_name');
-    $common_name = ucfirst($common_name) if defined $common_name;
+    my $taxonomy_id = $genome->organism->taxonomy_id;
 
-    my $geneset = $self->geneset($dba);
+    my $common_name;
+    my $node = $tna->fetch_by_taxon_id($taxonomy_id);
+    if (defined $node) {
+      $common_name = $node->name('genbank common name');
+      $common_name = $node->name('common name') if ! defined $common_name;
+      if (! defined $common_name && $node->rank eq 'subspecies') {
+        $common_name = $node->parent->name('genbank common name');
+        $common_name = $node->parent->name('common name') if ! defined $common_name;
+      }
+      $common_name = ucfirst($common_name) if defined $common_name;
+    } else {
+      $self->warning("Out-dated taxonomy ID for $production_name: $taxonomy_id");
+    }
+
+    # The 'last_geneset_update' value is the last part of the
+    # geneset identifier in the metadata db.
+    my $geneset = $genome->genebuild;
+    if ($geneset =~ /\/(\d{4}\-\d{2})$/) {
+      $geneset = $1;
+      $geneset =~ tr/-/_/;
+    }
 
     my $release_date = $helper->execute_single_result(
       -SQL => $sql,
       -PARAMS => [$genome->organism->dbID]
     );
 
-    $dba->dbc->disconnect_if_idle();
-
     push @metadata, {
       species => $species_name,
       strain => $strain,
       common_name => $common_name,
-      ensembl_production_name  => $production_name,
-      taxonomy_id => $genome->organism->taxonomy_id,
+      ensembl_production_name => $production_name,
+      taxonomy_id => $taxonomy_id,
       assembly_accession => $genome->assembly_accession,
       assembly_name => $genome->assembly_name,
       geneset => $geneset,
