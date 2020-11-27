@@ -66,6 +66,18 @@ sub run {
     }
   }
 
+  # Ensure checksum and README filenames are consistent.
+  my $md5sum_to_fix = catdir($output_dir, 'md5sum.txt.1');
+  my $md5sum = catdir($output_dir, 'md5sum.txt');
+  if (-e $md5sum_to_fix) {
+    path($md5sum_to_fix)->move($md5sum);
+  }
+  my $readme_to_fix = catdir($output_dir, 'README.1');
+  my $readme = catdir($output_dir, 'README.txt');
+  if (-e $readme_to_fix) {
+    path($readme_to_fix)->move($readme);
+  }
+
   $self->param('rnaseq_exists', $rnaseq_exists);
 }
 
