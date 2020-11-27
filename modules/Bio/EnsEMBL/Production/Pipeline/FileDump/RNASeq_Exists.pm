@@ -25,6 +25,7 @@ use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::FileDump::Base);
 
 use File::Spec::Functions qw/catdir/;
+use Path::Tiny;
 
 sub run {
   my ($self) = @_;
