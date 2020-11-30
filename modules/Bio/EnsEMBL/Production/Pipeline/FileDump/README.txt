@@ -14,7 +14,8 @@ species
       |-- <assembly>
           |-- geneset
               |-- <geneset>
-                  |-- README
+                  |-- md5sum.txt
+                  |-- README.txt
                   |-- <species>-<assembly>-<geneset>-cdna.fa.gz
                   |-- <species>-<assembly>-<geneset>-cds.fa.gz
                   |-- <species>-<assembly>-<geneset>-genes.embl.gz
@@ -23,7 +24,8 @@ species
                   |-- <species>-<assembly>-<geneset>-pep.fa.gz
                   |-- <species>-<assembly>-<geneset>-xref.tsv.gz
           |-- genome
-              |-- README
+              |-- md5sum.txt
+              |-- README.txt
               |-- [assembly_mapping]
                   |-- *.chain.gz
               |-- [<species>-<assembly>-chromosomes.tsv.gz]
@@ -31,10 +33,12 @@ species
               |-- <species>-<assembly>-softmasked.fa.gz
               |-- <species>-<assembly>-unmasked.fa.gz
           |-- [rnaseq]
-              |-- README
+              |-- md5sum.txt
+              |-- README.txt
               |-- *.bam
-              |-- *.bam.bai
+              |-- [*.bam.bai]
               |-- *.bam.bw
+              |-- [*.bam.csi]
 
 
 ========================================================================

@@ -24,13 +24,18 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::FileDump::Base');
 
 use File::Spec::Functions qw/catdir/;
+use Path::Tiny;
 
 sub param_defaults {
   my ($self) = @_;
 
   return {
     %{$self->SUPER::param_defaults},
-    root_readmes => ['README'],
+    root_readmes => {
+      geneset => ['README.txt'],
+      genome  => ['README.txt'],
+      rnaseq  => [],
+    },
   };
 }
 
@@ -38,24 +43,42 @@ sub run {
   my ($self) = @_;
   my $root_readmes  = $self->param_required('root_readmes');
   my $data_category = $self->param_required('data_category');
-  my $output_dir    = $self->param_required('output_dir');
+  my $ftp_root      = $self->param_required('ftp_root');
+  my $ftp_dir       = $self->param_required('ftp_dir');
 
-  my $relative_dir;
-  if ($data_category eq 'geneset') {
-    $relative_dir = catdir('..', '..', '..', '..', '..');
-  } else {
-    $relative_dir= catdir('..', '..', '..', '..');
-  }
+  foreach my $readme (@{ $$root_readmes{$data_category} }) {
+    # Sync README to the root of the ftp directory; it probably
+    # will not have changed, but doing it here means we don't need
+    # to rely on another pipeline/process for updating it.
+    my $readme_location = $self->readme_location($readme);
+    my $rsync_cmd = "rsync -aW $readme_location $ftp_root";
+    $self->run_cmd($rsync_cmd);
+    path(catdir($ftp_root, $readme))->chmod("g+w");
 
-  foreach my $readme (@$root_readmes) {
-    my $from = catdir($relative_dir, $readme);
-    unless (-e catdir($output_dir, $from)) {
-      $self->throw("README does not exist: $output_dir/$from");
+    my $relative_dir;
+    if ($data_category eq 'geneset') {
+      $relative_dir = catdir('..', '..', '..', '..', '..');
+    } else {
+      $relative_dir= catdir('..', '..', '..', '..');
     }
-    my $to = catdir($output_dir, $readme);
+
+    my $from = catdir($relative_dir, $readme);
+    my $to = catdir($ftp_dir, $readme);
 
     $self->create_symlink($from, $to);
   }
+}
+
+sub readme_location {
+  my ($self, $readme) = @_;
+
+  my $repo_location = $self->repo_location();
+
+  my $readme_location = catdir(
+    $repo_location,
+    'modules/Bio/EnsEMBL/Production/Pipeline/FileDump',
+    $readme
+  );
 }
 
 1;

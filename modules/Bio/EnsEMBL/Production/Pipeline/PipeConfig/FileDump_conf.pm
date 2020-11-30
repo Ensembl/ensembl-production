@@ -120,10 +120,21 @@ sub pipeline_analyses {
       -parameters        => {},
       -flow_into         => {
                               '1' => WHEN('#dump_metadata#' =>
-                                       ['Metadata_JSON', 'DbFactory'],
+                                       ['MetadataDump'],
                                      ELSE
                                        ['DbFactory']
                                      )
+                            }
+    },
+    {
+      -logic_name        => 'MetadataDump',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 1,
+      -analysis_capacity => 1,
+      -parameters        => {},
+      -flow_into         => {
+                              '1->A' => ['DbFactory'],
+                              'A->1' => ['Metadata_JSON'],
                             }
     },
     {
@@ -172,7 +183,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '3->A' => $self->o('genome_types'),
-                              'A->3' => ['README']
+                              'A->3' => ['Checksum']
                             },
     },
     {
@@ -186,7 +197,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '3->A' => $self->o('geneset_types'),
-                              'A->3' => ['README']
+                              'A->3' => ['Checksum']
                             },
     },
     {
@@ -532,14 +543,6 @@ sub pipeline_analyses {
       -parameters        => {},
     },
     {
-      -logic_name        => 'README',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::README',
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -batch_size        => 10,
-      -flow_into         => ['Checksum'],
-    },
-    {
       -logic_name        => 'Checksum',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
@@ -578,6 +581,14 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
                             },
+      -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => ['README'])
+    },
+    {
+      -logic_name        => 'README',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::README',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
     },
     {
       -logic_name        => 'Sync_Metadata',

@@ -24,6 +24,8 @@ use warnings;
 use feature 'say';
 use base ('Bio::EnsEMBL::Hive::Process');
 
+use File::Spec::Functions qw/catdir splitdir/;
+
 sub param_defaults {
   my ($self) = @_;
 
@@ -241,6 +243,24 @@ sub create_symlink {
       $self->throw("Failed to create symlink from $from to $to");
     }
   }
+}
+
+sub repo_location {
+  my ($self) = @_;
+
+  my $repo_name = 'ensembl-production';
+
+  foreach my $location (@INC) {
+    my @dirs = splitdir($location);
+    if (scalar(@dirs) >= 2) {
+      if ($dirs[-2] eq $repo_name) {
+        pop @dirs;
+        return catdir(@dirs);
+      }
+    }
+  }
+
+  die "$repo_name was not found in \@INC:\n" . join("\n", @INC);
 }
 
 1;
