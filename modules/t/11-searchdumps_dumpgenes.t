@@ -103,6 +103,7 @@ subtest "Checking protein_coding gene", sub {
     use Data::Dumper;
     my $expected_gene = {
         'biotype'             => 'protein_coding',
+        'so_term'             => 'protein_coding_gene',
         'seq_region_name'     => '6',
         'analysis'            => 'ensembl_havana_gene',
         'start'               => 29011990,
@@ -195,6 +196,7 @@ subtest "Checking protein_coding gene", sub {
                 'name'                => 'OR2W1-001',
                 'strand'              => -1,
                 'biotype'             => 'protein_coding',
+                'so_term'             => 'mRNA'.
                 'seq_region_name'     => '6',
                 'translations'        => [
                     {
@@ -1218,6 +1220,8 @@ subtest "Checking ncRNA gene", sub {
             'analysis_display'    => 'Havana',
             'strand'              => '-1',
             'biotype'             => 'processed_pseudogene',
+               
+            'so_term'             => undef, 
             'version'             => '1',
             'description'         => undef,
             'gene_id'             => 'ENSG00000261370',
@@ -1322,6 +1326,7 @@ subtest "Checking ncRNA gene", sub {
             'ensembl_object_type' => 'transcript' } ],
         'version'             => '1',
         'biotype'             => 'pseudogene',
+        'so_term'             => undef,  
         'source'              => 'havana',
         'strand'              => '-1',
         'end'                 => '970836',
