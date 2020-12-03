@@ -35,9 +35,11 @@ sub fetch_input {
 
   my $pipeline_name = $self->param('pipeline_name');
   my $output_dir    = $self->param('output_dir');
-  my $output_file   = catdir($output_dir, "$pipeline_name.txt");
 
-  my $duplicates = $self->find_duplicates($output_file);
+  $output_dir = catdir($output_dir, $pipeline_name);
+  path($output_dir)->mkpath();
+
+  my $duplicates = $self->batch_duplicates($output_dir);
 
   my $subject = "Stable ID pipeline completed ($pipeline_name)";
   $self->param('subject', $subject);
@@ -45,13 +47,31 @@ sub fetch_input {
   my $text =
     "The $pipeline_name pipeline has completed successfully.\n\n".
     "There are $duplicates duplicated stable IDs. ".
-    "Details: $output_file";
+    "Details: $output_dir";
 
   $self->param('text', $text);
 }
 
+sub batch_duplicates {
+  my ($self, $output_dir) = @_;
+
+  # Looking for duplicates across all stable IDs creates vast
+  # temporary tables and we run out of space on the server.
+  # Simplest way to partition is alphabetically; IDs are evenly
+  # distributed, but it does the job and is easy to implement.
+
+  my $duplicates = 0;
+  my @initials = ("A".."Z");
+  foreach my $initial (@initials) {
+    my $output_file = catdir($output_dir, "$initial.txt");
+    $duplicates += $self->find_duplicates($initial, $output_file);
+  }
+
+  return $duplicates;
+}
+
 sub find_duplicates {
-  my ($self, $output_file) = @_;
+  my ($self, $initial, $output_file) = @_;
 
   my $duplicates = 0;
 
@@ -64,6 +84,8 @@ sub find_duplicates {
     FROM
       stable_id_lookup INNER JOIN
       species USING (species_id)
+    WHERE
+      stable_id LIKE '${initial}%'
     GROUP BY
       stable_id, db_type, object_type
     HAVING
