@@ -99,15 +99,18 @@ sub get_genes {
   s.name as seq_region_name,
   'gene' as ensembl_object_type,
   a.logic_name as analysis,
-  ad.display_label as analysis_display
+  ad.display_label as analysis_display, 
+  b.so_term as so_term
   from gene f
   left join xref x on (f.display_xref_id = x.xref_id)
   join seq_region s using (seq_region_id)
   join coord_system c using (coord_system_id)
   join analysis a using (analysis_id)
-  left join analysis_description ad using (analysis_id)
+  left join analysis_description ad using (analysis_id) 
+  left join biotype b on  b.name = f.biotype  and b.object_type='gene'
   where c.species_id = ?
   /;
+
         $sql = $self->_append_biotype_sql($sql, $biotypes);
         $sql = $self->_append_analysis_sql($dba, $sql, 'f');
         $log->debug("Retrieving genes");
@@ -201,7 +204,8 @@ sub get_transcripts {
     s.name as seq_region_name,
     'transcript' as ensembl_object_type,
     a.logic_name as analysis,
-    ad.display_label as analysis_display
+    ad.display_label as analysis_display,
+    b.so_term 
     FROM 
     gene g
     join transcript t using (gene_id)
@@ -209,7 +213,8 @@ sub get_transcripts {
     join seq_region s on (s.seq_region_id = g.seq_region_id)
     join coord_system c using (coord_system_id)
     join analysis a on (t.analysis_id=a.analysis_id)
-    left join analysis_description ad on (a.analysis_id=ad.analysis_id)
+    left join analysis_description ad on (a.analysis_id=ad.analysis_id) 
+    left join biotype b on b.name = t.biotype and b.object_type='transcript' 
     where c.species_id = ?
     /;
     $sql = $self->_append_biotype_sql($sql, $biotypes, 't');
@@ -471,7 +476,7 @@ sub get_translations {
             -USE_HASHREFS => 1,
             -CALLBACK     => sub {
                 my ($row) = @_;
-                $row->{xrefs} = $xrefs->{ $row->{id} };
+                $row->{xrefs} = ( $xrefs->{ $row->{id} } ) ? $xrefs->{ $row->{id} } : [];
                 $row->{protein_features} = $protein_features->{ $row->{id} };
                 my $ids = $stable_ids->{$row->{id}};
                 $row->{previous_ids} = $ids if defined $ids && scalar(@$ids) > 0;
