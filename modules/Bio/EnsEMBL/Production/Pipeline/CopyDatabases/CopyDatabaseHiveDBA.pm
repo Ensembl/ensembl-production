@@ -26,7 +26,7 @@ limitations under the License.
  maurel@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive;
+package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHiveDBA;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 use strict;

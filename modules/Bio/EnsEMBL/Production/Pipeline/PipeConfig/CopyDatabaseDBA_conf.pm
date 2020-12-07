@@ -19,7 +19,7 @@
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabase_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabaseDBA_conf;
 
 use strict;
 use warnings;
