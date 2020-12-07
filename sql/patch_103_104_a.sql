@@ -20,8 +20,8 @@
 # Description:
 #   Update schema_version in meta table to 103.
 
-UPDATE meta SET meta_value='103' WHERE meta_key='schema_version';
+UPDATE meta SET meta_value='104' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_102_103_a.sql|schema_version');
+  VALUES (NULL, 'patch', 'patch_103_104_a.sql|schema_version');
