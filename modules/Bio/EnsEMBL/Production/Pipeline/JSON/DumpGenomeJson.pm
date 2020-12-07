@@ -68,95 +68,99 @@ sub run {
 }
 
 sub write_json {
-  my ($self) = @_;
-  my $sub_dir = $self->create_dir('json');
-  $self->info(
-    "Processing " . $self->production_name() . " into $sub_dir");
-  my $dba = $self->core_dba();
-  my $exporter =
-    Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
-      -LEVEL => 'protein_feature',
-      -LOAD_EXONS => 1,
-      -LOAD_XREFS => 1);
+    my ($self) = @_;
+    my $sub_dir = $self->create_dir('json');
+    $self->info(
+        "Processing " . $self->production_name() . " into $sub_dir");
+    my $dba = $self->core_dba();
+    my $exporter =
+        Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
+            -LEVEL      => 'protein_feature',
+            -LOAD_EXONS => 1,
+            -LOAD_XREFS => 1);
 
-  # work out compara division
-  my $compara_name = $self->division();
-  if (!defined $compara_name || $compara_name eq 'vertebrates') {
-    $compara_name = 'multi';
-  }
-  if ($compara_name eq 'bacteria') {
-    $compara_name = 'pan_homology';
-  }
-  # get genome
-  my $genome_dba =
-    $self->param('metadata_dba')->get_GenomeInfoAdaptor();
-  if ($compara_name ne 'multi') {
-    $genome_dba->set_ensembl_genomes_release();
-  }
-  my $mds = $genome_dba->fetch_by_name($self->production_name());
-  my $md;
-  my $division='Ensembl'.ucfirst($self->division());
-  foreach my $genome (@{$mds}){
-    $md = $genome if ($genome->division() eq $division);
-  }
-  die "Could not find genome " . $self->production_name()
-    if !defined $md;
+    # work out compara division
+    my $compara_name = $self->division();
+    if (!defined $compara_name || $compara_name eq 'vertebrates') {
+        $compara_name = 'multi';
+    }
+    if ($compara_name eq 'bacteria') {
+        $compara_name = 'pan_homology';
+    }
+    # get genome
+    my $genome_dba =
+        $self->param('metadata_dba')->get_GenomeInfoAdaptor();
+    if ($compara_name ne 'multi') {
+        $genome_dba->set_ensembl_genomes_release($self->param('release'));
+    }
+    my $mds = $genome_dba->fetch_by_name($self->production_name());
+    my $md;
+    my $division = 'Ensembl' . ucfirst($self->division());
+    foreach my $genome (@{$mds}) {
+        $md = $genome if ($genome->division() eq $division);
+    }
+    die "Could not find genome " . $self->production_name()
+        if !defined $md;
 
-  my $genome = {
-            id           => $md->name(),
-            dbname       => $md->dbname(),
-            species_id   => $md->species_id(),
-            division     => $md->division(),
-            genebuild    => $md->genebuild(),
-            reference => $md->reference(),
-            organism     => {
-                      name                => $md->name(),
-                      display_name        => $md->display_name(),
-                      scientific_name     => $md->scientific_name(),
-                      strain              => $md->strain(),
-                      serotype            => $md->serotype(),
-                      taxonomy_id         => $md->taxonomy_id(),
-                      species_taxonomy_id => $md->species_taxonomy_id(),
-                      aliases             => $md->aliases() },
-            assembly => { name => $md->assembly_name(),
-                          accession => $md->assembly_accession(),
-                          level => $md->assembly_level() } };
+    my $genome = {
+        id         => $md->name(),
+        dbname     => $md->dbname(),
+        species_id => $md->species_id(),
+        division   => $md->division(),
+        genebuild  => $md->genebuild(),
+        reference  => $md->reference(),
+        organism   => {
+            name                => $md->name(),
+            display_name        => $md->display_name(),
+            scientific_name     => $md->scientific_name(),
+            strain              => $md->strain(),
+            serotype            => $md->serotype(),
+            taxonomy_id         => $md->taxonomy_id(),
+            species_taxonomy_id => $md->species_taxonomy_id(),
+            aliases             => $md->aliases()
+        },
+        assembly   => {
+            name      => $md->assembly_name(),
+            accession => $md->assembly_accession(),
+            level     => $md->assembly_level()
+        }
+    };
 
-  $genome_dba->dbc()->disconnect_if_idle();
-  $self->info("Exporting genes");
-  $genome->{genes} = $exporter->export_genes($dba);
-  # add compara
-  $self->info("Trying to find compara for '$compara_name'");
-  my $compara = eval {
-      Bio::EnsEMBL::Registry->get_DBAdaptor($compara_name, 'compara')
-  };
-  if (defined $compara) {
-      $self->info("Adding " . $compara->species() . " compara");
-      $exporter->add_compara($self->production_name(), $genome->{genes}, $compara);
-      $compara->dbc()->disconnect_if_idle();
-  }
-  else {
-      $self->warning("Compara '$compara_name' not found ");
-  };
-  # remodel
-  my $remodeller = $self->param('remodeller');
-  my $hive_dbc = $self->dbc;
-  $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
-  if (defined $remodeller) {
-    $self->info("Remodelling genes");
-    $remodeller->remodel_genome($genome);
-    $remodeller->disconnect();
-  }
-  $dba->dbc()->disconnect_if_idle();
-  my $json_file_path =
-    $sub_dir . '/' . $self->production_name() . '.json';
-  $self->info("Writing to $json_file_path");
-  open my $json_file, '>', $json_file_path or
-    throw "Could not open $json_file_path for writing";
-  print $json_file encode_json($genome);
-  close $json_file;
-  $self->info("Write complete");
-  return;
+    $genome_dba->dbc()->disconnect_if_idle();
+    $self->info("Exporting genes");
+    $genome->{genes} = $exporter->export_genes($dba);
+    # add compara
+    $self->info("Trying to find compara for '$compara_name'");
+    my $compara = eval {
+        Bio::EnsEMBL::Registry->get_DBAdaptor($compara_name, 'compara')
+    };
+    if (defined $compara) {
+        $self->info("Adding " . $compara->species() . " compara");
+        $exporter->add_compara($self->production_name(), $genome->{genes}, $compara);
+        $compara->dbc()->disconnect_if_idle();
+    }
+    else {
+        $self->warning("Compara '$compara_name' not found ");
+    };
+    # remodel
+    my $remodeller = $self->param('remodeller');
+    my $hive_dbc = $self->dbc;
+    $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+    if (defined $remodeller) {
+        $self->info("Remodelling genes");
+        $remodeller->remodel_genome($genome);
+        $remodeller->disconnect();
+    }
+    $dba->dbc()->disconnect_if_idle();
+    my $json_file_path =
+        $sub_dir . '/' . $self->production_name() . '.json';
+    $self->info("Writing to $json_file_path");
+    open my $json_file, '>', $json_file_path or
+        throw "Could not open $json_file_path for writing";
+    print $json_file encode_json($genome);
+    close $json_file;
+    $self->info("Write complete");
+    return;
 } ## end sub write_json
 
 1;
