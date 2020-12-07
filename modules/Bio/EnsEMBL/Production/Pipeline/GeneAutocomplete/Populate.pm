@@ -77,19 +77,17 @@ sub run {
     my $genes = $dba->dbc->sql_helper->execute(-SQL => $select_sql);
     $dba->dbc->disconnect_if_idle();
 
-    # If it's not incremental, we will have deleted all existing
-    # data in an earlier stage of the pipeline, so don't need
-    # to do this for each species as well.
-    if ($incremental) {
-      my $delete_sql = qq/
-        DELETE FROM gene_autocomplete
-        WHERE species = ? AND db = ?
-      /;
-      $autocomplete_dba->dbc->sql_helper->execute_update(
-        -SQL    => $delete_sql,
-        -PARAMS => [$species, $group]
-      );
-    }
+    # This might seem redundant for non-incremental runs, but if
+    # a hive job fails and is retried, this ensures that any partial
+    # data is removed, to avoid duplicates.
+    my $delete_sql = qq/
+      DELETE FROM gene_autocomplete
+      WHERE species = ? AND db = ?
+    /;
+    $autocomplete_dba->dbc->sql_helper->execute_update(
+      -SQL    => $delete_sql,
+      -PARAMS => [$species, $group]
+    );
 
     my $insert_sql = qq/
       INSERT INTO

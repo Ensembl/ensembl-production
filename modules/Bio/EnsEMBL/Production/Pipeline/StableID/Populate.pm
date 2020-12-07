@@ -107,15 +107,14 @@ sub load_stable_ids {
     $species_id = $self->insert_species($stable_ids_dba, $species, $tax_id);
   }
 
-  # If it's not incremental, we will have deleted all existing
-  # data in an earlier stage of the pipeline, so don't need
-  # to do this for each species as well.
-  if ($self->param_required('incremental')) {
-    if ($group eq 'core') {
-      $self->delete_lookup($stable_ids_dba, $species_id, $group, 'archive_id_lookup');
-    }
-    $self->delete_lookup($stable_ids_dba, $species_id, $group, 'stable_id_lookup');
+  # This might seem redundant for non-incremental runs, but if
+  # a hive job fails and is retried, this ensures that any partial
+  # data is removed, to avoid duplicates (at this stage, we don't
+  # have indexes defined, so can't rely on an 'INSERT IGNORE').
+  if ($group eq 'core') {
+    $self->delete_lookup($stable_ids_dba, $species_id, $group, 'archive_id_lookup');
   }
+  $self->delete_lookup($stable_ids_dba, $species_id, $group, 'stable_id_lookup');
 
   if ($group eq 'core') {
     $self->insert_archive_ids($stable_ids_dba, $species_id, $dba, $group);
