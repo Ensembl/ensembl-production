@@ -24,35 +24,35 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabase_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf'); # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');  # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
 
 sub resource_classes {
     my ($self) = @_;
-    return { 'default' => { 'LSF' => '-q production-rh74' } };
+    return { 'default' => { 'LSF' => '-q production-rh74' }};
 }
 
 sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
-        'pipeline_name'    => "copy_database",
-        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
+        'pipeline_name' => "copy_database",
+
     }
 }
 
 sub pipeline_create_commands {
     my ($self) = @_;
     return [
-        @{$self->SUPER::pipeline_create_commands}, # inheriting database and hive tables' creation
+    @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
 
-        # additional tables needed for long multiplication pipeline's operation:
-        $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
-        $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
-        $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
-        $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
-        $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
+            # additional tables needed for long multiplication pipeline's operation:
+    $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
+    $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
+    $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
+    $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
+    $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
     ];
-}
+  }
 
 =head2 pipeline_analyses
 =cut
@@ -60,23 +60,18 @@ sub pipeline_create_commands {
 sub pipeline_analyses {
     my ($self) = @_;
     return [
-        {
-            -module          => 'ensembl.production.hive.ProductionDBCopy',
-            -language        => 'python3',
-            -rc_name         => 'default',
-            -input_ids       => [],
+        {   
+            -logic_name => 'copy_database',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive',
+            -input_ids => [],
             -max_retry_count => 0,
-            -parameters      => {
-                'endpoint'      => $self->o('copy_service_uri'),
-                'source_db_uri' => $self->o('source_db_uri'),
-                'target_db_uri' => $self->o('target_db_uri'),
-                'method'        => 'post',
-            },
-            -meadow_type     => 'LOCAL',
-            -flow_into       => {
-                2 => [ '?table_name=result' ]
-            },
+            -parameters => {
+        },
+	 -meadow_type => 'LOCAL',
+            -flow_into     => {
+                   2 => [ '?table_name=result']      
+                  },
         }
-    ];
+        ];
 }
 1;

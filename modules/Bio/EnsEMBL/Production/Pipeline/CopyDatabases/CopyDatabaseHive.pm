@@ -26,79 +26,80 @@ limitations under the License.
  maurel@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive;
+package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive; 
 
 use base ('Bio::EnsEMBL::Hive::Process');
 use strict;
 use warnings;
 use Bio::EnsEMBL::Production::Utils::CopyDatabase
-    qw/copy_database/;
+  qw/copy_database/;
 use JSON;
 use Time::Duration;
 use Log::Log4perl qw/:easy/;
 
-sub run {
+sub run{
 
-    my $self = shift @_;
 
-    my $source_db_uri = $self->param_required('source_db_uri');
-    my $target_db_uri = $self->param_required('target_db_uri');
-    my $only_tables = $self->param('only_tables');
-    my $skip_tables = $self->param('skip_tables');
-    my $update = $self->param('update');
-    my $drop = $self->param('drop');
-    my $convert_innodb = $self->param('convert_innodb');
-    my $skip_optimize = $self->param('skip_optimize');
-    my $start_time = time();
-    my $hive_dbc = $self->dbc;
+my $self = shift @_;
 
-    my $config = q{
-        log4perl.category = INFO, DB
-        log4perl.appender.DB                 = Log::Log4perl::Appender::DBI
-        log4perl.appender.DB.datasource=DBI:mysql:database=} . $hive_dbc->dbname() . q{;host=} . $hive_dbc->host() . q{;port=} . $hive_dbc->port() . q{
-        log4perl.appender.DB.username        = } . $hive_dbc->user() . q{
-        log4perl.appender.DB.password        = } . $hive_dbc->password() . q{
-        log4perl.appender.DB.sql             = \
-            insert into job_progress                   \
-            (job_id, message) values (?,?)
+my $source_db_uri = $self->param_required('source_db_uri');
+my $target_db_uri = $self->param_required('target_db_uri');
+my $only_tables = $self->param('only_tables');
+my $skip_tables = $self->param('skip_tables');
+my $update = $self->param('update');
+my $drop = $self->param('drop');
+my $convert_innodb = $self->param('convert_innodb');
+my $skip_optimize = $self->param('skip_optimize');
+my $start_time = time();
+my $hive_dbc = $self->dbc;
 
-        log4perl.appender.DB.params.1        = } . $self->input_job->dbID() . q{
-        log4perl.appender.DB.usePreparedStmt = 1
+my $config = q{
+	log4perl.category = INFO, DB
+    log4perl.appender.DB                 = Log::Log4perl::Appender::DBI
+    log4perl.appender.DB.datasource=DBI:mysql:database=}.$hive_dbc->dbname().q{;host=}.$hive_dbc->host().q{;port=}.$hive_dbc->port().q{
+    log4perl.appender.DB.username        = }.$hive_dbc->user().q{
+    log4perl.appender.DB.password        = }.$hive_dbc->password().q{
+    log4perl.appender.DB.sql             = \
+        insert into job_progress                   \
+        (job_id, message) values (?,?)
 
-        log4perl.appender.DB.layout          = Log::Log4perl::Layout::NoopLayout
-        log4perl.appender.DB.warp_message    = 0
-    };
+    log4perl.appender.DB.params.1        = }.$self->input_job->dbID().q{
+    log4perl.appender.DB.usePreparedStmt = 1
 
-    Log::Log4perl::init(\$config);
+    log4perl.appender.DB.layout          = Log::Log4perl::Layout::NoopLayout
+    log4perl.appender.DB.warp_message    = 0
+ };
 
-    my $logger = get_logger();
-    if (!Log::Log4perl->initialized()) {
-        Log::Log4perl->easy_init($DEBUG);
-    }
-    # Clean up if job already exist in result.
-    my $sql = q/DELETE FROM result WHERE job_id = ?/;
-    $hive_dbc->sql_helper()->execute_update(-SQL => $sql, -PARAMS => [ $self->input_job()->dbID() ]);
-    # Same for job_progress
-    $sql = q/DELETE FROM job_progress WHERE job_id = ?/;
-    $hive_dbc->sql_helper()->execute_update(-SQL => $sql, -PARAMS => [ $self->input_job()->dbID() ]);
+Log::Log4perl::init( \$config);
 
-    $hive_dbc->disconnect_if_idle() if defined $hive_dbc;
+my $logger = get_logger();
+if(!Log::Log4perl->initialized()) {
+  Log::Log4perl->easy_init($DEBUG);
+}
+#Clean up if job already exist in result.
+my $sql=q/DELETE FROM result WHERE job_id = ?/;
+$hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
+#Same for job_progress
+$sql=q/DELETE FROM job_progress WHERE job_id = ?/;
+$hive_dbc->sql_helper()->execute_update(-SQL=>$sql,-PARAMS=>[$self->input_job()->dbID()]);
 
-    copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb, $skip_optimize);
+$hive_dbc->disconnect_if_idle() if defined $hive_dbc;
 
-    my $runtime = duration(time() - $start_time);
+copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb, $skip_optimize);
 
-    my $output = {
-        source_db_uri => $source_db_uri,
-        target_db_uri => $target_db_uri,
-        runtime       => $runtime
-    };
-    $self->dataflow_output_id({
-        job_id => $self->input_job()->dbID(),
-        output => encode_json($output)
-    }, 2);
+my $runtime =  duration(time() - $start_time);
 
-    return;
+my $output = {
+		  source_db_uri=>$source_db_uri,
+		  target_db_uri=>$target_db_uri,
+		  runtime => $runtime
+		 };
+$self->dataflow_output_id({
+			       job_id=>$self->input_job()->dbID(),
+			       output=>encode_json($output)
+			      }, 2);
+
+return;
 }
 
 1;
