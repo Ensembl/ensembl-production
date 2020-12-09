@@ -21,6 +21,7 @@ class ProductionDBCopy(HiveRESTClient):
     """ OLS MySQL loader: initialise basics info in Ontology DB """
 
     def fetch_input(self):
+
         src_db = urlparse(self.param('source_db_uri'))
         tgt_db = urlparse(self.param('target_db_uri'))
         if src_db.scheme and src_db.hostname and tgt_db.hostname and tgt_db.scheme:
@@ -34,18 +35,19 @@ class ProductionDBCopy(HiveRESTClient):
             })
 
     def run(self):
-        if self.response.status_code != 201:
-            raise Exception('The Copy submission failed: ' + self.response.raise_for_status)
+        response = self.param('response')
+        if response.status_code != 201:
+            raise Exception('The Copy submission failed: ' + response.raise_for_status)
         submitted_time = time.time()
         while True:
             with self._session_scope() as http:
                 job_response = http.request(method='get',
-                                            url=self.param('endpoint') + '/' + self.response.json()['job_id'],
+                                            url=self.param('endpoint') + '/' + response.json()['job_id'],
                                             headers=self.param('headers'),
                                             timeout=self.param('timeout'))
             if job_response.json()['overall_status'] == 'Failed':
                 raise Exception(
-                    'The Copy failed, check: ' + self.param('endpoint') + '/' + self.response.json()['job_id'])
+                    'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
             elif job_response.json()['overall_status'] == 'Complete':
                 break
             # If the copy takes more than 2 hours then kill the job
