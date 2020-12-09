@@ -43,16 +43,8 @@ sub default_options {
        # inherit other stuff from the base class
        %{ $self->SUPER::default_options() },
 
-#'exe_dir'       => '/nfs/panda/ensemblgenomes/production/compara/binaries/',
-       'gt_exe'       => '/nfs/software/ensembl/RHEL7/linuxbrew/Cellar/genometools/1.5.8/bin/gt',
-        # create BLAST databases, version 2.2.27+
-#'ncbiblast_exe' => $self->o('exe_dir').'ncbi-blast/makeblastdb',
        'ncbiblast_exe' => 'makeblastdb',
-        # convert DNA from fasta to 2bit format
-#'blat_exe' => $self->o('exe_dir').'faToTwoBit',
        'blat_exe' => 'faToTwoBit',
-       # Previous release FASTA DNA files location
-       'prev_rel_dir' => '/nfs/ensemblftp/PUBLIC/pub/',
 	};
 }
 

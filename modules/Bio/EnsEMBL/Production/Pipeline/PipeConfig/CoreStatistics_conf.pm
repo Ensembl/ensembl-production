@@ -59,8 +59,6 @@ sub default_options {
     bin_count => '150',
     max_run   => '100',
 
-    skip_metadata_check => 0,
-
     pepstats_binary => 'pepstats',
     pepstats_tmpdir => '/scratch',
 
@@ -116,11 +114,12 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '3->A' => ['CheckAssemblyGeneset_ChromosomeRelatedTasks'],
+                            '3->A' => ['CheckStatistics_Chromosome'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
+
     {
       -logic_name      => 'SpeciesFactory_All',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -133,52 +132,61 @@ sub pipeline_analyses {
                          },
       -max_retry_count => 1,
       -flow_into       => {
-                            '2' => ['CheckAssemblyGeneset_GeneRelatedTasks'],
+                            '2' => ['CheckStatistics_All'],
                           },
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
+
     {
-      -logic_name      => 'CheckAssemblyGeneset_GeneRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
-      -parameters  => {
-          skip_metadata_check => $self->o('skip_metadata_check'),
-          release => $self->o('release')
-       },
+      -logic_name      => 'CheckStatistics_Chromosome',
+      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters      => {
+                            datacheck_groups => ['core_statistics'],
+                            history_file     => $self->o('history_file'),
+                            failures_fatal   => 0,
+                          },
       -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'normal',
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -flow_into       => WHEN(
+                            '#datachecks_failed#' =>
+                            [
+                              'CodingDensity',
+                              'PseudogeneDensity',
+                              'ShortNonCodingDensity',
+                              'LongNonCodingDensity',
+                              'PercentGC',
+                              'PercentRepeat',
+                            ]
+                          ),
+      -rc_name         => 'mem',
+    },
+
+    {
+      -logic_name      => 'CheckStatistics_All',
+      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -parameters      => {
+                            datacheck_groups => ['core_statistics'],
+                            history_file     => $self->o('history_file'),
+                            failures_fatal   => 0,
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
+      -batch_size      => 10,
+      -rc_name         => 'mem',
       -flow_into       => {
-                            '1->A' => WHEN( '#new_assembly# >= 1 or #new_genebuild# >=1' => [
-                                        'ConstitutiveExons',
-                                        'GeneCount',
-                                        'GeneGC',
-                                        'PepStats',
-                                      ]),
-                            'A->1' => WHEN('#new_assembly# >= 1 or #new_genebuild# >=1' => ['GenomeStats']),
+                            '1->A' => WHEN(
+                              '#datachecks_failed#' => [
+                                'ConstitutiveExons',
+                                'GeneCount',
+                                'GeneGC',
+                                'PepStats',
+                              ]
+                            ),
+                            'A->1' => WHEN(
+                              '#datachecks_failed#' => ['GenomeStats']
+                            ),
                           },
-    },
-    {
-      -logic_name      => 'CheckAssemblyGeneset_ChromosomeRelatedTasks',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
-      -parameters  => {
-          skip_metadata_check => $self->o('skip_metadata_check'),
-          release => $self->o('release')
-      },
-      -max_retry_count => 1,
-      -hive_capacity   => 10,
-      -priority        => 5,
-      -rc_name         => 'normal',
-      -flow_into       => [ WHEN(
-                        '#new_assembly# >= 1 or #new_genebuild# >=1' =>[
-                            'CodingDensity',
-                            'PseudogeneDensity',
-                            'ShortNonCodingDensity',
-                            'LongNonCodingDensity',
-                            'PercentGC',
-                            'PercentRepeat',
-                          ])
-      ],
     },
 
     {
@@ -247,7 +255,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
@@ -270,7 +278,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
+      -rc_name         => 'mem',
     },
 
     {
