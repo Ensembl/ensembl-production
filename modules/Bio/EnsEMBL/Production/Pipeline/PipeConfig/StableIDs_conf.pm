@@ -54,99 +54,100 @@ sub default_options {
   }
 }
 
-sub pipeline_create_commands {
-  my ($self) = @_;
-
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('output_dir')
-  ];
-}
-
 sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '8GB'  => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=1000]"'},
-    '32GB' => {'LSF' => '-q production-rh74 -M 32000 -R "rusage[mem=32000,scratch=1000]"'},
-  }
+    my $self = shift;
+    return {
+        'default' => { 'LSF' => '-q production-rh74 -n 4 -M 4000   -R "rusage[mem=4000]"' },
+        '32GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 32000  -R "rusage[mem=32000]"' },
+        '16GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 16000  -R "rusage[mem=16000]"' },
+        '64GB'    => { 'LSF' => '-q production-rh74 -n 4 -M 64000  -R "rusage[mem=64000]"' },
+    }
 }
+
 
 sub pipeline_analyses {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return [
-    {
-      -logic_name => 'cleanup_db',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-      -input_ids  => [ {} ],
-      -parameters => {
-        db_conn => $self->o('srv_url'),
-        sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name') . ';' ],
-      },
-      -flow_into  => [ 'create_db' ]
-    },
-    {
-      -logic_name => 'create_db',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-      -parameters => {
-        db_conn => $self->o('srv_url'),
-        sql     => [ 'CREATE DATABASE ' . $self->o('db_name') . ';' ],
-      },
-      -flow_into  => [ 'setup_db' ]
-    },
-    {
-      -logic_name => 'setup_db',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
-      -parameters => {
-        db_conn    => $self->o('db_url'),
-        input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/tables.sql',
-      },
-      -flow_into  => [ 'populate_meta' ]
-    },
-    {
-      -logic_name => 'populate_meta',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-      -parameters => {
-        db_conn => $self->o('db_url'),
-        sql     => [ "INSERT INTO meta(species_id,meta_key,meta_value) VALUES (NULL,'schema_version','" . $self->o('release') . "')" ],
-      },
-      -flow_into  => [ 'stable_id_script_factory' ],
-    },
-    {
-      -logic_name  => "stable_id_script_factory",
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-      -meadow_type => 'LSF',
-      -parameters  => {
-        inputlist    => $self->o('run_from'),
-        column_names => [ 'species_server' ]
-      },
-      -flow_into   => {
-        '2->A' => [ 'stable_id_script' ],
-        'A->1' => [ 'index' ],
-      },
-    },
-    {
-      -logic_name  => "stable_id_script",
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -meadow_type => 'LSF',
-      -parameters  => {
-        cmd      => 'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
-        db_srv   => $self->o('db_srv'),
-        dbname   => $self->o('db_name'),
-        release  => $self->o('release'),
-        base_dir => $self->o('base_dir')
-      },
-      -rc_name     => '32GB',
-    },
-    {
-      -logic_name => 'index',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
-      -parameters => {
-        db_conn    => $self->o('db_url'),
-        input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/indices.sql',
-      },
+    return [
+        {
+            -logic_name => 'cleanup_db',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+            -input_ids  => [ {} ],
+            -parameters => {
+                db_conn => $self->o('srv_url'),
+                sql     => [ 'DROP DATABASE IF EXISTS ' . $self->o('db_name') . ';' ],
+            },
+            -rc_name    => 'default',
+            -flow_into  => [ 'create_db' ]
+        },
+        {
+            -logic_name => 'create_db',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+            -parameters => {
+                db_conn => $self->o('srv_url'),
+                sql     => [
+                    'CREATE DATABASE ' . $self->o('db_name') . ';' ],
+            },
+            -rc_name    => 'default',
+            -flow_into  => [ 'setup_db' ]
+        },
+        {
+            -logic_name => 'setup_db',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+            -parameters => {
+                db_conn    => $self->o('db_url'),
+                input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/tables.sql',
+            },
+            -rc_name    => 'default',
+            -flow_into  => [ 'populate_meta' ]
+        },
+        {
+            -logic_name => 'populate_meta',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+            -parameters => {
+                db_conn => $self->o('db_url'),
+                sql     => [
+                    "INSERT INTO meta(species_id,meta_key,meta_value) VALUES (NULL,'schema_version','" . $self->o('release') . "')" ],
+            },
+            -rc_name    => 'default',
+            -flow_into  => [ 'stable_id_script_factory' ],
+
+        },
+        {
+            -logic_name  => "stable_id_script_factory",
+            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+            -meadow_type => 'LSF',
+            -parameters  => {
+                inputlist    => $self->o('run_from'),
+                column_names => [ 'species_server' ]
+            },
+            -flow_into   => {
+                '2->A' => [ 'stable_id_script' ],
+                'A->1' => [ 'index' ],
+            },
+        },
+        {
+            -logic_name  => "stable_id_script",
+            -module      => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -meadow_type => 'LSF',
+            -parameters  => {
+                'cmd'      =>
+                    'perl #base_dir#/ensembl/misc-scripts/stable_id_lookup/populate_stable_id_lookup.pl $(#db_srv# details script_l) $(#species_server# details script) -dbname #dbname# -version #release#',
+                'db_srv'   => $self->o('db_srv'),
+                'dbname'   => $self->o('db_name'),
+                'release'  => $self->o('release'),
+                'base_dir' => $self->o('base_dir')
+            },
+            -analysis_capacity => 1,
+            -rc_name     => '32GB',
+        },
+        {
+            -logic_name => 'index',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+            -parameters => {
+                db_conn    => $self->o('db_url'),
+                input_file => $self->o('base_dir') . '/ensembl/misc-scripts/stable_id_lookup/sql/indices.sql',
+            },
       -flow_into  => [ 'duplicates_report' ],
     },
     {

@@ -31,38 +31,42 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpSpeciesForGOA_conf;
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
+
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
+use Bio::EnsEMBL::Hive::Version 2.5;
+use File::Spec::Functions qw(catdir);
 
 sub default_options {
     my ($self) = @_;
 
     return {
-        # inherit other stuff from the base class
         %{$self->SUPER::default_options},
-        'registry'         => '',
-        # 'output_base'      => '/nfs/ftp/pub/databases/ensembl/projections/',
-        'output_base'      => '/hps/nobackup2/ftp/pub/databases/ensembl/projections/',
-        'output_dirname'   => $self->o('division'),
-        'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
-        'cleanup_dir'      => 1,
-        'species'          => '',
-        'antispecies'      => '',
-        'division'         => '',
-        'run_all'          => 0,
+
+        output_base    => '/ebi/ftp/pub/databases/ensembl/projections',
+        output_dirname => 'ensemblrapid',
+        output_dir     => catdir($self->o('output_base'), lc($self->o('output_dirname'))),
+        release_file   => catdir($self->o('output_dir'), 'release.txt'),
+
+        species     => [],
+        antispecies => [],
+        division    => [],
+        run_all     => 0,
+
+        # Following parameters are not currently used
+        method_link_type => 'ENSEMBL_ORTHOLOGUES',
+        cleanup_dir      => 1,
     }
-} ## end sub default_options
+}
 
 
 sub pipeline_create_commands {
     my ($self) = @_;
     return [
-        # inheriting database and hive tables' creation
         @{$self->SUPER::pipeline_create_commands},
-        'mkdir -p ' . $self->o('output_base'),
+        'mkdir -p ' . $self->o('output_dir'),
     ]
-} ## end sub pipeline_create_commands
+}
 
 sub pipeline_analyses {
     my ($self) = @_;
@@ -81,7 +85,6 @@ sub pipeline_analyses {
             },
             -rc_name         => 'default',
             -flow_into       => [ 'SpeciesNoOrthologs' ],
-            -hive_capacity   => 1
         },
         #TODO Filter species to dump according to some configuration file somewhere or some metadata info to only dump
         # species with actually no orthologues.
@@ -89,25 +92,25 @@ sub pipeline_analyses {
             -logic_name => 'SpeciesNoOrthologs',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs',
             -parameters => {
-                'output_dir' => $self->o('output_base') . '/' . lc($self->o('output_dirname')),
-                'release'    => $self->o('release')
-            },
-            -batch_size => 1,
-            -flow_into  => {
-                '1' => [ 'RunCreateReleaseFile' ],
+                output_dir => $self->o('output_dir'),
+                release    => $self->o('release')
             },
             -rc_name    => 'default',
+            -flow_into  => [ 'CreateReleaseFile' ],
         },
         {
-            -logic_name => 'RunCreateReleaseFile',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
+            -logic_name => 'CreateReleaseFile',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters => {
-                'release' => $self->o('release'),
+                cmd => 'echo -e "#output_dirname#\t#release#\t"$(date "+%Y/%m/%d %H:%m:%S") > #release_file#',
+                output_dirname => $self->o('output_dirname'),
+                release        => $self->o('release'),
+                release_file   => $self->o('release_file'),
             },
-            -batch_size => 1,
             -rc_name    => 'default'
         }
         #TODO include wait and load GPAD from HERE
     ];
-} ## end sub pipeline_analyses
+}
+
 1;

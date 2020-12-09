@@ -109,7 +109,7 @@ sub run {
       Bio::EnsEMBL::Compara::GeneMember->new_from_Gene(
         -GENE          => $gene,
         -GENOME_DB     => $genome_db,
-        -BIOTYPE_GROUP => $gene->get_Biotype->biotype_group();
+        -BIOTYPE_GROUP => $gene->get_Biotype->biotype_group()
       );
     # If there are duplicate stable IDs, trap fatal error from compara
     # method, so we can skip it and carry on with others.
