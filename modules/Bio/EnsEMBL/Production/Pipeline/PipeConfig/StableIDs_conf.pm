@@ -53,11 +53,12 @@ sub default_options {
 
     incremental => 0,
 
+    email_report => 1,
+
     db_name => 'ensembl_stable_ids',
     db_url  => $self->o('srv_url') . $self->o('db_name'),
 
-    table_sql => $self->o('base_dir').'/ensembl/misc-scripts/stable_id_lookup/sql/tables.sql',
-    index_sql => $self->o('base_dir').'/ensembl/misc-scripts/stable_id_lookup/sql/indices.sql',
+    table_sql => $self->o('base_dir').'/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/StableID/sql/table.sql',
   }
 }
 
@@ -77,7 +78,7 @@ sub pipeline_analyses {
     {
       -logic_name  => 'StableIDs',
       -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -input_ids   => [ {} ] ,
+      -input_ids   => [ {} ],
       -parameters  => {
                         incremental => $self->o('incremental'),
                       },
@@ -153,42 +154,42 @@ sub pipeline_analyses {
                           },
       -flow_into       => {
                             '2->A' => ['Populate'],
-                            'A->1' =>
-                              WHEN(
-                                '#incremental#' => ['DuplicatesReport'],
-                              ELSE
-                                ['Index']
-                              ),
+                            'A->1' => ['Optimize']
                           }
     },
     {
       -logic_name        => "Populate",
       -module            => 'Bio::EnsEMBL::Production::Pipeline::StableID::Populate',
-      -analysis_capacity => 50,
+      -analysis_capacity => 5,
       -max_retry_count   => 1,
       -parameters        => {
-                              incremental => $self->o('incremental'),
-                              db_url      => $self->o('db_url')
+                              db_url => $self->o('db_url')
                             }
     },
     {
-      -logic_name  => 'Index',
-      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
-      -parameters  => {
-                        db_conn    => $self->o('db_url'),
-                        input_file => $self->o('index_sql'),
-                      },
-      -flow_into   => ['DuplicatesReport'],
+      -logic_name      => "Optimize",
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -max_retry_count => 1,
+      -parameters      => {
+                            db_conn => $self->o('db_url'),
+                            sql => [
+                              'OPTIMIZE TABLE archive_id_lookup;',
+                              'OPTIMIZE TABLE species;',
+                              'OPTIMIZE TABLE stable_id_lookup;'
+                            ],
+                            email_report => $self->o('email_report'),
+                          },
+      -flow_into       => WHEN('#email_report#' => ['EmailReport'])
     },
     {
-      -logic_name  => 'DuplicatesReport',
+      -logic_name  => 'EmailReport',
       -module      => 'Bio::EnsEMBL::Production::Pipeline::StableID::EmailReport',
       -parameters  => {
                         db_conn       => $self->o('db_url'),
                         email         => $self->o('email'),
                         pipeline_name => $self->o('pipeline_name'),
                         output_dir    => $self->o('output_dir'),
-                      },
+                      }
     }
   ];
 }
