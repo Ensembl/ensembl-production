@@ -109,8 +109,7 @@ sub load_stable_ids {
 
   # This might seem redundant for non-incremental runs, but if
   # a hive job fails and is retried, this ensures that any partial
-  # data is removed, to avoid duplicates (at this stage, we don't
-  # have indexes defined, so can't rely on an 'INSERT IGNORE').
+  # data is removed, to avoid duplicates.
   if ($group eq 'core') {
     $self->delete_lookup($stable_ids_dba, $species_id, $group, 'archive_id_lookup');
   }
@@ -153,14 +152,25 @@ sub insert_species {
 sub delete_lookup {
   my ($self, $stable_ids_dba, $species_id, $group, $table) = @_;
 
-  my $sql = qq/
-    DELETE FROM $table
+  my $select_sql = qq/
+    SELECT COUNT(*) FROM $table
     WHERE species_id = ? AND db_type = ?
   /;
-  $stable_ids_dba->dbc->sql_helper->execute_update(
-    -SQL    => $sql,
+  my $count = $stable_ids_dba->dbc->sql_helper->execute_single_result(
+    -SQL => $select_sql,
     -PARAMS => [$species_id, $group]
   );
+
+  if ($count) {
+    my $delete_sql = qq/
+      DELETE FROM $table
+      WHERE species_id = ? AND db_type = ?
+    /;
+    $stable_ids_dba->dbc->sql_helper->execute_update(
+      -SQL    => $delete_sql,
+      -PARAMS => [$species_id, $group]
+    );
+  }
 }
 
 sub insert_archive_ids {
@@ -248,7 +258,7 @@ sub insert_stable_ids {
 sub batch_insert {
   my ($self, $dba, $select_sql, $stable_ids_dba, $insert_sql) = @_;
 
-  my $batch_size = 100000;
+  my $batch_size = 10000;
 
   my $dbh = $dba->dbc->db_handle;
   my $sth = $dbh->prepare($select_sql);

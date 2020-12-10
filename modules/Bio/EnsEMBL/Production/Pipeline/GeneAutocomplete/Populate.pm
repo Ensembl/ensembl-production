@@ -37,7 +37,6 @@ use Bio::EnsEMBL::Utils::URI qw/parse_uri/;
 sub run {
   my ($self) = @_;
 
-  my $incremental = $self->param_required('incremental');
   my $db_url      = $self->param_required('db_url');
   my $species     = $self->param_required('species');
 
@@ -80,14 +79,24 @@ sub run {
     # This might seem redundant for non-incremental runs, but if
     # a hive job fails and is retried, this ensures that any partial
     # data is removed, to avoid duplicates.
-    my $delete_sql = qq/
-      DELETE FROM gene_autocomplete
+    my $count_sql = qq/
+      SELECT COUNT(*) FROM gene_autocomplete
       WHERE species = ? AND db = ?
     /;
-    $autocomplete_dba->dbc->sql_helper->execute_update(
-      -SQL    => $delete_sql,
+    my $count = $autocomplete_dba->dbc->sql_helper->execute_single_result(
+      -SQL => $count_sql,
       -PARAMS => [$species, $group]
     );
+    if ($count) {
+      my $delete_sql = qq/
+        DELETE FROM gene_autocomplete
+        WHERE species = ? AND db = ?
+      /;
+      $autocomplete_dba->dbc->sql_helper->execute_update(
+        -SQL    => $delete_sql,
+        -PARAMS => [$species, $group]
+      );
+    }
 
     my $insert_sql = qq/
       INSERT INTO
