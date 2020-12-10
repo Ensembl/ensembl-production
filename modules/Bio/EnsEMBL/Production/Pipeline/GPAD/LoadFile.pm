@@ -15,26 +15,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
-Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
-
-=head1 DESCRIPTION
-
-=head1 AUTHOR
-
-ckong@ebi.ac.uk and maurel@ebi.ac.uk
-
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::GPAD::LoadFile;
 
 use strict;
 use warnings;
-use Data::Dumper;
+
 use Bio::EnsEMBL::Analysis;
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::Utils::SqlHelper;
-use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 sub run {
@@ -49,43 +39,6 @@ sub run {
     $hive_dbc->disconnect_if_idle() if defined $self->dbc;
 
     $self->log()->info("Loading $species from $file");
-
-    # Remove existing projected GO annotations from GOA
-    if ($self->param_required('delete_existing')) {
-      $self->log()->info("Deleting existing terms");
-      # Delete by analysis.logic_name='goa_import' for GOs mapped to translation
-      my $translation_go_sql=qq/
-        DELETE ox.*,onx.*,dx.*  FROM xref x
-          JOIN object_xref ox USING (xref_id)
-          LEFT JOIN ontology_xref onx USING (object_xref_id)
-          LEFT JOIN dependent_xref dx USING (object_xref_id)
-          JOIN analysis a USING (analysis_id)
-          JOIN translation tl ON (ox.ensembl_id=tl.translation_id)
-          JOIN transcript tf USING (transcript_id)
-          JOIN seq_region s USING (seq_region_id)
-          JOIN coord_system c USING (coord_system_id)
-        WHERE x.external_db_id=1000
-          AND c.species_id=?
-          AND a.logic_name=?/;
-      # Same deletes but for GOs mapped to transcripts
-      my $transcript_go_sql=qq/
-        DELETE ox.*,onx.*,dx.*  FROM xref x
-          JOIN object_xref ox USING (xref_id)
-          LEFT JOIN ontology_xref onx USING (object_xref_id)
-          LEFT JOIN dependent_xref dx USING (object_xref_id)
-          JOIN analysis a USING (analysis_id)
-          JOIN transcript tf ON (ox.ensembl_id = tf.transcript_id)
-          JOIN seq_region s USING (seq_region_id)
-          JOIN coord_system c USING (coord_system_id)
-        WHERE x.external_db_id=1000
-          AND c.species_id=?
-          AND a.logic_name=?/;
-
-      $self->log()->debug("Deleting GO mapped to translation");
-      $dba->dbc()->sql_helper()->execute_update(-SQL=>$translation_go_sql,-PARAMS=>[$dba->species_id(),$logic_name]);
-      $self->log()->debug("Deleting GO mapped to transcript");
-      $dba->dbc()->sql_helper()->execute_update(-SQL=>$transcript_go_sql,-PARAMS=>[$dba->species_id(),$logic_name]);
-    }
 
     my $odba = Bio::EnsEMBL::Registry->get_adaptor('multi', 'ontology', 'OntologyTerm');
     my $gos  = $self->fetch_ontology($odba);
