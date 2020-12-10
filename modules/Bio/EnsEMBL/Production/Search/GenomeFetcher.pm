@@ -49,8 +49,8 @@ my $logger = get_logger();
 sub new {
 	my ( $class, @args ) = @_;
 	my $self = bless( {}, ref($class) || $class );
-	my ( $metadata_dba, $eg, $taxonomy_dba ) =
-	  rearrange( [ 'METADATA_DBA', 'EG', 'TAXONOMY_DBA' ], @args );
+	my ( $metadata_dba, $eg, $taxonomy_dba, $ens_version, $eg_version) =
+	  rearrange( [ 'METADATA_DBA', 'EG', 'TAXONOMY_DBA', 'ENS_VERSION', 'EG_VERSION' ], @args );
 	if ( !defined $metadata_dba ) {
 		eval {
 			$metadata_dba =
@@ -83,11 +83,20 @@ sub new {
 	}
 	if ( defined $metadata_dba ) {
 		$self->{info_adaptor} = $metadata_dba->get_GenomeInfoAdaptor();
+                if( defined $ens_version){
+                  $self->{info_adaptor}->set_ensembl_release($ens_version);
+                }
 		if ( defined $eg ) {
 			# switch adaptor to use Ensembl Genomes if -EG supplied
 			$logger->debug("Using EG release");
-			$self->{info_adaptor}->set_ensembl_genomes_release();
+                        if(defined $eg_version){
+			  $self->{info_adaptor}->set_ensembl_genomes_release($eg_version);
+                        }else{
+			  $self->{info_adaptor}->set_ensembl_genomes_release();
+                        }
 		}
+
+             
 	}
 	return $self;
 } ## end sub new
@@ -104,8 +113,7 @@ sub fetch_metadata {
 	$logger->debug("Fetching metadata for genome $name");
 	croak "No metadata DB adaptor found" unless defined $self->{info_adaptor};
 	my $orgs = $self->{info_adaptor}->fetch_by_name($name);
-	my $meta = Bio::EnsEMBL::Registry->get_adaptor( $name, 'core',
-															'MetaContainer' );
+	my $meta = Bio::EnsEMBL::Registry->get_adaptor( $name, 'core', 'MetaContainer' );
 	if ( !defined $meta ) {
 		croak "Cannot find genome $name";
 	}

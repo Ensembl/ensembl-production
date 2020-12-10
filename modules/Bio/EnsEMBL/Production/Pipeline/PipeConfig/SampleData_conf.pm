@@ -158,22 +158,20 @@ sub pipeline_analyses {
                               maximum_gene_length => $self->o('maximum_gene_length'),
                            },
       -hive_capacity   => 50,
-      -batch_size      => 10,
       -flow_into        => {
                              '1' => ['RunDataChecks'],
-                             '-1' => ['GenerateSampleData_25GB'],
+                             '-1' => ['GenerateSampleData_mem'],
                            },
       -rc_name          => 'mem',
     },
     {
-      -logic_name       => 'GenerateSampleData_25GB',
+      -logic_name       => 'GenerateSampleData_mem',
       -module           => 'Bio::EnsEMBL::Production::Pipeline::SampleData::GenerateSampleData',
       -max_retry_count  => 1,
       -parameters      =>  {
                               maximum_gene_length => $self->o('maximum_gene_length'),
                            },
       -hive_capacity   => 50,
-      -batch_size      => 10,
       -flow_into        => {
                              '1' => ['RunDataChecks'],
                            },
@@ -218,7 +216,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    'mem_high'    => {'LSF' => '-q production-rh74 -M 25000 -R "rusage[mem=25000]"'},
+    'mem_high'    => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
   }
 }
 

@@ -26,7 +26,7 @@ limitations under the License.
  maurel@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive;
+package Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHiveDBA;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 use strict;
@@ -53,21 +53,21 @@ sub run {
     my $hive_dbc = $self->dbc;
 
     my $config = q{
-	log4perl.category = INFO, DB
-    log4perl.appender.DB                 = Log::Log4perl::Appender::DBI
-    log4perl.appender.DB.datasource=DBI:mysql:database=} . $hive_dbc->dbname() . q{;host=} . $hive_dbc->host() . q{;port=} . $hive_dbc->port() . q{
-    log4perl.appender.DB.username        = } . $hive_dbc->user() . q{
-    log4perl.appender.DB.password        = } . $hive_dbc->password() . q{
-    log4perl.appender.DB.sql             = \
-        insert into job_progress                   \
-        (job_id, message) values (?,?)
+        log4perl.category = INFO, DB
+        log4perl.appender.DB                 = Log::Log4perl::Appender::DBI
+        log4perl.appender.DB.datasource=DBI:mysql:database=} . $hive_dbc->dbname() . q{;host=} . $hive_dbc->host() . q{;port=} . $hive_dbc->port() . q{
+        log4perl.appender.DB.username        = } . $hive_dbc->user() . q{
+        log4perl.appender.DB.password        = } . $hive_dbc->password() . q{
+        log4perl.appender.DB.sql             = \
+            insert into job_progress                   \
+            (job_id, message) values (?,?)
 
-    log4perl.appender.DB.params.1        = } . $self->input_job->dbID() . q{
-    log4perl.appender.DB.usePreparedStmt = 1
+        log4perl.appender.DB.params.1        = } . $self->input_job->dbID() . q{
+        log4perl.appender.DB.usePreparedStmt = 1
 
-    log4perl.appender.DB.layout          = Log::Log4perl::Layout::NoopLayout
-    log4perl.appender.DB.warp_message    = 0
- };
+        log4perl.appender.DB.layout          = Log::Log4perl::Layout::NoopLayout
+        log4perl.appender.DB.warp_message    = 0
+    };
 
     Log::Log4perl::init(\$config);
 
@@ -75,10 +75,10 @@ sub run {
     if (!Log::Log4perl->initialized()) {
         Log::Log4perl->easy_init($DEBUG);
     }
-    #Clean up if job already exist in result.
+    # Clean up if job already exist in result.
     my $sql = q/DELETE FROM result WHERE job_id = ?/;
     $hive_dbc->sql_helper()->execute_update(-SQL => $sql, -PARAMS => [ $self->input_job()->dbID() ]);
-    #Same for job_progress
+    # Same for job_progress
     $sql = q/DELETE FROM job_progress WHERE job_id = ?/;
     $hive_dbc->sql_helper()->execute_update(-SQL => $sql, -PARAMS => [ $self->input_job()->dbID() ]);
 
@@ -87,7 +87,7 @@ sub run {
     copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb, $skip_optimize);
 
     my $runtime = duration(time() - $start_time);
-
+tmux a
     my $output = {
         source_db_uri => $source_db_uri,
         target_db_uri => $target_db_uri,
