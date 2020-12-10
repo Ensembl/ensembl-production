@@ -71,7 +71,7 @@ sub pipeline_analyses {
                         incremental => $self->o('incremental'),
                       },
       -flow_into   => WHEN(
-                        '#incremental#' => ['SpeciesFactory'],
+                        '#incremental#' => ['DbFactory'],
                       ELSE
                         ['CreateDb']
                       )
@@ -95,11 +95,11 @@ sub pipeline_analyses {
                         db_conn    => $self->o('db_url'),
                         input_file => $self->o('table_sql'),
                       },
-      -flow_into   => ['SpeciesFactory']
+      -flow_into   => ['DbFactory']
     },
     {
-      -logic_name      => 'SpeciesFactory',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -logic_name      => 'DbFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
       -parameters      => {
                             species      => $self->o('species'),
@@ -116,11 +116,11 @@ sub pipeline_analyses {
     {
       -logic_name        => "Populate",
       -module            => 'Bio::EnsEMBL::Production::Pipeline::GeneAutocomplete::Populate',
-      -analysis_capacity => 50,
+      -analysis_capacity => 5,
+      -batch_size        => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              incremental => $self->o('incremental'),
-                              db_url      => $self->o('db_url')
+                              db_url => $self->o('db_url')
                             }
     },
     {
