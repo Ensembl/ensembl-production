@@ -1,9 +1,28 @@
+=head1 LICENSE
+
+Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
+
 package Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
 
 use Moose;
 use Path::Tiny;
 
-with 'UcscIndex';
+#with 'UcscIndex';
 
 has 'genome'    => ( is => 'Any', is => 'ro', required => 1 );
 has 'bed_type'  => ( isa => 'Str', is => 'ro', required => 0 );
@@ -80,5 +99,26 @@ sub get_autosql {
   my $common = path(__FILE__)->parent(2)->child('common_files');
   return $common->child($autosql);
 }
+
+sub chrom_sizes {
+  my ($self) = @_;
+  return $self->genome()->chrom_sizes_path()->stringify();
+}
+
+
+
+sub system {
+        my ($self, $cmd, @args) = @_;
+        my ($stdout, $stderr, $exit) = capture {
+                system($cmd, @args);
+        };
+        if($exit != 0) {
+    print STDERR $stdout;
+    print STDERR $stderr;
+                confess "Return code was ${exit}. Failed to execute command $cmd: $!";
+        }
+        return;
+}
+
 
 1;
