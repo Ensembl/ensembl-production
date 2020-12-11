@@ -1062,6 +1062,11 @@ subtest "Checking protein_coding gene", sub {
                         ]
                     }
                 ],
+                 'cds' => [
+                    {
+                        'start' => 29011990,
+                        'end'   => 29013017
+                    }], 
                 'exons'               => [
                     {
                         'version'             => 1,
@@ -1265,6 +1270,12 @@ subtest "Checking ncRNA gene", sub {
             'start'               => '969238',
             'seq_region_name'     => 'HG480_HG481_PATCH',
             'end'                 => '970836',
+            'translations'       => [],
+            'cds'                 => [
+                {
+                   'start'    => 970445,
+                   'end'      => 969286
+                }],
             'exons'               => [ {
                 'version'             => '1',
                 'start'               => '970445',

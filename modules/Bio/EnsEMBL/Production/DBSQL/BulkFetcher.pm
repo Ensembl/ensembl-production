@@ -761,6 +761,7 @@ sub get_xrefs {
 
 } ## end sub get_xrefs
 
+
 sub get_coord_systems {
     my ($self, $dba, $type, $biotypes) = @_;
     my $sql = qq/
