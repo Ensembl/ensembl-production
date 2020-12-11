@@ -46,8 +46,20 @@ sub param_defaults {
   };
 }
 
+sub pre_cleanup {
+  my ($self) = @_;
+
+  $self->process_db('delete');
+}
+
 sub run {
   my ($self) = @_;
+
+  $self->process_db('load');
+}
+
+sub process_db {
+  my ($self, $action) = @_;
 
   my $db_url  = $self->param_required('db_url');
   my $species = $self->param_required('species');
@@ -81,12 +93,12 @@ sub run {
         -species_id      => $species_ids{$species},
       );
 
-      $self->load_stable_ids($stable_ids_dba, $species, $group, $dba);
+      $self->load_stable_ids($stable_ids_dba, $species, $group, $dba, $action);
 
       $dba->dbc->disconnect_if_idle();
     }
   } else {
-    $self->load_stable_ids($stable_ids_dba, $species, $group, $dba);
+    $self->load_stable_ids($stable_ids_dba, $species, $group, $dba, $action);
 
     $dba->dbc->disconnect_if_idle();
   }
@@ -95,7 +107,9 @@ sub run {
 }
 
 sub load_stable_ids {
-  my ($self, $stable_ids_dba, $species, $group, $dba) = @_;
+  my ($self, $stable_ids_dba, $species, $group, $dba, $action) = @_;
+
+  my $incremental = $self->param_required('incremental');
 
   # Note that the "species_id" here is the auto-increment field in the
   # stable ID database's "species" table, not to be confused with the
@@ -107,18 +121,19 @@ sub load_stable_ids {
     $species_id = $self->insert_species($stable_ids_dba, $species, $tax_id);
   }
 
-  # This might seem redundant for non-incremental runs, but if
-  # a hive job fails and is retried, this ensures that any partial
-  # data is removed, to avoid duplicates.
-  if ($group eq 'core') {
-    $self->delete_lookup($stable_ids_dba, $species_id, $group, 'archive_id_lookup');
+  if ($action eq 'delete' || $incremental) {
+    if ($group eq 'core') {
+      $self->delete_lookup($stable_ids_dba, $species_id, $group, 'archive_id_lookup');
+    }
+    $self->delete_lookup($stable_ids_dba, $species_id, $group, 'stable_id_lookup');
   }
-  $self->delete_lookup($stable_ids_dba, $species_id, $group, 'stable_id_lookup');
 
-  if ($group eq 'core') {
-    $self->insert_archive_ids($stable_ids_dba, $species_id, $dba, $group);
+  if ($action eq 'load') {
+    if ($group eq 'core') {
+      $self->insert_archive_ids($stable_ids_dba, $species_id, $dba, $group);
+    }
+    $self->insert_stable_ids($stable_ids_dba, $species_id, $dba, $group);
   }
-  $self->insert_stable_ids($stable_ids_dba, $species_id, $dba, $group);
 }
 
 sub fetch_species_id {
@@ -152,25 +167,14 @@ sub insert_species {
 sub delete_lookup {
   my ($self, $stable_ids_dba, $species_id, $group, $table) = @_;
 
-  my $select_sql = qq/
-    SELECT COUNT(*) FROM $table
+  my $delete_sql = qq/
+    DELETE FROM $table
     WHERE species_id = ? AND db_type = ?
   /;
-  my $count = $stable_ids_dba->dbc->sql_helper->execute_single_result(
-    -SQL => $select_sql,
+  $stable_ids_dba->dbc->sql_helper->execute_update(
+    -SQL    => $delete_sql,
     -PARAMS => [$species_id, $group]
   );
-
-  if ($count) {
-    my $delete_sql = qq/
-      DELETE FROM $table
-      WHERE species_id = ? AND db_type = ?
-    /;
-    $stable_ids_dba->dbc->sql_helper->execute_update(
-      -SQL    => $delete_sql,
-      -PARAMS => [$species_id, $group]
-    );
-  }
 }
 
 sub insert_archive_ids {
@@ -258,7 +262,7 @@ sub insert_stable_ids {
 sub batch_insert {
   my ($self, $dba, $select_sql, $stable_ids_dba, $insert_sql) = @_;
 
-  my $batch_size = 10000;
+  my $batch_size = 100000;
 
   my $dbh = $dba->dbc->db_handle;
   my $sth = $dbh->prepare($select_sql);

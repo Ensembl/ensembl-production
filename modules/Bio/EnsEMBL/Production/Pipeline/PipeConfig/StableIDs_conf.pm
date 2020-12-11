@@ -161,9 +161,11 @@ sub pipeline_analyses {
       -logic_name        => "Populate",
       -module            => 'Bio::EnsEMBL::Production::Pipeline::StableID::Populate',
       -analysis_capacity => 5,
+      -batch_size        => 5,
       -max_retry_count   => 1,
       -parameters        => {
-                              db_url => $self->o('db_url')
+                              db_url      => $self->o('db_url'),
+                              incremental => $self->o('incremental')
                             }
     },
     {
