@@ -62,11 +62,11 @@ sub run {
     my $gene_tree_adaptor = $compara_dba->get_GeneTreeAdaptor;
     my $good_gene_trees_sql = "SELECT root_id, tree_type, member_type, clusterset_id, gene_align_id, method_link_species_set_id, species_tree_root_id, stable_id, version, ref_root_id, NULL, NULL, NULL ".
                 "FROM gene_tree_root_attr a JOIN gene_tree_root r USING(root_id) ".
-                "WHERE a.taxonomic_coverage > 0.95 AND a.aln_percent_identity > 75 AND r.member_type = 'protein' and r.clusterset_id = 'default' and r.tree_type = 'tree';";
+                "WHERE a.taxonomic_coverage > 0.95 AND a.aln_percent_identity > 75 AND r.member_type = 'protein' and r.clusterset_id = 'default' and r.tree_type = 'tree' limit 500;";
     my $gene_tree_sth = $compara_dba->dbc->prepare($good_gene_trees_sql);
     $gene_tree_sth->execute;
     my $good_gene_trees = $gene_tree_adaptor->_objs_from_sth($gene_tree_sth);
-    $self->warning("Found " . scalar @$good_gene_trees . " 'good' gene trees\n") if $self->debug();
+    $self->warning("Found " . scalar @$good_gene_trees . " 'good' gene trees\n");
     # next, pick out genes from any tree that includes human (i.e. has a human ortholog) for vert only
     my $human_genome_db = $genome_db_adaptor->fetch_by_name_assembly('homo_sapiens') if $self->division() eq 'vertebrates';
     my @candidate_genes;
@@ -89,7 +89,7 @@ sub run {
     # Disconnect from the Compara db
     $compara_dba->dbc()->disconnect_if_idle();
     # now find a candidate with xrefs and good support
-    $self->warning("Found: " . scalar @candidate_genes . " genes for ".$species."\n") if $self->debug();
+    $self->warning("Found: " . scalar @candidate_genes . " genes for ".$species."\n");
     my %sample_transcripts;
     my $sample_transcript;
     TRANSCRIPT:foreach my $seq_member ( @candidate_genes ) {

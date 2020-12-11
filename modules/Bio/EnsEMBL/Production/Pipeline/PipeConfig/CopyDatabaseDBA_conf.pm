@@ -19,7 +19,7 @@
 =cut
 
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabase_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabaseDBA_conf;
 
 use strict;
 use warnings;
@@ -35,8 +35,8 @@ sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
-        'pipeline_name' => "copy_database",
-
+        'pipeline_name'    => "copy_database",
+        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
     }
 }
 
@@ -61,11 +61,16 @@ sub pipeline_analyses {
     my ($self) = @_;
     return [
         {
-            -logic_name      => 'copy_database',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::CopyDatabases::CopyDatabaseHive',
+            -module          => 'ensembl.production.hive.ProductionDBCopy',
+            -language        => 'python3',
+            -rc_name         => 'default',
             -input_ids       => [],
             -max_retry_count => 0,
             -parameters      => {
+                'endpoint'      => $self->o('copy_service_uri'),
+                'source_db_uri' => $self->o('source_db_uri'),
+                'target_db_uri' => $self->o('target_db_uri'),
+                'method'        => 'post',
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {

@@ -15,48 +15,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
-Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile;
-
-=head1 DESCRIPTION
-
-=head1 AUTHOR
-
-maurel@ebi.ac.uk
-
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::GPAD::FindFile;
 
 use strict;
 use warnings;
+
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::Utils::Exception qw(throw);
+use File::Spec::Functions qw(catdir);
+
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
-sub run {
-    my ($self)  = @_;
-    # Parse filename to get $target_species
-    my $species = $self->param_required('species');
+sub write_output {
+  my ($self)  = @_;
+  my $gpad_directory = $self->param_required('gpad_directory');
+  my $gpad_dirname   = $self->param('gpad_dirname');
+  my $species        = $self->param_required('species');
 
+  my $filename = "annotations_ensembl-$species.gpa";
+
+  my $file;
+  if (defined $gpad_dirname) {
+    $file = catdir($gpad_directory, $gpad_dirname, $filename);
+  } else {
     my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor( $species, 'core' );
-    my $hive_dbc = $self->dbc;
-    $hive_dbc->disconnect_if_idle() if defined $self->dbc;
     my $division = $dba->get_MetaContainer->get_division();
-    $division =~ s/Ensembl//;
-    $division = lc($division);
-    my $file = $self->param_required('gpad_directory').'/ensembl'.$division.'/annotations_ensembl-'.$species.'.gpa';
-
-    if (-e $file){
-      $self->log()->info("Found $file for $species");
-      $self->dataflow_output_id( { 'gpad_file' => $file, 'species' => $species }, 2);      
-    }
-    else{
-      $self->log()->info("Cannot find $file for $species");
-    }
+    $file = catdir($gpad_directory, lc($division), $filename);
     $dba->dbc->disconnect_if_idle();
-    
-    return;
   }
+
+  if (-e $file) {
+    $self->dataflow_output_id(
+      { 'gpad_file' => $file, 'species' => $species },
+      2
+    );
+  }
+}
 
 1;

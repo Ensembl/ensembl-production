@@ -24,7 +24,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Log::Log4perl qw/:easy/;
 
-
 my $opts = {};
 my @flags = qw(
     src_dir=s tgt_dir=s old_rel=s new_rel=s old_ens=s new_ens=s verbose
@@ -77,19 +76,12 @@ sub process_file {
     return if -d $file || -l $file;
     return if $file =~ m/mysql/ || $file =~ /CHECKSUMS/;
     $log->info("Processing $file");
-    if($file=~m/\.vcf\.gz/ || $file =~ m/\.gvf\.gz/) {	
-	my $newfile = rename_file($file);
-	$log->debug("VCF: $file -> $newfile");
-	# read and replace header
-	open my $in, "<:gzip", $file or die $!;
-	open my $out, ">:gzip", $newfile or die $!;
-	while(<$in>) {
-	    s/version=${old_ens_rel}/version=${new_ens_rel}/;
-	    s/e${old_ens_rel}/e${new_ens_rel}/;
-	    print $out $_;
-	}
-	close $in;
-	close $out;
+    if($file=~m/\.vcf\.gz$/ || $file =~ m/\.gvf\.gz$/) {
+      my $newfile = rename_file($file);
+
+      $log->debug("Doing: gunzip < $file | sed -e 's/version=${old_ens_rel}/version=${new_ens_rel}/g' | gzip -c > $newfile");
+      `gunzip < $file | sed -e 's/version=${old_ens_rel}/version=${new_ens_rel}/g' | gzip -c > $newfile`;
+
     } elsif($file=~m/Compara\..*_trees\.([0-9]+)\.tar\.gz/) {
 	my $newfile = rename_file(substr($file,0,$-[1]).$new_rel.substr($file,$+[1]));	
 	my $newtar = basename($newfile);

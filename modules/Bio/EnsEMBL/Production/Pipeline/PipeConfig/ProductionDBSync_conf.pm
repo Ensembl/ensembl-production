@@ -206,6 +206,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -parameters        => {
                               datacheck_groups => ['controlled_tables'],
+                              datacheck_types  => ['critical'],
                               registry_file    => $self->o('registry'),
                               history_file     => $self->o('history_file'),
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
