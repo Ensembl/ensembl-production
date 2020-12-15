@@ -59,6 +59,7 @@ sub default_options {
     db_url  => $self->o('srv_url') . $self->o('db_name'),
 
     table_sql => $self->o('base_dir').'/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/StableID/sql/table.sql',
+    index_sql => $self->o('base_dir').'/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/StableID/sql/index.sql',
   }
 }
 
@@ -154,7 +155,11 @@ sub pipeline_analyses {
                           },
       -flow_into       => {
                             '2->A' => ['Populate'],
-                            'A->1' => ['Optimize']
+                            'A->1' => WHEN(
+                                        '#incremental#' => ['Optimize'],
+                                      ELSE
+                                        ['CreateIndexes']
+                                      )
                           }
     },
     {
@@ -167,6 +172,15 @@ sub pipeline_analyses {
                               db_url      => $self->o('db_url'),
                               incremental => $self->o('incremental')
                             }
+    },
+    {
+      -logic_name  => 'CreateIndexes',
+      -module      => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+      -parameters  => {
+                        db_conn    => $self->o('db_url'),
+                        input_file => $self->o('index_sql'),
+                      },
+      -flow_into   => ['Optimize']
     },
     {
       -logic_name      => "Optimize",
