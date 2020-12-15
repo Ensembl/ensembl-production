@@ -40,7 +40,7 @@ sub run {
     my $dfa = $dba->get_adaptor('DataFile');
     my $data_files = $dfa->fetch_all;
 
-    my @missing;
+    my @missing = ();
     foreach my $data_file (@$data_files) {
       my $name = $data_file->name;
       my @paths;
@@ -62,9 +62,8 @@ sub run {
         }
       }
     }
-    if (scalar(@missing)) {
-      $self->throw('Missing data files: '.join(',', @missing));
-    }
+    $self->param('rnaseq_db', $dba->dbc->dbname);
+    $self->param('missing', \@missing);
   }
 
   # Ensure checksum and README filenames are consistent.
@@ -88,6 +87,15 @@ sub write_output {
 
   if ($rnaseq_exists) {
     $self->dataflow_output_id({}, 2);
+
+    my $rnaseq_db = $self->param_required('rnaseq_db');
+    my $missing   = $self->param_required('missing');
+    if (scalar(@$missing)) {
+      $self->dataflow_output_id({
+        'missing'   => $missing,
+        'rnaseq_db' => $rnaseq_db
+      }, 3);
+    }
   }
 }
 
