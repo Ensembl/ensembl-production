@@ -50,6 +50,8 @@ sub default_options {
     overwrite      => 0,
     per_chromosome => 0,
 
+    rnaseq_email => $self->o('email'),
+
     # External programs
     blastdb_exe          => 'makeblastdb',
     gtf_to_genepred_exe  => 'gtfToGenePred',
@@ -361,8 +363,19 @@ sub pipeline_analyses {
 	    -rc_name           => '1GB',
       -flow_into         => {
                               '2->A' => ['Symlink_RNASeq'],
-                              'A->2' => ['Verify_Unzipped']
+                              'A->2' => ['Verify_Unzipped'],
+                              '3'    => ['RNASeq_Missing'],
                             },
+    },
+    {
+      -logic_name        => 'RNASeq_Missing',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Missing',
+      -max_retry_count   => 1,
+      -hive_capacity     => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              email => $self->o('rnaseq_email'),
+                            }
     },
     {
       -logic_name        => 'Genome_FASTA_mem',
