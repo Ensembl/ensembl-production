@@ -13,14 +13,5 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS gene_autocomplete;
-
-CREATE TABLE gene_autocomplete (
-  species       varchar(255) NOT NULL,
-  stable_id     varchar(128) NOT NULL,
-  display_label varchar(128) NOT NULL,
-  location      varchar(60)  NOT NULL,
-  db            varchar(32)  NOT NULL DEFAULT "core",
-  KEY i  (species, display_label),
-  KEY i2 (species, stable_id),
-  KEY i3 (species, display_label, stable_id)) ENGINE=MyISAM;
+CREATE KEY stable_id_db_type ON stable_id_lookup(stable_id, db_type, object_type);
+CREATE KEY stable_id_object_type ON stable_id_lookup(stable_id, object_type);
