@@ -179,7 +179,7 @@ sub tidy {
 
   my $temp_filename = "$filename.sorted";
 
-  my $cmd = "$gt_gff3_exe -tidy -sort -retainids -force -o $temp_filename $filename";
+  my $cmd = "$gt_gff3_exe -tidy -sort -retainids -fixregionboundaries -force -o $temp_filename $filename";
   my ($rc, $output) = $self->run_cmd($cmd);
 
   if ($rc) {
