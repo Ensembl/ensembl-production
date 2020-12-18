@@ -41,7 +41,7 @@ use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
 use MIME::Base64 qw/encode_base64/;
 use Encode qw/encode/;
 use List::MoreUtils qw(uniq);
-use CoordinateConverter qw(to_zero_based);
+use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::CoordinateConverter qw(to_zero_based);
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
 
 
