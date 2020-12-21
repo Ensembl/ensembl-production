@@ -75,7 +75,7 @@ sub default_options {
 
         ## gff3 parameters
         'gt_exe'                 => 'gt',
-        'gff3_tidy'              => $self->o('gt_exe') . ' gff3 -tidy -sort -retainids -force',
+        'gff3_tidy'              => $self->o('gt_exe') . ' gff3 -tidy -sort -retainids -fixregionboundaries -force',
         'gff3_validate'          => $self->o('gt_exe') . ' gff3validator',
 
         'feature_type'           => [ 'Gene', 'Transcript', 'SimpleFeature' ], #'RepeatFeature'
