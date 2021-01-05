@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version    => '5.46-81.0',
+    interproscan_version    => '5.45-80.0',
     interproscan_exe        => 'interproscan.sh',
    	run_interproscan        => 1,
 
@@ -227,6 +227,7 @@ sub default_options {
         'logic_name'    => 'interpro2pathway',
         'db'            => 'InterPro2Pathway',
       },
+ 	
     ],
 
     # Remove existing analyses; if =0 then existing analyses
