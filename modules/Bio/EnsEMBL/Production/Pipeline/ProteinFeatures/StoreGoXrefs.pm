@@ -93,7 +93,7 @@ sub delete_existing {
       object_xref ox  ON x.xref_id = ox.xref_id INNER JOIN
       external_db edb ON x.external_db_id = edb.external_db_id
     WHERE
-      edb.db_name = "GO" AND ox.xref_id IS NUL
+      edb.db_name = "GO" AND ox.xref_id IS NULL
   /;
   $self->core_dbh->do($delete_go_sql);
 }
