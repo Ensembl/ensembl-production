@@ -57,6 +57,9 @@ sub default_options {
     # Allow the checksum loading to be skipped (not recommended)
     skip_checksum_loading => 0,
 
+    # Only use a source if its version has changed.
+    check_interpro_db_version => 0,
+
     # Transitive GO annotation
     interpro2go_file => '/nfs/panda/ensembl/production/ensprod/interpro2go/interpro2go',
 
@@ -257,7 +260,8 @@ sub default_options {
     # If this is switched on, you get one email per species.
     email_report => 0,
 
-    # History file for storing record of datacheck run.
+    # Config/history files for storing record of datacheck run.
+    config_file => undef,
     history_file => undef,
   };
 }
@@ -319,17 +323,7 @@ sub pipeline_analyses {
                               skip_checksum_loading => $self->o('skip_checksum_loading'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['InterProScanPrograms'],
-    },
-
-    {
-      -logic_name        => 'InterProScanPrograms',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScanPrograms',
-      -max_retry_count   => 0,
-      -parameters        => {
-                              analyses => $self->o('analyses'),
-                            },
-      -flow_into 	       => {
+      -flow_into         => {
                               '1->A' => ['DbFactory'],
                               'A->1' => WHEN(
                                           '#interpro_desc_source# eq "file"' =>
@@ -337,7 +331,7 @@ sub pipeline_analyses {
                                           '#interpro_desc_source# eq "core_dbs"' =>
                                             ['DbFactoryForDumpingInterPro']
                                         ),
-                            }
+                            },
     },
 
     {
@@ -356,7 +350,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '2->A' => ['BackupTables'],
-                              'A->2' => ['AnnotateProteinFeatures'],
+                              'A->2' => ['AnalysisConfiguration'],
                             }
     },
 
@@ -379,20 +373,21 @@ sub pipeline_analyses {
                               output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -rc_name           => 'normal',
-      -flow_into         => ['AnalysisFactory'],
     },
 
-    { -logic_name        => 'AnalysisFactory',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisFactory',
-      -max_retry_count   => 1,
-      -analysis_capacity => 20,
+    {
+      -logic_name        => 'AnalysisConfiguration',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
+      -max_retry_count   => 0,
       -parameters        => {
-                              analyses => $self->o('analyses'),
-                              run_seg  => $self->o('run_seg'),
+                              analyses                  => $self->o('analyses'),
+                              interproscan_version      => $self->o('interproscan_version'),
+                              check_interpro_db_version => $self->o('check_interpro_db_version'),
+                              run_seg                   => $self->o('run_seg'),
                             },
-      -flow_into         => {
+      -flow_into 	       => {
                               '2->A' => ['AnalysisSetup'],
-                              'A->1' => ['RemoveOrphans'],
+                              'A->3' => ['RemoveOrphans'],
                             }
     },
 
@@ -462,6 +457,7 @@ sub pipeline_analyses {
                               pathway_sources => $self->o('pathway_sources'),
                             },
       -rc_name           => 'normal',
+      -flow_into         => ['AnnotateProteinFeatures'],
     },
 
     {
@@ -649,7 +645,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '4GB',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanLookup_HighMem'],
                             },
     },
@@ -671,7 +667,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '16GB',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                             },
     },
 
@@ -692,7 +688,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '4GB_4CPU',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanNoLookup_HighMem'],
                             },
     },
@@ -714,7 +710,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '16GB_4CPU',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                             },
     },
 
@@ -735,7 +731,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '4GB_4CPU',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                                '0' => ['InterProScanLocal_HighMem'],
                             },
     },
@@ -757,7 +753,7 @@ sub pipeline_analyses {
       },
       -rc_name           => '32GB_4CPU',
       -flow_into         => {
-                               '1' => ['StoreProteinFeatures'],
+                               '3' => ['StoreProteinFeatures'],
                             },
     },
 
@@ -909,6 +905,7 @@ sub pipeline_analyses {
       -parameters        => {
                               datacheck_names  => ['ForeignKeys', 'PepstatsAttributes'],
                               datacheck_groups => ['protein_features'],
+                              config_file      => $self->o('config_file'),
                               history_file     => $self->o('history_file'),
                               failures_fatal   => 1,
                             },
