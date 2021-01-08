@@ -57,7 +57,7 @@ sub run {
   my $outfile_xml  = "$outfile_base.xml";
   my $outfile_tsv  = "$outfile_base.tsv";
   
-  if ($run_interproscan) {
+  if ( $run_interproscan && scalar(@$applications) ) {
     unlink $outfile_xml if -e $outfile_xml;
     unlink $outfile_tsv if -e $outfile_tsv;
     
@@ -104,13 +104,16 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $applications = $self->param_required('interproscan_applications');
   
-  my $output_ids =
-  {
-    'outfile_xml' => $self->param('outfile_xml'),
-    'outfile_tsv' => $self->param('outfile_tsv'),
-  };
-  $self->dataflow_output_id($output_ids, 1);
+  if (scalar(@$applications)) {
+    my $output_ids =
+    {
+      'outfile_xml' => $self->param('outfile_xml'),
+      'outfile_tsv' => $self->param('outfile_tsv'),
+    };
+    $self->dataflow_output_id($output_ids, 3);
+  }
 }
 
 1;
