@@ -23,31 +23,33 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
+sub param_defaults {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::param_defaults},
+    pathway_sources => [],
+  };
+}
+
 sub run {
   my ($self) = @_;
-  
-  my $pathway_sources = $self->param('pathway_sources') || [];
-  
-  my $species_id = $self->core_dba()->species_id();
 
-  my $delete_xref_sql =
-    q/DELETE x.* 
-    FROM 
-    xref x 
-    LEFT OUTER JOIN object_xref ox ON x.xref_id = ox.xref_id 
-    JOIN external_db edb ON x.external_db_id = edb.external_db_id
-    JOIN translation t ON (ox.ensembl_id=t.translation_id)
-    JOIN transcript tl USING (transcript_id)
-    JOIN seq_region s USING (seq_region_id)
-    JOIN coord_system c USING (coord_system_id)
+  my $pathway_sources = $self->param_required('pathway_sources');
+
+  my $delete_xref_sql = qq/
+    DELETE x.* FROM
+      xref x LEFT OUTER JOIN
+      object_xref ox ON x.xref_id = ox.xref_id INNER JOIN
+      external_db edb ON x.external_db_id = edb.external_db_id
     WHERE 
-    edb.db_name = ? AND ox.xref_id IS NULL
-    AND ox.ensembl_object_type='Translation'
-    AND c.species_id=?/;
+      edb.db_name = ? AND ox.xref_id IS NULL
+  /;
+
   my $delete_xref_sth = $self->core_dbh->prepare($delete_xref_sql);
-  
+
   foreach my $db_name (@{$pathway_sources}) {
-    $delete_xref_sth->execute($db_name, $species_id);
+    $delete_xref_sth->execute($db_name);
   }
 }
 
