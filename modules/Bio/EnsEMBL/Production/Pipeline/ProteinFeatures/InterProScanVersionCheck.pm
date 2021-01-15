@@ -28,10 +28,10 @@ use Path::Tiny;
 
 sub run {
   my ($self) = @_;
-  my $interproscan_version  = $self->param_required('interproscan_version');
-  my $interproscan_exe      = $self->param_required('interproscan_exe');
-  my $skip_checksum_loading = $self->param_required('skip_checksum_loading');
-  my $service_version_file  = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
+  my $interproscan_version = $self->param_required('interproscan_version');
+  my $interproscan_exe     = $self->param_required('interproscan_exe');
+  my $local_computation    = $self->param_required('local_computation');
+  my $service_version_file = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
 
   my $interpro_cmd = "$interproscan_exe --version";
   my $version_info = `$interpro_cmd` or $self->throw("Failed to run ".$interpro_cmd);
@@ -40,7 +40,7 @@ sub run {
     my $cmd_version = $1;
     if ($cmd_version ne $interproscan_version) {
       $self->throw("InterProScan version mismatch\nConf file: $interproscan_version\n$interproscan_exe: $cmd_version");
-    } elsif (! $skip_checksum_loading) {
+    } elsif (! $local_computation) {
       my $temp_dir = Path::Tiny->tempdir();
       my $ff = File::Fetch->new(uri => $service_version_file);
       my $file = $ff->fetch(to => $temp_dir->stringify);
