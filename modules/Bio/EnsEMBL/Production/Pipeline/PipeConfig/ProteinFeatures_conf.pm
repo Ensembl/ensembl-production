@@ -86,8 +86,8 @@ sub default_options {
     uniprot_file_local     => catdir($self->o('pipeline_dir'), 'uniprot.txt'),
 
     interpro2go_logic_name => 'interpro2go',
-    uniparc_logic_name     => 'uniparc_pf',
-    uniprot_logic_name     => 'uniprot_pf',
+    uniparc_logic_name     => 'uniparc_checksum',
+    uniprot_logic_name     => 'uniprot_checksum',
 
     protein_feature_analyses =>
     [
