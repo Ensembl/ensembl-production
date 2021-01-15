@@ -23,27 +23,30 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
+use Path::Tiny;
+use POSIX qw(strftime);
+
 sub run {
   my ($self) = @_;
-  my $analyses             = $self->param_required('analyses');
+  my $pf_analyses          = $self->param_required('protein_feature_analyses');
   my $interproscan_version = $self->param_required('interproscan_version');
   my $check_db_version     = $self->param_required('check_interpro_db_version');
   my $run_seg              = $self->param_required('run_seg');
+  my $xref_analyses        = $self->param_required('xref_analyses');
 
   my $aa = $self->core_dba->get_adaptor('Analysis');
 
   my $filtered_analyses = [];
-  foreach my $analysis_config (@{$analyses}) {
-    # If the analysis doesn't already exist, then always need to create it.
-    # For InterPro sources with the current InterProScan version, and for seg,
-    # don't re-annotate - it would only reproduce exactly the same results.
-    # If 'check_db_version' is true, then we only annotate if the InterPro
-    # source database version has changed (InterPro are adding entries with
-    # every release, so this leads to slightly less comprehensive annotation,
-    # but handling large data volumes would not be possible otherwise).
-    # We always delete all GO and reannotate; and we want to keep existing
-    # pathway data (the code is clever enough to remove pathways attached
-    # to any InterPro features that get removed).
+  foreach my $analysis_config (@{$pf_analyses}) {
+    # If the analysis doesn't already exist, then need to create it.
+    # For InterPro sources with the current InterProScan version,
+    # and for seg, don't re-annotate - it would only reproduce exactly
+    # the same results.
+    # If 'check_db_version' is true, then we only annotate if the
+    # InterPro source database version has changed (InterPro are adding
+    # entries with every release, so this leads to slightly less
+    # comprehensive annotation, but handling large data volumes would
+    # not be possible otherwise
     my $logic_name = $$analysis_config{'logic_name'};
     my $analysis = $aa->fetch_by_logic_name($logic_name);
 
@@ -51,10 +54,6 @@ sub run {
       if ($logic_name eq 'seg') {
         $run_seg = 0;
         $self->warning("Skipping $logic_name - annotation exists");
-      } elsif ($logic_name eq 'interpro2go') {
-        push @$filtered_analyses, $analysis_config;
-      } elsif ($logic_name eq 'interpro2pathway') {
-        $self->warning("Re-using existing pathway analysis");
       } elsif ($analysis->program_version eq $interproscan_version) {
         $self->warning("Skipping $logic_name - annotation exists for InterProScan $interproscan_version");
       } elsif ($check_db_version && ($$analysis_config{'db_version'} eq $analysis->db_version)) {
@@ -84,6 +83,23 @@ sub run {
   }
   @all = (@lookup, @nolookup);
 
+  foreach my $analysis_config (@{$xref_analyses}) {
+    if ($$analysis_config{'annotate'}) {
+      if (-e $$analysis_config{'local_file'}) {
+        my $timestamp = path($$analysis_config{'local_file'})->stat->mtime;
+        my $datestamp = strftime "%Y-%m-%d", localtime($timestamp);
+        $$analysis_config{'db_version'} = $datestamp;
+
+        # We _could_ try to check the db_version of existing analyses,
+        # if any; but it gets super-complicated to manage dependent
+        # xrefs in all the different permutations, so always re-load
+        # the xrefs - it doesn't take long, and avoids code that is
+        # highly susceptible to bugs.
+        push @$filtered_analyses, $analysis_config;
+      }
+    }
+  }
+
   $self->param('filtered_analyses', $filtered_analyses);
   $self->param('run_seg', $run_seg);
   $self->param('lookup', \@lookup);
@@ -100,7 +116,7 @@ sub write_output {
   my $nolookup = $self->param('nolookup');
   my $all      = $self->param('all');
 
-  if ( $run_seg || scalar(@$all) ) {
+  if ( scalar(@$analyses) ) {
     $self->dataflow_output_id( $analyses, 2 );
 
     $self->dataflow_output_id(

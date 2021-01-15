@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::PartitionByChecksum;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteins;
 
 use strict;
 use warnings;
@@ -26,63 +26,71 @@ use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 use Bio::SeqIO;
 use DBI qw(:sql_types);
 use Digest::MD5 qw(md5_hex);
-use File::Basename qw(dirname fileparse);
-use File::Path qw(make_path);
-
-sub fetch_input {
-  my ($self) = @_;
-  my $fasta_file = $self->param_required('fasta_file');
-  my $out_dir    = $self->param('out_dir');
-  
-  if (!-e $fasta_file) {
-    $self->throw("Fasta file '$fasta_file' does not exist");
-  }
-  
-  if (!defined $out_dir) {
-    $out_dir = dirname($fasta_file);
-    $self->param('out_dir', $out_dir);
-  } else {
-    if (!-e $out_dir) {
-      $self->warning("Output directory '$out_dir' does not exist. I shall create it.");
-      make_path($out_dir) or $self->throw("Failed to create output directory '$out_dir'");
-    }
-  }
-}
+use File::Spec::Functions qw(catdir);
+use Path::Tiny;
 
 sub run {
   my ($self) = @_;
-  my $fasta_file     = $self->param_required('fasta_file');
-  my $out_dir        = $self->param('out_dir');
-  my $checksum_table = $self->param_required('checksum_table');
-  
-  my ($basename, undef, undef) = fileparse($fasta_file, qr/\.[^.]*/);
-  my $checksum_dir   = "$out_dir/checksum";
-  my $nochecksum_dir = "$out_dir/nochecksum";
-  
-  if (!-e $checksum_dir) {
-    make_path($checksum_dir) or $self->throw("Failed to create directory '$checksum_dir'");
-  }
-  
-  if (!-e $nochecksum_dir) {
-    make_path($nochecksum_dir) or $self->throw("Failed to create directory '$nochecksum_dir'");
-  }
-  
-  my $checksum_file   = "$checksum_dir/$basename.fa";
-  my $nochecksum_file = "$nochecksum_dir/$basename.fa";
+
+  my $fasta_file         = $self->param_required('fasta_file');
+  my $uniparc_xrefs      = $self->param_required('uniparc_xrefs');
+  my $uniprot_xrefs      = $self->param_required('uniprot_xrefs');
+  my $uniparc_logic_name = $self->param_required('uniparc_logic_name');
+  my $uniprot_logic_name = $self->param_required('uniprot_logic_name');
+
+  my $fasta = path($fasta_file);
+  my $out_dir = $fasta->parent;
+  my $basename = $fasta->basename;
+  my $checksum_file = catdir($out_dir, 'checksum', $basename);
+  my $nochecksum_file = catdir($out_dir, 'nochecksum', $basename);
+  path($checksum_file)->parent->mkpath;
+  path($nochecksum_file)->parent->mkpath;
+
   $self->param('checksum_file', $checksum_file);
   $self->param('nochecksum_file', $nochecksum_file);
   
   my $all        = Bio::SeqIO->new(-format => 'Fasta', -file => $fasta_file);
   my $checksum   = Bio::SeqIO->new(-format => 'Fasta', -file => ">$checksum_file");
   my $nochecksum = Bio::SeqIO->new(-format => 'Fasta', -file => ">$nochecksum_file");
-  
-  my $sth = $self->hive_dbh->prepare("select 1 from $checksum_table where md5sum=? limit 1;")
-    or self->throw("Hive DB connection error: ".$self->hive_dbh->errstr);
-  
+
+  my $uniparc_sql = "SELECT upi FROM uniparc WHERE md5sum = ?";
+  my $dbh = $self->hive_dbh;
+  my $uniparc_sth = $dbh->prepare($uniparc_sql) or $self->throw($dbh->errstr);
+
+  my ($uniparc_analysis, $uniprot_analysis, $uniprot_sth, $dbea);
+  if ($uniparc_xrefs) {
+    my $dba  = $self->get_DBAdaptor('core');
+    my $aa   = $dba->get_adaptor('Analysis');
+    my $dbea = $dba->get_adaptor('DBEntry');
+
+    $uniparc_analysis = $aa->fetch_by_logic_name($uniparc_logic_name);
+
+    if ($uniprot_xrefs) {
+      $uniprot_analysis = $aa->fetch_by_logic_name($uniprot_logic_name);
+
+      my $uniprot_sql = "SELECT acc FROM uniprot WHERE upi = ?";
+      $uniprot_sth = $dbh->prepare($uniprot_sql) or $self->throw($dbh->errstr);
+    }
+
+    $dba->dbc && $dba->dbc->disconnect_if_idle();
+  }
+
   while (my $seq = $all->next_seq) {
-    if ($self->has_checksum($sth, md5_hex($seq->seq))) {
+    my $upi = $self->fetch_upi($uniparc_sth, md5_hex($seq->seq));
+
+    if (defined $upi) {
       my $success = $checksum->write_seq($seq);
       $self->throw("Failed to write sequence to '$checksum_file'") unless $success;
+
+      if ($uniparc_xrefs) {
+        my $uniparc_xref = $self->add_uniparc_xref($upi, $uniparc_analysis, $dbea, $seq->id);
+        if ($uniprot_xrefs) {
+          my $accs = $self->fetch_acc($uniprot_sth, $upi);
+          if (scalar(@$accs)) {
+            $self->add_uniprot_xref($accs, $uniprot_analysis, $dbea, $seq->id, $uniparc_xref);
+          }
+        }
+      }
     } else {
       my $success = $nochecksum->write_seq($seq);
       $self->throw("Failed to write sequence to '$nochecksum_file'") unless $success;
@@ -93,18 +101,87 @@ sub run {
 sub write_output {
   my ($self) = @_;
   
-  $self->dataflow_output_id({'checksum_file' => $self->param('checksum_file')}, 1);
-  $self->dataflow_output_id({'nochecksum_file' => $self->param('nochecksum_file')}, 2);
+  $self->dataflow_output_id({'checksum_file' => $self->param('checksum_file')}, 3);
+  $self->dataflow_output_id({'nochecksum_file' => $self->param('nochecksum_file')}, 4);
 }
 
-sub has_checksum {
+sub fetch_upi {
   my ($self, $sth, $md5sum) = @_;
-  
+
   $sth->bind_param(1, $md5sum, SQL_CHAR);
   $sth->execute();
-  my $result = $sth->fetchrow_arrayref;
-  
-  return defined($result) ? 1 : 0;
+
+  my $upi;
+  my $results = $sth->fetchall_arrayref;
+
+  if (scalar(@$results)) {
+    $upi = $$results[0][0];
+    if (scalar(@$results) > 1) {
+      $self->warning("Multiple UPIs found for $md5sum");
+    }
+  }
+
+  return $upi;
+}
+
+sub add_uniparc_xref {
+  my ($self, $upi, $analysis, $dbea, $translation_id) = @_;
+
+  my $xref = $self->create_uniparc_xref($upi, $analysis);
+  $dbea->store($xref, $translation_id, 'Translation');
+
+  return $xref;
+}
+
+sub create_uniparc_xref {
+  my ($self, $upi, $analysis) = @_;
+
+	my $xref = Bio::EnsEMBL::DBEntry->new(
+    -PRIMARY_ID => $upi,
+		-DISPLAY_ID => $upi,
+		-DBNAME     => 'UniParc',
+		-INFO_TYPE  => 'CHECKSUM',
+  );
+	$xref->analysis($analysis);
+
+  return $xref;
+}
+
+sub fetch_acc {
+  my ($self, $sth, $upi) = @_;
+
+  $sth->bind_param(1, $upi, SQL_CHAR);
+  $sth->execute();
+
+  my @accs = map {@$_} @{ $sth->fetchall_arrayref };
+
+  return \@accs;
+}
+
+sub add_uniprot_xref {
+  my ($self, $accs, $analysis, $dbea, $translation_id, $uniparc_xref) = @_;
+
+  foreach my $acc (@$accs) {
+    my $xref = $self->create_uniprot_xref($acc, $analysis);
+    $dbea->store($xref, $translation_id, 'Translation', undef, $uniparc_xref);
+  }
+}
+
+sub create_uniprot_xref {
+  my ($self, $acc, $analysis) = @_;
+
+  my $external_db = 'UniProtKB_all';
+  $external_db = 'Uniprot/Varsplic' if $acc =~ /\-\d+$/;
+
+	my $xref = Bio::EnsEMBL::DBEntry->new(
+    -PRIMARY_ID => $acc,
+		-DISPLAY_ID => $acc,
+		-DBNAME     => $external_db,
+		-INFO_TYPE  => 'DEPENDENT',
+  );
+	$xref->analysis($analysis);
+
+  return $xref;
 }
 
 1;
