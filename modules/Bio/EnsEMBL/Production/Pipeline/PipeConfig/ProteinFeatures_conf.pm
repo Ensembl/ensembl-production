@@ -851,7 +851,7 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              interpro2go_file => $self->o('interpro2go_file'),
+                              interpro2go_file => $self->o('interpro2go_file_local'),
                               logic_name       => $self->o('interpro2go_logic_name')
                             },
       -flow_into         => ['StoreInterProXrefs'],
@@ -865,9 +865,9 @@ sub pipeline_analyses {
       -parameters        => {
                               sql =>
                               [
-                                'CREATE TEMPORARY TABLE tmp_xref (acc VARCHAR(255), desc VARCHAR(255))',
-                                "LOAD DATA LOCAL INFILE '".$self->o('interpro_file_local')."' INTO TABLE tmp_xref;",
-                                'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type) SELECT external_db_id, acc, acc, 0, desc, "DIRECT" FROM tmp_xref, external_db WHERE db_name = "Interpro"',
+                                'CREATE TEMPORARY TABLE tmp_xref (acc VARCHAR(255), description VARCHAR(255))',
+                                "LOAD DATA LOCAL INFILE '".$self->o('interpro_file_local')."' INTO TABLE tmp_xref",
+                                'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type) SELECT external_db_id, acc, acc, 0, tmp_xref.description, "DIRECT" FROM tmp_xref, external_db WHERE db_name = "Interpro"',
                                 'DROP TEMPORARY TABLE tmp_xref',
                               ],
                             },
