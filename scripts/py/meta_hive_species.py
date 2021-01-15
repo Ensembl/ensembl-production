@@ -47,11 +47,11 @@ parser = argparse.ArgumentParser(
                 ' init_pipeline command')
 parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
 parser.add_argument('-d', '--division', help='Restrict to a single division', type=str, choices=divisions)
-parser.add_argument('-f', '--output_file', help='Overwrite default output file name', required=False)
+parser.add_argument('-v', '--version', help='versioned file name', required=False, default=getenv('ENS_VERSION'))
 parser.add_argument('-t', '--genomes_types', help='List genomes events (n r ua ug)', type=str, nargs='+',
                     default=['n', 'r', 'ua', 'ug'])
 
-rr_version = getenv('RR_VERSION')
+
 names = {
     'n': '{}-new_genomes.txt',
     'r': '{}-renamed_genomes.txt',
@@ -61,8 +61,6 @@ names = {
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    if not args.output_file:
-        logger.setLevel(logging.ERROR)
     if args.division:
         logger.info("Process only division %s", args.division)
         divisions = [args.division]
@@ -93,14 +91,15 @@ if __name__ == '__main__':
             else:
                 logger.info("File not found: %s", file_path)
 
-    logger.info("Retrieved species: %s", species)
-    with open(join(home_dir, 'species_%s.txt' % rr_version), 'w') as f:
+    logger.info("Retrieved species:")
+    [logger.info('%s', spec) for spec in species]
+    with open(join(home_dir, 'species_%s.txt' % args.version), 'w') as f:
         [f.write('-species {} '.format(spec[0])) for spec in species]
-    with open(join(home_dir, 'database_%s.txt' % rr_version), 'w') as f:
+        logger.info("Generated %s", f.name)
+    with open(join(home_dir, 'database_%s.txt' % args.version), 'w') as f:
         [f.write('-database {} '.format(spec[1])) for spec in species]
-    with open(join(home_dir, 'dblist_%s.txt' % rr_version), 'w') as f:
+        logger.info("Generated %s", f.name)
+    with open(join(home_dir, 'dblist_%s.txt' % args.version), 'w') as f:
         dbs = [spec[1] for spec in species]
         f.write(','.join(dbs))
-
-
-
+        logger.info("Generated %s", f.name)
