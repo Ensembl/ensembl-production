@@ -28,16 +28,16 @@ use Bio::EnsEMBL::OntologyXref;
 sub run {
   my ($self) = @_;
 
+  my $logic_name = $self->param_required('logic_name');
+
   $self->hive_dbc()->disconnect_if_idle();
   
   my $aa   = $self->core_dba->get_adaptor('Analysis');
   my $dbea = $self->core_dba->get_adaptor('DBEntry');
   
-  my $analysis = $aa->fetch_by_logic_name('interpro2go');
+  my $analysis = $aa->fetch_by_logic_name($logic_name);
   
   my $go = $self->parse_interpro2go();
-  
-  $self->delete_existing();
   
   $self->store_go_xref($dbea, $analysis, $go);
   $self->core_dbc()->disconnect_if_idle();
@@ -69,33 +69,6 @@ sub parse_interpro2go {
   close $fh;
   
   return \%go;
-}
-
-sub delete_existing {
-  my ($self) = @_;
-
-  my $delete_ox_sql = qq/
-    DELETE ox.*, ontx.* FROM
-      object_xref ox INNER JOIN
-      ontology_xref ontx USING (object_xref_id) INNER JOIN
-      xref x1 ON ox.xref_id = x1.xref_id INNER JOIN
-      external_db edb1 ON x1.external_db_id = edb1.external_db_id INNER JOIN
-      xref x2 ON ontx.source_xref_id = x2.xref_id INNER JOIN
-      external_db edb2 ON x2.external_db_id = edb2.external_db_id
-    WHERE
-      edb1.db_name = "GO" AND edb2.db_name = "Interpro"
-  /;
-  $self->core_dbh->do($delete_ox_sql);
-
-  my $delete_go_sql = qq/
-    DELETE x.* FROM
-      xref x LEFT OUTER JOIN
-      object_xref ox  ON x.xref_id = ox.xref_id INNER JOIN
-      external_db edb ON x.external_db_id = edb.external_db_id
-    WHERE
-      edb.db_name = "GO" AND ox.xref_id IS NULL
-  /;
-  $self->core_dbh->do($delete_go_sql);
 }
 
 sub store_go_xref {
