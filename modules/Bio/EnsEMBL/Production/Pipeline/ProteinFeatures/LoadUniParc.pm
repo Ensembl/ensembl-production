@@ -36,10 +36,10 @@ sub run {
     $dbh->do($sql) or self->throw($dbh->errstr);
 
     my $index_1 = 'ALTER TABLE uniparc ADD KEY upi_idx (upi)';
-    #$dbh->do($index_1) or self->throw($dbh->errstr);
+    $dbh->do($index_1) or self->throw($dbh->errstr);
 
     my $index_2 = 'ALTER TABLE uniparc ADD KEY md5sum_idx (md5sum) USING HASH';
-    #$dbh->do($index_2) or self->throw($dbh->errstr);
+    $dbh->do($index_2) or self->throw($dbh->errstr);
 
   } else {
     $self->throw("Checksum file '$uniparc_file' does not exist");
