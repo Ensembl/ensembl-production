@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadChecksums;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadUniParc;
 
 use strict;
 use warnings;
@@ -26,54 +26,24 @@ use File::Basename;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
-sub param_defaults {
-  my ($self) = @_;
-  
-  return {
-    %{$self->SUPER::param_defaults},
-    skip_checksum_loading => 0,
-  };
-}
-
 sub run {
   my ($self) = @_;
-  my $md5_checksum_file     = $self->param_required('md5_checksum_file');
-  my $skip_checksum_loading = $self->param_required('skip_checksum_loading');
-  
-  if (! -e $md5_checksum_file) {
-    $self->throw("Checksum file '$md5_checksum_file' does not exist");
-  }
-  
-  my ($checksum_table, undef, undef) = fileparse($md5_checksum_file);
-  $self->param('checksum_table', $checksum_table);
-  
-  my $hive_dbh = $self->hive_dbh;
-  
-  # Note that case-insensitivity is important, because the md5 checksums
-  # from interpro use uppercase and those generated with perl are lowercase.
-  my @load_sql = (
-    "DROP TABLE IF EXISTS $checksum_table;",
-    "CREATE TABLE $checksum_table (md5sum char(32) collate latin1_swedish_ci);",
-    "CREATE INDEX md5sum_idx ON $checksum_table (md5sum) using hash;"
-	);
-  
-  foreach my $load_sql (@load_sql) {
-    $hive_dbh->do($load_sql) or $self->throw("Failed to execute: $load_sql");
-  }
-  
-  if ($skip_checksum_loading) {
-    $self->warning("Checksums not loaded; all computation will be done locally.");
-  } else {
-    my $cmd = $self->mysqlimport_command_line($self->hive_dbc);
-    $cmd .= " $md5_checksum_file";
-    system($cmd) == 0 or $self->throw("Failed to run ".$cmd);
-  }
-}
+  my $uniparc_file = $self->param_required('uniparc_file_local');
 
-sub write_output {
-  my ($self) = @_;
-  
-  $self->dataflow_output_id({'checksum_table' => $self->param('checksum_table')}, 1);
+  if (-e $uniparc_file) {
+    my $dbh = $self->hive_dbh;
+    my $sql = "LOAD DATA LOCAL INFILE '$uniparc_file' INTO TABLE uniparc FIELDS TERMINATED BY ' '";
+    $dbh->do($sql) or self->throw($dbh->errstr);
+
+    my $index_1 = 'ALTER TABLE uniparc ADD KEY upi_idx (upi)';
+    #$dbh->do($index_1) or self->throw($dbh->errstr);
+
+    my $index_2 = 'ALTER TABLE uniparc ADD KEY md5sum_idx (md5sum) USING HASH';
+    #$dbh->do($index_2) or self->throw($dbh->errstr);
+
+  } else {
+    $self->throw("Checksum file '$uniparc_file' does not exist");
+  }
 }
 
 1;
