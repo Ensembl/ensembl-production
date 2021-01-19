@@ -59,16 +59,20 @@ sub run {
 
   my ($uniparc_analysis, $uniprot_analysis, $uniprot_sth, $dbea);
   if ($uniparc_xrefs) {
-    my $dba  = $self->get_DBAdaptor('core');
-    my $aa   = $dba->get_adaptor('Analysis');
-    my $dbea = $dba->get_adaptor('DBEntry');
+    my $dba = $self->get_DBAdaptor('core');
+    my $aa = $dba->get_adaptor('Analysis');
+    $dbea = $dba->get_adaptor('DBEntry');
 
     $uniparc_analysis = $aa->fetch_by_logic_name($uniparc_logic_name);
+    $self->external_db_reset($dba, 'UniParc');
 
     if ($uniprot_xrefs) {
       $uniprot_analysis = $aa->fetch_by_logic_name($uniprot_logic_name);
+      $self->external_db_reset($dba, 'UniProtKB_all');
+      $self->external_db_reset($dba, 'Uniprot/Varsplic');
 
-      my $uniprot_sql = "SELECT acc FROM uniprot WHERE upi = ?";
+      my $tax_id = $dba->get_adaptor('MetaContainer')->get_taxonomy_id();
+      my $uniprot_sql = "SELECT acc FROM uniprot WHERE upi = ? and tax_id = $tax_id";
       $uniprot_sth = $dbh->prepare($uniprot_sql) or $self->throw($dbh->errstr);
     }
 
@@ -103,6 +107,15 @@ sub write_output {
   
   $self->dataflow_output_id({'checksum_file' => $self->param('checksum_file')}, 3);
   $self->dataflow_output_id({'nochecksum_file' => $self->param('nochecksum_file')}, 4);
+}
+
+sub external_db_reset {
+  my ($self, $dba, $db_name) = @_;
+
+  my $dbh = $dba->dbc->db_handle();
+  my $sql = "UPDATE external_db SET db_release = NULL WHERE db_name = ?;";
+  my $sth = $dbh->prepare($sql);
+  $sth->execute($db_name) or $self->throw("Failed to execute ($db_name): $sql");
 }
 
 sub fetch_upi {
