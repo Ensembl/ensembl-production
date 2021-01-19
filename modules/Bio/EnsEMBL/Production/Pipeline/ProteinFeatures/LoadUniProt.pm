@@ -32,9 +32,7 @@ sub run {
   my $uniprot_file = $self->param_required('uniprot_file_local');
 
   if (-e $mapping_file) {
-    $self->run_cmd("gunzip $mapping_file");
-    $mapping_file =~ s/\.gz$//;
-    $self->run_cmd("grep UniParc $mapping_file | cut -f1,3 > $uniprot_file");
+    $self->run_cmd("gunzip -c $mapping_file | grep UniParc | cut -f1,3 > $uniprot_file");
     
     my $dbh = $self->hive_dbh;
     my $sql = "LOAD DATA LOCAL INFILE '$uniprot_file' INTO TABLE uniprot";
