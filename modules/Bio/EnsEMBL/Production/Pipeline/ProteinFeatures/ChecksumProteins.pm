@@ -53,7 +53,10 @@ sub run {
   my $checksum   = Bio::SeqIO->new(-format => 'Fasta', -file => ">$checksum_file");
   my $nochecksum = Bio::SeqIO->new(-format => 'Fasta', -file => ">$nochecksum_file");
 
-  my $uniparc_sql = "SELECT upi FROM uniparc WHERE md5sum = ?";
+  my $uniparc_sql = qq/
+    SELECT upi FROM uniparc
+    WHERE md5sum = ?
+    /;
   my $dbh = $self->hive_dbh;
   my $uniparc_sth = $dbh->prepare($uniparc_sql) or $self->throw($dbh->errstr);
 
@@ -67,12 +70,32 @@ sub run {
     $self->external_db_reset($dba, 'UniParc');
 
     if ($uniprot_xrefs) {
+      # If our species has a tax_id at a 'subspecies' level,
+      # we also annotate UniProt entries for the parent 'species',
+      # for which we need the taxonomy db.
+      my $tba = $self->get_DBAdaptor('taxonomy');
+      my $tna = $tba->get_adaptor('TaxonomyNode');
+
+      my $tax_id = $dba->get_adaptor('MetaContainer')->get_taxonomy_id();
+      my @tax_ids = ($tax_id);
+      my $node = $tna->fetch_by_taxon_id($tax_id);
+      if (defined $node) {
+        if ($node->rank ne 'species') {
+          if ($node->parent->rank eq 'species') {
+            push @tax_ids, $node->parent->taxon_id;
+          }
+        }
+      }
+      my $tax_ids = join(",", @tax_ids);
+
       $uniprot_analysis = $aa->fetch_by_logic_name($uniprot_logic_name);
       $self->external_db_reset($dba, 'UniProtKB_all');
       $self->external_db_reset($dba, 'Uniprot/Varsplic');
 
-      my $tax_id = $dba->get_adaptor('MetaContainer')->get_taxonomy_id();
-      my $uniprot_sql = "SELECT acc FROM uniprot WHERE upi = ? and tax_id = $tax_id";
+      my $uniprot_sql = qq/
+        SELECT acc FROM uniprot
+        WHERE upi = ? and tax_id IN ($tax_ids)
+      /;
       $uniprot_sth = $dbh->prepare($uniprot_sql) or $self->throw($dbh->errstr);
     }
 
