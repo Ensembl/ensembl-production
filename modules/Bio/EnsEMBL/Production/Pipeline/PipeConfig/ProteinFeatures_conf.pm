@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version    => '5.46-81.0',
+    interproscan_version    => '5.48-83.0',
     interproscan_exe        => 'interproscan.sh',
    	run_interproscan        => 1,
 
@@ -82,7 +82,7 @@ sub default_options {
       {
         'logic_name'    => 'cdd',
         'db'            => 'CDD',
-        'db_version'    => '3.17',
+        'db_version'    => '3.18',
         'ipscan_name'   => 'CDD',
         'ipscan_xml'    => 'CDD',
         'ipscan_lookup' => 1,
@@ -98,7 +98,7 @@ sub default_options {
       {
         'logic_name'    => 'hamap',
         'db'            => 'HAMAP',
-        'db_version'    => '2020_01',
+        'db_version'    => '2020_05',
         'ipscan_name'   => 'Hamap',
         'ipscan_xml'    => 'HAMAP',
         'ipscan_lookup' => 1,
@@ -106,7 +106,7 @@ sub default_options {
       {
         'logic_name'    => 'hmmpanther',
         'db'            => 'PANTHER',
-        'db_version'    => '14.1',
+        'db_version'    => '15.0',
         'ipscan_name'   => 'PANTHER',
         'ipscan_xml'    => 'PANTHER',
         'ipscan_lookup' => 1,
@@ -227,6 +227,7 @@ sub default_options {
         'logic_name'    => 'interpro2pathway',
         'db'            => 'InterPro2Pathway',
       },
+	
     ],
 
     # Remove existing analyses; if =0 then existing analyses
