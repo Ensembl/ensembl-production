@@ -32,13 +32,13 @@ sub run {
   my $uniprot_file = $self->param_required('uniprot_file_local');
 
   if (-e $mapping_file) {
-    $self->run_cmd("gunzip -c $mapping_file | grep UniParc | cut -f1,3 > $uniprot_file");
-    
+    $self->run_cmd("gunzip -c $mapping_file | cut -f1,11,13 > $uniprot_file");
+
     my $dbh = $self->hive_dbh;
     my $sql = "LOAD DATA LOCAL INFILE '$uniprot_file' INTO TABLE uniprot";
     $dbh->do($sql) or self->throw($dbh->errstr);
 
-    my $index_1 = 'ALTER TABLE uniprot ADD KEY upi_idx (upi)';
+    my $index_1 = 'ALTER TABLE uniprot ADD KEY upi_idx (upi, tax_id)';
     $dbh->do($index_1) or self->throw($dbh->errstr);
 
   } else {

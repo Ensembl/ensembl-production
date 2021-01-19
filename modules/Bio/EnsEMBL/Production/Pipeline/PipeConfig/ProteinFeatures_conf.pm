@@ -76,7 +76,7 @@ sub default_options {
     interpro_file    => 'names.dat',
     interpro2go_file => 'interpro2go',
     uniparc_file     => 'upidump.lis',
-    mapping_file     => 'idmapping.dat.gz',
+    mapping_file     => 'idmapping_selected.tab.gz',
 
     # Files are retrieved and stored locally with the same name.
     interpro_file_local    => catdir($self->o('pipeline_dir'), $self->o('interpro_file')),
@@ -331,7 +331,8 @@ sub pipeline_create_commands {
   my $uniprot_table_sql = q/
     CREATE TABLE uniprot (
       acc VARCHAR(10) NOT NULL,
-      upi VARCHAR(13) NOT NULL
+      upi VARCHAR(13) NOT NULL,
+      tax_id INT NOT NULL
     );
   /;
 
@@ -843,6 +844,9 @@ sub pipeline_analyses {
       -analysis_capacity => 10,
       -batch_size        => 50,
       -max_retry_count   => 1,
+      -parameters        => {
+                              analyses => $self->o('protein_feature_analyses')
+                            },
     },
 
     {
