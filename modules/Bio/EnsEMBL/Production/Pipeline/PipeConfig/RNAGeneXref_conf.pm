@@ -53,6 +53,7 @@ sub default_options {
       {
         logic_name => $self->o('rnacentral_logic_name'),
         db         => 'RNACentral',
+        local_file => $self->o('rnacentral_file_local'),
       },
     ],
 
@@ -162,7 +163,20 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -flow_into         => ['AnalysisSetup'],
+      -flow_into         => ['AnalysisConfiguration'],
+    },
+
+    {
+      -logic_name        => 'AnalysisConfiguration',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::RNAGeneXref::AnalysisConfiguration',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              analyses => $self->o('analyses'),
+                            },
+      -flow_into 	       => {
+                              '2->A' => ['AnalysisSetup'],
+                              'A->3' => ['SpeciesFactory'],
+                            }
     },
 
     {
@@ -171,16 +185,12 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -analysis_capacity => 20,
       -parameters        => {
-                              logic_name         => $self->o('rnacentral_logic_name'),
-                              db                 => 'RNACentral',
-                              db_version         => 'RNACentral',
                               db_backup_required => 1,
                               db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => ['object_xref'],
                               production_lookup  => 1,
                             },
-      -flow_into 	       => ['SpeciesFactory'],
     },
 
     {
