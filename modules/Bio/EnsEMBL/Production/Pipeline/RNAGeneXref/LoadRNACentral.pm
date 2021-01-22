@@ -29,13 +29,13 @@ use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 sub run {
   my ($self) = @_;
   my $rnacentral_file = $self->param_required('rnacentral_file_local');
+  (my $unzipped_file = $rnacentral_file) =~ s/\.gz$//;
 
   if (-e $rnacentral_file) {
-    $self->run_cmd("gunzip $rnacentral_file");
-    $rnacentral_file =~ s/\.gz$//;
+    $self->run_cmd("gunzip -c $rnacentral_file > $unzipped_file");
 
     my $dbh = $self->hive_dbh;
-    my $sql = "LOAD DATA LOCAL INFILE '$rnacentral_file' INTO TABLE rnacentral";
+    my $sql = "LOAD DATA LOCAL INFILE '$unzipped_file' INTO TABLE rnacentral";
     $dbh->do($sql) or self->throw($dbh->errstr);
 
     my $index_1 = 'ALTER TABLE rnacentral ADD KEY md5sum_idx (md5sum) USING HASH';
