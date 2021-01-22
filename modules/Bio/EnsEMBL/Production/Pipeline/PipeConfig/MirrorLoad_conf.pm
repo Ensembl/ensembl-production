@@ -55,9 +55,9 @@ sub pipeline_analyses {
     return [
 
        {
-            -logic_name => 'ListDatabases',
-            #-module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-            #-module     => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+            -logic_name => 'ListDatabasesToDelete',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::MirrorLoad::ListDatabase',
             -input_ids  => [ {} ], # required for automatic seeding
             -parameters => {
@@ -67,12 +67,36 @@ sub pipeline_analyses {
 	        process_mart         => $self->o('process_mart'),
                 process_grch37       => $self->o('process_grch37'),
              },
-            -flow_into  => { '2->A' => [ 'CopyToMirror' ],
-                             'A->1' => ['email_notification']
+            -flow_into  => { '2->A' => [ 'DeleteDBs' ],
+		             'A->1' => [ 'ListDatabasesToCopy' ]		
                            },
 
         },
+        {
+            -logic_name => 'DeleteDBs',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::MirrorLoad::DeleteDBs',
+            -parameters => {
+             },
+            #-flow_into  => { '2->A' => [ 'ListDatabasesToCopy' ],
+            #                 'A->1' => [ 'email_notification' ]
+            #               },
 
+        }, 
+        {
+            -logic_name => 'ListDatabasesToCopy',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::MirrorLoad::ListDatabase',
+            -parameters => {
+                division             => $self->o('division'),
+                run_all              => $self->o('run_all'),
+                release              => software_version(),
+                process_mart         => $self->o('process_mart'),
+                process_grch37       => $self->o('process_grch37'),
+             },
+
+            -flow_into  => { '2->A' => [ 'CopyToMirror' ],
+			     'A->1' => [ 'email_notification' ]	
+		           }
+        },
         {
             -logic_name      => 'CopyToMirror',
             -module          => 'ensembl.production.hive.ProductionDBCopy',
@@ -87,7 +111,8 @@ sub pipeline_analyses {
                 'method'        => 'post',
             },
             #-meadow_type     => 'LOCAL',
-        },
+	},
+
         {
            -logic_name => 'email_notification',
            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
@@ -97,6 +122,7 @@ sub pipeline_analyses {
                            'text'    => 'All db loaded to mirror ',
                           },
         },
+		
 		
     ];
 }
