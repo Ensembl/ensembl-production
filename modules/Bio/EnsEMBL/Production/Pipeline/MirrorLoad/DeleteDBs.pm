@@ -36,25 +36,19 @@ sub run {
          "EnsemblVertebrates_grch37" => ['m2-w'],
          "EnsemblMetazoa" => ['m3-w'],
          "EnsemblProtists" => ['m3-w'],
+         "EnsemblBacteria" => ['m4-w'],  
          "EnsemblPan" => ['m1-w', 'm2-w', 'm3-w', 'm4-w'],
-         "mart" => ['mysql-ens-mirror-mart-1'],       
+         "mart" => ['mysql-ens-mirror-mart-1-ensprod'],       
         );
         
         foreach my $host (@{ $hosts{$self->param('division')} }){
         
 		my $dbname = $self->param('db_name');
-                $host = "mysql-ens-general-dev-1";
 		my $cmd = "$host -e \" DROP database  $dbname\"  " ;
-		$self->warning($cmd);
-		 if ( $self->run_system_command($cmd) != 0 ) {
+		if ( $self->run_system_command($cmd) != 0 ) {
 		 	croak "cannot delete database $dbname: $!";
-		 }
+		}
         }  
-	#if ( system($cmd) != 0 ) {
-       
-        # 	croak "cannot delete database $dbname: $!";
-  	#}
-
 } 
 
 1;

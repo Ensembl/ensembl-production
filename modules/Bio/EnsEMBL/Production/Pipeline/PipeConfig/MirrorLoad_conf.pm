@@ -66,6 +66,7 @@ sub pipeline_analyses {
                 release              => $self->o('ENS_DELETE_VERSION'),
 	        process_mart         => $self->o('process_mart'),
                 process_grch37       => $self->o('process_grch37'),
+                tocopy               => 0,  
              },
             -flow_into  => { '2->A' => [ 'DeleteDBs' ],
 		             'A->1' => [ 'ListDatabasesToCopy' ]		
@@ -77,9 +78,6 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Production::Pipeline::MirrorLoad::DeleteDBs',
             -parameters => {
              },
-            #-flow_into  => { '2->A' => [ 'ListDatabasesToCopy' ],
-            #                 'A->1' => [ 'email_notification' ]
-            #               },
 
         }, 
         {
@@ -91,6 +89,7 @@ sub pipeline_analyses {
                 release              => software_version(),
                 process_mart         => $self->o('process_mart'),
                 process_grch37       => $self->o('process_grch37'),
+                tocopy               => 1, 
              },
 
             -flow_into  => { '2->A' => [ 'CopyToMirror' ],
@@ -106,11 +105,9 @@ sub pipeline_analyses {
             -max_retry_count => 0,
             -parameters      => {
                 'endpoint'      => $self->o('copy_service_uri'),
-                'source_db_uri' => $self->o('source_db_uri'),
-                'target_db_uri' => $self->o('target_db_uri'),
                 'method'        => 'post',
             },
-            #-meadow_type     => 'LOCAL',
+            -meadow_type     => 'LOCAL',
 	},
 
         {

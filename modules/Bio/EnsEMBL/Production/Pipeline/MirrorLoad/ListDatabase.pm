@@ -45,9 +45,10 @@ sub run {
 	
 	#list only mart
         if( $self->param('process_mart') || $self->param('run_all') ){
-                #we retain only 2 release for marts which includes current one 
-                #delete previous release mart
-                my $ens_release = $self->param('release') + 1 ;  
+                my $ens_release = $self->param('release');
+               #we retain only 2 release for marts so we delete previous release mart 
+                if( ! $self->param('tocopy' ) ){ $ens_release = $self->param('release') + 1 ;}
+
 		my $division_databases = $self->get_all_mart_and_pan_db('multi', $all_divisions, $ens_release, 1, 0);
 		$self->set_output_flow($division_databases, 'multi');
 	}
@@ -120,7 +121,7 @@ sub get_all_functional_dbs{
                 my $genomes = $gdba->fetch_all_by_division($division_name);
         	foreach my $genome (@$genomes){
         		foreach my $database (@{$genome->databases()}){
-                		$self->warning($database->dbname);
+                		#$self->warning($database->dbname);
                         	push (@{$division_databases{$division_name} },$database->dbname);
 			}
 		}
@@ -141,7 +142,7 @@ sub get_all_mart_and_pan_db{
                        my $division_type = $division_name;
                        if( $mart_database->dbname =~ /mart/g){
                            if($only_marts){
-                                $division_type = 'mart';
+                                $division_type = ($division_name eq 'EnsemblVertebrates') ? 'vert_mart' : 'nonvert_mart';
                                 push (@{$division_databases{$division_type}},$mart_database->dbname);
                            }
                        }else{
@@ -173,9 +174,13 @@ sub get_all_compara_db{
 }
 
 sub set_output_flow{
-	my ( $self, $division_databases, $type ) = @_;
+	my ( $self, $division_databases, $type  ) = @_;
 
 	#print Dumper($division_databases);
+	if($self->param('tocopy')){
+		$self->set_outflow_for_copy($division_databases, $type);
+		return ;
+	}
         
         foreach my $keys (keys %{$division_databases}){
                 
@@ -189,6 +194,52 @@ sub set_output_flow{
         }		
 
 } 
+
+sub set_outflow_for_copy{
+
+	my ( $self, $division_databases, $type  ) = @_;
+	
+	my %hosts = (
+         "EnsemblPlants" =>  ['mysql-ens-sta-3' , 'mysql-ens-mirror-3'] ,
+         "EnsemblVertebrates" => ['mysql-ens-sta-1', 'mysql-ens-mirror-1'],
+         "EnsemblVertebrates_grch37" => ['mysql-ens-sta-2', 'mysql-ens-mirror-2'], 
+         "EnsemblMetazoa" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
+         "EnsemblProtists" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
+         "EnsemblBacteria" => ['mysql-ens-sta-3', 'mysql-ens-mirror-4'],
+         #"EnsemblPan" => ['mysql-ens-sta-1,mysql-ens-sta-2,mysql-ens-sta-3,mysql-ens-sta-4', 'mysql-ens-mirror-1,mysql-ens-mirror-2,mysql-ens-mirror-3,mysql-ens-mirror-4'] ,
+         "vert_mart" =>  ['mysql-ens-sta-1', 'mysql-ens-mirror-mart-1'] , 
+	 "nonvert_mart" => ['mysql-ens-sta-3', 'mysql-ens-mirror-mart-1'] ,	 
+        );
+
+
+	foreach my $keys (keys %hosts){
+			
+		if( $self->param('release') % 2 != 0 ){	
+
+                	${$hosts{$keys}}[0] =~ s/sta-(\d)/sta-$1-b/g;
+
+		}
+
+                #prepare uri string
+                ${$hosts{$keys}}[0] = `echo \$(${$hosts{$keys}}[0] details url)`;
+                ${$hosts{$keys}}[1] = `echo \$(${$hosts{$keys}}[1] details url)`;
+	}
+
+
+        foreach my $keys (keys %{$division_databases}){
+
+               foreach my $division_database (sort(uniq(@{$division_databases->{$keys}}))){
+                        $self->dataflow_output_id( {
+                                 division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
+                                'db_name' =>  $division_database,
+                                'type'   => $type,
+			       'source_db_uri' => ${$hosts{$keys}}[0] . $division_database,
+                               'target_db_uri' => ${$hosts{$keys}}[1] . $division_database,
+                        }, 2);
+                }
+        }
+
+}
 
 1;
 
