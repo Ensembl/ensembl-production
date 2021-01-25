@@ -27,10 +27,10 @@ Example:
 import argparse
 import csv
 import logging
+import sys
 from os import getenv
 from os.path import isdir
 from os.path import join, isfile, realpath
-import sys
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -47,11 +47,9 @@ parser = argparse.ArgumentParser(
                 ' init_pipeline command')
 parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
 parser.add_argument('-d', '--division', help='Restrict to a single division', type=str, choices=divisions)
-parser.add_argument('-f', '--output_file', help='Overwrite default output file name', required=False)
+parser.add_argument('-v', '--version', help='versioned file name', required=False, default=getenv('ENS_VERSION'))
 parser.add_argument('-t', '--genomes_types', help='List genomes events (n r ua ug)', type=str, nargs='+',
                     default=['n', 'r', 'ua', 'ug'])
-parser.add_argument('-o', '--output', help='species,dbname', required=False, type=str,
-                    default='species')
 
 
 names = {
@@ -63,8 +61,6 @@ names = {
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    if not args.output_file:
-        logger.setLevel(logging.ERROR)
     if args.division:
         logger.info("Process only division %s", args.division)
         divisions = [args.division]
@@ -87,22 +83,23 @@ if __name__ == '__main__':
             file_path = join(scan_dir, file)
             if isfile(file_path):
                 with open(file_path, 'r') as f:
-                    logger.info("Current File: %s",f.name)
+                    logger.info("Current File: %s", f.name)
                     reader = csv.reader(f, delimiter="\t")
                     next(reader)
                     for row in reader:
-                        species.append(row[0]) if args.output == 'species' else species.append(row[2])
+                        species.append([row[0], row[2]])
             else:
                 logger.info("File not found: %s", file_path)
 
     logger.info("Retrieved species:")
-    logger.info(species)
-    if args.output_file:
-        out_file_path = join(home_dir, args.output_file)
-        with open(out_file_path, 'w') as f:
-            for spec in species:
-                f.write('-species {} '.format(spec)) if args.output == 'species' else f.write('-database {} '.format(spec)) if args.output == 'dbname' else f.write('{},'.format(spec))
-        logger.info("File generated in %s", out_file_path)
-    else:
-        for spec in species:
-            print('-species {} '.format(spec), end='', flush=True) if args.output == 'species' else print('-database {} '.format(spec), end='', flush=True) if args.output == 'dbname' else print('{},'.format(spec), end='', flush=True)
+    [logger.info('%s', spec) for spec in species]
+    with open(join(home_dir, 'species_%s.txt' % args.version), 'w') as f:
+        [f.write('-species {} '.format(spec[0])) for spec in species]
+        logger.info("Generated %s", f.name)
+    with open(join(home_dir, 'database_%s.txt' % args.version), 'w') as f:
+        [f.write('-database {} '.format(spec[1])) for spec in species]
+        logger.info("Generated %s", f.name)
+    with open(join(home_dir, 'dblist_%s.txt' % args.version), 'w') as f:
+        dbs = [spec[1] for spec in species]
+        f.write(','.join(dbs))
+        logger.info("Generated %s", f.name)
