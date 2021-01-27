@@ -47,7 +47,7 @@ sub default_options {
         'registry'               => $self->o('registry'),
         'release'                => $self->o('release'),
         'pipeline_name'          => "ftp_pipeline",
-        'email'                  => $self->o('ENV', 'USER') . '@ebi.ac.uk',
+        'email'                  => 'ensembl-production@ebi.ac.uk',
         'ftp_dir'                => '/nfs/nobackup/ensemblgenomes/' . $self->o('ENV', 'USER') . '/workspace/' . $self->o('pipeline_name') . '/ftp_site/release-' . $self->o('release'),
         'dumps'                  => [],
 
