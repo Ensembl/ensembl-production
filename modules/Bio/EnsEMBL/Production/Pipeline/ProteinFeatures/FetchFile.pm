@@ -22,60 +22,40 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro
+Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchFile
 
 =head1 DESCRIPTION
 
-Download InterPro descriptions file from ftp site.
-
-=head1 Author
-
-James Allen
+Download files from local filesystem or ftp site.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchInterPro;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::FetchFile;
 
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::FetchExternal');
 
 use File::Spec::Functions qw(catdir);
-use Path::Tiny;
-
-sub param_defaults {
-  return {
-    'ebi_path'       => '/ebi/ftp/pub/databases/interpro/current',
-    'ftp_uri'        => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current',
-    'file'           => 'names.dat',
-    'external_db_id' => 1200,
-  };
-}
 
 sub run {
   my ($self) = @_;
   my $ebi_path    = $self->param_required('ebi_path');
   my $ftp_uri     = $self->param_required('ftp_uri');
-  my $file        = $self->param_required('file');
-  my $edb_id      = $self->param_required('external_db_id');
-  my $output_file = $self->param_required('output_file');
-  
-  my $ebi_file = catdir($ebi_path, $file);
-  
+  my $remote_file = $self->param_required('remote_file');
+  my $local_file  = $self->param_required('local_file');
+
+  my $ebi_file = catdir($ebi_path, $remote_file);
+
   if (-e $ebi_file) {
-    $self->fetch_ebi_file($ebi_file, $output_file);
+    $self->fetch_ebi_file($ebi_file, $local_file);
   } else {
     my $ftp = $self->get_ftp($ftp_uri);
-    $self->fetch_ftp_file($ftp, $file, $output_file);
+    $self->fetch_ftp_file($ftp, $remote_file, $local_file);
   }
-  
-  # Insert constant values for xref columns, to make loading easier.
-  my $output = path($output_file);
-  my $descriptions = $output->slurp;
-  $descriptions =~ s/^(\S+)\t+(.*)/$edb_id\t$1\t$1\t0\t$2\tDIRECT\t/gm;
-  $output->spew($descriptions);
 }
 
+# Override inherited method, no action required.
 sub write_output {
   my ($self) = @_;
 }

@@ -15,38 +15,35 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
-Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AggregateInterProXrefs
-
-=head1 DESCRIPTION
-
-Aggregate InterPro xrefs from a set of core dbs.
-
-=head1 Author
-
-James Allen
-
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AggregateInterProXrefs;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadUniProt;
 
 use strict;
 use warnings;
+
+use File::Basename;
+
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
   my ($self) = @_;
-  
-  my $filenames   = $self->param_required('filenames');
-  my $merged_file = $self->param_required('merged_file');
-  my $unique_file = $self->param_required('unique_file');
-  
-  my $merge_cmd   = "cat ".join(' ', @$filenames)." > $merged_file";
-  my $uniqify_cmd = "sort -u $merged_file > $unique_file";
-  
-  system($merge_cmd)   == 0 or $self->throw("Failed to run ".$merge_cmd);
-  system($uniqify_cmd) == 0 or $self->throw("Failed to run ".$uniqify_cmd);
+  my $mapping_file = $self->param_required('mapping_file_local');
+  my $uniprot_file = $self->param_required('uniprot_file_local');
+
+  if (-e $mapping_file) {
+    $self->run_cmd("gunzip -c $mapping_file | cut -f1,11,13 > $uniprot_file");
+
+    my $dbh = $self->hive_dbh;
+    my $sql = "LOAD DATA LOCAL INFILE '$uniprot_file' INTO TABLE uniprot";
+    $dbh->do($sql) or self->throw($dbh->errstr);
+
+    my $index_1 = 'ALTER TABLE uniprot ADD KEY upi_idx (upi, tax_id)';
+    $dbh->do($index_1) or self->throw($dbh->errstr);
+
+  } else {
+    $self->throw("Mapping file '$mapping_file' does not exist");
+  }
 }
 
 1;

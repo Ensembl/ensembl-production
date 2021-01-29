@@ -35,8 +35,6 @@ sub fetch_input {
   
   $reports .= $self->xref_summary('interpro2go', 'GO xrefs assigned via InterPro:');
   
-  $reports .= $self->xref_summary('interpro2pathway', 'Pathway xrefs assigned via InterPro:');
-  
   $reports .= $self->xref_total_summary('All xrefs, pre-existing and newly-added:');
   $reports .= $self->xref_ontology_summary('Ontology xrefs, pre-existing and newly-added:');
       

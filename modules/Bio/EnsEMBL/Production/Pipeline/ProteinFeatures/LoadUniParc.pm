@@ -17,25 +17,33 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisFactory;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadUniParc;
 
 use strict;
 use warnings;
+
+use File::Basename;
+
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
-sub write_output {
+sub run {
   my ($self) = @_;
-  my $analyses = $self->param_required('analyses');
-  my $run_seg  = $self->param_required('run_seg');
-  
-  my $filtered_analyses = [];
-  foreach my $analysis (@{$analyses}) {
-    if ($$analysis{'logic_name'} ne 'seg' || $run_seg) {
-      push @$filtered_analyses, $analysis;
-    }
+  my $uniparc_file = $self->param_required('uniparc_file_local');
+
+  if (-e $uniparc_file) {
+    my $dbh = $self->hive_dbh;
+    my $sql = "LOAD DATA LOCAL INFILE '$uniparc_file' INTO TABLE uniparc FIELDS TERMINATED BY ' '";
+    $dbh->do($sql) or self->throw($dbh->errstr);
+
+    my $index_1 = 'ALTER TABLE uniparc ADD KEY upi_idx (upi)';
+    $dbh->do($index_1) or self->throw($dbh->errstr);
+
+    my $index_2 = 'ALTER TABLE uniparc ADD KEY md5sum_idx (md5sum) USING HASH';
+    $dbh->do($index_2) or self->throw($dbh->errstr);
+
+  } else {
+    $self->throw("Checksum file '$uniparc_file' does not exist");
   }
-  
-  $self->dataflow_output_id($filtered_analyses, 2);
 }
 
 1;
