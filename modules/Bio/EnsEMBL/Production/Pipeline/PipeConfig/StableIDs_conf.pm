@@ -72,6 +72,14 @@ sub pipeline_create_commands {
   ];
 }
 
+sub pipeline_wide_parameters {
+  my ($self) = @_;
+  return {
+    %{ $self->SUPER::pipeline_wide_parameters() },
+    incremental => $self->o('incremental'),
+  };
+}
+
 sub pipeline_analyses {
   my ($self) = @_;
 
@@ -80,9 +88,7 @@ sub pipeline_analyses {
       -logic_name  => 'StableIDs',
       -module      => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -input_ids   => [ {} ],
-      -parameters  => {
-                        incremental => $self->o('incremental'),
-                      },
+      -parameters  => {},
       -flow_into   => WHEN(
                         '#incremental#' => ['PopulateMeta'],
                       ELSE
