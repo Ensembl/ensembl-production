@@ -88,7 +88,7 @@ sub run {
       }
       $self->dbc and $self->dbc->disconnect_if_idle();
       
-      system($interpro_cmd) == 0 or $self->throw("Failed to run ".$interpro_cmd);
+      $self->run_cmd($interpro_cmd);
       
       unlink $scratch_dir if -e $scratch_dir;
     }
