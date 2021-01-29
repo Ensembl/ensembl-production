@@ -35,7 +35,7 @@ sub default_options {
           %{$self->SUPER::default_options},
           pipeline_dir => $ENV{'PWD'}.'/'.$self->o('pipeline_name'),
           user => $ENV{'USER'},
-          email => $ENV{'USER'}.'@ebi.ac.uk'
+          email => 'ensembl-production@ebi.ac.uk'
          };
 }
 
