@@ -43,7 +43,7 @@ sub default_options {
     meta_filters => {},
 
     # Directory for pre-pipeline database backups
-    output_dir => catdir('hps/nobackup2/production/ensembl', $self->o('user'), $self->o('pipeline_name')),
+    output_dir => catdir('/hps/nobackup2/production/ensembl', $self->o('user'), $self->o('pipeline_name')),
 
     # Remove existing GO annotations and associated analysis
     delete_existing => 1,
