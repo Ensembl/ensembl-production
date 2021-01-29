@@ -88,7 +88,7 @@ sub pipeline_analyses {
               meta_port       => $self->o('meta_port'),
               meta_database   => $self->o('meta_database'),
               base_output_dir => $self->o('base_output_dir'),
-              release         => $self->o('release'),I
+              release         => $self->o('release'),
               user            => $self->o('user'),
               password        => $self->o('pass'),
               host            => $self->o('host'),
