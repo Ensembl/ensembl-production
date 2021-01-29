@@ -42,8 +42,12 @@ sub run {
       my $logic_name = $$analysis_config{'logic_name'};
       my $analysis = $aa->fetch_by_logic_name($logic_name);
 
-      if ($datestamp ne $analysis->db_version) {
-        $$analysis_config{'db_version'} = $datestamp;
+      if (defined($analysis)) {
+        if ($datestamp ne $analysis->db_version) {
+          $$analysis_config{'db_version'} = $datestamp;
+          push @filtered_analyses, $analysis_config;
+        }
+      } else {
         push @filtered_analyses, $analysis_config;
       }
     }
