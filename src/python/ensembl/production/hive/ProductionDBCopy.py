@@ -11,40 +11,62 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import collections
+import json
 import time
 from urllib.parse import urlparse
 
 from ensembl.hive.HiveRESTClient import HiveRESTClient
 
+JobProgress = collections.namedtuple("JobProgress", "status_msg table_copied total_tables progress")
+
 
 class ProductionDBCopy(HiveRESTClient):
-    """ OLS MySQL loader: initialise basics info in Ontology DB """
+    """ Production DB copy REST Hive Client: """
+
+    def pre_cleanup(self):
+        print("Pre cleanup called, now how to clean db?")
 
     def fetch_input(self):
-
         src_db = urlparse(self.param('source_db_uri'))
         tgt_db = urlparse(self.param('target_db_uri'))
-        if src_db.scheme and src_db.hostname and tgt_db.hostname and tgt_db.scheme:
+        if src_db and tgt_db and src_db.scheme and src_db.hostname and tgt_db.hostname and tgt_db.scheme:
             # only if both parameters are set and valid
-            self.param('payload', {
-                "src_host": ':'.join((src_db.hostname, src_db.port)),
+            self.param('payload', json.dumps({
+                "src_host": ':'.join((src_db.hostname, str(src_db.port))),
                 "src_incl_db": src_db.path[1:],
-                "tgt_host": ':'.join((tgt_db.hostname, tgt_db.port)),
-                "tgt_db_name": src_db.path[1:],
+                "tgt_host": ':'.join((tgt_db.hostname, str(tgt_db.port))),
+                "tgt_db_name": tgt_db.path[1:],
                 "user": "ensprod"
-            })
+            }))
+        super().fetch_input()
 
     def run(self):
         response = self.param('response')
         if response.status_code != 201:
-            raise Exception('The Copy submission failed: ' + response.raise_for_status)
+            raise Exception('The Copy submission failed: %s (%s)' % (response.status_code, response.json()))
         submitted_time = time.time()
+        payload = json.loads(self.param('payload'))
         while True:
             with self._session_scope() as http:
                 job_response = http.request(method='get',
                                             url=self.param('endpoint') + '/' + response.json()['job_id'],
                                             headers=self.param('headers'),
                                             timeout=self.param('timeout'))
+            # Job_progress
+            response_json = job_response.json()
+            job_progress = JobProgress(**response_json.get("detailed_status", {}))
+            runtime = time.time() - submitted_time
+            if job_progress.status_msg != "":
+                message = "Status: %s - Progress: %s (%s/%s copied) - Runtime: %s" % (
+                    job_progress.status_msg, job_progress.progress, job_progress.table_copied, job_progress.total_tables,
+                    runtime)
+            else:
+                message = "Status: %s" % (response_json.get('overall_status', "Not Available for now"))
+            self.dataflow({
+                'job_id': self.input_job.dbID,
+                'message': message
+            }, 3)
             if job_response.json()['overall_status'] == 'Failed':
                 raise Exception(
                     'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
@@ -55,7 +77,19 @@ class ProductionDBCopy(HiveRESTClient):
                 raise Exception('The Copy seems to be stuck')
             # Pause for 1min before checking copy status again
             time.sleep(60)
-        pass
+
+        runtime = time.time() - submitted_time
+        output = {
+            'source_db_uri': '/'.join((payload["src_host"], payload['src_incl_db'])),
+            'target_db_uri': payload['tgt_host'],
+            'runtime': runtime
+        }
+        # in coordination with the dataflow output set in config to "?table_name=results",
+        # this will insert results in hive db. Remember @Luca/@marc conversation.
+        self.dataflow({
+            'job_id': self.input_job.dbID,
+            'output': json.dumps(output)
+        }, 2)
 
     def process_response(self, response):
         pass
