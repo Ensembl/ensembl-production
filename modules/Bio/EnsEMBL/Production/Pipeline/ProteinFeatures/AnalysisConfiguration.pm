@@ -90,12 +90,23 @@ sub run {
         my $datestamp = strftime "%Y-%m-%d", localtime($timestamp);
         $$analysis_config{'db_version'} = $datestamp;
 
-        # We _could_ try to check the db_version of existing analyses,
-        # if any; but it gets super-complicated to manage dependent
-        # xrefs in all the different permutations, so always re-load
-        # the xrefs - it doesn't take long, and avoids code that is
-        # highly susceptible to bugs.
-        push @$filtered_analyses, $analysis_config;
+        my $logic_name = $$analysis_config{'logic_name'};
+        my $analysis = $aa->fetch_by_logic_name($logic_name);
+
+        if (defined($analysis)) {
+          # If there are any InterPro sources to process, then we need
+          # to re-annotate interpro2go mappings. For other xrefs, only
+          # need to re-annotate if there is a more recent release.
+          if (scalar(@all) && $logic_name eq 'interpro2go') {
+            push @$filtered_analyses, $analysis_config;
+          } elsif ($$analysis_config{'db_version'} ne $analysis->db_version) {
+            push @$filtered_analyses, $analysis_config;
+          } else {
+            $self->warning("Skipping $logic_name - annotation exists for db version ".$analysis->db_version);
+          }
+        } else {
+          push @$filtered_analyses, $analysis_config;
+        }
       }
     }
   }
