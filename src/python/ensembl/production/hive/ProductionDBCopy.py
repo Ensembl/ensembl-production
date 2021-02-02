@@ -24,9 +24,6 @@ JobProgress = collections.namedtuple("JobProgress", "status_msg table_copied tot
 class ProductionDBCopy(HiveRESTClient):
     """ Production DB copy REST Hive Client: """
 
-    def pre_cleanup(self):
-        print("Pre cleanup called, now how to clean db?")
-
     def fetch_input(self):
         src_db = urlparse(self.param('source_db_uri'))
         tgt_db = urlparse(self.param('target_db_uri'))
