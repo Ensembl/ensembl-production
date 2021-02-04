@@ -83,10 +83,13 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $output_dir    = $self->param_required('output_dir');
   my $rnaseq_exists = $self->param_required('rnaseq_exists');
 
   if ($rnaseq_exists) {
-    $self->dataflow_output_id({}, 2);
+    if (-e $output_dir) {
+      $self->dataflow_output_id({}, 2);
+    }
 
     my $rnaseq_db = $self->param_required('rnaseq_db');
     my $missing   = $self->param_required('missing');
