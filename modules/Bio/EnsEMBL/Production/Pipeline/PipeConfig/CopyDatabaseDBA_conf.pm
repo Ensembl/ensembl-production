@@ -35,7 +35,7 @@ sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
-        'pipeline_name'    => "copy_database",
+        'pipeline_name'    => "dba_copy_database",
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
     }
 }
@@ -68,13 +68,13 @@ sub pipeline_analyses {
             -max_retry_count => 0,
             -parameters      => {
                 'endpoint'      => $self->o('copy_service_uri'),
-                'source_db_uri' => $self->o('source_db_uri'),
-                'target_db_uri' => $self->o('target_db_uri'),
                 'method'        => 'post',
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
-                2 => [ '?table_name=result' ]
+                # Dataflow method ProductionDBCopy Python module will output into this table result.
+                2 => [ '?table_name=result', ],
+                3 => [ '?table_name=job_progress', ]
             },
         }
     ];
