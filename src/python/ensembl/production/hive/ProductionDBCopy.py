@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 
 from ensembl.hive.HiveRESTClient import HiveRESTClient
 
-JobProgress = collections.namedtuple("JobProgress", "status_msg table_copied total_tables progress")
+JobProgress = collections.namedtuple("JobProgress", "status_msg table_copied total_tables progress runtime")
 
 
 class ProductionDBCopy(HiveRESTClient):
@@ -51,19 +51,21 @@ class ProductionDBCopy(HiveRESTClient):
                                             url=self.param('endpoint') + '/' + response.json()['job_id'],
                                             headers=self.param('headers'),
                                             timeout=self.param('timeout'))
-            # Job_progress
-            response_json = job_response.json()
-            job_progress = JobProgress(**response_json.get("detailed_status", {}))
+            # job progress
             runtime = time.time() - submitted_time
-            if job_progress.status_msg != "":
-                message = "Status: %s - Progress: %s (%s/%s copied) - Runtime: %s" % (
-                    job_progress.status_msg, job_progress.progress, job_progress.table_copied, job_progress.total_tables,
-                    runtime)
-            else:
-                message = "Status: %s" % (response_json.get('overall_status', "Not Available for now"))
+            # message is a dict as follow:
+            # "detailed_status": {
+            #   "status_msg": "Complete",
+            #   "progress": 100.0,
+            #   "total_tables": 77,
+            #   "table_copied": 77
+            # }
+            #
+            message = job_response.json().get("detailed_status", {})
+            message.update({"runtime": str(runtime)})
             self.dataflow({
                 'job_id': self.input_job.dbID,
-                'message': message
+                'message': json.dumps(message)
             }, 3)
             if job_response.json()['overall_status'] == 'Failed':
                 raise Exception(
@@ -72,7 +74,7 @@ class ProductionDBCopy(HiveRESTClient):
                 break
             # If the copy takes more than 2 hours then kill the job
             elif time.time() - submitted_time > 10800:
-                raise Exception('The Copy seems to be stuck')
+                raise Exception('The Copy seems to be stuck - please contact Production team')
             # Pause for 1min before checking copy status again
             time.sleep(60)
 
@@ -80,7 +82,7 @@ class ProductionDBCopy(HiveRESTClient):
         output = {
             'source_db_uri': '/'.join((payload["src_host"], payload['src_incl_db'])),
             'target_db_uri': payload['tgt_host'],
-            'runtime': runtime
+            'runtime': str(runtime)
         }
         # in coordination with the dataflow output set in config to "?table_name=results",
         # this will insert results in hive db. Remember @Luca/@marc conversation.
