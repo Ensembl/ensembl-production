@@ -28,16 +28,7 @@ if [ ! -d "$base_dir" ]; then
 fi
 
 function upload_file {
-    file=$(basename $1)
-    dir=$(dirname $1)
-    ftp -n -v ftp-private.ebi.ac.uk <<EOF
-lcd $dir
-user enaftp submit1
-prompt
-cd xref
-binary
-put $file
-EOF
+    lftp -e "put -O xref $1; bye" -u enaftp,submit1 ftp-private.ebi.ac.uk
 }
 
 for division in bacteria plants fungi metazoa protists; do
