@@ -48,6 +48,7 @@ sub run {
 		if ( $self->run_system_command($cmd) != 0 ) {
 		 	croak "cannot delete database $dbname: $!";
 		}
+		$self->warning($cmd);
         }  
 } 
 

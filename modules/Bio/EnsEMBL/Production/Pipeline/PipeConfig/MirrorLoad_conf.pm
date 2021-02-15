@@ -101,7 +101,6 @@ sub pipeline_analyses {
             -module          => 'ensembl.production.hive.ProductionDBCopy',
             -language        => 'python3',
             -rc_name         => 'default',
-            -input_ids       => [],
             -max_retry_count => 0,
             -parameters      => {
                 'endpoint'      => $self->o('copy_service_uri'),

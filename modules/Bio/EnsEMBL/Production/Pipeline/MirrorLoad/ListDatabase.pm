@@ -47,7 +47,7 @@ sub run {
         if( $self->param('process_mart') || $self->param('run_all') ){
                 my $ens_release = $self->param('release');
                #we retain only 2 release for marts so we delete previous release mart 
-                if( ! $self->param('tocopy' ) ){ $ens_release = $self->param('release') + 1 ;}
+                #if( ! $self->param('tocopy' ) ){ $ens_release = $self->param('release') + 1 ;}
 
 		my $division_databases = $self->get_all_mart_and_pan_db('multi', $all_divisions, $ens_release, 1, 0);
 		$self->set_output_flow($division_databases, 'multi');
@@ -176,7 +176,6 @@ sub get_all_compara_db{
 sub set_output_flow{
 	my ( $self, $division_databases, $type  ) = @_;
 
-	#print Dumper($division_databases);
 	if($self->param('tocopy')){
 		$self->set_outflow_for_copy($division_databases, $type);
 		return ;
@@ -206,7 +205,7 @@ sub set_outflow_for_copy{
          "EnsemblMetazoa" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
          "EnsemblProtists" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
          "EnsemblBacteria" => ['mysql-ens-sta-3', 'mysql-ens-mirror-4'],
-         #"EnsemblPan" => ['mysql-ens-sta-1,mysql-ens-sta-2,mysql-ens-sta-3,mysql-ens-sta-4', 'mysql-ens-mirror-1,mysql-ens-mirror-2,mysql-ens-mirror-3,mysql-ens-mirror-4'] ,
+         "EnsemblPan" => ['mysql-ens-sta-1,mysql-ens-sta-2,mysql-ens-sta-3,mysql-ens-sta-4', 'mysql-ens-mirror-1,mysql-ens-mirror-2,mysql-ens-mirror-3,mysql-ens-mirror-4'] ,
          "vert_mart" =>  ['mysql-ens-sta-1', 'mysql-ens-mirror-mart-1'] , 
 	 "nonvert_mart" => ['mysql-ens-sta-3', 'mysql-ens-mirror-mart-1'] ,	 
         );
@@ -220,21 +219,41 @@ sub set_outflow_for_copy{
 
 		}
 
-                #prepare uri string
-                ${$hosts{$keys}}[0] = `echo \$(${$hosts{$keys}}[0] details url)`;
-                ${$hosts{$keys}}[1] = `echo \$(${$hosts{$keys}}[1] details url)`;
 	}
 
 
         foreach my $keys (keys %{$division_databases}){
 
                foreach my $division_database (sort(uniq(@{$division_databases->{$keys}}))){
+			if( $keys=~ /EnsemblPan/ ){
+				my @src = split(',', ${$hosts{$keys}}[0]);
+				my @target_host = split(',', ${$hosts{$keys}}[1]);
+				foreach my $i (0..$#src){
+
+					my $src_uri = `echo \$($src[$i] details url)`;
+					my $target_host= `echo \$($target_host[$i] details url)`;	
+                        		$self->dataflow_output_id( {
+                                 		division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
+                                		'db_name' =>  $division_database,
+                                		'type'   => $type,
+                               			'source_db_uri' =>  $src_uri . $division_database,
+                               			'target_db_uri' => $target_host . $division_database,
+                        		}, 2);
+
+				}	
+
+				next;
+			}
+
+                	my $src_uri = `echo \$(${$hosts{$keys}}[0] details url)`;				
+			my $target_uri = `echo \$(${$hosts{$keys}}[1] details url)`;
+
                         $self->dataflow_output_id( {
                                  division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
                                 'db_name' =>  $division_database,
                                 'type'   => $type,
-			       'source_db_uri' => ${$hosts{$keys}}[0] . $division_database,
-                               'target_db_uri' => ${$hosts{$keys}}[1] . $division_database,
+			       'source_db_uri' => $src_uri . $division_database,
+                               'target_db_uri' => $target_uri . $division_database,
                         }, 2);
                 }
         }
