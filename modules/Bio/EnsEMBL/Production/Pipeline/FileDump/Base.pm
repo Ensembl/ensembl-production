@@ -84,14 +84,15 @@ sub species_name {
   $self->throw("Missing dba parameter: species_name method") unless defined $dba;
 
   my $mca = $dba->get_adaptor("MetaContainer");
-  my $species_name = $mca->single_value_by_key('species.display_name');
+  #my $species_name = $mca->single_value_by_key('species.display_name');
+  my $species_name = $mca->single_value_by_key('species.scientific_name');
   if (defined $species_name and $species_name ne '') {
-    $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
+    #$species_name =~ s/^([\w ]+) [\-\(].+/$1/;
+    #$species_name =~s/\s?\(\s?\w+.*//;  
     $species_name =~ s/ /_/g;
   } else {
     $self->throw("No species.display_name");
   }
-
   return $species_name;
 }
 
