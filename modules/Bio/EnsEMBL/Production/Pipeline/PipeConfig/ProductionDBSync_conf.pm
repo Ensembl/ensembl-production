@@ -47,7 +47,29 @@ sub default_options {
 
     # DB Factory
     species      => [],
-    antispecies  => [],
+    antispecies  => [
+        'fungi_ascomycota1_collection',
+        'fungi_ascomycota2_collection',
+        'fungi_ascomycota3_collection',
+        'mus_caroli',
+        'mus_musculus_129s1svimj',
+        'mus_musculus_aj',
+        'mus_musculus_akrj',
+        'mus_musculus_balbcj',
+        'mus_musculus_c3hhej',
+        'mus_musculus_c57bl6nj',
+        'mus_musculus_casteij',
+        'mus_musculus_cbaj',
+        'mus_musculus_dba2j',
+        'mus_musculus_fvbnj',
+        'mus_musculus_lpj',
+        'mus_musculus_nodshiltj',
+        'mus_musculus_nzohlltj',
+        'mus_musculus_pwkphj',
+        'mus_musculus_wsbeij',
+        'mus_pahari1',
+        'mus_spretus'
+    ],
     division     => [],
     dbname       => [],
     run_all      => 0,
@@ -213,6 +235,24 @@ sub pipeline_analyses {
                               failures_fatal   => 1,
                             },
       -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1' => ['RunDatachecksControlledTables_HighMem'],
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksControlledTables_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['controlled_tables'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
+                              failures_fatal   => 1,
+                            },
+      -rc_name           => '16GB',
     },
     {
       -logic_name        => 'RunDatachecksADCritical',
@@ -228,6 +268,24 @@ sub pipeline_analyses {
                               failures_fatal   => 1,
                             },
       -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1' => ['RunDatachecksADCritical_HighMem'],
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksADCritical_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADCritical.txt'),
+                              failures_fatal   => 1,
+                            },
+      -rc_name           => '16GB',
     },
     {
       -logic_name        => 'RunDatachecksADAdvisory',
@@ -273,6 +331,15 @@ sub pipeline_analyses {
     },
 
   ];
+}
+
+sub resource_classes {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::resource_classes},
+    '16GB' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"'},
+  }
 }
 
 1;
