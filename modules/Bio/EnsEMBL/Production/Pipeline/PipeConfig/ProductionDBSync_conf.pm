@@ -117,6 +117,15 @@ sub pipeline_wide_parameters {
  };
 }
 
+sub resource_classes {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::resource_classes},
+    '16GB' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"'},
+  }
+}
+
 sub pipeline_analyses {
   my $self = shift @_;
 
@@ -302,6 +311,25 @@ sub pipeline_analyses {
                             },
       -rc_name           => 'normal',
       -flow_into         => {
+                              '-1' => 'RunDatachecksADAdvisory_HighMem',
+                              '4'  => 'EmailReportADAdvisory'
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksADAdvisory_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADAdvisory.txt'),
+                              failures_fatal   => 0,
+                            },
+      -rc_name           => '16GB',
+      -flow_into         => {
                               '4' => 'EmailReportADAdvisory'
                             },
     },
@@ -331,15 +359,6 @@ sub pipeline_analyses {
     },
 
   ];
-}
-
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '16GB' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"'},
-  }
 }
 
 1;
