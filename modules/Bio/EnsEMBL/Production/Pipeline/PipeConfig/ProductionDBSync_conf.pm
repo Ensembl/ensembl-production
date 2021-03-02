@@ -48,9 +48,6 @@ sub default_options {
     # DB Factory
     species      => [],
     antispecies  => [
-        'fungi_ascomycota1_collection',
-        'fungi_ascomycota2_collection',
-        'fungi_ascomycota3_collection',
         'mus_caroli',
         'mus_musculus_129s1svimj',
         'mus_musculus_aj',
