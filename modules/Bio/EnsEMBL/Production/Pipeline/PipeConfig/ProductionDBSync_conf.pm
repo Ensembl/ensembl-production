@@ -67,7 +67,7 @@ sub default_options {
         'mus_musculus_nzohlltj',
         'mus_musculus_pwkphj',
         'mus_musculus_wsbeij',
-        'mus_pahari1',
+        'mus_pahari',
         'mus_spretus'
     ],
     division     => [],
