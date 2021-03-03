@@ -34,8 +34,8 @@ sub fetch_input {
   my $self = shift @_;
   $self->SUPER::fetch_input(); 
   $self->param('db_conn', $self->param('src_uri') );
-  #my $sql_cmd = [ 'DROP DATABASE '. $self->param('db_name').';' ];
-  #$self->param('sql', $sql_cmd);
+  my $sql_cmd = [ 'DROP DATABASE '. $self->param('db_name').';' ];
+  $self->param('sql', $sql_cmd);
  
 }
 
