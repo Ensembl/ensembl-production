@@ -22,35 +22,22 @@ package Bio::EnsEMBL::Production::Pipeline::MirrorLoad::DeleteDBs;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
-use Bio::EnsEMBL::Registry;
-use Carp qw/croak/;
 
-sub run {
+use base (
+  'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+  'Bio::EnsEMBL::Production::Pipeline::Common::Base'
+);
 
-	my ( $self ) = @_;
 
-        my %hosts = (
-         "EnsemblPlants" => ['m3-w'],
-         "EnsemblVertebrates" => ['m1-w'],
-         "EnsemblVertebrates_grch37" => ['m2-w'],
-         "EnsemblMetazoa" => ['m3-w'],
-         "EnsemblProtists" => ['m3-w'],
-         "EnsemblBacteria" => ['m4-w'],  
-         "EnsemblPan" => ['m1-w', 'm2-w', 'm3-w', 'm4-w'],
-         "mart" => ['mysql-ens-mirror-mart-1-ensprod'],       
-        );
-        
-        foreach my $host (@{ $hosts{$self->param('division')} }){
-        
-		my $dbname = $self->param('db_name');
-		my $cmd = "$host -e \" DROP database  $dbname\"  " ;
-		if ( $self->run_system_command($cmd) != 0 ) {
-		 	croak "cannot delete database $dbname: $!";
-		}
-		$self->warning($cmd);
-        }  
-} 
+sub fetch_input {
+
+  my $self = shift @_;
+  $self->SUPER::fetch_input(); 
+  $self->param('db_conn', $self->param('src_uri') );
+  #my $sql_cmd = [ 'DROP DATABASE '. $self->param('db_name').';' ];
+  #$self->param('sql', $sql_cmd);
+ 
+}
 
 1;
 

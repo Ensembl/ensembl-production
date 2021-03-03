@@ -32,15 +32,33 @@ use Data::Dumper;
 sub run {
 
 	my ( $self ) = @_;
-
         #process division names 
         my $all_divisions = $self->get_divisions();
-	
+
+        #read list of staging server 
+	my $hosts_config = $self->param('hosts_config');
+        my $host_servers = $hosts_config->{'DeleteFrom'};
+
+        #set src uri 
+        foreach my $division  ( keys %{ $host_servers }){
+		foreach my $i ( 0..scalar( @{$host_servers->{$division}} ) - 1 ){
+			
+			my $srv = $host_servers->{$division}->[$i];
+			my $src_uri = `echo \$($srv details url)`;
+			$host_servers->{$division}->[$i] = $src_uri;
+
+		}	
+        } 
+
+        #get list of uniqu division to copy 
+        my @uniq_divisions = ();
+ 
 	#list grch37 bds
 	if( $self->param('process_grch37') || $self->param('run_all') ){
 
 		my $division_databases = $self->get_all_functional_dbs('multi_grch37', $all_divisions, $self->param('release') );
-		$self->set_output_flow($division_databases, 'multi_grch37');
+		$self->set_output_flow($division_databases, 'multi_grch37', $host_servers);
+                push(@uniq_divisions, keys %{$division_databases});
         } 
 	
 	#list only mart
@@ -50,7 +68,8 @@ sub run {
                 #if( ! $self->param('tocopy' ) ){ $ens_release = $self->param('release') + 1 ;}
 
 		my $division_databases = $self->get_all_mart_and_pan_db('multi', $all_divisions, $ens_release, 1, 0);
-		$self->set_output_flow($division_databases, 'multi');
+		$self->set_output_flow($division_databases, 'multi', $host_servers);
+                push(@uniq_divisions, keys %{$division_databases});
 	}
 
 	#list all functional dbs
@@ -58,16 +77,30 @@ sub run {
 
 
                 my $division_databases = $self->get_all_functional_dbs('multi', $all_divisions, $self->param('release') );
-                $self->set_output_flow($division_databases, 'multi');
+                $self->set_output_flow($division_databases, 'multi', $host_servers);
+                push(@uniq_divisions, keys %{$division_databases});
 
 		#list pan dbs
 		$division_databases = $self->get_all_mart_and_pan_db('multi', $all_divisions, $self->param('release'), 0, 1);
-		$self->set_output_flow($division_databases, 'multi');
+		$self->set_output_flow($division_databases, 'multi', $host_servers);
+                push(@uniq_divisions, keys %{$division_databases});
 		
 		#get compara db
 		$division_databases = $self->get_all_compara_db('multi', $all_divisions, $self->param('release'));
-                $self->set_output_flow($division_databases, 'multi');	
+                $self->set_output_flow($division_databases, 'multi', $host_servers);
+                push(@uniq_divisions, keys %{$division_databases});	
         }
+
+	
+
+        if($self->param('tocopy')){
+			
+                @uniq_divisions = uniq(@uniq_divisions);
+	        $self->set_outflow_for_copy(\@uniq_divisions);
+		
+        }
+
+
         
 }
 
@@ -174,91 +207,164 @@ sub get_all_compara_db{
 }
 
 sub set_output_flow{
-	my ( $self, $division_databases, $type  ) = @_;
+
+	my ( $self, $division_databases, $type, $host_servers  ) = @_;
 
 	if($self->param('tocopy')){
-		$self->set_outflow_for_copy($division_databases, $type);
-		return ;
+		return;
 	}
-        
+
         foreach my $keys (keys %{$division_databases}){
                 
                foreach my $division_database (sort(uniq(@{$division_databases->{$keys}}))){
-                        $self->dataflow_output_id( {
-                                division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
-                                'db_name' =>  $division_database,
-				'type'   => $type,
-                        }, 2);
+
+			my $division = ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys;
+			foreach my $host (@{ $host_servers->{$division} }){
+
+                                $host =~ s/\s+$//;  
+	                        $self->dataflow_output_id( {
+        	                        division => $division, # ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
+                	                'db_name' =>  $division_database,
+                        	        'type'   => $type,
+					'src_uri' => $host.$division_database,
+                        	}, 2);
+			
+                        }       
+
                 }
         }		
 
 } 
 
+
 sub set_outflow_for_copy{
 
-	my ( $self, $division_databases, $type  ) = @_;
+	my ( $self, $divisions  ) = @_;
+
+        my $hosts_config = $self->param('hosts_config');
+        my $host_servers = $hosts_config->{'CopyTo'};
+
+	#select staging server based on release version	
 	
-	my %hosts = (
-         "EnsemblPlants" =>  ['mysql-ens-sta-3' , 'mysql-ens-mirror-3'] ,
-         "EnsemblVertebrates" => ['mysql-ens-sta-1', 'mysql-ens-mirror-1'],
-         "EnsemblVertebrates_grch37" => ['mysql-ens-sta-2', 'mysql-ens-mirror-2'], 
-         "EnsemblMetazoa" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
-         "EnsemblProtists" => ['mysql-ens-sta-3', 'mysql-ens-mirror-3'] ,
-         "EnsemblBacteria" => ['mysql-ens-sta-3', 'mysql-ens-mirror-4'],
-         "EnsemblPan" => ['mysql-ens-sta-1,mysql-ens-sta-2,mysql-ens-sta-3,mysql-ens-sta-4', 'mysql-ens-mirror-1,mysql-ens-mirror-2,mysql-ens-mirror-3,mysql-ens-mirror-4'] ,
-         "vert_mart" =>  ['mysql-ens-sta-1', 'mysql-ens-mirror-mart-1'] , 
-	 "nonvert_mart" => ['mysql-ens-sta-3', 'mysql-ens-mirror-mart-1'] ,	 
-        );
+	foreach my $div (@$divisions){
+		if($div !~ /EnsemblPan/){
+			if( $self->param('release') % 2 != 0 ){
 
+				$host_servers->{$div}->[0]=~s/sta-(\d)/sta-$1-b/g;
+			}
+			$host_servers->{$div}->[0] = `echo \$($host_servers->{$div}->[0] details url)`;
+			$host_servers->{$div}->[1] = `echo \$($host_servers->{$div}->[1] details url)`;
+			$host_servers->{$div}->[0] =~ s/\s+$//;
+			$host_servers->{$div}->[1] =~ s/\s+$//;
+		}		
+	}
+	
+	if( $self->param('run_all') ){
 
-	foreach my $keys (keys %hosts){
-			
-		if( $self->param('release') % 2 != 0 ){	
-
-                	${$hosts{$keys}}[0] =~ s/sta-(\d)/sta-$1-b/g;
-
-		}
-
+		$self->copy_division_dbs( $divisions, $host_servers );
+		$self->copy_grch37( $divisions, $host_servers );
+		$self->copy_marts( $divisions, $host_servers );
+		$self->copy_ensemblpan( $divisions, $host_servers );	
+		return ;
 	}
 
+	if(  $self->param('process_grch37') ){
+		$self->copy_grch37( $divisions, $host_servers );
+	}	
 
-        foreach my $keys (keys %{$division_databases}){
+	if($self->param('process_mart')){
+		$self->copy_marts( $divisions, $host_servers );
+	}
 
-               foreach my $division_database (sort(uniq(@{$division_databases->{$keys}}))){
-			if( $keys=~ /EnsemblPan/ ){
-				my @src = split(',', ${$hosts{$keys}}[0]);
-				my @target_host = split(',', ${$hosts{$keys}}[1]);
-				foreach my $i (0..$#src){
+	if( $self->param('copy_vert_dbs') ){
+		$self->copy_division_dbs($divisions, $host_servers, 'EnsemblVertebrates' );
+	}
+	if($self->param('copy_nonvert_dbs')){
+		$self->copy_division_dbs($divisions, $host_servers, 'EnsemblPlants' ); #can pass any nonvert division all have same src and dest mysql servers 
+	}
 
-					my $src_uri = `echo \$($src[$i] details url)`;
-					my $target_host= `echo \$($target_host[$i] details url)`;	
-                        		$self->dataflow_output_id( {
-                                 		division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
-                                		'db_name' =>  $division_database,
-                                		'type'   => $type,
-                               			'source_db_uri' =>  $src_uri . $division_database,
-                               			'target_db_uri' => $target_host . $division_database,
-                        		}, 2);
+}
 
-				}	
+sub copy_division_dbs{
 
-				next;
-			}
+	my ( $self, $divisions, $host_servers, $division ) = @_;
 
-                	my $src_uri = `echo \$(${$hosts{$keys}}[0] details url)`;				
-			my $target_uri = `echo \$(${$hosts{$keys}}[1] details url)`;
+	#copy all vert/nonvert  dbs
+	my $dbname='%core%,%funcgen%,%otherfeatures%,%rnaseq%';
+	$self->dataflow_output_id( {
+                'source_db_uri' =>  $host_servers->{$division}->[0] . $dbname,
+                'target_db_uri' =>  $host_servers->{$division}->[1],
+        }, 2);
 
+}
+
+sub copy_grch37{
+	my ( $self, $divisions, $host_servers ) = @_;
+
+        $host_servers->{'EnsemblVertebrates_grch37'}->[0] = `echo \$($host_servers->{'EnsemblVertebrates_grch37'}->[0] details url)`;
+        $host_servers->{'EnsemblVertebrates_grch37'}->[1] = `echo \$($host_servers->{'EnsemblVertebrates_grch37'}->[1] details url)`;
+	$host_servers->{'EnsemblVertebrates_grch37'}->[0] =~ s/\s+$//;
+        $host_servers->{'EnsemblVertebrates_grch37'}->[1] =~ s/\s+$//;
+		
+		
+	$self->dataflow_output_id( {
+        	'source_db_uri' =>  $host_servers->{'EnsemblVertebrates_grch37'}->[0] . '%homo_sapiens%37',
+                'target_db_uri' =>  $host_servers->{'EnsemblVertebrates_grch37'}->[1],
+        }, 2);	
+}
+
+sub copy_marts{
+
+	my ( $self, $divisions, $host_servers ) = @_;
+        my %marts = ('EnsemblPlants' => 'plants_%mart%', 'EnsemblMetazoa'=>'metazoa_%mart%',
+                      'EnsemblFungi' => 'fungi_%mart%', 'EnsemblProtists' => 'protists_%mart%',
+                      'EnsemblVertebrates' => '%marts%',
+                     ); #ontology_mart is copied from vert divsion %mart%
+
+        foreach my $division (@{$self->get_divisions()}){
+                my $div = '';
+                if($division =~ /(EnsemblPlants|EnsemblMetazoa|EnsemblFungi|EnsemblProtists)/){
+        	        $div = 'nonvert_mart';
+
+                }
+                if( $division =~ /EnsemblVertebrates/){
+                        $div = 'vert_mart';
+                 }
+                if( exists $marts{$division} && $div){
                         $self->dataflow_output_id( {
-                                 division =>  ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys,
-                                'db_name' =>  $division_database,
-                                'type'   => $type,
-			       'source_db_uri' => $src_uri . $division_database,
-                               'target_db_uri' => $target_uri . $division_database,
+                        	'source_db_uri' =>  $host_servers->{$div}->[0] . $marts{$division},
+                                'target_db_uri' => $host_servers->{$div}->[1],
                         }, 2);
                 }
+       }
+
+	
+
+}
+
+sub copy_ensemblpan{
+
+	my ( $self, $divisions, $host_servers ) = @_;	
+
+        my $division='EnsemblPan';
+        my @src = split(',', $host_servers->{$division}->[0]);
+        my @target_host = split(',', $host_servers->{$division}->[1]);
+        foreach my $i (0..$#src){
+        	if( $self->param('release') % 2 != 0 ){
+                	$src[$i] =~ s/sta-(\d)/sta-$1-b/g;
+                 }
+                 my $src_uri = `echo \$($src[$i] details url)`;
+                 $src_uri = $src_uri . 'ensembl%_'.$self->param('release');
+                 my $target_host = `echo \$($target_host[$i] details url)`;
+                 $self->dataflow_output_id( {
+                 	'source_db_uri' =>  $src_uri,
+                        'target_db_uri' => $target_host,
+                 }, 2);
+
         }
 
 }
+
 
 1;
 
