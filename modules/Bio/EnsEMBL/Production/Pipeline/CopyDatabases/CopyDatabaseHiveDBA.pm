@@ -87,7 +87,6 @@ sub run {
     copy_database($source_db_uri, $target_db_uri, $only_tables, $skip_tables, $update, $drop, $convert_innodb, $skip_optimize);
 
     my $runtime = duration(time() - $start_time);
-tmux a
     my $output = {
         source_db_uri => $source_db_uri,
         target_db_uri => $target_db_uri,
