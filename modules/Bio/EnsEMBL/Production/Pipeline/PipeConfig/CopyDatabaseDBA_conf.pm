@@ -24,12 +24,9 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabaseDBA_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf'); # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
-sub resource_classes {
-    my ($self) = @_;
-    return { 'default' => { 'LSF' => '-q production-rh74' } };
-}
+
 
 sub default_options {
     my ($self) = @_;
@@ -67,8 +64,8 @@ sub pipeline_analyses {
             -input_ids       => [],
             -max_retry_count => 0,
             -parameters      => {
-                'endpoint'      => $self->o('copy_service_uri'),
-                'method'        => 'post',
+                'endpoint' => $self->o('copy_service_uri'),
+                'method'   => 'post',
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
