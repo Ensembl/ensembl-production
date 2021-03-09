@@ -32,7 +32,7 @@ class ProductionDBCopy(HiveRESTClient):
                 "src_incl_db": src_db.path[1:],
                 "tgt_host": ':'.join((tgt_db.hostname, str(tgt_db.port))),
                 "tgt_db_name": tgt_db.path[1:],
-                "user": "ensprod"
+                "user": self.param('user')
             }))
         super().fetch_input()
 
