@@ -11,14 +11,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import collections
 import json
 import time
 from urllib.parse import urlparse
 
 from ensembl.hive.HiveRESTClient import HiveRESTClient
-
-JobProgress = collections.namedtuple("JobProgress", "status_msg table_copied total_tables progress runtime")
 
 
 class ProductionDBCopy(HiveRESTClient):
