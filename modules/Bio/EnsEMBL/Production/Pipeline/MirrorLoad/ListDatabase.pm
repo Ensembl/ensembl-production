@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -290,7 +290,7 @@ sub copy_division_dbs{
 	my ( $self, $divisions, $host_servers, $division ) = @_;
 
 	#copy all vert/nonvert  dbs
-	my $dbname='%core%,%funcgen%,%otherfeatures%,%rnaseq%';
+	my $dbname='%core%,%funcgen%,%otherfeatures%,%rnaseq%cdna%variation';
 	$self->dataflow_output_id( {
                 'source_db_uri' =>  $host_servers->{$division}->[0] . $dbname,
                 'target_db_uri' =>  $host_servers->{$division}->[1],
@@ -318,7 +318,7 @@ sub copy_marts{
 	my ( $self, $divisions, $host_servers ) = @_;
         my %marts = ('EnsemblPlants' => 'plants_%mart%', 'EnsemblMetazoa'=>'metazoa_%mart%',
                       'EnsemblFungi' => 'fungi_%mart%', 'EnsemblProtists' => 'protists_%mart%',
-                      'EnsemblVertebrates' => '%marts%',
+                      'EnsemblVertebrates' => '%mart%',
                      ); #ontology_mart is copied from vert divsion %mart%
 
         foreach my $division (@{$self->get_divisions()}){
