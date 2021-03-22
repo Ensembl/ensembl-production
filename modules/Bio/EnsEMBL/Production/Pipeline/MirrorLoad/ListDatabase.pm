@@ -330,7 +330,7 @@ sub copy_marts{
 	my ( $self, $divisions, $host_servers ) = @_;
         my %marts = ('EnsemblPlants' => 'plants_%mart%', 'EnsemblMetazoa'=>'metazoa_%mart%',
                       'EnsemblFungi' => 'fungi_%mart%', 'EnsemblProtists' => 'protists_%mart%',
-                      'EnsemblVertebrates' => '%marts%',
+                      'EnsemblVertebrates' => '%mart%',
                      ); #ontology_mart is copied from vert divsion %mart%
 
         foreach my $division (@{$self->get_divisions()}){
