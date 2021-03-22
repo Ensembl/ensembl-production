@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2020] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -60,7 +60,15 @@ sub run {
 		$self->set_output_flow($division_databases, 'multi_grch37', $host_servers);
                 push(@uniq_divisions, keys %{$division_databases});
         } 
+	#list only grch37 marts
+        if( $self->param('process_grch37_mart') || $self->param('run_all') ){
+                my $ens_release = $self->param('release');
+		my $division_databases = $self->get_all_mart_and_pan_db('multi_grch37', $all_divisions, $ens_release, 1, 0);
+		$self->set_output_flow($division_databases, 'multi_grch37', $host_servers);
+		push(@uniq_divisions, keys %{$division_databases});
+	}
 	
+
 	#list only mart
         if( $self->param('process_mart') || $self->param('run_all') ){
                 my $ens_release = $self->param('release');
@@ -73,7 +81,7 @@ sub run {
 	}
 
 	#list all functional dbs
-	if( !( $self->param('process_grch37') || $self->param('process_mart') ) || $self->param('run_all') ){
+	if( !( $self->param('process_grch37') || $self->param('process_mart') || $self->param('process_grch37_mart') ) || $self->param('run_all') ){
 
 
                 my $division_databases = $self->get_all_functional_dbs('multi', $all_divisions, $self->param('release') );
@@ -167,7 +175,7 @@ sub get_all_functional_dbs{
 sub get_all_mart_and_pan_db{
 
         my ( $self, $species, $all_divisions, $ens_release, $only_marts, $only_pan ) = @_;
-        my ($rdba,$gdba,$release,$release_info, $dbdba) = $self->get_metadata_db($species, $ens_release);
+        my ($rdba,$gdba,$release,$release_info, $dbdba) = $self->get_metadata_db($species, 102); #$ens_release);
         my %division_databases ;
         foreach my $division_name (@{$all_divisions}){
                 my $genomes = $gdba->fetch_all_by_division($division_name);
@@ -175,7 +183,7 @@ sub get_all_mart_and_pan_db{
                        my $division_type = $division_name;
                        if( $mart_database->dbname =~ /mart/g){
                            if($only_marts){
-                                $division_type = ($division_name eq 'EnsemblVertebrates') ? 'vert_mart' : 'nonvert_mart';
+                                $division_type = ($division_name eq 'EnsemblVertebrates') ? ($species eq 'multi_grch37' ) ? 'EnsemblVertebrates' : 'vert_mart' : 'nonvert_mart';
                                 push (@{$division_databases{$division_type}},$mart_database->dbname);
                            }
                        }else{
@@ -217,7 +225,6 @@ sub set_output_flow{
         foreach my $keys (keys %{$division_databases}){
                 
                foreach my $division_database (sort(uniq(@{$division_databases->{$keys}}))){
-
 			my $division = ( $type eq 'multi_grch37' ) ?  $keys.'_grch37':  $keys;
 			foreach my $host (@{ $host_servers->{$division} }){
 
@@ -262,15 +269,20 @@ sub set_outflow_for_copy{
 	if( $self->param('run_all') ){
 
 		$self->copy_division_dbs( $divisions, $host_servers );
-		$self->copy_grch37( $divisions, $host_servers );
+		$self->copy_grch37( $divisions, $host_servers, '%homo_sapiens%37' );
+                $self->copy_grch37( $divisions, $host_servers, '%mart%' );
 		$self->copy_marts( $divisions, $host_servers );
 		$self->copy_ensemblpan( $divisions, $host_servers );	
 		return ;
 	}
 
 	if(  $self->param('process_grch37') ){
-		$self->copy_grch37( $divisions, $host_servers );
-	}	
+		$self->copy_grch37( $divisions, $host_servers, '%homo_sapiens%37');
+	}
+
+	if( $self->param('process_grch37_mart')){
+		$self->copy_grch37( $divisions, $host_servers, '%mart%' );
+        }		
 
 	if($self->param('process_mart')){
 		$self->copy_marts( $divisions, $host_servers );
@@ -299,7 +311,7 @@ sub copy_division_dbs{
 }
 
 sub copy_grch37{
-	my ( $self, $divisions, $host_servers ) = @_;
+	my ( $self, $divisions, $host_servers, $db_name ) = @_;
 
         $host_servers->{'EnsemblVertebrates_grch37'}->[0] = `echo \$($host_servers->{'EnsemblVertebrates_grch37'}->[0] details url)`;
         $host_servers->{'EnsemblVertebrates_grch37'}->[1] = `echo \$($host_servers->{'EnsemblVertebrates_grch37'}->[1] details url)`;
@@ -308,7 +320,7 @@ sub copy_grch37{
 		
 		
 	$self->dataflow_output_id( {
-        	'source_db_uri' =>  $host_servers->{'EnsemblVertebrates_grch37'}->[0] . '%homo_sapiens%37',
+        	'source_db_uri' =>  $host_servers->{'EnsemblVertebrates_grch37'}->[0] . $db_name,
                 'target_db_uri' =>  $host_servers->{'EnsemblVertebrates_grch37'}->[1],
         }, 2);	
 }
@@ -318,7 +330,7 @@ sub copy_marts{
 	my ( $self, $divisions, $host_servers ) = @_;
         my %marts = ('EnsemblPlants' => 'plants_%mart%', 'EnsemblMetazoa'=>'metazoa_%mart%',
                       'EnsemblFungi' => 'fungi_%mart%', 'EnsemblProtists' => 'protists_%mart%',
-                      'EnsemblVertebrates' => '%mart%',
+                      'EnsemblVertebrates' => '%marts%',
                      ); #ontology_mart is copied from vert divsion %mart%
 
         foreach my $division (@{$self->get_divisions()}){
