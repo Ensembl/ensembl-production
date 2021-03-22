@@ -175,7 +175,7 @@ sub get_all_functional_dbs{
 sub get_all_mart_and_pan_db{
 
         my ( $self, $species, $all_divisions, $ens_release, $only_marts, $only_pan ) = @_;
-        my ($rdba,$gdba,$release,$release_info, $dbdba) = $self->get_metadata_db($species, 102); #$ens_release);
+        my ($rdba,$gdba,$release,$release_info, $dbdba) = $self->get_metadata_db($species, $ens_release);
         my %division_databases ;
         foreach my $division_name (@{$all_divisions}){
                 my $genomes = $gdba->fetch_all_by_division($division_name);
