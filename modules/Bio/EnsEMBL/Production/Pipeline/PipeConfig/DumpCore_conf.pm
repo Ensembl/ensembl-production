@@ -116,7 +116,7 @@ sub default_options {
             'oryctolagus_cuniculus'            => 30025,
             'oryzias_latipes'                  => 30026,
             'sus_scrofa'                       => 30039,
-            'meleagris_gallopavo'              => 30064,
+            'meleagris_gallopavo'              => 30082,
             'anas_platyrhynchos_platyrhynchos' => 30066,
             'ovis_aries'                       => 30068,
             'oreochromis_niloticus'            => 30073,
