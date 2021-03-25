@@ -2,7 +2,7 @@
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2020] EMBL-European Bioinformatics Institute
+    Copyright [2016-2021] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -33,7 +33,8 @@ sub default_options {
         'division'        => [],
         'run_all'         => 0, 
         'process_mart'    => 0,
-        'process_grch37'  => 0,     
+        'process_grch37'  => 0, 
+        'process_grch37_mart' => 0,     
         'email_subject' => $self->o('pipeline_name').'  pipeline has finished',
         'ensembl_release' =>  software_version(),  
         'ens_delete_version' => ( software_version() - 3 ),
@@ -50,7 +51,7 @@ sub default_options {
          		"EnsemblBacteria" => ['m4-w'],  
          		"EnsemblPan" => ['m1-w', 'm2-w', 'm3-w', 'm4-w'],
         		"vert_mart" => ['mysql-ens-mirror-mart-1'],  
-        		"nonvert_mart" => ['mysql-ens-mirror-mart-1'],  
+        		"nonvert_mart" => ['mysql-ens-mirror-mart-1'], 
 		 },
                 'CopyTo'=> {
          		"EnsemblPlants" =>  ['mysql-ens-sta-3' , 'mysql-ens-mirror-3'] ,
@@ -85,6 +86,7 @@ sub pipeline_analyses {
                 release              => $self->o('ens_delete_version') ,
 	        process_mart         => $self->o('process_mart'),
                 process_grch37       => $self->o('process_grch37'),
+                process_grch37_mart  => $self->o('process_grch37_mart'),
                 hosts_config          => $self->o('hosts_config'),
                 tocopy               => 0,  
              },
@@ -109,6 +111,7 @@ sub pipeline_analyses {
                 release              => $self->o('ensembl_release'),
                 process_mart         => $self->o('process_mart'),
                 process_grch37       => $self->o('process_grch37'),
+                process_grch37_mart  => $self->o('process_grch37_mart'),
                 hosts_config          => $self->o('hosts_config'),
                 copy_vert_dbs        => $self->o('copy_vert_dbs'),
                 copy_nonvert_dbs     => $self->o('copy_nonvert_dbs'),
