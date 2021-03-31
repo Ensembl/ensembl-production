@@ -113,6 +113,7 @@ sub filenames {
   }
   path($dir)->mkpath();
   path($dir)->chmod("g+w");
+  path($dir)->parent()->chmod("g+w");
 
   my %filenames;
 
