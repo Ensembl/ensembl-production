@@ -43,7 +43,7 @@ sub default_options {
 
     genome_types  => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
     geneset_types => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'
-    rnaseq_types  => [], # Possible values: 'Symlink_RNASeq'
+    rnaseq_types  => [], # Possible values: 'RNASeq_Exists'
 
     dump_metadata  => 0,
     dump_mysql     => 0,
