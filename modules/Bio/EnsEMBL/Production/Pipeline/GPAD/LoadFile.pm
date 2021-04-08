@@ -166,13 +166,18 @@ sub run {
       } elsif ($db =~ /RNAcentral/) {
         $self->log()->debug("Adding linkage to RNAcentral");
         $is_transcript = 1;
-        # Accession is the version with taxonomy id appended, e.g. URS0000007FBA_9606
-        # We store as URS0000007FBA, so need to remove everything from the _
-        # precursor_rna could be a list of accessions
-        my @precursor_rnas = split(",", $precursor_rna) if $precursor_rna;
-        foreach my $rna (@precursor_rnas) {
-          $rna =~ s/_[0-9]*//;
-          $db_object_id = $rna;
+        # For miRNA, we want the precursor(s), rather than the db ID,
+        # but for everything else we want the standard RNAcentral accession
+        my @db_object_ids;
+        if ($precursor_rna) {
+          @db_object_ids = split(",", $precursor_rna);
+        } else {
+          @db_object_ids = ($db_object_id)
+        }
+        foreach my $db_object_id (@db_object_ids) {
+          # The ID has the taxonomy id appended, e.g. URS0000007FBA_9606
+          # We store as URS0000007FBA, so need to remove the suffix.
+          $db_object_id =~ s/_[0-9]+$//;
           my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
           if (scalar(@$rnacentral_xrefs) != 0) {
             $master_xref = $rnacentral_xrefs->[0];
