@@ -144,9 +144,21 @@ sub pipeline_analyses {
                             meta_filters    => $self->o('meta_filters'),
                           },
       -flow_into       => {
-                            '2->A' => ['BackupTables'],
-                            'A->2' => ['RunDatachecks'],
+                            '2' => ['AnalysisConfiguration'],
                           }
+    },
+
+    {
+      -logic_name        => 'AnalysisConfiguration',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::RNAGeneXref::AnalysisConfiguration',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              analyses => $self->o('analyses'),
+                            },
+      -flow_into 	       => {
+                              '2->A' => ['BackupTables'],
+                              'A->3' => ['SpeciesFactory'],
+                            }
     },
 
     {
@@ -162,21 +174,9 @@ sub pipeline_analyses {
                                 'xref',
                               ],
                               output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              overwrite   => 1,
                             },
-      -flow_into         => ['AnalysisConfiguration'],
-    },
-
-    {
-      -logic_name        => 'AnalysisConfiguration',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::RNAGeneXref::AnalysisConfiguration',
-      -max_retry_count   => 0,
-      -parameters        => {
-                              analyses => $self->o('analyses'),
-                            },
-      -flow_into 	       => {
-                              '2->A' => ['AnalysisSetup'],
-                              'A->3' => ['SpeciesFactory'],
-                            }
+      -flow_into         => ['AnalysisSetup'],
     },
 
     {
@@ -212,6 +212,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('rnacentral_logic_name'),
                             },
+      -flow_into         => ['RunDatachecks'],
     },
 
     {

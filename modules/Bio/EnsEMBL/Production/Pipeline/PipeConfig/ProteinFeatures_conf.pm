@@ -473,9 +473,26 @@ sub pipeline_analyses {
                             meta_filters    => $self->o('meta_filters'),
                           },
       -flow_into       => {
-                            '2->A' => ['BackupTables'],
+                            '2->A' => ['AnalysisConfiguration'],
                             'A->2' => ['RunDatachecks'],
                           }
+    },
+
+    {
+      -logic_name        => 'AnalysisConfiguration',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
+      -max_retry_count   => 0,
+      -parameters        => {
+                              protein_feature_analyses  => $self->o('protein_feature_analyses'),
+                              interproscan_version      => $self->o('interproscan_version'),
+                              check_interpro_db_version => $self->o('check_interpro_db_version'),
+                              run_seg                   => $self->o('run_seg'),
+                              xref_analyses             => $self->o('xref_analyses'),
+                            },
+      -flow_into 	       => {
+                              '2->A' => ['BackupTables'],
+                              'A->3' => ['RemoveOrphans'],
+                            }
     },
 
     {
@@ -496,24 +513,7 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
-      -flow_into         => ['AnalysisConfiguration'],
-    },
-
-    {
-      -logic_name        => 'AnalysisConfiguration',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
-      -max_retry_count   => 0,
-      -parameters        => {
-                              protein_feature_analyses  => $self->o('protein_feature_analyses'),
-                              interproscan_version      => $self->o('interproscan_version'),
-                              check_interpro_db_version => $self->o('check_interpro_db_version'),
-                              run_seg                   => $self->o('run_seg'),
-                              xref_analyses             => $self->o('xref_analyses'),
-                            },
-      -flow_into 	       => {
-                              '2->A' => ['AnalysisSetup'],
-                              'A->3' => ['RemoveOrphans'],
-                            }
+      -flow_into         => ['AnalysisSetup'],
     },
 
     {
