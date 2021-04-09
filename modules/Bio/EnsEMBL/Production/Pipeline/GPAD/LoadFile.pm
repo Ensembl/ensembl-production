@@ -166,8 +166,10 @@ sub run {
       } elsif ($db =~ /RNAcentral/) {
         $self->log()->debug("Adding linkage to RNAcentral");
         $is_transcript = 1;
-        # For miRNA, we want the precursor(s), rather than the db ID,
-        # but for everything else we want the standard RNAcentral accession
+        # For microRNAs, GOA link terms to the product; however, we annotate GO terms
+	# against transcripts, not mature products, i.e. precursor miRNAs. Fortunately,
+	# the accessions for the precursor(s) are in the GPAD file, so we can use those
+	# instead of the standard RNAcentral accession that we use for everything else.
         my @db_object_ids;
         if ($precursor_rna) {
           @db_object_ids = split(",", $precursor_rna);
