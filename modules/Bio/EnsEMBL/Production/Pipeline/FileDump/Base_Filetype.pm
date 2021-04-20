@@ -111,9 +111,18 @@ sub filenames {
   } else {
     $dir = $self->param('output_dir');
   }
+
+  # If the parent dir does not exist, we will need to
+  # update the group permissions, so that other teams
+  # can write to it once we have created it.
+  my $parent_exists = path($dir)->parent()->exists();
+
   path($dir)->mkpath();
   path($dir)->chmod("g+w");
-  path($dir)->parent()->chmod("g+w");
+
+  if (! $parent_exists) {
+    path($dir)->parent()->chmod("g+w");
+  }
 
   my %filenames;
 
