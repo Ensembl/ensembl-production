@@ -40,20 +40,22 @@ package Bio::EnsEMBL::Production::Pipeline::SampleData::GenerateSampleData;
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Utils::Exception qw(throw);
+
 use Bio::EnsEMBL::Attribute;
 use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+
 sub run {
   my ($self) = @_;
   my $species = $self->param('species');
   my $db = $self->core_dba();
-  # defaults
+
   my $max_len = $self->param('maximum_gene_length');
   my $min_len = $max_len * 0.75;
-  # Create Compara adaptors
+
   my $compara_name = $self->division() ne "vertebrates"?$self->division():'Multi';
   my $compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($compara_name, 'compara') if defined $compara_name;
-  throw("Can't connect to Compara database specified by $compara_name - check command-line and registry file settings") if (!$compara_dba);
+  $self->throw("Can't connect to Compara database specified by $compara_name - check command-line and registry file settings") if (!$compara_dba);
+
   # First try to get the genomedb for the species
   my $genome_db_adaptor = $compara_dba->get_GenomeDBAdaptor;
   my $genome_db  = $genome_db_adaptor->fetch_by_registry_name($species);
@@ -90,6 +92,7 @@ sub run {
     $compara_dba->dbc()->disconnect_if_idle();
     # now find a candidate with xrefs and good support
     $self->warning("Found: " . scalar @candidate_genes . " genes for ".$species."\n");
+
     my %sample_transcripts;
     my $sample_transcript;
     TRANSCRIPT:foreach my $seq_member ( @candidate_genes ) {
