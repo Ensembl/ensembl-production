@@ -32,7 +32,7 @@ use strict;
 use warnings;
 use File::Spec;
 use Data::Dumper;
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
@@ -176,16 +176,13 @@ sub pipeline_wide_parameters {
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-        'default' => { 'LSF' => '-q production-rh74 -M 4000   -R "rusage[mem=4000]"' },
-        '8GB'     => { 'LSF' => '-q production-rh74 -M 8000   -R "rusage[mem=8000]"' },
-        '15GB'    => { 'LSF' => '-q production-rh74 -M 15000  -R "rusage[mem=15000]"' },
-        '32GB'    => { 'LSF' => '-q production-rh74 -M 32000  -R "rusage[mem=32000]"' },
-        '64GB'    => { 'LSF' => '-q production-rh74 -M 64000  -R "rusage[mem=64000]"' },
-        '128GB'   => { 'LSF' => '-q production-rh74 -M 128000 -R "rusage[mem=128000]"' },
-        '256GB'   => { 'LSF' => '-q production-rh74 -M 256000 -R "rusage[mem=256000]"' },
-    }
+  my ($self) = @_;
+  return {
+     '32GB' => { 'LSF' => '-q production  -M 32000 -R "rusage[mem=32000]"' },
+     '64GB' => { 'LSF' => '-q production - M 64000 -R "rusage[mem=64000]"' },
+    '128GB' => { 'LSF' => '-q production -M 128000 -R "rusage[mem=128000]"' },
+    '256GB' => { 'LSF' => '-q production -M 256000 -R "rusage[mem=256000]"' },
+  }
 }
 
 sub pipeline_analyses {
@@ -217,14 +214,12 @@ sub pipeline_analyses {
             },
             -input_ids       => [ {} ],
             -hive_capacity   => -1,
-            -rc_name         => 'default',
             -max_retry_count => 1,
             -flow_into       => { '2' => 'backbone_job_pipeline', },
         },
         { -logic_name      => 'backbone_job_pipeline',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -hive_capacity => -1,
-            -rc_name       => 'default',
             -flow_into     => { '1->A' => $pipeline_flow,
                 'A->1'                 => [ 'checksum_generator' ],
             }
@@ -237,7 +232,6 @@ sub pipeline_analyses {
                 skip_convert_fasta => $self->o('skip_convert_fasta')
             },
             -hive_capacity => 10,
-            -rc_name       => 'default'
         },
         ### GTF
         { -logic_name      => 'gtf',
@@ -249,7 +243,7 @@ sub pipeline_analyses {
                 gene            => $self->o('gene')
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
             -flow_into     => { '-1' => 'gtf_32GB', },
         },
 
@@ -306,7 +300,7 @@ sub pipeline_analyses {
                 xrefs            => $self->o('xrefs'),
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
             -flow_into     => { '-1' => 'gff3_32GB', '1' => 'tidy_gff3', },
         },
 
@@ -368,7 +362,6 @@ sub pipeline_analyses {
             -parameters    => { cmd => $self->o('gff3_tidy') . ' -gzip -o #out_file#.sorted.gz #out_file#', },
             -hive_capacity => 10,
             -batch_size    => 10,
-            -rc_name       => 'default',
             -flow_into     => 'move_gff3',
         },
 
@@ -377,7 +370,6 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters    => { cmd => 'mv #out_file#.sorted.gz #out_file#', },
             -hive_capacity => 10,
-            -rc_name       => 'default',
             -flow_into     => 'validate_gff3',
         },
 
@@ -387,7 +379,6 @@ sub pipeline_analyses {
             -parameters    => { cmd => $self->o('gff3_validate') . ' #out_file#', },
             -hive_capacity => 10,
             -batch_size    => 10,
-            -rc_name       => 'default',
         },
 
         ### EMBL
@@ -395,7 +386,7 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile',
             -parameters    => { type => 'embl', },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '4GB',
             -flow_into     => { '-1' => 'embl_32GB', },
         },
 
@@ -427,7 +418,7 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Production::Pipeline::Flatfile::DumpFile',
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '4GB',
             -flow_into     => { -1 => 'genbank_32GB', },
         },
 
@@ -466,7 +457,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 20,
             -priority        => 5,
-            -rc_name         => 'default',
+            -rc_name         => '2GB',
         },
         { -logic_name        => 'fasta_dna',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
@@ -483,7 +474,6 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 20,
             -priority        => 5,
-            -rc_name         => 'default',
         },
         { -logic_name        => 'dna',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
@@ -497,7 +487,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 20,
             -priority        => 5,
-            -rc_name         => 'default',
+            -rc_name         => '4GB',
         },
         {
             -logic_name    => 'copy_dna',
@@ -543,7 +533,6 @@ sub pipeline_analyses {
             },
             -max_retry_count   => 1,
             -analysis_capacity => 10,
-            -rc_name           => 'default',
             -flow_into         => { '3' => 'assembly_chain',
                 '4'                     => 'report_failed_assembly_chain' }
         },
@@ -554,7 +543,6 @@ sub pipeline_analyses {
                 ucsc     => $self->o('ucsc'),
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
             -flow_into     => { '-1' => 'assembly_chain_32GB', },
         },
         { -logic_name      => 'assembly_chain_32GB',
@@ -572,7 +560,6 @@ sub pipeline_analyses {
             -parameters        => { 'email' => $self->o('email') },
             -max_retry_count   => 1,
             -analysis_capacity => 10,
-            -rc_name           => 'default',
         },
 
         ### JSON dumps
@@ -580,15 +567,15 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
             -parameters    => {},
             -hive_capacity => 50,
-            -rc_name       => 'default',
-            -flow_into     => { -1 => 'json_15GB', },
+            -rc_name       => '4GB',
+            -flow_into     => { -1 => 'json_16GB', },
         },
 
-        { -logic_name      => 'json_15GB',
+        { -logic_name      => 'json_16GB',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::JSON::DumpGenomeJson',
             -parameters    => {},
             -hive_capacity => 50,
-            -rc_name       => '15GB',
+            -rc_name       => '16GB',
             -flow_into     => { -1 => 'json_32GB', },
         },
 
@@ -615,7 +602,7 @@ sub pipeline_analyses {
                 type        => 'uniprot',
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
         },
 
         { -logic_name      => 'tsv_refseq',
@@ -625,7 +612,7 @@ sub pipeline_analyses {
                 type        => 'refseq',
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
         },
 
         { -logic_name      => 'tsv_entrez',
@@ -635,20 +622,20 @@ sub pipeline_analyses {
                 type        => 'entrez',
             },
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
         },
 
 
         { -logic_name      => 'tsv_ena',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileEna',
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
         },
 
         { -logic_name      => 'tsv_metadata',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileMetadata',
             -hive_capacity => 50,
-            -rc_name       => 'default',
+            -rc_name       => '2GB',
         },
 
     ];

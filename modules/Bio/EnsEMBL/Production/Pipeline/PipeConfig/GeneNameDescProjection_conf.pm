@@ -200,7 +200,7 @@ sub pipeline_analyses {
                               output_file => catdir($self->o('output_dir'), '#config_type#', '#dbname#_bkp.sql.gz'),
                               table_list  => $self->o('backup_tables'),
                             },
-      -rc_name           => 'mem',
+      -rc_name           => '2GB',
       -flow_into         => ['DeleteExisting'],
     },
     {
@@ -225,7 +225,7 @@ sub pipeline_analyses {
                               delete_existing => 1,
                               db_backup_file => catdir($self->o('output_dir'), '#config_type#', '#dbname#_bkp.sql.gz'),
                             },
-      -rc_name           => 'mem',
+      -rc_name           => '2GB',
     },
     {
       -logic_name        => 'Project',
@@ -277,7 +277,7 @@ sub pipeline_analyses {
                               gene_desc_rules        => $self->o('gene_desc_rules'),
                               gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                             },
-      -rc_name           => 'mem',
+      -rc_name           => '2GB',
       -flow_into         => {
                               '1->A' => ['RunXrefCriticalDatacheck'],
                               'A->1' => ['RunXrefAdvisoryDatacheck']
@@ -322,7 +322,7 @@ sub pipeline_analyses {
                               gene_desc_rules        => $self->o('gene_desc_rules'),
                               gene_desc_rules_target => $self->o('gene_desc_rules_target'),
                             },
-      -rc_name           => 'mem',
+      -rc_name           => '2GB',
       -flow_into         => {
                               '1->A' => ['RunXrefCriticalDatacheck'],
                               'A->1' => ['RunXrefAdvisoryDatacheck']
@@ -386,14 +386,6 @@ sub pipeline_analyses {
     },
     @{Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self)},
   ];
-}
-
-sub resource_classes {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
-        '1Gb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M1000 -R"select[mem>1000] rusage[mem=1000]"'] },
-    };
 }
 
 1;

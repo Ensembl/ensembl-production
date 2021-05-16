@@ -98,17 +98,6 @@ sub pipeline_wide_parameters {
   };
 }
 
-sub resource_classes {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::resource_classes},
-    '1GB'  => {'LSF' => '-q production-rh74 -M 1000 -R "rusage[mem=1000,scratch=1000]"'},
-    '2GB'  => {'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000,scratch=1000]"'},
-    '4GB'  => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
-    '8GB'  => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=1000]"'},
-	}
-}
-
 sub pipeline_analyses {
   my ($self) = @_;
 

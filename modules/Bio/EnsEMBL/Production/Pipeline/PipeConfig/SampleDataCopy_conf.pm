@@ -121,13 +121,4 @@ sub pipeline_analyses {
   ];
 }
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '8GB' => {'LSF' => '-q production-rh74 -M 8000  -R "rusage[mem=8000]"'},
-  }
-}
-
 1;

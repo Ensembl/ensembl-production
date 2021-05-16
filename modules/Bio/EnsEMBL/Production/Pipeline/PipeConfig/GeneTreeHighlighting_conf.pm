@@ -32,7 +32,7 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 
 sub default_options {
   my ($self) = @_;

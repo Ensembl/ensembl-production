@@ -25,7 +25,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 
 use File::Spec::Functions qw(catdir);
 
@@ -52,14 +52,18 @@ sub beekeeper_extra_cmdline_options {
 }
 
 sub resource_classes {
-    my $self = shift;
-    return {
-	    %{$self->SUPER::resource_classes},
-      'default' => { 'LSF' => '-q production'},
-      'normal'  => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"'},
-      'mem'     => { 'LSF' => '-q production -M 2000 -R "rusage[mem=2000]"'},
-    }
+  my $self = shift;
+  return {
+    %{$self->SUPER::resource_classes},
 
+    'default' => { 'LSF' => '-q production'},
+     '1GB'    => { 'LSF' => '-q production -M  1000 -R "rusage[mem=1000]"'},
+     '2GB'    => { 'LSF' => '-q production -M  2000 -R "rusage[mem=2000]"'},
+     '4GB'    => { 'LSF' => '-q production -M  4000 -R "rusage[mem=4000]"'},
+     '8GB'    => { 'LSF' => '-q production -M  8000 -R "rusage[mem=8000]"'},
+    '16GB'    => { 'LSF' => '-q production -M 16000 -R "rusage[mem=16000]"'},
+    '32GB'    => { 'LSF' => '-q production -M 32000 -R "rusage[mem=32000]"'},
+  }
 }
 
 1;

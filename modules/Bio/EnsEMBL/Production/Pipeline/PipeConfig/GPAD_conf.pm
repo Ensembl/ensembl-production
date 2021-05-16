@@ -191,7 +191,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2' => ['LoadFile'],
                             },
-      -rc_name           => 'mem',
+      -rc_name           => '2GB',
     },
     {
       -logic_name        => 'LoadFile',
@@ -200,7 +200,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('logic_name')
                             },
-      -rc_name           => 'mem'
+      -rc_name           => '2GB'
     },
     {
        -logic_name       => 'RunXrefDatacheck',

@@ -32,7 +32,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_ensembl_con
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Hive::Version 2.3;
+use Bio::EnsEMBL::Hive::Version 2.5;
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf');
 

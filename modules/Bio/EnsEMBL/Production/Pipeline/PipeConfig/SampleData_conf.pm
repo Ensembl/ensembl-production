@@ -149,7 +149,7 @@ sub pipeline_analyses {
                              '1' => ['GeneSampleDataChecks'],
                             '-1' => ['GenerateGeneSample_mem'],
                           },
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -181,7 +181,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '1' => ['VEPSampleDataChecks']
                           },
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -212,15 +212,6 @@ sub pipeline_analyses {
                           },
     },
   ];
-}
-
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '8GB' => {'LSF' => '-q production-rh74 -M 8000  -R "rusage[mem=8000]"'},
-  }
 }
 
 1;

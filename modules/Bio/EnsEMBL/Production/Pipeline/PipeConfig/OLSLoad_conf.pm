@@ -15,25 +15,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
-=head1 SYNOPSIS
-
 =head1 DESCRIPTION
 
 Hive pipeline to load all required ontologies into a dedicated mysql database
 The pipeline will create a database named from current expected release number, load expected ontologies from OLS,
 Check and compute terms closure.
 
-
 =cut
-
 
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 
 use strict;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 use warnings FATAL => 'all';
+
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -69,10 +64,6 @@ sub default_options {
     }
 }
 
-
-=head2 pipeline_wide_parameters
-=cut
-
 sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
@@ -91,9 +82,6 @@ sub pipeline_wide_parameters {
         'ontologies'   => $self->o('ontologies'),
     };
 }
-
-=head2 pipeline_analyses
-=cut
 
 sub pipeline_analyses {
     my ($self) = @_;
@@ -156,7 +144,7 @@ sub pipeline_analyses {
             -module            => 'bio.ensembl.ontology.hive.OLSOntologyLoader',
             -language          => 'python3',
             -analysis_capacity => 20,
-            -rc_name           => 'default',
+            -rc_name           => '4GB',
             -parameters        => {
                 -db_url     => $self->o('db_url'),
                 -output_dir => $self->o('output_dir'),
@@ -185,7 +173,7 @@ sub pipeline_analyses {
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
             -language          => 'python3',
             -analysis_capacity => $self->o('ols_load'),
-            -rc_name           => 'default',
+            -rc_name           => '4GB',
             -parameters        => {
                 -db_url     => $self->o('db_url'),
                 -output_dir => $self->o('output_dir'),
@@ -197,7 +185,7 @@ sub pipeline_analyses {
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
             -language          => 'python3',
             -analysis_capacity => 5,
-            -rc_name           => 'default',
+            -rc_name           => '4GB',
             -parameters        => {
                 -db_url     => $self->o('db_url'),
                 -output_dir => $self->o('output_dir'),
@@ -209,7 +197,7 @@ sub pipeline_analyses {
             -module          => 'bio.ensembl.ontology.hive.OLSImportReport',
             -language        => 'python3',
             -max_retry_count => 1,
-            -rc_name         => 'default',
+            -rc_name         => '4GB',
             -parameters      => {
                 -output_dir => $self->o('output_dir'),
                 -verbosity  => $self->o('verbosity')
@@ -245,7 +233,7 @@ sub pipeline_analyses {
             -module          => 'bio.ensembl.ontology.hive.OLSLoadPhiBaseIdentifier',
             -language        => 'python3',
             -max_retry_count => 1,
-            -rc_name         => 'default',
+            -rc_name         => '4GB',
             -parameters      => {
                 'ontology_name' => "PHI",
                 'db_url'        => $self->o('db_url'),
@@ -296,7 +284,6 @@ sub pipeline_analyses {
             -logic_name    => 'copy_database',
             -module        => 'ensembl.production.hive.ProductionDBCopy',
             -language      => 'python3',
-            -rc_name       => 'default',
             -parameters    => {
                 'endpoint' => $self->o('copy_service_uri'),
                 'payload'  => $self->o('copy_service_payload'),
@@ -307,7 +294,6 @@ sub pipeline_analyses {
             -logic_name    => 'copy_mart_database',
             -module        => 'ensembl.production.hive.ProductionDBCopy',
             -language      => 'python3',
-            -rc_name       => 'default',
             -parameters    => {
                 'endpoint' => $self->o('copy_service_uri'),
                 'payload'  => $self->o('copy_service_mart_payload'),
@@ -317,14 +303,4 @@ sub pipeline_analyses {
     ];
 }
 
-sub resource_classes {
-    my $self = shift;
-    return {
-        'default' => { 'LSF' => '-q production-rh74 -M 4000   -R "rusage[mem=4000]"' },
-        '32GB'    => { 'LSF' => '-q production-rh74 -M 32000  -R "rusage[mem=32000]"' },
-        '64GB'    => { 'LSF' => '-q production-rh74 -M 64000  -R "rusage[mem=64000]"' },
-        '128GB'   => { 'LSF' => '-q production-rh74 -M 128000 -R "rusage[mem=128000]"' },
-        '256GB'   => { 'LSF' => '-q production-rh74 -M 256000 -R "rusage[mem=256000]"' },
-    }
-}
 1;

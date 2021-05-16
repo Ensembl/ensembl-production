@@ -24,9 +24,9 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
 
-use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
     my ($self) = @_;
@@ -88,7 +88,6 @@ sub pipeline_analyses {
             {-logic_name => 'download_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
              -parameters => { base_path     => $self->o('base_path')},
-             -rc_name    => 'normal',
              -max_retry_count => 3,
             },
             {-logic_name => 'checksum',
@@ -99,7 +98,6 @@ sub pipeline_analyses {
                             },
              -flow_into  => { '1->A' => 'schedule_species',
                               'A->1' => 'notify_by_email'},
-             -rc_name    => 'normal',
             },
             {-logic_name => 'schedule_species',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -172,7 +170,7 @@ sub pipeline_analyses {
             },
             {-logic_name => 'parse_source',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ParseSource',
-             -rc_name    => 'large',
+             -rc_name    => '10GB',
              -hive_capacity => 300,
              -analysis_capacity => 50,
              -batch_size => 30,
@@ -184,7 +182,7 @@ sub pipeline_analyses {
              -flow_into  => { '2->A' => 'dump_xref',
                               'A->1' => 'schedule_mapping'
                             },
-             -rc_name    => 'mem',
+             -rc_name    => '3GB',
             },
             {-logic_name => 'dump_xref',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DumpXref',
@@ -192,7 +190,6 @@ sub pipeline_analyses {
                              'release'     => $self->o('release'),
                              config_file   => $self->o('config_file')},
              -flow_into  => { 2 => 'align_factory'},
-             -rc_name    => 'normal',
             },
             {-logic_name => 'align_factory',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::AlignmentFactory',
@@ -204,7 +201,7 @@ sub pipeline_analyses {
             {-logic_name => 'align',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Alignment',
              -parameters => {'base_path'   => $self->o('base_path')},
-             -rc_name    => 'large',
+             -rc_name    => '10GB',
              -hive_capacity => 300,
              -analysis_capacity => 300,
              -batch_size => 5,
@@ -221,7 +218,6 @@ sub pipeline_analyses {
             },
             {-logic_name => 'direct_xrefs',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DirectXrefs',
-             -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -flow_into  => { 1 => 'process_alignment' },
@@ -229,14 +225,12 @@ sub pipeline_analyses {
             },
             {-logic_name => 'process_alignment',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ProcessAlignment',
-             -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -analysis_capacity => 30
             },
             {-logic_name => 'rnacentral_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::RNAcentralMapping',
-             -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -hive_capacity => 300,
@@ -245,7 +239,6 @@ sub pipeline_analyses {
             },
             {-logic_name => 'uniparc_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::UniParcMapping',
-             -rc_name    => 'normal',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -hive_capacity => 300,
@@ -254,14 +247,14 @@ sub pipeline_analyses {
             },
             {-logic_name => 'coordinate_mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CoordinateMapping',
-             -rc_name    => 'mem',
+             -rc_name    => '3GB',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -analysis_capacity => 30
             },
             {-logic_name => 'mapping',
              -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Mapping',
-             -rc_name    => 'mem',
+             -rc_name    => '3GB',
              -parameters => {'base_path'   => $self->o('base_path'),
                              'release'     => $self->o('release')},
              -analysis_capacity => 30,
@@ -332,9 +325,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'small' => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"'},
-    'mem'   => { 'LSF' => '-q production-rh74 -M 3000 -R "rusage[mem=3000]"'},
-    'large' => { 'LSF' => '-q production-rh74 -M 10000 -R "rusage[mem=10000]"'},
+    'small' => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"'},
+    '3GB'   => { 'LSF' => '-q production -M 3000 -R "rusage[mem=3000]"'},
+    '10GB'  => { 'LSF' => '-q production -M 10000 -R "rusage[mem=10000]"'},
   }
 }
 
