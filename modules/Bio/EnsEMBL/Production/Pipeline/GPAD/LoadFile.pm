@@ -96,7 +96,7 @@ sub run {
           $go_evidence=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/tgt_protein/){
-          $annotation_propertie =~ s/tgt_protein=[\w\-]+://;
+          $annotation_propertie =~ s/tgt_protein=[\w\-\d\.]+://;
           $tgt_protein=$annotation_propertie;
         }
         elsif ($annotation_propertie =~ m/tgt_transcript/){
