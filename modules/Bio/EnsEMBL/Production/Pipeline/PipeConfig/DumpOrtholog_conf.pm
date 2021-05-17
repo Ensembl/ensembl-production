@@ -30,19 +30,24 @@ sub default_options {
 	return {
 		%{ $self->SUPER::default_options() },
 
-		'method_link_type' => 'ENSEMBL_ORTHOLOGUES',
-		'compara' => undef,
+		compara => undef,
+    release => $self->o('ensembl_release'),
 
 		# Cleanup projection directory before running the pipeline
-		'cleanup_dir' => 0,
+		cleanup_dir => 0,
+
+		# Ortholog parameters
+		method_link_type => 'ENSEMBL_ORTHOLOGUES',
+		perc_id  => '30',
+		perc_cov => '66',
 
     # Flag controling the use of the is_tree_compliant flag from the homology table of the Compara database
     # If this flag is on (=1) then the pipeline will exclude all homologies where is_tree_compliant=0 in the homology table of the Compara db
     # This flag should be enabled for EG and disable for e! species.
-    'is_tree_compliant' => '0',
+    is_tree_compliant => 0,
 
 		# hive_capacity values for analysis
-		'getOrthologs_capacity' => '50',
+		getOrthologs_capacity => '50',
 	};
 }
 
@@ -70,8 +75,8 @@ sub pipeline_wide_parameters {
 
 	return {
 		%{ $self->SUPER::pipeline_wide_parameters },
-		'perc_id'  => $self->o('perc_id'),
-		'perc_cov' => $self->o('perc_cov'),
+		perc_id  => $self->o('perc_id'),
+		perc_cov => $self->o('perc_cov'),
   };
 }
 
@@ -79,83 +84,82 @@ sub pipeline_analyses {
 	my ($self) = @_;
 
 	return [
-
-		{  -logic_name => 'SourceFactory',
-		   -input_ids  => [ {} ],
-		   -module =>
-			 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
-		   -parameters => { 'species_config' => $self->o('species_config'),
-		   	 'compara' => $self->o('compara'),
-				    'output_dir'       => $self->o('output_dir'),
-						'cleanup_dir'     => $self->o('cleanup_dir')
-		   	 },
-		    -flow_into  => { '2->A'              => ['SpeciesFactory'],
-				    'A->1' => [ 'SpeciesFactoryAll'  ],
-						},
-		 },
-
-		 {  -logic_name      => 'SpeciesFactory',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-             -max_retry_count => 1,
-             -flow_into       => {
-                                  '2' => ['GetOrthologs'],
-                                 },
-          },
-			{  -logic_name      => 'SpeciesFactoryAll',
-             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-             -max_retry_count => 1,
-             -flow_into       => {
-                                  '1' => ['SpeciesNoOrthologs'],
-                                 },
-          },
-
-		{  -logic_name => 'SpeciesNoOrthologs',
-		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs',
-		   -parameters => {
-			      'release' => $self->o('ensembl_release'),
-       },
-		   -batch_size    => 1,
-		   -rc_name       => '4GB',
-			 -flow_into       => {
-				 '1' => ['RunCreateReleaseFile'],
-			 } ,
+		{
+      -logic_name => 'SourceFactory',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SourceFactory',
+      -input_ids  => [ {} ],
+      -parameters => {
+                      species_config => $self->o('species_config'),
+                      compara        => $self->o('compara'),
+                      output_dir     => $self->o('output_dir'),
+                      cleanup_dir    => $self->o('cleanup_dir')
+                     },
+      -flow_into  => {
+                      '2->A' => ['SpeciesFactory'],
+                      'A->1' => ['SpeciesFactoryAll'],
+                     },
     },
-
-		{  -logic_name => 'GetOrthologs',
-		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => { 'is_tree_compliant' => $self->o('is_tree_compliant'),
-							'method_link_type' => $self->o('method_link_type'),
-		   },
-		   -batch_size    => 1,
-		   -rc_name       => '4GB',
-		   -hive_capacity => $self->o('getOrthologs_capacity'),
-		   -flow_into     => { '-1' => 'GetOrthologs_16GB', }, },
-
-		{  -logic_name => 'GetOrthologs_16GB',
-		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => {
-				   'method_link_type' => $self->o('method_link_type'),
-		   },
-		   -batch_size    => 1,
-		   -rc_name       => '16GB',
-		   -hive_capacity => $self->o('getOrthologs_capacity'),
-		   -flow_into     => { '-1' => 'GetOrthologs_32GB', }, },
-
-		{  -logic_name => 'GetOrthologs_32GB',
-		   -module => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
-		   -parameters => {
-				   'method_link_type' => $self->o('method_link_type'),
-		   },
-		   -batch_size    => 1,
-		   -rc_name       => '32GB',
-		   -hive_capacity => $self->o('getOrthologs_capacity'), },
-		   
-		{  -logic_name => 'RunCreateReleaseFile',
-		   -module => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
-		   -parameters => { 							
-			'release' => $self->o('ensembl_release'),
-		   },
-		   -batch_size    => 1,
+    {
+      -logic_name      => 'SpeciesFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -max_retry_count => 1,
+      -flow_into       => {
+                            '2' => ['GetOrthologs'],
+                          },
+    },
+    {
+      -logic_name      => 'SpeciesFactoryAll',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -max_retry_count => 1,
+      -flow_into       => ['SpeciesNoOrthologs'],
+    },
+		{
+      -logic_name => 'SpeciesNoOrthologs',
+		  -module     => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::SpeciesNoOrthologs',
+		  -parameters => {
+                      release => $self->o('release'),
+                     },
+		   -rc_name   => '4GB',
+			 -flow_into => ['RunCreateReleaseFile'],
+    },
+		{
+      -logic_name    => 'GetOrthologs',
+		  -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
+		  -parameters    => {
+                          method_link_type  => $self->o('method_link_type'),
+                          is_tree_compliant => $self->o('is_tree_compliant'),
+                        },
+		  -rc_name       => '4GB',
+		  -hive_capacity => $self->o('getOrthologs_capacity'),
+		  -flow_into     => { '-1' => 'GetOrthologs_16GB' },
+    },
+		{
+      -logic_name    => 'GetOrthologs_16GB',
+		  -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
+		  -parameters    => {
+                          method_link_type => $self->o('method_link_type'),
+                          is_tree_compliant => $self->o('is_tree_compliant'),
+                        },
+		  -rc_name       => '16GB',
+		  -hive_capacity => $self->o('getOrthologs_capacity'),
+		  -flow_into     => { '-1' => 'GetOrthologs_32GB' },
+    },
+		{
+      -logic_name    => 'GetOrthologs_32GB',
+		  -module        => 'Bio::EnsEMBL::Production::Pipeline::Ortholog::DumpFile',
+		  -parameters    => {
+                          method_link_type => $self->o('method_link_type'),
+                          is_tree_compliant => $self->o('is_tree_compliant'),
+                        },
+		  -rc_name       => '32GB',
+		  -hive_capacity => $self->o('getOrthologs_capacity'),
+    },
+		{
+      -logic_name => 'RunCreateReleaseFile',
+		  -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::RunCreateReleaseFile',
+		  -parameters => { 							
+                      release => $self->o('release'),
+                     },
 		}
 	];
 }

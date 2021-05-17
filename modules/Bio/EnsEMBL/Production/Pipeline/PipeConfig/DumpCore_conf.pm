@@ -15,40 +15,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=head1 NAME
-
- Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf;
-
-=head1 DESCRIPTION
-
-=head1 AUTHOR 
-
- ckong@ebi.ac.uk 
-
 =cut
+
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf;
 
 use strict;
 use warnings;
-use File::Spec;
-use Data::Dumper;
-use Bio::EnsEMBL::Hive::Version 2.5;
-use Bio::EnsEMBL::ApiVersion qw/software_version/;
+
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use Bio::EnsEMBL::Hive::Version 2.5;
+use File::Spec;
 
 sub default_options {
     my ($self) = @_;
     return {
-        ## inherit other stuff from the base class
         %{$self->SUPER::default_options()},
 
         ## General parameters
-        'registry'               => $self->o('registry'),
-        'release'                => $self->o('release'),
+        'release'                => $self->o('ensembl_release'),
         'pipeline_name'          => "ftp_pipeline",
-        'email'                  => $self->o('ENV', 'USER') . '@ebi.ac.uk',
-        'ftp_dir'                => '/nfs/nobackup/ensemblgenomes/' . $self->o('ENV', 'USER') . '/workspace/' . $self->o('pipeline_name') . '/ftp_site/release-' . $self->o('release'),
         'dumps'                  => [],
 
         ## 'job_factory' parameters
@@ -137,48 +124,40 @@ sub default_options {
 }
 
 sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-        # inheriting database and hive tables' creation
-        @{$self->SUPER::pipeline_create_commands},
-        'mkdir -p ' . $self->o('ftp_dir'),
-    ];
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p ' . $self->o('ftp_dir'),
+  ];
 }
 
 # Ensures output parameters gets propagated implicitly
 sub hive_meta_table {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return {
-        %{$self->SUPER::hive_meta_table},
-        'hive_use_param_stack' => 1,
-    };
+  return {
+    %{$self->SUPER::hive_meta_table},
+    'hive_use_param_stack' => 1,
+  };
 }
 
-# Override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
-    my ($self) = @_;
-    return
-        ' -reg_conf ' . $self->o('registry'),
-    ;
-}
-
-# these parameter values are visible to all analyses, 
-# can be overridden by parameters{} and input_id{}
 sub pipeline_wide_parameters {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::pipeline_wide_parameters},    # here we inherit anything from the base class
-        'pipeline_name' => $self->o('pipeline_name'), #This must be defined for the beekeeper to work properly
-        'base_path'     => $self->o('ftp_dir'),
-        'release'       => $self->o('release'),
-    };
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    'pipeline_name' => $self->o('pipeline_name'),
+    'base_path'     => $self->o('ftp_dir'),
+    'release'       => $self->o('release'),
+  };
 }
 
 sub resource_classes {
   my ($self) = @_;
+
   return {
-     '32GB' => { 'LSF' => '-q production  -M 32000 -R "rusage[mem=32000]"' },
+    %{$self->SUPER::resource_classes},
      '64GB' => { 'LSF' => '-q production - M 64000 -R "rusage[mem=64000]"' },
     '128GB' => { 'LSF' => '-q production -M 128000 -R "rusage[mem=128000]"' },
     '256GB' => { 'LSF' => '-q production -M 256000 -R "rusage[mem=256000]"' },
@@ -189,16 +168,12 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     my $pipeline_flow;
-    # Getting list of dumps from argument
     my $dumps = $self->o('dumps');
-    # Checking if the list of dumps is an array
     my @dumps = (ref($dumps) eq 'ARRAY') ? @$dumps : ($dumps);
-    #Pipeline_flow will contain the dumps from the dumps list
+
     if (scalar @dumps) {
         $pipeline_flow = $dumps;
-    }
-    # Else, we run all the dumps
-    else {
+    } else {
         $pipeline_flow = [ 'json', 'gtf', 'gff3', 'embl', 'fasta_dna', 'fasta_pep', 'genbank', 'assembly_chain_datacheck', 'tsv_uniprot', 'tsv_ena', 'tsv_metadata', 'tsv_refseq', 'tsv_entrez' ];
     }
 
