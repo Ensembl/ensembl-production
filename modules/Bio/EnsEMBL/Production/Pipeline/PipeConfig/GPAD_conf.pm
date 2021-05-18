@@ -200,7 +200,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('logic_name')
                             },
-      -rc_name           => '2GB'
+      -rc_name           => 'dm',
     },
     {
        -logic_name       => 'RunXrefDatacheck',
