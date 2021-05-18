@@ -46,6 +46,8 @@ sub run {
     $relative_dir = catdir('..', '..', '..', '..');
   }
 
+  path($output_dir)->mkpath;
+
   $source_file =~ s/$dump_dir/$relative_dir/;
 
   my $basename = path($source_file)->basename;
