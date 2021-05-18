@@ -66,11 +66,11 @@ sub default_options {
     # mapping between InterPro and GO terms, so that we can transitively
     # annotate GO xrefs. Optionally, we may also want a mapping between
     # UniParc and UniProt IDs, in order to create UniProt xrefs.
-    interpro_ebi_path => '/ebi/ftp/pub/databases/interpro/current',
+    interpro_ebi_path => '/nfs/ftp/public/databases/interpro/current',
     interpro_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current',
-    uniparc_ebi_path  => '/ebi/ftp/pub/contrib/uniparc',
+    uniparc_ebi_path  => '/nfs/ftp/public/contrib/uniparc',
     uniparc_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/contrib/uniparc',
-    uniprot_ebi_path  => '/ebi/ftp/pub/databases/uniprot/current_release/knowledgebase/idmapping',
+    uniprot_ebi_path  => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping',
     uniprot_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping',
 
     interpro_file    => 'names.dat',
@@ -397,6 +397,7 @@ sub pipeline_analyses {
                             remote_file => $self->o('interpro_file'),
                             local_file  => $self->o('interpro_file_local'),
                           },
+      -rc_name         => 'dm',
     },
 
     {
@@ -409,6 +410,7 @@ sub pipeline_analyses {
                             remote_file => $self->o('interpro2go_file'),
                             local_file  => $self->o('interpro2go_file_local'),
                           },
+      -rc_name         => 'dm',
     },
 
     {
@@ -427,6 +429,7 @@ sub pipeline_analyses {
                           ELSE
                             ['LoadUniParc']
                           ),
+      -rc_name         => 'dm',
     },
 
     {
@@ -440,6 +443,7 @@ sub pipeline_analyses {
                             local_file  => $self->o('mapping_file_local'),
                           },
       -flow_into       => ['LoadUniProt'],
+      -rc_name         => 'dm',
     },
 
     {

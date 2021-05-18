@@ -40,7 +40,7 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
 
-    rnacentral_ebi_path => '/ebi/ftp/pub/databases/RNAcentral/current_release/md5',
+    rnacentral_ebi_path => '/nfs/ftp/public/databases/RNAcentral/current_release/md5',
     rnacentral_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5',
     rnacentral_file     => 'md5.tsv.gz',
 
@@ -121,6 +121,7 @@ sub pipeline_analyses {
                             local_file  => $self->o('rnacentral_file_local'),
                           },
       -flow_into       => ['LoadRNACentral'],
+      -rc_name         => 'dm',
     },
 
     {

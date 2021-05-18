@@ -57,6 +57,7 @@ sub resource_classes {
     %{$self->SUPER::resource_classes},
 
     'default' => { 'LSF' => '-q production'},
+    'dm'      => { 'LSF' => '-q datamover'},
      '1GB'    => { 'LSF' => '-q production -M  1000 -R "rusage[mem=1000]"'},
      '2GB'    => { 'LSF' => '-q production -M  2000 -R "rusage[mem=2000]"'},
      '4GB'    => { 'LSF' => '-q production -M  4000 -R "rusage[mem=4000]"'},
