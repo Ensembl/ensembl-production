@@ -196,6 +196,8 @@ sub has_seq_region_attribs {
 sub assert_executable {
   my ($self, $exe) = @_;
 
+  $exe =~ s/\s+.+//;
+
   if ( !-x $exe ) {
     my $output = `which $exe 2>&1`;
     chomp $output;
