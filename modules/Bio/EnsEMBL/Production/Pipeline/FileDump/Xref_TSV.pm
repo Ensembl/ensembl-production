@@ -46,28 +46,12 @@ sub run {
   my $external_dbs = $self->param_required('external_dbs');
   my $filenames    = $self->param_required('filenames');
 
-  my $dba = $self->dba;
-
-  # The API code accepts '%' as a pattern-matching character, so this
-  # is an easy way to get all xrefs, if no external_dbs are given.
-  if (scalar @$external_dbs == 0) {
-    push @$external_dbs, '%';
-  }
-
-  my $ga = $dba->get_adaptor('Gene');
-
-  my ($chr, $non_chr, $non_ref) = $self->get_slices($dba);
-  my @all_slices = (@$chr, @$non_chr, @$non_ref);
-
   my $filename = $$filenames{$data_type};
+  my $file = path($filename);
 
-  my $fh = path($filename)->filehandle('>');
-  $self->print_header($fh);
+  $self->print_xrefs($file, $external_dbs);
 
-  while (my $slice = shift @all_slices) {
-    my $genes = $ga->fetch_all_by_Slice($slice);
-    $self->print_xrefs($fh, $genes, $external_dbs);
-  }
+  $file->spew($self->header, sort $file->lines);
 }
 
 sub timestamp {
@@ -91,75 +75,225 @@ sub timestamp {
   }
 }
 
-sub print_header {
-  my ($self, $fh) = @_;
-  
-  say $fh join("\t",
+sub header {
+  my ($self) = @_;
+
+  join("\t",
     qw(
       gene_stable_id transcript_stable_id protein_stable_id
       xref_id xref_label description db_name info_type
-      dependent_sources ensembl_identity xref_identity linkage_type
+      source ensembl_identity xref_identity
     )
   );
 }
 
 sub print_xrefs {
-  my ($self, $fh, $genes, $external_dbs) = @_;
+  my ($self, $file, $external_dbs) = @_;
 
-  while (my $gene = shift @{$genes}) {
-    my $g_id = $gene->stable_id;
-    my %xrefs;
+  # It takes a long time to use the API to retrieve the xrefs,
+  # and the code would also need to be quite complicated.
+  # Direct SQL queries are two orders of magnitude quicker,
+  # and although there are a lot of joins are probably easier
+  # to understand and maintain.
 
-    foreach my $external_db (@$external_dbs) {
-      my $xref_list = $gene->get_all_DBEntries($external_db);
-      push @{$xrefs{'-'}{'-'}}, @$xref_list;
-    }
-
-    my $transcripts = $gene->get_all_Transcripts;
-    foreach my $transcript (@$transcripts) {
-      my $tn_id = defined($transcript->translation) ? $transcript->translation->stable_id : '-';
-
-      foreach my $external_db (@$external_dbs) {
-        my $xref_list = $transcript->get_all_DBLinks($external_db);
-        push @{$xrefs{$transcript->stable_id}{$tn_id}}, @$xref_list;
-      }
-    }
-    foreach my $tt_id (sort keys %xrefs) {
-      foreach my $tn_id (sort keys %{$xrefs{$tt_id}}) {
-        foreach my $xref (sort {$a->primary_id cmp $b->primary_id} @{$xrefs{$tt_id}{$tn_id}}) {
-          my $xref_id    = $xref->primary_id;
-          my $xref_label = $xref->display_id;
-          my $xref_db    = $xref->db_display_name;
-          my $xref_desc  = $xref->description || '';
-          my $info_type  = $xref->info_type;
-
-          my $ensembl_identity = '';
-          my $xref_identity    = '';
-          if ($xref->isa('Bio::EnsEMBL::IdentityXref')) {
-            $ensembl_identity = $xref->ensembl_identity;
-            $xref_identity = $xref->xref_identity; 
-          }
-
-          my @master_xrefs;
-          my $linkage_type = '';
-          if ($xref->isa('Bio::EnsEMBL::OntologyXref')) {
-            @master_xrefs = map { $_->[1] } @{ $xref->get_all_linkage_info };
-            $linkage_type = join('; ', @{$xref->get_all_linkage_types});
-          } else {
-            @master_xrefs = @{ $xref->get_all_masters };
-          }
-          my @sources = map { $_->db_display_name . ':' . $_->primary_id } @master_xrefs;
-          my $sources = '' . join('; ', @sources);
-
-          say $fh join("\t",
-            $g_id, $tt_id, $tn_id,
-            $xref_id, $xref_label, $xref_desc, $xref_db, $info_type,
-            $sources, $ensembl_identity, $xref_identity, $linkage_type
-          );
-        }
-      }
-    }
+  my $edb_filter = '';
+  if (scalar(@$external_dbs)) {
+    my $external_db_list = join(", ", map { "'$_'" } @$external_dbs);
+    $edb_filter = " AND e.db_name in ($external_db_list) ";
   }
+
+  $self->print_xref_subset( $file, $self->go_xref_sql($edb_filter) );
+  $self->print_xref_subset( $file, $self->gene_xref_sql($edb_filter) );
+  $self->print_xref_subset( $file, $self->transcript_xref_sql($edb_filter) );
+  $self->print_xref_subset( $file, $self->translation_xref_sql($edb_filter) );
+}
+
+sub print_xref_subset {
+  my ($self, $file, $sql) = @_;
+
+  my $helper  = $self->dba->dbc->sql_helper;
+  my $results = $helper->execute(
+    -SQL => $sql,
+    -CALLBACK => sub {
+                   my @row = @{ shift @_ };
+                   return { join("\t", @row) };
+                 }
+  );
+
+  $file->spew(join("\n", @$results));
+}
+
+sub go_xref_sql {
+  my ($self, $external_db_filter) = @_;
+
+  my $sql = qq/
+    select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      coalesce(tn.stable_id, "") as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, ""),
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(distinct replace(e2.db_display_name, " generic accession number (TrEMBL or SwissProt not differentiated)", ""), ":", x2.dbprimary_acc, ":", linkage_type separator "; "), "") as source,
+      "" as ensembl_identity,
+      "" as xref_identity
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on t.transcript_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id inner join
+      ontology_xref ontx on ox.object_xref_id = ontx.object_xref_id inner join
+      xref x2 on ontx.source_xref_id = x2.xref_id inner join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Transcript" and
+      e.db_display_name = "GO" $external_db_filter
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name
+  /;
+
+  return $sql;
+}
+
+sub gene_xref_sql {
+  my ($self, $external_db_filter) = @_;
+
+  my $sql = qq/
+    select
+      g.stable_id as gene_stable_id,
+      "",
+      "",
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, ""),
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as dependent_sources,
+      coalesce(ix.ensembl_identity, ""),
+      coalesce(ix.xref_identity, "")
+    from
+      gene g inner join
+      object_xref ox on g.gene_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Gene" and
+      e.db_display_name <> "GO" $external_db_filter
+    group by
+      g.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity
+  /;
+
+  return $sql;
+}
+
+sub transcript_xref_sql {
+  my ($self, $external_db_filter) = @_;
+
+  my $sql = qq/
+    select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      coalesce(tn.stable_id, "") as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, ""),
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as dependent_sources,
+      coalesce(ix.ensembl_identity, ""),
+      coalesce(ix.xref_identity, "")
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on t.transcript_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Transcript" and
+      e.db_display_name <> "GO" $external_db_filter
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity
+  /;
+
+  return $sql;
+}
+
+sub translation_xref_sql {
+  my ($self, $external_db_filter) = @_;
+
+  my $sql = qq/
+    select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      tn.stable_id as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, ""),
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as dependent_sources,
+      coalesce(ix.ensembl_identity, ""),
+      coalesce(ix.xref_identity, "")
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on tn.translation_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Translation" and
+      e.db_display_name <> "GO" $external_db_filter
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity
+  /;
+
+  return $sql;
 }
 
 1;
