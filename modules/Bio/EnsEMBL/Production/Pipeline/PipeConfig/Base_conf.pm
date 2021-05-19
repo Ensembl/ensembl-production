@@ -54,8 +54,6 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
   my $self = shift;
   return {
-    %{$self->SUPER::resource_classes},
-
     'default' => { 'LSF' => '-q production'},
     'dm'      => { 'LSF' => '-q datamover'},
      '1GB'    => { 'LSF' => '-q production -M  1000 -R "rusage[mem=1000]"'},
