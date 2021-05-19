@@ -49,6 +49,8 @@ sub run {
   my $filename = $$filenames{$data_type};
   my $file = path($filename);
 
+  $file->spew('');
+
   $self->print_xrefs($file, $external_dbs);
 
   $file->spew($self->header, sort $file->lines);
@@ -113,14 +115,12 @@ sub print_xref_subset {
 
   my $helper  = $self->dba->dbc->sql_helper;
   my $results = $helper->execute(
-    -SQL => $sql,
-    -CALLBACK => sub {
-                   my @row = @{ shift @_ };
-                   return { join("\t", @row) };
-                 }
+    -SQL => $sql
   );
 
-  $file->spew(join("\n", @$results));
+  foreach my $result (@$results) {
+    $file->append(join("\t", @$result));
+  }
 }
 
 sub go_xref_sql {
