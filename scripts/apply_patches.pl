@@ -79,7 +79,7 @@ my $dbh = DBI->connect($dsn, $opts->{user}, $opts->{pass}) ||
 my $available_databases = [];
 if (!defined $opts->{pattern}) {
   if (defined $opts->{database}) {
-    $opts->{pattern} = $opts->{database};
+    $opts->{pattern} = '^'.$opts->{database}.'$';
   }
   else {
     $opts->{pattern} = '.*';
