@@ -158,9 +158,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-     '64GB' => { 'LSF' => '-q production - M 64000 -R "rusage[mem=64000]"' },
-    '128GB' => { 'LSF' => '-q production -M 128000 -R "rusage[mem=128000]"' },
-    '256GB' => { 'LSF' => '-q production -M 256000 -R "rusage[mem=256000]"' },
+     '64GB' => { 'LSF' => '-q '.$self->o('production_queue').' -M  64000 -R "rusage[mem=64000]"' },
+    '128GB' => { 'LSF' => '-q '.$self->o('production_queue').' -M 128000 -R "rusage[mem=128000]"' },
+    '256GB' => { 'LSF' => '-q '.$self->o('production_queue').' -M 256000 -R "rusage[mem=256000]"' },
   }
 }
 

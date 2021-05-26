@@ -285,7 +285,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => '4GB_scratch',
+      -rc_name         => '4GB',
       -flow_into       => ['PepStats_Datacheck'],
     },
 
@@ -380,15 +380,6 @@ sub pipeline_analyses {
     },
 
   ];
-}
-
-sub resource_classes {
-  my ($self) = @_;
-  
-  return {
-    %{$self->SUPER::resource_classes},
-    '4GB_scratch' => {'LSF' => '-q production -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
-  }
 }
 
 1;

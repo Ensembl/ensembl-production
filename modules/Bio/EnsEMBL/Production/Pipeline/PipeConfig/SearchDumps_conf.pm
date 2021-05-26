@@ -424,7 +424,7 @@ sub resource_classes {
   
   return {
     %{$self->SUPER::resource_classes},
-    '100GB' => {'LSF' => '-q production -M 100000 -R "rusage[mem=100000]"'},
+    '100GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 100000 -R "rusage[mem=100000]"'},
   }
 }
 

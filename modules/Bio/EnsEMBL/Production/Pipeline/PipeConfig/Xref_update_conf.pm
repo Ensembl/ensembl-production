@@ -325,9 +325,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'small' => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"'},
-    '3GB'   => { 'LSF' => '-q production -M 3000 -R "rusage[mem=3000]"'},
-    '10GB'  => { 'LSF' => '-q production -M 10000 -R "rusage[mem=10000]"'},
+    'small' => { 'LSF' => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"'},
+    '3GB'   => { 'LSF' => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"'},
+    '10GB'  => { 'LSF' => '-q '.$self->o('production_queue').' -M 10000 -R "rusage[mem=10000]"'},
   }
 }
 

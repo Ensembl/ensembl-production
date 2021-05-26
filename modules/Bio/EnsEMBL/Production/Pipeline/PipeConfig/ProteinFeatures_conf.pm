@@ -914,9 +914,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-     '4GB_4CPU' => {'LSF' => '-q production -n 4 -M  4000 -R "rusage[mem=4000,scratch=1000]"'},
-    '16GB_4CPU' => {'LSF' => '-q production -n 4 -M 16000 -R "rusage[mem=16000,scratch=1000]"'},
-    '32GB_4CPU' => {'LSF' => '-q production -n 4 -M 32000 -R "rusage[mem=32000,scratch=1000]"'},
+     '4GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M  4000 -R "rusage[mem=4000]"'},
+    '16GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 16000 -R "rusage[mem=16000]"'},
+    '32GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 32000 -R "rusage[mem=32000]"'},
   }
 }
 

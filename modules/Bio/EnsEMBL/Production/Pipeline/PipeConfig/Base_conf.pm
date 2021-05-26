@@ -32,11 +32,16 @@ use File::Spec::Functions qw(catdir);
 sub default_options {
   my ($self) = @_;
   return {
-          %{$self->SUPER::default_options},
-          pipeline_dir => $ENV{'PWD'}.'/'.$self->o('pipeline_name'),
-          user => $ENV{'USER'},
-          email => $ENV{'USER'}.'@ebi.ac.uk'
-         };
+    %{$self->SUPER::default_options},
+
+    pipeline_dir => $ENV{'PWD'}.'/'.$self->o('pipeline_name'),
+
+    user  => $ENV{'USER'},
+    email => $ENV{'USER'}.'@ebi.ac.uk',
+
+    production_queue => 'production',
+    datamover_queue  => 'datamover',
+  };
 }
 
 # Force an automatic loading of the registry in all workers.
@@ -54,14 +59,14 @@ sub beekeeper_extra_cmdline_options {
 sub resource_classes {
   my $self = shift;
   return {
-    'default' => { 'LSF' => '-q production'},
-    'dm'      => { 'LSF' => '-q datamover'},
-     '1GB'    => { 'LSF' => '-q production -M  1000 -R "rusage[mem=1000]"'},
-     '2GB'    => { 'LSF' => '-q production -M  2000 -R "rusage[mem=2000]"'},
-     '4GB'    => { 'LSF' => '-q production -M  4000 -R "rusage[mem=4000]"'},
-     '8GB'    => { 'LSF' => '-q production -M  8000 -R "rusage[mem=8000]"'},
-    '16GB'    => { 'LSF' => '-q production -M 16000 -R "rusage[mem=16000]"'},
-    '32GB'    => { 'LSF' => '-q production -M 32000 -R "rusage[mem=32000]"'},
+    'default' => {LSF => '-q '.$self->o('production_queue')},
+    'dm'      => {LSF => '-q '.$self->o('datamover_queue')},
+     '1GB'    => {LSF => '-q '.$self->o('production_queue').' -M  1000 -R "rusage[mem=1000]"'},
+     '2GB'    => {LSF => '-q '.$self->o('production_queue').' -M  2000 -R "rusage[mem=2000]"'},
+     '4GB'    => {LSF => '-q '.$self->o('production_queue').' -M  4000 -R "rusage[mem=4000]"'},
+     '8GB'    => {LSF => '-q '.$self->o('production_queue').' -M  8000 -R "rusage[mem=8000]"'},
+    '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"'},
+    '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"'},
   }
 }
 
