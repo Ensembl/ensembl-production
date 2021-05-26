@@ -196,7 +196,7 @@ subtest "Checking protein_coding gene", sub {
                 'name'                => 'OR2W1-001',
                 'strand'              => -1,
                 'biotype'             => 'protein_coding',
-                'so_term'             => 'mRNA'.
+                'so_term'             => 'mRNA',
                 'seq_region_name'     => '6',
                 'translations'        => [
                     {
@@ -1221,7 +1221,7 @@ subtest "Checking ncRNA gene", sub {
             'strand'              => '-1',
             'biotype'             => 'processed_pseudogene',
                
-            'so_term'             => undef, 
+            'so_term'             => 'pseudogenic_transcript',
             'version'             => '1',
             'description'         => undef,
             'gene_id'             => 'ENSG00000261370',
@@ -1326,7 +1326,7 @@ subtest "Checking ncRNA gene", sub {
             'ensembl_object_type' => 'transcript' } ],
         'version'             => '1',
         'biotype'             => 'pseudogene',
-        'so_term'             => undef,  
+        'so_term'             => 'pseudogene',
         'source'              => 'havana',
         'strand'              => '-1',
         'end'                 => '970836',
