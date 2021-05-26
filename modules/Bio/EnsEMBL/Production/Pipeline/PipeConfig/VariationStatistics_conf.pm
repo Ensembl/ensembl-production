@@ -68,7 +68,6 @@ sub pipeline_analyses {
                              '4->A' => ['VariationTasks'],
                              'A->1' => ['Notify'],
                            },
-      -rc_name          => 'normal',
     },
 
     {
@@ -82,7 +81,6 @@ sub pipeline_analyses {
                                       ],
                             'A->1' => ['GenomeStats'],
                           },
-      -rc_name         => 'normal',
     },
 
     {
@@ -90,7 +88,6 @@ sub pipeline_analyses {
       -module           => 'Bio::EnsEMBL::Production::Pipeline::Production::SnpCount',
       -max_retry_count  => 1,
       -hive_capacity    => 50,
-      -rc_name          => 'normal',
     },
 
     {
@@ -103,7 +100,6 @@ sub pipeline_analyses {
                            },
       -max_retry_count  => 1,
       -hive_capacity    => 50,
-      -rc_name          => 'normal',
     },
 
     {
@@ -114,7 +110,6 @@ sub pipeline_analyses {
       -flow_into       => {
                             1 => { 'RunDataChecks' => {'group' => 'core'} }
                           },
-      -rc_name         => 'normal',
     },
 
     {
@@ -129,7 +124,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
     },
 
     {
@@ -139,7 +133,6 @@ sub pipeline_analyses {
                        email   => $self->o('email'),
                        subject => $self->o('pipeline_name').' has finished',
                      },
-      -rc_name    => 'normal',
     },
 
   ];

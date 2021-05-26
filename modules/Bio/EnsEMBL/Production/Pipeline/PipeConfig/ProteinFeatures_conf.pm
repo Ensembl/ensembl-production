@@ -25,7 +25,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 
 use File::Spec::Functions qw(catdir);
 
@@ -66,11 +66,11 @@ sub default_options {
     # mapping between InterPro and GO terms, so that we can transitively
     # annotate GO xrefs. Optionally, we may also want a mapping between
     # UniParc and UniProt IDs, in order to create UniProt xrefs.
-    interpro_ebi_path => '/ebi/ftp/pub/databases/interpro/current',
+    interpro_ebi_path => '/nfs/ftp/public/databases/interpro/current',
     interpro_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current',
-    uniparc_ebi_path  => '/ebi/ftp/pub/contrib/uniparc',
+    uniparc_ebi_path  => '/nfs/ftp/public/contrib/uniparc',
     uniparc_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/contrib/uniparc',
-    uniprot_ebi_path  => '/ebi/ftp/pub/databases/uniprot/current_release/knowledgebase/idmapping',
+    uniprot_ebi_path  => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping',
     uniprot_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping',
 
     interpro_file    => 'names.dat',
@@ -397,6 +397,7 @@ sub pipeline_analyses {
                             remote_file => $self->o('interpro_file'),
                             local_file  => $self->o('interpro_file_local'),
                           },
+      -rc_name         => 'dm',
     },
 
     {
@@ -409,6 +410,7 @@ sub pipeline_analyses {
                             remote_file => $self->o('interpro2go_file'),
                             local_file  => $self->o('interpro2go_file_local'),
                           },
+      -rc_name         => 'dm',
     },
 
     {
@@ -427,6 +429,7 @@ sub pipeline_analyses {
                           ELSE
                             ['LoadUniParc']
                           ),
+      -rc_name         => 'dm',
     },
 
     {
@@ -440,6 +443,7 @@ sub pipeline_analyses {
                             local_file  => $self->o('mapping_file_local'),
                           },
       -flow_into       => ['LoadUniProt'],
+      -rc_name         => 'dm',
     },
 
     {
@@ -910,12 +914,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    '4GB'  => {'LSF' => '-q production-rh74 -M 4000  -R "rusage[mem=4000]"'},
-    '8GB'  => {'LSF' => '-q production-rh74 -M 8000  -R "rusage[mem=8000]"'},
-    '16GB' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"'},
-    '4GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 4000 -R "rusage[mem=4000,scratch=4000]"'},
-    '16GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 16000 -R "rusage[mem=16000,scratch=4000]"'},
-    '32GB_4CPU' => {'LSF' => '-q production-rh74 -n 4 -M 32000 -R "rusage[mem=32000,scratch=4000]"'},
+     '4GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M  4000 -R "rusage[mem=4000]"'},
+    '16GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 16000 -R "rusage[mem=16000]"'},
+    '32GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 32000 -R "rusage[mem=32000]"'},
   }
 }
 

@@ -33,7 +33,7 @@ sub default_options {
   return {
     %{ $self->SUPER::default_options() },
 
-    gpad_directory => '/ebi/ftp/pub/contrib/goa/ensembl_projections',
+    gpad_directory => '/nfs/ftp/public/contrib/goa/ensembl_projections',
     gpad_dirname   => undef,
 
     species      => [],
@@ -191,7 +191,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2' => ['LoadFile'],
                             },
-      -rc_name           => 'mem',
+      -rc_name           => 'dm',
     },
     {
       -logic_name        => 'LoadFile',
@@ -200,7 +200,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('logic_name')
                             },
-      -rc_name           => 'mem'
+      -rc_name           => 'dm',
     },
     {
        -logic_name       => 'RunXrefDatacheck',

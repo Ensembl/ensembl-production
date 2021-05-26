@@ -114,15 +114,6 @@ sub pipeline_wide_parameters {
  };
 }
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    '16GB' => {'LSF' => '-q production-rh74 -M 16000 -R "rusage[mem=16000]"'},
-  }
-}
-
 sub pipeline_analyses {
   my $self = shift @_;
 
@@ -192,7 +183,6 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('backup_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['PopulateControlledTables'],
     },
     {
@@ -207,7 +197,6 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('backup_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['PopulateAnalysisDescription'],
     },
     {
@@ -240,7 +229,6 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
                               failures_fatal   => 1,
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['RunDatachecksControlledTables_HighMem'],
                             },
@@ -273,7 +261,6 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADCritical.txt'),
                               failures_fatal   => 1,
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => ['RunDatachecksADCritical_HighMem'],
                             },
@@ -306,7 +293,6 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADAdvisory.txt'),
                               failures_fatal   => 0,
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '-1' => 'RunDatachecksADAdvisory_HighMem',
                               '4'  => 'EmailReportADAdvisory'
@@ -339,7 +325,6 @@ sub pipeline_analyses {
                               email         => $self->o('email'),
                               pipeline_name => $self->o('pipeline_name'),
                             },
-      -rc_name           => 'normal',
     },
     {
       -logic_name        => 'EmailReport',
@@ -352,7 +337,6 @@ sub pipeline_analyses {
                               history_file  => $self->o('history_file'),
                               output_dir    => $self->o('datacheck_output_dir'),
                             },
-      -rc_name           => 'normal',
     },
 
   ];

@@ -1,4 +1,3 @@
-
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
@@ -22,86 +21,57 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::LoadFamily_conf;
 
 use strict;
 use warnings;
-use Data::Dumper;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf')
-  ; # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
 
-=head2 default_options
-
-    Description : Implements default_options() interface method of Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf that is used to initialize default options.
-
-=cut
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 sub default_options {
   my ($self) = @_;
 
   return {
-          %{ $self->SUPER::default_options() },    # inherit other stuff from the base class
-          
-          # name used by the beekeeper to prefix job names on the farm
-          'pipeline_name' => 'load_family',
-          
-          ## 'job_factory' parameters
-          'species'       => [],
-          'antispecies'   => [],
-          'division'      => [],
-          'run_all'       => 0,
-          'meta_filters'  => {},
-          
-          # logic names of family analyses
-          'logic_names' => [ 'hamap', 'panther', 'hmmpanther' ]
+    %{ $self->SUPER::default_options() },
 
+    pipeline_name => 'load_family',
+
+    species      => [],
+    division     => [],
+    antispecies  => [],
+    run_all      => 0,
+    meta_filters => {},
+
+    logic_names => [ 'hamap', 'panther', 'hmmpanther' ]
   };
-} ## end sub default_options
-
-# Force an automatic loading of the registry in all workers.
-sub beekeeper_extra_cmdline_options {
-  my $self = shift;
-  return "-reg_conf ".$self->o("registry");
-}
-
-sub resource_classes {
-  my ($self) = @_;
-  return {
-         'default'      => {'LSF' => '-q production-rh74' }
-  }
 }
 
 sub pipeline_analyses {
   my ($self) = @_;
+
   return [
-	{ -logic_name => 'create_families',
-	  -module =>
-'Bio::EnsEMBL::Production::Pipeline::LoadFamily::CreateFamilies',
-	  -analysis_capacity => 1,
-          -parameters => {
-                          species      => $self->o('species'),
-                          antispecies  => $self->o('antispecies'),
-                          division     => $self->o('division'),
-                          run_all      => $self->o('run_all'),
-                          meta_filters => $self->o('meta_filters'),
-                          logic_names => $self->o('logic_names')                          
-                         },
-	  -input_ids         => [
-                                 {}
-                                 
-                                ],
-	  -flow_into => {
-                         2 => ['add_members'],    # will create a fan of jobs
-                        }, },
-          
-          { -logic_name => 'add_members',
-            -module =>
-            'Bio::EnsEMBL::Production::Pipeline::LoadFamily::AddFamilyMembers',
-            -hive_capacity     => -1,      # turn off the reciprocal limiter
-            -analysis_capacity => 20,      # use per-analysis limiter
-            -parameters => { 
-                            division     => $self->o('division'),
-                            logic_names => $self->o('logic_names') },
-            -input_ids => [
-                           # (jobs for this analysis will be flown_into via branch-2 from 'start' jobs above)
-                          ], }, ];
-} ## end sub pipeline_analyses
+    {
+      -logic_name => 'create_families',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::LoadFamily::CreateFamilies',
+      -input_ids  => [ {} ],
+      -parameters => {
+                      species      => $self->o('species'),
+                      division     => $self->o('division'),
+                      antispecies  => $self->o('antispecies'),
+                      run_all      => $self->o('run_all'),
+                      meta_filters => $self->o('meta_filters'),
+                      logic_names  => $self->o('logic_names')                          
+                     },
+      -flow_into  => {
+                      2 => ['add_members'],
+                     },
+    },
+    {
+      -logic_name => 'add_members',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::LoadFamily::AddFamilyMembers',
+      -parameters => { 
+                      division    => $self->o('division'),
+                      logic_names => $self->o('logic_names')
+                     },
+      -analysis_capacity => 20,
+    },
+  ];
+}
 
 1;
-
