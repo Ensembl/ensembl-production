@@ -350,7 +350,8 @@ sub create_temp_dir {
 sub create_dsn {
   my ($db,$db_uri) = @_;
   my $dsn;
-  my $exist_db = `mysql -ss -r --host=$db->{host} --port=$db->{port} --user=$db->{user} --password=$db->{pass} -e "show databases like '$db->{dbname}'"`;
+  my $password = $db->{pass} // "";
+  my $exist_db = `mysql -ss -r --host=$db->{host} --port=$db->{port} --user=$db->{user} --password=$password -e "show databases like '$db->{dbname}'"`;
   if ($exist_db){
     $logger->debug("Connecting to $db_uri database");
     $dsn = sprintf( "DBI:mysql:database=%s;host=%s;port=%d", $db->{dbname}, $db->{host}, $db->{port} );
@@ -709,7 +710,7 @@ sub copy_mysql_dump {
     croak "Cannot create database $target_db->{dbname} on $target_db->{host}: $!";
   }
   $logger->info("Loading file $file into $target_db->{dbname} on $target_db->{host}");
-  if ( system("mysql --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname} < $file") != 0 ) {
+  if ( system("mysql --max_allowed_packet=1024M --host=$target_db->{host} --user=$target_db->{user} --password=$target_db->{pass} --port=$target_db->{port} $target_db->{dbname} < $file") != 0 ) {
     cleanup_file($file);
     croak "Cannot load file into $target_db->{dbname} on $target_db->{host}: $!";
   }
