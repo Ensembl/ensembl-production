@@ -47,7 +47,7 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version      => '5.48-83.0',
+    interproscan_version      => '5.51-85.0',
     interproscan_exe          => 'interproscan.sh',
    	run_interproscan          => 1,
     local_computation         => 0,
@@ -104,7 +104,7 @@ sub default_options {
       {
         logic_name      => 'gene3d',
         db              => 'Gene3D',
-        db_version      => '4.2.0',
+        db_version      => '4.3.0',
         program         => 'InterProScan',
         program_version => $self->o('interproscan_version'),
         ipscan_name     => 'Gene3D',
