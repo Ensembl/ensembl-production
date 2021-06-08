@@ -39,7 +39,7 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         ## General parameters
-        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
+        'output_dir' => '/hps/nobackup/flicek/ensembl/production/team/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),   
         'base_dir'         => $self->o('ENV', 'BASE_DIR'),
         'srv_cmd'          => undef,
         'wipe_all'         => 0,
