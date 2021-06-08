@@ -42,7 +42,7 @@ sub write_output {
     $self->run_system_command("$srv -e \"DROP database IF EXISTS $mart\"");
     $self->run_system_command("$srv -e \"CREATE database $mart\"");
     $self->log("Building mart database $mart");
-    my $TMP_SQL = "/scratch/mart.sql";
+    my $TMP_SQL = "/hps/scratch/mart.sql";
     $self->run_system_command("sed -e \"s/%MART_NAME%/$mart/g\" $templatefile | sed -e \"s/%ONTOLOGY_DB%/$dbname/g\" > $TMP_SQL");
     $self->run_system_command("$srv $mart < $TMP_SQL");
     $self->log("Cleaning up and optimizing tables in $mart");
