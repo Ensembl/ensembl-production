@@ -39,8 +39,9 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         ## General parameters
-        'output_dir'       => '/nfs/nobackup/ensembl/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),
+        'output_dir' => '/hps/nobackup/flicek/ensembl/production/team/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),   
         'base_dir'         => $self->o('ENV', 'BASE_DIR'),
+	'scratch_dir'      => '/hps/scratch/' . $self->o('ENV', 'USER'),
         'srv_cmd'          => undef,
         'wipe_all'         => 0,
         'wipe_one'         => 1,
@@ -69,6 +70,7 @@ sub pipeline_wide_parameters {
     return {
         %{$self->SUPER::pipeline_wide_parameters},
         'base_dir'     => $self->o('base_dir'),
+	'scratch_dir'  => $self->o('scratch_dir'),
         'db_name'      => $self->o('db_name'),
         'db_host'      => $self->o('db_host'),
         'db_url'       => $self->o('db_url'),
