@@ -21,6 +21,7 @@ package Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad;
 use strict;
 use warnings FATAL => 'all';
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+use Path::Tiny qw(path);
 
 sub fetch_input {
 }
@@ -37,14 +38,19 @@ sub write_output {
     my $srv = $self->param_required('srv');
     my $dbname = $self->param_required('db_name');
     my $templatefile = $self->param_required('base_dir') . "/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/OntologiesLoad/build_ontology_mart.sql";
+    my $scratch_dir = $self->param_required('scratch_dir');
 
     $self->log("Creating mart $srv:$mart");
     $self->run_system_command("$srv -e \"DROP database IF EXISTS $mart\"");
     $self->run_system_command("$srv -e \"CREATE database $mart\"");
     $self->log("Building mart database $mart");
-    my $TMP_SQL = "/hps/scratch/mart.sql";
+    $self->log("Creating mart.sql file");
+    my $temp_sqlfile = path($scratch_dir )->child('mysql.sql');
+    $temp_sqlfile->touchpath; 
+    my $TMP_SQL = $temp_sqlfile->absolute;
     $self->run_system_command("sed -e \"s/%MART_NAME%/$mart/g\" $templatefile | sed -e \"s/%ONTOLOGY_DB%/$dbname/g\" > $TMP_SQL");
     $self->run_system_command("$srv $mart < $TMP_SQL");
+    $temp_sqlfile->remove; # remove temp mysql.sql file 
     $self->log("Cleaning up and optimizing tables in $mart");
     my $optimize = <<"OPTIMIZE_TABLE";
 for table in \$($srv --skip-column-names $mart -e "show tables like 'closure%'"); do
