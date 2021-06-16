@@ -47,8 +47,8 @@ sub default_options {
     max_dirs_per_directory  => $self->o('max_files_per_directory'),
 
     # InterPro settings
-    interproscan_version      => '5.51-85.0',
-    interproscan_exe          => 'interproscan.sh',
+    interproscan_path         => '/hps/software/interproscan',
+    interproscan_version      => 'current',
    	run_interproscan          => 1,
     local_computation         => 0,
     check_interpro_db_version => 0,
@@ -94,9 +94,7 @@ sub default_options {
       {
         logic_name      => 'cdd',
         db              => 'CDD',
-        db_version      => '3.18',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'CDD',
         ipscan_xml      => 'CDD',
         ipscan_lookup   => 1,
@@ -104,9 +102,7 @@ sub default_options {
       {
         logic_name      => 'gene3d',
         db              => 'Gene3D',
-        db_version      => '4.3.0',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'Gene3D',
         ipscan_xml      => 'GENE3D',
         ipscan_lookup   => 1,
@@ -114,9 +110,7 @@ sub default_options {
       {
         logic_name      => 'hamap',
         db              => 'HAMAP',
-        db_version      => '2020_05',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'Hamap',
         ipscan_xml      => 'HAMAP',
         ipscan_lookup   => 1,
@@ -124,9 +118,7 @@ sub default_options {
       {
         logic_name      => 'hmmpanther',
         db              => 'PANTHER',
-        db_version      => '15.0',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'PANTHER',
         ipscan_xml      => 'PANTHER',
         ipscan_lookup   => 1,
@@ -134,9 +126,7 @@ sub default_options {
       {
         logic_name      => 'pfam',
         db              => 'Pfam',
-        db_version      => '33.1',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'Pfam',
         ipscan_xml      => 'PFAM',
         ipscan_lookup   => 1,
@@ -144,9 +134,7 @@ sub default_options {
       {
         logic_name      => 'pfscan',
         db              => 'Prosite_profiles',
-        db_version      => '2019_11',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'ProSiteProfiles',
         ipscan_xml      => 'PROSITE_PROFILES',
         ipscan_lookup   => 1,
@@ -154,9 +142,7 @@ sub default_options {
       {
         logic_name      => 'pirsf',
         db              => 'PIRSF',
-        db_version      => '3.10',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'PIRSF',
         ipscan_xml      => 'PIRSF',
         ipscan_lookup   => 1,
@@ -164,9 +150,7 @@ sub default_options {
       {
         logic_name      => 'prints',
         db              => 'PRINTS',
-        db_version      => '42.0',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'PRINTS',
         ipscan_xml      => 'PRINTS',
         ipscan_lookup   => 1,
@@ -174,9 +158,7 @@ sub default_options {
       {
         logic_name      => 'scanprosite',
         db              => 'Prosite_patterns',
-        db_version      => '2019_11',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'ProSitePatterns',
         ipscan_xml      => 'PROSITE_PATTERNS',
         ipscan_lookup   => 1,
@@ -184,9 +166,7 @@ sub default_options {
       {
         logic_name      => 'sfld',
         db              => 'SFLD',
-        db_version      => '4',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'SFLD',
         ipscan_xml      => 'SFLD',
         ipscan_lookup   => 1,
@@ -194,9 +174,7 @@ sub default_options {
       {
         logic_name      => 'smart',
         db              => 'Smart',
-        db_version      => '7.1',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'SMART',
         ipscan_xml      => 'SMART',
         ipscan_lookup   => 1,
@@ -204,9 +182,7 @@ sub default_options {
       {
         logic_name      => 'superfamily',
         db              => 'SuperFamily',
-        db_version      => '1.75',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'SUPERFAMILY',
         ipscan_xml      => 'SUPERFAMILY',
         ipscan_lookup   => 1,
@@ -214,9 +190,7 @@ sub default_options {
       {
         logic_name      => 'tigrfam',
         db              => 'TIGRfam',
-        db_version      => '15.0',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'TIGRFAM',
         ipscan_xml      => 'TIGRFAM',
         ipscan_lookup   => 1,
@@ -224,9 +198,7 @@ sub default_options {
       {
         logic_name      => 'mobidblite',
         db              => 'MobiDBLite',
-        db_version      => '2.0',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'MobiDBLite',
         ipscan_xml      => 'MOBIDB_LITE',
         ipscan_lookup   => 0,
@@ -234,9 +206,7 @@ sub default_options {
       {
         logic_name      => 'ncoils',
         db              => 'ncoils',
-        db_version      => '2.2.1',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'Coils',
         ipscan_xml      => 'COILS',
         ipscan_lookup   => 0,
@@ -244,9 +214,7 @@ sub default_options {
       {
         logic_name      => 'signalp',
         db              => 'SignalP',
-        db_version      => '4.1',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'SignalP_EUK',
         ipscan_xml      => 'SIGNALP_EUK',
         ipscan_lookup   => 0,
@@ -254,9 +222,7 @@ sub default_options {
       {
         logic_name      => 'tmhmm',
         db              => 'TMHMM',
-        db_version      => '2.0c',
         program         => 'InterProScan',
-        program_version => $self->o('interproscan_version'),
         ipscan_name     => 'TMHMM',
         ipscan_xml      => 'TMHMM',
         ipscan_lookup   => 0,
@@ -339,18 +305,21 @@ sub pipeline_create_commands {
   return [
     @{$self->SUPER::pipeline_create_commands},
     'mkdir -p '.$self->o('pipeline_dir'),
+    'mkdir -p '.$self->o('scratch_large_dir'),
     $self->db_cmd($uniparc_table_sql),
     $self->db_cmd($uniprot_table_sql),
   ];
 }
 
 sub pipeline_wide_parameters {
- my ($self) = @_;
+  my ($self) = @_;
 
- return {
-   %{$self->SUPER::pipeline_wide_parameters},
-   'email_report' => $self->o('email_report'),
- };
+  return {
+    %{$self->SUPER::pipeline_wide_parameters},
+    pipeline_dir => $self->o('pipeline_dir'),
+    scratch_dir  => $self->o('scratch_large_dir'),
+    email_report => $self->o('email_report'),
+  };
 }
 
 sub pipeline_analyses {
@@ -363,13 +332,13 @@ sub pipeline_analyses {
       -max_retry_count => 0,
       -input_ids       => [ {} ],
       -parameters      => {
+                            interproscan_path    => $self->o('interproscan_path'),
                             interproscan_version => $self->o('interproscan_version'),
-                            interproscan_exe     => $self->o('interproscan_exe'),
                             local_computation    => $self->o('local_computation'),
                           },
       -flow_into       => {
-                            '1->A' => ['FetchFiles'],
-                            'A->1' => ['DbFactory'],
+                            '3->A' => ['FetchFiles'],
+                            'A->3' => ['AnnotateProteinFeatures'],
                           },
     },
 
@@ -466,6 +435,16 @@ sub pipeline_analyses {
     },
 
     {
+      -logic_name      => 'AnnotateProteinFeatures',
+      -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count => 0,
+      -flow_into       => {
+                            '1->A' => ['DbFactory'],
+                            'A->1' => ['TidyScratch'],
+                          }
+    },
+
+    {
       -logic_name      => 'DbFactory',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
@@ -498,7 +477,7 @@ sub pipeline_analyses {
                                 'protein_feature',
                                 'xref',
                               ],
-                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -flow_into         => ['AnalysisConfiguration'],
     },
@@ -509,7 +488,6 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -parameters        => {
                               protein_feature_analyses  => $self->o('protein_feature_analyses'),
-                              interproscan_version      => $self->o('interproscan_version'),
                               check_interpro_db_version => $self->o('check_interpro_db_version'),
                               run_seg                   => $self->o('run_seg'),
                               xref_analyses             => $self->o('xref_analyses'),
@@ -527,7 +505,7 @@ sub pipeline_analyses {
       -analysis_capacity => 20,
       -parameters        => {
                               db_backup_required => 1,
-                              db_backup_file     => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                               delete_existing    => $self->o('delete_existing'),
                               linked_tables      => ['protein_feature', 'object_xref'],
                               production_lookup  => 1,
@@ -594,7 +572,7 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -analysis_capacity => 20,
       -parameters        => {
-                              proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
+                              proteome_dir => catdir('#pipeline_dir#', '#species#'),
                               header_style => 'dbID',
                               overwrite    => 1,
                             },
@@ -615,7 +593,7 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -analysis_capacity => 20,
       -parameters        => {
-                              proteome_dir => catdir($self->o('pipeline_dir'), '#species#'),
+                              proteome_dir => catdir('#pipeline_dir#', '#species#'),
                               header_style => 'dbID',
                               overwrite    => 1,
                             },
@@ -734,7 +712,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'lookup',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_lookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -754,7 +731,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'lookup',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_lookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -773,7 +749,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'nolookup',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -793,7 +768,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'nolookup',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -812,7 +786,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'local',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -832,7 +805,6 @@ sub pipeline_analyses {
       {
         input_file                => '#split_file#',
         run_mode                  => 'local',
-        interproscan_exe          => $self->o('interproscan_exe'),
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
@@ -906,6 +878,16 @@ sub pipeline_analyses {
                               subject => 'Protein features pipeline: report for #dbname#',
                             },
     },
+
+    {
+      -logic_name        => 'TidyScratch',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'rm -rf #scratch_dir#',
+                            },
+    },
+
   ];
 }
 

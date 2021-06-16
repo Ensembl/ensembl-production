@@ -23,8 +23,7 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
-use File::Path qw(make_path remove_tree);
-use File::Temp qw(tempdir);
+use Path::Tiny qw(tempdir);
 
 sub param_defaults {
   my ($self) = @_;
@@ -52,6 +51,7 @@ sub run {
   my $interproscan_exe = $self->param_required('interproscan_exe');
   my $applications     = $self->param_required('interproscan_applications');
   my $run_interproscan = $self->param_required('run_interproscan');
+  my $scratch_dir      = $self->param_required('scratch_dir');
   
   my $outfile_base = "$input_file.$run_mode";
   my $outfile_xml  = "$outfile_base.xml";
@@ -62,16 +62,10 @@ sub run {
       unlink $outfile_xml if -e $outfile_xml;
       unlink $outfile_tsv if -e $outfile_tsv;
       
-      # Must use /scratch for short temporary file names; TMHMM can't cope with longer ones.
-      my $scratch_dir = tempdir(DIR => '/scratch', CLEANUP => 1);
-      
-      if (! -e $scratch_dir) {
-        $self->warning("Output directory '$scratch_dir' does not exist. I shall create it.");
-        make_path($scratch_dir) or $self->throw("Failed to create output directory '$scratch_dir'");
-      }
+      my $tempdir = tempdir(DIR => $scratch_dir, CLEANUP => 1);
       
       my $options = "--iprlookup --goterms --pathways ";
-      $options .= "-f TSV, XML -t $seq_type --tempdir $scratch_dir ";
+      $options .= "-f TSV, XML -t $seq_type --tempdir $tempdir ";
       $options .= '--applications '.join(',', @$applications).' ';
       my $input_option  = "-i $input_file ";
       my $output_option = "--output-file-base $outfile_base ";  
@@ -89,8 +83,6 @@ sub run {
       $self->dbc and $self->dbc->disconnect_if_idle();
       
       $self->run_cmd($interpro_cmd);
-      
-      unlink $scratch_dir if -e $scratch_dir;
     }
     
     if (! -e $outfile_xml) {
