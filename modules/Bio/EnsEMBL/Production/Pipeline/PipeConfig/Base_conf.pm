@@ -45,7 +45,7 @@ sub default_options {
                                  $self->o('user'),
                                  $self->o('pipeline_name') ),
 
-    scratch_large_dir => catdir( $self->o('nobackup_dir'), 'scratch' ),
+    scratch_large_dir => catdir( $self->o('pipeline_dir'), 'scratch' ),
 
     production_queue => 'production',
     datamover_queue => 'datamover',
