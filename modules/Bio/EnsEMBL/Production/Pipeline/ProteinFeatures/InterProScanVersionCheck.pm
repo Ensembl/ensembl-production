@@ -44,7 +44,7 @@ sub run {
 
   my $service_version_file = 'http://www.ebi.ac.uk/interpro/match-lookup/version';
 
-  my $interproscan_exe = catdir($interproscan_path, "interproscan-$interproscan_version", 'interproscan.sh');
+  my $interproscan_exe = catdir($interproscan_path, $interproscan_version, 'interproscan.sh');
   my $interpro_cmd = "$interproscan_exe --version";
   my $version_info = `$interpro_cmd` or $self->throw("Failed to run ".$interpro_cmd);
 
