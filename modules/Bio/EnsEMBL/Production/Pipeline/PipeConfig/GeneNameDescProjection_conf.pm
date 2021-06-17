@@ -50,7 +50,6 @@ sub default_options {
 
     compara_division => undef, # Eg: protists, fungi, plants, metazoa, multi
     pipeline_name    => 'gene_name_desc_projection_'.$self->o('compara_division').'_'.$self->o('ensembl_release'),
-    output_dir       => '/hps/nobackup2/production/ensembl/'.$self->o('user').'/'.$self->o('pipeline_name'),
 
     # Analysis associated with gene name projection
     logic_name => 'xref_projection',
@@ -110,18 +109,21 @@ sub hive_meta_table {
 
 sub pipeline_create_commands {
   my ($self) = @_;
+
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('output_dir'),
+    'mkdir -p '.$self->o('pipeline_dir'),
   ];
 }
 
 sub pipeline_wide_parameters {
   my ($self) = @_;
+
   return {
     %{$self->SUPER::pipeline_wide_parameters},
-    'store_projections' => $self->o('store_projections'),
-    'compara_db' => $self->o('compara_db')
+    pipeline_dir => $self->o('pipeline_dir'),
+    compara_db => $self->o('compara_db'),
+    store_projections => $self->o('store_projections'),
   };
 }
 
@@ -197,7 +199,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
       -analysis_capacity => 5,
       -parameters        => {
-                              output_file => catdir($self->o('output_dir'), '#config_type#', '#dbname#_bkp.sql.gz'),
+                              output_file => catdir('#pipeline_dir#', '#config_type#', '#dbname#_bkp.sql.gz'),
                               table_list  => $self->o('backup_tables'),
                             },
       -rc_name           => '2GB',
@@ -209,7 +211,7 @@ sub pipeline_analyses {
       -analysis_capacity => 5,
       -max_retry_count   => 0,
       -parameters        => {
-                              output_file => catdir($self->o('output_dir'), '#config_type#', '#dbname#_bkp.sql.gz'),
+                              output_file => catdir('#pipeline_dir#', '#config_type#', '#dbname#_bkp.sql.gz'),
                               table_list  => $self->o('backup_tables'),
                             },
       -flow_into         => [  WHEN('#config_type# eq "names"' => ['AnalysisSetup']) ],
@@ -223,7 +225,7 @@ sub pipeline_analyses {
                               logic_name => $self->o('logic_name'),
                               production_lookup  => 1,
                               delete_existing => 1,
-                              db_backup_file => catdir($self->o('output_dir'), '#config_type#', '#dbname#_bkp.sql.gz'),
+                              db_backup_file => catdir('#pipeline_dir#', '#config_type#', '#dbname#_bkp.sql.gz'),
                             },
       -rc_name           => '2GB',
     },
@@ -263,7 +265,7 @@ sub pipeline_analyses {
       -parameters        => {
                               compara                => $self->o('compara_division'),
                               release                => $self->o('ensembl_release'),
-                              output_dir             => $self->o('output_dir'),
+                              output_dir             => $self->o('pipeline_dir'),
                               store_projections      => $self->o('store_projections'),
                               method_link_type       => $self->o('method_link_type'),
                               homology_types_allowed => $self->o('homology_types_allowed'),
@@ -311,7 +313,7 @@ sub pipeline_analyses {
       -parameters        => {
                               compara                => $self->o('compara_division'),
                               release                => $self->o('ensembl_release'),
-                              output_dir             => $self->o('output_dir'),
+                              output_dir             => $self->o('pipeline_dir'),
                               store_projections      => $self->o('store_projections'),
                               method_link_type       => $self->o('method_link_type'),
                               homology_types_allowed => $self->o('homology_types_allowed'),
@@ -380,7 +382,7 @@ sub pipeline_analyses {
       -parameters      => {
                             email   => $self->o('email'),
                             subject => $self->o('pipeline_name').' has completed',
-                            text    => 'Log files: '.$self->o('output_dir'),
+                            text    => 'Log files: '.$self->o('pipeline_dir'),
                           },
       -flow_into => ['species_update_factory'],
     },
