@@ -31,12 +31,12 @@ sub run {
   my $appris_url   = $self->param_required('appris_url');
   my $pipeline_dir = $self->param_required('pipeline_dir');
 
-  #my $wget = "wget -nd -r $appris_url -P $pipeline_dir -A txt";
-  #if ( system($wget) ) {
-  #  $self->throw("Could not copy files from $appris_url to $pipeline_dir");
-  #} else {
+  my $wget = "wget -nd -r $appris_url -P $pipeline_dir -A txt";
+  if ( system($wget) ) {
+    $self->throw("Could not copy files from $appris_url to $pipeline_dir");
+  } else {
     $self->info("Copied files from $appris_url to $pipeline_dir");
-  #}
+  }
 
   my @local_files = path("$pipeline_dir")->children(qr/appris/);
 
