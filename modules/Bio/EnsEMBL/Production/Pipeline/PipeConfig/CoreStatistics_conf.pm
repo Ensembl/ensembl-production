@@ -60,7 +60,6 @@ sub default_options {
     max_run   => '100',
 
     pepstats_binary => 'pepstats',
-    pepstats_tmpdir => '/scratch',
 
     history_file => undef,
   };
@@ -70,10 +69,20 @@ sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
     %{ $self->SUPER::pipeline_wide_parameters() },
-    release   => $self->o('release'),
-    bin_count => $self->o('bin_count'),
-    max_run   => $self->o('max_run'),
+    scratch_dir => $self->o('scratch_large_dir'),
+    release     => $self->o('release'),
+    bin_count   => $self->o('bin_count'),
+    max_run     => $self->o('max_run'),
   };
+}
+
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('scratch_large_dir'),
+  ];
 }
 
 # Implicit parameter propagation throughout the pipeline.
@@ -279,7 +288,7 @@ sub pipeline_analyses {
       -logic_name      => 'PepStats',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::PepStatsBatch',
       -parameters      => {
-                            tmpdir          => $self->o('pepstats_tmpdir'),
+                            tmpdir          => '#scratch_dir#',
                             pepstats_binary => $self->o('pepstats_binary'),
                             dbtype          => 'core',
                           },
@@ -377,6 +386,16 @@ sub pipeline_analyses {
                        email   => $self->o('email'),
                        subject => $self->o('pipeline_name').' has finished',
                      },
+      -flow_into  => ['TidyScratch'],
+    },
+
+    {
+      -logic_name        => 'TidyScratch',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'rm -rf #scratch_dir#',
+                            },
     },
 
   ];
