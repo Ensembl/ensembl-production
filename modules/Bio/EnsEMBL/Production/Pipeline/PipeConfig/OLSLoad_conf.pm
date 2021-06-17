@@ -28,7 +28,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::OLSLoad_conf;
 use strict;
 use warnings FATAL => 'all';
 
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -38,10 +38,7 @@ sub default_options {
 
     return {
         %{$self->SUPER::default_options},
-        ## General parameters
-        'output_dir' => '/hps/nobackup/flicek/ensembl/production/team/' . $self->o('ENV', 'USER') . '/ols_loader/' . $self->o('pipeline_name'),   
         'base_dir'         => $self->o('ENV', 'BASE_DIR'),
-	'scratch_dir'      => '/hps/scratch/' . $self->o('ENV', 'USER'),
         'srv_cmd'          => undef,
         'wipe_all'         => 0,
         'wipe_one'         => 1,
@@ -65,12 +62,27 @@ sub default_options {
     }
 }
 
+# Prevent default assumption (from Base_conf) that a registry is required.
+sub beekeeper_extra_cmdline_options {
+  my ($self) = @_;
+
+  return undef;
+}
+
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('pipeline_dir'),
+  ];
+}
+
 sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
         %{$self->SUPER::pipeline_wide_parameters},
         'base_dir'     => $self->o('base_dir'),
-	'scratch_dir'  => $self->o('scratch_dir'),
         'db_name'      => $self->o('db_name'),
         'db_host'      => $self->o('db_host'),
         'db_url'       => $self->o('db_url'),
@@ -79,7 +91,8 @@ sub pipeline_wide_parameters {
         'wipe_one'     => $self->o('wipe_one'),
         'srv'          => $self->o('srv'),
         'mart_db_name' => $self->o('mart_db_name'),
-        'output_dir'   => $self->o('output_dir'),
+        'output_dir'   => $self->o('pipeline_dir'),
+        'scratch_dir'  => $self->o('scratch_small_dir'),
         'verbosity'    => $self->o('verbosity'),
         'ontologies'   => $self->o('ontologies'),
     };
@@ -126,9 +139,6 @@ sub pipeline_analyses {
             -logic_name      => 'init_meta',
             -module          => 'bio.ensembl.ontology.hive.OLSHiveLoader',
             -language        => 'python3',
-            -parameters      => {
-                -db_url => $self->o('db_url'),
-            },
             -max_retry_count => 1,
             -flow_into       => [ 'ontologies_factory' ]
         },
@@ -147,11 +157,6 @@ sub pipeline_analyses {
             -language          => 'python3',
             -analysis_capacity => 20,
             -rc_name           => '4GB',
-            -parameters        => {
-                -db_url     => $self->o('db_url'),
-                -output_dir => $self->o('output_dir'),
-                -verbosity  => $self->o('verbosity'),
-            },
             -flow_into         => [ 'ontology_term_load_factory' ]
         },
         {
@@ -176,11 +181,6 @@ sub pipeline_analyses {
             -language          => 'python3',
             -analysis_capacity => $self->o('ols_load'),
             -rc_name           => '4GB',
-            -parameters        => {
-                -db_url     => $self->o('db_url'),
-                -output_dir => $self->o('output_dir'),
-                -verbosity  => $self->o('verbosity'),
-            }
         },
         {
             -logic_name        => 'ontology_term_load_light',
@@ -188,11 +188,6 @@ sub pipeline_analyses {
             -language          => 'python3',
             -analysis_capacity => 5,
             -rc_name           => '4GB',
-            -parameters        => {
-                -db_url     => $self->o('db_url'),
-                -output_dir => $self->o('output_dir'),
-                -verbosity  => $self->o('verbosity'),
-            }
         },
         {
             -logic_name      => 'ontology_report',
@@ -200,10 +195,6 @@ sub pipeline_analyses {
             -language        => 'python3',
             -max_retry_count => 1,
             -rc_name         => '4GB',
-            -parameters      => {
-                -output_dir => $self->o('output_dir'),
-                -verbosity  => $self->o('verbosity')
-            }
         },
         {
             -logic_name      => 'phibase_init',
@@ -238,9 +229,6 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -parameters      => {
                 'ontology_name' => "PHI",
-                'db_url'        => $self->o('db_url'),
-                'output_dir'    => $self->o('output_dir'),
-                'verbosity'     => $self->o('verbosity')
             }
         },
         {
@@ -266,7 +254,6 @@ sub pipeline_analyses {
             -rc_name     => '32GB',
             -parameters  => {
                 mart => $self->o('mart_db_name'),
-                srv  => $self->o('srv')
             },
             -flow_into   => [ 'ontology_dc' ]
         },
@@ -276,8 +263,8 @@ sub pipeline_analyses {
             -parameters => {
                 datacheck_groups => [ 'ontologies' ],
                 history_file     => $self->o('history_file'),
-                old_server_uri   => $self->o('old_server'),
-                registry_file    => $self->o('reg_file'),
+                old_server_uri   => $self->o('old_server_uri'),
+                registry_file    => $self->o('registry_file'),
                 failures_fatal   => 1
             },
             -flow_into => [ 'copy_database', 'copy_mart_database' ]

@@ -18,18 +18,13 @@ limitations under the License.
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::OntologiesLoad::MartLoad;
+
 use strict;
 use warnings FATAL => 'all';
+
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+
 use Path::Tiny qw(path);
-
-sub fetch_input {
-}
-
-sub run {
-    my $self = shift @_;
-
-}
 
 sub write_output {
     my ($self) = @_;
@@ -45,12 +40,17 @@ sub write_output {
     $self->run_system_command("$srv -e \"CREATE database $mart\"");
     $self->log("Building mart database $mart");
     $self->log("Creating mart.sql file");
-    my $temp_sqlfile = path($scratch_dir )->child('mysql.sql');
+
+    my $temp_sqlfile = path($scratch_dir)->child('mysql.sql');
     $temp_sqlfile->touchpath; 
     my $TMP_SQL = $temp_sqlfile->absolute;
+
     $self->run_system_command("sed -e \"s/%MART_NAME%/$mart/g\" $templatefile | sed -e \"s/%ONTOLOGY_DB%/$dbname/g\" > $TMP_SQL");
     $self->run_system_command("$srv $mart < $TMP_SQL");
-    $temp_sqlfile->remove; # remove temp mysql.sql file 
+
+    $temp_sqlfile->remove;
+    rmdir $scratch_dir;
+
     $self->log("Cleaning up and optimizing tables in $mart");
     my $optimize = <<"OPTIMIZE_TABLE";
 for table in \$($srv --skip-column-names $mart -e "show tables like 'closure%'"); do
@@ -98,4 +98,5 @@ OPTIMIZE_TABLE
     $self->log("Building mart database $mart complete");
 
 }
+
 1;
