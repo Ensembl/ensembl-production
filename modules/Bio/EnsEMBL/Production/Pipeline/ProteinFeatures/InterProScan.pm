@@ -64,7 +64,7 @@ sub run {
       
       my $tempdir = tempdir(DIR => $scratch_dir, CLEANUP => 1);
       
-      my $options = "--iprlookup --goterms --pathways ";
+      my $options = "--iprlookup --goterms ";
       $options .= "-f TSV, XML -t $seq_type --tempdir $tempdir ";
       $options .= '--applications '.join(',', @$applications).' ';
       my $input_option  = "-i $input_file ";

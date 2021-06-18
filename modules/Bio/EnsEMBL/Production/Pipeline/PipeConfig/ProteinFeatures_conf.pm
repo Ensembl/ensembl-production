@@ -752,7 +752,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_4CPU',
+      -rc_name           => '4GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanNoLookup_HighMem'],
@@ -771,7 +771,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '16GB_4CPU',
+      -rc_name           => '16GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                             },
@@ -789,7 +789,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_4CPU',
+      -rc_name           => '4GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                                '0' => ['InterProScanLocal_HighMem'],
@@ -808,7 +808,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '32GB_4CPU',
+      -rc_name           => '32GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                             },
@@ -896,9 +896,9 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-     '4GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M  4000 -R "rusage[mem=4000]"'},
-    '16GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 16000 -R "rusage[mem=16000]"'},
-    '32GB_4CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 4 -M 32000 -R "rusage[mem=32000]"'},
+     '4GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M  4000 -R "rusage[mem=4000]"'},
+    '16GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 16000 -R "rusage[mem=16000]"'},
+    '32GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 32000 -R "rusage[mem=32000]"'},
   }
 }
 
