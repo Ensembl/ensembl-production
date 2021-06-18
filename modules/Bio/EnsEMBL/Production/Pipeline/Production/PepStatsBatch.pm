@@ -48,6 +48,7 @@ sub run {
   $self->dump_translation($dba, $tmpfile);
   $log->info("Running pepstats");
   my $results = $self->run_pepstats($tmpfile);
+  unlink $tmpfile;
 
   $log->info("Storing attribs");
   $self->store_attribs($dba, $results);

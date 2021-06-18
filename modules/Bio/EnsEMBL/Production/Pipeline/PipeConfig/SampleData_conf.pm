@@ -59,9 +59,6 @@ sub default_options {
     # A script from the variation repo is needed, so need a path for it.
     base_dir => $ENV{'BASE_DIR'},
 
-    # Path for small intermediate files
-    tmp_dir => '/hps/nobackup2/production/ensembl/'.$ENV{'USER'}.'/'.$self->o('pipeline_name'),
-
     # By default, only update species with new or updated genesets.
     new_genesets_only => 1,
 
@@ -93,7 +90,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('tmp_dir'),
+    'mkdir -p '.$self->o('scratch_small_dir'),
   ];
 }
 
@@ -114,7 +111,8 @@ sub pipeline_analyses {
                             meta_filters => $self->o('meta_filters'),
                            },
       -flow_into       => {
-                            '2' => ['CheckSampleData'],
+                            '2->A' => ['CheckSampleData'],
+                            'A->1' => ['TidyScratch']
                           },
     },
 
@@ -175,8 +173,8 @@ sub pipeline_analyses {
                             'db_srv' => $self->o('db_srv'),
                             'release' => $self->o('ensembl_release'),
                             'base_dir' => $self->o('base_dir'),
-                            'tmp_dir' => $self->o('tmp_dir'),
-                            'cmd' => 'perl #base_dir#/ensembl-variation/scripts/misc/generate_vep_examples.pl $(#db_srv# details script) -species #species# -version #release# -dir #tmp_dir# -write_to_db'
+                            'dir' => $self->o('scratch_small_dir'),
+                            'cmd' => 'perl #base_dir#/ensembl-variation/scripts/misc/generate_vep_examples.pl $(#db_srv# details script) -species #species# -version #release# -dir #dir# -write_to_db'
                           },
       -flow_into       => {
                             '1' => ['VEPSampleDataChecks']
@@ -211,6 +209,16 @@ sub pipeline_analyses {
                             failures_fatal   => 1,
                           },
     },
+
+    {
+      -logic_name        => 'TidyScratch',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'rm -rf '.$self->o('scratch_small_dir'),
+                            },
+    },
+
   ];
 }
 

@@ -42,9 +42,6 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
 
-    # Directory for pre-pipeline database backups
-    output_dir => catdir('/hps/nobackup2/production/ensembl', $self->o('user'), $self->o('pipeline_name')),
-
     # Remove existing GO annotations and associated analysis
     delete_existing => 1,
 
@@ -67,7 +64,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('output_dir'),
+    'mkdir -p '.$self->o('pipeline_dir'),
   ];
 }
 
@@ -118,7 +115,7 @@ sub pipeline_analyses {
                                 'object_xref',
                                 'ontology_xref',
                               ],
-                              output_file => catdir($self->o('output_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -flow_into         => {
                               '1->A' => ['AnalysisSetup'],
