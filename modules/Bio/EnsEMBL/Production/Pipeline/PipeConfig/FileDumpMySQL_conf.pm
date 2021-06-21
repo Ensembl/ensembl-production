@@ -29,7 +29,7 @@ use Bio::EnsEMBL::Hive::Version 2.5;
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
-	my ($self) = @_;
+  my ($self) = @_;
   return {
     %{$self->SUPER::default_options},
 
@@ -50,7 +50,7 @@ sub default_options {
     # Include non-species-related databases, e.g. ensembl_ontology, ncbi_taxonomy
     pan_ensembl => 0,
     pan_ensembl_dir => 'pan_ensembl',
-	};
+  };
 }
 
 # Implicit parameter propagation throughout the pipeline.
@@ -145,7 +145,7 @@ sub pipeline_analyses {
       -parameters        => {
                               output_dir => catdir('#dump_dir#', '#division#', 'mysql', '#dbname#'),
                             },
-	    -rc_name           => '2GB',
+      -rc_name           => '2GB',
       -flow_into         => {
                               '2->A' => ['MySQL_Compress'],
                               'A->3' => ['Checksum']
@@ -160,7 +160,7 @@ sub pipeline_analyses {
                               db_url     => '#server_url##dbname#',
                               output_dir => catdir('#dump_dir#', '#division#', 'mysql', '#dbname#'),
                             },
-	    -rc_name           => '2GB',
+      -rc_name           => '2GB',
       -flow_into         => {
                               '2->A' => ['MySQL_Compress'],
                               'A->3' => ['Checksum']
@@ -175,7 +175,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'gzip -n -f "#output_filename#"',
                             },
-	    -rc_name           => '1GB',
+      -rc_name           => '1GB',
     },
     {
       -logic_name        => 'Checksum',
@@ -185,7 +185,7 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'cd "#output_dir#"; find -L . -type f ! -name "md5sum.txt" | sed \'s!^\./!!\' | xargs md5sum > md5sum.txt',
                             },
-	    -rc_name           => '1GB',
+      -rc_name           => '1GB',
       -flow_into         => ['Verify'],
     },
     {
