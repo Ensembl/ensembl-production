@@ -40,6 +40,7 @@ sub param_defaults {
     file_type            => 'gff3',
     per_chromosome       => 0,
     feature_types        => ['Gene', 'Transcript'],
+    header               => undef,
     gt_gff3_exe          => 'gt gff3',
     gt_gff3validator_exe => 'gt gff3validator',
   };
@@ -51,6 +52,7 @@ sub run {
   my $data_type      = $self->param_required('data_type');
   my $per_chromosome = $self->param_required('per_chromosome');
   my $feature_types  = $self->param_required('feature_types');
+  my $header         = $self->param_required('header');
   my $filenames      = $self->param_required('filenames');
 
   my $dba = $self->dba;
@@ -69,18 +71,18 @@ sub run {
   my $filename = $$filenames{$data_type};
 
   if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $filename, '>', $dba, \%adaptors, $provider);
+    $self->print_to_file($chr, 'chr', $filename, '>', $header, $dba, \%adaptors, $provider);
     if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $filename, '>>', $dba, \%adaptors, $provider);
+      $self->print_to_file($non_chr, 'non_chr', $filename, '>>', $header, $dba, \%adaptors, $provider);
     }
   } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $filename, '>', $dba, \%adaptors, $provider);
+    $self->print_to_file([@$chr, @$non_chr], undef, $filename, '>', $header, $dba, \%adaptors, $provider);
   }
 
   if (scalar(@$non_ref)) {
     my $non_ref_filename = $self->generate_non_ref_filename($filename);
     path($filename)->copy($non_ref_filename);
-    $self->print_to_file($non_ref, undef, $non_ref_filename, '>>', $dba, \%adaptors, $provider);
+    $self->print_to_file($non_ref, undef, $non_ref_filename, '>>', $header, $dba, \%adaptors, $provider);
   }
 
   my $output_filenames = $self->param('output_filenames');
@@ -91,9 +93,9 @@ sub run {
 }
 
 sub print_to_file {
-  my ($self, $slices, $region, $filename, $mode, $dba, $adaptors, $provider) = @_;
+  my ($self, $slices, $region, $filename, $mode, $header, $dba, $adaptors, $provider) = @_;
 
-  my $header = $mode eq '>' ? 1 : 0;
+  $header = $mode eq '>' ? 1 : 0 unless defined $header;
   my $serializer = $self->gff3_serializer($filename, $mode, $header, $slices, $dba);
 
   my $non_chr_serializer;
