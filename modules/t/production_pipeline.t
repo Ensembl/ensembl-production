@@ -29,7 +29,7 @@ if(@ARGV) {
 else {
   $options = '-run_all 1';
 }
-$options .= ' -scratch_dir /tmp ';
+$options .= ' -scratch_large_dir /tmp/${USER} ';
 
 
 ok(1, 'Startup test');
