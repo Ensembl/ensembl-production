@@ -44,12 +44,19 @@ sub default_options {
     run_all      => 0,
     meta_filters => {},
 
+    # If not specified, files are stored in sub-directories named for divisions.
+    dump_subdir => undef,
+
     # Include mart databases
     marts => 0,
 
     # Include non-species-related databases, e.g. ensembl_ontology, ncbi_taxonomy
     pan_ensembl => 0,
     pan_ensembl_dir => 'pan_ensembl',
+
+    # By default, files are not written if the parent directory
+    # (which is the database name) exists.
+    overwrite => 0,
   };
 }
 
@@ -68,8 +75,9 @@ sub pipeline_wide_parameters {
 
   return {
     %{$self->SUPER::pipeline_wide_parameters},
-    'dump_dir'   => $self->o('dump_dir'),
-    'server_url' => $self->o('server_url'),
+    'dump_dir'    => $self->o('dump_dir'),
+    'dump_subdir' => $self->o('dump_subdir'),
+    'server_url'  => $self->o('server_url'),
   };
 }
 
@@ -108,6 +116,7 @@ sub pipeline_analyses {
                               dbname       => $self->o('dbname'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
+                              compara_flow => 2,
                             },
       -flow_into         => {
                               '2' => ['GetDivision'],
@@ -143,7 +152,10 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -hive_capacity     => 10,
       -parameters        => {
-                              output_dir => catdir('#dump_dir#', '#division#', 'mysql', '#dbname#'),
+                              db_type    => '#group#',
+                              subdir     => '#expr(defined #dump_subdir# ? #dump_subdir# : #division#)expr#',
+                              output_dir => catdir('#dump_dir#', '#subdir#', 'mysql', '#dbname#'),
+                              overwrite  => $self->o('overwrite'),
                             },
       -rc_name           => '2GB',
       -flow_into         => {
@@ -158,7 +170,9 @@ sub pipeline_analyses {
       -hive_capacity     => 10,
       -parameters        => {
                               db_url     => '#server_url##dbname#',
-                              output_dir => catdir('#dump_dir#', '#division#', 'mysql', '#dbname#'),
+                              subdir     => '#expr(defined #dump_subdir# ? #dump_subdir# : #division#)expr#',
+                              output_dir => catdir('#dump_dir#', '#subdir#', 'mysql', '#dbname#'),
+                              overwrite  => $self->o('overwrite'),
                             },
       -rc_name           => '2GB',
       -flow_into         => {
@@ -183,7 +197,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -analysis_capacity => 10,
       -parameters        => {
-                              cmd => 'cd "#output_dir#"; find -L . -type f ! -name "md5sum.txt" | sed \'s!^\./!!\' | xargs md5sum > md5sum.txt',
+                              cmd => 'cd "#output_dir#"; find -L . -type f ! -name "CHECKSUMS" | sed \'s!^\./!!\' | xargs sum > CHECKSUMS',
                             },
       -rc_name           => '1GB',
       -flow_into         => ['Verify'],
@@ -199,3 +213,4 @@ sub pipeline_analyses {
 }
 
 1;
+
