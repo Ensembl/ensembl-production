@@ -260,7 +260,7 @@ sub default_options {
     delete_existing => 1,
 
     # seg analysis is not part of InterProScan, so is always run locally.
-    run_seg    => 1,
+    run_seg    => 0,
     seg_exe    => 'seg',
     seg_params => '-l -n',
 
