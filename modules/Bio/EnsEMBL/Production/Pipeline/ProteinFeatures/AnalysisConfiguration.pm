@@ -57,26 +57,32 @@ sub run {
     # and for seg, don't re-annotate - it would only reproduce exactly
     # the same results.
     # If 'check_db_version' is true, then we only annotate if the
-    # InterPro source database version has changed (InterPro are adding
+    # InterPro source database version has changed. (InterPro are adding
     # entries with every release, so this leads to slightly less
     # comprehensive annotation, but handling large data volumes would
-    # not be possible otherwise
+    # not be possible otherwise.)
     my $logic_name = $$analysis_config{'logic_name'};
     my $analysis = $aa->fetch_by_logic_name($logic_name);
 
-    if (defined($analysis)) {
-      if ($logic_name eq 'seg') {
-        $run_seg = 0;
-        $self->warning("Skipping $logic_name - annotation exists");
-      } elsif ($analysis->program_version eq $interproscan_version) {
-        $self->warning("Skipping $logic_name - annotation exists for InterProScan $interproscan_version");
-      } elsif ($check_db_version && ($analysis->db_version eq $$analysis_config{'db_version'})) {
-        $self->warning("Skipping $logic_name - annotation exists for db version ".$analysis->db_version);
+    if ($logic_name eq 'seg') {
+      if (defined($analysis)) {
+        if (! $run_seg) {
+          $self->warning("Skipping $logic_name - annotation exists");
+        }
       } else {
-        push @$filtered_analyses, $analysis_config;
+        $run_seg = 1;
       }
+      push @$filtered_analyses, $analysis_config if $run_seg;
     } else {
-      if ($logic_name ne 'seg' || $run_seg) {
+      if (defined($analysis)) {
+        if ($analysis->program_version eq $interproscan_version) {
+          $self->warning("Skipping $logic_name - annotation exists for InterProScan $interproscan_version");
+        } elsif ($check_db_version && ($analysis->db_version eq $$analysis_config{'db_version'})) {
+          $self->warning("Skipping $logic_name - annotation exists for db version ".$analysis->db_version);
+        } else {
+          push @$filtered_analyses, $analysis_config;
+        }
+      } else {
         push @$filtered_analyses, $analysis_config;
       }
     }
