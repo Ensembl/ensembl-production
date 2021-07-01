@@ -138,7 +138,6 @@ sub Bio::EnsEMBL::ExonTranscript::summary_as_hash {
   $summary{'end'}             = $self->seq_region_end;
   $summary{'strand'}          = $self->strand;
   $summary{'id'}              = $self->stable_id_version;
-  $summary{'Name'}            = $self->stable_id_version;
   $summary{'Parent'}          = $self->transcript->stable_id;
   $summary{'exon_id'}         = $self->stable_id_version;
   # Instead of 'rank' use 'exon_number', to match NCBI spec.
