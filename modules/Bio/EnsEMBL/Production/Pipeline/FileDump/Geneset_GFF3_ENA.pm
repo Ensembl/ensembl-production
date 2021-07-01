@@ -34,7 +34,8 @@ sub param_defaults {
 
   return {
     %{$self->SUPER::param_defaults},
-    header => 0,
+    data_type => 'genes_ena',
+    header    => 0,
   };
 }
 
