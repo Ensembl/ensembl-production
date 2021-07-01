@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpCore_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpENA_conf;
 
 use strict;
 use warnings;
@@ -28,28 +28,12 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    genome_types => [
-      'Assembly_Chain',
-      'Chromosome_TSV',
-      'Genome_FASTA',
-    ],
     geneset_types => [
-      'Geneset_EMBL',
-      'Geneset_FASTA',
-      'Geneset_GFF3',
-      'Geneset_GTF',
-      'Xref_TSV',
+      'Geneset_GFF3_ENA',
     ],
-    rnaseq_types => [
-      'RNASeq_Exists',
-    ],
-
-    dump_metadata => 1,
-
-    blast_index => 1,
 
     run_datachecks   => 1,
-    datacheck_groups => ['rapid_release'],
+    datacheck_groups => ['ena_submission'],
   };
 }
 
