@@ -40,6 +40,7 @@ sub param_defaults {
     file_type            => 'gff3',
     per_chromosome       => 0,
     feature_types        => ['Gene', 'Transcript'],
+    include_utr          => 1,
     header               => undef,
     gt_gff3_exe          => 'gt gff3',
     gt_gff3validator_exe => 'gt gff3validator',
@@ -158,6 +159,7 @@ sub fetch_features {
 
 sub exon_features {
   my ($self, $transcripts) = @_;
+  my $include_utr = $self->param_required('include_utr');
 
   my @cds_features;
   my @exon_features;
@@ -166,8 +168,10 @@ sub exon_features {
   foreach my $transcript (@$transcripts) {
     push @cds_features, @{ $transcript->get_all_CDS(); };
     push @exon_features, @{ $transcript->get_all_ExonTranscripts() };
-    push @utr_features, @{ $transcript->get_all_five_prime_UTRs()};
-    push @utr_features, @{ $transcript->get_all_three_prime_UTRs()};
+    if ($include_utr) {
+      push @utr_features, @{ $transcript->get_all_five_prime_UTRs()};
+      push @utr_features, @{ $transcript->get_all_three_prime_UTRs()};
+    }
   }
 
   return [@exon_features, @cds_features, @utr_features];
