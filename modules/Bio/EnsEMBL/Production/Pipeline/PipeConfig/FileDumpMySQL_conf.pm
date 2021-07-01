@@ -40,9 +40,11 @@ sub default_options {
     species      => [],
     antispecies  => [],
     division     => [],
-    dbname       => [],
     run_all      => 0,
     meta_filters => {},
+
+    # Named database factory
+    dbname => [],
 
     # If not specified, files are stored in sub-directories named for divisions.
     dump_subdir => undef,
@@ -90,7 +92,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 1,
       -input_ids         => [ {} ],
-      -flow_into         => ['GroupFactory', 'MultiDbFactory'],
+      -flow_into         => ['GroupFactory', 'MultiDbFactory', 'NamedDbFactory'],
     },
     {
       -logic_name        => 'GroupFactory',
@@ -113,7 +115,6 @@ sub pipeline_analyses {
                               species      => $self->o('species'),
                               antispecies  => $self->o('antispecies'),
                               division     => $self->o('division'),
-                              dbname       => $self->o('dbname'),
                               run_all      => $self->o('run_all'),
                               meta_filters => $self->o('meta_filters'),
                               compara_flow => 2,
@@ -141,6 +142,18 @@ sub pipeline_analyses {
                               marts           => $self->o('marts'),
                               pan_ensembl     => $self->o('pan_ensembl'),
                               pan_ensembl_dir => $self->o('pan_ensembl_dir'),
+                            },
+      -flow_into         => {
+                              '2' => ['MySQL_Multi_TXT'],
+                            },
+    },
+    {
+      -logic_name        => 'NamedDbFactory',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              inputlist    => $self->o('dbname'),
+                              column_names => ['dbname'],
                             },
       -flow_into         => {
                               '2' => ['MySQL_Multi_TXT'],
