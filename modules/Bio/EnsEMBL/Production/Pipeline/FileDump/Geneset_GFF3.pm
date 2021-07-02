@@ -41,7 +41,7 @@ sub param_defaults {
     per_chromosome       => 0,
     feature_types        => ['Gene', 'Transcript'],
     include_utr          => 1,
-    header               => undef,
+    header               => 1,
     gt_gff3_exe          => 'gt gff3',
     gt_gff3validator_exe => 'gt gff3validator',
   };
