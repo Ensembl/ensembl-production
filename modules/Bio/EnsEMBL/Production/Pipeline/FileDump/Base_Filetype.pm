@@ -54,6 +54,10 @@ sub fetch_input {
 
   if ($self->param_is_defined('custom_filenames')) {
     $filenames = $self->param('custom_filenames');
+
+    foreach my $file (values %{$filenames}) {
+      $self->create_dir(path($file)->parent);
+    }
   } else {
     my $overwrite = $self->param_required('overwrite');
 
@@ -112,17 +116,7 @@ sub filenames {
     $dir = $self->param('output_dir');
   }
 
-  # If the parent dir does not exist, we will need to
-  # update the group permissions, so that other teams
-  # can write to it once we have created it.
-  my $parent_exists = path($dir)->parent()->exists();
-
-  path($dir)->mkpath();
-  path($dir)->chmod("g+w");
-
-  if (! $parent_exists) {
-    path($dir)->parent()->chmod("g+w");
-  }
+  $self->create_dir($dir);
 
   my %filenames;
 
@@ -152,6 +146,22 @@ sub filenames {
   }
 
   return \%filenames;
+}
+
+sub create_dir {
+  my ($self, $dir) = @_;
+
+  # If the parent dir does not exist, we will need to
+  # update the group permissions, so that other teams
+  # can write to it once we have created it.
+  my $parent_exists = path($dir)->parent()->exists();
+
+  path($dir)->mkpath();
+  path($dir)->chmod("g+w");
+
+  if (! $parent_exists) {
+    path($dir)->parent()->chmod("g+w");
+  }
 }
 
 sub timestamp {
