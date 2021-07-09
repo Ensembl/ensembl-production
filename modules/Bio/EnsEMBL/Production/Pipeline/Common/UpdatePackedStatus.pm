@@ -36,6 +36,8 @@ use warnings;
 
 use base('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
+use Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor;
+
 sub param_defaults {
   my ($self) = @_;
   
@@ -48,12 +50,25 @@ sub param_defaults {
 sub run {
   my ($self) = @_;
 
+  my $metadata_host     = $self->param_required('metadata_host');
+  my $metadata_port     = $self->param_required('metadata_port');
+  my $metadata_user     = $self->param_required('metadata_user');
+  my $metadata_pass     = $self->param_required('metadata_pass');
+  my $metadata_dbname   = $self->param_required('metadata_dbname');
   my $species           = $self->param_required('species');
   my $packed            = $self->param_required('packed');
   my $ensembl_release   = $self->param('ensembl_release');
   my $secondary_release = $self->param('secondary_release');
 
-  my $mdba = $self->get_DBAdaptor('metadata');
+  my $mdba = Bio::EnsEMBL::MetaData::DBSQL::MetaDataDBAdaptor->new(
+    -host    => $metadata_host,
+    -port    => $metadata_port,
+    -user    => $metadata_user,
+    -pass    => $metadata_pass,
+    -dbname  => $metadata_dbname,
+    -species => 'multi',
+    -group   => 'metadata',
+  );
   my $gia  = $mdba->get_GenomeInfoAdaptor();
 
   if (defined $secondary_release) {
@@ -65,7 +80,7 @@ sub run {
   foreach ( @{ $gia->fetch_by_name($species) } ) {
     $gia->update_website_packed($_, $packed);
   }
-
 }
 
 1;
+

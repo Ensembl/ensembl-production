@@ -23,7 +23,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::UpdatePackedStatus_conf;
 use strict;
 use warnings;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use Bio::EnsEMBL::Hive::Version 2.5;
@@ -32,7 +32,7 @@ sub default_options {
   my ($self) = @_;
   return {
     %{$self->SUPER::default_options},
-    
+
     species      => [],
     antispecies  => [],
     taxons       => [],
@@ -44,13 +44,13 @@ sub default_options {
 
     packed => 1,
 
+    ensembl_release   => undef,
     secondary_release => undef,
   };
 }
 
 sub pipeline_analyses {
-  my $self = shift @_;
-  
+  my ($self) = @_;
   return [
     {
       -logic_name        => 'SpeciesFactory',
@@ -58,14 +58,15 @@ sub pipeline_analyses {
       -max_retry_count   => 0,
       -input_ids         => [ {} ],
       -parameters        => {
-                              species      => $self->o('species'),
-                              antispecies  => $self->o('antispecies'),
-                              taxons       => $self->o('taxons'),
-                              antitaxons   => $self->o('antitaxons'),
-                              division     => $self->o('division'),
-                              run_all      => $self->o('run_all'),
-                              meta_filters => $self->o('meta_filters'),
-                              dbname       => $self->o('dbname'),
+                              registry_file => $self->o('registry'),
+                              species       => $self->o('species'),
+                              antispecies   => $self->o('antispecies'),
+                              taxons        => $self->o('taxons'),
+                              antitaxons    => $self->o('antitaxons'),
+                              division      => $self->o('division'),
+                              run_all       => $self->o('run_all'),
+                              meta_filters  => $self->o('meta_filters'),
+                              dbname        => $self->o('dbname'),
                             },
       -flow_into         => {
                               '2' => ['UpdatePackedStatus'],
@@ -76,6 +77,11 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::UpdatePackedStatus',
       -max_retry_count   => 0,
       -parameters        => {
+                              metadata_host     => $self->o('metadata_host'),
+                              metadata_port     => $self->o('metadata_port'),
+                              metadata_user     => $self->o('metadata_user'),
+                              metadata_pass     => $self->o('metadata_pass'),
+                              metadata_dbname   => $self->o('metadata_dbname'),
                               packed            => $self->o('packed'),
                               ensembl_release   => $self->o('ensembl_release'),
                               secondary_release => $self->o('secondary_release'),
@@ -84,4 +90,12 @@ sub pipeline_analyses {
   ];
 }
 
+sub resource_classes {
+  my ($self) = @_;
+  return {
+    'default' => {LSF => '-q production'},
+  }
+}
+
 1;
+
