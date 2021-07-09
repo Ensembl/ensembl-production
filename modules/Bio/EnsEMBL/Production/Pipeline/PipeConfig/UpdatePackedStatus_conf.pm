@@ -53,7 +53,7 @@ sub pipeline_analyses {
   
   return [
     {
-      -logic_name        => 'DbFactory',
+      -logic_name        => 'SpeciesFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -max_retry_count   => 0,
       -input_ids         => [ {} ],
