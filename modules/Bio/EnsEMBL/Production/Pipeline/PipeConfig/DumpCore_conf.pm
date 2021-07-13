@@ -452,7 +452,7 @@ sub pipeline_analyses {
                                   report_json => $self->o('report_json'),
                                 },
             -flow_into       => {
-                                  1 => WHEN('#new_genome# || #new_assembly# || #renamed_genome#' => 'dump_dna',
+                                  3 => WHEN('#new_genome# || #new_assembly# || #renamed_genome#' => 'dump_dna',
                                        ELSE 'copy_dna')
                                 },
         },

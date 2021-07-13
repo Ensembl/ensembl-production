@@ -38,7 +38,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
 use JSON;
 use Path::Tiny;
-use Data::Dumper;
+
 sub write_output {
   my ($self) = @_;
 
