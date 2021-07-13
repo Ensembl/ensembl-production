@@ -356,7 +356,7 @@ sub pipeline_analyses {
                               gt_gff3_exe          => $self->o('gt_gff3_exe'),
                               gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
                             },
-      -rc_name           => '1GB',
+      -rc_name           => '2GB',
       -flow_into         => {
                               '-1' => ['Geneset_GFF3_ENA_mem'],
                               '2'  => ['Geneset_Compress']
