@@ -47,6 +47,7 @@ sub default_options {
 
         ## By default, we only dump DNA for new/updated assemblies and renamed genomes
         'dump_all_dna' => 0,
+        'report_json'  => undef,
 
         #  'fasta' - cdna, cds, dna, ncrna, pep
         #  'chain' - assembly chain files
