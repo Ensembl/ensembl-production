@@ -851,6 +851,21 @@ sub pipeline_analyses {
       -parameters        => {
                               analyses => $self->o('protein_feature_analyses')
                             },
+      -flow_into         => {
+                              '-1' => ['StoreProteinFeatures_HighMem'],
+                            },
+    },
+    
+    {
+      -logic_name        => 'StoreProteinFeatures_HighMem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
+      -analysis_capacity => 10,
+      -batch_size        => 50,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              analyses => $self->o('protein_feature_analyses')
+                            },
+      -rc_name           => '4GB',
     },
 
     {
