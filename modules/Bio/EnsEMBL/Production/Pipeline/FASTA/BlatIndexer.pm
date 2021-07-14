@@ -201,6 +201,7 @@ sub index_path {
 sub delete_existing {
   my ($self) = @_;
   my $species = $self->param('species');
+  $species = ucfirst($species);
   my $target_dir = $self->target_dir();
   opendir(DIR, $target_dir);
   foreach my $file ( grep(/\.$species\./, readdir(DIR)) ) {
