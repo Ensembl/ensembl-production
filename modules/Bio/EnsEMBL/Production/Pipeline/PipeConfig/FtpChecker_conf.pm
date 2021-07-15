@@ -56,6 +56,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('pipeline_dir'),
     $self->db_cmd($failures_table_sql),
   ];
 }
@@ -66,7 +67,6 @@ sub pipeline_wide_parameters {
   return {
     %{$self->SUPER::pipeline_wide_parameters},
     base_path    => $self->o('base_path'),
-    pipeline_dir => $self->o('pipeline_dir'),
   };
 }
 
