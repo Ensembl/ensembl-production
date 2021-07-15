@@ -39,22 +39,27 @@ sub fetch_input {
 
   $self->write_failures_file($failures_file);
 
-  my $text = "The $pipeline_name pipeline has completed successfully.\n\n";
+  my $text = "The $pipeline_name pipeline has completed successfully.\n\n".
+             "Failures were stored in: $failures_file\n";
 
-  if (-z $failures_file) {
-    $text .= "There were no failures!\n";
+  if (-s $failures_file < 2e6) {
+    push @{$self->param('attachments')}, $failures_file;
+    $text .= "(File also attached to this email.)\n"
   } else {
-    $text .= "Failures were stored in: $failures_file\n";
-
-    if (-s $failures_file < 2e6) {
-      push @{$self->param('attachments')}, $failures_file;
-      $text .= "(File also attached to this email.)\n"
-    } else {
-      $text .= "(File not attached because it exceeds 2MB limit)\n";
-    }
+    $text .= "(File not attached because it exceeds 2MB limit)\n";
   }
 
   $self->param('text', $text);
+}
+
+sub run {
+  my $self = shift;
+
+  my $failures_file = $self->param_required('failures_file');
+  
+  if (-s $failures_file) {
+    $self->SUPER::run();
+  }
 }
 
 sub write_failures_file {
