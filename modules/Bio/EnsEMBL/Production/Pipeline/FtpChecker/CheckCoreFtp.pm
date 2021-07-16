@@ -59,18 +59,6 @@ my $expected_files = {
 							'{species}*.json',
 							 'CHECKSUMS*'
 						       ]},
-		      "tsv" => {"dir" => "{division}/tsv/{species_dir}/", "expected" =>[
-							'{species_uc}*.ena.tsv.gz',
-							'{species_uc}*.entrez.tsv.gz',
-							'{species_uc}*.karyotype.tsv.gz',
-							'{species_uc}*.refseq.tsv.gz',
-							'{species_uc}*.uniprot.tsv.gz',
-							 'README_ENA*.tsv',
-							 'README_entrez*.tsv',
-							 'README_refseq*.tsv',
-							 'README_uniprot*.tsv',
-							 'CHECKSUMS*'
-						       ]},
 		      "fasta_pep" => {"dir" => "{division}/fasta/{species_dir}/pep/", "expected" =>[
 							'{species_uc}.*.fa.gz',
 							 'README*',
