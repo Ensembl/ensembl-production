@@ -52,9 +52,12 @@ sub default_options {
     # Include mart databases
     marts => 0,
 
+    # Include compara databases
+    compara => 0,
+
     # Include non-species-related databases, e.g. ensembl_ontology, ncbi_taxonomy
     pan_ensembl => 0,
-    pan_ensembl_dir => 'pan_ensembl',
+    pan_ensembl_name => 'pan_ensembl',
 
     # By default, files are not written if the parent directory
     # (which is the database name) exists.
@@ -109,7 +112,6 @@ sub pipeline_analyses {
     {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
-      -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
                               species      => $self->o('species'),
@@ -134,14 +136,14 @@ sub pipeline_analyses {
     {
       -logic_name        => 'MultiDbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::MultiDbFactory',
-      -analysis_capacity => 10,
       -max_retry_count   => 1,
       -parameters        => {
-                              ensembl_release => $self->o('ensembl_release'),
-                              division        => $self->o('division'),
-                              marts           => $self->o('marts'),
-                              pan_ensembl     => $self->o('pan_ensembl'),
-                              pan_ensembl_dir => $self->o('pan_ensembl_dir'),
+                              ensembl_release  => $self->o('ensembl_release'),
+                              division         => $self->o('division'),
+                              marts            => $self->o('marts'),
+                              compara          => $self->o('compara'),
+                              pan_ensembl      => $self->o('pan_ensembl'),
+                              pan_ensembl_name => $self->o('pan_ensembl_name'),
                             },
       -flow_into         => {
                               '2' => ['MySQL_Multi_TXT'],
