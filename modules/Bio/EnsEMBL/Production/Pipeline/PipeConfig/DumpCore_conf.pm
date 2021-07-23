@@ -97,9 +97,7 @@ sub default_options {
             'homo_sapiens'                     => 30001,
             'mus_musculus'                     => 30081,
             'danio_rerio'                      => 30003,
-            'rattus_norvegicus'                => 30005,
             'gallus_gallus'                    => 30010,
-            'canis_lupus_familiaris'           => 30014,
             'bos_taurus'                       => 30017,
             'oryctolagus_cuniculus'            => 30025,
             'oryzias_latipes'                  => 30026,
@@ -109,6 +107,8 @@ sub default_options {
             'ovis_aries'                       => 30068,
             'oreochromis_niloticus'            => 30073,
             'gadus_morhua'                     => 30080,
+            'canis_lupus_familiaris'           => 30083,
+            'rattus_norvegicus'                => 30084,
         },
         # History file for storing record of datacheck run.
         history_file             => undef,
