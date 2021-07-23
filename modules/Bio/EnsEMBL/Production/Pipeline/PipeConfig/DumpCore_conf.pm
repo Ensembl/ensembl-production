@@ -109,6 +109,8 @@ sub default_options {
             'ovis_aries'                       => 30068,
             'oreochromis_niloticus'            => 30073,
             'gadus_morhua'                     => 30080,
+            'canis_lupus_familiaris'           => 30083,
+            'rattus_norvegicus'                => 30084,
         },
         # History file for storing record of datacheck run.
         history_file             => undef,
