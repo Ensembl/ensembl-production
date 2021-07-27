@@ -79,7 +79,7 @@ sub pipeline_analyses {
       -parameters      => {
         base_path => $self->o('base_path')
       },
-      -rc_name         => 'normal',
+      -rc_name         => 'small',
       -max_retry_count => 3
     },
     {
@@ -93,7 +93,7 @@ sub pipeline_analyses {
       -flow_into  => {
         '1' => 'schedule_cleanup',
       },
-      -rc_name    => 'normal'
+      -rc_name    => 'small'
     },
     {
       -logic_name => 'schedule_cleanup',
@@ -103,14 +103,26 @@ sub pipeline_analyses {
         base_path => $self->o('base_path')
       },
       -flow_into  => {
-        '2->A' => 'cleanup_source',
+        '2->A' => 'cleanup_refseq_dna',
+	'3->A' => 'cleanup_refseq_peptide',
         'A->1' => 'notify_by_email'
       },
       -rc_name    => 'small'
     },
     {
-      -logic_name => 'cleanup_source',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupSource',
+      -logic_name => 'cleanup_refseq_dna',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqDna',
+      -comment    => 'Removes irrelevant data from source files and stores them in -clean_dir (only if -clean_files is set to 1).',
+      -parameters      => {
+        base_path    => $self->o('base_path'),
+        clean_files  => $self->o('clean_files'),
+        clean_dir    => $self->o('clean_dir')
+      },
+      -rc_name    => 'small'
+    },
+        {
+      -logic_name => 'cleanup_refseq_peptide',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqPeptide',
       -comment    => 'Removes irrelevant data from source files and stores them in -clean_dir (only if -clean_files is set to 1).',
       -parameters      => {
         base_path    => $self->o('base_path'),
@@ -138,7 +150,7 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'small'  => { 'LSF' => '-q production-rh74 -M 200 -R "rusage[mem=200]"' }
+    'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' }
   };
 }
 
