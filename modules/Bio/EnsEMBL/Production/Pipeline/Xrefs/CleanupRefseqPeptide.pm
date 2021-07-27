@@ -17,7 +17,7 @@ limitations under the License..
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupSource;
+package Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqPeptide;
 
 use strict;
 use warnings;
@@ -74,20 +74,18 @@ sub run {
       open($out_fh, '>', $output_file)
         or die "Couldn't open output file '$output_file' $!";
 
-      # Remove variation data
-      my $variation_data = 0;
+      # Remove unused data
+      my $skip_data = 0;
       while (<$in_fh>) {
-        if ($_ =~ /^\s{5}variation/){
-          $variation_data = 1;
-        } elsif ($variation_data) {
-          if ($_ =~ /^\s{0,5}([A-Za-z]+)/){
-            if ($1 ne "variation"){
-              $variation_data = 0;
-            }
+	if ($_ =~ /^REFERENCE/) {
+          $skip_data = 1;
+        } elsif ($skip_data) {
+          if ($_ =~ /^\s{5}CDS/){
+            $skip_data = 0;
           }
         }
 
-        if (!$variation_data) {print $out_fh $_;}
+        if (!$skip_data) {print $out_fh $_;}
       }
 
       close($in_fh);
