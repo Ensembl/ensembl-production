@@ -76,6 +76,7 @@ CREATE TABLE version (
   record_count             INT(10),
   uri                      VARCHAR(255),
   index_uri                VARCHAR(255),
+  clean_uri                VARCHAR(255),
 
   PRIMARY KEY (version_id),
   KEY version_idx (source_id, revision),
@@ -105,7 +106,3 @@ CREATE TABLE version_run (
   FOREIGN KEY (run_id) REFERENCES run(run_id)
 
 ) COLLATE=latin1_swedish_ci ENGINE=InnoDB;
-
-
-
-
