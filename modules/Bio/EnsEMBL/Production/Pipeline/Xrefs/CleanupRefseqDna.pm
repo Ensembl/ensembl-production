@@ -37,7 +37,7 @@ sub run {
 
   # Exit if not cleaning files or not a refseq source
   if (!$clean_files) {return;}
-  if ($name !~ /^RefSeq/) {return;}
+  if ($name !~ /^RefSeq_dna/) {return;}
 
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
@@ -77,19 +77,19 @@ sub run {
       # Remove unuused data
       my $skip_data = 0;
       while (<$in_fh>) {
-	if ($_ =~ /^REFERENCE/) {
-	  $skip_data = 1;
-	} elsif ($skip_data) {
+      	if ($_ =~ /^REFERENCE/) {
+      	  $skip_data = 1;
+      	} elsif ($skip_data) {
           if ($_ =~ /^\s{5}gene/) {
             $skip_data = 0;
           } elsif ($_ =~ /^ORIGIN/) {
-	    $skip_data = 0;
+	          $skip_data = 0;
           }
-	} elsif ($_ =~ /^\s{5}exon/) {
-          $skip_data = 1;
-	} elsif ($_ =~ /^\s{5}variation/){
-          $skip_data = 1;
-	}
+      	} elsif ($_ =~ /^\s{5}exon/) {
+                $skip_data = 1;
+      	} elsif ($_ =~ /^\s{5}variation/){
+                $skip_data = 1;
+      	}
 
         if (!$skip_data) {print $out_fh $_;}
       }

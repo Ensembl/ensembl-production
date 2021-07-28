@@ -68,7 +68,7 @@ sub pipeline_analyses {
       },
       -flow_into  => {
         '2->A' => 'download_source',
-        'A->1' => 'checksum'
+        'A->1' => 'schedule_cleanup'
       },
       -rc_name    => 'small'
     },
@@ -79,21 +79,8 @@ sub pipeline_analyses {
       -parameters      => {
         base_path => $self->o('base_path')
       },
-      -rc_name         => 'small',
+      -rc_name         => 'normal',
       -max_retry_count => 3
-    },
-    {
-      -logic_name => 'checksum',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
-      -comment    => 'Adds all checksum files into a single file and loads it into the checksum_xref table.',
-      -parameters => {
-        base_path     => $self->o('base_path'),
-        skip_download => $self->o('skip_download')
-      },
-      -flow_into  => {
-        '1' => 'schedule_cleanup',
-      },
-      -rc_name    => 'small'
     },
     {
       -logic_name => 'schedule_cleanup',
@@ -103,16 +90,27 @@ sub pipeline_analyses {
         base_path => $self->o('base_path')
       },
       -flow_into  => {
+        '1->A' => 'checksum',
         '2->A' => 'cleanup_refseq_dna',
-	'3->A' => 'cleanup_refseq_peptide',
+        '3->A' => 'cleanup_refseq_peptide',
         'A->1' => 'notify_by_email'
       },
       -rc_name    => 'small'
     },
     {
+      -logic_name => 'checksum',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
+      -comment    => 'Adds all checksum files into a single file and loads it into the checksum_xref table.',
+      -parameters => {
+        base_path     => $self->o('base_path'),
+        skip_download => $self->o('skip_download')
+      },
+      -rc_name    => 'normal'
+    },
+    {
       -logic_name => 'cleanup_refseq_dna',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqDna',
-      -comment    => 'Removes irrelevant data from source files and stores them in -clean_dir (only if -clean_files is set to 1).',
+      -comment    => 'Removes irrelevant data from RefSeq_dna files and stores them in -clean_dir (only if -clean_files is set to 1).',
       -parameters      => {
         base_path    => $self->o('base_path'),
         clean_files  => $self->o('clean_files'),
@@ -123,7 +121,7 @@ sub pipeline_analyses {
         {
       -logic_name => 'cleanup_refseq_peptide',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqPeptide',
-      -comment    => 'Removes irrelevant data from source files and stores them in -clean_dir (only if -clean_files is set to 1).',
+      -comment    => 'Removes irrelevant data from RefSeq_peptide files and stores them in -clean_dir (only if -clean_files is set to 1).',
       -parameters      => {
         base_path    => $self->o('base_path'),
         clean_files  => $self->o('clean_files'),
@@ -150,7 +148,8 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-    'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' }
+    'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' }, # Change 'production' to 'production-rh74' if running on noah
+    'normal' => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"' }
   };
 }
 

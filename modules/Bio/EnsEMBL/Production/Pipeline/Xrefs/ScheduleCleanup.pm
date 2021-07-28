@@ -46,14 +46,15 @@ sub run {
 
     if ($name !~ /^RefSeq/) {next;} # Only cleaning RefSeq for now
 
-    # Send parameters into CleanupSource jobs for each source
+    # Send parameters into cleanup jobs for each source
     if (-d $base_path."/".$name) {
+      my $branch = ($name =~ /^RefSeq_dna/ ? 2 : 3);
       $dataflow_params = {
         name         => $name,
         version_file => $version_file,
         db_url       => $db_url,
       };
-      $self->dataflow_output_id($dataflow_params, 2);
+      $self->dataflow_output_id($dataflow_params, $branch);
     }
   }
 
