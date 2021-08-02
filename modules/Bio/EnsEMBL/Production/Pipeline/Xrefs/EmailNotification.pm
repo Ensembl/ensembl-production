@@ -48,13 +48,16 @@ sub fetch_input {
   	$total_analyses++;
 
   	my $status = $analysis->{'status'};
-  	if ($status eq 'DONE') {$done_analyses++;}
-  	elsif ($status eq 'FAILED') {$failed_analyses++;}
+    if ($status eq 'FAILED') {$failed_analyses++;}
+    else {$done_analyses++;}
 
   	$total_jobs += $analysis->{'total_job_count'};
   	$done_jobs += $analysis->{'done_job_count'};
   	$failed_jobs += $analysis->{'failed_job_count'};
   }
+
+  # Adding current job (this assumes it suceeds)
+  $done_jobs++;
 
   $msg .= "<b>Analyses</b><br>\n";
   $msg .= "\tTotal: ".$total_analyses."<br>\n";
@@ -81,7 +84,7 @@ sub fetch_input {
   $msg .= "\tPipeline errors: ".$pipeline_errors."<br>\n";
   $msg .= "\tWorker errors: ".$worker_errors."<br>\n";
 
-  $msg .= "## Pipeline Info ##<br><br>\n";
+  $msg .= "<br>## Pipeline Info ##<br><br>\n";
 
   # Different pipeline info depending on pipeline type (downlaod or process)
   if ($pipeline_part eq 'download') {
