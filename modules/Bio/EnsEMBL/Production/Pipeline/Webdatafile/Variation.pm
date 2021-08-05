@@ -39,8 +39,7 @@ use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::GenomeLookup;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::variants::VariantsScaler;
 use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::variants::VariationBedWriter;
-use CoordinateConverter qw(to_zero_based);
-
+use Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::CoordinateConverter qw(to_zero_based);
 
 sub run {
 

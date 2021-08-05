@@ -21,13 +21,14 @@ package Bio::EnsEMBL::Production::Pipeline::Webdatafile::lib::IndexBed;
 
 use Moose;
 use Path::Tiny;
-
+use Capture::Tiny qw/capture/;
 #with 'UcscIndex';
 
 has 'genome'    => ( is => 'Any', is => 'ro', required => 1 );
 has 'bed_type'  => ( isa => 'Str', is => 'ro', required => 0 );
 has 'auto_sql'  => ( isa => 'Path::Tiny', is => 'ro', required => 0 );
 has 'indexes'   => ( isa => 'Str', is => 'ro', required => 0 );
+has 'remove_temp_files' => ( isa => 'Bool', is => 'ro', required => 0, default => 1 );
 
 sub index {
   my ($self, $bed_path) = @_;
