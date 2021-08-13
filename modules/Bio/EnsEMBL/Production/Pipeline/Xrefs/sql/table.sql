@@ -53,6 +53,7 @@ CREATE TABLE version (
   uri                      VARCHAR(255),
   index_uri                VARCHAR(255),
   clean_uri                VARCHAR(255),
+  preparse                 BOOLEAN NOT NULL DEFAULT 0,
 
   PRIMARY KEY (version_id),
   KEY version_idx (source_id, revision),

@@ -33,6 +33,8 @@ sub default_options {
   return {
     %{$self->SUPER::default_options()},
     'work_dir'       => $self->o('ENV', 'HOME')."/work/lib",
+    'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
+    'release'          => $self->o('ensembl_release'),
 
     # Parameters for source download
     'config_file'   => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
@@ -93,7 +95,7 @@ sub pipeline_analyses {
         '1->A' => 'checksum',
         '2->A' => 'cleanup_refseq_dna',
         '3->A' => 'cleanup_refseq_peptide',
-        'A->1' => 'notify_by_email'
+        'A->1' => 'schedule_pre_parse'
       },
       -rc_name    => 'small'
     },
@@ -129,6 +131,27 @@ sub pipeline_analyses {
         skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
+      -rc_name    => 'small'
+    },
+    {
+      -logic_name => 'schedule_pre_parse',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::SchedulePreParse',
+      -comment    => 'Schedule pre parsing of data for multi species sources',
+      -parameters      => {
+	source_url    => $self->o('source_url'),
+	release       => $self->o('release'),
+	sql_dir       => $self->o('sql_dir'),
+      },
+      -flow_into  => {
+        '2->A' => 'pre_parse_source',
+        'A->1' => 'notify_by_email'
+      },
+      -rc_name    => 'small'
+    },
+        {
+      -logic_name => 'pre_parse_source',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
+      -comment    => 'Store RefSeq data for faster species parsing',
       -rc_name    => 'small'
     },
     {
