@@ -390,4 +390,11 @@ sub pipeline_analyses {
   ];
 }
 
+sub resource_classes {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
+        '1Gb_job'    => { 'LSF' => [' -q production -M 1000 '] },
+    };
+}
 1;
