@@ -143,7 +143,7 @@ sub pipeline_analyses {
                               cmd => 'echo -n $(#src# details host-port)',
                             },
       -flow_into         => {
-                              '1' => { 'DbCopy_2' => {'src_host' => '#stdout#'} }
+                              '1' => { 'Copy_2' => {'src_host' => '#stdout#'} }
                             },
     },
     {
