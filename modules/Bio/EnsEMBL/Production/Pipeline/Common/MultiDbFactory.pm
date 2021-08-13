@@ -42,7 +42,9 @@ sub param_defaults {
     %{$self->SUPER::param_defaults},
     division => [],
     marts => 0,
+    compara => 0,
     pan_ensembl => 0,
+    pan_ensembl_name => 'pan_ensembl',
   };
 }
 
@@ -51,8 +53,9 @@ sub run {
   my $ensembl_release = $self->param_required('ensembl_release');
   my $division = $self->param_required('division');
   my $marts = $self->param_required('marts');
+  my $compara = $self->param_required('compara');
   my $pan_ensembl = $self->param_required('pan_ensembl');
-  my $pan_ensembl_dir = $self->param_required('pan_ensembl_dir');
+  my $pan_ensembl_name = $self->param_required('pan_ensembl_name');
 
   my $mdba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'metadata');
 
@@ -60,9 +63,21 @@ sub run {
     SELECT
       drd.dbname,
       lower(replace(d.name, 'Ensembl', '')) AS division
-    FROM 
+    FROM
       data_release dr INNER JOIN
       data_release_database drd USING (data_release_id) INNER JOIN
+      division d USING (division_id)
+    WHERE
+      dr.ensembl_version = $ensembl_release
+    
+    UNION
+    
+    SELECT DISTINCT
+      ca.dbname,
+      lower(replace(d.name, 'Ensembl', '')) AS division
+    FROM
+      data_release dr INNER JOIN
+      compara_analysis ca USING (data_release_id) INNER JOIN
       division d USING (division_id)
     WHERE
       dr.ensembl_version = $ensembl_release
@@ -77,16 +92,18 @@ sub run {
   foreach my $dbname (keys %$dbnames) {
     if ($$dbnames{$dbname} eq 'pan') {
       if ($pan_ensembl) {
-        $filtered_dbnames{$dbname} = $pan_ensembl_dir;
+        $filtered_dbnames{$dbname} = $pan_ensembl_name;
       }
     } else {
-      if ($marts) {
+      my $mart_dbname = ($dbname =~ /_mart_/);
+      my $compara_dbname = ($dbname =~ /_(ancestral|compara)_/);
+      if ( ($marts && $mart_dbname) || ($compara && $compara_dbname) ) {
         if (scalar(@$division)) {
           if (exists($divisions{$$dbnames{$dbname}})) {
             $filtered_dbnames{$dbname} = $$dbnames{$dbname};
           }
         } else {
-          $self->throw("'division' parameter(s) are required for mart dumps");
+          $filtered_dbnames{$dbname} = $$dbnames{$dbname};
         }
       }
     }
