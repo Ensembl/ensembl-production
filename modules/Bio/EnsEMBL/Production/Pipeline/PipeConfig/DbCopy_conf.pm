@@ -102,7 +102,7 @@ sub pipeline_analyses {
                             },
       -flow_into         => {
                               '1->A' => WHEN('#delete_db#', [ 'Delete' ]),
-                              'A->1' => WHEN('#copy_db#', [ 'CopyAndRename' ]),
+                              'A->1' => [ 'CopyAndRename' ],
                             },
     },
     {
@@ -130,7 +130,7 @@ sub pipeline_analyses {
                               rename_db => $self->o('rename_db'),
                             },
       -flow_into         => {
-                              '1->A' => [ 'Copy_1' ],
+                              '1->A' => WHEN('#copy_db#', [ 'Copy_1' ]),
                               'A->1' => WHEN('#rename_db#', [ 'Rename' ]),
                             },
     },
