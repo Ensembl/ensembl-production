@@ -92,17 +92,16 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name        => 'DeleteAndCopy',
+      -logic_name        => 'DeleteDB',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 1,
       -input_ids         => [ {} ],
       -parameters        => {
-                              copy_db   => $self->o('copy_db'),
                               delete_db => $self->o('delete_db'),
                             },
       -flow_into         => {
                               '1->A' => WHEN('#delete_db#', [ 'Delete' ]),
-                              'A->1' => [ 'CopyAndRename' ],
+                              'A->1' => [ 'CopyDB' ],
                             },
     },
     {
@@ -123,15 +122,15 @@ sub pipeline_analyses {
                             },
     },
     {
-      -logic_name        => 'CopyAndRename',
+      -logic_name        => 'CopyDB',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 1,
       -parameters        => {
-                              rename_db => $self->o('rename_db'),
+                              copy_db   => $self->o('copy_db'),
                             },
       -flow_into         => {
                               '1->A' => WHEN('#copy_db#', [ 'Copy_1' ]),
-                              'A->1' => WHEN('#rename_db#', [ 'Rename' ]),
+                              'A->1' => [ 'RenameDB' ],
                             },
     },
     {
@@ -161,6 +160,17 @@ sub pipeline_analyses {
                                   'MultiDbCopyFactory' => {'tgt_host' => '#stdout#'},
                                   'NamedDbCopyFactory' => {'tgt_host' => '#stdout#'},                              
                                 }
+                            },
+    },
+    {
+      -logic_name        => 'RenameDB',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              rename_db => $self->o('rename_db'),
+                            },
+      -flow_into         => {
+                              '1' => WHEN('#rename_db#', [ 'Rename' ]),
                             },
     },
     {
@@ -336,7 +346,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'RenameDatabase_2',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               tgt => $self->o('tgt'),
                               cmd => 'rename_db #tgt# #dbname# #new_dbname#',
@@ -348,7 +358,7 @@ sub pipeline_analyses {
     {
       -logic_name        => 'ApplyPatches',
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
+      -max_retry_count   => 0,
       -parameters        => {
                               tgt => $self->o('tgt'),
                               base_dir => $self->o('base_dir'),
