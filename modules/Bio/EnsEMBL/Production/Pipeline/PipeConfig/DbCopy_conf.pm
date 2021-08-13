@@ -46,6 +46,7 @@ sub default_options {
     marts       => 0,
     compara     => 0,
     pan_ensembl => 0,
+    division    => [],
 
     # Copy service
     copy_service_uri => "http://production-services.ensembl.org/api/dbcopy/requestjob",
@@ -211,6 +212,7 @@ sub pipeline_analyses {
                               marts           => $self->o('delete_marts'),
                               compara         => $self->o('delete_compara'),
                               pan_ensembl     => $self->o('delete_pan_ensembl'),
+                              division        => $self->o('division'),
                             },
       -flow_into         => {
                               '2' => [ 'DeleteDatabase' ],
@@ -249,6 +251,7 @@ sub pipeline_analyses {
                               ensembl_release => $self->o('ensembl_release'),
                               marts           => $self->o('marts'),
                               compara         => $self->o('compara'),
+                              division        => $self->o('division'),
                               pan_ensembl     => $self->o('pan_ensembl'),
                             },
       -flow_into         => {
@@ -287,6 +290,7 @@ sub pipeline_analyses {
                               ensembl_release => $self->o('ensembl_release'),
                               marts           => $self->o('marts'),
                               compara         => $self->o('compara'),
+                              division        => $self->o('division'),
                               pan_ensembl     => $self->o('pan_ensembl'),
                             },
       -flow_into         => {
