@@ -114,6 +114,7 @@ sub pipeline_analyses {
       -parameters      => {
         base_path    => $self->o('base_path'),
         clean_files  => $self->o('clean_files'),
+        skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
       -rc_name    => 'small'
@@ -125,6 +126,7 @@ sub pipeline_analyses {
       -parameters      => {
         base_path    => $self->o('base_path'),
         clean_files  => $self->o('clean_files'),
+        skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
       -rc_name    => 'small'

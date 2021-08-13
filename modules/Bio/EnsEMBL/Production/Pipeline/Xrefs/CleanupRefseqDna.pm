@@ -34,10 +34,21 @@ sub run {
   my $version_file = $self->param('version_file');
   my $clean_files  = $self->param('clean_files');
   my $clean_dir    = $self->param_required('clean_dir');
+  my $skip_download = $self->param('skip_download');
 
   # Exit if not cleaning files or not a refseq source
   if (!$clean_files) {return;}
   if ($name !~ /^RefSeq_dna/) {return;}
+
+  # Save the clean files directory in source db
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
+  $update_version_sth->execute($output_path, $name);
+  $update_version_sth->finish();
+
+  # If no new download, no need to clean up the files again
+  if ($skip_download) { return; }
 
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
@@ -99,12 +110,6 @@ sub run {
     }
   }
 
-  # Save the clean files directory in source db
-  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
-  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
-  $update_version_sth->execute($output_path, $name);
-  $update_version_sth->finish();
 }
 
 1;
