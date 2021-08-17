@@ -67,7 +67,7 @@ sub run {
   if ( !defined( $xrefs ) ) {
     return 1;    #error
   }
-  $self->upload_xref_object_graphs( $xrefs, $dbi )
+  $self->upload_xref_object_graphs( $xrefs, $dbi );
 
 #  if ( defined $release_file ) {
 #    # Parse and set release info.
