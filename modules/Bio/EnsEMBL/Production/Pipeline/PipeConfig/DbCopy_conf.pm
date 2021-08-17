@@ -37,7 +37,8 @@ sub default_options {
     copy_db => 1,
 
     # Database type factory
-    group => [],
+    groups => 1,
+    group  => [],
 
     # Named database factory
     dbname => [],
@@ -198,9 +199,10 @@ sub pipeline_analyses {
       -parameters      => {
                             ensembl_release => $self->o('delete_release'),
                             group           => $self->o('delete_group'),
+                            groups          => $self->o('groups'),
                           },
       -flow_into       => {
-                            '2' => [ 'DeleteDatabase' ],
+                            '2' => WHEN('#groups#', [ 'DeleteDatabase' ] ),
                           }
     },
     {
@@ -238,9 +240,10 @@ sub pipeline_analyses {
                               inputlist       => $self->o('group'),
                               column_names    => ['group'],
                               ensembl_release => $self->o('ensembl_release'),
+                              groups          => $self->o('groups'),
                             },
       -flow_into         => {
-                              '2' => { 'CopyDatabase' => {'src_incl_db' => '%_#group#%_#ensembl_release#_%'} },
+                              '2' => WHEN('#groups#', { 'CopyDatabase' => {'src_incl_db' => '%_#group#%_#ensembl_release#_%'} } ),
                             },
     },
     {
@@ -277,9 +280,10 @@ sub pipeline_analyses {
       -parameters      => {
                             ensembl_release => $self->o('ensembl_release'),
                             group           => $self->o('group'),
+                            groups          => $self->o('groups'),
                           },
       -flow_into       => {
-                            '2' => [ 'RenameDatabase_1' ],
+                            '2' => WHEN('#groups#', [ 'RenameDatabase_1' ] ),
                           }
     },
     {

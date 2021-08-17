@@ -33,7 +33,8 @@ sub default_options {
     %{$self->SUPER::default_options},
 
     # Database type factory
-    group => [],
+    groups => 1,
+    group  => [],
 
     # Named database factory
     dbname => [],
@@ -97,9 +98,10 @@ sub pipeline_analyses {
       -parameters      => {
                             ensembl_release => $self->o('ensembl_release'),
                             group           => $self->o('group'),
+                            groups          => $self->o('groups'),
                           },
       -flow_into       => {
-                            '2' => [ 'GrantDatabase' ],
+                            '2' => WHEN('#groups#', [ 'GrantDatabase' ] ),
                           }
     },
     {
