@@ -40,6 +40,10 @@ sub run {
   if (!$clean_files) {return;}
   if ($name !~ /^RefSeq_peptide/) {return;}
 
+  # Create needed directories
+  my $output_path = $clean_dir."/".$name;
+  make_path($output_path);
+
   # Save the clean files directory in source db
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
@@ -51,10 +55,6 @@ sub run {
 
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
-
-  # Create needed directories
-  my $output_path = $clean_dir."/".$name;
-  make_path($output_path);
 
   # Get all files for source
   my $files_path = $base_path."/".$name;
@@ -87,14 +87,11 @@ sub run {
       # Remove unused data
       my $skip_data = 0;
       while (<$in_fh>) {
-	      if ($_ =~ /^REFERENCE/) {
+        if ($_ =~ /^REFERENCE/ || $_ =~ /^COMMENT/ || $_ =~ /^\s{5}Protein/) {
           $skip_data = 1;
-        } elsif ($skip_data) {
-          if ($_ =~ /^\s{5}CDS/){
-            $skip_data = 0;
-          }
+        } elsif ($_ =~ /^\s{5}source/ || $_ =~ /^\s{5}CDS/) {
+          $skip_data = 0;
         }
-
         if (!$skip_data) {print $out_fh $_;}
       }
 

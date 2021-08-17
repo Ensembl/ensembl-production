@@ -40,6 +40,10 @@ sub run {
   if (!$clean_files) {return;}
   if ($name !~ /^RefSeq_dna/) {return;}
 
+  # Create needed directories
+  my $output_path = $clean_dir."/".$name;
+  make_path($output_path);
+
   # Save the clean files directory in source db
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
@@ -52,10 +56,6 @@ sub run {
 
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
-
-  # Create needed directories
-  my $output_path = $clean_dir."/".$name;
-  make_path($output_path);
 
   # Get all files for source
   my $files_path = $base_path."/".$name;
