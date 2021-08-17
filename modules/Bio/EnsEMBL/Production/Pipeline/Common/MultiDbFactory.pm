@@ -90,7 +90,7 @@ sub run {
 
   my %filtered_dbnames;
   foreach my $dbname (keys %$dbnames) {
-    if ($$dbnames{$dbname} eq 'pan') {
+    if ($$dbnames{$dbname} eq 'pan' && $dbname !~ /_mart_/) {
       if ($pan_ensembl) {
         $filtered_dbnames{$dbname} = $pan_ensembl_name;
       }
@@ -99,7 +99,7 @@ sub run {
       my $compara_dbname = ($dbname =~ /_(ancestral|compara)_/);
       if ( ($marts && $mart_dbname) || ($compara && $compara_dbname) ) {
         if (scalar(@$division)) {
-          if (exists($divisions{$$dbnames{$dbname}})) {
+          if ($$dbnames{$dbname} eq 'pan' || exists($divisions{$$dbnames{$dbname}})) {
             $filtered_dbnames{$dbname} = $$dbnames{$dbname};
           }
         } else {
