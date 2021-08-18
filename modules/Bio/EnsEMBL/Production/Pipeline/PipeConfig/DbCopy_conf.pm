@@ -55,7 +55,7 @@ sub default_options {
 
     # Drop databases from target, by default the same set that will be copied
     delete_db          => 0,
-    delete_release     => undef,
+    delete_release     => $self->o('ensembl_release'),
     delete_group       => $self->o('group'),
     delete_dbname      => $self->o('dbname'),
     delete_marts       => $self->o('marts'),
@@ -325,19 +325,20 @@ sub pipeline_analyses {
                             },
     },
     {
-        -logic_name    => 'CopyDatabase',
-        -module        => 'ensembl.production.hive.ProductionDBCopy',
-        -language      => 'python3',
-        -parameters    => {
-                            endpoint => $self->o('copy_service_uri'),
-                            method   => 'post',
-                            payload  => q/{
-                              "user": "#username#",
-                              "src_host": "#src_host#",
-                              "tgt_host": "#tgt_host#",
-                              "src_incl_db": "#src_incl_db#"
-                            }/,
-                          },
+        -logic_name      => 'CopyDatabase',
+        -module          => 'ensembl.production.hive.ProductionDBCopy',
+        -max_retry_count => 0,
+        -language        => 'python3',
+        -parameters      => {
+                              endpoint => $self->o('copy_service_uri'),
+                              method   => 'post',
+                              payload  => q/{
+                                "user": "#username#",
+                                "src_host": "#src_host#",
+                                "tgt_host": "#tgt_host#",
+                                "src_incl_db": "#src_incl_db#"
+                              }/,
+                            },
     },
     {
       -logic_name        => 'RenameDatabase_1',
