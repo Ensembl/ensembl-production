@@ -41,7 +41,7 @@ sub default_options {
                             $self->o('user'),
                             $self->o('pipeline_name') ),
 
-    scratch_small_dir => catdir( '/hps/scratch',
+    scratch_small_dir => catdir( '/hps/scratch/flicek/ensembl',
                                  $self->o('user'),
                                  $self->o('pipeline_name') ),
 
