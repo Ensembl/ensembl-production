@@ -180,6 +180,7 @@
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
+      "preparse" : 1,
       "release" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
@@ -190,6 +191,7 @@
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
+      "preparse" : 1,
       "release" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
