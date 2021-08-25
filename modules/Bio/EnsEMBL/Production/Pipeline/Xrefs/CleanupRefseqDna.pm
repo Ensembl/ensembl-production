@@ -88,18 +88,10 @@ sub run {
       # Remove unuused data
       my $skip_data = 0;
       while (<$in_fh>) {
-      	if ($_ =~ /^REFERENCE/) {
+      	if ($_ =~ /^REFERENCE/ || $_ =~ /^COMMENT/ || $_ =~ /^\s{5}exon/ || $_ =~ /^\s{5}misc_feature/ || $_ =~ /^\s{5}variation/) {
       	  $skip_data = 1;
-      	} elsif ($skip_data) {
-          if ($_ =~ /^\s{5}gene/) {
-            $skip_data = 0;
-          } elsif ($_ =~ /^ORIGIN/) {
-	          $skip_data = 0;
-          }
-      	} elsif ($_ =~ /^\s{5}exon/) {
-                $skip_data = 1;
-      	} elsif ($_ =~ /^\s{5}variation/){
-                $skip_data = 1;
+      	} elsif ($_ =~ /^\s{5}source/ || $_ =~ /^ORIGIN/) {
+          $skip_data = 0;
       	}
 
         if (!$skip_data) {print $out_fh $_;}
