@@ -96,6 +96,7 @@ sub pipeline_analyses {
         '1->A' => 'checksum',
         '2->A' => 'cleanup_refseq_dna',
         '3->A' => 'cleanup_refseq_peptide',
+        '4->A' => 'cleanup_uniprot',
         'A->1' => 'schedule_pre_parse'
       },
       -rc_name    => 'small'
@@ -122,7 +123,7 @@ sub pipeline_analyses {
       },
       -rc_name    => 'small'
     },
-        {
+    {
       -logic_name => 'cleanup_refseq_peptide',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupRefseqPeptide',
       -comment    => 'Removes irrelevant data from RefSeq_peptide files and stores them in -clean_dir (only if -clean_files is set to 1).',
@@ -130,6 +131,17 @@ sub pipeline_analyses {
         base_path    => $self->o('base_path'),
         clean_files  => $self->o('clean_files'),
         skip_download => $self->o('skip_download'),
+        clean_dir    => $self->o('clean_dir')
+      },
+      -rc_name    => 'small'
+    },
+    {
+      -logic_name => 'cleanup_uniprot',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::CleanupUniprot',
+      -comment    => 'Removes irrelevant data from Uniprot/SWISSPROT and Uniprot/SPTREMBL files and stores them in -clean_dir (only if -clean_files is set to 1).',
+      -parameters      => {
+        base_path    => $self->o('base_path'),
+        clean_files  => $self->o('clean_files'),
         clean_dir    => $self->o('clean_dir')
       },
       -rc_name    => 'small'
@@ -150,7 +162,7 @@ sub pipeline_analyses {
       },
       -rc_name    => 'small'
     },
-        {
+    {
       -logic_name => 'pre_parse_source',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
       -comment    => 'Store data for faster species parsing',

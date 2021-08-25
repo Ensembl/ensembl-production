@@ -44,11 +44,15 @@ sub run {
     my $name = $source->{'name'};
     my $version_file = $source->{'revision'};
 
-    if ($name !~ /^RefSeq/) {next;} # Only cleaning RefSeq for now
+    if ($name !~ /^RefSeq_(dna|peptide)/ && $name !~ /^Uniprot/) {next;} # Only cleaning RefSeq and UniProt for now
+
+    # Remove / char from source name to access directory
+    my $clean_name = $name;
+    $clean_name =~ s/\///g;
 
     # Send parameters into cleanup jobs for each source
-    if (-d $base_path."/".$name) {
-      my $branch = ($name =~ /^RefSeq_dna/ ? 2 : 3);
+    if (-d $base_path."/".$clean_name) {
+      my $branch = ($name =~ /^RefSeq_dna/ ? 2 : ($name =~ /^RefSeq_peptide/ ? 3 : 4));
       $dataflow_params = {
         name         => $name,
         version_file => $version_file,
