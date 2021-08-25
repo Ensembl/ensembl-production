@@ -35,6 +35,7 @@ sub run {
   my $version_file = $self->param('version_file');
   my $clean_files  = $self->param('clean_files');
   my $clean_dir    = $self->param_required('clean_dir');
+  my $skip_download = $self->param('skip_download');
 
   # Exit if not cleaning files or not a uniprot source
   if (!$clean_files) {return;}
@@ -50,6 +51,15 @@ sub run {
   # Create needed directories
   my $output_path = $clean_dir."/".$clean_name;
   make_path($output_path);
+
+  # Save the clean files directory in source db
+  $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
+  $update_version_sth->execute($output_path, $name);
+  $update_version_sth->finish();
+
+  # If no new download, no need to clean up the files again
+  if ($skip_download) { return; }
 
   # Get xref sources
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
@@ -109,12 +119,6 @@ sub run {
       close($out_fh);
     }
   }
-
-  # Save the clean files directory in source db
-  $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
-  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
-  $update_version_sth->execute($output_path, $name);
-  $update_version_sth->finish();
 }
 
 sub get_source_names {
