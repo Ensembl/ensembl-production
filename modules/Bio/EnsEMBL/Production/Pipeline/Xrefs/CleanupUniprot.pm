@@ -71,6 +71,7 @@ sub run {
     # Skipped in parsing step
     'GO', 'UniGene', 'RGD', 'CCDS', 'IPI', 'UCSC', 'SGD', 'HGNC', 'MGI', 'VGNC', 'Orphanet',
     'ArrayExpress', 'GenomeRNAi', 'EPD', 'Xenbase', 'Reactome', 'MIM_GENE', 'MIM_MORBID', 'MIM',
+    'Interpro'
   );
   my $sources_to_remove = join("|", @source_names);
 
@@ -109,6 +110,7 @@ sub run {
         # Remove unused data
         $_ =~ s/R(N|P|X|A|T|R|L|C|G)\s{3}.*\n//g; # Remove references lines
         $_ =~ s/CC\s{3}.*\n//g; # Remove comments
+	$_ =~ s/FT\s{3}.*\n//g; # Remove feature coordinates
         $_ =~ s/DR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
 
         # Added lines that we do need into output
