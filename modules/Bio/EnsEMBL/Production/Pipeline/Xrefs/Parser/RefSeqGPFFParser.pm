@@ -28,16 +28,6 @@ use File::Basename;
 
 use base qw( Bio::EnsEMBL::Production::Pipeline::Xrefs::Parser::BaseParser);
 
-my $peptide_source_id;
-my $mrna_source_id ;
-my $ncrna_source_id ;
-my $pred_peptide_source_id ;
-my $pred_mrna_source_id ;
-my $pred_ncrna_source_id ;
-my $entrez_source_id;
-my $wiki_source_id;
-my %entrez;
-
 sub run {
 
   my ($self, $ref_arg) = @_;
@@ -46,49 +36,11 @@ sub run {
   my $release_file = $ref_arg->{rel_file};
   my $dbi          = $ref_arg->{dbi};
 
-  $peptide_source_id =
-    $self->get_source_id_for_source_name('RefSeq_peptide', undef, $dbi);
-  $mrna_source_id =
-    $self->get_source_id_for_source_name('RefSeq_mRNA','refseq', $dbi);
-  $ncrna_source_id =
-    $self->get_source_id_for_source_name('RefSeq_ncRNA', undef, $dbi);
-
-  $pred_peptide_source_id =
-    $self->get_source_id_for_source_name('RefSeq_peptide_predicted', undef, $dbi);
-  $pred_mrna_source_id =
-    $self->get_source_id_for_source_name('RefSeq_mRNA_predicted','refseq', $dbi);
-  $pred_ncrna_source_id =
-    $self->get_source_id_for_source_name('RefSeq_ncRNA_predicted', undef, $dbi);
-
-  $entrez_source_id = $self->get_source_id_for_source_name('EntrezGene', undef, $dbi);
-  $wiki_source_id = $self->get_source_id_for_source_name('WikiGene', undef, $dbi);
-
-  my $xrefs = $self->create_xrefs($file, $dbi);
+  my $xrefs = $self->create_xrefs($file, $dbi, $release_file);
   if ( !defined( $xrefs ) ) {
     return 1;    #error
   }
   $self->upload_xref_object_graphs( $xrefs, $dbi );
-
-#  if ( defined $release_file ) {
-#    # Parse and set release info.
-#    my $release_io = $self->get_filehandle($release_file);
-#    local $/ = "\n*";
-#    my $release = $release_io->getline();
-#    $release_io->close();
-#
-#    $release =~ s/\s{2,}/ /g;
-#    $release =~ s/.*(NCBI Reference Sequence.*) Distribution.*/$1/s;
-#    # Put a comma after the release number to make it more readable.
-#    $release =~ s/Release (\d+)/Release $1,/;
-#
-#    $self->set_release( $source_id,              $release, $dbi );
-#    $self->set_release( $peptide_source_id,      $release, $dbi );
-#    $self->set_release( $mrna_source_id,         $release, $dbi );
-#    $self->set_release( $ncrna_source_id,        $release, $dbi );
-#    $self->set_release( $pred_mrna_source_id,    $release, $dbi );
-#    $self->set_release( $pred_ncrna_source_id,   $release, $dbi );
-#    $self->set_release( $pred_peptide_source_id, $release, $dbi );
-#  }
 
 }
 
@@ -100,11 +52,45 @@ sub run {
 # Slightly different formats
 
 sub create_xrefs {
-  my ($self, $file, $dbi) = @_;
+  my ($self, $file, $dbi, $release_file) = @_;
 
-  my %dependent_sources =  $self->get_xref_sources($dbi);
+  my $peptide_source_id =
+    $self->get_source_id_for_source_name('RefSeq_peptide', undef, $dbi);
+  my $mrna_source_id =
+    $self->get_source_id_for_source_name('RefSeq_mRNA','refseq', $dbi);
+  my $ncrna_source_id =
+    $self->get_source_id_for_source_name('RefSeq_ncRNA', undef, $dbi);
 
-  my $add_dependent_xref_sth = $dbi->prepare("INSERT INTO dependent_xref  (master_xref_id,dependent_xref_id, linkage_source_id) VALUES (?,?, $entrez_source_id)");
+  my $pred_peptide_source_id =
+    $self->get_source_id_for_source_name('RefSeq_peptide_predicted', undef, $dbi);
+  my $pred_mrna_source_id =
+    $self->get_source_id_for_source_name('RefSeq_mRNA_predicted','refseq', $dbi);
+  my $pred_ncrna_source_id =
+    $self->get_source_id_for_source_name('RefSeq_ncRNA_predicted', undef, $dbi);
+
+  my $ncbi_source_id = $self->get_source_id_for_source_name('EntrezGene', undef, $dbi);
+  my $wiki_source_id = $self->get_source_id_for_source_name('WikiGene', undef, $dbi);
+
+  # Extract version from release file
+  if ( defined $release_file ) {
+    # Parse and set release info.
+    my $release_io = $self->get_filehandle($release_file);
+    local $/ = "\n*";
+    my $release = $release_io->getline();
+    $release_io->close();
+
+    $release =~ s/\s{2,}/ /g;
+    $release =~ s/.*(NCBI Reference Sequence.*) Distribution.*/$1/s;
+    # Put a comma after the release number to make it more readable.
+    $release =~ s/Release (\d+)/Release $1,/;
+
+    $self->set_release( $peptide_source_id,      $release, $dbi );
+    $self->set_release( $mrna_source_id,         $release, $dbi );
+    $self->set_release( $ncrna_source_id,        $release, $dbi );
+    $self->set_release( $pred_mrna_source_id,    $release, $dbi );
+    $self->set_release( $pred_ncrna_source_id,   $release, $dbi );
+    $self->set_release( $pred_peptide_source_id, $release, $dbi );
+  }
 
   my $refseq_io = $self->get_filehandle($file);
 
@@ -127,7 +113,7 @@ sub create_xrefs {
       $pred_mrna_source_id, $pred_ncrna_source_id,
       $mrna_source_id, $ncrna_source_id,
       $pred_peptide_source_id, $peptide_source_id,
-      $entrez_source_id, $wiki_source_id, $add_dependent_xref_sth,
+      $ncbi_source_id, $wiki_source_id,
      );
 
       push @xrefs, $xref if $xref;
@@ -147,12 +133,14 @@ sub type_from_file {
   print STDERR "Could not work out sequence type for $file\n";
   return;
 }
+
+
 sub xref_from_record {
   my ( $self, $entry, $type,
       $pred_mrna_source_id, $pred_ncrna_source_id,
       $mrna_source_id, $ncrna_source_id,
       $pred_peptide_source_id, $peptide_source_id,
-      $entrez_source_id, $wiki_source_id, $add_dependent_xref_sth,
+      $ncbi_source_id, $wiki_source_id,
   ) = @_;
   chomp $entry;
 
@@ -230,23 +218,19 @@ sub xref_from_record {
   $xref->{INFO_TYPE} = "SEQUENCE_MATCH";
 
   # Extrat NCBIGene ids
-  my @EntrezGeneIDline = $entry =~ /db_xref=.GeneID:(\d+)/g;
-  foreach my $ll (@EntrezGeneIDline) {
+  my @NCBIGeneIDline = $entry =~ /db_xref=.GeneID:(\d+)/g;
+  foreach my $ll (@NCBIGeneIDline) {
     my %dep;
-    if (defined $entrez{$ll}) {
-      $dep{SOURCE_ID} = $entrez_source_id;
-      $dep{LINKAGE_SOURCE_ID} = $source_id;
-      $dep{ACCESSION} = $ll;
-      $dep{LABEL} = $entrez{$ll};
-      push @{$xref->{DEPENDENT_XREFS}}, \%dep;
+    $dep{SOURCE_ID} = $ncbi_source_id;
+    $dep{LINKAGE_SOURCE_ID} = $source_id;
+    $dep{ACCESSION} = $ll;
+    push @{$xref->{DEPENDENT_XREFS}}, \%dep;
 
-      my %dep2;
-      $dep2{SOURCE_ID} = $wiki_source_id;
-      $dep2{LINKAGE_SOURCE_ID} = $source_id;
-      $dep2{ACCESSION} = $ll;
-      $dep2{LABEL} = $entrez{$ll};
-      push @{$xref->{DEPENDENT_XREFS}}, \%dep2;
-    }
+    my %dep2;
+    $dep2{SOURCE_ID} = $wiki_source_id;
+    $dep2{LINKAGE_SOURCE_ID} = $source_id;
+    $dep2{ACCESSION} = $ll;
+    push @{$xref->{DEPENDENT_XREFS}}, \%dep2;
   }
   return $xref;
 }
