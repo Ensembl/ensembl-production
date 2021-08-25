@@ -39,6 +39,7 @@ sub run {
   my $order_priority   = $self->param_required('priority');
 
   my $source_url       = $self->param_required('source_url');
+  my $source_xref      = $self->param('source_xref');
 
   my $db_url           = $self->param('xref_url');
   my $user             = $self->param('xref_user');
@@ -68,14 +69,15 @@ sub run {
   # Retrieve list of sources from versioning database
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, index_uri, count_seen, revision FROM source s, version v WHERE s.source_id = v.source_id");
-  my ($name, $parser, $file_name, $dataflow_params, $db, $priority, $release_file);
+  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id");
+  my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $preparse, $release_file);
   $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority, \$release_file);
+  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$clean_file_name, \$db, \$priority, \$preparse, \$release_file);
 
   while ($select_source_sth->fetch()) {
     if (defined $db && $db eq 'checksum') { next; }
     if ($priority != $order_priority) { next; }
+    if (defined $clean_file_name) { $file_name = $clean_file_name; }
 
     # Some sources are species-specific
     my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id, $name, $division_id);
@@ -103,6 +105,7 @@ sub run {
         parser        => $parser,
         source        => $source_id,
         xref_url      => $xref_db_url,
+	source_xref   => $source_xref,
         db            => $db,
         release_file  => $release_file,
         file_name     => $file_name
@@ -111,6 +114,7 @@ sub run {
     } else {
       # Create list of files
       my @list_files = `ls $file_name`;
+      if ($preparse) { @list_files = $preparse; }
       foreach my $file (@list_files) {
         $file =~ s/\n//;
         $file = $file_name . "/" . $file;
@@ -125,6 +129,7 @@ sub run {
           db            => $db,
           release_file  => $release_file,
           priority      => $priority,
+	  source_xref   => $source_xref,
           file_name     => $file
         };
         $self->dataflow_output_id($dataflow_params, 2);

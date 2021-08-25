@@ -34,12 +34,14 @@ sub run {
   my $file_name    = $self->param_required('file_name');
   my $source_id    = $self->param_required('source');
   my $xref_url     = $self->param_required('xref_url');
+  my $source_xref  = $self->param_required('source_xref');
   my $db           = $self->param('db');
   my $release_file = $self->param('release_file');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
   my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
+  my ($source_user, $source_pass, $source_host, $source_port, $source_dbname) = $self->parse_url($source_xref);
 
   my $xref_dbc = XrefParser::Database->new({
             host    => $host,
@@ -50,6 +52,7 @@ sub run {
   $xref_dbc->disconnect_if_idle();
 
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
+  my $source_dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_dbname);
 
   my @files;
   push @files, $file_name;
@@ -68,6 +71,7 @@ sub run {
                              rel_file   => $release_file,
                              dbi        => $dbi,
                              species    => $species,
+			     xref_source=> $source_dbi,
                              file       => $file_name}) ;
     $self->cleanup_DBAdaptor($db);
   } else {
@@ -76,6 +80,7 @@ sub run {
                       species    => $species,
                       rel_file   => $release_file,
                       dbi        => $dbi,
+		      xref_source => $source_dbi,
                       files      => [@files] }) ;
   }
   if ($failure) { die; }
