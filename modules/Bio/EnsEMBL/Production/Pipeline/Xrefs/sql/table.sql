@@ -36,7 +36,6 @@ CREATE TABLE source (
   source_id                INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   name                     VARCHAR(128),
   active                   BOOLEAN NOT NULL DEFAULT 1,
-  created_date             TIMESTAMP NOT NULL DEFAULT NOW(),
   parser                   VARCHAR(128),
 
   PRIMARY KEY (source_id),
@@ -48,7 +47,6 @@ CREATE TABLE version (
   version_id               INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   source_id                INT(10) UNSIGNED,
   revision                 VARCHAR(255),
-  created_date             TIMESTAMP NOT NULL DEFAULT NOW(),
   count_seen               INT(10) UNSIGNED NOT NULL,
   uri                      VARCHAR(255),
   index_uri                VARCHAR(255),
