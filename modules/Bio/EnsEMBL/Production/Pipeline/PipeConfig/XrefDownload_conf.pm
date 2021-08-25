@@ -35,6 +35,7 @@ sub default_options {
     'work_dir'       => $self->o('ENV', 'HOME')."/work/lib",
     'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
     'release'          => $self->o('ensembl_release'),
+    'source_xref'      => '',
 
     # Parameters for source download
     'config_file'   => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
@@ -141,6 +142,7 @@ sub pipeline_analyses {
 	source_url    => $self->o('source_url'),
 	release       => $self->o('release'),
 	sql_dir       => $self->o('sql_dir'),
+	source_xref   => $self->o('source_xref')
       },
       -flow_into  => {
         '2->A' => 'pre_parse_source',
@@ -151,8 +153,9 @@ sub pipeline_analyses {
         {
       -logic_name => 'pre_parse_source',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
-      -comment    => 'Store RefSeq data for faster species parsing',
-      -rc_name    => 'small'
+      -comment    => 'Store data for faster species parsing',
+      -rc_name    => '4GB',
+      -hive_capacity => 50,
     },
     {
       -logic_name => 'notify_by_email',
