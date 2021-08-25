@@ -27,19 +27,19 @@ use parent qw/Bio::EnsEMBL::Production::Pipeline::Xrefs::Base/;
 sub run {
   my ($self) = @_;
   my $source_url       = $self->param_required('source_url');
-  my $release          = $self->param('release');
-  my $sql_dir          = $self->param('sql_dir');
+  my $sql_dir          = $self->param_required('sql_dir');
+  my $source_xref      = $self->param_required('source_xref');
 
   my ($user, $pass, $host, $port) = $self->parse_url($source_url);
+  my ($xref_user, $xref_pass, $xref_host, $xref_port, $xref_dbname) = $self->parse_url($source_xref);
 
   # Create central Xref database
-  my $dbname = "xref_source_preparse_" . $release;
   my $xref_dbc = XrefParser::Database->new({
-            host    => $host,
-            dbname  => $dbname,
-            port    => $port,
-            user    => $user,
-            pass    => $pass });
+            host    => $xref_host,
+            dbname  => $xref_dbname,
+            port    => $xref_port,
+            user    => $xref_user,
+            pass    => $xref_pass });
   $xref_dbc->create($sql_dir, 1, 1);
 
   # Retrieve list of sources to pre-parse from versioning database
@@ -61,9 +61,8 @@ sub run {
         parser       => $parser,
         name         => $name,
         version_file => $version_file,
-        xref_url     => $source_url,
+        xref_url     => $source_xref,
         file         => $file,
-        dbname       => $dbname,
       };
       $self->dataflow_output_id($dataflow_params, 2);
     }

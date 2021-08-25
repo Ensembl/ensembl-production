@@ -33,9 +33,8 @@ sub run {
   my $name         = $self->param_required('name');
   my $version_file = $self->param('version_file');
   my $file         = $self->param_required('file');
-  my $dbname       = $self->param_required('dbname');
 
-  my ($user, $pass, $host, $port) = $self->parse_url($xref_url);
+  my ($user, $pass, $host, $port, $dbname) = $self->parse_url($xref_url);
 
   my $xref_dbc = XrefParser::Database->new({
             host    => $host,
