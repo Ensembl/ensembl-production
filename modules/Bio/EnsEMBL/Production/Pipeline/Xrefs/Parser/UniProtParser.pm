@@ -69,7 +69,7 @@ sub create_xrefs {
   my $sp_direct_source_id = $self->get_source_id_for_source_name('Uniprot/SWISSPROT', 'direct', $dbi);
   my $sptr_direct_source_id = $self->get_source_id_for_source_name('Uniprot/SPTREMBL', 'direct', $dbi);
 
-  my $isoform_source_id = $self->get_source_id_for_source_name('Uniprot_isoform');
+  my $isoform_source_id = $self->get_source_id_for_source_name('Uniprot_isoform', undef, $dbi);
 
   if ( defined $release_file ) {
     my ($sp_release, $sptr_release);
@@ -209,7 +209,7 @@ sub create_xrefs {
       
       my $desc = $name.' '.$description;
       if(!length($desc)){
-	$desc = $sub_description;
+        $desc = $sub_description;
       }
       
       $desc =~ s/\s*\{ECO:.*?\}//g;
@@ -219,18 +219,17 @@ sub create_xrefs {
       
       if (($line =~ /EC=/) && ($species_id == 4932)) {
 
-	  $line =~ /^DE\s+EC=([^;]+);/;
-	  # Get the EC Number and make it an xref for S.cer if any
-	  my $EC = $1;
-	  
-	  my %depe;
-	  $depe{LABEL} = $EC;
-	  $depe{ACCESSION} = $EC;
-	  $depe{SOURCE_NAME} = "EC_NUMBER";
-	  $depe{SOURCE_ID} = $dependent_sources{"EC_NUMBER"};
-	  $depe{LINKAGE_SOURCE_ID} = $xref->{SOURCE_ID};
-	  push @{$xref->{DEPENDENT_XREFS}}, \%depe;
-	  print "Added dependent EC xrefs with $EC as accession\n";
+          $line =~ /^DE\s+EC=([^;]+);/;
+          # Get the EC Number and make it an xref for S.cer if any
+          my $EC = $1;
+          
+          my %depe;
+          $depe{LABEL} = $EC;
+          $depe{ACCESSION} = $EC;
+          $depe{SOURCE_NAME} = "EC_NUMBER";
+          $depe{SOURCE_ID} = $dependent_sources{"EC_NUMBER"};
+          $depe{LINKAGE_SOURCE_ID} = $xref->{SOURCE_ID};
+          push @{$xref->{DEPENDENT_XREFS}}, \%depe;
       }
     }
 
@@ -245,7 +244,6 @@ sub create_xrefs {
     $parsed_seq =~ s/\s//g;     # remove whitespace
     $parsed_seq =~ s/^.*;//g;   # remove everything before last ;
     $xref->{SEQUENCE} = $parsed_seq;
-    #print "Adding " . $xref->{ACCESSION} . " " . $xref->{LABEL} ."\n";
 
     my ($gns) = $_ =~ /(GN\s+.+)/s;
     my @gn_lines = ();
@@ -257,18 +255,16 @@ sub create_xrefs {
     if(! $ensembl_derived_protein) {
       my %depe;
       foreach my $gn (@gn_lines){
-# Make sure these are still lines with Name or Synonyms
+        # Make sure these are still lines with Name or Synonyms
         if (($gn !~ /^GN/ || $gn !~ /Name=/) && $gn !~ /Synonyms=/) { last; }
-        my $gene_name = undef;
 
         if ($gn =~ / Name=([A-Za-z0-9_\-\.\s]+)/s) { #/s for multi-line entries ; is the delimiter
-# Example line 
-# GN   Name=ctrc {ECO:0000313|Xenbase:XB-GENE-5790348};
+          # Example line 
+          # GN   Name=ctrc {ECO:0000313|Xenbase:XB-GENE-5790348};
           my $name = $1;
           $name =~ s/\s+$//g; # Remove white spaces that are left over at the end if there was an evidence code
           $depe{LABEL} = $name; # leave name as is, upper/lower case is relevant in gene names
-	  $depe{ACCESSION} = $xref->{ACCESSION};
-          $gene_name = $depe{ACCESSION};
+          $depe{ACCESSION} = $xref->{ACCESSION};
 
           $depe{SOURCE_NAME} = "Uniprot_gn";
           $depe{SOURCE_ID} = $dependent_sources{"Uniprot_gn"};
@@ -277,9 +273,9 @@ sub create_xrefs {
         }
         my @syn;
         if($gn =~ /Synonyms=(.*)/s){ # use of /s as synonyms can be across more than one line
-# Example line
-# GN   Synonyms=cela2a {ECO:0000313|Ensembl:ENSXETP00000014934},
-# GN   MGC79767 {ECO:0000313|EMBL:AAH80976.1}
+          # Example line
+          # GN   Synonyms=cela2a {ECO:0000313|Ensembl:ENSXETP00000014934},
+          # GN   MGC79767 {ECO:0000313|EMBL:AAH80976.1}
           my $syn = $1;
           $syn =~ s/{.*}//g;  # Remove any potential evidence codes
           $syn =~ s/\n//g;    # Remove return carriages, as entry can span several lines
@@ -303,8 +299,8 @@ sub create_xrefs {
     foreach my $dep (@dep_lines) {
       #Skipp external sources obtained through other files
       if ($dep =~ /GO/ || $dep =~ /UniGene/ || $dep =~ /RGD/ || $dep =~ /CCDS/ || $dep =~ /IPI/ || $dep =~ /UCSC/ ||
-	      $dep =~ /SGD/ || $dep =~ /HGNC/ || $dep =~ /MGI/ || $dep =~ /VGNC/ || $dep =~ /Orphanet/ || $dep =~ /ArrayExpress/ ||
-	      $dep =~ /GenomeRNAi/ || $dep =~ /EPD/ || $dep =~ /Xenbase/ || $dep =~ /Reactome/ || $dep =~ /MIM/) { next; }
+              $dep =~ /SGD/ || $dep =~ /HGNC/ || $dep =~ /MGI/ || $dep =~ /VGNC/ || $dep =~ /Orphanet/ || $dep =~ /ArrayExpress/ ||
+              $dep =~ /GenomeRNAi/ || $dep =~ /EPD/ || $dep =~ /Xenbase/ || $dep =~ /Reactome/ || $dep =~ /MIM/) { next; }
       if ($dep =~ /^DR\s+(.+)/) {
         my ($source, $acc, @extra) = split /;\s*/, $1;
         # If mapped to Ensembl, add as direct xref
@@ -341,35 +337,33 @@ sub create_xrefs {
             });
           }
         }
-	if (exists $dependent_sources{$source} ) {
-	  # create dependent xref structure & store it
-	  my %dep;
+        if (exists $dependent_sources{$source} ) {
+          # create dependent xref structure & store it
+          my %dep;
           $dep{SOURCE_NAME} = $source;
           $dep{LINKAGE_SOURCE_ID} = $xref->{SOURCE_ID};
           $dep{SOURCE_ID} = $dependent_sources{$source};
-	  $dep{ACCESSION} = $acc;
-	  if(!defined($seen{$dep{SOURCE_NAME}.":".$dep{ACCESSION}})){
-	    push @{$xref->{DEPENDENT_XREFS}}, \%dep; # array of hashrefs
-	    $seen{$dep{SOURCE_NAME}.":".$dep{ACCESSION}} =1;
-	    print "Added dependent for $source as " . $dep{ACCESSION} . "\n";
-	  }
-	  if($dep =~ /EMBL/ && !($dep =~ /ChEMBL/)){
-	    my ($protein_id) = $extra[0];
-	    if(($protein_id ne "-") and (!defined($seen{$source.":".$protein_id}))){
-	      my %dep2;
-	      $dep2{SOURCE_NAME} = $source;
-	      $dep2{SOURCE_ID} = $dependent_sources{"protein_id"};
-	      $dep2{LINKAGE_SOURCE_ID} = $xref->{SOURCE_ID};
-	      # store accession unversioned
-	      $dep2{LABEL} = $protein_id;
-	      my ($prot_acc, $prot_version) = $protein_id =~ /([^.]+)\.([^.]+)/;
-	      $dep2{ACCESSION} = $prot_acc;
-	      $seen{$source.":".$protein_id} = 1;
-	      push @{$xref->{DEPENDENT_XREFS}}, \%dep2; # array of hashrefs
-	      print "Added dependent for $source as " . $dep2{ACCESSION} . "\n";
-	    }
-	  }
-	}
+          $dep{ACCESSION} = $acc;
+          if(!defined($seen{$dep{SOURCE_NAME}.":".$dep{ACCESSION}})){
+            push @{$xref->{DEPENDENT_XREFS}}, \%dep; # array of hashrefs
+            $seen{$dep{SOURCE_NAME}.":".$dep{ACCESSION}} =1;
+          }
+          if($dep =~ /EMBL/ && !($dep =~ /ChEMBL/)){
+            my ($protein_id) = $extra[0];
+            if(($protein_id ne "-") and (!defined($seen{$source.":".$protein_id}))){
+              my %dep2;
+              $dep2{SOURCE_NAME} = $source;
+              $dep2{SOURCE_ID} = $dependent_sources{"protein_id"};
+              $dep2{LINKAGE_SOURCE_ID} = $xref->{SOURCE_ID};
+              # store accession unversioned
+              $dep2{LABEL} = $protein_id;
+              my ($prot_acc, $prot_version) = $protein_id =~ /([^.]+)\.([^.]+)/;
+              $dep2{ACCESSION} = $prot_acc;
+              $seen{$source.":".$protein_id} = 1;
+              push @{$xref->{DEPENDENT_XREFS}}, \%dep2; # array of hashrefs
+            }
+          }
+        }
       }
     }
 
