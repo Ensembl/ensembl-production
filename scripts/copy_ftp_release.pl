@@ -61,12 +61,12 @@ sub rename_file {
 }
 
 my $gzip_files = [
-    qr/.*\.(${old_rel})\..*?\.?gff3\.gz/,
-    qr/.*\.(${old_rel})\.gtf\.gz/,
-    qr/.*\.(${old_rel})\.emf\.gz/,
-    qr/.*\.(${old_rel})\.[a-z]+\.tsv\.gz/,
-    qr/.*\.(${old_rel})\..*\.dat\.gz/,
-    qr/.*\.gz/
+    qr/.*\.(${old_rel})\..*?\.?gff3\.gz$/,
+    qr/.*\.(${old_rel})\.gtf\.gz$/,
+    qr/.*\.(${old_rel})\.emf\.gz$/,
+    qr/.*\.(${old_rel})\.[a-z]+\.tsv\.gz$/,
+    qr/.*\.(${old_rel})\..*?\.?dat\.gz$/,
+    qr/.*\.gz$/
 ];
 
 sub process_file {
