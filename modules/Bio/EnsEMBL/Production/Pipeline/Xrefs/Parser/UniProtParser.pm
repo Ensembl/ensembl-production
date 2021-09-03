@@ -46,18 +46,6 @@ sub run {
   my $release_file = $ref_arg->{rel_file};
   my $dbi          = $ref_arg->{dbi};
 
-  $self->create_xrefs( $file, $dbi, $release_file);
-
-  return 0; # successfull
-}
-
-
-# --------------------------------------------------------------------------------
-# Parse file into array of xref objects
-
-sub create_xrefs {
-  my ($self, $file, $dbi, $release_file) = @_;
-
   my $sp_source_id =
     $self->get_source_id_for_source_name('Uniprot/SWISSPROT','sequence_mapped', $dbi);
   my $sptr_source_id =
@@ -116,9 +104,9 @@ sub create_xrefs {
     # set accession (and synonyms if more than one)
     # AC line may have primary accession and possibly several ; separated synonyms
     # May also be more than one AC line
-    my ($acc) = $_ =~ /(\nAC\s+.+)/s; # will match first AC line and everything else
+    my ($record) = $_ =~ /(\nAC\s+.+)/s; # will match first AC line and everything else
 
-    my @all_lines = split /\n/, $acc;
+    my @all_lines = split /\n/, $record;
 
     # Check for CC (caution) lines containing certain text
     # If sequence is from Ensembl, do not use
@@ -135,12 +123,9 @@ sub create_xrefs {
 
     }
 
-    if(lc($accessions[0]) eq "unreviewed"){
-      print "WARNING: entries with accession of $acc not allowed will be skipped\n";
-      next;
-    }
+    my $accession = $accessions[0];
     $xref->{INFO_TYPE} = "SEQUENCE_MATCH";
-    $xref->{ACCESSION} = $accessions[0];
+    $xref->{ACCESSION} = $accession;
     for (my $a=1; $a <= $#accessions; $a++) {
       push(@{$xref->{"SYNONYMS"} }, $accessions[$a]);
     }
@@ -168,12 +153,11 @@ sub create_xrefs {
 
     # some straightforward fields
     # the previous $label flag of type BRCA2_HUMAN is not used in Uniprot any more, use accession instead
-    $xref->{LABEL} = $accessions[0] ."." . $version;
+    $xref->{LABEL} = $accession ."." . $version;
     $xref->{VERSION} = $version;
     $xref->{SPECIES_ID} = $species_id;
     $xref->{SEQUENCE_TYPE} = 'peptide';
     $xref->{STATUS} = 'experimental';
-    print "Created xref for species $species_id with " . $xref->{ACCESSION} . "\n";
 
     # May have multi-line descriptions
     my ($description_and_rest) = $_ =~ /(DE\s+.*)/s;
@@ -322,8 +306,8 @@ sub create_xrefs {
           }
           push @{$xref->{DIRECT_XREFS}}, \%direct;
 
-          my $uniprot_acc = $accessions[0];
-          if ($extra[1] =~ /($accessions[0]-[0-9]+)/) {
+          my $uniprot_acc = $acc;
+          if ($extra[1] =~ /($acc-[0-9]+)/) {
             $isoform = $1;
             $self->add_to_direct_xrefs({
               stable_id  => $extra[0],
@@ -381,6 +365,8 @@ sub create_xrefs {
   $self->upload_xref_object_graphs(\@xrefs, $dbi) if scalar(@xrefs) > 0;
 
   $uniprot_io->close();
+
+  return 0; # successful
 
 }
 
