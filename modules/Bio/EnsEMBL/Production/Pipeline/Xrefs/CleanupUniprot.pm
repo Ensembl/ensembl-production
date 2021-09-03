@@ -53,7 +53,8 @@ sub run {
   make_path($output_path);
 
   # Save the clean files directory in source db
-  $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
   $update_version_sth->execute($output_path, $name);
   $update_version_sth->finish();
@@ -62,8 +63,6 @@ sub run {
   if ($skip_download) { return; }
 
   # Get xref sources
-  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my %sources = get_source_names($dbi);
 
   # Set sources to skip
@@ -108,10 +107,10 @@ sub run {
       # Read full records
       while ($_ = $in_fh->getline()) {
         # Remove unused data
-        $_ =~ s/R(N|P|X|A|T|R|L|C|G)\s{3}.*\n//g; # Remove references lines
-        $_ =~ s/CC\s{3}.*\n//g; # Remove comments
-	$_ =~ s/FT\s{3}.*\n//g; # Remove feature coordinates
-        $_ =~ s/DR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
+        $_ =~ s/\nR(N|P|X|A|T|R|L|C|G)\s{3}.*//g; # Remove references lines
+        $_ =~ s/\nCC\s{3}.*//g; # Remove comments
+	$_ =~ s/\nFT\s{3}.*//g; # Remove feature coordinates
+        $_ =~ s/\nDR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
 
         # Added lines that we do need into output
         print $out_fh $_;
