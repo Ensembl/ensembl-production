@@ -27,10 +27,8 @@ use XrefParser::Database;
 use Carp;
 use DBI;
 use Getopt::Long;
+use Memory::Usage;
 
-my $base_dir = File::Spec->curdir();
-
-my %xref_dependent_mapped;
 
 
 ###################################################
@@ -152,8 +150,11 @@ sub get_source_id_for_source_name {
 ##############################
 sub upload_xref_object_graphs {
   my ($self, $rxrefs, $dbi) = @_;
+  print "Called upload xref object graphs with " . scalar(@$rxrefs) . "\n";
 
+  my $mu = Memory::Usage->new();
   my $count = scalar @{$rxrefs};
+  $mu->record('starting xref upload');
   if ($count) {
 
     #################
@@ -192,6 +193,7 @@ sub upload_xref_object_graphs {
 	   || croak 'Could not write message';
 	 return;
        }
+       $mu->record("Storing xref " . $xref->{ACCESSION});
 
        ########################################
        # Create entry in xref table and note ID
@@ -221,6 +223,10 @@ sub upload_xref_object_graphs {
 	 if(defined $xref->{DESCRIPTION} ){
 	   $xref_update_descr_sth->execute($xref->{DESCRIPTION},$xref_id);
 	 }
+	 $mu->record('update existing xref');
+	 $xref_update_label_sth->finish();
+         $xref_update_descr_sth->finish();
+	 $mu->record('update existing xref and clean up');
        }
        else{
          $xref_id_sth->execute(
@@ -228,7 +234,11 @@ sub upload_xref_object_graphs {
                    $xref->{SOURCE_ID},
                    $xref->{SPECIES_ID} );
          $xref_id = ($xref_id_sth->fetchrow_array())[0];
+	 $mu->record('insert new xref');
        }
+       $xref_update_label_sth->finish();
+       $xref_update_descr_sth->finish();
+       $mu->record("stored initial xref");
 
        foreach my $direct_xref (@{$xref->{DIRECT_XREFS}}) {
          $xref_sth->execute( $xref->{ACCESSION},
@@ -245,6 +255,8 @@ sub upload_xref_object_graphs {
          $direct_xref_id = ($xref_id_sth->fetchrow_array())[0];
          $self->add_direct_xref($direct_xref_id, $direct_xref->{STABLE_ID}, $direct_xref->{ENSEMBL_TYPE},$direct_xref->{LINKAGE_TYPE}, $dbi);
        }
+       $xref_id_sth->finish();
+       $mu->record("stored direct xref");
 
        ################
        # Error checking
@@ -274,7 +286,11 @@ sub upload_xref_object_graphs {
 				     $xref->{STATUS} )
 	     or croak( $dbi->errstr() );
 	 }
+	 $primary_xref_id_sth->finish();
+	 $pri_update_sth->finish();
+	 $pri_insert_sth->finish();
        }
+       $mu->record("after storing sequence");
 
        ##########################################################
        # if there are synonyms, add entries in the synonym table
@@ -283,6 +299,7 @@ sub upload_xref_object_graphs {
 	 $syn_sth->execute( $xref_id, $syn )
 	   or croak( $dbi->errstr() . "\n $xref_id\n $syn\n" );
        }
+       $mu->record('after storing synonyms');
 
        #######################################################################
        # if there are dependent xrefs, add xrefs and dependent xrefs for them
@@ -303,8 +320,10 @@ sub upload_xref_object_graphs {
                                             'desc'       => $dep{DESCRIPTION},
                                             'version'    => $dep{VERSION},
                                             'info_type'  => 'DEPENDENT',
+					    #'mu'         => $mu,
                                             'dbi'        => $dbi,
                                           });
+				  $mu->record('after calling add_xref for ' . $dep{ACCESSION});
          if( ! $dep_xref_id ) {
            next DEPENDENT_XREF;
          }
@@ -339,19 +358,23 @@ sub upload_xref_object_graphs {
        ###########################
        # tidy up statement handles
        ###########################
-       if(defined $xref_sth) {$xref_sth->finish()};
-       if(defined $pri_insert_sth) {$pri_insert_sth->finish()} ;
-       if(defined $pri_update_sth) {$pri_update_sth->finish()};
-       if(defined $syn_sth) { $syn_sth->finish()};
-       if(defined $xref_update_label_sth) { $xref_update_label_sth->finish()};
-       if(defined $xref_update_descr_sth) { $xref_update_descr_sth->finish()};
-       if(defined $pair_sth) { $pair_sth->finish()};
-       if(defined $xref_id_sth) { $xref_id_sth->finish()};
-       if(defined $primary_xref_id_sth) { $primary_xref_id_sth->finish()};
+       $xref_sth->finish();
+       $pri_insert_sth->finish();
+       $pri_update_sth->finish();
+       $syn_sth->finish();
+       $xref_update_label_sth->finish();
+       $xref_update_descr_sth->finish();
+       $pair_sth->finish();
+       $xref_id_sth->finish();
+       $primary_xref_id_sth->finish();
+
+       $mu->record("clean up leftover statement handles");
 
      }  # foreach xref
 
   }
+  $mu->record('finish upload xref');
+  $mu->dump();
   return 1;
 }
 
@@ -406,8 +429,8 @@ sub get_direct_xref{
     push @results, $row_ref->[0];
   }
  
-  return @results;
   $direct_sth->finish();
+  return @results;
   return;
 }
 
@@ -417,23 +440,32 @@ sub get_direct_xref{
 # if not found return undef;
 ###################################################################
 sub get_xref{
-  my ($self,$acc,$source, $species_id, $dbi) = @_;
+  my ($self,$acc,$source, $species_id, $dbi, $mu) = @_;
+  #my $mu = Memory::Usage->new();
+  #$mu->record('starting get_xref') if defined $mu;
 
-  #
-  # If the statement handle does nt exist create it.
-  #
   my $sql = 'select xref_id from xref where accession = ? and source_id = ? and species_id = ?';
   my $get_xref_sth = $dbi->prepare($sql);
+  #$mu->record('after preparing sql') if defined $mu;
 
   #
   # Find the xref_id using the sql above
   #
   $get_xref_sth->execute( $acc, $source, $species_id ) or croak( $dbi->errstr() );
-  if(my @row = $get_xref_sth->fetchrow_array()) {
-    return $row[0];
+  my $xref_id;
+  my @xref_ids;
+  $get_xref_sth->bind_columns(\$xref_id);
+  while ($get_xref_sth->fetch) {
+    push (@xref_ids, $xref_id);
   }
+  #$mu->record('after executing sql') if defined $mu;
   $get_xref_sth->finish();
-  return;
+  #$mu->record("after retrieving row as " . $xref_ids[0]) if defined $mu;
+  if (@xref_ids> 0) {
+    return $xref_ids[0];
+  } else {
+    return;
+  }
 }
 
 
@@ -444,6 +476,9 @@ sub get_xref{
 ###########################################################
 sub add_xref {
   my ( $self, $arg_ref) = @_;
+  #my $mu = $arg_ref->{mu};
+  #my $mu = Memory::Usage->new();
+  #$mu->record('starting add_xref') if defined $mu;
 
   my $acc         = $arg_ref->{acc}        || croak 'add_xref needs aa acc';
   my $source_id   = $arg_ref->{source_id}  || croak 'add_xref needs a source_id';
@@ -458,8 +493,11 @@ sub add_xref {
   ##################################################################
   # See if it already exists. It so return the xref_id for this one.
   ##################################################################
+  #$mu->record('Get existing xref_id') if defined $mu;
   my $xref_id = $self->get_xref($acc,$source_id, $species_id, $dbi);
+  #$mu->record('Retrieved xref_id') if defined $mu;
   if(defined $xref_id){
+    print "Alread have $xref_id for $acc\n";
     return $xref_id;
   }
 
@@ -477,6 +515,7 @@ sub add_xref {
     substr $description, 255 - (length $truncmsg),
             length $truncmsg, $truncmsg;
   }
+  #$mu->record('Update description') if defined $mu;
 
 
   ####################################
@@ -487,6 +526,7 @@ sub add_xref {
   ) or croak("$acc\t$label\t\t$source_id\t$species_id\n");
 
   $add_xref_sth->finish();
+  #$mu->record('finish inserting') if defined $mu;
   return $add_xref_sth->{'mysql_insertid'};
 } ## end sub add_xref
 
@@ -581,24 +621,14 @@ sub add_dependent_xref_maponly {
   my ( $self, $dependent_id, $dependent_source_id, $master_id, $master_source_id, $dbi) = @_;
 
   my $sql = (<<'ADX');
-INSERT INTO dependent_xref 
+INSERT IGNORE INTO dependent_xref 
   (master_xref_id,dependent_xref_id,linkage_annotation,linkage_source_id)
   VALUES (?,?,?,?)
 ADX
   my $add_dependent_xref_sth = $dbi->prepare($sql);
 
-  # If the dependency cannot be found in %xref_dependent_mapped,
-  # i.e. has not been set yet, add it
-  if ( ( ! defined $xref_dependent_mapped{"$master_id|$dependent_id"} )
-       || $xref_dependent_mapped{"$master_id|$dependent_id"} ne $master_source_id ) {
-
-    $add_dependent_xref_sth->execute( $master_id, $dependent_id,
-                                      $master_source_id, $dependent_source_id )
-      || croak("$master_id\t$dependent_id\t$master_source_id\t$dependent_source_id");
-
-    $xref_dependent_mapped{"$master_id|$dependent_id"} = $master_source_id;
-  }
-
+  $add_dependent_xref_sth->execute( $master_id, $dependent_id,
+                                      $master_source_id, $dependent_source_id );
   $add_dependent_xref_sth->finish();
 
   return;
