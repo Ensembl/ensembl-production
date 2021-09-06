@@ -36,6 +36,14 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf');
 
+sub pipeline_wide_parameters {
+    my ($self) = @_;
+    return {
+	'exclude_outgroup_species' => ['ciona_savignyi' ,'homo_sapiens'],	    
+    };
+}
+
+
 sub default_options {
   my ($self) = @_;
 
