@@ -40,7 +40,7 @@ sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
 	%{$self->SUPER::pipeline_wide_parameters},    
-	'exclude_outgroup_species' => ['ciona_savignyi', 'homo_sapiens'],	    
+	'exclude_species' => ['ciona_savignyi', 'homo_sapiens'],	    
     };
 }
 
