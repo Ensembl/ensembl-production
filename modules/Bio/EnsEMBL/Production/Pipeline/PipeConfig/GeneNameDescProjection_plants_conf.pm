@@ -39,7 +39,8 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjectio
 sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
-	'exclude_outgroup_species' => ['ciona_savignyi' ,'homo_sapiens'],	    
+	%{$self->SUPER::pipeline_wide_parameters},    
+	'exclude_outgroup_species' => ['ciona_savignyi', 'homo_sapiens'],	    
     };
 }
 
