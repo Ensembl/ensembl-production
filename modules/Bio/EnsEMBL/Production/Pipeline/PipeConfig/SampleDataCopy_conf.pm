@@ -115,6 +115,7 @@ sub pipeline_analyses {
                             datacheck_groups => ['meta_sample'],
                             config_file      => $self->o('config_file'),
                             history_file     => $self->o('history_file'),
+                            registry_file    => $self->o('registry'),
                             failures_fatal   => 1,
                           },
     },

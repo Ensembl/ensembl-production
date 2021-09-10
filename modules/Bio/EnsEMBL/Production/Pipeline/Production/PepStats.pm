@@ -44,6 +44,7 @@ sub run {
   my $tmpfile = $self->param('tmpdir') . "/$$.pep";
   $self->dump_translation($dba, $tmpfile);
   my $results = $self->run_pepstats($tmpfile);
+  unlink $tmpfile;
 
   my $attrib_types = $self->get_attrib_types();
 

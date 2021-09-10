@@ -73,7 +73,7 @@ sub pipeline_analyses {
         -can_be_empty => 1,
         -analysis_capacity => 10,
         -priority => 5,
-        -rc_name => 'default',
+        -rc_name => '2GB',
       },
 
       { -logic_name => 'index_ncbiblastDNA',
@@ -88,7 +88,7 @@ sub pipeline_analyses {
        -analysis_capacity => 10,
        -priority => 5,
        -can_be_empty  => 1,
-       -rc_name 	   => 'default',     
+       -rc_name 	   => '2GB',
       },  
 
       { -logic_name => 'index_ncbiblastPEP',

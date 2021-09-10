@@ -45,8 +45,9 @@ sub default_options {
         'dbname'                 => undef,
         'run_all'                => 0,
 
-        ## Flag to skip metadata database check for dumping DNA only for species with update assembly
-        'skip_metadata_check'    => 0,
+        ## By default, we only dump DNA for new/updated assemblies and renamed genomes
+        'dump_all_dna' => 0,
+        'report_json'  => undef,
 
         #  'fasta' - cdna, cds, dna, ncrna, pep
         #  'chain' - assembly chain files
@@ -96,9 +97,7 @@ sub default_options {
             'homo_sapiens'                     => 30001,
             'mus_musculus'                     => 30081,
             'danio_rerio'                      => 30003,
-            'rattus_norvegicus'                => 30005,
             'gallus_gallus'                    => 30010,
-            'canis_lupus_familiaris'           => 30014,
             'bos_taurus'                       => 30017,
             'oryctolagus_cuniculus'            => 30025,
             'oryzias_latipes'                  => 30026,
@@ -108,6 +107,8 @@ sub default_options {
             'ovis_aries'                       => 30068,
             'oreochromis_niloticus'            => 30073,
             'gadus_morhua'                     => 30080,
+            'canis_lupus_familiaris'           => 30083,
+            'rattus_norvegicus'                => 30084,
         },
         # History file for storing record of datacheck run.
         history_file             => undef,
@@ -434,23 +435,28 @@ sub pipeline_analyses {
             -priority        => 5,
             -rc_name         => '2GB',
         },
-        { -logic_name        => 'fasta_dna',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::CheckAssemblyGeneset',
-            -parameters      => {
-                skip_metadata_check => $self->o('skip_metadata_check'),
-                release             => $self->o('release')
-            },
-            -can_be_empty    => 1,
-            -flow_into       => {
-                1 => WHEN(
-                    '#new_assembly# >= 1 || #new_genebuild# >= 1' => 'dna',
-                    ELSE 'copy_dna',
-                ) },
+        { -logic_name      => 'fasta_dna',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -parameters    => { dump_all_dna => $self->o('dump_all_dna'), },
+            -flow_into     => {
+                                1 => WHEN('#dump_all_dna#' => 'dump_dna',
+                                     ELSE 'updated_species')
+                              },
+        },
+        { -logic_name        => 'updated_species',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::UpdatedSpecies',
             -max_retry_count => 1,
             -hive_capacity   => 20,
             -priority        => 5,
+            -parameters      => {
+                                  report_json => $self->o('report_json'),
+                                },
+            -flow_into       => {
+                                  3 => WHEN('#new_genome# || #updated_assembly# || #renamed_genome#' => 'dump_dna',
+                                       ELSE 'copy_dna')
+                                },
         },
-        { -logic_name        => 'dna',
+        { -logic_name        => 'dump_dna',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FASTA::DumpFile',
             -parameters      => {
                 sequence_type_list  => $self->o('dna_sequence_type_list'),

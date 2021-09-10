@@ -22,17 +22,19 @@ addons:
 before_install:
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
 - export ENSEMBL_BRANCH=master
-- if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; fi
+- export METADATA_BRANCH=main
+- if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export METADATA_BRANCH=$TRAVIS_BRANCH; fi
 - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+- echo "METADATA_BRANCH=$METADATA_BRANCH"
 - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-test.git
 - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-hive.git
 - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-compara.git
-- git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-datacheck.git
+- git clone --branch main --depth 1 https://github.com/Ensembl/ensembl-datacheck.git
 - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-variation.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-orm.git
 - git clone --branch master --depth 1 https://github.com/Ensembl/ensembl-taxonomy.git
-- git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-metadata.git
+- git clone --branch $METADATA_BRANCH --depth 1 https://github.com/Ensembl/ensembl-metadata.git
 - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-funcgen.git
 - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
 - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git

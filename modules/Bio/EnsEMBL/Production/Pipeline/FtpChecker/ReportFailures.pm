@@ -23,27 +23,61 @@ package Bio::EnsEMBL::Production::Pipeline::FtpChecker::ReportFailures;
 use strict;
 use warnings;
 
-use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
+use base qw/
+  Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail
+  Bio::EnsEMBL::Production::Pipeline::Common::Base
+/;
 
-use Carp;
+sub fetch_input {
+  my $self = shift;
+
+  my $pipeline_name = $self->param_required('pipeline_name');
+  my $failures_file = $self->param_required('failures_file');
+
+  my $subject = "ftp checker pipeline completed ($pipeline_name)";
+  $self->param('subject', $subject);
+
+  $self->write_failures_file($failures_file);
+
+  my $text = "The $pipeline_name pipeline has completed successfully.\n\n".
+             "Failures were stored in: $failures_file\n";
+
+  if (-s $failures_file < 2e6) {
+    push @{$self->param('attachments')}, $failures_file;
+    $text .= "(File also attached to this email.)\n"
+  } else {
+    $text .= "(File not attached because it exceeds 2MB limit)\n";
+  }
+
+  $self->param('text', $text);
+}
 
 sub run {
-  my ($self) = @_;
-  my $outfile = $self->param_required('failures_file');
-  open my $out, ">", $outfile || croak "Could not open $outfile for writing";
+  my $self = shift;
+
+  my $failures_file = $self->param_required('failures_file');
+  
+  if (-s $failures_file) {
+    $self->SUPER::run();
+  }
+}
+
+sub write_failures_file {
+  my ($self, $file) = @_;
+
+  open my $out, ">", $file || $self->throw("Could not open $file");
   my $n = 0;
   $self->hive_dbc()->sql_helper()->execute_no_return(
-						     -SQL=>q/select * from failures/,
-						     -CALLBACK => sub {
-						       my $row = shift;
-						       print $out join("\t", @$row);
-						       print $out "\n";
-							 $n++;
-						       return;	       
-						     } 	    	       
-						    );
+    -SQL      => q/select * from failures/,
+    -CALLBACK => sub {
+                      my $row = shift;
+                      print $out join("\t", @$row);
+                      print $out "\n";
+                      $n++;
+                      return;         
+                     }                
+  );
   close $out;
-  return;
 }
 
 1;

@@ -36,38 +36,47 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf');
 
+sub pipeline_wide_parameters {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},
+        'exclude_species' => self->o('antispecies')
+    };
+}
+
+
 sub default_options {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{ $self->SUPER::default_options() },
+    return {
+        %{$self->SUPER::default_options()},
 
-    compara_division => 'plants',
+        compara_division => 'plants',
 
-    gene_name_source => [ 'TAIR_SYMBOL', 'UniProtKB/Swiss-Prot', 'Uniprot_gn' ],
-
-    gd_config => [
-      {
-        source      => 'arabidopsis_thaliana',
-        taxons      => ['eudicotyledons'],
-        antispecies => ['arabidopsis_thaliana'],
-      },
-      {
-        source      => 'oryza_sativa',
-        taxons      => ['Liliopsida'],
-        antispecies => ['oryza_sativa'],
-      },
-      {
-        source      => 'arabidopsis_thaliana',
-        taxons      => ['Liliopsida'],
-        antispecies => ['oryza_sativa'],
-      },
-      {
-        source      => 'oryza_sativa',
-        taxons      => ['eudicotyledons'],
-        antispecies => ['arabidopsis_thaliana'],
-      },
-    ],
-  };
+        gene_name_source => [ 'TAIR_SYMBOL', 'UniProtKB/Swiss-Prot', 'Uniprot_gn' ],
+        antispecies      => [ 'ciona_savignyi', 'homo_sapiens', 'caenorhabditis_elegans', 'drosophila_melanogaster', 'saccharomyces_cerevisiae' ],
+        gd_config        => [
+            {
+                source      => 'arabidopsis_thaliana',
+                taxons      => [ 'eudicotyledons' ],
+                antispecies => [ 'arabidopsis_thaliana' ],
+            },
+            {
+                source      => 'oryza_sativa',
+                taxons      => [ 'Liliopsida' ],
+                antispecies => [ 'oryza_sativa' ],
+            },
+            {
+                source      => 'arabidopsis_thaliana',
+                taxons      => [ 'Liliopsida' ],
+                antispecies => [ 'oryza_sativa' ],
+            },
+            {
+                source      => 'oryza_sativa',
+                taxons      => [ 'eudicotyledons' ],
+                antispecies => [ 'arabidopsis_thaliana' ],
+            },
+        ],
+    };
 }
 1;

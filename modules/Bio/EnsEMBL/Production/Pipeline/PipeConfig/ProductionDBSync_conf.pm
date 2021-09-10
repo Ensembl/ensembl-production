@@ -92,7 +92,7 @@ sub pipeline_create_commands {
   my ($self) = @_;
 
   my @cmds = (
-    'mkdir -p '.$self->o('backup_dir')
+    'mkdir -p '.$self->o('pipeline_dir')
   );
   if (defined $self->o('datacheck_output_dir')) {
     push @cmds, 'mkdir -p '.$self->o('datacheck_output_dir');
@@ -181,7 +181,7 @@ sub pipeline_analyses {
                                 'attrib',
                                 'attrib_set'
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
                             },
       -flow_into         => ['PopulateControlledTables'],
     },
@@ -195,7 +195,7 @@ sub pipeline_analyses {
                               table_list  => [
                                 'analysis_description',
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
                             },
       -flow_into         => ['PopulateAnalysisDescription'],
     },
