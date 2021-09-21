@@ -64,8 +64,8 @@ sub pipeline_analyses {
             -input_ids       => [],
             -max_retry_count => 0,
             -parameters      => {
-                'endpoint'     => $self->o('copy_service_uri'),
-                'method'       => 'post',
+                'endpoint' => $self->o('copy_service_uri'),
+                'method'   => 'post',
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
