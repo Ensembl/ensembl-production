@@ -383,7 +383,7 @@ sub pipeline_analyses {
     {
       -logic_name => 'ReformatGenomeEBeye',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::ReformatGenomeEBeye',
-      -flow_into  => 'ValidateXMLFileEBeye'
+      -flow_into  => 'ValidateXMLFileEBeye',
       -rc_name    => '4GB',
       -analysis_capacity => 10,
     },
