@@ -37,7 +37,6 @@ class ProductionDBCopy(HiveRESTClient):
         super().fetch_input()
 
     def run(self):
-        copy_timeout = int(self.param('copy_timeout'))
         response = self.param('response')
         if response.status_code != 201:
             raise Exception('The Copy submission failed: %s (%s)' % (response.status_code, response.json()))
@@ -70,10 +69,6 @@ class ProductionDBCopy(HiveRESTClient):
                     'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
             elif job_response.json()['overall_status'] == 'Complete':
                 break
-            elif copy_timeout > 0:
-                elapsed_time = int(time.time() - submitted_time)
-                if elapsed_time > copy_timeout:
-                    raise Exception(f'Analysis timed out after {elapsed_time} seconds.')
             # Pause for 1min before checking copy status again
             time.sleep(60)
 

@@ -34,7 +34,6 @@ sub default_options {
         %{$self->SUPER::default_options},
         'pipeline_name'    => "dba_copy_database",
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
-        'copy_timeout'     => -1
     }
 }
 
@@ -67,7 +66,6 @@ sub pipeline_analyses {
             -parameters      => {
                 'endpoint'     => $self->o('copy_service_uri'),
                 'method'       => 'post',
-                'copy_timeout' => $self->o('copy_timeout')
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
