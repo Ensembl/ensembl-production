@@ -75,9 +75,6 @@ sub pipeline_wide_parameters {
 sub pipeline_analyses {
   my $self = shift;
 
-  my @variant_analyses = [ 'VariantDumpFactory' ] if $self->o('dump_variant') == 1;
-  my @regulation_analyses = $self->o('dump_regulation') == 1 ? [ 'RegulationDumpFactory', 'ProbeDumpFactory' ] : [ 'ProbeDumpFactory' ];
-
   return [
     {
       -logic_name => 'SpeciesFactory',
@@ -106,11 +103,15 @@ sub pipeline_analyses {
     {
       -logic_name => 'DumpGenomeJson',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
+      -parameters => {
+                       dump_variant => $self->o('dump_variant'),
+                       dump_regulation => $self->o('dump_regulation'),
+                     },
       -flow_into  => {
                       2 => [ 'DumpGenesJson' ],
                       7 => [ 'DumpGenesJson' ],
-                      4 => @variant_analyses, 
-                      6 => @regulation_analyses,
+                      4 => WHEN('#dump_variant#', [ 'VariantDumpFactory' ]),
+                      6 => WHEN('#dump_regulation#', [ 'RegulationDumpFactory', 'ProbeDumpFactory' ], ELSE [ 'ProbeDumpFactory' ]),
                      },
       -analysis_capacity => 10,
     },
@@ -429,3 +430,4 @@ sub resource_classes {
 }
 
 1;
+
