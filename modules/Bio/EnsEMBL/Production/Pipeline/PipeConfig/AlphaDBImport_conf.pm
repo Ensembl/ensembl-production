@@ -63,6 +63,7 @@ sub default_options {
     %{$self->SUPER::default_options()},
 
     species => 'homo_sapiens',
+    rest_server => 'https://www.ebi.ac.uk/gifts/api/',
 
     user_r => 'ensro',
     password => $ENV{EHIVE_PASS},
@@ -100,6 +101,7 @@ sub pipeline_analyses {
         core_dbpass => $self->o('pass'),
         cs_version => $self->o('cs_version'),
         species => $self->o('species'),
+	rest_server => $self->o('rest_server'),
         alpha_path => $self->o('alpha_path')
       },
       -rc_name => '4GB',
