@@ -23,6 +23,7 @@ use strict;
 use warnings;
 use base qw(Bio::EnsEMBL::Production::Pipeline::FileDump::Base_Filetype);
 
+use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Utils::URI qw/parse_uri/;
 use File::Spec::Functions qw/catdir/;
 use Path::Tiny;
