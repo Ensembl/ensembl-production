@@ -55,7 +55,8 @@ sub default_options {
     # Datachecks
     history_file   => undef,
     config_file    => undef,
-    old_server_uri => undef
+    old_server_uri => undef,
+    advisory_dc_output => $self->o('pipeline_dir') . '/advisory_dc_output'
   };
 }
 
@@ -83,10 +84,46 @@ sub pipeline_analyses {
 
   return [
     {
+      -logic_name        => 'InitDummy',
+      -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -input_ids         => [ {} ],
+      -flow_into        => {
+              '1->A' => ['DbFactory'],
+              'A->1' => ['DataCheckResults'],
+      }
+    },
+    {
+       -logic_name       => 'DataCheckResults',
+       -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -flow_into        => {
+               '1' => ['ConvertTapToJson'],
+       },
+    },
+    {
+      -logic_name       => 'ConvertTapToJson',
+      -module           => 'Bio::EnsEMBL::DataCheck::Pipeline::ConvertTapToJson',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+        tap => $self->o('advisory_dc_output'),
+        output_dir => $self->o('advisory_dc_output'),
+      },	
+      -flow_into => ['AdvisoryDataCheckReport'],
+    },
+    {
+      -logic_name        => 'AdvisoryDataCheckReport',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::AdvisoryDataCheckSummary',
+      -rc_name           => 'default',
+      -parameters =>{
+         pipeline_name => $self->o('pipeline_name'),
+         email => $self->o('email'),
+	 output_dir => $self->o('advisory_dc_output'),
+      }
+    },
+    {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
-      -input_ids         => [ {} ],
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
@@ -236,20 +273,8 @@ sub pipeline_analyses {
                               config_file      => $self->o('config_file'),
                               history_file     => $self->o('history_file'),
                               old_server_uri   => $self->o('old_server_uri'),
+			      output_dir       => $self->o('advisory_dc_output'),
                               failures_fatal   => 0,
-                            },
-      -flow_into         => {
-                              '4' => 'EmailReportXrefAdvisory'
-                            },
-    },
-    {
-      -logic_name        => 'EmailReportXrefAdvisory',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -parameters        => {
-                              email         => $self->o('email'),
-                              pipeline_name => $self->o('pipeline_name'),
                             },
     },
   ];
