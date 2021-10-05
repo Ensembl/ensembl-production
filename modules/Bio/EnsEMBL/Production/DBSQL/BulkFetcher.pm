@@ -933,7 +933,7 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
             push @{$homologues->{ $row->[0] }}, {
                 stable_id      => $row->[1],
                 genome         => $row->[2],
-                taxonomy_id    => $row[5],
+                taxonomy_id    => $row->[5],
                 orthology_type => $row->[3],
                 gene_tree_id   => $row->[4] };
             return;
