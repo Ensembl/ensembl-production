@@ -915,7 +915,7 @@ sub add_homologues {
     my $homologues = {};
     $compara_dba->dbc()->sql_helper()->execute_no_return(
         -SQL      => q/
-SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id
+SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id, g2.taxon_id
 FROM homology_member hm1
  INNER JOIN homology_member hm2 ON (hm1.homology_id = hm2.homology_id)
  INNER JOIN homology h ON (hm1.homology_id = h.homology_id)
@@ -933,6 +933,7 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
             push @{$homologues->{ $row->[0] }}, {
                 stable_id      => $row->[1],
                 genome         => $row->[2],
+                taxonomy_id    => $row[5],
                 orthology_type => $row->[3],
                 gene_tree_id   => $row->[4] };
             return;
