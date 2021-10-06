@@ -47,7 +47,7 @@ class ProductionDBCopy(HiveRESTClient):
                 job_response = http.request(method='get',
                                             url=self.param('endpoint') + '/' + response.json()['job_id'],
                                             headers=self.param('headers'),
-                                            timeout=self.param('timeout'))
+                                            timeout=self.param('endpoint_timeout'))
             # job progress
             runtime = time.time() - submitted_time
             # message is a dict as follow:
@@ -69,9 +69,6 @@ class ProductionDBCopy(HiveRESTClient):
                     'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
             elif job_response.json()['overall_status'] == 'Complete':
                 break
-            # If the copy takes more than 2 hours then kill the job
-            elif time.time() - submitted_time > 10800:
-                raise Exception('The Copy seems to be stuck - please contact Production team')
             # Pause for 1min before checking copy status again
             time.sleep(60)
 
