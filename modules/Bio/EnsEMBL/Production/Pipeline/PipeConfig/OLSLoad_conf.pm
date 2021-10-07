@@ -48,7 +48,7 @@ sub default_options {
         wipe_all     => 0,
         wipe_one     => 1,
         verbosity    => 2,
-        ols_load     => 50,
+        ols_load     => 1,
 
         db_name      => 'ensembl_ontology',
         mart_db_name => 'ontology_mart',
@@ -176,7 +176,7 @@ sub pipeline_analyses {
             -logic_name        => 'ontology_load',
             -module            => 'bio.ensembl.ontology.hive.OLSOntologyLoader',
             -language          => 'python3',
-            -analysis_capacity => 20,
+            -analysis_capacity => 1,
             -rc_name           => '4GB',
             -flow_into         => [ 'ontology_term_load_factory' ]
         },
@@ -207,7 +207,7 @@ sub pipeline_analyses {
             -logic_name        => 'ontology_term_load_light',
             -module            => 'bio.ensembl.ontology.hive.OLSTermsLoader',
             -language          => 'python3',
-            -analysis_capacity => 5,
+            -analysis_capacity => 1,
             -rc_name           => '4GB',
         },
         {
