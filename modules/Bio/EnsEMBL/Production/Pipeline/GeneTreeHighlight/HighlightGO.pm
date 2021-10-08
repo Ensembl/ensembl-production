@@ -127,7 +127,6 @@ sub run {
    	join gene_member m using (gene_member_id)
 	join genome_db g using (genome_db_id) where e.db_name=? and g.name=?/,
 	-PARAMS=>[$db_name, $core_dba->species()]);
-
       $self->info("Updating member_xref for " . $core_dba->species() . "\n");
 
       $xref_adaptor->store_member_associations($core_dba, $db_name,
