@@ -542,6 +542,12 @@ sub pipeline_analyses {
                                 'DELETE i.* FROM interpro i '.
                                   'LEFT OUTER JOIN protein_feature pf ON i.id = pf.hit_name '.
                                   'WHERE pf.hit_name IS NULL ',
+                                'DELETE oxr.* FROM object_xref oxr '.
+                                  'JOIN xref xr USING (xref_id) '.
+                                  'JOIN external_db edb USING (external_db_id) '.
+                                  'LEFT JOIN interpro i ON xr.dbprimary_acc = i.interpro_ac '.
+                                  'WHERE edb.db_name = "Interpro" '
+                                  'AND i.interpro_ac IS NULL ',
                                 'DELETE x.* FROM xref x '.
                                   'INNER JOIN external_db edb USING (external_db_id) '.
                                   'LEFT OUTER JOIN interpro i ON x.dbprimary_acc = i.interpro_ac '.
