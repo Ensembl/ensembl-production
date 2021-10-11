@@ -24,6 +24,7 @@ use warnings;
 
 use Bio::EnsEMBL::Registry;
 use File::Spec::Functions qw(catdir);
+#use File::Monitor;
 
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 
