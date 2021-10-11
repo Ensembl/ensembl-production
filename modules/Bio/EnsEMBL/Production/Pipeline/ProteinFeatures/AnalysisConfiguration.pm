@@ -28,41 +28,61 @@ use POSIX qw(strftime);
 
 sub run {
   my ($self) = @_;
-  my $pf_analyses          = $self->param_required('protein_feature_analyses');
+  my $interproscan_exe     = $self->param_required('interproscan_exe');
   my $interproscan_version = $self->param_required('interproscan_version');
+  my $pf_analyses          = $self->param_required('protein_feature_analyses');
   my $check_db_version     = $self->param_required('check_interpro_db_version');
   my $run_seg              = $self->param_required('run_seg');
   my $xref_analyses        = $self->param_required('xref_analyses');
 
   my $aa = $self->core_dba->get_adaptor('Analysis');
 
+  my $db_versions = $self->get_db_versions($interproscan_exe);
+
   my $filtered_analyses = [];
   foreach my $analysis_config (@{$pf_analyses}) {
+    # Set analysis versions
+    if (exists $$analysis_config{'program'} && $$analysis_config{'program'} eq 'InterProScan') {
+      my $ipscan_name = $$analysis_config{'ipscan_name'};
+      if (exists $$db_versions{$ipscan_name}) {
+        $$analysis_config{'db_version'} = $$db_versions{$ipscan_name};
+        $$analysis_config{'program_version'} = $interproscan_version;
+      } else {
+        $self->throw("Could not retrieve version for $ipscan_name");
+      }
+    }
+    
     # If the analysis doesn't already exist, then need to create it.
     # For InterPro sources with the current InterProScan version,
     # and for seg, don't re-annotate - it would only reproduce exactly
     # the same results.
     # If 'check_db_version' is true, then we only annotate if the
-    # InterPro source database version has changed (InterPro are adding
+    # InterPro source database version has changed. (InterPro are adding
     # entries with every release, so this leads to slightly less
     # comprehensive annotation, but handling large data volumes would
-    # not be possible otherwise
+    # not be possible otherwise.)
     my $logic_name = $$analysis_config{'logic_name'};
     my $analysis = $aa->fetch_by_logic_name($logic_name);
 
-    if (defined($analysis)) {
-      if ($logic_name eq 'seg') {
-        $run_seg = 0;
-        $self->warning("Skipping $logic_name - annotation exists");
-      } elsif ($analysis->program_version eq $interproscan_version) {
-        $self->warning("Skipping $logic_name - annotation exists for InterProScan $interproscan_version");
-      } elsif ($check_db_version && ($$analysis_config{'db_version'} eq $analysis->db_version)) {
-        $self->warning("Skipping $logic_name - annotation exists for db version ".$analysis->db_version);
+    if ($logic_name eq 'seg') {
+      if (defined($analysis)) {
+        if (! $run_seg) {
+          $self->warning("Skipping $logic_name - annotation exists");
+        }
       } else {
-        push @$filtered_analyses, $analysis_config;
+        $run_seg = 1;
       }
+      push @$filtered_analyses, $analysis_config if $run_seg;
     } else {
-      if ($logic_name ne 'seg' || $run_seg) {
+      if (defined($analysis)) {
+        if ($analysis->program_version eq $interproscan_version) {
+          $self->warning("Skipping $logic_name - annotation exists for InterProScan $interproscan_version");
+        } elsif ($check_db_version && ($analysis->db_version eq $$analysis_config{'db_version'})) {
+          $self->warning("Skipping $logic_name - annotation exists for db version ".$analysis->db_version);
+        } else {
+          push @$filtered_analyses, $analysis_config;
+        }
+      } else {
         push @$filtered_analyses, $analysis_config;
       }
     }
@@ -116,6 +136,17 @@ sub run {
   $self->param('lookup', \@lookup);
   $self->param('nolookup', \@nolookup);
   $self->param('all', \@all);
+}
+
+sub get_db_versions {
+  my ($self, $interproscan_exe) = @_;
+
+  my $interpro_cmd = "$interproscan_exe --help";
+  my $info = `$interpro_cmd` or $self->throw("Failed to run ".$interpro_cmd);
+
+  my %db_versions = $info =~ /^\s+(\S+) \((\S+)\) \: /gm;
+
+  return \%db_versions;
 }
 
 sub write_output {

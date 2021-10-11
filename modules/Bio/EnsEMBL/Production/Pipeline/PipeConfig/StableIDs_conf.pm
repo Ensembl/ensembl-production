@@ -63,15 +63,6 @@ sub default_options {
   }
 }
 
-sub pipeline_create_commands {
-  my ($self) = @_;
-
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('output_dir')
-  ];
-}
-
 sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
@@ -210,7 +201,7 @@ sub pipeline_analyses {
                         db_conn       => $self->o('db_url'),
                         email         => $self->o('email'),
                         pipeline_name => $self->o('pipeline_name'),
-                        output_dir    => $self->o('output_dir'),
+                        output_dir    => $self->o('pipeline_dir'),
                       }
     }
   ];

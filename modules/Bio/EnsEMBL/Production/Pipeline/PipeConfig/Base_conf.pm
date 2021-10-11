@@ -34,13 +34,21 @@ sub default_options {
   return {
     %{$self->SUPER::default_options},
 
-    pipeline_dir => $ENV{'PWD'}.'/'.$self->o('pipeline_name'),
-
     user  => $ENV{'USER'},
     email => $ENV{'USER'}.'@ebi.ac.uk',
 
+    pipeline_dir => catdir( '/hps/nobackup/flicek/ensembl/production',
+                            $self->o('user'),
+                            $self->o('pipeline_name') ),
+
+    scratch_small_dir => catdir( '/hps/scratch/flicek/ensembl',
+                                 $self->o('user'),
+                                 $self->o('pipeline_name') ),
+
+    scratch_large_dir => catdir( $self->o('pipeline_dir'), 'scratch' ),
+
     production_queue => 'production',
-    datamover_queue  => 'datamover',
+    datamover_queue => 'datamover',
   };
 }
 

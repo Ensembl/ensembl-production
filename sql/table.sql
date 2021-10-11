@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES
   (NULL, 'schema_type', 'production'),
-  (NULL, 'schema_version', 103);
+  (NULL, 'schema_version', 106);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_102_103_a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_105_106_a.sql|schema version');
 
 -- The 'master_biotype' table.
 -- Contains all the valid biotypes used for genes and transcripts.

@@ -38,13 +38,13 @@ sub run {
     if (-e $$analysis_config{'local_file'}) {
       my $timestamp = path($$analysis_config{'local_file'})->stat->mtime;
       my $datestamp = strftime "%Y-%m-%d", localtime($timestamp);
+      $$analysis_config{'db_version'} = $datestamp;
 
       my $logic_name = $$analysis_config{'logic_name'};
       my $analysis = $aa->fetch_by_logic_name($logic_name);
 
       if (defined($analysis)) {
-        if ($datestamp ne $analysis->db_version) {
-          $$analysis_config{'db_version'} = $datestamp;
+        if ($$analysis_config{'db_version'} ne $analysis->db_version) {
           push @filtered_analyses, $analysis_config;
         }
       } else {

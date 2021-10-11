@@ -235,6 +235,7 @@ sub write_output {
       my $dataflow_params = {
         dbname  => $dbname,
         species => $division,
+        group   => 'compara',
       };
 
       $self->dataflow_output_id( $dataflow_params, $compara_flow );

@@ -17,29 +17,24 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::MirrorLoad::DeleteDBs;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpENA_conf;
 
 use strict;
 use warnings;
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDump_conf');
 
+sub default_options {
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::default_options},
 
-use base (
-  'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-  'Bio::EnsEMBL::Production::Pipeline::Common::Base'
-);
+    geneset_types => [
+      'Geneset_GFF3_ENA',
+    ],
 
-
-sub fetch_input {
-
-  my $self = shift @_;
-  $self->SUPER::fetch_input(); 
-  $self->param('db_conn', $self->param('src_uri') );
-  my $sql_cmd = [ 'DROP DATABASE '. $self->param('db_name').';' ];
-  $self->param('sql', $sql_cmd);
- 
+    run_datachecks   => 1,
+    datacheck_groups => ['ena_submission'],
+  };
 }
 
 1;
-
-
-                           
