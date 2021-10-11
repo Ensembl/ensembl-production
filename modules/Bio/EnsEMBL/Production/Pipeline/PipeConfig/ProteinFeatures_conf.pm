@@ -546,7 +546,7 @@ sub pipeline_analyses {
                                   'JOIN xref xr USING (xref_id) '.
                                   'JOIN external_db edb USING (external_db_id) '.
                                   'LEFT JOIN interpro i ON xr.dbprimary_acc = i.interpro_ac '.
-                                  'WHERE edb.db_name = "Interpro" '
+                                  'WHERE edb.db_name = "Interpro" '.
                                   'AND i.interpro_ac IS NULL ',
                                 'DELETE x.* FROM xref x '.
                                   'INNER JOIN external_db edb USING (external_db_id) '.
