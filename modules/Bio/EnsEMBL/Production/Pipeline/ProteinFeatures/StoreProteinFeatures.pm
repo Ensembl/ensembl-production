@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,18 +30,15 @@ use XML::Simple;
 
 sub run {
   my ($self) = @_;
-  my $outfile_xml     = $self->param_required('outfile_xml');
-  my $pathway_sources = $self->param('pathway_sources') || [];
-  my %pathway_sources = map { $_ => 1 } @$pathway_sources;
+  my $outfile_xml = $self->param_required('outfile_xml');
   
   my @features;
-  my @pathways;
   
   my $results = XMLin
   (
     $outfile_xml,
     KeyAttr =>[],
-    ForceArray => ['protein', 'xref', 'matches', 'pathway-xref']
+    ForceArray => ['protein', 'xref', 'matches']
   );
   
   foreach my $protein (@{$results->{protein}}) {
@@ -50,10 +47,10 @@ sub run {
       foreach my $matches (@{$protein->{matches}}) {
         foreach my $match_group (keys %{$matches}){
           if (ref $matches->{$match_group} ne 'ARRAY') {
-            $self->parse_match($translation_id, $matches->{$match_group}, \%pathway_sources, \@features, \@pathways);
+            $self->parse_match($translation_id, $matches->{$match_group}, \@features);
           } else {
             foreach my $match (@{$matches->{$match_group}}) {
-              $self->parse_match($translation_id, $match, \%pathway_sources, \@features, \@pathways);
+              $self->parse_match($translation_id, $match, \@features);
             }
           }
         }
@@ -62,12 +59,11 @@ sub run {
   }
   
   $self->store_features(\@features);
-  $self->store_pathways(\@pathways);
   $self->core_dbc()->disconnect_if_idle();
 }
 
 sub parse_match {
-  my ($self, $translation_id, $match, $pathway_sources, $features, $pathways) = @_;
+  my ($self, $translation_id, $match, $features) = @_;
   
   my $signature = $match->{signature};
   
@@ -113,25 +109,6 @@ sub parse_match {
     };
     
     push @$features, $feature;
-  }
-  
-  foreach my $pathway (@{$signature->{entry}->{'pathway-xref'}}) {
-    (my $db_name = $pathway->{db}) =~ s/^KEGG$/KEGG_Enzyme/;
-    
-    if (exists $$pathway_sources{$db_name}) {
-      my $pathway =
-      {
-        'translation_id' => $translation_id,
-        'interpro_ac'    => $signature->{entry}->{ac},
-        'interpro_name'  => $signature->{entry}->{name},
-        'interpro_desc'  => $signature->{entry}->{desc},
-        'db_name'        => $db_name,
-        'pathway_id'     => $pathway->{id},
-        'pathway_desc'   => $pathway->{name},
-      };
-      
-      push @$pathways, $pathway;
-    }
   }
 }
 
@@ -197,44 +174,6 @@ sub store_features {
   }
 }
 
-sub store_pathways {
-  my ($self, $pathways) = @_;
-  
-  my $aa   = $self->core_dba->get_adaptor('Analysis');
-  my $dbea = $self->core_dba->get_adaptor('DBEntry');
-  
-  my $analysis = $aa->fetch_by_logic_name('interpro2pathway');
-  
-  foreach my $pathway (@$pathways) {
-    my $translation_id = $$pathway{'translation_id'};
-    
-    # 1. Fetch or store the xref_id associated with the interpro xref
-    my $interpro_xref_id = $self->store_xref(
-      $dbea,
-      'Interpro',
-      $$pathway{'interpro_ac'},
-      $$pathway{'interpro_name'},
-      $$pathway{'interpro_desc'},
-      'DIRECT',
-    );
-    
-    # 2. Fetch or store the xref_id associated with the pathway xref
-    my $pathway_xref_id = $self->store_xref(
-      $dbea,
-      $$pathway{'db_name'},
-      $$pathway{'pathway_id'},
-      $$pathway{'pathway_id'},
-      $$pathway{'pathway_desc'},
-      'DEPENDENT',
-      $analysis,
-      $translation_id,
-    );
-    
-    # 3. Create dependency between interpro and pathway xrefs
-    $self->store_dependent_xref($translation_id, $pathway_xref_id, $interpro_xref_id, $analysis->dbID);
-  }
-}
-
 sub store_xref {
   my ($self, $dbea, $dbname, $primary_id, $display_id, $description, $info_type, $analysis, $translation_id) = @_;
   
@@ -253,25 +192,6 @@ sub store_xref {
   } else {
     return $dbea->store($xref);
   }
-}
-
-sub store_dependent_xref {
-  my ($self, $translation_id, $pathway_xref_id, $interpro_xref_id, $analysis_id) = @_;
-  
-  my $select_ox_sql =
-    'SELECT object_xref_id FROM object_xref '.
-    'WHERE ensembl_id=? AND ensembl_object_type=? AND xref_id=? AND analysis_id=?';
-  my $select_ox_sth = $self->core_dbh->prepare($select_ox_sql);
-  
-  my $insert_dx_sql =
-    'INSERT IGNORE INTO dependent_xref '.
-    '(object_xref_id, master_xref_id, dependent_xref_id) VALUES (?, ?, ?)';
-  my $insert_dx_sth = $self->core_dbh->prepare($insert_dx_sql);
-  
-  $select_ox_sth->execute($translation_id, 'Translation', $pathway_xref_id, $analysis_id);
-  my $ox = $select_ox_sth->fetchrow_arrayref;
-  my $object_xref_id = $$ox[0];
-  $insert_dx_sth->execute($object_xref_id, $interpro_xref_id, $pathway_xref_id);
 }
 
 1;

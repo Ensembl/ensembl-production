@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 
 sub default_options {
   my ($self) = @_;
@@ -105,7 +105,6 @@ sub pipeline_analyses {
                             meta_filters => $self->o('meta_filters'),
                             db_type      => $self->o('db_type'),
                           },
-      -rc_name         => 'normal',
       -flow_into       => {
                             '2->A' => ['DbCmd'],
                             'A->1' => ['ProcessResults'],
@@ -124,7 +123,6 @@ sub pipeline_analyses {
                               output_file => $output_file,
                             },
       -batch_size        => 10,
-      -rc_name           => 'normal',
       -flow_into         => WHEN('#run_datachecks#' => ['RunDataChecks']),
     },
     
@@ -145,7 +143,6 @@ sub pipeline_analyses {
                               old_server_uri     => $self->o('old_server_uri'),
                               failures_fatal     => 1,
                             },
-      -rc_name           => 'normal',
     },
     
     {
@@ -153,7 +150,6 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
       -parameters      => {},
-      -rc_name         => 'normal',
       -flow_into       => WHEN('#out_file#' => ['AggregateResults']),
     },
     
@@ -165,7 +161,6 @@ sub pipeline_analyses {
                             cmd => 'cat #out_file#_* > #out_file#;'.
                                    'rm #out_file#_*;',
                           },
-      -rc_name         => 'normal',
       -flow_into       => WHEN('#unique_rows#' => ['UniquifyResults']),
     },
     
@@ -177,7 +172,6 @@ sub pipeline_analyses {
                             cmd => 'sort -u #out_file# > #out_file#.tmp;'.
                                    'mv #out_file#.tmp #out_file#;',
                           },
-      -rc_name         => 'normal',
     },
     
   ];

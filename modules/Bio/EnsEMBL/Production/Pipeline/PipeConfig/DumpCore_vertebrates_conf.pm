@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ sub pipeline_analyses {
         -can_be_empty => 1,
         -analysis_capacity => 10,
         -priority => 5,
-        -rc_name => 'default',
+        -rc_name => '2GB',
       },
 
       { -logic_name => 'index_ncbiblastDNA',
@@ -88,7 +88,7 @@ sub pipeline_analyses {
        -analysis_capacity => 10,
        -priority => 5,
        -can_be_empty  => 1,
-       -rc_name 	   => 'default',     
+       -rc_name 	   => '2GB',
       },  
 
       { -logic_name => 'index_ncbiblastPEP',

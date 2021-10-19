@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -60,7 +60,6 @@ sub default_options {
     max_run   => '100',
 
     pepstats_binary => 'pepstats',
-    pepstats_tmpdir => '/scratch',
 
     history_file => undef,
   };
@@ -70,10 +69,20 @@ sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
     %{ $self->SUPER::pipeline_wide_parameters() },
-    release   => $self->o('release'),
-    bin_count => $self->o('bin_count'),
-    max_run   => $self->o('max_run'),
+    scratch_dir => $self->o('scratch_large_dir'),
+    release     => $self->o('release'),
+    bin_count   => $self->o('bin_count'),
+    max_run     => $self->o('max_run'),
   };
+}
+
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    'mkdir -p '.$self->o('scratch_large_dir'),
+  ];
 }
 
 # Implicit parameter propagation throughout the pipeline.
@@ -99,7 +108,6 @@ sub pipeline_analyses {
                             '1->A' => ['SpeciesFactory_Chromosome'],
                             'A->1' => ['Notify'],
                           },
-      -rc_name         => 'normal',
     },
 
     {
@@ -117,7 +125,7 @@ sub pipeline_analyses {
                             '3->A' => ['CheckStatistics_Chromosome'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -134,7 +142,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '2' => ['CheckStatistics_All'],
                           },
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -159,7 +167,7 @@ sub pipeline_analyses {
                               'PercentRepeat',
                             ]
                           ),
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -173,7 +181,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
       -flow_into       => {
                             '1->A' => WHEN(
                               '#datachecks_failed#' => [
@@ -197,7 +205,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
     },
 
     {
@@ -205,7 +212,6 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
       -flow_into       => {
                              '1' => ['GeneCounts_Datacheck'],
                             '-1' => ['GeneCount_HighMem'],
@@ -217,7 +223,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'mem_high',
+      -rc_name         => '8GB',
       -flow_into       => ['GeneCounts_Datacheck'],
     },
 
@@ -232,7 +238,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
     },
 
     {
@@ -240,7 +245,6 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneGCBatch',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
       -flow_into       => ['GeneGC_Datacheck'],
     },
 
@@ -255,7 +259,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -263,7 +267,6 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GenomeStats',
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
       -flow_into       => ['RunDataChecks'],
     },
 
@@ -278,20 +281,20 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
       -logic_name      => 'PepStats',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::PepStatsBatch',
       -parameters      => {
-                            tmpdir          => $self->o('pepstats_tmpdir'),
+                            tmpdir          => '#scratch_dir#',
                             pepstats_binary => $self->o('pepstats_binary'),
                             dbtype          => 'core',
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'mem_scratch',
+      -rc_name         => '4GB',
       -flow_into       => ['PepStats_Datacheck'],
     },
 
@@ -306,7 +309,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'normal',
     },
 
     {
@@ -318,7 +320,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
     },
 
     {
@@ -330,7 +331,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
     },
 
     {
@@ -342,7 +342,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
     },
 
     {
@@ -354,7 +353,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'normal',
     },
 
     {
@@ -366,7 +364,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'mem',
+      -rc_name         => '2GB',
     },
 
     {
@@ -378,7 +376,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'mem_high',
+      -rc_name         => '8GB',
     },
 
     {
@@ -388,20 +386,19 @@ sub pipeline_analyses {
                        email   => $self->o('email'),
                        subject => $self->o('pipeline_name').' has finished',
                      },
-      -rc_name    => 'normal',
+      -flow_into  => ['TidyScratch'],
+    },
+
+    {
+      -logic_name        => 'TidyScratch',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'rm -rf #scratch_dir#',
+                            },
     },
 
   ];
-}
-
-sub resource_classes {
-  my ($self) = @_;
-  
-  return {
-    %{$self->SUPER::resource_classes},
-    'mem_high'    => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000]"'},
-    'mem_scratch' => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
-  }
 }
 
 1;

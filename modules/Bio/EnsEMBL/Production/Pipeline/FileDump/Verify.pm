@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ sub run {
   push @errors, map { "Broken symlink: $_" } split(/\n/, $broken_symlink);
 
   if ($check_unzipped) {
-    my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'md5sum.txt' ! -name '*.gz*'";
+    my $unzipped_file_cmd = "find '$output_dir' -type f ! -name 'README' ! -name 'CHECKSUMS' ! -name 'md5sum.txt' ! -name '*.gz*'";
     my (undef, $unzipped_file) = $self->run_cmd($unzipped_file_cmd);
     push @errors, map { "Unzipped file: $_" } split(/\n/, $unzipped_file);
   }

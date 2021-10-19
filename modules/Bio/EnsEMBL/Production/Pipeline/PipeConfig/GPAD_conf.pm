@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ sub default_options {
   return {
     %{ $self->SUPER::default_options() },
 
-    gpad_directory => '/ebi/ftp/pub/contrib/goa/ensembl_projections',
+    gpad_directory => '/nfs/ftp/public/contrib/goa/ensembl_projections',
     gpad_dirname   => undef,
 
     species      => [],
@@ -41,9 +41,6 @@ sub default_options {
     division     => [],
     run_all      => 0,
     meta_filters => {},
-
-    # Directory for pre-pipeline database backups
-    output_dir => catdir('hps/nobackup2/production/ensembl', $self->o('user'), $self->o('pipeline_name')),
 
     # Remove existing GO annotations and associated analysis
     delete_existing => 1,
@@ -67,7 +64,7 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('output_dir'),
+    'mkdir -p '.$self->o('pipeline_dir'),
   ];
 }
 
@@ -118,7 +115,7 @@ sub pipeline_analyses {
                                 'object_xref',
                                 'ontology_xref',
                               ],
-                              output_file => catdir($self->o('output_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
       -flow_into         => {
                               '1->A' => ['AnalysisSetup'],
@@ -191,7 +188,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2' => ['LoadFile'],
                             },
-      -rc_name           => 'mem',
+      -rc_name           => 'dm',
     },
     {
       -logic_name        => 'LoadFile',
@@ -200,7 +197,7 @@ sub pipeline_analyses {
       -parameters        => {
                               logic_name => $self->o('logic_name')
                             },
-      -rc_name           => 'mem'
+      -rc_name           => 'dm',
     },
     {
        -logic_name       => 'RunXrefDatacheck',

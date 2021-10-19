@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,18 +57,6 @@ my $expected_files = {
 						       ]},
 		      "json" => {"dir" => "{division}/json/{species_dir}/", "expected" =>[
 							'{species}*.json',
-							 'CHECKSUMS*'
-						       ]},
-		      "tsv" => {"dir" => "{division}/tsv/{species_dir}/", "expected" =>[
-							'{species_uc}*.ena.tsv.gz',
-							'{species_uc}*.entrez.tsv.gz',
-							'{species_uc}*.karyotype.tsv.gz',
-							'{species_uc}*.refseq.tsv.gz',
-							'{species_uc}*.uniprot.tsv.gz',
-							 'README_ENA*.tsv',
-							 'README_entrez*.tsv',
-							 'README_refseq*.tsv',
-							 'README_uniprot*.tsv',
 							 'CHECKSUMS*'
 						       ]},
 		      "fasta_pep" => {"dir" => "{division}/fasta/{species_dir}/pep/", "expected" =>[

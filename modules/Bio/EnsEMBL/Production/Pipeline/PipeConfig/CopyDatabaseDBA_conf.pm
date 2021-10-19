@@ -7,7 +7,7 @@
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2020] EMBL-European Bioinformatics Institute
+    Copyright [2016-2021] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -24,18 +24,15 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabaseDBA_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf'); # All Hive databases configuration files should inherit from HiveGeneric, directly or indirectly
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
-sub resource_classes {
-    my ($self) = @_;
-    return { 'default' => { 'LSF' => '-q production-rh74' } };
-}
+
 
 sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
-        'pipeline_name'    => "copy_database",
+        'pipeline_name'    => "dba_copy_database",
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
     }
 }
@@ -67,14 +64,14 @@ sub pipeline_analyses {
             -input_ids       => [],
             -max_retry_count => 0,
             -parameters      => {
-                'endpoint'      => $self->o('copy_service_uri'),
-                'source_db_uri' => $self->o('source_db_uri'),
-                'target_db_uri' => $self->o('target_db_uri'),
-                'method'        => 'post',
+                'endpoint' => $self->o('copy_service_uri'),
+                'method'   => 'post',
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
-                2 => [ '?table_name=result' ]
+                # Dataflow method ProductionDBCopy Python module will output into this table result.
+                2 => [ '?table_name=result', ],
+                3 => [ '?table_name=job_progress', ]
             },
         }
     ];

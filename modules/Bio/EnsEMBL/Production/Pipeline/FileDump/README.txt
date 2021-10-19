@@ -229,13 +229,15 @@ UniProt. The file has the following columns:
     * CHECKSUM: an exact sequence match
     * SEQUENCE_MATCH: an alignment based sequence match (not
       necessarily exact)
- * dependent_sources: For transitively-derived cross-references, the
-   external data source and identifier used as intermediary
+ * source: For transitively-derived cross-references, the
+   external data source and identifier used as intermediary.
+   For GO terms, the method of inference, e.g. IEA is also given.
+   These elements are separated by colons ':'
+   Multiple sources are separated by semi-colons ';'
  * source_identity: For alignment-derived cross-references, the
    percentage of the Ensembl sequence that matches the external sequence
  * xref_identity: For alignment-derived cross-references, the
    percentage of the external sequence that matches the Ensembl sequence
- * linkage_type: for GO terms, the method of inference, e.g. IEA
 
 
 ========================================================================

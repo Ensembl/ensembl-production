@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,10 +49,11 @@ sub default_options {
     # The sub_dir is there to allow for this pipeline to match
     # the current main site structure, but also give flexibility
     # for RR structure, if/when that becomes necessary.
-    dump_dir     => '/hps/nobackup2/production/ensembl/ensprod/release_dumps',
     pipeline_dir => catdir($self->o('dump_dir'), $self->o('sub_dir')),
-    tmp_dir      => catdir('/hps/nobackup2/production/ensembl/ensprod/temp',
-                      'tmp_variation_'.$self->o('pipeline_name')),
+
+    tmp_dir => catdir( '/hps/nobackup/flicek/ensembl/production',
+                                 $self->o('user'),
+                                 $self->o('pipeline_name'), 'scratch' ),
 	};
 }
 

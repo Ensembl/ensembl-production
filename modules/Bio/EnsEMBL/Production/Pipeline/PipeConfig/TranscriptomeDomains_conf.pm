@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeatures_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.4;
+use Bio::EnsEMBL::Hive::Version 2.5;
 
 sub default_options {
   my ($self) = @_;
@@ -91,7 +91,6 @@ sub pipeline_analyses {
                               transcriptome_file => $self->o('transcriptome_file'),
                               pipeline_dir       => $self->o('pipeline_dir'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '2->A' => ['FastaSplit'],
                               'A->2' => ['MergeResults'],
@@ -108,7 +107,6 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => {
                               '2' => ['InterProScan'],
                             }
@@ -143,7 +141,6 @@ sub pipeline_analyses {
       -parameters        => {
                               results_dir    => $self->o('results_dir'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['GenerateSolr'],
     },
     
@@ -156,7 +153,6 @@ sub pipeline_analyses {
                               interproscan_version => $self->o('interproscan_version'),
                               pathway_sources      => $self->o('pathway_sources'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['EmailReport'],
     },
     
@@ -168,7 +164,6 @@ sub pipeline_analyses {
                               email   => $self->o('email'),
                               subject => 'InterProScan transcriptome annotation',
                             },
-      -rc_name           => 'normal',
     },
     
   ];

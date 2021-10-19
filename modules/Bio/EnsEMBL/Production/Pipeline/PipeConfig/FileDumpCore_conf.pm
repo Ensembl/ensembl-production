@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDump_conf');
 
 sub default_options {
-	my ($self) = @_;
+  my ($self) = @_;
   return {
     %{$self->SUPER::default_options},
 
@@ -47,7 +47,10 @@ sub default_options {
     dump_metadata => 1,
 
     blast_index => 1,
-	};
+
+    run_datachecks   => 1,
+    datacheck_groups => ['rapid_release'],
+  };
 }
 
 1;

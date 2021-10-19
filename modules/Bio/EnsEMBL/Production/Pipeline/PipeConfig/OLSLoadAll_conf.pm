@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ limitations under the License.
 
 =head1 LICENSE
 
-    Copyright [2016-2020] EMBL-European Bioinformatics Institute
+    Copyright [2016-2021] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -53,7 +53,7 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         'wipe_all'   => 1,
-        'ontologies' => ['GO', 'SO', 'PATO', 'HP', 'VT', 'EFO', 'PO', 'EO', 'TO', 'CHEBI', 'PR', 'FYPO', 'PECO', 'BFO',
+	 'ontologies' => ['GO', 'SO', 'PATO', 'HP', 'VT', 'EFO', 'PO', 'TO', 'CHEBI', 'PR', 'FYPO', 'PECO', 'BFO',
                          'BTO', 'CL', 'CMO', 'ECO', 'MP', 'OGMS', 'UO', 'MONDO', 'PHI']
     }
 }

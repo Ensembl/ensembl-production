@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,74 +25,58 @@ Bio::EnsEMBL::Production::Pipeline::PipeConfig::UpdateComparaMemberNamesDescript
 
 =head1 DESCRIPTION  
 
-The PipeConfig file for the pipeline that imports Gene names and Gene descriptions from Core databases
+Import gene names and descriptions from Core databases
 into the Compara database gene and seq members tables.
 
 =cut
-
 
 package Bio::EnsEMBL::Production::Pipeline::PipeConfig::UpdateComparaMemberNamesDescriptions_conf;
 
 use strict;
 use warnings;
-use Bio::EnsEMBL::Registry;
+
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions;
-
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use Bio::EnsEMBL::Registry;
 
 sub default_options {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::default_options},
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::default_options},
 
-        'pipeline_name'   => 'Compara_member_description_update_'.$self->o('rel_with_suffix'),   # also used to differentiate submitted processes
+    pipeline_name => 'compara_name_update_'.$self->o('rel_with_suffix'),
 
-        #Pipeline capacities:
-        'update_capacity'                           => '5',
-
-    };
+    update_capacity => '5',
+  };
 }
 
-# override the default method, to force an automatic loading of the registry in all workers
-sub beekeeper_extra_cmdline_options {
-    my $self = shift;
-    return "-reg_conf ".$self->o("reg_conf");
-}
-
-
+# Ensures that output parameters get propagated implicitly.
 sub hive_meta_table {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::hive_meta_table},       # here we inherit anything from the base class
-        'hive_use_param_stack'  => 1,           # switch on the new param_stack mechanism
-    }
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::hive_meta_table},
+    'hive_use_param_stack' => 1,
+  };
 }
-
-
 
 sub resource_classes {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::resource_classes},  # inherit 'default' from the parent class
-
-        '500Mb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M500 -R"select[mem>500] rusage[mem=500]"'] },
-        '1Gb_job'    => { 'LSF' => [' -q production-rh74 -C0 -M1000 -R"select[mem>1000] rusage[mem=1000]"'] },
-    };
+  my ($self) = @_;
+  return {
+    %{$self->SUPER::resource_classes},
+    '500Mb_job' => { LSF => '-q production -M  500' },
+    '1Gb_job'   => { LSF => '-q production -M 1000' },
+  };
 }
-
 
 sub pipeline_analyses {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    my $pipeline_analyses = Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self);
-    $pipeline_analyses->[0]->{'-input_ids'} = [ {
-        'compara_db'    => $self->o('compara_db'),
-        } ];
-    return $pipeline_analyses;
+  my $pipeline_analyses = Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self);
+  $pipeline_analyses->[0]->{'-input_ids'} = [ {
+    'compara_db' => $self->o('compara_db'),
+  } ];
+  return $pipeline_analyses;
 }
 
-
 1;
-
-

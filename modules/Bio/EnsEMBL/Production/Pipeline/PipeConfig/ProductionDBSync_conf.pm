@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,7 +47,26 @@ sub default_options {
 
     # DB Factory
     species      => [],
-    antispecies  => [],
+    antispecies  => [
+        'mus_caroli',
+        'mus_musculus_129s1svimj',
+        'mus_musculus_aj',
+        'mus_musculus_akrj',
+        'mus_musculus_balbcj',
+        'mus_musculus_c3hhej',
+        'mus_musculus_c57bl6nj',
+        'mus_musculus_casteij',
+        'mus_musculus_cbaj',
+        'mus_musculus_dba2j',
+        'mus_musculus_fvbnj',
+        'mus_musculus_lpj',
+        'mus_musculus_nodshiltj',
+        'mus_musculus_nzohlltj',
+        'mus_musculus_pwkphj',
+        'mus_musculus_wsbeij',
+        'mus_pahari',
+        'mus_spretus'
+    ],
     division     => [],
     dbname       => [],
     run_all      => 0,
@@ -73,7 +92,7 @@ sub pipeline_create_commands {
   my ($self) = @_;
 
   my @cmds = (
-    'mkdir -p '.$self->o('backup_dir')
+    'mkdir -p '.$self->o('pipeline_dir')
   );
   if (defined $self->o('datacheck_output_dir')) {
     push @cmds, 'mkdir -p '.$self->o('datacheck_output_dir');
@@ -162,9 +181,8 @@ sub pipeline_analyses {
                                 'attrib',
                                 'attrib_set'
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'controlled_tables_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['PopulateControlledTables'],
     },
     {
@@ -177,9 +195,8 @@ sub pipeline_analyses {
                               table_list  => [
                                 'analysis_description',
                               ],
-                              output_file => catdir($self->o('backup_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
+                              output_file => catdir($self->o('pipeline_dir'), '#dbname#', 'analysis_description_bkp.sql.gz'),
                             },
-      -rc_name           => 'normal',
       -flow_into         => ['PopulateAnalysisDescription'],
     },
     {
@@ -212,7 +229,24 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
                               failures_fatal   => 1,
                             },
-      -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1' => ['RunDatachecksControlledTables_HighMem'],
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksControlledTables_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['controlled_tables'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
+                              failures_fatal   => 1,
+                            },
+      -rc_name           => '16GB',
     },
     {
       -logic_name        => 'RunDatachecksADCritical',
@@ -227,7 +261,24 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADCritical.txt'),
                               failures_fatal   => 1,
                             },
-      -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1' => ['RunDatachecksADCritical_HighMem'],
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksADCritical_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['critical'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADCritical.txt'),
+                              failures_fatal   => 1,
+                            },
+      -rc_name           => '16GB',
     },
     {
       -logic_name        => 'RunDatachecksADAdvisory',
@@ -242,7 +293,25 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADAdvisory.txt'),
                               failures_fatal   => 0,
                             },
-      -rc_name           => 'normal',
+      -flow_into         => {
+                              '-1' => 'RunDatachecksADAdvisory_HighMem',
+                              '4'  => 'EmailReportADAdvisory'
+                            },
+    },
+    {
+      -logic_name        => 'RunDatachecksADAdvisory_HighMem',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -analysis_capacity => 10,
+      -max_retry_count   => 1,
+      -parameters        => {
+                              datacheck_groups => ['analysis_description'],
+                              datacheck_types  => ['advisory'],
+                              registry_file    => $self->o('registry'),
+                              history_file     => $self->o('history_file'),
+                              output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADAdvisory.txt'),
+                              failures_fatal   => 0,
+                            },
+      -rc_name           => '16GB',
       -flow_into         => {
                               '4' => 'EmailReportADAdvisory'
                             },
@@ -256,7 +325,6 @@ sub pipeline_analyses {
                               email         => $self->o('email'),
                               pipeline_name => $self->o('pipeline_name'),
                             },
-      -rc_name           => 'normal',
     },
     {
       -logic_name        => 'EmailReport',
@@ -269,7 +337,6 @@ sub pipeline_analyses {
                               history_file  => $self->o('history_file'),
                               output_dir    => $self->o('datacheck_output_dir'),
                             },
-      -rc_name           => 'normal',
     },
 
   ];

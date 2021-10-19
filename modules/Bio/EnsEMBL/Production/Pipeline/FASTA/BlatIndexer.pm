@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -115,7 +115,9 @@ sub run_indexing {
 
 sub index_file {
   my ($self, $file) = @_;
-  
+
+  $self->delete_existing();
+
   my $target_file = $self->target_file();
   my $cmd = sprintf(q{%s %s %s}, 
     $self->param('program'), $file, $target_file);
@@ -194,6 +196,19 @@ sub index_path {
   my $dir = File::Spec->catdir( $base_dir, $format, @extras);
   mkpath($dir);
   return $dir;
+}
+
+sub delete_existing {
+  my ($self) = @_;
+  my $species = $self->param('species');
+  $species = ucfirst($species);
+  my $target_dir = $self->target_dir();
+  opendir(DIR, $target_dir);
+  foreach my $file ( grep(/\.$species\./, readdir(DIR)) ) {
+    next if $file =~ /Homo_sapiens\.GRCh37/;
+    unlink File::Spec->catdir( $target_dir, $file);
+  }
+  closedir(DIR);
 }
 
 1;

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2020] EMBL-European Bioinformatics Institute
+# Copyright [2016-2021] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,16 +28,7 @@ if [ ! -d "$base_dir" ]; then
 fi
 
 function upload_file {
-    file=$(basename $1)
-    dir=$(dirname $1)
-    ftp -n -v ftp-private.ebi.ac.uk <<EOF
-lcd $dir
-user enaftp submit1
-prompt
-cd xref
-binary
-put $file
-EOF
+    lftp -e "put -O xref $1; bye" -u enaftp,submit1 ftp-private.ebi.ac.uk
 }
 
 for division in bacteria plants fungi metazoa protists; do

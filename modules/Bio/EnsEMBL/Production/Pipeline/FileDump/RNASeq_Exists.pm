@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ sub run {
     my $dfa = $dba->get_adaptor('DataFile');
     my $data_files = $dfa->fetch_all;
 
-    my @missing;
+    my @missing = ();
     foreach my $data_file (@$data_files) {
       my $name = $data_file->name;
       my @paths;
@@ -62,9 +62,8 @@ sub run {
         }
       }
     }
-    if (scalar(@missing)) {
-      $self->throw('Missing data files: '.join(',', @missing));
-    }
+    $self->param('rnaseq_db', $dba->dbc->dbname);
+    $self->param('missing', \@missing);
   }
 
   # Ensure checksum and README filenames are consistent.
@@ -84,10 +83,22 @@ sub run {
 
 sub write_output {
   my ($self) = @_;
+  my $output_dir    = $self->param_required('output_dir');
   my $rnaseq_exists = $self->param_required('rnaseq_exists');
 
   if ($rnaseq_exists) {
-    $self->dataflow_output_id({}, 2);
+    if (-e $output_dir) {
+      $self->dataflow_output_id({}, 2);
+    }
+
+    my $rnaseq_db = $self->param_required('rnaseq_db');
+    my $missing   = $self->param_required('missing');
+    if (scalar(@$missing)) {
+      $self->dataflow_output_id({
+        'missing'   => $missing,
+        'rnaseq_db' => $rnaseq_db
+      }, 3);
+    }
   }
 }
 

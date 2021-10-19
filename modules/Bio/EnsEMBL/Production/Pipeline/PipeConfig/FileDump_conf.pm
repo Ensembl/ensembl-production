@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,13 +42,24 @@ sub default_options {
     ftp_root => undef,
 
     genome_types  => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
-    geneset_types => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'
-    rnaseq_types  => [], # Possible values: 'Symlink_RNASeq'
+    geneset_types => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
+    rnaseq_types  => [], # Possible values: 'RNASeq_Exists'
 
     dump_metadata  => 0,
     dump_mysql     => 0,
     overwrite      => 0,
     per_chromosome => 0,
+
+    rnaseq_email => $self->o('email'),
+
+    # Pre-dump datachecks
+    run_datachecks   => 0,
+    config_file      => undef,
+    history_file     => undef,
+    output_dir       => undef,
+    datacheck_names  => [],
+    datacheck_groups => [],
+    datacheck_types  => [],
 
     # External programs
     blastdb_exe          => 'makeblastdb',
@@ -88,23 +99,13 @@ sub pipeline_wide_parameters {
   my ($self) = @_;
   return {
     %{$self->SUPER::pipeline_wide_parameters},
-    dump_dir      => $self->o('dump_dir'),
-    ftp_root      => $self->o('ftp_root'),
-    dump_metadata => $self->o('dump_metadata'),
-    dump_mysql    => $self->o('dump_mysql'),
-    overwrite     => $self->o('overwrite'),
+    dump_dir       => $self->o('dump_dir'),
+    ftp_root       => $self->o('ftp_root'),
+    dump_metadata  => $self->o('dump_metadata'),
+    dump_mysql     => $self->o('dump_mysql'),
+    overwrite      => $self->o('overwrite'),
+    run_datachecks => $self->o('run_datachecks'),
   };
-}
-
-sub resource_classes {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::resource_classes},
-    '1GB'  => {'LSF' => '-q production-rh74 -M 1000 -R "rusage[mem=1000,scratch=1000]"'},
-    '2GB'  => {'LSF' => '-q production-rh74 -M 2000 -R "rusage[mem=2000,scratch=1000]"'},
-    '4GB'  => {'LSF' => '-q production-rh74 -M 4000 -R "rusage[mem=4000,scratch=1000]"'},
-    '8GB'  => {'LSF' => '-q production-rh74 -M 8000 -R "rusage[mem=8000,scratch=1000]"'},
-	}
 }
 
 sub pipeline_analyses {
@@ -151,7 +152,31 @@ sub pipeline_analyses {
                               meta_filters => $self->o('meta_filters'),
                             },
       -flow_into         => {
-                              '2' => WHEN('#dump_mysql#' =>
+                              '2' => WHEN(
+                                       '#run_datachecks#' => ['RunDataChecks'],
+                                       '#dump_mysql# && !#run_datachecks#' => ['MySQL_TXT', 'SpeciesFactory'],
+                                     ELSE
+                                       ['SpeciesFactory']
+                                     )
+                             },
+    },
+    {
+      -logic_name        => 'RunDataChecks',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -parameters        => {
+                              registry_file      => $self->o('registry'),
+                              history_file       => $self->o('history_file'),
+                              output_dir         => $self->o('output_dir'),
+                              config_file        => $self->o('config_file'),
+                              datacheck_names    => $self->o('datacheck_names'),
+                              datacheck_groups   => $self->o('datacheck_groups'),
+                              datacheck_types    => $self->o('datacheck_types'),
+                              failures_fatal     => 1,
+                            },
+      -flow_into         => {
+                              '3' => WHEN('#dump_mysql#' =>
                                        ['MySQL_TXT', 'SpeciesFactory'],
                                      ELSE
                                        ['SpeciesFactory']
@@ -322,6 +347,22 @@ sub pipeline_analyses {
                             },
     },
     {
+      -logic_name        => 'Geneset_GFF3_ENA',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
+      -max_retry_count   => 1,
+      -hive_capacity     => 10,
+      -parameters        => {
+                              per_chromosome       => $self->o('gff3_per_chromosome'),
+                              gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                              gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+                            },
+      -rc_name           => '2GB',
+      -flow_into         => {
+                              '-1' => ['Geneset_GFF3_ENA_mem'],
+                              '2'  => ['Geneset_Compress']
+                            },
+    },
+    {
       -logic_name        => 'Geneset_GTF',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
       -max_retry_count   => 1,
@@ -361,8 +402,19 @@ sub pipeline_analyses {
 	    -rc_name           => '1GB',
       -flow_into         => {
                               '2->A' => ['Symlink_RNASeq'],
-                              'A->2' => ['Verify_Unzipped']
+                              'A->2' => ['Verify_Unzipped'],
+                              '3'    => ['RNASeq_Missing'],
                             },
+    },
+    {
+      -logic_name        => 'RNASeq_Missing',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Missing',
+      -max_retry_count   => 1,
+      -hive_capacity     => 10,
+      -batch_size        => 10,
+      -parameters        => {
+                              email => $self->o('rnaseq_email'),
+                            }
     },
     {
       -logic_name        => 'Genome_FASTA_mem',
@@ -422,6 +474,22 @@ sub pipeline_analyses {
                               overwrite            => 1,
                             },
 	    -rc_name           => '8GB',
+      -flow_into         => {
+                              '2' => ['Geneset_Compress']
+                            },
+    },
+    {
+      -logic_name        => 'Geneset_GFF3_ENA_mem',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
+      -max_retry_count   => 1,
+      -hive_capacity     => 10,
+      -parameters        => {
+                              per_chromosome       => $self->o('gff3_per_chromosome'),
+                              gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                              gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+                              overwrite            => 1,
+                            },
+      -rc_name           => '8GB',
       -flow_into         => {
                               '2' => ['Geneset_Compress']
                             },

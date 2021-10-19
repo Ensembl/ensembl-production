@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2020] EMBL-European Bioinformatics Institute
+Copyright [2016-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -166,13 +166,20 @@ sub run {
       } elsif ($db =~ /RNAcentral/) {
         $self->log()->debug("Adding linkage to RNAcentral");
         $is_transcript = 1;
-        # Accession is the version with taxonomy id appended, e.g. URS0000007FBA_9606
-        # We store as URS0000007FBA, so need to remove everything from the _
-        # precursor_rna could be a list of accessions
-        my @precursor_rnas = split(",", $precursor_rna) if $precursor_rna;
-        foreach my $rna (@precursor_rnas) {
-          $rna =~ s/_[0-9]*//;
-          $db_object_id = $rna;
+        # For microRNAs, GOA link terms to the product; however, we annotate GO terms
+	# against transcripts, not mature products, i.e. precursor miRNAs. Fortunately,
+	# the accessions for the precursor(s) are in the GPAD file, so we can use those
+	# instead of the standard RNAcentral accession that we use for everything else.
+        my @db_object_ids;
+        if ($precursor_rna) {
+          @db_object_ids = split(",", $precursor_rna);
+        } else {
+          @db_object_ids = ($db_object_id)
+        }
+        foreach my $db_object_id (@db_object_ids) {
+          # The ID has the taxonomy id appended, e.g. URS0000007FBA_9606
+          # We store as URS0000007FBA, so need to remove the suffix.
+          $db_object_id =~ s/_[0-9]+$//;
           my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
           if (scalar(@$rnacentral_xrefs) != 0) {
             $master_xref = $rnacentral_xrefs->[0];

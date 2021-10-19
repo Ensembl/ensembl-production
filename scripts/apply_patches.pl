@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2020] EMBL-European Bioinformatics Institute
+# Copyright [2016-2021] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ my $dbh = DBI->connect($dsn, $opts->{user}, $opts->{pass}) ||
 my $available_databases = [];
 if (!defined $opts->{pattern}) {
   if (defined $opts->{database}) {
-    $opts->{pattern} = $opts->{database};
+    $opts->{pattern} = '^'.$opts->{database}.'$';
   }
   else {
     $opts->{pattern} = '.*';
