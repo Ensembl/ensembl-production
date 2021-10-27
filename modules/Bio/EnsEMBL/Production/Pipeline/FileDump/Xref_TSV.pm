@@ -104,6 +104,7 @@ sub print_xrefs {
     $edb_filter = " AND e.db_name in ($external_db_list) ";
   }
 
+  $file->append("\n");
   $self->print_xref_subset( $file, $self->go_xref_sql($edb_filter) );
   $self->print_xref_subset( $file, $self->gene_xref_sql($edb_filter) );
   $self->print_xref_subset( $file, $self->transcript_xref_sql($edb_filter) );
@@ -120,6 +121,7 @@ sub print_xref_subset {
 
   foreach my $result (@$results) {
     $file->append(join("\t", @$result));
+    $file->append("\n");
   }
 }
 
