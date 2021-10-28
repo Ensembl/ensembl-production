@@ -93,7 +93,6 @@ sub pipeline_analyses {
       -module => 'Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures',
       -input_ids  => [{}],
       -parameters => {
-        output_path => $self->o('base_path'),
         core_dbhost => $self->o('host'),
         core_dbport => $self->o('port'),
         core_dbname => $self->o('dbname'),
