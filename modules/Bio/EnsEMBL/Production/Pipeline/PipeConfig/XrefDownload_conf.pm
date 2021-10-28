@@ -190,7 +190,7 @@ sub resource_classes {
   return {
     %{$self->SUPER::resource_classes},
     'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' }, # Change 'production' to 'production-rh74' if running on noah
-    'normal' => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"' }
+    'normal' => { 'LSF' => '-q production -M 1000 -R "rusage[mem=1000]"' }
   };
 }
 
