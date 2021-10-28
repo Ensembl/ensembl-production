@@ -41,6 +41,8 @@ sub run {
   if (!$clean_files) {return;}
   if ($name !~ /^Uniprot/) {return;}
 
+  my $file_size = 200000;
+
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
 
@@ -97,12 +99,14 @@ sub run {
     }
 
     # Only start cleaning up if could get filehandle
+    my $count = 0;
+    my $file_count = 1;
     if (defined($in_fh)) {
       local $/ = "//\n";
 
-      $output_file = $output_path."/".$output_file;
-      open($out_fh, '>', $output_file)
-        or die "Couldn't open output file '$output_file' $!";
+      my $write_file = $output_path."/".$output_file . "-$file_count";
+      open($out_fh, '>', $write_file)
+        or die "Couldn't open output file '$write_file' $!";
 
       # Read full records
       while ($_ = $in_fh->getline()) {
@@ -114,6 +118,17 @@ sub run {
 
         # Added lines that we do need into output
         print $out_fh $_;
+
+	# Check how many lines have been processed and write to new file if size exceeded
+	$count++;
+	if ($count > $file_size) {
+          close($out_fh);
+	  $file_count++;
+	  $write_file = $output_path."/".$output_file . "-$file_count";
+	  open($out_fh, '>', $write_file)
+            or die "Couldn't open output file '$write_file' $!";
+          $count = 0;
+        }
       }
 
       close($in_fh);
