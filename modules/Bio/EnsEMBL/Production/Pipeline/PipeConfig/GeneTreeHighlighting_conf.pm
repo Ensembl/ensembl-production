@@ -33,6 +33,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
     my ($self) = @_;
@@ -40,26 +41,26 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
 
-        species                     => [],
-        division                    => [],
-        run_all                     => 0,
-        antispecies                 => [],
-        meta_filters                => {},
-
+        species                 => [],
+        division                => [],
+        run_all                 => 0,
+        antispecies             => [],
+        meta_filters            => {},
+        history_file            => undef,
+        output_dir              => undef,
+        config_file             => undef,
         ## Allow division of compara database to be explicitly specified
-        compara_division            => undef,
+        compara_division        => undef,
+        ensembl_cvs_root_dir    => $ENV{'BASE_DIR'},
+        external_db_sql         => "insert ignore into external_db " .
+            "(external_db_id, db_name, status, priority, db_display_name, type) " .
+            "values (1000, 'GO', 'XREF', 5, 'GO', 'MISC'), " .
+            "(1200, 'Interpro', 'XREF', 5, 'InterPro', 'MISC');",
 
-        external_db_sql             => 'insert ignore into external_db ' .
-            '(external_db_id, db_name, status, priority, db_display_name, type) ' .
-            'values (1000, "GO", "XREF", 5, "GO", "MISC"), ' .
-            '(1200, "Interpro", "XREF", 5, "InterPro", "MISC");',
-
-        delete_members_xref_sql => "delete mx.*
-                from member_xref mx
-      	            join external_db e using (external_db_id)
-      	       	where e.db_name in ('GO', 'Interpro')",
-
-        highlighting_capacity       => 20,
+        delete_members_xref_sql => "delete mx.* ".
+                "from member_xref mx where mx.external_db_id in (1000, 1200)",
+        disable_key_sql         => 'ALTER TABLE `member_xref` DISABLE KEYS',
+        highlighting_capacity   => 20,
     }
 }
 
@@ -72,7 +73,7 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -input_ids  => [ {} ],
             -parameters => {
-                cmd             => '#compara_host# #compara_db# -e \'#external_db_sql#\'',
+                cmd             => '#compara_host# #compara_db# -e "#external_db_sql#"',
                 compara_db      => $self->o('compara_db'),
                 compara_host    => $self->o('compara_host'),
                 external_db_sql => $self->o('external_db_sql')
@@ -82,12 +83,22 @@ sub pipeline_analyses {
         {
             -logic_name => 'delete_member_xref',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -input_ids  => [ {} ],
             -parameters => {
-                cmd             => '#compara_host# #compara_db# -e \'#delete_members_xref_sql#\'',
+                cmd             => '#compara_host# #compara_db# -e "#delete_members_xref_sql#"',
                 compara_db      => $self->o('compara_db'),
                 compara_host    => $self->o('compara_host'),
-                external_db_sql => $self->o('delete_members_xref_sql')
+                delete_members_xref_sql => $self->o('delete_members_xref_sql')
+            },
+            -flow_into  => [ 'disable_keys' ],
+        },
+        {
+            -logic_name => 'disable_keys',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -parameters => {
+                cmd             => '#compara_host# #compara_db# -e "#disable_key_sql#"',
+                compara_db      => $self->o('compara_db'),
+                compara_host    => $self->o('compara_host'),
+                disable_key_sql => $self->o('disable_key_sql')
             },
             -flow_into  => [ 'job_factory' ],
         },
@@ -106,7 +117,6 @@ sub pipeline_analyses {
                 'A->2' => [ 'highlight_interpro' ],
             }
         },
-
         {
             -logic_name    => 'highlight_go',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightGO',
@@ -115,7 +125,6 @@ sub pipeline_analyses {
                 compara_division => $self->o('compara_division'),
             },
         },
-
         {
             -logic_name    => 'highlight_interpro',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::GeneTreeHighlight::HighlightInterPro',
@@ -123,7 +132,44 @@ sub pipeline_analyses {
             -parameters    => {
                 compara_division => $self->o('compara_division'),
             },
+            -flow_into     => [ 'check_duplicates_member_xref' ],
         },
+        {
+            -logic_name        => 'check_duplicates_member_xref',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -analysis_capacity => 1,
+            -max_retry_count   => 0,
+            -parameters        => {
+                datacheck_names => [ 'DuplicateComparaMemberXref' ],
+                registry_file   => $self->o('registry'),
+                history_file    => $self->o('history_file'),
+                failures_fatal  => 0,
+            },
+            -flow_into         => WHEN(
+                '#datachecks_failed#' => [ 'deduplicate_rows' ],
+                ELSE [ 'run_final_dc' ])
+        },
+        {
+            -logic_name => 'deduplicate_rows',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+            -parameters => {
+                'input_file' => $self->o('ensembl_cvs_root_dir') . '/ensembl-production/module/Bio/EnsEMBL/Production/PipelineGeneTreeHighlight/deduplicate.sql',
+            },
+            -flow_into  => [ 'run_final_dc' ],
+        },
+        {
+            -logic_name        => 'run_final_dc',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -analysis_capacity => 1,
+            -max_retry_count   => 0,
+            -parameters        => {
+                datacheck_names => [ 'GeneTreeHighlighting' ],
+                registry_file   => $self->o('registry'),
+                history_file    => $self->o('history_file'),
+                failures_fatal  => 1,
+            }
+        },
+
     ];
 }
 
