@@ -95,7 +95,7 @@ sub pipeline_analyses {
             -logic_name => 'disable_keys',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters => {
-                cmd             => '#compara_host# #compara_db# -e "#disable_key_sql#"',
+                cmd             => '#compara_host# #compara_db# -e \'#disable_key_sql#\'',
                 compara_db      => $self->o('compara_db'),
                 compara_host    => $self->o('compara_host'),
                 disable_key_sql => $self->o('disable_key_sql')
