@@ -158,7 +158,7 @@ foreach my $db_name (@{$dbs}){
   my $current_dbname = $db_name->[0];
   print STDERR "Going to update mapping for $current_dbname....\n";
   my $mapping_set_id = get_max_mapping_set_id($dbh,$current_dbname) + 1;
-  my $sth_seq_mapping = $dbh->prepare("INSERT INTO $current_dbname.seq_region_mapping VALUES(?,?,?)");
+  my $sth_seq_mapping = $dbh->prepare("INSERT IGNORE INTO $current_dbname.seq_region_mapping VALUES(?,?,?)");
   my $sth_mapping_set = $dbh->prepare("INSERT INTO $current_dbname.mapping_set VALUES(?,?,?)");
   my $sth_update_build = $dbh->prepare("UPDATE $current_dbname.mapping_set SET internal_schema_build = ?");
   my $sth_update_old = $dbh->prepare("UPDATE $current_dbname.seq_region_mapping SET internal_seq_region_id = ? WHERE internal_seq_region_id = ?");

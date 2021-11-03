@@ -41,42 +41,33 @@ use Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions;
 use Bio::EnsEMBL::Registry;
 
 sub default_options {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::default_options},
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::default_options},
 
-    pipeline_name => 'compara_name_update_'.$self->o('rel_with_suffix'),
+        pipeline_name   => 'compara_name_update_' . $self->o('rel_with_suffix'),
 
-    update_capacity => '5',
-  };
+        update_capacity => '5',
+    };
 }
 
 # Ensures that output parameters get propagated implicitly.
 sub hive_meta_table {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack' => 1,
-  };
-}
-
-sub resource_classes {
-  my ($self) = @_;
-  return {
-    %{$self->SUPER::resource_classes},
-    '500Mb_job' => { LSF => '-q production -M  500' },
-    '1Gb_job'   => { LSF => '-q production -M 1000' },
-  };
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::hive_meta_table},
+        'hive_use_param_stack' => 1,
+    };
 }
 
 sub pipeline_analyses {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  my $pipeline_analyses = Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self);
-  $pipeline_analyses->[0]->{'-input_ids'} = [ {
-    'compara_db' => $self->o('compara_db'),
-  } ];
-  return $pipeline_analyses;
+    my $pipeline_analyses = Bio::EnsEMBL::Compara::PipeConfig::Parts::UpdateMemberNamesDescriptions::pipeline_analyses_member_names_descriptions($self);
+    $pipeline_analyses->[0]->{'-input_ids'} = [ {
+        'compara_db' => $self->o('compara_db'),
+    } ];
+    return $pipeline_analyses;
 }
 
 1;
