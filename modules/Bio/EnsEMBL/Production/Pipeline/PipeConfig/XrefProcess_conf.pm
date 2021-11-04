@@ -39,6 +39,7 @@ sub default_options {
     # Parameters for source data
     'config_file'      => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/xref_sources.json",
     'source_url'       => '',
+    'source_xref'      => '',
 
     # Parameters for 'job_factory'
     'species'          => [],
@@ -93,8 +94,8 @@ sub pipeline_analyses {
       release    => $self->o('release'),
       sql_dir    => $self->o('sql_dir'),
       priority   => 1,
-      base_path  => $self->o('base_path'),
       source_url => $self->o('source_url'),
+      source_xref => $self->o('source_xref'),
       xref_url   => $self->o('xref_url'),
       xref_host  => $self->o('xref_host'),
       xref_port  => $self->o('xref_port'),
@@ -112,7 +113,6 @@ sub pipeline_analyses {
       release    => $self->o('release'),
       sql_dir    => $self->o('sql_dir'),
       priority   => 2,
-      base_path  => $self->o('base_path'),
       source_url => $self->o('source_url'),
       xref_url   => $self->o('xref_url'),
       xref_host  => $self->o('xref_host'),
@@ -133,7 +133,6 @@ sub pipeline_analyses {
       release    => $self->o('release'),
       sql_dir    => $self->o('sql_dir'),
       priority   => 3,
-      base_path  => $self->o('base_path'),
       source_url => $self->o('source_url'),
       xref_url   => $self->o('xref_url'),
       xref_host  => $self->o('xref_host'),
@@ -154,6 +153,9 @@ sub pipeline_analyses {
     -hive_capacity     => 300,
     -analysis_capacity => 50,
     -batch_size        => 30,
+    -parameters => {
+      source_xref => $self->o('source_xref'),
+    },
   },
   {
     -logic_name => 'dump_ensembl',
@@ -347,7 +349,7 @@ sub resource_classes {
   return {
     %{$self->SUPER::resource_classes},
     'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' },
-    'normal' => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"' }
+    'normal' => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"' },
     'mem'    => { 'LSF' => '-q production -M 3000 -R "rusage[mem=3000]"' },
     'large'  => { 'LSF' => '-q production -M 10000 -R "rusage[mem=10000]"' },
   }
