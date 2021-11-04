@@ -155,11 +155,13 @@ sub pipeline_analyses {
 	source_url    => $self->o('source_url'),
 	release       => $self->o('release'),
 	sql_dir       => $self->o('sql_dir'),
-	source_xref   => $self->o('source_xref')
+	source_xref   => $self->o('source_xref'),
       },
       -flow_into  => {
-        '2->A' => 'pre_parse_source',
-        'A->1' => 'notify_by_email'
+        '1->A' => 'pre_parse_source',
+        '2' => 'pre_parse_source_dependent',
+	'3' => 'pre_parse_source_tertiary',
+	'A->1' => 'notify_by_email'
       },
       -rc_name    => 'small'
     },
@@ -167,8 +169,24 @@ sub pipeline_analyses {
       -logic_name => 'pre_parse_source',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
       -comment    => 'Store data for faster species parsing',
-      -rc_name    => '4GB',
-      -hive_capacity => 50,
+      -rc_name    => '2GB',
+      -hive_capacity => 100,
+    },
+    {
+      -logic_name => 'pre_parse_source_dependent',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
+      -comment    => 'Store data for faster species parsing',
+      -rc_name    => '2GB',
+      -hive_capacity => 100,
+      -wait_for => 'pre_parse_source'
+    },
+    {
+      -logic_name => 'pre_parse_source_tertiary',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
+      -comment    => 'Store data for faster species parsing',
+      -rc_name    => '2GB',
+      -hive_capacity => 100,
+      -wait_for => 'pre_parse_source_dependent',
     },
     {
       -logic_name => 'notify_by_email',

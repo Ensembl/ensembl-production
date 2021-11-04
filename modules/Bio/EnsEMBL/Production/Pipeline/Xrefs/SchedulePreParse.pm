@@ -45,10 +45,10 @@ sub run {
   # Retrieve list of sources to pre-parse from versioning database
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, revision FROM source s, version v WHERE s.source_id = v.source_id and preparse = 1");
-  my ($name, $parser, $dir, $clean_dir, $version_file);
+  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, revision, count_seen FROM source s, version v WHERE s.source_id = v.source_id and preparse = 1");
+  my ($name, $parser, $dir, $clean_dir, $version_file, $priority);
   $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$dir, \$clean_dir, \$version_file);
+  $select_source_sth->bind_columns(\$name, \$parser, \$dir, \$clean_dir, \$version_file, \$priority);
 
   my $dataflow_params;
   while ($select_source_sth->fetch()) {
@@ -64,7 +64,7 @@ sub run {
         xref_url     => $source_xref,
         file         => $file,
       };
-      $self->dataflow_output_id($dataflow_params, 2);
+      $self->dataflow_output_id($dataflow_params, $priority);
     }
   }
 }
