@@ -35,7 +35,6 @@ sub run {
   my $species          = $self->param_required('species');
   my $release          = $self->param_required('release');
   my $sql_dir          = $self->param_required('sql_dir');
-  my $base_path        = $self->param_required('base_path');
   my $order_priority   = $self->param_required('priority');
 
   my $source_url       = $self->param_required('source_url');
@@ -50,6 +49,11 @@ sub run {
   if ($db_url) {
     ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
+  my ($xref_source_user, $xref_source_pass, $xref_source_host, $xref_source_port, $xref_source_db, $xref_source_dbi);
+  if ($source_xref) {
+    ($xref_source_user, $xref_source_pass, $xref_source_host, $xref_source_port, $xref_source_db) = $self->parse_url($source_xref);
+    $xref_source_dbi = $self->get_dbi($xref_source_host, $xref_source_port, $xref_source_user, $xref_source_pass, $xref_source_db);
+  }
 
   # Create Xref database
   my $dbname = $species . "_xref_update_" . $release;
@@ -59,7 +63,7 @@ sub run {
             port    => $port,
             user    => $user,
             pass    => $pass });
-  $dbc->create($sql_dir, 1, 1) if $order_priority == 1; 
+  $dbc->create($sql_dir, 1, 1, $xref_source_dbi) if $order_priority == 1; 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
   my $xref_dbi = $dbc->dbi();
 
@@ -105,7 +109,6 @@ sub run {
         parser        => $parser,
         source        => $source_id,
         xref_url      => $xref_db_url,
-	source_xref   => $source_xref,
         db            => $db,
         release_file  => $release_file,
         file_name     => $file_name
@@ -129,7 +132,6 @@ sub run {
           db            => $db,
           release_file  => $release_file,
           priority      => $priority,
-	  source_xref   => $source_xref,
           file_name     => $file
         };
         $self->dataflow_output_id($dataflow_params, 2);
