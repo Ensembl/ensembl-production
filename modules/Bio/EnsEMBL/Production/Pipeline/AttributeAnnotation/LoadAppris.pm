@@ -92,7 +92,7 @@ sub run {
   }
 
   if ( $stable_id_in_file != $appris_transcripts ) {
-    throw("Not all transcripts found in database");
+    $self->throw("Not all transcripts found in database");
   }
   
   $dba->dbc->disconnect_if_idle();
