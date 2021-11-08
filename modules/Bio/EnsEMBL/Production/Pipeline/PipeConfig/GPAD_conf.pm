@@ -56,7 +56,14 @@ sub default_options {
     history_file   => undef,
     config_file    => undef,
     old_server_uri => undef,
-    advisory_dc_output => $self->o('pipeline_dir') . '/advisory_dc_output'
+    advisory_dc_output => $self->o('pipeline_dir') . '/advisory_dc_output',
+
+    #filewatcher
+    file_name => 'annotations_ensembl-{}.gpa',
+    directory => $self->o('gpad_directory') . '/' . $self->o('gpad_dirname'),
+    watch_until => 48,
+    wait => 0,     
+
   };
 }
 
@@ -84,14 +91,28 @@ sub pipeline_analyses {
 
   return [
     {
-      -logic_name        => 'InitDummy',
+        -logic_name      => 'FileWatcher',
+        -module          => 'ensembl.production.hive.FileWatcher',
+        -max_retry_count => 0,
+        -language        => 'python3',
+        -parameters      => {
+                              directory => $self->o('directory'),
+                              file_name => $self->o('file_name') ,
+			      species => $self->o('species'),
+                              watch_until => $self->o('watch_until'),
+                              wait => $self->o('wait'),
+                            },
+        -flow_into        => { 1 => ['AdvisoryDCReportInit'] },
+        -input_ids         => [ {} ],
+    },
+    {
+      -logic_name        => 'AdvisoryDCReportInit',
       -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -input_ids         => [ {} ],
       -flow_into        => {
               '1->A' => ['DbFactory'],
               'A->1' => ['DataCheckResults'],
       }
-    },
+    },	  
     {
        -logic_name       => 'DataCheckResults',
        -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
