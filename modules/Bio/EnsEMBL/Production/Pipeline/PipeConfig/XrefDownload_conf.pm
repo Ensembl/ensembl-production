@@ -158,10 +158,10 @@ sub pipeline_analyses {
 	source_xref   => $self->o('source_xref'),
       },
       -flow_into  => {
-        '1->A' => 'pre_parse_source',
+        '1' => 'pre_parse_source',
         '2' => 'pre_parse_source_dependent',
 	'3' => 'pre_parse_source_tertiary',
-	'A->1' => 'notify_by_email'
+	'-1' => 'notify_by_email'
       },
       -rc_name    => 'small'
     },
@@ -195,8 +195,10 @@ sub pipeline_analyses {
       -parameters => {
         email   => $self->o('email'),
         subject => 'Xref Download finished',
+	base_path => $self->o('base_path'),
         clean_files => $self->o('clean_files')
       },
+      -wait_for => 'pre_parse_source_tertiary',
       -rc_name    => 'small'
     }
   ];
