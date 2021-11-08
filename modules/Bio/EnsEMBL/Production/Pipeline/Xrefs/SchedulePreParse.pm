@@ -67,6 +67,10 @@ sub run {
       $self->dataflow_output_id($dataflow_params, $priority);
     }
   }
+  $dataflow_params = {
+    db_url => $source_url
+  };
+  $self->dataflow_output_id($dataflow_params, -1);
 }
 
 1;
