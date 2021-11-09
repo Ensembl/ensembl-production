@@ -34,17 +34,28 @@ sub run {
   my $version_file = $self->param('version_file');
   my $clean_files  = $self->param('clean_files');
   my $clean_dir    = $self->param_required('clean_dir');
+  my $skip_download = $self->param('skip_download');
 
   # Exit if not cleaning files or not a refseq source
   if (!$clean_files) {return;}
   if ($name !~ /^RefSeq_dna/) {return;}
 
-  # Remove last '/' character if it exists
-  if ($base_path =~ /\/$/) {chop($base_path);}
-
   # Create needed directories
   my $output_path = $clean_dir."/".$name;
   make_path($output_path);
+
+  # Save the clean files directory in source db
+  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
+  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
+  $update_version_sth->execute($output_path, $name);
+  $update_version_sth->finish();
+
+  # If no new download, no need to clean up the files again
+  if ($skip_download) { return; }
+
+  # Remove last '/' character if it exists
+  if ($base_path =~ /\/$/) {chop($base_path);}
 
   # Get all files for source
   my $files_path = $base_path."/".$name;
@@ -77,18 +88,10 @@ sub run {
       # Remove unuused data
       my $skip_data = 0;
       while (<$in_fh>) {
-      	if ($_ =~ /^REFERENCE/) {
+      	if ($_ =~ /^REFERENCE/ || $_ =~ /^COMMENT/ || $_ =~ /^\s{5}exon/ || $_ =~ /^\s{5}misc_feature/ || $_ =~ /^\s{5}variation/) {
       	  $skip_data = 1;
-      	} elsif ($skip_data) {
-          if ($_ =~ /^\s{5}gene/) {
-            $skip_data = 0;
-          } elsif ($_ =~ /^ORIGIN/) {
-	          $skip_data = 0;
-          }
-      	} elsif ($_ =~ /^\s{5}exon/) {
-                $skip_data = 1;
-      	} elsif ($_ =~ /^\s{5}variation/){
-                $skip_data = 1;
+      	} elsif ($_ =~ /^\s{5}source/ || $_ =~ /^ORIGIN/) {
+          $skip_data = 0;
       	}
 
         if (!$skip_data) {print $out_fh $_;}
@@ -99,12 +102,6 @@ sub run {
     }
   }
 
-  # Save the clean files directory in source db
-  my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
-  my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
-  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
-  $update_version_sth->execute($output_path, $name);
-  $update_version_sth->finish();
 }
 
 1;

@@ -94,6 +94,9 @@ sub download_file {
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
     unless ($skip_download_if_file_present and -f $file_path) {
+      if (defined $db and $db eq 'checksum') {
+        $file_path = catfile($dest_dir, $source_name."-".basename($uri->path));
+      }
       open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
       my $http = HTTP::Tiny->new();
       my $response = $http->get($uri->as_string());

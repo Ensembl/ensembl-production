@@ -35,10 +35,13 @@ sub run {
   my $version_file = $self->param('version_file');
   my $clean_files  = $self->param('clean_files');
   my $clean_dir    = $self->param_required('clean_dir');
+  my $skip_download = $self->param('skip_download');
 
   # Exit if not cleaning files or not a uniprot source
   if (!$clean_files) {return;}
   if ($name !~ /^Uniprot/) {return;}
+
+  my $file_size = 200000;
 
   # Remove last '/' character if it exists
   if ($base_path =~ /\/$/) {chop($base_path);}
@@ -51,9 +54,17 @@ sub run {
   my $output_path = $clean_dir."/".$clean_name;
   make_path($output_path);
 
-  # Get xref sources
+  # Save the clean files directory in source db
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
+  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
+  $update_version_sth->execute($output_path, $name);
+  $update_version_sth->finish();
+
+  # If no new download, no need to clean up the files again
+  if ($skip_download) { return; }
+
+  # Get xref sources
   my %sources = get_source_names($dbi);
 
   # Set sources to skip
@@ -61,6 +72,7 @@ sub run {
     # Skipped in parsing step
     'GO', 'UniGene', 'RGD', 'CCDS', 'IPI', 'UCSC', 'SGD', 'HGNC', 'MGI', 'VGNC', 'Orphanet',
     'ArrayExpress', 'GenomeRNAi', 'EPD', 'Xenbase', 'Reactome', 'MIM_GENE', 'MIM_MORBID', 'MIM',
+    'Interpro'
   );
   my $sources_to_remove = join("|", @source_names);
 
@@ -87,34 +99,42 @@ sub run {
     }
 
     # Only start cleaning up if could get filehandle
+    my $count = 0;
+    my $file_count = 1;
     if (defined($in_fh)) {
       local $/ = "//\n";
 
-      $output_file = $output_path."/".$output_file;
-      open($out_fh, '>', $output_file)
-        or die "Couldn't open output file '$output_file' $!";
+      my $write_file = $output_path."/".$output_file . "-$file_count";
+      open($out_fh, '>', $write_file)
+        or die "Couldn't open output file '$write_file' $!";
 
       # Read full records
       while ($_ = $in_fh->getline()) {
         # Remove unused data
-        $_ =~ s/R(N|P|X|A|T|R|L|C|G)\s{3}.*\n//g; # Remove references lines
-        $_ =~ s/CC\s{3}.*\n//g; # Remove comments
-        $_ =~ s/DR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
+        $_ =~ s/\nR(N|P|X|A|T|R|L|C|G)\s{3}.*//g; # Remove references lines
+        $_ =~ s/\nCC\s{3}.*//g; # Remove comments
+	$_ =~ s/\nFT\s{3}.*//g; # Remove feature coordinates
+        $_ =~ s/\nDR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
 
         # Added lines that we do need into output
         print $out_fh $_;
+
+	# Check how many lines have been processed and write to new file if size exceeded
+	$count++;
+	if ($count > $file_size) {
+          close($out_fh);
+	  $file_count++;
+	  $write_file = $output_path."/".$output_file . "-$file_count";
+	  open($out_fh, '>', $write_file)
+            or die "Couldn't open output file '$write_file' $!";
+          $count = 0;
+        }
       }
 
       close($in_fh);
       close($out_fh);
     }
   }
-
-  # Save the clean files directory in source db
-  $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
-  my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
-  $update_version_sth->execute($output_path, $name);
-  $update_version_sth->finish();
 }
 
 sub get_source_names {

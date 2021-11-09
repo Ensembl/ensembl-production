@@ -44,12 +44,14 @@ sub run {
     my $file = $source->{'file'};
     my $db = $source->{'db'};
     my $version_file = $source->{'release'};
+    my $preparse = $source->{'preparse'};
     $dataflow_params = {
       parser       => $parser,
       name         => $name,
       priority     => $priority,
       db           => $db,
       version_file => $version_file,
+      preparse     => $preparse,
       db_url       => $db_url,
       file         => $file,
       skip_download=> $skip_download,
