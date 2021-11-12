@@ -1,11 +1,12 @@
-import csv
-import json
+from dataclasses import dataclass
+from datetime import datetime
+import os
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, TextIO, Generator
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from utils import blake2bsum, get_ftp_uri
+from typing import Dict, List, Tuple, Optional
+from urllib.parse import urljoin
+
+from .utils import blake2bsum, make_release, get_group
 
 
 FILE_COMPRESSIONS = {
@@ -32,7 +33,7 @@ class Species:
 class Release:
     ens: int
     eg: int
-    date: datetime
+    date: str
 
 
 @dataclass
@@ -46,7 +47,6 @@ class Assembly:
 @dataclass
 class BaseOptMetadata:
     file_extension: Optional[str]
-    assembly: Optional[str]
 
 
 @dataclass
@@ -57,12 +57,16 @@ class BaseFileMetadata:
 
 
 @dataclass
-class FileMetadata(BaseFileMetadata):
+class FileMetadata:
     file_path: str
-    size: int
-    last_modified: datetime
+    file_format: str
+    release: Release
+    assembly: Assembly
+    file_size: int
+    file_last_modified: str
     blake2bsum: bytes
-    url: FileURL
+    urls: List[FileURL]
+    species: Species
     optional_data: BaseOptMetadata
 
 
@@ -86,24 +90,6 @@ class FASTAOptMetadata(BaseOptMetadata):
     sequence_type: str
 
 
-@dataclass
-class ManifestRow:
-    file_format: str
-    species: str
-    ens_release: int
-    file_name: str
-    extras: dict
-
-
-def get_group(group_name: str, match: Optional[re.Match], default: Optional[str] = None) -> Optional[str]:
-    if match:
-        try:
-            return match.group(group_name)
-        except IndexError:
-            pass
-    return default
-
-
 class FileParserError(ValueError):
     def __init__(self, message: str, errors: dict) -> None:
         super().__init__(message)
@@ -113,57 +99,88 @@ class FileParserError(ValueError):
 class BaseFileParser:
     def __init__(self, **options) -> None:
         self._options = options
+        self._ftp_dirs = [
+            (options.get('ftp_dir_ens'), options.get('ftp_url_ens')),
+            (options.get('ftp_dir_eg'), options.get('ftp_url_eg')),
+        ]
 
-    def get_metadata(self, directory: str, manifest_data: ManifestRow) -> FileMetadata:
+    def get_metadata(self, metadata: dict) -> FileMetadata:
         errors = {}
-        file_path = Path(directory) / manifest_data.file_name
+        file_path = metadata['file_path']
         try:
-            base_metadata = self.base_metadata(manifest_data)
+            base_metadata = self.get_base_metadata(metadata)
         except ValueError as e:
             errors['base_metadata_err'] = str(e)
         try:
-            optional_data = self.optional_metadata(manifest_data)
+            optional_data = self.get_optional_metadata(metadata)
         except ValueError as e:
             errors['optional_data_err'] = str(e)
         if errors:
             raise FileParserError(f'Cannot parse {file_path}', errors)
-        file_stats = file_path.stat()
-        last_modified = datetime.fromtimestamp(file_stats.st_mtime).astimezone() #.isoformat()
+        file_stats = os.stat(file_path)
+        last_modified = datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
         b2bsum_chunk_size = self._options.get('b2bsum_chunk_size')
-        if b2bsum_chunk_size:
-            b2bsum = blake2bsum(file_path, int(b2bsum_chunk_size))
-        else:
-            b2bsum = blake2bsum(file_path)
-        ftp_uri = get_ftp_uri(file_path)
-        metadata = FileMetadata(
-            file_path=str(file_path),
-            size=file_stats.st_size,
-            last_modified=last_modified,
+        b2bsum = blake2bsum(file_path, b2bsum_chunk_size)
+        ftp_uri = self.get_ftp_uri(file_path)
+        file_metadata = FileMetadata(
+            file_path=file_path,
+            file_format=metadata['file_format'],
+            release=Release(
+                *make_release(metadata['ens_release']),
+                date=metadata['release_date']
+            ),
+            assembly=Assembly(
+                default=metadata['assembly_default'],
+                accession=metadata['assembly_accession'],
+                provider_name='',
+                genome_id=metadata['genome_id']
+            ),
+            file_size=file_stats.st_size,
+            file_last_modified=last_modified,
             blake2bsum=b2bsum,
-            uri=ftp_uri,
+            urls=[FileURL(ftp_uri, {})],
+            species=Species(
+                production_name=base_metadata.species,
+                division=metadata['division'],
+                taxon_id=metadata['taxon_id'],
+                species_taxon_id=metadata['species_taxon_id'],
+                classifications=[metadata['division']],
+            ),
             optional_data=optional_data,
-            **asdict(base_metadata)
         )
-        return metadata
+        return file_metadata
 
-    def base_metadata(self, manifest_data: ManifestRow) -> BaseFileMetadata:
-        raise NotImplementedError('Calling abstract method: BaseFileParser.base_metadata')
+    def _ftp_paths(self, file_path: str) -> Tuple[str, Optional[Path]]:
+        for ftp_root_dir, ftp_root_uri in self._ftp_dirs:
+            try:
+                ftp_dir = Path(ftp_root_dir)
+                relative_path = Path(file_path).relative_to(ftp_dir)
+                return ftp_root_uri, relative_path
+            except (ValueError, TypeError):
+                pass
+        return '', None
 
-    def optional_metadata(self, manifest_data: ManifestRow) -> BaseOptMetadata:
-        raise NotImplementedError('Calling abstract method: BaseFileParser.optional_metadata')
+    def get_ftp_uri(self, file_path: str) -> str:
+        ftp_root_uri, relative_path = self._ftp_paths(file_path)
+        if relative_path is not None:
+            ftp_uri = urljoin(ftp_root_uri, str(relative_path))
+            return ftp_uri
+        return 'none'
+
+    def get_base_metadata(self, metadata: dict) -> BaseFileMetadata:
+        raise NotImplementedError('Calling abstract method: BaseFileParser.get_base_metadata')
+
+    def get_optional_metadata(self, metadata: dict) -> BaseOptMetadata:
+        raise NotImplementedError('Calling abstract method: BaseFileParser.get_optional_metadata')
 
 
 class FileParser(BaseFileParser):
-    def base_metadata(self, manifest_data: ManifestRow) -> BaseFileMetadata:
-        match = self.FILENAMES_RE.match(manifest_data.file_name)
-        matched_species = get_group("species", match, '')
-        species = manifest_data.species or matched_species
-        metadata = BaseFileMetadata(
-            file_type=manifest_data.file_format.lower(),
-            species=species.lower(),
-            ens_release=manifest_data.ens_release
+    def get_base_metadata(self, metadata: dict) -> BaseFileMetadata:
+        return BaseFileMetadata(
+            file_type=metadata['file_format'].lower(),
+            species=metadata['species'].lower(),
+            ens_release=int(metadata['ens_release'])
         )
-        return metadata
 
 
 class EMBLFileParser(FileParser):
@@ -176,24 +193,21 @@ class EMBLFileParser(FileParser):
         r'\.?(?P<sorted>sorted)?\.?(gz)?$')
     )
 
-    def optional_metadata(self, manifest_data: ManifestRow) -> EMBLOptMetadata:
-        match = self.FILENAMES_RE.match(manifest_data.file_name)
-        matched_assembly = get_group("assembly", match)
+    def get_optional_metadata(self, metadata: dict) -> EMBLOptMetadata:
+        match = self.FILENAMES_RE.match(metadata['file_path'])
         matched_compression = FILE_COMPRESSIONS.get(get_group('compression', match))
         matched_content_type = get_group('content_type', match)
-        match = self.FILE_EXT_RE.match(manifest_data.file_name)
+        match = self.FILE_EXT_RE.match(metadata['file_name'])
         file_extension = get_group("file_extension", match)
         matched_sorting = get_group("sorted", match)
-        assembly = manifest_data.extras.get("assembly") or matched_assembly
-        compression = manifest_data.extras.get('compression') or matched_compression
-        content_type = manifest_data.extras.get('content_type') or matched_content_type
-        sorting = manifest_data.extras.get("sorting") or matched_sorting
+        compression = metadata.get("extras", {}).get('compression') or matched_compression
+        content_type = metadata.get("extras", {}).get('content_type') or matched_content_type
+        sorting = metadata.get("extras", {}).get("sorting") or matched_sorting
         optional_data = EMBLOptMetadata(
             compression=compression,
             file_extension=file_extension,
             content_type=content_type,
             sorting=sorting,
-            assembly=assembly,
         )
         return optional_data
 
@@ -205,24 +219,21 @@ class FASTAFileParser(FileParser):
     )
     FILE_EXT_RE = re.compile(r'.*?\.?(?P<file_extension>fa)\.?(?P<compression>gz)?(\.gzi|\.fai)?$')
 
-    def optional_metadata(self, manifest_data: ManifestRow) -> FASTAOptMetadata:
-        match = self.FILENAMES_RE.match(manifest_data.file_name)
-        matched_assembly = get_group("assembly", match)
+    def get_optional_metadata(self, metadata: dict) -> FASTAOptMetadata:
+        match = self.FILENAMES_RE.match(metadata['file_path'])
         matched_sequence_type = get_group("sequence_type", match)
         matched_content_type = get_group("content_type", match)
-        match = self.FILE_EXT_RE.match(manifest_data.file_name)
+        match = self.FILE_EXT_RE.match(metadata['file_name'])
         file_extension = get_group("file_extension", match)
         matched_compression = FILE_COMPRESSIONS.get(get_group('compression', match), None)
-        compression = manifest_data.extras.get("compression") or matched_compression
-        content_type = manifest_data.extras.get("content_type") or matched_content_type
-        sequence_type = manifest_data.extras.get("sequence_type") or matched_sequence_type
-        assembly = manifest_data.extras.get("assembly") or matched_assembly
+        compression = metadata.get("extras", {}).get("compression") or matched_compression
+        content_type = metadata.get("extras", {}).get("content_type") or matched_content_type
+        sequence_type = metadata.get("extras", {}).get("sequence_type") or matched_sequence_type
         optional_data = FASTAOptMetadata(
             compression=compression,
             file_extension=file_extension,
             content_type=content_type,
-            sequence_type=sequence_type,
-            assembly=assembly,
+            sequence_type=sequence_type
         )
         return optional_data
 
@@ -233,51 +244,17 @@ class BAMFileParser(FileParser):
     )
     FILE_EXT_RE = re.compile(r'.*?\.(?P<file_extension>(bam(\..{2,})?)|txt)$')
 
-    def optional_metadata(self, manifest_data: ManifestRow) -> BAMOptMetadata:
-        match = self.FILENAMES_RE.match(manifest_data.file_name)
-        matched_assembly = get_group("assembly", match)
+    def get_optional_metadata(self, metadata: dict) -> BAMOptMetadata:
+        match = self.FILENAMES_RE.match(metadata['file_name'])
         matched_source = get_group("source", match)
         matched_origin = get_group("origin", match)
-        match = self.FILE_EXT_RE.match(manifest_data.file_name)
+        match = self.FILE_EXT_RE.match(metadata['file_name'])
         file_extension = get_group("file_extension", match)
-        assembly = manifest_data.extras.get("assembly") or matched_assembly
-        source = manifest_data.extras.get("source") or matched_source
-        origin = manifest_data.extras.get("origin") or matched_origin
+        source = metadata.get("extras", {}).get("source") or matched_source
+        origin = metadata.get("extras", {}).get("origin") or matched_origin
         optional_data = BAMOptMetadata(
             file_extension=file_extension,
             source=source,
             origin=origin,
-            assembly=assembly
         )
         return optional_data
-
-
-def manifest_rows(manifest_f: TextIO) -> Generator[ManifestRow, None, None]:
-    reader = csv.DictReader(manifest_f, restkey='unknown', dialect='excel-tab')
-    reader.fieldnames = [clean_name(name) for name in reader.fieldnames]
-    for row in reader:
-        try:
-            extras_str = row['extras']
-            extras = load_extras(extras_str)
-            yield ManifestRow(
-                file_format=clean_name(row['file_format']),
-                species=clean_name(row['species']),
-                ens_release=int(row['ens_release']),
-                file_name=row['file_name'],
-                extras=extras
-            )
-        except KeyError as err:
-            raise ValueError(f"Missing column: {err}") from err
-
-
-def clean_name(name: str) -> str:
-    return name.strip().lower()
-
-
-def load_extras(extras_str: str) -> dict:
-    if extras_str:
-        try:
-            return json.loads(extras_str)
-        except json.JSONDecodeError as err:
-            raise ValueError(f"Invalid JSON format for column 'extras': {err}") from err
-    return {}

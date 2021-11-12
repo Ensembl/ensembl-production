@@ -27,7 +27,6 @@ use Data::Dumper;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 
-
 sub default_options {
     my ($self) = @_;
     return {
@@ -35,6 +34,8 @@ sub default_options {
         'pipeline_name' => 'datafile_scraper',
         'ftp_dir_ens'   => '/nfs/ensemblftp/PUBLIC/pub',
         'ftp_dir_eg'    => '/nfs/ensemblgenomes/ftp/pub',
+        'ftp_url_ens'   => 'ftp://ftp.ensembl.org/pub',
+        'ftp_url_eg'    => 'ftp://ftp.ensemblgenomes.org/pub',
     }
 }
 
@@ -57,14 +58,29 @@ sub pipeline_analyses {
     my ($self) = @_;
     return [
         {
+            -logic_name      => 'load_manifest_data',
             -module          => 'ensembl.production.hive.DataFileCrawler',
             -language        => 'python3',
             -rc_name         => 'default',
             -input_ids       => [],
             -max_retry_count => 0,
+            -meadow_type     => 'LOCAL',
+            -flow_into       => {
+                1 => [ 'get_metadata_from_files' ],
+            },
+        },
+        {
+            -logic_name      => 'get_metadata_from_files',
+            -module          => 'ensembl.production.hive.DataFileParser',
+            -language        => 'python3',
+            -rc_name         => 'default',
+            -input_ids       => [],
+            -max_retry_count => 3,
             -parameters      => {
                 'ftp_dir_ens' => $self->o('ftp_dir_ens'),
                 'ftp_dir_eg'  => $self->o('ftp_dir_eg'),
+                'ftp_url_ens' => $self->o('ftp_url_ens'),
+                'ftp_url_eg'  => $self->o('ftp_url_eg'),
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {

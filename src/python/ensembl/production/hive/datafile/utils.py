@@ -1,21 +1,14 @@
-import hashlib
-from functools import partial, lru_cache
-from typing import Tuple, NamedTuple, List, Optional
 from datetime import datetime
-from pathlib import Path
-from urllib.parse import urljoin
+import csv
+from functools import partial, lru_cache
+import hashlib
+import json
+from typing import Tuple, NamedTuple, List, Optional, TextIO, Match, Generator, Any
 
 import sqlalchemy as sa
-from settings import SETTINGS
 
 
-FTP_DIRS = (
-    (SETTINGS.get('ftp_dir_ens', '/nfs/ensemblftp/PUBLIC/pub'), 'ftp://ftp.ensembl.org/pub'),
-    (SETTINGS.get('ftp_dir_eg', '/nfs/ensemblgenomes/ftp/pub'), 'ftp://ftp.ensemblgenomes.org/pub')
-)
-
-
-def blake2bsum(file_path: str, chunk_size: int = 2**19) -> bytes:
+def blake2bsum(file_path: str, chunk_size: Optional[int] = None) -> bytes:
     """Returns blake2b binary digest of a file.
 
     The file is read sequentially in chunks to prevent large files from taking
@@ -25,31 +18,21 @@ def blake2bsum(file_path: str, chunk_size: int = 2**19) -> bytes:
         file_path: The path of the file on the files system
         chunk_size: The size of the chunks in bytes (default: 524288)
     """
+    chunk_size_n = chunk_size if chunk_size else 2**19
     b2bh = hashlib.blake2b()
-    with open(file_path, 'rb') as f:
-        for chunk in iter(partial(f.read, chunk_size), b''):
+    with open(file_path, 'rb') as file:
+        for chunk in iter(partial(file.read, chunk_size_n), b''):
             b2bh.update(chunk)
     return b2bh.digest()
 
 
-def _ftp_paths(filepath: Path) -> Tuple[str, Optional[Path]]:
-    for ftp_root_dir, ftp_root_uri in FTP_DIRS:
-        ftp_dir = Path(ftp_root_dir)
+def get_group(group_name: str, match: Optional[Match], default: Optional[str] = None) -> Optional[str]:
+    if match:
         try:
-            relative_path = filepath.relative_to(ftp_dir)
-            return ftp_root_uri, relative_path
-        except ValueError:
+            return match.group(group_name)
+        except IndexError:
             pass
-    return '', None
-
-
-def get_ftp_uri(file_path: str) -> str:
-    filepath = Path(file_path).resolve()
-    ftp_root_uri, relative_path = _ftp_paths(filepath)
-    if relative_path is not None:
-        ftp_uri = urljoin(ftp_root_uri, relative_path)
-        return ftp_uri
-    return 'none'
+    return default
 
 
 def remove_none(elem: dict, recursive: bool = False) -> dict:
@@ -71,6 +54,17 @@ def substitute_none(elem: dict, recursive: bool = False) -> None:
                 substitute_none(value)
         if value is None:
             elem[key] = 'NULL'
+
+
+def extract_value(data: dict, key: str) -> Any:
+    value = data.get(key)
+    if value is not None:
+        del data[key]
+    return value
+
+
+def make_release(ens_version: int) -> Tuple[int, int]:
+    return ens_version, ens_version - 53
 
 
 @lru_cache(maxsize=None)
@@ -121,3 +115,42 @@ def get_metadata_from_db(metadata_url: str, species: str, ens_version: int) -> T
         return ([ENSMetadata(*meta) for meta in metadata], err)
     err = f'No metadata record found for {species} (release {ens_version}) on {metadata_url}'
     return ([], err)
+
+
+class ManifestRow(NamedTuple):
+    file_format: str
+    species: str
+    ens_release: int
+    file_name: str
+    extras: dict
+
+
+def manifest_rows(manifest_f: TextIO) -> Generator[ManifestRow, None, None]:
+    reader = csv.DictReader(manifest_f, restkey='unknown', dialect='excel-tab')
+    reader.fieldnames = [clean_name(name) for name in reader.fieldnames]
+    for row in reader:
+        try:
+            extras_str = row['extras']
+            extras = load_extras(extras_str)
+            yield ManifestRow(
+                file_format=clean_name(row['file_format']),
+                species=clean_name(row['species']),
+                ens_release=int(row['ens_release']),
+                file_name=row['file_name'],
+                extras=extras
+            )
+        except KeyError as err:
+            raise ValueError(f"Missing column: {err}") from err
+
+
+def clean_name(name: str) -> str:
+    return name.strip().lower()
+
+
+def load_extras(extras_str: str) -> dict:
+    if extras_str:
+        try:
+            return json.loads(extras_str)
+        except json.JSONDecodeError as err:
+            raise ValueError(f"Invalid JSON format for column 'extras': {err}") from err
+    return {}
