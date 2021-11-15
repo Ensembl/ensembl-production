@@ -3,8 +3,8 @@ from pathlib import Path
 
 import eHive
 
-from ensembl.production.hive.datafile.utils import manifest_rows
-from ensembl.production.hive.datafile.serializers import metadata_from_db, metadata_from_manifest
+from .datafile.utils import manifest_rows
+from .datafile.serializers import metadata_from_db, metadata_from_manifest
 
 
 class DataFileCrawler(eHive.BaseRunnable):

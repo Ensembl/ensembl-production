@@ -3,7 +3,7 @@ import json
 
 import eHive
 
-from ensembl.production.hive.datafile.parsers import FileParserError, EMBLFileParser, FASTAFileParser, BAMFileParser
+from .datafile.parsers import FileParserError, EMBLFileParser, FASTAFileParser, BAMFileParser
 
 
 PARSERS = {

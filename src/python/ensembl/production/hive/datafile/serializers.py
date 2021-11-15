@@ -1,10 +1,9 @@
 from dataclasses import asdict
 from pathlib import Path
-from parsers import FileMetadata
-from python.ensembl.production.hive.datafile.utils import ENSMetadata
 from typing import Optional, Tuple
 
 from .utils import remove_none, substitute_none, get_metadata_from_db, ManifestRow
+from .parsers import FileMetadata
 
 
 def metadata_from_manifest(manifest_row: ManifestRow, manifest_dir: Path):
