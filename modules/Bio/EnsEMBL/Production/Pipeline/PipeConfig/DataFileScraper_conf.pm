@@ -24,7 +24,10 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DataFileScraper_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+use Bio::EnsEMBL::Hive::Version 2.5;
+
+use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 
 sub default_options {
@@ -36,6 +39,11 @@ sub default_options {
         'ftp_dir_eg'    => '/nfs/ensemblgenomes/ftp/pub',
         'ftp_url_ens'   => 'ftp://ftp.ensembl.org/pub',
         'ftp_url_eg'    => 'ftp://ftp.ensemblgenomes.org/pub',
+
+        user  => $ENV{'USER'},
+        email => $ENV{'USER'}.'@ebi.ac.uk',
+
+        production_queue => 'production',
     }
 }
 
