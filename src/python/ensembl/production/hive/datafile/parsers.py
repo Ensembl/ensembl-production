@@ -59,6 +59,7 @@ class BaseFileMetadata:
 @dataclass
 class FileMetadata:
     file_path: str
+    file_set_id: Optional[int]
     file_format: str
     release: Release
     assembly: Assembly
@@ -124,6 +125,7 @@ class BaseFileParser:
         ftp_uri = self.get_ftp_uri(file_path)
         file_metadata = FileMetadata(
             file_path=file_path,
+            file_set_id=metadata.get("file_set_id"),
             file_format=metadata['file_format'],
             release=Release(
                 *make_release(metadata['ens_release']),
