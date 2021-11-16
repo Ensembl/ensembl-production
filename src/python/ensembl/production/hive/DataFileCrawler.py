@@ -5,11 +5,13 @@ import eHive
 
 from .datafile.utils import manifest_rows
 from .datafile.serializers import metadata_from_db, metadata_from_manifest
+from .BaseProdRunnable import BaseProdRunnable
 
 
-class DataFileCrawler(eHive.BaseRunnable):
+class DataFileCrawler(BaseProdRunnable):
     def run(self):
         file_metadata_list = []
+        errors = []
         root_dir = Path(self.param("root_dir")).resolve()
         metadata_db_url = self.param("metadata_db_url")
         manifests = root_dir.rglob("MANIFEST")
@@ -24,15 +26,16 @@ class DataFileCrawler(eHive.BaseRunnable):
                         db_data, err = metadata_from_db(metadata_db_url, species, ens_release)
                         if err:
                             msg = f"Error fetching metadata from DB {metadata_db_url}: {err}"
-                            self.warning(msg, is_error=True)
+                            errors.append(msg)
                         else:
                             file_metadata_list.append({**manifest_data, **db_data})
                 except ValueError as exc:
-                    self.warning(f"Error while reading {manifest.resolve()}: {exc}", is_error=True)
+                    msg = f"Error while reading {manifest.resolve()}: {exc}"
+                    errors.append(msg)
         self.param('file_metadata_list', file_metadata_list)
+        self.param('errors', errors)
 
     def write_output(self):
         for data in self.param('file_metadata_list'):
-            self.dataflow({
-                'data': json.dumps(data)
-            }, 1)
+            self.flow_output_data(data)
+        self.write_result({"errors": self.param("errors")})

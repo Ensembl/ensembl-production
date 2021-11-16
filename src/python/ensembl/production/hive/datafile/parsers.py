@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Type
 from urllib.parse import urljoin
 
 from .utils import blake2bsum, make_release, get_group
@@ -91,6 +91,12 @@ class FASTAOptMetadata(BaseOptMetadata):
     sequence_type: str
 
 
+@dataclass
+class Result:
+    file_metadata: Optional[FileMetadata]
+    errors: List[str]
+
+
 class FileParserError(ValueError):
     def __init__(self, message: str, errors: dict) -> None:
         super().__init__(message)
@@ -105,19 +111,20 @@ class BaseFileParser:
             (options.get('ftp_dir_eg'), options.get('ftp_url_eg')),
         ]
 
-    def get_metadata(self, metadata: dict) -> FileMetadata:
-        errors = {}
+    def parse_metadata(self, metadata: dict) -> Result:
+        errors: List[str] = []
         file_path = metadata['file_path']
         try:
             base_metadata = self.get_base_metadata(metadata)
         except ValueError as e:
-            errors['base_metadata_err'] = str(e)
+            errors.append(f"Error parsing base metadata: {e}")
         try:
             optional_data = self.get_optional_metadata(metadata)
         except ValueError as e:
-            errors['optional_data_err'] = str(e)
+            errors.append(f"Error parsing optional metadata: {e}")
         if errors:
-            raise FileParserError(f'Cannot parse {file_path}', errors)
+            errors.insert(0, f'Cannot parse {file_path}')
+            return Result(None, errors)
         file_stats = os.stat(file_path)
         last_modified = datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
         b2bsum_chunk_size = self._options.get('b2bsum_chunk_size')
@@ -150,7 +157,8 @@ class BaseFileParser:
             ),
             optional_data=optional_data,
         )
-        return file_metadata
+        result = Result(file_metadata, errors)
+        return result
 
     def _ftp_paths(self, file_path: str) -> Tuple[str, Optional[Path]]:
         for ftp_root_dir, ftp_root_uri in self._ftp_dirs:
@@ -260,3 +268,21 @@ class BAMFileParser(FileParser):
             origin=origin,
         )
         return optional_data
+
+
+PARSERS = {
+    "embl": EMBLFileParser,
+    "genbank": EMBLFileParser,
+    "gff3": EMBLFileParser,
+    "gtf": EMBLFileParser,
+    "fasta": FASTAFileParser,
+    "bamcov": BAMFileParser,
+}
+
+
+def get_parser(file_format: str, file_path: str) -> Tuple[Optional[Type[FileParser]], Optional[Result]]:
+    ParserClass = PARSERS.get(file_format)
+    if ParserClass is None:
+        err = f"Invalid file_format: {file_format} for {file_path}"
+        return None, Result(None, [err])
+    return ParserClass, None

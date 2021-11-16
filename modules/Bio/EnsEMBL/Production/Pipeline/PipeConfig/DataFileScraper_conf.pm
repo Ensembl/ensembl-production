@@ -57,6 +57,7 @@ sub pipeline_analyses {
             -meadow_type     => 'LOCAL',
             -flow_into       => {
                 1 => [ 'get_metadata_from_files' ],
+                2 => [ '?table_name=result', ],
             },
         },
         {
@@ -74,7 +75,7 @@ sub pipeline_analyses {
             },
             -meadow_type     => 'LOCAL',
             -flow_into       => {
-                # Dataflow method DataFileCrawler Python module will output into this table result.
+                # BaseProdRunnable.write_result() will flow on channel 2.
                 2 => [ '?table_name=result', ],
             },
         }
