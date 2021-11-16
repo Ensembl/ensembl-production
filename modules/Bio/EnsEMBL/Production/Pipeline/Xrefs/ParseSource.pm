@@ -52,7 +52,7 @@ sub run {
   $xref_dbc->disconnect_if_idle();
 
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $dbname);
-  my $source_dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_dbname);
+  my $source_dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_dbname) if defined $source_dbname;
 
   my @files;
   push @files, $file_name;
