@@ -110,7 +110,7 @@
     },
     {
       "name" : "RefSeq_dna",
-      "parser" : "RefSeqGPFFParser",
+      "parser" : "RefSeqDatabaseParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
@@ -121,7 +121,7 @@
     },
     {
       "name" : "RefSeq_peptide",
-      "parser" : "RefSeqGPFFParser",
+      "parser" : "RefSeqDatabaseParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
@@ -153,7 +153,7 @@
     },
     {
       "name" : "Uniprot/SWISSPROT",
-      "parser" : "UniProtParser",
+      "parser" : "UniProtDatabaseParser",
       "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
@@ -164,7 +164,7 @@
     },
     {
       "name" : "Uniprot/SPTREMBL",
-      "parser" : "UniProtParser",
+      "parser" : "UniProtDatabaseParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,

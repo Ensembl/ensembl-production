@@ -300,7 +300,9 @@ sub get_division_id {
     'EnsemblVertebrates' => 7742,
     'Vertebrates'        => 7742,
     'EnsemblMetazoa'     => 33208,
-    'Metazoa'            => 33208
+    'Metazoa'            => 33208,
+    'Plants'             => 33090,
+    'EnsemblPlants'      => 33090,
   );
   my $division_id = $division_taxon{$division};
   return $division_id;
