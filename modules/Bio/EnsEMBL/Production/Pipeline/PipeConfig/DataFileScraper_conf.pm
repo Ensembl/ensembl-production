@@ -24,39 +24,21 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::DataFileScraper_conf;
 use strict;
 use warnings;
 use Data::Dumper;
-use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
 
-use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BasePython_conf');
 
 
 sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
+
         'pipeline_name' => 'datafile_scraper',
         'ftp_dir_ens'   => '/nfs/ensemblftp/PUBLIC/pub',
         'ftp_dir_eg'    => '/nfs/ensemblgenomes/ftp/pub',
         'ftp_url_ens'   => 'ftp://ftp.ensembl.org/pub',
         'ftp_url_eg'    => 'ftp://ftp.ensemblgenomes.org/pub',
-
-        user  => $ENV{'USER'},
-        email => $ENV{'USER'}.'@ebi.ac.uk',
-
-        production_queue => 'production',
     }
-}
-
-sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-        @{$self->SUPER::pipeline_create_commands},
-
-        # Create/alter tables used by ensembl.production.core.models.hive Python module
-        $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
-        $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
-        $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
-    ];
 }
 
 =head2 pipeline_analyses
