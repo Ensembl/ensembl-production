@@ -30,15 +30,17 @@ def blake2bsum(file_path: str, chunk_size: Optional[int] = None) -> bytes:
         file_path: The path of the file on the files system
         chunk_size: The size of the chunks in bytes (default: 524288)
     """
-    chunk_size_n = chunk_size if chunk_size else 2**19
+    chunk_size_n = chunk_size if chunk_size else 2 ** 19
     b2bh = hashlib.blake2b()
-    with open(file_path, 'rb') as file:
-        for chunk in iter(partial(file.read, chunk_size_n), b''):
+    with open(file_path, "rb") as file:
+        for chunk in iter(partial(file.read, chunk_size_n), b""):
             b2bh.update(chunk)
     return b2bh.digest()
 
 
-def get_group(group_name: str, match: Optional[Match], default: Optional[str] = None) -> Optional[str]:
+def get_group(
+    group_name: str, match: Optional[Match], default: Optional[str] = None
+) -> Optional[str]:
     if match:
         try:
             return match.group(group_name)
@@ -52,7 +54,7 @@ def make_release(ens_version: int) -> Tuple[int, int]:
 
 
 @lru_cache(maxsize=None)
-def _get_engine(metadata_url: str) -> sa.engine.Engine :
+def _get_engine(metadata_url: str) -> sa.engine.Engine:
     return sa.create_engine(metadata_url)
 
 
@@ -68,7 +70,9 @@ class ENSMetadata(NamedTuple):
 
 
 @lru_cache(maxsize=None)
-def get_metadata_from_db(metadata_url: str, species: str, ens_version: int) -> Tuple[List[ENSMetadata], Optional[str]]:
+def get_metadata_from_db(
+    metadata_url: str, species: str, ens_version: int
+) -> Tuple[List[ENSMetadata], Optional[str]]:
     sql = """
         SELECT
             o.name AS organism_name,
@@ -95,9 +99,9 @@ def get_metadata_from_db(metadata_url: str, species: str, ens_version: int) -> T
     if metadata:
         err = None
         if len(metadata) > 1:
-            err = f'Multiple records found for {species} (release {ens_version}) on {metadata_url}'
+            err = f"Multiple records found for {species} (release {ens_version}) on {metadata_url}"
         return ([ENSMetadata(*meta) for meta in metadata], err)
-    err = f'No metadata record found for {species} (release {ens_version}) on {metadata_url}'
+    err = f"No metadata record found for {species} (release {ens_version}) on {metadata_url}"
     return ([], err)
 
 
@@ -110,18 +114,18 @@ class ManifestRow(NamedTuple):
 
 
 def manifest_rows(manifest_f: TextIO) -> Generator[ManifestRow, None, None]:
-    reader = csv.DictReader(manifest_f, restkey='unknown', dialect='excel-tab')
+    reader = csv.DictReader(manifest_f, restkey="unknown", dialect="excel-tab")
     reader.fieldnames = [clean_name(name) for name in reader.fieldnames]
     for row in reader:
         try:
-            extras_str = row['extras']
+            extras_str = row["extras"]
             extras = load_extras(extras_str)
             yield ManifestRow(
-                file_format=clean_name(row['file_format']),
-                species=clean_name(row['species']),
-                ens_release=int(row['ens_release']),
-                file_name=row['file_name'],
-                extras=extras
+                file_format=clean_name(row["file_format"]),
+                species=clean_name(row["species"]),
+                ens_release=int(row["ens_release"]),
+                file_name=row["file_name"],
+                extras=extras,
             )
         except KeyError as err:
             raise ValueError(f"Missing column: {err}") from err

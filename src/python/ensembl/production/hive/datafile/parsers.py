@@ -21,9 +21,7 @@ from urllib.parse import urljoin
 from .utils import blake2bsum, make_release, get_group
 
 
-FILE_COMPRESSIONS = {
-    'gz': 'gzip'
-}
+FILE_COMPRESSIONS = {"gz": "gzip"}
 
 
 @dataclass
@@ -119,13 +117,13 @@ class BaseFileParser:
     def __init__(self, **options) -> None:
         self._options = options
         self._ftp_dirs = [
-            (options.get('ftp_dir_ens'), options.get('ftp_url_ens')),
-            (options.get('ftp_dir_eg'), options.get('ftp_url_eg')),
+            (options.get("ftp_dir_ens"), options.get("ftp_url_ens")),
+            (options.get("ftp_dir_eg"), options.get("ftp_url_eg")),
         ]
 
     def parse_metadata(self, metadata: dict) -> Result:
         errors: List[str] = []
-        file_path = metadata['file_path']
+        file_path = metadata["file_path"]
         try:
             base_metadata = self.get_base_metadata(metadata)
         except ValueError as e:
@@ -135,26 +133,27 @@ class BaseFileParser:
         except ValueError as e:
             errors.append(f"Error parsing optional metadata: {e}")
         if errors:
-            errors.insert(0, f'Cannot parse {file_path}')
+            errors.insert(0, f"Cannot parse {file_path}")
             return Result(None, errors)
         file_stats = os.stat(file_path)
-        last_modified = datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
-        b2bsum_chunk_size = self._options.get('b2bsum_chunk_size')
+        last_modified = (
+            datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
+        )
+        b2bsum_chunk_size = self._options.get("b2bsum_chunk_size")
         b2bsum = blake2bsum(file_path, b2bsum_chunk_size).hex()
         ftp_uri = self.get_ftp_uri(file_path)
         file_metadata = FileMetadata(
             file_path=file_path,
             file_set_id=metadata.get("file_set_id"),
-            file_format=metadata['file_format'],
+            file_format=metadata["file_format"],
             release=Release(
-                *make_release(metadata['ens_release']),
-                date=metadata['release_date']
+                *make_release(metadata["ens_release"]), date=metadata["release_date"]
             ),
             assembly=Assembly(
-                default=metadata['assembly_default'],
-                accession=metadata['assembly_accession'],
-                provider_name='',
-                genome_id=metadata['genome_id']
+                default=metadata["assembly_default"],
+                accession=metadata["assembly_accession"],
+                provider_name="",
+                genome_id=metadata["genome_id"],
             ),
             file_size=file_stats.st_size,
             file_last_modified=last_modified,
@@ -162,10 +161,10 @@ class BaseFileParser:
             urls=[FileURL(ftp_uri, {})],
             species=Species(
                 production_name=base_metadata.species,
-                division=metadata['division'],
-                taxon_id=metadata['taxon_id'],
-                species_taxon_id=metadata['species_taxon_id'],
-                classifications=[metadata['division']],
+                division=metadata["division"],
+                taxon_id=metadata["taxon_id"],
+                species_taxon_id=metadata["species_taxon_id"],
+                classifications=[metadata["division"]],
             ),
             optional_data=optional_data,
         )
@@ -180,50 +179,62 @@ class BaseFileParser:
                 return ftp_root_uri, relative_path
             except (ValueError, TypeError):
                 pass
-        return '', None
+        return "", None
 
     def get_ftp_uri(self, file_path: str) -> str:
         ftp_root_uri, relative_path = self._ftp_paths(file_path)
         if relative_path is not None:
             ftp_uri = urljoin(ftp_root_uri, str(relative_path))
             return ftp_uri
-        return 'none'
+        return "none"
 
     def get_base_metadata(self, metadata: dict) -> BaseFileMetadata:
-        raise NotImplementedError('Calling abstract method: BaseFileParser.get_base_metadata')
+        raise NotImplementedError(
+            "Calling abstract method: BaseFileParser.get_base_metadata"
+        )
 
     def get_optional_metadata(self, metadata: dict) -> BaseOptMetadata:
-        raise NotImplementedError('Calling abstract method: BaseFileParser.get_optional_metadata')
+        raise NotImplementedError(
+            "Calling abstract method: BaseFileParser.get_optional_metadata"
+        )
 
 
 class FileParser(BaseFileParser):
     def get_base_metadata(self, metadata: dict) -> BaseFileMetadata:
         return BaseFileMetadata(
-            file_type=metadata['file_format'].lower(),
-            species=metadata['species'].lower(),
-            ens_release=int(metadata['ens_release'])
+            file_type=metadata["file_format"].lower(),
+            species=metadata["species"].lower(),
+            ens_release=int(metadata["ens_release"]),
         )
 
 
 class EMBLFileParser(FileParser):
     FILENAMES_RE = re.compile(
-        (r'^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(5|1)\d{1,2}\.'
-        r'\.?(?P<content_type>abinitio|chr|chr_patch_hapl_scaff|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?')
+        (
+            r"^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(5|1)\d{1,2}\."
+            r"\.?(?P<content_type>abinitio|chr|chr_patch_hapl_scaff|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
+        )
     )
     FILE_EXT_RE = re.compile(
-        (r'.*?\.?(?P<file_extension>gff3|gtf|dat)\.?(?P<compression>gz)?'
-        r'\.?(?P<sorted>sorted)?\.?(gz)?$')
+        (
+            r".*?\.?(?P<file_extension>gff3|gtf|dat)\.?(?P<compression>gz)?"
+            r"\.?(?P<sorted>sorted)?\.?(gz)?$"
+        )
     )
 
     def get_optional_metadata(self, metadata: dict) -> EMBLOptMetadata:
-        match = self.FILENAMES_RE.match(metadata['file_path'])
-        matched_compression = FILE_COMPRESSIONS.get(get_group('compression', match))
-        matched_content_type = get_group('content_type', match)
-        match = self.FILE_EXT_RE.match(metadata['file_name'])
+        match = self.FILENAMES_RE.match(metadata["file_path"])
+        matched_compression = FILE_COMPRESSIONS.get(get_group("compression", match))
+        matched_content_type = get_group("content_type", match)
+        match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
         matched_sorting = get_group("sorted", match)
-        compression = metadata.get("extras", {}).get('compression') or matched_compression
-        content_type = metadata.get("extras", {}).get('content_type') or matched_content_type
+        compression = (
+            metadata.get("extras", {}).get("compression") or matched_compression
+        )
+        content_type = (
+            metadata.get("extras", {}).get("content_type") or matched_content_type
+        )
         sorting = metadata.get("extras", {}).get("sorting") or matched_sorting
         optional_data = EMBLOptMetadata(
             compression=compression,
@@ -236,41 +247,53 @@ class EMBLFileParser(FileParser):
 
 class FASTAFileParser(FileParser):
     FILENAMES_RE = re.compile(
-        (r'^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(?P<sequence_type>dna(_sm|_rm)?|cdna|cds|pep|ncrna)\.'
-        r'\.?(?P<content_type>abinitio|all|alt|toplevel|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?')
+        (
+            r"^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(?P<sequence_type>dna(_sm|_rm)?|cdna|cds|pep|ncrna)\."
+            r"\.?(?P<content_type>abinitio|all|alt|toplevel|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
+        )
     )
-    FILE_EXT_RE = re.compile(r'.*?\.?(?P<file_extension>fa)\.?(?P<compression>gz)?(\.gzi|\.fai)?$')
+    FILE_EXT_RE = re.compile(
+        r".*?\.?(?P<file_extension>fa)\.?(?P<compression>gz)?(\.gzi|\.fai)?$"
+    )
 
     def get_optional_metadata(self, metadata: dict) -> FASTAOptMetadata:
-        match = self.FILENAMES_RE.match(metadata['file_path'])
+        match = self.FILENAMES_RE.match(metadata["file_path"])
         matched_sequence_type = get_group("sequence_type", match)
         matched_content_type = get_group("content_type", match)
-        match = self.FILE_EXT_RE.match(metadata['file_name'])
+        match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
-        matched_compression = FILE_COMPRESSIONS.get(get_group('compression', match), None)
-        compression = metadata.get("extras", {}).get("compression") or matched_compression
-        content_type = metadata.get("extras", {}).get("content_type") or matched_content_type
-        sequence_type = metadata.get("extras", {}).get("sequence_type") or matched_sequence_type
+        matched_compression = FILE_COMPRESSIONS.get(
+            get_group("compression", match), None
+        )
+        compression = (
+            metadata.get("extras", {}).get("compression") or matched_compression
+        )
+        content_type = (
+            metadata.get("extras", {}).get("content_type") or matched_content_type
+        )
+        sequence_type = (
+            metadata.get("extras", {}).get("sequence_type") or matched_sequence_type
+        )
         optional_data = FASTAOptMetadata(
             compression=compression,
             file_extension=file_extension,
             content_type=content_type,
-            sequence_type=sequence_type
+            sequence_type=sequence_type,
         )
         return optional_data
 
 
 class BAMFileParser(FileParser):
     FILENAMES_RE = re.compile(
-        r'^(?P<assembly>.+?)(\.(?P<source>[a-zA-Z]{2,}))?\.(?P<origin>[\w\-]+?)(\.\d)?.*?'
+        r"^(?P<assembly>.+?)(\.(?P<source>[a-zA-Z]{2,}))?\.(?P<origin>[\w\-]+?)(\.\d)?.*?"
     )
-    FILE_EXT_RE = re.compile(r'.*?\.(?P<file_extension>(bam(\..{2,})?)|txt)$')
+    FILE_EXT_RE = re.compile(r".*?\.(?P<file_extension>(bam(\..{2,})?)|txt)$")
 
     def get_optional_metadata(self, metadata: dict) -> BAMOptMetadata:
-        match = self.FILENAMES_RE.match(metadata['file_name'])
+        match = self.FILENAMES_RE.match(metadata["file_name"])
         matched_source = get_group("source", match)
         matched_origin = get_group("origin", match)
-        match = self.FILE_EXT_RE.match(metadata['file_name'])
+        match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
         source = metadata.get("extras", {}).get("source") or matched_source
         origin = metadata.get("extras", {}).get("origin") or matched_origin
@@ -292,7 +315,9 @@ PARSERS = {
 }
 
 
-def get_parser(file_format: str, file_path: str) -> Tuple[Optional[Type[FileParser]], Optional[Result]]:
+def get_parser(
+    file_format: str, file_path: str
+) -> Tuple[Optional[Type[FileParser]], Optional[Result]]:
     ParserClass = PARSERS.get(file_format)
     if ParserClass is None:
         err = f"Invalid file_format: {file_format} for {file_path}"

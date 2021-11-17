@@ -27,12 +27,12 @@ class DataFileParser(BaseProdRunnable):
         self.param("file_path", input_data.get("file_path"))
 
     def run(self):
-        file_format = self.param('file_format')
-        file_path = self.param('file_path')
+        file_format = self.param("file_format")
+        file_path = self.param("file_path")
         ParserClass, err_result = get_parser(file_format, file_path)
         if err_result:
             self.warning(err_result.errors[0])
-            self.param('result', err_result)
+            self.param("result", err_result)
         else:
             parser = ParserClass(
                 ftp_dir_ens=self.param("ftp_dir_ens"),
@@ -43,7 +43,7 @@ class DataFileParser(BaseProdRunnable):
             result = parser.parse_metadata(self.param("input_data"))
             if result.errors:
                 self.warning(f"Errors: {result.errors}")
-            self.param('result', result)
+            self.param("result", result)
 
     def write_output(self):
         self.write_result(asdict(self.param("result")))
