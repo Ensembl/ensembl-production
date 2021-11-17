@@ -10,6 +10,8 @@ from .BaseProdRunnable import BaseProdRunnable
 class DataFileParser(BaseProdRunnable):
     def fetch_input(self):
         input_data = self.get_input_data()
+        self.param("input_data", input_data)
+        # Store file_format and file_path in parameters for visibility/clarity
         self.param("file_format", input_data.get("file_format"))
         self.param("file_path", input_data.get("file_path"))
 
@@ -27,7 +29,7 @@ class DataFileParser(BaseProdRunnable):
                 ftp_url_ens=self.param("ftp_url_ens"),
                 ftp_url_eg=self.param("ftp_url_eg"),
             )
-            result = parser.parse_metadata(json.loads(self.param("data")))
+            result = parser.parse_metadata(self.param("input_data"))
             if result.errors:
                 self.warning(f"Errors: {result.errors}")
             self.param('result', result)
