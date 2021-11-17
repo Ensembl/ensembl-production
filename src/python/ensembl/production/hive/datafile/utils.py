@@ -3,7 +3,7 @@ import csv
 from functools import partial, lru_cache
 import hashlib
 import json
-from typing import Tuple, NamedTuple, List, Optional, TextIO, Match, Generator, Any
+from typing import Tuple, NamedTuple, List, Optional, TextIO, Match, Generator, Union
 
 import sqlalchemy as sa
 
@@ -33,34 +33,6 @@ def get_group(group_name: str, match: Optional[Match], default: Optional[str] = 
         except IndexError:
             pass
     return default
-
-
-def remove_none(elem: dict, recursive: bool = False) -> dict:
-    if recursive:
-        new_dict = {}
-        for key, value in elem.items():
-            if isinstance(value, dict):
-                new_dict[key] = remove_none(value)
-            elif value is not None:
-                new_dict[key] = value
-        return new_dict
-    return {k: v for k, v in elem.items() if v is not None}
-
-
-def substitute_none(elem: dict, recursive: bool = False) -> None:
-    for key, value in elem.items():
-        if recursive:
-            if isinstance(value, dict):
-                substitute_none(value)
-        if value is None:
-            elem[key] = 'NULL'
-
-
-def extract_value(data: dict, key: str) -> Any:
-    value = data.get(key)
-    if value is not None:
-        del data[key]
-    return value
 
 
 def make_release(ens_version: int) -> Tuple[int, int]:

@@ -1,9 +1,7 @@
-from dataclasses import asdict
 from pathlib import Path
 from typing import Optional, Tuple
 
-from .utils import remove_none, substitute_none, get_metadata_from_db, ManifestRow
-from .parsers import FileMetadata
+from .utils import get_metadata_from_db, ManifestRow
 
 
 def metadata_from_manifest(manifest_row: ManifestRow, manifest_dir: Path):
@@ -21,12 +19,3 @@ def metadata_from_db(
     data = ens_metadatas[0]._asdict()
     data['release_date'] = data['release_date'].astimezone().isoformat()
     return data, None
-
-
-def record_to_data(record: FileMetadata, compact: bool = False) -> dict:
-    data = asdict(record)
-    if compact:
-        data['optional_data'] = remove_none(data['optional_data'])
-    else:
-        substitute_none(data['optional_data'])
-    return data
