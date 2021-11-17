@@ -65,7 +65,7 @@ class FileMetadata:
     assembly: Assembly
     file_size: int
     file_last_modified: str
-    blake2bsum: bytes
+    blake2bsum: str
     urls: List[FileURL]
     species: Species
     optional_data: BaseOptMetadata
@@ -128,7 +128,7 @@ class BaseFileParser:
         file_stats = os.stat(file_path)
         last_modified = datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
         b2bsum_chunk_size = self._options.get('b2bsum_chunk_size')
-        b2bsum = blake2bsum(file_path, b2bsum_chunk_size)
+        b2bsum = blake2bsum(file_path, b2bsum_chunk_size).hex()
         ftp_uri = self.get_ftp_uri(file_path)
         file_metadata = FileMetadata(
             file_path=file_path,

@@ -17,5 +17,5 @@ def metadata_from_db(
     if err:
         return None, err
     data = ens_metadatas[0]._asdict()
-    data['release_date'] = data['release_date'].astimezone().isoformat()
+    data['release_date'] = data['release_date'].isoformat()
     return data, None
