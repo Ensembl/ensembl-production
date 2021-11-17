@@ -1,3 +1,3 @@
-requests
-mysqlclient
-sqlalchemy
+requests>=2.25.0
+mysqlclient>=2.0.1
+sqlalchemy>=1.4.0
