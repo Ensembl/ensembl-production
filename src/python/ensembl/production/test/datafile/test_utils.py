@@ -27,8 +27,8 @@ from ensembl.production.hive.datafile.utils import (
 
 
 def test_blake2bsum():
-    test_file = "test file"
-    encoded_test_file = bytes(test_file, "utf-8")
+    test_file_content = "test file content"
+    encoded_test_file = bytes(test_file_content, "utf-8")
     b2bh = hashlib.blake2b()
     b2bh.update(encoded_test_file)
     expected_hash = b2bh.digest()
