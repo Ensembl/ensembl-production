@@ -146,7 +146,7 @@ class BaseFileParser:
             file_set_id=metadata.get("file_set_id"),
             file_format=metadata["file_format"],
             release=Release(
-                *make_release(metadata["ens_release"]), date=metadata["release_date"]
+                *make_release(int(metadata["ens_release"])), date=metadata["release_date"]
             ),
             assembly=Assembly(
                 default=metadata["assembly_default"],
@@ -210,13 +210,13 @@ class EMBLFileParser(FileParser):
     FILENAMES_RE = re.compile(
         (
             r"^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(5|1)\d{1,2}\."
-            r"\.?(?P<content_type>abinitio|chr|chr_patch_hapl_scaff|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
+            r"(?P<content_type>abinitio|chr|chr_patch_hapl_scaff|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
         )
     )
     FILE_EXT_RE = re.compile(
         (
-            r".*?\.?(?P<file_extension>gff3|gtf|dat)\.?(?P<compression>gz)?"
-            r"\.?(?P<sorted>sorted)?\.?(gz)?$"
+            r".*?\.(?P<file_extension>gff3|gtf|dat)"
+            r"(\.(?P<sorted>sorted))?(\.(?P<compression>gz))?$"
         )
     )
 
@@ -224,6 +224,7 @@ class EMBLFileParser(FileParser):
         match = self.FILENAMES_RE.match(metadata["file_name"])
         matched_content_type = get_group("content_type", match)
         match = self.FILE_EXT_RE.match(metadata["file_name"])
+        matched_compression = FILE_COMPRESSIONS.get(get_group("compression", match))
         file_extension = get_group("file_extension", match)
         matched_sorting = get_group("sorted", match)
         compression = (
@@ -246,11 +247,11 @@ class FASTAFileParser(FileParser):
     FILENAMES_RE = re.compile(
         (
             r"^(?P<species>\w+)\.(?P<assembly>[\w\-\.]+?)\.(?P<sequence_type>dna(_sm|_rm)?|cdna|cds|pep|ncrna)\."
-            r"\.?(?P<content_type>abinitio|all|alt|toplevel|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
+            r"(?P<content_type>abinitio|all|alt|toplevel|nonchromosomal|(chromosome|plasmid|scaffold)\.[\w\-\.]+?|primary_assembly[\w\-\.]*?|(chromosome_)?group\.\w+?)?.*?"
         )
     )
     FILE_EXT_RE = re.compile(
-        r".*?\.?(?P<file_extension>fa)\.?(?P<compression>gz)?(\.gzi|\.fai)?$"
+        r".*?\.(?P<file_extension>fa)(\.(?P<compression>gz)?(\.gzi|\.fai)?)?$"
     )
 
     def get_optional_metadata(self, metadata: dict) -> FASTAOptMetadata:
@@ -259,9 +260,7 @@ class FASTAFileParser(FileParser):
         matched_content_type = get_group("content_type", match)
         match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
-        matched_compression = FILE_COMPRESSIONS.get(
-            get_group("compression", match), None
-        )
+        matched_compression = FILE_COMPRESSIONS.get(get_group("compression", match))
         compression = (
             metadata.get("extras", {}).get("compression") or matched_compression
         )
