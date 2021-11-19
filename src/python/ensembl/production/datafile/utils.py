@@ -15,7 +15,7 @@ import csv
 from functools import partial, lru_cache
 import hashlib
 import json
-from typing import Tuple, NamedTuple, List, Optional, TextIO, Match, Generator
+from typing import Tuple, NamedTuple, List, Optional, TextIO, Generator
 
 import sqlalchemy as sa
 
@@ -36,21 +36,6 @@ def blake2bsum(file_path: str, chunk_size: Optional[int] = None) -> bytes:
         for chunk in iter(partial(file.read, chunk_size_n), b""):
             b2bh.update(chunk)
     return b2bh.digest()
-
-
-def get_group(
-    group_name: str, match: Optional[Match], default: Optional[str] = None
-) -> Optional[str]:
-    if match:
-        try:
-            return match.group(group_name)
-        except IndexError:
-            pass
-    return default
-
-
-def make_release(ens_version: int) -> Tuple[int, int]:
-    return ens_version, ens_version - 53
 
 
 @lru_cache(maxsize=None)

@@ -12,15 +12,12 @@
 
 import hashlib
 from io import StringIO
-import re
 
 import pytest
 from unittest.mock import patch, mock_open
 
-from ensembl.production.hive.datafile.utils import (
+from ensembl.production.datafile.utils import (
     blake2bsum,
-    get_group,
-    make_release,
     manifest_rows,
     clean_name,
 )
@@ -35,21 +32,6 @@ def test_blake2bsum():
     with patch("builtins.open", mock_open(read_data=encoded_test_file)):
         actual_hash = blake2bsum("/test/path")
     assert actual_hash == expected_hash
-
-
-def test_get_group():
-    match = re.match(r"^(?P<test_group>\w+)_not_this", "capture_this_not_this")
-    assert get_group("test_group", match) == "capture_this"
-    assert get_group("non_group", match) == None
-    assert get_group("test_group", None) == None
-    assert get_group("non_group", match, "def_value") == "def_value"
-    assert get_group("non_group", None, "def_value") == "def_value"
-
-
-def test_make_release():
-    ens_version = 104
-    eg_version = 51
-    assert make_release(ens_version) == (ens_version, eg_version)
 
 
 def test_manifest_rows():

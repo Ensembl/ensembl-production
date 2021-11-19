@@ -14,7 +14,7 @@ from dataclasses import asdict
 
 import eHive
 
-from .datafile.parsers import get_parser
+from ..datafile.file_parsers import get_parser
 from .BaseProdRunnable import BaseProdRunnable
 
 

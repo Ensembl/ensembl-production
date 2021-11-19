@@ -14,10 +14,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import re
-from typing import Dict, List, Tuple, Optional, Type
+from typing import Dict, List, Tuple, Optional, Type, Match
 from urllib.parse import urljoin
 
-from .utils import blake2bsum, make_release, get_group
+from .utils import blake2bsum
 
 
 FILE_COMPRESSIONS = {"gz": "gzip"}
@@ -104,6 +104,21 @@ class FASTAOptMetadata(BaseOptMetadata):
 class Result:
     file_metadata: Optional[FileMetadata]
     errors: List[str]
+
+
+def get_group(
+    group_name: str, match: Optional[Match], default: Optional[str] = None
+) -> Optional[str]:
+    if match:
+        try:
+            return match.group(group_name)
+        except IndexError:
+            pass
+    return default
+
+
+def make_release(ens_version: int) -> Tuple[int, int]:
+    return ens_version, ens_version - 53
 
 
 class FileParserError(ValueError):

@@ -18,7 +18,7 @@ import re
 import pytest
 from unittest.mock import patch, mock_open
 
-from ensembl.production.hive.datafile.parsers import (
+from ensembl.production.datafile.file_parsers import (
     Result,
     FileMetadata,
     Assembly,
@@ -30,7 +30,9 @@ from ensembl.production.hive.datafile.parsers import (
     BAMOptMetadata,
     EMBLFileParser,
     FASTAFileParser,
-    BAMFileParser
+    BAMFileParser,
+    make_release,
+    get_group
 )
 
 
@@ -166,3 +168,18 @@ def test_file_parser(metadata, opt_data, file_parser_cls):
         patched_stat.return_value.st_size = file_size
         result = parser.parse_metadata(metadata)
     assert result == expected_result
+
+
+def test_get_group():
+    match = re.match(r"^(?P<test_group>\w+)_not_this", "capture_this_not_this")
+    assert get_group("test_group", match) == "capture_this"
+    assert get_group("non_group", match) == None
+    assert get_group("test_group", None) == None
+    assert get_group("non_group", match, "def_value") == "def_value"
+    assert get_group("non_group", None, "def_value") == "def_value"
+
+
+def test_make_release():
+    ens_version = 104
+    eg_version = 51
+    assert make_release(ens_version) == (ens_version, eg_version)

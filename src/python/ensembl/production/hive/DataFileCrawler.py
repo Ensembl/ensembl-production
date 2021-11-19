@@ -14,8 +14,8 @@ from pathlib import Path
 
 import eHive
 
-from .datafile.utils import manifest_rows
-from .datafile.serializers import metadata_from_db, metadata_from_manifest
+from ..datafile.utils import manifest_rows
+from ..datafile.serializers import metadata_from_db, metadata_from_manifest
 from .BaseProdRunnable import BaseProdRunnable
 
 
