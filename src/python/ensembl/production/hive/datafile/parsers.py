@@ -281,7 +281,7 @@ class FASTAFileParser(FileParser):
 
 class BAMFileParser(FileParser):
     FILENAMES_RE = re.compile(
-        r"^(?P<assembly>.+?)(\.(?P<source>[a-zA-Z]{2,}))?\.(?P<origin>[\w\-]+?)(\.\d)?.*?"
+        r"^(?P<assembly>.+?)(\.(?P<source>[a-zA-Z]{2,}))?\.(?P<origin>[\w\-]+)(\.\d)?.*?"
     )
     FILE_EXT_RE = re.compile(r".*?\.(?P<file_extension>(bam(\..{2,})?)|txt)$")
 
