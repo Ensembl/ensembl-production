@@ -12,7 +12,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-import os
 from pathlib import Path
 import re
 from typing import Dict, List, Tuple, Optional, Type
@@ -117,13 +116,13 @@ class BaseFileParser:
     def __init__(self, **options) -> None:
         self._options = options
         self._ftp_dirs = [
-            (options.get("ftp_dir_ens"), options.get("ftp_url_ens")),
-            (options.get("ftp_dir_eg"), options.get("ftp_url_eg")),
+            (Path(options.get("ftp_dir_ens", "")).resolve(), options.get("ftp_url_ens")),
+            (Path(options.get("ftp_dir_eg", "")).resolve(), options.get("ftp_url_eg")),
         ]
 
     def parse_metadata(self, metadata: dict) -> Result:
         errors: List[str] = []
-        file_path = metadata["file_path"]
+        file_path = (Path(metadata["file_dir"]) / metadata["file_name"]).resolve()
         try:
             base_metadata = self.get_base_metadata(metadata)
         except ValueError as e:
@@ -135,7 +134,7 @@ class BaseFileParser:
         if errors:
             errors.insert(0, f"Cannot parse {file_path}")
             return Result(None, errors)
-        file_stats = os.stat(file_path)
+        file_stats = file_path.stat()
         last_modified = (
             datetime.fromtimestamp(file_stats.st_mtime).astimezone().isoformat()
         )
@@ -143,7 +142,7 @@ class BaseFileParser:
         b2bsum = blake2bsum(file_path, b2bsum_chunk_size).hex()
         ftp_uri = self.get_ftp_uri(file_path)
         file_metadata = FileMetadata(
-            file_path=file_path,
+            file_path=str(file_path),
             file_set_id=metadata.get("file_set_id"),
             file_format=metadata["file_format"],
             release=Release(
@@ -171,17 +170,16 @@ class BaseFileParser:
         result = Result(file_metadata, errors)
         return result
 
-    def _ftp_paths(self, file_path: str) -> Tuple[str, Optional[Path]]:
+    def _ftp_paths(self, file_path: Path) -> Tuple[str, Optional[Path]]:
         for ftp_root_dir, ftp_root_uri in self._ftp_dirs:
             try:
-                ftp_dir = Path(ftp_root_dir)
-                relative_path = Path(file_path).relative_to(ftp_dir)
+                relative_path = file_path.relative_to(ftp_root_dir)
                 return ftp_root_uri, relative_path
             except (ValueError, TypeError):
                 pass
         return "", None
 
-    def get_ftp_uri(self, file_path: str) -> str:
+    def get_ftp_uri(self, file_path: Path) -> str:
         ftp_root_uri, relative_path = self._ftp_paths(file_path)
         if relative_path is not None:
             ftp_uri = urljoin(ftp_root_uri, str(relative_path))
@@ -223,8 +221,7 @@ class EMBLFileParser(FileParser):
     )
 
     def get_optional_metadata(self, metadata: dict) -> EMBLOptMetadata:
-        match = self.FILENAMES_RE.match(metadata["file_path"])
-        matched_compression = FILE_COMPRESSIONS.get(get_group("compression", match))
+        match = self.FILENAMES_RE.match(metadata["file_name"])
         matched_content_type = get_group("content_type", match)
         match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
@@ -257,7 +254,7 @@ class FASTAFileParser(FileParser):
     )
 
     def get_optional_metadata(self, metadata: dict) -> FASTAOptMetadata:
-        match = self.FILENAMES_RE.match(metadata["file_path"])
+        match = self.FILENAMES_RE.match(metadata["file_name"])
         matched_sequence_type = get_group("sequence_type", match)
         matched_content_type = get_group("content_type", match)
         match = self.FILE_EXT_RE.match(metadata["file_name"])

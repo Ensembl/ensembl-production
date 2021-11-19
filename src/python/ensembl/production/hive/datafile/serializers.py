@@ -18,7 +18,7 @@ from .utils import get_metadata_from_db, ManifestRow
 
 def metadata_from_manifest(manifest_row: ManifestRow, manifest_dir: Path):
     data = manifest_row._asdict()
-    data["file_path"] = str(manifest_dir / manifest_row.file_name)
+    data["file_dir"] = str(manifest_dir)
     return data
 
 
