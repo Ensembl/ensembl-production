@@ -26,40 +26,102 @@ from ensembl.production.hive.datafile.parsers import (
     FileURL,
     Species,
     EMBLOptMetadata,
+    FASTAOptMetadata,
+    BAMOptMetadata,
     EMBLFileParser,
     FASTAFileParser,
     BAMFileParser
 )
 
 
-def test_embl_file_parser():
-    embl_file_content = "test content"
-    encoded_embl_file = bytes(embl_file_content, "utf-8")
+CONFIG = {
+    "ftp_dir_ens": "/FTP/PUBLIC",
+    "ftp_dir_eg": "/ENSGEN/FTP",
+    "ftp_url_ens":"ftp://ensembl.ftp",
+    "ftp_url_eg": "ftp://ensemblgenomes.ftp",
+}
+
+
+PARSER_TEST_CASES = [
+    (
+        {
+            "file_dir": "/FTP/PUBLIC/release-100/gtf/acanthochromis_polyacanthus",
+            "file_name": "Acanthochromis_polyacanthus.ASM210954v1.100.abinitio.gtf.gz",
+            "file_format": "gtf",
+            "species": "acanthochromis_polyacanthus",
+            "ens_release": 100,
+            "release_date": datetime(2020, 4, 29).astimezone().isoformat(),
+            "division": "EnsemblVertebrates",
+            "genome_id": 882535,
+            "taxon_id": 80966,
+            "species_taxon_id": 80966,
+            "assembly_default": "ASM210954v1",
+            "assembly_accession": "GCA_002109545.1"
+        },
+        EMBLOptMetadata(
+            file_extension='gtf',
+            compression='gzip',
+            content_type='abinitio',
+            sorting=None
+        ),
+        EMBLFileParser
+    ),
+    (
+        {
+            "file_dir": "/FTP/PUBLIC/release-100/fasta/accipiter_nisus/dna",
+            "file_name": "Accipiter_nisus.Accipiter_nisus_ver1.0.dna.nonchromosomal.fa.gz",
+            "file_format": "fasta",
+            "species": "accipiter_nisus",
+            "ens_release": 100,
+            "release_date": datetime(2020, 4, 29).astimezone().isoformat(),
+            "division": "EnsemblVertebrates",
+            "genome_id": 882524,
+            "taxon_id": 211598,
+            "species_taxon_id": 211598,
+            "assembly_default": "Accipiter_nisus_ver1.0",
+            "assembly_accession": "GCA_004320145.1"
+        },
+        FASTAOptMetadata(
+            compression='gzip',
+            file_extension='fa',
+            content_type='nonchromosomal',
+            sequence_type="dna",
+        ),
+        FASTAFileParser
+    ),
+    (
+        {
+            "file_dir": "/FTP/PUBLIC/release-100/bamcov/amazona_collaria/genebuild",
+            "file_name": "ASM394721v1.ENA.blood.1.bam.bw",
+            "file_format": "bamcov",
+            "species": "amazona_collaria",
+            "ens_release": 100,
+            "release_date": datetime(2020, 4, 29).astimezone().isoformat(),
+            "division": "EnsemblVertebrates",
+            "genome_id": 882524,
+            "taxon_id": 241587,
+            "species_taxon_id": 211598,
+            "assembly_default": "ASM394721v1",
+            "assembly_accession": "GCA_003947215.1"
+        },
+        BAMOptMetadata(
+            file_extension='bam.bw',
+            origin='blood',
+            source="ENA",
+        ),
+        BAMFileParser
+    ),
+]
+
+@pytest.mark.parametrize("metadata,opt_data,file_parser_cls", PARSER_TEST_CASES)
+def test_file_parser(metadata, opt_data, file_parser_cls):
+    file_content = "test content"
+    encoded_file = bytes(file_content, "utf-8")
+    b2b = hashlib.blake2b()
+    b2b.update(encoded_file)
+    b2bsum = b2b.hexdigest()
     modified_time = time()
     file_size = 3363872
-    b2b = hashlib.blake2b()
-    b2b.update(encoded_embl_file)
-    b2bsum = b2b.hexdigest()
-    metadata = {
-        "file_dir": "/FTP/PUBLIC/release-100/gtf/acanthochromis_polyacanthus",
-        "file_name": "Acanthochromis_polyacanthus.ASM210954v1.100.abinitio.gtf.gz",
-        "file_format": "gtf",
-        "species": "acanthochromis_polyacanthus",
-        "ens_release": 100,
-        "release_date": datetime(2020, 4, 29).astimezone().isoformat(),
-        "division": "EnsemblVertebrates",
-        "genome_id": 882535,
-        "taxon_id": 80966,
-        "species_taxon_id": 80966,
-        "assembly_default": "ASM210954v1",
-        "assembly_accession": "GCA_002109545.1"
-    }
-    config = {
-        "ftp_dir_ens": "/FTP/PUBLIC",
-        "ftp_dir_eg": "/ENSGEN/FTP",
-        "ftp_url_ens":"ftp://ensembl.ftp",
-        "ftp_url_eg": "ftp://ensemblgenomes.ftp",
-    }
     file_path = f"{metadata['file_dir']}/{metadata['file_name']}"
     expected_result = Result(
         file_metadata=FileMetadata(
@@ -72,8 +134,8 @@ def test_embl_file_parser():
                 date=metadata["release_date"]
             ),
             assembly=Assembly(
-                default='ASM210954v1',
-                accession='GCA_002109545.1',
+                default=metadata["assembly_default"],
+                accession=metadata["assembly_accession"],
                 provider_name='',
                 genome_id=metadata["genome_id"]
             ),
@@ -82,7 +144,7 @@ def test_embl_file_parser():
             blake2bsum=b2bsum,
             urls=[
                 FileURL(
-                    url=re.sub(config["ftp_dir_ens"], config["ftp_url_ens"], file_path),
+                    url=re.sub(CONFIG["ftp_dir_ens"], CONFIG["ftp_url_ens"], file_path),
                     headers={})
             ],
             species=Species(
@@ -92,18 +154,13 @@ def test_embl_file_parser():
                 species_taxon_id=metadata["species_taxon_id"],
                 classifications=[metadata["division"]]
             ),
-            optional_data=EMBLOptMetadata(
-                file_extension='gtf',
-                compression='gzip',
-                content_type='abinitio',
-                sorting=None
-            )
+            optional_data=opt_data
         ),
         errors=[]
     )
-    patch_open = patch("builtins.open", mock_open(read_data=encoded_embl_file))
+    patch_open = patch("builtins.open", mock_open(read_data=encoded_file))
     patch_stat = patch("pathlib.Path.stat")
-    parser = EMBLFileParser(**config)
+    parser = file_parser_cls(**CONFIG)
     with patch_open, patch_stat as patched_stat:
         patched_stat.return_value.st_mtime = modified_time
         patched_stat.return_value.st_size = file_size
