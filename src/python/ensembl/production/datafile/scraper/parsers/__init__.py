@@ -13,10 +13,10 @@
 
 from typing import Optional, Tuple, Type
 
-from .bam_parser import *
-from .embl_parser import *
-from .fasta_parser import *
-from .file_parser import *
+from .bam import *
+from .embl import *
+from .fasta import *
+from .base_parser import *
 
 
 _PARSERS = {

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import re
 from typing import Optional
 
-from .file_parser import BaseOptMetadata, FileParser, FILE_COMPRESSIONS
+from .base_parser import BaseOptMetadata, FileParser, _FILE_COMPRESSIONS_MAP
 from ..utils import get_group
 
 
@@ -43,7 +43,7 @@ class FASTAFileParser(FileParser):
         matched_content_type = get_group("content_type", match)
         match = self.FILE_EXT_RE.match(metadata["file_name"])
         file_extension = get_group("file_extension", match)
-        matched_compression = FILE_COMPRESSIONS.get(get_group("compression", match))
+        matched_compression = _FILE_COMPRESSIONS_MAP.get(get_group("compression", match))
         compression = (
             metadata.get("extras", {}).get("compression") or matched_compression
         )

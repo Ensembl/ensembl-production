@@ -20,7 +20,7 @@ from urllib.parse import urljoin
 from ..utils import blake2bsum, make_release
 
 
-FILE_COMPRESSIONS = {"gz": "gzip"}
+_FILE_COMPRESSIONS_MAP = {"gz": "gzip"}
 
 
 @dataclass
