@@ -9,12 +9,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+"""Single file parser module for DataFile Scraper pipeline."""
 
 from dataclasses import asdict
 
 import eHive
 
-from ..datafile.file_parsers import get_parser
+from ..datafile.scraper.parsers import get_parser
 from .BaseProdRunnable import BaseProdRunnable
 
 

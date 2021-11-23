@@ -9,13 +9,14 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+"""Utils module for DataFile Scraper package"""
 
 from datetime import datetime
 import csv
 from functools import partial, lru_cache
 import hashlib
 import json
-from typing import Tuple, NamedTuple, List, Optional, TextIO, Generator
+from typing import Tuple, NamedTuple, List, Optional, TextIO, Generator, Match
 
 import sqlalchemy as sa
 
@@ -127,3 +128,18 @@ def load_extras(extras_str: str) -> dict:
         except json.JSONDecodeError as err:
             raise ValueError(f"Invalid JSON format for column 'extras': {err}") from err
     return {}
+
+
+def get_group(
+    group_name: str, match: Optional[Match], default: Optional[str] = None
+) -> Optional[str]:
+    if match:
+        try:
+            return match.group(group_name)
+        except IndexError:
+            pass
+    return default
+
+
+def make_release(ens_version: int) -> Tuple[int, int]:
+    return ens_version, ens_version - 53

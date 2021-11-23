@@ -18,7 +18,7 @@ import re
 import pytest
 from unittest.mock import patch, mock_open
 
-from ensembl.production.datafile.file_parsers import (
+from ensembl.production.datafile.scraper.parsers import (
     Result,
     FileMetadata,
     Assembly,

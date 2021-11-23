@@ -16,7 +16,7 @@ from io import StringIO
 import pytest
 from unittest.mock import patch, mock_open
 
-from ensembl.production.datafile.utils import (
+from ensembl.production.datafile.scraper.utils import (
     blake2bsum,
     manifest_rows,
     clean_name,

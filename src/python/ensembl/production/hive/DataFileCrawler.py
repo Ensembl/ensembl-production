@@ -9,13 +9,14 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+"""Crawler module for DataFile Scraper pipeline. Finds and loads manifest files."""
 
 from pathlib import Path
 
 import eHive
 
-from ..datafile.utils import manifest_rows
-from ..datafile.serializers import metadata_from_db, metadata_from_manifest
+from ..datafile.scraper.utils import manifest_rows
+from ..datafile.scraper.serializers import metadata_from_db, metadata_from_manifest
 from .BaseProdRunnable import BaseProdRunnable
 
 

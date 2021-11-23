@@ -55,7 +55,7 @@ jobs:
     - pip install -r requirements-test.txt
     - pip install -e .
     script:
-    - pytest src/python/ensembl/production/test
+    - pytest src/python/test
 
 notifications:
   email:

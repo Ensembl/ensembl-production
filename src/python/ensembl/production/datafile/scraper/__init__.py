@@ -9,25 +9,4 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
-from pathlib import Path
-from typing import Optional, Tuple
-
-from .utils import get_metadata_from_db, ManifestRow
-
-
-def metadata_from_manifest(manifest_row: ManifestRow, manifest_dir: Path):
-    data = manifest_row._asdict()
-    data["file_dir"] = str(manifest_dir)
-    return data
-
-
-def metadata_from_db(
-    metadata_db_url: str, species: str, ens_release: int
-) -> Tuple[Optional[dict], Optional[str]]:
-    ens_metadatas, err = get_metadata_from_db(metadata_db_url, species, ens_release)
-    if err:
-        return None, err
-    data = ens_metadatas[0]._asdict()
-    data["release_date"] = data["release_date"].isoformat()
-    return data, None
+"""DataFile Scraper package. Used to fetch file metadata for Ensembl flat files"""
