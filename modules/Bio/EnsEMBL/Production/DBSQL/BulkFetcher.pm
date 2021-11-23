@@ -268,6 +268,14 @@ sub get_transcripts {
     }
 
     {
+        $log->debug("Getting transcripts attributes");
+        my $attrib = $self->get_transcript_attrib($dba);
+        while (my ($id, $attrib_val) = each %{$attrib}) {
+            $transcripts->{$id}->{attrib} = $attrib_val;
+        }
+    }
+
+    {
 
         my $exons_list = {};
         my $current_transcript_id = '';  
@@ -790,6 +798,28 @@ sub get_coord_systems {
         });
     return $coord_systems;
 }
+
+sub get_transcript_attrib {
+    my ($self, $dba) = @_;
+    my $sql = qq/
+    select ifnull(t.stable_id, t.transcript_id) as id, at.code, ta.value
+    from transcript t 
+    join transcript_attrib ta using (transcript_id) 
+    join attrib_type at using(attrib_type_id)
+  /;
+
+    my $transcript_attrib = {};
+
+    $dba->dbc()->sql_helper()->execute_no_return(
+        -SQL      => $sql,
+        -CALLBACK => sub {
+            my ($row) = @_;
+            $transcript_attrib->{ $row->[0] }{ $row->[1] } = $row->[2];
+            return;
+        });
+    return $transcript_attrib;
+}
+
 
 sub get_synonyms {
     my ($self, $dba, $biotypes) = @_;
