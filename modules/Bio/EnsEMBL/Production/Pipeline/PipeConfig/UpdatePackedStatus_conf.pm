@@ -76,6 +76,7 @@ sub pipeline_analyses {
       -logic_name        => 'UpdatePackedStatus',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::UpdatePackedStatus',
       -max_retry_count   => 0,
+      -analysis_capacity => 10,
       -parameters        => {
                               metadata_host     => $self->o('metadata_host'),
                               metadata_port     => $self->o('metadata_port'),
