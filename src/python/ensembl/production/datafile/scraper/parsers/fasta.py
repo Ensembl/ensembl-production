@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import re
 from typing import Optional
 
-from .base_parser import BaseOptMetadata, FileParser, _FILE_COMPRESSIONS_MAP
+from .base import BaseOptMetadata, FileParser, _FILE_COMPRESSIONS_MAP
 from ..utils import get_group
 
 
