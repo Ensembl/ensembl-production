@@ -28,45 +28,50 @@ sub run {
   my ($self) = @_;
   my $source_url       = $self->param_required('source_url');
   my $sql_dir          = $self->param_required('sql_dir');
-  my $source_xref      = $self->param_required('source_xref');
+  my $source_xref      = $self->param('source_xref');
+  my $skip_preparse    = $self->param('skip_preparse');
 
   my ($user, $pass, $host, $port) = $self->parse_url($source_url);
   my ($xref_user, $xref_pass, $xref_host, $xref_port, $xref_dbname) = $self->parse_url($source_xref);
-
-  # Create central Xref database
-  my $xref_dbc = XrefParser::Database->new({
-            host    => $xref_host,
-            dbname  => $xref_dbname,
-            port    => $xref_port,
-            user    => $xref_user,
-            pass    => $xref_pass });
-  $xref_dbc->create($sql_dir, 1, 1);
-
-  # Retrieve list of sources to pre-parse from versioning database
-  my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
-  my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, revision, count_seen FROM source s, version v WHERE s.source_id = v.source_id and preparse = 1");
-  my ($name, $parser, $dir, $clean_dir, $version_file, $priority);
-  $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$dir, \$clean_dir, \$version_file, \$priority);
-
   my $dataflow_params;
-  while ($select_source_sth->fetch()) {
-    if (defined $clean_dir) { $dir = $clean_dir; }
-    my @files = `ls $dir`;
-    foreach my $file (@files) {
-      $file =~ s/\n//;
-      $file = $dir . "/" . $file;
-      $dataflow_params = {
-        parser       => $parser,
-        name         => $name,
-        version_file => $version_file,
-        xref_url     => $source_xref,
-        file         => $file,
-      };
-      $self->dataflow_output_id($dataflow_params, $priority);
+
+  unless ($skip_preparse) {
+
+    # Create central Xref database
+    my $xref_dbc = XrefParser::Database->new({
+              host    => $xref_host,
+              dbname  => $xref_dbname,
+              port    => $xref_port,
+              user    => $xref_user,
+              pass    => $xref_pass });
+    $xref_dbc->create($sql_dir, 1, 1);
+  
+    # Retrieve list of sources to pre-parse from versioning database
+    my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
+    my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
+    my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, revision, count_seen FROM source s, version v WHERE s.source_id = v.source_id and preparse = 1");
+    my ($name, $parser, $dir, $clean_dir, $version_file, $priority);
+    $select_source_sth->execute();
+    $select_source_sth->bind_columns(\$name, \$parser, \$dir, \$clean_dir, \$version_file, \$priority);
+
+    while ($select_source_sth->fetch()) {
+      if (defined $clean_dir) { $dir = $clean_dir; }
+      my @files = `ls $dir`;
+      foreach my $file (@files) {
+        $file =~ s/\n//;
+        $file = $dir . "/" . $file;
+        $dataflow_params = {
+          parser       => $parser,
+          name         => $name,
+          version_file => $version_file,
+          xref_url     => $source_xref,
+          file         => $file,
+        };
+        $self->dataflow_output_id($dataflow_params, $priority+1);
+      }
     }
   }
+
   $dataflow_params = {
     db_url => $source_url
   };

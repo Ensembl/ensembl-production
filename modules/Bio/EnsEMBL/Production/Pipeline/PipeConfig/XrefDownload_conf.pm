@@ -43,6 +43,7 @@ sub default_options {
     'source_dir'    => $self->o('work_dir')."/ensembl-production/modules/Bio/EnsEMBL/Production/Pipeline/Xrefs/sql",
     'reuse_db'      => 0,
     'skip_download' => 0,
+    'skip_preparse' => 0,
 
     # Parameters for cleaning up files
     'clean_files'   => 1,
@@ -156,11 +157,12 @@ sub pipeline_analyses {
 	release       => $self->o('release'),
 	sql_dir       => $self->o('sql_dir'),
 	source_xref   => $self->o('source_xref'),
+	skip_preparse => $self->o('skip_preparse'),
       },
       -flow_into  => {
-        '1' => 'pre_parse_source',
-        '2' => 'pre_parse_source_dependent',
-	'3' => 'pre_parse_source_tertiary',
+        '2' => 'pre_parse_source',
+        '3' => 'pre_parse_source_dependent',
+	'4' => 'pre_parse_source_tertiary',
 	'-1' => 'notify_by_email'
       },
       -rc_name    => 'small'
@@ -171,6 +173,7 @@ sub pipeline_analyses {
       -comment    => 'Store data for faster species parsing',
       -rc_name    => '2GB',
       -hive_capacity => 100,
+      -can_be_empty => 1,
     },
     {
       -logic_name => 'pre_parse_source_dependent',
@@ -178,6 +181,7 @@ sub pipeline_analyses {
       -comment    => 'Store data for faster species parsing',
       -rc_name    => '2GB',
       -hive_capacity => 100,
+      -can_be_empty => 1,
       -wait_for => 'pre_parse_source'
     },
     {
@@ -186,6 +190,7 @@ sub pipeline_analyses {
       -comment    => 'Store data for faster species parsing',
       -rc_name    => '2GB',
       -hive_capacity => 100,
+      -can_be_empty => 1,
       -wait_for => 'pre_parse_source_dependent',
     },
     {

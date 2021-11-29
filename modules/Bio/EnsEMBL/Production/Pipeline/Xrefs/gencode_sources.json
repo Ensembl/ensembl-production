@@ -89,12 +89,6 @@
       "priority" : 1
     },
     {
-      "name" : "RGD",
-      "parser" : "RGDParser",
-      "file" : "https://download.rgd.mcw.edu/pub/data_release/GENES.RAT.txt",
-      "priority" : 2
-    },
-    {
       "name" : "Reactome",
       "parser" : "ReactomeParser",
       "file" : "http://www.reactome.org/download/current/Ensembl2Reactome_All_Levels.txt",
@@ -110,24 +104,42 @@
     },
     {
       "name" : "RefSeq_dna",
-      "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete*rna.gbff.gz",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/H_sapiens/mRNA_Prot/*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
       "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
-      "preparse" : 1,
+      "priority" : 2
+    },
+    {
+      "name" : "RefSeq_dna",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/M_musculus/mRNA_Prot/*rna.gbff.gz",
+      "method" : "--bestn 5",
+      "query_cutoff" : 90,
+      "target_cutoff" : 90,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
       "priority" : 2
     },
     {
       "name" : "RefSeq_peptide",
-      "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant*protein.gpff.gz",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/H_sapiens/mRNA_Prot/*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
-      "preparse" : 1,
+      "priority" : 3
+    },
+    {
+      "name" : "RefSeq_peptide",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/M_musculus/mRNA_Prot/*protein.gpff.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
       "priority" : 3
     },
     {
@@ -153,72 +165,22 @@
     },
     {
       "name" : "Uniprot/SWISSPROT",
-      "parser" : "UniProtDatabaseParser",
+      "parser" : "UniProtParser",
       "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
-      "preparse" : 1,
       "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
       "name" : "Uniprot/SPTREMBL",
-      "parser" : "UniProtDatabaseParser",
+      "parser" : "UniProtParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
-      "preparse" : 1,
       "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "VGNC",
-      "parser" : "VGNCParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/vgnc_gene_set_All.txt.gz",
-      "priority" : 1
-    },
-    {
-      "name" : "ZFIN_ID",
-      "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/refseq.txt",
-      "priority" : 3
-    },
-    {
-      "name" : "ZFIN_ID",
-      "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/uniprot.txt",
-      "priority" : 2
-    },
-    {
-      "name" : "ZFIN_ID",
-      "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/aliases.txt",
-      "priority" : 2
-    },
-    {
-      "name" : "ZFIN_ID",
-      "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/gene_seq.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "ZFIN_desc",
-      "parser" : "ZFINDescParser",
-      "file" : "http://zfin.org/pub/transfer/MEOW/zfin_genes.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "cint_jgi_v1",
-      "parser" : "JGI_ProteinParser",
-      "file" : "http://ftp.ensembl.org/pub/misc/cint_jgi/v1/ciona.prot.fasta.gz",
-      "priority" : 1
-    },
-    {
-      "name" : "Xenbase",
-      "parser" : "XenopusJamboreeParser",
-      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
       "priority" : 1
     },
     {
