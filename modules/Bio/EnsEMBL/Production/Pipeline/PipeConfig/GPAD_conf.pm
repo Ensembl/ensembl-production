@@ -133,7 +133,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name        => 'AdvisoryDataCheckReport',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::AdvisoryDataCheckSummary',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::DataCheckMailSummary',
       -rc_name           => 'default',
       -parameters =>{
          pipeline_name => $self->o('pipeline_name'),
