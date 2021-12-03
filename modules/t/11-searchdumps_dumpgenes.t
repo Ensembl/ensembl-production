@@ -189,6 +189,19 @@ subtest "Checking protein_coding gene", sub {
             {
                 'analysis'            => 'ensembl_havana_transcript',
                 'start'               => 29011990,
+		'attrib' => {
+
+                     'synonym' => 'XXbac-BPG258E24.8-001',
+                     'name' => 'XXbac-BPG258E24.8-001',
+                     'remark' => 'MANE_select',
+                     'xref_id' => 'OTTHUMT00000076053',
+                     'gencode_basic' => 'GENCODE basic',
+                     'appris' => 'principal1',
+                     'TSL' => 'tslNA (assigned to previous version 1)',
+                     'ccds_transcript' => 'CCDS4656.1',
+                     'MANE_Select' => 'NM_030903.3',
+                     'is_canonical' =>  1,
+                },
                 'coord_system'        => {
                     'version' => 'GRCh38',
                     'name'    => 'chromosome'
