@@ -16,8 +16,10 @@ from urllib.parse import urlparse
 
 from ensembl.hive.HiveRESTClient import HiveRESTClient
 
+from .BaseProdRunnable import BaseProdRunnable
 
-class ProductionDBCopy(HiveRESTClient):
+
+class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
     """ Production DB copy REST Hive Client: """
 
     def fetch_input(self):
@@ -59,10 +61,7 @@ class ProductionDBCopy(HiveRESTClient):
             #
             message = job_response.json().get("detailed_status", {})
             message.update({"runtime": str(runtime)})
-            self.dataflow({
-                'job_id': self.input_job.dbID,
-                'message': json.dumps(message)
-            }, 3)
+            self.write_progress(message)
             if job_response.json()['overall_status'] == 'Failed':
                 raise Exception(
                     'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
@@ -79,10 +78,7 @@ class ProductionDBCopy(HiveRESTClient):
         }
         # in coordination with the dataflow output set in config to "?table_name=results",
         # this will insert results in hive db. Remember @Luca/@marc conversation.
-        self.dataflow({
-            'job_id': self.input_job.dbID,
-            'output': json.dumps(output)
-        }, 2)
+        self.write_result(output)
 
     def process_response(self, response):
         pass
