@@ -46,7 +46,7 @@ sub default_options {
                                  $self->o('pipeline_name') ),
 
     scratch_large_dir => catdir( $self->o('pipeline_dir'), 'scratch' ),
-
+    work_dir => catdir( '/hps/software/users/ensembl/repositories/', $self->o('user') ),
     production_queue => 'production',
     datamover_queue => 'datamover',
   };
@@ -69,10 +69,13 @@ sub resource_classes {
   return {
     'default' => {LSF => '-q '.$self->o('production_queue')},
     'dm'      => {LSF => '-q '.$self->o('datamover_queue')},
-     '1GB'    => {LSF => '-q '.$self->o('production_queue').' -M  1000 -R "rusage[mem=1000]"'},
-     '2GB'    => {LSF => '-q '.$self->o('production_queue').' -M  2000 -R "rusage[mem=2000]"'},
-     '4GB'    => {LSF => '-q '.$self->o('production_queue').' -M  4000 -R "rusage[mem=4000]"'},
-     '8GB'    => {LSF => '-q '.$self->o('production_queue').' -M  8000 -R "rusage[mem=8000]"'},
+    '200M'    => {LSF => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"' },
+    '500M'    => {LSF => '-q '.$self->o('production_queue').' -M 500 -R "rusage[mem=500]"' },
+    '1GB'     => {LSF => '-q '.$self->o('production_queue').' -M 1000 -R "rusage[mem=1000]"'},
+    '2GB'     => {LSF => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"'},
+    '3GB'     => {LSF => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"'},
+    '4GB'     => {LSF => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
+    '8GB'     => {LSF => '-q '.$self->o('production_queue').' -M 8000 -R "rusage[mem=8000]"'},
     '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"'},
     '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"'},
   }
