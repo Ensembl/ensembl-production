@@ -23,7 +23,6 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
     """ Production DB copy REST Hive Client: """
 
     def fetch_input(self):
-
         src_db = urlparse(self.param('source_db_uri'))
         tgt_db = urlparse(self.param('target_db_uri'))
         if src_db and tgt_db and src_db.scheme and src_db.hostname and tgt_db.hostname and tgt_db.scheme:
@@ -35,12 +34,21 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
                 "tgt_db_name": tgt_db.path[1:],
                 "user": self.param('user')
             }))
+        # Trigger http request with the following parameters:
+        #   method: self.param_required('method')
+        #   url: self.param_required('endpoint')
+        #   headers: self.param('headers')
+        #   data: self.param('payload')
+        #   timeout: self.param('endpoint_timeout')
         super().fetch_input()
+        response = self.param("response")
+        response_body = response.json()
+        response_code = response.status_code
+        if not response_body.get("job_id"):
+            raise Exception(f'The Copy submission failed: {response_code} ({response_body})')
 
     def run(self):
         response = self.param('response')
-        if response.status_code != 201:
-            raise Exception('The Copy submission failed: %s (%s)' % (response.status_code, response.json()))
         submitted_time = time.time()
         payload = json.loads(self.param('payload'))
         while True:
