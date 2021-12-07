@@ -16,7 +16,7 @@ jobs:
             - graphviz
             - emboss
       before_install:
-        - git clone --branch $ENSEMBL_BRANCH --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+        - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
         - export ENSEMBL_BRANCH=master
         - export SECONDARY_BRANCH=main
