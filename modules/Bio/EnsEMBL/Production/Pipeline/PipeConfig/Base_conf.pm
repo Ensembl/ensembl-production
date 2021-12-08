@@ -35,7 +35,7 @@ sub default_options {
     %{$self->SUPER::default_options},
 
     user  => $ENV{'USER'},
-    email => $ENV{'USER'}.'@ebi.ac.uk',
+    email => $self->o('email'),
 
     pipeline_dir => catdir( '/hps/nobackup/flicek/ensembl/production',
                             $self->o('user'),
