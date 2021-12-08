@@ -43,9 +43,15 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
         super().fetch_input()
         response = self.param("response")
         response_body = response.json()
-        response_code = response.status_code
         if not response_body.get("job_id"):
-            raise Exception(f'The Copy submission failed: {response_code} ({response_body})')
+            response_code = response.status_code
+            method = self.param_required("method")
+            endpoint = self.param_required("endpoint")
+            payload = self.param("payload")
+            err_msg = "Copy submission failed. The server did not return a job_id."
+            http_request = f"Request: HTTP {method} {endpoint} -- {payload}"
+            http_response = f"Response: HTTP {response_code} -- {response_body}"
+            raise IOError(f"{err_msg} {http_request} {http_response}")
 
     def run(self):
         response = self.param('response')
@@ -53,10 +59,12 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
         payload = json.loads(self.param('payload'))
         while True:
             with self._session_scope() as http:
-                job_response = http.request(method='get',
-                                            url=self.param('endpoint') + '/' + response.json()['job_id'],
-                                            headers=self.param('headers'),
-                                            timeout=self.param('endpoint_timeout'))
+                job_response = http.request(
+                    method='get',
+                    url=f"{self.param('endpoint')}/{response.json()['job_id']}",
+                    headers=self.param('headers'),
+                    timeout=self.param('endpoint_timeout')
+                )
             # job progress
             runtime = time.time() - submitted_time
             # message is a dict as follow:
@@ -71,16 +79,17 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
             message.update({"runtime": str(runtime)})
             self.write_progress(message)
             if job_response.json()['overall_status'] == 'Failed':
-                raise Exception(
-                    'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
-            elif job_response.json()['overall_status'] == 'Complete':
+                raise IOError(
+                    f"The Copy failed, check: {self.param('endpoint')}/{response.json()['job_id']}"
+                )
+            if job_response.json()['overall_status'] == 'Complete':
                 break
             # Pause for 1min before checking copy status again
             time.sleep(60)
 
         runtime = time.time() - submitted_time
         output = {
-            'source_db_uri': '/'.join((payload["src_host"], payload['src_incl_db'])),
+            'source_db_uri': f"{payload['src_host']}/{payload['src_incl_db']}",
             'target_db_uri': payload['tgt_host'],
             'runtime': str(runtime)
         }
