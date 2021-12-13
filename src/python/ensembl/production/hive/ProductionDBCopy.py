@@ -16,12 +16,13 @@ from urllib.parse import urlparse
 
 from ensembl.hive.HiveRESTClient import HiveRESTClient
 
+from .BaseProdRunnable import BaseProdRunnable
 
-class ProductionDBCopy(HiveRESTClient):
+
+class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
     """ Production DB copy REST Hive Client: """
 
     def fetch_input(self):
-
         src_db = urlparse(self.param('source_db_uri'))
         tgt_db = urlparse(self.param('target_db_uri'))
         if src_db and tgt_db and src_db.scheme and src_db.hostname and tgt_db.hostname and tgt_db.scheme:
@@ -33,20 +34,37 @@ class ProductionDBCopy(HiveRESTClient):
                 "tgt_db_name": tgt_db.path[1:],
                 "user": self.param('user')
             }))
+        # Trigger http request with the following parameters:
+        #   method: self.param_required('method')
+        #   url: self.param_required('endpoint')
+        #   headers: self.param('headers')
+        #   data: self.param('payload')
+        #   timeout: self.param('endpoint_timeout')
         super().fetch_input()
+        response = self.param("response")
+        response_body = response.json()
+        if not response_body.get("job_id"):
+            response_code = response.status_code
+            method = self.param_required("method")
+            endpoint = self.param_required("endpoint")
+            payload = self.param("payload")
+            err_msg = "Copy submission failed. The server did not return a job_id."
+            http_request = f"Request: HTTP {method} {endpoint} -- {payload}"
+            http_response = f"Response: HTTP {response_code} -- {response_body}"
+            raise IOError(f"{err_msg} {http_request} {http_response}")
 
     def run(self):
         response = self.param('response')
-        if response.status_code != 201:
-            raise Exception('The Copy submission failed: %s (%s)' % (response.status_code, response.json()))
         submitted_time = time.time()
         payload = json.loads(self.param('payload'))
         while True:
             with self._session_scope() as http:
-                job_response = http.request(method='get',
-                                            url=self.param('endpoint') + '/' + response.json()['job_id'],
-                                            headers=self.param('headers'),
-                                            timeout=self.param('endpoint_timeout'))
+                job_response = http.request(
+                    method='get',
+                    url=f"{self.param('endpoint')}/{response.json()['job_id']}",
+                    headers=self.param('headers'),
+                    timeout=self.param('endpoint_timeout')
+                )
             # job progress
             runtime = time.time() - submitted_time
             # message is a dict as follow:
@@ -59,30 +77,25 @@ class ProductionDBCopy(HiveRESTClient):
             #
             message = job_response.json().get("detailed_status", {})
             message.update({"runtime": str(runtime)})
-            self.dataflow({
-                'job_id': self.input_job.dbID,
-                'message': json.dumps(message)
-            }, 3)
+            self.write_progress(message)
             if job_response.json()['overall_status'] == 'Failed':
-                raise Exception(
-                    'The Copy failed, check: ' + self.param('endpoint') + '/' + response.json()['job_id'])
-            elif job_response.json()['overall_status'] == 'Complete':
+                raise IOError(
+                    f"The Copy failed, check: {self.param('endpoint')}/{response.json()['job_id']}"
+                )
+            if job_response.json()['overall_status'] == 'Complete':
                 break
             # Pause for 1min before checking copy status again
             time.sleep(60)
 
         runtime = time.time() - submitted_time
         output = {
-            'source_db_uri': '/'.join((payload["src_host"], payload['src_incl_db'])),
+            'source_db_uri': f"{payload['src_host']}/{payload['src_incl_db']}",
             'target_db_uri': payload['tgt_host'],
             'runtime': str(runtime)
         }
         # in coordination with the dataflow output set in config to "?table_name=results",
         # this will insert results in hive db. Remember @Luca/@marc conversation.
-        self.dataflow({
-            'job_id': self.input_job.dbID,
-            'output': json.dumps(output)
-        }, 2)
+        self.write_result(output)
 
     def process_response(self, response):
         pass

@@ -16,7 +16,7 @@ import re
 from typing import Optional
 
 from ..utils import get_group
-from .base_parser import BaseOptMetadata, FileParser
+from .base import BaseOptMetadata, FileParser
 
 
 @dataclass

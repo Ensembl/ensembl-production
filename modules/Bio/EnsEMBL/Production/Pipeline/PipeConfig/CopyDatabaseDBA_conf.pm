@@ -1,9 +1,9 @@
-=pod 
+=pod
 =head1 NAME
 
 =head1 SYNOPSIS
 
-=head1 DESCRIPTION  
+=head1 DESCRIPTION
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
@@ -23,9 +23,7 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CopyDatabaseDBA_conf;
 
 use strict;
 use warnings;
-use Data::Dumper;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
-
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BasePython_conf');
 
 
 sub default_options {
@@ -37,19 +35,6 @@ sub default_options {
     }
 }
 
-sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-        @{$self->SUPER::pipeline_create_commands}, # inheriting database and hive tables' creation
-
-        # additional tables needed for long multiplication pipeline's operation:
-        $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
-        $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
-        $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
-        $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
-        $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
-    ];
-}
 
 =head2 pipeline_analyses
 =cut
