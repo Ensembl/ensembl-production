@@ -538,7 +538,7 @@ sub pipeline_analyses {
         {
             -logic_name        => 'report_failed_assembly_chain',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-            -parameters        => { 'email' => $self->o('email').$self->o('web_email') },
+            -parameters        => { 'email' => $self->o('email').",".$self->o('web_email') },
             -max_retry_count   => 1,
             -analysis_capacity => 10,
         },
