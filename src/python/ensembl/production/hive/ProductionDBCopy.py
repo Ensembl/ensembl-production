@@ -55,13 +55,16 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
 
     def run(self):
         response = self.param('response')
+        job_id = response.json()['job_id']
+        if isinstance(job_id, list):
+            job_id = job_id[0]
         submitted_time = time.time()
         payload = json.loads(self.param('payload'))
         while True:
             with self._session_scope() as http:
                 job_response = http.request(
                     method='get',
-                    url=f"{self.param('endpoint')}/{response.json()['job_id']}",
+                    url=f"{self.param('endpoint')}/{job_id}",
                     headers=self.param('headers'),
                     timeout=self.param('endpoint_timeout')
                 )
@@ -80,7 +83,7 @@ class ProductionDBCopy(HiveRESTClient, BaseProdRunnable):
             self.write_progress(message)
             if job_response.json()['overall_status'] == 'Failed':
                 raise IOError(
-                    f"The Copy failed, check: {self.param('endpoint')}/{response.json()['job_id']}"
+                    f"The Copy failed, check: {self.param('endpoint')}/{job_id}"
                 )
             if job_response.json()['overall_status'] == 'Complete':
                 break
