@@ -32,7 +32,7 @@ sub default_options {
 
   return {
     %{$self->SUPER::default_options()},
-    'work_dir'       => $self->o('ENV', 'HOME')."/work/lib",
+    'work_dir'       => $self->o('ENV', 'BASE_DIR'),
     'sql_dir'          => $self->o('work_dir')."/ensembl/misc-scripts/xref_mapping",
     'release'          => $self->o('ensembl_release'),
     'source_xref'      => '',
