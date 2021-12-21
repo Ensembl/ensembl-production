@@ -189,6 +189,14 @@ subtest "Checking protein_coding gene", sub {
             {
                 'analysis'            => 'ensembl_havana_transcript',
                 'start'               => 29011990,
+                'attrib' => {
+
+                     'synonym' => 'XXbac-BPG258E24.8-001',
+                     'name' => 'XXbac-BPG258E24.8-001',
+		     'author_email' => 'v@somewhere.com',
+		     'hidden_remark' => 'CCDS4656.1',
+		     'author' => 'Havana',
+                },
                 'coord_system'        => {
                     'version' => 'GRCh38',
                     'name'    => 'chromosome'
@@ -1216,6 +1224,13 @@ subtest "Checking ncRNA gene", sub {
         'analysis_display'    => 'Havana',
         'coord_system'        => { 'name' => 'chromosome', 'version' => 'GRCh38' },
         'transcripts'         => [ {
+ 	    'attrib' => {
+
+                'name' => 'RP11-309M23.2-001',
+		'remark' => 'ribosomal protein L14 (RPL14) pseudogene',
+                'author_email' => 'v@somewhere.com',
+                'author' => 'Havana',
+            },
             'analysis'            => 'havana',
             'analysis_display'    => 'Havana',
             'strand'              => '-1',
