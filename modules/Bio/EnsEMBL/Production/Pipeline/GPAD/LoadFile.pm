@@ -248,7 +248,7 @@ sub run {
                 $go_xref->add_linkage_type($go_evidence);
             }
         } else {
-            $self->log()->warning("No GOEvidence for $lineN");
+            $self->warning("No GOEvidence for $lineN");
         }
 
         if (defined $tgt_protein) {
