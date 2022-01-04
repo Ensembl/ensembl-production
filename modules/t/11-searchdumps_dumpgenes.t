@@ -1076,6 +1076,8 @@ subtest "Checking protein_coding gene", sub {
                         'end'                 => 29013017,
                         'seq_region_name'     => '6',
                         'rank'                => 1,
+			'phase'               => '-1',
+			'end_phase'           => '-1',
                         'ensembl_object_type' => 'exon',
                         'id'                  => 'ENSE00001691220',
                         'start'               => 29011990,
@@ -1290,6 +1292,8 @@ subtest "Checking ncRNA gene", sub {
                 'end'                 => '970836',
                 'id'                  => 'ENSE00002580842',
                 'rank'                => '1',
+		'phase'               => '-1', 
+		'end_phase'           => '-1',
                 'coord_system'        =>
                     { 'name' => 'chromosome', 'version' => 'GRCh38' },
 
@@ -1299,6 +1303,8 @@ subtest "Checking ncRNA gene", sub {
                     { 'name' => 'chromosome', 'version' => 'GRCh38' },
 
                 'rank'                => '2',
+		'phase'               => '-1',  
+		'end_phase'           => '-1',
                 'id'                  => 'ENSE00002621881',
                 'strand'              => '-1',
                 'end'                 => '970115',
@@ -1307,6 +1313,8 @@ subtest "Checking ncRNA gene", sub {
                 'version'             => '1' }, {
                 'ensembl_object_type' => 'exon',
                 'rank'                => '3',
+		'phase'               => '-1',
+	        'end_phase'           => '-1',      	
                 'coord_system'        =>
                     { 'name' => 'chromosome', 'version' => 'GRCh38' },
                 'id'                  => 'ENSE00002622269',
