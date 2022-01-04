@@ -55,6 +55,7 @@ sub default_options {
     logic_name => 'xref_projection',
 
     store_projections => 1,
+    exclude_species  => [],
 
     backup_tables => [
       'analysis',
