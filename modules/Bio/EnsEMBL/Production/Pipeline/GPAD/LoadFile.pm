@@ -154,73 +154,43 @@ sub run {
         # In practice, we just want to add it as master_xref, so the first one is fine
         # Distinguish if data is UniProt (proteins), RNACentral (transcripts), Protein_id (proteins),
         # wormbase_transcript (transcripts), flybase_translation_id (translations)
-        if (defined($go_evidence)) {
-            $self->log()->debug("DB " . $db . " Go Evidence " . $go_evidence);
-            if ($db =~ /UniProt/) {
-                $self->log()->debug("Adding linkage to UniProt");
-                $is_protein = 1;
-                my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
-                my @master_xref = grep {$_->dbname =~ m/uniprot/i} @$uniprot_xrefs;
-                if (scalar(@master_xref) != 0) {
-                    $master_xref = $master_xref[0];
-                    $go_xref->add_linkage_type($go_evidence, $master_xref);
-                }
-                else {
-                    $unmatched_uniprot{$tgt_species}++;
-                }
+
+        $self->log()->debug("DB " . $db . " Go Evidence " . $go_evidence);
+        if ($db =~ /UniProt/) {
+            $self->log()->debug("Adding linkage to UniProt");
+            $is_protein = 1;
+            my $uniprot_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id);
+            my @master_xref = grep {$_->dbname =~ m/uniprot/i} @$uniprot_xrefs;
+            if (scalar(@master_xref) != 0) {
+                $master_xref = $master_xref[0];
+                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
             }
-            elsif ($db =~ /RNAcentral/) {
-                $self->log()->debug("Adding linkage to RNAcentral");
-                $is_transcript = 1;
-                # For microRNAs, GOA link terms to the product; however, we annotate GO terms
-                # against transcripts, not mature products, i.e. precursor miRNAs. Fortunately,
-                # the accessions for the precursor(s) are in the GPAD file, so we can use those
-                # instead of the standard RNAcentral accession that we use for everything else.
-                my @db_object_ids;
-                if ($precursor_rna) {
-                    @db_object_ids = split(",", $precursor_rna);
-                }
-                else {
-                    @db_object_ids = ($db_object_id)
-                }
-                foreach my $db_object_id (@db_object_ids) {
-                    # The ID has the taxonomy id appended, e.g. URS0000007FBA_9606
-                    # We store as URS0000007FBA, so need to remove the suffix.
-                    $db_object_id =~ s/_[0-9]+$//;
-                    my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
-                    if (scalar(@$rnacentral_xrefs) != 0) {
-                        $master_xref = $rnacentral_xrefs->[0];
-                        $go_xref->add_linkage_type($go_evidence, $master_xref);
-                        $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
-                        foreach my $transcript (@$transcripts) {
-                            $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
-                            $species_added_via_xref{$tgt_species}++;
-                        }
-                    }
-                    else {
-                        $unmatched_rnacentral{$tgt_species}++;
-                    }
-                }
+            else {
+                $unmatched_uniprot{$tgt_species}++;
             }
-            elsif (lc($db) =~ /ena/) {
-                $self->log()->debug("Adding linkage to Protein ID");
-                $is_protein = 1;
-                my $protein_id_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'protein_id');
-                if (scalar(@$protein_id_xrefs) != 0) {
-                    $master_xref = $protein_id_xrefs->[0];
-                    $go_xref->add_linkage_type($go_evidence, $master_xref);
-                }
-                else {
-                    $unmatched_protein_id{$tgt_species}++;
-                }
+        }
+        elsif ($db =~ /RNAcentral/) {
+            $self->log()->debug("Adding linkage to RNAcentral");
+            $is_transcript = 1;
+            # For microRNAs, GOA link terms to the product; however, we annotate GO terms
+            # against transcripts, not mature products, i.e. precursor miRNAs. Fortunately,
+            # the accessions for the precursor(s) are in the GPAD file, so we can use those
+            # instead of the standard RNAcentral accession that we use for everything else.
+            my @db_object_ids;
+            if ($precursor_rna) {
+                @db_object_ids = split(",", $precursor_rna);
             }
-            elsif (lc($db) =~ /wormbase/) {
-                $self->log()->debug("Adding linkage to Wormbase Transcript");
-                $is_transcript = 1;
-                my $wormbase_transcript_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'wormbase_transcript');
-                if (scalar(@$wormbase_transcript_xrefs) != 0) {
-                    $master_xref = $wormbase_transcript_xrefs->[0];
-                    $go_xref->add_linkage_type($go_evidence, $master_xref);
+            else {
+                @db_object_ids = ($db_object_id)
+            }
+            foreach my $db_object_id (@db_object_ids) {
+                # The ID has the taxonomy id appended, e.g. URS0000007FBA_9606
+                # We store as URS0000007FBA, so need to remove the suffix.
+                $db_object_id =~ s/_[0-9]+$//;
+                my $rnacentral_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'RNAcentral');
+                if (scalar(@$rnacentral_xrefs) != 0) {
+                    $master_xref = $rnacentral_xrefs->[0];
+                    $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
                     $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
                     foreach my $transcript (@$transcripts) {
                         $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
@@ -228,27 +198,54 @@ sub run {
                     }
                 }
                 else {
-                    $unmatched_wormbase_transcript{$tgt_species}++;
+                    $unmatched_rnacentral{$tgt_species}++;
                 }
             }
-            elsif (lc($db) =~ /flybase/) {
-                $self->log()->debug("Adding linkage to Flybase translation");
-                $is_protein = 1;
-                my $flybase_translation_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'flybase_translation_id');
-                if (scalar(@$flybase_translation_xrefs) != 0) {
-                    $master_xref = $flybase_translation_xrefs->[0];
-                    $go_xref->add_linkage_type($go_evidence, $master_xref);
-                }
-                else {
-                    $unmatched_flybase_translation{$tgt_species}++;
+        }
+        elsif (lc($db) =~ /ena/) {
+            $self->log()->debug("Adding linkage to Protein ID");
+            $is_protein = 1;
+            my $protein_id_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'protein_id');
+            if (scalar(@$protein_id_xrefs) != 0) {
+                $master_xref = $protein_id_xrefs->[0];
+                $go_xref->add_link1age_type($go_evidence, $master_xref) if defined($go_evidence);
+            }
+            else {
+                $unmatched_protein_id{$tgt_species}++;
+            }
+        }
+        elsif (lc($db) =~ /wormbase/) {
+            $self->log()->debug("Adding linkage to Wormbase Transcript");
+            $is_transcript = 1;
+            my $wormbase_transcript_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'wormbase_transcript');
+            if (scalar(@$wormbase_transcript_xrefs) != 0) {
+                $master_xref = $wormbase_transcript_xrefs->[0];
+                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
+                $transcripts = $t_adaptor->fetch_all_by_external_name($db_object_id);
+                foreach my $transcript (@$transcripts) {
+                    $dbe_adaptor->store($go_xref, $transcript->dbID, 'Transcript', 1, $master_xref);
+                    $species_added_via_xref{$tgt_species}++;
                 }
             }
             else {
-                $self->log()->debug("Adding default linkage");
-                $go_xref->add_linkage_type($go_evidence);
+                $unmatched_wormbase_transcript{$tgt_species}++;
             }
-        } else {
-            $self->warning("No GOEvidence for $lineN");
+        }
+        elsif (lc($db) =~ /flybase/) {
+            $self->log()->debug("Adding linkage to Flybase translation");
+            $is_protein = 1;
+            my $flybase_translation_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'flybase_translation_id');
+            if (scalar(@$flybase_translation_xrefs) != 0) {
+                $master_xref = $flybase_translation_xrefs->[0];
+                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
+            }
+            else {
+                $unmatched_flybase_translation{$tgt_species}++;
+            }
+        }
+        else {
+            $self->log()->debug("Adding default linkage");
+            $go_xref->add_linkage_type($go_evidence) if defined($go_evidence);
         }
 
         if (defined $tgt_protein) {
