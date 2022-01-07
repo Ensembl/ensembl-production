@@ -31,11 +31,24 @@ sub run {
   my $appris_url   = $self->param_required('appris_url');
   my $pipeline_dir = $self->param_required('pipeline_dir');
 
-  my $wget = "wget -nd -r $appris_url -P $pipeline_dir -A txt";
-  if ( system($wget) ) {
-    $self->throw("Could not copy files from $appris_url to $pipeline_dir");
-  } else {
+  my %wget_errors = (
+    1 => "Generic error",
+    2 => "Parse error",
+    3 => "I/O error",
+    4 => "Network failure (or matching files could not have been saved)",
+    5 => "SSL verification failure",
+    6 => "Authentication error",
+    7 => "Protocol error",
+    8 => "Server error (can be a HTTP error)"
+  );
+
+  my @wget = ("wget", "-nd", "-np", "-r", $appris_url, "-P", $pipeline_dir, "-A", ".txt");
+  my $retval = (system(@wget) >> 8);
+  if ( $retval == 0 ) {
     $self->info("Copied files from $appris_url to $pipeline_dir");
+  } else {
+    my $error = exists($wget_errors{$retval}) ? $wget_errors{$retval} : 'Unknown error';
+    $self->throw("Could not copy files from $appris_url to $pipeline_dir. Error: $error");
   }
 
   my @local_files = path("$pipeline_dir")->children(qr/appris/);

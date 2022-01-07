@@ -110,7 +110,9 @@ subtest "Checking protein_coding gene", sub {
         'strand'              => -1,
         'coord_system'        => {
             'version' => 'GRCh38',
-            'name'    => 'chromosome'
+            'name'    => 'chromosome',
+	    'seq_length' => '171115067',
+	    'seq_name' => '6',
         },
         'name'                => 'OR2W1',
         'version'             => 2,
@@ -189,9 +191,19 @@ subtest "Checking protein_coding gene", sub {
             {
                 'analysis'            => 'ensembl_havana_transcript',
                 'start'               => 29011990,
+                'attrib' => {
+
+                     'synonym' => 'XXbac-BPG258E24.8-001',
+                     'name' => 'XXbac-BPG258E24.8-001',
+		     'author_email' => 'v@somewhere.com',
+		     'hidden_remark' => 'CCDS4656.1',
+		     'author' => 'Havana',
+                },
                 'coord_system'        => {
                     'version' => 'GRCh38',
-                    'name'    => 'chromosome'
+                    'name'    => 'chromosome',
+		    'seq_length' => '171115067',
+		    'seq_name'  => '6',
                 },
                 'name'                => 'OR2W1-001',
                 'strand'              => -1,
@@ -1076,13 +1088,17 @@ subtest "Checking protein_coding gene", sub {
                         'end'                 => 29013017,
                         'seq_region_name'     => '6',
                         'rank'                => 1,
+			'phase'               => '-1',
+			'end_phase'           => '-1',
                         'ensembl_object_type' => 'exon',
                         'id'                  => 'ENSE00001691220',
                         'start'               => 29011990,
                         'strand'              => -1,
                         'coord_system'        => {
                             'version' => 'GRCh38',
-                            'name'    => 'chromosome'
+                            'name'    => 'chromosome',
+			    'seq_length' => '171115067',
+			    'seq_name' => '6',
                         }
                     }
                 ],
@@ -1214,8 +1230,15 @@ subtest "Checking ncRNA gene", sub {
         'id'                  => 'ENSG00000261370',
         'analysis'            => 'havana',
         'analysis_display'    => 'Havana',
-        'coord_system'        => { 'name' => 'chromosome', 'version' => 'GRCh38' },
+        'coord_system'        => { 'name' => 'chromosome', 'version' => 'GRCh38', 'seq_length' => '155131142', 'seq_name' => 'HG480_HG481_PATCH' },
         'transcripts'         => [ {
+ 	    'attrib' => {
+
+                'name' => 'RP11-309M23.2-001',
+		'remark' => 'ribosomal protein L14 (RPL14) pseudogene',
+                'author_email' => 'v@somewhere.com',
+                'author' => 'Havana',
+            },
             'analysis'            => 'havana',
             'analysis_display'    => 'Havana',
             'strand'              => '-1',
@@ -1271,7 +1294,7 @@ subtest "Checking ncRNA gene", sub {
                 'db_display'  => 'HGNC transcript name',
                 'dbname'      => 'HGNC_trans_name' } ],
             'coord_system'        =>
-                { 'version' => 'GRCh38', 'name' => 'chromosome' },
+                { 'version' => 'GRCh38', 'name' => 'chromosome', 'seq_length' => '155131142', 'seq_name' => 'HG480_HG481_PATCH' },
             'id'                  => 'ENST00000569325',
             'start'               => '969238',
             'seq_region_name'     => 'HG480_HG481_PATCH',
@@ -1290,15 +1313,19 @@ subtest "Checking ncRNA gene", sub {
                 'end'                 => '970836',
                 'id'                  => 'ENSE00002580842',
                 'rank'                => '1',
+		'phase'               => '-1', 
+		'end_phase'           => '-1',
                 'coord_system'        =>
-                    { 'name' => 'chromosome', 'version' => 'GRCh38' },
+                    { 'name' => 'chromosome', 'version' => 'GRCh38', 'seq_length' => '155131142', 'seq_name' => 'HG480_HG481_PATCH' },
 
                 'ensembl_object_type' => 'exon' }, {
                 'ensembl_object_type' => 'exon',
                 'coord_system'        =>
-                    { 'name' => 'chromosome', 'version' => 'GRCh38' },
+                    { 'name' => 'chromosome', 'version' => 'GRCh38', 'seq_length' => '155131142', 'seq_name' => 'HG480_HG481_PATCH' },
 
                 'rank'                => '2',
+		'phase'               => '-1',  
+		'end_phase'           => '-1',
                 'id'                  => 'ENSE00002621881',
                 'strand'              => '-1',
                 'end'                 => '970115',
@@ -1307,8 +1334,10 @@ subtest "Checking ncRNA gene", sub {
                 'version'             => '1' }, {
                 'ensembl_object_type' => 'exon',
                 'rank'                => '3',
+		'phase'               => '-1',
+	        'end_phase'           => '-1',      	
                 'coord_system'        =>
-                    { 'name' => 'chromosome', 'version' => 'GRCh38' },
+                    { 'name' => 'chromosome', 'version' => 'GRCh38', 'seq_length' => '155131142', 'seq_name' => 'HG480_HG481_PATCH' },
                 'id'                  => 'ENSE00002622269',
                 'start'               => '969238',
                 'seq_region_name'     => 'HG480_HG481_PATCH',

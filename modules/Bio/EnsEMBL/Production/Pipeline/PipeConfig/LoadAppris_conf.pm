@@ -41,7 +41,7 @@ sub default_options {
   return {
     %{ $self->SUPER::default_options() },
 
-    appris_url => 'http://apprisws.bioinfo.cnio.es/forEnsembl'
+    appris_url => "http://apprisws.bioinfo.cnio.es/forEnsembl/e".$self->o('ens_version')."/",
   };
 }
 

@@ -268,6 +268,14 @@ sub get_transcripts {
     }
 
     {
+        $log->debug("Getting transcripts attributes");
+        my $attrib = $self->get_transcript_attrib($dba);
+        while (my ($id, $attrib_val) = each %{$attrib}) {
+            $transcripts->{$id}->{attrib} = $attrib_val;
+        }
+    }
+
+    {
 
         my $exons_list = {};
         my $current_transcript_id = '';  
@@ -280,6 +288,8 @@ sub get_transcripts {
 		e.seq_region_start as start, 
 		e.seq_region_end as end,
 		e.seq_region_strand as strand,
+		e.phase as phase,
+		e.end_phase as end_phase,
 		et.rank as rank,
 		'exon' as ensembl_object_type
 		FROM transcript t
@@ -769,7 +779,7 @@ sub get_xrefs {
 sub get_coord_systems {
     my ($self, $dba, $type, $biotypes) = @_;
     my $sql = qq/
-    select ifnull(g.stable_id,g.${type}_id) as id, c.name, c.version
+    select ifnull(g.stable_id,g.${type}_id) as id, c.name, c.version, s.name, s.length
     from $type g
     join seq_region s using (seq_region_id)
     join coord_system c using (coord_system_id)
@@ -785,11 +795,33 @@ sub get_coord_systems {
         -PARAMS   => [ $dba->species_id() ],
         -CALLBACK => sub {
             my ($row) = @_;
-            $coord_systems->{ $row->[0] } = { name => $row->[1], version => $row->[2] };
+            $coord_systems->{ $row->[0] } = { name => $row->[1], version => $row->[2], seq_name => $row->[3], seq_length => $row->[4]  };
             return;
         });
     return $coord_systems;
 }
+
+sub get_transcript_attrib {
+    my ($self, $dba) = @_;
+    my $sql = qq/
+    select ifnull(t.stable_id, t.transcript_id) as id, at.code, ta.value
+    from transcript t 
+    join transcript_attrib ta using (transcript_id) 
+    join attrib_type at using(attrib_type_id)
+  /;
+
+    my $transcript_attrib = {};
+
+    $dba->dbc()->sql_helper()->execute_no_return(
+        -SQL      => $sql,
+        -CALLBACK => sub {
+            my ($row) = @_;
+            $transcript_attrib->{ $row->[0] }{ $row->[1] } = $row->[2];
+            return;
+        });
+    return $transcript_attrib;
+}
+
 
 sub get_synonyms {
     my ($self, $dba, $biotypes) = @_;
@@ -915,7 +947,7 @@ sub add_homologues {
     my $homologues = {};
     $compara_dba->dbc()->sql_helper()->execute_no_return(
         -SQL      => q/
-SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id
+SELECT gm1.stable_id, gm2.stable_id, g2.name, h.description, r.stable_id, g2.taxon_id
 FROM homology_member hm1
  INNER JOIN homology_member hm2 ON (hm1.homology_id = hm2.homology_id)
  INNER JOIN homology h ON (hm1.homology_id = h.homology_id)
@@ -933,6 +965,7 @@ WHERE (hm1.gene_member_id <> hm2.gene_member_id)
             push @{$homologues->{ $row->[0] }}, {
                 stable_id      => $row->[1],
                 genome         => $row->[2],
+                taxonomy_id    => $row->[5],
                 orthology_type => $row->[3],
                 gene_tree_id   => $row->[4] };
             return;

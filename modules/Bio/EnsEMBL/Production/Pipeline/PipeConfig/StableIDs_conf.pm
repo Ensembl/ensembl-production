@@ -172,6 +172,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name  => 'CreateIndexes',
+      -max_retry_count   => 0,
       -module      => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
       -parameters  => {
                         db_conn    => $self->o('db_url'),

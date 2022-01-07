@@ -37,7 +37,8 @@
                     "description",
                     "genome",
                     "genome_display",
-                    "stable_id"
+                    "stable_id",
+                    "taxonomy_id"
                 ],
                 "type": "object",
                 "properties": {
@@ -51,6 +52,9 @@
                         "type": "string"
                     },
                     "genome": {
+                        "type": "string"
+                    },
+                    "taxonomy_id": {
                         "type": "string"
                     }
                 }
