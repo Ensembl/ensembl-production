@@ -35,6 +35,7 @@ sub run {
   my $skip_download    = $self->param_required('skip_download');
   my $db               = $self->param('db');
   my $version_file     = $self->param('version_file');
+  my $preparse         = $self->param('preparse');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
@@ -47,9 +48,9 @@ sub run {
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);
   my $dbi = $self->get_dbi($host, $port, $user, $pass, $source_db);
   my $insert_source_sth = $dbi->prepare("INSERT IGNORE INTO source (name, parser) VALUES (?, ?)");
-  my $insert_version_sth = $dbi->prepare("INSERT ignore INTO version (source_id, uri, index_uri, count_seen, revision) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?, ?)");
+  my $insert_version_sth = $dbi->prepare("INSERT ignore INTO version (source_id, uri, index_uri, count_seen, revision, preparse) VALUES ((SELECT source_id FROM source WHERE name = ?), ?, ?, ?, ?, ?)");
   $insert_source_sth->execute($name, $parser);
-  $insert_version_sth->execute($name, $file_name, $db, $priority, $version);
+  $insert_version_sth->execute($name, $file_name, $db, $priority, $version, $preparse);
   $insert_source_sth->finish();
   $insert_version_sth->finish();
 }

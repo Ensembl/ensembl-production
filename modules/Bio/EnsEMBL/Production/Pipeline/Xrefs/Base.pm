@@ -75,25 +75,30 @@ sub download_file {
   }
   make_path($dest_dir);
   if ($uri->scheme eq 'ftp') {
-    my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
-    if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
-      $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
-    }
-    $ftp->login( 'anonymous', '-anonymous@' ); 
-    $ftp->cwd( dirname( $uri->path ) );
-    $ftp->binary();
-    foreach my $remote_file ( ( @{ $ftp->ls() } ) ) {
+    my $ftp = ftp_connect($uri);
+    my @remote_files = $ftp->ls();
+    foreach my $remote_file ( @remote_files ) {
       if ( !match_glob( basename( $uri->path() ), $remote_file ) ) { next; }
       $remote_file =~ s/\///g;
       $file_path = catfile($dest_dir, basename($remote_file));
       if (defined $db and $db eq 'checksum') {
         $file_path = catfile($dest_dir, $source_name."-".basename($remote_file));
       }
-      $ftp->get( $remote_file, $file_path ) unless $skip_download_if_file_present and -f $file_path;
+      unless ($skip_download_if_file_present and -f $file_path) {
+        if (!$ftp->get( $remote_file, $file_path )) {
+          $ftp->quit;
+          $ftp = ftp_connect($uri);
+          $ftp->get( $remote_file, $file_path )
+        }
+      }
     }
+    $ftp->quit;
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
     $file_path = catfile($dest_dir, basename($uri->path));
     unless ($skip_download_if_file_present and -f $file_path) {
+      if (defined $db and $db eq 'checksum') {
+        $file_path = catfile($dest_dir, $source_name."-".basename($uri->path));
+      }
       open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
       my $http = HTTP::Tiny->new();
       my $response = $http->get($uri->as_string());
@@ -106,6 +111,21 @@ sub download_file {
   }
   return dirname($file_path);
   
+}
+
+sub ftp_connect {
+  my ($uri) = @_;
+
+  my $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
+  if (!defined($ftp) or ! $ftp->can('ls') or !$ftp->ls()) {
+    $ftp = Net::FTP->new( $uri->host(), 'Debug' => 0);
+  }
+
+  $ftp->login( 'anonymous', '-anonymous@' );
+  $ftp->cwd( dirname( $uri->path ) );
+  $ftp->binary();
+
+  return $ftp;
 }
 
 sub parse_url {
@@ -297,7 +317,9 @@ sub get_division_id {
     'EnsemblVertebrates' => 7742,
     'Vertebrates'        => 7742,
     'EnsemblMetazoa'     => 33208,
-    'Metazoa'            => 33208
+    'Metazoa'            => 33208,
+    'Plants'             => 33090,
+    'EnsemblPlants'      => 33090,
   );
   my $division_id = $division_taxon{$division};
   return $division_id;

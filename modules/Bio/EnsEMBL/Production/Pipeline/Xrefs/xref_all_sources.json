@@ -111,18 +111,7 @@
     {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate_*rna.gbff.gz",
-      "method" : "--bestn 5",
-      "query_cutoff" : 90,
-      "target_cutoff" : 90,
-      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
-      "preparse" : 1,
-      "priority" : 2
-    },
-    {
-      "name" : "RefSeq_dna",
-      "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*rna.gbff.gz",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
@@ -133,18 +122,7 @@
     {
       "name" : "RefSeq_peptide",
       "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate*protein.gpff.gz",
-      "method" : "--bestn 1",
-      "query_cutoff" : 100,
-      "target_cutoff" : 100,
-      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
-      "preparse" : 1,
-      "priority" : 3
-    },
-    {
-      "name" : "RefSeq_peptide",
-      "parser" : "RefSeqDatabaseParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*protein.gpff.gz",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
