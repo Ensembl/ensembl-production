@@ -40,7 +40,7 @@ sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
         %{$self->SUPER::pipeline_wide_parameters},
-        'exclude_species' => self->o('antispecies')
+        'exclude_species' => $self->o('antispecies')
     };
 }
 
