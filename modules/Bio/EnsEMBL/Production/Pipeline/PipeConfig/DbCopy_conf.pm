@@ -121,7 +121,7 @@ sub pipeline_analyses {
                                 {
                                   'GroupDeleteFactory'   => {'tgt_uri' => '#stdout#'},
                                   'MultiDbDeleteFactory' => {'tgt_uri' => '#stdout#'},
-                                  'NamedDbDeleteFactory' => {'tgt_uri' => '#stdout#'},                              
+                                  'NamedDbDeleteFactory' => {'tgt_uri' => '#stdout#'},
                                 }
                             },
     },
@@ -158,11 +158,11 @@ sub pipeline_analyses {
                               cmd => 'echo -n $(#tgt# details host-port)',
                             },
       -flow_into         => {
-                              '1' => 
+                              '1' =>
                                 {
                                   'GroupCopyFactory'   => {'tgt_host' => '#stdout#'},
                                   'MultiDbCopyFactory' => {'tgt_host' => '#stdout#'},
-                                  'NamedDbCopyFactory' => {'tgt_host' => '#stdout#'},                              
+                                  'NamedDbCopyFactory' => {'tgt_host' => '#stdout#'},
                                 }
                             },
     },
@@ -190,7 +190,7 @@ sub pipeline_analyses {
                                 {
                                   'GroupRenameFactory'   => {'tgt_uri' => '#stdout#'},
                                   'MultiDbRenameFactory' => {'tgt_uri' => '#stdout#'},
-                                  'NamedDbRenameFactory' => {'tgt_uri' => '#stdout#'},                              
+                                  'NamedDbRenameFactory' => {'tgt_uri' => '#stdout#'},
                                 }
                             },
     },

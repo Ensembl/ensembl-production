@@ -103,7 +103,6 @@ sub print_xrefs {
     my $external_db_list = join(", ", map { "'$_'" } @$external_dbs);
     $edb_filter = " AND e.db_name in ($external_db_list) ";
   }
-
   $file->append("\n");
   $self->print_xref_subset( $file, $self->go_xref_sql($edb_filter) );
   $self->print_xref_subset( $file, $self->gene_xref_sql($edb_filter) );
