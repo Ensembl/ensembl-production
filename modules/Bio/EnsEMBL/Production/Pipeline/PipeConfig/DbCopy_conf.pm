@@ -47,7 +47,9 @@ sub default_options {
     marts       => 0,
     compara     => 0,
     pan_ensembl => 0,
-    division    => [],
+
+    # Deliberately do not use the name 'division', to avoid confusion with SpeciesFactory parameter
+    multi_division => [],
 
     # Copy service
     copy_service_uri => "http://production-services.ensembl.org/api/dbcopy/requestjob",
@@ -214,7 +216,7 @@ sub pipeline_analyses {
                               marts           => $self->o('delete_marts'),
                               compara         => $self->o('delete_compara'),
                               pan_ensembl     => $self->o('delete_pan_ensembl'),
-                              division        => $self->o('division'),
+                              division        => $self->o('multi_division'),
                             },
       -flow_into         => {
                               '2' => [ 'DeleteDatabase' ],
@@ -254,7 +256,7 @@ sub pipeline_analyses {
                               ensembl_release => $self->o('ensembl_release'),
                               marts           => $self->o('marts'),
                               compara         => $self->o('compara'),
-                              division        => $self->o('division'),
+                              division        => $self->o('multi_division'),
                               pan_ensembl     => $self->o('pan_ensembl'),
                             },
       -flow_into         => {
@@ -279,6 +281,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             ensembl_release => $self->o('ensembl_release'),
+                            division        => $self->o('multi_division'),
                             group           => $self->o('group'),
                             groups          => $self->o('groups'),
                           },
@@ -294,7 +297,7 @@ sub pipeline_analyses {
                               ensembl_release => $self->o('ensembl_release'),
                               marts           => $self->o('marts'),
                               compara         => $self->o('compara'),
-                              division        => $self->o('division'),
+                              division        => $self->o('multi_division'),
                               pan_ensembl     => $self->o('pan_ensembl'),
                             },
       -flow_into         => {
