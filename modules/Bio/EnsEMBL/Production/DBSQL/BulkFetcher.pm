@@ -288,6 +288,8 @@ sub get_transcripts {
 		e.seq_region_start as start, 
 		e.seq_region_end as end,
 		e.seq_region_strand as strand,
+		e.phase as phase,
+		e.end_phase as end_phase,
 		et.rank as rank,
 		'exon' as ensembl_object_type
 		FROM transcript t
