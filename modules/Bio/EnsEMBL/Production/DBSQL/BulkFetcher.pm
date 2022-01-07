@@ -779,7 +779,7 @@ sub get_xrefs {
 sub get_coord_systems {
     my ($self, $dba, $type, $biotypes) = @_;
     my $sql = qq/
-    select ifnull(g.stable_id,g.${type}_id) as id, c.name, c.version
+    select ifnull(g.stable_id,g.${type}_id) as id, c.name, c.version, s.name, s.length
     from $type g
     join seq_region s using (seq_region_id)
     join coord_system c using (coord_system_id)
@@ -795,7 +795,7 @@ sub get_coord_systems {
         -PARAMS   => [ $dba->species_id() ],
         -CALLBACK => sub {
             my ($row) = @_;
-            $coord_systems->{ $row->[0] } = { name => $row->[1], version => $row->[2] };
+            $coord_systems->{ $row->[0] } = { name => $row->[1], version => $row->[2], seq_name => $row->[3], seq_length => $row->[4]  };
             return;
         });
     return $coord_systems;
