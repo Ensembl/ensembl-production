@@ -67,7 +67,7 @@ sub run {
   /;
 
   if (scalar(@$division)) {
-    $sql .= ' AND division IN ("' . join('", "', @$division) . '")';
+    $sql .= ' AND d.division IN ("' . join('", "', 'Ensembl'.@$division) . '")';
   }
 
   if (scalar(@$group)) {
