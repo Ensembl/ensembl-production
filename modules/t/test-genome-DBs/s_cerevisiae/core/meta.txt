@@ -1,5 +1,5 @@
 1	\N	schema_type	core
-2	\N	schema_version	106
+2	\N	schema_version	107
 3	\N	patch	patch_98_99_a.sql|schema_version
 4	\N	patch	patch_60_61_b.sql|create_seq_region_synonym_table
 5	\N	patch	patch_60_61_c.sql|rejig_object_xref_indexes
@@ -181,3 +181,5 @@
 670	\N	patch	patch_103_104_a.sql|schema_version
 671	\N	patch	patch_104_105_a.sql|schema_version
 672	\N	patch	patch_105_106_a.sql|schema_version
+673	\N	patch	patch_106_107_a.sql|schema_version
+674	\N	patch	patch_106_107_b.sql|Added index for seq_region_mapping
