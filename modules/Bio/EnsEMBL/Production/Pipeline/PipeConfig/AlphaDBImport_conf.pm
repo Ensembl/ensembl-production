@@ -62,16 +62,14 @@ sub default_options {
 
   return {
     %{$self->SUPER::default_options()},
-
-    species => 'homo_sapiens',
+#    species => 'homo_sapiens',
     rest_server => 'https://www.ebi.ac.uk/gifts/api/',
-
     user_r => 'ensro',
     password => $ENV{EHIVE_PASS},
     user => 'ensadmin',
     pipe_db_host => 'mysql-ens-genebuild-prod-7',
     pipe_db_port => 4533,
-    email_address => $ENV{USER}.'@ebi.ac.uk',
+#    email_address => $ENV{USER}.'@ebi.ac.uk',
   };
 }
 
@@ -81,6 +79,8 @@ sub pipeline_wide_parameters {
 
   return {
     %{$self->SUPER::pipeline_wide_parameters},
+     rest_server => $self->o('rest_server'),
+     alpha_path => $self->o('alpha_path')
   }
 }
 
@@ -89,24 +89,51 @@ sub pipeline_analyses {
   my ($self) = @_;
 
   my @analyses = (
+              # Receive standard Production pipeline parameters such as
+            # -division protists / -species bla / antispecies etc...
+            # SpeciesFactory usage
+            # Will output `species`
+  {
+      -logic_name => 'load_params',
+      -module => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+      -input_ids  => [{}],
+      -flow_into       => {
+
+                            '2' => ['metadata'],
+                          },
+      -parameters => {
+      # pass all expected parameters for species factory like antispecies etc
+        division => $self->o('division'),
+        species => $self->o('species'),
+
+      },
+      -rc_name => '4GB',
+  },
+   {
+	-logic_name      => 'metadata',
+	-module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
+	# compute required fileds and pass to load_alphadb get cs_verion from core db
+
+	-flow_into       => {
+                            '1' => ['load_alphadb'],
+                        },
+    },
     {
       -logic_name => 'load_alphadb',
       -module => 'Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures',
-      -input_ids  => [{}],
       -parameters => {
-        core_dbhost => $self->o('host'),
-        core_dbport => $self->o('port'),
-        core_dbname => $self->o('dbname'),
-        core_dbuser => $self->o('user'),
-        core_dbpass => $self->o('pass'),
-        cs_version => $self->o('cs_version'),
-        species => $self->o('species'),
-	rest_server => $self->o('rest_server'),
-        alpha_path => $self->o('alpha_path')
       },
       -rc_name => '4GB',
     },
-  );
+    {
+      -logic_name => 'datacheck',
+      -module => 'Bio::EnsEMBL::DataCheck::Pipeline::CheckAlphafoldEntries',
+      -input_ids  => [{}],
+      -parameters => {
+      },
+      -rc_name => '4GB',
+    }
+  )};
 
   return \@analyses;
 }
