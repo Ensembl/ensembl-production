@@ -111,21 +111,6 @@ sub pipeline_analyses {
     },
 
     {
-      -logic_name      => 'SpeciesFactory_AlphaFold',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-      -parameters      => {
-                            species      => $self->o('species'),
-                            division     => $self->o('division'),
-                         },
-      -max_retry_count => 1,
-      -flow_into       => {
-                            '3->A' => ['CheckStatistics_Chromosome'],
-                            'A->1' => ['SpeciesFactory_All'],
-                          },
-      -rc_name         => '2GB',
-    },
-
-    {
       -logic_name      => 'SpeciesFactory_Chromosome',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
       -parameters      => {
