@@ -66,8 +66,8 @@ sub default_options {
     user_r => 'ensro',
     password => $ENV{EHIVE_PASS},
     user => 'ensadmin',
-    pipe_db_host => 'mysql-ens-genebuild-prod-7',
-    pipe_db_port => 4533,
+    pipe_db_host => $self->o('pipe_db_host'),
+    pipe_db_port => $self->o('pipe_db_port')
   };
 }
 
@@ -108,10 +108,10 @@ sub pipeline_analyses {
    {
 	-logic_name      => 'metadata',
 	-module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
-
-	-flow_into       => {
-                            '1' => ['load_alphadb'],
-                        },
+    -flow_into       => {
+                        '1->A' => ['load_alphadb'],
+                        'A->1' => ['Datacheck']
+                    },
     },
     {
       -logic_name => 'load_alphadb',
@@ -121,9 +121,13 @@ sub pipeline_analyses {
     },
     {
       -logic_name => 'Datacheck',
-      -module => 'Bio::EnsEMBL::DataCheck::Pipeline::CheckAlphafoldEntries',
-      -input_ids  => [{}],
-      -parameters => {},
+      -module => 'Bio::ensembl::DataCheck::pipeline::RunDataChecks',
+      -parameters => {
+         -datacheck_names => 'CheckAlphaFoldFormat',
+      },
+      -flow_into       => {
+                            '1' => ['Notify'],
+                        },
       -rc_name => '4GB',
     },
     {
