@@ -62,14 +62,12 @@ sub default_options {
 
   return {
     %{$self->SUPER::default_options()},
-#    species => 'homo_sapiens',
     rest_server => 'https://www.ebi.ac.uk/gifts/api/',
     user_r => 'ensro',
     password => $ENV{EHIVE_PASS},
     user => 'ensadmin',
     pipe_db_host => 'mysql-ens-genebuild-prod-7',
     pipe_db_port => 4533,
-#    email_address => $ENV{USER}.'@ebi.ac.uk',
   };
 }
 
@@ -89,10 +87,6 @@ sub pipeline_analyses {
   my ($self) = @_;
 
   my @analyses = (
-              # Receive standard Production pipeline parameters such as
-            # -division protists / -species bla / antispecies etc...
-            # SpeciesFactory usage
-            # Will output `species`
   {
       -logic_name => 'load_params',
       -module => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -102,9 +96,11 @@ sub pipeline_analyses {
                             '2' => ['metadata'],
                           },
       -parameters => {
-      # pass all expected parameters for species factory like antispecies etc
-        division => $self->o('division'),
-        species => $self->o('species'),
+                            species      => $self->o('species'),
+                            division     => $self->o('division'),
+                            run_all      => $self->o('run_all'),
+                            antispecies  => $self->o('antispecies'),
+                            meta_filters => $self->o('meta_filters'),
 
       },
       -rc_name => '4GB',
@@ -112,7 +108,6 @@ sub pipeline_analyses {
    {
 	-logic_name      => 'metadata',
 	-module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
-	# compute required fileds and pass to load_alphadb get cs_verion from core db
 
 	-flow_into       => {
                             '1' => ['load_alphadb'],
@@ -121,18 +116,26 @@ sub pipeline_analyses {
     {
       -logic_name => 'load_alphadb',
       -module => 'Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures',
-      -parameters => {
-      },
+      -parameters => {},
       -rc_name => '4GB',
     },
     {
-      -logic_name => 'datacheck',
+      -logic_name => 'Datacheck',
       -module => 'Bio::EnsEMBL::DataCheck::Pipeline::CheckAlphafoldEntries',
       -input_ids  => [{}],
-      -parameters => {
-      },
+      -parameters => {},
       -rc_name => '4GB',
-    }
+    },
+    {
+      -logic_name        => 'Notify',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -parameters        => {
+                              email         => $self->o('email'),
+                              pipeline_name => $self->o('pipeline_name'),
+                            },
+    },
   )};
 
   return \@analyses;
