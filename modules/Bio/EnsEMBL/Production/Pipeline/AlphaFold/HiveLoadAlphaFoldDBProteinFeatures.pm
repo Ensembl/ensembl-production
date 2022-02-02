@@ -45,11 +45,11 @@ It also populates the "pdb_ens" table in the GIFTS database with similar data.
 
 =head1 EXAMPLE USAGE
 
-standaloneJob.pl Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures -alpha_path /hps/nobackup/flicek/ensembl/mr6/AlphaFoldDB/homo_sapiens/alpha_mappings.txt -core_dbhost genebuild3 -core_dbport 4500 -core_dbname carlos_homo_sapiens_core_89_test -core_dbuser *** -core_dbpass *** -cs_version GRCh38 -species homo_sapiens -rest_server https://www.ebi.ac.uk/gifts/api/
+standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures -alpha_path /hps/nobackup/flicek/ensembl/mr6/AlphaFoldDB/homo_sapiens/alpha_mappings.txt -core_dbhost genebuild3 -core_dbport 4500 -core_dbname carlos_homo_sapiens_core_89_test -core_dbuser *** -core_dbpass *** -cs_version GRCh38 -species homo_sapiens -rest_server https://www.ebi.ac.uk/gifts/api/
 
 =cut
 
-package Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures;
+package Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures;
 
 use strict;
 use warnings;
@@ -57,7 +57,7 @@ use warnings;
 use 5.014002;
 use Bio::EnsEMBL::Analysis::Tools::Utilities;
 use parent ('Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveBaseRunnableDB');
-use Bio::EnsEMBL::Analysis::Runnable::MakeAlphaFoldDBProteinFeatures;
+use Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures;
 
 use Net::FTP;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
@@ -110,7 +110,7 @@ sub fetch_input {
 
   $self->hrdb_set_con($core_dba,"core");
 
-  my $runnable = Bio::EnsEMBL::Analysis::Runnable::MakeAlphaFoldDBProteinFeatures->new(
+  my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
     -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
                                             -db => 'alphafold',
                                             #-db_version => , it will be populated in the MakePDBProteinFeatures module when parsing the file
