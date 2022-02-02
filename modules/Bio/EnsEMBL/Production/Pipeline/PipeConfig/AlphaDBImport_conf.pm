@@ -115,7 +115,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name => 'load_alphadb',
-      -module => 'Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures',
+      -module => 'Bio::EnsEMBL:Production::Pipeline::PipeConfig::HiveLoadAlphaFoldDBProteinFeatures',
       -parameters => {},
       -rc_name => '4GB',
     },
