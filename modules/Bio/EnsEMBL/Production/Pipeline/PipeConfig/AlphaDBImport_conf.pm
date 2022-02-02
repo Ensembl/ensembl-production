@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -66,8 +66,8 @@ sub default_options {
     user_r => 'ensro',
     password => $ENV{EHIVE_PASS},
     user => 'ensadmin',
-    pipe_db_host => $self->o('pipe_db_host'),
-    pipe_db_port => $self->o('pipe_db_port')
+    pipe_db_host => undef,
+    pipe_db_port => undef
   };
 }
 
@@ -98,9 +98,7 @@ sub pipeline_analyses {
       -parameters => {
                             species      => $self->o('species'),
                             division     => $self->o('division'),
-                            run_all      => $self->o('run_all'),
-                            antispecies  => $self->o('antispecies'),
-                            meta_filters => $self->o('meta_filters'),
+                            antispecies  => [],
 
       },
       -rc_name => '4GB',
@@ -140,7 +138,7 @@ sub pipeline_analyses {
                               pipeline_name => $self->o('pipeline_name'),
                             },
     },
-  )};
+  );
 
   return \@analyses;
 }
