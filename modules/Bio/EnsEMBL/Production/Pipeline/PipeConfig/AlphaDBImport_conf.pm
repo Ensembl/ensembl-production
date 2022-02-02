@@ -107,7 +107,7 @@ sub pipeline_analyses {
 	-logic_name      => 'metadata',
 	-module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
     -flow_into       => {
-                        '1->A' => ['load_alphadb'],
+                        '2->A' => ['load_alphadb'],
                         'A->1' => ['Datacheck']
                     },
     },
@@ -119,7 +119,7 @@ sub pipeline_analyses {
     },
     {
       -logic_name => 'Datacheck',
-      -module => 'Bio::ensembl::DataCheck::pipeline::RunDataChecks',
+      -module => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
       -parameters => {
          -datacheck_names => 'CheckAlphaFoldFormat',
       },

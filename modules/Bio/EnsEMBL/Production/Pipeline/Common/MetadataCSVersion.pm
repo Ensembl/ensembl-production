@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-
+=cut
 package Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion;
 
 use strict;
@@ -37,11 +37,11 @@ sub run {
 
 
     $self->dataflow_output_id({
-          'host'    => $core_dbc->host,
-          'dbname'  => $core_dbc->dbname,
-          'port'    => $core_dbc->port,
-          'user'    => $core_dbc->user,
-          'pass'    => $core_dbc->pass,
+          'core_dbhost'    => $core_dbc->host,
+          'core_dbname'  => $core_dbc->dbname,
+          'core_dbport'    => $core_dbc->port,
+          'core_dbuser'    => $core_dbc->user,
+          'core_dbpass'    => $core_dbc->pass,
           'cs_version'=> $cs_version,
           'species' => $species,
          },
