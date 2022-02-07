@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ sub run {
   my $species          = $self->param_required('species');
   my $release          = $self->param_required('release');
   my $sql_dir          = $self->param_required('sql_dir');
-  my $base_path        = $self->param_required('base_path');
   my $order_priority   = $self->param_required('priority');
 
   my $source_url       = $self->param_required('source_url');
+  my $source_xref      = $self->param('source_xref');
 
   my $db_url           = $self->param('xref_url');
   my $user             = $self->param('xref_user');
@@ -49,6 +49,11 @@ sub run {
   if ($db_url) {
     ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
+  my ($xref_source_user, $xref_source_pass, $xref_source_host, $xref_source_port, $xref_source_db, $xref_source_dbi);
+  if ($source_xref) {
+    ($xref_source_user, $xref_source_pass, $xref_source_host, $xref_source_port, $xref_source_db) = $self->parse_url($source_xref);
+    $xref_source_dbi = $self->get_dbi($xref_source_host, $xref_source_port, $xref_source_user, $xref_source_pass, $xref_source_db);
+  }
 
   # Create Xref database
   my $dbname = $species . "_xref_update_" . $release;
@@ -58,7 +63,7 @@ sub run {
             port    => $port,
             user    => $user,
             pass    => $pass });
-  $dbc->create($sql_dir, 1, 1) if $order_priority == 1; 
+  $dbc->create($sql_dir, 1, 1, $xref_source_dbi) if $order_priority == 1; 
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
   my $xref_dbi = $dbc->dbi();
 
@@ -68,14 +73,15 @@ sub run {
   # Retrieve list of sources from versioning database
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, index_uri, count_seen, revision FROM source s, version v WHERE s.source_id = v.source_id");
-  my ($name, $parser, $file_name, $dataflow_params, $db, $priority, $release_file);
+  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id");
+  my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $preparse, $release_file);
   $select_source_sth->execute();
-  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$db, \$priority, \$release_file);
+  $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$clean_file_name, \$db, \$priority, \$preparse, \$release_file);
 
   while ($select_source_sth->fetch()) {
     if (defined $db && $db eq 'checksum') { next; }
     if ($priority != $order_priority) { next; }
+    if (defined $clean_file_name) { $file_name = $clean_file_name; }
 
     # Some sources are species-specific
     my $source_id = $self->get_source_id($xref_dbi, $parser, $species_id, $name, $division_id);
@@ -111,6 +117,7 @@ sub run {
     } else {
       # Create list of files
       my @list_files = `ls $file_name`;
+      if ($preparse) { @list_files = $preparse; }
       foreach my $file (@list_files) {
         $file =~ s/\n//;
         $file = $file_name . "/" . $file;

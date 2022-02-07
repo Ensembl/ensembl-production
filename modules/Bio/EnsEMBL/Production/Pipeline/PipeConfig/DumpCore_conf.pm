@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ sub default_options {
         'release'                => $self->o('ensembl_release'),
         'pipeline_name'          => "ftp_pipeline",
         'dumps'                  => [],
-
+        'web_email'              => '',
         ## 'job_factory' parameters
         'species'                => [],
         'antispecies'            => [],
@@ -538,7 +538,7 @@ sub pipeline_analyses {
         {
             -logic_name        => 'report_failed_assembly_chain',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-            -parameters        => { 'email' => $self->o('email') },
+            -parameters        => { 'email' => $self->o('email').",".$self->o('web_email') },
             -max_retry_count   => 1,
             -analysis_capacity => 10,
         },

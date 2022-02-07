@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,7 +55,15 @@ sub default_options {
     # Datachecks
     history_file   => undef,
     config_file    => undef,
-    old_server_uri => undef
+    old_server_uri => undef,
+    advisory_dc_output => $self->o('pipeline_dir') . '/advisory_dc_output',
+
+    #filewatcher
+    file_name => 'annotations_ensembl-{}.gpa',
+    directory => $self->o('gpad_directory') . '/' . $self->o('gpad_dirname'),
+    watch_until => 48,
+    wait => 0,     
+
   };
 }
 
@@ -83,10 +91,60 @@ sub pipeline_analyses {
 
   return [
     {
+        -logic_name      => 'FileWatcher',
+        -module          => 'ensembl.production.hive.FileWatcher',
+        -max_retry_count => 0,
+        -language        => 'python3',
+        -parameters      => {
+                              directory => $self->o('directory'),
+                              file_name => $self->o('file_name') ,
+			      species => $self->o('species'),
+                              watch_until => $self->o('watch_until'),
+                              wait => $self->o('wait'),
+                            },
+        -flow_into        => { 1 => ['AdvisoryDCReportInit'] },
+        -input_ids         => [ {} ],
+    },
+    {
+      -logic_name        => 'AdvisoryDCReportInit',
+      -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -flow_into        => {
+              '1->A' => ['DbFactory'],
+              'A->1' => ['DataCheckResults'],
+      }
+    },	  
+    {
+       -logic_name       => 'DataCheckResults',
+       -module           => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+       -flow_into        => {
+               '1' => ['ConvertTapToJson'],
+       },
+    },
+    {
+      -logic_name       => 'ConvertTapToJson',
+      -module           => 'Bio::EnsEMBL::DataCheck::Pipeline::ConvertTapToJson',
+      -analysis_capacity => 10,
+      -max_retry_count   => 0,
+      -parameters        => {
+        tap => $self->o('advisory_dc_output'),
+        output_dir => $self->o('advisory_dc_output'),
+      },	
+      -flow_into => ['AdvisoryDataCheckReport'],
+    },
+    {
+      -logic_name        => 'AdvisoryDataCheckReport',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::DataCheckMailSummary',
+      -rc_name           => 'default',
+      -parameters =>{
+         pipeline_name => $self->o('pipeline_name'),
+         email => $self->o('email'),
+	 output_dir => $self->o('advisory_dc_output'),
+      }
+    },
+    {
       -logic_name        => 'DbFactory',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count   => 1,
-      -input_ids         => [ {} ],
       -parameters        => {
                               species         => $self->o('species'),
                               antispecies     => $self->o('antispecies'),
@@ -236,20 +294,8 @@ sub pipeline_analyses {
                               config_file      => $self->o('config_file'),
                               history_file     => $self->o('history_file'),
                               old_server_uri   => $self->o('old_server_uri'),
+			      output_dir       => $self->o('advisory_dc_output'),
                               failures_fatal   => 0,
-                            },
-      -flow_into         => {
-                              '4' => 'EmailReportXrefAdvisory'
-                            },
-    },
-    {
-      -logic_name        => 'EmailReportXrefAdvisory',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-      -max_retry_count   => 1,
-      -analysis_capacity => 10,
-      -parameters        => {
-                              email         => $self->o('email'),
-                              pipeline_name => $self->o('pipeline_name'),
                             },
     },
   ];

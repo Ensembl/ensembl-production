@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,12 +44,14 @@ sub run {
     my $file = $source->{'file'};
     my $db = $source->{'db'};
     my $version_file = $source->{'release'};
+    my $preparse = $source->{'preparse'};
     $dataflow_params = {
       parser       => $parser,
       name         => $name,
       priority     => $priority,
       db           => $db,
       version_file => $version_file,
+      preparse     => $preparse,
       db_url       => $db_url,
       file         => $file,
       skip_download=> $skip_download,

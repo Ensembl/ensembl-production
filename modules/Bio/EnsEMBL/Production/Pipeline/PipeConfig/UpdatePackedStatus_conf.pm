@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,6 +76,7 @@ sub pipeline_analyses {
       -logic_name        => 'UpdatePackedStatus',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::UpdatePackedStatus',
       -max_retry_count   => 0,
+      -analysis_capacity => 10,
       -parameters        => {
                               metadata_host     => $self->o('metadata_host'),
                               metadata_port     => $self->o('metadata_port'),

@@ -1,0 +1,202 @@
+[
+    {
+      "name" : "ArrayExpress",
+      "parser" : "ArrayExpressParser",
+      "file" : "Database",
+      "db" : "core",
+      "priority" : 1
+    },
+    {
+      "name" : "CCDS",
+      "parser" : "CCDSParser",
+      "file" : "Database",
+      "db" : "ccds",
+      "priority" : 1
+    },
+    {
+      "name" : "UniParc",
+      "parser" : "ChecksumParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
+      "db" : "checksum",
+      "priority" : 1
+    },
+    {
+      "name" : "RNACentral",
+      "parser" : "ChecksumParser",
+      "file" : "http://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
+      "db" : "checksum",
+      "priority" : 1
+    },
+    {
+      "name" : "DBASS3",
+      "parser" : "DBASSParser",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass3/DownloadCsv",
+      "priority" : 1
+    },
+    {
+      "name" : "DBASS5",
+      "parser" : "DBASSParser",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass5/DownloadCsv",
+      "priority" : 1
+    },
+    {
+      "name" : "EntrezGene",
+      "parser" : "EntrezGeneParser",
+      "file" : "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "HPA",
+      "parser" : "HPAParser",
+      "file" : "http://www.proteinatlas.org/download/xref.php",
+      "priority" : 1
+    },
+    {
+      "name" : "MGI",
+      "parser" : "MGIParser",
+      "file" : "http://www.informatics.jax.org/downloads/reports/MRK_ENSEMBL.rpt",
+      "priority" : 2
+    },
+    {
+      "name" : "MGI_desc",
+      "parser" : "MGI_Desc_Parser",
+      "file" : "http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt",
+      "priority" : 1
+    },
+    {
+      "name" : "MGI_ccds",
+      "parser" : "MGI_CCDS_Parser",
+      "file" : "http://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_mouse/CCDS.current.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "MIM2GENE",
+      "parser" : "Mim2GeneParser",
+      "file" : "http://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen",
+      "priority" : 3
+    },
+    {
+      "name" : "MIM",
+      "parser" : "MIMParser",
+      "file" : "http://data.omim.org/downloads/s4mpHKpNRgugjDKWuUAJMw/omim.txt.gz",
+      "priority" : 2
+    },
+    {
+      "name" : "RFAM",
+      "parser" : "RFAMParser",
+      "file" : "http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.seed.gz",
+      "db" : "core",
+      "priority" : 1
+    },
+    {
+      "name" : "Reactome",
+      "parser" : "ReactomeParser",
+      "file" : "http://www.reactome.org/download/current/Ensembl2Reactome_All_Levels.txt",
+      "release" : "http://www.reactome.org/ReactomeRESTfulAPI/RESTfulWS/version",
+      "priority" : 1
+    },
+    {
+      "name" : "Reactome",
+      "parser" : "ReactomeParser",
+      "file" : "http://www.reactome.org/download/current/UniProt2Reactome_All_Levels.txt",
+      "release" : "http://www.reactome.org/ReactomeRESTfulAPI/RESTfulWS/version",
+      "priority" : 2
+    },
+    {
+      "name" : "RefSeq_dna",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/H_sapiens/mRNA_Prot/*rna.gbff.gz",
+      "method" : "--bestn 5",
+      "query_cutoff" : 90,
+      "target_cutoff" : 90,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "RefSeq_dna",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/M_musculus/mRNA_Prot/*rna.gbff.gz",
+      "method" : "--bestn 5",
+      "query_cutoff" : 90,
+      "target_cutoff" : 90,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "RefSeq_peptide",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/H_sapiens/mRNA_Prot/*protein.gpff.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 3
+    },
+    {
+      "name" : "RefSeq_peptide",
+      "parser" : "RefSeqGPFFParser",
+      "file" : "ftp://ftp.ncbi.nih.gov/refseq/M_musculus/mRNA_Prot/*protein.gpff.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "priority" : 3
+    },
+    {
+      "name" : "Refseq_import",
+      "parser" : "RefSeqCoordinateParser",
+      "file" : "Database",
+      "db" : "otherfeatures",
+      "priority" : 2
+    },
+    {
+      "name" : "UCSC_hg38",
+      "parser" : "UCSC_human_parser",
+      "file" : "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz",
+      "release" : "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/README.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "UCSC_mm10",
+      "parser" : "UCSC_mouse_parser",
+      "file" : "http://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/knownGene.txt.gz",
+      "release" : "http://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/README.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "Uniprot/SWISSPROT",
+      "parser" : "UniProtParser",
+      "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "Uniprot/SPTREMBL",
+      "parser" : "UniProtParser",
+      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 100,
+      "target_cutoff" : 100,
+      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "miRBase",
+      "parser" : "miRBaseParser",
+      "file" : "https://mirbase.org/ftp/CURRENT/miRNA.dat.gz",
+      "method" : "--bestn 1",
+      "query_cutoff" : 90,
+      "target_cutoff" : 90,
+      "priority" : 1
+    },
+    {
+      "name" : "HGNC",
+      "parser" : "HGNCParser",
+      "file" : "https://www.genenames.org/cgi-bin/download?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_eg_id&col=gd_pub_ensembl_id&col=gd_pub_refseq_ids&col=gd_ccds_ids&col=gd_lsdb_links&status=Approved&status_opt=2&where=&order_by=gd_app_sym_sort&format=text&limit=&hgnc_dbtag=on&submit=submit",
+      "db" : "ccds",
+      "priority" : 3
+    }
+]

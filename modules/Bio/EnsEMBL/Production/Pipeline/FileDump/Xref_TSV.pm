@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ sub print_xrefs {
     my $external_db_list = join(", ", map { "'$_'" } @$external_dbs);
     $edb_filter = " AND e.db_name in ($external_db_list) ";
   }
-  $file->append("\n");   
+  $file->append("\n");
   $self->print_xref_subset( $file, $self->go_xref_sql($edb_filter) );
   $self->print_xref_subset( $file, $self->gene_xref_sql($edb_filter) );
   $self->print_xref_subset( $file, $self->transcript_xref_sql($edb_filter) );
