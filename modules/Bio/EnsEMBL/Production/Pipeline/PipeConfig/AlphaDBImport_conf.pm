@@ -78,7 +78,7 @@ sub pipeline_wide_parameters {
   return {
     %{$self->SUPER::pipeline_wide_parameters},
      rest_server => $self->o('rest_server'),
-     alpha_path => $self->o('alpha_path')
+     base_path => $self->o('base_path')
   }
 }
 
@@ -104,29 +104,31 @@ sub pipeline_analyses {
       -rc_name => '4GB',
   },
    {
-	-logic_name      => 'metadata',
-	-module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
-    -flow_into       => {
+        -logic_name      => 'metadata',
+        -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
+        -flow_into       => {
                         '2->A' => ['load_alphadb'],
                         'A->1' => ['Datacheck']
                     },
     },
     {
-      -logic_name => 'load_alphadb',
-      -module => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
-      -parameters => {},
-      -rc_name => '4GB',
+        -logic_name => 'load_alphadb',
+        -module => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
+        -parameters => {
+            -alpha_path => File::Spec->catfile( $self->param('base_path'), '#species#/alpha_mappings.txt'),
+        },
+        -rc_name => '4GB',
     },
     {
-      -logic_name => 'Datacheck',
-      -module => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -parameters => {
-         -datacheck_names => 'CheckAlphaFoldFormat',
-      },
-      -flow_into       => {
+        -logic_name => 'Datacheck',
+        -module => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+        -parameters => {
+           -datacheck_names => [ 'CheckAlphafoldEntries' ],
+        },
+        -flow_into       => {
                             '1' => ['Notify'],
                         },
-      -rc_name => '4GB',
+        -rc_name => '4GB',
     },
     {
       -logic_name        => 'Notify',
