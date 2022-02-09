@@ -115,7 +115,7 @@ sub pipeline_analyses {
         -logic_name => 'load_alphadb',
         -module => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
         -parameters => {
-            -alpha_path => File::Spec->catfile( '#base_path#', '#species#/alpha_mappings.txt'),
+            -alpha_path => File::Spec->catfile( '#base_path#', '#species#', 'alpha_mappings.txt'),
         },
         -rc_name => '4GB',
     },
