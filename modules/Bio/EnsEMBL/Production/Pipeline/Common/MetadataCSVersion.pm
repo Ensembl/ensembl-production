@@ -44,6 +44,7 @@ sub run {
           'core_dbpass'    => $core_dbc->pass,
           'cs_version'=> $cs_version,
           'species' => $species,
+          'alpha_path' => File::Spec->catfile( $self->param('base_path'), $self->param('species'), 'alpha_mappings.txt')
          },
        2
     );
