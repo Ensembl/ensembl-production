@@ -32,21 +32,20 @@ sub run {
     my $species = $self->param('species');
     my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $mca = $core_adaptor->get_MetaContainer();
-    my $cs_version = $mca->single_value_by_key('assembly.name');
+    my $cs_version = $mca->single_value_by_key('assembly.default');
     my $core_dbc = $core_adaptor->dbc;
 
-
     $self->dataflow_output_id({
-          'core_dbhost'    => $core_dbc->host,
-          'core_dbname'  => $core_dbc->dbname,
-          'core_dbport'    => $core_dbc->port,
-          'core_dbuser'    => $core_dbc->user,
-          'core_dbpass'    => $core_dbc->pass,
-          'cs_version'=> $cs_version,
-          'species' => $species,
-          'alpha_path' => File::Spec->catfile( $self->param('base_path'), $self->param('species'), 'alpha_mappings.txt')
-         },
-       2
+        'core_dbhost' => $core_dbc->host,
+        'core_dbname' => $core_dbc->dbname,
+        'core_dbport' => $core_dbc->port,
+        'core_dbuser' => $core_dbc->user,
+        'core_dbpass' => $core_dbc->pass,
+        'cs_version'  => $cs_version,
+        'species'     => $species,
+        'alpha_path'  => File::Spec->catfile($self->param('base_path'), $self->param('species'), 'alpha_mappings.txt')
+    },
+        2
     );
 }
 
