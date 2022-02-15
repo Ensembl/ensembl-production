@@ -26,7 +26,7 @@ limitations under the License.
 
 
 
-package Bio::EnsEMBL::Production::Pipeline::Xrefs::Parser::UniProtParser;
+package Bio::EnsEMBL::Production::Pipeline::Xrefs::Parser::UniProtDatabaseParser;
 
 use strict;
 use warnings;
