@@ -122,8 +122,8 @@ sub pipeline_analyses {
             -logic_name => 'load_alphadb',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
             -parameters => {
-                -rest_server => $self->o('rest_server'),
-                -output_path => $self->o('scratch_large_dir')
+                rest_server => $self->o('rest_server'),
+                output_path => $self->o('scratch_large_dir')
             },
             -rc_name    => '4GB',
         },
@@ -131,7 +131,7 @@ sub pipeline_analyses {
             -logic_name => 'Datacheck',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
-                -datacheck_names => [ 'CheckAlphafoldEntries' ],
+                datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
             -flow_into  => {
                 '1' => [ 'Notify' ],
