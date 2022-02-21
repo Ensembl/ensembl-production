@@ -137,16 +137,17 @@ sub pipeline_analyses {
       },
       {
           -logic_name        => 'copy_ncbiblastDNA',
-          -parameters => {
-                          ftp_dir => $self->o('prev_rel_dir'),
-                          dir => $self->o('ftp_dir')."/vertebrates/ncbi_blast/genomic/",
-                          release => $self->o('release'),
-                          type    => 'genomic',
-                          blast_dir => 'ncbi_blast',
+          -parameters        => {
+              ftp_dir   => $self->o('prev_rel_dir'),
+              dir       => $self->o('ftp_dir') . "/vertebrates/ncbi_blast/genomic/",
+              release   => $self->o('release'),
+              type      => 'genomic',
+              blast_dir => 'ncbi_blast',
           },
           -module            => 'Bio::EnsEMBL::Production::Pipeline::FASTA::CopyNCBIBlastDNA',
           -analysis_capacity => 10,
-          -priority => 5,
+          -priority          => 5,
+          -rc_name           => 'dm'
       },
     ];
 }

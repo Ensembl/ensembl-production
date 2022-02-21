@@ -47,7 +47,7 @@ sub default_options {
       ## gff3 & gtf parameter
       'abinitio'        => 0,
       # Previous release FASTA DNA files location
-      'prev_rel_dir' => '/nfs/ensemblgenomes/ftp/pub/',
+      'prev_rel_dir' => '/nfs/ftp/ensemblftp/ensemblgenomes/pub/',
       ## Indexing parameters
       'skip_convert_fasta' => 0,
       };

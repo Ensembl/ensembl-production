@@ -83,7 +83,7 @@ sub default_options {
         'skip_logic_names'       => [],
         # Previous release FASTA DNA files location
         # Previous release number
-        'prev_rel_dir'           => '/nfs/ensemblftp/PUBLIC/pub/',
+        'prev_rel_dir'           => '/nfs/ftp/ensemblftp/ensembl/PUBLIC/pub/',
 
         ## assembly_chain parameters
         #  default => ON (1)
@@ -480,6 +480,7 @@ sub pipeline_analyses {
                 ftp_dir => $self->o('prev_rel_dir'),
                 release => $self->o('release')
             },
+            -rc_name       => => 'dm'
         },
         # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm'
         { -logic_name        => 'concat_fasta',
