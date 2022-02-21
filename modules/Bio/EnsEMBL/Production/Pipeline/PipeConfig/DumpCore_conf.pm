@@ -480,7 +480,7 @@ sub pipeline_analyses {
                 ftp_dir => $self->o('prev_rel_dir'),
                 release => $self->o('release')
             },
-            -rc_name       => => 'dm'
+            -rc_name       => 'dm'
         },
         # Creating the 'toplevel' dumps for 'dna', 'dna_rm' & 'dna_sm'
         { -logic_name        => 'concat_fasta',
