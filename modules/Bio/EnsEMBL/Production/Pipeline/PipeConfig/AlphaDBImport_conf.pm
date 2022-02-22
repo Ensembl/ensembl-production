@@ -63,6 +63,8 @@ sub default_options {
         %{$self->SUPER::default_options()},
         rest_server  => 'https://www.ebi.ac.uk/gifts/api/',
         user_r       => 'ensro',
+        species      => [],
+        division     => [],
         password     => $ENV{EHIVE_PASS},
         user         => 'ensadmin',
         pipe_db_host => undef,
