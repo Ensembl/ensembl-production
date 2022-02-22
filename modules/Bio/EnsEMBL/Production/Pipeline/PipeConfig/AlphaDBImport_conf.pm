@@ -65,6 +65,8 @@ sub default_options {
         user_r       => 'ensro',
         species      => [],
         division     => [],
+        run_all      => 0,
+        antispecies  => [],
         password     => $ENV{EHIVE_PASS},
         user         => 'ensadmin',
         pipe_db_host => undef,
