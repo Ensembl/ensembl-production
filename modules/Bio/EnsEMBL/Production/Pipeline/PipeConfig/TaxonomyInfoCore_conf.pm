@@ -36,7 +36,7 @@ sub default_options {
     # Primary function of pipeline is to copy, but can be used to just delete dbs
     username => $self->o('ENV', 'USER'),
     ensembl_release => $self->o('ENV', 'ENS_VERSION'),
-    dumppath => "/hps/scratch/flicek/ensembl/". $self->o('username') ."/db_backs_meta_tables/". $self->o('ensembl_release'),
+    dumppath => $self->o('scratch_large_dir') ."/db_backs_meta_tables/". $self->o('ensembl_release'),
     group => [],
     division => [],
     species => [],
