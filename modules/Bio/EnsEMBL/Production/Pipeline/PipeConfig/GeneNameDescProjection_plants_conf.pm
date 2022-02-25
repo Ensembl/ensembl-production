@@ -36,14 +36,6 @@ use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::GeneNameDescProjection_conf');
 
-sub pipeline_wide_parameters {
-    my ($self) = @_;
-    return {
-        %{$self->SUPER::pipeline_wide_parameters},
-        'exclude_species' => $self->o('antispecies')
-    };
-}
-
 
 sub default_options {
     my ($self) = @_;
@@ -54,7 +46,7 @@ sub default_options {
         compara_division => 'plants',
 
         gene_name_source => [ 'TAIR_SYMBOL', 'UniProtKB/Swiss-Prot', 'Uniprot_gn' ],
-        antispecies      => [ 'ciona_savignyi', 'homo_sapiens', 'caenorhabditis_elegans', 'drosophila_melanogaster', 'saccharomyces_cerevisiae' ],
+        exclude_species  => [ 'ciona_savignyi', 'homo_sapiens', 'caenorhabditis_elegans', 'drosophila_melanogaster', 'saccharomyces_cerevisiae' ],
         gd_config        => [
             {
                 source      => 'arabidopsis_thaliana',
