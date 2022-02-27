@@ -96,10 +96,21 @@ sub pipeline_analyses {
                           }
     },
     {
-      -logic_name        => 'BackUpDataBase',
+      -logic_name        => 'BackUpDataBase',	    
       -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::BackUpDatabase',
-      -flow_into         => { '1' => 'ProcessMeataData'} 
-    },
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => { 
+	                      overwrite   => 1,
+                              table_list  => [
+				      'meta'
+                              ],
+                              output_file => catdir($self->o('dumppath'), '#dbname#_meta_bkp.sql.gz'),
+                            },
+      -flow_into         => {
+	      		       '1' => 'ProcessMeataData',
+                            }
+    },    
     {
       -logic_name        => 'ProcessMeataData',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::QueryMetadata',
