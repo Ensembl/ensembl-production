@@ -114,14 +114,6 @@ sub pipeline_analyses {
     {
       -logic_name        => 'ProcessMeataData',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::QueryMetadata',
-      -flow_into         => { '1' => 'DropBackupTable'}
-    },
-    {
-      -logic_name        => 'DropBackupTable',
-      -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::BackUpDatabase',
-      -parameters      => {
-                             dropbaks  => 1,
-                          },
     },
 
   ];
