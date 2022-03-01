@@ -46,7 +46,8 @@ sub default_options {
         compara_division => 'plants',
 
         gene_name_source => [ 'TAIR_SYMBOL', 'UniProtKB/Swiss-Prot', 'Uniprot_gn' ],
-        exclude_species  => [ 'ciona_savignyi', 'homo_sapiens', 'caenorhabditis_elegans', 'drosophila_melanogaster', 'saccharomyces_cerevisiae' ],
+        antispecies      => [ 'ciona_savignyi', 'homo_sapiens', 'caenorhabditis_elegans', 'drosophila_melanogaster', 'saccharomyces_cerevisiae' ],
+        exclude_species  => $self->o('antispecies'),  # Used by Bio::EnsEMBL::Compara::RunnableDB::GenomeDBFactory
         gd_config        => [
             {
                 source      => 'arabidopsis_thaliana',
