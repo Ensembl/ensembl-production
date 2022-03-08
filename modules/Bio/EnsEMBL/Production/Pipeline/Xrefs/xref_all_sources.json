@@ -78,7 +78,7 @@
     {
       "name" : "MIM",
       "parser" : "MIMParser",
-      "file" : "http://data.omim.org/downloads/s4mpHKpNRgugjDKWuUAJMw/omim.txt.gz",
+      "file" : "http://data.omim.org/downloads/ZpPlmgwjuTBK9T5vf2sFjA/omim.txt.gz",
       "priority" : 2
     },
     {

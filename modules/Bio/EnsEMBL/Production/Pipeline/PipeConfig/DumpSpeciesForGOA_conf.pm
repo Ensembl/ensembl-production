@@ -95,7 +95,7 @@ sub pipeline_analyses {
                 output_dir => $self->o('output_dir'),
                 release    => $self->o('release')
             },
-            -rc_name    => 'default',
+            -rc_name    => 'dm',
             -flow_into  => [ 'CreateReleaseFile' ],
         },
         {
@@ -107,7 +107,7 @@ sub pipeline_analyses {
                 release        => $self->o('release'),
                 release_file   => $self->o('release_file'),
             },
-            -rc_name    => 'default'
+            -rc_name    => 'dm'
         }
         #TODO include wait and load GPAD from HERE
     ];
