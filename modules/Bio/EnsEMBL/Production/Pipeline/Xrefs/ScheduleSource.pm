@@ -63,7 +63,14 @@ sub run {
             port    => $port,
             user    => $user,
             pass    => $pass });
-  $dbc->create($sql_dir, 1, 1, $xref_source_dbi) if $order_priority == 1; 
+  if ($order_priority == 1) {
+    $dbc->create($sql_dir, 1, 1, $xref_source_dbi);
+
+    if ($self->param_exists('pipeline_part')) {
+      my $species_sth = $self->dbc->prepare("INSERT INTO updated_species (species_name) VALUES (?)");
+      $species_sth->execute($species);
+    }
+  }
   my $xref_db_url = sprintf("mysql://%s:%s@%s:%s/%s", $user, $pass, $host, $port, $dbname);
   my $xref_dbi = $dbc->dbi();
 
