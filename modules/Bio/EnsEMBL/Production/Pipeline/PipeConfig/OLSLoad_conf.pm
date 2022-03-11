@@ -339,6 +339,7 @@ sub pipeline_analyses {
                 'payload'  => $self->o('copy_service_mart_payload'),
                 'method'   => 'post',
             },
+            -rc_name     => "500M"
         },
     ];
 }

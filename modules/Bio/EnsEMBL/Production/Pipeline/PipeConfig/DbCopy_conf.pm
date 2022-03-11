@@ -342,6 +342,7 @@ sub pipeline_analyses {
                                 "src_incl_db": "#src_incl_db#"
                               }/,
                             },
+       -rc_name           => '500M'
     },
     {
       -logic_name        => 'RenameDatabase_1',
