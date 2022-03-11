@@ -68,7 +68,9 @@ sub pipeline_analyses {
         source_dir    => $self->o('source_dir'),
         source_url    => $self->o('source_url'),
         reuse_db      => $self->o('reuse_db'),
-        skip_download => $self->o('skip_download')
+        skip_download => $self->o('skip_download'),
+        skip_preparse => $self->o('skip_preparse')
+
       },
       -flow_into  => {
         '2->A' => 'download_source',
@@ -200,8 +202,10 @@ sub pipeline_analyses {
       -parameters => {
         email   => $self->o('email'),
         subject => 'Xref Download finished',
-	base_path => $self->o('base_path'),
-        clean_files => $self->o('clean_files')
+        base_path => $self->o('base_path'),
+        clean_files => $self->o('clean_files'),
+        source_xref => $self->o('source_xref'),
+        skip_preparse => $self->o('skip_preparse')
       },
       -wait_for => 'pre_parse_source_tertiary',
       -rc_name    => 'small'

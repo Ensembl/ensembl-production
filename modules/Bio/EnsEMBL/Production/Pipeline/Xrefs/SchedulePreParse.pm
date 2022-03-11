@@ -32,10 +32,10 @@ sub run {
   my $skip_preparse    = $self->param('skip_preparse');
 
   my ($user, $pass, $host, $port) = $self->parse_url($source_url);
-  my ($xref_user, $xref_pass, $xref_host, $xref_port, $xref_dbname) = $self->parse_url($source_xref);
   my $dataflow_params;
 
   unless ($skip_preparse) {
+    my ($xref_user, $xref_pass, $xref_host, $xref_port, $xref_dbname) = $self->parse_url($source_xref);
 
     # Create central Xref database
     my $xref_dbc = XrefParser::Database->new({

@@ -364,4 +364,13 @@ sub pipeline_wide_parameters {
   };
 }
 
+sub pipeline_create_commands {
+  my ($self) = @_;
+
+  return [
+    @{$self->SUPER::pipeline_create_commands},
+    $self->db_cmd('CREATE TABLE updated_species (species_name varchar(255) NOT NULL)')
+  ];
+}
+
 1;
