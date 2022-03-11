@@ -40,8 +40,10 @@ sub default_options {
     group => [],
     division => [],
     species => [],
+    antispecies => [],
     removedeprecated => 1,
     dropbaks => 1,
+    run_all => 0,
     deprecated_keys => ['species.ensembl_common_name', 'species.ensembl_alias_name', 'species.short_name'],
   };
 }
@@ -87,17 +89,53 @@ sub pipeline_analyses {
       -parameters      => {
                             ensembl_release => $self->o('ensembl_release'),
                             group           => $self->o('group'),
-			    division        => $self->o('division'),
-			    species         => $self->o('species'),
-			    dropbaks        => 0, 
+                            division        => $self->o('division'),
+                            species         => $self->o('species'),
+                            dropbaks        => 0, 
+                          },
+	-flow_into     => {
+		            '2->A' => 'BackUpDataBase',
+			    'A->2' => 'DbFactory'
+			  },
+    },
+
+    {
+      -logic_name      => 'DbFactory',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+      -max_retry_count => 0,
+      -parameters      => {
+                            division     => '#division#',
+			    dbname       => '#dbname#',
+			    chromosome_flow => 0,
+			    shout_db_not_found_in_registry => 1,
                           },
       -flow_into       => {
-                            '2' => 'BackUpDataBase',
-                          }
+                            '2' => ['SpeciesFactory'],
+			    '4' => ['ProcessMetaData'],
+			    '6' => ['ProcessMetaData'],
+			    '7' => ['ProcessMetaData'],
+                          },
     },
+
+    {
+      -logic_name        => 'SpeciesFactory',
+      -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
+      -parameters        => {},
+      -flow_into         => {
+                              '2' => [
+                                'ProcessMetaData',
+                              ],
+                            }
+    },
+    
+    
+
     {
       -logic_name        => 'BackUpDataBase',	    
       -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::BackUpDatabase',
+      #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => { 
@@ -107,13 +145,12 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir($self->o('dumppath'), '#dbname#_meta_bkp.sql.gz'),
                             },
-      -flow_into         => {
-	      		       '1' => 'ProcessMeataData',
-                            }
     },    
     {
-      -logic_name        => 'ProcessMeataData',
+      -logic_name        => 'ProcessMetaData',
       -module            => 'Bio::EnsEMBL::Production::Pipeline::TaxonomyUpdate::QueryMetadata',
+      -max_retry_count   => 1,
+      -analysis_capacity => 20,
     },
 
   ];
