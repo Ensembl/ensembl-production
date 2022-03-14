@@ -60,52 +60,49 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   my $dbname = $self->param('dbname');
-  my ($shost, $sport, $suser);
-  my ($dba) = @{ Bio::EnsEMBL::Registry->get_all_DBAdaptors_by_dbname($dbname) };
-  if (! defined $dba){
-	throw "Database $dbname not found in registry.";  
-  }
+  my $species = $self->param('species');
+  my $group   = $self->param('group');
+  my $meta_container = Bio::EnsEMBL::Registry->get_adaptor( $species, $group, 'MetaContainer' );
   my $gdba = Bio::EnsEMBL::Registry->get_DBAdaptor("multi", "metadata"); 
   my $tdba =  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
   $self->warning("Processing $dbname ");
-  $self->_meta($dba, $gdba, $tdba);
+  $self->warning("Processing Species : $species ");
+  $self->_meta($meta_container, $gdba, $tdba);
   $self->warning('Remove depricated');
-  #$self->_remove_deprecated($dba);
+  $self->_remove_deprecated($meta_container);
   return;
 }
 
 
 sub _meta {
 
-  my ( $self, $dba, $gdba, $tdba ) = @_;
-  my $dbname = $dba->dbc->dbname;
+  my ( $self, $meta_container, $gdba, $tdba ) = @_;
   $self->warning('Querying Metadata');
-  my $metadata = $self->_metadata($dba, $gdba);
+  my $metadata = $self->_metadata($meta_container, $gdba);
   $self->warning('Querying Taxonomy');
   #my $tdba =  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
   my $taxonomy  = $self->_taxonomy( $tdba, $metadata->{'species.taxonomy_id'});
   $metadata->{'species.classification'} = $taxonomy; 	
-  my $mc = $dba->get_MetaContainer();
   $self->warning('Updating meta');
   foreach my $key ( keys %{$metadata} ) {
     my $array = wrap_array( $metadata->{$key} );
-    $mc->delete_key($key);
+    $meta_container->delete_key($key);
     foreach my $value ( @{$array} ) {
-        $mc->store_key_value( $key, $value );
+        $meta_container->store_key_value( $key, $value );
     }
   }
 }
 
 
 sub _metadata {
-  my ( $self, $dba, $gdba ) = @_;
-  my $dbname = $dba->dbc->dbname;
+  my ( $self, $meta_container, $gdba ) = @_;
+  my $dbname = $self->param('dbname');
+  my $species = $self->param('species');
   #get taxonomy id / production names from meta table
-  my $mca = $dba->get_MetaContainer();
-  my $taxon = $mca->single_value_by_key('species.taxonomy_id');
-  my $production_name = $mca->single_value_by_key('species.production_name');
+  my $taxon = $meta_container->single_value_by_key('species.taxonomy_id');
+  my $production_name = $meta_container->single_value_by_key('species.production_name');
   if ( !$taxon || !$production_name ){
-	  throw "Cannot discover the taxonomy id / production name for the database $dbname. Populate meta table with 'species.taxonomy_id' and 'species.production_name' ";
+	  throw "Cannot discover the taxonomy id / production name for species $species in database $dbname . Populate meta table with 'species.taxonomy_id' and 'species.production_name' ";
   }
 
   #get metadata from metadata db
@@ -154,19 +151,18 @@ SQL
 
 
 sub _remove_deprecated {
-  my ($self, $dba) = @_;
+  my ($self, $meta_container) = @_;
 
   if(!$self->param('removedeprecated')) {
     $self->warning('Not removing deprecated meta keys');
     return;
   }
-  my $mc  = $dba->get_MetaContainer();
   $self->warning('Removing deprecated meta keys');
 
   my @deprecated_keys = $self->param('deprecated_keys');
   foreach my $key (@deprecated_keys) {
     $self->warning('Deleting key "%s"', $key);
-    $mc->delete_key($key);
+    $meta_container->delete_key($key);
   }
   $self->warning('Finished removing deprecated meta keys');
   return;
