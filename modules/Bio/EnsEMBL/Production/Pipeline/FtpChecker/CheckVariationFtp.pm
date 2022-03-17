@@ -31,55 +31,58 @@ use Data::Dumper;
 use Log::Log4perl qw/:easy/;
 
 my $expected_files = {
-		      "vcf" => {"dir" => "{division}/vcf/{species_dir}/", "excepted" =>[
-							'{species}*.vcf.gz',
-							'{species}_incl_consequences*.vcf.gz',
-							'{species}*.vcf.gz.tbi',
-							'{species}_incl_consequences*.vcf.gz.tbi',
-							 'README*',
-							 'CHECKSUMS*'
-						       ]},
-		      "gvf" => {"dir" => "{division}/gvf/{species_dir}/", "excepted" =>[
-							'{species}*.gvf.gz',
-							'{species}_failed*.gvf.gz',
-							'{species}_incl_consequences*.gvf.gz',
-							 'README*',
-							 'CHECKSUMS*'
-						       ]}
+    "vcf" => {
+        "dir" => "{division}/vcf/{species_dir}/", "excepted" => [
+        '{species}*.vcf.gz',
+        '{species}_incl_consequences*.vcf.gz',
+        '{species}*.vcf.gz.tbi',
+        '{species}_incl_consequences*.vcf.gz.tbi',
+        'README*',
+        'CHECKSUMS*'
+    ] },
+    "gvf" => { "dir"                                =>
+        "{division}/gvf/{species_dir}/", "excepted" => [
+        '{species}*.gvf.gz',
+        '{species}_failed*.gvf.gz',
+        '{species}_incl_consequences*.gvf.gz',
+        'README*',
+        'CHECKSUMS*'
+    ] }
 };
 
 sub run {
-  my ($self) = @_;
-  my $species = $self->param('species');
-  if ( $species !~ /Ancestral sequences/ ) {
-    Log::Log4perl->easy_init($DEBUG);
-    $self->{logger} = get_logger();
-    my $base_path = $self->param('base_path');
-    $self->{logger}->info("Checking $species on $base_path");
-    my $vals = {};
-    $vals->{species} = $species;    
-    $vals->{species_uc} = ucfirst $species;
-    my $dba = $self->core_dba();
-    if($dba->dbc()->dbname() =~ m/^(.*_collection)_core_.*/) {
-      $vals->{species_dir} = $1.'/'.$species;
-      $vals->{collection_dir} = $1.'/';
-    } else {
-      $vals->{species_dir} = $species;
-      $vals->{collection_dir} = '';
+    my ($self) = @_;
+    my $species = $self->param('species');
+    if ($species !~ /Ancestral sequences/) {
+        Log::Log4perl->easy_init($DEBUG);
+        $self->{logger} = get_logger();
+        my $base_path = $self->param('base_path');
+        $self->{logger}->info("Checking $species on $base_path");
+        my $vals = {};
+        $vals->{species} = $species;
+        $vals->{species_uc} = ucfirst $species;
+        my $dba = $self->core_dba();
+        if ($dba->dbc()->dbname() =~ m/^(.*_collection)_core_.*/) {
+            $vals->{species_dir} = $1 . '/' . $species;
+            $vals->{collection_dir} = $1 . '/';
+        }
+        else {
+            $vals->{species_dir} = $species;
+            $vals->{collection_dir} = '';
+        }
+        my $division = $dba->get_MetaContainer()->get_division();
+        $dba->dbc()->disconnect_if_idle();
+        if (defined $division) {
+            $division = lc($division);
+            $division =~ s/ensembl//i;
+        }
+        if ($division eq "vertebrates") {
+            $division = "";
+        }
+        $vals->{division} = $division;
+        $self->check_files($species, 'variation', $base_path, $expected_files, $vals);
     }
-    my $division = $dba->get_MetaContainer()->get_division();   
-    $dba->dbc()->disconnect_if_idle();
-    if(defined $division) {
-      $division = lc ($division);
-      $division =~ s/ensembl//i;
-    }
-    if ($division eq "vertebrates"){
-      $division = "";
-    }
-    $vals->{division} = $division;
-    $self->check_files($species, 'variation', $base_path, $expected_files, $vals);
-  }
-  return;
+    return;
 }
 
 1;

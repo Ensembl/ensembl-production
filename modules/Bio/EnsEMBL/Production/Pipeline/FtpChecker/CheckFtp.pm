@@ -33,38 +33,38 @@ use Log::Log4perl qw/:easy/;
 
 
 sub check_files {
-  my ($self, $species, $type, $base_path, $expected_files, $vals) = @_;
-  my $n = 0;
-  $DB::single = 1;
-  while( my($format) = each %$expected_files) { 
-    for my $file (@{$expected_files->{$format}->{expected}}) {
-      my $path =  _expand_str($base_path.'/'.$expected_files->{$format}->{dir}.'/'.$file, $vals);
-      my @files = glob($path);
-      if(scalar(@files) == 0) {
-	$self->{logger}->error("Could not find $path");
-	$self->dataflow_output_id(   
-				  {
-				   species => $species,
-           division => $vals->{division},
-				   type => $type,
-           format => $format,
-				   file_path=>$path
-				  }
-				  , 2);
-	$n++;
-      }
+    my ($self, $species, $type, $base_path, $expected_files, $vals) = @_;
+    my $n = 0;
+    $DB::single = 1;
+    while (my ($format) = each %$expected_files) {
+        for my $file (@{$expected_files->{$format}->{expected}}) {
+            my $path = _expand_str($base_path . '/' . $expected_files->{$format}->{dir} . '/' . $file, $vals);
+            my @files = glob($path);
+            if (scalar(@files) == 0) {
+                $self->{logger}->error("Could not find $path");
+                $self->dataflow_output_id(
+                    {
+                        species   => $species,
+                        division  => $vals->{division},
+                        type      => $type,
+                        format    => $format,
+                        file_path => $path
+                    }
+                    , 2);
+                $n++;
+            }
+        }
     }
-  }    
-  return $n;
+    return $n;
 }
 
 sub _expand_str {
-  my ($template, $vals) = @_;
-  my $str = $template;
-  while(my ($k,$v) = each %$vals) {
-    $str =~ s/\{$k\}/$v/g;
-  }
-  return $str;
+    my ($template, $vals) = @_;
+    my $str = $template;
+    while (my ($k, $v) = each %$vals) {
+        $str =~ s/\{$k\}/$v/g;
+    }
+    return $str;
 }
 
 1;
