@@ -158,7 +158,7 @@ sub get_version_type {
   my ($dbname) = @_;
   my $type;
   my $version;
-  if ($dbname =~ m/ensembl_compara.*_([0-9]+)$/) {
+  if ($dbname =~ m/.*_compara.*_([0-9]+)$/) {
     $type = 'compara';
     $version = $1;
   }
