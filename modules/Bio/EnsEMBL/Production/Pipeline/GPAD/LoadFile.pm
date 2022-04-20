@@ -208,7 +208,7 @@ sub run {
             my $protein_id_xrefs = $dbe_adaptor->fetch_all_by_name($db_object_id, 'protein_id');
             if (scalar(@$protein_id_xrefs) != 0) {
                 $master_xref = $protein_id_xrefs->[0];
-                $go_xref->add_link1age_type($go_evidence, $master_xref) if defined($go_evidence);
+                $go_xref->add_linkage_type($go_evidence, $master_xref) if defined($go_evidence);
             }
             else {
                 $unmatched_protein_id{$tgt_species}++;
