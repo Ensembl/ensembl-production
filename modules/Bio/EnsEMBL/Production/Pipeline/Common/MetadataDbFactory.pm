@@ -42,6 +42,7 @@ sub param_defaults {
     %{$self->SUPER::param_defaults},
     division => [],
     group => [],
+    species => [],
   };
 }
 
@@ -50,6 +51,7 @@ sub run {
   my $ensembl_release = $self->param_required('ensembl_release');
   my $division = $self->param_required('division');
   my $group = $self->param_required('group');
+  my $species = $self->param_required('species');
 
   my $mdba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'metadata');
 
@@ -60,19 +62,26 @@ sub run {
     FROM
       data_release dr INNER JOIN
       genome g USING (data_release_id) INNER JOIN
+      organism o USING (organism_id) INNER JOIN
       genome_database gd USING (genome_id) INNER JOIN
       division d USING (division_id)
     WHERE
       dr.ensembl_version = $ensembl_release
   /;
 
+  if( scalar(@$species) ){
+    $sql .= ' AND o.name IN ("' . join('", "', @$species) . '")';
+  }
+
+
   if (scalar(@$division)) {
-    $sql .= ' AND division IN ("' . join('", "', @$division) . '")';
+    $sql .= ' AND d.name IN ("' . join('", "', map("ensembl" . $_, @$division)) . '")';
   }
 
   if (scalar(@$group)) {
     $sql .= ' AND gd.type IN ("' . join('", "', @$group) . '")';
   }
+
 
   my $helper = $mdba->dbc->sql_helper;
   my $dbnames = $helper->execute_into_hash(-SQL => $sql);
@@ -83,7 +92,6 @@ sub run {
 sub write_output {
   my ($self) = @_;
   my $dbnames = $self->param('dbnames');
-
   foreach my $dbname (keys %$dbnames) {
     $self->dataflow_output_id(
       {

@@ -61,6 +61,7 @@ sub param_defaults {
     meta_filters => {},
     group        => 'core',
     registry_file => undef,
+    shout_db_not_found_in_registry => 0,
   };
 }
 
@@ -123,6 +124,9 @@ sub run {
         }
       } else {
         $self->warning("Database $dbname not found in registry.");
+	if($self->param("shout_db_not_found_in_registry")){
+	  $self->throw("Database $dbname not found in registry.");	
+	}
       }
     }
   } else {
@@ -135,7 +139,7 @@ sub run {
 
     my $all_compara_dbas;
     if ($self->param('compara_flow')) {
-      $all_compara_dbas = $reg->get_all_DBAdaptors( -GROUP => 'compara' );
+	$all_compara_dbas = $reg->get_all_DBAdaptors( -GROUP => 'compara' );
     }
 
     if ( ! scalar(@$all_dbas) && ! scalar(@$all_compara_dbas) ) {

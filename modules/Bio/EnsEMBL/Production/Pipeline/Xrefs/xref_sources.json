@@ -78,7 +78,7 @@
     {
       "name" : "MIM",
       "parser" : "MIMParser",
-      "file" : "http://data.omim.org/downloads/s4mpHKpNRgugjDKWuUAJMw/omim.txt.gz",
+      "file" : "http://data.omim.org/downloads/ZpPlmgwjuTBK9T5vf2sFjA/omim.txt.gz",
       "priority" : 2
     },
     {
@@ -111,6 +111,7 @@
     {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate_*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
@@ -122,6 +123,7 @@
     {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
@@ -133,6 +135,7 @@
     {
       "name" : "RefSeq_peptide",
       "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_mammalian/vertebrate*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
@@ -144,6 +147,7 @@
     {
       "name" : "RefSeq_peptide",
       "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/vertebrate_other/vertebrate*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
@@ -176,6 +180,7 @@
     {
       "name" : "Uniprot/SWISSPROT",
       "parser" : "UniProtDatabaseParser",
+      "old_parser" : "UniProtParser",
       "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
@@ -187,6 +192,7 @@
     {
       "name" : "Uniprot/SPTREMBL",
       "parser" : "UniProtDatabaseParser",
+      "old_parser" : "UniProtParser",
       "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,

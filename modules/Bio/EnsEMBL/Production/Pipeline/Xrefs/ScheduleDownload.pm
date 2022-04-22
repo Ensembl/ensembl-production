@@ -30,6 +30,11 @@ sub run {
   my $source_dir       = $self->param_required('source_dir');
   my $skip_download    = $self->param_required('skip_download');
 
+  my $skip_preparse = 1;
+  if ($self->param_exists('skip_preparse')) {
+    $skip_preparse = $self->param('skip_preparse');
+  }
+
   my $db_url = $self->param_required('source_url');
 
   $self->create_db($source_dir, $db_url, $self->param_required('reuse_db'));
@@ -45,6 +50,12 @@ sub run {
     my $db = $source->{'db'};
     my $version_file = $source->{'release'};
     my $preparse = $source->{'preparse'};
+
+    if ($preparse && $skip_preparse) {
+      $parser = $source->{'old_parser'};
+      $preparse = 0;
+    }
+
     $dataflow_params = {
       parser       => $parser,
       name         => $name,

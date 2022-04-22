@@ -40,7 +40,6 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::AlphaDBImport_conf;
 use strict;
 use warnings;
 
-
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
@@ -58,70 +57,104 @@ use Bio::EnsEMBL::Hive::Version 2.5;
 =cut
 
 sub default_options {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{$self->SUPER::default_options()},
-
-    species => 'homo_sapiens',
-    rest_server => 'https://www.ebi.ac.uk/gifts/api/',
-
-    user_r => 'ensro',
-    password => $ENV{EHIVE_PASS},
-    user => 'ensadmin',
-    pipe_db_host => 'mysql-ens-genebuild-prod-7',
-    pipe_db_port => 4533,
-    email_address => $ENV{USER}.'@ebi.ac.uk',
-  };
+    return {
+        %{$self->SUPER::default_options()},
+        rest_server  => 'https://www.ebi.ac.uk/gifts/api/',
+        user_r       => 'ensro',
+        species      => [],
+        division     => [],
+        run_all      => 0,
+        antispecies  => [],
+        password     => $ENV{EHIVE_PASS},
+        user         => 'ensadmin',
+        pipe_db_host => undef,
+        pipe_db_port => undef
+    };
 }
 
 
 sub pipeline_wide_parameters {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{$self->SUPER::pipeline_wide_parameters},
-  }
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},
+        rest_server => $self->o('rest_server'),
+        base_path   => $self->o('base_path')
+    }
 }
 
+sub pipeline_create_commands {
+    my ($self) = @_;
+    return [
+        @{$self->SUPER::pipeline_create_commands},
+        'mkdir -p '.$self->o('pipeline_dir'),
+        'mkdir -p '.$self->o('scratch_large_dir')
+    ];
+}
 
 sub pipeline_analyses {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  my @analyses = (
-    {
-      -logic_name => 'load_alphadb',
-      -module => 'Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveLoadAlphaFoldDBProteinFeatures',
-      -input_ids  => [{}],
-      -parameters => {
-        core_dbhost => $self->o('host'),
-        core_dbport => $self->o('port'),
-        core_dbname => $self->o('dbname'),
-        core_dbuser => $self->o('user'),
-        core_dbpass => $self->o('pass'),
-        cs_version => $self->o('cs_version'),
-        species => $self->o('species'),
-	rest_server => $self->o('rest_server'),
-        alpha_path => $self->o('alpha_path')
-      },
-      -rc_name => '4GB',
-    },
-  );
+    my @analyses = (
+        {
+            -logic_name => 'load_params',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -input_ids  => [ {} ],
+            -flow_into  => {
 
-  return \@analyses;
-}
+                '2' => [ 'metadata' ],
+            },
+            -parameters => {
+                species     => $self->o('species'),
+                division    => $self->o('division'),
+                antispecies => [],
 
+            },
+            -rc_name    => '4GB',
+        },
+        {
+            -logic_name => 'metadata',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
+            -flow_into  => {
+                '2->A' => [ 'load_alphadb' ],
+                'A->1' => [ 'Datacheck' ]
+            },
+        },
+        {
+            -logic_name => 'load_alphadb',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
+            -parameters => {
+                rest_server => $self->o('rest_server'),
+                output_path => $self->o('scratch_large_dir')
+            },
+            -rc_name    => '4GB',
+        },
+        {
+            -logic_name => 'Datacheck',
+            -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -parameters => {
+                datacheck_names => [ 'CheckAlphafoldEntries' ],
+            },
+            -flow_into  => {
+                '1' => [ 'Notify' ],
+            },
+            -rc_name    => '4GB',
+        },
+        {
+            -logic_name        => 'Notify',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -parameters        => {
+                email         => $self->o('email'),
+                pipeline_name => $self->o('pipeline_name'),
+            },
+        },
+    );
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    'default' => { LSF => '-q production -M 1000 -R"select[mem>1000] rusage[mem=1000]"'},
-    '4GB' => { LSF => '-q production -M 4000 -R"select[mem>4000] rusage[mem=4000]"'},
-    '8GB' => { LSF => '-q production -M 8000 -R"select[mem>8000] rusage[mem=8000]"'},
-    '16GB' => { LSF => '-q production -M 16000 -R"select[mem>16000] rusage[mem=16000]"'},
-    '20GB' => { LSF => '-q production -M 20000 -R"select[mem>20000] rusage[mem=20000]"'},
-  };
+    return \@analyses;
 }
 
 1;

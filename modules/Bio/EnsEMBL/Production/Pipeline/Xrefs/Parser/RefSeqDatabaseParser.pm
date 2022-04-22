@@ -19,7 +19,7 @@ limitations under the License.
 
 # Parse RefSeq GPFF files to create xrefs.
 
-package Bio::EnsEMBL::Production::Pipeline::Xrefs::Parser::RefSeqGPFFParser;
+package Bio::EnsEMBL::Production::Pipeline::Xrefs::Parser::RefSeqDatabaseParser;
 
 use strict;
 use warnings;

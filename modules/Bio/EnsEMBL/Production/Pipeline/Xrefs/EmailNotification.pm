@@ -125,29 +125,22 @@ sub fetch_input {
     $msg .= "<br>Useful parameters to use in Xref Process pipeline:<br>\n";
     $msg .= "<b>-base_path</b> ".$base_path."<br>\n";
     $msg .= "<b>-source_url</b> ".$db_url;
+
+    my $skip_preparse = $self->param('skip_preparse');
+    if (!$skip_preparse) {
+      $msg .= "<br>\n";
+      $msg .= "<b>-source_xref</b> ".$self->param('source_xref');
+    }
   } elsif ($pipeline_part eq 'process') {
-    my $xref_url = $self->param_required('xref_url');
-
-    my ($user, $pass, $host, $port, $xref_db) = $self->parse_url($xref_url);
-    my $dbi = $self->get_dbi($host, $port, $user, $pass, $xref_db);
-
     my $total_species = 0;
     my $temp_msg = '';
 
-    # Get names and number of species updated
-    my $species_sth = $dbi->prepare("select distinct(species_id) from xref");
+    # Get names of species updated
+    my $species_sth = $hive_dbi->prepare("SELECT species_name FROM updated_species ORDER BY species_name");
     $species_sth->execute;
 
     $temp_msg .= "<ul>\n";
-    while (my $species_id = $species_sth->fetchrow_array()) {
-      my $species_name_sth = $dbi->prepare("select name from species where species_id=?");
-      $species_name_sth->execute($species_id->[0]);
-
-      my $species_name = "";
-      if (my @row = $species_name_sth->fetchrow_array()) {
-        $species_name = $row[0];
-      }
-
+    while (my $species_name = $species_sth->fetchrow()) {
       $temp_msg .= "<li>".$species_name."</li>\n";
       $total_species++;
     }
