@@ -50,14 +50,20 @@ install:
 jobs:
   include:
     - language: python
-      python:
-        - 3.7.6
-        - 3.8
+      python: 3.7.6
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
       script:
         - pytest src/python/test
+    - language: python
+      python: 3.8
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      script:
+        - pytest src/python/test
+
 
 notifications:
   email:
