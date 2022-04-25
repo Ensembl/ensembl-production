@@ -50,12 +50,6 @@ install:
 jobs:
   include:
     - language: perl
-      perl:
-        - "5.14"
-      script: ./travisci/harness.sh
-    - language: perl
-      perl:
-        - "5.26"
       script: ./travisci/harness.sh
     - language: python
       python: 3.7.6
