@@ -5,6 +5,7 @@ jobs:
         - mysql
       perl:
         - '5.14'
+        - '5.26'
       env:
         - COVERALLS=true  DB=mysql
       sudo: false
