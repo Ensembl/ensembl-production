@@ -49,8 +49,6 @@ install:
   - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
 jobs:
   include:
-    - language: perl
-      script: ./travisci/harness.sh
     - language: python
       python: 3.7.6
       install:
