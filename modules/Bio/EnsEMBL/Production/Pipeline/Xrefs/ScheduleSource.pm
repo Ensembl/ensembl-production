@@ -46,6 +46,8 @@ sub run {
   my $host             = $self->param('xref_host');
   my $port             = $self->param('xref_port');
 
+  my $preparse = 0;
+
   if ($db_url) {
     ($user, $pass, $host, $port) = $self->parse_url($db_url);
   }
@@ -53,6 +55,7 @@ sub run {
   if ($source_xref) {
     ($xref_source_user, $xref_source_pass, $xref_source_host, $xref_source_port, $xref_source_db) = $self->parse_url($source_xref);
     $xref_source_dbi = $self->get_dbi($xref_source_host, $xref_source_port, $xref_source_user, $xref_source_pass, $xref_source_db);
+    $preparse = 1;
   }
 
   # Create Xref database
@@ -64,7 +67,7 @@ sub run {
             user    => $user,
             pass    => $pass });
   if ($order_priority == 1) {
-    $dbc->create($sql_dir, 1, 1, $xref_source_dbi);
+    $dbc->create($sql_dir, 1, 1, $preparse, $xref_source_dbi);
 
     if ($self->param_exists('pipeline_part')) {
       my $species_sth = $self->dbc->prepare("INSERT INTO updated_species (species_name) VALUES (?)");

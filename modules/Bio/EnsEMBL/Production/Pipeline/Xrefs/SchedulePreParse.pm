@@ -44,7 +44,7 @@ sub run {
               port    => $xref_port,
               user    => $xref_user,
               pass    => $xref_pass });
-    $xref_dbc->create($sql_dir, 1, 1);
+    $xref_dbc->create($sql_dir, 1, 1, 1);
   
     # Retrieve list of sources to pre-parse from versioning database
     my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);

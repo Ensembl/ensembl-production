@@ -210,7 +210,7 @@
     {
       "name" : "ZFIN_desc",
       "parser" : "ZFINDescParser",
-      "file" : "http://zfin.org/pub/transfer/MEOW/zfin_genes.txt",
+      "file" : "ftp://zfin.org/pub/transfer/MEOW/zfin_genes.txt",
       "priority" : 1
     },
     {
