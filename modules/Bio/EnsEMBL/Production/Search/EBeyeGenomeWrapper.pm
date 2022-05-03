@@ -59,7 +59,9 @@ sub wrap_genomes {
 
   my $genome_file_out = File::Spec->catfile($out_path, 'Genome_Ensembl' . $division . '.xml');
 
-  my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in($out_path);
+  my @species_sub_dir = File::Find::Rule->directory->in( $out_path );
+
+  my @genome_xml_files = File::Find::Rule->file->name("*_genome.xml")->in(@species_sub_dir);
 
   open my $fh, '>', $genome_file_out or croak "Could not open $genome_file_out for writing";
 
