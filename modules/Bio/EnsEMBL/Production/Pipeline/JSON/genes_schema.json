@@ -211,10 +211,22 @@
                     "seq_region_name",
                     "start",
                     "strand",
-                    "xrefs"
+                    "xrefs",
+		    "attrib"
                 ],
                 "type": "object",
                 "properties": {
+                    "attrib": {
+                      "required": [
+                        "is_canonical"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "is_canonical": {
+                          "type": "boolean"
+                        }
+                      }
+                    },			
                     "exons": {
                         "items": {
                             "required": [
