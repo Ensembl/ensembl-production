@@ -38,7 +38,7 @@ sub run {
 
     my $has_readthrough = 0;
     # TODO remove readthrough processing entirely
-    my @readthroughs = @{$aa->fetch_all_by_Transcript(undef, 'readthrough_tra')};
+    # my @readthroughs = @{$aa->fetch_all_by_Transcript(undef, 'readthrough_tra')};
     # $has_readthrough = 1 if @readthroughs;
 
     my %attrib_codes = $self->get_attrib_codes($has_readthrough);
