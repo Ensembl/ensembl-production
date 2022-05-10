@@ -36,16 +36,11 @@ sub run {
     my $ta = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'transcript');
     my $aa = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'attribute');
 
-    my $has_readthrough = 0;
-    # TODO remove readthrough processing entirely
-    # my @readthroughs = @{$aa->fetch_all_by_Transcript(undef, 'readthrough_tra')};
-    # $has_readthrough = 1 if @readthroughs;
-
-    my %attrib_codes = $self->get_attrib_codes($has_readthrough);
+    my %attrib_codes = $self->get_attrib_codes();
     $self->delete_old_attrib($dba, %attrib_codes);
     $self->delete_old_stats($dba, %attrib_codes);
 
-    my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
+    my %alt_attrib_codes = $self->get_alt_attrib_codes();
     $self->delete_old_attrib($dba, %alt_attrib_codes);
     $self->delete_old_stats($dba, %alt_attrib_codes);
 
@@ -116,11 +111,8 @@ sub run {
 }
 
 sub get_attrib_codes {
-    my ($self, $has_readthrough) = @_;
+    my ($self) = @_;
     my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'noncoding_cnt_s', 'noncoding_cnt_l', 'noncoding_cnt_m');
-    if ($has_readthrough) {
-        push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'noncoding_rcnt_s', 'noncoding_rcnt_l', 'noncoding_rcnt_m');
-    }
     my %biotypes;
     foreach my $code (@attrib_codes) {
         my ($group, $subgroup) = $code =~ /(\w+)\_r?cnt_?([a-z]?)/;
@@ -132,11 +124,8 @@ sub get_attrib_codes {
 }
 
 sub get_alt_attrib_codes {
-    my ($self, $has_readthrough) = @_;
+    my ($self) = @_;
     my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'noncoding_acnt_s', 'noncoding_acnt_l', 'noncoding_acnt_m');
-    if ($has_readthrough) {
-        push @alt_attrib_codes, ('coding_racnt', 'pseudogene_racnt', 'noncoding_racnt_s', 'noncoding_racnt_l', 'noncoding_racnt_m');
-    }
     my %biotypes;
     foreach my $alt_code (@alt_attrib_codes) {
         my ($group, $subgroup) = $alt_code =~ /(\w+)\_r?acnt_?([a-z]?)/;
@@ -223,23 +212,8 @@ sub get_all_slices {
 sub get_feature_count {
     my ($self, $slice, $key, $biotypes) = @_;
     my $species = $self->param('species');
-    my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
-    my $helper = $dba->dbc()->sql_helper();
-    if ($key =~ /_ra?cnt/) {
-        my $slice_id = $slice->get_seq_region_id();
-        my $sql = q{
-       SELECT COUNT(distinct(g.gene_id)) FROM gene g, transcript t, transcript_attrib ta, attrib_type at
-       WHERE g.gene_id=t.gene_id AND t.transcript_id=ta.transcript_id AND ta.attrib_type_id=at.attrib_type_id
-       AND at.code='readthrough_tra' AND g.seq_region_id = ? AND g.biotype in 
-    };
-        $sql .= "(" . join(q{,}, map {qq{'${_}'}} @{$biotypes}) . ")";
-        my $count = $helper->execute_single_result(-SQL => $sql, -PARAMS => [ $slice_id ]);
-        return $count;
-    }
     my $ga = Bio::EnsEMBL::Registry->get_adaptor($species, 'core', 'gene');
     return $ga->count_all_by_Slice($slice, $biotypes);
 }
 
-
 1;
-
