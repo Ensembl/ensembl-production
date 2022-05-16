@@ -13,15 +13,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_106_107_a.sql
+# patch_107_108_a.sql
 #
 # Title: Update schema version.
 #
 # Description:
-#   Update schema_version in meta table to 107.
+#   Update schema_version in meta table to 108.
 
-UPDATE meta SET meta_value='107' WHERE meta_key='schema_version';
+UPDATE meta SET meta_value='108' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-VALUES (NULL, 'patch', 'patch_106_107_a.sql|schema_version');
+VALUES (NULL, 'patch', 'patch_107_108_a.sql|schema_version');

@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES
   (NULL, 'schema_type', 'production'),
-  (NULL, 'schema_version', 107);
+  (NULL, 'schema_version', 108);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
