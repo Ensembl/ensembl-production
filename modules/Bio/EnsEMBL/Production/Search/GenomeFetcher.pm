@@ -88,12 +88,10 @@ sub new {
                 }
 		if ( defined $eg ) {
 			# switch adaptor to use Ensembl Genomes if -EG supplied
-			$logger->debug("Using EG release");
-                        if(defined $eg_version){
-			  $self->{info_adaptor}->set_ensembl_genomes_release($eg_version);
-                        }else{
-			  $self->{info_adaptor}->set_ensembl_genomes_release();
-                        }
+			# try to get ENV var EG_VERSION if not defined.
+			my $version =  defined($eg_version) ? $eg_version : $ENV{'EG_VERSION'} || "";
+  		  	$logger->debug("Using EG release:".$version );
+			$self->{info_adaptor}->set_ensembl_genomes_release($version);
 		}
 
              
@@ -120,6 +118,7 @@ sub fetch_metadata {
 	my $division = $meta->get_division();
   my $org;
   foreach my $genome (@{$orgs}){
+	$logger->info("Org: ". $genome. " / division ". $division);
     $org = $genome if ($genome->division() eq $division);
   }
 	return $org;
