@@ -83,18 +83,15 @@ sub new {
 	}
 	if ( defined $metadata_dba ) {
 		$self->{info_adaptor} = $metadata_dba->get_GenomeInfoAdaptor();
-                if( defined $ens_version){
-                  $self->{info_adaptor}->set_ensembl_release($ens_version);
-                }
+		my $version = defined($ens_version) ? $ens_version : $ENV{'ENS_VERSION'} || "";
+		$self->{info_adaptor}->set_ensembl_release($version);
 		if ( defined $eg ) {
 			# switch adaptor to use Ensembl Genomes if -EG supplied
 			# try to get ENV var EG_VERSION if not defined.
-			my $version =  defined($eg_version) ? $eg_version : $ENV{'EG_VERSION'} || "";
+			$version =  defined($eg_version) ? $eg_version : $ENV{'EG_VERSION'} || "";
   		  	$logger->debug("Using EG release:".$version );
 			$self->{info_adaptor}->set_ensembl_genomes_release($version);
 		}
-
-             
 	}
 	return $self;
 } ## end sub new
