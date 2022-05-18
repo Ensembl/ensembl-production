@@ -83,20 +83,15 @@ sub new {
 	}
 	if ( defined $metadata_dba ) {
 		$self->{info_adaptor} = $metadata_dba->get_GenomeInfoAdaptor();
-                if( defined $ens_version){
-                  $self->{info_adaptor}->set_ensembl_release($ens_version);
-                }
+		my $version = defined($ens_version) ? $ens_version : $ENV{'ENS_VERSION'} || "";
+		$self->{info_adaptor}->set_ensembl_release($version);
 		if ( defined $eg ) {
 			# switch adaptor to use Ensembl Genomes if -EG supplied
-			$logger->debug("Using EG release");
-                        if(defined $eg_version){
-			  $self->{info_adaptor}->set_ensembl_genomes_release($eg_version);
-                        }else{
-			  $self->{info_adaptor}->set_ensembl_genomes_release();
-                        }
+			# try to get ENV var EG_VERSION if not defined.
+			$version =  defined($eg_version) ? $eg_version : $ENV{'EG_VERSION'} || "";
+  		  	$logger->debug("Using EG release:".$version );
+			$self->{info_adaptor}->set_ensembl_genomes_release($version);
 		}
-
-             
 	}
 	return $self;
 } ## end sub new
@@ -120,6 +115,7 @@ sub fetch_metadata {
 	my $division = $meta->get_division();
   my $org;
   foreach my $genome (@{$orgs}){
+	$logger->info("Org: ". $genome. " / division ". $division);
     $org = $genome if ($genome->division() eq $division);
   }
 	return $org;
