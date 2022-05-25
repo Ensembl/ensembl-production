@@ -22,7 +22,7 @@ Script to create specific symlinks for GENE-SWITCH project under the public misc
 
 import argparse
 import os.path
-import pymysql
+import MySQLdb
 import re
 import sys
 
@@ -70,7 +70,7 @@ def check_paths(arguments):
 
 def db_connection(db_name, host, user, port):
     try:
-        connection = pymysql.connect(host=host, user=user, db=db_name, port=port)
+        connection = MySQLdb.connect(host=host, user=user, db=db_name, port=port)
 
         return connection
 
