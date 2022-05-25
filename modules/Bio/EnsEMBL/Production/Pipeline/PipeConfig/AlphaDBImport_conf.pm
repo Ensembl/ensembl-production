@@ -43,7 +43,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version 2.6;
 
 
 
@@ -69,8 +69,14 @@ sub default_options {
         antispecies  => [],
         password     => $ENV{EHIVE_PASS},
         user         => 'ensadmin',
-        pipe_db_host => undef,
-        pipe_db_port => undef
+        pipeline_db  => {
+            -driver => $self->o('hive_driver'),
+            -host   => $self->o('pipe_db_host'),
+            -port   => $self->o('pipe_db_port'),
+            -user   => $self->o('user'),
+            -pass   => $self->o('password'),
+            -dbname => $self->o('dbowner').'_alphafold_'.$self->o('pipeline_name').'_pipe',
+        },
     };
 }
 

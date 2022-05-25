@@ -52,7 +52,7 @@ use strict;
 use 5.014002;
 use parent ('Bio::EnsEMBL::Analysis::Runnable');
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
-use Bio::EnsEMBL::Utils::Exception qw(throw);
+use Bio::EnsEMBL::Utils::Exception qw(throw info);
 use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
 use Bio::EnsEMBL::ProteinFeature;
 
@@ -91,14 +91,24 @@ sub new {
 =cut
 
 sub run {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  $self->{'afdb_info'} = $self->parse_afdb_file();
-  $self->{'perfect_matches'} = fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'},$self->{'cs_version'});
-  #$self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
-  $self->make_protein_features();
+    $self->{'afdb_info'} = $self->parse_afdb_file();
+    unless (ref($self->{'afdb_info'}) eq 'ARRAY') {
+        die "Missing info from AFDB file. Path: " . $self->{'alpha_path'} . ". Species: " . $self->{'species'} . "\n";
+    }
 
-  return 1;
+    $self->{'perfect_matches'} = eval{fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'}, $self->{'cs_version'})};
+    unless ($self->{'perfect_matches'}) {
+        info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s. Message:\n%s", $self->{'species'}, $self->{'rest_server'}, $self->{'cs_version'}, $@));
+        $self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
+    }
+    unless ($self->{'perfect_matches'}) {
+        die "No matches for species %s found in core DB %s\n", $self->{'species'}, $self->{'core_dba'}->dbc->dbname();
+    }
+    $self->make_protein_features();
+
+    return 1;
 }
 
 =head2 fetch_uniprot_ensembl_matches();
@@ -211,6 +221,8 @@ sub make_protein_features() {
           if ($t and $t->translation and $t->translation->length >= $$afdb_line{SP_END}) {
             my $translation = $t->translation();
             my $translation_sid = $translation->stable_id();
+
+            $$afdb_line{'SIFTS_RELEASE_DATE'} //= '';
 
             my $pf = Bio::EnsEMBL::ProteinFeature->new(
                     -start    => $$afdb_line{'SP_BEG'},
