@@ -143,19 +143,16 @@ sub pipeline_analyses {
             -parameters => {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
-            -flow_into  => {
-                '1' => [ 'Notify' ],
-            },
+            -flow_into  => [ 'report' ],
             -rc_name    => '4GB',
         },
         {
-            -logic_name        => 'Notify',
-            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+            -logic_name        => 'report',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailReport',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -parameters        => {
                 email         => $self->o('email'),
-                pipeline_name => $self->o('pipeline_name'),
             },
         },
     );
