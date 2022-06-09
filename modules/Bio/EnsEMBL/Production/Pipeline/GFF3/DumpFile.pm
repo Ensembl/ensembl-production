@@ -277,7 +277,11 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'ccdsid'}                   = $self->ccds->display_id if $self->ccds;
   $summary{'transcript_id'}            = $id;
   $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
-  $summary{'tag'}                      = 'basic' if $self->gencode_basic();
+
+  my @tags;
+  push(@tags, 'basic') if $self->gencode_basic();
+  push(@tags, 'Ensembl_canonical') if $self->is_canonical();
+  $summary{'tag'} = \@tags if @tags;
 
   # Add xrefs
   if ($add_xrefs) {
