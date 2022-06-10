@@ -265,6 +265,15 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   my @tags;
   push(@tags, 'basic') if $self->gencode_basic();
   push(@tags, 'Ensembl_canonical') if $self->is_canonical();
+  
+  # A transcript can have different types of MANE-related attributes (MANE_Select, MANE_Plus_Clinical)
+  # We depend on the Bio::EnsEMBL::MANE object to get the specific type
+  my $mane = $self->mane_transcript();
+  if ($mane) {
+    my $mane_type = $mane->type();
+    push(@tags, $mane_type) if ($mane_type);
+  }
+
   $summary{'tag'} = \@tags if @tags;
 
   # Check for seq-edits
