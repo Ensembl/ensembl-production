@@ -10,5 +10,12 @@ setup(
     package_dir={"": "src/python"},
     license='Apache 2.0',
     include_package_data=True,
-    zip_safe=False
+    zip_safe=False,
+    entry_points={
+        "console_scripts": [
+            "dcparser=scripts.dcparse:main",
+            "dcstat=scripts.dcstat:main",
+            "meta_hive_species=scripts.meta_hive_species:main",
+        ]
+    }    
 )
