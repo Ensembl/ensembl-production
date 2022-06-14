@@ -35,31 +35,32 @@ from os.path import join, isfile, realpath
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-divisions = (
+
+def main():
+    
+    divisions = (
     'vertebrates',
     'metazoa',
     'fungi',
     'protists',
     'plants'
-)
-parser = argparse.ArgumentParser(
-    description='Parse outputs from `~ensemble-metadata/misc_scripts/genomes_report.pl to get species_list for hive'
-                ' init_pipeline command')
-parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
-parser.add_argument('-d', '--division', help='Restrict to a single division', type=str, choices=divisions)
-parser.add_argument('-v', '--version', help='versioned file name', required=False, default=getenv('ENS_VERSION'))
-parser.add_argument('-t', '--genomes_types', help='List genomes events (n r ua ug)', type=str, nargs='+',
-                    default=['n', 'r', 'ua', 'ug'])
+    )
 
+    parser = argparse.ArgumentParser(
+        description='Parse outputs from `~ensemble-metadata/misc_scripts/genomes_report.pl to get species_list for hive'
+                    ' init_pipeline command')
+    parser.add_argument('-i', '--input_dir', type=str, required=True, help='Input directory')
+    parser.add_argument('-d', '--division', help='Restrict to a single division', type=str, choices=divisions)
+    parser.add_argument('-v', '--version', help='versioned file name', required=False, default=getenv('ENS_VERSION'))
+    parser.add_argument('-t', '--genomes_types', help='List genomes events (n r ua ug)', type=str, nargs='+',
+                        default=['n', 'r', 'ua', 'ug'])
+    names = {
+        'n': '{}-new_genomes.txt',
+        'r': '{}-renamed_genomes.txt',
+        'ua': '{}-updated_annotations.txt',
+        'ug': '{}-updated_assemblies.txt',
+    }
 
-names = {
-    'n': '{}-new_genomes.txt',
-    'r': '{}-renamed_genomes.txt',
-    'ua': '{}-updated_annotations.txt',
-    'ug': '{}-updated_assemblies.txt',
-}
-
-if __name__ == '__main__':
     args = parser.parse_args()
     if args.division:
         logger.info("Process only division %s", args.division)
@@ -103,3 +104,6 @@ if __name__ == '__main__':
         dbs = [spec[1] for spec in species]
         f.write(','.join(dbs))
         logger.info("Generated %s", f.name)
+
+if __name__ == '__main__':
+    main()
