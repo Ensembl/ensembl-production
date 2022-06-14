@@ -13,9 +13,9 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "dcparser=scripts.dcparse:main",
-            "dcstat=scripts.dcstat:main",
-            "meta_hive_species=scripts.meta_hive_species:main",
+            "dc-parser=scripts.dcparse:main",
+            "dc-stat=scripts.dcstat:main",
+            "meta-hive-species=scripts.meta_hive_species:main",
         ]
     }    
 )
