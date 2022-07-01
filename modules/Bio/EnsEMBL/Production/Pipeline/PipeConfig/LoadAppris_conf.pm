@@ -57,8 +57,6 @@ sub hive_meta_table {
 sub pipeline_create_commands {
     my ($self) = @_;
 
-    $ENV{'APPRIS_FILE_PATH'} = $self->o('pipeline_dir');
-
     return [
         @{$self->SUPER::pipeline_create_commands},
         'mkdir -p ' . $self->o('pipeline_dir'),
