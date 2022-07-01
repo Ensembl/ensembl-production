@@ -26,13 +26,14 @@
 #
 #options:
 #  -h, --help         show this help message and exit
-#  --tmp-dir TMP_DIR  Path for temp dir to extract PDB files into. (Defaults to <script dir>/alpha_temp)
+#  --tmp-dir TMP_DIR  Path for temp dir to extract PDB files into. (Defaults to <script dir>)
 #  --out-dir OUT_DIR  Path for dir to store the mappings into. (Defaults to <script dir>/afdb_files)
 #  -v, --verbose      Increase output verbosity - UNUSED
 
 import argparse
 import urllib.request
 import shutil
+import tempfile
 import json
 import re
 import os
@@ -47,11 +48,6 @@ ALPHA_MAP_RE = re.compile(r'^DBREF')
 METADATA_URL = "http://ftp.ebi.ac.uk/pub/databases/alphafold/download_metadata.json"
 
 UNSAFE = True
-
-
-def cleanup_dir_tree(dir_root: str):
-    shutil.rmtree(dir_root, ignore_errors=True)
-
 
 def create_output_dir(dir_name: str, force: bool = False):
     # Check if dir_name exists and is empty, create if it doesn't exist
@@ -88,12 +84,6 @@ def get_alphamapping(work_dir: str) -> List[str]:
     return alpha_mappings
 
 
-def cleanup_unpacked_files(work_dir: str) -> None:
-    files = glob.glob(work_dir + '/*.gz')
-    for ff in files:
-        os.remove(ff)
-
-
 def dump_alphamapping(amap_list: List[str], work_dir: str, out_file_name: str = 'alpha_mappings.txt') -> None:
     full_outfile = work_dir + '/' + out_file_name
     with open(full_outfile, 'wt') as wfh:
@@ -107,7 +97,7 @@ def main():
     parser.add_argument('tarfile_name', type=str,
                         help='Full path/filename to AlphaFold TAR archive containing PDB files')
     parser.add_argument('--tmp-dir', type=str,
-                        help='Path for temp dir to extract PDB files into. (Defaults to <script dir>/alpha_temp)')
+                        help='Path for temp dir to extract PDB files into. (Defaults to <script dir>)')
     parser.add_argument('--out-dir', type=str,
                         help='Path for output dir to store alpha mappings into. (Defaults to <script dir>/afdb_files)')
     parser.add_argument("-v", "--verbose", action="count", default=0,
@@ -126,20 +116,20 @@ def main():
         print('ERROR - TAR file expected as input. Found instead {}. Exiting...'.format(args.tarfile_name))
         exit(1)
 
-    # Set tmp-dir to default value if it wasn't passed
-    if not args.tmp_dir:
-        args.tmp_dir = os.path.dirname(os.path.realpath(__file__))+'/alpha_temp'
-
     # Set out-dir to default value if it wasn't passed
     if not args.out_dir:
         args.out_dir = os.path.dirname(os.path.realpath(__file__))+'/afdb_files'
 
-    # Check if tmp-dir exists and is empty, create if it doesn't exist
-    try:
-        create_output_dir(args.tmp_dir, UNSAFE)
-    except OSError as error:
-        print(error)
+    # Set tmp-dir to default value if it wasn't passed
+    if not args.tmp_dir:
+        args.tmp_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    if not os.path.isdir(args.tmp_dir):
+        print('ERROR - TMP-DIR is not a directory. Exiting...')
         exit(1)
+
+    # Create temp directory
+    temp_dir = tempfile.TemporaryDirectory(prefix="alphafoldtmp-", dir=args.tmp_dir)
 
     # Split file name and path
     if args.tarfile_name.find('/') != -1:
@@ -153,9 +143,9 @@ def main():
     species_dir = Path(af_meta.get("species").lower().replace(" ","_"))
     out_dir = os.path.join(args.out_dir, species_dir)
 
-    # DANGEROUS STUFF
+    # DANGEROUS STUFF - aggressive cleanup of output directory
     if UNSAFE:
-        cleanup_dir_tree(out_dir)
+        shutil.rmtree(out_dir, ignore_errors=True)
 
     # Check if out-dir exists and is empty, create if it doesn't exist
     try:
@@ -165,23 +155,14 @@ def main():
         exit(1)
 
     # Unpack AlphaFold tar file - it expects to find it somewhere on the file system
-    shutil.unpack_archive(args.tarfile_name, args.tmp_dir)
+    shutil.unpack_archive(args.tarfile_name, temp_dir.name)
 
     # Read through the PDB files and extract mapping info
-    alpha_mapping = get_alphamapping(args.tmp_dir)
-
-    # Cleanup files extracted from the AlphaFold tar file
-    cleanup_unpacked_files(args.tmp_dir)
+    alpha_mapping = get_alphamapping(temp_dir.name)
 
     # Write out alphamapping.txt file
     dump_alphamapping(alpha_mapping, out_dir)
 
-    # Cleanup tmp_dir if empty
-    try:
-        Path(args.tmp_dir).rmdir()
-    except OSError as error:
-        print(error)
-   
 
 if __name__ == '__main__':
     main()
