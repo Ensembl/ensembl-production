@@ -149,8 +149,6 @@ sub _process_dba {
         $self->v("\tNo datafiles found");
     }
     else {
-
-        my @emission_files_done;
         foreach my $df (@{$datafiles}) {
             next if $df->absolute();
 
