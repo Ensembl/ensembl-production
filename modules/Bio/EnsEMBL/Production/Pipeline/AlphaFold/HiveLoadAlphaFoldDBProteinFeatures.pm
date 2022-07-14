@@ -82,6 +82,7 @@ sub param_defaults {
       cs_version => undef,
       species => undef,
       rest_server => undef,
+      debug => undef,
     }
 }
 
@@ -110,6 +111,10 @@ sub fetch_input {
 
   $self->hrdb_set_con($core_dba,"core");
 
+  print "Cleaning up old protein features and analysis\n" if defined($self->param('debug'));
+  $self->cleanup_protein_features('alphafold_import');
+
+  print "Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object\n" if defined($self->param('debug'));
   my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
     -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
                                             -db => 'alphafold',
@@ -191,6 +196,28 @@ sub insert_protein_features_xrefs {
   $pdb_xref->status('XREF');
   $pdb_xref->analysis($pf->analysis());
   $dbe_adaptor->store($pdb_xref,$translation_id,'Translation');
+}
+
+sub cleanup_protein_features() {
+# cleans up the protein features from the database 'core_dba'
+
+  my ($self, $analysis_logic_name) = @_;
+
+  my $core_dba = $self->hrdb_get_con("core");
+  my $ana = $core_dba->get_AnalysisAdaptor();
+
+  my $analysis = $ana->fetch_by_logic_name($analysis_logic_name);
+
+  if (defined($analysis)) {
+      my $analysis_id = $analysis->dbID();
+      print "Found alphafold_import analysis (ID: $analysis_id). Deleting it ...\n" if defined($self->param('debug'));
+
+      my $pfa = $core_dba->get_ProteinFeatureAdaptor();
+      $pfa->remove_by_analysis_id($analysis_id);
+
+      $ana->remove($analysis);
+  }
+
 }
 
 1;
