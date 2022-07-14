@@ -105,7 +105,7 @@ sub run {
     print "... done with GIFTS\n" if defined($self->{'debug'});
 
     unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
-        print "No data found for species ".$self->{'species'}."in GIFTS DB for assembly ".$self->{'cs_version'}.$/;
+        print "No data found for species ".$self->{'species'}." in GIFTS DB for assembly ".$self->{'cs_version'}.$/ if defined($self->{'debug'});
 
         info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s. Message:\n%s", $self->{'species'}, $self->{'rest_server'}, $self->{'cs_version'}, $@));
         $self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
