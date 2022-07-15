@@ -93,19 +93,26 @@ sub new {
 sub run {
     my ($self) = @_;
 
+    info(sprintf("Parsing the afdb_file for species %s\n", $self->{'species'}));
     $self->{'afdb_info'} = $self->parse_afdb_file();
     unless (ref($self->{'afdb_info'}) eq 'ARRAY') {
         die "Missing info from AFDB file. Path: " . $self->{'alpha_path'} . ". Species: " . $self->{'species'} . "\n";
     }
 
+    info(sprintf("Calling GIFTS endpoint for species %s\n", $self->{'species'}));
     $self->{'perfect_matches'} = eval{fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'}, $self->{'cs_version'})};
-    unless ($self->{'perfect_matches'}) {
+    info(sprintf("Done with GIFTS for species %s\n", $self->{'species'}));
+
+    unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
         info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s. Message:\n%s", $self->{'species'}, $self->{'rest_server'}, $self->{'cs_version'}, $@));
         $self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
     }
-    unless ($self->{'perfect_matches'}) {
-        die "No matches for species %s found in core DB %s\n", $self->{'species'}, $self->{'core_dba'}->dbc->dbname();
+
+    unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
+        die(sprintf("No matches for species %s found in core DB %s\n", $self->{'species'}, $self->{'core_dba'}->dbc->dbname()));
     }
+
+    info(sprintf("Making protein features for species %s\n", $self->{'species'}));
     $self->make_protein_features();
 
     return 1;
@@ -212,34 +219,34 @@ sub make_protein_features() {
 
     if (defined($self->{'perfect_matches'}{$afdb_uniprot})) {
       my @ensts = @{$self->{'perfect_matches'}{$afdb_uniprot}};
-      if (scalar(@ensts) > 0) {
-        foreach my $enst (@ensts) {
+      #if (scalar(@ensts) > 0) {
+      foreach my $enst (@ensts) {
 
-          my %pf_translation;
-          my $t = $ta->fetch_by_stable_id($enst);
+        my %pf_translation;
+        my $t = $ta->fetch_by_stable_id($enst);
 
-          if ($t and $t->translation and $t->translation->length >= $$afdb_line{SP_END}) {
-            my $translation = $t->translation();
-            my $translation_sid = $translation->stable_id();
+        if ($t and $t->translation and $t->translation->length >= $$afdb_line{SP_END}) {
+          my $translation = $t->translation();
+          my $translation_sid = $translation->stable_id();
 
-            $$afdb_line{'SIFTS_RELEASE_DATE'} //= '';
+          $$afdb_line{'SIFTS_RELEASE_DATE'} //= '';
 
-            my $pf = Bio::EnsEMBL::ProteinFeature->new(
-                    -start    => $$afdb_line{'SP_BEG'},
-                    -end      => $$afdb_line{'SP_END'},
-                    -hseqname => $$afdb_line{'AFDB'}.".".$$afdb_line{'CHAIN'},
-                    -hstart   => $$afdb_line{'RES_BEG'},
-                    -hend     => $$afdb_line{'RES_END'},
-                    -analysis => $analysis,
-                    -hdescription => "Via SIFTS (".$$afdb_line{'SIFTS_RELEASE_DATE'}.
-                                     ") UniProt protein ".$$afdb_line{'SP_PRIMARY'}.
-                                     " isoform exact match to Ensembl protein $translation_sid"
-                 );
-              $pf_translation{$translation->dbID()} = $pf;
-              push(@pfs,\%pf_translation);
-          } # if t
-        } # foreach my enst
-      } # if scalar
+          my $pf = Bio::EnsEMBL::ProteinFeature->new(
+                  -start    => $$afdb_line{'SP_BEG'},
+                  -end      => $$afdb_line{'SP_END'},
+                  -hseqname => $$afdb_line{'AFDB'}.".".$$afdb_line{'CHAIN'},
+                  -hstart   => $$afdb_line{'RES_BEG'},
+                  -hend     => $$afdb_line{'RES_END'},
+                  -analysis => $analysis,
+                  -hdescription => "Via SIFTS (".$$afdb_line{'SIFTS_RELEASE_DATE'}.
+                                   ") UniProt protein ".$$afdb_line{'SP_PRIMARY'}.
+                                   " isoform exact match to Ensembl protein $translation_sid"
+               );
+            $pf_translation{$translation->dbID()} = $pf;
+            push(@pfs,\%pf_translation);
+        } # if t
+      } # foreach my enst
+      #} # if scalar
     } # if ensts
   } # foreach my afdb_line
 

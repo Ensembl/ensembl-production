@@ -77,10 +77,12 @@ def get_alphamapping(work_dir: str) -> List[str]:
     alpha_mappings = []
     files = glob.glob(work_dir + '/*.pdb.gz')
     for f in files:
+        f_name = os.path.basename(f)[:-len('.gz')]
         with gzip.open(f, 'rt') as gfh:
             for line in gfh:
                 if ALPHA_MAP_RE.match(line):
-                    alpha_mappings.append(line)
+                    my_line = f"{f_name}:{line}"
+                    alpha_mappings.append(my_line)
     return alpha_mappings
 
 
