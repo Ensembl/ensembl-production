@@ -83,7 +83,6 @@ sub param_defaults {
       cs_version => undef,
       species => undef,
       rest_server => undef,
-      debug => undef,
     }
 }
 
@@ -112,10 +111,10 @@ sub fetch_input {
 
   $self->hrdb_set_con($core_dba,"core");
 
-  info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->{'species'})) if defined($self->{'debug'});
+  info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->{'species'}));
   $self->cleanup_protein_features('alphafold_import');
 
-  info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->{'species'})) if defined($self->{'debug'});
+  info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->{'species'}));
   my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
     -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
                                             -db => 'alphafold',
@@ -211,7 +210,7 @@ sub cleanup_protein_features() {
 
   if (defined($analysis)) {
       my $analysis_id = $analysis->dbID();
-      info(sprintf("Found alphafold_import analysis (ID: $analysis_id) for species %s. Deleting it ...\n", $self->{'species'})) if defined($self->{'debug'});
+      info(sprintf("Found alphafold_import analysis (ID: $analysis_id) for species %s. Deleting it ...\n", $self->{'species'}));
 
       my $pfa = $core_dba->get_ProteinFeatureAdaptor();
       $pfa->remove_by_analysis_id($analysis_id);
