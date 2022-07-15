@@ -58,6 +58,7 @@ use 5.014002;
 use Bio::EnsEMBL::Analysis::Tools::Utilities;
 use parent ('Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveBaseRunnableDB');
 use Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures;
+use Bio::EnsEMBL::Utils::Exception qw(throw info);
 
 use Net::FTP;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
@@ -111,10 +112,10 @@ sub fetch_input {
 
   $self->hrdb_set_con($core_dba,"core");
 
-  print "Cleaning up old protein features and analysis\n" if defined($self->param('debug'));
+  info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->{'species'})) if defined($self->{'debug'});
   $self->cleanup_protein_features('alphafold_import');
 
-  print "Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object\n" if defined($self->param('debug'));
+  info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->{'species'})) if defined($self->{'debug'});
   my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
     -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
                                             -db => 'alphafold',
@@ -210,7 +211,7 @@ sub cleanup_protein_features() {
 
   if (defined($analysis)) {
       my $analysis_id = $analysis->dbID();
-      print "Found alphafold_import analysis (ID: $analysis_id). Deleting it ...\n" if defined($self->param('debug'));
+      info(sprintf("Found alphafold_import analysis (ID: $analysis_id) for species %s. Deleting it ...\n", $self->{'species'})) if defined($self->{'debug'});
 
       my $pfa = $core_dba->get_ProteinFeatureAdaptor();
       $pfa->remove_by_analysis_id($analysis_id);

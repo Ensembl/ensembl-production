@@ -94,19 +94,17 @@ sub new {
 sub run {
     my ($self) = @_;
 
-    print "Parsing the afdb_file ...\n" if defined($self->{'debug'});
+    info(sprintf("Parsing the afdb_file for species %s\n", $self->{'species'})) if defined($self->{'debug'});
     $self->{'afdb_info'} = $self->parse_afdb_file();
     unless (ref($self->{'afdb_info'}) eq 'ARRAY') {
         die "Missing info from AFDB file. Path: " . $self->{'alpha_path'} . ". Species: " . $self->{'species'} . "\n";
     }
 
-    print "Calling GIFTS endpoint ...\n" if defined($self->{'debug'});
+    info(sprintf("Calling GIFTS endpoint for species %s\n", $self->{'species'})) if defined($self->{'debug'});
     $self->{'perfect_matches'} = eval{fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'}, $self->{'cs_version'})};
-    print "... done with GIFTS\n" if defined($self->{'debug'});
+    info(sprintf("Done with GIFTS for species %s\n", $self->{'species'})) if defined($self->{'debug'});
 
     unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
-        print "No data found for species ".$self->{'species'}." in GIFTS DB for assembly ".$self->{'cs_version'}.$/ if defined($self->{'debug'});
-
         info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s. Message:\n%s", $self->{'species'}, $self->{'rest_server'}, $self->{'cs_version'}, $@));
         $self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
     }
