@@ -259,12 +259,8 @@ sub run {
             else {
                 $translation = $tl_adaptor->fetch_by_stable_id($tgt_protein);
                 $transcript = $translation->transcript;
-                if (defined $transcript) {
-                    $transcript_hash{$tgt_protein} = $transcript;
-                    $translation_hash{$tgt_protein} = $translation;
-                } else {
-                    $self->log()->warn("Transcript not found for protein $tgt_protein");
-                }
+                $translation_hash{$tgt_protein} = $translation;
+                $transcript_hash{$tgt_protein} = $transcript;
             }
 
             if (defined $translation) {
@@ -303,13 +299,9 @@ sub run {
                     # Protein xref is attached to translation
                     # But GO term should be attached to transcript
                     foreach my $translation (@$translations) {
-                        if (defined $translation->transcript) {
-                            $self->log()->debug("Attaching via translation to transcript " . $translation->transcript()->dbID());
-                            $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
-                            $species_added_via_xref{$tgt_species}++;
-                        } else {
-                            $self->log()->warn("Transcript not found for $translation");
-                        }
+                        $self->log()->debug("Attaching via translation to transcript " . $translation->transcript()->dbID());
+                        $dbe_adaptor->store($go_xref, $translation->transcript->dbID, 'Transcript', 1, $master_xref);
+                        $species_added_via_xref{$tgt_species}++;
                     }
                 }
                 elsif ($is_transcript) {
