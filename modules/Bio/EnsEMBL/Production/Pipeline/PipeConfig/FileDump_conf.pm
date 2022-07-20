@@ -650,7 +650,7 @@ sub pipeline_analyses {
                 cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
             },
             -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => [ 'README' ]),
-            -rc_name       => "dm"
+            -rc_name           => "dm"
         },
         {
             -logic_name        => 'README',

@@ -41,7 +41,7 @@ sub default_options {
     %{Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMySQL_conf::default_options($self)},
 
     # Copy service
-    copy_service_uri  => "http://production-services.ensembl.org/api/dbcopy/requestjob",
+    copy_service_uri  => "https://services.ensembl.ebi.ac.uk:2000/api/dbcopy/requestjob",
     username          => $self->o('ENV', 'USER'),
     skip_convert_fasta => 1,
     #registry 
