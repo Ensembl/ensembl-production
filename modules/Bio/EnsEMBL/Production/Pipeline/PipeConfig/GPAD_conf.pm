@@ -104,7 +104,7 @@ sub pipeline_analyses {
             },
             -flow_into       => { 1 => [ 'AdvisoryDCReportInit' ] },
             -input_ids       => [ {} ],
-            -rc_name         => 'dm'
+            -rc_name         => 'default'
         },
         {
             -logic_name => 'AdvisoryDCReportInit',
