@@ -650,7 +650,7 @@ sub pipeline_analyses {
                 cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
             },
             -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => [ 'README' ]),
-            -rc_name       => "dm"
+            -rc_name           => "dm"
         },
         {
             -logic_name        => 'README',
@@ -658,6 +658,7 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
+            -rc_name           => "dm"
         },
         {
             -logic_name        => 'Sync_Metadata',
