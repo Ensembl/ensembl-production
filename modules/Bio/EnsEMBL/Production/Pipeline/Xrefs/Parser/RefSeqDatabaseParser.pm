@@ -201,12 +201,18 @@ sub xref_from_record {
   # For peptide file, the pair is in DBSOURCE REFSEQ accession
   my ($refseq_pair) = $entry =~ /DBSOURCE\s+REFSEQ: accession (\S+)/;
   my @protein_id = $entry =~ /\/protein_id=.(\S+_\d+)/g;
-  if (!defined $refseq_pair) {
+  my @coded_by = $entry =~ /\/coded_by=.(\w+_\d+)/g;
+
+  foreach my $cb (@coded_by) {
+    $xref->{PAIR} = $cb;
+  }
+  if (!defined($xref->{PAIR})) {
+    $xref->{PAIR} = $refseq_pair;
+  }
+  if (!defined($xref->{PAIR})) {
     foreach my $pi (@protein_id){
       $xref->{PAIR} = $pi;
     }
-  } else {
-    $xref->{PAIR} = $refseq_pair;
   }
 
   $xref->{LABEL} = $acc . "\." . $ver;

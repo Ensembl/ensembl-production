@@ -28,13 +28,14 @@ use base ('Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
 sub fetch_input {
   my ($self) = @_;
   my $pipeline_part = $self->param_required('pipeline_part');
-  my $db_url = $self->param('db_url');
-  my $base_path = $self->param('base_path');
-  my $clean_files  = $self->param('clean_files');
+  my $db_url        = $self->param('db_url');
+  my $base_path     = $self->param('base_path');
+  my $clean_files   = $self->param('clean_files');
+  my $pipeline_name = $self->param('pipeline_name');
 
   # Start with stats about hive
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
-  my $msg = "The Xref ".ucfirst($pipeline_part)." pipeline has completed its run.<br><br>\n".
+  my $msg = "The Xref ".ucfirst($pipeline_part)." pipeline ($pipeline_name) has completed its run.<br><br>\n".
   	"## eHive Info ##<br><br>\n";
 
   my $hive_dbi = $self->dbc;
@@ -56,17 +57,17 @@ sub fetch_input {
   	$failed_jobs += $analysis->{'failed_job_count'};
   }
 
-  # Adding current job (this assumes it suceeds)
+  # Adding current job (this assumes it succeeds)
   $done_jobs++;
 
   $msg .= "<b>Analyses</b><br>\n";
-  $msg .= "\tTotal: ".$total_analyses."<br>\n";
-  $msg .= "\tSuccessful: ".$done_analyses."<br>\n";
-  $msg .= "\tFailed: ".$failed_analyses."<br>\n";
+  $msg .= "&emsp;Total: ".$total_analyses."<br>\n";
+  $msg .= "&emsp;Successful: ".$done_analyses."<br>\n";
+  $msg .= "&emsp;Failed: ".$failed_analyses."<br>\n";
   $msg .= "<b>Jobs</b><br>\n";
-  $msg .= "\tTotal: ".$total_jobs."<br>\n";
-  $msg .= "\tSuccessful: ".$done_jobs."<br>\n";
-  $msg .= "\tFailed: ".$failed_jobs."<br>\n";
+  $msg .= "&emsp;Total: ".$total_jobs."<br>\n";
+  $msg .= "&emsp;Successful: ".$done_jobs."<br>\n";
+  $msg .= "&emsp;Failed: ".$failed_jobs."<br>\n";
 
   # Get error totals
   my ($pipeline_errors, $worker_errors) = (0, 0, 0);
@@ -80,9 +81,9 @@ sub fetch_input {
   $worker_errors = $counts->{'worker_error_count'};
 
   $msg .= "<b>Errors</b><br>\n";
-  $msg .= "\tTotal: ".($pipeline_errors + $worker_errors)."<br>\n";
-  $msg .= "\tPipeline errors: ".$pipeline_errors."<br>\n";
-  $msg .= "\tWorker errors: ".$worker_errors."<br>\n";
+  $msg .= "&emsp;Total: ".($pipeline_errors + $worker_errors)."<br>\n";
+  $msg .= "&emsp;Pipeline errors: ".$pipeline_errors."<br>\n";
+  $msg .= "&emsp;Worker errors: ".$worker_errors."<br>\n";
 
   $msg .= "<br>## Pipeline Info ##<br><br>\n";
 
@@ -150,6 +151,7 @@ sub fetch_input {
       $temp_msg;
   }
 
+  $self->param('subject', "Xref ".ucfirst($pipeline_part)." finished");
   $self->param('text', $msg);
   $self->param('is_html', 1);
 

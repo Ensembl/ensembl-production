@@ -69,10 +69,19 @@ sub pipeline_analyses {
 
   return [
   {
+    -logic_name => 'init_pipeline',
+    -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+    -input_ids  => [{}],
+    -flow_into  => {
+      '1->A' => 'schedule_species',
+      'A->1' => 'EmailAdvisoryXrefReport'
+    },
+    -rc_name    => 'small',
+  },
+  {
     -logic_name => 'schedule_species',
     -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
     -comment    => 'Creates a job for each species for the pipeline to run on, depending on -species, -antispecies, and -run_all options.',
-    -input_ids  => [{}],
     -parameters => {
       db_url => $self->o('source_url'),
       species     => $self->o('species'),
@@ -316,27 +325,29 @@ sub pipeline_analyses {
       old_server_uri   => $self->o('old_server_uri'),
       failures_fatal   => 0,
     },
-    -flow_into         => {
-      '4->A' => 'EmailReportXrefAdvisory',
-      'A->1' => 'notify_by_email'
-    },
+    -flow_into         => { 4 => 'AdvisoryXrefReport' }
   },
   {
-    -logic_name        => 'EmailReportXrefAdvisory',
-    -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-    -analysis_capacity => 10,
-    -max_retry_count   => 1,
-    -parameters        => {
-      email         => $self->o('email'),
+    -logic_name => 'AdvisoryXrefReport',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::AdvisoryXrefReport',
+    -rc_name    => 'small'
+  },
+  {
+    -logic_name => 'EmailAdvisoryXrefReport',
+    -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::EmailAdvisoryXrefReport',
+    -parameters => {
+      email        => $self->o('email'),
       pipeline_name => $self->o('pipeline_name'),
     },
+    -rc_name    => 'small',
+    -flow_into  => { 1 => 'notify_by_email' }
   },
   {
     -logic_name => 'notify_by_email',
     -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::EmailNotification',
     -parameters => {
       email        => $self->o('email'),
-      subject      => 'Xref Process finished',
+      pipeline_name => $self->o('pipeline_name')
     },
     -rc_name    => 'small'
   }
@@ -369,7 +380,8 @@ sub pipeline_create_commands {
 
   return [
     @{$self->SUPER::pipeline_create_commands},
-    $self->db_cmd('CREATE TABLE updated_species (species_name varchar(255) NOT NULL)')
+    $self->db_cmd('CREATE TABLE updated_species (species_name varchar(255) NOT NULL)'),
+    $self->db_cmd('CREATE TABLE advisory_dc_report (db_name varchar(255) NOT NULL, datacheck_name varchar(255), datacheck_output MEDIUMTEXT)')
   ];
 }
 
