@@ -153,12 +153,23 @@ sub pipeline_analyses {
             },
             -flow_into         => {
                 '2' => WHEN(
-                    '#run_datachecks#'                  => [ 'RunDataChecks' ],
+                    '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
                     '#dump_mysql# && !#run_datachecks#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
             },
+        },
+        {
+            -logic_name        => 'FTPDumpDummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count   => 1,
+            -analysis_capacity => 1,
+            -parameters        => {},
+            -flow_into         => {
+                '1->A' => [ 'RunDataChecks' ],
+                'A->1' => [ 'SpeciesFactory' ],
+            }
         },
         {
             -logic_name        => 'RunDataChecks',
@@ -174,13 +185,6 @@ sub pipeline_analyses {
                 datacheck_groups => $self->o('datacheck_groups'),
                 datacheck_types  => $self->o('datacheck_types'),
                 failures_fatal   => 1,
-            },
-            -flow_into         => {
-                '3' => WHEN('#dump_mysql#' =>
-                    [ 'MySQL_TXT', 'SpeciesFactory' ],
-                    ELSE
-                        [ 'SpeciesFactory' ]
-                )
             },
         },
         {
@@ -650,7 +654,7 @@ sub pipeline_analyses {
                 cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
             },
             -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => [ 'README' ]),
-            -rc_name           => "dm"
+            -rc_name       => "dm"
         },
         {
             -logic_name        => 'README',
