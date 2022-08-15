@@ -36,8 +36,6 @@ sub run {
 
   # Add report parameters into hive db
   my $dbname = $datacheck_params->{dba_params}->{-DBNAME};
-  $datacheck_output =~ s/\n/<br>/g;
-  $datacheck_output =~ s/\s/&nbsp;/g;
   my $hive_sth = $hive_dbi->prepare("INSERT INTO advisory_dc_report (db_name, datacheck_name, datacheck_output) VALUES (?,?,?)");
   $hive_sth->execute($dbname, $datacheck_name, $datacheck_output);
 }

@@ -338,6 +338,7 @@ sub pipeline_analyses {
     -parameters => {
       email        => $self->o('email'),
       pipeline_name => $self->o('pipeline_name'),
+      base_path => $self->o('base_path')
     },
     -rc_name    => 'small',
     -flow_into  => { 1 => 'notify_by_email' }

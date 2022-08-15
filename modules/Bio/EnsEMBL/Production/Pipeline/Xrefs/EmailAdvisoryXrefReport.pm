@@ -29,6 +29,7 @@ sub fetch_input {
   my ($self) = @_;
 
   my $pipeline_name = $self->param('pipeline_name');
+  my $base_path     = $self->param('base_path');
 
   my %reports;
   my $msg;
@@ -47,16 +48,26 @@ sub fetch_input {
 
   # Construct email report
   if ($reports_failure) {
-    $msg = "Some advisory datachecks have failed for some species in the xref pipeline run ($pipeline_name).<br><br>\n";
+    my $failures_file = $base_path."/dc_report_".$pipeline_name."_".time().".txt";
+    open(my $out_fh, ">", $failures_file) || $self->throw("Could not open $failures_file");
 
-    while (my ($db_name, $dc_values) = each %reports) {
-      $msg .= "<b>For $db_name</b><br><br>\n";
+    $msg = "Some advisory datachecks have failed for the following species in the xref pipeline run ($pipeline_name).<br>\n";
+    $msg .= "<ul>\n";
+      while (my ($db_name, $dc_values) = each %reports) {
+        print $out_fh "\nFor $db_name\n\n";
+        $msg .= "<li>".substr($db_name, 0, index($db_name, '_core_'))."</li>\n";
 
-      while (my ($dc_name, $dc_output) = each %{$dc_values}) {
-        $msg .= "Datacheck <b>$dc_name</b> failed. See full output below:<br>\n";
-        $msg .= $dc_output."<br><br>\n";
+        while (my ($dc_name, $dc_output) = each %{$dc_values}) {
+          print $out_fh "Datacheck $dc_name failed. See full output below:\n";
+          print $out_fh $dc_output."\n\n";
+        }
       }
-    }
+    $msg .= "</ul>\n";
+    $msg .= "DC failures details attached in this email\n";
+
+    close($out_fh);
+
+    push @{$self->param('attachments')}, $failures_file;
   } else {
     $msg = "Advisory datachecks have all succeeded for all species in the xref pipeline run ($pipeline_name).<br><br>\n";
   }
