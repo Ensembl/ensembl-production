@@ -84,7 +84,7 @@ sub run {
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
   my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id");
-  my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $preparse, $release_file);
+  my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $release_file);
   $select_source_sth->execute();
   $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$clean_file_name, \$db, \$priority, \$preparse, \$release_file);
 
