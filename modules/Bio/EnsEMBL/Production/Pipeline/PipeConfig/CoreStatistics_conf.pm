@@ -159,7 +159,7 @@ sub pipeline_analyses {
       -hive_capacity   => 50,
       -batch_size      => 10,
       -flow_into       => WHEN(
-                            '#species# ~~ @{#forced_species#}' || '#datachecks_failed#'=>
+                            '#species# ~~ @{#forced_species#} || #datachecks_failed#'=>
                             [
                               'CodingDensity',
                               'PseudogeneDensity',
@@ -186,7 +186,7 @@ sub pipeline_analyses {
       -rc_name         => '2GB',
       -flow_into       => {
                             '1->A' => WHEN(
-                              '#species# ~~ @{#forced_species#}' || '#datachecks_failed#' => [
+                              '#species# ~~ @{#forced_species#} || #datachecks_failed#' => [
                                 'ConstitutiveExons',
                                 'GeneCount',
                                 'GeneGC',
@@ -194,7 +194,7 @@ sub pipeline_analyses {
                               ]
                             ),
                             'A->1' => WHEN(
-                              '#species# ~~ @{#forced_species#}' || '#datachecks_failed#' => ['GenomeStats']
+                              '#species# ~~ @{#forced_species#} || #datachecks_failed#' => ['GenomeStats']
                             ),
                           },
     },
