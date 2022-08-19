@@ -62,6 +62,8 @@ sub default_options {
     pepstats_binary => 'pepstats',
 
     history_file => undef,
+    forced_species => [],
+    run_all_forced => 0,
   };
 }
 
@@ -73,6 +75,7 @@ sub pipeline_wide_parameters {
     release     => $self->o('release'),
     bin_count   => $self->o('bin_count'),
     max_run     => $self->o('max_run'),
+    forced_species => $self->o('forced_species')
   };
 }
 
@@ -157,7 +160,7 @@ sub pipeline_analyses {
       -hive_capacity   => 50,
       -batch_size      => 10,
       -flow_into       => WHEN(
-                            '#datachecks_failed#' =>
+                            '#run_all_forced# || #species# ~~ @{#forced_species#} || #datachecks_failed#'=>
                             [
                               'CodingDensity',
                               'PseudogeneDensity',
@@ -184,7 +187,7 @@ sub pipeline_analyses {
       -rc_name         => '2GB',
       -flow_into       => {
                             '1->A' => WHEN(
-                              '#datachecks_failed#' => [
+                              '#run_all_forced# || #species# ~~ @{#forced_species#} || #datachecks_failed#' => [
                                 'ConstitutiveExons',
                                 'GeneCount',
                                 'GeneGC',
@@ -192,7 +195,7 @@ sub pipeline_analyses {
                               ]
                             ),
                             'A->1' => WHEN(
-                              '#datachecks_failed#' => ['GenomeStats']
+                              '#run_all_forced# || #species# ~~ @{#forced_species#} || #datachecks_failed#' => ['GenomeStats']
                             ),
                           },
     },
