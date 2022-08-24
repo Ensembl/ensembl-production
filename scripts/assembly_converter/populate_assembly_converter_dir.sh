@@ -16,8 +16,8 @@
 
 base_src=/hps/nobackup/flicek/ensembl/production/release_dumps
 base_dest=/hps/nobackup/flicek/ensembl/production/release_dumps/assembly_converter
-vert_ftp=/nfs/ensemblftp/PUBLIC/pub
-non_vert_ftp=/nfs/ensemblgenomes/ftp/pub
+vert_ftp=/nfs/ftp/ensemblftp/ensembl/PUBLIC/pub
+non_vert_ftp=/nfs/ftp/ensemblftp/ensemblgenomes/pub/
 testing=false
 
 

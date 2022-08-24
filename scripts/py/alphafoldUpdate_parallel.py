@@ -15,11 +15,13 @@
 # limitations under the License.
 
 # Print help:
-#   python alphafoldUpdate.py -h
+#   python alphafoldUpdate_parallel.py -h
 
-#usage: alphafoldUpdate.py [-h] [--tmp-dir TMP_DIR] [-v] tarfile_name
+#usage: alphafoldUpdate_parallel.py [-h] [--tmp-dir TMP_DIR] [-v] tarfile_name
 #
 #PDB file extractor and alphamapping file generator
+#This version spawns off MAX_WORKERS processes
+#The value of MAX_WORKERS is hardcoded 32 - optimised for 8 threads per 4 cpus
 #
 #positional arguments:
 #  tarfile_name       Full path/filename to AlphaFold TAR archive containing PDB files
@@ -41,7 +43,10 @@ import glob
 import gzip
 from os.path import exists as file_exists
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 from typing import Any, List, Dict
+
+MAX_WORKERS=32 # 8 * 4 processors
 
 TARFILE_RE = re.compile(r'(UP.*)\.tar')
 ALPHA_MAP_RE = re.compile(r'^DBREF')
@@ -72,19 +77,25 @@ def get_af_metadata(tarfile: str, metadata_url: str = METADATA_URL) -> Dict[str,
             break
     return af_metadata
 
-
-def get_alphamapping(work_dir: str) -> List[str]:
+def grep_alphamap(filename: str) -> List[str]:
     alpha_mappings = []
-    files = glob.glob(work_dir + '/*.pdb.gz')
-    for f in files:
-        f_name = os.path.basename(f)[:-len('.gz')]
-        with gzip.open(f, 'rt') as gfh:
-            for line in gfh:
-                if ALPHA_MAP_RE.match(line):
-                    my_line = f"{f_name}:{line}"
-                    alpha_mappings.append(my_line)
+    f_name = os.path.basename(filename)[:-len('.gz')]
+
+    with gzip.open(filename, 'rt') as gfh:
+        for line in gfh:
+            if ALPHA_MAP_RE.match(line):
+                alpha_mappings.append(f"{f_name}:{line}")
+
     return alpha_mappings
 
+def get_alphamapping_parallel(work_dir: str) -> List[str]:
+    """
+    Create a process pool and get the AF mappings from specified files
+    """
+    filename_list = glob.glob(work_dir + '/*.pdb.gz')
+
+    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        return executor.map(grep_alphamap, filename_list, timeout=60)
 
 def dump_alphamapping(amap_list: List[str], work_dir: str, out_file_name: str = 'alpha_mappings.txt') -> None:
     full_outfile = work_dir + '/' + out_file_name
@@ -160,7 +171,8 @@ def main():
     shutil.unpack_archive(args.tarfile_name, temp_dir.name)
 
     # Read through the PDB files and extract mapping info
-    alpha_mapping = get_alphamapping(temp_dir.name)
+    alpha_res = get_alphamapping_parallel(temp_dir.name)
+    alpha_mapping = [ a_map for f_map in alpha_res for a_map in f_map ]
 
     # Write out alphamapping.txt file
     dump_alphamapping(alpha_mapping, out_dir)
