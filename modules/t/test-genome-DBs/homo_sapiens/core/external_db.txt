@@ -558,3 +558,4 @@ The main requirement behind this entry, is to be able to link TAIR GO annotation
 50745	BROAD_M_violaceum	1	KNOWNXREF	0	Broad Institute	MISC	\N	\N	Broad Institute Microbotryum violaceum Database
 50746	BROAD_M_violaceum_GENE	1	KNOWNXREF	0	Broad Institute	PRIMARY_DB_SYNONYM	\N	\N	Broad Institute Microbotryum violaceum Database
 50747	BROAD_M_violaceum_TRANSCRIPT	1	KNOWNXREF	0	Broad Institute	PRIMARY_DB_SYNONYM	\N	\N	Broad Institute Microbotryum violaceum Database
+50748	GeneCards	\N	XREF	50	GeneCards	MISC	\N	\N	\N
