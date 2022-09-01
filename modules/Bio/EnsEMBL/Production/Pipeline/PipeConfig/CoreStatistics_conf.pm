@@ -63,6 +63,7 @@ sub default_options {
 
     history_file => undef,
     forced_species => [],
+    include_readthrough => 0,
     run_all_forced => 0,
   };
 }
@@ -215,6 +216,9 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
       -max_retry_count => 1,
       -hive_capacity   => 50,
+      -parameters      => {
+                            include_readthrough => $self->o('include_readthrough'),
+                          },
       -flow_into       => {
                              '1' => ['GeneCounts_Datacheck'],
                             '-1' => ['GeneCount_HighMem'],

@@ -30,6 +30,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 sub run {
   my ($self) = @_;
   my $species    = $self->param('species');
+  my $include_readthrough = $self->param('include_readthrough');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
@@ -41,7 +42,7 @@ sub run {
   my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
   $has_readthrough = 1 if @readthroughs;
 
-  my %attrib_codes = $self->get_attrib_codes($has_readthrough);
+  my %attrib_codes = $self->get_attrib_codes($has_readthrough, $include_readthrough);
   $self->delete_old_attrib($dba, %attrib_codes);
   $self->delete_old_stats($dba, %attrib_codes);
   
@@ -115,9 +116,9 @@ sub run {
 }
 
 sub get_attrib_codes {
-  my ($self, $has_readthrough) = @_;
+  my ($self, $has_readthrough, $include_readthrough) = @_;
   my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'noncoding_cnt_s', 'noncoding_cnt_l', 'noncoding_cnt_m');
-  if ($has_readthrough) {
+  if ($has_readthrough && $include_readthrough) {
     push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'noncoding_rcnt_s', 'noncoding_rcnt_l', 'noncoding_rcnt_m');
   }
   my %biotypes;
