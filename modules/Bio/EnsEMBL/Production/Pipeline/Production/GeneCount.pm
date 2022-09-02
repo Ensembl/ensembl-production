@@ -46,7 +46,7 @@ sub run {
   $self->delete_old_attrib($dba, %attrib_codes);
   $self->delete_old_stats($dba, %attrib_codes);
   
-  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
+  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough, $include_readthrough);
   $self->delete_old_attrib($dba, %alt_attrib_codes);
   $self->delete_old_stats($dba, %alt_attrib_codes);
   
