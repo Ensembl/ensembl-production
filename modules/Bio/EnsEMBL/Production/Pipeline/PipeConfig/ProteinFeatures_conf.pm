@@ -66,7 +66,7 @@ sub default_options {
     # mapping between InterPro and GO terms, so that we can transitively
     # annotate GO xrefs. Optionally, we may also want a mapping between
     # UniParc and UniProt IDs, in order to create UniProt xrefs.
-     => '/nfs/ftp/public/databases/interpro/current_release',
+    interpro_ebi_path => '/nfs/ftp/public/databases/interpro/current_release',
     interpro_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current_release',
     uniparc_ebi_path  => '/nfs/ftp/public/contrib/uniparc',
     uniparc_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/contrib/uniparc',
