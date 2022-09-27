@@ -64,6 +64,7 @@ sub default_options {
     history_file => undef,
     forced_species => [],
     include_readthrough => 0,
+    exclude_species_readthrough => ['homo_sapiens', 'mus_musculus', ],
     run_all_forced => 0,
   };
 }
@@ -218,6 +219,7 @@ sub pipeline_analyses {
       -hive_capacity   => 50,
       -parameters      => {
                             include_readthrough => $self->o('include_readthrough'),
+			    exclude_species_readthrough => $self->o('exclude_species_readthrough'),
                           },
       -flow_into       => {
                              '1' => ['GeneCounts_Datacheck'],
@@ -230,6 +232,10 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::GeneCount',
       -max_retry_count => 1,
       -hive_capacity   => 50,
+      -parameters      => {
+                            include_readthrough => $self->o('include_readthrough'),
+			    exclude_species_readthrough => $self->o('exclude_species_readthrough'),
+                          },      
       -rc_name         => '8GB',
       -flow_into       => ['GeneCounts_Datacheck'],
     },
