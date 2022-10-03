@@ -30,7 +30,6 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 sub run {
   my ($self) = @_;
   my $species    = $self->param('species');
-  my $include_readthrough = $self->param('include_readthrough');
   my $exclude_species_readthrough = $self->param('exclude_species_readthrough');
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
@@ -42,23 +41,11 @@ sub run {
   my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
   $has_readthrough = 1 if @readthroughs;
   
-  #check if species in eclude_species_readthrough list and clean the old readthrough stats if exists
-  if ( $species ~~ @{$exclude_species_readthrough} ) {
-     #get all attributes including readcount and delete the old stats for exclude species
-     my %exclude_species_attrib_codes = $self->get_attrib_codes($has_readthrough, 1);
-     $self->delete_old_stats($dba, %exclude_species_attrib_codes);
-
-     my %exclude_species_alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough, 1);
-     $self->delete_old_stats($dba, %exclude_species_alt_attrib_codes);
-     $has_readthrough = 0 ;
-     $include_readthrough = 0 ; 
-  }
-
-  my %attrib_codes = $self->get_attrib_codes($has_readthrough, $include_readthrough);
+  my %attrib_codes = $self->get_attrib_codes($has_readthrough);
   $self->delete_old_attrib($dba, %attrib_codes);
   $self->delete_old_stats($dba, %attrib_codes);
   
-  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough, $include_readthrough);
+  my %alt_attrib_codes = $self->get_alt_attrib_codes($has_readthrough);
   $self->delete_old_attrib($dba, %alt_attrib_codes);
   $self->delete_old_stats($dba, %alt_attrib_codes);
   
@@ -118,7 +105,16 @@ sub run {
       }
     }    
   }
-  
+
+  #check if species in eclude_species_readthrough list and substract coding_rcnt value from coding_cnt
+  if ( $species ~~ @{$exclude_species_readthrough} ) {
+
+	if(exists $stats_hash{'coding_cnt'} && exists $stats_hash{'coding_rcnt'}){
+
+          $stats_hash{'coding_cnt'} = $stats_hash{'coding_cnt'} - $stats_hash{'coding_rcnt'};
+  	} 
+  }
+
   $self->store_statistics($species, \%stats_hash, \%stats_attrib);
 
   # disconnecting from the registry
@@ -128,9 +124,9 @@ sub run {
 }
 
 sub get_attrib_codes {
-  my ($self, $has_readthrough, $include_readthrough) = @_;
+  my ($self, $has_readthrough) = @_;
   my @attrib_codes = ('coding_cnt', 'pseudogene_cnt', 'noncoding_cnt_s', 'noncoding_cnt_l', 'noncoding_cnt_m');
-  if ($has_readthrough && $include_readthrough) {
+  if ($has_readthrough) {
     push @attrib_codes, ('coding_rcnt', 'pseudogene_rcnt', 'noncoding_rcnt_s', 'noncoding_rcnt_l', 'noncoding_rcnt_m');
   }
   my %biotypes;
@@ -144,9 +140,9 @@ sub get_attrib_codes {
 }
 
 sub get_alt_attrib_codes {
-  my ($self, $has_readthrough, $include_readthrough) = @_;
+  my ($self, $has_readthrough) = @_;
   my @alt_attrib_codes = ('coding_acnt', 'pseudogene_acnt', 'noncoding_acnt_s', 'noncoding_acnt_l', 'noncoding_acnt_m');
-  if ($has_readthrough && $include_readthrough ) {
+  if ($has_readthrough) {
     push @alt_attrib_codes, ('coding_racnt', 'pseudogene_racnt', 'noncoding_racnt_s', 'noncoding_racnt_l', 'noncoding_racnt_m');
   }
   my %biotypes;
