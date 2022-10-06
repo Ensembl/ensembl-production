@@ -45,7 +45,7 @@ from typing import Any, List, Dict
 
 TARFILE_RE = re.compile(r'(UP.*)\.tar')
 ALPHA_MAP_RE = re.compile(r'^DBREF')
-METADATA_URL = "http://ftp.ebi.ac.uk/pub/databases/alphafold/download_metadata.json"
+METADATA_URL = "https://ftp.ebi.ac.uk/pub/databases/alphafold/download_metadata.json"
 
 UNSAFE = True
 

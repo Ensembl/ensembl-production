@@ -62,7 +62,7 @@ my @a_dbIds = qw( 2000 2001 2200 2201 2202 2250 );
 my @a_deletedIds = qw(delac_sp.txt
                       delac_tr.txt.gz);
 
-my $uniprot_ftp="ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/";
+my $uniprot_ftp="https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/docs/";
 
 # Check that the biotype list below is up to date by running the following MySQL query on the human database:
 #select count(*),t.biotype from protein_align_feature paf,supporting_feature sf,exon e,exon_transcript et,transcript t,analysis a where paf.protein_align_feature_id=sf.feature_id and sf.feature_type='protein_align_feature' and sf.exon_id=e.exon_id and e.exon_id=et.exon_id and et.transcript_id=t.transcript_id and a.analysis_id = paf.analysis_id AND (a.logic_name LIKE "uniprot%havana" OR paf.external_db_id IN (2000,2001,2200,2201,2202,2250) AND a.logic_name NOT LIKE "uniprot%") group by t.biotype;

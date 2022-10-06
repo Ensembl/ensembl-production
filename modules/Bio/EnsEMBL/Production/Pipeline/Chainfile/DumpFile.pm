@@ -24,7 +24,7 @@ Bio::EnsEMBL::Production::Pipeline::Chainfile::DumpFile
 =head1 DESCRIPTION
 
 Generate the assembly chain files, which is made available via the ftp site
-eg: ftp://ftp.ensemblgenomes.org/pub/metazoa/release-30/assembly_chain/
+eg: https://ftp.ensemblgenomes.org/pub/metazoa/release-30/assembly_chain/
 
 Logic adapted from script:
 ensembl/misc-scripts/assembly/ensembl_assembly_to_chain.pl

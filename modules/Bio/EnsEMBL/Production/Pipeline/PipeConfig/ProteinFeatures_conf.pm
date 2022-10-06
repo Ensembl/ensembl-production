@@ -67,11 +67,11 @@ sub default_options {
     # annotate GO xrefs. Optionally, we may also want a mapping between
     # UniParc and UniProt IDs, in order to create UniProt xrefs.
     interpro_ebi_path => '/nfs/ftp/public/databases/interpro/current',
-    interpro_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/interpro/current',
+    interpro_ftp_uri  => 'https://ftp.ebi.ac.uk/pub/databases/interpro/current',
     uniparc_ebi_path  => '/nfs/ftp/public/contrib/uniparc',
-    uniparc_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/contrib/uniparc',
+    uniparc_ftp_uri   => 'https://ftp.ebi.ac.uk/pub/contrib/uniparc',
     uniprot_ebi_path  => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping',
-    uniprot_ftp_uri   => 'ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping',
+    uniprot_ftp_uri   => 'https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping',
 
     interpro_file    => 'names.dat',
     interpro2go_file => 'interpro2go',

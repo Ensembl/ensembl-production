@@ -2002,7 +2002,7 @@
 109295	44324	"codon_variant" []	EXACT	
 109296	44325	"initiatior codon variant" []	EXACT	
 109297	44325	"initiator codon change" []	EXACT	
-109298	44326	"missense" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109298	44326	"missense" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109299	44326	"missense codon" []	EXACT	
 109300	44327	"conservative missense codon" []	EXACT	
 109301	44327	"conservative missense variant" []	EXACT	
@@ -2011,7 +2011,7 @@
 109304	44328	"non conservative missense codon" []	EXACT	
 109305	44328	"non conservative missense variant" []	EXACT	
 109310	44330	"frameshift variant" []	EXACT	
-109311	44330	"frameshift_" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109311	44330	"frameshift_" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109312	44330	"frameshift_coding" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109313	44331	"terminal codon variant" []	EXACT	
 109314	44331	"terminal_codon_variant" []	EXACT	
@@ -2060,15 +2060,15 @@
 109357	44364	"5'UTR variant" []	EXACT	
 109358	44364	"5PRIME_UTR" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109359	44364	"five prime UTR variant" []	EXACT	
-109360	44364	"untranslated-5" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109360	44364	"untranslated-5" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109361	44365	"3'UTR variant" []	EXACT	
 109362	44365	"3PRIME_UTR" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109363	44365	"three prime UTR variant" []	EXACT	
-109364	44365	"untranslated-3" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109364	44365	"untranslated-3" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109365	44366	"incomplete terminal codon variant" []	EXACT	
 109366	44366	"partial_codon" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109367	44367	"intron variant" []	EXACT	
-109368	44367	"intron_" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109368	44367	"intron_" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109369	44367	"intronic" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109370	44368	"intergenic" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109371	44368	"intergenic variant" []	EXACT	
@@ -2081,11 +2081,11 @@
 109378	44373	"downstream" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109379	44373	"within 5KB downstream" []	RELATED	
 109380	44374	"500B downstream variant" []	EXACT	
-109381	44374	"near-gene-3" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109381	44374	"near-gene-3" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109382	44375	"5kb upstream variant" []	EXACT	
 109383	44375	"upstream" [http://ensembl.org/info/docs/variation/index.html]	EXACT	
 109384	44376	"2KB upstream variant" []	EXACT	
-109385	44376	"near-gene-5" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109385	44376	"near-gene-5" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109386	44377	"rDNA" []	EXACT	
 109387	44377	"rRNA gene" []	EXACT	
 109388	44378	"piRNA gene" []	EXACT	
@@ -2219,7 +2219,7 @@
 109617	44551	"coding variant quality" []	EXACT	
 109618	44553	"non synonymous" []	RELATED	
 109619	44555	"protein altering variant" []	EXACT	
-109620	44556	"coding-synon" [ftp://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
+109620	44556	"coding-synon" [https://ftp.ncbi.nih.gov/snp/specs/docsum_3.1.xsd]	EXACT	
 109621	44556	"silent mutation" []	RELATED	
 109622	44556	"silent substitution" []	RELATED	
 109623	44556	"silent_mutation" []	RELATED	

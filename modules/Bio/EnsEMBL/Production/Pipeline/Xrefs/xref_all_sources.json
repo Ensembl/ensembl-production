@@ -16,14 +16,14 @@
     {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
+      "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
       "db" : "checksum",
       "priority" : 1
     },
     {
       "name" : "RNACentral",
       "parser" : "ChecksumParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
       "db" : "checksum",
       "priority" : 1
     },
@@ -42,7 +42,7 @@
     {
       "name" : "EntrezGene",
       "parser" : "EntrezGeneParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
       "priority" : 1
     },
     {
@@ -66,13 +66,13 @@
     {
       "name" : "MGI_ccds",
       "parser" : "MGI_CCDS_Parser",
-      "file" : "http://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_mouse/CCDS.current.txt",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_mouse/CCDS.current.txt",
       "priority" : 2
     },
     {
       "name" : "MIM2GENE",
       "parser" : "Mim2GeneParser",
-      "file" : "http://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen",
       "priority" : 3
     },
     {
@@ -84,7 +84,7 @@
     {
       "name" : "RFAM",
       "parser" : "RFAMParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.seed.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.seed.gz",
       "db" : "core",
       "priority" : 1
     },
@@ -112,11 +112,11 @@
       "name" : "RefSeq_dna",
       "parser" : "RefSeqDatabaseParser",
       "old_parser" : "RefSeqGPFFParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete*rna.gbff.gz",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
-      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "release" : "https://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
       "preparse" : 1,
       "priority" : 2
     },
@@ -124,11 +124,11 @@
       "name" : "RefSeq_peptide",
       "parser" : "RefSeqDatabaseParser",
       "old_parser" : "RefSeqGPFFParser",
-      "file" : "ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant*protein.gpff.gz",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.nonredundant*protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
-      "release" : "ftp://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "release" : "https://ftp.ncbi.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
       "preparse" : 1,
       "priority" : 3
     },
@@ -157,30 +157,30 @@
       "name" : "Uniprot/SWISSPROT",
       "parser" : "UniProtDatabaseParser",
       "old_parser" : "UniProtParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "preparse" : 1,
-      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
       "name" : "Uniprot/SPTREMBL",
       "parser" : "UniProtDatabaseParser",
       "old_parser" : "UniProtParser",
-      "file" : "ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "preparse" : 1,
-      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
       "name" : "VGNC",
       "parser" : "VGNCParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/vgnc_gene_set_All.txt.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/genenames/vgnc/tsv/vgnc_gene_set_All.txt.gz",
       "priority" : 1
     },
     {
@@ -216,13 +216,13 @@
     {
       "name" : "cint_jgi_v1",
       "parser" : "JGI_ProteinParser",
-      "file" : "http://ftp.ensembl.org/pub/misc/cint_jgi/v1/ciona.prot.fasta.gz",
+      "file" : "https://ftp.ensembl.org/pub/misc/cint_jgi/v1/ciona.prot.fasta.gz",
       "priority" : 1
     },
     {
       "name" : "Xenbase",
       "parser" : "XenopusJamboreeParser",
-      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
+      "file" : "https://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
       "priority" : 1
     },
     {

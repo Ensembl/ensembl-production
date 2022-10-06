@@ -36,8 +36,8 @@ sub default_options {
         'pipeline_name' => 'datafile_scraper',
         'ftp_dir_ens'   => '/nfs/ensemblftp/PUBLIC/pub',
         'ftp_dir_eg'    => '/nfs/ensemblgenomes/ftp/pub',
-        'ftp_url_ens'   => 'ftp://ftp.ensembl.org/pub',
-        'ftp_url_eg'    => 'ftp://ftp.ensemblgenomes.org/pub',
+        'ftp_url_ens'   => 'https://ftp.ensembl.org/pub',
+        'ftp_url_eg'    => 'https://ftp.ensemblgenomes.org/pub',
     }
 }
 

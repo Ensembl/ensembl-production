@@ -130,7 +130,7 @@ sub prepare_sql {
 
   my ($self, $genome_id) = @_;
       # Query suggested by Andy that reproduces assembly reports that we used to get from NCBI
-      #   # (example of NCBI assembly report: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.27_GRCh38.p12/GCA_000001405.27_GRCh38.p12_assembly_report.txt)
+      #   # (example of NCBI assembly report: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.27_GRCh38.p12/GCA_000001405.27_GRCh38.p12_assembly_report.txt)
   
     return "
     select sr.name, CASE WHEN IFNULL(sra3.value, 0) = 0 AND cs.name = 'chromosome' THEN 'assembled-molecule' ELSE 'unlocalized-scaffold' END, sr.name, cs.name, srs1.synonym, '=', srs2.synonym, 'Primary Assembly', sr.length, srs3.synonym

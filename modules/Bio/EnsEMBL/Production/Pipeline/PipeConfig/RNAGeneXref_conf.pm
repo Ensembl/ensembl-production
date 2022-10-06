@@ -41,7 +41,7 @@ sub default_options {
     meta_filters => {},
 
     rnacentral_ebi_path => '/nfs/ftp/public/databases/RNAcentral/current_release/md5',
-    rnacentral_ftp_uri  => 'ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5',
+    rnacentral_ftp_uri  => 'https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5',
     rnacentral_file     => 'md5.tsv.gz',
 
     rnacentral_file_local => catdir($self->o('pipeline_dir'), $self->o('rnacentral_file')),
