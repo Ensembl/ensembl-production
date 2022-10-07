@@ -112,7 +112,11 @@ sub run {
 	if(exists $stats_hash{'coding_cnt'} && exists $stats_hash{'coding_rcnt'}){
 
           $stats_hash{'coding_cnt'} = $stats_hash{'coding_cnt'} - $stats_hash{'coding_rcnt'};
-  	} 
+  	}
+        if(exists $stats_hash{'coding_acnt'} && exists $stats_hash{'coding_racnt'}){
+
+          $stats_hash{'coding_acnt'} = $stats_hash{'coding_acnt'} - $stats_hash{'coding_racnt'};
+        }	
   }
 
   $self->store_statistics($species, \%stats_hash, \%stats_attrib);
