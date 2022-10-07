@@ -42,7 +42,7 @@ my $fetcher = Bio::EnsEMBL::Production::Search::GeneFetcher->new();
 
 my $genes = $fetcher->fetch_genes_for_dba($core_dba, undef, $funcgen_dba);
 is(scalar(@$genes), 88, "Correct number of genes");
-=head
+
 my $genes_file_in = "41-searchdumps_reformat_advsearch_genes_in.json";
 open my $genes_file, ">", $genes_file_in;
 print $genes_file encode_json($genes);
@@ -68,7 +68,7 @@ is(scalar(@$r_genes), 88, "Correct number of genes");
 unlink $genome_file_out;
 unlink $genes_file_out;
 unlink $genes_file_in;
-
+=head
 my $probe_fetcher  = Bio::EnsEMBL::Production::Search::ProbeFetcher->new();
 my $out = $probe_fetcher->fetch_probes_for_dba( $funcgen_dba, $core_dba, 0, 21000000);
 my $probes_file_in = "41-searchdumps_reformat_advsearch_probes_in.json";
