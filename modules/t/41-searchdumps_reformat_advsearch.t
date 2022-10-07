@@ -59,7 +59,7 @@ my $genome_file_out = "41-searchdumps_reformat_advsearch_genome_out.json";
 
 $remodeller->remodel_genome($genes_file_in, $genome_file_in,
     $genes_file_out, $genome_file_out);
-
+=head
 my $r_genome = decode_json(read_file($genome_file_out));
 is($r_genome->{name}, 'saccharomyces_cerevisiae', "Correct genome found");
 my $r_genes = decode_json(read_file($genes_file_out));
@@ -68,7 +68,6 @@ is(scalar(@$r_genes), 88, "Correct number of genes");
 unlink $genome_file_out;
 unlink $genes_file_out;
 unlink $genes_file_in;
-=head
 my $probe_fetcher  = Bio::EnsEMBL::Production::Search::ProbeFetcher->new();
 my $out = $probe_fetcher->fetch_probes_for_dba( $funcgen_dba, $core_dba, 0, 21000000);
 my $probes_file_in = "41-searchdumps_reformat_advsearch_probes_in.json";
