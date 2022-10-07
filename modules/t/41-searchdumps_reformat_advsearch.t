@@ -53,7 +53,7 @@ print $genome_file
     q/{"species_id":"1","organism":{"taxonomy_id":"559292","display_name":"Saccharomyces cerevisiae S288c","scientific_name":"Saccharomyces cerevisiae S288c","species_taxonomy_id":"4932","serotype":null,"aliases":["S_cerevisiae","Saccharomyces cerevisiae","Saccharomyces cerevisiae (Baker's yeast)","Saccharomyces cerevisiae S288c"],"strain":"S288C","name":"saccharomyces_cerevisiae"},"reference":null,"genebuild":"2011-09-SGD","id":"saccharomyces_cerevisiae","dbname":"saccharomyces_cerevisiae_core_88_4","assembly":{"accession":"GCA_000146045.2","name":"R64-1-1","level":"chromosome"},"division":"Ensembl"}/;
 close $genome_file;
 my $remodeller = Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
-=head
+
 my $genes_file_out = "41-searchdumps_reformat_advsearch_genes_out.json";
 my $genome_file_out = "41-searchdumps_reformat_advsearch_genome_out.json";
 
@@ -68,6 +68,7 @@ is(scalar(@$r_genes), 88, "Correct number of genes");
 unlink $genome_file_out;
 unlink $genes_file_out;
 unlink $genes_file_in;
+=head
 my $probe_fetcher  = Bio::EnsEMBL::Production::Search::ProbeFetcher->new();
 my $out = $probe_fetcher->fetch_probes_for_dba( $funcgen_dba, $core_dba, 0, 21000000);
 my $probes_file_in = "41-searchdumps_reformat_advsearch_probes_in.json";
