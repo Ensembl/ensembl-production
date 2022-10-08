@@ -50,7 +50,7 @@ close $genes_file;
 my $genome_file_in = "41-searchdumps_reformat_advsearch_genome_in.json";
 open my $genome_file, ">", $genome_file_in;
 print $genome_file
-    q/{"species_id":"1","organism":{"taxonomy_id":"559292","display_name":"Saccharomyces cerevisiae S288c","scientific_name":"Saccharomyces cerevisiae S288c","species_taxonomy_id":"4932","serotype":null,"aliases":["S_cerevisiae","Saccharomyces cerevisiae","Saccharomyces cerevisiae (Baker's yeast)","Saccharomyces cerevisiae S288c"],"strain":"S288C","name":"saccharomyces_cerevisiae"},"reference":null,"genebuild":"2011-09-SGD","id":"saccharomyces_cerevisiae","dbname":"saccharomyces_cerevisiae_core_88_4","assembly":{"accession":"GCA_000146045.2","name":"R64-1-1","level":"chromosome"},"division":"Ensembl"}/;
+    q/{"species_id":"1","organism":{"taxonomy_id":"559292","display_name":"Saccharomyces cerevisiae S288c","scientific_name":"Saccharomyces cerevisiae S288c","species_taxonomy_id":"4932","serotype":"","aliases":["S_cerevisiae","Saccharomyces cerevisiae","Saccharomyces cerevisiae (Baker's yeast)","Saccharomyces cerevisiae S288c"],"strain":"S288C","name":"saccharomyces_cerevisiae"},"reference":"","genebuild":"2011-09-SGD","id":"saccharomyces_cerevisiae","dbname":"saccharomyces_cerevisiae_core_88_4","assembly":{"accession":"GCA_000146045.2","name":"R64-1-1","level":"chromosome"},"division":"Ensembl"}/;
 close $genome_file;
 my $remodeller = Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
 
