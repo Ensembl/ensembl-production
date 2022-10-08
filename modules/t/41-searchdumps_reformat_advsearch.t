@@ -52,7 +52,7 @@ open my $genome_file, ">", $genome_file_in;
 #print $genome_file
 #    q/{"species_id":"1","organism":{"taxonomy_id":"559292","display_name":"Saccharomyces cerevisiae S288c","scientific_name":"Saccharomyces cerevisiae S288c","species_taxonomy_id":"4932","serotype":"","aliases":["S_cerevisiae","Saccharomyces cerevisiae","Saccharomyces cerevisiae (Baker's yeast)","Saccharomyces cerevisiae S288c"],"strain":"S288C","name":"saccharomyces_cerevisiae"},"reference":"","genebuild":"2011-09-SGD","id":"saccharomyces_cerevisiae","dbname":"saccharomyces_cerevisiae_core_88_4","assembly":{"accession":"GCA_000146045.2","name":"R64-1-1","level":"chromosome"},"division":"Ensembl"}/;
 
-print $genome_file q/{"species_id":"1","organism":{"name":"saccharomyces_cerevisiae"},"genebuild":"2011-09-SGD","id":"saccharomyces_cerevisiae","dbname":"saccharomyces_cerevisiae_core_88_4"}/;
+print $genome_file q/{"species_id":"1","organism":{"name":"saccharomyces_cerevisiae"}}/;
 close $genome_file;
 my $remodeller = Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
 
