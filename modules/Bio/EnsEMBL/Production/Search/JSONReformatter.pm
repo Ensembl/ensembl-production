@@ -38,6 +38,8 @@ our @EXPORT = qw(process_json_file reformat_json);
 
 use Log::Log4perl qw/get_logger/;
 use Carp qw/croak/;
+BEGIN { $ENV{PERL_JSON_BACKEND} = 'JSON::XS' }
+
 use JSON;
 
 my $logger = get_logger();
@@ -59,9 +61,12 @@ sub process_json_file {
   print("json222222222222222222222222222222222222222222222222\n");
   my $n    = 0;
   my $json = new JSON;
+  $json->allow_nonref->escape_slash->encode("/");
+
   {
     local $/ = '}';
     while (<$fh>) {
+     print("...///$_\n");	    
       my $obj = $json->incr_parse($_);
       if ( defined $obj ) {
         $n++;
