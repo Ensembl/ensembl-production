@@ -48,6 +48,7 @@ sub process_json_file {
   print("..............................................");
   print("$file.......production error.......\n");
   # open filehandle
+  print("json1111111111111111111111111111111111111111\n");
   open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
   # seek through whitespace
   my $c;
@@ -55,6 +56,7 @@ sub process_json_file {
   if ( $c ne '[' ) {
     croak "JSON file must contain an array only";
   }
+  print("json222222222222222222222222222222222222222222222222\n");
   my $n    = 0;
   my $json = new JSON;
   {
@@ -70,6 +72,7 @@ sub process_json_file {
       }
     }
   }
+  print("json 3333333333333333333333333333333333\n");
   close $fh;
   $logger->info("Completed processing $n elements from $file");
   return;
