@@ -45,6 +45,8 @@ my $logger = get_logger();
 sub process_json_file {
   my ( $file, $callback ) = @_;
   $logger->info("Processing $file");
+  print("..............................................");
+  print("$file.......production error.......\n");
   # open filehandle
   open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
   # seek through whitespace

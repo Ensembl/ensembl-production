@@ -86,6 +86,7 @@ sub remodel_genome {
     print(%{$genome}, "\n");
     my $n = 0;
     my $genome_gos = {};
+    print("1111111111111111111111111111111111111\n");
     process_json_file(
         $genes_file,
         sub {
