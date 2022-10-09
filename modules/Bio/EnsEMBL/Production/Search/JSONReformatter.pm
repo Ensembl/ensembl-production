@@ -38,7 +38,7 @@ our @EXPORT = qw(process_json_file reformat_json);
 
 use Log::Log4perl qw/get_logger/;
 use Carp qw/croak/;
-BEGIN { $ENV{PERL_JSON_BACKEND} = 'JSON::XS' }
+#BEGIN { $ENV{PERL_JSON_BACKEND} = 'JSON::XS' }
 
 use JSON;
 
