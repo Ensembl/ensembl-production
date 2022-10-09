@@ -105,15 +105,16 @@ sub remodel_genome {
                 }
             }
         });
-
+    print(".............................jjjjjjjjjjjjjjjjjjjjjjjjjjjj............................\n");
     $genome->{GO_genome} = [ keys %$genome_gos ];
     print $out "]";
     close $out;
-
+    print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n");
     open my $gout, ">",
         $genome_out || croak "Could not open $genome_out for writing: $@";
     print $gout encode_json($genome);
     close $gout;
+    print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMmm\n");
     return;
 } ## end sub remodel_genome
 
