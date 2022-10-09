@@ -5,7 +5,6 @@
     "display_name": "Saccharomyces cerevisiae S288c",
     "scientific_name": "Saccharomyces cerevisiae S288c",
     "species_taxonomy_id": "4932",
-    "serotype": null,
     "aliases": [
       "S_cerevisiae",
       "Saccharomyces cerevisiae",
@@ -15,7 +14,6 @@
     "strain": "S288C",
     "name": "saccharomyces_cerevisiae"
   },
-  "reference": null,
   "genebuild": "2011-09-SGD",
   "id": "saccharomyces_cerevisiae",
   "dbname": "saccharomyces_cerevisiae_core_88_4",

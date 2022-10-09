@@ -74,7 +74,7 @@ sub disconnect {
 sub remodel_genome {
     my ($self, $genes_file, $genomes_file, $genes_out, $genome_out) = @_;
     my $genome = decode_json(read_file($genomes_file));
-
+    print("..........................HHHH.............................\n");
     open my $out, ">",
         $genes_out || croak "Could not open $genes_out for writing: $@";
     print $out "[";
@@ -83,6 +83,7 @@ sub remodel_genome {
 
     $genome->{name} ||= $genome->{id};
 
+    print(%{$genome}, "\n");
     my $n = 0;
     my $genome_gos = {};
     process_json_file(
@@ -93,7 +94,7 @@ sub remodel_genome {
             $new_gene->{genome} = $genome->{organism}{name};
             $new_gene->{genome_display} = $genome->{organism}{display_name};
             $new_gene->{taxon_id} = $genome->{organism}{taxonomy_id};
-            $new_gene->{lineage} = $genome->{organism}{lineage};
+	    #$new_gene->{lineage} = $genome->{organism}{lineage};
             if ($n++ > 0) {
                 print $out ",";
             }
