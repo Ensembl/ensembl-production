@@ -61,12 +61,15 @@ sub process_json_file {
   print("json222222222222222222222222222222222222222222222222\n");
   my $n    = 0;
   my $json = new JSON;
-  $json->allow_nonref->escape_slash->encode("\\");
+  $json->allow_nonref->escape_slash->encode('\\');
 
   {
     local $/ = '}';
     while (<$fh>) {
-	    #print("...///$_\n");	    
+	    #print("...///$_\n");
+      s/\\/"/g;
+      #print("-------$_\n");
+           
       my $obj = $json->incr_parse($_);
       if ( defined $obj ) {
         $n++;
