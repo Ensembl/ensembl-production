@@ -59,8 +59,8 @@ my $remodeller = Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new(
 my $genes_file_out = "41-searchdumps_reformat_advsearch_genes_out.json";
 my $genome_file_out = "41-searchdumps_reformat_advsearch_genome_out.json";
 
-$remodeller->remodel_genome($genes_file_in, $genome_file_in,
-    $genes_file_out, $genome_file_out);
+#$remodeller->remodel_genome($genes_file_in, $genome_file_in,
+#    $genes_file_out, $genome_file_out);
 
 
 
