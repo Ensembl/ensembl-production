@@ -74,7 +74,7 @@ sub process_json_file {
     local $/ = '}';
     while (<$fh>) {
 	    #print("...///$_\n");
-      s/\\/"/g;
+      s/\\\\//g;
       #print("-------$_\n");
            
       my $obj = $json->incr_parse($_);

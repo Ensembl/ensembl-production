@@ -49,7 +49,7 @@ open my $genes_file, ">", $genes_file_in;
 print $genes_file encode_json($genes);
 close $genes_file;
 
-my $genes_file_in =dirname(abs_path($0)). "/41-searchdumps_reformat_advsearch_genes_in.json";
+#my $genes_file_in =dirname(abs_path($0)). "/41-searchdumps_reformat_advsearch_genes_in.json";
 
 print("......................file exists.........................\n");
 print($genes_file_in);
