@@ -58,6 +58,7 @@ sub process_json_file {
   {
     local $/ = '}';
     while (<$fh>) {
+      s/\\\\//g;	    
       my $obj = $json->incr_parse($_);
       if ( defined $obj ) {
         $n++;
