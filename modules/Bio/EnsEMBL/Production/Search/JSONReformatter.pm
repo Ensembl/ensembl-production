@@ -54,6 +54,12 @@ sub process_json_file {
   print("file name $file.............\n");
   open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
   # seek through whitespace
+  print("checking........filehandler \n");
+  if($fh){
+    print("filehandler open ..........................\n");	  
+  }else{
+    print("filehadler closed...........................\n");	  
+  }	  
   my $c;
   while ( ( $c = getc($fh) ) =~ m/\s/ ) { }
   if ( $c ne '[' ) {
