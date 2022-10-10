@@ -34,7 +34,10 @@ Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures -
 
 =head1 DESCRIPTION
 
-This module makes protein features based on the AFDB-UniProt mappings found in the EMBL-EBI AFDB SIFTS data and the UniProt-ENSP mappings found in the GIFTS database in order to make the link between AFDB and ENSP having a AFDB entry as a protein feature for a given ENSP protein.
+This module makes protein features based on the AFDB-UniProt mappings found in
+the EMBL-EBI AFDB SIFTS data and the UniProt-ENSP mappings found in the GIFTS
+database in order to make the link between AFDB and ENSP having a AFDB entry as
+a protein feature for a given ENSP protein.
 
 =head1 APPENDIX
 
@@ -48,13 +51,14 @@ package Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFea
 use warnings;
 use strict;
 
-# Bio::DB::HTS::Faidx used in Bio::EnsEMBL::GIFTS::DB needs Perl 5.14.2
-use 5.014002;
 use parent ('Bio::EnsEMBL::Analysis::Runnable');
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
 use Bio::EnsEMBL::Utils::Exception qw(throw);
 use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
 use Bio::EnsEMBL::ProteinFeature;
+use JSON;
+
+use open qw( :std :encoding(UTF-8) );
 
 sub new {
     my ($class,@args) = @_;
@@ -145,33 +149,19 @@ sub fetch_uniprot_ensembl_matches {
 
 =cut
 
-sub parse_afdb_file() {
+sub parse_afdb_file {
   my $self = shift;
 
-  open(my $afdb_fh,'<',$self->{'alpha_path'}) || throw('Cannot open: '.$self->{'alpha_path'});
-  my @afdb_info = ();
-  my $sifts_release_date;
-
-  while (my $line = <$afdb_fh>) {
-
-    # parse a AFDB-UniProt line
-    my ($afdb,undef,$chain,$res_beg,$res_end,undef,$sp_primary,undef,$sp_beg,$sp_end) = split(/\s+/,$line);
-    #my $clean_afdb = $afdb =~ /(AF-\w-\w)-model_\w.pdb:DBREF/g;
-    my ($clean_afdb) = $afdb =~ /(AF-\w+-\w+)-model_\w+.pdb:DBREF/;
-
-    push(@afdb_info,{'AFDB' => $clean_afdb,
-                    'CHAIN' => $chain,
-                    'SP_PRIMARY' => $sp_primary,
-                    'RES_BEG' => $res_beg,
-                    'RES_END' => $res_end,
-                    'SP_BEG' => $sp_beg,
-                    'SP_END' => $sp_end,
-                    'SIFTS_RELEASE_DATE' => $sifts_release_date
-                   }) unless ($sp_beg > $sp_end);
-    # ignore complex AFDB-UniProt mappings that allow SP_BEG > SP_END
+  my $alpha_data;
+  {
+      open(my $fh, '<', $self->{'alpha_path'}) || throw('Cannot open: '.$self->{'alpha_path'});
+      local $/ = undef;
+      $alpha_data = <$fh>;
+      close $fh;
   }
-  close($afdb_fh) || throw('Cannot close '.$self->{'alpha_path'});
-  return \@afdb_info;
+  my $afdb_info = decode_json($alpha_data);
+
+  return $afdb_info;
 }
 
 
