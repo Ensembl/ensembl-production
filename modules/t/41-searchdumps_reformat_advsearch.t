@@ -49,6 +49,11 @@ my $genes_file_in =dirname(abs_path($0)). "/41-searchdumps_reformat_advsearch_ge
 #print $genes_file encode_json($genes);
 #close $genes_file;
 
+print("......................file exists.........................\n");
+print($genes_file_in);
+#print(":::", exists $genes_file_in);
+print("\n..................................\n");
+
 
 my $genome_file_in = dirname(abs_path($0))."/41-searchdumps_reformat_advsearch_genome_in.json";
 #open my $genome_file, ">", $genome_file_in;

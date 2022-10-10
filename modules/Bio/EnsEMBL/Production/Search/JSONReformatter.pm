@@ -51,6 +51,7 @@ sub process_json_file {
   print("$file.......production error.......\n");
   # open filehandle
   print("json1111111111111111111111111111111111111111\n");
+  print("file name $file.............\n");
   open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
   # seek through whitespace
   my $c;
