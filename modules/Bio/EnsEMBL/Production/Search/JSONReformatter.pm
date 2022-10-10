@@ -52,7 +52,7 @@ sub process_json_file {
   # open filehandle
   print("json1111111111111111111111111111111111111111\n");
   print("file name $file.............\n");
-  open my $fh, "<", $file || croak "Could not open $file for reading: " . @_;
+  open my $fh, "<", $file || die "Could not open $file for reading: " . @_;
   # seek through whitespace
   print("checking........filehandler \n");
   if($fh){

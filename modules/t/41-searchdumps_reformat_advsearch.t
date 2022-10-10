@@ -44,10 +44,12 @@ my $fetcher = Bio::EnsEMBL::Production::Search::GeneFetcher->new();
 my $genes = $fetcher->fetch_genes_for_dba($core_dba, undef, $funcgen_dba);
 is(scalar(@$genes), 88, "Correct number of genes");
 
+my $genes_file_in = "41-searchdumps_reformat_advsearch_genes_in.json";
+open my $genes_file, ">", $genes_file_in;
+print $genes_file encode_json($genes);
+close $genes_file;
+
 my $genes_file_in =dirname(abs_path($0)). "/41-searchdumps_reformat_advsearch_genes_in.json";
-#open my $genes_file, ">", $genes_file_in;
-#print $genes_file encode_json($genes);
-#close $genes_file;
 
 print("......................file exists.........................\n");
 print($genes_file_in);
