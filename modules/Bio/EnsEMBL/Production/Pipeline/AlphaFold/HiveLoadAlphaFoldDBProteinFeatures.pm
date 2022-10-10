@@ -19,7 +19,11 @@ HiveLoadAlphaFoldDBProteinFeatures.pm
 
 =head1 DESCRIPTION
 
-This module inserts protein features into an Ensembl core database based on the AlphaFoldDB-UniProt mappings found in the EMBL-EBI AlphaFoldDB SIFTS data and the UniProt-ENSP mappings found in the GIFTS database in order to make the link between AlphaFoldDB and ENSP having a AlphaFoldDB entry as a protein feature for a given ENSP protein.
+This module inserts protein features into an Ensembl core database based on the
+AlphaFoldDB-UniProt mappings found in the EMBL-EBI AlphaFoldDB SIFTS data and
+the UniProt-ENSP mappings found in the GIFTS database in order to make the link
+between AlphaFoldDB and ENSP having a AlphaFoldDB entry as a protein feature for
+a given ENSP protein.
 
 It also populates the "pdb_ens" table in the GIFTS database with similar data.
 
@@ -45,7 +49,14 @@ It also populates the "pdb_ens" table in the GIFTS database with similar data.
 
 =head1 EXAMPLE USAGE
 
-standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures -alpha_path /hps/nobackup/flicek/ensembl/mr6/AlphaFoldDB/homo_sapiens/alpha_mappings.txt -core_dbhost genebuild3 -core_dbport 4500 -core_dbname carlos_homo_sapiens_core_89_test -core_dbuser *** -core_dbpass *** -cs_version GRCh38 -species homo_sapiens -rest_server https://www.ebi.ac.uk/gifts/api/
+standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures
+  -core_dbhost dev_host
+  -core_dbport 3xxx
+  -core_dbname homo_sapiens_core_test
+  -core_dbuser user
+  -core_dbpass pass
+  -cs_version GRCh38
+  -species homo_sapiens
 
 =cut
 
@@ -54,7 +65,6 @@ package Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProtei
 use strict;
 use warnings;
 
-use 5.014002;
 use Bio::EnsEMBL::Analysis::Tools::Utilities;
 use parent ('Bio::EnsEMBL::Analysis::Hive::RunnableDB::HiveBaseRunnableDB');
 use Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures;
@@ -89,7 +99,7 @@ sub param_defaults {
 sub fetch_input {
   my $self = shift;
 
-  $self->param_required('alpha_path');
+  $self->param_required('alphafold_mapfile');
   $self->param_required('core_dbhost');
   $self->param_required('core_dbport');
   $self->param_required('core_dbname');
@@ -111,20 +121,20 @@ sub fetch_input {
 
   $self->hrdb_set_con($core_dba,"core");
 
-  info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->{'species'}));
+  info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->param('species')));
   $self->cleanup_protein_features('alphafold_import');
 
-  info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->{'species'}));
+  info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->param('species')));
   my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
     -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
                                             -db => 'alphafold',
                                             #-db_version => , it will be populated in the MakePDBProteinFeatures module when parsing the file
-                                            -db_file => $self->param('alpha_path'),
+                                            -db_file => $self->param('alphafold_mapfile'),
                                             -display_label => 'AlphaFoldDB import',
                                             -displayable => '1',
                                             -description => 'Protein features based on the AlphaFoldDB-UniProt mappings'),
     -core_dba => $self->hrdb_get_con("core"),
-    -alpha_path => $self->param('alpha_path'),
+    -alpha_path => $self->param('alphafold_mapfile'),
     -species => $self->param('species'),
     -cs_version => $self->param('cs_version'),
     -rest_server => $self->param('rest_server')
