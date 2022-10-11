@@ -70,6 +70,7 @@ sub write_output {
   );
   if ($data_category eq 'geneset') {
     $output{'geneset'} = $self->param_required('geneset');
+    $output{'annotation_source'} = $self->param_required('annotation_source');
   }
 
   $self->dataflow_output_id(\%output, 3);
@@ -105,6 +106,7 @@ sub directories {
       $assembly,
       $self->param_required('annotation_source'),
       $geneset_dirname,
+      $self->param_required('annotation_source'),
       $self->param('geneset')
     );
   } elsif ($data_category eq 'rnaseq') {
