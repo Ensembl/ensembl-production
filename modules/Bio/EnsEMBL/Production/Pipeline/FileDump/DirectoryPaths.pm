@@ -38,6 +38,7 @@ sub run {
 
   my $dba = $self->dba;
   $self->param('species_name', $self->species_name($dba));
+  $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
   if ($data_category eq 'geneset') {
     $self->param('geneset', $self->geneset($dba));
@@ -68,6 +69,7 @@ sub write_output {
   );
   if ($data_category eq 'geneset') {
     $output{'geneset'} = $self->param_required('geneset');
+    $output{'annotation_source'} = $self->param_required('annotation_source');
   }
 
   $self->dataflow_output_id(\%output, 3);
@@ -101,6 +103,7 @@ sub directories {
       $species_name,
       $assembly,
       $geneset_dirname,
+      $self->param_required('annotation_source'),
       $self->param('geneset')
     );
   } elsif ($data_category eq 'rnaseq') {
