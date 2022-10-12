@@ -89,7 +89,7 @@ sub annotation_source {
     return 'ensembl';
   }
 
-  return $annotation_source;
+  return lc $annotation_source;
 }
 
 
