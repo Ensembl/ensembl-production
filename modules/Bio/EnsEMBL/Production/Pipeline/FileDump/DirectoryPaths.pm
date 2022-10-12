@@ -65,11 +65,11 @@ sub write_output {
     output_dir      => $self->param('output_dir'),
     timestamped_dir => $self->param('timestamped_dir'),
     web_dir         => $self->param('web_dir'),
-    ftp_dir         => $self->param('ftp_dir')
+    ftp_dir         => $self->param('ftp_dir'),
+    annotation_source => $self->param_required('annotation_source')
   );
   if ($data_category eq 'geneset') {
     $output{'geneset'} = $self->param_required('geneset');
-    $output{'annotation_source'} = $self->param_required('annotation_source');
   }
 
   $self->dataflow_output_id(\%output, 3);
@@ -95,7 +95,8 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
-      $genome_dirname
+      $genome_dirname,
+      $self->param_required('annotation_source')
     );
   } elsif ($data_category eq 'geneset') {
     $subdirs = catdir(
@@ -111,7 +112,8 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
-      $rnaseq_dirname
+      $rnaseq_dirname,
+      $self->param_required('annotation_source')
     );
   }
 
