@@ -41,9 +41,9 @@ sub run {
 
   my $relative_dir;
   if ($data_category eq 'geneset') {
-    $relative_dir = catdir('..', '..', '..', '..', '..');
+    $relative_dir = catdir('..', '..', '..', '..', '..', '..');
   } else {
-    $relative_dir = catdir('..', '..', '..', '..');
+    $relative_dir = catdir('..', '..', '..', '..', '..');
   }
 
   path($output_dir)->mkpath;
