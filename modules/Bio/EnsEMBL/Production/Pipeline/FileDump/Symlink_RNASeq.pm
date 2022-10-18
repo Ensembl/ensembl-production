@@ -48,7 +48,7 @@ sub run {
     path($data_files_dir)->mkpath();
     path($data_files_dir)->chmod("g+w");
 
-    my $relative_dir = catdir('..', '..', '..', '..');
+    my $relative_dir = catdir('..', '..', '..', '..', '..');
     $output_dir =~ s/$dump_dir/$relative_dir/;
 
     $self->create_symlink($output_dir, catdir($data_files_dir, 'rnaseq'));
