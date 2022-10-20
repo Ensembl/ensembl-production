@@ -1,35 +1,28 @@
 // Declare syntax version
 nextflow.enable.dsl=2
-// Script parameters
-params.query = "/some/data/sample.fa"
-params.db = "/some/path/pdb"
 
-process blastSearch {
-  input:
-    path query
-    path db
+params.str = 'Hello world!'
+
+process splitLetters {
   output:
-    path "top_hits.txt"
+    path 'chunk_*'
 
-    """
-    blastp -db $db -query $query -outfmt 6 > blast_result
-    cat blast_result | head -n 10 | cut -f 2 > top_hits.txt
-    """
+  """
+  printf '${params.str}' | split -b 6 - chunk_
+  """
 }
 
-process extractTopHits {
+process convertToUpper {
   input:
-    path top_hits
-
+    path x
   output:
-    path "sequences.txt"
+    stdout
 
-    """
-    blastdbcmd -db $db -entry_batch $top_hits > sequences.txt
-    """
+  """
+  cat $x | tr '[a-z]' '[A-Z]'
+  """
 }
 
 workflow {
-   def query_ch = Channel.fromPath(params.query)
-   blastSearch(query_ch, params.db) | extractTopHits | view
+  splitLetters | flatten | convertToUpper | view { it.trim() }
 }
