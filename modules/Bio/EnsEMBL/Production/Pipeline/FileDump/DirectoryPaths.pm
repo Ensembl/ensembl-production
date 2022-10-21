@@ -95,16 +95,16 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
+      $self->param_required('annotation_source'),
       $genome_dirname,
-      $self->param_required('annotation_source')
     );
   } elsif ($data_category eq 'geneset') {
     $subdirs = catdir(
       $species_dirname,
       $species_name,
       $assembly,
-      $geneset_dirname,
       $self->param_required('annotation_source'),
+      $geneset_dirname,
       $self->param('geneset')
     );
   } elsif ($data_category eq 'rnaseq') {
@@ -112,8 +112,8 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
-      $rnaseq_dirname,
-      $self->param_required('annotation_source')
+      $self->param_required('annotation_source'),
+      $rnaseq_dirname
     );
   }
 
