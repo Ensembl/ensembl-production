@@ -16,7 +16,7 @@
     {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
+      "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
       "db" : "checksum",
       "priority" : 1
     },
@@ -42,7 +42,7 @@
     {
       "name" : "EntrezGene",
       "parser" : "EntrezGeneParser",
-      "file" : "http://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
       "priority" : 1
     },
     {
@@ -189,24 +189,24 @@
       "name" : "Uniprot/SWISSPROT",
       "parser" : "UniProtDatabaseParser",
       "old_parser" : "UniProtParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "preparse" : 1,
-      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
       "name" : "Uniprot/SPTREMBL",
       "parser" : "UniProtDatabaseParser",
       "old_parser" : "UniProtParser",
-      "file" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "preparse" : 1,
-      "release" : "http://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
+      "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
