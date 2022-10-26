@@ -50,6 +50,8 @@ sub run {
     my $db = $source->{'db'};
     my $version_file = $source->{'release'};
     my $preparse = $source->{'preparse'};
+    my $rel_number = $source->{'release_number'};
+    my $catalog = $source->{'catalog'};
 
     if ($preparse && $skip_preparse) {
       $parser = $source->{'old_parser'};
@@ -66,6 +68,8 @@ sub run {
       db_url       => $db_url,
       file         => $file,
       skip_download=> $skip_download,
+      rel_number   => $rel_number,
+      catalog      => $catalog
     };
     $self->dataflow_output_id($dataflow_params, 2);
   }
