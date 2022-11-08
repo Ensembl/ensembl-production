@@ -103,10 +103,18 @@ sub batch_duplicates {
 
   my $duplicates = 0;
   my $species = {};
-  my @initials = ("A".."Z");
-  foreach my $initial (@initials) {
-    my $output_file = catdir($output_dir, "${initial}_${db_type}.txt");
-    $duplicates += $self->find_duplicates($initial, $output_file, $db_type, $species);
+  my $dbh = $self->data_dbc->db_handle;
+  # Retrieve a set of prefix long enough to help with subsequent group by
+  my $sql_prefixes = qq/
+    SELECT DISTINCT left(stable_id,8)
+    FROM stable_id_lookup;
+  /;
+  my $sth = $dbh->prepare($sql_prefixes) or die $dbh->errstr();
+  $sth->execute();
+
+  while (my @row = $sth->fetchrow_array) {
+    my $output_file = catdir($output_dir, "${row[0]}_${db_type}.txt");
+    $duplicates += $self->find_duplicates($row[0], $output_file, $db_type, $species);
   }
 
   my $summary_file = catdir($output_dir, "duplicates_${db_type}.txt");
@@ -128,6 +136,7 @@ sub find_duplicates {
   my $duplicates = 0;
 
   my $dbh = $self->data_dbc->db_handle;
+  # Removed Having clause because query never ends, filter is done when creating duplicates list
   my $sql = qq/
     SELECT
       stable_id, db_type, object_type,
@@ -141,8 +150,6 @@ sub find_duplicates {
       stable_id LIKE '${initial}%'
     GROUP BY
       stable_id, db_type, object_type
-    HAVING
-      species_count > 1
   /;
   my $sth = $dbh->prepare($sql) or die $dbh->errstr();
   $sth->execute();
@@ -151,7 +158,7 @@ sub find_duplicates {
   $out->remove if -e $output_file;
 
   while (my @row = $sth->fetchrow_array) {
-    $out->append_raw(join("\t",@row)."\n");
+    $out->append_raw(join("\t",@row)."\n") if $row[3] != 1;
     $$species{$row[4]}++;
     $duplicates++;
   }
