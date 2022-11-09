@@ -36,94 +36,95 @@ use Bio::EnsEMBL::Hive::Version 2.5;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{ $self->SUPER::default_options() },
+    return {
+        %{$self->SUPER::default_options()},
 
-    appris_url => "http://apprisws.bioinfo.cnio.es/forEnsembl/e".$self->o('ens_version')."/",
-  };
+        appris_url => "http://apprisws.bioinfo.cnio.es/forEnsembl/e" . $self->o('ens_version') . "/",
+    };
 }
 
 sub hive_meta_table {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack' => 1,
-  };
+    return {
+        %{$self->SUPER::hive_meta_table},
+        'hive_use_param_stack' => 1,
+    };
 }
 
 sub pipeline_create_commands {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('pipeline_dir'),
-  ];
+    return [
+        @{$self->SUPER::pipeline_create_commands},
+        'mkdir -p ' . $self->o('pipeline_dir'),
+    ];
 }
 
 sub pipeline_analyses {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return [
-    {
-      -logic_name      => 'FetchApprisFiles',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::AttributeAnnotation::FetchApprisFiles',
-      -max_retry_count => 1,
-      -input_ids       => [ {} ],
-      -parameters      => {
-                            appris_url   => $self->o('appris_url'),
-                            pipeline_dir => $self->o('pipeline_dir')
-                          },
-      -flow_into       => {
-                            '2' => ['LoadAppris'],
-                          }
-    },
+    return [
+        {
+            -logic_name      => 'FetchApprisFiles',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::AttributeAnnotation::FetchApprisFiles',
+            -max_retry_count => 1,
+            -input_ids       => [ {} ],
+            -parameters      => {
+                appris_url   => $self->o('appris_url'),
+                pipeline_dir => $self->o('pipeline_dir')
+            },
+            -flow_into       => {
+                '2' => [ 'LoadAppris' ],
+            }
+        },
 
-    {
-      -logic_name      => 'LoadAppris',
-      -module          => 'Bio::EnsEMBL::Production::Pipeline::AttributeAnnotation::LoadAppris',
-      -max_retry_count => 1,
-      -flow_into       => ['Critical_Datachecks']
-    },
+        {
+            -logic_name      => 'LoadAppris',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::AttributeAnnotation::LoadAppris',
+            -max_retry_count => 1,
+            -flow_into       => [ 'Critical_Datachecks' ]
+        },
 
-    {
-      -logic_name      => 'Critical_Datachecks',
-      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -max_retry_count => 1,
-      -parameters      => {
-                            datacheck_names => ['APPRISAttribValuesExist'],
-                            config_file     => $self->o('config_file'),
-                            failures_fatal  => 1,
-                          },
-      -flow_into       => ['Advisory_Datachecks']
-    },
+        {
+            -logic_name      => 'Critical_Datachecks',
+            -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -max_retry_count => 1,
+            -parameters      => {
+                datacheck_names => [ 'APPRISAttribValuesExist', 'APPRISCompareSource' ],
+                config_file     => $self->o('config_file'),
+                base_path       => $self->o('pipeline_dir'),
+                failures_fatal  => 1,
+            },
+            -flow_into       => [ 'Advisory_Datachecks' ]
+        },
 
-    {
-      -logic_name      => 'Advisory_Datachecks',
-      -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-      -max_retry_count => 1,
-      -parameters      => {
-                            datacheck_names => ['APPRISCoverage'],
-                            config_file     => $self->o('config_file'),
-                            failures_fatal  => 0,
-                          },
-      -flow_into       => {
-                            '4' => 'DatacheckFailureNotification'
-                          },
-    },
+        {
+            -logic_name      => 'Advisory_Datachecks',
+            -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -max_retry_count => 1,
+            -parameters      => {
+                datacheck_names => [ 'APPRISCoverage' ],
+                config_file     => $self->o('config_file'),
+                failures_fatal  => 0,
+            },
+            -flow_into       => {
+                '4' => 'DatacheckFailureNotification'
+            },
+        },
 
-    {
-      -logic_name        => 'DatacheckFailureNotification',
-      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              'email' => $self->o('email')
-                            },
-   },
+        {
+            -logic_name      => 'DatacheckFailureNotification',
+            -module          => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+            -max_retry_count => 1,
+            -parameters      => {
+                'email' => $self->o('email')
+            },
+        },
 
-  ];
+    ];
 }
 
 1;

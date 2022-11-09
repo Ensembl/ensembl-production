@@ -38,6 +38,7 @@ sub run {
 
   my $dba = $self->dba;
   $self->param('species_name', $self->species_name($dba));
+  $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
   if ($data_category eq 'geneset') {
     $self->param('geneset', $self->geneset($dba));
@@ -64,7 +65,8 @@ sub write_output {
     output_dir      => $self->param('output_dir'),
     timestamped_dir => $self->param('timestamped_dir'),
     web_dir         => $self->param('web_dir'),
-    ftp_dir         => $self->param('ftp_dir')
+    ftp_dir         => $self->param('ftp_dir'),
+    annotation_source => $self->param_required('annotation_source')
   );
   if ($data_category eq 'geneset') {
     $output{'geneset'} = $self->param_required('geneset');
@@ -93,13 +95,15 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
-      $genome_dirname
+      $self->param_required('annotation_source'),
+      $genome_dirname,
     );
   } elsif ($data_category eq 'geneset') {
     $subdirs = catdir(
       $species_dirname,
       $species_name,
       $assembly,
+      $self->param_required('annotation_source'),
       $geneset_dirname,
       $self->param('geneset')
     );
@@ -108,6 +112,7 @@ sub directories {
       $species_dirname,
       $species_name,
       $assembly,
+      $self->param_required('annotation_source'),
       $rnaseq_dirname
     );
   }

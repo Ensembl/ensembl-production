@@ -85,7 +85,7 @@ sub pipeline_analyses {
       -parameters      => {
         base_path => $self->o('base_path')
       },
-      -rc_name         => 'normal',
+      -rc_name         => 'dm',
       -max_retry_count => 3
     },
     {
@@ -201,7 +201,7 @@ sub pipeline_analyses {
       -comment    => 'Sends an email to the initializing user with a notification that the pipeline has done running and some useful information.',
       -parameters => {
         email   => $self->o('email'),
-        subject => 'Xref Download finished',
+        pipeline_name => $self->o('pipeline_name'),
         base_path => $self->o('base_path'),
         clean_files => $self->o('clean_files'),
         source_xref => $self->o('source_xref'),

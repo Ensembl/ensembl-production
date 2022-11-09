@@ -29,9 +29,9 @@ Bio::EnsEMBL:Production::Pipeline::PipeConfig::AlphaDBImport_conf:
 
 =head1 SYNOPSIS
 
+Creates links from a protein to the AlphaFold structure prediction in a Core database
 
 =head1 DESCRIPTION
-
 
 =cut
 
@@ -43,7 +43,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version 2.6;
 
 
 
@@ -69,28 +69,23 @@ sub default_options {
         antispecies  => [],
         password     => $ENV{EHIVE_PASS},
         user         => 'ensadmin',
-        pipe_db_host => undef,
-        pipe_db_port => undef
+        pipeline_db  => {
+            -driver => $self->o('hive_driver'),
+            -host   => $self->o('pipe_db_host'),
+            -port   => $self->o('pipe_db_port'),
+            -user   => $self->o('user'),
+            -pass   => $self->o('password'),
+            -dbname => $self->o('dbowner').'_alphafold_'.$self->o('pipeline_name').'_pipe',
+        },
     };
-}
-
-
-sub pipeline_wide_parameters {
-    my ($self) = @_;
-
-    return {
-        %{$self->SUPER::pipeline_wide_parameters},
-        rest_server => $self->o('rest_server'),
-        base_path   => $self->o('base_path')
-    }
 }
 
 sub pipeline_create_commands {
     my ($self) = @_;
+
     return [
         @{$self->SUPER::pipeline_create_commands},
-        'mkdir -p '.$self->o('pipeline_dir'),
-        'mkdir -p '.$self->o('scratch_large_dir')
+        'mkdir -p '.$self->o('scratch_large_dir'),
     ];
 }
 
@@ -99,57 +94,73 @@ sub pipeline_analyses {
 
     my @analyses = (
         {
-            -logic_name => 'load_params',
+            -logic_name => 'species_factory',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
             -input_ids  => [ {} ],
-            -flow_into  => {
-
-                '2' => [ 'metadata' ],
-            },
             -parameters => {
                 species     => $self->o('species'),
                 division    => $self->o('division'),
-                antispecies => [],
-
+                antispecies => $self->o('antispecies'),
+            },
+            -flow_into  => {
+                '2->A' => [ 'species_version' ],
+                'A->1' => [ 'cleanup' ]
             },
             -rc_name    => '4GB',
         },
         {
-            -logic_name => 'metadata',
+            -logic_name => 'species_version',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
             -flow_into  => {
-                '2->A' => [ 'load_alphadb' ],
-                'A->1' => [ 'Datacheck' ]
+                '2' => [ 'alpha_map' ],
             },
+        },
+        {
+            -logic_name => 'alpha_map',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaFoldMapping',
+            -parameters => {
+                alphafold_data_dir => $self->o('alphafold_data_dir'),
+                alphafold_mapfile_dir => $self->o('scratch_large_dir'),
+            },
+            -flow_into  => {
+                '2->A' => [ 'load_alphadb' ],
+                'A->2' => [ 'datacheck' ]
+            },
+            -rc_name    => 'dm',
         },
         {
             -logic_name => 'load_alphadb',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::HiveLoadAlphaFoldDBProteinFeatures',
             -parameters => {
                 rest_server => $self->o('rest_server'),
-                output_path => $self->o('scratch_large_dir')
             },
             -rc_name    => '4GB',
         },
         {
-            -logic_name => 'Datacheck',
+            -logic_name => 'datacheck',
             -module     => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -parameters => {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
-            -flow_into  => {
-                '1' => [ 'Notify' ],
-            },
+            -flow_into  => [ 'report' ],
             -rc_name    => '4GB',
         },
         {
-            -logic_name        => 'Notify',
-            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailNotify',
+            -logic_name        => 'report',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::EmailReport',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -parameters        => {
+                dbname        => $self->o('pipeline_db')->{'-dbname'},
                 email         => $self->o('email'),
-                pipeline_name => $self->o('pipeline_name'),
+            },
+        },
+        {
+            -logic_name        => 'cleanup',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -parameters        => {
+                cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
             },
         },
     );

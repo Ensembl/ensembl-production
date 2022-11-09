@@ -34,7 +34,10 @@ Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures -
 
 =head1 DESCRIPTION
 
-This module makes protein features based on the AFDB-UniProt mappings found in the EMBL-EBI AFDB SIFTS data and the UniProt-ENSP mappings found in the GIFTS database in order to make the link between AFDB and ENSP having a AFDB entry as a protein feature for a given ENSP protein.
+This module makes protein features based on the AFDB-UniProt mappings found in
+the EMBL-EBI AFDB SIFTS data and the UniProt-ENSP mappings found in the GIFTS
+database in order to make the link between AFDB and ENSP having a AFDB entry as
+a protein feature for a given ENSP protein.
 
 =head1 APPENDIX
 
@@ -48,13 +51,14 @@ package Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFea
 use warnings;
 use strict;
 
-# Bio::DB::HTS::Faidx used in Bio::EnsEMBL::GIFTS::DB needs Perl 5.14.2
-use 5.014002;
 use parent ('Bio::EnsEMBL::Analysis::Runnable');
 use Bio::EnsEMBL::Utils::Argument qw(rearrange);
-use Bio::EnsEMBL::Utils::Exception qw(throw);
+use Bio::EnsEMBL::Utils::Exception qw(throw info);
 use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
 use Bio::EnsEMBL::ProteinFeature;
+use JSON;
+
+use open qw( :std :encoding(UTF-8) );
 
 sub new {
     my ($class,@args) = @_;
@@ -91,14 +95,31 @@ sub new {
 =cut
 
 sub run {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  $self->{'afdb_info'} = $self->parse_afdb_file();
-  $self->{'perfect_matches'} = fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'},$self->{'cs_version'});
-  #$self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
-  $self->make_protein_features();
+    info(sprintf("Parsing the afdb_file for species %s\n", $self->{'species'}));
+    $self->{'afdb_info'} = $self->parse_afdb_file();
+    unless (ref($self->{'afdb_info'}) eq 'ARRAY') {
+        die "Missing info from AFDB file. Path: " . $self->{'alpha_path'} . ". Species: " . $self->{'species'} . "\n";
+    }
 
-  return 1;
+    info(sprintf("Calling GIFTS endpoint for species %s\n", $self->{'species'}));
+    $self->{'perfect_matches'} = eval{fetch_latest_uniprot_enst_perfect_matches($self->{'rest_server'}, $self->{'cs_version'})};
+    info(sprintf("Done with GIFTS for species %s\n", $self->{'species'}));
+
+    unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
+        info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s. Message:\n%s", $self->{'species'}, $self->{'rest_server'}, $self->{'cs_version'}, $@));
+        $self->{'perfect_matches'} = $self->fetch_uniprot_ensembl_matches();
+    }
+
+    unless (scalar(keys %{$self->{'perfect_matches'}}) > 0) {
+        die(sprintf("No matches for species %s found in core DB %s\n", $self->{'species'}, $self->{'core_dba'}->dbc->dbname()));
+    }
+
+    info(sprintf("Making protein features for species %s\n", $self->{'species'}));
+    $self->make_protein_features();
+
+    return 1;
 }
 
 =head2 fetch_uniprot_ensembl_matches();
@@ -145,33 +166,19 @@ sub fetch_uniprot_ensembl_matches {
 
 =cut
 
-sub parse_afdb_file() {
+sub parse_afdb_file {
   my $self = shift;
 
-  open(my $afdb_fh,'<',$self->{'alpha_path'}) || throw('Cannot open: '.$self->{'alpha_path'});
-  my @afdb_info = ();
-  my $sifts_release_date;
-
-  while (my $line = <$afdb_fh>) {
-
-    # parse a AFDB-UniProt line
-    my ($afdb,undef,$chain,$res_beg,$res_end,undef,$sp_primary,undef,$sp_beg,$sp_end) = split(/\s+/,$line);
-    #my $clean_afdb = $afdb =~ /(AF-\w-\w)-model_\w.pdb:DBREF/g;
-    my ($clean_afdb) = $afdb =~ /(AF-\w+-\w+)-model_\w+.pdb:DBREF/;
-
-    push(@afdb_info,{'AFDB' => $clean_afdb,
-                    'CHAIN' => $chain,
-                    'SP_PRIMARY' => $sp_primary,
-                    'RES_BEG' => $res_beg,
-                    'RES_END' => $res_end,
-                    'SP_BEG' => $sp_beg,
-                    'SP_END' => $sp_end,
-                    'SIFTS_RELEASE_DATE' => $sifts_release_date
-                   }) unless ($sp_beg > $sp_end);
-    # ignore complex AFDB-UniProt mappings that allow SP_BEG > SP_END
+  my $alpha_data;
+  {
+      open(my $fh, '<', $self->{'alpha_path'}) || throw('Cannot open: '.$self->{'alpha_path'});
+      local $/ = undef;
+      $alpha_data = <$fh>;
+      close $fh;
   }
-  close($afdb_fh) || throw('Cannot close '.$self->{'alpha_path'});
-  return \@afdb_info;
+  my $afdb_info = decode_json($alpha_data);
+
+  return $afdb_info;
 }
 
 
@@ -202,32 +209,34 @@ sub make_protein_features() {
 
     if (defined($self->{'perfect_matches'}{$afdb_uniprot})) {
       my @ensts = @{$self->{'perfect_matches'}{$afdb_uniprot}};
-      if (scalar(@ensts) > 0) {
-        foreach my $enst (@ensts) {
+      #if (scalar(@ensts) > 0) {
+      foreach my $enst (@ensts) {
 
-          my %pf_translation;
-          my $t = $ta->fetch_by_stable_id($enst);
+        my %pf_translation;
+        my $t = $ta->fetch_by_stable_id($enst);
 
-          if ($t and $t->translation and $t->translation->length >= $$afdb_line{SP_END}) {
-            my $translation = $t->translation();
-            my $translation_sid = $translation->stable_id();
+        if ($t and $t->translation and $t->translation->length >= $$afdb_line{SP_END}) {
+          my $translation = $t->translation();
+          my $translation_sid = $translation->stable_id();
 
-            my $pf = Bio::EnsEMBL::ProteinFeature->new(
-                    -start    => $$afdb_line{'SP_BEG'},
-                    -end      => $$afdb_line{'SP_END'},
-                    -hseqname => $$afdb_line{'AFDB'}.".".$$afdb_line{'CHAIN'},
-                    -hstart   => $$afdb_line{'RES_BEG'},
-                    -hend     => $$afdb_line{'RES_END'},
-                    -analysis => $analysis,
-                    -hdescription => "Via SIFTS (".$$afdb_line{'SIFTS_RELEASE_DATE'}.
-                                     ") UniProt protein ".$$afdb_line{'SP_PRIMARY'}.
-                                     " isoform exact match to Ensembl protein $translation_sid"
-                 );
-              $pf_translation{$translation->dbID()} = $pf;
-              push(@pfs,\%pf_translation);
-          } # if t
-        } # foreach my enst
-      } # if scalar
+          $$afdb_line{'SIFTS_RELEASE_DATE'} //= '';
+
+          my $pf = Bio::EnsEMBL::ProteinFeature->new(
+                  -start    => $$afdb_line{'SP_BEG'},
+                  -end      => $$afdb_line{'SP_END'},
+                  -hseqname => $$afdb_line{'AFDB'}.".".$$afdb_line{'CHAIN'},
+                  -hstart   => $$afdb_line{'RES_BEG'},
+                  -hend     => $$afdb_line{'RES_END'},
+                  -analysis => $analysis,
+                  -hdescription => "Via SIFTS (".$$afdb_line{'SIFTS_RELEASE_DATE'}.
+                                   ") UniProt protein ".$$afdb_line{'SP_PRIMARY'}.
+                                   " isoform exact match to Ensembl protein $translation_sid"
+               );
+            $pf_translation{$translation->dbID()} = $pf;
+            push(@pfs,\%pf_translation);
+        } # if t
+      } # foreach my enst
+      #} # if scalar
     } # if ensts
   } # foreach my afdb_line
 
