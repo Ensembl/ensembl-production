@@ -94,10 +94,10 @@ if __name__ == '__main__':
     logger.info("Retrieved species:")
     [logger.info('%s', spec) for spec in species]
     with open(join(home_dir, 'species_%s.txt' % args.version), 'w') as f:
-        [f.write('-species {} '.format(spec[0])) for spec in species]
+        [f.write("-species {} \n".format(spec[0])) for spec in species]
         logger.info("Generated %s", f.name)
     with open(join(home_dir, 'database_%s.txt' % args.version), 'w') as f:
-        [f.write('-database {} '.format(spec[1])) for spec in species]
+        [f.write("-database {} \n".format(spec[1])) for spec in species]
         logger.info("Generated %s", f.name)
     with open(join(home_dir, 'dblist_%s.txt' % args.version), 'w') as f:
         dbs = [spec[1] for spec in species]
