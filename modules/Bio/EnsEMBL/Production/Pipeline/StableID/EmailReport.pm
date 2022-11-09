@@ -150,6 +150,7 @@ sub find_duplicates {
       stable_id LIKE '${initial}%'
     GROUP BY
       stable_id, db_type, object_type
+    HAVING species_count > 1
   /;
   my $sth = $dbh->prepare($sql) or die $dbh->errstr();
   $sth->execute();
@@ -158,7 +159,7 @@ sub find_duplicates {
   $out->remove if -e $output_file;
 
   while (my @row = $sth->fetchrow_array) {
-    $out->append_raw(join("\t",@row)."\n") if $row[3] != 1;
+    $out->append_raw(join("\t",@row)."\n");
     $$species{$row[4]}++;
     $duplicates++;
   }
