@@ -31,42 +31,42 @@ use File::Spec::Functions qw(catdir);
 use Path::Tiny;
 
 sub fetch_input {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  my $pipeline_name = $self->param('pipeline_name');
-  my $output_dir    = $self->param('output_dir');
+    my $pipeline_name = $self->param('pipeline_name');
+    my $output_dir = $self->param('output_dir');
 
-  $output_dir = catdir($output_dir, $pipeline_name);
-  path($output_dir)->mkpath();
+    $output_dir = catdir($output_dir, $pipeline_name);
+    path($output_dir)->mkpath();
 
-  my $core_count = $self->summary($output_dir, 'core');
-  my $of_count   = $self->summary($output_dir, 'otherfeatures');
-  my ($duplicates, $species) = $self->batch_duplicates($output_dir, 'core');
+    my $core_count = $self->summary($output_dir, 'core');
+    my $of_count = $self->summary($output_dir, 'otherfeatures');
+    my ($duplicates, $species) = $self->batch_duplicates($output_dir, 'core');
 
-  my $subject = "Stable ID pipeline completed ($pipeline_name)";
-  $self->param('subject', $subject);
+    my $subject = "Stable ID pipeline completed ($pipeline_name)";
+    $self->param('subject', $subject);
 
-  my $text =
-    "The $pipeline_name pipeline has completed successfully.\n\n".
-    "There are stable IDs for $core_count core databases and ".
-    "$of_count otherfeatures databases.\n\n".
-    "There are $duplicates duplicated stable IDs ".
-    "across ".scalar(keys(%$species))." species groups.\n\n".
-    "Summary files are attached; for detailed duplicate ".
-    "information, see: $output_dir";
+    my $text =
+        "The $pipeline_name pipeline has completed successfully.\n\n" .
+            "There are stable IDs for $core_count core databases and " .
+            "$of_count otherfeatures databases.\n\n" .
+            "There are $duplicates duplicated stable IDs " .
+            "across " . scalar(keys(%$species)) . " species groups.\n\n" .
+            "Summary files are attached; for detailed duplicate " .
+            "information, see: $output_dir";
 
-  $self->param('text', $text);
+    $self->param('text', $text);
 }
 
 sub summary {
-  my ($self, $output_dir, $db_type) = @_;
+    my ($self, $output_dir, $db_type) = @_;
 
-  my $count = 0;
+    my $count = 0;
 
-  my $output_file = catdir($output_dir, "summary_${db_type}.txt");
+    my $output_file = catdir($output_dir, "summary_${db_type}.txt");
 
-  my $dbh = $self->data_dbc->db_handle;
-  my $sql = qq/
+    my $dbh = $self->data_dbc->db_handle;
+    my $sql = qq/
     SELECT
       name, COUNT(*) AS id_count
     FROM
@@ -77,94 +77,107 @@ sub summary {
     ORDER BY name
   /;
 
-  my $sth = $dbh->prepare($sql) or die $dbh->errstr();
-  $sth->execute();
+    my $sth = $dbh->prepare($sql) or die $dbh->errstr();
+    $sth->execute();
 
-  my $out = path($output_file);
-  $out->remove if -e $output_file;
+    my $out = path($output_file);
+    $out->remove if -e $output_file;
 
-  while (my @row = $sth->fetchrow_array) {
-    $out->append_raw(join("\t",@row)."\n");
-    $count++;
-  }
+    while (my @row = $sth->fetchrow_array) {
+        $out->append_raw(join("\t", @row) . "\n");
+        $count++;
+    }
 
-  push @{$self->param('attachments')}, $output_file;
+    push @{$self->param('attachments')}, $output_file;
 
-  return $count;
+    return $count;
 }
 
 sub batch_duplicates {
-  my ($self, $output_dir, $db_type) = @_;
+    my ($self, $output_dir, $db_type) = @_;
 
-  # Looking for duplicates across all stable IDs creates vast
-  # temporary tables and we run out of space on the server.
-  # Simplest way to partition is alphabetically; IDs are evenly
-  # distributed, but it does the job and is easy to implement.
+    # Looking for duplicates across all stable IDs creates vast
+    # temporary tables and we run out of space on the server.
+    # Simplest way to partition is alphabetically; IDs are evenly
+    # distributed, but it does the job and is easy to implement.
 
-  my $duplicates = 0;
-  my $species = {};
-  my $dbh = $self->data_dbc->db_handle;
-  # Retrieve a set of prefix long enough to help with subsequent group by
-  my $sql_prefixes = qq/
+    my $duplicates = 0;
+    my $species = {};
+    my $dbh = $self->data_dbc->db_handle;
+    # Retrieve a set of prefix long enough to help with subsequent group by
+    my $sql_prefixes = qq/
     SELECT DISTINCT left(stable_id,8)
     FROM stable_id_lookup;
   /;
-  my $sth = $dbh->prepare($sql_prefixes) or die $dbh->errstr();
-  $sth->execute();
+    my $sth = $dbh->prepare($sql_prefixes) or die $dbh->errstr();
+    $sth->execute();
 
-  while (my @row = $sth->fetchrow_array) {
-    my $output_file = catdir($output_dir, "${row[0]}_${db_type}.txt");
-    $duplicates += $self->find_duplicates($row[0], $output_file, $db_type, $species);
-  }
+    while (my @row = $sth->fetchrow_array) {
+        my $output_file = catdir($output_dir, "${row [ 0 ]}_${db_type}.txt");
+        $duplicates += $self->find_duplicates($row[0], $output_file, $db_type, $species);
+    }
 
-  my $summary_file = catdir($output_dir, "duplicates_${db_type}.txt");
-  my $summary = path($summary_file);
-  $summary->remove if -e $summary_file;
+    my $summary_file = catdir($output_dir, "duplicates_${db_type}.txt");
+    my $summary = path($summary_file);
+    $summary->remove if -e $summary_file;
 
-  foreach (sort keys %$species) {
-    $summary->append_raw($_."\t".$$species{$_}."\n");
-  }
+    foreach (sort keys %$species) {
+        $summary->append_raw($_ . "\t" . $$species{$_} . "\n");
+    }
 
-  push @{$self->param('attachments')}, $summary_file;
+    push @{$self->param('attachments')}, $summary_file;
 
-  return ($duplicates, $species);
+    return ($duplicates, $species);
 }
 
 sub find_duplicates {
-  my ($self, $initial, $output_file, $db_type, $species) = @_;
+    my ($self, $initial, $output_file, $db_type, $species) = @_;
 
-  my $duplicates = 0;
+    my $duplicates = 0;
 
-  my $dbh = $self->data_dbc->db_handle;
-  # Removed Having clause because query never ends, filter is done when creating duplicates list
-  my $sql = qq/
-    SELECT
-      stable_id, db_type, object_type,
-      COUNT(species_id) AS species_count,
-      GROUP_CONCAT(name) AS species_name_list
-    FROM
-      stable_id_lookup INNER JOIN
-      species USING (species_id)
-    WHERE
-      db_type = '$db_type' AND
-      stable_id LIKE '${initial}%'
-    GROUP BY
-      stable_id, db_type, object_type
-    HAVING species_count > 1
+    my $dbh = $self->data_dbc->db_handle;
+    # Removed JOIN clause because query never ends, then retrieve the species name while creating the file
+    my $sql = qq/
+    SELECT stable_id,
+          object_type,
+          count(species_id) as species_count,
+          GROUP_CONCAT(species_id) AS species_id_list
+    FROM stable_id_lookup
+    WHERE db_type = '${db_type}'
+      AND stable_id LIKE '${initial}%'
+    GROUP BY stable_id, object_type
+    HAVING species_count > 1;
   /;
-  my $sth = $dbh->prepare($sql) or die $dbh->errstr();
-  $sth->execute();
+    my $sth = $dbh->prepare($sql) or die $dbh->errstr();
+    $sth->execute();
 
-  my $out = path($output_file);
-  $out->remove if -e $output_file;
+    my $sqlSpec = qq/
+    SELECT name
+    FROM species
+    where species_id in (?)
+      /;
+    my $get_name = $dbi->prepare($sqlSpec);
+    my $out = path($output_file);
+    $out->remove if -e $output_file;
+    my %species_duplicate;
+    my $names;
+    while (my @row = $sth->fetchrow_array) {
+        # not there fetch name
+        if ($species_duplicate{$row[3]}) {
+            # species already
+            $names = $species_duplicate{$row[3]};
+        }
+        else {
+            # not there fetch name
+            $get_name->execute($row[3]) or croak($dbi->errstr());
+            $names = join(",", $sth->fetchrow_array());
+        }
+        $out->append_raw(join("\t", splice(@row, 0, 3, $names) . "\n"));
+        $$species{$row[3]}++;
+        $duplicates++;
+    }
 
-  while (my @row = $sth->fetchrow_array) {
-    $out->append_raw(join("\t",@row)."\n");
-    $$species{$row[4]}++;
-    $duplicates++;
-  }
-
-  return $duplicates;
+    return $duplicates;
 }
 
 1;
