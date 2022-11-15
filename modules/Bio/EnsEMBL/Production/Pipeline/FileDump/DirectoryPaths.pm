@@ -118,7 +118,10 @@ sub directories {
       $rnaseq_dirname
     );
   }
-
+  if ( grep( /^geneset|variation$/, @data_categories ) ) {
+    # Variation and geneset dirs add a extra `YYYY_MM` subdir.
+    $subdirs = catdir ($subdirs, $self->param_required('geneset'))
+  }
   my $output_dir = catdir(
     $dump_dir,
     $subdirs
