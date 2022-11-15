@@ -5,6 +5,7 @@
 
 // Import Production Common Factories
 include { SpeciesFactory } from '../modules/productionCommon.nf'
+//include { SpeciesFactory } from '../modules/productionCommonStandalone.nf'
 include { DbFactory } from '../modules/productionCommon.nf'
 
 //default params
@@ -57,7 +58,7 @@ workflow {
  if (params.ftp_path && params.registry){
         DbFactory()
         //check_species(DbFactory.out.splitText(), file_type)
-        SpeciesFactory()
+        SpeciesFactory(DbFactory.out.splitText())
         check_species(SpeciesFactory.out.splitText(), file_type) 
  }
 

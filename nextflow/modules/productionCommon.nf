@@ -8,7 +8,7 @@ process SpeciesFactory {
   path 'dataflow_2.json'
  
   """
-  perl ${params.pipeline_dir}/run_process.pl -class='Nextflow::DbAwareSpeciesFactory' -dataflow='$x' -reg_conf=${params.registry}
+  perl ${params.pipeline_dir}/run_process.pl -class='Bio::EnsEMBL::Nextflow::DbAwareSpeciesFactory' -dataflow='$x' -reg_conf=${params.registry}
   """
 }
 
