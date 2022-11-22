@@ -30,7 +30,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Production::StatsGenerator/;
 sub run {
   my ($self) = @_;
   my $species    = $self->param('species');
-
+  my $exclude_species_readthrough = $self->param('exclude_species_readthrough');
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
   my $dba        = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
@@ -40,7 +40,7 @@ sub run {
   my $has_readthrough = 0;
   my @readthroughs = @{ $aa->fetch_all_by_Transcript(undef, 'readthrough_tra') };
   $has_readthrough = 1 if @readthroughs;
-
+  
   my %attrib_codes = $self->get_attrib_codes($has_readthrough);
   $self->delete_old_attrib($dba, %attrib_codes);
   $self->delete_old_stats($dba, %attrib_codes);
@@ -105,7 +105,20 @@ sub run {
       }
     }    
   }
-  
+
+  #check if species in eclude_species_readthrough list and substract coding_rcnt value from coding_cnt
+  if ( $species ~~ @{$exclude_species_readthrough} ) {
+
+	if(exists $stats_hash{'coding_cnt'} && exists $stats_hash{'coding_rcnt'}){
+
+          $stats_hash{'coding_cnt'} = $stats_hash{'coding_cnt'} - $stats_hash{'coding_rcnt'};
+  	}
+        if(exists $stats_hash{'coding_acnt'} && exists $stats_hash{'coding_racnt'}){
+
+          $stats_hash{'coding_acnt'} = $stats_hash{'coding_acnt'} - $stats_hash{'coding_racnt'};
+        }	
+  }
+
   $self->store_statistics($species, \%stats_hash, \%stats_attrib);
 
   # disconnecting from the registry

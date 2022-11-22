@@ -79,6 +79,20 @@ sub geneset {
   return $geneset;
 }
 
+sub annotation_source {
+  my ($self, $dba) = @_;
+  $self->throw("Missing dba parameter: annotation_source method") unless defined $dba;
+
+  my $mca = $dba->get_adaptor("MetaContainer");
+  my $annotation_source = $mca->single_value_by_key('species.annotation_source');
+  if (!defined $annotation_source || $annotation_source eq '') {
+    return 'ensembl';
+  }
+
+  return lc $annotation_source;
+}
+
+
 sub species_name {
   my ($self, $dba) = @_;
   $self->throw("Missing dba parameter: species_name method") unless defined $dba;
