@@ -39,10 +39,7 @@ species
               |-- [rnaseq]
                   |-- md5sum.txt
                   |-- README.txt
-                  |-- *.bam
-                  |-- [*.bam.bai]
                   |-- *.bam.bw
-                  |-- [*.bam.csi]
               |-- [statistics]
                   |-- *_busco_short_summary.txt.txt
               |-- [variation]
@@ -311,14 +308,11 @@ be 'primary_assembly' for non-chromosomal regions.
 The homologues of each query gene in a tab-separated format (tsv)
 
 ========================================================================
- [rnaseq] | *.bam
- [rnaseq] | *.bam.bai
  [rnaseq] | *.bam.bw
 ========================================================================
-BAM and bigWig files of RNA-seq data aligned against a genome. A README
+BigWig files of RNA-seq data aligned against a genome. A README
 file in the [rnaseq] directory contains details of the samples used in
-the alignments. This directory is absent if there are no RNA-seq
-alignments.
+the alignments. This directory is absent if there are no RNA-seq alignments.
 
 ========================================================================
  statistics | *_busco_short_summary.txt
