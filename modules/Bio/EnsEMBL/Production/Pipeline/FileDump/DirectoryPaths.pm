@@ -40,7 +40,7 @@ sub run {
   $self->param('species_name', $self->species_name($dba));
   $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
-  if ($data_category eq 'geneset') {
+  if ($data_category =~ /geneset|variation|homology/) {
     $self->param('geneset', $self->geneset($dba));
   }
 
@@ -68,8 +68,8 @@ sub write_output {
     ftp_dir         => $self->param('ftp_dir'),
     annotation_source => $self->param_required('annotation_source')
   );
-  if ($data_category eq 'geneset') {
-    $output{'geneset'} = $self->param_required('geneset');
+  if ($data_category =~ /geneset|variation|homology/) {
+    $output{'geneset'} = $self->param('geneset');
   }
 
   $self->dataflow_output_id(\%output, 3);
@@ -96,9 +96,9 @@ sub directories {
       $self->param_required("${data_category}_dirname"),
     );
   }
-  if ( grep( /^geneset|variation$/, @data_categories ) ) {
+  if ( $data_category =~ /geneset|variation|homology/ ) {
     # Variation and geneset dirs add a extra `YYYY_MM` subdir.
-    $subdirs = catdir ($subdirs, $self->param_required('geneset'))
+    $subdirs = catdir ($subdirs, $self->param('geneset'))
   }
   my $output_dir = catdir(
     $dump_dir,
