@@ -346,5 +346,6 @@ http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-cal
 vep
 indexed_vep_cache
 -----------------
+These directories contain Ensembl VEP caches of the remapped Ensembl/GENCODE gene set to facilitate analysing your own variant data with Ensembl VEP.
 
-This directory contains VEP tool utility files, for more information please refer to http://www.ensembl.org/info/docs/tools/vep/index.html
+For more information please refer to http://www.ensembl.org/info/docs/tools/vep/index.html
