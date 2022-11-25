@@ -6,39 +6,66 @@ The structure of the FTP directory is show below.
 <species> is the scientific name of a species.
 <assembly> is the assembly accession, e.g. GCA_001458135.1.
 <geneset> is the date that the geneset was loaded by Ensembl.
+<species.annotation_source> is the source of annotation used. See below.
 Square brackets indicate directories or files that are not available
 for all species.
 
 species
   |-- <species>
       |-- <assembly>
-          |-- geneset
-              |-- <geneset>
+          |-- <species.annotation_source>
+              |-- geneset
+                  |-- <geneset>
+                      |-- md5sum.txt
+                      |-- README.txt
+                      |-- <species>-<assembly>-<geneset>-cdna.fa.gz
+                      |-- <species>-<assembly>-<geneset>-cds.fa.gz
+                      |-- <species>-<assembly>-<geneset>-genes.embl.gz
+                      |-- <species>-<assembly>-<geneset>-genes.gtf.gz
+                      |-- <species>-<assembly>-<geneset>-genes.gff3.gz
+                      |-- <species>-<assembly>-<geneset>-pep.fa.gz
+                      |-- <species>-<assembly>-<geneset>-xref.tsv.gz
+              |-- genome
                   |-- md5sum.txt
                   |-- README.txt
-                  |-- <species>-<assembly>-<geneset>-cdna.fa.gz
-                  |-- <species>-<assembly>-<geneset>-cds.fa.gz
-                  |-- <species>-<assembly>-<geneset>-genes.embl.gz
-                  |-- <species>-<assembly>-<geneset>-genes.gtf.gz
-                  |-- <species>-<assembly>-<geneset>-genes.gff3.gz
-                  |-- <species>-<assembly>-<geneset>-pep.fa.gz
-                  |-- <species>-<assembly>-<geneset>-xref.tsv.gz
-          |-- genome
-              |-- md5sum.txt
-              |-- README.txt
-              |-- [assembly_mapping]
-                  |-- *.chain.gz
-              |-- [<species>-<assembly>-chromosomes.tsv.gz]
-              |-- <species>-<assembly>-hardmasked.fa.gz
-              |-- <species>-<assembly>-softmasked.fa.gz
-              |-- <species>-<assembly>-unmasked.fa.gz
-          |-- [rnaseq]
-              |-- md5sum.txt
-              |-- README.txt
-              |-- *.bam
-              |-- [*.bam.bai]
-              |-- *.bam.bw
-              |-- [*.bam.csi]
+                  |-- [assembly_mapping]
+                      |-- *.chain.gz
+                  |-- [<species>-<assembly>-chromosomes.tsv.gz]
+                  |-- <species>-<assembly>-hardmasked.fa.gz
+                  |-- <species>-<assembly>-softmasked.fa.gz
+                  |-- <species>-<assembly>-unmasked.fa.gz
+              |-- [homology]
+                  |-- <species>-<assembly>-<geneset>-homology.tsv.gz
+              |-- [rnaseq]
+                  |-- md5sum.txt
+                  |-- README.txt
+                  |-- *.bam.bw
+              |-- [statistics]
+                  |-- *_busco_short_summary.txt.txt
+              |-- [variation]
+                  |-- indexed_vep_cache
+                      |-- *.tar.gz
+                  |-- vcf
+                      |-- <species>-<assembly>--<geneset>-<variant-source>.vcf.gz
+                      |-- <species>-<assembly>--<geneset>-<variant-source>.vcf.gz.tbi
+                  |-- vep
+                      |-- *.tar.gz
+
+
+========================================================================
+ <species> | <assembly> | <species.annotation_source>
+
+ In order to present the ever-increasing data in Ensembl Rapid Release more clearly, the FTP site layout present separate
+ annotation sets for the same genome assembly.
+ A new subdirectory containing all annotation, assembly and statistic files will be added to indicate the annotation source.
+
+ So far the following annotation sources are valid (the list is not exhaustive and more source may be added in the future):
+
+  - ensembl
+  - refseq
+  - community
+  - genebank
+========================================================================
 
 
 ========================================================================
@@ -275,14 +302,50 @@ Example 'softmasked' header:
 The <seq_type> will be 'chromosome' for chromosomal regions, and will
 be 'primary_assembly' for non-chromosomal regions.
 
+========================================================================
+ [homology] | <species>-<assembly>-<geneset>-<variation-source>.tsv.gz
+========================================================================
+The homologues of each query gene in a tab-separated format (tsv)
 
 ========================================================================
- [rnaseq] | *.bam
- [rnaseq] | *.bam.bai
  [rnaseq] | *.bam.bw
 ========================================================================
-BAM and bigWig files of RNA-seq data aligned against a genome. A README
+BigWig files of RNA-seq data aligned against a genome. A README
 file in the [rnaseq] directory contains details of the samples used in
-the alignments. This directory is absent if there are no RNA-seq
-alignments.
+the alignments. This directory is absent if there are no RNA-seq alignments.
 
+========================================================================
+ statistics | *_busco_short_summary.txt
+========================================================================
+BUSCO provides a quantitative assessment of the completeness of the gene set.
+The file contains a plain text summary of the lineage dataset used to score
+the gene set and the completeness results from BUSCO, run in protein mode,
+in BUSCO notation.
+
+========================================================================
+ variation | indexed_vep_cache | *.tar.gz
+ variation | vcf | <species>-<assembly>-<geneset>-<variation-source>.vcf.gz
+ variation | vcf | <species>-<assembly>-<geneset>-<variation-source>.vcf.gz.tbi
+ variation | vep | *.tar.gz
+========================================================================
+---
+vcf
+---
+This directory contains sorted and bgzip-compressed VCF (Variant Call Format) files:
+
+The data contained in these files is presented in VCF format. For more details about
+the format refer to:
+http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
+
+    <species>-<assembly>-<geneset>-<variation-source>.vcf.gz
+        All variations from the current Ensembl Rapid release for this species
+    <species>-<assembly>-<geneset>-<variation-source>.vcf.gz.tbi
+        All variations tabix from the current Ensembl Rapid release for this species
+
+-----------------
+vep
+indexed_vep_cache
+-----------------
+These directories contain Ensembl VEP caches of the remapped Ensembl/GENCODE gene set to facilitate analysing your own variant data with Ensembl VEP.
+
+For more information please refer to http://www.ensembl.org/info/docs/tools/vep/index.html

@@ -56,7 +56,7 @@ sub run {
     path(catdir($ftp_root, $readme))->chmod("g+w");
 
     my $relative_dir;
-    if ($data_category eq 'geneset') {
+    if ($data_category =~ /geneset|variation|homology/) {
       $relative_dir = catdir('..', '..', '..', '..', '..');
     } else {
       $relative_dir= catdir('..', '..', '..', '..');

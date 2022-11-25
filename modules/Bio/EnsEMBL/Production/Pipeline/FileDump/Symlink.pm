@@ -40,7 +40,7 @@ sub run {
   }
 
   my $relative_dir;
-  if ($data_category eq 'geneset') {
+  if ($data_category =~ /geneset|variation|homology/) {
     $relative_dir = catdir('..', '..', '..', '..', '..', '..');
   } else {
     $relative_dir = catdir('..', '..', '..', '..', '..');
