@@ -5,12 +5,12 @@
 
 // Import Production Common Factories
 include { SpeciesFactory } from '../modules/productionCommon.nf'
-//include { SpeciesFactory } from '../modules/productionCommonStandalone.nf'
 include { DbFactory } from '../modules/productionCommon.nf'
 
 //default params
+params.division = 'vertebrates'
 params.filetype = ['embl', 'fasta', 'genbank', 'gff3', 'gtf', 'json', 'mysql', 'tsv']
-//params.species = 'homo_sapiens'
+
 def helpMessage() {
     log.info"""
 Usage:
@@ -37,12 +37,19 @@ process check_species {
   debug 'ture'
   label 'mem2GB'
   tag 'check_species'
+  errorStrategy 'finish'
+
   input:
   each species_info
   each filetype
 
+  shell:
+  species = (species_info =~ /"species":"([A-Za-z0-9_]+)",/)[0][1]
+
   """
-  echo "Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii $species_info , $filetype"
+  echo " $species_info , $filetype $species"
+  python checkftpfiles.py -f $params.ftp_path -e \$ENS_VERSION  -g \$EG_VERSION -t $filetype -d $params.division -s $species
+
   """
 }
 
@@ -57,9 +64,9 @@ workflow {
  
  if (params.ftp_path && params.registry){
         DbFactory()
-        //check_species(DbFactory.out.splitText(), file_type)
         SpeciesFactory(DbFactory.out.splitText())
-        check_species(SpeciesFactory.out.splitText(), file_type) 
+        check_species(SpeciesFactory.out.splitText(), file_type, ) 
+        //check_species(DbFactory.out.splitText(), file_type ) 
  }
 
 }
