@@ -38,6 +38,9 @@ sub param_defaults {
     genome_dirname      => 'genome',
     geneset_dirname     => 'geneset',
     rnaseq_dirname      => 'rnaseq',
+    variation_dirname   => 'variation',
+    homology_dirname    => 'homology',
+    stats_dirname       => 'statistics'
   };
 }
 

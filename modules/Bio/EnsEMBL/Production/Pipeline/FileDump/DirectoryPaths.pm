@@ -40,7 +40,7 @@ sub run {
   $self->param('species_name', $self->species_name($dba));
   $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
-  if ($data_category eq 'geneset') {
+  if ($data_category =~ /geneset|variation|homology/) {
     $self->param('geneset', $self->geneset($dba));
   }
 
@@ -68,8 +68,8 @@ sub write_output {
     ftp_dir         => $self->param('ftp_dir'),
     annotation_source => $self->param_required('annotation_source')
   );
-  if ($data_category eq 'geneset') {
-    $output{'geneset'} = $self->param_required('geneset');
+  if ($data_category =~ /geneset|variation|homology/) {
+    $output{'geneset'} = $self->param('geneset');
   }
 
   $self->dataflow_output_id(\%output, 3);
@@ -78,45 +78,28 @@ sub write_output {
 sub directories {
   my ($self, $data_category) = @_;
 
-  my $dump_dir            = $self->param_required('dump_dir');
-  my $species_dirname     = $self->param_required('species_dirname');
-  my $timestamped_dirname = $self->param_required('timestamped_dirname');
-  my $web_dirname         = $self->param_required('web_dirname');
-  my $genome_dirname      = $self->param_required('genome_dirname');
-  my $geneset_dirname     = $self->param_required('geneset_dirname');
-  my $rnaseq_dirname      = $self->param_required('rnaseq_dirname');
-
-  my $species_name = $self->param('species_name');
-  my $assembly = $self->param('assembly');
+  my $dump_dir              = $self->param_required('dump_dir');
+  my $species_dirname       = $self->param_required('species_dirname');
+  my $timestamped_dirname   = $self->param_required('timestamped_dirname');
+  my $web_dirname           = $self->param_required('web_dirname');
+  my $species_name          = $self->param('species_name');
+  my $assembly              = $self->param('assembly');
 
   my $subdirs;
-  if ($data_category eq 'genome') {
+  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
+  if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
       $species_dirname,
       $species_name,
       $assembly,
       $self->param_required('annotation_source'),
-      $genome_dirname,
-    );
-  } elsif ($data_category eq 'geneset') {
-    $subdirs = catdir(
-      $species_dirname,
-      $species_name,
-      $assembly,
-      $self->param_required('annotation_source'),
-      $geneset_dirname,
-      $self->param('geneset')
-    );
-  } elsif ($data_category eq 'rnaseq') {
-    $subdirs = catdir(
-      $species_dirname,
-      $species_name,
-      $assembly,
-      $self->param_required('annotation_source'),
-      $rnaseq_dirname
+      $self->param_required("${data_category}_dirname"),
     );
   }
-
+  if ( $data_category =~ /geneset|variation|homology/ ) {
+    # Variation and geneset dirs add a extra `YYYY_MM` subdir.
+    $subdirs = catdir ($subdirs, $self->param('geneset'))
+  }
   my $output_dir = catdir(
     $dump_dir,
     $subdirs
