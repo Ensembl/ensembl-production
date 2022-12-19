@@ -107,7 +107,7 @@ sub run {
     my $dbc = $gdba->db()->dbc();
     my $go_parents = {};
 
-    my $xref_adaptor = Bio::EnsEMBL::Compara::DBSQL::XrefAssociationAdaptor->new($dbc);
+    my $xref_adaptor = Bio::EnsEMBL::Compara::DBSQL::XrefAssociationAdaptor->new($gdba->db());
     my @genome_dbs = grep {$_->name() ne 'ancestral_sequences'} @{$gdba->fetch_all()};
     @genome_dbs = grep {$_->name() eq $species} @genome_dbs if (defined $species);
 
