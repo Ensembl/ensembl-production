@@ -138,7 +138,7 @@ CREATE TABLE `gene_align_member` (
 
 CREATE TABLE `gene_member` (
   `gene_member_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `stable_id` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
+  `stable_id` varchar(128) NOT NULL,
   `version` int(10) unsigned DEFAULT '0',
   `source_name` enum('ENSEMBLGENE','EXTERNALGENE') NOT NULL,
   `taxon_id` int(10) unsigned NOT NULL,
@@ -152,14 +152,15 @@ CREATE TABLE `gene_member` (
   `dnafrag_strand` tinyint(4) DEFAULT NULL,
   `display_label` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`gene_member_id`),
-  UNIQUE KEY `stable_id` (`stable_id`),
+  UNIQUE KEY `genome_db_stable_id` (`genome_db_id`,`stable_id`),
   KEY `taxon_id` (`taxon_id`),
   KEY `source_name` (`source_name`),
   KEY `canonical_member_id` (`canonical_member_id`),
   KEY `dnafrag_id_start` (`dnafrag_id`,`dnafrag_start`),
   KEY `dnafrag_id_end` (`dnafrag_id`,`dnafrag_end`),
   KEY `biotype_dnafrag_id_start_end` (`biotype_group`,`dnafrag_id`,`dnafrag_start`,`dnafrag_end`),
-  KEY `genome_db_id_biotype` (`genome_db_id`,`biotype_group`)
+  KEY `genome_db_id_biotype` (`genome_db_id`,`biotype_group`),
+  KEY `stable_id` (`stable_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 MAX_ROWS=100000000;
 
 CREATE TABLE `gene_member_hom_stats` (
@@ -440,7 +441,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM AUTO_INCREMENT=157 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=165 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `method_link` (
   `method_link_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -490,7 +491,7 @@ CREATE TABLE `method_link_species_set_tag` (
 
 CREATE TABLE `ncbi_taxa_name` (
   `taxon_id` int(10) unsigned NOT NULL,
-  `name` varchar(255) NOT NULL,
+  `name` varchar(500) NOT NULL,
   `name_class` varchar(50) NOT NULL,
   KEY `taxon_id` (`taxon_id`),
   KEY `name` (`name`),
@@ -544,7 +545,7 @@ CREATE TABLE `peptide_align_feature` (
 
 CREATE TABLE `seq_member` (
   `seq_member_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `stable_id` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
+  `stable_id` varchar(128) NOT NULL,
   `version` int(10) unsigned DEFAULT '0',
   `source_name` enum('ENSEMBLPEP','ENSEMBLTRANS','Uniprot/SPTREMBL','Uniprot/SWISSPROT','EXTERNALPEP','EXTERNALTRANS','EXTERNALCDS') NOT NULL,
   `taxon_id` int(10) unsigned NOT NULL,
@@ -560,7 +561,7 @@ CREATE TABLE `seq_member` (
   `dnafrag_strand` tinyint(4) DEFAULT NULL,
   `display_label` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`seq_member_id`),
-  UNIQUE KEY `stable_id` (`stable_id`),
+  UNIQUE KEY `genome_db_stable_id` (`genome_db_id`,`stable_id`),
   KEY `taxon_id` (`taxon_id`),
   KEY `genome_db_id` (`genome_db_id`),
   KEY `source_name` (`source_name`),
@@ -568,7 +569,8 @@ CREATE TABLE `seq_member` (
   KEY `gene_member_id` (`gene_member_id`),
   KEY `dnafrag_id_start` (`dnafrag_id`,`dnafrag_start`),
   KEY `dnafrag_id_end` (`dnafrag_id`,`dnafrag_end`),
-  KEY `seq_member_gene_member_id_end` (`seq_member_id`,`gene_member_id`)
+  KEY `seq_member_gene_member_id_end` (`seq_member_id`,`gene_member_id`),
+  KEY `stable_id` (`stable_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 MAX_ROWS=100000000;
 
 CREATE TABLE `seq_member_projection` (
