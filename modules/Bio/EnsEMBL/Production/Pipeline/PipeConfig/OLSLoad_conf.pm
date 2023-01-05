@@ -64,7 +64,7 @@ sub default_options {
         tgt_mart_host    => undef,
         tgt_mart_db_name => $self->o('mart_db_name').'_'.$self->o('ens_version'),
 
-        copy_service_payload =>
+        copy_ensembl_ontology_payload =>
           '{'.
             '"src_host": "'.$self->o('src_host').'", '.
             '"src_incl_db": "'.$self->o('db_name').'", '.
@@ -73,7 +73,7 @@ sub default_options {
             '"user": "'.$self->o('user').'"'.
           '}',
 
-        copy_service_mart_payload =>
+        copy_ontology_mart_payload =>
           '{'.
             '"src_host": "'.$self->o('src_host').'", '.
             '"src_incl_db": "'.$self->o('mart_db_name').'", '.
@@ -321,22 +321,22 @@ sub pipeline_analyses {
             },
         },
         {
-            -logic_name    => 'copy_database',
+            -logic_name    => 'copy_ensembl_ontology',
             -module        => 'ensembl.production.hive.ProductionDBCopy',
             -language      => 'python3',
             -parameters    => {
                 'endpoint' => $self->o('copy_service_uri'),
-                'payload'  => $self->o('copy_service_payload'),
+                'payload'  => $self->o('copy_ensembl_ontology_payload'),
                 'method'   => 'post',
             },
         },
         {
-            -logic_name    => 'copy_mart_database',
+            -logic_name    => 'copy_ontology_mart',
             -module        => 'ensembl.production.hive.ProductionDBCopy',
             -language      => 'python3',
             -parameters    => {
                 'endpoint' => $self->o('copy_service_uri'),
-                'payload'  => $self->o('copy_service_mart_payload'),
+                'payload'  => $self->o('copy_ontology_mart_payload'),
                 'method'   => 'post',
             },
             -rc_name     => "500M"
