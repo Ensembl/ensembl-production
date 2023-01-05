@@ -16,13 +16,14 @@
 # limitations under the License
 
 usage () {
-  echo "Usage: $0 [path_repo_list_file]"
+  echo "Usage: $0 [path_repo_list_file] [reviewer]"
 }
 
 if [ -z "$1" ] ; then
     usage
     exit 1
 fi
+
 hash gh 2>/dev/null || {
   echo >&2 "This script required 'gh' library. See https://github.com/cli/cli#installation and rerun."
   exit 1
@@ -48,7 +49,11 @@ for repo in $repositories; do
   git commit -a -m "${year} copyright update"
   git push --set-upstream origin bau/copyright-${year}
   if [ $? -eq 0 ]; then
-    gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
+    if [ ! -z "$2" ]; then
+      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2
+    else
+      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
+    fi
   else
     echo 'failed to push commits and open a pull request.';
   fi
