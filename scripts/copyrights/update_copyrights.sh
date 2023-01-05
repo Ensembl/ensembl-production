@@ -47,21 +47,27 @@ for repo in $repositories; do
   echo $repo
   rm -rf ${tmp_dir}/${repo}
   git clone --depth 1 --branch main git@github.com:Ensembl/${repo} ${tmp_dir}/${repo}
-  cd ${tmp_dir}/${repo}
-  git checkout -b bau/copyright-${year}
-  perl ${ENSEMBL_ROOT_DIR}/ensembl/misc-scripts/annual_copyright_updater.sh
-  git commit -a -m "${year} copyright update"
-  git push --set-upstream origin bau/copyright-${year}
   if [ $? -eq 0 ]; then
-    if [ "$#" -eq 2 ]; then
-      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2
-    elif [ "$#" -eq 3 ]; then
-      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --assignee $3
+    cd ${tmp_dir}/${repo}
+    git checkout -b bau/copyright-${year}
+    perl ${ENSEMBL_ROOT_DIR}/ensembl/misc-scripts/annual_copyright_updater.sh
+    git commit -a -m "${year} copyright update"
+    if [ $? -eq 0 ]; then
+      git push --set-upstream origin bau/copyright-${year}
+      if [ $? -eq 0 ]; then
+        if [ "$#" -eq 2 ]; then
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2
+        elif [ "$#" -eq 3 ]; then
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --assignee $3
+        else
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
+        fi
+      else
+        echo 'failed to push commits and open a pull request.';
+      fi
     else
-      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
+      echo 'failed to commit updates.';
     fi
-  else
-    echo 'failed to push commits and open a pull request.';
   fi
   echo "--------------------"
 done
