@@ -76,7 +76,7 @@ sub default_options {
         copy_service_mart_payload =>
           '{'.
             '"src_host": "'.$self->o('src_host').'", '.
-            '"src_incl_db": "'.$self->o('db_name').'", '.
+            '"src_incl_db": "'.$self->o('mart_db_name').'", '.
             '"tgt_host": "'.$self->o('tgt_mart_host').'", '.
             '"tgt_db_name": "'.$self->o('tgt_mart_db_name').'", '.
             '"user": "'.$self->o('user').'"'.
