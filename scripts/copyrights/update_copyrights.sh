@@ -16,7 +16,7 @@
 # limitations under the License
 
 usage () {
-  echo "Usage: $0 [path_repo_list_file] [reviewer]"
+  echo "Usage: $0 path_repo_list_file [reviewer] [assignee]"
 }
 
 if [ -z "$1" ] ; then
@@ -24,14 +24,18 @@ if [ -z "$1" ] ; then
     exit 1
 fi
 
+if [ -f "$1" ]; then
+  repositories=`cat ${1}`
+else
+  repositories=$1
+fi
+
 hash gh 2>/dev/null || {
   echo >&2 "This script required 'gh' library. See https://github.com/cli/cli#installation and rerun."
   exit 1
 }
 
-repositories=`cat ${1}`
 tmp_dir="$HOME/tmp"
-
 mkdir -p $tmp_dir
 year=`date +'%Y'`
 
@@ -49,8 +53,10 @@ for repo in $repositories; do
   git commit -a -m "${year} copyright update"
   git push --set-upstream origin bau/copyright-${year}
   if [ $? -eq 0 ]; then
-    if [ ! -z "$2" ]; then
+    if [ "$#" -eq 2 ]; then
       gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2
+    elif [ "$#" -eq 3 ]; then
+      gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --assignee $3
     else
       gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
     fi
