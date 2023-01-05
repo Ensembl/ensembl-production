@@ -16,7 +16,7 @@
 # limitations under the License
 
 usage () {
-  echo "Usage: $0 path_repo_list_file [reviewer] [assignee]"
+  echo "Usage: $0 [path_repo_list_file or repo full path] [reviewer] [assignee]"
 }
 
 if [ -z "$1" ] ; then
@@ -39,14 +39,15 @@ tmp_dir="$HOME/tmp"
 mkdir -p $tmp_dir
 year=`date +'%Y'`
 
-# Run git push and then immediately open the Pull Request URL
-
 for repo in $repositories; do
   # checkout default branch
   echo "--------------------"
   echo $repo
+  if [[ $repo != Ensembl* ]]; then
+    repo="Ensembl/$repo"
+  fi
   rm -rf ${tmp_dir}/${repo}
-  git clone --depth 1 --branch main git@github.com:Ensembl/${repo} ${tmp_dir}/${repo}
+  git clone --depth 1 --branch main git@github.com:${repo} ${tmp_dir}/${repo}
   if [ $? -eq 0 ]; then
     cd ${tmp_dir}/${repo}
     git checkout -b bau/copyright-${year}
@@ -56,11 +57,11 @@ for repo in $repositories; do
       git push --set-upstream origin bau/copyright-${year}
       if [ $? -eq 0 ]; then
         if [ "$#" -eq 2 ]; then
-          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --base main
         elif [ "$#" -eq 3 ]; then
-          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --assignee $3
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --reviewer $2 --assignee $3 --base main
         else
-          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year}
+          gh pr create --title "Annual copyright update ${year}" --body "${year} annual copyright file updates" --head bau/copyright-${year} --base main
         fi
       else
         echo 'failed to push commits and open a pull request.';
