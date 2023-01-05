@@ -35,6 +35,8 @@ use JSON;
 use Bio::EnsEMBL::Hive::Utils::URL;
 use Bio::EnsEMBL::DBSQL::DBConnection;
 use Text::Glob qw( match_glob );
+use File::Copy qw(copy);
+use LWP::Simple;
 use Bio::EnsEMBL::Utils::IO qw/slurp/;
 use Bio::EnsEMBL::Utils::URI qw(parse_uri);
 
@@ -63,10 +65,19 @@ sub create_db {
 }
 
 sub download_file {
-  my ($self, $file, $base_path, $source_name, $db, $skip_download_if_file_present, $release) = @_;
+  my ($self, $file, $base_path, $source_name, $db, $extra_args) = @_;
 
+  # Create uri object and get scheme
   my $uri = URI->new($file);
   if (!defined $uri->scheme) { return $file; }
+
+  # Get extra parameters
+  my $skip_download_if_file_present = $extra_args->{'skip_download_if_file_present'} || 0;
+  my $release = $extra_args->{'release'} || undef;
+  my $rel_number = $extra_args->{'rel_number'} || undef;
+  my $catalog = $extra_args->{'catalog'} || undef;
+
+  # Create file download path
   my $file_path;
   $source_name =~ s/\///g;
   my $dest_dir = catdir($base_path, $source_name);
@@ -74,7 +85,64 @@ sub download_file {
     $dest_dir = catdir($base_path, 'Checksum');
   }
   make_path($dest_dir);
-  if ($uri->scheme eq 'ftp') {
+
+  # If file is in local ftp, copy from there
+  if ($file =~ /ftp.ebi.ac.uk/) {
+    # Construct local path
+    my $local_file = $file;
+    $local_file =~ s|http://ftp.ebi.ac.uk/pub/|/nfs/ftp/public/|;
+
+    # Check if local file exists
+    if (-e $local_file) {
+      $file_path = catfile($dest_dir, basename($uri->path));
+      if (defined $db and $db eq 'checksum') {
+        $file_path = catfile($dest_dir, $source_name."-".basename($uri->path));
+      }
+
+      unless ($skip_download_if_file_present && -f $file_path) {
+        copy $local_file, $file_path;
+
+        # Check if copy was successful
+        if (-e $file_path) {
+          return $file_path if (defined $release);
+          return dirname($file_path);
+        }
+      }
+    }
+  }
+
+  if ($source_name =~ /RefSeq/ && defined($rel_number) && defined($catalog) && !defined($release)) {
+    # Get current release number
+    my $release_number = get($rel_number);
+    $release_number =~ s/\n//g;
+    if (!$release_number) {
+      die "No release number in ".$rel_number;
+    }
+
+    # Get list of files in catalog
+    $catalog =~ s/\*/$release_number/;
+    my $list = get($catalog);
+    my %refseq_files = map {(split /\n/)} split /\t/, $list;
+
+    while (my ($checksum, $file_name) = each %refseq_files) {
+      # Only interested in files matching pattern
+      next if (!match_glob(basename($uri->path), $file_name));
+
+      $file_path = catfile($dest_dir, basename($file_name));
+      unless ($skip_download_if_file_present && -f $file_path) {
+        my $http = HTTP::Tiny->new();
+        my $response = $http->get(dirname($file)."/".$file_name);
+
+        if ($response->{success}) {
+          open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+          print OUT $response->{content};
+          close OUT;
+        } else {
+          die "Error in downloading file from ".dirname($file)."/".$file_name;
+        }
+      }
+    }
+  } elsif ($uri->scheme eq 'ftp') {
     my $ftp = ftp_connect($uri);
     my @remote_files = $ftp->ls();
     foreach my $remote_file ( @remote_files ) {
@@ -88,22 +156,40 @@ sub download_file {
         if (!$ftp->get( $remote_file, $file_path )) {
           $ftp->quit;
           $ftp = ftp_connect($uri);
-          $ftp->get( $remote_file, $file_path )
+          $ftp->get( $remote_file, $file_path ) or die "Error in downloading ftp file from ".$uri->as_string();
         }
       }
     }
     $ftp->quit;
   } elsif ($uri->scheme eq 'http' || $uri->scheme eq 'https') {
+    if ($source_name =~ /RefSeq/ && defined($rel_number) && defined($release)) {
+      # Get current release number
+      my $release_number = get($rel_number);
+      $release_number =~ s/\n//g;
+      if (!$release_number) {
+        die "No release number in ".$rel_number;
+      }
+
+      $file =~ s/\*/$release_number/;
+      $uri = URI->new($file);
+    }
+
     $file_path = catfile($dest_dir, basename($uri->path));
     unless ($skip_download_if_file_present and -f $file_path) {
       if (defined $db and $db eq 'checksum') {
         $file_path = catfile($dest_dir, $source_name."-".basename($uri->path));
       }
-      open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+
       my $http = HTTP::Tiny->new();
       my $response = $http->get($uri->as_string());
-      print OUT $response->{content};
-      close OUT;
+
+      if ($response->{success}) {
+        open OUT, ">$file_path" or die "Couldn't open file $file_path $!";
+        print OUT $response->{content};
+        close OUT;
+      } else {
+        die "Error in downloading file from ".$uri->as_string();
+      }
     }
   }
   if (defined $release) {

@@ -85,7 +85,7 @@ sub pipeline_analyses {
       -parameters      => {
         base_path => $self->o('base_path')
       },
-      -rc_name         => 'normal',
+      -rc_name         => 'dm',
       -max_retry_count => 3
     },
     {

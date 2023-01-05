@@ -258,8 +258,8 @@ sub run {
             }
             else {
                 $translation = $tl_adaptor->fetch_by_stable_id($tgt_protein);
-                if (defined $translation) {
-                    $transcript = $translation->transcript;
+                $transcript = $translation->transcript;
+                if (defined $transcript) {
                     $transcript_hash{$tgt_protein} = $transcript;
                     $translation_hash{$tgt_protein} = $translation;
                 } else {
