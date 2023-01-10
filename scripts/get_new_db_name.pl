@@ -36,5 +36,5 @@ if($name =~ m/^(.*_[a-z]+_)([0-9]+)$/) {
     my $v1 = $2 + 1;
     print "${1}${v1}_${3}\n";
 } else {
-    print "4 $name\n";
+    print "$name\n";
 }
