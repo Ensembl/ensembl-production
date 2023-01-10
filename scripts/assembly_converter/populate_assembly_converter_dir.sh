@@ -14,25 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-base_src=/hps/nobackup/flicek/ensembl/production/release_dumps
-base_dest=/hps/nobackup/flicek/ensembl/production/release_dumps/assembly_converter
-vert_ftp=/nfs/ftp/ensemblftp/ensembl/PUBLIC/pub
-non_vert_ftp=/nfs/ftp/ensemblftp/ensemblgenomes/pub/
+base_src="/hps/nobackup/flicek/ensembl/production/release_dumps/release-${ENS_VERSION}/ftp_dumps"
+base_dest="/hps/nobackup/flicek/ensembl/production/release_dumps/assembly_converter"
+vert_ftp="/nfs/ftp/ensemblftp/ensembl/PUBLIC/pub"
+non_vert_ftp="/nfs/ftp/ensemblftp/ensemblgenomes/pub"
+divisions="vertebrates plants fungi metazoa protists"
 testing=false
 
+function usage() {
+  echo "$0 -s source_base -t target_base -v vert_ftp_path -n nv_vert_path -d division -T (test mode)"
+  exit 1
+}
 
-while getopts "n:v:s:d:T" opt; do
+while getopts "n:v:s:d:Th" opt; do
   case $opt in
-    s) base_src="$OPTARG"
-    ;;
-    d) base_dest="$OPTARG"
-    ;;
-    v) vert_ftp="$OPTARG"
-    ;;
-    n) non_vert_ftp="$OPTARG"
-    ;;
-    T) testing=true
-    ;;
+    s) base_src="$OPTARG" ;;
+    t) base_dest="$OPTARG" ;;
+    v) vert_ftp="$OPTARG" ;;
+    n) non_vert_ftp="$OPTARG" ;;
+    d) divisions="$OPTARG" ;;
+    T) testing=true ;;
+    h) usage ;;
     \?) echo "Invalid option -$OPTARG" 1>&2
     ;;
   esac
@@ -41,134 +43,43 @@ done
 echo ""
 echo "DELETE EXISTING DATA"
 echo "----------------------"
-rm -rf ${base_dest}/*
-
+if [ "$testing" == false ]; then
+  rm -rf ${base_dest}/*
+else
+  echo "rm -rf ${base_dest}/*"
+fi
 echo ""
-echo "PROCESSING VERTEBRATES"
-echo "----------------------"
-for dir in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain`
-do
-    echo "mkdir -p ${base_dest}/www/${dir} if not exists"
-    if [ "$testing" = false ]; then
-        mkdir -p ${base_dest}/www/${dir}
-    fi
-
-    echo "---------------------------"
-    echo "Copying... ${dir} chain files"
-    echo "---------------------------"
-
-    for file in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}`
-    do
-        if test ${file} !=  "CHECKSUMS"
-        then
-            echo "cp ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}/${file} ${base_dest}/www/${dir}/"
-            if [ "$testing" = false ]; then
-                cp ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir}/${file} ${base_dest}/www/${dir}/
-            fi
-        fi
-    done
-
-    echo "------------------------"
-    echo "Copying, unzipping and renaming indexed current ${dir} dna.toplevel.fa"
-    echo "------------------------"
-
-    for file in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/`
-    do
-        if test ${file} !=  "CHECKSUMS"
-        then
-            if [ "$testing" = false ]; then
-                if [[ "${file}" = *".fa.gz.fai" ]]
-                then
-                    echo "cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/www/${dir}/"
-                    cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/www/${dir}/
-                    mv -f "${base_dest}/www/${dir}/${file}" "${base_dest}/www/${dir}/${file/.fa.gz.fai/.fa.fai}"
-                elif [[ "${file}" = *".fa.gz" ]]
-                then
-                   echo "cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/www/${dir}/"
-                   cp ${base_src}/release-${ENS_VERSION}/vertebrates/fasta/${dir}/dna_index/${file} ${base_dest}/www/${dir}/
-                   echo "Unzipping files ${file}"
-                   gunzip -f ${base_dest}/www/${dir}/${file}
-                fi
-            fi
-        fi
-    done
-
-    echo "------------------------"
-    echo "Copying, unzipping and indexing previous assembly ${dir} dna.toplevel.fa"
-    echo "------------------------"
-
-    for assembly in `ls ${base_src}/release-${ENS_VERSION}/vertebrates/assembly_chain/${dir} | xargs -n 1 basename | sed s/_to.*// | uniq`
-    do
-        if test ${assembly} !=  "CHECKSUMS"
-        then
-            if [ "$testing" = false ]; then
-                if [[ "${assembly}" = 'GRCh37' && "${dir}" = 'homo_sapiens' ]]
-                then
-                    file_path=`find ${vert_ftp}/grch37/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
-                elif [[ "${assembly}" = 'NCBI35' && "${dir}" = 'homo_sapiens' ]]
-                then
-                    file_path=`find ${vert_ftp}/release-*/homo_sapiens*/data/fasta/dna/ -type f -name "${dir^}.*.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
-                elif [[ "${assembly}" = 'NCBI34' && "${dir}" = 'homo_sapiens' ]]
-                then
-                    file_path=`find ${vert_ftp}/release-*/human*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
-                elif [[ "${assembly}" = 'NCBIM36' && "${dir}" = 'mus_musculus' ]]
-                then
-                    file_path=`find ${vert_ftp}/release-*/mus_musculus*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.seqlevel.fa.gz" | sort -r | head -n1`
-                else
-                    file_path=`find ${vert_ftp}/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
-                fi
-                if [[ -n "$file_path" ]]
-                then
-                    file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
-                else
-                    echo "INFO: Cannot find file for assembly '$assembly'"
-                    continue
-                fi
-                if [ ! -f "${base_dest}/www/${dir}/$file" ]
-                then
-                    echo "cp $file_path ${base_dest}/www/${dir}"
-                    cp $file_path ${base_dest}/www/${dir}
-                    echo "Unzipping file ${file}.gz"
-                    gunzip -f ${base_dest}/www/${dir}/${file}.gz
-                    echo "indexing ${file}"
-                    samtools faidx ${base_dest}/www/${dir}/${file}
-                fi
-            fi
-        fi
-    done
-done
-
-echo ""
-echo "PROCESSING NON-VERTEBRATES"
-echo "--------------------"
-for division in plants fungi metazoa protists
+echo "PROCESSING Assembly Chain files"
+echo "-------------------------------"
+for division in $divisions
 do
     echo ""
     echo "------------------"
     echo "Division $division"
     echo "------------------"
-    for dir in `ls ${base_src}/release-${EG_VERSION}/${division}/assembly_chain`
+    for dir in `ls ${base_src}/${division}/assembly_chain`
     do
         if [[ "${dir}" != *"collection" ]]
         then
-            if [ "$testing" = false ]; then
-                # Create dirs
-                mkdir -p ${base_dest}/${division}/${dir}
+            dest_division_dir="${base_dest}/${division}/${dir}"
+            if [ "$testing" == false ]; then
+                # Create destination dir
+                mkdir -p ${dest_division_dir}
             else
-                echo "mkdir -p ${base_dest}/${division}/${dir}"
+                echo "mkdir -p ${dest_division_dir}"
             fi
 
             echo "--------------------------------------"
-            echo "Copying... $division  ${dir} chain files"
+            echo "Copying... ${division} ${dir} chain files"
             echo "--------------------------------------"
 
-            for file in `ls ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}`
+            for file in `ls ${base_src}/${division}/assembly_chain/${dir}`
             do
                 if test ${file} !=  "CHECKSUMS"
                 then
-                    echo "cp ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}/${file} ${base_dest}/${division}/${dir}/"
+                      echo "cp ${base_src}/${division}/assembly_chain/${dir}/${file} ${dest_division_dir}/"
                     if [ "$testing" = false ]; then
-                        cp ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}/${file} ${base_dest}/${division}/${dir}/
+                        cp ${base_src}/${division}/assembly_chain/${dir}/${file} ${dest_division_dir}/
                     fi
 
                 fi
@@ -177,22 +88,22 @@ do
             echo "Copying, unzipping and renaming indexed $division ${dir} dna.toplevel.fa"
             echo "----------------------------------"
 
-            for file in `ls ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/`
+            for file in `ls ${base_src}/${division}/fasta/${dir}/dna_index/`
             do
                 if test ${file} !=  "CHECKSUMS"
                 then
                     if [ "$testing" = false ]; then
                         if [[ "${file}" = *".fa.gz.fai" ]]
                         then
-                            echo "cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/"
-                            cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/
-                            mv -f "${base_dest}/${division}/${dir}/${file}" "${base_dest}/${division}/${dir}/${file/.fa.gz.fai/.fa.fai}"
+                            echo "cp ${base_src}/${division}/fasta/${dir}/dna_index/${file} ${dest_division_dir}/"
+                            cp ${base_src}/${division}/fasta/${dir}/dna_index/${file} ${dest_division_dir}/
+                            mv -f "${dest_division_dir}/${file}" "${dest_division_dir}/${file/.fa.gz.fai/.fa.fai}"
                         elif [[ "${file}" = *".fa.gz" ]]
                         then
-                            echo "cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/"
-                            cp ${base_src}/release-${EG_VERSION}/${division}/fasta/${dir}/dna_index/${file} ${base_dest}/${division}/${dir}/
+                            echo "cp ${base_src}/${division}/fasta/${dir}/dna_index/${file} ${dest_division_dir}/"
+                            cp ${base_src}/${division}/fasta/${dir}/dna_index/${file} ${dest_division_dir}/
                             echo "Unzipping files ${file}"
-                            gunzip -f ${base_dest}/${division}/${dir}/${file}
+                            gunzip -f ${dest_division_dir}/${file}
                         fi
                     fi
                 fi
@@ -201,28 +112,49 @@ do
             echo "------------------------"
             echo "Copying, unzipping and indexing previous assembly ${dir} dna.toplevel.fa"
             echo "------------------------"
-
-            for assembly in `ls ${base_src}/release-${EG_VERSION}/${division}/assembly_chain/${dir}| xargs -n 1 basename | sed s/_to.*// | uniq`
+            if [[ $division == "vertebrates" ]]; then
+              src_ftp=${vert_ftp}
+            else
+              src_ftp=${non_vert_ftp}
+            fi
+            for assembly in `ls ${base_src}/${division}/assembly_chain/${dir}| xargs -n 1 basename | sed s/_to.*// | uniq`
             do
                 if test ${assembly} !=  "CHECKSUMS"
                 then
                     if [ "$testing" = false ]; then
-                        file_path=`find ${non_vert_ftp}/release-*/${division}/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
+                        if [[ "${assembly}" = 'GRCh37' && "${dir}" = 'homo_sapiens' ]]
+                        then
+                            file_path=`find ${src_ftp}/grch37/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
+                        elif [[ "${assembly}" = 'NCBI35' && "${dir}" = 'homo_sapiens' ]]
+                        then
+                            file_path=`find ${src_ftp}/release-*/homo_sapiens*/data/fasta/dna/ -type f -name "${dir^}.*.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
+                        elif [[ "${assembly}" = 'NCBI34' && "${dir}" = 'homo_sapiens' ]]
+                        then
+                            file_path=`find ${src_ftp}/release-*/human*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.contig.fa.gz" | sort -r | head -n1`
+                        elif [[ "${assembly}" = 'NCBIM36' && "${dir}" = 'mus_musculus' ]]
+                        then
+                            file_path=`find ${src_ftp}/release-*/mus_musculus*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.seqlevel.fa.gz" | sort -r | head -n1`
+                        else
+                            file_path=`find ${src_ftp}/release-*/${division}/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
+                        fi
                         if [[ -n "$file_path" ]]
                         then
                             file=`echo ${file_path} | xargs -n 1 basename | sed s/.gz//`
+                            echo "INFO: Found file for assembly '$file'"
                         else
                             echo "INFO: Cannot find file for assembly '$assembly'"
                             continue
                         fi
-                        if [ ! -f "${base_dest}/${division}/${dir}/$file" ]
+                        if [ ! -f "${dest_division_dir}/$file" ]
                         then
-                            echo "cp $file_path ${base_dest}/${division}/${dir}"
-                            cp $file_path ${base_dest}/${division}/${dir}
-                            echo "Unzipping file ${file}.gz"
-                            gunzip -f ${base_dest}/${division}/${dir}/${file}.gz
-                            echo "indexing ${file}"
-                            samtools faidx ${base_dest}/${division}/${dir}/${file}
+                          echo "INFO: cp $file_path ${dest_division_dir}"
+                          cp $file_path ${dest_division_dir}
+                          echo "--- Unzipping file ${file}.gz"
+                          gunzip -f ${dest_division_dir}/${file}.gz
+                          echo "--- Indexing ${file}"
+                          samtools faidx ${dest_division_dir}/${file}
+                        else
+                           echo "INFO: File already present, no override ${dest_division_dir}/$file"
                         fi
                     fi
                 fi
