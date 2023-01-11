@@ -134,6 +134,8 @@ do
                         elif [[ "${assembly}" = 'NCBIM36' && "${dir}" = 'mus_musculus' ]]
                         then
                             file_path=`find ${src_ftp}/release-*/mus_musculus*/data/fasta/dna/ -type f -name "${dir^}.${assembly}.*.dna.seqlevel.fa.gz" | sort -r | head -n1`
+                        elif [[ $division == "vertebrates" ]]; then
+                            file_path=`find ${src_ftp}/release-*/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
                         else
                             file_path=`find ${src_ftp}/release-*/${division}/fasta/${dir}/dna/ -type f -name "${dir^}.${assembly}.*.dna.toplevel.fa.gz" -o -name "${dir^}.${assembly}.dna.toplevel.fa.gz" | sort -r | head -n1`
                         fi
