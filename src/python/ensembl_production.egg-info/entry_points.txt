@@ -1,0 +1,5 @@
+[console_scripts]
+dc-parser = scripts.dcparse:main
+dc-stat = scripts.dcstat:main
+meta-hive-species = scripts.meta_hive_species:main
+
