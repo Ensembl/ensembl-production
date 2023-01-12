@@ -79,4 +79,65 @@ def species_factory(metadata_params: dict):
         for result in session.execute(meta_query): 
             species_info = dict(result)
             yield species_info
+    
+def get_genome_info(ens_version: int, eg_version: int, 
+                metadata_url: str, dbtype=["core"],  
+                species: list=[], division: list=[]):    
+    """
+    Genome Information for Ensembl Species
+    Args:
+        ens_version (int): Ensembl Release Version 
+        eg_version (int): Ensembl Genomes Release Version
+        metadata_uri (str): MetaData Database Mysql Url  
+        species_name (str): Species name 
+        division (str): Ensembl Division
+        dbtype (str): Ensembl Database Type (default: core)
+
+    Yields:
+        dict: genome information
+            species (str)   : Ensembl species production name ,
+            group (str)     : Ensembl Database type,
+            genome_id (str) : Ensembl genome ID (combination species id and assembly accession),
+            gca (str)       : Assembly Accession,
+            level (str)     : Assembly level,
+            assembly_default (str) : Assembly Default,
+            assembly_ucsc (str) : Asembly UCSC Version name,
+            dbname (str)    : Ensembl Database Name,
+            version (str)   : Assembly Version,
+            division (str)  : Ensembl Division,
+            species_id (str): Ensembl Species ID,
+                       
+        
+    """     
+    db_connection =  get_db_session(metadata_url)
+    with db_connection.session_scope() as session:
+        meta_query = select(Organism.name.label("species"), GenomeDatabase.type.label("group"),
+                    (Organism.name + '_' + Assembly.assembly_accession).label("genome_id"),        
+                    Assembly.assembly_accession.label("gca"),Assembly.assembly_level.label("level"),
+                    Assembly.assembly_default, Assembly.assembly_name.label("version"), Assembly.assembly_ucsc,
+                    Organism.scientific_name, Organism.display_name, Organism.species_taxonomy_id, Organism.strain,
+                    Genome.genebuild, GenomeDatabase.dbname, DataRelease.release_date, Division.name.label("division"), 
+                    Organism.organism_id.label("species_id")).select_from(GenomeDatabase) \
+                    .join(Genome).join(Assembly).join(Organism).join(DataRelease).join(Division) \
+                    .filter(DataRelease.ensembl_version.in_( ens_version) ) \
+                    .filter(DataRelease.ensembl_genomes_version.in_(eg_version))
+        
+        if species:
+            meta_query = meta_query.filter(
+                GenomeDatabase.type.in_(dbtype)
+            )
+        if species:
+            meta_query = meta_query.filter(
+                Organism.name.in_(species)
+            )
+        
+        if division:
+            meta_query = meta_query.filter(
+                Division.name.in_(division)
+            )
+            
+        for result in session.execute(meta_query): 
+            species_info = dict(result)
+            yield species_info      
+      
             
