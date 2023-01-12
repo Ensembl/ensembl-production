@@ -90,7 +90,7 @@ def get_genome_info(ens_version: int, eg_version: int,
         eg_version (int): Ensembl Genomes Release Version
         metadata_uri (str): MetaData Database Mysql Url  
         species_name (list): List of Species production names 
-        division (list): Ensembl Division
+        division (list): Ensembl Division Names
         dbtype (list): Ensembl Database Type (default: core)
 
     Yields:
