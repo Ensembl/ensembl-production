@@ -125,7 +125,6 @@ sub get_repeatmask_value {
    	  -SQL => qq/select max(date_format( created, "%Y%m%d")) from analysis a join meta m on (a.logic_name = lower(m.meta_value)) where meta_key =?/, 
 	  -USE_HASHREFS => 1, 
 	  -PARAMS => ['repeat.analysis']);
-  print($res_array->[0]);
   return $res_array->[0] if @$res_array;
   return "";
 }
