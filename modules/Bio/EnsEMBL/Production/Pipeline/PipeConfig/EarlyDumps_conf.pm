@@ -179,6 +179,7 @@ sub pipeline_analyses {
       	      		      dump_script        => $self->o('metadata_script'),
       		              dump_path          => $self->o('metadata_base_dir'),
       		              division_pattern_nonvert  => $self->o('division_pattern_nonvert'),
+			      division                  => $self->o('division'),  
       		              division_list             => $self->o('division_list'), 	      
 			    },
       -flow_into         => {
