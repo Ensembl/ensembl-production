@@ -113,8 +113,8 @@ sub species_wise_metadata_files {
 	my @non_vert_combine_files = ();
 	my $cmd_str = "";
 	my $division_specific_param = {    'ftp_dir'          => $self->param('ens_ftp_dir'),
-                                           'base_path'        => catdir($self->param('base_path'),  "/release-".$self->param('ens_version')."/ftp_dumps"), 
-                                           'dump_dir'         => catdir($self->param('base_path'),  "/release-".$self->param('ens_version')."/ftp_dumps"),
+                                           'base_path'        => $self->param('base_path'), 
+                                           'dump_dir'         => $self->param('base_path'),
                                            'release'          => $self->param('ens_version'),
                                            'server_url'       => $self->param('server_url_vert'),
 					   'dump_division'    => 'vertebrates',
