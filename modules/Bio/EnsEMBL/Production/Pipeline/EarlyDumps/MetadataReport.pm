@@ -106,11 +106,15 @@ sub species_wise_metadata_files {
 	my ( $self, $dump_path) = @_;
 
 	my @division_list = @{$self->param('division_list')};
+	
+	if(@{$self->param('division')}){
+	  @division_list = @{$self->param('division')};
+	}
 	my @non_vert_combine_files = ();
 	my $cmd_str = "";
 	my $division_specific_param = {    'ftp_dir'          => $self->param('ens_ftp_dir'),
-                                           'base_path'        => catdir($self->param('base_path'),  "/release-".$self->param('ens_version')), 
-                                           'dump_dir'         => catdir($self->param('base_path'),  "/release-".$self->param('ens_version')),
+                                           'base_path'        => $self->param('base_path'), 
+                                           'dump_dir'         => $self->param('base_path'),
                                            'release'          => $self->param('ens_version'),
                                            'server_url'       => $self->param('server_url_vert'),
 					   'dump_division'    => 'vertebrates',
@@ -148,15 +152,13 @@ sub species_wise_metadata_files {
 		if($each_division ne 'vertebrates' ){
 			$analysis_flow = 2;
 			$division_specific_param->{'release_version'}=$self->param('eg_version');
-			$division_specific_param->{'base_path'}=catdir($self->param('base_path'),  "/release-".$self->param('eg_version'));
-			$division_specific_param->{'dump_dir'}=catdir($self->param('base_path'),  "/release-".$self->param('eg_version'));
 			$division_specific_param->{'release'}=$self->param('eg_version');
 			$division_specific_param->{'server_url'}=$self->param('server_url_nonvert');
 			$division_specific_param->{'dump_division'}=$each_division;
 
 		}elsif($each_division eq 'bacteria'){
 			$analysis_flow = 3;
-			$division_specific_param->{'server_url'}=$self->param('server_url_nonvert');
+			$division_specific_param->{'server_url'}=$self->param('server_url_bacteria');
 		}
 
 		$division_specific_param->{'species'}	= \@species_list;

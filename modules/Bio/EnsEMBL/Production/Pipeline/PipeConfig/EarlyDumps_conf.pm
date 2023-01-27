@@ -48,6 +48,7 @@ sub default_options {
     registry          => $self->o('registry'),
     # Metadata Report Script
     species           => [],
+    division          => [],
     metadata_db_host  => 'mysql-ens-meta-prod-1',
     base_dir          => $self->o('ENV', 'BASE_DIR'),
     ensembl_version   => $self->o('ENV', 'ENS_VERSION'),
@@ -81,6 +82,7 @@ sub default_options {
     overwrite => 0,
     server_url_vert => $self->get_server_url('gp1'),
     server_url_nonvert => $self->get_server_url('gp3'),
+    server_url_bacteria => $self->get_server_url('gp4'),
 
   };
 }
@@ -177,6 +179,7 @@ sub pipeline_analyses {
       	      		      dump_script        => $self->o('metadata_script'),
       		              dump_path          => $self->o('metadata_base_dir'),
       		              division_pattern_nonvert  => $self->o('division_pattern_nonvert'),
+			      division                  => $self->o('division'),  
       		              division_list             => $self->o('division_list'), 	      
 			    },
       -flow_into         => {
