@@ -6,25 +6,24 @@
 #
 attrs==21.2.0
     # via pytest
-certifi==2021.10.8
+certifi==2022.12.7
     # via requests
-charset-normalizer==2.0.7
+charset-normalizer==3.0.1
     # via requests
-greenlet==1.1.2
+ensembl-hive @ git+https://github.com/Ensembl/ensembl-hive.git@main
+    # via ensembl-py
+ensembl-py @ git+https://github.com/Ensembl/ensembl-py.git
+    # via -r requirements.in
+greenlet==2.0.2
     # via sqlalchemy
-idna==3.3
+idna==3.4
     # via requests
-importlib-metadata==4.8.2
-    # via
-    #   pluggy
-    #   pytest
-    #   sqlalchemy
 iniconfig==1.1.1
     # via pytest
-mock==4.0.3
-    # via -r requirements-test.in
 mysqlclient==2.0.3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   ensembl-py
 packaging==21.2
     # via pytest
 pluggy==1.0.0
@@ -34,16 +33,29 @@ py==1.11.0
 pyparsing==2.4.7
     # via packaging
 pytest==6.2.5
-    # via -r requirements-test.in
-requests==2.26.0
-    # via -r requirements.in
-sqlalchemy==1.4.27
-    # via -r requirements.in
+    # via
+    #   ensembl-py
+    #   pytest-dependency
+pytest-dependency==0.5.1
+    # via ensembl-py
+python-dotenv==0.19.2
+    # via ensembl-py
+pyyaml==6.0
+    # via ensembl-py
+requests==2.28.2
+    # via
+    #   -r requirements.in
+    #   ensembl-py
+six==1.16.0
+    # via sqlalchemy-utils
+sqlalchemy==1.4.46
+    # via
+    #   -r requirements.in
+    #   ensembl-py
+    #   sqlalchemy-utils
+sqlalchemy-utils==0.37.9
+    # via ensembl-py
 toml==0.10.2
     # via pytest
-typing-extensions==4.0.0
-    # via importlib-metadata
-urllib3==1.26.7
+urllib3==1.26.14
     # via requests
-zipp==3.6.0
-    # via importlib-metadata
