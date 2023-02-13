@@ -27,7 +27,7 @@
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaFoldMapping
+ Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaDB
 
 =head1 SYNOPSIS
 

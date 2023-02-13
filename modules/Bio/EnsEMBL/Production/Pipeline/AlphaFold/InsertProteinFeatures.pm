@@ -99,6 +99,7 @@ sub run {
 
     # connect to the core database
     my $core_dba = $self->core_dba;
+    my $dbc = $core_dba->dbc;
 
     info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->param('species')));
     $self->cleanup_protein_features('alphafold_import');
@@ -127,7 +128,9 @@ sub run {
     );
     die "Error creating analysis object" unless $analysis;
     my $ana = $core_dba->get_AnalysisAdaptor();
-    $ana->store($analysis);
+    # We get undef in case of an error. The adaptor does warn, but the error string is not
+    # accessible
+    $ana->store($analysis) // die "Error storing analysis in DB. Runnable should be restarted";
 
     # insert the Ensembl-PDB links into the protein_feature table in the core database
     info(sprintf("Calling GIFTS endpoint for species %s using endpoint %s and assembly %s.\n", $self->param('species'), $self->param('rest_server'), $self->param('cs_version')));
@@ -137,7 +140,6 @@ sub run {
     my $mappings = eval{fetch_latest_uniprot_enst_perfect_matches($self->param('rest_server'), $self->param('cs_version'))};
     info(sprintf("Done with GIFTS for species %s\n", $self->param('species')));
 
-    my $dbc = $core_dba->dbc;
 
     my $no_uniparc = 0;
     my $no_uniprot = 0;
@@ -269,7 +271,9 @@ SQL
                     -hdescription => $comment,
             );
 
-            $pfa->store($pf, $translation_id);
+            # We get undef in case of an error. The adaptor does warn, but the error string is not
+            # accessible
+            $pfa->store($pf, $translation_id) // die "Storing protein feature failed. Runnable should be restarted";
         }
     }
     dbunlock();
@@ -281,7 +285,7 @@ my $lock_fh;
 sub dblock {
     my $path = shift;
     open($lock_fh, ">", "$path/dblock") or die "Failed to create lock file: $!";
-    flock $lock_fh, LOCK_EX;
+    flock ($lock_fh, LOCK_EX) or die "Unable to lock $path/dblock: $!";
 }
 
 sub dbunlock {
