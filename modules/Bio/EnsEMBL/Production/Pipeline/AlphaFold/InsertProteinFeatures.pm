@@ -99,6 +99,7 @@ sub run {
 
     # connect to the core database
     my $core_dba = $self->core_dba;
+    my $dbc = $core_dba->dbc;
 
     info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->param('species')));
     $self->cleanup_protein_features('alphafold_import');
@@ -107,27 +108,34 @@ sub run {
 
     dblock($db_path);
 
-    my $db = new Tie::LevelDB::DB($idx_dir_al);
-    die "Error opening DB with Tie::LevelDB::DB from $idx_dir_al: $!" unless $db;
+    my %alpha_db;
+    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
+        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
 
-    my $it = $db->NewIterator;
-    $it->SeekToFirst;
-    die "DB entry invalid" unless $it->Valid;
-    my $alpha_version = (split ',', $it->value)[-1];
+    my $al_string;
+    while (my ($k, $v) = each %alpha_db) {
+        $al_string = $v;
+        last;
+    }
+    untie(%alpha_db);
+
+    my $alpha_version = (split ',', $al_string)[-1];
     $alpha_version //= 0;
 
     my $analysis = new Bio::EnsEMBL::Analysis(
             -logic_name    => 'alphafold_import',
             -db            => 'alphafold',
             -db_version    => $alpha_version,
-            -db_file       => $self->param('alphafold_db_dir') . '/accession_ids.csv',
+            -db_file       => $self->param('db_dir') . '/accession_ids.csv',
             -display_label => 'AlphaFold DB import',
             -displayable   => '1',
             -description   => 'Protein features based on AlphaFold predictions, mapped with GIFTS or UniParc'
     );
     die "Error creating analysis object" unless $analysis;
     my $ana = $core_dba->get_AnalysisAdaptor();
-    $ana->store($analysis);
+    # We get undef in case of an error. The adaptor does warn, but the error string is not
+    # accessible
+    $ana->store($analysis) // die "Error storing analysis in DB. Runnable should be restarted";
 
     # insert the Ensembl-PDB links into the protein_feature table in the core database
     info(sprintf("Calling GIFTS endpoint for species %s using endpoint %s and assembly %s.\n", $self->param('species'), $self->param('rest_server'), $self->param('cs_version')));
@@ -137,7 +145,6 @@ sub run {
     my $mappings = eval{fetch_latest_uniprot_enst_perfect_matches($self->param('rest_server'), $self->param('cs_version'))};
     info(sprintf("Done with GIFTS for species %s\n", $self->param('species')));
 
-    my $dbc = $core_dba->dbc;
 
     my $no_uniparc = 0;
     my $no_uniprot = 0;
@@ -226,6 +233,9 @@ SQL
         die(sprintf("No matches for species %s found in core DB %s\n", $self->param('species'), $dbc->dbname()));
     }
 
+    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
+        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
+
     my $pfa = $core_dba->get_ProteinFeatureAdaptor();
 
     my $good = 0;
@@ -238,7 +248,7 @@ SQL
             my $uniparc = $entry->{'uniparc'};
             my $ensid = $entry->{'ensid'};
             my $translation_id = $entry->{'dbid'};
-            my $alpha_data = $db->Get($uniprot);
+            my $alpha_data = $alpha_db{$uniprot};
 
             unless ($alpha_data) {
                 $no_alpha++;
@@ -269,9 +279,14 @@ SQL
                     -hdescription => $comment,
             );
 
-            $pfa->store($pf, $translation_id);
+            # We get undef in case of an error. The adaptor does warn, but the error string is not
+            # accessible
+            $pfa->store($pf, $translation_id) // die "Storing protein feature failed. Runnable should be restarted";
         }
     }
+    
+    untie(%alpha_db);
+
     dbunlock();
     info("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no alphafold data: $no_alpha");
 }
@@ -280,18 +295,16 @@ my $lock_fh;
 
 sub dblock {
     my $path = shift;
-    open($lock_fh, ">", "$path/dblock") or die "Failed to create lock file: $!";
-    flock $lock_fh, LOCK_EX;
+
+    info("Waiting for dblock");
+    open($lock_fh, ">", "$path/dblock") or die "Failed to open or create lock file: $!";
+    flock ($lock_fh, LOCK_EX) or die "Unable to lock $path/dblock: $!";
+    info("Locked dblock OK");
 }
 
 sub dbunlock {
     flock $lock_fh, LOCK_UN;
     close $lock_fh;
-}
-
-sub write_output {
-  my $self = shift;
-  return 1;
 }
 
 # cleans up the protein features from the database 'core_dba'
