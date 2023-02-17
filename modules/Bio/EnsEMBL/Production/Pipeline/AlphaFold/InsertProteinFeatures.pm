@@ -46,18 +46,28 @@
  select the matching Alphafold accession and associated information and insert
  new protein features based on this data.
 
+ For multispecies DBs, this may only be run for one species. This can be any
+ species from the collection. The analysis will cover the protein features for
+ everything in the DB. Running it a second time would delete the analysis and
+ then recreate it with identical features. Running the runnable in parallel
+ would delete the analysis and might lead to an inconsistent DB with unlinked
+ protein features.
+
 =head1 OPTIONS
 
- -cs_version     Coordinate system version.
- -species        Production name of species to process
+ -species        Production name of species to process. For a collection DB, any species from the DB
+ -species_list   List of species production names. For a single species, a list
+                 with just this species. For a collection DB, list of all species in the DB
  -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in LevelDB format
  -rest_server    GIFTS rest server to fetch the perfect matches data from.
+ -cs_version     Needed for GIFTS, otherwise optional. Name of assembly, like 'GRCh38'.
 
 =head1 EXAMPLE USAGE
 
  standaloneJob.pl Bio::EnsEMBL::Production::Pipeline::AlphaFold::InsertProteinFeatures
   -cs_version GRCh38
   -species homo_sapiens
+  -species_list "['homo_sapiens']"
   -db_dir /hps/scratch/...
   -rest_server 'https://www.ebi.ac.uk/gifts/api/'
   -registry my_reg.pm
@@ -71,40 +81,53 @@ use warnings;
 
 use parent 'Bio::EnsEMBL::Production::Pipeline::Common::Base';
 
-use Bio::EnsEMBL::Utils::Exception qw(throw info);
-use Bio::EnsEMBL::DBSQL::DBAdaptor;
-use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
+use Bio::EnsEMBL::Analysis;
 use Bio::EnsEMBL::ProteinFeature;
+use Bio::EnsEMBL::Registry;
+use Bio::EnsEMBL::Utils::Exception qw(throw info);
+use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
 use Tie::LevelDB;
 use Fcntl qw(:flock);
 
 sub fetch_input {
     my $self = shift;
 
-    $self->param_required('cs_version');
     $self->param_required('species');
     $self->param_required('rest_server');
     $self->param_required('db_dir');
+    $self->param_required('species_list');
 
     return 1;
 }
 
 sub run {
     my $self = shift;
+
+    # Uncomment for verbose output - recommended when running standalone
     # Bio::EnsEMBL::Utils::Exception::verbose('INFO');
 
     my $db_path = $self->param_required('db_dir');
     my $idx_dir_al = $db_path . '/uniprot-to-alpha.leveldb';
     my $idx_dir_up = $db_path . '/uniparc-to-uniprot.leveldb';
 
-    # connect to the core database
-    my $core_dba = $self->core_dba;
+    my $species = $self->param_required('species');
+    my $species_list = $self->param_required('species_list');
+
+    my $log_species = $species;
+    if ($species_list and @$species_list and @$species_list > 1) {
+        $log_species = "collection (@$species_list)";
+        info("This is a multi-species (collection) DB: $log_species\n");
+    }
+
+    # Fetch core adaptor from registry, ignore aliases
+    my $core_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core', 1);
+    die "Registry did not return an adaptor for the species: $species" unless $core_dba;
     my $dbc = $core_dba->dbc;
 
-    info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->param('species')));
+    info("Cleaning up old protein features and analysis for species $species\n");
     $self->cleanup_protein_features('alphafold_import');
 
-    info(sprintf("Initiating and creating the analysis object for species %s\n", $self->param('species')));
+    info("Initiating and creating the analysis object for species $species\n");
 
     dblock($db_path);
 
@@ -137,14 +160,21 @@ sub run {
     # accessible
     $ana->store($analysis) // die "Error storing analysis in DB. Runnable should be restarted";
 
-    # insert the Ensembl-PDB links into the protein_feature table in the core database
-    info(sprintf("Calling GIFTS endpoint for species %s using endpoint %s and assembly %s.\n", $self->param('species'), $self->param('rest_server'), $self->param('cs_version')));
+    my $mappings;
 
-    ###  fetch_latest_uniprot_enst_perfect_matches returns data like: { 'A0A0G2K0H5' => [ 'ENSRNOT00000083658' ], 'B5DEL8' => [ 'ENSRNOT00000036389' ], ...}
+    if (defined $self->param('cs_version')) {
+        # insert the Ensembl-PDB links into the protein_feature table in the core database
+        info(sprintf("Calling GIFTS endpoint for species %s using endpoint %s and assembly %s.\n", $species, $self->param('rest_server'), $self->param('cs_version')));
 
-    my $mappings = eval{fetch_latest_uniprot_enst_perfect_matches($self->param('rest_server'), $self->param('cs_version'))};
-    info(sprintf("Done with GIFTS for species %s\n", $self->param('species')));
-
+        ###  fetch_latest_uniprot_enst_perfect_matches returns data like: { 'A0A0G2K0H5' => [ 'ENSRNOT00000083658' ], 'B5DEL8' => [ 'ENSRNOT00000036389' ], ...}
+        $mappings = eval{fetch_latest_uniprot_enst_perfect_matches($self->param('rest_server'), $self->param('cs_version'))};
+        info(sprintf("Done with GIFTS for species %s. Used endpoint %s and assembly %s. Got data: %s\n",
+            $species,
+            $self->param('rest_server'),
+            $self->param('cs_version'),
+            ($mappings and %$mappings) ? "Yes" : "No")
+        );
+    }
 
     my $no_uniparc = 0;
     my $no_uniprot = 0;
@@ -157,7 +187,6 @@ sub run {
         # alphafold data using the uniprot id and insert a protein feature using
         # the dbid.
 
-        info(sprintf("No data found for species %s in GIFTS DB using endpoint %s and assembly %s.\n", $self->param('species'), $self->param('rest_server'), $self->param('cs_version')));
 
         tie(my %uniprot_db, 'Tie::LevelDB', $idx_dir_up)
             or die "Error trying to tie Tie::LevelDB $idx_dir_up: $!";
@@ -171,6 +200,7 @@ SELECT xr.dbprimary_acc as uniparc_id, tr.stable_id, tr.translation_id
   where external_db_id = (SELECT external_db_id FROM external_db where db_name = 'UniParc')
     and xr.xref_id = ox.xref_id
     and ox.ensembl_id = tr.translation_id
+    and ox.ensembl_object_type = 'Translation'
     group by uniparc_id, tr.stable_id, tr.translation_id
 SQL
 
@@ -230,7 +260,7 @@ SQL
     }
 
     unless (scalar(keys %$mappings) > 0) {
-        die(sprintf("No matches for species %s found in core DB %s\n", $self->param('species'), $dbc->dbname()));
+        die(sprintf("No matches for species %s found in core DB %s\n", $species, $dbc->dbname()));
     }
 
     tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
@@ -288,7 +318,9 @@ SQL
     untie(%alpha_db);
 
     dbunlock();
-    info("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no alphafold data: $no_alpha");
+
+    # Info line to be stored in the hive DB
+    $self->warning("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no alphafold data: $no_alpha. Species: $log_species");
 }
 
 my $lock_fh;
