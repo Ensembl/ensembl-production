@@ -66,18 +66,60 @@ sub beekeeper_extra_cmdline_options {
 
 sub resource_classes {
   my $self = shift;
+  my $pq = ' --partition=standard';
+  my $dq = ' --partition=datamover';
+
+  my $hour = ' --time=1:00:00';
+  my $day = ' --time=1-00:00:00';
+  my $week = ' --time=7-00:00:00';
+
+  my $mem_100 = ' --mem=100m';
+  my $mem_200 = ' --mem=200m';
+  my $mem_500 = ' --mem=500m';
+  my $mem_1G = ' --mem=1g';
+  my $mem_2G = ' --mem=2g';
+  my $mem_3G = ' --mem=3g';
+  my $mem_4G = ' --mem=4g';
+  my $mem_8G = ' --mem=8g';
+  my $mem_16G = ' --mem=16g';
+  my $mem_32G = ' --mem=32g';
+
+
+
   return {
-    'default' => {LSF => '-q '.$self->o('production_queue')},
-    'dm'      => {LSF => '-q '.$self->o('datamover_queue')},
-    '200M'    => {LSF => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"' },
-    '500M'    => {LSF => '-q '.$self->o('production_queue').' -M 500 -R "rusage[mem=500]"' },
-    '1GB'     => {LSF => '-q '.$self->o('production_queue').' -M 1000 -R "rusage[mem=1000]"'},
-    '2GB'     => {LSF => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"'},
-    '3GB'     => {LSF => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"'},
-    '4GB'     => {LSF => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
-    '8GB'     => {LSF => '-q '.$self->o('production_queue').' -M 8000 -R "rusage[mem=8000]"'},
-    '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"'},
-    '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"'},
+    'default' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$hour.$mem_100},
+    'default_D' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$day.$mem_100},
+    'default_W' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$week.$mem_100},
+    'dm'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$hour.$mem_100},
+    'dm_D'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$day.$mem_100},
+    'dm_W'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$week.$mem_100},
+    '200M'    => {LSF => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"', SLURM => $pq.$hour.$mem_200 },
+    '200M'    => {LSF => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"', SLURM => $pq.$day.$mem_200 },
+    '200M'    => {LSF => '-q '.$self->o('production_queue').' -M 200 -R "rusage[mem=200]"', SLURM => $pq.$week.$mem_200 },
+    '500M'    => {LSF => '-q '.$self->o('production_queue').' -M 500 -R "rusage[mem=500]"', SLURM => $pq.$hour.$mem_500 },
+    '500M'    => {LSF => '-q '.$self->o('production_queue').' -M 500 -R "rusage[mem=500]"', SLURM => $pq.$day.$mem_500 },
+    '500M'    => {LSF => '-q '.$self->o('production_queue').' -M 500 -R "rusage[mem=500]"', SLURM => $pq.$week.$mem_500 },
+    '1GB'     => {LSF => '-q '.$self->o('production_queue').' -M 1000 -R "rusage[mem=1000]"', SLURM => $pq.$hour.$mem_1G },
+    '1GB'     => {LSF => '-q '.$self->o('production_queue').' -M 1000 -R "rusage[mem=1000]"', SLURM => $pq.$day.$mem_1G },
+    '1GB'     => {LSF => '-q '.$self->o('production_queue').' -M 1000 -R "rusage[mem=1000]"', SLURM => $pq.$week.$mem_1G },
+    '2GB'     => {LSF => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"', SLURM => $pq.$hour.$mem_2G },
+    '2GB'     => {LSF => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"', SLURM => $pq.$day.$mem_2G },
+    '2GB'     => {LSF => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"', SLURM => $pq.$week.$mem_2G },
+    '3GB'     => {LSF => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"', SLURM => $pq.$hour.$mem_3G },
+    '3GB'     => {LSF => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"', SLURM => $pq.$day.$mem_3G },
+    '3GB'     => {LSF => '-q '.$self->o('production_queue').' -M 3000 -R "rusage[mem=3000]"', SLURM => $pq.$week.$mem_3G },
+    '4GB'     => {LSF => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"', SLURM => $pq.$hour.$mem_4G },
+    '4GB'     => {LSF => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"', SLURM => $pq.$day.$mem_4G },
+    '4GB'     => {LSF => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"', SLURM => $pq.$week.$mem_4G },
+    '8GB'     => {LSF => '-q '.$self->o('production_queue').' -M 8000 -R "rusage[mem=8000]"', SLURM => $pq.$hour.$mem_8G },
+    '8GB'     => {LSF => '-q '.$self->o('production_queue').' -M 8000 -R "rusage[mem=8000]"', SLURM => $pq.$day.$mem_8G },
+    '8GB'     => {LSF => '-q '.$self->o('production_queue').' -M 8000 -R "rusage[mem=8000]"', SLURM => $pq.$week.$mem_8G },
+    '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"', SLURM => $pq.$hour.$mem_16G },
+    '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"', SLURM => $pq.$day.$mem_16G },
+    '16GB'    => {LSF => '-q '.$self->o('production_queue').' -M 16000 -R "rusage[mem=16000]"', SLURM => $pq.$week.$mem_16G },
+    '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"', SLURM => $pq.$day.$mem_32G },
+    '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"', SLURM => $pq.$hour.$mem_32G },
+    '32GB'    => {LSF => '-q '.$self->o('production_queue').' -M 32000 -R "rusage[mem=32000]"', SLURM => $pq.$week.$mem_32G },
   }
 }
 
