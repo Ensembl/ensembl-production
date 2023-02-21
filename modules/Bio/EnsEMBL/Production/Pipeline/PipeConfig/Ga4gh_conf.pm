@@ -116,7 +116,7 @@ sub pipeline_analyses {
         { -logic_name      => 'backbone_job_pipeline',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -hive_capacity => -1,
-            -flow_into => ['FetchSequence']
+            -flow_into => { '1' => 'fetch_toplevel_seq'] }
         },
         { -logic_name      => 'fetch_toplevel_seq',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequence',
