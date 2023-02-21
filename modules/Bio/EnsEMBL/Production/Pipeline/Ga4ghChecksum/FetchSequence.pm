@@ -101,8 +101,6 @@ sub fetch_input {
   my ($self) = @_;
   my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type') };
   $self->param('sequence_types', \%sequence_types);
- 
-  
   my $types = $self->param('db_types');
   $types = ['core'] unless $types;
   $self->param('db_types', $types);
@@ -113,6 +111,7 @@ sub fetch_input {
 sub run {
   my ($self) = @_;
   my $types = $self->param('db_types');
+  my $type = 'core';
   my $dba = $self->get_DBAdaptor($type);
     if(! $dba) {
       $self->info("Cannot continue with %s as we cannot find a DBAdaptor", $type);
@@ -124,9 +123,9 @@ sub run {
     my $sa = $dba->get_SliceAdaptor();
     my @slices = @{ $sa->fetch_all( 'toplevel', undef, 1, undef, undef ) };
     foreach my $slice (@slices) {
-      print($slice->seq())
-      print($slice->coord_system()->name())
-      print($slice->seq_region_name();)
+      print($slice->seq());
+      print($slice->coord_system()->name());
+      print($slice->seq_region_name());
     }
 #   foreach my $type (@{$types}) {
     
