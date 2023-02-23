@@ -150,25 +150,17 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'species_factory',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::NoMultiSpeciesFactory',
             -parameters => {
                 species     => $self->o('species'),
                 division    => $self->o('division'),
                 antispecies => $self->o('antispecies'),
             },
             -flow_into  => {
-                '2->A' => [ 'species_version' ],
+                '2->A' => [ 'insert_features' ],
                 'A->1' => [ 'cleanup' ]
             },
-            -rc_name    => '4GB',
-        },
-        {
-            -logic_name => 'species_version',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::MetadataCSVersion',
-            -flow_into  => {
-                '2' => ['insert_features'],
-            },
-            -rc_name    => 'dm',
+            -rc_name    => '500M',
         },
         {
             -logic_name => 'insert_features',
@@ -184,6 +176,7 @@ sub pipeline_analyses {
             -flow_into  => {
                 '1' => [ 'datacheck' ]
             },
+            -analysis_capacity => 20,
             -rc_name    => '4GB',
         },
         {
@@ -193,7 +186,7 @@ sub pipeline_analyses {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
             -flow_into  => 'report',
-            -rc_name    => '4GB',
+            -rc_name    => '200M',
         },
         {
             -logic_name        => 'report',
@@ -204,6 +197,7 @@ sub pipeline_analyses {
                 dbname        => $self->o('pipeline_db')->{'-dbname'},
                 email         => $self->o('email'),
             },
+            -meadow_type     => 'LOCAL',
         },
         {
             -logic_name        => 'cleanup',
