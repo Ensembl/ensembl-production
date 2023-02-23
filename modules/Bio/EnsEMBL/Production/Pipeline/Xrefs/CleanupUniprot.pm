@@ -112,7 +112,9 @@ sub run {
       while ($_ = $in_fh->getline()) {
         # Remove unused data
         $_ =~ s/\nR(N|P|X|A|T|R|L|C|G)\s{3}.*//g; # Remove references lines
+	$_ =~ s/\nCC(\s{3}.*)CAUTION: The sequence shown here is derived from an Ensembl(.*)/\nCT$1CAUTION: The sequence shown here is derived from an Ensembl$2/g; # Set specific caution comment to temporary
         $_ =~ s/\nCC\s{3}.*//g; # Remove comments
+        $_ =~ s/\nCT(\s{3}.*)CAUTION: The sequence shown here is derived from an Ensembl(.*)/\nCC$1CAUTION: The sequence shown here is derived from an Ensembl$2/g; # Set temp line back to comment
 	$_ =~ s/\nFT\s{3}.*//g; # Remove feature coordinates
         $_ =~ s/\nDR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
 
