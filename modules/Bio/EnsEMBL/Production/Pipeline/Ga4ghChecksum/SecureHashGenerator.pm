@@ -30,18 +30,18 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequence
+Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator
 
 =head1 DESCRIPTION
 
-Fetch the toplevel genomic sequences  chromosomes, super contigs  and other sequence cDNA, CDS and Peptide
+aGenerates secure hash for genomic sequences
 
 
 =over 8 
 
-=item 1 - Fetch Toplevel sequences
+=item 1 - Genomic sequences
 
-=item 2 - Fetch cDNA, CDS and Peptide sequences
+=item 2 - Generates SHA512 hash 
 
 =back
 
