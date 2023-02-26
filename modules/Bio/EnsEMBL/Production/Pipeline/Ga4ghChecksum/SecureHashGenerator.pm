@@ -45,13 +45,14 @@ aGenerates secure hash for genomic sequences
 
 =back
 
-The script is responsible for genomic sequences for given sequence type
+The script is responsible for generating secure hash for genomic sequences 
 
 Allowed parameters are:
 
 =over 8
 
 =item hash_type - hash algorithm type 
+=item sequence_type - type of genomic sequences
 
 
 =back

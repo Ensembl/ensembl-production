@@ -78,8 +78,6 @@ sub param_defaults {
 
 sub fetch_input {
   my ($self) = @_;
-  #my %sequence_types = map { $_ => 1 } @{ $self->param('sequence_type') };
-  #$self->param('sequence_types', \%sequence_types);
   my $type = $self->param('group');
   my $sequence_types = $self->param('sequence_types');
   my $hash_types = $self->param('hash_types');
