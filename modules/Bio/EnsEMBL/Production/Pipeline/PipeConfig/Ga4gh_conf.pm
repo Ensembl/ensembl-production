@@ -38,11 +38,15 @@ sub default_options {
         'pipeline_name'          => "ga4gh_checksum_generator_".$self->o('ensembl_release'),
         'web_email'              => '',
         'sequence_types'         => [],
+	'run_all'                => 0, 
         ## 'job_factory' parameters
         'species'                => [],
         'antispecies'            => [],
         'division'               => [],
         'dbname'                 => undef,
+	#checksum params
+	'sequence_type'         => [],
+	'hash_type'             => [],
     };
 }
 
@@ -71,6 +75,10 @@ sub pipeline_wide_parameters {
     %{$self->SUPER::pipeline_wide_parameters},
     'pipeline_name' => $self->o('pipeline_name'),
     'release'       => $self->o('release'),
+    'sequence_types'         => $self->o('sequence_type'),
+    'hash_types'             => $self->o('hash_type'),
+
+
   };
 }
 
@@ -87,42 +95,57 @@ sub resource_classes {
 
 sub pipeline_analyses {
     my ($self) = @_;
-
-    my $pipeline_flow;
-    my $sequence_types = $self->o('sequence_types');
-    my @sequence_types = (ref($sequence_types) eq 'ARRAY') ? @$sequence_types : ($sequence_types);
-
-    if (scalar @sequence_types) {
-        $pipeline_flow = $sequence_types;
-    } else {
-        $pipeline_flow = [ 'update_seqregion_attrib_toplevel', 'update_transcript_attrib_cdna',  'update_translation_attrib_pep' ]; #todo 'update_transcript_attrib_cds',
-    }
-
     return [
-        { -logic_name        => 'job_factory',
+        { 
+            -logic_name      => 'species_factory',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
             -parameters      => {
-                species     => $self->o('species'),
-                antispecies => $self->o('antispecies'),
-                division    => $self->o('division'),
-                dbname      => $self->o('dbname'),
-                run_all     => $self->o('run_all'),
+                species      => $self->o('species'),
+                antispecies  => $self->o('antispecies'),
+                division     => $self->o('division'),
+                dbname       => $self->o('dbname'),
+                run_all      => $self->o('run_all'),
             },
             -input_ids       => [ {} ],
             -hive_capacity   => -1,
             -max_retry_count => 1,
-            -flow_into       => { '2' => 'backbone_job_pipeline', },
+            -flow_into       => { '2' => 'job_factory', },
         },
-        { -logic_name      => 'backbone_job_pipeline',
+        { -logic_name      => 'job_factory',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -hive_capacity => -1,
-            -flow_into => { '1' => 'fetch_toplevel_seq' }
+            -flow_into => { '1' => 'fetch_sequences' }
         },
-        { -logic_name      => 'fetch_toplevel_seq',
+        { -logic_name      => 'fetch_sequences',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequence',
             -hive_capacity => -1,
+	    -flow_into => { '2' => 'toplevel_checksum', '3' => 'cdna_checksum' , '4'=> 'cds_checksum', '5'=> 'pep_checksum' }
         },
+        { -logic_name      => 'toplevel_checksum',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -hive_capacity => 50,
+            -rc_name       => '2GB',
 
+        },
+        { -logic_name      => 'cdna_checksum',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -hive_capacity => 50,
+            -rc_name       => '2GB',
+
+        },
+        { -logic_name      => 'cds_checksum',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -hive_capacity => 50,
+            -rc_name       => '2GB',
+
+        },
+        { -logic_name      => 'pep_checksum',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -hive_capacity => 50,
+            -rc_name       => '2GB',
+
+        },
+	
     ];
 }
 

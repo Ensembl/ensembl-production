@@ -85,9 +85,9 @@ sub fetch_input {
   my $hash_types = $self->param('hash_types');
   my %flow = (
     'toplevel' => 2,
-    'cdna' => 3,
-    'cds' => 4,
-    'pep' => 5
+    'cdna'     => 3,
+    'cds'      => 4,
+    'pep'      => 5
   );
 
   $self->param('flow', \%flow);
@@ -102,7 +102,6 @@ sub fetch_input {
   $self->param('group',  $type);
   $self->param('sequence_types',  $sequence_types);
   $self->param('hash_types',  $hash_types);
-
   return;
 }
 
@@ -114,15 +113,12 @@ sub run {
     $self->info("Cannot find adaptor for type %s", $type);
     next;
   }
-
   my  $sequence_types = $self->param('sequence_types');
-  #my $aa  = $dba->get_adaptor('Attribute');
-  #my $attrib = $aa->fetch_by_code('toplevel_sha512');
   my $slice_adaptor = $dba->get_SliceAdaptor();
   my @slices = @{ $slice_adaptor->fetch_all( 'toplevel', undef, 1, undef, undef ) };
   my $flow = $self->param('flow');  
   foreach my $seq_type (@{$sequence_types}){
-	$self->prepare_flow_data($slice_adaptor, $seq_type);
+    $self->prepare_flow_data($slice_adaptor, $seq_type);
   }	  
 	    
 }
@@ -139,7 +135,7 @@ sub prepare_flow_data {
             'hash_types'    => $self->param('hash_types')
         };
      if($seq_type eq 'toplevel'){
-       $flow_data->{'seq'} = $slice->seq();
+       #$flow_data->{'seq'} = $slice->seq();
        $self->dataflow_output_id($flow_data, $flow->{$seq_type});
      }else{
        #get all transcript from slice
@@ -148,27 +144,19 @@ sub prepare_flow_data {
 	 foreach my $trans_seq_type (@$seq_type){  
 	   $flow_data->{'transcript_id'} = $transcript->stable_id;
            $flow_data->{'seq_type'} = $trans_seq_type;
-            
-           if($trans_seq_type eq 'cdna'){
-	     $flow_data->{'seq'} = $transcript->spliced_seq();
+	   $flow_data->{'transcript_dbid'} = $transcript->dbID();
+	   my $translation_ad = $transcript->translation();
+	   if( $trans_seq_type eq 'pep' ){
+	      if( defined $translation_ad ){
+	        $flow_data->{'translation_dbid'} = $translation_ad->dbID() ;
+	        $self->dataflow_output_id($flow_data, $flow->{$trans_seq_type});	
+	      }	      
+           }else{
 	     $self->dataflow_output_id($flow_data, $flow->{$trans_seq_type});
-           }
-	   if($trans_seq_type eq 'cds'){
-             $flow_data->{'seq'} = $transcript->translateable_seq();
-	     $self->dataflow_output_id($flow_data, $flow->{$trans_seq_type});
-           }
-           if($trans_seq_type eq 'pep'){
-             my $translation_ad = $transcript->translation();
-             if(defined $translation_ad){  	     
-	       $flow_data->{'translation_id'} = $translation_ad->stable_id();
-               $flow_data->{'seq'} = $translation_ad->seq();
-               $self->dataflow_output_id($flow_data, $flow->{$trans_seq_type});	  
-	     }   
-	   }
+           }  
          }
        }
      }
-       
    }
 }
 
