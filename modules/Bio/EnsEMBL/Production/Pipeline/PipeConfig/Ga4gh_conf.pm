@@ -117,30 +117,30 @@ sub pipeline_analyses {
             -flow_into => { '1' => 'fetch_sequences' }
         },
         { -logic_name      => 'fetch_sequences',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequence',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequenceInfo',
             -hive_capacity => -1,
 	    -flow_into => { '2' => 'toplevel_checksum', '3' => 'cdna_checksum' , '4'=> 'cds_checksum', '5'=> 'pep_checksum' }
         },
         { -logic_name      => 'toplevel_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
             -hive_capacity => 50,
-            -rc_name       => '2GB',
+            -rc_name       => '4GB',
 
         },
         { -logic_name      => 'cdna_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
             -hive_capacity => 50,
             -rc_name       => '2GB',
 
         },
         { -logic_name      => 'cds_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
             -hive_capacity => 50,
             -rc_name       => '2GB',
 
         },
         { -logic_name      => 'pep_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::SecureHashGenerator',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
             -hive_capacity => 50,
             -rc_name       => '2GB',
 
