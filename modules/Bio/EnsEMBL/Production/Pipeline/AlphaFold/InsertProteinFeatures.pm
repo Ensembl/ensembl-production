@@ -171,7 +171,7 @@ sub run {
             info("Found GIFTS file $file, species: $1, assembly: $2, release: $3");
             if ($2 eq $assembly) {
                 $mappings = read_gifts_data("$gifts_dir/$file");
-                info("Read data for GIFTS from file $$gifts_dir/file, " . (scalar (keys ($mappings))) . " entries");
+                info("Read data for GIFTS from file $gifts_dir/file, " . (scalar (keys ($mappings))) . " entries");
                 last;
             }
         }
