@@ -163,17 +163,19 @@ sub run {
     my $mappings;
 
     if (defined $self->param('cs_version')) {
-        # insert the Ensembl-PDB links into the protein_feature table in the core database
-        info(sprintf("Calling GIFTS endpoint for species %s using endpoint %s and assembly %s.\n", $species, $self->param('rest_server'), $self->param('cs_version')));
-
-        ###  fetch_latest_uniprot_enst_perfect_matches returns data like: { 'A0A0G2K0H5' => [ 'ENSRNOT00000083658' ], 'B5DEL8' => [ 'ENSRNOT00000036389' ], ...}
-        $mappings = eval{fetch_latest_uniprot_enst_perfect_matches($self->param('rest_server'), $self->param('cs_version'))};
-        info(sprintf("Done with GIFTS for species %s. Used endpoint %s and assembly %s. Got data: %s\n",
-            $species,
-            $self->param('rest_server'),
-            $self->param('cs_version'),
-            ($mappings and %$mappings) ? "Yes" : "No")
-        );
+        my $assembly = $self->param('cs_version');
+        my $gifts_dir = $self->param_required('gifts_dir');
+        opendir(my $dh, $gifts_dir) or die "Error opening dir $gifts_dir: $!";
+        for my $file (readdir($dh)) {
+            next unless $file =~ /^(.*?)-(.*)-rel(.*?)\.csv$/;
+            info("Found GIFTS file $file, species: $1, assembly: $2, release: $3");
+            if ($2 eq $assembly) {
+                $mappings = read_gifts_data("$gifts_dir/$file");
+                info("Read data for GIFTS from file $$gifts_dir/file, " . (scalar (keys ($mappings))) . " entries");
+                last;
+            }
+        }
+        closedir($dh);
     }
 
     my $no_uniparc = 0;
@@ -247,6 +249,7 @@ SQL
         my $sth = $dbc->prepare($sql);
         $sth->execute;
         while (my @row = $sth->fetchrow_array) {
+            $protein_count++;
             my ($dbid, $stable_id) = @row;
 
             for my $uniprot_id ( @{$rev_mappings{$stable_id}}) {
@@ -282,6 +285,7 @@ SQL
 
             unless ($alpha_data) {
                 $no_alpha++;
+                info("No alphafold data for: $uniprot, $translation_id");
                 next;
             }
             $good++;
@@ -337,6 +341,26 @@ sub dblock {
 sub dbunlock {
     flock $lock_fh, LOCK_UN;
     close $lock_fh;
+}
+
+# Read a GIFTS CSV dump file, return a hash-ref like:
+# { 'A0A0G2K0H5' => [ 'ENSRNOT00000083658' ], 'B5DEL8' => [ 'ENSRNOT00000036389' ], ...}
+sub read_gifts_data {
+    my $path = shift;
+    open (my $fh, '<', $path) or die "GIFTS dump file '$path' not readable: $!";
+
+    my %uniprot_ensid;
+    while (my $line = <$fh>) {
+        chomp $line;
+        (undef, undef, my $ensid, my $uniprot) = split ",", $line;
+        # A protein may have isoforms. In Uniprot, their reference looks like
+        # e.g. F1RA39-1. Alphafold currently only has data for the canonical
+        # sequence. Here, we just remove the isoform reference and always refer
+        # to the Alphafold data for the canonical sequence.
+        $uniprot =~ s/-\d+//;
+        push @{$uniprot_ensid{$uniprot}}, $ensid;
+    }
+    return \%uniprot_ensid;
 }
 
 # cleans up the protein features from the database 'core_dba'
