@@ -72,6 +72,9 @@ sub default_options {
         user         => 'ensadmin',
         alphafold_data_file => '/nfs/ftp/public/databases/alphafold/accession_ids.csv',
         uniparc_data_file => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz',
+        # Do not blindly increase the version here. GIFTS data is seldom
+        # refreshed - the current version probably has no GIFTS data.
+        gifts_dir    => '/nfs/production/flicek/ensembl/production/alphafold_gifts/107',
         pipeline_db  => {
             -driver => $self->o('hive_driver'),
             -host   => $self->o('pipe_db_host'),
@@ -167,7 +170,8 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::InsertProteinFeatures',
             -parameters => {
                 rest_server => $self->o('rest_server'),
-                db_dir => $self->o('scratch_large_dir')
+                db_dir => $self->o('scratch_large_dir'),
+                gifts_dir => $self->o('gifts_dir'),
             },
             -wait_for => [
                 'create_alphafold_db',
@@ -197,7 +201,6 @@ sub pipeline_analyses {
                 dbname        => $self->o('pipeline_db')->{'-dbname'},
                 email         => $self->o('email'),
             },
-            -meadow_type     => 'LOCAL',
         },
         {
             -logic_name        => 'cleanup',
