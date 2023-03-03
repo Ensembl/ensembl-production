@@ -77,7 +77,7 @@ sub default_options {
         gtf_per_chromosome   => $self->o('per_chromosome'),
         xref_external_dbs    => [],
 	dump_homologies_script => $self->o('ENV','ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-	rr_version => $self->o('ENV', 'RR_VERSION'),
+	rr_version => $self->o('ENV', 'RR_ENS_VERSION'),
 	ref_dbname => 'ensembl_compara_references',
 	homology_dump_server_url => $self->get_server_url('st5'),
     };
