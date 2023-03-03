@@ -76,6 +76,10 @@ sub default_options {
         gff3_per_chromosome  => $self->o('per_chromosome'),
         gtf_per_chromosome   => $self->o('per_chromosome'),
         xref_external_dbs    => [],
+	dump_homologies_script => $self->o('ENV','ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
+	rr_version => $self->o('ENV', 'RR_VERSION'),
+	ref_dbname => 'ensembl_compara_references',
+	compara_host_uri => '',
     };
 }
 
@@ -105,6 +109,7 @@ sub pipeline_wide_parameters {
         dump_mysql     => $self->o('dump_mysql'),
         overwrite      => $self->o('overwrite'),
         run_datachecks => $self->o('run_datachecks'),
+        dump_homologies => $self->o('dump_homologies'),
     };
 }
 
@@ -154,7 +159,8 @@ sub pipeline_analyses {
             -flow_into         => {
                 '2' => WHEN(
                     '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
-                    '#dump_mysql# && !#run_datachecks#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
+                    '#dump_mysql# && !#run_datachecks# && !#dump_homologies#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
+                    '#dump_homologies#' => [ 'HomologySpeciesFactory' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
@@ -200,6 +206,61 @@ sub pipeline_analyses {
                     'RNASeqDirectoryPaths',
                 ],
             }
+        },
+        {
+            -logic_name        => 'HomologySpeciesFactory',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {},
+            -flow_into         => {
+                '2' => [
+                    'HomologyDirectoryPaths',
+                ],
+            }
+        },
+        {
+            -logic_name        => 'HomologyDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+	      analysis_types   => ['Homologies'],	    
+	      data_category    => 'homology',
+	    },
+            -flow_into         => {
+                '3' => [
+                    'HomologyTSVDumps',
+                ],
+            }
+        },
+        {
+            -logic_name        => 'HomologyTSVDumps',
+            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+		ref_dbname => $self->o('ref_dbname'),
+		dump_homologies_script => $self->o('dump_homologies_script'),
+		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_version'),
+	    },
+            -flow_into         => {
+                '2' => [
+                    'CompressHomologyTSV',
+                ],
+            }
+        },	
+	
+	{
+            -logic_name        => 'CompressHomologyTSV',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+	    -parameters        => {
+                cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
+            },
+
+
         },
         {
             -logic_name        => 'GenomeDirectoryPaths',
