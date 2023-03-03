@@ -180,6 +180,7 @@ sub run {
 
     my $no_uniparc = 0;
     my $no_uniprot = 0;
+    my $no_dbid = 0;
     my $protein_count = 0;
     if (! $mappings or ! %$mappings) {
 
@@ -252,12 +253,23 @@ SQL
             $protein_count++;
             my ($dbid, $stable_id) = @row;
 
-            for my $uniprot_id ( @{$rev_mappings{$stable_id}}) {
+            unless (exists $rev_mappings{$stable_id}) {
+                info("No entry in GIFTS for stable ID $stable_id");
+                $no_dbid++;
+                next;
+            }
+            my @rmap = @{$rev_mappings{$stable_id}};
+
+            for my $uniprot_id (@rmap) {
                 unless ($uniprot_id) {
                     $no_uniprot++;
                     next;
                 }
                 push @{$mappings->{$uniprot_id}}, {'dbid' => $dbid, 'ensid' => $stable_id};
+            }
+            unless (scalar @rmap) {
+                info("No mapping data for stable ID $stable_id");
+                $no_dbid++;
             }
         }
     }
@@ -324,7 +336,7 @@ SQL
     dbunlock();
 
     # Info line to be stored in the hive DB
-    $self->warning("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no alphafold data: $no_alpha. Species: $log_species");
+    $self->warning("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no stable ID match: $no_dbid, no alphafold data: $no_alpha. Species: $log_species");
 }
 
 my $lock_fh;

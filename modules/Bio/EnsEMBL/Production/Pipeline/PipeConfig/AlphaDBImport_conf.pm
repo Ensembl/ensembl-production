@@ -113,8 +113,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'copy_alphafold',
-            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters => {
                 cmd => 'cp -f "' . $self->o('alphafold_data_file') . '" "' . $self->o('scratch_large_dir') . '"',
             },
@@ -125,8 +124,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'copy_uniparc',
-            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters => {
                 cmd => 'cp -f "' . $self->o('uniparc_data_file') . '" "' . $self->o('scratch_large_dir') . '"',
             },
@@ -137,8 +135,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'create_alphafold_db',
-            #-module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaDB',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaDB',
             -parameters => {
                 alphafold_db_dir => $self->o('scratch_large_dir'),
             },
@@ -146,8 +143,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'create_uniparc_db',
-            #-module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateUniparcDB',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateUniparcDB',
             -parameters => {
                 uniparc_db_dir => $self->o('scratch_large_dir'),
             },
@@ -206,8 +202,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'cleanup',
-            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -max_retry_count   => 1,
             -parameters        => {
                 cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
