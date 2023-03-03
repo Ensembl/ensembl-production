@@ -72,9 +72,7 @@ sub default_options {
         user         => 'ensadmin',
         alphafold_data_file => '/nfs/ftp/public/databases/alphafold/accession_ids.csv',
         uniparc_data_file => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz',
-        # Do not blindly increase the version here. GIFTS data is seldom
-        # refreshed - the current version probably has no GIFTS data.
-        gifts_dir    => '/nfs/production/flicek/ensembl/production/alphafold_gifts/107',
+        gifts_dir    => '',
         pipeline_db  => {
             -driver => $self->o('hive_driver'),
             -host   => $self->o('pipe_db_host'),
@@ -115,7 +113,8 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'copy_alphafold',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -parameters => {
                 cmd => 'cp -f "' . $self->o('alphafold_data_file') . '" "' . $self->o('scratch_large_dir') . '"',
             },
@@ -126,7 +125,8 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'copy_uniparc',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -parameters => {
                 cmd => 'cp -f "' . $self->o('uniparc_data_file') . '" "' . $self->o('scratch_large_dir') . '"',
             },
@@ -137,7 +137,8 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'create_alphafold_db',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaDB',
+            #-module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateAlphaDB',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -parameters => {
                 alphafold_db_dir => $self->o('scratch_large_dir'),
             },
@@ -145,7 +146,8 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'create_uniparc_db',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateUniparcDB',
+            #-module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::CreateUniparcDB',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -parameters => {
                 uniparc_db_dir => $self->o('scratch_large_dir'),
             },
@@ -204,7 +206,8 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'cleanup',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            #-module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count   => 1,
             -parameters        => {
                 cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
