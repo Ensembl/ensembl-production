@@ -79,15 +79,8 @@ sub default_options {
 	dump_homologies_script => $self->o('ENV','ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
 	rr_version => $self->o('ENV', 'RR_VERSION'),
 	ref_dbname => 'ensembl_compara_references',
-	homology_dump_server_url => $self->get_server_url('st5'),
+	compara_host_uri => '',
     };
-}
-
-sub get_server_url {
-        my ($self, $host_name) = @_ ;
-	my $server_url = `$host_name details url`;
-	chomp $server_url;
-        return $server_url;
 }
 
 sub pipeline_create_commands {
@@ -249,7 +242,7 @@ sub pipeline_analyses {
             -parameters        => {
 		ref_dbname => $self->o('ref_dbname'),
 		dump_homologies_script => $self->o('dump_homologies_script'),
-		per_species_db => $self->o("homology_dump_server_url").'#species#'.'_compara_'.$self->o('rr_version'),
+		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_version'),
 	    },
             -flow_into         => {
                 '2' => [
