@@ -113,7 +113,7 @@ sub run {
   }
   my  $sequence_types = $self->param('sequence_types');
   my $slice_adaptor = $dba->get_SliceAdaptor();
-  my @slices = @{ $slice_adaptor->fetch_all( 'toplevel', undef, 1, undef, undef ) };
+  #my @slices = @{ $slice_adaptor->fetch_all( 'toplevel', undef, 1, undef, undef ) };
   my $flow = $self->param('flow');  
   foreach my $seq_type (@{$sequence_types}){
     $self->prepare_flow_data($slice_adaptor, $seq_type);
