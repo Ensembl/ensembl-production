@@ -114,10 +114,11 @@ sub run {
     $genome_ad = $registry->get_adaptor($species, $type, "Transcript");
     $genome_feature = $genome_ad->fetch_by_dbID($self->param('transcript_dbid'));
     $genome_slice = $genome_feature->seq; #create a seq object 
+    $attrib_table = "transcript";
+    $genome_feature_id = $self->param('transcript_dbid');
+
     if( $seq_type eq 'cds' ){
       $genome_slice->seq($genome_feature->translateable_seq);
-      $attrib_table = "transcript";
-      $genome_feature_id = $self->param('transcript_dbid');
     }
     if( $seq_type eq 'pep' ){
       $genome_slice = $genome_feature->translate;
