@@ -41,19 +41,19 @@ sub default_options {
     };
 }
 
-sub pipeline_create_commands {
-    my ($self) = @_;
-    return [
-    @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
-
-            # additional tables needed for long multiplication pipeline's operation:
-    $self->db_cmd('CREATE TABLE result (job_id int(10), output LONGTEXT, PRIMARY KEY (job_id))'),
-    $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
-    $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
-    $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
-    $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
-    ];
-  }
+# sub pipeline_create_commands {
+#     my ($self) = @_;
+#     return [
+#     @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
+#
+#             # additional tables needed for long multiplication pipeline's operation:
+#     $self->db_cmd('CREATE TABLE result (job_id int(10), output LONGTEXT, PRIMARY KEY (job_id))'),
+#     $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
+#     $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
+#     $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
+#     $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
+#     ];
+#   }
 
 
 sub pipeline_analyses {
