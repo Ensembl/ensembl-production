@@ -21,4 +21,4 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
         if self.param("release"):
             CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
         else:
-            CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
+            CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"))
