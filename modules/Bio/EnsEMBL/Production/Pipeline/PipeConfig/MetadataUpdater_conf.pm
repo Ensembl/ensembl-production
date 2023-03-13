@@ -64,7 +64,7 @@ sub pipeline_analyses {
             -module          => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveProcessDb',
             -language        => 'python3',
             -rc_name         => 'default',
-            -input_ids       => [],
+            -input_ids       => [{}],
             -max_retry_count => 1,
             -parameters      => {
                 'metadata_uri' => $self->o('metadata_uri'),
