@@ -65,7 +65,7 @@ class ProductionParams(BaseModel):
   nextflow: constr(regex='[01]') = 0
   dataflow: constr(regex='[1234567]') =  2
   base_path: Optional[DirectoryPath]
-  coredb_url: Optional[AnyUrl] = os.environ.get('CORE_DB_URL')
+  coredb_srv: Optional[AnyUrl] = os.environ.get('CORE_DB_SRV')
   class Config:
     arbitrary_types_allowed = True
 
@@ -87,12 +87,6 @@ class ProductionParams(BaseModel):
   @root_validator
   def check_valid_list(cls, values):
     return  {k: [v] if isinstance(v, str) and k != 'metadata_db_url' else v for k, v in values.items()}
-  
-class RRParams(BaseModel):
-  base_path: DirectoryPath
-  coredb_url: Optional[AnyUrl] = os.environ.get('CORE_DB_URL')
-  class Config:
-    arbitrary_types_allowed = True
   
 class BaseFactory():
   def __init__(self,**kwargs):
@@ -210,7 +204,7 @@ class SpeciesFactory(DBFactory):
     #TODO
     return {}
   
-class RRDatafiles(SpeciesFactory):
+class Datafiles(SpeciesFactory):
   """ Get Species Datafiles From FTP Directory
   Args:
       species (Optional[List[str]]): List of species names
@@ -223,7 +217,7 @@ class RRDatafiles(SpeciesFactory):
       meta_filters (dict): A hashref with key-value pairs that are matched against meta_key and meta_value from the meta table.   
   """ 
   
-  def _get_annotations_source_info(self, species:str, dbname: str, coredb_url: str, meta_keys=[
+  def _get_annotations_source_info(self, species:str, dbname: str, coredb_srv: str, meta_keys=[
                                               'species.annotation_source',
                                               'species.display_name',                               
                                               'genebuild.last_geneset_update',
@@ -232,14 +226,14 @@ class RRDatafiles(SpeciesFactory):
       Fetch Meta key annotation_source information from species core db 
       Args:
           dbname (str): Ensembl Metadata database name
-          coredb_url (str): Mysql url for species core database
+          coredb_srv (str): Mysql url for species core database
           meta_keys (list): List of metakeys 
           
       Returns:
           dictionary: annotation source information
     """     
-    coredb_url_conn_str = os.path.join(coredb_url, dbname)   
-    db_connection =  self.get_db_session(coredb_url_conn_str)
+    coredb_srv_conn_str = os.path.join(coredb_srv, dbname)   
+    db_connection =  self.get_db_session(coredb_srv_conn_str)
     with db_connection.session_scope() as session:
       
       #get species id to support collection dbs
@@ -282,17 +276,17 @@ class RRDatafiles(SpeciesFactory):
     return kargs
   
   def get_species_datafiles(self, species:str=None, dbname:str=None, base_path:DirectoryPath=None, 
-                            coredb_url:str=None, ens_version:int=None)->dict:
+                            coredb_srv:str=None, ens_version:int=None)->dict:
       
     try:
       species     = "".join(self.species[:1]) if species is None else species
       base_path   = self.base_path   if base_path is None else base_path
-      coredb_url  = self.coredb_url  if coredb_url is None else coredb_url
+      coredb_srv  = self.coredb_srv  if coredb_srv is None else coredb_srv
       ens_version = self.ens_version if ens_version is None else ens_version
       
       #construct dbname from species name if dname is not provided, this works for rr-species only  
       dbname      = f"{species}_core_{ens_version}_1" if dbname is None else dbname
-      species_annot_info = self._get_annotations_source_info(species, dbname, coredb_url)
+      species_annot_info = self._get_annotations_source_info(species, dbname, coredb_srv)
       species_annot_info = self.set_annot_source(**species_annot_info)
       
       #check base path contain species directory
@@ -305,18 +299,18 @@ class RRDatafiles(SpeciesFactory):
     except Exception as e:
       raise ValueError(str(e))
     
-  def get_datafiles(self, coredb_url:str=None, base_path:str=None):
+  def get_datafiles(self, coredb_srv:str=None, base_path:str=None):
     
     try:
       
       base_path   = self.base_path if base_path is None else base_path
-      coredb_url  = self.coredb_url if coredb_url is None else coredb_url
+      coredb_srv  = self.coredb_srv if coredb_srv is None else coredb_srv
             
       #fetch all species form speciesfactory coreflow 
       for dataflow in self.core_flow():
         dataflow_info = dict(dataflow)
         species_datafile = self.get_species_datafiles(species=dataflow_info['species'], dbname=dataflow_info['dbname'], 
-                                  coredb_url=coredb_url, base_path=base_path
+                                  coredb_srv=coredb_srv, base_path=base_path
                                   )
        
         yield (species_datafile) 
@@ -352,4 +346,7 @@ def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri:
           species_info[info['name_1']].append(info['name'])
       
       return species_info
+
+
+
 
