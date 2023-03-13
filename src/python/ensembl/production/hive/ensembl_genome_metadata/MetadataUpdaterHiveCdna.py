@@ -16,11 +16,6 @@ from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
 from ensembl.production.metadata.updater import CoreMetaUpdater
 
 class MetadataUpdaterHiveCdna(BaseProdRunnable):
-    def fetch_input(self):
-        input_data = self.get_input_data()
-        self.param("metadata_uri", input_data.get("metadata_uri"))
-        self.param("database_uri", input_data.get("database_uri"))
-        self.param("release", input_data.get("release"))
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
