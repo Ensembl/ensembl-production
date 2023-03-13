@@ -117,7 +117,7 @@ class BaseFactory():
     #implementation for species, group, dbnames and division
     
     columns = [Assembly.assembly_accession.label("assembly_accession"), Assembly.assembly_name.label("assembly_name"), Division.name.label("division"),
-               Organism.name.label('species_name'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')] if not len(columns) else columns
+               Organism.name.label('species'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')] if not len(columns) else columns
     
     #get base query  
     query = self.base_query(columns)
@@ -191,7 +191,7 @@ class SpeciesFactory(DBFactory):
       
   """ 
   def core_flow(self):
-    columns = [Organism.name.label('species_name'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')]
+    columns = [Organism.name.label('species'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')]
     query = self._base_filter(columns)
     values = self.execute_query(query, self.metadata_db_url)
     
@@ -314,10 +314,10 @@ class RRDatafiles(SpeciesFactory):
             
       #fetch all species form speciesfactory coreflow 
       for dataflow in self.core_flow():
-        
-        species_datafile = self.get_species_datafiles(species=dataflow['species'], dbname=dataflow['dbname'], 
-                                   coredb_url=coredb_url, base_path=base_path
-                                   )
+        dataflow_info = dict(dataflow)
+        species_datafile = self.get_species_datafiles(species=dataflow_info['species'], dbname=dataflow_info['dbname'], 
+                                  coredb_url=coredb_url, base_path=base_path
+                                  )
        
         yield (species_datafile) 
     except Exception as e:
@@ -352,22 +352,4 @@ def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri:
           species_info[info['name_1']].append(info['name'])
       
       return species_info
-
-
-
-species_factory = RRDatafiles( run_all=0, 
-                      dataflow=Flow.core_flow,
-                      ens_version=109,
-                      group='core',
-                      species='zootoca_vivipara',
-                      antispecies='homo_sapiens',
-                      metadata_db_url="mysql://ensro@mysql-ens-meta-prod-1:4483/ensembl_metadata_qrp",
-                      )
-    
-print(species_factory.get_species_datafiles( base_path="/home/vinay/Documents/Ensembl-Master/ensembl_production_apps/ensembl-production/src/python/ensembl/production/metadata/test",
-                                    coredb_url="mysql://ensro@mysql-ens-sta-5:4684/", ens_version=109))
-
-for i in species_factory.get_datafiles(base_path="/home/vinay/Documents/Ensembl-Master/ensembl_production_apps/ensembl-production/src/python/ensembl/production/metadata/test",
-                                    coredb_url="mysql://ensro@mysql-ens-sta-5:4684/"):
-  print(i)
 
