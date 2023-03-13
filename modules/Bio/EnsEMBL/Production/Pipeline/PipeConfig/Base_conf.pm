@@ -68,10 +68,8 @@ sub beekeeper_extra_cmdline_options {
 
 sub resource_classes {
   my $self = shift;
-
-
   ## Sting it together
-my %time = (H => ' --time=1:00:00',
+  my %time = (H => ' --time=1:00:00',
               D => ' --time=1-00:00:00',
               W => ' --time=7-00:00:00',);
 
