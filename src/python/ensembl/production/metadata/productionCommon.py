@@ -290,10 +290,11 @@ class Datafiles(SpeciesFactory):
       species_annot_info = self.set_annot_source(**species_annot_info)
       
       #check base path contain species directory
-      base_path = os.path.join(base_path, "species")
+      species_display_name = species_annot_info['species.display_name']
+      base_path = os.path.join(base_path, f"species/{species_display_name}")
       if not os.path.exists(base_path):
         raise ValueError("No species dir in the provided base_path: {base_path}")
-      species_datafile = self._generate_datafiles(base_path,  species_annot_info['species.display_name'])
+      species_datafile = self._generate_datafiles(base_path,  species_display_name)
       return species_datafile
       
     except Exception as e:
@@ -346,7 +347,4 @@ def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri:
           species_info[info['name_1']].append(info['name'])
       
       return species_info
-
-
-
 
