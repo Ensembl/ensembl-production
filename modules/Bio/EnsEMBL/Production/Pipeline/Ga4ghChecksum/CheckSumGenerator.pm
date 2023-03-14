@@ -168,9 +168,8 @@ sub md5{
   my ($self, $slice) = @_;
   my $md5 = Digest::MD5->new;
   $md5 = $self->sequence_stream_digest($slice, $md5, $self->param('chunk_size'));
-  my $digest = $md5->digest;
-  my $base64 = encode_base64url($digest);
-  return $base64 
+  my $digest = $md5->hexdigest;
+  return $digest
 }
 
 sub sequence_stream_digest {
