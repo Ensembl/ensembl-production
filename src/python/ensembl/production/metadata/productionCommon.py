@@ -218,6 +218,7 @@ class Datafiles(SpeciesFactory):
   """ 
   
   def _get_annotations_source_info(self, species:str, dbname: str, coredb_srv: str, meta_keys=[
+                                              'assembly.accession',  
                                               'species.annotation_source',
                                               'species.display_name',                               
                                               'genebuild.last_geneset_update',
@@ -291,7 +292,8 @@ class Datafiles(SpeciesFactory):
       
       #check base path contain species directory
       species_display_name = species_annot_info['species.display_name']
-      base_path = os.path.join(base_path, f"species/{species_display_name}")
+      assembly_accession = species_annot_info['assembly.accession']
+      base_path = os.path.join(base_path, f"species/{species_display_name}/{assembly_accession}")
       if not os.path.exists(base_path):
         raise ValueError("No species dir in the provided base_path: {base_path}")
       species_datafile = self._generate_datafiles(base_path,  species_display_name)
@@ -347,4 +349,7 @@ def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri:
           species_info[info['name_1']].append(info['name'])
       
       return species_info
+
+
+
 
