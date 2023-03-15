@@ -77,7 +77,7 @@ sub default_options {
         gtf_per_chromosome   => $self->o('per_chromosome'),
         xref_external_dbs    => [],
 	dump_homologies_script => $self->o('ENV','ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-	rr_version => $self->o('ENV', 'RR_VERSION'),
+	rr_ens_version => $self->o('ENV', 'RR_ENS_VERSION'),
 	ref_dbname => 'ensembl_compara_references',
 	compara_host_uri => '',
     };
@@ -242,7 +242,7 @@ sub pipeline_analyses {
             -parameters        => {
 		ref_dbname => $self->o('ref_dbname'),
 		dump_homologies_script => $self->o('dump_homologies_script'),
-		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_version'),
+		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_ens_version'),
 	    },
             -flow_into         => {
                 '2' => [
