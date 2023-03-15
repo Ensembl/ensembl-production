@@ -242,7 +242,7 @@ sub pipeline_analyses {
             -parameters        => {
 		ref_dbname => $self->o('ref_dbname'),
 		dump_homologies_script => $self->o('dump_homologies_script'),
-		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_version'),
+		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_ens_version'),
 	    },
             -flow_into         => {
                 '2' => [
