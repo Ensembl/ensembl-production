@@ -96,7 +96,7 @@ sub run {
   my $type = $self->param('group');
   my $species = $self->param('species');
   my $seq_type = $self->param('seq_type');
-  my ($genome_ad, $genome_feature,  $sequence, $attrib_table, $genome_feature_id, $genome_slice) ;
+  my ($genome_ad, $genome_feature,  $sequence, $attrib_table, $genome_feature_id, $sequence_obj) ;
   my $dba  = $self->get_DBAdaptor($type);
   my $registry = 'Bio::EnsEMBL::Registry';
   if(! $dba) {
@@ -108,20 +108,20 @@ sub run {
     $genome_ad = $registry->get_adaptor( $species, $type, "Slice" );
     $attrib_table = "seq_region";
     $genome_feature_id = $self->param('seq_region_id');
-    $genome_slice = $genome_ad->fetch_by_seq_region_id($self->param('seq_region_id'));
+    $sequence_obj = $genome_ad->fetch_by_seq_region_id($self->param('seq_region_id'));
   }
   elsif($seq_type eq 'cdna' || $seq_type eq 'cds' || $seq_type eq 'pep'){
     $genome_ad = $registry->get_adaptor($species, $type, "Transcript");
     $genome_feature = $genome_ad->fetch_by_dbID($self->param('transcript_dbid'));
-    $genome_slice = $genome_feature->seq; #create a seq object 
+    $sequence_obj = $genome_feature->seq; #create a seq object 
     $attrib_table = "transcript";
     $genome_feature_id = $self->param('transcript_dbid');
 
     if( $seq_type eq 'cds' ){
-      $genome_slice->seq($genome_feature->translateable_seq);
+      $sequence_obj->seq($genome_feature->translateable_seq);
     }
     if( $seq_type eq 'pep' ){
-      $genome_slice = $genome_feature->translate;
+      $sequence_obj = $genome_feature->translate;
       $attrib_table = "translation";
       $genome_feature_id = $self->param('translation_dbid');
     }	    
@@ -132,7 +132,7 @@ sub run {
   #generate hash and update the attrb table 
   foreach my $hash_method (@$hash_types){
     my $at_code = $hash_method."_".$seq_type;
-    my $sequence_hash = $self->generate_sequence_hash($genome_slice, $hash_method);
+    my $sequence_hash = $self->generate_sequence_hash($sequence_obj, $hash_method);
     $self->update_attrib_table($attribute_adaptor, $at_code, $sequence_hash, $genome_feature_id , $attrib_table);
   }  
 }
