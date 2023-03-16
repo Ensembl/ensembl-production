@@ -112,8 +112,8 @@ sub pipeline_analyses {
            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
            -parameters => {
 		           'email'   => $self->o('email'),
-                           'subject' => $self->o('pipeline_name'). " Completed!",
-                           'text'    => 'Checksum value atted to atrrib tables'
+                           'subject' => "Pipeline ". $self->o('pipeline_name'). " Completed!",
+                           'text'    => 'Checksum value added to atrrib tables'
 		          },
         },	
         {
@@ -133,11 +133,11 @@ sub pipeline_analyses {
 	    -logic_name    => 'job_factory',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -hive_capacity => -1,
-            -flow_into => { '1' => 'fetch_sequences' }
+            -flow_into => { '1' => 'fetch_genome_sequence_info' }
         },
 	
         { 
-	    -logic_name    => 'fetch_sequences',
+	    -logic_name    => 'fetch_genome_sequence_info',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequenceInfo',
             -hive_capacity => -1,
 	    -flow_into => { '2' => 'toplevel_checksum', '3' => 'cdna_checksum' , '4'=> 'cds_checksum', '5'=> 'pep_checksum' }
