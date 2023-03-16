@@ -67,11 +67,9 @@ use Digest::SHA;
 use Digest::MD5;
 use MIME::Base64 qw/encode_base64url/;
 use Encode;
-
 use Bio::EnsEMBL::Attribute;
 use Bio::EnsEMBL::Registry;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
-
 
 sub param_defaults {
   my ($self) = @_;
@@ -140,12 +138,14 @@ sub run {
 sub generate_sequence_hash {
   my ($self, $slice, $hash_method) = @_;
   my $sequence_hash;
-  if( $hash_method =~ /sha\-?(\d+)/){
+  if( $hash_method =~ /sha\-?(\d+)t(\d+)u?/){
     my $digest_size = $self->param('digest_size') || 24;
     my $algo = int($1);    
     $sequence_hash = $self->sha512t24u($slice, $algo, $digest_size);	  
   }elsif($hash_method eq "md5"){
      $sequence_hash = $self->md5($slice);	  
+  }else{
+     die "Unknown hash method $hash_method, valid hash methods ex: 'sha512t(24|30..)u?', 'md5'";	  
   }	  
   return $sequence_hash; 
 }
@@ -157,7 +157,7 @@ sub sha512t24u {
     die "Digest size must be a multiple of 3 to avoid padded digests";
   }
   my $sha = Digest::SHA->new(int($algo)); #even though we use sha512 algorithm we truncate the generated hash based on given digest size  
-  $sha = $self->sequence_stream_digest($slice, $sha, $self->param('chunk_size')); 
+  $sha = $self->sequence_stream_digest($slice, $sha); 
   my $digest = $sha->digest;
   my $base64 = encode_base64url($digest);
   my $substr_offset = int($digest_size/3)*4;
@@ -167,14 +167,14 @@ sub sha512t24u {
 sub md5{
   my ($self, $slice) = @_;
   my $md5 = Digest::MD5->new;
-  $md5 = $self->sequence_stream_digest($slice, $md5, $self->param('chunk_size'));
+  $md5 = $self->sequence_stream_digest($slice, $md5);
   my $digest = $md5->hexdigest;
   return $digest
 }
 
 sub sequence_stream_digest {
   my ($self, $slice, $hash_obj) = @_;
-  my $chunk_size = $self->param('chunk_size') unless $chunk_size;
+  my $chunk_size = $self->param('chunk_size');
   my $start = 1;
   my $end = $slice->length();
   my $seek = $start;
@@ -198,6 +198,14 @@ sub update_attrib_table{
                          -VALUE => $secure_hash,
                          -DESCRIPTION => $attrib_obj->[3]
     );
+
+    #method store_on_Object do not update the value rather it insert the new row when hashvalue change if sequence changed 
+    my $attrib_info = $attribute_adaptor->fetch_all_by_Object($genome_feature_id, $attrib_table, $attrib_obj->[1]); 
+    if(scalar @$attrib_info ){
+      if(${$attrib_info->[0]}{'value'} ne $secure_hash){
+         $attribute_adaptor->remove_from_Object($genome_feature_id, $attrib_table, $attrib_obj->[1]);	      
+      }		      
+    }	    
     $attribute_adaptor->store_on_Object($genome_feature_id, [$attrib], $attrib_table);
 }
 
