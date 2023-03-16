@@ -112,7 +112,6 @@ sub pipeline_analyses {
                             '1->A' => ['SpeciesFactory_Chromosome'],
                             'A->1' => ['Notify'],
                           },
-      -rc_name         => 'default',
     },
 
     {
@@ -132,7 +131,6 @@ sub pipeline_analyses {
                           },
       -rc_name         => '2GB',
     },
-
 
     {
       -logic_name      => 'SpeciesFactory_All',
@@ -204,14 +202,13 @@ sub pipeline_analyses {
     },
 
     {
-        -logic_name      => 'ConstitutiveExons',
-        -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::ConstitutiveExons',
-        -parameters      => {
-            dbtype => 'core',
-        },
-        -max_retry_count => 1,
-        -hive_capacity   => 50,
-        -rc_name         => 'default_W'
+      -logic_name      => 'ConstitutiveExons',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::ConstitutiveExons',
+      -parameters      => {
+                            dbtype => 'core',
+                          },
+      -max_retry_count => 1,
+      -hive_capacity   => 50,
     },
 
     {
@@ -226,8 +223,6 @@ sub pipeline_analyses {
                              '1' => ['GeneCounts_Datacheck'],
                             '-1' => ['GeneCount_HighMem'],
                           },
-      -rc_name         => 'default',
-
     },
 
     {
@@ -253,7 +248,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'default',
     },
 
     {
@@ -262,7 +256,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -flow_into       => ['GeneGC_Datacheck'],
-      -rc_name         => 'default_D',
     },
 
     {
@@ -285,7 +278,6 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -flow_into       => ['RunDataChecks'],
-      -rc_name         => 'default',
     },
 
     {
@@ -312,7 +304,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => '4GB_D',
+      -rc_name         => '4GB',
       -flow_into       => ['PepStats_Datacheck'],
     },
 
@@ -327,9 +319,8 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'default',
     },
-#
+
     {
       -logic_name      => 'CodingDensity',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Production::CodingDensity',
@@ -339,8 +330,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'default',
-
     },
 
     {
@@ -352,7 +341,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'default',
     },
 
     {
@@ -364,7 +352,6 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => 'default',
     },
 
     {
@@ -375,7 +362,6 @@ sub pipeline_analyses {
                             value_type => 'sum',
                           },
       -max_retry_count => 1,
-      -rc_name         => 'default',
       -hive_capacity   => 50,
     },
 
@@ -388,7 +374,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => '2GB_D',
+      -rc_name         => '2GB',
     },
 
     {
@@ -400,7 +386,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => '8GB_D',
+      -rc_name         => '8GB',
     },
 
     {
@@ -411,7 +397,6 @@ sub pipeline_analyses {
                        subject => $self->o('pipeline_name').' has finished',
                      },
       -flow_into  => ['TidyScratch'],
-      -rc_name         => 'default',
     },
 
     {
@@ -421,7 +406,6 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'rm -rf #scratch_dir#',
                             },
-      -rc_name         => 'default',
     },
 
   ];
