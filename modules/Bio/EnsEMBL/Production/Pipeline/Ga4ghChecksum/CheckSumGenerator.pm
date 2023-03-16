@@ -173,8 +173,8 @@ sub md5{
 }
 
 sub sequence_stream_digest {
-  my ($self, $slice, $hash_obj, $chunk_size) = @_;
-  $chunk_size = $self->param('$chunk_size') unless $chunk_size;
+  my ($self, $slice, $hash_obj) = @_;
+  my $chunk_size = $self->param('chunk_size') unless $chunk_size;
   my $start = 1;
   my $end = $slice->length();
   my $seek = $start;
