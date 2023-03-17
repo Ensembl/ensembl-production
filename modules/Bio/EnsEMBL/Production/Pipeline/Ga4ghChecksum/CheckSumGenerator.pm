@@ -156,7 +156,7 @@ sub sha512t24u {
 my $digest_size = 24;
     die "Digest size must be a multiple of 3 to avoid padded digests";
   }
-  my $sha = Digest::SHA->new(int($algo)); #even though we use sha512 algorithm we truncate the generated hash based on given digest size  
+  my $sha = Digest::SHA->new(512);
   $sha = $self->sequence_stream_digest($slice, $sha); 
   my $digest = $sha->digest;
   my $base64 = encode_base64url($digest);
