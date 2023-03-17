@@ -15,7 +15,6 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)     
 
-
 def get_db_session(url) :
   """Provide the DB session scope with context manager
   Args:
@@ -106,7 +105,7 @@ class BaseFactory():
         .join(Genome).join(Assembly).join(Organism).join(DataRelease).join(Division) 
     return meta_query
 
-  def _base_filter(self, columns=[]):
+  def _base_filter(self, columns=[], **kwargs):
     #TODO filter of the results based on dbname, species, antispecies, taxon etc similar to production speciesfactory
     #implementation for species, group, dbnames and division
     
@@ -116,30 +115,41 @@ class BaseFactory():
     #get base query  
     query = self.base_query(columns)
     
-    if len(self.ens_version)==0 and len(self.eg_version)==0 :
+    #set kwargs params to class object value 
+    for param in self.__dict__:
+      kwargs[param] = kwargs.get(param, self.__dict__[param])
+    
+    #set all kwargs to meat the production params   
+    kwargs =  ProductionParams(**kwargs).dict()
+    
+    print(kwargs)
+    
+    if len(kwargs['ens_version'])==0 and len(kwargs['ens_version'])==0 :
       raise ValueError('ENS and EG versions missing,  provied them during initiation or export them as enviroment variables : ENS_VERSION=110; EG_VERSION=57')
     
     #apply the filter 
-    if self.ens_version:
-      query = query.filter(DataRelease.ensembl_version.in_( self.ens_version))
+    if kwargs['ens_version']:
+      query = query.filter(DataRelease.ensembl_version.in_( kwargs['ens_version']))
         
-    if self.eg_version:     
-      query = query.filter(DataRelease.ensembl_genomes_version.in_(self.eg_version))    
+    if kwargs['eg_version']:     
+      query = query.filter(DataRelease.ensembl_genomes_version.in_(kwargs['eg_version']))    
       
-    if self.division:
-      query = query.filter(Division.name.in_(self.division))       
+    if kwargs['division']:
+      query = query.filter(Division.name.in_(kwargs['division']))       
 
-    if self.group:
-      query = query.filter(GenomeDatabase.type.in_(self.group))
+    if kwargs['group']:
+      query = query.filter(GenomeDatabase.type.in_(kwargs['group']))
       
-    if self.dbname and not self.run_all:
-      query = query.filter(GenomeDatabase.dbname.in_(self.dbname))
+    if kwargs['dbname'] and not kwargs['run_all']:
+      query = query.filter(GenomeDatabase.dbname.in_(kwargs['dbname']))
       
-    if self.species and not self.run_all:
-      query = query.filter(or_(Organism.name.in_(self.species), GenomeDatabase.dbname.in_(self.dbname) ))
+    if kwargs['species'] and not kwargs['run_all']:
+      query = query.filter(or_(Organism.name.in_(kwargs['species']), GenomeDatabase.dbname.in_(kwargs['dbname']) ))
     
     #filter antispecies and antitaxon
-    query = query.filter(Organism.name.notin_(self.antispecies))
+    query = query.filter(Organism.name.notin_(kwargs['antispecies']))
+    
+    print(query)
     return query
   
   def execute_query(self, query, url):
@@ -183,10 +193,12 @@ class SpeciesFactory(DBFactory):
       metadata_db_url (URL): metadata database mysql url  
       meta_filters (dict): A hashref with key-value pairs that are matched against meta_key and meta_value from the meta table.
       
-  """ 
-  def core_flow(self):
+  """
+  
+  def core_flow(self, **kwargs):
+    
     columns = [Organism.name.label('species'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')]
-    query = self._base_filter(columns)
+    query = self._base_filter(columns, **kwargs)
     values = self.execute_query(query, self.metadata_db_url)
     
     if self.nextflow: #TODO write to the dataflow_2.json as standard flows for nexflow processor 
@@ -218,6 +230,7 @@ class Datafiles(SpeciesFactory):
   """ 
   
   def _get_annotations_source_info(self, species:str, dbname: str, coredb_srv: str, meta_keys=[
+                                              'assembly.accession',
                                               'species.annotation_source',
                                               'species.display_name',                               
                                               'genebuild.last_geneset_update',
@@ -238,10 +251,8 @@ class Datafiles(SpeciesFactory):
       
       #get species id to support collection dbs
       species_query = select(Meta.species_id).filter(Meta.meta_value == species).filter(Meta.meta_key == 'species.production_name')
-      species_id    = dict(session.execute(species_query).one())['species_id'] 
-      
+      species_id    = dict(session.execute(species_query).one())['species_id']       
       core_query = select(Meta.meta_key, Meta.meta_value).filter(Meta.meta_key.in_(meta_keys)).filter(Meta.species_id==species_id)
-      
       result =  dict(session.execute(core_query).all())
       
       return result 
@@ -268,17 +279,18 @@ class Datafiles(SpeciesFactory):
     return {species_name: species_datafile}
   
   @staticmethod
-  def set_annot_source(**kargs):
-    kargs['species.display_name'] = "_".join(kargs.get('species.display_name','').split(' ')[0:2]) #Zootoca vivipara (Common lizard) - GCA_011800845.1  
-    kargs['genebuild.initial_release_date'] = kargs.get('genebuild.initial_release_date','').replace('-','_') if kargs.get('genebuild.initial_release_date', None) else ''
-    kargs['genebuild.last_geneset_update'] = kargs.get('genebuild.last_geneset_update', '').replace('-','_') if kargs.get('genebuild.initial_release_date', None) else ''
-    kargs['species.annotation_source']  = 'ensembl' if kargs.get('species.annotation_source', '') == '' else kargs.get('species.annotation_source', '')
-    return kargs
+  def set_annot_source(**kwargs):
+    kwargs['species.display_name'] = "_".join(kwargs.get('species.display_name','').split(' ')[0:2]) #Zootoca vivipara (Common lizard) - GCA_011800845.1  
+    kwargs['genebuild.initial_release_date'] = kwargs.get('genebuild.initial_release_date','').replace('-','_') if kwargs.get('genebuild.initial_release_date', None) else ''
+    kwargs['genebuild.last_geneset_update'] = kwargs.get('genebuild.last_geneset_update', '').replace('-','_') if kwargs.get('genebuild.initial_release_date', None) else ''
+    kwargs['species.annotation_source']  = 'ensembl' if kwargs.get('species.annotation_source', '') == '' else kwargs.get('species.annotation_source', '')
+    return kwargs
   
   def get_species_datafiles(self, species:str=None, dbname:str=None, base_path:DirectoryPath=None, 
                             coredb_srv:str=None, ens_version:int=None)->dict:
       
     try:
+
       species     = "".join(self.species[:1]) if species is None else species
       base_path   = self.base_path   if base_path is None else base_path
       coredb_srv  = self.coredb_srv  if coredb_srv is None else coredb_srv
@@ -291,34 +303,47 @@ class Datafiles(SpeciesFactory):
       
       #check base path contain species directory
       species_display_name = species_annot_info['species.display_name']
-      base_path = os.path.join(base_path, f"species/{species_display_name}")
+      assembly_accession = species_annot_info['assembly.accession']
+      base_path = os.path.join(base_path, f"species/{species_display_name}/{assembly_accession}")
       if not os.path.exists(base_path):
         raise ValueError("No species dir in the provided base_path: {base_path}")
       species_datafile = self._generate_datafiles(base_path,  species_display_name)
+
       return species_datafile
       
     except Exception as e:
       raise ValueError(str(e))
     
-  def get_datafiles(self, coredb_srv:str=None, base_path:str=None):
-    
+  def get_datafiles(self, coredb_srv:str=None, base_path:str=None, **kwargs):
+    """_summary_
+
+    Args:
+        coredb_srv (str, optional): _description_. Defaults to None.
+        base_path (str, optional): _description_. Defaults to None.
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+
+    Yields:
+        _type_: _description_
+    """    
     try:
-      
+
       base_path   = self.base_path if base_path is None else base_path
       coredb_srv  = self.coredb_srv if coredb_srv is None else coredb_srv
             
       #fetch all species form speciesfactory coreflow 
-      for dataflow in self.core_flow():
+      for dataflow in self.core_flow(**kwargs):
         dataflow_info = dict(dataflow)
         species_datafile = self.get_species_datafiles(species=dataflow_info['species'], dbname=dataflow_info['dbname'], 
                                   coredb_srv=coredb_srv, base_path=base_path
                                   )
-       
         yield (species_datafile) 
     except Exception as e:
       raise ValueError(str(e))
-    
-    return ()
 
 #nextflow check pipeline used this function remove it after removing the dependencies                    
 def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri: str, division: list):
@@ -347,4 +372,5 @@ def get_all_species_by_division(ens_version: int, eg_version: int, metadata_uri:
           species_info[info['name_1']].append(info['name'])
       
       return species_info
+
 
