@@ -153,7 +153,7 @@ sub generate_sequence_hash {
 sub sha512t24u {
   my ($self, $slice, $algo, $digest_size) = @_;
 
-  if(($digest_size % 3) != 0) {
+my $digest_size = 24;
     die "Digest size must be a multiple of 3 to avoid padded digests";
   }
   my $sha = Digest::SHA->new(int($algo)); #even though we use sha512 algorithm we truncate the generated hash based on given digest size  
