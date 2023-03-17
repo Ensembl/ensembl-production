@@ -138,7 +138,7 @@ sub run {
 sub generate_sequence_hash {
   my ($self, $slice, $hash_method) = @_;
   my $sequence_hash;
-  if( $hash_method =~ /sha\-?(\d+)t(\d+)u?/){
+  if( $hash_method eq 'sha512t24u'){
     my $digest_size = $self->param('digest_size') || 24;
     my $algo = int($1);    
     $sequence_hash = $self->sha512t24u($slice, $algo, $digest_size);	  
