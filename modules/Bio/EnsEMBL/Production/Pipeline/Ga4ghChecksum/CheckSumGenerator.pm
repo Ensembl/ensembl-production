@@ -127,7 +127,7 @@ sub run {
     die "Unknown $seq_type : valid seq_types are toplevel, cdna, cds, pep";	  
   }
 
-  #generate hash and update the attrb table 
+  #generate hash and update the attrib tables (seq_region_attrib, transcript_attrib, translation attrib) 
   foreach my $hash_method (@$hash_types){
     my $at_code = $hash_method."_".$seq_type;
     my $sequence_hash = $self->generate_sequence_hash($sequence_obj, $hash_method);
@@ -136,28 +136,23 @@ sub run {
 }
 
 sub generate_sequence_hash {
-  my ($self, $slice, $hash_method) = @_;
+  my ($self, $sequence_obj, $hash_method) = @_;
   my $sequence_hash;
   if( $hash_method eq 'sha512t24u'){
-    my $digest_size = $self->param('digest_size') || 24;
-    my $algo = int($1);    
-    $sequence_hash = $self->sha512t24u($slice, $algo, $digest_size);	  
+    $sequence_hash = $self->sha512t24u($sequence_obj);	  
   }elsif($hash_method eq "md5"){
-     $sequence_hash = $self->md5($slice);	  
+     $sequence_hash = $self->md5($sequence_obj);	  
   }else{
-     die "Unknown hash method $hash_method, valid hash methods ex: 'sha512t(24|30..)u?', 'md5'";	  
+     die "Unknown hash method $hash_method, valid hash methods ex: 'sha512t24u', 'md5'";	  
   }	  
   return $sequence_hash; 
 }
 
 sub sha512t24u {
-  my ($self, $slice, $algo, $digest_size) = @_;
-
-my $digest_size = 24;
-    die "Digest size must be a multiple of 3 to avoid padded digests";
-  }
+  my ($self, $sequence_obj) = @_;
+  my $digest_size = 24;
   my $sha = Digest::SHA->new(512);
-  $sha = $self->sequence_stream_digest($slice, $sha); 
+  $sha = $self->sequence_stream_digest($sequence_obj, $sha); 
   my $digest = $sha->digest;
   my $base64 = encode_base64url($digest);
   my $substr_offset = int($digest_size/3)*4;
@@ -165,23 +160,23 @@ my $digest_size = 24;
 }
 
 sub md5{
-  my ($self, $slice) = @_;
+  my ($self, $sequence_obj) = @_;
   my $md5 = Digest::MD5->new;
-  $md5 = $self->sequence_stream_digest($slice, $md5);
+  $md5 = $self->sequence_stream_digest($sequence_obj, $md5);
   my $digest = $md5->hexdigest;
   return $digest
 }
 
 sub sequence_stream_digest {
-  my ($self, $slice, $hash_obj) = @_;
+  my ($self, $sequence_obj, $hash_obj) = @_;
   my $chunk_size = $self->param('chunk_size');
   my $start = 1;
-  my $end = $slice->length();
+  my $end = $sequence_obj->length();
   my $seek = $start;
   while($seek <= $end) {
     my $seek_upto = $seek + $chunk_size - 1;
     $seek_upto = $end if($seek_upto > $end);
-    my $seq = encode("utf8", $slice->subseq($seek, $seek_upto));
+    my $seq = encode("utf8", $sequence_obj->subseq($seek, $seek_upto));
     $hash_obj->add($seq);
     $seek = $seek_upto + 1;
   }
