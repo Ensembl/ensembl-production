@@ -88,6 +88,9 @@ class ProductionParams(BaseModel):
     return  {k: [v] if isinstance(v, str) and k != 'metadata_db_url' else v for k, v in values.items()}
   
 class BaseFactory():
+  """
+  Prodction BaseFactory To Query the Metadata Database 
+  """  
   def __init__(self,**kwargs):
     params = ProductionParams(**kwargs)
     self.__dict__.update(params.dict())
@@ -151,6 +154,15 @@ class BaseFactory():
     return query
   
   def execute_query(self, query, url):
+    """Execute the Sql Query Againts the given database 
+
+    Args:
+        query (SqlAlchemy): ORM object 
+        url (str): Mysql string to connect the database 
+
+    Yields:
+        dict: yield the array of dictionary results from database 
+    """    
     #connect to  database
     db_connection = self.get_db_session(url)   
     with db_connection.session_scope() as session: 
@@ -194,6 +206,11 @@ class SpeciesFactory(DBFactory):
   """
   
   def core_flow(self, **kwargs):
+    """Outpus the species name and species group from metadata database 
+
+    Returns:
+        list: ORM execution object
+    """    
     
     columns = [Organism.name.label('species'), GenomeDatabase.dbname.label('dbname'),GenomeDatabase.type.label('group')]
     query = self._base_filter(columns, **kwargs)
@@ -260,7 +277,17 @@ class Datafiles(SpeciesFactory):
       return result 
   
   @staticmethod      
-  def update_datafile(result,keys, value):
+  def update_datafile(result:dict ,keys:str, value:str) -> dict:
+    """Recursive method to update the multilevel dictionary
+
+    Args:
+        result (dict): Multilevel dictionary
+        keys (str): filename
+        value (str): filepath
+
+    Returns:
+        dict: multilevel dictionay
+    """  
     current = result
     for key in keys[:-1]:
         current = current.setdefault(key, {})
@@ -272,6 +299,15 @@ class Datafiles(SpeciesFactory):
     return result  
       
   def _generate_datafiles(self, base_path:str, species_name:str):
+    """Generates the datafile path for given species 
+
+    Args:
+        base_path (str): FTP base direcotry path
+        species_name (str): ensembl species production name 
+
+    Returns:
+        dictionay: Multi level dictionary with species datafiles paths
+    """    
     species_datafile = {}
     for dirpath, dirnames, filenames in os.walk(base_path):
       for datafile in filenames:
@@ -283,6 +319,11 @@ class Datafiles(SpeciesFactory):
   
   @staticmethod
   def set_annot_source(**kwargs):
+    """Get annotation source from core db metatable and set the display name as per RR FTP site 
+
+    Returns:
+        dictionary: dictionary with species metadata information 
+    """    
     kwargs['species.display_name'] = "_".join(kwargs.get('species.display_name','').split(' ')[0:2]) #Zootoca vivipara (Common lizard) - GCA_011800845.1  
     kwargs['genebuild.initial_release_date'] = kwargs.get('genebuild.initial_release_date','').replace('-','_') if kwargs.get('genebuild.initial_release_date', None) else ''
     kwargs['genebuild.last_geneset_update'] = kwargs.get('genebuild.last_geneset_update', '').replace('-','_') if kwargs.get('genebuild.initial_release_date', None) else ''
@@ -291,6 +332,21 @@ class Datafiles(SpeciesFactory):
   
   def get_species_datafiles(self, species:str=None, dbname:str=None, base_path:DirectoryPath=None, 
                             coredb_srv:str=None, ens_version:int=None)->dict:
+    """Generate the datafiles for given species  
+
+    Args:
+        species (str, optional): species production name. Defaults to None.
+        dbname (str, optional): species core database name. Defaults to None.
+        base_path (DirectoryPath, optional): path to the ftp location in farm. Defaults to None.
+        coredb_srv (str, optional): mysql url for core db. Defaults to None.
+        ens_version (int, optional): ensembl release version. Defaults to None.
+
+    Raises:
+        ValueError: Raise the value error exception
+
+    Returns:
+        dict: dictionary with species name and datafiles related to it from the RR FTP site 
+    """    
       
     try:
 
@@ -321,7 +377,7 @@ class Datafiles(SpeciesFactory):
       raise ValueError(str(e))
     
   def get_datafiles(self, coredb_srv:str=None, base_path:str=None, **kwargs):
-    """Fetch Species Info from SpeciesFactory coreflow and generate datafile paths
+    """Fetch Species Info from SpeciesFactory coreflow and generate datafile paths from RR FTP location
 
     Args:
         coredb_srv (str, optional): Core database mysql server URI (mysql://ensro@localhost:3366/). Defaults to None.
@@ -331,7 +387,7 @@ class Datafiles(SpeciesFactory):
         ValueError: Raise valueerror exception on failure 
 
     Yields:
-        dictionary:  dictionary with species level datafile paths
+        dictionary:  dictionary with species and its datafile paths
     """    
     try:
 
