@@ -127,6 +127,7 @@ sub download_file {
     while (my ($checksum, $file_name) = each %refseq_files) {
       # Only interested in files matching pattern
       next if (!match_glob(basename($uri->path), $file_name));
+      next if ($file_name =~ /nonredundant_protein/);
 
       $file_path = catfile($dest_dir, basename($file_name));
       unless ($skip_download_if_file_present && -f $file_path) {
