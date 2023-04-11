@@ -30,147 +30,108 @@ use File::Spec;
 
 sub default_options {
     my ($self) = @_;
+
     return {
         %{$self->SUPER::default_options()},
 
         ## General parameters
-        'release'                => $self->o('ensembl_release'),
-        'pipeline_name'          => "pipeline_checksum_generator_".$self->o('ensembl_release'),
-        'web_email'              => '',
-        'sequence_types'         => [],
-	'run_all'                => 0,
-	'email'                  => 'ensembl-production@ebi.ac.uk',    
+        'release'        => $self->o('ensembl_release'),
+        'pipeline_name'  => 'pipeline_checksum_generator_' . $self->o('ensembl_release'),
+        'web_email'      => '',
+        'sequence_types' => [],
+        'run_all'        => 0,
+        'email'          => 'ensembl-production@ebi.ac.uk',
         ## 'job_factory' parameters
-        'species'                => [],
-        'antispecies'            => [],
-        'division'               => [],
-        'dbname'                 => undef,
-	#checksum params
-	'sequence_type'         => [],
-	'hash_type'             => [],
+        'species'     => [],
+        'antispecies' => [],
+        'division'    => [],
+        'dbname'      => undef,
+        #checksum params
+        'sequence_type' => [],
+        'hash_type'     => [],
     };
 }
 
 sub pipeline_create_commands {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return [
-    @{$self->SUPER::pipeline_create_commands}
-  ];
+    return [
+        @{$self->SUPER::pipeline_create_commands}
+    ];
 }
 
 # Ensures output parameters gets propagated implicitly
 sub hive_meta_table {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{$self->SUPER::hive_meta_table},
-    'hive_use_param_stack' => 1,
-  };
+    return {
+        %{$self->SUPER::hive_meta_table},
+        'hive_use_param_stack' => 1,
+    };
 }
 
 sub pipeline_wide_parameters {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  return {
-    %{$self->SUPER::pipeline_wide_parameters},
-    'pipeline_name' => $self->o('pipeline_name'),
-    'release'       => $self->o('release'),
-    'sequence_types'         => $self->o('sequence_type'),
-    'hash_types'             => $self->o('hash_type'),
-  };
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},
+        'pipeline_name'  => $self->o('pipeline_name'),
+        'release'        => $self->o('release'),
+        'sequence_types' => $self->o('sequence_type'),
+        'hash_types'     => $self->o('hash_type'),
+    };
 }
-
 
 sub pipeline_analyses {
     my ($self) = @_;
-    return [
 
+    return [
         {
-            -logic_name    => 'Init_checksum',
+            -logic_name    => 'init_checksum',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -hive_capacity => -1,
-	    -input_ids     => [ {} ],
-            -flow_into => { '1->A' => 'species_factory', 'A->1' => 'email_report' }
+            -input_ids     => [{}],
+            -flow_into     => {'1->A' => 'species_factory', 'A->1' => 'email_report'}
         },
-        { 
-            -logic_name      => 'species_factory',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
-            -parameters      => {
-                species      => $self->o('species'),
-                antispecies  => $self->o('antispecies'),
-                division     => $self->o('division'),
-                dbname       => $self->o('dbname'),
-                run_all      => $self->o('run_all'),
+        {
+            -logic_name => 'species_factory',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
+            -parameters => {
+                species     => $self->o('species'),
+                antispecies => $self->o('antispecies'),
+                division    => $self->o('division'),
+                dbname      => $self->o('dbname'),
+                run_all     => $self->o('run_all'),
             },
-            -hive_capacity   => -1,
             -max_retry_count => 1,
-            -flow_into       => { '2->A' => 'job_factory', 'A->2'=> 'Run_datacheck' },
+            -flow_into       => {'2->A' => 'fetch_genome_sequence_info', 'A->2' => 'run_datacheck'},
         },
         {
-           -logic_name => 'email_report',
-           -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
-           -parameters => {
-		           'email'   => $self->o('email'),
-                           'subject' => "Pipeline ". $self->o('pipeline_name'). " Completed!",
-                           'text'    => 'Checksum value added to atrrib tables'
-		          },
-        },	
+            -logic_name => 'fetch_genome_sequence_info',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequenceInfo',
+            -analysis_capacity => 20,
+        },
         {
-            -logic_name        => 'Run_datacheck',
+            -logic_name        => 'run_datacheck',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-              datacheck_names  => ['SequenceChecksum'],
-              datacheck_types  => ['critical'],
-              registry_file    => $self->o('registry'),
-              failures_fatal   => 1,
-           },
+                datacheck_names => ['SequenceChecksum'],
+                datacheck_types => ['critical'],
+                registry_file   => $self->o('registry'),
+                failures_fatal  => 1,
+            },
         },
-        { 
-	    -logic_name    => 'job_factory',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -hive_capacity => -1,
-            -flow_into => { '1' => 'fetch_genome_sequence_info' }
+        {
+            -logic_name => 'email_report',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
+            -parameters => {
+                'email'   => $self->o('email'),
+                'subject' => 'Pipeline ' . $self->o('pipeline_name') . ' completed!',
+                'text'    => 'Checksum value added to attrib tables'
+            },
         },
-	
-        { 
-	    -logic_name    => 'fetch_genome_sequence_info',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequenceInfo',
-            -hive_capacity => -1,
-	    -flow_into => { '2' => 'toplevel_checksum', '3' => 'cdna_checksum' , '4'=> 'cds_checksum', '5'=> 'pep_checksum' }
-        },
-        { 
-	    -logic_name    => 'toplevel_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
-            -hive_capacity => 50,
-            -rc_name       => '4GB',
-
-        },
-        { 
-	    -logic_name    => 'cdna_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
-            -hive_capacity => 50,
-            -rc_name       => '2GB',
-
-        },
-        { 
-	    -logic_name    => 'cds_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
-            -hive_capacity => 50,
-            -rc_name       => '2GB',
-
-        },
-        { 
-	    -logic_name    => 'pep_checksum',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::CheckSumGenerator',
-            -hive_capacity => 50,
-            -rc_name       => '2GB',
-
-        },
-	
     ];
 }
 
