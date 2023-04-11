@@ -229,9 +229,10 @@ sub pipeline_analyses {
 	      data_category    => 'homology',
 	    },
             -flow_into         => {
-                '3' => [
+                '3->A' => [
                     'HomologyTSVDumps',
                 ],
+		'A->3' => ['SyncHomologyDumps']
             }
         },
         {
@@ -259,8 +260,17 @@ sub pipeline_analyses {
 	    -parameters        => {
                 cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
             },
-
-
+        },
+	{
+            -logic_name        => 'SyncHomologyDumps',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
+            },
+            -rc_name       => "dm"
         },
         {
             -logic_name        => 'GenomeDirectoryPaths',
