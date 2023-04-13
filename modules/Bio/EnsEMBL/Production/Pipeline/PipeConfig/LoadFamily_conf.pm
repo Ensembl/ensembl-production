@@ -22,6 +22,8 @@ package Bio::EnsEMBL::Production::Pipeline::PipeConfig::LoadFamily_conf;
 use strict;
 use warnings;
 
+use Bio::EnsEMBL::Compara::PipeConfig::Parts::GeneMemberHomologyStats;
+
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 sub default_options {
@@ -59,8 +61,9 @@ sub pipeline_analyses {
                       logic_names  => $self->o('logic_names')                          
                      },
       -flow_into  => {
-                      2 => ['add_members'],
-                     },
+          '2->A'  => [ 'add_members' ],
+          'A->8'  => [ 'stats_families' ],
+      },
     },
     {
       -logic_name => 'add_members',
@@ -71,6 +74,7 @@ sub pipeline_analyses {
                      },
       -analysis_capacity => 20,
     },
+    @{ Bio::EnsEMBL::Compara::PipeConfig::Parts::GeneMemberHomologyStats::pipeline_analyses_fam_stats($self) },
   ];
 }
 
