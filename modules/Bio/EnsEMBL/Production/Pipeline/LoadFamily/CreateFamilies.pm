@@ -31,6 +31,17 @@ use Carp qw/croak/;
 use strict;
 use base qw/Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory/;
 
+sub param_defaults {
+  my ($self) = @_;
+
+  return {
+    %{$self->SUPER::param_defaults},
+
+    # Dataflow channels 1-7 are used by Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory.
+    funnel_flow => 8,
+  };
+}
+
 sub run {
   my ($self) = @_;
   # call run from super
@@ -53,6 +64,7 @@ sub run {
     croak "Expecting one compara database only";  
   }
   my $compara_dba = $compara_dbas[0];
+  $self->param('compara_url', $compara_dba->url);
   my $schema_version = $compara_dba->get_MetaContainer->get_schema_version();
   $compara_dba->dbc()->sql_helper()->execute_update(-SQL=>'delete family.*,family_member.* from family left join family_member using (family_id)');
   # get compara
@@ -164,6 +176,14 @@ sub run {
   }
   print "Completed storing families\n";
   
+}
+
+sub write_output {
+  my $self = shift;
+
+  $self->SUPER::write_output;
+
+  $self->dataflow_output_id({ 'db_conn' => $self->param('compara_url') }, $self->param('funnel_flow'));
 }
 
 1;
