@@ -159,8 +159,8 @@ sub pipeline_analyses {
             -flow_into         => {
                 '2' => WHEN(
                     '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
-                    '#dump_mysql# && !#run_datachecks# && !#dump_homologies#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
-                    '#dump_homologies#' => [ 'HomologySpeciesFactory' ],
+                    '#dump_mysql# && !#run_datachecks#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
+		    #'#dump_homologies#' => [ 'HomologySpeciesFactory' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
@@ -204,18 +204,7 @@ sub pipeline_analyses {
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
                     'RNASeqDirectoryPaths',
-                ],
-            }
-        },
-        {
-            -logic_name        => 'HomologySpeciesFactory',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {},
-            -flow_into         => {
-                '2' => [
-                    'HomologyDirectoryPaths',
+		    'HomologyDirectoryPaths'
                 ],
             }
         },
@@ -225,14 +214,14 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-	      analysis_types   => ['Homologies'],	    
+	      analysis_types   => $self->o('homology_dumps'),	    
 	      data_category    => 'homology',
 	    },
             -flow_into         => {
                 '3->A' => [
                     'HomologyTSVDumps',
                 ],
-		'A->3' => ['SyncHomologyDumps']
+		'A->3' => ['Checksum']
             }
         },
         {
@@ -260,17 +249,6 @@ sub pipeline_analyses {
 	    -parameters        => {
                 cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
             },
-        },
-	{
-            -logic_name        => 'SyncHomologyDumps',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
-            },
-            -rc_name       => "dm"
         },
         {
             -logic_name        => 'GenomeDirectoryPaths',
