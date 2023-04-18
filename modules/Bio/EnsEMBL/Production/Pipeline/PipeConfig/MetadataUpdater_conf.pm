@@ -7,7 +7,7 @@
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2022] EMBL-European Bioinformatics Institute
+    Copyright [2016-2023] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -34,26 +34,12 @@ sub default_options {
         pipeline_name => 'metadata_updater',
         metadata_uri  => '',
         database_uri  => '',
-        e_release     => '',
+        release     => '',
         email         => '',
         timestamp     => '',
-        comment       => ''
+        comment       => '',
     };
 }
-
-# sub pipeline_create_commands {
-#     my ($self) = @_;
-#     return [
-#     @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
-#
-#             # additional tables needed for long multiplication pipeline's operation:
-#     $self->db_cmd('CREATE TABLE result (job_id int(10), output LONGTEXT, PRIMARY KEY (job_id))'),
-#     $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
-#     $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
-#     $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
-#     $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
-#     ];
-#   }
 
 
 sub pipeline_analyses {
@@ -67,9 +53,9 @@ sub pipeline_analyses {
             -input_ids       => [{}],
             -max_retry_count => 1,
             -parameters      => {
-                'metadata_uri' => $self->o('metadata_uri'),
-                'database_uri' => $self->o('database_uri'),
-                'e_release'    => $self->o('e_release'),
+                metadata_uri => $self->o('metadata_uri'),
+                database_uri => $self->o('database_uri'),
+                e_release    => $self->o('e_release'),
                 email          => $self->o('email'),
                 timestamp      => $self->o('timestamp'),
                 comment        => $self->o('comment'),
