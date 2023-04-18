@@ -19,4 +19,4 @@ class MetadataUpdaterHiveOtherfeatures(BaseProdRunnable):
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
-        raise Exception("Other Features not implemented yet")
+        raise NotImplementedError("Other Features not implemented yet")

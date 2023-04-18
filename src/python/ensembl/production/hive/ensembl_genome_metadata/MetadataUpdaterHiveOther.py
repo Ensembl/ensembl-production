@@ -19,4 +19,4 @@ class MetadataUpdaterHiveOther(BaseProdRunnable):
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
-        raise Exception("Other db not implemented yet")
+        raise NotImplementedError("Other db not implemented yet")

@@ -19,4 +19,4 @@ class MetadataUpdaterHiveCompara(BaseProdRunnable):
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
-        raise Exception("compara not implemented yet")
+        raise NotImplementedError("compara not implemented yet")

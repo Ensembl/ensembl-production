@@ -19,4 +19,4 @@ class MetadataUpdaterHiveRnaseq(BaseProdRunnable):
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
-        raise Exception("RnaSeq not implemented yet")
+        raise NotImplementedError("RnaSeq not implemented yet")

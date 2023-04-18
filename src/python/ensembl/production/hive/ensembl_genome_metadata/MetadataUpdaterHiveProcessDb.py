@@ -18,15 +18,6 @@ from sqlalchemy.engine.url import make_url
 
 class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
     def fetch_input(self):
-        # input_data = self.get_input_data()
-        # self.param("input_data", input_data)
-        # self.param("metadata_uri", input_data.get("metadata_uri"))
-        # self.param("database_uri", input_data.get("database_uri"))
-        # self.param("e_release", input_data.get("e_release"))
-        # self.param("email", input_data.get("email"))
-        # self.param("timestamp", input_data.get("timestamp"))
-        # self.param("comment", input_data.get("comment"))
-        # self.param("payload", input_data.get("payload"))
         if self.param('payload'):
             payload = json.loads(self.param('payload'))
             self.param("comment", payload["input"]["comment"])
@@ -35,7 +26,8 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
             self.param("metadata_uri", payload["input"]["metadata_uri"])
             self.param("source", payload["input"]["source"])
             self.param("timestamp", payload["input"]["timestamp"])
-
+        else:
+            raise NotImplementedError("No Payload")
 
     def run(self):
         db_url = make_url(self.param("database_uri"))
@@ -61,7 +53,7 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
         elif re.match('^\w+_?\d*_\d+$', db_url.database):
             self.dataflow(output, 10)
         elif re.match(
-                '^ensembl_accounts|ensembl_archive|ensembl_autocomplete|ensembl_metadata|ensembl_production|ensembl_stable_ids|ncbi_taxonomy|ontology|website',
+                '^ensembl_accounts|ensembl_archive|ensembl_autocomplete|ensembl_production|ensembl_stable_ids|ncbi_taxonomy|ontology|website',
                 db_url.database):
             self.dataflow(output, 10)
         else:

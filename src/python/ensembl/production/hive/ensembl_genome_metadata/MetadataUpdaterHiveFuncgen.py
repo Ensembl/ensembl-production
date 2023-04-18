@@ -19,4 +19,4 @@ class MetadataUpdaterHiveFuncgen(BaseProdRunnable):
 
     def run(self):
         # CoreMetaUpdater(self.param("database_uri"),self.param("metadata_uri"),self.param("release"))
-        raise Exception("variation not implemented yet")
+        raise NotImplementedError("variation not implemented yet")

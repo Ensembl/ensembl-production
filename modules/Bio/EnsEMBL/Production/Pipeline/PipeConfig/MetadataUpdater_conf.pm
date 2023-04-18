@@ -32,12 +32,12 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         pipeline_name => 'metadata_updater',
-        metadata_uri  => '',
-        database_uri  => '',
-        release     => '',
-        email         => '',
-        timestamp     => '',
-        comment       => '',
+        metadata_uri  => None,
+        database_uri  => None,
+        release     => None,
+        email         => None,
+        timestamp     => None,
+        comment       => None,
     };
 }
 
