@@ -107,7 +107,7 @@ sub pipeline_analyses {
         },
         {
             -logic_name => 'fetch_genome_sequence_info',
-            -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::FetchSequenceInfo',
+            -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
         },
         {
