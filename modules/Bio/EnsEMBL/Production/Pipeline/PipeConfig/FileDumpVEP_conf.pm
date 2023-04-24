@@ -27,85 +27,87 @@ use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
-	my ($self) = @_;
-  return {
-    %{$self->SUPER::default_options},
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::default_options},
 
-    # Override defaults in variation conf
-    hive_force_init => 0,
+        # Override defaults in variation conf
+        hive_force_init   => 0,
 
-    # Need to reinstate these from EnsemblGeneric_conf
-    # (the vep conf overrides them with values we don't want)
-    ensembl_release => Bio::EnsEMBL::ApiVersion::software_version(), 
-    pipeline_name   => $self->default_pipeline_name().'_'.$self->o('rel_with_suffix'),
+        # Need to reinstate these from EnsemblGeneric_conf
+        # (the vep conf overrides them with values we don't want)
+        ensembl_release   => Bio::EnsEMBL::ApiVersion::software_version(),
+        pipeline_name     => $self->default_pipeline_name() . '_' . $self->o('rel_with_suffix'),
 
-    # The sub_dir is there to allow for this pipeline to match
-    # the current main site structure, but also give flexibility
-    # for RR structure, if/when that becomes necessary.
-    target_dir   => catdir($self->o('dump_dir'), $self->o('sub_dir')),
-    pipeline_dir => catdir($self->o('vep_dir'), $self->o('sub_dir')),
-	};
+        # The sub_dir is there to allow for this pipeline to match
+        # the current main site structure, but also give flexibility
+        # for RR structure, if/when that becomes necessary.
+        target_dir        => catdir($self->o('dump_dir'), $self->o('sub_dir')),
+        pipeline_dir      => catdir($self->o('vep_dir'), $self->o('sub_dir')),
+        dump_grch_37      => 0, # 0 No treatment, 1 copy from previous, 2 redump
+        dumps_1000genomes => 1
+    }
 }
 
 sub pipeline_create_commands {
-  my ($self) = @_;
-  return [
-    @{$self->SUPER::pipeline_create_commands},
-    'mkdir -p '.$self->o('target_dir'),
-  ];
+    my ($self) = @_;
+    return [
+        @{$self->SUPER::pipeline_create_commands},
+        'mkdir -p ' . $self->o('target_dir'),
+    ];
 }
 
 sub pipeline_analyses {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  my $analyses = $self->SUPER::pipeline_analyses;
+    my $analyses = $self->SUPER::pipeline_analyses;
 
-  delete $$analyses[0]{'-input_ids'};
+    delete $$analyses[0]{'-input_ids'};
 
-  my $local_analyses = [
-    {
-      -logic_name        => 'FileDump',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -max_retry_count   => 1,
-      -analysis_capacity => 1,
-      -input_ids         => [ {} ],
-      -parameters        => {},
-      -flow_into         => {
-                              '1->A' => ['species_factory'],
-                              'A->1' => ['DivisionFactory'],
-                            }
-    },
-    {
-      -logic_name        => 'DivisionFactory',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-      -max_retry_count   => 1,
-      -analysis_capacity => 1,
-      -parameters        => {
-                              inputlist => $self->o('division'),
-                              column_names => ['division_name'],
-                            },
-      -flow_into         => {
-                              2 =>['Copy'],
-                            },
-    },
-    {
-      -logic_name        => 'Copy',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
-      -analysis_capacity => 1,
-      -parameters        => {
-                              cmd =>
-                                'mkdir -p #target_dir#/#division_name#/variation ;'.
-                                'rsync -avW #pipeline_dir#/#division_name#/dumps/production/ #target_dir#/#division_name#/variation/vep ;'.
-                                'rsync -avW #pipeline_dir#/#division_name#/dumps/web/ #target_dir#/#division_name#/variation/indexed_vep_cache ;',
-                              ,
-                              target_dir => $self->o('target_dir'),
-                            },
-    },
-  ];
-  unshift @$analyses, @$local_analyses;
+    my $local_analyses = [
+        {
+            -logic_name        => 'FileDump',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count   => 1,
+            -analysis_capacity => 1,
+            -input_ids         => [ {} ],
+            -parameters        => {},
+            -flow_into         => {
+                '1->A' => [ 'species_factory' ],
+                'A->1' => [ 'DivisionFactory' ],
+            }
+        },
+        {
+            -logic_name        => 'DivisionFactory',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+            -max_retry_count   => 1,
+            -analysis_capacity => 1,
+            -parameters        => {
+                inputlist    => $self->o('division'),
+                column_names => [ 'division_name' ],
+            },
+            -flow_into         => {
+                2 => [ 'Copy' ],
+            },
+        },
+        {
+            -logic_name        => 'Copy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -analysis_capacity => 1,
+            -parameters        => {
+                cmd        =>
+                    'mkdir -p #target_dir#/#division_name#/variation ;' .
+                        'rsync -avW #pipeline_dir#/#division_name#/dumps/production/ #target_dir#/#division_name#/variation/vep ;' .
+                        'rsync -avW #pipeline_dir#/#division_name#/dumps/web/ #target_dir#/#division_name#/variation/indexed_vep_cache ;',
+                ,
+                target_dir => $self->o('target_dir'),
+            },
+        },
+    ];
+    unshift @$analyses, @$local_analyses;
 
-  return $analyses;
+    return $analyses;
 }
 
 1;
