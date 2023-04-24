@@ -44,10 +44,6 @@ sub default_options {
       'RNASeq_Exists',
     ],
 
-    homology_dumps => [
-      'Homologies',	    
-    ],	    
-
     dump_metadata => 1,
 
     blast_index => 1,
