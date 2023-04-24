@@ -45,7 +45,9 @@ sub default_options {
         geneset_types        => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
         rnaseq_types         => [], # Possible values: 'RNASeq_Exists'
 
-        dump_metadata        => 0,
+    	homology_dumps       => [], # Possible values : 'Homologies'
+       
+       	dump_metadata        => 0,
         dump_mysql           => 0,
         overwrite            => 0,
         per_chromosome       => 0,
@@ -109,7 +111,6 @@ sub pipeline_wide_parameters {
         dump_mysql     => $self->o('dump_mysql'),
         overwrite      => $self->o('overwrite'),
         run_datachecks => $self->o('run_datachecks'),
-        dump_homologies => $self->o('dump_homologies'),
     };
 }
 
