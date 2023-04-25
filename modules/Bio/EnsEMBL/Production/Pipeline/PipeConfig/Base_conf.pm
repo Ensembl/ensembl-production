@@ -28,8 +28,6 @@ use Bio::EnsEMBL::Hive::Version 2.5;
 
 use File::Spec::Functions qw(catdir);
 
-print resource_classes()
-
 
 sub default_options {
   my ($self) = @_;
@@ -105,8 +103,8 @@ my %time = (H => ' --time=1:00:00',
          #   'LSF' => '-q $self->o(production_queue) -M 2000 -R "rusage[mem=2000]"'
          # };
 
-  while (($time_key, $time_value) = each (%time)){
-    while (($memory_key, $memory_value) = each (%memory)) {
+  while ((my $time_key, my $time_value) = each (%time)){
+    while ((my $memory_key, my $memory_value) = each (%memory)) {
       if ($time_key eq 'H'){
         $output{$memory_key} = {LSF => '-q '.$self->o(production_queue).' -M '.$memory_value.' -R "rusage[mem='.$memory_value.']"',
                                 SLURM => $pq.$time_value.'  --mem='.$memory_value.'m' }
