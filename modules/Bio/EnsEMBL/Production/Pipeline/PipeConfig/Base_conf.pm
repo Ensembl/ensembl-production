@@ -89,13 +89,13 @@ my %time = (H => ' --time=1:00:00',
 
   my %output = (
 	  #Default is a duplicate of 100M
-	    'default' => {LSF => '-q '.$self->o(production_queue), SLURM => $pq.$time{'H'}.' --mem='.$memory{'100M'}.'m'},
-	    'default_D' => {LSF => '-q '.$self->o(production_queue), SLURM => $pq.$time{'D'}.' --mem='.$memory{'100M'}.'m'},
-	    'default_W' => {LSF => '-q '.$self->o(production_queue), SLURM => $pq.$time{'W'}.' --mem='.$memory{'100M'}.'m'},
+	    'default' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$time{'H'}.' --mem='.$memory{'100M'}.'m'},
+	    'default_D' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$time{'D'}.' --mem='.$memory{'100M'}.'m'},
+	    'default_W' => {LSF => '-q '.$self->o('production_queue'), SLURM => $pq.$time{'W'}.' --mem='.$memory{'100M'}.'m'},
         #Data mover nodes
-	    'dm'      => {LSF => '-q '.$self->o(datamover_queue), SLURM => $dq.$time{'H'}.' --mem='.$memory{'100M'}.'m'},
-	    'dm_D'      => {LSF => '-q '.$self->o(datamover_queue), SLURM => $dq.$time{'D'}.' --mem='.$memory{'100M'}.'m'},
-	    'dm_W'      => {LSF => '-q '.$self->o(datamover_queue), SLURM => $dq.$time{'W'}.' --mem='.$memory{'100M'}.'m'},
+	    'dm'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$time{'H'}.' --mem='.$memory{'100M'}.'m'},
+	    'dm_D'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$time{'D'}.' --mem='.$memory{'100M'}.'m'},
+	    'dm_W'      => {LSF => '-q '.$self->o('datamover_queue'), SLURM => $dq.$time{'W'}.' --mem='.$memory{'100M'}.'m'},
   );
 #Create a dictionary of all possible time and memory combinations. Format would be:
     #2G={
@@ -106,10 +106,10 @@ my %time = (H => ' --time=1:00:00',
   while ((my $time_key, my $time_value) = each (%time)){
     while ((my $memory_key, my $memory_value) = each (%memory)) {
       if ($time_key eq 'H'){
-        $output{$memory_key} = {LSF => '-q '.$self->o(production_queue).' -M '.$memory_value.' -R "rusage[mem='.$memory_value.']"',
+        $output{$memory_key} = {LSF => '-q '.$self->o('production_queue').' -M '.$memory_value.' -R "rusage[mem='.$memory_value.']"',
                                 SLURM => $pq.$time_value.'  --mem='.$memory_value.'m' }
       }else{
-        $output{$memory_key.'_'.$time_key} = {LSF => '-q '.$self->o(production_queue).' -M '.$memory_value.' -R"rusage[mem='.$memory_value.']"',
+        $output{$memory_key.'_'.$time_key} = {LSF => '-q '.$self->o('production_queue').' -M '.$memory_value.' -R"rusage[mem='.$memory_value.']"',
                                 SLURM => $pq.$time_value.'  --mem='.$memory_value.'m' }
       }
     }
