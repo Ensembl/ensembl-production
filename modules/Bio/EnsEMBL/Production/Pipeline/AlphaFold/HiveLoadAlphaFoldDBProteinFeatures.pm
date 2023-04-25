@@ -122,11 +122,11 @@ sub fetch_input {
   $self->hrdb_set_con($core_dba,"core");
 
   info(sprintf("Cleaning up old protein features and analysis for species %s\n", $self->{'species'}));
-  $self->cleanup_protein_features('alphafold_import');
+  $self->cleanup_protein_features('alphafold');
 
   info(sprintf("Initiating MakeAlphaFoldDBProteinFeatures and creating the analysis object for species %s\n", $self->{'species'}));
   my $runnable = Bio::EnsEMBL::Production::Pipeline::AlphaFold::MakeAlphaFoldDBProteinFeatures->new(
-    -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold_import',
+    -analysis => new Bio::EnsEMBL::Analysis(-logic_name => 'alphafold',
                                             -db => 'alphafold',
                                             #-db_version => , it will be populated in the MakePDBProteinFeatures module when parsing the file
                                             -db_file => $self->param('alphafold_mapfile'),
@@ -220,7 +220,7 @@ sub cleanup_protein_features() {
 
   if (defined($analysis)) {
       my $analysis_id = $analysis->dbID();
-      info(sprintf("Found alphafold_import analysis (ID: $analysis_id) for species %s. Deleting it ...\n", $self->{'species'}));
+      info(sprintf("Found alphafold analysis (ID: $analysis_id) for species %s. Deleting it ...\n", $self->{'species'}));
 
       my $pfa = $core_dba->get_ProteinFeatureAdaptor();
       $pfa->remove_by_analysis_id($analysis_id);
