@@ -115,7 +115,7 @@ my %time = (H => ' --time=1:00:00',
     }
   }
 
-return %output;
+return \%output;
 
 }
 
