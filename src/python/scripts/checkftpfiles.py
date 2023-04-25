@@ -66,7 +66,7 @@ if __name__ == "__main__":
                         help='species names ' )
     parser.add_argument('-g', '--eg_version', action="extend", nargs="+", type=int, required=True, help='Ensembl genome Release number [48, 49]')    
     parser.add_argument('-t', '--dump_type', action="extend", nargs="+", type=str,
-                        choices=['embl', 'fasta_pep', 'genbank', 'gff3', 'gtf', 'json', 'tsv'], 
+                        choices=['embl', 'fasta_pep', 'genbank', 'gff3', 'gtf', 'json', 'tsv', 'vcf', 'gvf'], 
                         default=[],
                         help='datatype subdir for ftp dumps'
                         )
