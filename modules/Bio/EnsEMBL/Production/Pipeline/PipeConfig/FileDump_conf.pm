@@ -45,7 +45,7 @@ sub default_options {
         geneset_types        => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
         rnaseq_types         => [], # Possible values: 'RNASeq_Exists'
 
-    	homology_dumps       => [], # Possible values : 'Homologies'
+    	homology_types       => [], # Possible values : 'Homologies_TSV'
        
        	dump_metadata        => 0,
         dump_mysql           => 0,
@@ -214,18 +214,16 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-	      analysis_types   => $self->o('homology_dumps'),	    
+	      analysis_types   => $self->o('homology_types'),	    
 	      data_category    => 'homology',
 	    },
             -flow_into         => {
-                '3->A' => [
-                    'HomologyTSVDumps',
-                ],
+                '3->A' => $self->o('homology_types'),
 		'A->3' => ['Checksum']
             }
         },
         {
-            -logic_name        => 'HomologyTSVDumps',
+            -logic_name        => 'Homologies_TSV',
             -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
             -max_retry_count   => 1,
             -analysis_capacity => 20,
