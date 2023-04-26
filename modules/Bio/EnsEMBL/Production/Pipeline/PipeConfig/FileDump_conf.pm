@@ -223,32 +223,6 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name        => 'Homologies_TSV',
-            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-		ref_dbname => $self->o('ref_dbname'),
-		dump_homologies_script => $self->o('dump_homologies_script'),
-		per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_ens_version'),
-	    },
-            -flow_into         => {
-                '2' => [
-                    'CompressHomologyTSV',
-                ],
-            }
-        },	
-	
-	{
-            -logic_name        => 'CompressHomologyTSV',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-	    -parameters        => {
-                cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
-            },
-        },
-        {
             -logic_name        => 'GenomeDirectoryPaths',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
             -max_retry_count   => 1,
@@ -309,6 +283,31 @@ sub pipeline_analyses {
             -flow_into       => {
                 '2->A' => [ 'MySQL_Compress' ],
                 'A->3' => [ 'Checksum' ]
+            },
+        },
+	{
+            -logic_name        => 'Homologies_TSV',
+            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                ref_dbname => $self->o('ref_dbname'),
+                dump_homologies_script => $self->o('dump_homologies_script'),
+                per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_ens_version'),
+            },
+            -flow_into         => {
+                '2' => [
+                    'CompressHomologyTSV',
+                ],
+            }
+        },
+        {
+            -logic_name        => 'CompressHomologyTSV',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
             },
         },
         {
