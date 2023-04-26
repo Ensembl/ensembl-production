@@ -57,5 +57,5 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
                 db_url.database):
             self.dataflow(output, 10)
         else:
-            raise "Can't find data_type for database " + db_url.database
+            raise JobFailedException("Can't find data_type for database " + db_url.database)
 
