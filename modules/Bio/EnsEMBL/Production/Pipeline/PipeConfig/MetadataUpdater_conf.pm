@@ -32,15 +32,14 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
         pipeline_name => 'metadata_updater',
-        metadata_uri  => None,
-        database_uri  => None,
-        release     => None,
-        email         => None,
-        timestamp     => None,
-        comment       => None,
+        metadata_uri  => undef,
+        database_uri  => undef,
+        release       => undef,
+        email         => undef,
+        timestamp     => undef,
+        comment       => undef,
     };
 }
-
 
 sub pipeline_analyses {
     my ($self) = @_;
@@ -50,26 +49,26 @@ sub pipeline_analyses {
             -module          => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveProcessDb',
             -language        => 'python3',
             -rc_name         => 'default',
-            -input_ids       => [{}],
+            -input_ids       => [ {} ],
             -max_retry_count => 1,
             -parameters      => {
                 metadata_uri => $self->o('metadata_uri'),
                 database_uri => $self->o('database_uri'),
                 e_release    => $self->o('e_release'),
-                email          => $self->o('email'),
-                timestamp      => $self->o('timestamp'),
-                comment        => $self->o('comment'),
+                email        => $self->o('email'),
+                timestamp    => $self->o('timestamp'),
+                comment      => $self->o('comment'),
 
             },
             -flow_into       => {
-                2 => [ '?table_name=result', ],
-                3 => [ 'metadata_updater_core' ],
-                4 => [ 'metadata_updater_compara' ],
-                5 => [ 'metadata_updater_variation' ],
-                6 => [ 'metadata_updater_funcgen' ],
-                7 => [ 'metadata_updater_otherfeatures' ],
-                8 => [ 'metadata_updater_rnaseq' ],
-                9 => [ 'metadata_updater_cdna' ],
+                2  => [ '?table_name=result', ],
+                3  => [ 'metadata_updater_core' ],
+                4  => [ 'metadata_updater_compara' ],
+                5  => [ 'metadata_updater_variation' ],
+                6  => [ 'metadata_updater_funcgen' ],
+                7  => [ 'metadata_updater_otherfeatures' ],
+                8  => [ 'metadata_updater_rnaseq' ],
+                9  => [ 'metadata_updater_cdna' ],
                 10 => [ 'metadata_updater_other' ],
             }
         },

@@ -18,16 +18,16 @@ from sqlalchemy.engine.url import make_url
 
 class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
     def fetch_input(self):
-        if self.param('payload'):
-            payload = json.loads(self.param('payload'))
-            self.param("comment", payload["input"]["comment"])
-            self.param("database_uri", payload["input"]["database_uri"])
-            self.param("email", payload["input"]["email"])
-            self.param("metadata_uri", payload["input"]["metadata_uri"])
-            self.param("source", payload["input"]["source"])
-            self.param("timestamp", payload["input"]["timestamp"])
-        else:
-            raise NotImplementedError("No Payload")
+        payload = json.loads(self.param_required("payload"))
+        self.param("comment", payload["input"]["comment"])
+        self.param("database_uri", payload["input"]["database_uri"])
+        self.param_required("database_uri")
+        self.param("email", payload["input"]["email"])
+        self.param("metadata_uri", payload["input"]["metadata_uri"])
+        self.param_required("metadata_uri")
+        self.param("source", payload["input"]["source"])
+        self.param("timestamp", payload["input"]["timestamp"])
+
 
     def run(self):
         db_url = make_url(self.param("database_uri"))
