@@ -161,7 +161,6 @@ sub pipeline_analyses {
                 '2' => WHEN(
                     '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
                     '#dump_mysql# && !#run_datachecks#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
-		    #'#dump_homologies#' => [ 'HomologySpeciesFactory' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
