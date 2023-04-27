@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import json
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
+from eHive import ParamException
 from sqlalchemy.engine.url import make_url
 
 class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
