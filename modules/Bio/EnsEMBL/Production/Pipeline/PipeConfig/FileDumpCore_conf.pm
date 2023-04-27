@@ -50,7 +50,6 @@ sub default_options {
     
     run_datachecks   => 1,
     datacheck_groups => ['rapid_release'],
-    dump_homologies => 0,
   };
 }
 
