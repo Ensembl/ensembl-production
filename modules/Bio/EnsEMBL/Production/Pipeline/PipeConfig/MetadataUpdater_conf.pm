@@ -33,10 +33,8 @@ sub default_options {
         %{$self->SUPER::default_options},
         pipeline_name => 'metadata_updater',
         metadata_uri  => undef,
-        database_uri  => undef,
-        release       => undef,
         email         => undef,
-        timestamp     => undef,
+        source        => undef,
         comment       => undef,
     };
 }
@@ -44,6 +42,35 @@ sub default_options {
 sub pipeline_analyses {
     my ($self) = @_;
     return [
+        #db_factory
+        {
+      -logic_name      => 'DbFactory_core',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+      -max_retry_count => 1,
+      -parameters      => {
+                            species      => $self->o('species'),
+                            antispecies  => $self->o('antispecies'),
+                            division     => $self->o('division'),
+                            run_all      => $self->o('run_all'),
+                            meta_filters => $self->o('meta_filters'),
+                            group        => 'core',
+                          },
+      -flow_into        => {
+                            1 => [ 'generate_payload' ],
+                        },
+      -rc_name           => 'default',
+        },
+        #Generate the json for each analysis.
+        {
+            -logic_name        => 'payload_generator',
+            -module            => 'ensembl.production.hive.ensembl_genome_metadata.PayloadGenerator',
+            -language          => 'python3',
+            -max_retry_count   => 1,
+            -parameters        => {},
+            -rc_name           => 'default',
+            -flow_into         => 'metadata_updater_processdb',
+        },
+        #Directly update for this process for handover and other pipelines
         {
             -logic_name      => 'metadata_updater_processdb',
             -module          => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveProcessDb',
