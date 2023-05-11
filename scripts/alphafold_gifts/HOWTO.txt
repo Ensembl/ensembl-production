@@ -1,0 +1,30 @@
+Dumping GIFTS data for Alphafold
+================================
+
+You can use the provided SQL statements to dump data from the GIFTS database.
+
+This will fetch the latest entries for each species:
+psql -h host dbname user -f get_assemblies.sql --csv -t -o gifts_assemblies.csv
+
+Dumped data:
+GIFTS DB ensembl_species_history_id,  species name,  species assembly name and version,  Ensembl release number
+50,Danio rerio,GRCz11,107
+...
+
+This will fetch the data:
+psql -h host dbname user -f get_alignment_data.sql --csv -t -o danio_rerio-GRCz11-rel107.csv
+
+The GIFTS DB ensembl_species_history_id has to be adjusted manually in the SQL file.
+
+The file name has to be of the form:
+Species name lower case joined with underscores, a dash, the assembly name as it
+appears in the DB without modification, a dash, a release identifier and the
+.csv extension.
+
+Examples:
+danio_rerio-GRCz11-rel107.csv
+zea_mays-Zm-B73-REFERENCE-NAM-5.0-rel107.csv
+
+The dumped data is plain CSV data in the form:
+GIFTS DB ID referring to Ensembl Stable ID,  GIFTS DB ID referring to Uniprot entry,  Ensembl Stable ID,  Uniprot accession
+1044803,4336777,ENSDART00000026314,P0CH95

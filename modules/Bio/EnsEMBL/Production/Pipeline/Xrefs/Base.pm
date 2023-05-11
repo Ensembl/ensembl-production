@@ -120,8 +120,8 @@ sub download_file {
     }
 
     # Get list of files in catalog
-    my $list = get($catalog);
     $catalog =~ s/\*/$release_number/;
+    my $list = get($catalog);
     my %refseq_files = map {(split /\n/)} split /\t/, $list;
 
     while (my ($checksum, $file_name) = each %refseq_files) {

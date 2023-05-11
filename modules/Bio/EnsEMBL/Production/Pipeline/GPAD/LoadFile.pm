@@ -258,12 +258,17 @@ sub run {
             }
             else {
                 $translation = $tl_adaptor->fetch_by_stable_id($tgt_protein);
-                $transcript = $translation->transcript;
-                if (defined $transcript) {
-                    $transcript_hash{$tgt_protein} = $transcript;
-                    $translation_hash{$tgt_protein} = $translation;
+                if (defined $translation or $translation ne '') {
+                    if (defined ($translation->transcript)) {
+                         $transcript = $translation->transcript;
+                         $transcript_hash{$tgt_protein} = $transcript;
+                         $translation_hash{$tgt_protein} = $translation;
+                    } else {
+                        $self->log()->warn("Transcript not found for protein $tgt_protein");
+                    }
+                                
                 } else {
-                    $self->log()->warn("Transcript not found for protein $tgt_protein");
+                    $self->log()->warn("Translation does not exist or is blank");
                 }
             }
 

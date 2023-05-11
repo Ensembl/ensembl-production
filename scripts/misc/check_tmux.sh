@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # Check tmux sessions accross all our login-nodes!
 function usage () {
   echo "Usage: $0 -v [virtual_user] -u [ssh_user]"

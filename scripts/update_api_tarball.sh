@@ -51,7 +51,7 @@ for repo in $list; do
 done
 tarball=ensembl-api.tar.gz
 rm -f $tarball
-tar cvzf $tarball $list --exclude="*/.*" 
+tar cvzf $tarball --exclude="*/.*" $list
 tgt_tarball="$ftp_dir/$tarball"
 if ! cmp --silent $tarball $tgt_tarball; then
     echo "Updating $tgt_tarball"
