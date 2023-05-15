@@ -36,9 +36,6 @@ sub default_options {
         email         => undef,
         source        => undef,
         comment       => undef,
-        email         => undef,
-        source        => undef,
-        comment       => undef,
     };
 }
 
@@ -78,11 +75,11 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -parameters      => {
                 metadata_uri => $self->o('metadata_uri'),
-                database_uri => $self->o('database_uri'),
-                e_release    => $self->o('e_release'),
-                email        => $self->o('email'),
-                timestamp    => $self->o('timestamp'),
-                comment      => $self->o('comment'),
+# #                database_uri => $self->o('database_uri'),
+#                 e_release    => $self->o('e_release'),
+#                 email        => $self->o('email'),
+#                 timestamp    => $self->o('timestamp'),
+#                 comment      => $self->o('comment'),
 
             },
             -flow_into       => {
