@@ -56,7 +56,7 @@ sub pipeline_analyses {
                             group        => 'core',
                           },
       -flow_into        => {
-                            1 => [ 'generate_payload' ],
+                            1 => [ 'payload_generator' ],
                         },
       -rc_name           => 'default',
         },
