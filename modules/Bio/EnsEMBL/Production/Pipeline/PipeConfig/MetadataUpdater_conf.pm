@@ -36,7 +36,6 @@ sub default_options {
         email         => undef,
         source        => undef,
         comment       => undef,
-        registry_file => $self->o('registry'),
         group         => 'core',
     };
 }
@@ -49,9 +48,12 @@ sub pipeline_analyses {
       -logic_name      => 'DbFactory_core',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
-      -parameters      => {
+      -parameters      => {     registry_file => $self->o('registry'),
 
                           },
+      -input_ids       => [ {} ],
+      -hive_capacity   => -1,
+      -max_retry_count => 1,
       -flow_into        => {
                             1 => [ 'payload_generator' ],
                         },
