@@ -15,7 +15,7 @@
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
 import json
 from datetime import datetime
-from ensembl.production.metadata.updater import CoreMetaUpdater
+#from ensembl.production.metadata.updater import CoreMetaUpdater
 
 class MetadataUpdaterHiveCdna(BaseProdRunnable):
     # Goal of this step is to replicate the json emitted from handover payload
