@@ -36,6 +36,9 @@ sub default_options {
         email         => undef,
         source        => undef,
         comment       => undef,
+        email         => undef,
+        source        => undef,
+        comment       => undef,
     };
 }
 
@@ -48,11 +51,6 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
       -parameters      => {
-                            species      => $self->o('species'),
-                            antispecies  => $self->o('antispecies'),
-                            division     => $self->o('division'),
-                            run_all      => $self->o('run_all'),
-                            meta_filters => $self->o('meta_filters'),
                             group        => 'core',
                           },
       -flow_into        => {
