@@ -48,6 +48,7 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
       -parameters      => {
+                            registry_file   => $self->o('registry'),
                             group        => 'core',
                           },
       -flow_into        => {
