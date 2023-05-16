@@ -37,7 +37,7 @@ class PayloadGenerator(BaseProdRunnable):
         data['status'] = 'complete'
         data['input'] = dict()
         data['input']['comment'] = self.param("comment")
-        data['input']['database_uri'] = self.param_required('db_url')
+        data['input']['database_uri'] = self.param_required('dbs')
         data['input']['email'] = self.param("email")
         data['input']['metadata_uri'] = self.param("metadata_uri")
         data['input']['source'] = self.param("source")
