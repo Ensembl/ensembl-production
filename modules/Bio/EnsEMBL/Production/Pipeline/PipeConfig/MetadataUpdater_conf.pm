@@ -33,10 +33,12 @@ sub default_options {
         %{$self->SUPER::default_options},
         pipeline_name => 'metadata_updater',
         metadata_uri  => undef,
-        email         => undef,
-        source        => undef,
-        comment       => undef,
+        email         => '',
+        source        => '',
+        comment       => '',
         group         => 'core',
+        species       => [],
+        antispecies   => [],
     };
 }
 
@@ -49,21 +51,21 @@ sub pipeline_analyses {
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
       -parameters      => {
-          registry_file => $self->o('registry'),
+                registry_file => $self->o('registry'),
+                species     => $self->o('species'),
+                antispecies => $self->o('antispecies'),
+                division    => $self->o('division'),
                           },
       -input_ids       => [ {} ],
       -hive_capacity   => -1,
       -max_retry_count => 1,
-      -flow_into        => {
-                            1 => [ 'payload_generator' ],
-                        },
+      -flow_into        => { 2 => [ 'payload_generator' ], },
       -rc_name           => 'default',
         },
         #Generate the json for each analysis.
         {
             -logic_name        => 'payload_generator',
-            -module            => 'ensembl.production.hive.ensembl_genome_metadata.PayloadGenerator',
-            -language          => 'python3',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator',
             -max_retry_count   => 1,
             -parameters        => {},
             -rc_name           => 'default',
