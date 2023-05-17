@@ -17,24 +17,15 @@ limitations under the License.
 
 
 =cut
-
-package Bio::EnsEMBL::Production::Pipeline::JSON::PayloadGenerator;
-
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+package Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator;
 
 use warnings;
 use strict;
-use Bio::EnsEMBL::Utils::Exception qw(throw);
-use Bio::EnsEMBL::Utils::Argument qw(rearrange);
-use Data::Dumper;
-use Log::Log4perl qw/get_logger/;
-use List::MoreUtils qw/natatime/;
 
 sub run {
     my ($self) = @_;
-
     my $species = $self->param_required('species');
-
     my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $core_dbc = $core_adaptor->dbc;
     print $core_dbc->port;
