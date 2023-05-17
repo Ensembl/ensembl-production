@@ -18,7 +18,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
+package Bio::EnsEMBL::Production::Pipeline::JSON::PayloadGenerator;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
