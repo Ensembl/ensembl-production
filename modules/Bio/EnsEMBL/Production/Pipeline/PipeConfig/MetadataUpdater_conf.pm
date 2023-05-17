@@ -69,6 +69,7 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator',
             -max_retry_count   => 1,
             -parameters        => {},
+
             -rc_name           => 'default',
             -flow_into         => 'metadata_updater_processdb',
         },
