@@ -38,6 +38,7 @@ sub default_options {
         comment       => '',
         group         => 'core',
         species       => [],
+        division      => 0,
         antispecies   => [],
     };
 }
