@@ -20,6 +20,8 @@ limitations under the License.
 
 package Bio::EnsEMBL::Production::Pipeline::JSON::JsonRemodeller;
 
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+
 use warnings;
 use strict;
 use Bio::EnsEMBL::Utils::Exception qw(throw);
