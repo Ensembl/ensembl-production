@@ -17,11 +17,13 @@ limitations under the License.
 
 
 =cut
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+
 package Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator;
 
-use warnings;
 use strict;
+use warnings;
+
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
     my ($self) = @_;
