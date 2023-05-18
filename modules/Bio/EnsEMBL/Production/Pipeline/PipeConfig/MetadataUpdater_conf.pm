@@ -26,6 +26,9 @@ use warnings;
 use Data::Dumper;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
+
 
 sub default_options {
     my ($self) = @_;
@@ -36,29 +39,67 @@ sub default_options {
         email         => '',
         source        => '',
         comment       => '',
-        group         => 'core',
-        species       => [],
-        division      => [],
-        antispecies   => [],
-        runall        => 1,
+        %{$self->SUPER::default_options},
+        species              => [],
+        antispecies          => [],
+        division             => [],
+        run_all              => 0,
+        dbname               => [],
+        meta_filters         => {},
     };
 }
+sub pipeline_create_commands {
+    my ($self) = @_;
+    return [
+        @{$self->SUPER::pipeline_create_commands},
+    ];
+}
+
+sub hive_meta_table {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::hive_meta_table},
+        hive_use_param_stack => 1,
+    };
+}
+
+sub pipeline_wide_parameters {
+    my ($self) = @_;
+    return {
+        %{$self->SUPER::pipeline_wide_parameters},
+    };
+}
+
+
 
 sub pipeline_analyses {
     my ($self) = @_;
     return [
         #db_factory
         {
+            -logic_name        => 'Dummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count   => 1,
+            -parameters        => {},
+            -flow_into         => 'DbFactory_core',
+            -rc_name           => 'default',
+            -input_ids       => [ {} ],
+        },
+
+
+        {
       -logic_name      => 'DbFactory_core',
       -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
       -max_retry_count => 1,
       -parameters      => {
-                registry_file => $self->o('registry'),
-                species     => $self->o('species'),
-                antispecies => $self->o('antispecies'),
-                division    => $self->o('division'),
+                shout_db_not_found_in_registry =>1,
+                species      => $self->o('species'),
+                antispecies  => $self->o('antispecies'),
+                division     => $self->o('division'),
+                run_all      => 1,  #$self->o('run_all'),
+                dbname       => $self->o('dbname'),
+                meta_filters => $self->o('meta_filters'),
                           },
-      -input_ids       => [ {} ],
       -hive_capacity   => -1,
       -max_retry_count => 1,
       -flow_into        => { 2 => [ 'payload_generator' ], },
