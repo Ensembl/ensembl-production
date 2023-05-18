@@ -33,6 +33,8 @@ sub run {
     print $core_dbc->port;
     print $core_dbc->host;
     print $core_dbc->dbname;
+    print $core_dbc->host;
+    print $core_dbc->password;
 
     my $comment = $self->param_required('comment');
     my $database_uri = "Having issues right now";
