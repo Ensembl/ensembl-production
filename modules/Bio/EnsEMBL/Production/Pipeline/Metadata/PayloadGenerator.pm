@@ -44,14 +44,15 @@ sub run {
     my $payload = '{
 "id": 1,
 "input": {
-	"comment": "'.$comment.'",
-	"database_uri": "'.$database_uri.'",
-	"email": "'.$email.'",
-	"metadata_uri": "'.$metadata_uri.'",
-	"source": "'.$source.'",
-	"timestamp": "'.$timestamp.'"},
+	"comment": "' . $comment . '",
+	"database_uri": "' . $database_uri . '",
+	"email": "' . $email . '",
+	"metadata_uri": "' . $metadata_uri . '",
+	"source": "' . $source . '",
+	"timestamp": "' . $timestamp . '"},
 "status": "complete"}`;
 }';
 
-$self->dataflow_output_id( { payload => $payload }, 3 );
+    $self->dataflow_output_id({ payload => $payload }, 3);
+}
 1;
