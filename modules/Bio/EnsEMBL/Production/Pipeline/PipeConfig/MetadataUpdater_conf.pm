@@ -38,7 +38,7 @@ sub default_options {
         comment       => '',
         group         => 'core',
         species       => [],
-        division      => 0,
+        division      => [],
         antispecies   => [],
     };
 }
@@ -73,6 +73,9 @@ sub pipeline_analyses {
             -rc_name           => 'default',
             -flow_into         => 'metadata_updater_processdb',
         },
+
+
+
         #Directly update for this process for handover and other pipelines
         {
             -logic_name      => 'metadata_updater_processdb',
