@@ -30,10 +30,15 @@ sub run {
     my $species = $self->param_required('species');
     my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $core_dbc = $core_adaptor->dbc;
+    print "\nport: ";
     print $core_dbc->port;
+    print "\nhost: ";
     print $core_dbc->host;
+    print "\ndbname: ";
     print $core_dbc->dbname;
-    print $core_dbc->host;
+    print "\nuser: ";
+    print $core_dbc->user;
+    print "\npassword: ";
     print $core_dbc->password;
 
     my $comment = $self->param_required('comment');
