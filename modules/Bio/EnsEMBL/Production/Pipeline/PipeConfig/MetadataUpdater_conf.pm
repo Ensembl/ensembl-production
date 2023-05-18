@@ -109,7 +109,12 @@ sub pipeline_analyses {
             -logic_name        => 'payload_generator',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator',
             -max_retry_count   => 1,
-            -parameters        => {},
+            -parameters        => {
+                comment  => $self->o('comment'),
+                source     => $self->o('source'),
+                email       => $self->o('email'),
+                metadata_uri => $self->o('metadata_uri'),
+            },
 
             -rc_name           => 'default',
             -flow_into         => {3  => [ 'metadata_updater_processdb' ],},
