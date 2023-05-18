@@ -22,7 +22,7 @@ package Bio::EnsEMBL::Production::Pipeline::Metadata::PayloadGenerator;
 
 use strict;
 use warnings;
-
+#use JSON;
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
@@ -52,8 +52,7 @@ sub run {
 	"metadata_uri": "' . $metadata_uri . '",
 	"source": "' . $source . '",
 	"timestamp": "' . $timestamp . '"},
-"status": "complete"}`;
-}';
+"status": "complete"}';
 
     $self->dataflow_output_id({ payload => $payload }, 3);
 }
