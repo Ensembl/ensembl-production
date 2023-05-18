@@ -40,6 +40,7 @@ sub default_options {
         species       => [],
         division      => [],
         antispecies   => [],
+        runall        => 1,
     };
 }
 
