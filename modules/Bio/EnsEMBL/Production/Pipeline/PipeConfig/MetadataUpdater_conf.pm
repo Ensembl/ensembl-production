@@ -39,7 +39,6 @@ sub default_options {
         email         => '',
         source        => '',
         comment       => '',
-        %{$self->SUPER::default_options},
         species              => [],
         antispecies          => [],
         division             => [],
