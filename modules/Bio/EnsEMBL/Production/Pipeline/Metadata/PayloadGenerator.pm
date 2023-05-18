@@ -33,7 +33,25 @@ sub run {
     print $core_dbc->port;
     print $core_dbc->host;
     print $core_dbc->dbname;
-}
 
+    my $comment = $self->param_required('comment');
+    my $database_uri = "Having issues right now";
+    my $email = $self->param_required('email');
+    my $metadata_uri = $self->param_required('metadata_uri');
+    my $source = $self->param_required('source');
+    my $timestamp = "Temporarly nothing important";
 
+    my $payload = '{
+"id": 1,
+"input": {
+	"comment": "'.$comment.'",
+	"database_uri": "'.$database_uri.'",
+	"email": "'.$email.'",
+	"metadata_uri": "'.$metadata_uri.'",
+	"source": "'.$source.'",
+	"timestamp": "'.$timestamp.'"},
+"status": "complete"}`;
+}';
+
+$self->dataflow_output_id( { payload => $payload }, 3 );
 1;

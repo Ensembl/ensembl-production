@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BasePython_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 sub default_options {
     my ($self) = @_;
@@ -71,7 +71,7 @@ sub pipeline_analyses {
             -parameters        => {},
 
             -rc_name           => 'default',
-            -flow_into         => 'metadata_updater_processdb',
+            -flow_into         => {3  => [ 'metadata_updater_processdb' ],},
         },
 
 
