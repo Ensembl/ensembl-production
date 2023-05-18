@@ -30,23 +30,18 @@ sub run {
     my $species = $self->param_required('species');
     my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
     my $core_dbc = $core_adaptor->dbc;
-    print "\nport: ";
-    print $core_dbc->port;
-    print "\nhost: ";
-    print $core_dbc->host;
-    print "\ndbname: ";
-    print $core_dbc->dbname;
-    print "\nuser: ";
-    print $core_dbc->user;
-    print "\npassword: ";
-    print $core_dbc->password;
+    my $user =  $core_dbc->user;
+    my $password = $core_dbc->password;
+    my $host = $core_dbc->host;
+    my $port = $core_dbc->port;
+    my $dbname = $core_dbc->dbname;
 
     my $comment = $self->param_required('comment');
-    my $database_uri = "Having issues right now";
+    my $database_uri = 'mysql://'.$user.':'.$password.'@'.$host.':'.$port.'/'.$dbname;
     my $email = $self->param_required('email');
     my $metadata_uri = $self->param_required('metadata_uri');
     my $source = $self->param_required('source');
-    my $timestamp = "Temporarly nothing important";
+    my $timestamp = scalar(localtime);
 
     my $payload = '{
 "id": 1,
