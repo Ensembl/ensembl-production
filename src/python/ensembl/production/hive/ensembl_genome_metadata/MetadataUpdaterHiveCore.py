@@ -19,6 +19,9 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
         if self.param("release"):
-            CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
+            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
+            Run.process_core()
         else:
-            CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"))
+            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"))
+            Run.process_core()
+
