@@ -292,8 +292,8 @@ sub pipeline_analyses {
                 tgt_host         => $self->o('tgt_host'),
                 tgt_mart_host    => $self->o('tgt_mart_host'),
             },
-            -flow_into => WHEN('defined #tgt_host#' => [ 'copy_database' ],
-                          'defined #tgt_mart_host#' => [ 'copy_mart_database' ]
+            -flow_into => WHEN('defined #tgt_host#' => [ 'copy_ensembl_ontology' ],
+                          'defined #tgt_mart_host#' => [ 'copy_ontology_mart' ]
                           ),
         },
         {
