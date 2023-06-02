@@ -21,7 +21,7 @@ process SpeciesFactory {
   val division
 
   output:
-  val division // place holder to set the array from 1 to 7 as per the standarded flows
+  val division // place holder to set the array from 1 to 7 as per the standard flows
   path 'dataflow_1.json' // all species flow 
   path 'dataflow_2.json', optional: true // core flow 
   path 'dataflow_3.json', optional: true // chromosome flow 
