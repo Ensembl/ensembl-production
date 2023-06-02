@@ -47,7 +47,7 @@ sub default_options {
     dump_metadata => 1,
 
     blast_index => 1,
-
+    
     run_datachecks   => 1,
     datacheck_groups => ['rapid_release'],
   };
