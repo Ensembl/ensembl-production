@@ -41,10 +41,6 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
         }
         if '_compara_' in db_url.database:
             self.dataflow(output, 4)
-        elif '_variation_' in db_url.database:
-            self.dataflow(output, 5)
-        elif '_funcgen_' in db_url.database:
-            self.dataflow(output, 6)
         elif '_core_' in db_url.database:
             self.dataflow(output, 3)
         elif '_otherfeatures_' in db_url.database:

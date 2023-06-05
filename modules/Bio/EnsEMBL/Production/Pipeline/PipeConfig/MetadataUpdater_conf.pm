@@ -142,8 +142,6 @@ sub pipeline_analyses {
                 2  => [ '?table_name=result', ],
                 3  => [ 'metadata_updater_core' ],
                 4  => [ 'metadata_updater_compara' ],
-                5  => [ 'metadata_updater_variation' ],
-                6  => [ 'metadata_updater_funcgen' ],
                 7  => [ 'metadata_updater_otherfeatures' ],
                 8  => [ 'metadata_updater_rnaseq' ],
                 9  => [ 'metadata_updater_cdna' ],
@@ -169,34 +167,6 @@ sub pipeline_analyses {
         {
             -logic_name        => 'metadata_updater_compara',
             -module            => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveCompara',
-            -language          => 'python3',
-            -max_retry_count   => 1,
-            -analysis_capacity => 30,
-            -parameters        => {},
-            -rc_name           => 'default',
-            # Testing Necessary            -rc_name => '2GB',
-            -flow_into         => {
-                2 => [ '?table_name=result', ],
-            },
-        },
-        #variation
-        {
-            -logic_name        => 'metadata_updater_variation',
-            -module            => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveVariation',
-            -language          => 'python3',
-            -max_retry_count   => 1,
-            -analysis_capacity => 30,
-            -parameters        => {},
-            -rc_name           => 'default',
-            # Testing Necessary            -rc_name => '2GB',
-            -flow_into         => {
-                2 => [ '?table_name=result', ],
-            },
-        },
-        #funcgen
-        {
-            -logic_name        => 'metadata_updater_funcgen',
-            -module            => 'ensembl.production.hive.ensembl_genome_metadata.MetadataUpdaterHiveFuncgen',
             -language          => 'python3',
             -max_retry_count   => 1,
             -analysis_capacity => 30,
