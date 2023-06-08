@@ -125,14 +125,7 @@ sub _write_tsv {
   }#slice 
   close $fh; 
 
-  if ($xrefs_exist == 1) {
-    $self->info( "Compressing tsv dump for " . $self->param('species'));
-    my $unzip_out_file = $out_file;
-    `gzip -n $unzip_out_file`;
-
-    if (-e $unzip_out_file) { `rm $unzip_out_file`; }
-  } else {
-    # If we have no xrefs, delete the file (which will just have a header).
+  if ($xrefs_exist != 1) {
     unlink $out_file  or die "failed to delete $out_file!";
   }
 

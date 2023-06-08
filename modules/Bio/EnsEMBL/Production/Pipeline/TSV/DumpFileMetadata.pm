@@ -103,9 +103,6 @@ sub _make_karyotype_file {
       }
    });
 
-  $self->info( "Compressing tsv dump for " . $sp);
-  my $unzip_file = $file;
-  `gzip -n $unzip_file`;
 
 return;
 }
