@@ -124,6 +124,7 @@ sub _write_tsv {
       $self->info( "Compressing ENA tsv dump for " . $self->param('species'));
       my $unzip_out_file = $out_file;
       `gzip -n $unzip_out_file`;
+      if (-e $unzip_out_file) { die "gzip failed"; }
     } else {
       # If we have no xrefs, delete the file (which will just have a header).
       unlink $out_file  or die "failed to delete $out_file!";
