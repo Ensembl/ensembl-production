@@ -33,6 +33,7 @@ package Bio::EnsEMBL::Production::Pipeline::TSV::Gzip;;
 use strict;
 use warnings;
 use base qw/Bio::EnsEMBL::Production::Pipeline::TSV::Base/;
+use IO::Compress::Gzip qw(gzip $GzipError) ;
 
 sub fetch_input {
     my ($self) = @_;
@@ -41,10 +42,22 @@ return;
 
 sub run {
     my ($self) = @_;
-    my $out_file  = $self->_generate_file_name();
-    `gzip -n $out_file`;
+    my @compress = $self->param_required('compress');
 
-    if (-e $out_file) { die "Error: gzip failed" }
+    foreach my $file (@compress) {
+        my $output_file = $file.'.gz';
+        eval {
+            local $SIG{PIPE} = sub { die "gzip interrupted by SIGPIPE\n" };
+            gzip $file => $output_file
+                or die "gzip failed: $GzipError\n";
+            unlink $file;
+        };
+        if ($@) {
+            print "Error compressing '$file': $@\n";
+        } else {
+            print "Compressed '$file' to '$output_file' and removed the original file\n";
+        }
+    }
 return;
 }
 

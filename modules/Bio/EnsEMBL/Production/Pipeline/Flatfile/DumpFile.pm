@@ -111,7 +111,8 @@ sub run {
     push(@chromosomes, $s) if $chr;
     push(@non_chromosomes, $s) if ! $chr;
   }
-  
+  my @compress = ();
+
   if(@non_chromosomes) {
     my $path = $self->_generate_file_name('nonchromosomal');
     $self->info('Dumping non-chromosomal data to %s', $path);
@@ -123,12 +124,11 @@ sub run {
       }
       return;
     });
-    $self->run_cmd("gzip -n $path");
+    push (@compress, $path);
   } else {
     $self->info('Did not find any non-chromosomal data');
   }
   
-  my @compress = ();
   foreach my $slice (@chromosomes) {
     $self->fine('Dumping chromosome %s', $slice->name());
     my $path = $self->_generate_file_name($slice->coord_system_name(), $slice->seq_region_name());
@@ -147,8 +147,8 @@ sub run {
       return;
     });
   }
-  
-  map { $self->run_cmd("gzip -n $_") } @compress;
+  $self->param('compress', \@compress);
+  $self->dataflow_output_id($self->param('compress'), 1);
 
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
