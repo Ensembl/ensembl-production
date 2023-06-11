@@ -635,7 +635,7 @@ sub pipeline_analyses {
 
         },
         { -logic_name      => 'compress_file',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::COMMON::Gzip',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -hive_capacity => 50,
             -rc_name       => '4GB',
         },
