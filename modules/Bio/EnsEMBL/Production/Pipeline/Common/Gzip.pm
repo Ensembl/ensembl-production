@@ -17,7 +17,7 @@ limitations under the License.
 
 =head1 NAME
 
- Bio::EnsEMBL::Production::Pipeline::TSV::Gzip;
+ Bio::EnsEMBL::Production::Pipeline::Common::Gzip;
 
 =head1 DESCRIPTION
 
@@ -28,11 +28,11 @@ A simple script for gzipping files and catching errors
  ckong@ebi.ac.uk 
 
 =cut
-package Bio::EnsEMBL::Production::Pipeline::TSV::Gzip;;
+package Bio::EnsEMBL::Production::Pipeline::Common::Gzip;;
 
 use strict;
 use warnings;
-use base qw/Bio::EnsEMBL::Production::Pipeline::TSV::Base/;
+use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 use IO::Compress::Gzip qw(gzip $GzipError) ;
 
 sub fetch_input {
