@@ -63,7 +63,7 @@ return;
 #############
 sub _write_tsv {
     my ($self) = @_;
-
+    my @compress;
     my $out_file  = $self->_generate_file_name();
     my $header    = $self->_build_headers();   
 
@@ -124,7 +124,9 @@ sub _write_tsv {
     if ($xrefs_exist != 1) {
       unlink $out_file  or die "failed to delete $out_file!";
     }else {
-        push (@compress,$out_file);
+      push(@compress, $out_file);
+      $self->param('compress', @compress);
+      $self->dataflow_output_id($self->param('compress'), 1);
     }
 return;
 }
