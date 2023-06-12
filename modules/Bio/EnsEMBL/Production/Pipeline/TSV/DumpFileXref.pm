@@ -46,12 +46,14 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
-
+    my @compress;
     my $type = $self->param('type');
     my $external_db = $self->param('external_db');
     $self->param('type', $type);
     $self->param('external_db', $external_db);
     $self->param('dba', $self->get_DBAdaptor());
+    $self->param('compress', @compress);
+    $self->dataflow_output_id($self->param('compress'), 1);
 
 return;
 }
@@ -127,6 +129,8 @@ sub _write_tsv {
 
   if ($xrefs_exist != 1) {
     unlink $out_file  or die "failed to delete $out_file!";
+  }else{
+      push(@compress, $out_file)
   }
 
 return;

@@ -70,9 +70,10 @@ return;
 
 sub run {
   my ($self) = @_;
-  
+  my @compress;
   $self->_make_karyotype_file();
-  
+  $self->param('compress', @compress);
+  $self->dataflow_output_id($self->param('compress'), 1);
 return;
 }
 
@@ -94,6 +95,7 @@ sub _make_karyotype_file {
     return unless(scalar(@$slices));
  
     my $file = $self->_generate_file_name();
+    push(@compress, $file);
   
     work_with_file($file, 'w', sub {
       my ($fh) = @_;

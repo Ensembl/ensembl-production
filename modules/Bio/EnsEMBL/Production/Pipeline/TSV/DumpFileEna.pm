@@ -47,13 +47,14 @@ sub param_defaults {
 
 sub run {
     my ($self) = @_;
-
+    my @compress;
     $self->info( "Starting ENA tsv dump for " . $self->param('species'));
     $self->_write_tsv();
+    $self->param('compress', @compress);
     $self->_create_README();
     $self->info( "Completed ENA tsv dump for " . $self->param('species'));
     $self->cleanup_DBAdaptor();
-
+    $self->dataflow_output_id($self->param('compress'), 1)
 return;
 }
 
@@ -122,8 +123,9 @@ sub _write_tsv {
 
     if ($xrefs_exist != 1) {
       unlink $out_file  or die "failed to delete $out_file!";
+    }else {
+        push (@compress,$out_file);
     }
-
 return;
 }
 
