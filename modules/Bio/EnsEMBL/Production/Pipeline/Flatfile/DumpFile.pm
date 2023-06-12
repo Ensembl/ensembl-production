@@ -148,8 +148,6 @@ sub run {
     });
   }
   $self->param('compress', \@compress);
-  $self->dataflow_output_id($self->param('compress'), 1);
-
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
   $self->hive_dbc()->disconnect_if_idle();  

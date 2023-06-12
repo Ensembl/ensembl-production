@@ -130,7 +130,6 @@ sub _write_tsv {
   }else{
       push(@compress, $out_file);
       $self->param('compress', @compress);
-      $self->dataflow_output_id($self->param('compress'), 1);
   }
 
 return;
