@@ -55,14 +55,11 @@ return;
 
 sub run {
     my ($self) = @_;
-    my @compress;
     $self->info( "Starting tsv dump for " . $self->param('species'));
     $self->_write_tsv();
-    $self->param('compress', @compress);
     $self->_create_README();
     $self->info( "Completed tsv dump for " . $self->param('species'));
     $self->dbc()->disconnect_if_idle();
-    $self->dataflow_output_id($self->param('compress'), 1)
 return;
 }
 
@@ -118,7 +115,6 @@ sub _write_tsv {
       }#gene
   }#slice 
   close $fh;
-  push (@compress,$out_file);
   $self->core_dbc()->disconnect_if_idle();
 return;
 }
