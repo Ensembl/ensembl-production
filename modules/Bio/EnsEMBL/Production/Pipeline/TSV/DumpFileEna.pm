@@ -54,7 +54,6 @@ sub run {
     $self->_create_README();
     $self->info( "Completed ENA tsv dump for " . $self->param('species'));
     $self->cleanup_DBAdaptor();
-    $self->dataflow_output_id($self->param('compress'), 1)
 return;
 }
 
