@@ -94,7 +94,7 @@ sub _make_karyotype_file {
     return unless(scalar(@$slices));
  
     my $file = $self->_generate_file_name();
-      push(@compress, $out_file);
+      push(@compress, $file);
       $self->param('compress', @compress);
       $self->dataflow_output_id($self->param('compress'), 1);
   
