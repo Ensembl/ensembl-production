@@ -46,35 +46,37 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
+
     my $type = $self->param('type');
     my $external_db = $self->param('external_db');
     $self->param('type', $type);
     $self->param('external_db', $external_db);
     $self->param('dba', $self->get_DBAdaptor());
 
-
 return;
 }
 
 sub run {
     my ($self) = @_;
+
     $self->info( "Starting tsv dump for " . $self->param('species'));
     $self->_write_tsv();
     $self->_create_README();
     $self->info( "Completed tsv dump for " . $self->param('species'));
 
-
 return;
 }
+sub write {
 
+}
 #############
 ##SUBROUTINES
 #############
 sub _write_tsv {
     my ($self) = @_;
-    my @compress;
+
     my $out_file  = $self->_generate_file_name();
-    my $header    = $self->_build_headers();   
+    my $header    = $self->_build_headers();
 
     open my $fh, '>', $out_file or die "cannot open $out_file for writing!";
     print $fh join ("\t", @$header);
@@ -112,9 +114,9 @@ sub _write_tsv {
                    my $xref_db       = $dbentry->dbname();
                    my $xref_info_type= $dbentry->info_type();
 
-                   if ($dbentry->isa('Bio::EnsEMBL::IdentityXref')){ 
- 		      $src_identity  = $dbentry->ensembl_identity(); 
-                      $xref_identity = $dbentry->xref_identity(); 
+                   if ($dbentry->isa('Bio::EnsEMBL::IdentityXref')){
+ 		      $src_identity  = $dbentry->ensembl_identity();
+                      $xref_identity = $dbentry->xref_identity();
                    }
 		   $linkage_type = join(' ', @{$dbentry->get_all_linkage_types()})if($dbentry->isa('Bio::EnsEMBL::OntologyXref'));
                    print $fh "$g_id\t$tr_id\t$tl_id\t$xref_id\t$xref_db\t$xref_info_type\t$src_identity\t$xref_identity\t$linkage_type\n";
@@ -122,16 +124,17 @@ sub _write_tsv {
 	       }#dbentry
          }#transcript
       }#gene
-  }#slice 
-  close $fh; 
+  }#slice
+  close $fh;
 
-  if ($xrefs_exist != 1) {
+
+  if ($xrefs_exist == 1) {
+      $self->dataflow_output_id(
+              { "compress" => [$out_file] }, 1);
+  } else {
+    # If we have no xrefs, delete the file (which will just have a header).
     unlink $out_file  or die "failed to delete $out_file!";
-  }else{
-      push(@compress, $out_file);
-      $self->param('compress', @compress);
   }
-
 return;
 }
 

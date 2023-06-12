@@ -70,18 +70,18 @@ return;
 
 sub run {
   my ($self) = @_;
+
   $self->_make_karyotype_file();
+
 return;
 }
 
 sub _make_karyotype_file {
-   my @compress;
-
     my ($self) = @_;
 
     my $sp = $self->param_required('species');
     my $sa = Bio::EnsEMBL::Registry->get_adaptor($sp, 'core', 'slice');
-   
+
     if(! $sa) {
         $self->info("Cannot continue as we cannot find a core:slice DBAdaptor for %s", $sp);
         return;
@@ -92,11 +92,8 @@ sub _make_karyotype_file {
     my $slices = $sa->fetch_all_karyotype();
     # If we don't have any slices (ie. chromosomes), don't make the file
     return unless(scalar(@$slices));
- 
+
     my $file = $self->_generate_file_name();
-      push(@compress, $file);
-      $self->param('compress', @compress);
-#      $self->dataflow_output_id($self->param('compress'), 1);
   
     work_with_file($file, 'w', sub {
       my ($fh) = @_;
@@ -106,7 +103,7 @@ sub _make_karyotype_file {
       }
    });
 
-
+      $self->dataflow_output_id({ "compress" => [$file] }, 1);
 return;
 }
 
