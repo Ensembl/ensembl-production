@@ -46,25 +46,25 @@ sub param_defaults {
 
 sub fetch_input {
     my ($self) = @_;
-    my @compress;
     my $type = $self->param('type');
     my $external_db = $self->param('external_db');
     $self->param('type', $type);
     $self->param('external_db', $external_db);
     $self->param('dba', $self->get_DBAdaptor());
-    $self->param('compress', @compress);
-    $self->dataflow_output_id($self->param('compress'), 1);
+
 
 return;
 }
 
 sub run {
     my ($self) = @_;
-
+    my @compress;
     $self->info( "Starting tsv dump for " . $self->param('species'));
     $self->_write_tsv();
     $self->_create_README();
     $self->info( "Completed tsv dump for " . $self->param('species'));
+    $self->param('compress', @compress);
+    $self->dataflow_output_id($self->param('compress'), 1);
 
 return;
 }
