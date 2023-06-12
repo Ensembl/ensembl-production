@@ -57,7 +57,7 @@ sub default_options {
         history_file => undef,
         old_server_uri => [],
 
-        copy_service_uri => "https://services.ensembl.ebi.ac.uk:2000/api/dbcopy/requestjob",
+	copy_service_uri => $self->o('ENV', 'DBCOPY_API_URI'),
         src_host         => undef,
         tgt_host         => undef,
         tgt_db_name      => $self->o('db_name').'_'.$self->o('ens_version'),
