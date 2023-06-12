@@ -96,7 +96,7 @@ sub _make_karyotype_file {
     my $file = $self->_generate_file_name();
       push(@compress, $file);
       $self->param('compress', @compress);
-      $self->dataflow_output_id($self->param('compress'), 1);
+#      $self->dataflow_output_id($self->param('compress'), 1);
   
     work_with_file($file, 'w', sub {
       my ($fh) = @_;
