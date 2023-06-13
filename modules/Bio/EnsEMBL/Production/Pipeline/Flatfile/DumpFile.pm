@@ -149,7 +149,7 @@ sub run {
   }
   unless (@compress == 0) {
     $self->dataflow_output_id(
-        { "compress" => [ @compress ] }, 4);
+        { "compress" => \@compress  }, 4);
   }
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
