@@ -42,7 +42,7 @@ return;
 
 sub run {
     my ($self) = @_;
-    my @compress = $self->param_required('compress');
+    my @compress = @{$self->param_required('compress')};
 
     foreach my $file (@compress) {
         my $output_file = $file.'.gz';
