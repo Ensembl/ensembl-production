@@ -122,7 +122,7 @@ sub _write_tsv {
 
     if ($xrefs_exist == 1) {
         $self->dataflow_output_id(
-            { "compress" => [ $out_file ] }, 1);
+            { "compress" => [ $out_file ] }, 4);
     }else{
       unlink $out_file  or die "failed to delete $out_file!";
     }

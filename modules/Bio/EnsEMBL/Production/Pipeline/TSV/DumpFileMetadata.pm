@@ -103,7 +103,7 @@ sub _make_karyotype_file {
       }
    });
 
-      $self->dataflow_output_id({ "compress" => [$file] }, 1);
+      $self->dataflow_output_id({ "compress" => [$file] }, 4);
 return;
 }
 
