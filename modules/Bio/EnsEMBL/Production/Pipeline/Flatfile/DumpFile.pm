@@ -147,7 +147,7 @@ sub run {
       return;
     });
   }
-  unless (@compress == []) {
+  unless (@compress == 0) {
     $self->dataflow_output_id(
         { "compress" => [ @compress ] }, 1);
   }
