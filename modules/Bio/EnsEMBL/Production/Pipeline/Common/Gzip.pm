@@ -42,20 +42,22 @@ return;
 
 sub run {
     my ($self) = @_;
-    my @compress = @{$self->param_required('compress')};
-
-    foreach my $file (@compress) {
-        my $output_file = $file.'.gz';
-        eval {
-            local $SIG{PIPE} = sub { die "gzip interrupted by SIGPIPE\n" };
-            gzip $file => $output_file
-                or die "gzip failed: $GzipError\n";
-            unlink $file;
-        };
-        if ($@) {
-            print "Error compressing '$file': $@\n";
-        } else {
-            print "Compressed '$file' to '$output_file' and removed the original file\n";
+    my @compress = @{$self->param('compress')};
+    if ($self->param_exists('compress')){
+        foreach my $file (@compress) {
+            my $output_file = $file . '.gz';
+            eval {
+                local $SIG{PIPE} = sub {die "gzip interrupted by SIGPIPE\n"};
+                gzip $file => $output_file
+                    or die "gzip failed: $GzipError\n";
+                unlink $file;
+            };
+            if ($@) {
+                print "Error compressing '$file': $@\n";
+            }
+            else {
+                print "Compressed '$file' to '$output_file' and removed the original file\n";
+            }
         }
     }
 return;
