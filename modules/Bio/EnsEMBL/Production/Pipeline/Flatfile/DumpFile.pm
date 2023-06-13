@@ -147,9 +147,10 @@ sub run {
       return;
     });
   }
+  unless (@compress == 0) {
     $self->dataflow_output_id(
-        { "compress" => [ @compress ] }, 1);
-
+        { "compress" => [ @compress ] }, 4);
+  }
   $self->_create_README();
   $self->core_dbc()->disconnect_if_idle();  
   $self->hive_dbc()->disconnect_if_idle();  
