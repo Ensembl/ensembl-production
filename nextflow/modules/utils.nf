@@ -1,15 +1,15 @@
-def checkParams(allowedParams) {    
+def requiredParams(requiredParamsList) {
 
     /*
-      Function: checkParams
-      Description: Checks the params defined by the user.
-      Input: inputData - allowedParams (list of params allowed for a pipeline])
+      Function: requiredParamsList
+      Description: Checks the required params defined by the user.
+      Input: inputData - None (default nextflow params Type: None)
       Output: result - Throws the exception . (Type: RuntimeException])
     */
 
-    unknownParams = params.keySet() - allowedParams
-    if (unknownParams) {
-        throw new RuntimeException("Unknown parameters: ${unknownParams.join(', ')}")
+    requiredParams = requiredParamsList - params.keySet() 
+    if (requiredParams) {
+        throw new RuntimeException("Missing required parameters : ${requiredParams.join(', ')}")
     }
 }
 
