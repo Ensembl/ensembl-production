@@ -1,94 +1,55 @@
-
-def convertToList( userParam ){
-
+process GenerateThoasConfigFile {
     /*
-      Function: convertToList
-      Description: Convert User defined comma seperated params into a list.
-      Input: inputData - Comma seperated string. (Type: String, Ex: "homo_sapiens,mus_musculus")
-      Output: result - Split the string with delimitar. (Type: List[String])
-    */ 
-
-    if ( userParam && userParam != true && userParam != false){
-        return userParam.split(',').collect { value -> "\"$value\""}
-    }
-
-    return []	
-
-}
-
-process GenomeInfoProcess {
-    /*
-      Description: Fetch the genome information from the ensembl production metadata-api and generate the yaml file.
-      Input:
-            genome_uuid (list): genome Universally Unique IDentifier. Defaults to [].
-            species_name (list): Ensembl Species Name. Defaults to [].
-            organism_group (list): Ensembl species Divisions. Defaults [].
-            metadata_uri (str, Required): Mysql URI string to connect the metadata database.
-            taxonomy_uri (str, Required): Mysql URI string to connect the ncbi taxonomy db.
-
-       Output:
-            Tuple: File paths to  genome information and genome ids 
+      Description: Generate Thoas loading config ini file with general and genome information  
     */
 
     debug true  
     label 'mem4GB'
-    tag 'genomeinfo'
-    publishDir "${params.genome_info_yaml}", mode: 'copy', overWrite: true
+    tag 'thoasConfig'
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
     input:
-    val genome_uuid
-    val species_name
-    val organism_group
-    val metadata_uri
-    val taxonomy_uri 
+    path genome_info
 
     output:
-    path "load-${params.release}.conf"
+    path "${params.thoas_config_filename}"
 
     """
-    #!/usr/bin/env python
-    
-    #Script to fetch genome info from new metadata api
-
-    import os
-    import yaml
-    import configparser 
-    from ensembl.production.metadata.api import GenomeAdaptor
-
-    #set nexflow params
-    GENOME_UUID    = $genome_uuid if $genome_uuid else None
-    SPECIES_NAME   = $species_name if $species_name else None
-    ORGANISM_GROUP = $organism_group if $organism_group else None
-    METADATA_URI   = "$metadata_uri"
-    METADATA_URI   = "$taxonomy_uri"
-
-    genome_info    = {} 
-    genome_info_obj = GenomeAdaptor(metadata_uri=METADATA_URI, taxonomy_uri=METADATA_URI)    
-
-       
-    with open("genome_id_info.yml", "a") as genome_id_info_file, open("genome_uuids.txt", "a") as genome_uuids_file:
-         
-        for genome in genome_info_obj.fetch_genomes_info(unreleased_datasets=True, genome_uuid=GENOME_UUID, ensembl_name=SPECIES_NAME, group=ORGANISM_GROUP) or []:
-
-            division_type = "vert" if genome[0]['genome'][-1].name.lower() == "ensemblvertebrates" else "non_vert"
-            if genome[0]['genome'][2].assembly_default == "GRCh37":
-                division_type = genome[0]['genome'][2].assembly_default.lower()
-
-            division = genome[0]['genome'][-1].name.lower().replace('ensembl','') 
-            genome_uuids_file.write(f"{genome[0]['genome'][0].genome_uuid}\\n")
-            yaml.dump({
-                genome[0]['genome'][0].genome_uuid:{
-                "genome_id" : genome[0]['genome'][0].genome_uuid,
-                "species"   : genome[0]['genome'][1].ensembl_name,
-                "gca"       : genome[0]['genome'][2].accession,
-                "division"  : division,
-                "dbname"    : genome[0]['datasets'][-1][-1].name,
-                "contigs"   : genome[0]['genome'][2].level,
-                "version"   : genome[0]['genome'][2].assembly_default,
-                "type"      : division_type
-               }
-            }, genome_id_info_file)
-
+    #Script to prepare thoas load-<ENS_VERSION>.conf file 
+    ${params.nf_py_script_path}/generate_thoas_conf.py \
+     -i $genome_info \
+     -o ${params.thoas_config_filename} \
+     --release h \
+     --thoas_code_location ${params.thoas_code_location} \
+     --thoas_data_location ${params.thoas_data_location} \
+     --base_data_path ${params.base_data_path} \
+     --grch37_data_path ${params.grch37_data_path} \
+     --classifier_path ${params.classifier_path} \
+     --chr_checksums_path ${params.chr_checksums_path} \
+     --xref_lod_mapping_file ${params.xref_lod_mapping_file} \
+     --core_db_host ${params.core_db_host} \
+     --core_db_port ${params.core_db_port} \
+     --core_db_port ${params.core_db_user} \
+     --metadata_db_host ${params.metadata_db_host} \
+     --metadata_db_port ${params.metadata_db_port} \
+     --metadata_db_user ${params.metadata_db_user}  \
+     --metadata_db_dbname ${params.metadata_db_dbname}  \
+     --taxonomy_db_host ${params.metadata_db_host} \
+     --taxonomy_db_port ${params.metadata_db_port} \
+     --taxonomy_db_user ${params.metadata_db_user}  \
+     --taxonomy_db_dbname ${params.taxonomy_db_dbname}  \
+     --refget_db_host ${params.refget_db_host} \
+     --refget_db_port ${params.refget_db_port} \
+     --refget_db_dbname ${params.refget_db_dbname} \
+     --refget_db_user ${params.refget_db_user} \
+     --refget_db_password ${params.refget_db_password} \
+     --mongo_db_host ${params.mongo_db_host} \
+     --mongo_db_port ${params.mongo_db_host} \
+     --mongo_db_dbname ${params.mongo_db_host} \
+     --mongo_db_user ${params.mongo_db_host} \
+     --mongo_db_password ${params.mongo_db_host} \
+     --mongo_db_schema ${params.mongo_db_host} \
+     --mongo_db_collection ${params.mongo_db_host}
     """
 
 }
