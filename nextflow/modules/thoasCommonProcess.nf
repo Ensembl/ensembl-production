@@ -3,7 +3,7 @@ process GenerateThoasConfigFile {
       Description: Generate Thoas loading config ini file with general and genome information  
     */
 
-    debug true  
+    debug "${params.debug}"  
     label 'mem4GB'
     tag 'thoasConfig'
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
@@ -50,6 +50,33 @@ process GenerateThoasConfigFile {
      --mongo_db_password ${params.mongo_db_host} \
      --mongo_db_schema ${params.mongo_db_host} \
      --mongo_db_collection ${params.mongo_db_host}
+    """
+
+}
+
+
+process LoadThoas {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem16GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv activate production-nextflow-py-3.7
+    export META_CLASSIFIER_PATH=${thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${thoas_code_location}/src/ensembl/multi_load.py --config $thoas_config_file &> "loading_log_${params.release}.out"
     """
 
 }
