@@ -3,7 +3,8 @@
 nextflow.enable.dsl=2
 
 include { 
-          GenerateThoasConfigFile
+          GenerateThoasConfigFile;
+          LoadThoas
         } from '../modules/thoasCommonProcess'
 
 include {
@@ -157,19 +158,12 @@ nextflow run thoas.nf <ARGUMENTS>
 }
 
 workflow {
-
-    //checkParams() 
     
     if(params.help){
       helpMessage()
       exit 1; 
     }
-    
-    // if(params.metadata_uri == '' || params.taxonomy_uri == ''){
-    //     helpMessage()
-    //     throw new RuntimeException("Missing Required parameter: metadata_uri or taxonomy_uri ") 
-    // }
-    
+       
     //set user params as list  
     genome_uuid     = convertToList(params.genome_uuid) 
     species_name    = convertToList(params.species_name)
@@ -180,48 +174,13 @@ workflow {
     output_json     = 'genome_info.json'
     unreleased_genomes = params.unreleased_genomes ? true : false
     
-
     GenomeInfo(genome_uuid, species_name, organism_group, unreleased_genomes, dataset_type, 
                               metadata_db_uri, taxonomy_db_uri, output_json)
-    
     GenerateThoasConfigFile(GenomeInfo.out[0])
-    // myrun = BoostrapFlow(GenomeInfoProcess.out[1].splitText().map { it.replaceAll('\n', '') })
-    // rs = DatafileFlow(myrun) 
-    // JumpFileFlow(rs)  
+    LoadThoas(GenerateThoasConfigFile.out[0]) 
 }
 
-
-// workflow BoostrapFlow {
-//     take: genomes_uuids
-//     main:
-//         myrun = BootstrapProcess(genomes_uuids)
-//     emit:
-//         genome_out = myrun
-// }
-
-// workflow JumpFileFlow {
-//     take: 
-//     genome_ids
-//     main:
-//         JumpFileProcess(genome_ids) 
-// }
-
-// workflow DatafileFlow {
-//     take: ensembl_genome_uuids
-    
-//     main:
-//         transcript_ch = TranscriptProcess(ensembl_genome_uuids)    
-//         contig_ch = ContigProcess(ensembl_genome_uuids)        
-//         gc_ch = GCProcess(ensembl_genome_uuids)
-//         jumpfile_ch = PrepareJumpFileProcess(transcript_ch
-//                                                 .join(contig_ch,  remainder: true)
-//                                                 .join(gc_ch,  remainder: true)
-//                                             ) 
-
-        
-//         emit:
-//             data = jumpfile_ch.collect().flatten().last()
-
-               
-// }
-
+workflow.onComplete {
+    println "Pipeline completed at: $workflow.complete"
+    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+}

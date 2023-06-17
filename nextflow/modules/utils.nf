@@ -7,8 +7,8 @@ def requiredParams(requiredParamsList) {
       Output: result - Throws the exception . (Type: RuntimeException])
     */
 
-    requiredParams = requiredParamsList - params.keySet() 
-    if (requiredParams) {
+     
+    if (! params.keySet().containsAll(requiredParams)) {
         throw new RuntimeException("Missing required parameters : ${requiredParams.join(', ')}")
     }
 }
