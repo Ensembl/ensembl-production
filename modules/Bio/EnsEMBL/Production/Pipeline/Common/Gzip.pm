@@ -42,7 +42,12 @@ return;
 
 sub run {
     my ($self) = @_;
-    my @compress = @{$self->param_required('compress')};
+    my @compress = ();
+    if (ref $self->param_required('compress') eq 'ARRAY') {
+        @compress = @{$self->param_required('compress')};
+    }else{
+        push(@compress, $self->param_required('compress'))
+    }
     foreach my $file (@compress) {
         my $output_file = $file.'.gz';
         eval {
