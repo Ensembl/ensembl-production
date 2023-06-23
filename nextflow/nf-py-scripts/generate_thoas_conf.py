@@ -45,15 +45,15 @@ def main():
                       help='output filename, ex: load-108.conf')
   
   #general paths for thoas
-  parser.add_argument('-c', '--thoas_code_location'   ,  type=str, required=True)
-  parser.add_argument('-d', '--thoas_data_location'   ,  type=str, required=True)
-  parser.add_argument('-b', '--base_data_path'        ,  type=str, required=True)
-  parser.add_argument('-r', '--grch37_data_path'      ,  type=str, required=True)
-  parser.add_argument('-l', '--classifier_path'       ,  type=str, required=True)
-  parser.add_argument('-s', '--chr_checksums_path'    ,  type=str, required=True)
-  parser.add_argument('-x', '--xref_lod_mapping_file' ,  type=str, required=True)
-  parser.add_argument('-f', '--log_faulty_urls'       ,  required=False, action='store_true', default=False )
-  parser.add_argument('-e', '--release'               ,  type=str, required=True)
+  parser.add_argument( '--thoas_code_location'   ,  type=str, required=True)
+  parser.add_argument( '--thoas_data_location'   ,  type=str, required=True)
+  parser.add_argument( '--base_data_path'        ,  type=str, required=True)
+  parser.add_argument( '--grch37_data_path'      ,  type=str, required=True)
+  parser.add_argument( '--classifier_path'       ,  type=str, required=True)
+  parser.add_argument( '--chr_checksums_path'    ,  type=str, required=True)
+  parser.add_argument( '--xref_lod_mapping_file' ,  type=str, required=True)
+  parser.add_argument( '--log_faulty_urls'       ,  required=False, action='store_true', default=False )
+  parser.add_argument( '--release'               ,  type=str, required=True)
   
   #core db host
   parser.add_argument('--core_db_host'  ,  type=str, required=True)
@@ -117,7 +117,7 @@ def main():
     
       
     genomes['GENERAL'] = {
-      'base_data_path'       :args.base_data_path,
+      'base_data_path'       : args.base_data_path,
       'grch37_data_path'     : args.grch37_data_path,
       'release'              : args.release,
       'classifier_path'      : args.classifier_path,
@@ -127,23 +127,20 @@ def main():
     }
 
     genomes['METADATA DB'] = {
-      'base_data_path'       :args.base_data_path,
-      'grch37_data_path'     : args.grch37_data_path,
-      'release'              : args.release,
-      'classifier_path'      : args.classifier_path,
-      'chr_checksums_path'   : args.chr_checksums_path,
-      'xref_lod_mapping_file': args.xref_lod_mapping_file,
-      'log_faulty_urls'      : args.log_faulty_urls,
+      'host'        : args.metadata_db_host,
+      'port'        : args.metadata_db_port,
+      'user'        : args.metadata_db_user,
+      'database'    : args.metadata_db_dbname,
+      'password'    : args.metadata_db_password,
+      
     }
     
     genomes['TAXON DB'] = {
-      'base_data_path'       :args.base_data_path,
-      'grch37_data_path'     : args.grch37_data_path,
-      'release'              : args.release,
-      'classifier_path'      : args.classifier_path,
-      'chr_checksums_path'   : args.chr_checksums_path,
-      'xref_lod_mapping_file': args.xref_lod_mapping_file,
-      'log_faulty_urls'      : args.log_faulty_urls,
+      'host'        : args.taxonomy_db_host,
+      'port'        : args.taxonomy_db_port,
+      'user'        : args.taxonomy_db_user,
+      'database'    : args.taxonomy_db_dbname,
+      'password'    : args.taxonomy_db_password,
     }        
 
     genomes['MONGO DB'] = {

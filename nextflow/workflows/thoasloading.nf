@@ -38,7 +38,7 @@ println """\
          log_faulty_urls       : ${params.log_faulty_urls}   
          mongo_dbname          : ${params.mongo_db_dbname}
          mongodb_collection    : ${params.mongo_db_collection}
-         mongo_schema          : ${params.mongo_sb_schema}
+         mongo_schema          : ${params.mongo_db_schema}
          refget_dbname         : ${params.refget_db_dbname}
          """
          .stripIndent()

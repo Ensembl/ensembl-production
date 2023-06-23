@@ -51,7 +51,7 @@ def main():
   
   args = parser.parse_args()
   
-  print(args)
+  
   #default values
   genome_uuid         = args.genome_uuid
   species             = args.species

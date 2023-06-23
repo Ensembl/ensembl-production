@@ -7,6 +7,7 @@ process GenerateThoasConfigFile {
     label 'mem4GB'
     tag 'thoasConfig'
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+     
 
     input:
     path genome_info
@@ -29,7 +30,7 @@ process GenerateThoasConfigFile {
      --xref_lod_mapping_file ${params.xref_lod_mapping_file} \
      --core_db_host ${params.core_db_host} \
      --core_db_port ${params.core_db_port} \
-     --core_db_port ${params.core_db_user} \
+     --core_db_user ${params.core_db_user} \
      --metadata_db_host ${params.metadata_db_host} \
      --metadata_db_port ${params.metadata_db_port} \
      --metadata_db_user ${params.metadata_db_user}  \
@@ -44,12 +45,12 @@ process GenerateThoasConfigFile {
      --refget_db_user ${params.refget_db_user} \
      --refget_db_password ${params.refget_db_password} \
      --mongo_db_host ${params.mongo_db_host} \
-     --mongo_db_port ${params.mongo_db_host} \
-     --mongo_db_dbname ${params.mongo_db_host} \
-     --mongo_db_user ${params.mongo_db_host} \
-     --mongo_db_password ${params.mongo_db_host} \
-     --mongo_db_schema ${params.mongo_db_host} \
-     --mongo_db_collection ${params.mongo_db_host}
+     --mongo_db_port ${params.mongo_db_port} \
+     --mongo_db_dbname ${params.mongo_db_dbname} \
+     --mongo_db_user ${params.mongo_db_user} \
+     --mongo_db_password ${params.mongo_db_password} \
+     --mongo_db_schema ${params.mongo_db_schema} \
+     --mongo_db_collection ${params.mongo_db_collection}
     """
 
 }
@@ -74,9 +75,9 @@ process LoadThoas {
     path "loading_log_${params.release}.out"
 
     """
-    pyenv activate production-nextflow-py-3.7
-    export META_CLASSIFIER_PATH=${thoas_code_location}/metadata_documents/metadata_classifiers/
-    python ${thoas_code_location}/src/ensembl/multi_load.py --config $thoas_config_file &> "loading_log_${params.release}.out"
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
     """
 
 }
