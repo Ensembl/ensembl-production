@@ -177,6 +177,7 @@ workflow {
     GenomeInfo(genome_uuid, species_name, organism_group, unreleased_genomes, dataset_type, 
                               metadata_db_uri, taxonomy_db_uri, output_json)
     GenerateThoasConfigFile(GenomeInfo.out[0])
+    
     LoadThoas(GenerateThoasConfigFile.out[0]) 
 }
 
