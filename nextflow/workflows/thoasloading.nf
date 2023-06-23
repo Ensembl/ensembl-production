@@ -38,7 +38,7 @@ println """\
          log_faulty_urls       : ${params.log_faulty_urls}   
          mongo_dbname          : ${params.mongo_db_dbname}
          mongodb_collection    : ${params.mongo_db_collection}
-         mongo_schema          : ${params.mongo_sb_schema}
+         mongo_schema          : ${params.mongo_db_schema}
          refget_dbname         : ${params.refget_db_dbname}
          """
          .stripIndent()
@@ -177,6 +177,7 @@ workflow {
     GenomeInfo(genome_uuid, species_name, organism_group, unreleased_genomes, dataset_type, 
                               metadata_db_uri, taxonomy_db_uri, output_json)
     GenerateThoasConfigFile(GenomeInfo.out[0])
+    
     LoadThoas(GenerateThoasConfigFile.out[0]) 
 }
 
