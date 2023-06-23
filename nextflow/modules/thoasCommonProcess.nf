@@ -20,7 +20,7 @@ process GenerateThoasConfigFile {
     ${params.nf_py_script_path}/generate_thoas_conf.py \
      -i $genome_info \
      -o ${params.thoas_config_filename} \
-     --release h \
+     --release ${params.release} \
      --thoas_code_location ${params.thoas_code_location} \
      --thoas_data_location ${params.thoas_data_location} \
      --base_data_path ${params.base_data_path} \
@@ -63,6 +63,161 @@ process LoadThoas {
 
     debug "${params.debug}"  
     label 'mem16GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
+    """
+
+}
+
+
+process ExtractCDS {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    perl ${params.thoas_code_location}/extract_cds_from_ens.pl --host= --user= --port= --species=production_name --assembly=assembly --division=division 
+    """
+
+}
+
+process PrepareGeneName {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
+    """
+
+}
+
+process DumpProteins {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
+    """
+
+}
+
+process LoadGenome {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
+    """
+
+}
+
+process LoadGene {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
+    cpus '12'
+    tag 'thoasloading'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    path "loading_log_${params.release}.out"
+
+    """
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file 
+    """
+
+}
+
+process LoadRegion {
+    /*
+      Description: Load  genome data into mongodb collection for thoas
+    */
+
+    debug "${params.debug}"  
+    label 'mem4GB'
     cpus '12'
     tag 'thoasloading'
 
