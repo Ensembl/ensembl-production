@@ -49,8 +49,8 @@ SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
 GENE_SWITCH_SPECIES = ["sus_scrofa", "gallus_gallus", "gallus_gallus_gca000002315v5"]
 
 PUBLIC_PUB_PATH = "PUBLIC/pub"
-DATA_FILES_PATH = "data_files/vertebrates/"
-DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/vertebrates/{species}/{assembly}/funcgen"
+DATA_FILES_PATH = "data_files/"
+DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/{species}/{assembly}/funcgen"
 RELEASE_FOLDER_PATH_TEMPLATE = "{ftp_path}/release-{release}/regulation/{species}/{assembly}"
 MISC_GENE_SWITCH_PATH_TEMPLATE = "{ftp_path}/misc/gene-switch/regulation/{species}/{assembly}"
 
