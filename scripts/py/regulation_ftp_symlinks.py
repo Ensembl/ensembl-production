@@ -173,15 +173,15 @@ class RegulationSymlinkFTP:
     def symlink2rf(self, only_remove=False, relative=True):
 
         target = (
-            Path(path.relpath(self.target, self.sources["release_folder"]))
+            Path(path.relpath(self.target, self.sources["release_folder"])) / "peaks"
             if relative
-            else self.target
+            else self.target / "peaks"
         )
         source = self.sources["release_folder"] / self.get("analysis_type")
 
         self._symlink(source, target, only_remove)
 
-    def symlink2misc(self, only_remove=False, relative=True):
+    def symlink2misc(self, analysis_type, only_remove=False, relative=True):
 
         if self.get("species") not in GENE_SWITCH_SPECIES:
             return None, None
@@ -190,9 +190,9 @@ class RegulationSymlinkFTP:
             makedirs(self.sources["misc_folder"])
 
         target = (
-            Path(path.relpath(self.target, self.sources["misc_folder"]))
+            Path(path.relpath(self.target, self.sources["misc_folder"])) / analysis_type
             if relative
-            else self.target
+            else self.target / analysis_type
         )
         source = self.sources["misc_folder"] / self.get("analysis_type")
 
@@ -205,7 +205,7 @@ class RegulationSymlinkFTP:
 
         if not only_remove:
             source.symlink_to(target, target_is_directory=True)
-            if validator.is_symlink(source):
+            if validator.is_symlink(source, check=True):
                 logger.info(f"{source} -> {target} --- was successfully created")
         else:
             if not validator.is_symlink(source, check=True):
@@ -278,11 +278,11 @@ if __name__ == "__main__":
     peaks = RegulationSymlinkFTP.search(ANALYSIS_TYPE_PEAKS, ftp_path, args.release_version)
     for peak in peaks:
         peak.symlink2rf(only_remove=args.delete_symlinks)
-        peak.symlink2misc(only_remove=args.delete_symlinks)
+        peak.symlink2misc("peaks", only_remove=args.delete_symlinks)
 
     logger.info("Searching for signals in data_files ...")
     signals = RegulationSymlinkFTP.search(ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version)
     for signal in signals:
-        signal.symlink2misc(only_remove=args.delete_symlinks)
+        signal.symlink2misc("signal", only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")
