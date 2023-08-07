@@ -106,6 +106,7 @@ sub param_defaults {
             },
         },
         source => 'Ensembl',
+        sequence_type => [qw/toplevel cdna cds pep/],
     };
 }
 
@@ -193,6 +194,11 @@ sub create_basic_refget_objects {
 sub generate_and_load_toplevel {
     my ($self, $slice, $checksum_lookup, $sequence_adaptor, $refget_schema) = @_;
 
+    # Skip if we were not to process this type
+    if(! $self->_process_sequence_type('toplevel')) {
+        return;
+    }
+
     # Generate the checksums from the sequence in the DB
     my $seq_ref = $sequence_adaptor->fetch_by_Slice_start_end_strand($slice, 1, undef, 1);
     my $slice_checksums = $self->_generate_checksums_from_seq_ref($seq_ref);
@@ -242,39 +248,53 @@ sub generate_and_load_transcripts_and_proteins {
     my $transcripts = $slice->get_all_Transcripts();
     my $is_circular = 0;
     my $verify_checksums = $self->param('verify_checksums');
-    while(my $transcript = shift @{$transcripts}) {
-        my $cdna = $transcript->seq()->seq();
-        my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
-        my $transcript_id = $transcript->stable_id_version();
 
-        if($verify_checksums) {
-            my $cdna_checksums = $checksum_lookup->{cdna};
-            $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript->stable_id_version(), $transcript->dbID());
+    my $process_cdna = $self->_process_sequence_type('cdna');
+    my $process_cds = $self->_process_sequence_type('cds');
+    my $process_pep = $self->_process_sequence_type('pep');
+
+    while(my $transcript = shift @{$transcripts}) {
+
+        # Skip if we were not to process this type
+        if(! $process_cdna) {
+            my $cdna = $transcript->seq()->seq();
+            my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
+            my $transcript_id = $transcript->stable_id_version();
+
+            if($verify_checksums) {
+                my $cdna_checksums = $checksum_lookup->{cdna};
+                $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript->stable_id_version(), $transcript->dbID());
+            }
+
+            $self->insert_molecule($refget_schema, \$cdna, $cdna_seq_hash, $transcript_id, 'cdna');
         }
 
-        $self->insert_molecule($refget_schema, \$cdna, $cdna_seq_hash, $transcript_id, 'cdna');
         my $translation = $transcript->translation();
         if($translation) {
             # We only have a CDS when it is a translation. Perl API will return an empty string
             # if there is no translation associcated with a transcript record
-            my $cds = $transcript->translateable_seq();
-            my $cds_seq_hash = $self->create_seq_hash(\$cds);
+            if(! $process_cds) {
+                my $cds = $transcript->translateable_seq();
+                my $cds_seq_hash = $self->create_seq_hash(\$cds);
 
-            if($verify_checksums) {
-                my $cds_checksums = $checksum_lookup->{cds};
-                $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript->stable_id_version(), $transcript->dbID());
+                if($verify_checksums) {
+                    my $cds_checksums = $checksum_lookup->{cds};
+                    $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript->stable_id_version(), $transcript->dbID());
+                }
+                $self->insert_molecule($refget_schema, \$cds, $cds_seq_hash, $transcript_id, 'cds');
             }
-            $self->insert_molecule($refget_schema, \$cds, $cds_seq_hash, $transcript_id, 'cds');
 
             # Now process protein
-            my $protein = $translation->seq();
-            my $protein_seq_hash = $self->create_seq_hash(\$protein);
-            my $protein_id = $translation->stable_id_version();
-            if($verify_checksums) {
-                my $protein_checksums = $checksum_lookup->{pep};
-                $self->_verify_checksums_match($protein_seq_hash, $protein_checksums, 'pep', $protein_id, $translation->dbID());
+            if(! $process_pep) {
+                my $protein = $translation->seq();
+                my $protein_seq_hash = $self->create_seq_hash(\$protein);
+                my $protein_id = $translation->stable_id_version();
+                if($verify_checksums) {
+                    my $protein_checksums = $checksum_lookup->{pep};
+                    $self->_verify_checksums_match($protein_seq_hash, $protein_checksums, 'pep', $protein_id, $translation->dbID());
+                }
+                $self->insert_molecule($refget_schema, \$protein, $protein_seq_hash, $protein_id, 'protein');
             }
-            $self->insert_molecule($refget_schema, \$protein, $protein_seq_hash, $protein_id, 'protein');
         }
     }
     return;
@@ -310,6 +330,18 @@ sub _generate_checksums_from_seq_ref {
         trunc512 => $trunc512,
         sha512t24u => $sha512t24u
     };
+}
+
+sub _process_sequence_type {
+    my ($self, $type) = @_;
+    my $sequence_type_lookup;
+    if(! $self->param_exists('sequence_type_lookup')) {
+        my $sequence_type = $self->param('sequence_type');
+        my %lookup = map { $_, 1 } @{$sequence_type};
+        $self->param('sequence_type_lookup', \%lookup);
+    }
+    $sequence_type_lookup = $self->param('sequence_type_lookup');
+    return exists $sequence_type_lookup->{$type} ? 1 : 0;
 }
 
 ##### Sequence existence methods
