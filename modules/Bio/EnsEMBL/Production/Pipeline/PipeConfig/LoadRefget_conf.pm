@@ -48,6 +48,7 @@ sub default_options {
         ## Checksum parameters
         'check_refget' => 1,
         'verify_checksums' => 1,
+        'sequence_type'  => [],
     };
 }
 
