@@ -54,6 +54,7 @@ sub args {
       group=s
       refget=s
       output_dir=s
+      check_refget
       verbose
       help
       man
@@ -137,6 +138,9 @@ sub _process_dba {
 
 sub sequence_exists {
     my ($self, $md5) = @_;
+    if(! $self->opts()->{check_refget}) {
+      return -1;
+    }
     my $url = $self->opts->{refget};
     my $full_url = "${url}/sequence/${md5}/metadata";
     my $headers = {};
@@ -232,6 +236,7 @@ check_sequence_refget.pl
   ./check_sequence_refget.pl -release VER -user USER -pass PASS -host HOST [-port PORT] \
                       [-species SPECIES] [-group GROUP] \
                       [-output_dir PATH] \
+                      [-check_refget] \
                       [-verbose] \
                       [-help | -man]
 
@@ -239,7 +244,7 @@ check_sequence_refget.pl
   ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -species homo_sapiens -group core
 
   #Everything for a release
-  ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -group core
+  ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -group core -check_refget
 
 =head1 DESCRIPTION
 
@@ -287,8 +292,12 @@ Run tests against the given refget server. Defaults to C<https://www.ebi.ac.uk/e
 =item B<--output_dir>
 
 REQUIRED. Write information about the sequence's existence in ENA. Will write to a CSV file 
-with the columns C<production_name,seq_region_id,md5,region_name,length,exists> where exists is set to a 1 or 0. 
-Will create a file per species processed of the format C<production_name.csv>
+with the columns C<production_name,seq_region_id,md5,region_name,length,exists> where exists is set to a 1 or 0 (or -1 
+if C<--check_refget> wasn't on). Will create a file per species processed of the format C<[production_name].csv>.
+
+=item B<--check_refget>
+
+Run the check against refget for every md5 checksum. If not set, then the output in the CSV will be B<-1>.
 
 =item B<--verbose>
 
