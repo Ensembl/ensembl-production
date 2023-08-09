@@ -418,7 +418,7 @@ sub _verify_checksums_match {
     foreach my $checksum (qw/md5 sha512t24u/) {
         my $calculated_checksum = $generated_checksums->{$checksum};
         my $stored_checksum = $retreived_checksums->{$checksum}->{$db_id};
-        if( ne $stored_checksum) {
+        if($calculated_checksum ne $stored_checksum) {
             my $error_string = sprintf(
                 'The stored %s %s checksum (%s) for ID %s dbID %d does not match the calculated checksum (%s)',
                 $type, $checksum, $stored_checksum, $id, $db_id, $calculated_checksum
