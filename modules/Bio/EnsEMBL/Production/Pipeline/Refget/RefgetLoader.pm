@@ -137,7 +137,7 @@ sub run {
     # Get the checksum lookups
     my $checksum_lookup = {};
     if($self->param('verify_checksums')) {
-        foreach my $type ($self->param('sequence_type')) {
+        foreach my $type (@{$self->param('sequence_type')}) {
             foreach my $checksum (qw/md5 sha512t24u/) {
                 $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
             }
