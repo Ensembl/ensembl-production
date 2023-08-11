@@ -49,6 +49,8 @@ sub default_options {
         'check_refget' => 0,
         'verify_checksums' => 1,
         'sequence_type'  => [],
+        'refget_dba_name' => 'multi',
+        'refget_dba_group' => 'refget',
     };
 }
 
@@ -77,9 +79,6 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},
         'pipeline_name'  => $self->o('pipeline_name'),
         'release'        => $self->o('release'),
-        'check_refget' => $self->o('check_refget'),
-        'verify_checksums' => $self->o('verify_checksums'),
-        'sequence_type' => $self->o('sequence_type'),
     };
 }
 
@@ -88,7 +87,7 @@ sub pipeline_analyses {
 
     return [
         {
-            -logic_name    => 'init_checksum',
+            -logic_name    => 'init_refget_load',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -input_ids     => [{}],
             -flow_into     => {'1->A' => 'species_factory', 'A->1' => 'email_report'}
@@ -110,6 +109,11 @@ sub pipeline_analyses {
             -logic_name         => 'load_refget',
             -module             => 'Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader',
             -analysis_capacity  => 20,
+            -parameters         => {
+                check_refget => $self->o('check_refget'),
+                verify_checksums => $self->o('verify_checksums'),
+                sequence_type => $self->o('sequence_type'),
+            },
         },
         {
             -logic_name        => 'run_datacheck',

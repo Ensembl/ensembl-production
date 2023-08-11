@@ -105,6 +105,8 @@ sub param_defaults {
                 sha512t24u => 'sha512t24u_pep',
             },
         },
+        refget_dba_name => 'multi',
+        refget_dba_group => 'refget',
         source => 'Ensembl',
         sequence_type => [qw/toplevel cdna cds pep/],
     };
@@ -116,7 +118,7 @@ sub run {
     my $dba = $self->get_DBAdaptor($group);
     $self->throw("Cannot find adaptor for type $group") unless $dba;
     # Assumes refget is available from the multi name & refget type
-    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'refget');
+    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
     my $extra_attributes = {};
     if($refget_dba->dbc()->driver() eq 'mysql') {
         $extra_attributes->{quote_char} = '`';
@@ -135,7 +137,7 @@ sub run {
     # Get the checksum lookups
     my $checksum_lookup = {};
     if($self->param('verify_checksums')) {
-        foreach my $type (qw/toplevel cdna cds pep/) {
+        foreach my $type ($self->param('sequence_type')) {
             foreach my $checksum (qw/md5 sha512t24u/) {
                 $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
             }
@@ -342,14 +344,12 @@ sub _generate_checksums_from_seq_ref {
 
 sub _process_sequence_type {
     my ($self, $type) = @_;
-    my $sequence_type_lookup;
     if(! $self->param_exists('sequence_type_lookup')) {
         my $sequence_type = $self->param('sequence_type');
         my %lookup = map { $_, 1 } @{$sequence_type};
         $self->param('sequence_type_lookup', \%lookup);
     }
-    $sequence_type_lookup = $self->param('sequence_type_lookup');
-    return exists $sequence_type_lookup->{$type} ? 1 : 0;
+    return exists $self->param('sequence_type_lookup')->{$type} ? 1 : 0;
 }
 
 ##### Sequence existence methods
