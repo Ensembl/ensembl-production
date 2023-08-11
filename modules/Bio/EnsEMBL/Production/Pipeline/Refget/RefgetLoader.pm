@@ -117,9 +117,13 @@ sub run {
     $self->throw("Cannot find adaptor for type $group") unless $dba;
     # Assumes refget is available from the multi name & refget type
     my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'refget');
+    my $extra_attributes = {};
+    if($refget_dba->dbc()->driver() eq 'mysql') {
+        $extra_attributes->{quote_char} = '`';
+    }
     my $refget_schema = Refget::Schema->connect(sub {
         return $refget_dba->dbc()->db_handle();
-    });
+    }, $extra_attributes);
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
 
@@ -147,7 +151,7 @@ sub run {
             $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
         });
     }
-    
+
     # cleanup
     $dba->dbc->disconnect_if_idle();
     $refget_dba->dbc->disconnect_if_idle();
