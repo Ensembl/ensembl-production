@@ -84,7 +84,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 sub param_defaults {
     my ($self) = @_;
     return {
-        check_refget => 1,
+        check_refget => 0,
         refget_ping_url => 'https://www.ebi.ac.uk/ena/cram',
         verify_checksums => 1,
         attrib_keys => {
@@ -133,7 +133,7 @@ sub run {
     if($self->param('verify_checksums')) {
         foreach my $type (qw/toplevel cdna cds pep/) {
             foreach my $checksum (qw/md5 sha512t24u/) {
-                $lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
+                $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
             }
         }
     }
@@ -256,14 +256,14 @@ sub generate_and_load_transcripts_and_proteins {
     while(my $transcript = shift @{$transcripts}) {
 
         # Skip if we were not to process this type
+        my $transcript_id = $transcript->stable_id_version();
         if(! $process_cdna) {
             my $cdna = $transcript->seq()->seq();
             my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
-            my $transcript_id = $transcript->stable_id_version();
 
             if($verify_checksums) {
                 my $cdna_checksums = $checksum_lookup->{cdna};
-                $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript->stable_id_version(), $transcript->dbID());
+                $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript_id, $transcript->dbID());
             }
 
             $self->insert_molecule($refget_schema, \$cdna, $cdna_seq_hash, $transcript_id, 'cdna');
@@ -279,7 +279,7 @@ sub generate_and_load_transcripts_and_proteins {
 
                 if($verify_checksums) {
                     my $cds_checksums = $checksum_lookup->{cds};
-                    $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript->stable_id_version(), $transcript->dbID());
+                    $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript_id, $transcript->dbID());
                 }
                 $self->insert_molecule($refget_schema, \$cds, $cds_seq_hash, $transcript_id, 'cds');
             }

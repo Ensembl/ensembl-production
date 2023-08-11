@@ -46,7 +46,7 @@ sub default_options {
         'division'    => [],
         'dbname'      => undef,
         ## Checksum parameters
-        'check_refget' => 1,
+        'check_refget' => 0,
         'verify_checksums' => 1,
         'sequence_type'  => [],
     };
