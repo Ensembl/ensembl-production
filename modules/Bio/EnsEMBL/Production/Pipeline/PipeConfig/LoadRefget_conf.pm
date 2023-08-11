@@ -77,6 +77,9 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},
         'pipeline_name'  => $self->o('pipeline_name'),
         'release'        => $self->o('release'),
+        'check_refget' => $self->o('check_refget'),
+        'verify_checksums' => $self->o('verify_checksums'),
+        'sequence_type' => $self->o('sequence_type'),
     };
 }
 
