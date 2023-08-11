@@ -116,9 +116,9 @@ sub run {
     my $dba = $self->get_DBAdaptor($group);
     $self->throw("Cannot find adaptor for type $group") unless $dba;
     # Assumes refget is available from the multi name & refget type
+    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'refget');
     my $refget_schema = Refget::Schema->connect(sub {
-        my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'refget');
-        return $dba->dbc()->db_handle();
+        return $refget_dba->dbc()->db_handle();
     });
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
@@ -147,6 +147,10 @@ sub run {
             $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
         });
     }
+    
+    # cleanup
+    $dba->dbc->disconnect_if_idle();
+    $refget_dba->dbc->disconnect_if_idle();
 }
 
 ##### DBIX::Class/Ensembl object loading methods
