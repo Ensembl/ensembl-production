@@ -267,7 +267,7 @@ sub generate_and_load_transcripts_and_proteins {
 
         # Skip if we were not to process this type
         my $transcript_id = $transcript->stable_id_version();
-        if(! $process_cdna) {
+        if($process_cdna) {
             my $cdna = $transcript->seq()->seq();
             my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
 
@@ -283,7 +283,7 @@ sub generate_and_load_transcripts_and_proteins {
         if($translation) {
             # We only have a CDS when it is a translation. Perl API will return an empty string
             # if there is no translation associcated with a transcript record
-            if(! $process_cds) {
+            if($process_cds) {
                 my $cds = $transcript->translateable_seq();
                 my $cds_seq_hash = $self->create_seq_hash(\$cds);
 
@@ -295,7 +295,7 @@ sub generate_and_load_transcripts_and_proteins {
             }
 
             # Now process protein
-            if(! $process_pep) {
+            if($process_pep) {
                 my $protein = $translation->seq();
                 my $protein_seq_hash = $self->create_seq_hash(\$protein);
                 my $protein_id = $translation->stable_id_version();
