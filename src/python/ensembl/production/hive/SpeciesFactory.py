@@ -21,21 +21,23 @@ from ensembl.production.metadata.api.genome import GenomeAdaptor
 class SpeciesFactory(eHive.BaseRunnable):
   def fetch_input(self):
     #set default params  
-    self.param("genome_uuid", None)
-    self.param_defaults("species", None) 
-    self.param_defaults("organism_group", None)       
-    self.param_defaults("organism_group_type", None)      
-    self.param_defaults("dataset_name", None)
-    self.param_defaults("dataset_source", None)        
-    self.param_required("unreleased_genomes")
-    self.param_required("metadata_db_uri")  
-    self.param_required("taxonomy_db_uri")   
+    self.param("genome_uuid")
+    self.param("ensembl_species") 
+    self.param("organism_group")       
+    self.param("organism_group_type")      
+    self.param("dataset_name")
+    self.param("dataset_source")        
+    self.param("unreleased_genomes")
+    self.param("metadata_db_uri")  
+    self.param("taxonomy_db_uri")   
 
   def run(self):
+    print("Helll...............")
+    print(self.param("ensembl_species"))
     genome_info_obj = GenomeAdaptor(metadata_uri=self.param("metadata_db_uri"), 
                                     taxonomy_uri=self.param("taxonomy_db_uri"))           
     for genome in genome_info_obj.fetch_genomes_info(genome_uuid=self.param("genome_uuid"),
-                                                     ensembl_name=self.param("species"),
+                                                     ensembl_name=self.param("ensembl_species"),
                                                      group=self.param("organism_group"),
                                                      group_type=self.param("organism_group_type"),
                                                      dataset_name=self.param("dataset_name"),
@@ -47,14 +49,13 @@ class SpeciesFactory(eHive.BaseRunnable):
                      "group"      : genome[0]['datasets'][-1][-1].type   #dbtype (core|variation|otherfeatures)
       }
       
-      if self.param("species"):
-          genome_info["species"] = genome[0]['genome'][1].ensembl_name
+      genome_info["species"] = genome[0]['genome'][1].ensembl_name
       
       if self.param("organism_group"):
         genome_info["division"] = genome[0]['genome'][-1].name
       
       self.dataflow(
-        asdict(genome_info)  , 2
+        genome_info  , 2
       )
 
   def write_output(self):
