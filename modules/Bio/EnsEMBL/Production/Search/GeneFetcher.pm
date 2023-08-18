@@ -80,7 +80,10 @@ sub fetch_genes_for_dba {
   my ($self, $dba, $compara_dba, $funcgen_dba, $pan_compara_dba, $exclude_xref_external_db_list) = @_;
   $logger->debug("Retrieving genes for " . $dba->species());
   $dba->dbc()->db_handle()->{mysql_use_result} = 1;
-  my @genes = grep {_include_gene($_, $exclude_xref_external_db_list)} @{$self->{fetcher}->export_genes($dba)};
+  my @genes = grep {_include_gene($_)} @{$self->{fetcher}->export_genes($dba)};
+  #filter depricated xrefs
+  my %external_db_hash = map { $_ => 1 } @{$external_db_list};
+  @{$gene->{xrefs}} = grep { not exists $external_db_hash{$_} } @{$gene->{xrefs}};
   $self->{fetcher}->add_funcgen(\@genes, $funcgen_dba) if defined $funcgen_dba;
   $self->{fetcher}->add_compara($dba->species(), \@genes, $compara_dba) if defined $compara_dba;
   $self->{fetcher}->add_pan_compara($dba->species(), \@genes, $pan_compara_dba) if defined $pan_compara_dba;
@@ -89,12 +92,7 @@ sub fetch_genes_for_dba {
 
 sub _include_gene {
   my $gene = shift;
-  my $external_db_list = shift;
-
   # exclude LRGs as they are not "proper" genes
-  #$include_xref = 0;
-  my @xrefs = @{$gene->{xrefs}};
-  
   return lc $gene->{biotype} ne 'lrg';
 }
 

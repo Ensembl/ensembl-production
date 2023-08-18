@@ -479,7 +479,7 @@ sub get_translations {
 
     #add translation checksum attrib 
     $log->debug("Retrieving checksum attrib for translations");
-    $checksums = $self->get_translation_checksum_attrib($dba);
+    my $checksums = $self->get_translation_checksum_attrib($dba);
 
     my $stable_ids = $self->get_stable_ids($dba, 'translation');
 
