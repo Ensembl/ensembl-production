@@ -43,10 +43,11 @@ my $log = get_logger();
 sub new {
     my ($class, @args) = @_;
     my $self = bless({}, ref($class) || $class);
-    ($self->{biotypes}, $self->{level}, $self->{load_xrefs}) =
-        rearrange([ 'BIOTYPES', 'LEVEL', 'LOAD_XREFS' ], @args);
+    ($self->{biotypes}, $self->{level}, $self->{load_xrefs}, $self->{external_dbs} ) =
+        rearrange([ 'BIOTYPES', 'LEVEL', 'LOAD_XREFS', 'EXCLUDE_EXTERNAL_DBS' ], @args);
     $self->{load_xrefs} ||= 0;
     $self->{level} ||= 'gene';
+    $self->{external_dbs} ||= []; 
     return $self;
 }
 

@@ -97,7 +97,7 @@ sub dump_genes {
     $pan_compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('pan_homology', 'compara') if $use_pan_compara;
   }
 
-  my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()->fetch_genes_for_dba($dba, $compara_dba, $funcgen_dba, $pan_compara_dba, $exclude_xref_external_db_list);
+  my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new(-EXCLUDE_EXTERNAL_DBS => $exclude_xref_external_db_list )->fetch_genes_for_dba($dba, $compara_dba, $funcgen_dba, $pan_compara_dba);
   if (defined $genes && scalar(@$genes) > 0) {
     $self->{logger}->info("Writing " . scalar(@$genes) . " genes to JSON");
     my $f = $self->write_json($dba->species, 'genes', $genes, $type);
