@@ -54,7 +54,7 @@ sub new {
       Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
           -LEVEL      => 'protein_feature',
           -LOAD_EXONS => 1,
-          -LOAD_XREFS => 1
+          -LOAD_XREFS => 1,
           -EXCLUDE_EXTERNAL_DBS => $self->{external_dbs} );
   return $self;
 }
