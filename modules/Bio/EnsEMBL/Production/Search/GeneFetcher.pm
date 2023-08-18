@@ -82,7 +82,7 @@ sub fetch_genes_for_dba {
   $dba->dbc()->db_handle()->{mysql_use_result} = 1;
   my @genes = grep {_include_gene($_)} @{$self->{fetcher}->export_genes($dba)};
   #filter depricated xrefs
-  my %external_db_hash = map { $_ => 1 } @{$external_db_list};
+  my %external_db_hash = map { $_ => 1 } @{$exclude_xref_external_db_list};
   @{$gene->{xrefs}} = grep { not exists $external_db_hash{$_} } @{$gene->{xrefs}};
   $self->{fetcher}->add_funcgen(\@genes, $funcgen_dba) if defined $funcgen_dba;
   $self->{fetcher}->add_compara($dba->species(), \@genes, $compara_dba) if defined $compara_dba;
