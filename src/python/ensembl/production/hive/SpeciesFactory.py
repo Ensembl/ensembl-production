@@ -19,41 +19,39 @@ from dataclasses import asdict
 from ensembl.production.metadata.api.genome import GenomeAdaptor
 
 class SpeciesFactory(eHive.BaseRunnable):
-  def fetch_input(self):
-    #set default params  
-    self.param("genome_uuid")
-    self.param("ensembl_species") 
-    self.param("organism_group")       
-    self.param("organism_group_type")      
-    self.param("dataset_name")
-    self.param("dataset_source")        
-    self.param("unreleased_genomes")
-    self.param("metadata_db_uri")  
-    self.param("taxonomy_db_uri")   
-
+  
+  @staticmethod
+  def check_params(param):
+    if  isinstance(param, tuple):
+        param = param[0]
+    if isinstance(param, list):
+      if(len(param)==0):
+        param = None
+    if param is not None and not isinstance(param, list):
+        param = [param]
+    return param
+    
   def run(self):
-    print("Helll...............")
-    print(self.param("ensembl_species"))
+
     genome_info_obj = GenomeAdaptor(metadata_uri=self.param("metadata_db_uri"), 
-                                    taxonomy_uri=self.param("taxonomy_db_uri"))           
-    for genome in genome_info_obj.fetch_genomes_info(genome_uuid=self.param("genome_uuid"),
-                                                     ensembl_name=self.param("ensembl_species"),
-                                                     group=self.param("organism_group"),
-                                                     group_type=self.param("organism_group_type"),
-                                                     dataset_name=self.param("dataset_name"),
-                                                     dataset_source=self.param("dataset_source"),
-                                                     unreleased_genomes=self.param("unreleased_genomes")) or []:
+                                    taxonomy_uri=self.param("taxonomy_db_uri"))  
+     
+    for genome in genome_info_obj.fetch_genomes_info(
+                                                     genome_uuid=self.check_params(self.param("genome_uuid")),
+                                                     ensembl_name=self.check_params(self.param("ensembl_species")),
+                                                     group=self.check_params(self.param("organism_group")),
+                                                     group_type=self.check_params(self.param("organism_group_type")),
+                                                     dataset_name=self.check_params(self.param("dataset_name")),
+                                                     dataset_source=self.check_params(self.param("dataset_source")),
+                                                     unreleased_genomes=self.check_params(self.param("unreleased_genomes"))) or []:
       
       genome_info = { 
                      "genome_uuid": genome[0]['genome'][0].genome_uuid,
-                     "group"      : genome[0]['datasets'][-1][-1].type   #dbtype (core|variation|otherfeatures)
+                     "group"      : genome[0]['datasets'][-1][-1].type,   #dbtype (core|variation|otherfeatures)
+                     "species"    : genome[0]['genome'][1].ensembl_name,
+                     "division"   : genome[0]['genome'][-1].name
       }
-      
-      genome_info["species"] = genome[0]['genome'][1].ensembl_name
-      
-      if self.param("organism_group"):
-        genome_info["division"] = genome[0]['genome'][-1].name
-      
+            
       self.dataflow(
         genome_info  , 2
       )
