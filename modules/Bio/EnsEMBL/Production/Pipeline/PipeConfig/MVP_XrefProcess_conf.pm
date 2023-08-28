@@ -61,7 +61,12 @@ sub default_options {
     'unreleased_genomes' => $self->o('unreleased_genomes'),
     'metadata_db_uri'    => $self->o('metadata_db_uri'),
     'taxonomy_db_uri'    => $self->o('taxonomy_db_uri'),
-    'ensembl_species'    => undef,
+    'organism_group_type'=> undef,
+    'genome_uuid'        => [], 
+    'ensembl_species'    => [],
+    'organism_group'     => [],
+    'dataset_name'       => [],
+    'dataset_source'     => [],
 
     # Datachecks
     history_file   => undef,
@@ -80,8 +85,8 @@ sub pipeline_analyses {
     -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
     -input_ids  => [{}],
     -flow_into  => {
-      '1' => 'MVPSpeciesFactory',
-      # 'A->1' => 'DatasetClient',
+      '1->A'    => 'MVPSpeciesFactory',
+      'A->1'    => 'EmailAdvisoryXrefReport',
     },
     -rc_name    => 'small',
   },
@@ -96,17 +101,22 @@ sub pipeline_analyses {
     'metadata_db_uri'    => $self->o('metadata_db_uri'),
     'taxonomy_db_uri'    => $self->o('taxonomy_db_uri'),
     'ensembl_species'    => $self->o('ensembl_species'),  
+    'organism_group'     => $self->o('organism_group'), 
+    'dataset_name'       => $self->o('dataset_name'),
+    'dataset_source'     => $self->o('dataset_source'),
+    'genome_uuid'        => $self->o('genome_uuid'), 
+    'organism_group_type' => $self->o('organism_group_type'),
     
     },       
     -flow_into  => {
-      '2' => 'schedule_species',
+      '2->A' => 'schedule_species',
+      'A->2' => 'DatasetClient'
     },
   },
   {
     -logic_name => 'DatasetClient',
     -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
     -rc_name    => 'small',
-    -flow_into => ['EmailAdvisoryXrefReport']
   },
   {
     -logic_name => 'schedule_species',
