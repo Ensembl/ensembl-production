@@ -20,7 +20,7 @@ Creates Regulation FTP symlinks.
 
 This script is in charge of creating Regulation FTP symlinks from data files folders to:
     - GENE-SWITCH project folder under the public miscellaneous directory [PEAKS, SIGNALS] - misc/gene-switch/regulation
-    - Release specific folder [PEAKS] - release-[RELEASE_VERSION]/regulation/[SPECIES]/[ASSEMBLY]
+    - Release specific folder [PEAKS, SIGNALS] - release-[RELEASE_VERSION]/regulation/[SPECIES]/[ASSEMBLY]
 
 Typical usage example:
     python3 regulation_ftp_symlinks.py -f /nfs/production/flicek/ensembl/production/ensemblftp/ -r 110
@@ -283,6 +283,7 @@ if __name__ == "__main__":
     logger.info("Searching for signals in data_files ...")
     signals = RegulationSymlinkFTP.search(ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version)
     for signal in signals:
+        signal.symlink2rf(only_remove=args.release_version)
         signal.symlink2misc(only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")
