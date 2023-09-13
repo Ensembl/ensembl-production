@@ -202,9 +202,15 @@ sub all_hashes {
                             $sequence_obj->seq($genome_feature->translateable_seq);
                         }
 
-                        my $hashes = $self->do_sum($attribute_adaptor, $hash_types, $trans_seq_type, $sequence_obj);
-                        push @{$batch->{$seq_type}->{$attrib_table}->{$genome_feature_id}}, @$hashes;
-                        $count += @$hashes;
+                        # Only add if we have an actual sequence. We don't have translatable_seq if we don't have a 
+                        # translation. MD5 checksums of d41d8cd98f00b204e9800998ecf8427e and sha512t24u of
+                        # z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXc are smells of creating sequence checksums
+                        # with zero content
+                        if($sequence_obj->seq() ne q{}) {
+                            my $hashes = $self->do_sum($attribute_adaptor, $hash_types, $trans_seq_type, $sequence_obj);
+                            push @{$batch->{$seq_type}->{$attrib_table}->{$genome_feature_id}}, @$hashes;
+                            $count += @$hashes;
+                        }
                     }
                 }
             }
