@@ -40,9 +40,7 @@ sub default_options {
       'Geneset_GTF',
       'Xref_TSV',
     ],
-    rnaseq_types => [
-      'RNASeq_Exists',
-    ],
+    rnaseq_types => [],
 
     dump_metadata => 1,
 
