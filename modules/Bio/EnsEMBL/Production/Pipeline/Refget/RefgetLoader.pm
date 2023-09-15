@@ -1,70 +1,44 @@
 =head1 LICENSE
-
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 Copyright [2016-2023] EMBL-European Bioinformatics Institute
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
      http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 =cut
 
 =pod
-
-
 =head1 CONTACT
-
   Please email comments or questions to the public Ensembl
   developers list at <http://lists.ensembl.org/mailman/listinfo/dev>.
-
   Questions may also be sent to the Ensembl help desk at
   <http://www.ensembl.org/Help/Contact>.
-
 =head1 NAME
-
 Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader
-
 =head1 DESCRIPTION
-
 A module for loading sequences from a core-like database into the 
 Perl reference implementation of refget (https://github.com/andrewyatz/refget-server-perl). 
-
 The code will load all proteins, cds and cDNA, and can optionally load toplevel
 sequences if missing from ENA's refget instance (https://www.ebi.ac.uk/ena/cram/).
-
 Allowed parameters are:
-
 =over 8
-
 =item species - The species to fetch the genomic sequence
-
 =item release - A required parameter for the version of Ensembl we are dumping for
-
 =item db_types - Array reference of the database groups to use. Defaults to core
-
 =item check_refget - Ping a refget for MD5 existence before attempting to load a toplevel sequence. Defaults to true
-
 =item refget_ping_url - URL to ping when checking for pre-existing sequences. Defaults to ENA's implementation
-
 =item verify_checksums - If set to true this module will double check the recorded checksum. Defaults to true
-
 =item source - Annotation source. Defaults to Ensembl
-
 =back
-
 The database connection for DBIx::Class is assumed to be in the registry under the species name B<multi>
 and the group of B<refget>. DBIx::Class then can take the underlying DBI handle to connect. Adding
 a C<-DRIVER> attribute of type C<"Pg"> to a C<Bio::EnsEMBL::DBSQL::DBAdaptor> constructor will make
 the magic happen (assuming the underlying Refget is in PostgreSQL).
-
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader;
@@ -84,7 +58,7 @@ use base qw/Bio::EnsEMBL::Production::Pipeline::Common::Base/;
 sub param_defaults {
     my ($self) = @_;
     return {
-        check_refget => 1,
+        check_refget => 0,
         refget_ping_url => 'https://www.ebi.ac.uk/ena/cram',
         verify_checksums => 1,
         attrib_keys => {
@@ -105,7 +79,10 @@ sub param_defaults {
                 sha512t24u => 'sha512t24u_pep',
             },
         },
+        refget_dba_name => 'multi',
+        refget_dba_group => 'refget',
         source => 'Ensembl',
+        sequence_type => [qw/toplevel cdna cds pep/],
     };
 }
 
@@ -115,10 +92,14 @@ sub run {
     my $dba = $self->get_DBAdaptor($group);
     $self->throw("Cannot find adaptor for type $group") unless $dba;
     # Assumes refget is available from the multi name & refget type
+    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
+    my $extra_attributes = {};
+    if($refget_dba->dbc()->driver() eq 'mysql') {
+        $extra_attributes->{quote_char} = '`';
+    }
     my $refget_schema = Refget::Schema->connect(sub {
-        my $dba = Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'refget');
-        return $dba->dbc()->db_handle();
-    });
+        return $refget_dba->dbc()->db_handle();
+    }, $extra_attributes);
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
 
@@ -126,15 +107,30 @@ sub run {
     my $attribute_adaptor = $dba->get_AttributeAdaptor();
     my $sequence_adaptor = $dba->get_SequenceAdaptor();
     my @slices = reverse @{$slice_adaptor->fetch_all('toplevel', undef, 1, undef, undef)};
+
+    # Get the checksum lookups
+    my $checksum_lookup = {};
+    if($self->param('verify_checksums')) {
+        foreach my $type (@{$self->param('sequence_type')}) {
+            foreach my $checksum (qw/md5 sha512t24u/) {
+                $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
+            }
+        }
+    }
+
     while(my $slice = shift @slices) {
         # Transaction block is left at just one per toplevel region. 
         # Sometimes it'll be fine and others it won't be
         # Rows only inserted into molecule if there's a new id+seq+release+type
         $refget_schema->txn_do(sub {
-            $self->generate_and_load_toplevel($slice, $attribute_adaptor, $sequence_adaptor, $refget_schema);
-            $self->generate_and_load_transcripts_and_proteins($slice, $attribute_adaptor, $refget_schema);
+            $self->generate_and_load_toplevel($slice, $checksum_lookup, $sequence_adaptor, $refget_schema);
+            $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
         });
     }
+
+    # cleanup
+    $dba->dbc->disconnect_if_idle();
+    $refget_dba->dbc->disconnect_if_idle();
 }
 
 ##### DBIX::Class/Ensembl object loading methods
@@ -180,24 +176,28 @@ sub create_basic_refget_objects {
 }
 
 sub generate_and_load_toplevel {
-    my ($self, $slice, $attribute_adaptor, $sequence_adaptor, $refget_schema) = @_;
-    
+    my ($self, $slice, $checksum_lookup, $sequence_adaptor, $refget_schema) = @_;
+
+    # Skip if we were not to process this type
+    if(! $self->_process_sequence_type('toplevel')) {
+        return;
+    }
+
     # Generate the checksums from the sequence in the DB
     my $seq_ref = $sequence_adaptor->fetch_by_Slice_start_end_strand($slice, 1, undef, 1);
     my $slice_checksums = $self->_generate_checksums_from_seq_ref($seq_ref);
-    my $existing_slice_checksums = { md5 => '', sha512t24u => '' };
 
     # Verify means fetch the DB stored checksums and make sure there isn't any drift
     # Die if there is drift
     if($self->param('verify_checksums')) {
-        $existing_slice_checksums = $self->_get_slice_checksums($slice, $attribute_adaptor);
+        my $seq_region_id = $slice->get_seq_region_id();
         foreach my $checksum (qw/md5 sha512t24u/) {
-            if($slice_checksums->{$checksum} ne $existing_slice_checksums->{$checksum}) {
-                my $seq_region_id = $slice->get_seq_region_id();
+            my $existing_checksum = $checksum_lookup->{'toplevel'}->{$checksum}->{$seq_region_id};
+            if($slice_checksums->{$checksum} ne $existing_checksum) {
                 my $seq_region_name =  $slice->seq_region_name();
                 my $error_string = sprintf(
                     'The stored %s checksum (%s) for seq_region_name %s seq_region_id %d does not match the calculated checksum (%s)',
-                    $checksum, $existing_slice_checksums->{$checksum}, $seq_region_name, $seq_region_id, $slice_checksums->{$checksum}
+                    $checksum, $existing_checksum, $seq_region_name, $seq_region_id, $slice_checksums->{$checksum}
                 );
                 $self->throw($error_string);
             }
@@ -228,42 +228,57 @@ sub generate_and_load_toplevel {
 }
 
 sub generate_and_load_transcripts_and_proteins {
-    my ($self, $slice, $attribute_adaptor, $refget_schema) = @_;
+    my ($self, $slice, $checksum_lookup, $refget_schema) = @_;
     my $transcripts = $slice->get_all_Transcripts();
     my $is_circular = 0;
-    while(my $transcript = shift @{$transcripts}) {
-        my $cdna = $transcript->seq()->seq();
-        my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
-        my $transcript_id = $transcript->stable_id_version();
+    my $verify_checksums = $self->param('verify_checksums');
 
-        if($self->param('verify_checksums')) {
-            my $cdna_checksums = $self->_get_cdna_checksums($transcript, $attribute_adaptor);
-            $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript->stable_id_version(), $transcript->dbID());
+    my $process_cdna = $self->_process_sequence_type('cdna');
+    my $process_cds = $self->_process_sequence_type('cds');
+    my $process_pep = $self->_process_sequence_type('pep');
+
+    while(my $transcript = shift @{$transcripts}) {
+
+        # Skip if we were not to process this type
+        my $transcript_id = $transcript->stable_id_version();
+        if($process_cdna) {
+            my $cdna = $transcript->seq()->seq();
+            my $cdna_seq_hash = $self->create_seq_hash(\$cdna);
+
+            if($verify_checksums) {
+                my $cdna_checksums = $checksum_lookup->{cdna};
+                $self->_verify_checksums_match($cdna_seq_hash, $cdna_checksums, 'cdna', $transcript_id, $transcript->dbID());
+            }
+
+            $self->insert_molecule($refget_schema, \$cdna, $cdna_seq_hash, $transcript_id, 'cdna');
         }
 
-        $self->insert_molecule($refget_schema, \$cdna, $cdna_seq_hash, $transcript_id, 'cdna');
         my $translation = $transcript->translation();
         if($translation) {
             # We only have a CDS when it is a translation. Perl API will return an empty string
             # if there is no translation associcated with a transcript record
-            my $cds = $transcript->translateable_seq();
-            my $cds_seq_hash = $self->create_seq_hash(\$cds);
+            if($process_cds) {
+                my $cds = $transcript->translateable_seq();
+                my $cds_seq_hash = $self->create_seq_hash(\$cds);
 
-            if($self->param('verify_checksums')) {
-                my $cds_checksums = $self->_get_cds_checksums($transcript, $attribute_adaptor);
-                $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript->stable_id_version(), $transcript->dbID());
+                if($verify_checksums) {
+                    my $cds_checksums = $checksum_lookup->{cds};
+                    $self->_verify_checksums_match($cds_seq_hash, $cds_checksums, 'cds', $transcript_id, $transcript->dbID());
+                }
+                $self->insert_molecule($refget_schema, \$cds, $cds_seq_hash, $transcript_id, 'cds');
             }
-            $self->insert_molecule($refget_schema, \$cds, $cds_seq_hash, $transcript_id, 'cds');
 
             # Now process protein
-            my $protein = $translation->seq();
-            my $protein_seq_hash = $self->create_seq_hash(\$protein);
-            my $protein_id = $translation->stable_id_version();
-            if($self->param('verify_checksums')) {
-                my $protein_checksums = $self->_get_protein_checksums($translation, $attribute_adaptor);
-                $self->_verify_checksums_match($protein_seq_hash, $protein_checksums, 'pep', $protein_id, $translation->dbID());
+            if($process_pep) {
+                my $protein = $translation->seq();
+                my $protein_seq_hash = $self->create_seq_hash(\$protein);
+                my $protein_id = $translation->stable_id_version();
+                if($verify_checksums) {
+                    my $protein_checksums = $checksum_lookup->{pep};
+                    $self->_verify_checksums_match($protein_seq_hash, $protein_checksums, 'pep', $protein_id, $translation->dbID());
+                }
+                $self->insert_molecule($refget_schema, \$protein, $protein_seq_hash, $protein_id, 'protein');
             }
-            $self->insert_molecule($refget_schema, \$protein, $protein_seq_hash, $protein_id, 'protein');
         }
     }
     return;
@@ -299,6 +314,16 @@ sub _generate_checksums_from_seq_ref {
         trunc512 => $trunc512,
         sha512t24u => $sha512t24u
     };
+}
+
+sub _process_sequence_type {
+    my ($self, $type) = @_;
+    if(! $self->param_exists('sequence_type_lookup')) {
+        my $sequence_type = $self->param('sequence_type');
+        my %lookup = map { $_, 1 } @{$sequence_type};
+        $self->param('sequence_type_lookup', \%lookup);
+    }
+    return exists $self->param('sequence_type_lookup')->{$type} ? 1 : 0;
 }
 
 ##### Sequence existence methods
@@ -368,64 +393,77 @@ sub insert_raw_sequence {
     return $raw_seq;
 }
 
-##### Checksum attribute retrieval and checking
-
-sub _get_checksums_from_attributes {
-    my ($self, $attributes, $seq_type, $identifier, $db_id) = @_;
-    my $values = {};
-    my $key_names = $self->param('attrib_keys');
-    # Transform attributes for easier lookup rather than multiple DB trips
-    my %inverted_attributes = map { $_->code(), $_->value() } @{$attributes};
-    foreach my $checksum (qw/md5 sha512t24u/) {
-        my $code = $key_names->{$seq_type}->{$checksum};
-        my $value = $inverted_attributes{$code};
-        if(! $value) {
-            my $error = sprintf('Could not find a %s attribute (%s) in the database linked to id %s (db id %d) of type %s', 
-                $checksum, $code, $identifier, $db_id, $seq_type
-            );
-            $self->throw($error);
-        }
-        $values->{$checksum} = $value;
-    }
-    return $values;
-}
-
-sub _get_slice_checksums {
-    my ($self, $slice, $attribute_adaptor) = @_;
-    my $attributes = $attribute_adaptor->fetch_all_by_Slice($slice);
-    return $self->_get_checksums_from_attributes($attributes, 'toplevel', $slice->seq_region_name(), $slice->get_seq_region_id());
-}
-
-sub _get_cdna_checksums {
-    my ($self, $transcript, $attribute_adaptor) = @_;
-    my $attributes = $attribute_adaptor->fetch_all_by_Transcript($transcript);
-    return $self->_get_checksums_from_attributes($attributes, 'cdna', $transcript->stable_id_version(), $transcript->dbID());
-}
-
-sub _get_cds_checksums {
-    my ($self, $transcript, $attribute_adaptor) = @_;
-    my $attributes = $attribute_adaptor->fetch_all_by_Transcript($transcript);
-    return $self->_get_checksums_from_attributes($attributes, 'cds', $transcript->stable_id_version(), $transcript->dbID());
-}
-
-sub _get_protein_checksums {
-    my ($self, $translation, $attribute_adaptor) = @_;
-    my $attributes = $attribute_adaptor->fetch_all_by_Translation($translation);
-    return $self->_get_checksums_from_attributes($attributes, 'pep', $translation->stable_id_version(), $translation->dbID());
-}
+##### Batch checksum attribute retrieval and checking
 
 sub _verify_checksums_match {
     my ($self, $generated_checksums, $retreived_checksums, $type, $id, $db_id) = @_;
     foreach my $checksum (qw/md5 sha512t24u/) {
-        if($generated_checksums->{$checksum} ne $retreived_checksums->{$checksum}) {
+        my $calculated_checksum = $generated_checksums->{$checksum};
+        my $stored_checksum = $retreived_checksums->{$checksum}->{$db_id};
+        if($calculated_checksum ne $stored_checksum) {
             my $error_string = sprintf(
                 'The stored %s %s checksum (%s) for ID %s dbID %d does not match the calculated checksum (%s)',
-                $type, $checksum, $retreived_checksums->{$checksum}, $id, $db_id, $generated_checksums->{$checksum}
+                $type, $checksum, $stored_checksum, $id, $db_id, $calculated_checksum
             );
             $self->throw($error_string);
         }
     }
     return 1;
+}
+
+sub _get_checksums_from_db {
+    my ($self, $dba, $type, $checksum) = @_;
+    my ($sql, $params) = $self->_get_attribute_sql_and_params($dba, $type, $checksum);
+    my $lookup = $dba->dbc()->sql_helper()->execute_into_hash(-SQL => $sql, -PARAMS => $params);
+    return $lookup;
+}
+
+sub _get_attribute_sql_and_params {
+    my ($self, $dba, $type, $checksum) = @_;
+    my $sql = q{};
+    if($type eq 'toplevel') {
+      $sql = << 'EOF';
+SELECT sr.seq_region_id, att.value
+FROM seq_region sr
+JOIN coord_system cs on cs.coord_system_id = sr.coord_system_id
+JOIN seq_region_attrib att ON sr.seq_region_id = att.seq_region_id
+JOIN attrib_type at on att.attrib_type_id = at.attrib_type_id
+WHERE cs.species_id =?
+AND at.code =?
+EOF
+    }
+    elsif ($type eq q{cdna} || $type eq q{cds}) {
+      $sql = << 'EOF';
+SELECT t.transcript_id, att.value
+FROM transcript t
+JOIN seq_region sr ON t.seq_region_id = sr.seq_region_id
+JOIN coord_system cs on cs.coord_system_id = sr.coord_system_id
+JOIN transcript_attrib att ON t.transcript_id = att.transcript_id
+JOIN attrib_type at on att.attrib_type_id = at.attrib_type_id
+WHERE cs.species_id =?
+AND at.code =?
+EOF
+    }
+    elsif ($type eq q{pep}) {
+      $sql = << 'EOF';
+SELECT tr.translation_id, att.value
+FROM transcript t
+JOIN seq_region sr ON t.seq_region_id = sr.seq_region_id
+JOIN coord_system cs on cs.coord_system_id = sr.coord_system_id
+JOIN translation tr ON t.transcript_id = tr.transcript_id
+JOIN translation_attrib att ON tr.translation_id = att.translation_id
+JOIN attrib_type at on att.attrib_type_id = at.attrib_type_id
+WHERE cs.species_id =?
+AND at.code =?
+EOF
+    }
+    else {
+        $self->throw("Given unknown sequence type '${type}'");
+    }
+
+    # Params set to the species id for the species and the attrib key for a checksum e.g. sha512t24u or md5
+    my $params = [$dba->species_id(), $self->param('attrib_keys')->{$type}->{$checksum}];
+    return ($sql, $params);
 }
 
 1;
