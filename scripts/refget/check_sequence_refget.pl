@@ -54,7 +54,10 @@ sub args {
       group=s
       refget=s
       output_dir=s
+<<<<<<< HEAD
       check_refget
+=======
+>>>>>>> 283316fb860a54b4c912ba23d2459ca68ae95f30
       verbose
       help
       man
@@ -138,9 +141,12 @@ sub _process_dba {
 
 sub sequence_exists {
     my ($self, $md5) = @_;
+<<<<<<< HEAD
     if(! $self->opts()->{check_refget}) {
       return -1;
     }
+=======
+>>>>>>> 283316fb860a54b4c912ba23d2459ca68ae95f30
     my $url = $self->opts->{refget};
     my $full_url = "${url}/sequence/${md5}/metadata";
     my $headers = {};
@@ -236,7 +242,10 @@ check_sequence_refget.pl
   ./check_sequence_refget.pl -release VER -user USER -pass PASS -host HOST [-port PORT] \
                       [-species SPECIES] [-group GROUP] \
                       [-output_dir PATH] \
+<<<<<<< HEAD
                       [-check_refget] \
+=======
+>>>>>>> 283316fb860a54b4c912ba23d2459ca68ae95f30
                       [-verbose] \
                       [-help | -man]
 
@@ -244,7 +253,11 @@ check_sequence_refget.pl
   ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -species homo_sapiens -group core
 
   #Everything for a release
+<<<<<<< HEAD
   ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -group core -check_refget
+=======
+  ./check_sequence_refget.pl -release 110 -host ensembdb.ensembl.org -port 5306 -user anonymous -group core
+>>>>>>> 283316fb860a54b4c912ba23d2459ca68ae95f30
 
 =head1 DESCRIPTION
 
