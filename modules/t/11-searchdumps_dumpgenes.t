@@ -1218,10 +1218,8 @@ subtest "Checking protein_coding gene", sub {
             'bananag'
         ]
     };
-    # warn
-
-    warn Dumper(sort_gene($gene)->{transcripts}[0]);
-    #warn Dumper(sort_gene($expected_gene));
+    # warn Dumper(sort_gene($gene)->{transcripts}[0]);
+    # warn Dumper(sort_gene($expected_gene));
     is_deeply(sort_gene($gene),
         sort_gene($expected_gene),
         "Testing gene structure");
