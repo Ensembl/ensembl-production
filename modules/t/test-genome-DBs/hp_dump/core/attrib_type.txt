@@ -251,3 +251,12 @@
 389	snoncoding_cnt	Short non coding gene count	Number of short non coding genes
 390	lnoncoding_cnt	Long non coding gene count	Number of long non coding genes
 391	TlUPsCount	translated_unprocessed_pseudogene	Number of Translated Unprocessed Pseudogenes
+567	Ga4gh_id	Bacteria Sequence Checksum	Checksum generated sequence for all biological features Chromosomes, super contigs, cDNA, CDS, Peptides
+568	md5_toplevel	Toplevel Sequence Checksum MD5	Toplevel genomic sequences checksum like chromosomes and supercontigs
+569	sha512t24u_toplevel	Toplevel Sequence Checksum SHA512	Toplevel genomic sequences checksum like chromosomes and supercontigs
+570	sha512t24u_cds	sha512 Checksum for cds sequences	sha512 Checksum for cds sequences
+571	md5_cds	md5 Checksum for cds sequences	md5 Checksum for cds sequences
+572	sha512t24u_cdna	sha512 Checksum for cdna sequences	sha512 Checksum for cdna sequences
+573	md5_cdna	md5 Checksum for cdna sequences	md5 Checksum for cdna sequences
+574	sha512t24u_pep	sha512 Checksum for translation sequences 	sha512 Checksum for translation sequences
+575	md5_pep	md5 Checksum for translation sequences	md5 Checksum for translation sequences

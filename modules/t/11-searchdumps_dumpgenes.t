@@ -18,7 +18,6 @@ use strict;
 use warnings;
 use Test::More;
 
-
 BEGIN {
     use_ok('Bio::EnsEMBL::Production::Search::GeneFetcher');
 }
@@ -192,8 +191,10 @@ subtest "Checking protein_coding gene", sub {
                 'analysis'            => 'ensembl_havana_transcript',
                 'start'               => 29011990,
                 'attrib'              => {
-                    "sha512t24u_pep"  =>"IIv8JZA65kMjxtgtEwQ7FhCJ9KYGmFtp",
-                    "md5_pep"         => "18487f77ceffccd48fbfe27d6e1c7a12",
+                    'synonym'      => 'XXbac-BPG258E24.8-001',
+                    'name'         => 'XXbac-BPG258E24.8-001',
+                    'author_email' => 'v@somewhere.com',
+                    'author'       => 'Havana',
                 },
                 'coord_system'        => {
                     'version'    => 'GRCh38',
@@ -212,10 +213,8 @@ subtest "Checking protein_coding gene", sub {
                         'id'                  => 'ENSP00000366380',
                         'transcript_id'       => 'ENST00000377175',
                         'attrib'              => {
-                              'synonym'       => 'XXbac-BPG258E24.8-001',
-                              'name'          => 'XXbac-BPG258E24.8-001',
-                              'author_email'  => 'v@somewhere.com',
-                              'author'        => 'Havana',
+                            "sha512t24u_pep" => "IIv8JZA65kMjxtgtEwQ7FhCJ9KYGmFtp",
+                            "md5_pep"        => "18487f77ceffccd48fbfe27d6e1c7a12",
                         },
                         'xrefs'               => [
                             {
@@ -1219,7 +1218,10 @@ subtest "Checking protein_coding gene", sub {
             'bananag'
         ]
     };
-    # warn Dumper(sort_gene($gene));
+    # warn
+
+    warn Dumper(sort_gene($gene)->{transcripts}[0]);
+    #warn Dumper(sort_gene($expected_gene));
     is_deeply(sort_gene($gene),
         sort_gene($expected_gene),
         "Testing gene structure");
@@ -1261,46 +1263,46 @@ subtest "Checking ncRNA gene", sub {
                         'display_id'  => 'RP11-309M23.2-001',
                         'info_type'   => 'NONE'
                     }, {
-                        'info_type'   => 'NONE',
-                        'info_text'   => 'Added during ensembl-vega production',
-                        'display_id'  => 'OTTHUMT00000427110',
-                        'primary_id'  => 'OTTHUMT00000427110',
-                        'description' => undef,
-                        'dbname'      => 'Vega_transcript',
-                        'db_display'  => 'Vega transcript'
-                    }, {
-                        'info_type'   => 'NONE',
-                        'display_id'  => 'OTTHUMT00000427110',
-                        'info_text'   => '',
-                        'primary_id'  => 'OTTHUMT00000427110',
-                        'description' => undef,
-                        'dbname'      => 'OTTT',
-                        'db_display'  => 'Havana transcript'
-                    }, {
-                        'display_id'  => 'RP11-309M23.2-001',
-                        'info_text'   => '',
-                        'info_type'   => 'DIRECT',
-                        'db_display'  => 'Clone-based (Vega)',
-                        'dbname'      => 'Clone_based_vega_transcript',
-                        'description' => '',
-                        'primary_id'  => 'RP11-309M23.2-001'
-                    }, {
-                        'info_text'   => 'Generated via ensembl_manual',
-                        'display_id'  => 'RPL14P5',
-                        'info_type'   => 'DIRECT',
-                        'db_display'  => 'HGNC Symbol',
-                        'dbname'      => 'HGNC',
-                        'description' => 'ribosomal protein L14 pseudogene 5',
-                        'primary_id'  => '37720'
-                    }, {
-                        'info_type'   => 'MISC',
-                        'display_id'  => 'RPL14P5-001',
-                        'info_text'   => '',
-                        'description' => 'ribosomal protein L14 pseudogene 5',
-                        'primary_id'  => 'RPL14P5-001',
-                        'db_display'  => 'HGNC transcript name',
-                        'dbname'      => 'HGNC_trans_name'
-                    }
+                    'info_type'   => 'NONE',
+                    'info_text'   => 'Added during ensembl-vega production',
+                    'display_id'  => 'OTTHUMT00000427110',
+                    'primary_id'  => 'OTTHUMT00000427110',
+                    'description' => undef,
+                    'dbname'      => 'Vega_transcript',
+                    'db_display'  => 'Vega transcript'
+                }, {
+                    'info_type'   => 'NONE',
+                    'display_id'  => 'OTTHUMT00000427110',
+                    'info_text'   => '',
+                    'primary_id'  => 'OTTHUMT00000427110',
+                    'description' => undef,
+                    'dbname'      => 'OTTT',
+                    'db_display'  => 'Havana transcript'
+                }, {
+                    'display_id'  => 'RP11-309M23.2-001',
+                    'info_text'   => '',
+                    'info_type'   => 'DIRECT',
+                    'db_display'  => 'Clone-based (Vega)',
+                    'dbname'      => 'Clone_based_vega_transcript',
+                    'description' => '',
+                    'primary_id'  => 'RP11-309M23.2-001'
+                }, {
+                    'info_text'   => 'Generated via ensembl_manual',
+                    'display_id'  => 'RPL14P5',
+                    'info_type'   => 'DIRECT',
+                    'db_display'  => 'HGNC Symbol',
+                    'dbname'      => 'HGNC',
+                    'description' => 'ribosomal protein L14 pseudogene 5',
+                    'primary_id'  => '37720'
+                }, {
+                    'info_type'   => 'MISC',
+                    'display_id'  => 'RPL14P5-001',
+                    'info_text'   => '',
+                    'description' => 'ribosomal protein L14 pseudogene 5',
+                    'primary_id'  => 'RPL14P5-001',
+                    'db_display'  => 'HGNC transcript name',
+                    'dbname'      => 'HGNC_trans_name'
+                }
                 ],
                 'coord_system'        => {
                     'version'    => 'GRCh38',
@@ -1318,61 +1320,61 @@ subtest "Checking ncRNA gene", sub {
                         'end'   => 969286
                     }
                 ],
-                'exons' => [
-            {
-                'version'             => '1',
-                'start'               => '970445',
-                'seq_region_name'     => 'HG480_HG481_PATCH',
-                'strand'              => '-1',
-                'end'                 => '970836',
-                'id'                  => 'ENSE00002580842',
-                'rank'                => '1',
-                'phase'               => '-1',
-                'end_phase'           => '-1',
-                'coord_system'        => {
-                    'name' => 'chromosome',
-                    'version' => 'GRCh38',
-                    'seq_length' => '155131142',
-                    'seq_name' => 'HG480_HG481_PATCH'
-                },
-                'ensembl_object_type' => 'exon'
-            }, {
-                'ensembl_object_type' => 'exon',
-                'coord_system'        => {
-                    'name' => 'chromosome',
-                    'version' => 'GRCh38',
-                    'seq_length' => '155131142',
-                    'seq_name' => 'HG480_HG481_PATCH'
-                },
-                'rank'                => '2',
-                'phase'               => '-1',
-                'end_phase'           => '-1',
-                'id'                  => 'ENSE00002621881',
-                'strand'              => '-1',
-                'end'                 => '970115',
-                'start'               => '969827',
-                'seq_region_name'     => 'HG480_HG481_PATCH',
-                'version'             => '1'
-            }, {
-                'ensembl_object_type' => 'exon',
-                'rank'                => '3',
-                'phase'               => '-1',
-                'end_phase'           => '-1',
-                'coord_system'        => {
-                    'name' => 'chromosome',
-                    'version' => 'GRCh38',
-                    'seq_length' => '155131142',
-                    'seq_name' => 'HG480_HG481_PATCH'
-                },
-                'id'                  => 'ENSE00002622269',
-                'start'               => '969238',
-                'seq_region_name'     => 'HG480_HG481_PATCH',
-                'end'                 => '969286',
-                'strand'              => '-1',
-                'version'             => '1'
-            }
-            ],
-                'probes' => [
+                'exons'               => [
+                    {
+                        'version'             => '1',
+                        'start'               => '970445',
+                        'seq_region_name'     => 'HG480_HG481_PATCH',
+                        'strand'              => '-1',
+                        'end'                 => '970836',
+                        'id'                  => 'ENSE00002580842',
+                        'rank'                => '1',
+                        'phase'               => '-1',
+                        'end_phase'           => '-1',
+                        'coord_system'        => {
+                            'name'       => 'chromosome',
+                            'version'    => 'GRCh38',
+                            'seq_length' => '155131142',
+                            'seq_name'   => 'HG480_HG481_PATCH'
+                        },
+                        'ensembl_object_type' => 'exon'
+                    }, {
+                    'ensembl_object_type' => 'exon',
+                    'coord_system'        => {
+                        'name'       => 'chromosome',
+                        'version'    => 'GRCh38',
+                        'seq_length' => '155131142',
+                        'seq_name'   => 'HG480_HG481_PATCH'
+                    },
+                    'rank'                => '2',
+                    'phase'               => '-1',
+                    'end_phase'           => '-1',
+                    'id'                  => 'ENSE00002621881',
+                    'strand'              => '-1',
+                    'end'                 => '970115',
+                    'start'               => '969827',
+                    'seq_region_name'     => 'HG480_HG481_PATCH',
+                    'version'             => '1'
+                }, {
+                    'ensembl_object_type' => 'exon',
+                    'rank'                => '3',
+                    'phase'               => '-1',
+                    'end_phase'           => '-1',
+                    'coord_system'        => {
+                        'name'       => 'chromosome',
+                        'version'    => 'GRCh38',
+                        'seq_length' => '155131142',
+                        'seq_name'   => 'HG480_HG481_PATCH'
+                    },
+                    'id'                  => 'ENSE00002622269',
+                    'start'               => '969238',
+                    'seq_region_name'     => 'HG480_HG481_PATCH',
+                    'end'                 => '969286',
+                    'strand'              => '-1',
+                    'version'             => '1'
+                }
+                ],
+                'probes'              => [
                     {
                         'probe'  => '214727_at',
                         'array'  => 'HG-Focus',
@@ -1395,28 +1397,28 @@ subtest "Checking ncRNA gene", sub {
         'xrefs'               => [
             {
                 'description' => undef,
-                'primary_id'                           => 'OTTHUMG00000174633',
-                'dbname'                               => 'OTTG',
-                'db_display'                           => 'Havana gene',
-                'info_type'                            => 'NONE',
-                'info_text'                            => '',
-                'display_id'                           => 'OTTHUMG00000174633'
-            }, {
-                'db_display'  => 'ArrayExpress',
-                'dbname'      => 'ArrayExpress',
-                'primary_id'  => 'ENSG00000261370',
-                'description' => '',
-                'display_id'  => 'ENSG00000261370',
+                'primary_id'  => 'OTTHUMG00000174633',
+                'dbname'      => 'OTTG',
+                'db_display'  => 'Havana gene',
+                'info_type'   => 'NONE',
                 'info_text'   => '',
-                'info_type'   => 'DIRECT'
+                'display_id'  => 'OTTHUMG00000174633'
             }, {
-                'primary_id'  => '37720',
-                'description' => 'ribosomal protein L14 pseudogene 5',
-                'db_display'  => 'HGNC Symbol',
-                'dbname'      => 'HGNC',
-                'info_type'   => 'DIRECT',
-                'info_text'   => 'Generated via ensembl_manual',
-                'display_id'  => 'RPL14P5' }
+            'db_display'  => 'ArrayExpress',
+            'dbname'      => 'ArrayExpress',
+            'primary_id'  => 'ENSG00000261370',
+            'description' => '',
+            'display_id'  => 'ENSG00000261370',
+            'info_text'   => '',
+            'info_type'   => 'DIRECT'
+        }, {
+            'primary_id'  => '37720',
+            'description' => 'ribosomal protein L14 pseudogene 5',
+            'db_display'  => 'HGNC Symbol',
+            'dbname'      => 'HGNC',
+            'info_type'   => 'DIRECT',
+            'info_text'   => 'Generated via ensembl_manual',
+            'display_id'  => 'RPL14P5' }
         ],
         'ensembl_object_type' => 'gene',
         'name'                => 'RPL14P5'
