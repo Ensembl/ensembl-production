@@ -115,6 +115,8 @@ sub pipeline_analyses {
                 source     => $self->o('source'),
                 email       => $self->o('email'),
                 metadata_uri => $self->o('metadata_uri'),
+                taxonomy_uri => $self->o('taxonomy_uri'),
+
             },
 
             -rc_name           => 'default',
@@ -132,6 +134,8 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -parameters      => {
                 metadata_uri => $self->o('metadata_uri'),
+                taxonomy_uri => $self->o('taxonomy_uri'),
+
 # #                database_uri => $self->o('database_uri'),
 #                 e_release    => $self->o('e_release'),
 #                 email        => $self->o('email'),
