@@ -13,7 +13,7 @@
 
 
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
-from ensembl.production.metadata.updater import CoreMetaUpdater
+# from ensembl.production.metadata.updater import CoreMetaUpdater
 
 class MetadataUpdaterHiveOtherfeatures(BaseProdRunnable):
 
