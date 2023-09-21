@@ -17,8 +17,9 @@
 use strict;
 use warnings;
 
-my $DEFAULT_USER = 'ensgen';
-
+my $DEFAULT_USER = 'ensemblftp';
+my $allowed_users = 'ensodd|enseven|ensprod|enscovid|ens2020';
+my @reg_users = qw/ensodd enseven ensprod enscovid ens2020/;
 use Cwd;
 use Fcntl qw( :mode );
 use File::Spec;
@@ -36,9 +37,8 @@ sub options {
   GetOptions($opts, @flags) or pod2usage(1);
 
   _exit( undef, 0, 1) if $opts->{help};
-        _exit( undef, 0, 2) if $opts->{man};
-
-        _exit('No -directory given. Need somewhere to start scanning from', 1, 1) unless $opts->{directory};
+  _exit( undef, 0, 2) if $opts->{man};
+  _exit('No -directory given. Need somewhere to start scanning from', 1, 1) unless $opts->{directory};
 
   $opts->{directory} = File::Spec->rel2abs($opts->{directory});
 
@@ -48,8 +48,8 @@ sub options {
     print STDERR "Ignoring that our user should be $DEFAULT_USER. I hope you know what you're doing\n";
   }
   else {
-    if($ENV{USER} ne $DEFAULT_USER) {
-      _exit('You are not ensgen; either become ensgen & rerun this command or give -ignore_user to the script.', 1, 1);
+    if($ENV{USER} ne $DEFAULT_USER and !($ENV{USER} ~~ @reg_users)) {
+      _exit("You are not $DEFAULT_USER; either become one of [$allowed_users] & rerun this command or give '-ignore_user' to the script.", 1, 1);
     }
   }
 
@@ -210,9 +210,9 @@ Forces re-calculation of all checksums
 
 =item B<--ignore_user>
 
-By default this program should be run as ensgen; giving this option turns
+By default this program should be run as ensemblftp; giving this option turns
 that check off. Do so at your own peril (all files on FTP have to be
-owned by ensgen & writable ONLY by ensgen)
+owned ensemblftp & writable ONLY by ensemblftp)
 
 =item B<--help>
 

@@ -16,67 +16,218 @@
 # limitations under the License.
 
 """
-regulation_ftp_symlinks:
-Script to create specific symlinks for GENE-SWITCH project under the public miscellaneous directory
+Creates Regulation FTP symlinks.
+
+This script is in charge of creating Regulation FTP symlinks from data files folders to:
+    - GENE-SWITCH project folder under the public miscellaneous directory [PEAKS, SIGNALS] - misc/gene-switch/regulation
+    - Release specific folder [PEAKS] - release-[RELEASE_VERSION]/regulation/[SPECIES]/[ASSEMBLY]
+
+Typical usage example:
+    python3 regulation_ftp_symlinks.py -f /nfs/production/flicek/ensembl/production/ensemblftp/ -r 110
+
+Required Args:
+  -f, --ftp_path        - FTP root path
+  -r, --release_version - Release version
+
+Optional Args:
+  -h, --help            - Show help message
+  -d, --delete_symlinks - Delete symlinks
 """
 
-import argparse
-import os.path
-import re
+
+from argparse import ArgumentParser
+from collections import defaultdict
 import logging
-import shutil
-import sys
-
-#***** New (species, assemblies) should be added here ************************
-
-# MISC_SPECIES_PEAKS = [(<species_name>, <assembly_name>), (...)]
-MISC_SPECIES_PEAKS = [("sus_scrofa", "Sscrofa11.1"), ("gallus_gallus", "GRCg7b"), ("gallus_gallus", "GRCg6a")]
-
-# MISC_SPECIES_SIGNAL = [(<source_species_name>, <source_assembly_name>,
-#                           <target_species_name>, <target_assembly_name>), (...)]
-MISC_SPECIES_SIGNAL = [("sus_scrofa", "Sscrofa11.1", "sus_scrofa", "Sscrofa11.1"),
-                       ("gallus_gallus", "bGalGal1.mat.broiler.GRCg7b", "gallus_gallus", "GRCg7b"),
-                       ("gallus_gallus_gca000002315v5", "GRCg6a", "gallus_gallus", "GRCg6a")]
-
-#*******************************************************************************
+from os import walk, path, listdir, makedirs
+from pathlib import Path
 
 
-# Paths
+# Human and Mouse follow a different dir structure
+SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
+
+# GENE-SWITCH species
+GENE_SWITCH_SPECIES = ["sus_scrofa", "gallus_gallus", "gallus_gallus_gca000002315v5"]
+
 PUBLIC_PUB_PATH = "PUBLIC/pub"
-PUBLIC_DATA_FILES_PATH = "data_files"
-MISC_GENE_SWITCH_PATH = "misc/gene-switch/regulation"
+DATA_FILES_PATH = "data_files/vertebrates/"
+DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/vertebrates/{species}/{assembly}/funcgen"
+RELEASE_FOLDER_PATH_TEMPLATE = "{ftp_path}/release-{release}/regulation/{species}/{assembly}"
+MISC_GENE_SWITCH_PATH_TEMPLATE = "{ftp_path}/misc/gene-switch/regulation/{species}/{assembly}"
 
+ANALYSIS_TYPE_PEAKS = "peaks"
+ANALYSIS_TYPE_SIGNAL = "signal"
+ANALYSIS_TYPES = [ANALYSIS_TYPE_PEAKS, ANALYSIS_TYPE_SIGNAL]
 
-#Logging
+# Logging
 logging.basicConfig(format="%(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-# Exceptions
-class FtpError(Exception):
-    """Base class for the regulation_ftp_symlinks script exceptions"""
-    pass
+class Validator:
+    @staticmethod
+    def is_dir(to_validate, check=False):
+        result = to_validate.is_dir()
+        if check:
+            return result
+        else:
+            if not result:
+                raise NotADirectoryError(f"Dir {to_validate} not found.")
 
-class PathNotFound(FtpError):
-    """Raised when path is not found"""
-    pass
+    @staticmethod
+    def is_file(to_validate, check=False):
+        result = to_validate.is_file()
+        if check:
+            return result
+        else:
+            if not result:
+                raise FileNotFoundError(f"File {to_validate} not found.")
 
-class NoReleaseFound(FtpError):
-    """Raised when release path is not found"""
-    pass
+    @staticmethod
+    def analysis_type_is_valid(to_validate, check=False):
+        result = to_validate in ANALYSIS_TYPES
+        if check:
+            return result
+        else:
+            if not result:
+                raise TypeError(f"Invalid analysis type {to_validate}.")
 
-class UnableToDeleteSymlink(FtpError):
-    """Raised when delete symlink fails"""
-    pass
+    @staticmethod
+    def is_symlink(to_validate, check=False):
+        result = to_validate.is_symlink()
+        if check:
+            return result
+        else:
+            if not result:
+                raise NotADirectoryError(f"Symlink {to_validate} not found.")
 
-class UnableToCreateSymlink(FtpError):
-    """Raised when create symlink fails"""
-    pass
 
-class ReleaseVersionNotMatch(FtpError):
-    """Raised when FTP release version doesn't match the DB release version"""
-    pass
+validator = Validator()
+
+
+class Utils:
+    @staticmethod
+    def get_species_with_analysis_type_folder(analysis_type, ftp_path):
+
+        validator.analysis_type_is_valid(analysis_type)
+        validator.is_dir(ftp_path)
+
+        data_files_path = ftp_path / DATA_FILES_PATH
+
+        reg_species = defaultdict(set)
+
+        for (root, dirs, _) in walk(data_files_path):
+            for species in SPECIES_TO_NOT_INCLUDE:
+                if species in dirs:
+                    dirs.remove(species)
+            if analysis_type in dirs:
+                root = Path(root)
+                if root.parent.name == "funcgen":
+                    assembly = root.parent.parent.name
+                    species = root.parent.parent.parent.name
+
+                    reg_species[species].add(assembly)
+        return reg_species
+
+    @staticmethod
+    def get_most_recent_release_data_file_path(data_file_path):
+        validator.is_dir(Path(data_file_path))
+        available_releases = listdir(data_file_path)
+        return Path(data_file_path) / str(max([int(release) for release in available_releases]))
+
+
+utils = Utils()
+
+
+class RegulationSymlinkFTP:
+
+    RELEASE_PATH_ALIASES = {
+        "bGalGal1.mat.broiler.GRCg7b": "GRCg7b",
+        "gallus_gallus_gca000002315v5": "gallus_gallus",
+    }
+
+    def __init__(self, **path_specifics):
+
+        self.path_specifics = path_specifics
+        self.target = Path(
+            utils.get_most_recent_release_data_file_path(
+                DATA_FILES_PATH_TEMPLATE.format(**path_specifics)
+            )
+        )
+        self.sources = {
+            "release_folder": Path(
+                RELEASE_FOLDER_PATH_TEMPLATE.format(**self.aliased_paths(**path_specifics))
+            ),
+            "misc_folder": Path(
+                MISC_GENE_SWITCH_PATH_TEMPLATE.format(**self.aliased_paths(**path_specifics))
+            ),
+        }
+
+        validator.analysis_type_is_valid(self.get("analysis_type"))
+        validator.is_dir(self.target)
+        validator.is_dir(self.sources["release_folder"])
+
+    def get(self, key):
+        return self.path_specifics.get(key)
+
+    def symlink2rf(self, only_remove=False, relative=True):
+
+        target = (
+            Path(path.relpath(self.target, self.sources["release_folder"]))
+            if relative
+            else self.target
+        )
+        source = self.sources["release_folder"] / self.get("analysis_type")
+
+        self._symlink(source, target, only_remove)
+
+    def symlink2misc(self, only_remove=False, relative=True):
+
+        if self.get("species") not in GENE_SWITCH_SPECIES:
+            return None, None
+
+        if not validator.is_dir(self.sources["misc_folder"], check=True):
+            makedirs(self.sources["misc_folder"])
+
+        target = (
+            Path(path.relpath(self.target, self.sources["misc_folder"]))
+            if relative
+            else self.target
+        )
+        source = self.sources["misc_folder"] / self.get("analysis_type")
+
+        self._symlink(source, target, only_remove)
+
+    def _symlink(self, source, target, only_remove):
+
+        if validator.is_symlink(source, check=True):
+            source.unlink()
+
+        if not only_remove:
+            source.symlink_to(target, target_is_directory=True)
+            if validator.is_symlink(source):
+                logger.info(f"{source} -> {target} --- was successfully created")
+        else:
+            if not validator.is_symlink(source, check=True):
+                logger.info("{source} -> {target} -- was successfully removed")
+
+    def aliased_paths(self, **kwargs):
+        return {key: self.RELEASE_PATH_ALIASES.get(value, value) for key, value in kwargs.items()}
+
+    @staticmethod
+    def search(analysis_type, ftp_path, release):
+        result = utils.get_species_with_analysis_type_folder(analysis_type, ftp_path)
+        return [
+            RegulationSymlinkFTP(
+                analysis_type=analysis_type,
+                species=species,
+                assembly=assembly,
+                ftp_path=ftp_path,
+                release=release,
+            )
+            for species, assemblies in result.items()
+            for assembly in assemblies
+        ]
 
 
 def parse_arguments():
@@ -86,192 +237,52 @@ def parse_arguments():
     --delete_symlinks
     """
 
-    parser = argparse.ArgumentParser(description='Arguments')
-    required_args = parser.add_argument_group('Required arguments')
-    exclusive_args = parser.add_mutually_exclusive_group(required=True)
-    required_args.add_argument('-f', '--ftp_path', metavar='FTP path', type=str, help='FTP root path ...',
-                               required=True)
-    exclusive_args.add_argument('-r', '--release_version', metavar='Release version', type=int,
-                                help='Release version ...')
-    exclusive_args.add_argument('-d', '--delete_symlinks', help='Delete symlinks', action='store_true')
+    parser = ArgumentParser(description="Arguments")
 
-    return parser.parse_args()
+    required_args = parser.add_argument_group("Required arguments")
 
+    required_args.add_argument(
+        "-f",
+        "--ftp_path",
+        type=Path,
+        help="FTP root path",
+        required=True,
+    )
 
-def check_path(path):
-    if not os.path.isdir(path):
-        raise PathNotFound("Path Not Found: %s" % path)
+    required_args.add_argument(
+        "-r", "--release_version", type=int, help="Release version", required=True
+    )
 
-    return path
+    parser.add_argument(
+        "-d",
+        "--delete_symlinks",
+        help="Delete symlinks",
+        action="store_true",
+        required=False,
+    )
 
+    args = parser.parse_args()
+    validator.is_dir(args.ftp_path)
 
-def get_highest_release_directory(base_path, current_release):
-    release_dirs = next(os.walk(base_path))[1]
-    release_dirs = [int(i) for i in release_dirs if int(i) <= current_release]
-    if not release_dirs:
-        raise NoReleaseFound("Highest release path not found")
-
-    return max(release_dirs)
-
-
-def get_highest_ensembl_release_directory(base_path, current_release):
-    dirs = next(os.walk(base_path))[1]
-    release_dirs = [i for i in dirs if i.startswith('release-')]
-    if not release_dirs:
-        raise NoReleaseFound("Ensembl release path not found")
-
-    highest_release_number = 0
-    for rel_dir in release_dirs:
-        release_number = int(re.findall(r'\d+', rel_dir)[0])
-        if (release_number > highest_release_number) and (release_number <= int(current_release)):
-            highest_release_number = release_number
-    if highest_release_number == 0:
-        raise NoReleaseFound("Highest Ensembl release path not found")
-
-    return highest_release_number
+    return args
 
 
-def misc_signal_symlinks(species, ftp_root_path, assembly, public_path, data_files_path, gene_switch_path,
-                         target_species, target_assembly, release_version):
-    symlink_paths = {}
-    base_path = os.path.join(ftp_root_path, public_path)
-    partial_target_signal_path = os.path.join(base_path, gene_switch_path, target_species, target_assembly)
-    funcgen_signal_path = check_path(os.path.join(base_path, data_files_path, species, assembly, "funcgen"))
-    highest_release = get_highest_release_directory(funcgen_signal_path, release_version)
-    src_signal_path = check_path(os.path.join(funcgen_signal_path, str(highest_release), "signal"))
-    src_signal_relative_path = os.path.relpath(src_signal_path, partial_target_signal_path)
-    target_signal_path = os.path.join(partial_target_signal_path, 'signal')
-    symlink_paths['source'] = src_signal_relative_path
-    symlink_paths['target'] = target_signal_path
+if __name__ == "__main__":
 
-    return symlink_paths
-
-
-def misc_peaks_symlinks(species, ftp_root_path, assembly, public_path, gene_switch_path, release_version):
-    symlink_paths = {}
-    base_path = check_path(os.path.join(ftp_root_path, public_path))
-    highest_release_dir_number = get_highest_ensembl_release_directory(base_path, release_version)
-    if highest_release_dir_number == release_version:
-        partial_target_peaks_path = os.path.join(base_path, gene_switch_path, species, assembly)
-        release_dir = "release-" + str(highest_release_dir_number)
-        src_peaks_path = check_path(os.path.join(base_path, release_dir, "regulation", species, assembly, "peaks"))
-        src_peaks_relative_path = os.path.relpath(src_peaks_path, partial_target_peaks_path)
-        target_peaks_path = os.path.join(partial_target_peaks_path, 'peaks')
-
-        symlink_paths['source'] = src_peaks_relative_path
-        symlink_paths['target'] = target_peaks_path
-
-    else:
-        raise ReleaseVersionNotMatch("Database release version is '%s' but highest Ensembl release directory is '%s'"
-                         % (release_version, str(highest_release_dir_number)))
-
-    return symlink_paths
-
-
-def check_symlink(target, created_message=True, source=""):
-    ret = False
-    if os.path.exists(target):
-        if os.path.islink(target):
-            if created_message:
-                logger.info("%s -> %s --- Was successfully created" % (target, source))
-            ret = True
-
-    return ret
-
-
-def delete_symlink(symlink):
-    try:
-        if check_symlink(symlink, False):
-            os.unlink(symlink)
-
-        return
-    except OSError:
-        raise UnableToDeleteSymlink("Error deleting symlink: %s" % symlink)
-
-
-def create_symlinks(symlinks):
-    separator = '/'
-    for symlink_data in symlinks:
-        target_splitted_path = symlink_data['target'].split(separator)
-        target_splitted_path.pop()
-
-        target_parent_path = separator.join(target_splitted_path)
-
-        # remove symlink if already exists
-        delete_symlink(symlink_data['target'])
-
-        # create path if doesn't exists
-        if not os.path.exists(target_parent_path):
-            os.makedirs(target_parent_path)
-
-        try:
-            # create symlink
-            os.symlink(src=symlink_data['source'], dst=symlink_data['target'], target_is_directory=True)
-            check_symlink(symlink_data['target'], True, symlink_data['source'])
-        except OSError:
-            raise UnableToCreateSymlink("Error creating symlink: %s -> %s" % (symlink_data['source'],
-                                                                              symlink_data['target'] ))
-    return
-
-def signal_symlinks(ftp_root_path, release_version):
-    signal_symlinks_to_create = []
-    for species_assembly in MISC_SPECIES_SIGNAL:
-        source_species_name = species_assembly[0]
-        source_assembly_name = species_assembly[1]
-        target_species_name = species_assembly[2]
-        target_assembly_name = species_assembly[3]
-        misc_signal = misc_signal_symlinks(species=source_species_name, ftp_root_path=ftp_root_path,
-                                           assembly=source_assembly_name, public_path=PUBLIC_PUB_PATH,
-                                           data_files_path=PUBLIC_DATA_FILES_PATH,
-                                           gene_switch_path=MISC_GENE_SWITCH_PATH, target_species=target_species_name,
-                                           target_assembly=target_assembly_name, release_version=release_version)
-        if misc_signal:
-            signal_symlinks_to_create.append(misc_signal)
-
-    return signal_symlinks_to_create
-
-def peaks_symlink(ftp_root_path, release_version):
-    peak_symlinks_to_create = []
-    for species_assembly in MISC_SPECIES_PEAKS:
-        species_name = species_assembly[0]
-        assembly_name = species_assembly[1]
-        misc_peaks = misc_peaks_symlinks(species=species_name, ftp_root_path=ftp_root_path,
-                                         assembly=assembly_name,
-                                         public_path=PUBLIC_PUB_PATH,
-                                         gene_switch_path=MISC_GENE_SWITCH_PATH,
-                                         release_version=release_version)
-        if misc_peaks:
-            peak_symlinks_to_create.append(misc_peaks)
-
-    return peak_symlinks_to_create
-
-def delete_all_symlinks(root_ftp_path):
-    path_to_delete = check_path(os.path.join(root_ftp_path, PUBLIC_PUB_PATH, MISC_GENE_SWITCH_PATH))
-    if path_to_delete:
-        confirmation = input("Do you want to delete %s (Yes/No) (default=No)? " % path_to_delete)
-        if confirmation.upper() == "Y" or confirmation.upper() == "YES":
-            try:
-                shutil.rmtree(path_to_delete)
-                print("%s was successfully deleted." % path_to_delete)
-            except OSError as e:
-                print("Error: %s : %s" % (path_to_delete, e.strerror))
-        else:
-            print("No changes will be done to %s" % path_to_delete)
-
-    return
-
-
-if __name__ == '__main__':
     logger.info("Script started ...")
 
     args = parse_arguments()
-    ftp_path = check_path(args.ftp_path)
-    if args.delete_symlinks:
-        delete_all_symlinks(args.ftp_path)
-    else:
-        sig_symlinks = signal_symlinks(ftp_path, args.release_version)
-        pea_symlinks = peaks_symlink(ftp_path, args.release_version)
-        symlinks_to_create = sig_symlinks + pea_symlinks
-        create_symlinks(symlinks_to_create)
+    ftp_path = args.ftp_path / PUBLIC_PUB_PATH
+
+    logger.info("Searching for peaks in data_files ...")
+    peaks = RegulationSymlinkFTP.search(ANALYSIS_TYPE_PEAKS, ftp_path, args.release_version)
+    for peak in peaks:
+        peak.symlink2rf(only_remove=args.delete_symlinks)
+        peak.symlink2misc(only_remove=args.delete_symlinks)
+
+    logger.info("Searching for signals in data_files ...")
+    signals = RegulationSymlinkFTP.search(ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version)
+    for signal in signals:
+        signal.symlink2misc(only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")
