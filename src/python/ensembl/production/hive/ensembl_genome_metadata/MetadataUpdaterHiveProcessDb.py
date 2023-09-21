@@ -30,6 +30,8 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
             self.param_required("metadata_uri")
             self.param("source", payload["input"]["source"])
             self.param("timestamp", payload["input"]["timestamp"])
+            self.param_required("taxonomy_uri")
+            self.param("taxonomy_uri", payload["input"]["taxonomy_uri"])
         except json.JSONDecodeError as e:
             raise ParamException(e)
 

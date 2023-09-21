@@ -13,7 +13,7 @@
 
 
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
-from ensembl.production.metadata.updater import CoreMetaUpdater
+from ensembl.production.metadata.updater.core import CoreMetaUpdater
 
 class MetadataUpdaterHiveCore(BaseProdRunnable):
 
@@ -22,6 +22,6 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
             Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
             Run.process_core()
         else:
-            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"))
+            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
             Run.process_core()
 

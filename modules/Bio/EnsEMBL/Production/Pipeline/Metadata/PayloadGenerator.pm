@@ -40,6 +40,7 @@ sub run {
     my $database_uri = 'mysql://'.$user.':'.$password.'@'.$host.':'.$port.'/'.$dbname;
     my $email = $self->param_required('email');
     my $metadata_uri = $self->param_required('metadata_uri');
+    my $taxonomy_uri = $self->param_required('taxonomy_uri');
     my $source = $self->param_required('source');
     my $timestamp = scalar(localtime);
 
@@ -50,6 +51,7 @@ sub run {
 	"database_uri": "' . $database_uri . '",
 	"email": "' . $email . '",
 	"metadata_uri": "' . $metadata_uri . '",
+	"$taxonomy_uri": "' . $taxonomy_uri . '",
 	"source": "' . $source . '",
 	"timestamp": "' . $timestamp . '"},
 "status": "complete"}';

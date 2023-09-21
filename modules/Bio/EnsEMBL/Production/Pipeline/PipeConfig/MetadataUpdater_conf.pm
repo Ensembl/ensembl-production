@@ -36,6 +36,7 @@ sub default_options {
         %{$self->SUPER::default_options},
         pipeline_name => 'metadata_updater',
         metadata_uri  => undef,
+        taxonomy_uri  => undef,
         email         => '',
         source        => '',
         comment       => '',
