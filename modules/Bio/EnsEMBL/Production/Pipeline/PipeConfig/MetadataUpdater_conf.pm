@@ -44,7 +44,7 @@ sub default_options {
         antispecies          => [],
         division             => [],
         run_all              => 0,
-        dbname               => [],
+        dbname               => undef,
         meta_filters         => {},
     };
 }
