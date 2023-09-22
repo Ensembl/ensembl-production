@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BasePython_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 
 
