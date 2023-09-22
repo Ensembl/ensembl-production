@@ -96,7 +96,7 @@ sub pipeline_analyses {
                 species      => $self->o('species'),
                 antispecies  => $self->o('antispecies'),
                 division     => $self->o('division'),
-                run_all      => 1,  #$self->o('run_all'),
+                run_all      => $self->o('run_all'),
                 dbname       => $self->o('dbname'),
                 meta_filters => $self->o('meta_filters'),
                           },
