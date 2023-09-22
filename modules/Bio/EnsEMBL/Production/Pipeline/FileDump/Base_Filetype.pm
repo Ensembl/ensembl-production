@@ -129,19 +129,15 @@ sub filenames {
   foreach my $data_type (@data_types) {
     my $filename;
 
-    if ($self->param_is_defined('geneset')) {
-      my $geneset = $self->param('geneset');
+    if( $self->param('genome_uuid')){
+      my $genome_uuid =  $self->param('genome_uuid');
       $filename = catdir(
         $dir,
-        "$species_name-$assembly-$geneset-$data_type.$file_type"
+        "$genome_uuid.$data_type.$file_type"
       );
-    } else {
-      $filename = catdir(
-        $dir,
-        "$species_name-$assembly-$data_type.$file_type"
-      );
+    }else{
+      $self->throw("No genome UUID set");
     }
-
     $filenames{$data_type} = $filename;
   }
 

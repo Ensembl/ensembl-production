@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths;
+package Bio::EnsEMBL::Production::Pipeline::FileDump::BlastDirectoryPaths;
 
 use strict;
 use warnings;
@@ -31,6 +31,7 @@ sub run {
 
   my $analysis_types = $self->param_required('analysis_types');
   my $data_category  = $self->param_required('data_category');
+  my $genome_uuid    = $self->param_required('genome_uuid');
 
   if (scalar(@$analysis_types) == 0) {
     $self->complete_early("No $data_category analyses specified");
@@ -38,20 +39,20 @@ sub run {
 
   my $dba = $self->dba;
   $self->param('species_name', $self->species_name($dba));
-  $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
+
   if ($data_category =~ /geneset|variation|homology/) {
     $self->param('geneset', $self->geneset($dba));
   }
 
-  my ($output_dir, $timestamped_dir, $web_dir, $ftp_dir) =
+  my ($output_dir, $timestamped_dir, $web_dir) =
     $self->directories($data_category);
 
   $self->param('output_dir', $output_dir);
   $self->param('timestamped_dir', $timestamped_dir);
   $self->param('web_dir', $web_dir);
-  $self->param('ftp_dir', $ftp_dir);
-  
+
+
 }
 
 sub write_output {
@@ -66,12 +67,11 @@ sub write_output {
     output_dir      => $self->param('output_dir'),
     timestamped_dir => $self->param('timestamped_dir'),
     web_dir         => $self->param('web_dir'),
-    ftp_dir         => $self->param('ftp_dir'),
-    annotation_source => $self->param_required('annotation_source')
+    genome_uuid     => $self->param_required('genome_uuid'),
   );
-  if ($data_category =~ /geneset|variation|homology/) {
-    $output{'geneset'} = $self->param('geneset');
-  }
+  # if ($data_category =~ /geneset|variation|homology/) {
+  #   $output{'geneset'} = $self->param('geneset');
+  # }
 
   $self->dataflow_output_id(\%output, 3);
 }
@@ -79,28 +79,23 @@ sub write_output {
 sub directories {
   my ($self, $data_category) = @_;
 
-  my $dump_dir              = $self->param_required('dump_dir');
-  my $species_dirname       = $self->param_required('species_dirname');
-  my $timestamped_dirname   = $self->param_required('timestamped_dirname');
-  my $web_dirname           = $self->param_required('web_dirname');
-  my $species_name          = $self->param('species_name');
-  my $assembly              = $self->param('assembly');
+  my $dump_dir                    = $self->param_required('dump_dir');
+  my $species_dirname             = $self->param_required('species_dirname');
+  my $timestamped_dirname         = $self->param_required('timestamped_dirname');
+  my $web_dirname                 = $self->param_required('web_dirname');
+  my $species_production_name     = $self->param('species');
+  my $assembly                    = $self->param('assembly');
 
   my $subdirs;
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
-      $species_dirname,
-      $species_name,
-      $assembly,
-      $self->param_required('annotation_source'),
       $self->param_required("${data_category}_dirname"),
+      $species_production_name,
+      $assembly
     );
   }
-  if ( $data_category =~ /geneset|variation|homology/ ) {
-    # Variation and geneset dirs add a extra `YYYY_MM` subdir.
-    $subdirs = catdir ($subdirs, $self->param('geneset'))
-  }
+
   my $output_dir = catdir(
     $dump_dir,
     $subdirs
@@ -117,15 +112,7 @@ sub directories {
     $web_dirname
   );
 
-  my $ftp_dir;
-  if ($self->param_is_defined('ftp_root')) {
-    $ftp_dir = catdir(
-      $self->param('ftp_root'),
-      $subdirs
-    );
-  }
-
-  return ($output_dir, $timestamped_dir, $web_dir, $ftp_dir);
+  return ($output_dir, $timestamped_dir, $web_dir);
 }
 
 1;
