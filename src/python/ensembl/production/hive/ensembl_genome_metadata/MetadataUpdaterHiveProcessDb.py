@@ -22,16 +22,18 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
     def fetch_input(self):
         try:
             payload = json.loads(self.param_required("payload"))
-            self.param("comment", payload["input"]["comment"])
-            self.param("database_uri", payload["input"]["database_uri"])
+
+            self.param("comment", payload["input"].get("comment", None))
+            self.param("database_uri", payload["input"].get("database_uri", None))
             self.param_required("database_uri")
-            self.param("email", payload["input"]["email"])
-            self.param("metadata_uri", payload["input"]["metadata_uri"])
+            self.param("email", payload["input"].get("email", None))
+            self.param("metadata_uri", payload["input"].get("metadata_uri", None))
             self.param_required("metadata_uri")
-            self.param("source", payload["input"]["source"])
-            self.param("timestamp", payload["input"]["timestamp"])
+            self.param("source", payload["input"].get("source", None))
+            self.param("timestamp", payload["input"].get("timestamp", None))
+            self.param("taxonomy_uri", payload["input"].get("taxonomy_uri", None))
             self.param_required("taxonomy_uri")
-            self.param("taxonomy_uri", payload["input"]["taxonomy_uri"])
+
         except json.JSONDecodeError as e:
             raise ParamException(e)
 
