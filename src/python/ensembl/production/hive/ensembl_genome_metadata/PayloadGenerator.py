@@ -41,6 +41,7 @@ class PayloadGenerator(BaseProdRunnable):
         data['input']['email'] = self.param("email")
         data['input']['metadata_uri'] = self.param("metadata_uri")
         data['input']['source'] = self.param("source")
+        data['input']['taxonomy_uri'] = self.param("taxonomy_uri")
         dt = datetime.now()
         data['input']['timestamp'] = dt.strftime("%a %b %m %H:%M:%S %Y")
         payload = json.dumps(data)
