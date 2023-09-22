@@ -42,6 +42,7 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
         output = {
             "database_uri": self.param("database_uri"),
             "metadata_uri": self.param("metadata_uri"),
+            "taxonomy_uri": self.param("taxonomy_uri"),
         }
         if '_compara_' in db_url.database:
             self.dataflow(output, 4)

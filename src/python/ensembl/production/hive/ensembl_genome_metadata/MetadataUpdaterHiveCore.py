@@ -18,10 +18,6 @@ from ensembl.production.metadata.updater.core import CoreMetaUpdater
 class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
-        if self.param("release"):
-            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("release"))
-            Run.process_core()
-        else:
-            Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
-            Run.process_core()
+        Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
+        Run.process_core()
 
