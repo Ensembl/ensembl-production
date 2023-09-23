@@ -496,6 +496,7 @@ sub get_translations {
                 $row->{attrib} = $checksums->{$row->{id}};
                 $row->{protein_features} = $protein_features->{ $row->{id} };
                 my $ids = $stable_ids->{$row->{id}};
+                $row->{protein_length} = $self->get_protein_length($dba, $row->{id});
                 $row->{previous_ids} = $ids if defined $ids && scalar(@$ids) > 0;
                 return $row;
             })};
@@ -507,6 +508,19 @@ sub get_translations {
     }
     return $translation_hash;
 } ## end sub get_translations
+
+
+sub get_protein_length() {
+    #get peptide length for given translation stable id 
+    my ($self, $dba, $tanslation_id);
+    my $translation =  $dba->get_adaptor('translation')->fetch_by_stable_id($tanslation_id);
+    if (!$translation) {
+        return 0
+    }
+    return $translation->length();
+}
+
+
 
 sub get_protein_features {
     my ($self, $dba, $biotypes) = @_;
