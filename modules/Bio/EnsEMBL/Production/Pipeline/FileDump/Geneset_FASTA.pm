@@ -50,6 +50,12 @@ sub run {
   my $blast_index = $self->param_required('blast_index');
   my $filenames   = $self->param_required('filenames');
 
+  if($self->param_is_defined('geneset')){
+    $filenames   = $self->param_required('filenames');
+  }
+  
+
+
   my $dba = $self->dba;
 
   my ($chr, $non_chr, $non_ref) = $self->get_slices($dba);
