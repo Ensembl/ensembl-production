@@ -496,6 +496,7 @@ sub get_translations {
                 $row->{attrib} = $checksums->{$row->{id}};
                 $row->{protein_features} = $protein_features->{ $row->{id} };
                 my $ids = $stable_ids->{$row->{id}};
+                #protein length
                 $row->{protein_length} = $self->get_protein_length($dba, $row->{id});
                 $log->debug($row->{protein_length});
                 $row->{previous_ids} = $ids if defined $ids && scalar(@$ids) > 0;
