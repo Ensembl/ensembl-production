@@ -483,7 +483,7 @@ sub get_translations {
     my $checksums = $self->get_translation_checksum_attrib($dba);
 
     my $stable_ids = $self->get_stable_ids($dba, 'translation');
-
+    $dba->dbc->disconnect_if_idle();
     $log->debug("Retrieving translations");
     my @translations = @{
         $dba->dbc()->sql_helper()->execute(
@@ -497,6 +497,7 @@ sub get_translations {
                 $row->{protein_features} = $protein_features->{ $row->{id} };
                 my $ids = $stable_ids->{$row->{id}};
                 $row->{protein_length} = $self->get_protein_length($dba, $row->{id});
+                $log->debug($row->{protein_length});
                 $row->{previous_ids} = $ids if defined $ids && scalar(@$ids) > 0;
                 return $row;
             })};
@@ -512,12 +513,9 @@ sub get_translations {
 
 sub get_protein_length() {
     #get peptide length for given translation stable id 
-    my ($self, $dba, $tanslation_id);
-    my $translation =  $dba->get_adaptor('translation')->fetch_by_stable_id($tanslation_id);
-    if (!$translation) {
-        return 0
-    }
-    return $translation->length();
+    my ($self, $dba, $stable_id) = @_;
+    my $translation =  $dba->get_adaptor('translation')->fetch_by_stable_id($stable_id);
+    return ($translation) ?  $translation->length() : 0;
 }
 
 
