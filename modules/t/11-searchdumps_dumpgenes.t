@@ -212,6 +212,7 @@ subtest "Checking protein_coding gene", sub {
                         'ensembl_object_type' => 'translation',
                         'id'                  => 'ENSP00000366380',
                         'transcript_id'       => 'ENST00000377175',
+                        'protein_length'      => 320,
                         'attrib'              => {
                             "sha512t24u_pep" => "IIv8JZA65kMjxtgtEwQ7FhCJ9KYGmFtp",
                             "md5_pep"        => "18487f77ceffccd48fbfe27d6e1c7a12",
