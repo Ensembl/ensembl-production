@@ -197,8 +197,8 @@ sub blast_index {
 
   my $blast_filename = catdir(
     $web_dir,
-    $blast_dirname,
-    'genes',
+    #$blast_dirname,
+    #'genes',
     $basename
   );
   path($blast_filename)->parent->mkpath();

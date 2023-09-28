@@ -90,9 +90,10 @@ sub directories {
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
+      $self->param_required('genome_uuid'),
       $self->param_required("${data_category}_dirname"),
-      $species_production_name,
-      $assembly
+      # $species_production_name,
+      # $assembly
     );
   }
 
@@ -109,7 +110,8 @@ sub directories {
 
   my $web_dir = catdir(
     $dump_dir,
-    $web_dirname
+    $subdirs
+    #$web_dirname
   );
 
   return ($output_dir, $timestamped_dir, $web_dir);

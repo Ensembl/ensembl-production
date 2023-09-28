@@ -133,7 +133,9 @@ sub filenames {
       my $genome_uuid =  $self->param('genome_uuid');
       $filename = catdir(
         $dir,
-        "$genome_uuid.$data_type.$file_type"
+        "$data_type.$file_type"
+        #"$genome_uuid.$data_type.$file_type"  #if genome_uuid need to be added for file name 
+
       );
     }else{
       $self->throw("No genome UUID set");
