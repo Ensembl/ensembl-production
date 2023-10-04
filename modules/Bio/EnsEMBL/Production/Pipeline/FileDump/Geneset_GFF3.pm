@@ -274,6 +274,9 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
     push(@tags, $mane_type) if ($mane_type);
   }
 
+  my $gencode_primary = $self->get_all_Attributes('gencode_primary');
+  push(@tags, 'GENCODE Primary') if @{$gencode_primary};
+
   $summary{'tag'} = \@tags if @tags;
 
   # Check for seq-edits
