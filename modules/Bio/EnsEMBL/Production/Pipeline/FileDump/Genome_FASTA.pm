@@ -37,7 +37,7 @@ sub param_defaults {
     data_type      => 'sequence',
     data_types     => ['unmasked', 'softmasked', 'hardmasked'],
     file_type      => 'fa',
-    timestamped    => 1,
+    timestamped    => 0,
     per_chromosome => 0,
     chunk_size     => 30000,
     line_width     => 60,
@@ -64,29 +64,31 @@ sub run {
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
 
-  if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
-    if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
-    }
-  } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
-  }
+  #dump all into single file
+  $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses); 
+  # if ($per_chromosome && scalar(@$chr)) {
+  #   $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
+  #   if (scalar(@$non_chr)) {
+  #     $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
+  #   }
+  # } else {
+  #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
+  # }
 
   $self->unmask($sm_filename, $um_filename);
   $self->hardmask($sm_filename, $hm_filename);
 
-  if (scalar(@$non_ref)) {
-    my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
-    my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
-    my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
-    path($sm_filename)->copy($sm_non_ref_filename);
+  # if (scalar(@$non_ref)) {
+  #   my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
+  #   my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
+  #   my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
+  #   path($sm_filename)->copy($sm_non_ref_filename);
 
-    $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
+  #   $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
 
-    $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
-    $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
-  }
+  #   $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
+  #   $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
+  # }
 
   if ($blast_index) {
     $self->blast_index($um_filename, 'nucl');

@@ -64,17 +64,19 @@ sub run {
   my $cds_filename  = $$filenames{'cds'};
   my $pep_filename  = $$filenames{'pep'};
 
-  $self->print_to_file([@$chr, @$non_chr], $cdna_filename, $cds_filename, $pep_filename, '>');
+  #get everything including nonref  
+  $self->print_to_file([@$chr, @$non_chr, @$non_ref ], $cdna_filename, $cds_filename, $pep_filename, '>');
 
-  if (scalar(@$non_ref)) {
-    my $non_ref_cdna_filename = $self->generate_non_ref_filename($cdna_filename);
-    my $non_ref_cds_filename  = $self->generate_non_ref_filename($cds_filename);
-    my $non_ref_pep_filename  = $self->generate_non_ref_filename($pep_filename);
-    path($cdna_filename)->copy($non_ref_cdna_filename);
-    path($cds_filename)->copy($non_ref_cds_filename);
-    path($pep_filename)->copy($non_ref_pep_filename);
-    $self->print_to_file($non_ref, $non_ref_cdna_filename, $non_ref_cds_filename, $non_ref_pep_filename, '>>');
-  }
+  #uncomment below code get nonref in seperate file 
+  # if (scalar(@$non_ref)) {
+  #   my $non_ref_cdna_filename = $self->generate_non_ref_filename($cdna_filename);
+  #   my $non_ref_cds_filename  = $self->generate_non_ref_filename($cds_filename);
+  #   my $non_ref_pep_filename  = $self->generate_non_ref_filename($pep_filename);
+  #   path($cdna_filename)->copy($non_ref_cdna_filename);
+  #   path($cds_filename)->copy($non_ref_cds_filename);
+  #   path($pep_filename)->copy($non_ref_pep_filename);
+  #   $self->print_to_file($non_ref, $non_ref_cdna_filename, $non_ref_cds_filename, $non_ref_pep_filename, '>>');
+  # }
 
   if ($blast_index) {
     $self->blast_index($cdna_filename, 'nucl');

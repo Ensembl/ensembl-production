@@ -104,8 +104,9 @@ sub directories {
 
   my $timestamped_dir = catdir(
     $dump_dir,
-    $timestamped_dirname,
     $subdirs
+    # $timestamped_dirname,
+    # $subdirs
   );
 
   my $web_dir = catdir(
