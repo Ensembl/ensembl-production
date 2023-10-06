@@ -43,8 +43,8 @@ class SpeciesFactory(eHive.BaseRunnable):
                                                      group_type=self.check_params(self.param("organism_group_type")),
                                                      dataset_name=self.check_params(self.param("dataset_name")),
                                                      dataset_source=self.check_params(self.param("dataset_source")),
-                                                     unreleased_genomes=self.check_params(self.param("unreleased_genomes")),
-                                                     unreleased_datasets=self.check_params(self.param("unreleased_datasets")),
+                                                     allow_unreleased_genomes=self.check_params(self.param("unreleased_genomes")),
+                                                     allow_unreleased_datasets=self.check_params(self.param("unreleased_datasets")),
                                                      dataset_attributes=self.check_params(self.param("dataset_attributes"))                                            
                                                     ) or []:
       genome_info = { 
