@@ -66,6 +66,7 @@ sub run {
 
   #get everything including nonref  
   $self->print_to_file([@$chr, @$non_chr, @$non_ref ], $cdna_filename, $cds_filename, $pep_filename, '>');
+  $self->print_to_file($non_ref, $cdna_filename, $cds_filename, $pep_filename, '>>');
 
   #uncomment below code get nonref in seperate file 
   # if (scalar(@$non_ref)) {
