@@ -203,7 +203,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                blast_index    => $self->o('blast_index'),
+                blast_index    => 0,
                 blastdb_exe    => $self->o('blastdb_exe'),
                 per_chromosome => $self->o('dna_per_chromosome'),
             },
