@@ -42,7 +42,8 @@ def main():
   parser.add_argument('-s', '--species',     type=str, nargs='*', required=False, default=None, help='Ensembl species names, ex: homo_sapiens,mus_musculus')
   parser.add_argument('-d', '--organism_group', type=str, nargs='*', required=False, default=None, help='versioned file name, ex: EnsemblVertbrates,EnsemblPlants')
   parser.add_argument('-p', '--organism_group_type', type=str, nargs='*', required=False, default=None, help='organism group type, ex: Division')
-  parser.add_argument('-u', '--unreleased_genomes', help='Fetch only unreleased genome and datasets', action='store_true')
+  parser.add_argument('-u', '--allow_unreleased_genomes', help='Fetch only unreleased genome ', action='store_true')
+  parser.add_argument('-e', '--allow_unreleased_datasets', help='Fetch only unreleased datasets', action='store_true')
   parser.add_argument('-n', '--dataset_name', type=str, nargs='*', required=False, default=None, help='ensembl dataset type to fetch unique genomes, ex: assembly, genebuild')
   parser.add_argument('-r', '--dataset_source', type=str, nargs='*', required=False, default=None, help='ensembl dataset source, ex: homo_sapiens_core_111_38')
   parser.add_argument('-m', '--metadata_db_uri', type=str, required=True,  help='metadata db mysql uri, ex: mysql://ensro@localhost:3366/ensembl_genome_metadata')
@@ -62,7 +63,8 @@ def main():
   
   
   #required values
-  unreleased_genomes   = args.unreleased_genomes
+  allow_unreleased_genomes   = args.allow_unreleased_genomes
+  allow_unreleased_datasets  = args.allow_unreleased_datasets
   metadata_db_uri      = args.metadata_db_uri
   taxonomy_db_uri      = args.taxonomy_db_uri
   output_file_name     = args.output
@@ -75,7 +77,8 @@ def main():
                                                      group_type=organism_group_type,
                                                      dataset_name=dataset_name,
                                                      dataset_source=dataset_source,
-                                                     unreleased_genomes=unreleased_genomes) or []:
+                                                     allow_unreleased_genomes=allow_unreleased_genomes,
+                                                     allow_unreleased_datasets=allow_unreleased_datasets) or []:
       
       genome_info = {
                       "genome_uuid"          : genome[0]['genome'][0].genome_uuid,
@@ -84,7 +87,7 @@ def main():
                       "assembly_name"        : genome[0]['genome'][2].ensembl_name,
                       "assembly_accession"   : genome[0]['genome'][2].accession,
                       "assembly_level"       : genome[0]['genome'][2].level,
-                      "division"             : genome[0]['genome'][-1].name,
+                      "division"             : genome[0]['genome'][-2].name,
                       "database"             : genome[0]['datasets'][-1][-1].name,
                       "database_type"        : genome[0]['datasets'][-1][-1].type
       }
