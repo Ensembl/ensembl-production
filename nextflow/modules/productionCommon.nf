@@ -100,6 +100,6 @@ process GenomeInfo {
 
   ${params.nf_py_script_path}/genome_info.py \
     $metadata_db_uri $taxonomy_db_uri $genome_uuid_param $species_name_param $organism_group_param \
-    $unreleased_genomes_param $dataset_type_param -o $output_json
+    $allow_unreleased_genomes_param $dataset_type_param -o $output_json
   """
 }
