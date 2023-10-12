@@ -91,7 +91,8 @@ process GenomeInfo {
   def genome_uuid_param        =  genome_uuid.size() > 0 ?  "--genome_uuid ${genome_uuid.join(" ")}" : ''             
   def species_name_param       =  species_name.size() > 0 ?  "--species_name ${species_name.join(" ")}" : ''        
   def organism_group_param     =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''        
-  def unreleased_genomes_param =  unreleased_genomes ? "--unreleased_genomes" : ''         
+  def unreleased_genomes_param =  allow_unreleased_genomes ? "--allow_unreleased_genomes" : ''         
+  def unreleased_datasets_param = allow_unreleased_datasets ? "--allow_unreleased_datasets" : ''         
   def dataset_type_param       =  dataset_type.size() > 0 ?  "--dataset_name ${dataset_type.join(" ")}" : ''        
   
   """
