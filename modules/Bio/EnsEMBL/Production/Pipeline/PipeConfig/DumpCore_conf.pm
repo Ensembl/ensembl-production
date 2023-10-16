@@ -624,12 +624,20 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileEna',
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
         },
 
         { -logic_name      => 'tsv_metadata',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileMetadata',
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
+
+        },
+        { -logic_name      => 'compress_file',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -hive_capacity => 50,
+            -rc_name       => '4GB',
         },
 
     ];
