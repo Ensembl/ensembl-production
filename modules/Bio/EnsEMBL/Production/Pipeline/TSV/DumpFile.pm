@@ -117,12 +117,6 @@ sub _write_tsv {
   }#slice 
   close $fh; 
   $self->core_dbc()->disconnect_if_idle();
-  $self->info( "Compressing tsv dump for " . $self->param('species'));
-  my $unzip_out_file = $out_file;
-  `gzip -n $unzip_out_file`;
-
-  if (-e $unzip_out_file) { `rm $unzip_out_file`; }
-
 return;
 }
 
