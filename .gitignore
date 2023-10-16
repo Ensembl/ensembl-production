@@ -36,3 +36,4 @@ MultiTestDB.conf
 *.iml
 /_Deparsed_XSubs.pm
 __pycache__/
+/build/
