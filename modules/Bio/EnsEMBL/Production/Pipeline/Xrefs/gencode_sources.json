@@ -194,7 +194,7 @@
     {
       "name" : "miRBase",
       "parser" : "miRBaseParser",
-      "file" : "https://mirbase.org/ftp/CURRENT/miRNA.dat.gz",
+      "file" : "https://mirbase.org/download/miRNA.dat",
       "method" : "--bestn 1",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
