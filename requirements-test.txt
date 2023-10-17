@@ -4,19 +4,52 @@
 #
 #    pip-compile --output-file=requirements-test.txt requirements-test.in requirements.in
 #
-certifi==2022.12.7
+certifi==2023.7.22
     # via requests
-charset-normalizer==2.1.1
+charset-normalizer==3.3.0
     # via requests
-greenlet==2.0.1
+ensembl-hive @ git+https://github.com/Ensembl/ensembl-hive.git
+    # via ensembl-py
+ensembl-py @ git+https://github.com/Ensembl/ensembl-py.git
+    # via -r requirements.in
+greenlet==3.0.0
     # via sqlalchemy
 idna==3.4
     # via requests
+iniconfig==2.0.0
+    # via pytest
 mysqlclient==2.0.3
+    # via
+    #   -r requirements.in
+    #   ensembl-py
+packaging==23.2
+    # via pytest
+pluggy==1.3.0
+    # via pytest
+pydantic==1.10.13
     # via -r requirements.in
-requests==2.28.1
-    # via -r requirements.in
-sqlalchemy==1.4.44
-    # via -r requirements.in
-urllib3==1.26.13
+pytest==7.4.2
+    # via
+    #   ensembl-py
+    #   pytest-dependency
+pytest-dependency==0.5.1
+    # via ensembl-py
+python-dotenv==0.19.2
+    # via ensembl-py
+pyyaml==6.0.1
+    # via ensembl-py
+requests==2.31.0
+    # via
+    #   -r requirements.in
+    #   ensembl-py
+sqlalchemy==1.4.49
+    # via
+    #   -r requirements.in
+    #   ensembl-py
+    #   sqlalchemy-utils
+sqlalchemy-utils==0.38.3
+    # via ensembl-py
+typing-extensions==4.8.0
+    # via pydantic
+urllib3==1.26.18
     # via requests
