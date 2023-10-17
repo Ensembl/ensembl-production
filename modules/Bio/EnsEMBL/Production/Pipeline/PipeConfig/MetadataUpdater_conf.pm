@@ -115,8 +115,6 @@ sub pipeline_analyses {
                 source     => $self->o('source'),
                 email       => $self->o('email'),
                 metadata_uri => $self->o('metadata_uri'),
-                taxonomy_uri => $self->o('taxonomy_uri'),
-
             },
 
             -rc_name           => 'default',
@@ -136,12 +134,6 @@ sub pipeline_analyses {
                 metadata_uri => $self->o('metadata_uri'),
                 taxonomy_uri => $self->o('taxonomy_uri'),
 
-# #                database_uri => $self->o('database_uri'),
-#                 e_release    => $self->o('e_release'),
-#                 email        => $self->o('email'),
-#                 timestamp    => $self->o('timestamp'),
-#                 comment      => $self->o('comment'),
-
             },
             -flow_into       => {
                 2  => [ '?table_name=result', ],
@@ -160,7 +152,9 @@ sub pipeline_analyses {
             -language          => 'python3',
             -max_retry_count   => 1,
             -analysis_capacity => 30,
-            -parameters        => {},
+            -parameters        => {
+                 taxonomy_uri => $self->o('taxonomy_uri'),
+            },
             -rc_name           => 'default',
             # Testing Necessary            -rc_name => '2GB',
             -flow_into         => {
