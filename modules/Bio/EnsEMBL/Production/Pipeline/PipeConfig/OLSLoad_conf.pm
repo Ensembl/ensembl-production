@@ -57,7 +57,7 @@ sub default_options {
         history_file => undef,
         old_server_uri => [],
 
-        copy_service_uri => "https://services.ensembl.ebi.ac.uk:2000/api/dbcopy/requestjob",
+	copy_service_uri => $self->o('ENV', 'DBCOPY_API_URI'),
         src_host         => undef,
         tgt_host         => undef,
         tgt_db_name      => $self->o('db_name').'_'.$self->o('ens_version'),
@@ -292,8 +292,8 @@ sub pipeline_analyses {
                 tgt_host         => $self->o('tgt_host'),
                 tgt_mart_host    => $self->o('tgt_mart_host'),
             },
-            -flow_into => WHEN('defined #tgt_host#' => [ 'copy_database' ],
-                          'defined #tgt_mart_host#' => [ 'copy_mart_database' ]
+            -flow_into => WHEN('defined #tgt_host#' => [ 'copy_ensembl_ontology' ],
+                          'defined #tgt_mart_host#' => [ 'copy_ontology_mart' ]
                           ),
         },
         {

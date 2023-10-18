@@ -65,11 +65,11 @@ sub dump {
     $self->hive_dbc()->disconnect_if_idle() if defined $self->hive_dbc();
     $self->{logger}->info("Dumping data for $species $type");
     $self->{logger}->info("Dumping genes");
-    $output->{genes_file} = $self->dump_genes($dba, $compara, $type, $self->param('use_pan_compara'));
+    $output->{genes_file} = $self->dump_genes($dba, $compara, $type, $self->param('use_pan_compara'), $self->param('exclude_xref_external_db_list') );
     $self->{logger}->info("Dumping sequences");
     $output->{sequences_file} = $self->dump_sequences($dba, $type);
-    $self->{logger}->info("Dumping LRGs");
-    $output->{lrgs_file} = $self->dump_lrgs($dba, $type);
+    #$self->{logger}->info("Dumping LRGs");
+    #$output->{lrgs_file} = $self->dump_lrgs($dba, $type);
     $self->{logger}->info("Dumping markers");
     $output->{markers_file} = $self->dump_markers($dba, $type);
     $self->{logger}->info("Dumping IDs");
@@ -83,7 +83,7 @@ sub dump {
 } ## end sub dump
 
 sub dump_genes {
-    my ($self, $dba, $compara, $type, $use_pan_compara) = @_;
+    my ($self, $dba, $compara, $type, $use_pan_compara, $exclude_xref_external_db_list) = @_;
     $self->{logger} = get_logger();
     my $funcgen_dba;
     my $compara_dba;
@@ -97,7 +97,7 @@ sub dump_genes {
     $pan_compara_dba = Bio::EnsEMBL::Registry->get_DBAdaptor('pan_homology', 'compara') if $use_pan_compara;
   }
 
-  my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new()->fetch_genes_for_dba($dba, $compara_dba, $funcgen_dba, $pan_compara_dba);
+  my $genes = Bio::EnsEMBL::Production::Search::GeneFetcher->new(-EXCLUDE_EXTERNAL_DBS => $exclude_xref_external_db_list )->fetch_genes_for_dba($dba, $compara_dba, $funcgen_dba, $pan_compara_dba);
   if (defined $genes && scalar(@$genes) > 0) {
     $self->{logger}->info("Writing " . scalar(@$genes) . " genes to JSON");
     my $f = $self->write_json($dba->species, 'genes', $genes, $type);
@@ -139,20 +139,21 @@ sub dump_markers {
   }
 }
 
-sub dump_lrgs {
-  my ($self, $dba, $type) = @_;
-  $self->{logger} = get_logger();
-  my $lrgs = Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs_for_dba($dba);
-  if (scalar(@$lrgs) > 0) {
-    $self->{logger}->info("Writing " . scalar(@$lrgs) . " LRGs to JSON");
-    my $f = $self->write_json($dba->species, 'lrgs', $lrgs, $type);
-    $self->{logger}->info("Wrote " . scalar(@$lrgs) . " LRGs to $f");
-    return $f;
-  }
-  else {
-    return undef;
-  }
-}
+#LRGS are not included for MVP
+# sub dump_lrgs {
+#   my ($self, $dba, $type) = @_;
+#   $self->{logger} = get_logger();
+#   my $lrgs = Bio::EnsEMBL::Production::Search::LRGFetcher->new()->fetch_lrgs_for_dba($dba);
+#   if (scalar(@$lrgs) > 0) {
+#     $self->{logger}->info("Writing " . scalar(@$lrgs) . " LRGs to JSON");
+#     my $f = $self->write_json($dba->species, 'lrgs', $lrgs, $type);
+#     $self->{logger}->info("Wrote " . scalar(@$lrgs) . " LRGs to $f");
+#     return $f;
+#   }
+#   else {
+#     return undef;
+#   }
+# }
 
 sub dump_ids {
   my ($self, $dba, $type) = @_;

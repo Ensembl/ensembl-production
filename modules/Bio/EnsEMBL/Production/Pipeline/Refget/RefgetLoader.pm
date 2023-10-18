@@ -1,70 +1,44 @@
 =head1 LICENSE
-
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 Copyright [2016-2023] EMBL-European Bioinformatics Institute
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
      http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 =cut
 
 =pod
-
-
 =head1 CONTACT
-
   Please email comments or questions to the public Ensembl
   developers list at <http://lists.ensembl.org/mailman/listinfo/dev>.
-
   Questions may also be sent to the Ensembl help desk at
   <http://www.ensembl.org/Help/Contact>.
-
 =head1 NAME
-
 Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader
-
 =head1 DESCRIPTION
-
 A module for loading sequences from a core-like database into the 
 Perl reference implementation of refget (https://github.com/andrewyatz/refget-server-perl). 
-
 The code will load all proteins, cds and cDNA, and can optionally load toplevel
 sequences if missing from ENA's refget instance (https://www.ebi.ac.uk/ena/cram/).
-
 Allowed parameters are:
-
 =over 8
-
 =item species - The species to fetch the genomic sequence
-
 =item release - A required parameter for the version of Ensembl we are dumping for
-
 =item db_types - Array reference of the database groups to use. Defaults to core
-
 =item check_refget - Ping a refget for MD5 existence before attempting to load a toplevel sequence. Defaults to true
-
 =item refget_ping_url - URL to ping when checking for pre-existing sequences. Defaults to ENA's implementation
-
 =item verify_checksums - If set to true this module will double check the recorded checksum. Defaults to true
-
 =item source - Annotation source. Defaults to Ensembl
-
 =back
-
 The database connection for DBIx::Class is assumed to be in the registry under the species name B<multi>
 and the group of B<refget>. DBIx::Class then can take the underlying DBI handle to connect. Adding
 a C<-DRIVER> attribute of type C<"Pg"> to a C<Bio::EnsEMBL::DBSQL::DBAdaptor> constructor will make
 the magic happen (assuming the underlying Refget is in PostgreSQL).
-
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader;

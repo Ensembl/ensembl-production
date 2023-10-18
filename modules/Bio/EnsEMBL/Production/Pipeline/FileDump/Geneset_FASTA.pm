@@ -174,7 +174,7 @@ sub header {
     push @attributes, 'description:"'.$gene->description.'"';
   }
 
-  return join(' ', @attributes);
+  return 'ENSEMBL:' . join(' ', @attributes);
 }
 
 sub blast_index {

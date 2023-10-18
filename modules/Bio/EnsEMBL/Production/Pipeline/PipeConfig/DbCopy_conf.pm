@@ -52,7 +52,7 @@ sub default_options {
     multi_division => [],
 
     # Copy service
-    copy_service_uri => "https://services.ensembl.ebi.ac.uk:2000/api/dbcopy/requestjob",
+    copy_service_uri => $self->o('ENV', 'DBCOPY_API_URI'),
     username         => $self->o('ENV', 'USER'),
 
     # Drop databases from target, by default the same set that will be copied

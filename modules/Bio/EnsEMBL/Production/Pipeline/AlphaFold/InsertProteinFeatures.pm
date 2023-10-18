@@ -125,7 +125,7 @@ sub run {
     my $dbc = $core_dba->dbc;
 
     info("Cleaning up old protein features and analysis for species $species\n");
-    $self->cleanup_protein_features('alphafold_import');
+    $self->cleanup_protein_features('alphafold');
 
     info("Initiating and creating the analysis object for species $species\n");
 
@@ -146,7 +146,7 @@ sub run {
     $alpha_version //= 0;
 
     my $analysis = new Bio::EnsEMBL::Analysis(
-            -logic_name    => 'alphafold_import',
+            -logic_name    => 'alphafold',
             -db            => 'alphafold',
             -db_version    => $alpha_version,
             -db_file       => $self->param('db_dir') . '/accession_ids.csv',
@@ -386,7 +386,7 @@ sub cleanup_protein_features {
 
     if (defined($analysis)) {
         my $analysis_id = $analysis->dbID();
-        info(sprintf("Found alphafold_import analysis (ID: $analysis_id) for species %s. Deleting it.\n", $self->param('species')));
+        info(sprintf("Found alphafold analysis (ID: $analysis_id) for species %s. Deleting it.\n", $self->param('species')));
 
         my $pfa = $core_dba->get_ProteinFeatureAdaptor();
         $pfa->remove_by_analysis_id($analysis_id);

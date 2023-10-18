@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpCore_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMVPBlast_conf;
 
 use strict;
 use warnings;
@@ -30,15 +30,10 @@ sub default_options {
 
     genome_types => [
       'Assembly_Chain',
-      'Chromosome_TSV',
       'Genome_FASTA',
     ],
     geneset_types => [
-      'Geneset_EMBL',
       'Geneset_FASTA',
-      'Geneset_GFF3',
-      'Geneset_GTF',
-      'Xref_TSV',
     ],
     rnaseq_types => [],
 
