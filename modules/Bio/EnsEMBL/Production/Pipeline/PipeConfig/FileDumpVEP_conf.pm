@@ -38,10 +38,11 @@ sub default_options {
     # (the vep conf overrides them with values we don't want)
     ensembl_release => Bio::EnsEMBL::ApiVersion::software_version(), 
     pipeline_name   => $self->default_pipeline_name().'_'.$self->o('rel_with_suffix'),
-
     # The sub_dir is there to allow for this pipeline to match
     # the current main site structure, but also give flexibility
     # for RR structure, if/when that becomes necessary.
+    tmp_base_dir => '/hps/nobackup/flicek/ensembl/production',
+    tmp_dir => catdir($self->o('tmp_base_dir'), $ENV{'USER'}, 'vepdump'),
     target_dir   => catdir($self->o('dump_dir'), $self->o('sub_dir')),
     pipeline_dir => catdir($self->o('vep_dir')),
 	};
