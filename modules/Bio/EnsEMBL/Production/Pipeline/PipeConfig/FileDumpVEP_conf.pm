@@ -43,7 +43,7 @@ sub default_options {
     # the current main site structure, but also give flexibility
     # for RR structure, if/when that becomes necessary.
     target_dir   => catdir($self->o('dump_dir'), $self->o('sub_dir')),
-    pipeline_dir => catdir($self->o('vep_dir'), $self->o('sub_dir')),
+    pipeline_dir => catdir($self->o('vep_dir')),
 	};
 }
 
