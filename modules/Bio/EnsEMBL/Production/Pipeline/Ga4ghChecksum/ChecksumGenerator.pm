@@ -346,8 +346,7 @@ sub delete_checksums {
                     inner join coord_system using (coord_system_id)
                     inner join meta using (species_id)
                     inner join attrib_type using (attrib_type_id)
-                    where meta_key = 'species.db_name'
-                        and meta_value = ?
+                    where coord_system.species_id = ?
                         and code = ?
             ";
         } elsif ($seq_type eq 'cdna' or $seq_type eq 'cds') {
@@ -359,8 +358,7 @@ sub delete_checksums {
                     inner join coord_system using (coord_system_id)
                     inner join meta using (species_id)
                     inner join attrib_type using (attrib_type_id)
-                    where meta_key = 'species.db_name'
-                        and meta_value = ?
+                    where coord_system.species_id = ?
                         and code = ?
             ";
         } elsif ($seq_type eq 'pep') {
@@ -373,8 +371,7 @@ sub delete_checksums {
                     inner join coord_system using (coord_system_id)
                     inner join meta using (species_id)
                     inner join attrib_type using (attrib_type_id)
-                    where meta_key = 'species.db_name'
-                        and meta_value = ?
+                    where coord_system.species_id = ?
                         and code = ?
             ";
         }
@@ -385,7 +382,7 @@ sub delete_checksums {
             my $at_code = $hash_type . "_" . $seq_type;
 
             my $sth = $dba->dbc->db_handle->prepare($sql);
-            my $records = $sth->execute($species, $at_code);
+            my $records = $sth->execute($dba->species_id(), $at_code);
             $self->warning("Deleted $records for species $species, type $at_code from table $attrib_table");
         }
     }

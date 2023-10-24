@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BasePython_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 
 
@@ -48,12 +48,22 @@ sub default_options {
         meta_filters         => {},
     };
 }
+
 sub pipeline_create_commands {
     my ($self) = @_;
     return [
         @{$self->SUPER::pipeline_create_commands},
+
+        # Create/alter tables used by ensembl.production.core.models.hive Python module
+        $self->db_cmd('CREATE TABLE result (job_id int(10), output TEXT, PRIMARY KEY (job_id))'),
+        $self->db_cmd('CREATE TABLE job_progress (job_progress_id int(11) NOT NULL AUTO_INCREMENT, job_id int(11) NOT NULL , message TEXT,  PRIMARY KEY (job_progress_id))'),
+        $self->db_cmd('ALTER TABLE job_progress ADD INDEX (job_id)'),
+        $self->db_cmd('ALTER TABLE job DROP KEY input_id_stacks_analysis'),
+        $self->db_cmd('ALTER TABLE job MODIFY input_id TEXT')
     ];
 }
+
+
 
 sub hive_meta_table {
     my ($self) = @_;
@@ -115,8 +125,6 @@ sub pipeline_analyses {
                 source     => $self->o('source'),
                 email       => $self->o('email'),
                 metadata_uri => $self->o('metadata_uri'),
-                taxonomy_uri => $self->o('taxonomy_uri'),
-
             },
 
             -rc_name           => 'default',
@@ -136,12 +144,6 @@ sub pipeline_analyses {
                 metadata_uri => $self->o('metadata_uri'),
                 taxonomy_uri => $self->o('taxonomy_uri'),
 
-# #                database_uri => $self->o('database_uri'),
-#                 e_release    => $self->o('e_release'),
-#                 email        => $self->o('email'),
-#                 timestamp    => $self->o('timestamp'),
-#                 comment      => $self->o('comment'),
-
             },
             -flow_into       => {
                 2  => [ '?table_name=result', ],
@@ -160,7 +162,9 @@ sub pipeline_analyses {
             -language          => 'python3',
             -max_retry_count   => 1,
             -analysis_capacity => 30,
-            -parameters        => {},
+            -parameters        => {
+                 taxonomy_uri => $self->o('taxonomy_uri'),
+            },
             -rc_name           => 'default',
             # Testing Necessary            -rc_name => '2GB',
             -flow_into         => {

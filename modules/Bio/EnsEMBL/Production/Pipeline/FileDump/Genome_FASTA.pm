@@ -179,7 +179,7 @@ sub header_function {
     }
     $location =~ s/^$cs_name://;
 
-    return "$name $data_type:$cs_name $location";
+    return "ENSEMBL:$name $data_type:$cs_name $location";
   };
 }
 

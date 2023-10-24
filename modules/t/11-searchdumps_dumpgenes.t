@@ -192,10 +192,8 @@ subtest "Checking protein_coding gene", sub {
                 'analysis'            => 'ensembl_havana_transcript',
                 'start'               => 29011990,
                 'attrib'              => {
-                    'synonym'       => 'XXbac-BPG258E24.8-001',
-                    'name'          => 'XXbac-BPG258E24.8-001',
-                    'author_email'  => 'v@somewhere.com',
-                    'author'        => 'Havana',
+                    "sha512t24u_pep"  =>"IIv8JZA65kMjxtgtEwQ7FhCJ9KYGmFtp",
+                    "md5_pep"         => "18487f77ceffccd48fbfe27d6e1c7a12",
                 },
                 'coord_system'        => {
                     'version'    => 'GRCh38',
@@ -213,6 +211,12 @@ subtest "Checking protein_coding gene", sub {
                         'ensembl_object_type' => 'translation',
                         'id'                  => 'ENSP00000366380',
                         'transcript_id'       => 'ENST00000377175',
+                        'attrib'              => {
+                              'synonym'       => 'XXbac-BPG258E24.8-001',
+                              'name'          => 'XXbac-BPG258E24.8-001',
+                              'author_email'  => 'v@somewhere.com',
+                              'author'        => 'Havana',
+                        },
                         'xrefs'               => [
                             {
                                 'display_id'  => '191160',

@@ -59,7 +59,32 @@ sub default_options {
 
     gene_search_reformat => 0,
 
-    release => $self->o('ensembl_release')
+    release => $self->o('ensembl_release'),
+    exclude_xref_external_db_list => [
+      'DBASS3',
+      'DBASS5',
+      'Ens_Hs_gene',
+      'Ens_Hs_transcript',
+      'Ens_Hs_translation',
+      'Clone_based_ensembl_gene',
+      'Clone_based_ensembl_transcript',
+      'Clone_based_vega_gene',
+      'Clone_based_vega_transcript',
+      'goslim_goa',
+      'KEGG_Enzyme',
+      'LRG',
+      'MetaCyc',
+      'OTTG',
+      'OTTT',
+      'shares_CDS_and_UTR_with_OTTT',
+      'shares_CDS_with_OTTT',
+      'UniGene',
+      'UniPathway',
+      'Vega_transcript',
+      'Vega_translation',
+      'ENS_LRG_gene',
+      'ENS_LRG_transcript',
+    ]
 	};
 }
 
@@ -175,7 +200,7 @@ sub pipeline_analyses {
     {
       -logic_name => 'DumpGenesJson',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
-      -parameters => { use_pan_compara => $self->o('use_pan_compara') },
+      -parameters => { use_pan_compara => $self->o('use_pan_compara') , exclude_xref_external_db_list => $self->o('exclude_xref_external_db_list') },
       -flow_into  => {
                       1 =>
                         WHEN ('#gene_search_reformat#' =>

@@ -43,10 +43,11 @@ my $log = get_logger();
 sub new {
     my ($class, @args) = @_;
     my $self = bless({}, ref($class) || $class);
-    ($self->{biotypes}, $self->{level}, $self->{load_xrefs}) =
-        rearrange([ 'BIOTYPES', 'LEVEL', 'LOAD_XREFS' ], @args);
+    ($self->{biotypes}, $self->{level}, $self->{load_xrefs}, $self->{external_dbs} ) =
+        rearrange([ 'BIOTYPES', 'LEVEL', 'LOAD_XREFS', 'EXCLUDE_EXTERNAL_DBS' ], @args);
     $self->{load_xrefs} ||= 0;
     $self->{level} ||= 'gene';
+    $self->{external_dbs} ||= []; 
     return $self;
 }
 
@@ -274,6 +275,7 @@ sub get_transcripts {
             $transcripts->{$id}->{attrib} = $attrib_val;
         }
     }
+   
 
     {
 
@@ -476,6 +478,10 @@ sub get_translations {
         $protein_features = $self->get_protein_features($dba, $biotypes);
     }
 
+    #add translation checksum attrib 
+    $log->debug("Retrieving checksum attrib for translations");
+    my $checksums = $self->get_translation_checksum_attrib($dba);
+
     my $stable_ids = $self->get_stable_ids($dba, 'translation');
 
     $log->debug("Retrieving translations");
@@ -487,6 +493,7 @@ sub get_translations {
             -CALLBACK     => sub {
                 my ($row) = @_;
                 $row->{xrefs} = ( $xrefs->{ $row->{id} } ) ? $xrefs->{ $row->{id} } : [];
+                $row->{attrib} = $checksums->{$row->{id}};
                 $row->{protein_features} = $protein_features->{ $row->{id} };
                 my $ids = $stable_ids->{$row->{id}};
                 $row->{previous_ids} = $ids if defined $ids && scalar(@$ids) > 0;
@@ -820,6 +827,27 @@ sub get_transcript_attrib {
             return;
         });
     return $transcript_attrib;
+}
+
+sub get_translation_checksum_attrib {
+    my ($self, $dba) = @_;
+    my $sql = qq/
+      select ifnull(t.stable_id, t.transcript_id) as id, at.code, ta.value
+      from translation t
+      join translation_attrib ta using (translation_id)
+      join attrib_type at using(attrib_type_id) where at.code in ('sha512t24u_pep','md5_pep');
+    /;
+
+    my $translation_attrib = {};
+
+    $dba->dbc()->sql_helper()->execute_no_return(
+        -SQL      => $sql,
+        -CALLBACK => sub {
+            my ($row) = @_;
+            $translation_attrib->{ $row->[0] }{ $row->[1] } = $row->[2];
+            return;
+        });
+    return $translation_attrib;
 }
 
 

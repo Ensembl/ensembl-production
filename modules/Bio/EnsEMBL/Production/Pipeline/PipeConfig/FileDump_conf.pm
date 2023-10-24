@@ -31,57 +31,57 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
 
-        species              => [],
-        antispecies          => [],
-        division             => [],
-        run_all              => 0,
-        dbname               => [],
-        meta_filters         => {},
+        species                => [],
+        antispecies            => [],
+        division               => [],
+        run_all                => 0,
+        dbname                 => [],
+        meta_filters           => {},
 
-        dump_dir             => undef,
-        ftp_root             => undef,
+        dump_dir               => undef,
+        ftp_root               => undef,
 
-        genome_types         => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
-        geneset_types        => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
-        rnaseq_types         => [], # Possible values: 'RNASeq_Exists'
+        genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
+        geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
+        rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
 
-    	homology_types       => [], # Possible values : 'Homologies_TSV'
-       
-       	dump_metadata        => 0,
-        dump_mysql           => 0,
-        overwrite            => 0,
-        per_chromosome       => 0,
+        homology_types         => [], # Possible values : 'Homologies_TSV'
 
-        rnaseq_email         => $self->o('email'),
+        dump_metadata          => 0,
+        dump_mysql             => 0,
+        overwrite              => 0,
+        per_chromosome         => 0,
+
+        rnaseq_email           => $self->o('email'),
 
         # Pre-dump datachecks
-        run_datachecks       => 0,
-        config_file          => undef,
-        history_file         => undef,
-        output_dir           => undef,
-        datacheck_names      => [],
-        datacheck_groups     => [],
-        datacheck_types      => [],
+        run_datachecks         => 0,
+        config_file            => undef,
+        history_file           => undef,
+        output_dir             => undef,
+        datacheck_names        => [],
+        datacheck_groups       => [],
+        datacheck_types        => [],
 
         # External programs
-        blastdb_exe          => 'makeblastdb',
-        gtf_to_genepred_exe  => 'gtfToGenePred',
-        genepred_check_exe   => 'genePredCheck',
-        gt_gff3_exe          => 'gt gff3',
-        gt_gff3validator_exe => 'gt gff3validator',
+        blastdb_exe            => 'makeblastdb',
+        gtf_to_genepred_exe    => 'gtfToGenePred',
+        genepred_check_exe     => 'genePredCheck',
+        gt_gff3_exe            => 'gt gff3',
+        gt_gff3validator_exe   => 'gt gff3validator',
 
         # Parameters specific to particular dump_types
-        blast_index          => 0,
-        chain_ucsc           => 1,
-        dna_per_chromosome   => $self->o('per_chromosome'),
-        embl_per_chromosome  => $self->o('per_chromosome'),
-        gff3_per_chromosome  => $self->o('per_chromosome'),
-        gtf_per_chromosome   => $self->o('per_chromosome'),
-        xref_external_dbs    => [],
-	dump_homologies_script => $self->o('ENV','ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-	rr_ens_version => $self->o('ENV', 'RR_ENS_VERSION'),
-	ref_dbname => 'ensembl_compara_references',
-	compara_host_uri => '',
+        blast_index            => 0,
+        chain_ucsc             => 1,
+        dna_per_chromosome     => $self->o('per_chromosome'),
+        embl_per_chromosome    => $self->o('per_chromosome'),
+        gff3_per_chromosome    => $self->o('per_chromosome'),
+        gtf_per_chromosome     => $self->o('per_chromosome'),
+        xref_external_dbs      => [],
+        dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
+        rr_ens_version         => $self->o('ENV', 'RR_ENS_VERSION'),
+        ref_dbname             => 'ensembl_compara_references',
+        compara_host_uri       => '',
     };
 }
 
@@ -204,7 +204,7 @@ sub pipeline_analyses {
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
                     'RNASeqDirectoryPaths',
-		    'HomologyDirectoryPaths'
+                    'HomologyDirectoryPaths'
                 ],
             }
         },
@@ -214,12 +214,12 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-	      analysis_types   => $self->o('homology_types'),	    
-	      data_category    => 'homology',
-	    },
+                analysis_types => $self->o('homology_types'),
+                data_category  => 'homology',
+            },
             -flow_into         => {
                 '3->A' => $self->o('homology_types'),
-		'A->3' => ['Checksum']
+                'A->3' => [ 'Checksum' ]
             }
         },
         {
@@ -285,15 +285,15 @@ sub pipeline_analyses {
                 'A->3' => [ 'Checksum' ]
             },
         },
-	{
+        {
             -logic_name        => 'Homologies_TSV',
             -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-                ref_dbname => $self->o('ref_dbname'),
+                ref_dbname             => $self->o('ref_dbname'),
                 dump_homologies_script => $self->o('dump_homologies_script'),
-                per_species_db => $self->o("compara_host_uri").'#species#'.'_compara_'.$self->o('rr_ens_version'),
+                per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('rr_ens_version'),
             },
             -flow_into         => {
                 '2' => [
@@ -700,7 +700,7 @@ sub pipeline_analyses {
                 cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
             },
             -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => [ 'README' ]),
-            -rc_name       => "dm"
+            -rc_name           => "dm"
         },
         {
             -logic_name        => 'README',
@@ -718,7 +718,7 @@ sub pipeline_analyses {
             -parameters        => {
                 cmd => 'rsync -aLW #output_filename# #ftp_root#',
             },
-            -rc_name       => "dm"
+            -rc_name           => "dm"
         },
     ];
 }
