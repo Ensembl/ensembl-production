@@ -69,15 +69,17 @@ process LoadThoas {
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
     input:
-    path thoas_config_file
-
-    output:
-    path "loading_log_${params.release}.out"
+    //path thoas_config_file
+    val genome_info
+ 
+    //output:
+    //path "loading_log_${params.release}.out"
 
     """
     pyenv local production-nextflow-py-3.8
     export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
-    python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file &> loading_log_${params.release}.out
+    echo JHIIIIIIIIIIIIIIIIIIIIIIIIIIIi 
+     echo $genome_info
     """
 
 }

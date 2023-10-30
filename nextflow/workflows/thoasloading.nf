@@ -25,7 +25,7 @@ println """\
          species_name          : ${params.species_name}
          dataset_type          : ${params.dataset_type}
          organism_group        : ${params.organism_group}
-         unreleased_genomes    : ${params.unreleased_genomes}
+         unreleased_genomes    : ${params.allow_unreleased_genomes}
          outdir                : ${params.thoas_data_location}
          thoas_code_location   : ${params.thoas_code_location}   
          thoas_data_location   : ${params.thoas_data_location}
@@ -172,13 +172,15 @@ workflow {
     metadata_db_uri = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
     taxonomy_db_uri = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.taxonomy_db_dbname}"
     output_json     = 'genome_info.json'
-    unreleased_genomes = params.unreleased_genomes ? true : false
+    allow_unreleased_genomes = params.allow_unreleased_genomes ? true : false
+    allow_unreleased_datasets = params.allow_unreleased_datasets ? true : false
     
-    GenomeInfo(genome_uuid, species_name, organism_group, unreleased_genomes, dataset_type, 
+    GenomeInfo(genome_uuid, species_name, organism_group, allow_unreleased_genomes, allow_unreleased_datasets, dataset_type, 
                               metadata_db_uri, taxonomy_db_uri, output_json)
     GenerateThoasConfigFile(GenomeInfo.out[0])
     
-    LoadThoas(GenerateThoasConfigFile.out[0]) 
+    //LoadThoas(GenomeInfo.out[0].splitText().map { it.replaceAll('\n', '')})  
+    //LoadThoas(GenerateThoasConfigFile.out[0]) 
 }
 
 workflow.onComplete {
