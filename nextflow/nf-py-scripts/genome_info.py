@@ -77,9 +77,11 @@ def main():
                                                      group_type=organism_group_type,
                                                      dataset_name=dataset_name,
                                                      dataset_source=dataset_source,
+                                                     dataset_attributes=False,
                                                      allow_unreleased_genomes=allow_unreleased_genomes,
                                                      allow_unreleased_datasets=allow_unreleased_datasets) or []:
-      
+      print("...........")
+      print(genome[0]['datasets'])
       genome_info = {
                       "genome_uuid"          : genome[0]['genome'][0].genome_uuid,
                       "species"              : genome[0]['genome'][1].ensembl_name,

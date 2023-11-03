@@ -58,7 +58,7 @@ process GenomeInfo {
             genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
             species_name        (list): Ensembl Species Name. Defaults to [].
             organism_group      (list): Ensembl species Divisions. Defaults [].
-            unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True 
+            allow_unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True 
             dataset_topic       (str) : dataset topic name to fetch the unique genome ids Default 'assembly'
             metadata_uri        (str, Required): Mysql URI string to connect the metadata database.
             taxonomy_uri        (str, Required): Mysql URI string to connect the ncbi taxonomy db.
@@ -76,7 +76,8 @@ process GenomeInfo {
     val genome_uuid
     val species_name
     val organism_group
-    val unreleased_genomes
+    val allow_unreleased_genomes
+    val allow_unreleased_datasets
     val dataset_type
     val metadata_uri
     val taxonomy_uri
