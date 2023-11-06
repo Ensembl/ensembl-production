@@ -129,7 +129,7 @@ sub print_xref_subset {
       eval {
         print $file join("\t", @$result);
         print $file "\n";
-      }
+      };
       if($@) {
          die("Could not print results to file: $@");
       }
