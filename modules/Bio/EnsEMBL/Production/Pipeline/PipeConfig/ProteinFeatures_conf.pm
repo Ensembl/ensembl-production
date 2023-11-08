@@ -340,6 +340,8 @@ sub pipeline_analyses {
                             '3->A' => ['FetchFiles'],
                             'A->3' => ['AnnotateProteinFeatures'],
                           },
+      -rc_name           => '2GB',
+
     },
 
     {
@@ -422,6 +424,8 @@ sub pipeline_analyses {
       -parameters      => {
                             uniparc_file_local => $self->o('uniparc_file_local'),
                           },
+      -rc_name           => '2GB_W',
+
     },
 
     {
@@ -479,6 +483,7 @@ sub pipeline_analyses {
                               ],
                               output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
                             },
+      -rc_name           => '1GB',
       -flow_into         => ['AnalysisConfiguration'],
     },
 
@@ -492,6 +497,8 @@ sub pipeline_analyses {
                               run_seg                   => $self->o('run_seg'),
                               xref_analyses             => $self->o('xref_analyses'),
                             },
+       -rc_name           => '2GB',
+
       -flow_into 	       => {
                               '2->A' => ['AnalysisSetup'],
                               'A->3' => ['RemoveOrphans'],
@@ -529,6 +536,7 @@ sub pipeline_analyses {
                                   'WHERE ox.object_xref_id IS NULL',
                               ]
                             },
+      -rc_name           => 'default_D',
       -flow_into         => ['DeleteInterPro']
     },
 
@@ -567,6 +575,7 @@ sub pipeline_analyses {
       -max_retry_count   => 1,
       -analysis_capacity => 20,
       -parameters        => {},
+      -rc_name           => '1GB',
       -flow_into         => {
                               '2' => ['DumpProteome'],
                             }
@@ -582,7 +591,7 @@ sub pipeline_analyses {
                               header_style => 'dbID',
                               overwrite    => 1,
                             },
-      -rc_name           => '4GB',
+      -rc_name           => '4GB_W',
       -flow_into         => {
                              '-1' => ['DumpProteome_HighMem'],
                               '1' => WHEN('#run_seg#' =>
@@ -625,6 +634,7 @@ sub pipeline_analyses {
                               max_files_per_directory => $self->o('max_files_per_directory'),
                               max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                             },
+      -rc_name           => '1GB',
       -flow_into         => {
                               '2' => ['RunSeg'],
                             },
@@ -640,6 +650,7 @@ sub pipeline_analyses {
       {
         cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
       },
+      -rc_name           => '1GB',
       -flow_into         => ['StoreSegFeatures'],
     },
 
@@ -667,6 +678,7 @@ sub pipeline_analyses {
                               uniparc_logic_name => $self->o('uniparc_logic_name'),
                               uniprot_logic_name => $self->o('uniprot_logic_name'),
                             },
+      -rc_name           => '1GB_D',
       -flow_into         => {
                               '3' => ['SplitChecksumFile'],
                               '4' => ['SplitNoChecksumFile'],
@@ -758,7 +770,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_nolookup_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_8CPU',
+      -rc_name           => '16GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                               '-1' => ['InterProScanNoLookup_HighMem'],
@@ -795,7 +807,7 @@ sub pipeline_analyses {
         interproscan_applications => '#interproscan_local_applications#',
         run_interproscan          => $self->o('run_interproscan'),
       },
-      -rc_name           => '4GB_8CPU',
+      -rc_name           => '16GB_8CPU',
       -flow_into         => {
                                '3' => ['StoreProteinFeatures'],
                                '0' => ['InterProScanLocal_HighMem'],
@@ -829,6 +841,7 @@ sub pipeline_analyses {
       -parameters        => {
                               analyses => $self->o('protein_feature_analyses')
                             },
+      -rc_name           => '1GB_D',
       -flow_into         => {
                               '-1' => ['StoreProteinFeatures_HighMem'],
                             },
@@ -855,6 +868,7 @@ sub pipeline_analyses {
                               interpro2go_file => $self->o('interpro2go_file_local'),
                               logic_name       => $self->o('interpro2go_logic_name')
                             },
+      -rc_name           => '1GB',
       -flow_into         => ['StoreInterProXrefs'],
     },
 
@@ -886,6 +900,7 @@ sub pipeline_analyses {
                               history_file     => $self->o('history_file'),
                               failures_fatal   => 1,
                             },
+      -rc_name           => '2GB_D',
       -flow_into         => WHEN('#email_report#' => ['EmailReport']),
     },
 
@@ -907,6 +922,15 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd => 'rm -rf #scratch_dir#',
                             },
+     -flow_into  => 'CleanTables',
+    },
+
+    {
+        -logic_name => 'CleanTables',
+        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+        -parameters => {
+            sql => 'DROP table uniparc; drop table uniprot',
+        },
     },
 
   ];
@@ -917,9 +941,10 @@ sub resource_classes {
 
   return {
     %{$self->SUPER::resource_classes},
-     '4GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M  4000 -R "rusage[mem=4000]"'},
-    '16GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 16000 -R "rusage[mem=16000]"'},
-    '32GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 32000 -R "rusage[mem=32000]"'},
+    '16GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 16000 -R "rusage[mem=16000]"',
+                          'SLURM' => ' --partition=standard --time=1-00:00:00  --mem=16000m -n 8 -N 1'},
+    '32GB_8CPU' => {'LSF' => '-q '.$self->o('production_queue').' -n 8 -M 32000 -R "rusage[mem=32000]"',
+                    'SLURM' => ' --partition=standard --time=1-00:00:00  --mem=32000m -n 8 -N 1'},
   }
 }
 
