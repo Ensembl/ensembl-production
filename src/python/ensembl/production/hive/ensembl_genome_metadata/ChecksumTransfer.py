@@ -12,6 +12,7 @@
 
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
 from sqlalchemy.engine.url import make_url
+from sqlalchemy.orm.exc import NoResultFound
 from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSystem, Meta
 from ensembl.database import DBConnection
 from ensembl.production.metadata.model import Assembly, AssemblySequence
@@ -73,8 +74,9 @@ class ChecksumTransfer(BaseProdRunnable):
                 assembly_acc = species_data['assembly_acc']
                 seq_regions = species_data['seq_regions']
 
-                assembly = session.query(Assembly).filter_by(accession=assembly_acc).first()
-                if not assembly:
+                try:
+                    assembly = session.query(Assembly).filter_by(accession=assembly_acc).one()
+                except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
 
                 for seq_name, checksums in seq_regions.items():
