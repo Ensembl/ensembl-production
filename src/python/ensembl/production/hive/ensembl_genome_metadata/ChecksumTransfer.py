@@ -76,7 +76,7 @@ class ChecksumTransfer(BaseProdRunnable):
 
                 try:
                     print(Assembly.__dict__)
-                    assembly = session.query(Assembly).filter_by(accession=assembly_acc).one()
+                    assembly = session.query(Assembly).filter_by(assembly_accession=assembly_acc).one()
                 except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
 
