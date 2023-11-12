@@ -16,7 +16,7 @@ package Bio::EnsEMBL::Production::Pipeline::Metadata::CreateURI;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Checksum::Base');
 
 sub run {
     my ($self) = @_;
