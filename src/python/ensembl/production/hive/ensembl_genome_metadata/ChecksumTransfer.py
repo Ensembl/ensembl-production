@@ -47,8 +47,8 @@ class ChecksumTransfer(BaseProdRunnable):
             result = {}
             for species_id, name, code, value in data:
                 if species_id not in result:
-                    assemb = (session.execute(db.select(Meta.meta_value).filter(
-                                Meta.meta_key == "assembly.accession").filter(Meta.species_id == species_id)).one_or_none())
+                    assemb = session.query(Meta.meta_value).filter(
+                                Meta.meta_key == "assembly.accession").filter(Meta.species_id == species_id).one_or_none()
                     if assemb is None:
                         Exception("Assembly Accession missing for this organism")
                     else:
