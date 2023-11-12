@@ -75,6 +75,7 @@ class ChecksumTransfer(BaseProdRunnable):
                 seq_regions = species_data['seq_regions']
 
                 try:
+                    print(Assembly.__dict__)
                     assembly = session.query(Assembly).filter_by(accession=assembly_acc).one()
                 except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
