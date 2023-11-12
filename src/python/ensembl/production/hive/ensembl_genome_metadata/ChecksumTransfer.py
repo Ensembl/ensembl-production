@@ -76,13 +76,14 @@ class ChecksumTransfer(BaseProdRunnable):
 
                 try:
                     print(Assembly.__dict__)
-                    assembly = session.query(Assembly).filter_by(assembly_accession=assembly_acc).one()
+                    assembly = session.query(Assembly).filter(Assembly.accession == assembly_acc).one()
                 except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
 
                 for seq_name, checksums in seq_regions.items():
-                    assembly_seq = session.query(AssemblySequence).filter_by(assembly_id=assembly.assembly_id,
-                                                                             name=seq_name).first()
+                    assembly_seq = session.query(AssemblySequence).filter(
+                        AssemblySequence.assembly_id == assembly.assembly_id).filter(
+                        AssemblySequence.name == seq_name).first()
                     if not assembly_seq:
                         raise ValueError(f"AssemblySequence with name {seq_name} not found for assembly {assembly_acc}")
 
