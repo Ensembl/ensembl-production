@@ -16,7 +16,7 @@ from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSys
 from ensembl.database import DBConnection
 from ensembl.production.metadata.model import Assembly, AssemblySequence
 
-class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
+class ChecksumTransfer(BaseProdRunnable):
     def run(self):
         db_uri = make_url(self.param("database_uri"))
         md_uri = make_url(self.param("metadata_uri"))
