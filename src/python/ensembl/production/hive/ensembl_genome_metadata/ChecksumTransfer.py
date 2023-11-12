@@ -91,6 +91,6 @@ class ChecksumTransfer(BaseProdRunnable):
                         raise ValueError(f"MD5 checksum not found for {seq_name}")
 
                     if sha512t24u and 'sha512t24u' in checksums:
-                        assembly_seq.sha512t4u = checksums['sha512t24u']
+                        assembly_seq.sha512t24u = checksums['sha512t24u']
                     elif sha512t24u:
                         raise ValueError(f"SHA512t24u checksum not found for {seq_name}")
