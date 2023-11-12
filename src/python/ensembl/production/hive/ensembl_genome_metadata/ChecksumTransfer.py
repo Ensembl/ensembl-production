@@ -20,9 +20,7 @@ from ensembl.production.metadata.api.models import Assembly, AssemblySequence
 class ChecksumTransfer(BaseProdRunnable):
     def run(self):
         db_uri = make_url(self.param_required("database_uri"))
-        print (db_uri)
         md_uri = make_url(self.param_required("metadata_uri"))
-        print (md_uri)
         md5 = self.param("md5")
         sha512t24u = self.param("sha512t24u")
 
@@ -75,9 +73,6 @@ class ChecksumTransfer(BaseProdRunnable):
                 seq_regions = species_data['seq_regions']
 
                 try:
-                    print(Assembly.__dict__)
-                    old_organism = meta_session.query(Organism).filter(
-                        Organism.ensembl_name == new_organism.ensembl_name).one_or_none()
                     assembly = session.query(Assembly).filter(Assembly.accession == assembly_acc).one()
                 except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
