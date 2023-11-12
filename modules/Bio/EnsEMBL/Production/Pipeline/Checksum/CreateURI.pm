@@ -12,11 +12,11 @@
 #  limitations under the License.
 
 
-package Bio::EnsEMBL::Production::Pipeline::Metadata::CreateURI;
+package Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::Checksum::Base');
+use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
     my ($self) = @_;
