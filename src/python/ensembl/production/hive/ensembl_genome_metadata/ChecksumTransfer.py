@@ -18,15 +18,17 @@ from ensembl.production.metadata.model import Assembly, AssemblySequence
 
 class ChecksumTransfer(BaseProdRunnable):
     def run(self):
-        db_uri = make_url(self.param("database_uri"))
-        md_uri = make_url(self.param("metadata_uri"))
+        db_uri = make_url(self.param_required("database_uri"))
+        print (db_uri)
+        md_uri = make_url(self.param_required("metadata_uri"))
+        print (md_uri)
         md5 = self.param("md5")
         sha512t24u = self.param("sha512t24u")
 
-        data =  self.extract_data_from_core(db_uri)
+        data = self.extract_data_from_core(db_uri)
         self.deposit_data_in_meta(md_uri,data,md5,sha512t24u)
 
-    def extract_data_from_core(self,db_uri):
+    def extract_data_from_core(self, db_uri):
         db = DBConnection(db_uri)
         with db.session_scope() as session:
             query = session.query(
@@ -64,7 +66,7 @@ class ChecksumTransfer(BaseProdRunnable):
                     result[species_id]['seq_regions'][name]['sha512t24u'] = value
             return result
 
-    def deposit_data_in_meta(self,data,md_uri,md5=1,sha512t24u=1):
+    def deposit_data_in_meta(self,md_uri,data,md5=1,sha512t24u=1):
         md = DBConnection(md_uri)
         with md.session_scope() as session:
             for species_id, species_data in data.items():
