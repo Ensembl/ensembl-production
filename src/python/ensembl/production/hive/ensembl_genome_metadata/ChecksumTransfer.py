@@ -15,7 +15,7 @@ from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm.exc import NoResultFound
 from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSystem, Meta
 from ensembl.database import DBConnection
-from ensembl.production.metadata.model import Assembly, AssemblySequence
+from ensembl.production.metadata.api.models import Assembly, AssemblySequence
 
 class ChecksumTransfer(BaseProdRunnable):
     def run(self):
@@ -76,6 +76,8 @@ class ChecksumTransfer(BaseProdRunnable):
 
                 try:
                     print(Assembly.__dict__)
+                    old_organism = meta_session.query(Organism).filter(
+                        Organism.ensembl_name == new_organism.ensembl_name).one_or_none()
                     assembly = session.query(Assembly).filter(Assembly.accession == assembly_acc).one()
                 except NoResultFound:
                     raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
