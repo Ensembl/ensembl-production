@@ -42,13 +42,16 @@ sub default_options {
         'run_all'        => 0,
         'email'          => 'ensembl-production@ebi.ac.uk',
         ## 'job_factory' parameters
-        'species'     => [],
-        'antispecies' => [],
-        'division'    => [],
-        'dbname'      => undef,
+        'species'        => [],
+        'antispecies'    => [],
+        'division'       => [],
+        'dbname'         => undef,
         #checksum params
-        'sequence_type' => [],
-        'hash_type'     => [],
+        'sequence_type'  => [],
+        'hash_type'      => [],
+        #For the new metadata
+        'populate_mvp'   => 1,
+        'metadata_uri'   => undef,
     };
 }
 
@@ -109,7 +112,21 @@ sub pipeline_analyses {
             -logic_name => 'fetch_genome_sequence_info',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
+            -flow_into        => { 3 => [ 'checksum_transfer' ], },
+
         },
+        {
+            -logic_name        => 'checksum_transfer',
+            -module            => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
+            -language        => 'python3',
+            -max_retry_count   => 1,
+            -parameters        => {
+                sequence_types => $self->o('sequence_types'),
+                metadata_uri   => $self->o('metadata_uri'),
+            },
+
+
+
         {
             -logic_name        => 'run_datacheck',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
