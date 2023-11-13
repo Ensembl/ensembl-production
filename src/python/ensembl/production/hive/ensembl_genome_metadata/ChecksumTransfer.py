@@ -106,7 +106,7 @@ class ChecksumTransfer(BaseProdRunnable):
 
                     # Add to updates list
                     if update_data:
-                        update_data['id'] = assembly_seq.id  # Assuming 'id' is the primary key
+                        update_data['assembly_sequence_id'] = assembly_seq.assembly_sequence_id
                         updates.append(update_data)
 
             # Perform the bulk update
