@@ -17,6 +17,7 @@ from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSys
 from ensembl.database import DBConnection
 from ensembl.production.metadata.api.models import Assembly, AssemblySequence
 
+
 class ChecksumTransfer(BaseProdRunnable):
     def run(self):
         db_uri = make_url(self.param_required("database_uri"))
@@ -25,7 +26,7 @@ class ChecksumTransfer(BaseProdRunnable):
         sha512t24u = self.param("sha512t24u")
 
         data = self.extract_data_from_core(db_uri)
-        self.deposit_data_in_meta(md_uri,data,md5,sha512t24u)
+        self.deposit_data_in_meta(md_uri, data, md5, sha512t24u)
 
     def extract_data_from_core(self, db_uri):
         db = DBConnection(db_uri)
@@ -47,11 +48,11 @@ class ChecksumTransfer(BaseProdRunnable):
             for species_id, name, code, value in data:
                 if species_id not in result:
                     assemb = session.query(Meta.meta_value).filter(
-                                Meta.meta_key == "assembly.accession").filter(Meta.species_id == species_id).one_or_none()
+                        Meta.meta_key == "assembly.accession").filter(Meta.species_id == species_id).one_or_none()
                     if assemb is None:
                         raise Exception("Assembly Accession missing for this organism")
                     else:
-                         assembly_acc = assemb[0]
+                        assembly_acc = assemb[0]
                     result[species_id] = {
                         'assembly_acc': assembly_acc,
                         'seq_regions': {}
@@ -65,32 +66,50 @@ class ChecksumTransfer(BaseProdRunnable):
                     result[species_id]['seq_regions'][name]['sha512t24u'] = value
             return result
 
-    def deposit_data_in_meta(self,md_uri,data,md5=1,sha512t24u=1):
+    def deposit_data_in_meta(self, md_uri, data, md5=1, sha512t24u=1):
         md = DBConnection(md_uri)
         with md.session_scope() as session:
+            updates = []
+
             for species_id, species_data in data.items():
                 assembly_acc = species_data['assembly_acc']
                 seq_regions = species_data['seq_regions']
 
-                try:
-                    assembly = session.query(Assembly).filter(Assembly.accession == assembly_acc).one()
-                except NoResultFound:
-                    raise ValueError(f"Assembly with accession {assembly_acc} not found for species {species_id}")
+                # Fetch all relevant AssemblySequence records
+                assembly_seqs = session.query(AssemblySequence).join(Assembly).filter(
+                    Assembly.accession == assembly_acc,
+                    AssemblySequence.name.in_(seq_regions.keys())
+                ).all()
+
+                # Map AssemblySequence records to their names for easy access
+                assembly_seq_dict = {seq.name: seq for seq in assembly_seqs}
+
+                # Check Seq_region exists in metadata database but not in our dictionary
+                for seq in assembly_seqs:
+                    if seq.name not in seq_regions:
+                        raise ValueError(
+                            f"AssemblySequence with name {seq.name} exists in metadata database but is not found in the provided data for assembly {assembly_acc}")
 
                 for seq_name, checksums in seq_regions.items():
-                    assembly_seq = session.query(AssemblySequence).filter(
-                        AssemblySequence.assembly_id == assembly.assembly_id).filter(
-                        AssemblySequence.name == seq_name).first()
+                    assembly_seq = assembly_seq_dict.get(seq_name)
                     if not assembly_seq:
-                        raise ValueError(f"AssemblySequence with name {seq_name} not found for assembly {assembly_acc}")
+                        # Check Seq_region for a particular species not found in metadata database
+                        raise ValueError(
+                            f"AssemblySequence with name {seq_name} not found in metadata database for assembly {assembly_acc}")
 
-                    # Update checksums if they exist
+                    # Prepare the update data
+                    update_data = {}
                     if md5 and 'md5' in checksums:
-                        assembly_seq.md5 = checksums['md5']
-                    elif md5:
-                        raise ValueError(f"MD5 checksum not found for {seq_name}")
-
+                        update_data['md5'] = checksums['md5']
                     if sha512t24u and 'sha512t24u' in checksums:
-                        assembly_seq.sha512t24u = checksums['sha512t24u']
-                    elif sha512t24u:
-                        raise ValueError(f"SHA512t24u checksum not found for {seq_name}")
+                        update_data['sha512t24u'] = checksums['sha512t24u']
+
+                    # Add to updates list
+                    if update_data:
+                        update_data['id'] = assembly_seq.id  # Assuming 'id' is the primary key
+                        updates.append(update_data)
+
+            # Perform the bulk update
+            if updates:
+                session.bulk_update_mappings(AssemblySequence, updates)
+                session.commit()
