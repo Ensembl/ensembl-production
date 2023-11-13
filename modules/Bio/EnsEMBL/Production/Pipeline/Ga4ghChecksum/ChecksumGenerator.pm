@@ -130,6 +130,18 @@ sub run {
     foreach my $seq_type (@{$sequence_types}) {
         $self->all_hashes($slice_adaptor, $seq_type);
     }
+    if ($self->param('populate_mvp') == 1){
+        my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+        my $core_dbc = $core_adaptor->dbc;
+        my $user = $core_dbc->user;
+        my $password = $core_dbc->password;
+        my $host = $core_dbc->host;
+        my $port = $core_dbc->port;
+        my $dbname = $core_dbc->dbname;
+        my $database_uri = 'mysql://' . $user . ':' . $password . '@' . $host . ':' . $port . '/' . $dbname;
+        $self->dataflow_output_id({ database_uri => $database_uri }, 3);
+    }
+
 }
 
 

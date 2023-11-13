@@ -42,8 +42,7 @@ sub default_options {
         run_all              => 0,
         dbname               => [],
         meta_filters         => {},
-        sha512t24u           => 1,
-        md5                  => 1,
+        'sequence_types'     => [],
     };
 }
 sub pipeline_create_commands {
@@ -116,8 +115,7 @@ sub pipeline_analyses {
             -language        => 'python3',
             -max_retry_count   => 1,
             -parameters        => {
-                md5            => $self->o('md5'),
-                sha512t24u     => $self->o('sha512t24u'),
+                sequence_types => $self->o('sequence_types'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
 
