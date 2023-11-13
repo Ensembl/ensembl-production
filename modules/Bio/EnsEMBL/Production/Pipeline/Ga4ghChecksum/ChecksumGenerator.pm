@@ -131,6 +131,7 @@ sub run {
         $self->all_hashes($slice_adaptor, $seq_type);
     }
     if ($self->param('populate_mvp') == 1){
+        my $species = $self->param_required('species');
         my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
         my $core_dbc = $core_adaptor->dbc;
         my $user = $core_dbc->user;
