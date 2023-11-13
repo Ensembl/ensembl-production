@@ -116,17 +116,15 @@ sub pipeline_analyses {
 
         },
         {
-            -logic_name        => 'checksum_transfer',
-            -module            => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
+            -logic_name      => 'checksum_transfer',
+            -module          => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
             -language        => 'python3',
-            -max_retry_count   => 1,
-            -parameters        => {
+            -max_retry_count => 1,
+            -parameters      => {
                 sequence_types => $self->o('sequence_types'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
-
-
-
+        },
         {
             -logic_name        => 'run_datacheck',
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
@@ -148,7 +146,7 @@ sub pipeline_analyses {
                 'subject' => 'Pipeline ' . $self->o('pipeline_name') . ' completed!',
                 'text'    => 'Checksum value added to attrib tables'
             },
-        },
+        }
     ];
 }
 
