@@ -58,7 +58,7 @@
  -species        Production name of species to process. For a collection DB, any species from the DB
  -species_list   List of species production names. For a single species, a list
                  with just this species. For a collection DB, list of all species in the DB
- -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in LevelDB format
+ -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in KyotoCabinet format
  -rest_server    GIFTS rest server to fetch the perfect matches data from.
  -cs_version     Needed for GIFTS, otherwise optional. Name of assembly, like 'GRCh38'.
 

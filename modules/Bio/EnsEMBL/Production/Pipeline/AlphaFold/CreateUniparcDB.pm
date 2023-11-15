@@ -32,12 +32,12 @@
 =head1 SYNOPSIS
 
  This module prepares a DB with a mapping from Uniparc accession to Uniprot
- accession. The DB is created on disk in LevelDB format.
+ accession. The DB is created on disk in KyotoCabinet format.
 
 =head1 DESCRIPTION
 
  - We expect the file idmapping_selected.tab.gz to be available
- - We go through the file and build a LevelDB mapping the Uniparc accessions to Uniprot accessions
+ - We go through the file and build a DB mapping the Uniparc accessions to Uniprot accessions
 
 =cut
 

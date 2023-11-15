@@ -33,12 +33,12 @@
 
  This module prepares a DB with a mapping from Uniprot accession to related
  Alphafold data (Alphafold accession, protein start, end). The DB is created on
- disk in LevelDB format.
+ disk in KyotoCabinet format.
 
 =head1 DESCRIPTION
 
  - We expect the file accession_ids.csv to be available
- - We go through the file and build a LevelDB mapping the Uniprot accession to the Alphafold data
+ - We go through the file and build a DB mapping the Uniprot accession to the Alphafold data
 
 =cut
 
