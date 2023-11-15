@@ -49,7 +49,7 @@ use strict;
 
 use parent 'Bio::EnsEMBL::Production::Pipeline::Common::Base';
 use Bio::EnsEMBL::Utils::Exception qw(throw info);
-use Tie::LevelDB;
+use KyotoCabinet;
 use File::Temp 'tempdir';
 
 
@@ -66,7 +66,7 @@ sub run {
 
     throw ("Data file not found: '$map_file' on host " . `hostname`) unless -f $map_file;
 
-    my $idx_dir = $self->param_required('alphafold_db_dir') . '/uniprot-to-alpha.leveldb';
+    my $idx_dir = $self->param_required('alphafold_db_dir') . '/uniprot-to-alphafold';
     if (-d $idx_dir) {
         system(qw(rm -rf), $idx_dir);
     }
@@ -78,33 +78,42 @@ sub run {
         $copy_to = $idx_dir;
         $idx_dir = tempdir(DIR => '/dev/shm/');
     }
+ 
+    my $db = new KyotoCabinet::DB;
 
-    tie(my %idx, 'Tie::LevelDB', $idx_dir)
-        or die "Error trying to tie Tie::LevelDB $idx_dir: $!";
+    # Set 4 GB mmap size
+    my $mapsize_gb = 4 << 30;
+
+    # Open the DB
+    # Open as the exclusive writer, truncate if it exists, otherwise create the DB
+    # Open the database as a file hash DB, 600M buckets, 4GB mmap, linear option for
+    # hash collision handling. These are tuned for write speed and for approx. 300M entries.
+    # As with a regular Perl hash, a duplicate entry will overwrite the previous
+    # value.
+    $db->open("uniprot-to-alphafold.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
+        $db->OWRITER | $db->OCREATE | $db->OTRUNCATE
+    ) or die "Error opening DB: " . $db->error();
 
     my $map;
     open($map, '<', $map_file) or die "Opening map file $map_file failed: $!";
 
-    # A line from accession_ids.csv looks like this:
-    # Uniprot accession, hit start, hit end, Alphafold accession, Alphafold version
-    # A0A2I1PIX0,1,200,AF-A0A2I1PIX0-F1,4
-    # Currently, all entries in this file have a unique uniprot accession and
-    # have a hit starting at 1
-
     while (my $line = <$map>) {
+        # A line from accession_ids.csv looks like this:
+        # Uniprot accession, hit start, hit end, Alphafold accession, Alphafold version
+        # A0A2I1PIX0,1,200,AF-A0A2I1PIX0-F1,4
+        # Currently, all entries in this file have a unique uniprot accession and
+        # have a hit starting at 1
         unless ($line =~ /^\w+,\d+,\d+,[\w_-]+,\d+$/) {
             chomp $line;
-            warn "Data error. Line is not what we expect: '$line'";
-            next;
+            die "Data error. Line is not what we expect: '$line'";
         }
         my @x = split(",", $line, 2);
 
-        # This is the DB write operation. Tie::LevelDB will croak on errors (e.g. disk full)
-        $idx{$x[0]} = $x[1];
+        # This is the DB write operation.
+        $db->set($x[0], $x[1]) or die "Error inserting data: " . $db->error();
     }
 
-    close($map);
-    untie %idx;
+    $db->close() or die "Error closing DB: " . $db->error();
 
     if ($copy_back) {
         system (qw(cp -r), $idx_dir, $copy_to);

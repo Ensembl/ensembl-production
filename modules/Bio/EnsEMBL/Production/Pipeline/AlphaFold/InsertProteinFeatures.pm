@@ -86,8 +86,7 @@ use Bio::EnsEMBL::ProteinFeature;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw(throw info);
 use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
-use Tie::LevelDB;
-use Fcntl qw(:flock);
+use KyotoCabinet;
 
 sub fetch_input {
     my $self = shift;
@@ -107,8 +106,8 @@ sub run {
     # Bio::EnsEMBL::Utils::Exception::verbose('INFO');
 
     my $db_path = $self->param_required('db_dir');
-    my $idx_dir_al = $db_path . '/uniprot-to-alpha.leveldb';
-    my $idx_dir_up = $db_path . '/uniparc-to-uniprot.leveldb';
+    my $idx_dir_al = $db_path . '/uniprot-to-alphafold/uniprot-to-alphafold.kch';
+    my $idx_dir_up = $db_path . '/uniparc-to-uniprot/uniparc-to-uniprot.kch';
 
     my $species = $self->param_required('species');
     my $species_list = $self->param_required('species_list');
@@ -129,18 +128,17 @@ sub run {
 
     info("Initiating and creating the analysis object for species $species\n");
 
-    dblock($db_path);
-
-    my %alpha_db;
-    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
-        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
+    my $alpha_db = new KyotoCabinet::DB;
+    # Set 4 GB mmap size
+    my $mapsize_gb = 4 << 30;
+    $alpha_db->open("$idx_dir_al#msiz=$mapsize_gb#opts=l",
+        $alpha_db->OREADER
+    ) or die "Error opening DB: " . $alpha_db->error();
 
     my $al_string;
-    while (my ($k, $v) = each %alpha_db) {
-        $al_string = $v;
-        last;
-    }
-    untie(%alpha_db);
+    my $cur = $alpha_db->cursor();
+    (undef, $al_string) = $cur->get(0);
+    $cur->disable();
 
     my $alpha_version = (split ',', $al_string)[-1];
     $alpha_version //= 0;
@@ -191,8 +189,12 @@ sub run {
         # the dbid.
 
 
-        tie(my %uniprot_db, 'Tie::LevelDB', $idx_dir_up)
-            or die "Error trying to tie Tie::LevelDB $idx_dir_up: $!";
+        my $uniprot_db = new KyotoCabinet::DB;
+        # Set 4 GB mmap size
+        my $mapsize_gb = 4 << 30;
+        $uniprot_db->open("$idx_dir_up#msiz=$mapsize_gb#opts=l",
+            $uniprot_db->OREADER
+        ) or die "Error opening DB: " . $uniprot_db->error();
 
         # We currently have the same uniparc accession tied to the same
         # translation_id but in different versions (xref pipeline run
@@ -212,7 +214,7 @@ SQL
         while ( my @row = $sth->fetchrow_array ) {
             $protein_count++;
             my ($uniparc_id, $stable_id, $dbid) = @row;
-            my $uniprot_id = $uniprot_db{$uniparc_id};
+            my $uniprot_id = $uniprot_db->get($uniparc_id);
             unless ($uniprot_id) {
                 $no_uniparc++;
                 next;
@@ -221,7 +223,7 @@ SQL
         }
         info("Num proteins in DB $protein_count, no uniparc $no_uniparc");
 
-        untie %uniprot_db;
+        $uniprot_db->close() or die "Error closing DB: " . $uniprot_db->error();
 
     } else {
 
@@ -278,8 +280,6 @@ SQL
         die(sprintf("No matches for species %s found in core DB %s\n", $species, $dbc->dbname()));
     }
 
-    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
-        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
 
     my $pfa = $core_dba->get_ProteinFeatureAdaptor();
 
@@ -293,7 +293,7 @@ SQL
             my $uniparc = $entry->{'uniparc'};
             my $ensid = $entry->{'ensid'};
             my $translation_id = $entry->{'dbid'};
-            my $alpha_data = $alpha_db{$uniprot};
+            my $alpha_data = $alpha_db->get($uniprot);
 
             unless ($alpha_data) {
                 $no_alpha++;
@@ -331,28 +331,10 @@ SQL
         }
     }
     
-    untie(%alpha_db);
-
-    dbunlock();
+    $alpha_db->close() or die "Error closing DB: " . $alpha_db->error();
 
     # Info line to be stored in the hive DB
     $self->warning("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no stable ID match: $no_dbid, no alphafold data: $no_alpha. Species: $log_species");
-}
-
-my $lock_fh;
-
-sub dblock {
-    my $path = shift;
-
-    info("Waiting for dblock");
-    open($lock_fh, ">", "$path/dblock") or die "Failed to open or create lock file: $!";
-    flock ($lock_fh, LOCK_EX) or die "Unable to lock $path/dblock: $!";
-    info("Locked dblock OK");
-}
-
-sub dbunlock {
-    flock $lock_fh, LOCK_UN;
-    close $lock_fh;
 }
 
 # Read a GIFTS CSV dump file, return a hash-ref like:
