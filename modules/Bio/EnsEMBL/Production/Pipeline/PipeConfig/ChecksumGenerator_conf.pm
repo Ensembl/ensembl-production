@@ -112,6 +112,9 @@ sub pipeline_analyses {
             -logic_name => 'fetch_genome_sequence_info',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
+            -parameters      => {
+                populate_mvp => $self->o('populate_mvp'),
+            },
             -flow_into        => { 3 => [ 'checksum_transfer' ], },
 
         },
