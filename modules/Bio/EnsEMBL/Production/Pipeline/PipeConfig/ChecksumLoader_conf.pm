@@ -42,7 +42,7 @@ sub default_options {
         run_all              => 0,
         dbname               => [],
         meta_filters         => {},
-        'sequence_types'     => [],
+        hash_types    => [],
     };
 }
 sub pipeline_create_commands {
@@ -115,7 +115,7 @@ sub pipeline_analyses {
             -language        => 'python3',
             -max_retry_count   => 1,
             -parameters        => {
-                sequence_types => $self->o('sequence_types'),
+                sequence_types => $self->o('hash_type'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
 
