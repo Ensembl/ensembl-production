@@ -22,12 +22,12 @@ class ChecksumTransfer(BaseProdRunnable):
     def run(self):
         db_uri = make_url(self.param_required("database_uri"))
         md_uri = make_url(self.param_required("metadata_uri"))
-        sequence_types = self.param_required("metadata_uri")
-        if "md5" in sequence_types:
+        hash_type = self.param_required("hash_type")
+        if "md5" in hash_type:
             md5 = 1
-            if "sha512t24u" in sequence_types:
+            if "sha512t24u" in hash_type:
                 sha512t24u = 1
-        elif "sha512t24u" in sequence_types:
+        elif "sha512t24u" in hash_type:
                 sha512t24u = 1
         else:
             md5 = 1
