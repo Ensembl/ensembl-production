@@ -126,7 +126,7 @@ sub pipeline_analyses {
                 registry_file   => $self->o('registry'),
                 failures_fatal  => 1,
             },
-            -flow_into          => {2 => ['uri_generator']}
+            -flow_into          => {1 => ['uri_generator']}
         },
 
          {
