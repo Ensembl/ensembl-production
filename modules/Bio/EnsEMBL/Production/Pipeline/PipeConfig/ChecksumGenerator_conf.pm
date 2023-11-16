@@ -151,8 +151,6 @@ sub pipeline_analyses {
             },
         },
 
-
-
         {
             -logic_name => 'email_report',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
