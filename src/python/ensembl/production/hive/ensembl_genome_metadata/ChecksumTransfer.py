@@ -58,7 +58,8 @@ class ChecksumTransfer(BaseProdRunnable):
                     assemb = session.query(Meta.meta_value).filter(
                         Meta.meta_key == "assembly.accession").filter(Meta.species_id == species_id).one_or_none()
                     if assemb is None:
-                        raise Exception("Assembly Accession missing for this organism")
+                        print(f"Assembly Accession missing for species_id: {species_id}")
+                        continue
                     else:
                         assembly_acc = assemb[0]
                     result[species_id] = {
