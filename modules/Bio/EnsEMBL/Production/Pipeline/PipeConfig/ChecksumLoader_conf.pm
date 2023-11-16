@@ -42,7 +42,9 @@ sub default_options {
         run_all              => 0,
         dbname               => [],
         meta_filters         => {},
-        hash_types    => [],
+        hash_types           => [],
+        'populate_mvp'       => 1,
+
     };
 }
 sub pipeline_create_commands {
@@ -106,6 +108,9 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
             -max_retry_count   => 1,
             -rc_name           => 'default',
+            -parameters      => {
+                populate_mvp => $self->o('populate_mvp'),
+            },
             -flow_into        => { 3 => [ 'checksum_transfer' ], },
 
         },

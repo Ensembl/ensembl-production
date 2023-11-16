@@ -34,8 +34,9 @@ sub run {
     my $port = $core_dbc->port;
     my $dbname = $core_dbc->dbname;
     my $database_uri = 'mysql://' . $user . ':' . $password . '@' . $host . ':' . $port . '/' . $dbname;
-
-    $self->dataflow_output_id({ database_uri => $database_uri }, 3);
+    if ($self->param('populate_mvp') eq "1") {
+        $self->dataflow_output_id({ database_uri => $database_uri }, 3);
+    }
 }
 1;
 
