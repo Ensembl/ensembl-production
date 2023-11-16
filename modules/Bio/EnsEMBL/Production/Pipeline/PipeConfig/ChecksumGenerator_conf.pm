@@ -106,12 +106,34 @@ sub pipeline_analyses {
                 run_all     => $self->o('run_all'),
             },
             -max_retry_count => 1,
-            -flow_into       => {'2->A' => 'fetch_genome_sequence_info', 'A->2' => 'run_datacheck'},
+            -flow_into       => {'2->A' => 'fetch_info_generate_checksums', 'A->2' => 'run_datacheck'},
         },
         {
-            -logic_name => 'fetch_genome_sequence_info',
+            -logic_name => 'fetch_info_generate_checksums',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
+
+        },
+        {
+            -logic_name        => 'run_datacheck',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                datacheck_names => ['SequenceChecksum'],
+                datacheck_types => ['critical'],
+                registry_file   => $self->o('registry'),
+                failures_fatal  => 1,
+            },
+            -flow_into          => {2 => ['uri_generator']}
+        },
+
+         {
+            -logic_name        => 'uri_generator',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
+            -max_retry_count   => 1,
+            -rc_name           => 'default',
             -parameters      => {
                 populate_mvp => $self->o('populate_mvp'),
             },
@@ -128,19 +150,9 @@ sub pipeline_analyses {
                 metadata_uri   => $self->o('metadata_uri'),
             },
         },
-        {
-            -logic_name        => 'run_datacheck',
-            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                datacheck_names => ['SequenceChecksum'],
-                datacheck_types => ['critical'],
-                registry_file   => $self->o('registry'),
-                failures_fatal  => 1,
-            },
-        },
+
+
+
         {
             -logic_name => 'email_report',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
