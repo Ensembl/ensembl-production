@@ -51,6 +51,7 @@ process DbFactory {
   """
 }
 
+/* use new genome factory */
 process GenomeInfo {
     /*
       Description: Fetch the genome information from the ensembl production metadata-api
@@ -58,43 +59,44 @@ process GenomeInfo {
             genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
             species_name        (list): Ensembl Species Name. Defaults to [].
             organism_group      (list): Ensembl species Divisions. Defaults [].
-            unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True 
+            allow_unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True
             dataset_topic       (str) : dataset topic name to fetch the unique genome ids Default 'assembly'
             metadata_uri        (str, Required): Mysql URI string to connect the metadata database.
             taxonomy_uri        (str, Required): Mysql URI string to connect the ncbi taxonomy db.
-            output_json         (str, Required): path to genome info json file 
+            output_json         (str, Required): path to genome info json file
 
       Output:
-          String: Json file with genome information 
+          String: Json file with genome information
     */
 
-    debug "${params.debug}"  
+    debug "${params.debug}"
     label 'mem4GB'
     tag 'genomeinfo'
-  
+
     input:
     val genome_uuid
     val species_name
     val organism_group
-    val unreleased_genomes
+    val allow_unreleased_genomes
+    val allow_unreleased_datasets
     val dataset_type
     val metadata_uri
     val taxonomy_uri
     val output_json
-    
+
     output:
     path "$output_json"
 
   script :
-  def metadata_db_uri          =  metadata_uri ? "--metadata_db_uri $metadata_uri" : '' 
+  def metadata_db_uri          =  metadata_uri ? "--metadata_db_uri $metadata_uri" : ''
   def taxonomy_db_uri          =  taxonomy_uri ? "--taxonomy_db_uri $taxonomy_uri" : ''
-  def genome_uuid_param        =  genome_uuid.size() > 0 ?  "--genome_uuid ${genome_uuid.join(" ")}" : ''             
-  def species_name_param       =  species_name.size() > 0 ?  "--species_name ${species_name.join(" ")}" : ''        
-  def organism_group_param     =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''        
-  def unreleased_genomes_param =  allow_unreleased_genomes ? "--allow_unreleased_genomes" : ''         
-  def unreleased_datasets_param = allow_unreleased_datasets ? "--allow_unreleased_datasets" : ''         
-  def dataset_type_param       =  dataset_type.size() > 0 ?  "--dataset_name ${dataset_type.join(" ")}" : ''        
-  
+  def genome_uuid_param        =  genome_uuid.size() > 0 ?  "--genome_uuid ${genome_uuid.join(" ")}" : ''
+  def species_name_param       =  species_name.size() > 0 ?  "--species_name ${species_name.join(" ")}" : ''
+  def organism_group_param     =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''
+  def unreleased_genomes_param =  allow_unreleased_genomes ? "--allow_unreleased_genomes" : ''
+  def unreleased_datasets_param = allow_unreleased_datasets ? "--allow_unreleased_datasets" : ''
+  def dataset_type_param       =  dataset_type.size() > 0 ?  "--dataset_name ${dataset_type.join(" ")}" : ''
+
   """
   pyenv local production-nextflow-py-3.8
 

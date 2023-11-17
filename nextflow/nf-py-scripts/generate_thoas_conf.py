@@ -26,6 +26,7 @@ import sys
 import json
 import configparser 
 import json
+import re
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -73,11 +74,11 @@ def main():
   parser.add_argument('--taxonomy_db_dbname',  type=str, required=False, default='ncbi_taxonomy')
   parser.add_argument('--taxonomy_db_password',  type=str, required=False, default='')
   #refget
-  parser.add_argument('--refget_db_host'    ,  type=str, required=True)
-  parser.add_argument('--refget_db_port'    ,  type=str, required=True)
-  parser.add_argument('--refget_db_dbname'  ,  type=str, required=True)
-  parser.add_argument('--refget_db_user'    ,  type=str, required=True)
-  parser.add_argument('--refget_db_password',  type=str, required=True)
+  # parser.add_argument('--refget_db_host'    ,  type=str, required=True)
+  # parser.add_argument('--refget_db_port'    ,  type=str, required=True)
+  # parser.add_argument('--refget_db_dbname'  ,  type=str, required=True)
+  # parser.add_argument('--refget_db_user'    ,  type=str, required=True)
+  # parser.add_argument('--refget_db_password',  type=str, required=True)
   #mongo db
   parser.add_argument('--mongo_db_host'      ,  type=str, required=True)
   parser.add_argument('--mongo_db_port'      ,  type=str, required=True)
@@ -92,8 +93,7 @@ def main():
   #default values
   genome_file         = args.genome_file
   output              = args.output
-  genomes             = configparser.ConfigParser() 
-    
+  genomes             = configparser.ConfigParser()  
       
   with genome_file as infile:       
     for line in infile:
@@ -101,14 +101,16 @@ def main():
       
       species = each_genome['species']
       division = each_genome['division'].lower().replace('ensembl','') 
-      if each_genome['assembly'] == 'GRCh37':
+      if each_genome['assembly_default'] == 'GRCh37':
         species='homo_sapiens_37'
-        
+                
       genomes[species] = {
         'production_name'  : species,
-        'assembly'         : each_genome['assembly'],
+        'species_production': species,
+        'ensembl_name'     : each_genome['ensembl_name'], 
+        'assembly'         : each_genome['assembly_name'],
         'division'         : division,
-        'database'         : each_genome['database'],
+        'database'         : each_genome['database_name'],
         'genome_uuid'      : each_genome['genome_uuid'],
         'host'             : args.core_db_host,
         'port'             : args.core_db_port,
@@ -153,13 +155,13 @@ def main():
       'collection'  : args.mongo_db_collection,
     }            
 
-    genomes['REFGET DB'] = {
-      'host'     : args.refget_db_host,
-      'port'     : args.refget_db_port, 
-      'db'       : args.refget_db_dbname, 
-      'user'     : args.refget_db_user, 
-      'password' : args.refget_db_password,     
-    }
+    # genomes['REFGET DB'] = {
+    #   'host'     : args.refget_db_host,
+    #   'port'     : args.refget_db_port, 
+    #   'db'       : args.refget_db_dbname, 
+    #   'user'     : args.refget_db_user, 
+    #   'password' : args.refget_db_password,     
+    # }
     
   #write config parser
   with args.output as configfile:

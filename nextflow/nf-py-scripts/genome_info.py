@@ -24,16 +24,22 @@ import argparse
 import logging
 import sys
 import json
-import configparser 
+import re
+import configparser
 from os import getenv
 from os.path import isdir
 from os.path import join, isfile, realpath
+from sqlalchemy import create_engine
+
+#TODO: GenomeAdaport is removed from ensembl production api  
 from ensembl.production.metadata.api.genome import GenomeAdaptor
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-def main():  
+
+
+def main():
   parser = argparse.ArgumentParser(
        prog='genome_info.py',
       description='Fetch Ensembl genome info from new metadata API'
@@ -49,10 +55,10 @@ def main():
   parser.add_argument('-m', '--metadata_db_uri', type=str, required=True,  help='metadata db mysql uri, ex: mysql://ensro@localhost:3366/ensembl_genome_metadata')
   parser.add_argument('-t', '--taxonomy_db_uri', type=str, required=True,  help='taxonomy db mysql uri, ex: mysql://ensro@localhost:3366/ncbi_taxonomy')
   parser.add_argument('-o', '--output', type=str, required=True,  help='output file ex: genome_info.json')
-  
+
   args = parser.parse_args()
-  
-  
+
+
   #default values
   genome_uuid         = args.genome_uuid
   species             = args.species
@@ -60,39 +66,96 @@ def main():
   organism_group_type = args.organism_group_type
   dataset_name        = args.dataset_name
   dataset_source      = args.dataset_source
-  
-  
+
+
   #required values
   allow_unreleased_genomes   = args.allow_unreleased_genomes
   allow_unreleased_datasets  = args.allow_unreleased_datasets
   metadata_db_uri      = args.metadata_db_uri
   taxonomy_db_uri      = args.taxonomy_db_uri
   output_file_name     = args.output
+  #TODO: fetch  production_name directly from the dataset attribute type production.production_name  each species : 
+
+  production_regex    =  re.compile(r'^(?P<prefix>\w+)_(?P<type>core|rnaseq|cdna|otherfeatures|variation|funcgen)(_\d+)?_(\d+)_(?P<assembly>\d+)$') 
+  bacteria_collection = re.compile(r'bacteria_.*_collection.*')  
+  ##################################################  
   
-  genome_info_obj = GenomeAdaptor(metadata_uri=metadata_db_uri, taxonomy_uri=taxonomy_db_uri)    
-  with open(output_file_name, 'w') as json_output:       
-    for genome in genome_info_obj.fetch_genomes_info(genome_uuid=genome_uuid,
-                                                     ensembl_name=species,
-                                                     group=organism_group,
-                                                     group_type=organism_group_type,
-                                                     dataset_name=dataset_name,
-                                                     dataset_source=dataset_source,
-                                                     allow_unreleased_genomes=allow_unreleased_genomes,
-                                                     allow_unreleased_datasets=allow_unreleased_datasets) or []:
+  sql_query = f"""
+select distinct
+    g.genome_uuid as genome_uuid,
+    da.value as species,
+     o.ensembl_name as ensembl_name,
+     a.assembly_default as  assembly_default,
+     a.ensembl_name as assembly_ensembl_name,
+     a.name as assembly_name,
+     a.accession    as assembly_accession,
+     a.level        as assembly_level,
+     og.name        as division,
+     ds.name        as database_name,
+     ds.type         as type
+
+from genome g
+
+         join organism o using (organism_id)
+         join organism_group_member ogm on o.organism_id = ogm.organism_id
+         join organism_group og on ogm.organism_group_id = og.organism_group_id
+         join assembly a using (assembly_id)
+         join genome_dataset gd on g.genome_id = gd.genome_id
+         join dataset d on gd.dataset_id = d.dataset_id
+         join dataset_attribute da on d.dataset_id = da.dataset_id
+         join dataset_source ds on d.dataset_source_id = ds.dataset_source_id
+         join attribute a2 on da.attribute_id = a2.attribute_id
+         where a2.name='production.production_name' and og.type='DIVISION'
+
+"""
+  
+  
+  # genome_info_obj = GenomeAdaptor(metadata_uri=metadata_db_uri, taxonomy_uri=taxonomy_db_uri)
+  
+  connection_uri = f"{metadata_db_uri}"
+  engine = create_engine(connection_uri)
+  
+  if genome_uuid and len(genome_uuid) > 0: 
+    sql_query = sql_query + " and g.genome_uuid in (" + ",".join( [ "'"+gid+"'" for gid in genome_uuid]) + ")" 
+  
+  with open(output_file_name, 'w') as json_output:
+    with engine.connect() as connection:
+      result = connection.execute(sql_query)
+      for genome_info in result:
+        
+        json.dump(dict(genome_info), json_output)
+        json_output.write("\n")
       
-      genome_info = {
-                      "genome_uuid"          : genome[0]['genome'][0].genome_uuid,
-                      "species"              : genome[0]['genome'][1].ensembl_name,
-                      "assembly"             : genome[0]['genome'][2].assembly_default,
-                      "assembly_name"        : genome[0]['genome'][2].ensembl_name,
-                      "assembly_accession"   : genome[0]['genome'][2].accession,
-                      "assembly_level"       : genome[0]['genome'][2].level,
-                      "division"             : genome[0]['genome'][-2].name,
-                      "database"             : genome[0]['datasets'][-1][-1].name,
-                      "database_type"        : genome[0]['datasets'][-1][-1].type
-      }
-      json.dump(genome_info, json_output)
-      json_output.write("\n")
+    # for genome in genome_info_obj.fetch_genomes_info(genome_uuid=genome_uuid,
+    #                                                  ensembl_name=species,
+    #                                                  group=organism_group,
+    #                                                  group_type=organism_group_type,
+    #                                                  dataset_name=dataset_name,
+    #                                                  dataset_source=dataset_source,
+    #                                                  dataset_attributes=False,
+    #                                                  allow_unreleased_genomes=allow_unreleased_genomes,
+    #                                                  allow_unreleased_datasets=allow_unreleased_datasets) or []:
       
+    #   if production_regex.match(genome[0]['datasets'][-1][-1].name) and not bacteria_collection.match(genome[0]['datasets'][-1][-1].name) :
+    #     m = production_regex.match(genome[0]['datasets'][-1][-1].name)
+    #     species_production_name = m.group('prefix')
+
+    #   genome_info = {
+    #                   "genome_uuid"             : genome[0]['genome'][0].genome_uuid,
+    #                   "species"                 : species_production_name,
+    #                   "ensembl_name"            : genome[0]['genome'][1].ensembl_name,
+    #                   "assembly"                : genome[0]['genome'][2].assembly_default,
+    #                   "assembly_name"           : genome[0]['genome'][2].ensembl_name,
+    #                   "assembly_accession"      : genome[0]['genome'][2].accession,
+    #                   "assembly_level"          : genome[0]['genome'][2].level,
+    #                   "division"                : genome[0]['genome'][-2].name,
+    #                   "database"                : genome[0]['datasets'][-1][-1].name,
+    #                   "database_type"           : genome[0]['datasets'][-1][-1].type,
+                      
+    #   }
+
+        # json.dump(genome_info, json_output)
+        # json_output.write("\n")
+
 if __name__ == '__main__':
   main()
