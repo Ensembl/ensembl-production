@@ -1,44 +1,70 @@
 =head1 LICENSE
+
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
 Copyright [2016-2023] EMBL-European Bioinformatics Institute
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
      http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 =cut
 
 =pod
+
+
 =head1 CONTACT
+
   Please email comments or questions to the public Ensembl
   developers list at <http://lists.ensembl.org/mailman/listinfo/dev>.
+
   Questions may also be sent to the Ensembl help desk at
   <http://www.ensembl.org/Help/Contact>.
+
 =head1 NAME
+
 Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader
+
 =head1 DESCRIPTION
+
 A module for loading sequences from a core-like database into the 
 Perl reference implementation of refget (https://github.com/andrewyatz/refget-server-perl). 
+
 The code will load all proteins, cds and cDNA, and can optionally load toplevel
 sequences if missing from ENA's refget instance (https://www.ebi.ac.uk/ena/cram/).
+
 Allowed parameters are:
+
 =over 8
+
 =item species - The species to fetch the genomic sequence
+
 =item release - A required parameter for the version of Ensembl we are dumping for
+
 =item db_types - Array reference of the database groups to use. Defaults to core
+
 =item check_refget - Ping a refget for MD5 existence before attempting to load a toplevel sequence. Defaults to true
+
 =item refget_ping_url - URL to ping when checking for pre-existing sequences. Defaults to ENA's implementation
+
 =item verify_checksums - If set to true this module will double check the recorded checksum. Defaults to true
+
 =item source - Annotation source. Defaults to Ensembl
+
 =back
+
 The database connection for DBIx::Class is assumed to be in the registry under the species name B<multi>
 and the group of B<refget>. DBIx::Class then can take the underlying DBI handle to connect. Adding
 a C<-DRIVER> attribute of type C<"Pg"> to a C<Bio::EnsEMBL::DBSQL::DBAdaptor> constructor will make
 the magic happen (assuming the underlying Refget is in PostgreSQL).
+
 =cut
 
 package Bio::EnsEMBL::Production::Pipeline::Refget::RefgetLoader;
@@ -90,16 +116,25 @@ sub run {
     my ($self) = @_;
     my $group = $self->param('group');
     my $dba = $self->get_DBAdaptor($group);
+    #set sequence and hash
+    $self->{'subseq'}={};
+
     $self->throw("Cannot find adaptor for type $group") unless $dba;
     # Assumes refget is available from the multi name & refget type
-    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
+    #my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
     my $extra_attributes = {};
-    if($refget_dba->dbc()->driver() eq 'mysql') {
-        $extra_attributes->{quote_char} = '`';
-    }
-    my $refget_schema = Refget::Schema->connect(sub {
-        return $refget_dba->dbc()->db_handle();
-    }, $extra_attributes);
+    #if($refget_dba->dbc()->driver() eq 'mysql') {
+    # $extra_attributes->{quote_char} = '`';
+	#}
+    #--host mysql-ens-test-1 --port 4508 --user ensadmin --pass ensembl	
+ 
+    $extra_attributes->{quote_char} = '`';
+    my $refget_schema = Refget::Schema->connect("dbi:mysql:database=ensgaarefgetpro;host=mysql-ens-production-1.ebi.ac.uk;port=xxxx;max_allowed_packet=1G",
+      "xxxx", "xxxx",  { AutoCommit => 0 }, $extra_attributes);
+    #$refget_schema->{mysql_auto_reconnect} = 1; 
+	    #asub {
+	    #return $refget_dba->dbc()->db_handle()->clone();
+	    #}, $extra_attributes);
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
 
@@ -109,28 +144,33 @@ sub run {
     my @slices = reverse @{$slice_adaptor->fetch_all('toplevel', undef, 1, undef, undef)};
 
     # Get the checksum lookups
-    my $checksum_lookup = {};
+        my $checksum_lookup = {};
     if($self->param('verify_checksums')) {
         foreach my $type (@{$self->param('sequence_type')}) {
             foreach my $checksum (qw/md5 sha512t24u/) {
                 $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
             }
         }
-    }
+     }
 
     while(my $slice = shift @slices) {
         # Transaction block is left at just one per toplevel region. 
         # Sometimes it'll be fine and others it won't be
         # Rows only inserted into molecule if there's a new id+seq+release+type
-        $refget_schema->txn_do(sub {
-            $self->generate_and_load_toplevel($slice, $checksum_lookup, $sequence_adaptor, $refget_schema);
-            $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
-        });
+	$refget_schema->txn_do(sub {
+	    $self->generate_and_load_toplevel($slice, $checksum_lookup, $sequence_adaptor, $refget_schema);
+	    $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
+	});
     }
 
     # cleanup
+    #$refget_dba->dbc()->db_handle()->{'AutoCommit'} = 1; 
     $dba->dbc->disconnect_if_idle();
-    $refget_dba->dbc->disconnect_if_idle();
+    $refget_schema->txn_commit;
+
+    #$refget_schema->storage->disconnect();
+    
+    #$refget_dba->dbc->disconnect_if_idle();
 }
 
 ##### DBIX::Class/Ensembl object loading methods
@@ -139,6 +179,8 @@ sub run {
 # into a refget instance.
 sub create_basic_refget_objects {
     my ($self, $dba, $refget_schema) = @_;
+    print($dba->dbc->dbname);
+    print("\n", $dba->dbc->host);
     my $mc = $dba->get_MetaContainer();
     my $csa = $dba->get_CoordSystemAdaptor();
     my ($cs) = @{$csa->fetch_all()};
@@ -146,6 +188,14 @@ sub create_basic_refget_objects {
     my $species_name = $mc->get_scientific_name();
     my $species_assembly = $cs->version();
     my $species_division = $mc->single_value_by_key('species.division');
+    
+    #check species stain group and select assembly version name 
+    my $strain_group = $mc->single_value_by_key('species.strain_group');
+    if(defined $strain_group){
+      $species_assembly =  $mc->single_value_by_key('assembly.name');
+    }
+
+
     my $species_release = $self->param('release');
     my $source = $self->param('source');
 
@@ -171,6 +221,7 @@ sub create_basic_refget_objects {
             $self->throw("No source object found for source '${source}'. Is the DB pre-populated?");
         }
         $self->param('source_obj', $source_obj);
+	$refget_schema->txn_commit;
     });
     return;
 }
@@ -199,7 +250,8 @@ sub generate_and_load_toplevel {
                     'The stored %s checksum (%s) for seq_region_name %s seq_region_id %d does not match the calculated checksum (%s)',
                     $checksum, $existing_checksum, $seq_region_name, $seq_region_id, $slice_checksums->{$checksum}
                 );
-                $self->throw($error_string);
+		print($slice->seq_region_name(), "\n");
+		$self->throw($error_string);
             }
         }
     }
@@ -212,6 +264,7 @@ sub generate_and_load_toplevel {
     }
 
     # Load if it wasn't found in refget
+    my $seq_region_id = $slice->get_seq_region_id(); #remove it 
     if(! $exists_in_refget) {
         my $seq_hash = {
             trunc512 => $slice_checksums->{trunc512},
@@ -346,12 +399,14 @@ sub sequence_exists {
 
 sub insert_molecule {
     my ($self, $refget_schema, $seq_ref, $seq_hash, $id, $mol_type) = @_;
+    print($mol_type, "\n");
     my $molecule_type_obj = $self->param('mol_type_objs')->{$mol_type};
     my $release_obj = $self->param('release_obj');
     my $species_obj = $self->param('species_obj');
     # This is an option to insert but we don't do it in refget main ...
     # my $division_obj = $self->param('division_obj');
     my $source_obj = $self->param('source_obj');
+
     my ($seq_obj, $first_seen) = $self->insert_sequence($refget_schema, $seq_ref, $seq_hash);
     my $molecule_obj = $seq_obj->find_or_create_related(
         'molecules',
@@ -375,6 +430,7 @@ sub insert_sequence {
     delete $seq_hash_clone{sha512t24u};
     # Logic taken from Refget::Schema::ResultSet::Seq so there is logic bleed here
     # Could be moved up
+    print("$ga4gh_id\n......\n");
     my $seq_obj = $rs->find_or_new(\%seq_hash_clone, {key => 'seq_trunc512_uniq'});
     my $first_seen = 0;
     if(!$seq_obj->in_storage()) {
@@ -387,8 +443,8 @@ sub insert_sequence {
 
 sub insert_raw_sequence {
     my ($self, $refget_schema, $seq_ref, $ga4gh_id) = @_;
-    my $hash = ga4gh_to_trunc512($ga4gh_id);
     my $rs = $refget_schema->resultset('RawSeq');
+    my $hash = ga4gh_to_trunc512($ga4gh_id);
     my $raw_seq = $rs->find_or_create({ checksum => $hash, seq => ${$seq_ref} });
     return $raw_seq;
 }

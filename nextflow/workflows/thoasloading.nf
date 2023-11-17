@@ -33,6 +33,7 @@ println """\
          dataset_type          : ${params.dataset_type}
          organism_group        : ${params.organism_group}
          unreleased_genomes    : ${params.allow_unreleased_genomes}
+         unreleased_genomes    : ${params.allow_unreleased_genomes}
          outdir                : ${params.thoas_data_location}
          thoas_code_location   : ${params.thoas_code_location}
          thoas_data_location   : ${params.thoas_data_location}

@@ -37,7 +37,9 @@ sub param_defaults {
     data_type      => 'sequence',
     data_types     => ['unmasked', 'softmasked', 'hardmasked'],
     file_type      => 'fa',
-    timestamped    => 0,
+    # For BLAST generation we don't need the timestamped files to be generated
+      # TODO NEED revision
+    timestamped    => 1,
     per_chromosome => 0,
     chunk_size     => 30000,
     line_width     => 60,

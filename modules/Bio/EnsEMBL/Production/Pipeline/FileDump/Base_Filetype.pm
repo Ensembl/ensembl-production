@@ -128,18 +128,10 @@ sub filenames {
 
   foreach my $data_type (@data_types) {
     my $filename;
-
-    if( $self->param('genome_uuid')){
-      my $genome_uuid =  $self->param('genome_uuid');
-      $filename = catdir(
-        $dir,
-        "$data_type.$file_type"
-        #"$genome_uuid.$data_type.$file_type"  #if genome_uuid need to be added for file name 
-
-      );
-    }else{
-      $self->throw("No genome UUID set");
-    }
+    $filename = catdir(
+      $dir,
+      "$data_type.$file_type"
+    );
     $filenames{$data_type} = $filename;
   }
 
