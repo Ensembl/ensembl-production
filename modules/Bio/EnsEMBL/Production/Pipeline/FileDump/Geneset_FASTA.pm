@@ -90,7 +90,11 @@ sub print_to_file {
   my ($self, $slices, $cdna_filename, $cds_filename, $pep_filename, $mode) = @_;
 
   my $cdna_serializer = $self->fasta_serializer($cdna_filename, $mode);
-  my $cds_serializer  = $self->fasta_serializer($cds_filename, $mode);
+  my $cds_serializer = "";
+
+  if($self->param('cds')){
+    $cds_serializer  = $self->fasta_serializer($cds_filename, $mode);
+  }
   my $pep_serializer  = $self->fasta_serializer($pep_filename, $mode);
 
   while (my $slice = shift @{$slices}) {
@@ -102,10 +106,11 @@ sub print_to_file {
       
       if ($transcript->translateable_seq ne '') {
         my $cds_seq = $cdna_seq;
-        $cds_seq->seq($transcript->translateable_seq);
-        $cds_seq->display_id($self->header($transcript, 'cds'));
-        $cds_serializer->print_Seq($cds_seq);
-
+        if($self->param('cds')){ #no need to dump cds for blast mvp 
+          $cds_seq->seq($transcript->translateable_seq);
+          $cds_seq->display_id($self->header($transcript, 'cds'));
+          $cds_serializer->print_Seq($cds_seq);
+        }
         my $pep_seq = $transcript->translate;
         if (defined $pep_seq) {
           $pep_seq->display_id($self->header($transcript, 'pep'));

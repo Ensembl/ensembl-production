@@ -29,7 +29,6 @@ sub default_options {
     %{$self->SUPER::default_options},
 
     genome_types => [
-      'Assembly_Chain',
       'Genome_FASTA',
     ],
     geneset_types => [

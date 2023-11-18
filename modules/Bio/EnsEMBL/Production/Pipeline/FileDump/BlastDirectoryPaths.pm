@@ -91,7 +91,7 @@ sub directories {
   if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
       $self->param_required('genome_uuid'),
-      $self->param_required("${data_category}_dirname"),
+      #$self->param_required("${data_category}_dirname"), # uncommnet if subdirectory gene or genome needed
       # $species_production_name,
       # $assembly
     );

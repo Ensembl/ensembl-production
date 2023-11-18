@@ -78,16 +78,22 @@ sub default_options {
         ref_dbname             => 'ensembl_compara_references',
         compara_host_uri       => '',
 
-        # Default MVP params        
-        'unreleased_genomes' => $self->o('unreleased_genomes'),
-        'metadata_db_uri'    => $self->o('metadata_db_uri'),
-        'taxonomy_db_uri'    => $self->o('taxonomy_db_uri'),
-        'organism_group_type'=> undef,
-        'genome_uuid'        => [], 
-        'ensembl_species'    => [],
-        'organism_group'     => [],
-        'dataset_name'       => [],
-        'dataset_source'     => [],
+        # Default MVP params 
+        'genome_uuid'          => [],       
+        'unreleased_genomes'   => $self->o('unreleased_genomes'),
+        'metadata_db_uri'      => $self->o('metadata_db_uri'),
+        'ensembl_species'      => [],
+        'released_genomes'     => 0, 
+        'unreleased_genomes'   => 0,  
+        'organism_group_type'  => 'DIVISION',      
+        'organism_group'       => [],     
+        'anti_ensembl_name'    => [],  
+
+        #mvp blast param
+        'hardmasked'          => 1,
+        'cds'                 => 1,   
+        'timestamped_dir'     => 1,         
+
     };
 }
 
@@ -141,15 +147,16 @@ sub pipeline_analyses {
             -language        => 'python3',
             -rc_name         => 'default', 
             -parameters => {
-            'unreleased_genomes' => $self->o('unreleased_genomes'),
-            'metadata_db_uri'    => $self->o('metadata_db_uri'),
-            'taxonomy_db_uri'    => $self->o('taxonomy_db_uri'),
-            'ensembl_species'    => $self->o('ensembl_species'),  
-            'organism_group'     => $self->o('organism_group'), 
-            'dataset_name'       => $self->o('dataset_name'),
-            'dataset_source'     => $self->o('dataset_source'),
-            'genome_uuid'        => $self->o('genome_uuid'), 
-            'organism_group_type' => $self->o('organism_group_type'),
+            
+            'metadata_db_uri'      => $self->o('metadata_db_uri'),
+            'organism_name'        => $self->o('ensembl_species'),  
+            'genome_uuid'          => $self->o('genome_uuid'), 
+            'unreleased_genomes'   => $self->o('unreleased_genomes'),    
+            'organism_group'       => $self->o('organism_group'),
+            'released_genomes'     => $self->o('released_genomes'),
+            'organism_group_type'  => $self->o('organism_group_type'),
+            'organism_group'       => $self->o('organism_group'),
+            'anti_organism_name'   => $self->o('anti_ensembl_name'),
 
             },       
             -flow_into  => {
@@ -206,6 +213,8 @@ sub pipeline_analyses {
                 blast_index    => 0,
                 blastdb_exe    => $self->o('blastdb_exe'),
                 per_chromosome => $self->o('dna_per_chromosome'),
+                hardmasked  => $self->o('hardmasked'),
+                timestamped => $self->o('timestamped'),
             },
             -rc_name         => '4GB',
             -flow_into       => {
@@ -220,6 +229,7 @@ sub pipeline_analyses {
             -parameters      => {
                 blast_index => 0,
                 blastdb_exe => $self->o('blastdb_exe'),
+                cds         => $self->o('cds'),
             },
             -rc_name         => '1GB',
             -flow_into       => {
@@ -235,6 +245,7 @@ sub pipeline_analyses {
                 blast_index    => $self->o('blast_index'),
                 blastdb_exe    => $self->o('blastdb_exe'),
                 per_chromosome => $self->o('dna_per_chromosome'),
+                hardmasked     => $self->o('hardmasked'),
                 overwrite      => 1,
             },
             -rc_name         => '8GB',
@@ -248,6 +259,7 @@ sub pipeline_analyses {
                 blast_index => 0,
                 blastdb_exe => $self->o('blastdb_exe'),
                 overwrite   => 1,
+                cds         => $self->o('cds'),
             },
             -rc_name         => '4GB',
 
