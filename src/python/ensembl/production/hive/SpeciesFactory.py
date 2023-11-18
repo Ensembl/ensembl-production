@@ -22,22 +22,22 @@ class SpeciesFactory(eHive.BaseRunnable):
   
   def run(self):
     
-    # query = """
-    #   genomeId
-    #   genomeUuid
-    #   productionName
-    #   organism {      
-    #     ensemblName         
-    #   }
-    #   genomeDatasets {
-    #     dataset {
-    #       datasetSource {
-    #         name
-    #         type
-    #       }
-    #     }
-    #   }
-    # """
+    query = """
+      genomeId
+      genomeUuid
+      productionName
+      organism {      
+        ensemblName         
+      }
+      genomeDatasets {
+        dataset {
+          datasetSource {
+            name
+            type
+          }
+        }
+      }
+    """
     
     for genome in genome_factory.get_genomes(
       metadata_db_uri        = self.param("metadata_db_uri"),
@@ -51,8 +51,6 @@ class SpeciesFactory(eHive.BaseRunnable):
       # query_param            = query
       ):
       
-      #print(genome)
-  
       (database_name, dbtype) = (None, None)
                 
       for each_dataset in genome.get('genomeDatasets', []) :
