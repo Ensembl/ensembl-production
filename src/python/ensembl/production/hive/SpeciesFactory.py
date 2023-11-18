@@ -16,45 +16,59 @@ SpeciesFactory for MVP
 
 import eHive
 from dataclasses import asdict
-from ensembl.production.metadata.api.genome import GenomeAdaptor
+from ensembl.production.metadata import genome_factory
 
 class SpeciesFactory(eHive.BaseRunnable):
   
-  @staticmethod
-  def check_params(param):
-    if  isinstance(param, tuple):
-        param = param[0]
-    if isinstance(param, list):
-      if(len(param)==0):
-        param = None
-    if param is not None and not isinstance(param, list):
-        param = [param]
-    return param
-    
   def run(self):
+    
+    # query = """
+    #   genomeId
+    #   genomeUuid
+    #   productionName
+    #   organism {      
+    #     ensemblName         
+    #   }
+    #   genomeDatasets {
+    #     dataset {
+    #       datasetSource {
+    #         name
+    #         type
+    #       }
+    #     }
+    #   }
+    # """
+    
+    for genome in genome_factory.get_genomes(
+      metadata_db_uri        = self.param("metadata_db_uri"),
+      organism_name          = self.param("organism_name"),
+      genome_uuid            = self.param("genome_uuid"),
+      unreleased_genomes     = self.param("unreleased_genomes"), 
+      released_genomes       = self.param("released_genomes"), 
+      organism_group_type    = self.param("organism_group_type"),
+      organism_group         = self.param("organism_group"),  
+      anti_organism_name     = self.param("anti_organism_name"),  
+      # query_param            = query
+      ):
+      
+      #print(genome)
+  
+      (database_name, dbtype) = (None, None)
+                
+      for each_dataset in genome.get('genomeDatasets', []) :
+        if each_dataset.get('dataset', {}).get('name', None) == 'assembly':
+          database_name = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
+          dbtype   =  each_dataset.get('dataset', {}).get('datasetSource', {}).get('type', None)
 
-    genome_info_obj = GenomeAdaptor(metadata_uri=self.param("metadata_db_uri"), 
-                                    taxonomy_uri=self.param("taxonomy_db_uri"))  
-     
-    for genome in genome_info_obj.fetch_genomes_info(
-                                                     genome_uuid=self.check_params(self.param("genome_uuid")),
-                                                     ensembl_name=self.check_params(self.param("ensembl_species")),
-                                                     group=self.check_params(self.param("organism_group")),
-                                                     group_type=self.check_params(self.param("organism_group_type")),
-                                                     dataset_name=self.check_params(self.param("dataset_name")),
-                                                     dataset_source=self.check_params(self.param("dataset_source")),
-                                                     allow_unreleased_genomes=self.check_params(self.param("unreleased_genomes")),
-                                                     allow_unreleased_datasets=self.check_params(self.param("unreleased_datasets")),
-                                                     dataset_attributes=self.check_params(self.param("dataset_attributes"))                                            
-                                                    ) or []:
       genome_info = { 
-                     "genome_uuid": genome[0]['genome'][0].genome_uuid,
-                     "species"    : genome[0]['genome'][1].ensembl_name,
-                     "division"   : genome[0]['genome'][3].name,
-                     "group"      : genome[0]['datasets'][0][4].type,   #dbtype (core|variation|otherfeatures)
-                     "dbname"     : genome[0]['datasets'][0][4].name,
+         "genome_uuid": genome.get('genomeUuid', None),
+         "species": genome.get('productionName', None),
+         "ensembl_name": genome.get('organism', {}).get('ensemblName', None),
+         "dbname": database_name,
+         "type": dbtype,
       }
-            
+
+
       self.dataflow(
         genome_info  , 2
       )
