@@ -79,7 +79,7 @@ def main():
                 
       for each_dataset in genome.get('genomeDatasets', []) :
         if each_dataset.get('dataset', {}).get('name', None) == 'assembly':
-          division = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
+          database_name = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
           dbtype   =  each_dataset.get('dataset', {}).get('datasetSource', {}).get('type', None)
       
       genome_info = { 
