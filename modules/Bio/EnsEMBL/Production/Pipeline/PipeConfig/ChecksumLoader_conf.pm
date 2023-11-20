@@ -100,7 +100,7 @@ sub pipeline_analyses {
                           },
       -hive_capacity   => -1,
       -max_retry_count => 1,
-      -flow_into        => { 2 => [ 'uri_generator' ], },
+      -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
       -rc_name           => 'default',
         },
         {
@@ -111,7 +111,7 @@ sub pipeline_analyses {
             -parameters      => {
                 populate_mvp => $self->o('populate_mvp'),
             },
-            -flow_into        => { 3 => [ 'checksum_transfer' ], },
+            -flow_into        =>  'checksum_transfer' ,
 
         },
         {

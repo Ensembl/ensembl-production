@@ -40,9 +40,8 @@ sub run {
     else {
         $database_uri = 'mysql://' . $user . '@' . $host . ':' . $port . '/' . $dbname;
     }
-    if ($self->param('populate_mvp') eq "1") {
-        $self->dataflow_output_id({ database_uri => $database_uri }, 3);
-    }
+    $self->dataflow({ database_uri => $database_uri });
+
 }
 1;
 
