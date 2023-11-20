@@ -40,8 +40,7 @@ sub run {
     else {
         $database_uri = 'mysql://' . $user . '@' . $host . ':' . $port . '/' . $dbname;
     }
-    $self->dataflow({ database_uri => $database_uri });
-
+    $self->dataflow_output_id({ database_uri => $database_uri }, 2);
 }
 1;
 
