@@ -43,8 +43,6 @@ sub default_options {
         dbname               => [],
         meta_filters         => {},
         hash_types           => [],
-        'populate_mvp'       => 0,
-
     };
 }
 sub pipeline_create_commands {
@@ -66,7 +64,6 @@ sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
         %{$self->SUPER::pipeline_wide_parameters},
-        'populate_mvp' => $self->o('populate_mvp'),
     };
 }
 
@@ -109,10 +106,7 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
             -max_retry_count   => 1,
             -rc_name           => 'default',
-            -parameters      => {
-                populate_mvp => $self->o('populate_mvp'),
-            },
-            -flow_into        =>  'checksum_transfer' ,
+            -flow_into        => {2 => 'checksum_transfer'},
 
         },
         {
@@ -124,7 +118,6 @@ sub pipeline_analyses {
                 sequence_types => $self->o('hash_type'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
-
             -rc_name           => 'default',
         }
 

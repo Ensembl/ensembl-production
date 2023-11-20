@@ -113,7 +113,6 @@ sub pipeline_analyses {
             -logic_name => 'fetch_info_generate_checksums',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
-            -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
         },
         {
             -logic_name        => 'run_datacheck',
@@ -127,6 +126,7 @@ sub pipeline_analyses {
                 registry_file   => $self->o('registry'),
                 failures_fatal  => 1,
             },
+            -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
         },
 
          {
