@@ -28,7 +28,7 @@ class ChecksumTransfer(BaseProdRunnable):
             if "sha512t24u" in hash_type:
                 sha512t24u = 1
         elif "sha512t24u" in hash_type:
-                sha512t24u = 1
+            sha512t24u = 1
         else:
             md5 = 1
             sha512t24u = 1
@@ -121,4 +121,3 @@ class ChecksumTransfer(BaseProdRunnable):
             # Perform the bulk update
             if updates:
                 session.bulk_update_mappings(AssemblySequence, updates)
-                session.commit()
