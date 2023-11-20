@@ -126,7 +126,7 @@ sub pipeline_analyses {
                 registry_file   => $self->o('registry'),
                 failures_fatal  => 1,
             },
-            -flow_into          => {1 => ['uri_generator']}
+            -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
         },
 
          {
@@ -137,7 +137,7 @@ sub pipeline_analyses {
             -parameters      => {
                 populate_mvp => $self->o('populate_mvp'),
             },
-            -flow_into        => { 3 => [ 'checksum_transfer' ], },
+            -flow_into        =>  'checksum_transfer',
 
         },
         {
