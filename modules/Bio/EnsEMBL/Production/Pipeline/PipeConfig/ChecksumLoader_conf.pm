@@ -43,7 +43,7 @@ sub default_options {
         dbname               => [],
         meta_filters         => {},
         hash_types           => [],
-        'populate_mvp'       => 1,
+        'populate_mvp'       => 0,
 
     };
 }
@@ -66,6 +66,7 @@ sub pipeline_wide_parameters {
     my ($self) = @_;
     return {
         %{$self->SUPER::pipeline_wide_parameters},
+        'populate_mvp' => $self->o('populate_mvp'),
     };
 }
 

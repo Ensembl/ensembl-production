@@ -82,6 +82,7 @@ sub pipeline_wide_parameters {
         'release'        => $self->o('release'),
         'sequence_types' => $self->o('sequence_type'),
         'hash_types'     => $self->o('hash_type'),
+        'populate_mvp' => $self->o('populate_mvp'),
     };
 }
 
