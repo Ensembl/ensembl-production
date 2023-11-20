@@ -137,7 +137,7 @@ sub pipeline_analyses {
             -parameters      => {
                 populate_mvp => $self->o('populate_mvp'),
             },
-            -flow_into        =>  'checksum_transfer',
+            -flow_into        => {2 => 'checksum_transfer'},
 
         },
         {
