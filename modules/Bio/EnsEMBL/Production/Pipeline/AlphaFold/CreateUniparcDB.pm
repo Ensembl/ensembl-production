@@ -91,7 +91,7 @@ sub run {
     # Uniparc has 251M entries at the moment.
     # As with a regular Perl hash, a duplicate entry will overwrite the previous
     # # value.
-    $db->open("uniparc-to-uniprot.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
+    $db->open("$idx_dir/uniparc-to-uniprot.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
         $db->OWRITER | $db->OCREATE | $db->OTRUNCATE
     ) or die "Error opening DB: " . $db->error();
 
@@ -103,6 +103,7 @@ sub run {
     # We pick out the Uniparc accession and Uniprot accession
     # index[10] (Uniparc): UPI00003B0FD4; index[0] (Uniprot): Q6GZX4
     my $line;
+
     while ($line = <$map>) {
         unless ($line =~ /^\w+\t[[:print:]\t]+$/) {
             chomp $line;
@@ -114,7 +115,12 @@ sub run {
             die "Data error: Uniparc accession is not what we expect: '$line'";
         }
         # This is the DB write operation.
-        $db->set($x[10], $x[0]) or die "Error inserting data: " . $db->error();
+        my $oldval;
+        if ($oldval = $db->get($x[10])) {
+            $db->set($x[10], "$oldval\t" . $x[0]) or die "Error inserting data: " . $db->error();
+        } else {
+            $db->set($x[10], $x[0]) or die "Error inserting data: " . $db->error();
+        }
     }
 
     $map->close;

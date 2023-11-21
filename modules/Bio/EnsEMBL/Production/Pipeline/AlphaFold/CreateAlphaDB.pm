@@ -90,7 +90,7 @@ sub run {
     # hash collision handling. These are tuned for write speed and for approx. 300M entries.
     # As with a regular Perl hash, a duplicate entry will overwrite the previous
     # value.
-    $db->open("uniprot-to-alphafold.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
+    $db->open("$idx_dir/uniprot-to-alphafold.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
         $db->OWRITER | $db->OCREATE | $db->OTRUNCATE
     ) or die "Error opening DB: " . $db->error();
 
