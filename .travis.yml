@@ -45,9 +45,9 @@ install:
   - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
   - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
   - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
+  - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
   - cpanm --sudo -v --installdeps --notest .
   - cpanm --sudo -n Devel::Cover::Report::Coveralls
-  - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
   - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
   - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
 script:
