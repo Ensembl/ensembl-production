@@ -14,4 +14,7 @@ requires 'File::Slurp';
 requires 'Log::Log4perl';
 requires 'XML::Simple';
 requires 'Time::Duration';
-
+requires 'Tie::LevelDB';
+requires 'IO::Zlib';
+requires 'File::Temp';
+requires 'Fcntl';

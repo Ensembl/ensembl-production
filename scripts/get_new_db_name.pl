@@ -1,6 +1,6 @@
 #!/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2022] EMBL-European Bioinformatics Institute
+# Copyright [2016-2023] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,10 @@ if($name =~ m/^(.*_[a-z]+_)([0-9]+)$/) {
     my $v1 = $2 + 1;
     my $v2 = $3 + 1;
     print "${1}${v1}_${v2}${4}\n";
+} elsif ($name =~  m/^(.*_compara_[a-z]+_)([0-9]+)_([0-9]+)$/) {
+    my $v1 = $2 + 1;
+    my $v2 = $3 + 1;
+    print "${1}${v1}_${v2}\n";
 } elsif($name =~ m/^(.*_[a-z]+_)([0-9]+)_([0-9]+)$/) {
     my $v1 = $2 + 1;
     print "${1}${v1}_${3}\n";

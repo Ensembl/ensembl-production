@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -258,12 +258,17 @@ sub run {
             }
             else {
                 $translation = $tl_adaptor->fetch_by_stable_id($tgt_protein);
-                if (defined $translation) {
-                    $transcript = $translation->transcript;
-                    $transcript_hash{$tgt_protein} = $transcript;
-                    $translation_hash{$tgt_protein} = $translation;
+                if (defined $translation or $translation ne '') {
+                    if (defined ($translation->transcript)) {
+                         $transcript = $translation->transcript;
+                         $transcript_hash{$tgt_protein} = $transcript;
+                         $translation_hash{$tgt_protein} = $translation;
+                    } else {
+                        $self->log()->warn("Transcript not found for protein $tgt_protein");
+                    }
+                                
                 } else {
-                    $self->log()->warn("Transcript not found for protein $tgt_protein");
+                    $self->log()->warn("Translation does not exist or is blank");
                 }
             }
 

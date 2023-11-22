@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -106,12 +106,28 @@ sub get_blast_files {
   my $base = $self->param('ftp_dir');
   my $type = $self->param('type');
   my $old_path = File::Spec->catdir($base, "release-$old_release", 'ncbi_blast', $type);
+  my $repeatmask_value = $self->get_repeatmask_value($self->param('species'));
   my $filter = sub {
     my ($filename) = @_;
-    return ($filename =~ /$species\./) ? 1 : 0;
+    return ($filename =~ /$species\./ && $filename =~ /$repeatmask_value\.dna/) ? 1 : 0;
   };
   my $files = $self->find_files($old_path, $filter);
+  if(! scalar @$files){
+    $self->throw("No Blast index files found in previous release for species $species with repeatmasker date $repeatmask_value");
+  }
   return $files;
 }
+
+sub get_repeatmask_value {
+  my ($self, $species) = @_;
+  my $core_adaptor = Bio::EnsEMBL::Registry->get_DBAdaptor($species, 'core');
+  my $res_array = $core_adaptor->dbc()->sql_helper()->execute_simple( 
+   	  -SQL => qq/select max(date_format( created, "%Y%m%d")) from analysis a join meta m on (a.logic_name = lower(m.meta_value)) where meta_key =?/, 
+	  -USE_HASHREFS => 1, 
+	  -PARAMS => ['repeat.analysis']);
+  return $res_array->[0] if @$res_array;
+  return "";
+}
+
 
 1;

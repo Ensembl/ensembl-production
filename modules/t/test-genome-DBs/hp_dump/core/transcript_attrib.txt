@@ -2,7 +2,6 @@
 2263059	4	XXbac-BPG258E24.8-001
 2263059	52	Havana
 2263059	53	v@somewhere.com
-2263059	123	CCDS4656.1
 2263060	3	XXbac-BPG258E24.1-001
 2263060	4	XXbac-BPG258E24.1-001
 2263060	52	Havana
@@ -11,13 +10,11 @@
 2263061	4	XXbac-BPG258E24.7-001
 2263061	52	Havana
 2263061	53	v@somewhere.com
-2263061	123	pseudopolyA not annotated as genomic has mutated from AATAAA -> AATTAA
 2263062	92	chromosome:GRCh38:6:29054084:29055090:1
 2263063	3	XXbac-BPG171B11.2-001
 2263063	4	XXbac-BPG171B11.2-001
 2263063	52	Havana
 2263063	53	v@somewhere.com
-2263063	123	Segregating Pseudo Gene, a nonsynonymous SNP rs2394517 (AA change=*/Q ) as identified by Olender et al., 2012 (ib2 - 13/04/2013)
 2263063	191	rs2394517,CSHL-HAPMAP:HapMap-CEU
 2263063	191	rs2394517,CSHL-HAPMAP:HapMap-HCB
 2263063	191	rs2394517,CSHL-HAPMAP:HapMap-JPT
@@ -25,17 +22,14 @@
 2263064	4	XXbac-BPG171B11.3-001
 2263064	52	Havana
 2263064	53	v@somewhere.com
-2263064	123	CCDS43433.1
 2263065	3	XXbac-BPG258E24.10-001
 2263065	4	XXbac-BPG258E24.10-001
 2263065	52	Havana
 2263065	53	v@somewhere.com
-2263065	123	masked by repeat
 2263066	3	XXbac-BPG171B11.7-001
 2263066	4	XXbac-BPG171B11.7-001
 2263066	52	Havana
 2263066	53	v@somewhere.com
-2263066	123	Originally annotated as part of ENCODE based on yale unitary pseudogene prediction which used e.g. MGI:2177519 as evidence. However, difficult to determine whether mouse Olfr134 orthologue has gene synteny nwith human due to the multiple OR duplications (ib2 - 17/04/2013)
 2263067	92	chromosome:GRCh38:6:29141080:29142351:1
 2263068	3	XXbac-BPG171B11.6-001
 2263068	4	XXbac-BPG171B11.6-001
@@ -59,7 +53,6 @@
 2263073	4	XXbac-BPG308J9.2-001
 2263073	52	Havana
 2263073	53	v@somewhere.com
-2263073	123	LTR splits ORF although cds 'appears' to splice around it
 2263074	3	XXbac-BPG308J9.1-001
 2263074	4	XXbac-BPG308J9.1-001
 2263074	52	Havana
@@ -68,7 +61,6 @@
 2263075	4	XXbac-BPG1H2.5-001
 2263075	52	Havana
 2263075	53	v@somewhere.com
-2263075	123	Originally annotated as part of ENCODE based on yale unitary pseudogene prediction which used MGI:3030057 as evidence. However, the mouse Olfr124 orthologue has multiple equal BLAT hits in human and difficult to determine true gene synteny so doubt this is a unitary_psudogene (ib2 - 18/04/2013)
 2263076	92	chromosome:GRCh38:6:29274467:29275432:1
 2263077	3	XXbac-BPG1H2.2-001
 2263077	4	XXbac-BPG1H2.2-001
@@ -78,18 +70,15 @@
 2263078	4	XXbac-BPG1H2.4-001
 2263078	52	Havana
 2263078	53	v@somewhere.com
-2263078	123	CCDS4657.1
 2263080	3	XXbac-BPG1H2.3-001
 2263080	4	XXbac-BPG1H2.3-001
 2263080	52	Havana
 2263080	53	v@somewhere.com
-2263080	123	CCDS4658.1
 2263081	92	chromosome:GRCh38:6:29364332:29365400:1
 2263082	3	XXbac-BPG13B8.5-001
 2263082	4	XXbac-BPG13B8.5-001
 2263082	52	Havana
 2263082	53	v@somewhere.com
-2263082	123	Segregating Pseudo Gene, a polymorphism of 16 bp del at positions 556-572 as identified by Olender et al., 2012 (ib2 - 18/04/2013)
 2263082	192	rs1011985,CSHL-HAPMAP:HapMap-CEU
 2263082	192	rs1011985,CSHL-HAPMAP:HapMap-HCB
 2263082	192	rs1011985,CSHL-HAPMAP:HapMap-JPT
@@ -98,7 +87,6 @@
 2263083	4	XXbac-BPG13B8.3-001
 2263083	52	Havana
 2263083	53	v@somewhere.com
-2263083	123	CCDS34363.1
 2263084	3	XXbac-BPG13B8.3-002
 2263084	4	XXbac-BPG13B8.3-002
 2263084	52	Havana
@@ -108,23 +96,18 @@
 2263086	4	XXbac-BPG13B8.1-001
 2263086	52	Havana
 2263086	53	v@somewhere.com
-2263086	123	CCDS34364.1
-2263086	123	Segregating Pseudo Gene, a nonsynonymous SNP rs17184009 (AA change=Q/* ) as identified by Olender et al., 2012 (ib2 -17/04/2013)
 2263087	3	XXbac-BPG13B8.2-002
 2263087	4	XXbac-BPG13B8.2-002
 2263087	52	Havana
 2263087	53	v@somewhere.com
-2263087	123	splice acceptor variant at coding exon
 2263088	3	XXbac-BPG13B8.2-001
 2263088	4	XXbac-BPG13B8.2-001
 2263088	52	Havana
 2263088	53	v@somewhere.com
-2263088	123	CCDS4660.1
 2263089	3	XXbac-BPG13B8.2-003
 2263089	4	XXbac-BPG13B8.2-003
 2263089	52	Havana
 2263089	53	v@somewhere.com
-2263089	123	5' UTR variant
 2263090	3	XXbac-BPG13B8.2-004
 2263090	4	XXbac-BPG13B8.2-004
 2263090	52	Havana
@@ -134,7 +117,6 @@
 2263091	4	XXbac-BPG13B8.2-007
 2263091	52	Havana
 2263091	53	v@somewhere.com
-2263091	123	non-splicing variant
 2263092	3	XXbac-BPG13B8.2-005
 2263092	4	XXbac-BPG13B8.2-005
 2263092	52	Havana
@@ -160,8 +142,6 @@
 2263099	4	XXbac-BPG13B8.10-001
 2263099	52	Havana
 2263099	53	v@somewhere.com
-2263099	123	5' and 3' EST pair
-2263099	123	polyA features
 2263100	3	XXbac-BPG158F21.2-001
 2263100	4	XXbac-BPG158F21.2-001
 2263100	52	Havana
@@ -187,29 +167,23 @@
 2263106	4	XXbac-BPG126D10.5-002
 2263106	52	Havana
 2263106	53	v@somewhere.com
-2263106	123	3'-UTR exon is part of UBD gene
 2263107	3	XXbac-BPG126D10.5-013
 2263107	4	XXbac-BPG126D10.5-013
 2263107	52	Havana
 2263107	53	v@somewhere.com
-2263107	123	not organism-supported
 2263108	3	XXbac-BPG126D10.5-003
 2263108	4	XXbac-BPG126D10.5-003
 2263108	52	Havana
 2263108	53	v@somewhere.com
-2263108	123	skips exon but remains in frame
 2263109	3	XXbac-BPG126D10.5-004
 2263109	4	XXbac-BPG126D10.5-004
 2263109	52	Havana
 2263109	53	v@somewhere.com
 2263109	54	alternative 3' UTR
-2263109	123	alternative coding variant
 2263110	3	XXbac-BPG126D10.5-005
 2263110	4	XXbac-BPG126D10.5-005
 2263110	52	Havana
 2263110	53	v@somewhere.com
-2263110	123	3' UTR has a deletion in mRNA AB208790.1
-2263110	123	alternative splice donor introduces frameshift
 2263111	3	XXbac-BPG126D10.5-001
 2263111	4	XXbac-BPG126D10.5-001
 2263111	52	Havana
@@ -222,8 +196,6 @@
 2263113	4	XXbac-BPG126D10.5-006
 2263113	52	Havana
 2263113	53	v@somewhere.com
-2263113	123	frameshift introduces early termination
-2263113	123	skips exon
 2263114	3	XXbac-BPG126D10.5-020
 2263114	4	XXbac-BPG126D10.5-020
 2263114	52	Havana
@@ -256,7 +228,6 @@
 2263121	4	XXbac-BPG126D10.5-014
 2263121	52	Havana
 2263121	53	v@somewhere.com
-2263121	123	not organism-supported
 2263122	3	XXbac-BPG126D10.5-009
 2263122	4	XXbac-BPG126D10.5-009
 2263122	52	Havana
@@ -282,7 +253,6 @@
 2263127	4	XXbac-BPG126D10.10-001
 2263127	52	Havana
 2263127	53	v@somewhere.com
-2263127	123	formerly known as \\
 2263128	62	1:84\t.5(7.8)7.8(3.(7.4)10.24
 2263129	3	XXbac-BPG126D10.4-001
 2263129	4	XXbac-BPG126D10.4-001
@@ -303,18 +273,15 @@
 2263133	4	XXbac-BPG126D10.1-012
 2263133	52	Havana
 2263133	53	v@somewhere.com
-2263133	123	exon 2 splice acceptor variant
 2263134	3	XXbac-BPG126D10.1-003
 2263134	4	XXbac-BPG126D10.1-003
 2263134	52	Havana
 2263134	53	v@somewhere.com
-2263134	123	skips coding exon 2, remains in frame
 2263134	315	B0UZR7.1
 2263135	3	XXbac-BPG126D10.1-002
 2263135	4	XXbac-BPG126D10.1-002
 2263135	52	Havana
 2263135	53	v@somewhere.com
-2263135	123	apparent retained intron at 3' may give rise to protein isoform with alternative C-terminus
 2263135	315	B0UZR7.1
 2263136	3	XXbac-BPG126D10.1-013
 2263136	4	XXbac-BPG126D10.1-013
@@ -324,7 +291,6 @@
 2263137	4	XXbac-BPG126D10.1-007
 2263137	52	Havana
 2263137	53	v@somewhere.com
-2263137	123	exon 6 novel
 2263137	315	B0UZR7.1
 2263138	3	XXbac-BPG126D10.1-015
 2263138	4	XXbac-BPG126D10.1-015
@@ -340,7 +306,6 @@
 2263140	4	XXbac-BPG126D10.1-017
 2263140	52	Havana
 2263140	53	v@somewhere.com
-2263140	123	not organism-supported
 2263140	315	B0UZR7.1
 2263141	3	XXbac-BPG126D10.1-008
 2263141	4	XXbac-BPG126D10.1-008
@@ -351,7 +316,6 @@
 2263142	4	XXbac-BPG126D10.1-005
 2263142	52	Havana
 2263142	53	v@somewhere.com
-2263142	123	alternative 3' end
 2263142	315	B0UZR7.1
 2263143	3	XXbac-BPG126D10.1-004
 2263143	4	XXbac-BPG126D10.1-004
@@ -362,8 +326,6 @@
 2263144	4	XXbac-BPG126D10.1-006
 2263144	52	Havana
 2263144	53	v@somewhere.com
-2263144	123	alternative 3' end
-2263144	123	exon 6 novel
 2263144	315	B0UZR7.1
 2263145	3	XXbac-BPG126D10.1-009
 2263145	4	XXbac-BPG126D10.1-009
@@ -383,7 +345,6 @@
 2263148	4	XXbac-BPG126D10.1-010
 2263148	52	Havana
 2263148	53	v@somewhere.com
-2263148	123	novel exon disrupting cds
 2263148	124	1
 2263148	126	1
 2263148	315	B0UZR7.1
@@ -391,7 +352,6 @@
 2263149	4	XXbac-BPG126D10.1-011
 2263149	52	Havana
 2263149	53	v@somewhere.com
-2263149	123	novel exon disrupting cds
 2263149	124	1
 2263149	126	1
 2263149	315	B0UZR7.1
@@ -431,7 +391,6 @@
 2263160	4	XXbac-BPG170G13.20-003
 2263160	52	Havana
 2263160	53	v@somewhere.com
-2263160	123	alternative 3' end
 2263161	3	XXbac-BPG170G13.20-008
 2263161	4	XXbac-BPG170G13.20-008
 2263161	52	Havana
@@ -440,18 +399,14 @@
 2263162	4	XXbac-BPG170G13.20-009
 2263162	52	Havana
 2263162	53	v@somewhere.com
-2263162	123	confirm experimentally
-2263162	123	Duplicated several times on chromosome 6 with the same SNPs in each case thus making it impossible to distinguish
 2263163	3	XXbac-BPG170G13.20-002
 2263163	4	XXbac-BPG170G13.20-002
 2263163	52	Havana
 2263163	53	v@somewhere.com
-2263163	123	skips exon
 2263164	3	XXbac-BPG170G13.20-010
 2263164	4	XXbac-BPG170G13.20-010
 2263164	52	Havana
 2263164	53	v@somewhere.com
-2263164	123	splice variant
 2263165	3	XXbac-BPG170G13.20-011
 2263165	4	XXbac-BPG170G13.20-011
 2263165	52	Havana
@@ -470,23 +425,18 @@
 2263168	4	XXbac-BPG170G13.20-015
 2263168	52	Havana
 2263168	53	v@somewhere.com
-2263168	123	near NAGNAG in 3rd exon (gm5, feb 2013)
-2263168	123	NMD likely if extended
 2263169	3	XXbac-BPG170G13.20-014
 2263169	4	XXbac-BPG170G13.20-014
 2263169	52	Havana
 2263169	53	v@somewhere.com
-2263169	123	alternative long-distance 3' end
 2263170	3	XXbac-BPG170G13.20-013
 2263170	4	XXbac-BPG170G13.20-013
 2263170	52	Havana
 2263170	53	v@somewhere.com
-2263170	123	alternative 3' end
 2263171	3	XXbac-BPG170G13.20-005
 2263171	4	XXbac-BPG170G13.20-005
 2263171	52	Havana
 2263171	53	v@somewhere.com
-2263171	123	splice variant
 2263171	124	1
 2263171	126	1
 2263174	3	XXbac-BPG170G13.30-001
@@ -509,7 +459,6 @@
 2263178	4	XXbac-BPG170G13.16-001
 2263178	52	Havana
 2263178	53	v@somewhere.com
-2263178	123	Shares two exons with locus DAQB-335A13.8
 2263179	3	XXbac-BPG170G13.3-001
 2263179	4	XXbac-BPG170G13.3-001
 2263179	52	Havana
@@ -533,31 +482,23 @@
 2263185	4	XXbac-BPG170G13.26-005
 2263185	52	Havana
 2263185	53	v@somewhere.com
-2263185	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
-2263185	123	Duplicated several times on chromosome 6 with the same SNPs in each case thus making it impossible to distinguish
 2263186	3	XXbac-BPG170G13.26-002
 2263186	4	XXbac-BPG170G13.26-002
 2263186	52	Havana
 2263186	53	v@somewhere.com
 2263186	54	XXbac-BPG170G13.21-002
-2263186	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
-2263186	123	The DAQB-335A13.14 transcripts and dJ77H14.4 (HLA-75) share sequence and overlap HCG4 on the opposite strand. Short ORFs could be seen for all variants which showed HLA class I leader homology. DAQB-335A13.14-001 is a complete match with the PGF and SSTO haplotypes. PGF and SSTO have a repeat (59 copies of 4 mer TCTT on the front of an AluSq) within intron 2 of DAQB-335A13.14-001. DAQB-335A13.14-001 does not fully match COX and QBL which have a 21 base deletion (7 amino acid in-frame deletion of RAPWMEQ) in exon 2 and one copy of the TCTT. DAQB-335A13.14-002 and DAQB-335A13.14-003 match with COX and QBL having the 21 bp deletion and one copy of the TCTT which is located in exonic sequence for these variants
 2263187	3	XXbac-BPG170G13.26-003
 2263187	4	XXbac-BPG170G13.26-003
 2263187	52	Havana
 2263187	53	v@somewhere.com
-2263187	123	01/09/05 reannotation of MHC haplotypes: in summary, this locus is haplotypic. PGF contains a small 21bp insertion-duplication event that corresponds to exon 2 of DAQB-335A13.19-001 and DAQB-335A13.19-002 and exon 4 of DAQB-335A13.19-003. This insertion is absent from QBL. PGF also contains a 59mer repeat of TCTT that corresponds to intron 2 of -001, exon 3 of -002 and exon 6 of -003. This repeat is absent in QBL. There are also five other small exonic indels in PGF that are absent in QBL. Importantly, a SNP in PGF converts a canonical splice site between exons 2 and 3 of DAQB-335A13.19-003 (-G/GT ... CAG/-) to a noncanonical splice site (-G/GT ... CGG/-), thus potentially eliminating transcription of this variant within the PGF haplotype.cDNA Em:BC051362.1 (object -001) derives from the PGF haplotype whereas cDNAs Em:AK128290.1 (-002) and Em:BC068238.1 (-003) derive from QBL. EST Em:BI825984.1 (-005) derives from QBL.ORFs possible in some variants but with low confidence
-2263187	123	The DAQB-335A13.14 transcripts and dJ77H14.4 (HLA-75) share sequence and overlap HCG4 on the opposite strand. Short ORFs could be seen for all variants which showed HLA class I leader homology. DAQB-335A13.14-001 is a complete match with the PGF and SSTO haplotypes. PGF and SSTO have a repeat (59 copies of 4 mer TCTT on the front of an AluSq) within intron 2 of DAQB-335A13.14-001. DAQB-335A13.14-001 does not fully match COX and QBL which have a 21 base deletion (7 amino acid in-frame deletion of RAPWMEQ) in exon 2 and one copy of the TCTT. DAQB-335A13.14-002 and DAQB-335A13.14-003 match with COX and QBL having the 21 bp deletion and one copy of the TCTT which is located in exonic sequence for these variants
 2263188	3	XXbac-BPG170G13.26-001
 2263188	4	XXbac-BPG170G13.26-001
 2263188	52	Havana
 2263188	53	v@somewhere.com
-2263188	123	HLA-75 and HLA-90 were merged (into HLA-90) because they were part of the same unprocessed pseudogene
 2263189	3	XXbac-BPG170G13.4-001
 2263189	4	XXbac-BPG170G13.4-001
 2263189	52	Havana
 2263189	53	v@somewhere.com
-2263189	123	ORF disrupted by frameshift (2bp insertion in genomic reference). Theoretical translation for Em:AF036977.1 may be identified in another haplotype
 2263190	59	1
 2263191	3	XXbac-BPG170G13.1-001
 2263191	4	XXbac-BPG170G13.1-001
@@ -572,12 +513,10 @@
 2263193	52	Havana
 2263193	53	v@somewhere.com
 2263193	54	A known pseudogene that does not show protein matches on the F-map
-2263193	123	(rcg) pseudogene corresponds to the last 43 amino acids of MICB. This suggests that MICG is a duplication of the final exon of MICB - therefore an unprocessed pseudogene
 2263194	3	XXbac-BPG12I6.3-002
 2263194	4	XXbac-BPG12I6.3-002
 2263194	52	Havana
 2263194	53	v@somewhere.com
-2263194	123	alternative 5' end
 2263194	315	Q5RIS3.1
 2263195	3	XXbac-BPG12I6.3-001
 2263195	4	XXbac-BPG12I6.3-001
@@ -595,39 +534,33 @@
 2263197	52	Havana
 2263197	53	v@somewhere.com
 2263197	54	HLA-G2.2
-2263197	123	evidence used (M90685.1) not on Fmap
 2263197	315	Q5RIS3.1
 2263198	3	XXbac-BPG12I6.3-005
 2263198	4	XXbac-BPG12I6.3-005
 2263198	52	Havana
 2263198	53	v@somewhere.com
 2263198	54	HLA-G2.1
-2263198	123	evidence used (M90684.1) not on Fmap
 2263198	315	Q5RIS3.1
 2263199	3	XXbac-BPG12I6.3-006
 2263199	4	XXbac-BPG12I6.3-006
 2263199	52	Havana
 2263199	53	v@somewhere.com
 2263199	54	HLA-G3
-2263199	123	human evidence used (M90686.1) not on Fmap,
 2263199	315	Q5RIS3.1
 2263200	315	Q5RIS3.1
 2263201	3	XXbac-BPG12I6.5-001
 2263201	4	XXbac-BPG12I6.5-001
 2263201	52	Havana
 2263201	53	v@somewhere.com
-2263201	123	This family of annotated objects is located on the complement strand of the HLA genes (5' end, overlapping CpG island). The founding member, HCG4, is located on the complement strand at the 5' end of the HLA-75 pseudogene. There is a 100% cDNA match at the HCG4 locus (Em:BC021249.2) and this contains several small ORFs. The cDNA (Em:AF036977.1) is a 99.9% match to the genomic and contains a 2bp deletion relative to the genomic sequence. The cDNA has a theoretical translation of 331aa but this is frameshifted within the human reference sequence. Therefore, this locus in the PGF haplotype, is annotated as a pseudogene. There is a good amount of transcriptional evidence for this locus and polyA features support this too. It was thought that the full ORF may found in an alternative haplotype but this has so far proved not to be the case (PGF, COX, QBL, SSTO so far analysed). The rest of the family are also designated as pseudogenes although not all members have been annotated. I will annotate all possible HCG4 members - this will increase the size of the family! Pseudogene annotation based on protein Tr:O95141 (331aa) (rcg)
 2263202	3	XXbac-BPG12I6.1-001
 2263202	4	XXbac-BPG12I6.1-001
 2263202	52	Havana
 2263202	53	v@somewhere.com
 2263202	54	A known pseudogene that does not show on the F-map
-2263202	123	Other protein evidence not available in the LACE database: AAC39846, AAC39847, AAC39848
 2263203	3	XXbac-BPG12I6.6-001
 2263203	4	XXbac-BPG12I6.6-001
 2263203	52	Havana
 2263203	53	v@somewhere.com
-2263203	123	This family of annotated objects is located on the complement strand of the HLA genes (5' end, overlapping CpG island). The founding member, HCG4, is located on the complement strand at the 5' end of the HLA-75 pseudogene. There is a 100% cDNA match at the HCG4 locus (Em:BC021249.2) and this contains several small ORFs. The cDNA (Em:AF036977.1) is a 99.9% match to the genomic and contains a 2bp deletion relative to the genomic sequence. The cDNA has a theoretical translation of 331aa but this is frameshifted within the human reference sequence. Therefore, this locus in the PGF haplotype, is annotated as a pseudogene. There is a good amount of transcriptional evidence for this locus and polyA features support this too. It was thought that the full ORF may found in an alternative haplotype but this has so far proved not to be the case (PGF, COX, QBL, SSTO so far analysed). The rest of the family are also designated as pseudogenes although not all members have been annotated. I will annotate all possible HCG4 members - this will increase the size of the family! Pseudogene annotation based on protein Tr:O95141 (331aa) (rcg)
 2263204	3	XXbac-BPG12I6.2-001
 2263204	4	XXbac-BPG12I6.2-001
 2263204	52	Havana
@@ -664,34 +597,26 @@
 2263213	4	XXbac-BPG309N1.2-002
 2263213	52	Havana
 2263213	53	v@somewhere.com
-2263213	123	confirm experimentally
-2263213	123	exon 5 splice donor variant
 2263214	3	XXbac-BPG309N1.2-004
 2263214	4	XXbac-BPG309N1.2-004
 2263214	52	Havana
 2263214	53	v@somewhere.com
-2263214	123	exon 2/3 splice junction variant + retained intron
 2263215	3	XXbac-BPG309N1.2-003
 2263215	4	XXbac-BPG309N1.2-003
 2263215	52	Havana
 2263215	53	v@somewhere.com
-2263215	123	skips 3 exons - remains in-frame
 2263216	3	XXbac-BPG309N1.2-005
 2263216	4	XXbac-BPG309N1.2-005
 2263216	52	Havana
 2263216	53	v@somewhere.com
-2263216	123	intron 2 retained. exon 5 splice acceptor variant
 2263217	3	XXbac-BPG309N1.2-006
 2263217	4	XXbac-BPG309N1.2-006
 2263217	52	Havana
 2263217	53	v@somewhere.com
-2263217	123	intron 2 retained
 2263218	3	XXbac-BPG309N1.2-007
 2263218	4	XXbac-BPG309N1.2-007
 2263218	52	Havana
 2263218	53	v@somewhere.com
-2263218	123	confirm experimentally
-2263218	123	retained intron and exon 4 splice donor variant
 2263220	3	XXbac-BPG309N1.14-001
 2263220	4	XXbac-BPG309N1.14-001
 2263220	52	Havana
@@ -708,8 +633,6 @@
 2263223	4	XXbac-BPG309N1.9-001
 2263223	52	Havana
 2263223	53	v@somewhere.com
-2263223	123	exon 3 is FRAM SINE
-2263223	123	hypothetical ORF makes transcript subject to NMD. no evidence for CDS, therefore changed to transcript
 2263224	3	XXbac-BPG309N1.9-002
 2263224	4	XXbac-BPG309N1.9-002
 2263224	52	Havana
@@ -773,17 +696,14 @@
 2263238	4	XXbac-BPG250I8.1-002
 2263238	52	Havana
 2263238	53	v@somewhere.com
-2263238	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
 2263239	3	XXbac-BPG250I8.1-003
 2263239	4	XXbac-BPG250I8.1-003
 2263239	52	Havana
 2263239	53	v@somewhere.com
-2263239	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
 2263240	3	XXbac-BPG250I8.1-004
 2263240	4	XXbac-BPG250I8.1-004
 2263240	52	Havana
 2263240	53	v@somewhere.com
-2263240	123	ORF possible but subject to NMD - true CDS appears frameshifted (hence pseudogene)
 2263241	3	XXbac-BPG250I8.1-001
 2263241	4	XXbac-BPG250I8.1-001
 2263241	52	Havana
@@ -792,7 +712,6 @@
 2263242	4	XXbac-BPG250I8.2-001
 2263242	52	Havana
 2263242	53	v@somewhere.com
-2263242	123	split by a SINE
 2263243	3	LL0YNC03-29C1.1-001
 2263243	4	LL0YNC03-29C1.1-001
 2263243	52	Havana
@@ -802,13 +721,10 @@
 2263244	52	Havana
 2263244	53	v@somewhere.com
 2263244	54	FLJ11323
-2263244	123	Have merged last two exons as they are split due to repeats. Structure corresponds with mouse Plxcd1
-2263244	123	QC splicing correct
 2263245	3	LL0XNC01-136G2.1-009
 2263245	4	LL0XNC01-136G2.1-009
 2263245	52	Havana
 2263245	53	v@somewhere.com
-2263245	123	likely NMD if continued
 2263246	3	LL0XNC01-136G2.1-010
 2263246	4	LL0XNC01-136G2.1-010
 2263246	52	Havana
@@ -821,8 +737,6 @@
 2263247	52	Havana
 2263247	53	v@somewhere.com
 2263247	54	alternative 5' UTR
-2263247	123	QC splicing correct
-2263247	123	this is the best match on the repeat which splices
 2263247	125	1
 2263247	127	1
 2263248	3	LL0XNC01-136G2.1-002
@@ -830,7 +744,6 @@
 2263248	52	Havana
 2263248	53	v@somewhere.com
 2263248	54	alternative 5' UTR
-2263248	123	Have merged last two exons as they are split due to repeats. Structure corresponds with mouse Plxcd1
 2263249	3	LL0XNC01-136G2.1-006
 2263249	4	LL0XNC01-136G2.1-006
 2263249	52	Havana
@@ -843,8 +756,6 @@
 2263250	52	Havana
 2263250	53	v@somewhere.com
 2263250	54	alternative 5' UTR
-2263250	123	joint BIG (with Y)
-2263250	123	QC splicing correct
 2263250	125	1
 2263250	127	1
 2263251	3	LL0XNC01-136G2.1-007
@@ -852,8 +763,6 @@
 2263251	52	Havana
 2263251	53	v@somewhere.com
 2263251	54	alternative 5' UTR
-2263251	123	joint BIG (with Y)
-2263251	123	QC splicing correct
 2263251	125	1
 2263251	127	1
 2263252	3	LL0XNC01-136G2.1-008
@@ -875,7 +784,6 @@
 2263255	4	LL0XNC01-136G2.2-003
 2263255	52	Havana
 2263255	53	v@somewhere.com
-2263255	123	artifactual exon cut back
 2263256	3	LL0XNC01-136G2.2-001
 2263256	4	LL0XNC01-136G2.2-001
 2263256	52	Havana

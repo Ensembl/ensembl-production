@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,13 +36,21 @@ sub run {
   my $db               = $self->param('db');
   my $version_file     = $self->param('version_file');
   my $preparse         = $self->param('preparse');
+  my $rel_number       = $self->param('rel_number');
+  my $catalog          = $self->param('catalog');
 
   $self->dbc()->disconnect_if_idle() if defined $self->dbc();
 
-  my $file_name = $self->download_file($file, $base_path, $name, $db, $skip_download);
+  my $extra_args = {};
+  $extra_args->{'skip_download_if_file_present'} = $skip_download;
+  $extra_args->{'rel_number'} = $rel_number if (defined($rel_number));
+  $extra_args->{'catalog'} = $catalog if (defined($catalog));
+  my $file_name = $self->download_file($file, $base_path, $name, $db, $extra_args);
+
   my $version;
   if (defined $version_file) {
-    $version = $self->download_file($version_file, $base_path, $name, $db, $skip_download, 'version');
+    $extra_args->{'release'} = 'version';
+    $version = $self->download_file($version_file, $base_path, $name, $db, $extra_args);
   }
 
   my ($user, $pass, $host, $port, $source_db) = $self->parse_url($db_url);

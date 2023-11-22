@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -296,7 +296,10 @@ sub run {
           # If the UniProt accession is repeated here, it links to a specific isoform
           my %direct;
           my $isoform;
-          $direct{STABLE_ID} = $extra[0];
+
+          my $stable_id = $extra[0];
+          $stable_id =~ s/\.[0-9]+//;
+          $direct{STABLE_ID} = $stable_id;
           $direct{ENSEMBL_TYPE} = 'Translation';
           $direct{LINKAGE_TYPE} = 'DIRECT';
           if ($xref->{SOURCE_ID} == $sp_source_id) {
@@ -310,7 +313,7 @@ sub run {
           if ($extra[1] =~ /($acc-[0-9]+)/) {
             $isoform = $1;
             $self->add_to_direct_xrefs({
-              stable_id  => $extra[0],
+              stable_id  => $stable_id,
               type       => 'translation',
               acc        => $isoform,
               label      => $isoform,

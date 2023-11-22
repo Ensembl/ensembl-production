@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ sub run {
     my $db = $source->{'db'};
     my $version_file = $source->{'release'};
     my $preparse = $source->{'preparse'};
+    my $rel_number = $source->{'release_number'};
+    my $catalog = $source->{'catalog'};
 
     if ($preparse && $skip_preparse) {
       $parser = $source->{'old_parser'};
@@ -66,6 +68,8 @@ sub run {
       db_url       => $db_url,
       file         => $file,
       skip_download=> $skip_download,
+      rel_number   => $rel_number,
+      catalog      => $catalog
     };
     $self->dataflow_output_id($dataflow_params, 2);
   }

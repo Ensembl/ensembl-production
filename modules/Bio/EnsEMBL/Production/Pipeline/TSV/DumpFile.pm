@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2022] EMBL-European Bioinformatics Institute
+Copyright [2016-2023] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,7 +55,6 @@ return;
 
 sub run {
     my ($self) = @_;
-
     $self->info( "Starting tsv dump for " . $self->param('species'));
     $self->_write_tsv();
     $self->_create_README();
@@ -115,14 +114,8 @@ sub _write_tsv {
          }#transcript
       }#gene
   }#slice 
-  close $fh; 
+  close $fh;
   $self->core_dbc()->disconnect_if_idle();
-  $self->info( "Compressing tsv dump for " . $self->param('species'));
-  my $unzip_out_file = $out_file;
-  `gzip -n $unzip_out_file`;
-
-  if (-e $unzip_out_file) { `rm $unzip_out_file`; }
-
 return;
 }
 
