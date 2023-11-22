@@ -76,7 +76,7 @@ sub pipeline_analyses {
         '2->A' => 'download_source',
         'A->1' => 'schedule_cleanup'
       },
-      -rc_name    => 'small'
+      -rc_name    => 'default'
     },
     {
       -logic_name      => 'download_source',
@@ -85,9 +85,22 @@ sub pipeline_analyses {
       -parameters      => {
         base_path => $self->o('base_path')
       },
-      -rc_name         => 'dm',
+      -rc_name         => 'dm_D',
       -max_retry_count => 3
     },
+
+
+
+
+
+
+
+
+
+
+
+
+
     {
       -logic_name => 'schedule_cleanup',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleCleanup',
@@ -102,17 +115,17 @@ sub pipeline_analyses {
         '4->A' => 'cleanup_uniprot',
         'A->1' => 'schedule_pre_parse'
       },
-      -rc_name    => 'small'
+      -rc_name    => 'default'
     },
     {
-      -logic_name => 'checksum',
+      -logic_name => 'checksum_W',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
       -comment    => 'Adds all checksum files into a single file and loads it into the checksum_xref table.',
       -parameters => {
         base_path     => $self->o('base_path'),
         skip_download => $self->o('skip_download')
       },
-      -rc_name    => 'normal'
+      -rc_name    => '100M_W'
     },
     {
       -logic_name => 'cleanup_refseq_dna',
@@ -124,7 +137,7 @@ sub pipeline_analyses {
         skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
-      -rc_name    => 'small'
+      -rc_name    => '100M_D'
     },
     {
       -logic_name => 'cleanup_refseq_peptide',
@@ -136,7 +149,7 @@ sub pipeline_analyses {
         skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
-      -rc_name    => 'small'
+      -rc_name    => 'default'
     },
     {
       -logic_name => 'cleanup_uniprot',
@@ -148,7 +161,7 @@ sub pipeline_analyses {
 	skip_download => $self->o('skip_download'),
         clean_dir    => $self->o('clean_dir')
       },
-      -rc_name    => 'small'
+      -rc_name    => '200M_D'
     },
     {
       -logic_name => 'schedule_pre_parse',
@@ -167,21 +180,30 @@ sub pipeline_analyses {
 	'4' => 'pre_parse_source_tertiary',
 	'-1' => 'notify_by_email'
       },
-      -rc_name    => 'small'
+      -rc_name    => 'default'
     },
     {
       -logic_name => 'pre_parse_source',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
       -comment    => 'Store data for faster species parsing',
-      -rc_name    => '2GB',
+      -rc_name    => '2GB_D',
       -hive_capacity => 100,
       -can_be_empty => 1,
     },
+      #-1 go to
+      #4GB and 1 week
+
+
+
+
+
+
+
     {
       -logic_name => 'pre_parse_source_dependent',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
       -comment    => 'Store data for faster species parsing',
-      -rc_name    => '2GB',
+      -rc_name    => '16GB_D',
       -hive_capacity => 100,
       -can_be_empty => 1,
       -wait_for => 'pre_parse_source'
@@ -190,7 +212,7 @@ sub pipeline_analyses {
       -logic_name => 'pre_parse_source_tertiary',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
       -comment    => 'Store data for faster species parsing',
-      -rc_name    => '2GB',
+      -rc_name    => '2GB_D',
       -hive_capacity => 100,
       -can_be_empty => 1,
       -wait_for => 'pre_parse_source_dependent',
@@ -208,19 +230,9 @@ sub pipeline_analyses {
         skip_preparse => $self->o('skip_preparse')
       },
       -wait_for => 'pre_parse_source_tertiary',
-      -rc_name    => 'small'
+      -rc_name    => 'default'
     }
   ];
-}
-
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' }, # Change 'production' to 'production-rh74' if running on noah
-    'normal' => { 'LSF' => '-q production -M 1000 -R "rusage[mem=1000]"' }
-  };
 }
 
 sub pipeline_wide_parameters {
