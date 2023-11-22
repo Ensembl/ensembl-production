@@ -62,7 +62,6 @@ sub default_options {
 
     return {
         %{$self->SUPER::default_options()},
-        rest_server  => 'https://www.ebi.ac.uk/gifts/api/',
         user_r       => 'ensro',
         species      => [],
         division     => [],
@@ -167,7 +166,6 @@ sub pipeline_analyses {
             -logic_name => 'insert_features',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::InsertProteinFeatures',
             -parameters => {
-                rest_server => $self->o('rest_server'),
                 db_dir => $self->o('scratch_large_dir'),
                 gifts_dir => $self->o('gifts_dir'),
             },

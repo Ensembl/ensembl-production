@@ -58,8 +58,7 @@
  -species        Production name of species to process. For a collection DB, any species from the DB
  -species_list   List of species production names. For a single species, a list
                  with just this species. For a collection DB, list of all species in the DB
- -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in LevelDB format
- -rest_server    GIFTS rest server to fetch the perfect matches data from.
+ -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in KyotoCabinet format
  -cs_version     Needed for GIFTS, otherwise optional. Name of assembly, like 'GRCh38'.
 
 =head1 EXAMPLE USAGE
@@ -69,7 +68,6 @@
   -species homo_sapiens
   -species_list "['homo_sapiens']"
   -db_dir /hps/scratch/...
-  -rest_server 'https://www.ebi.ac.uk/gifts/api/'
   -registry my_reg.pm
 
 =cut
@@ -86,14 +84,12 @@ use Bio::EnsEMBL::ProteinFeature;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw(throw info);
 use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
-use Tie::LevelDB;
-use Fcntl qw(:flock);
+use KyotoCabinet;
 
 sub fetch_input {
     my $self = shift;
 
     $self->param_required('species');
-    $self->param_required('rest_server');
     $self->param_required('db_dir');
     $self->param_required('species_list');
 
@@ -107,8 +103,8 @@ sub run {
     # Bio::EnsEMBL::Utils::Exception::verbose('INFO');
 
     my $db_path = $self->param_required('db_dir');
-    my $idx_dir_al = $db_path . '/uniprot-to-alpha.leveldb';
-    my $idx_dir_up = $db_path . '/uniparc-to-uniprot.leveldb';
+    my $idx_dir_al = $db_path . '/uniprot-to-alphafold/uniprot-to-alphafold.kch';
+    my $idx_dir_up = $db_path . '/uniparc-to-uniprot/uniparc-to-uniprot.kch';
 
     my $species = $self->param_required('species');
     my $species_list = $self->param_required('species_list');
@@ -129,21 +125,24 @@ sub run {
 
     info("Initiating and creating the analysis object for species $species\n");
 
-    dblock($db_path);
 
-    my %alpha_db;
-    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
-        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
-
-    my $al_string;
-    while (my ($k, $v) = each %alpha_db) {
-        $al_string = $v;
+    my $alpha_version = 0;
+    my $mapsize_gb = 4 << 30;
+    my $db = tie(my %db, 'KyotoCabinet::DB', "$idx_dir_al#msiz=$mapsize_gb#opts=l");
+    # traverse records by iterator
+    while (my ($key, $value) = each(%db)) {
+        $alpha_version = (split ',', $value)[-1];
         last;
     }
-    untie(%alpha_db);
+    untie %db;
+    untie $db;
+    die "Unable to extract AlphaFold version" unless $alpha_version;
 
-    my $alpha_version = (split ',', $al_string)[-1];
-    $alpha_version //= 0;
+    my $alpha_db = new KyotoCabinet::DB;
+    # Set 4 GB mmap size
+    $alpha_db->open("$idx_dir_al#msiz=$mapsize_gb#opts=l",
+        $alpha_db->OREADER
+    ) or die "Error opening DB: " . $alpha_db->error();
 
     my $analysis = new Bio::EnsEMBL::Analysis(
             -logic_name    => 'alphafold',
@@ -179,9 +178,9 @@ sub run {
     }
 
     my $no_uniparc = 0;
-    my $no_uniprot = 0;
     my $no_dbid = 0;
     my $protein_count = 0;
+    my $no_alpha = 0;
     if (! $mappings or ! %$mappings) {
 
         # If we don't have data in $mappings, this species is not in GIFTS.
@@ -190,9 +189,12 @@ sub run {
         # alphafold data using the uniprot id and insert a protein feature using
         # the dbid.
 
-
-        tie(my %uniprot_db, 'Tie::LevelDB', $idx_dir_up)
-            or die "Error trying to tie Tie::LevelDB $idx_dir_up: $!";
+        my $uniprot_db = new KyotoCabinet::DB;
+        # Set 4 GB mmap size
+        my $mapsize_gb = 4 << 30;
+        $uniprot_db->open("$idx_dir_up#msiz=$mapsize_gb#opts=l",
+            $uniprot_db->OREADER
+        ) or die "Error opening DB: " . $uniprot_db->error();
 
         # We currently have the same uniparc accession tied to the same
         # translation_id but in different versions (xref pipeline run
@@ -209,19 +211,32 @@ SQL
 
         my $sth = $dbc->prepare($sql);
         $sth->execute;
-        while ( my @row = $sth->fetchrow_array ) {
+        while (my @row = $sth->fetchrow_array) {
             $protein_count++;
             my ($uniparc_id, $stable_id, $dbid) = @row;
-            my $uniprot_id = $uniprot_db{$uniparc_id};
-            unless ($uniprot_id) {
+            my $uniprot_str = $uniprot_db->get($uniparc_id);
+            unless ($uniprot_str) {
                 $no_uniparc++;
                 next;
             }
-            push @{$mappings->{$uniprot_id}}, {'uniparc' => $uniparc_id, 'dbid' => $dbid, 'ensid' => $stable_id};
+            my @uniprots = split("\t", $uniprot_str);
+
+            my $at_least_one_alpha_mapping = 0;
+            for my $uniprot_id (@uniprots) {
+                my $alpha_data = $alpha_db->get($uniprot_id);
+                next unless $alpha_data;
+                push @{$mappings->{$uniprot_id}},
+                    {'uniparc' => $uniparc_id, 'dbid' => $dbid, 'ensid' => $stable_id, 'alpha' => $alpha_data};
+                $at_least_one_alpha_mapping = 1;
+            }
+            unless ($at_least_one_alpha_mapping) {
+                $no_alpha++;
+                info("No alphafold data for: UniParc acc $uniparc_id, stable_id $stable_id, translation_id $dbid");
+            }
         }
         info("Num proteins in DB $protein_count, no uniparc $no_uniparc");
 
-        untie %uniprot_db;
+        $uniprot_db->close() or die "Error closing DB: " . $uniprot_db->error();
 
     } else {
 
@@ -254,22 +269,26 @@ SQL
             my ($dbid, $stable_id) = @row;
 
             unless (exists $rev_mappings{$stable_id}) {
-                info("No entry in GIFTS for stable ID $stable_id");
                 $no_dbid++;
+                info("No entry in GIFTS for stable ID $stable_id");
                 next;
             }
             my @rmap = @{$rev_mappings{$stable_id}};
 
+            my $at_least_one_alpha_mapping = 0;
             for my $uniprot_id (@rmap) {
-                unless ($uniprot_id) {
-                    $no_uniprot++;
-                    next;
-                }
-                push @{$mappings->{$uniprot_id}}, {'dbid' => $dbid, 'ensid' => $stable_id};
+                my $alpha_data = $alpha_db->get($uniprot_id);
+                next unless $alpha_data;
+                push @{$mappings->{$uniprot_id}}, {'dbid' => $dbid, 'ensid' => $stable_id, 'alpha' => $alpha_data};
+                $at_least_one_alpha_mapping = 1;
             }
             unless (scalar @rmap) {
-                info("No mapping data for stable ID $stable_id");
                 $no_dbid++;
+                info("No mapping data for stable ID $stable_id");
+            }
+            if (@rmap and ! $at_least_one_alpha_mapping) {
+                $no_alpha++;
+                info("No alphafold data for: stable_id $stable_id, translation_id $dbid, uniprot accessions: @rmap");
             }
         }
     }
@@ -278,27 +297,23 @@ SQL
         die(sprintf("No matches for species %s found in core DB %s\n", $species, $dbc->dbname()));
     }
 
-    tie(%alpha_db, 'Tie::LevelDB', $idx_dir_al)
-        or die "Error trying to tie Tie::LevelDB $idx_dir_al: $!";
 
     my $pfa = $core_dba->get_ProteinFeatureAdaptor();
 
     my $good = 0;
-    my $no_alpha = 0;
 
-    info("Unique uniprot accessions for species after mapping: " . scalar (keys %$mappings));
+    info("Unique UniProt accessions for species after mapping: " . scalar (keys %$mappings));
     for my $uniprot (keys %$mappings) {
         for my $entry (@{$mappings->{$uniprot}}) {
 
             my $uniparc = $entry->{'uniparc'};
             my $ensid = $entry->{'ensid'};
             my $translation_id = $entry->{'dbid'};
-            my $alpha_data = $alpha_db{$uniprot};
+            my $alpha_data = $entry->{'alpha'};
 
             unless ($alpha_data) {
-                $no_alpha++;
-                info("No alphafold data for: $uniprot, $translation_id");
-                next;
+                die("There is an entry in the mappings hash, but alphafold data is missing for entry: " .
+                    "uniprot $uniprot, stable_id $ensid, translation_id $translation_id");
             }
             $good++;
 
@@ -308,9 +323,10 @@ SQL
 
             my $comment = 'Mapped ';
             if ($uniparc) {
-                $comment .= "direct from UniParc $uniparc to UniProt $uniprot, Ensembl stable ID $ensid";
+                $comment .= "direct from UniParc $uniparc to UniProt $uniprot, " .
+                "Ensembl stable ID $ensid, alpha_version $alpha_version)";
             } else {
-                $comment .= "using GIFTS DB (UniProt $uniprot, Ensembl stable ID $ensid)";
+                $comment .= "using GIFTS DB (UniProt $uniprot, Ensembl stable ID $ensid), alpha_version $alpha_version)";
             }
 
             info("Protein feature: start $al_start, end $al_end, $alpha_accession: $comment");
@@ -331,28 +347,17 @@ SQL
         }
     }
     
-    untie(%alpha_db);
-
-    dbunlock();
+    $alpha_db->close() or die "Error closing DB: " . $alpha_db->error();
 
     # Info line to be stored in the hive DB
-    $self->warning("Inserted $good OK. Num of proteins for species: $protein_count, no uniparc mapping: $no_uniparc, no uniprot mapping: $no_uniprot, no stable ID match: $no_dbid, no alphafold data: $no_alpha. Species: $log_species");
-}
-
-my $lock_fh;
-
-sub dblock {
-    my $path = shift;
-
-    info("Waiting for dblock");
-    open($lock_fh, ">", "$path/dblock") or die "Failed to open or create lock file: $!";
-    flock ($lock_fh, LOCK_EX) or die "Unable to lock $path/dblock: $!";
-    info("Locked dblock OK");
-}
-
-sub dbunlock {
-    flock $lock_fh, LOCK_UN;
-    close $lock_fh;
+    my $covered_proteins = $protein_count - $no_dbid - $no_uniparc - $no_alpha;
+    $self->warning(
+        "Inserted $good protein features. Num of proteins for species: $protein_count " .
+        "with at least one mapping for $covered_proteins. ".
+        "No UniParc to UniProt mappings: $no_uniparc; No GIFTS mappings for stable ID: $no_dbid; " .
+        "No link from UniProt to Alphafold (for any UniProt accession found through UniParc): $no_alpha. " .
+        "Species: $log_species"
+    );
 }
 
 # Read a GIFTS CSV dump file, return a hash-ref like:
@@ -386,7 +391,10 @@ sub cleanup_protein_features {
 
     if (defined($analysis)) {
         my $analysis_id = $analysis->dbID();
-        info(sprintf("Found alphafold analysis (ID: $analysis_id) for species %s. Deleting it.\n", $self->param('species')));
+        info(sprintf(
+                "Found alphafold analysis (ID: $analysis_id) for species %s. Deleting it.\n", $self->param('species')
+            )
+        );
 
         my $pfa = $core_dba->get_ProteinFeatureAdaptor();
         $pfa->remove_by_analysis_id($analysis_id);
