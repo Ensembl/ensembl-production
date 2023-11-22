@@ -14,6 +14,7 @@ addons:
       - sendmail
       - graphviz
       - emboss
+      - libkyotocabinet-dev
 before_install:
   - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
   - export PATH=$PATH:$PWD/ensembl-git-tools/bin
@@ -44,6 +45,7 @@ install:
   - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
   - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
   - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
+  - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
   - cpanm --sudo -v --installdeps --notest .
   - cpanm --sudo -n Devel::Cover::Report::Coveralls
   - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
