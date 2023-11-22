@@ -81,7 +81,12 @@ sub resource_classes {
         '4GB'            => '4000',
         '8GB'            => '8000',
         '16GB'           => '16000',
-        '32GB'           => '32000',);
+        '32GB'           => '32000',
+        '50GB'           => '50000',
+        '100GB'           => '100000',
+        '200GB'           => '200000',
+
+    );
 
     my $pq = ' --partition=standard';
     my $dq = ' --partition=datamover';
