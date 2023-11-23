@@ -66,6 +66,12 @@ sub run {
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
 
+
+  #set timestamped dir for FTP dumps
+  #$self->param('timestamped', 1);
+
+
+
   #dump all into single file
   $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses); 
   # if ($per_chromosome && scalar(@$chr)) {
@@ -78,7 +84,10 @@ sub run {
   # }
 
   $self->unmask($sm_filename, $um_filename);
-  $self->hardmask($sm_filename, $hm_filename);
+  if($self->param('hardmasked')){
+    $self->hardmask($sm_filename, $hm_filename);
+  }
+  
 
   # if (scalar(@$non_ref)) {
   #   my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
