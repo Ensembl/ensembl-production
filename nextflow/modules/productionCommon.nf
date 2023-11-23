@@ -53,21 +53,20 @@ process DbFactory {
 
 /* use new genome factory */
 process GenomeInfo {
-    /*
-      Description: Fetch the genome information from the ensembl production metadata-api
-      Input:
-            genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
-            species_name        (list): Ensembl Species Name. Defaults to [].
-            organism_group      (list): Ensembl species Divisions. Defaults [].
-            allow_unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True
-            dataset_topic       (str) : dataset topic name to fetch the unique genome ids Default 'assembly'
-            metadata_uri        (str, Required): Mysql URI string to connect the metadata database.
-            taxonomy_uri        (str, Required): Mysql URI string to connect the ncbi taxonomy db.
-            output_json         (str, Required): path to genome info json file
-
-      Output:
-          String: Json file with genome information
-    */
+  /*
+    Description: Fetch the genome information from the ensembl production metadata-api
+    Input:
+      genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
+      species_name        (list): Ensembl Species Name. Defaults to [].
+      organism_group      (list): Ensembl species Divisions. Defaults [].
+      allow_unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True
+      dataset_topic       (str) : dataset topic name to fetch the unique genome ids Default 'assembly'
+      metadata_uri        (str, Required): Mysql URI string to connect the metadata database.
+      taxonomy_uri        (str, Required): Mysql URI string to connect the ncbi taxonomy db.
+      output_json         (str, Required): path to genome info json file
+    Output:
+        String: Json file with genome information
+  */
 
     debug "${params.debug}"
     label 'mem4GB'
@@ -77,31 +76,32 @@ process GenomeInfo {
     val genome_uuid
     val species_name
     val organism_group
-    val allow_unreleased_genomes
-    val allow_unreleased_datasets
-    val dataset_type
+    val released_genomes
+    val unreleased_genomes
     val metadata_uri
-    val taxonomy_uri
+    val released_datasets
+    val unreleased_datasets
+    val dataset_type
     val output_json
 
     output:
     path "$output_json"
 
   script :
-  def metadata_db_uri          =  metadata_uri ? "--metadata_db_uri $metadata_uri" : ''
-  def taxonomy_db_uri          =  taxonomy_uri ? "--taxonomy_db_uri $taxonomy_uri" : ''
-  def genome_uuid_param        =  genome_uuid.size() > 0 ?  "--genome_uuid ${genome_uuid.join(" ")}" : ''
-  def species_name_param       =  species_name.size() > 0 ?  "--species_name ${species_name.join(" ")}" : ''
-  def organism_group_param     =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''
-  def unreleased_genomes_param =  allow_unreleased_genomes ? "--allow_unreleased_genomes" : ''
-  def unreleased_datasets_param = allow_unreleased_datasets ? "--allow_unreleased_datasets" : ''
-  def dataset_type_param       =  dataset_type.size() > 0 ?  "--dataset_name ${dataset_type.join(" ")}" : ''
-
+  def metadata_db_uri           =  metadata_uri ?               "--metadata_db_uri $metadata_uri" : ''
+  def genome_uuid_param         =  genome_uuid.size() > 0 ?     "--genome_uuid ${genome_uuid.join(" ")}" : ''
+  def species_name_param        =  species_name.size() > 0 ?    "--organism_name ${species_name.join(" ")}" : '' 
+  def organism_group_param      =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''
+  def released_genomes_param    =  released_genomes ?           "--released_genomes true" : ''
+  def unreleased_genomes_param  =  unreleased_genomes ?         "--unreleased_genomes true" : ''
+  def unreleased_datasets_param =  unreleased_datasets ?        "--unreleased_datasets true" : ''
+  def released_datasets_param   =  released_datasets ?          "--released_datasets true" : ''
+  def dataset_type_param        =  dataset_type.size() > 0 ?    "--dataset_type ${dataset_type.join(" ")}" : ''
   """
   pyenv local production-nextflow-py-3.8
-
   ${params.nf_py_script_path}/genome_info.py \
-    $metadata_db_uri $taxonomy_db_uri $genome_uuid_param $species_name_param $organism_group_param \
-    $unreleased_genomes_param $dataset_type_param -o $output_json
+    $metadata_db_uri $genome_uuid_param $species_name_param $organism_group_param \
+    $released_genomes_param $unreleased_genomes_param $unreleased_datasets_param \
+    $released_datasets_param $dataset_type_param --output $output_json
   """
 }

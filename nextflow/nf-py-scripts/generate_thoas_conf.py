@@ -22,11 +22,9 @@ Generate Thoas Config file
 
 import argparse
 import logging
-import sys
 import json
 import configparser 
 import json
-import re
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -73,13 +71,7 @@ def main():
   parser.add_argument('--taxonomy_db_user'  ,  type=str, required=False, default='ensro')
   parser.add_argument('--taxonomy_db_dbname',  type=str, required=False, default='ncbi_taxonomy')
   parser.add_argument('--taxonomy_db_password',  type=str, required=False, default='')
-  #refget
-  # parser.add_argument('--refget_db_host'    ,  type=str, required=True)
-  # parser.add_argument('--refget_db_port'    ,  type=str, required=True)
-  # parser.add_argument('--refget_db_dbname'  ,  type=str, required=True)
-  # parser.add_argument('--refget_db_user'    ,  type=str, required=True)
-  # parser.add_argument('--refget_db_password',  type=str, required=True)
-  #mongo db
+
   parser.add_argument('--mongo_db_host'      ,  type=str, required=True)
   parser.add_argument('--mongo_db_port'      ,  type=str, required=True)
   parser.add_argument('--mongo_db_dbname'    ,  type=str, required=True)
@@ -155,14 +147,6 @@ def main():
       'collection'  : args.mongo_db_collection,
     }            
 
-    #genomes['REFGET DB'] = {
-    #  'host'     : args.refget_db_host,
-    #  'port'     : args.refget_db_port, 
-    #  'db'       : args.refget_db_dbname, 
-    #  'user'     : args.refget_db_user, 
-    #  'password' : args.refget_db_password,     
-    #}
-    
   #write config parser
   with args.output as configfile:
     genomes.write(configfile)

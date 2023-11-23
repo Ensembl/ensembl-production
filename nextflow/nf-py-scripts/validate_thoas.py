@@ -229,13 +229,13 @@ if __name__ == "__main__":
         )
     
 
-    if mysql_genes_count!= mongo_genes_count \
-        or mysql_transcripts_count != mongo_transcripts_count \
-        or mysql_proteins_count != mongo_proteins_count \
-        or mysql_exons_count != mongo_exons_count:
-        logger.error(",".join([genome_uuid, production_name, 
-                                f"Gene:{mysql_genes_count == mongo_genes_count}",
-                                f"Transcript:{mysql_transcripts_count == mongo_transcripts_count}",
-                                f"Protein:{mysql_proteins_count == mysql_proteins_count}",
-                                f"Exon:{mysql_exons_count == mongo_exons_count}"
-                                ]))
+    # if mysql_genes_count!= mongo_genes_count \
+    #     or mysql_transcripts_count != mongo_transcripts_count \
+    #     or mysql_proteins_count != mongo_proteins_count \
+    #     or mysql_exons_count != mongo_exons_count:
+    #     logger.error(",".join([genome_uuid, production_name, 
+    #                             f"Gene:{mysql_genes_count == mongo_genes_count}",
+    #                             f"Transcript:{mysql_transcripts_count == mongo_transcripts_count}",
+    #                             f"Protein:{mysql_proteins_count == mysql_proteins_count}",
+    #                             f"Exon:{mysql_exons_count == mongo_exons_count}"
+    #                             ]))

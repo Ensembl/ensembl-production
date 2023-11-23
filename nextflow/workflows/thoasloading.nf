@@ -5,13 +5,12 @@ nextflow.enable.dsl=2
 include {
   GenerateThoasConfigFile;
   LoadThoasMetadata;
-  //ExtractCoreDbData;
-  //LoadThoasIntoMongo;
   ExtractCoreDbDataCDS;
   ExtractCoreDbDataGeneName;
   ExtractCoreDbDataProteins;
   LoadGeneIntoThoas;
   LoadRegionIntoThoas;
+  CreateIndex;
 } from '../modules/thoasCommonProcess'
 
 include {
@@ -32,8 +31,10 @@ println """\
          species_name          : ${params.species_name}
          dataset_type          : ${params.dataset_type}
          organism_group        : ${params.organism_group}
-         unreleased_genomes    : ${params.allow_unreleased_genomes}
-         unreleased_genomes    : ${params.allow_unreleased_genomes}
+         released_genomes      : ${params.released_genomes}
+         unreleased_genomes    : ${params.unreleased_genomes}
+         released_datasets     : ${params.released_datasets}
+         unreleased_datasets   : ${params.unreleased_datasets}
          outdir                : ${params.thoas_data_location}
          thoas_code_location   : ${params.thoas_code_location}
          thoas_data_location   : ${params.thoas_data_location}
@@ -47,7 +48,6 @@ println """\
          mongo_dbname          : ${params.mongo_db_dbname}
          mongodb_collection    : ${params.mongo_db_collection}
          mongo_schema          : ${params.mongo_db_schema}
-         refget_dbname         : ${params.refget_db_dbname}
          """
          .stripIndent()
 
@@ -117,21 +117,6 @@ nextflow run thoas.nf <ARGUMENTS>
   --metadata_db_password  metadata database passwrod
                           default: ${params.metadata_password}
 
-  --refget_db_host        refget database host name
-                          default: ${params.refget_host}
-
-  --refget_db_port        refget database port details
-                          default: ${params.refget_port}
-
-  --refget_db_dbname      refget database name
-                          default: ${params.refget_dbname}
-
-  --refget_db_user        refget database user name
-                          default: ${params.refget_user}
-
-  --refget_db_password    refget database user password
-                          default: ${params.refget_password}
-
   --mongo_db_host         mongo database host name
                           default: ${params.mongo_host}
 
@@ -173,55 +158,42 @@ workflow {
     }
 
     //set user params as list
-    genome_uuid     = convertToList(params.genome_uuid)
-    species_name    = convertToList(params.species_name)
-    organism_group  = convertToList(params.organism_group)
-    dataset_type    = convertToList(params.dataset_type)
-    metadata_db_uri = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
-    taxonomy_db_uri = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.taxonomy_db_dbname}"
-    output_json     = 'genome_info.json'
-    allow_unreleased_genomes = params.allow_unreleased_genomes ? true : false
-    allow_unreleased_datasets = params.allow_unreleased_datasets ? true : false
-    genomic_feature_type = channel.of(['cds','genes', 'proteins'])   
+    genome_uuid         = convertToList(params.genome_uuid)
+    species_name        = convertToList(params.species_name)
+    organism_group      = convertToList(params.organism_group)
+    dataset_type        = convertToList(params.dataset_type)
+    metadata_db_uri     = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
+    released_genomes    = params.released_genomes ? true : false
+    unreleased_genomes  = params.unreleased_genomes ? true : false
+    released_datasets   = params.released_datasets ? true : false
+    unreleased_datasets = params.unreleased_datasets ? true : false 
     
-    GenomeInfo(genome_uuid, species_name, organism_group, allow_unreleased_genomes, allow_unreleased_datasets, dataset_type,
-                              metadata_db_uri, taxonomy_db_uri, output_json
+    output_json     = 'genome_info.json'
+    GenomeInfo(genome_uuid, species_name, organism_group,
+              released_genomes, unreleased_genomes, metadata_db_uri,
+              released_datasets, unreleased_datasets, dataset_type, output_json
     )
-    // GenerateThoasConfigFile(GenomeInfo.out[0])
+    GenerateThoasConfigFile(GenomeInfo.out[0])
  
-    // LoadThoasMetadata(GenerateThoasConfigFile.out[0])
+    LoadThoasMetadata(GenerateThoasConfigFile.out[0])
 
-    // ExtractCoreDbDataCDS( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-    //                  .combine(LoadThoasMetadata.out[0])
-    // )
+    ExtractCoreDbDataCDS( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
+                     .combine(LoadThoasMetadata.out[0])
+    )
    
-    // ExtractCoreDbDataGeneName( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-    //                  .combine(LoadThoasMetadata.out[0])
-    // )
+    ExtractCoreDbDataGeneName( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
+                     .combine(LoadThoasMetadata.out[0])
+    )
    
-    // ExtractCoreDbDataProteins( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-    //                  .combine(LoadThoasMetadata.out[0])
-    // )
-
-    //ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0]).join(ExtractCoreDbDataProteins.out[0]).view()
-    // LoadThoasIntoMongo(ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0]).join(ExtractCoreDbDataProteins.out[0]))
-
-    // LoadGeneIntoThoas(GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-    //                  .combine(LoadThoasMetadata.out[0]))
-    // LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
-
-// GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-//                      .combine(LoadThoasMetadata.out[0]).view({"genome $it"})
-
+    ExtractCoreDbDataProteins( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
+                     .combine(LoadThoasMetadata.out[0])
+    )
+    LoadGeneIntoThoas(ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0],remainder: true).join(ExtractCoreDbDataProteins.out[0],remainder: true))
+    LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
+    CreateIndex(LoadRegionIntoThoas.out[0].collect().flatten().last())
 }
 
-workflow BoostrapFlow {
-    take: genomes_uuids
-    main:
-        myrun = BootstrapProcess(genomes_uuids)
-    emit:
-        genome_out = myrun
-}
+
 
 
 workflow.onComplete {

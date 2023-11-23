@@ -49,7 +49,6 @@ process GenerateThoasConfigFile {
     """
 }
 
-
 process LoadThoasMetadata {
     /*
       Description: Load  genome data into mongodb collection for thoas
@@ -73,10 +72,6 @@ process LoadThoasMetadata {
     export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
     python ${params.nf_py_script_path}/thoas_load.py -c ${params.thoas_code_location} -i ${params.thoas_data_location}/${thoas_config_file} --load_metadata 
     """
-    // onError { 
-    //     println "Failed to load metadata to mongoDB check log file for more inforamtion : loading_log_${params.release}.log"
-    //     exit 1
-    // }
 }
 
 process ExtractCoreDbDataCDS {
@@ -211,39 +206,28 @@ process LoadGeneIntoThoas {
     input:
       val genome_info
 
-    // input:
-    //   val load_species
-
-    // script:
-    //   species = load_species[0]
-    //   thoas_conf = load_species[1]
-
     script:
-      def jsonSlurper = new groovy.json.JsonSlurper()
-      def genome      = jsonSlurper.parseText(genome_info[0])
-      species     = genome['species']
-      assembly    = genome['assembly_name']
+      species     = genome_info[0]
       thoas_conf  = genome_info[1]
           
 
     """
     echo $species
-     echo Load genes for  $species in  $thoas_conf
-     pyenv local production-nextflow-py-3.8
-     export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
-     cd  ${params.thoas_data_location}/
-     python ${params.nf_py_script_path}/thoas_load.py \
-     -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
-     --load_species \
-     --load_genomic_features \
-     --load_genomic_features_type genes
+    echo Load genes for  $species in  $thoas_conf
+    pyenv local production-nextflow-py-3.8
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
+    cd  ${params.thoas_data_location}/
+    python ${params.nf_py_script_path}/thoas_load.py \
+    -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
+    --load_species \
+    --load_genomic_features \
+    --load_genomic_features_type genes
     """
     // removed load genome --load_genomic_features_type genome genes regions
     output:
       tuple val("${species}"), val(thoas_conf)
-    queueSize=20
+    queueSize=10
 }
-
 
 process LoadRegionIntoThoas {
     /*
@@ -283,6 +267,64 @@ process LoadRegionIntoThoas {
     queueSize=20
 }
 
+process CreateIndex {
+    /*
+      Description: Create MongoDB Index for gene genome and regions 
+    */
+
+    debug "${params.debug}"  
+    label 'mem8GB'
+    cpus '8'
+    tag 'createindex'
+        
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+      val thoas_conf
+
+    """
+      echo Index in progress 
+      pyenv local production-nextflow-py-3.8
+      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
+      cd  ${params.thoas_data_location}/
+      python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/${thoas_conf} --mongo_collection ${params.mongo_db_collection}
+    """
+
+}
+
+
+
+
+process Validate {
+    /*
+      Description: Create MongoDB Index for gene genome and regions 
+    */
+
+    debug "${params.debug}"  
+    label 'mem8GB'
+    cpus '8'
+    tag 'createindex'
+    
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+      val load_species
+
+    script:
+      species = load_species[0]
+      thoas_conf = load_species[1]
+
+
+    """
+      echo Index in progress 
+      pyenv local production-nextflow-py-3.8
+      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
+      cd  ${params.thoas_data_location}/
+      python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/$thoas_conf --mongo_collection ${params.mongo_db_collection}
+    """
+
+}
+
 
 
 
@@ -316,4 +358,45 @@ process LoadRegionIntoThoas {
     
 //     """
 
-}
+//}
+
+// process LoadGeneIntoThoasBack {
+//     /*
+//       Description: Load  genomic feature into mongo
+//     */
+
+//     debug "${params.debug}"  
+//     label 'mem8GB'
+//     cpus '8'
+//     tag 'extractcoredbdata'
+    
+//     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+//     input:
+//       val genome_info
+
+//     script:
+//       def jsonSlurper = new groovy.json.JsonSlurper()
+//       def genome      = jsonSlurper.parseText(genome_info[0])
+//       species     = genome['species']
+//       assembly    = genome['assembly_name']
+//       thoas_conf  = genome_info[1]
+          
+
+//     """
+//     echo $species
+//      echo Load genes for  $species in  $thoas_conf
+//      pyenv local production-nextflow-py-3.8
+//      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
+//      cd  ${params.thoas_data_location}/
+//      python ${params.nf_py_script_path}/thoas_load.py \
+//      -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
+//      --load_species \
+//      --load_genomic_features \
+//      --load_genomic_features_type genes
+//     """
+//     // removed load genome --load_genomic_features_type genome genes regions
+//     output:
+//       tuple val("${species}"), val(thoas_conf)
+//     queueSize=20
+// }

@@ -55,6 +55,7 @@ def main():
   with open(args.output, 'w') as json_output:
 
     for genome in genome_factory.get_genomes(
+      genome_uuid            = args.genome_uuid,
       metadata_db_uri        = args.metadata_db_uri,
       released_genomes       = args.released_genomes,
       unreleased_genomes     = args.unreleased_genomes,
