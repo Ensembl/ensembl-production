@@ -37,9 +37,9 @@ logger = logging.getLogger(__name__)
 
 # Define the Enum type
 class DatasetStatusEnum(graphene.Enum):
-    SUBMITTED = 'Submitted'
-    PROGRESSING = 'Progressing'
-    PROCESSED = 'Processed'
+  SUBMITTED = 'Submitted'
+  PROGRESSING = 'Progressing'
+  PROCESSED = 'Processed'
  
 class GenomeFilterInput(graphene.InputObjectType):
   genome_uuid         = graphene.List(graphene.String)
