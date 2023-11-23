@@ -16,60 +16,60 @@ SpeciesFactory for MVP
 
 import eHive
 from dataclasses import asdict
-from ensembl.production.metadata import genome_factory
+from ensembl.production.metadata import genomeFactory
+
 
 class SpeciesFactory(eHive.BaseRunnable):
-  
-  def run(self):
-    
-    query = """
-      genomeId
-      genomeUuid
-      productionName
-      organism {      
-        ensemblName         
-      }
-      genomeDatasets {
-        dataset {
-          datasetSource {
-            name
-            type
+
+    def run(self):
+
+        query = """      
+            genomeId
+            genomeUuid
+            productionName
+            organism {      
+                ensemblName         
+            }
+            genomeDatasets {
+                dataset {
+                datasetSource {
+                    name
+                    type
+                }
+            }
           }
-        }
-      }
-    """
-    
-    for genome in genome_factory.get_genomes(
-      metadata_db_uri        = self.param("metadata_db_uri"),
-      organism_name          = self.param("organism_name"),
-      genome_uuid            = self.param("genome_uuid"),
-      unreleased_genomes     = self.param("unreleased_genomes"), 
-      released_genomes       = self.param("released_genomes"), 
-      organism_group_type    = self.param("organism_group_type"),
-      organism_group         = self.param("organism_group"),  
-      anti_organism_name     = self.param("anti_organism_name"),  
-      # query_param            = query
-      ):
-      
-      (database_name, dbtype) = (None, None)
-                
-      for each_dataset in genome.get('genomeDatasets', []) :
-        if each_dataset.get('dataset', {}).get('name', None) == 'assembly':
-          database_name = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
-          dbtype   =  each_dataset.get('dataset', {}).get('datasetSource', {}).get('type', None)
+        """
 
-      genome_info = { 
-         "genome_uuid": genome.get('genomeUuid', None),
-         "species": genome.get('productionName', None),
-         "ensembl_name": genome.get('organism', {}).get('ensemblName', None),
-         "dbname": database_name,
-         "type": dbtype,
-      }
+        for genome in genomeFactory.get_genomes(
+                metadata_db_uri=self.param("metadata_db_uri"),
+                organism_name=self.param("organism_name"),
+                genome_uuid=self.param("genome_uuid"),
+                unreleased_genomes=self.param("unreleased_genomes"),
+                released_genomes=self.param("released_genomes"),
+                organism_group_type=self.param("organism_group_type"),
+                organism_group=self.param("organism_group"),
+                anti_organism_name=self.param("anti_organism_name"),
+                query_param=query
+        ):
 
+            (database_name, dbtype) = (None, None)
 
-      self.dataflow(
-        genome_info  , 2
-      )
+            for each_dataset in genome.get('genomeDatasets', []):
+                if each_dataset.get('dataset', {}).get('name', None) == 'assembly':
+                    database_name = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
+                    dbtype = each_dataset.get('dataset', {}).get('datasetSource', {}).get('type', None)
 
-  def write_output(self):
-      pass
+            genome_info = {
+                "genome_uuid": genome.get('genomeUuid', None),
+                "species": genome.get('productionName', None),
+                "ensembl_name": genome.get('organism', {}).get('ensemblName', None),
+                "dbname": database_name,
+                "type": dbtype,
+            }
+
+            self.dataflow(
+                genome_info, 2
+            )
+
+    def write_output(self):
+        pass
