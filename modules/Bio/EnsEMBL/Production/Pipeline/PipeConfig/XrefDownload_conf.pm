@@ -86,21 +86,31 @@ sub pipeline_analyses {
         base_path => $self->o('base_path')
       },
       -rc_name         => 'dm_D',
+      -max_retry_count => 3,
+      -flow_into  => { '-1' => 'download_source_32'}
+    },
+    {
+      -logic_name      => 'download_source_32',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
+      -comment         => 'Downloads the source files and stores then in -base_path.',
+      -parameters      => {
+        base_path => $self->o('base_path')
+      },
+      -rc_name         => 'dm32_D',
+      -max_retry_count => 3,
+      -flow_into  => { '-1' => 'download_source_MAX'}
+    },
+      #THIS STEP IS THE RESULT OF A BUG AND SHOULD BE REMOVED AS SOON AS THE PIPELINE IS FIXED
+    {
+      -logic_name      => 'download_source_MAX',
+      -module          => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::DownloadSource',
+      -comment         => 'Downloads the source files and stores then in -base_path.',
+      -parameters      => {
+        base_path => $self->o('base_path')
+      },
+      -rc_name         => 'dmMAX_D',
       -max_retry_count => 3
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
     {
       -logic_name => 'schedule_cleanup',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ScheduleCleanup',
@@ -182,6 +192,7 @@ sub pipeline_analyses {
       },
       -rc_name    => 'default'
     },
+
     {
       -logic_name => 'pre_parse_source',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
@@ -189,16 +200,16 @@ sub pipeline_analyses {
       -rc_name    => '2GB_D',
       -hive_capacity => 100,
       -can_be_empty => 1,
+      -flow_into  => {'-1' => 'pre_parse_source_long_HM'}
     },
-      #-1 go to
-      #4GB and 1 week
-
-
-
-
-
-
-
+    {
+      -logic_name => 'pre_parse_source_long_HM',
+      -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
+      -comment    => 'Store data for faster species parsing',
+      -rc_name    => '4GB_W',
+      -hive_capacity => 100,
+      -can_be_empty => 1,
+    },
     {
       -logic_name => 'pre_parse_source_dependent',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::PreParse',
