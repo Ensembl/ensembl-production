@@ -60,6 +60,10 @@
                  with just this species. For a collection DB, list of all species in the DB
  -db_dir         Path to the uniparc-to-uniprot DB and the uniprot-to-alpha DB, both in KyotoCabinet format
  -cs_version     Needed for GIFTS, otherwise optional. Name of assembly, like 'GRCh38'.
+ - gifts_host    The GIFTS DB hostname
+ - gifts_db      The GIFTS DB schema name
+ - gifts_user    The GIFTS DB user name
+ - gifts_pass    The GIFTS DB password
 
 =head1 EXAMPLE USAGE
 
@@ -69,6 +73,7 @@
   -species_list "['homo_sapiens']"
   -db_dir /hps/scratch/...
   -registry my_reg.pm
+  -gifts_pass 'ThePassword'
 
 =cut
 
@@ -83,7 +88,7 @@ use Bio::EnsEMBL::Analysis;
 use Bio::EnsEMBL::ProteinFeature;
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Exception qw(throw info);
-use Bio::EnsEMBL::GIFTS::DB qw(fetch_latest_uniprot_enst_perfect_matches);
+use DBD::Pg; # For GIFTS
 use KyotoCabinet;
 
 sub fetch_input {
@@ -144,6 +149,14 @@ sub run {
         $alpha_db->OREADER
     ) or die "Error opening DB: " . $alpha_db->error();
 
+    my $gifts_host = $self->param('gifts_host') // 'pgsql-hlvm-051.ebi.ac.uk';
+    my $gifts_db = $self->param('gifts_db') // 'gtigftpro';
+    my $gifts_user = $self->param('gifts_user') // 'giftsrw';
+    my $gifts_pass = $self->param_required('gifts_pass');
+    my $gifts_dbh = DBI->connect("dbi:Pg:dbname=$gifts_db;host=$gifts_host", $gifts_user, $gifts_pass,
+        {AutoCommit => 0, RaiseError => 1, PrintError => 0}
+    );
+
     my $analysis = new Bio::EnsEMBL::Analysis(
             -logic_name    => 'alphafold',
             -db            => 'alphafold',
@@ -163,19 +176,19 @@ sub run {
 
     if (defined $self->param('cs_version')) {
         my $assembly = $self->param('cs_version');
-        my $gifts_dir = $self->param_required('gifts_dir');
-        opendir(my $dh, $gifts_dir) or die "Error opening dir $gifts_dir: $!";
-        for my $file (readdir($dh)) {
-            next unless $file =~ /^(.*?)-(.*)-rel(.*?)\.csv$/;
-            info("Found GIFTS file $file, species: $1, assembly: $2, release: $3");
-            if ($2 eq $assembly) {
-                $mappings = read_gifts_data("$gifts_dir/$file");
-                info("Read data for GIFTS from file $gifts_dir/file, " . (scalar (keys %$mappings)) . " entries");
+        # grab GIFTS species / assembly data
+        my $gifts_data = read_gifts_species($gifts_dbh);
+        for my $row (@$gifts_data) {
+            my ($g_species_id, $g_species, $g_assembly, $g_release) = @$row;
+            info("Found species in GIFTS DB: species: $g_species, assembly: $g_assembly, release: $g_release");
+            if ($g_assembly eq $assembly) {
+                $mappings = read_gifts_data($gifts_dbh, $g_species_id);
+                info("Read data for GIFTS, " . (scalar (keys %$mappings)) . " entries");
                 last;
             }
         }
-        closedir($dh);
     }
+    $gifts_dbh->disconnect();
 
     my $no_uniparc = 0;
     my $no_dbid = 0;
@@ -199,15 +212,15 @@ sub run {
         # We currently have the same uniparc accession tied to the same
         # translation_id but in different versions (xref pipeline run
         # 'xrefchecksum' and 'uniparc_checksum')
-        my $sql = <<SQL;
-SELECT xr.dbprimary_acc as uniparc_id, tr.stable_id, tr.translation_id
-  FROM xref xr, object_xref ox, translation tr
-  where external_db_id = (SELECT external_db_id FROM external_db where db_name = 'UniParc')
-    and xr.xref_id = ox.xref_id
-    and ox.ensembl_id = tr.translation_id
-    and ox.ensembl_object_type = 'Translation'
-    group by uniparc_id, tr.stable_id, tr.translation_id
-SQL
+        my $sql = "
+            SELECT xr.dbprimary_acc as uniparc_id, tr.stable_id, tr.translation_id
+            FROM xref xr, object_xref ox, translation tr
+            where external_db_id = (SELECT external_db_id FROM external_db where db_name = 'UniParc')
+                and xr.xref_id = ox.xref_id
+                and ox.ensembl_id = tr.translation_id
+                and ox.ensembl_object_type = 'Translation'
+                group by uniparc_id, tr.stable_id, tr.translation_id
+        ";
 
         my $sth = $dbc->prepare($sql);
         $sth->execute;
@@ -281,6 +294,7 @@ SQL
                 next unless $alpha_data;
                 push @{$mappings->{$uniprot_id}}, {'dbid' => $dbid, 'ensid' => $stable_id, 'alpha' => $alpha_data};
                 $at_least_one_alpha_mapping = 1;
+                info("Mapping found for $stable_id: $alpha_data");
             }
             unless (scalar @rmap) {
                 $no_dbid++;
@@ -360,16 +374,51 @@ SQL
     );
 }
 
-# Read a GIFTS CSV dump file, return a hash-ref like:
+# Reads info about available species from GIFTS. Will use the latest release for
+# which GIFTS data is available. This is probably older than the release the
+# pipeline is running with. Since the species in GIFTS are unlikely to see
+# updates in the Core DBs, this is likely not an issue.
+# Returns an arrayref like: [[ensembl_species_history_id, species, assembly, ensembl_release], ...]
+sub read_gifts_species {
+    my $dbh = shift;
+
+    my $sql = "
+        select ensembl_species_history_id, species, assembly_accession as assembly, ensembl_release as release
+        from ensembl_gifts.ensembl_species_history
+        where ensembl_release = (select max(ensembl_release) from ensembl_gifts.ensembl_species_history)
+        order by ensembl_species_history_id
+    ";
+
+    my $sth = $dbh->prepare($sql);
+    $sth->execute();
+    return $sth->fetchall_arrayref();
+}
+
+# Read GIFTS data from DB, return a hash-ref like:
 # { 'A0A0G2K0H5' => [ 'ENSRNOT00000083658' ], 'B5DEL8' => [ 'ENSRNOT00000036389' ], ...}
 sub read_gifts_data {
-    my $path = shift;
-    open (my $fh, '<', $path) or die "GIFTS dump file '$path' not readable: $!";
+    my $dbh = shift;
+    my $ensembl_species_history_id = shift;
+
+    my $sql = "
+        select et.enst_id, ue.uniprot_acc
+        from ensembl_gifts.alignment al
+        inner join ensembl_gifts.alignment_run alr ON alr.alignment_run_id = al.alignment_run_id
+        inner join ensembl_gifts.release_mapping_history rmh ON rmh.release_mapping_history_id = alr.release_mapping_history_id
+        inner join ensembl_gifts.ensembl_species_history esh ON esh.ensembl_species_history_id = rmh.ensembl_species_history_id
+        inner join ensembl_gifts.ensembl_transcript et ON et.transcript_id = al.transcript_id
+        inner join ensembl_gifts.uniprot_entry ue ON ue.uniprot_id = al.uniprot_id
+        where score1_type = 'perfect_match'
+            and alr.ensembl_release = esh.ensembl_release
+            and rmh.ensembl_species_history_id = ?
+    ";
+
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($ensembl_species_history_id);
 
     my %uniprot_ensid;
-    while (my $line = <$fh>) {
-        chomp $line;
-        (undef, undef, my $ensid, my $uniprot) = split ",", $line;
+    while (my $row = $sth->fetchrow_arrayref()) {
+        my ($ensid, $uniprot) = @$row;
         # A protein may have isoforms. In Uniprot, their reference looks like
         # e.g. F1RA39-1. Alphafold currently only has data for the canonical
         # sequence. Here, we just remove the isoform reference and always refer
