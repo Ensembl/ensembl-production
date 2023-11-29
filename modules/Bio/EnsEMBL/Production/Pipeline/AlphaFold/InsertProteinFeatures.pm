@@ -97,6 +97,7 @@ sub fetch_input {
     $self->param_required('species');
     $self->param_required('db_dir');
     $self->param_required('species_list');
+    $self->param_required('gifts_pass');
 
     return 1;
 }
