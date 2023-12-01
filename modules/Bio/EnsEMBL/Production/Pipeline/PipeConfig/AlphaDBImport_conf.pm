@@ -71,7 +71,6 @@ sub default_options {
         user         => 'ensadmin',
         alphafold_data_file => '/nfs/ftp/public/databases/alphafold/accession_ids.csv',
         uniparc_data_file => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz',
-        gifts_dir    => '',
         pipeline_db  => {
             -driver => $self->o('hive_driver'),
             -host   => $self->o('pipe_db_host'),
@@ -157,8 +156,8 @@ sub pipeline_analyses {
                 antispecies => $self->o('antispecies'),
             },
             -flow_into  => {
-                '2->A' => [ 'insert_features' ],
-                'A->1' => [ 'cleanup' ]
+                '1' => [ 'cleanup' ],
+                '2' => [ 'insert_features' ],
             },
             -rc_name    => '500M',
         },
@@ -167,7 +166,7 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::InsertProteinFeatures',
             -parameters => {
                 db_dir => $self->o('scratch_large_dir'),
-                gifts_dir => $self->o('gifts_dir'),
+                gifts_pass => $self->o('gifts_pass'),
             },
             -wait_for => [
                 'create_alphafold_db',
@@ -202,6 +201,9 @@ sub pipeline_analyses {
             -logic_name        => 'cleanup',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -max_retry_count   => 1,
+            -wait_for => [
+                'datacheck'
+            ],
             -parameters        => {
                 cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
             },
