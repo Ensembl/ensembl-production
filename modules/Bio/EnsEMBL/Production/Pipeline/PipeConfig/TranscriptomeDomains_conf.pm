@@ -56,7 +56,7 @@ sub default_options {
       'SFLD',
       'SMART',
       'SUPERFAMILY',
-      'TIGRFAM',
+      'NCBIFAM',
     ],
     
   };

@@ -188,11 +188,11 @@ sub default_options {
         ipscan_lookup   => 1,
       },
       {
-        logic_name      => 'tigrfam',
-        db              => 'TIGRfam',
+        logic_name      => 'ncbifam',
+        db              => 'NCBIfam',
         program         => 'InterProScan',
-        ipscan_name     => 'TIGRFAM',
-        ipscan_xml      => 'TIGRFAM',
+        ipscan_name     => 'NCBIFAM',
+        ipscan_xml      => 'NCBIFAM',
         ipscan_lookup   => 1,
       },
       {

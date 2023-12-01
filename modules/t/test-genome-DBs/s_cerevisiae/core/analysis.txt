@@ -13,4 +13,4 @@
 51	2011-02-10 22:06:52	ncoils	coiled_coil	\N	/nas/seqdb/integr8/production/code/external/src/coils	ncoils	\N	/nas/seqdb/integr8/production/code/external/bin/ncoils	\N	ProteinAnnotation/Coil	\N	ncoils	annotation
 52	2011-02-10 22:06:52	signalp	signal_peptide	\N	\N	signalp	\N	/homes/ensgen/signalp-3.0/signalp	\N	ProteinAnnotation/Signalp	\N	Signalp	annotation
 53	2011-02-10 22:06:52	prints	Prints	\N	/nfs/seqdb/production/interpro/data/iprscan/prints.pval	FingerPRINTScan	\N	/nfs/seqdb/production/interpro/binaries/64_bit_Linux/fingerPRINTScan	\N	ProteinAnnotation/Prints	\N	Prints	domain
-54	2011-02-10 22:06:52	tigrfam	TIGRfam	\N	/nfs/seqdb/production/interpro/data/iprscan/TIGRFAMs_HMM.LIB	hmmpfam	\N	/sw/arch/bin/hmmpfam	--cut_ga	ProteinAnnotation/Hmmpfam	\N	TIGRFAM	domain
+54	2011-02-10 22:06:52	ncbifam	NCBIfam	\N	/nfs/seqdb/production/interpro/data/iprscan/TIGRFAMs_HMM.LIB	hmmpfam	\N	/sw/arch/bin/hmmpfam	--cut_ga	ProteinAnnotation/Hmmpfam	\N	TIGRFAM	domain
