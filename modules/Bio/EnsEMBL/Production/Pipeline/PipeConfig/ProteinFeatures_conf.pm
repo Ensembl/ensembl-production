@@ -191,7 +191,7 @@ sub default_options {
         logic_name      => 'ncbifam',
         db              => 'NCBIfam',
         program         => 'InterProScan',
-        ipscan_name     => 'NCBIFAM',
+        ipscan_name     => 'NCBIfam',
         ipscan_xml      => 'NCBIFAM',
         ipscan_lookup   => 1,
       },
