@@ -500,9 +500,7 @@
 50681	Ens_Ac_transcript	\N	XREF	40	Ensembl Anole Lizard Transcript	MISC	\N	\N	\N	1	105157	2012-04-11 13:55:16	\N	\N
 50682	BGI_Gene	1	XREF	50	BGI_2005_indica_Gene	MISC	\N	\N	BGI gene identifier	1	101255	2012-05-11 13:33:36	\N	\N
 50683	GeneIndex	1	XREF	50	GeneIndex	MISC	\N	\N	\N	1	101255	2012-05-11 13:35:01	\N	\N
-50684	EO	1	XREF	0	Environment Ontology	MISC	\N	\N	Plant environmental conditions ontology terms.\
-More information in there:\
-http://www.gramene.org/plant_ontology/ontology_browse.html#eo	1	101255	2012-05-11 13:35:34	101255	2012-11-27 16:42:08
+50684	EO	1	XREF	0	Environment Ontology	MISC	\N	\N	Plant environmental conditions ontology terms.\nMore information in there:\nhttp://www.gramene.org/plant_ontology/ontology_browse.html#eo	1	101255	2012-05-11 13:35:34	101255	2012-11-27 16:42:08
 50685	Ens_Rn_transcript	\N	XREF	5	Ensembl Rat Transcript	MISC	\N	\N	\N	1	5132	2012-05-21 15:38:32	\N	\N
 50686	Ens_Rn_translation	\N	XREF	5	Ensembl Rat Translation	MISC	\N	\N	\N	1	5132	2012-05-21 15:39:01	\N	\N
 50687	Uppsala University	\N	KNOWN	5	Uppsala University	MISC	\N	\N	\N	1	5132	2012-05-22 18:46:35	\N	\N
@@ -551,8 +549,7 @@ http://www.gramene.org/plant_ontology/ontology_browse.html#eo	1	101255	2012-05-1
 50731	Turkey Genome Consortium	\N	KNOWN	5	Turkey Genome Consortium	MISC	\N	\N	Turkey Genome Consortium	1	5132	2013-02-25 16:25:54	\N	\N
 50732	Yutaka_Satou_Kyoto_University	\N	KNOWN	5	Yutaka Satou Kyoto University	MISC	\N	\N	Yutaka Satou Kyoto University	1	5132	2013-02-26 21:43:47	\N	\N
 50733	Chicken_Genome_Consortium	\N	KNOWN	5	International Chicken Genome Consortium	MISC	\N	\N	\N	1	5132	2013-02-26 21:50:34	\N	\N
-50734	TAIR_TRANSLATION	1	XREF	1	TAIR Translation identifiers	MISC	\N	\N	TAIR identifiers to link to Ensembl Translation identifiers.\
-The main requirement behind this entry, is to be able to link TAIR GO annotations to Ensembl Translations.	1	101255	2013-03-21 17:21:53	\N	\N
+50734	TAIR_TRANSLATION	1	XREF	1	TAIR Translation identifiers	MISC	\N	\N	TAIR identifiers to link to Ensembl Translation identifiers.\nThe main requirement behind this entry, is to be able to link TAIR GO annotations to Ensembl Translations.	1	101255	2013-03-21 17:21:53	\N	\N
 50735	AGI_GENE	1	XREF	1	AGI Gene	MISC	\N	\N	annotation provided by Arizona Genome Institute	1	101255	2013-03-22 16:45:07	\N	\N
 50736	AGI_TRANSCRIPT	1	XREF	1	AGI Transcript	MISC	\N	\N	annotation provided by Arizona Genome Institute	1	101255	2013-03-22 16:48:18	\N	\N
 50737	CGNC	\N	KNOWNXREF	100	CGNC Symbol	PRIMARY_DB_SYNONYM	\N	\N	\N	1	97245	2013-04-08 09:46:58	\N	\N
