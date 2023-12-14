@@ -21,8 +21,7 @@
 21	genebuild.last_otherfeatures_update	0	0	otherfeatures	\N	\N	\N	\N	\N	0
 22	genebuild.last_update	0	0	otherfeatures	\N	\N	\N	\N	\N	0
 23	genebuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
-24	genebuild.method	0	0	core,rnaseq	full_genebuild,projection_build,import,mixed_stragegy_build.\
-Full genebuild is use of standard annotation system. Projection build is use of projection pipeline from a reference (usually human) to either a low coverage or higher primate genome. Import used only for ensembl-genomes species. Mixed strategy covers other combinations for example a projection build combined with full genebuild method.	\N	\N	101214	2013-01-24 10:19:34	0
+24	genebuild.method	0	0	core,rnaseq	full_genebuild,projection_build,import,mixed_stragegy_build.\nFull genebuild is use of standard annotation system. Projection build is use of projection pipeline from a reference (usually human) to either a low coverage or higher primate genome. Import used only for ensembl-genomes species. Mixed strategy covers other combinations for example a projection build combined with full genebuild method.	\N	\N	101214	2013-01-24 10:19:34	0
 25	genebuild.start_date	0	0	core,rnaseq,vega,presite	This is the date when the genebuild was started. The date roughly corresponds to the date when the supporting evidence were downloaded. This date will remain unchanged until there is a new genebuild	\N	\N	101214	2013-01-24 10:27:27	0
 26	genebuild.version	0	0	core,otherfeatures,vega	\N	\N	\N	\N	\N	0
 27	genebuild_id	0	0	cdna	\N	\N	\N	97245	2012-01-24 10:54:35	0
@@ -30,8 +29,7 @@ Full genebuild is use of standard annotation system. Projection build is use of 
 29	individual.display_strain	0	0	variation	\N	\N	\N	\N	\N	0
 30	individual.reference_strain	0	0	variation	\N	\N	\N	\N	\N	0
 31	liftover.mapping	0	0	cdna,core,otherfeatures,rnaseq,presite	\N	\N	\N	97804	2012-11-30 09:49:40	0
-32	marker.priority	0	0	core	when marker data is available, can set a cutoff for the number of markers displayed in a given location\
-usually set to 1 for most species, set to 80 for human	\N	\N	97245	2012-05-28 15:44:03	0
+32	marker.priority	0	0	core	when marker data is available, can set a cutoff for the number of markers displayed in a given location\nusually set to 1 for most species, set to 80 for human	\N	\N	97245	2012-05-28 15:44:03	0
 33	pairwise_ld.default_population	0	0	variation	\N	\N	\N	\N	\N	0
 34	patch	0	0	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	\N	\N	\N	\N	\N	0
 35	pipeline.lock	0	0	core,otherfeatures	\N	\N	\N	\N	\N	0
@@ -73,8 +71,7 @@ usually set to 1 for most species, set to 80 for human	\N	\N	97245	2012-05-28 15
 71	species.taxonomy_id	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Taxonomy ID from NCBI taxonomy database. Usually provided by INSDC who provides assembly.	\N	\N	\N	\N	0
 72	species.three_letter_code	0	0	otherfeatures	\N	\N	\N	\N	\N	0
 73	transcriptbuild.level	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	\N	\N	\N	\N	\N	0
-74	xref.timestamp	0	0	core,otherfeatures	timestamp created when running xrefs\
-should exist in all core databases and in otherfeatures databases for mouse and human where refseq and ccds import get xrefs	\N	\N	97245	2012-05-28 15:36:17	0
+74	xref.timestamp	0	0	core,otherfeatures	timestamp created when running xrefs\nshould exist in all core databases and in otherfeatures databases for mouse and human where refseq and ccds import get xrefs	\N	\N	97245	2012-05-28 15:36:17	0
 75	species.production_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	The name of the species in a form suitable for use in, e.g., database table names or file names.	\N	\N	\N	\N	0
 76	schema_type	0	0	cdna,core,funcgen,otherfeatures,rnaseq,variation,vega,presite	The type of schema in this database, e.g., 'core' in a Core database or 'variation' in a Variation database.	\N	\N	\N	\N	0
 77	genebuild.vega_merge_db	0	0	core	Database name for Vega database used for GENCODE gene merge	\N	\N	\N	\N	0
@@ -85,14 +82,8 @@ should exist in all core databases and in otherfeatures databases for mouse and 
 83	removed_evidence_flag.uniprot_dbversion	0	0	core	Uniprot database used to flag transcripts whose transcript_supporting_feature has been removed from Uniprot	\N	\N	\N	\N	0
 84	removed_evidence_flag.ensembl_dbversion	0	0	core	Ensembl human database used to flag transcripts whose transcript_supporting_feature has been removed from the reference since the projection genebuild	\N	\N	97245	2011-10-26 08:57:51	0
 86	lrg	1	0	cdna,core,otherfeatures,rnaseq,vega,presite	Indicates the presence of LRG seq_regions in the database	\N	2011-05-26 12:02:41	97245	2011-10-26 09:15:10	0
-87	assembly.web_accession_source	0	0	core,presite	For Web team. Choose only ENA, NCBI, DDBJ. This meta key tells the Web code which website to link out to on the species home page for the GCA assembly accession. They have hard-coded the link based on the meta key's value. \
-The concatenation of "assembly.accession_link" (stored in web code, derived from assembly.web_accession_source) and "assembly.accession" should get a valid path.	5132	2012-04-03 14:28:19	101214	2013-01-24 10:26:57	0
-88	assembly.web_accession_type	0	0	core,presite	For web. \
-When assembly.accession_souce = NCBI, then set assembly.accession_type = 'GenBank Assembly ID'.\
-When assembly.accession_souce = ENA, then set assembly.accession_type = 'EMBL-Bank WGS Master'.\
-\
-Web code can then concat the text\
-"The genome assembly represented here corresponds to ".assembly.accession_type." ".assembly.accession.""	5132	2012-04-04 14:29:53	101214	2013-01-24 10:27:07	0
+87	assembly.web_accession_source	0	0	core,presite	For Web team. Choose only ENA, NCBI, DDBJ. This meta key tells the Web code which website to link out to on the species home page for the GCA assembly accession. They have hard-coded the link based on the meta key's value. \nThe concatenation of "assembly.accession_link" (stored in web code, derived from assembly.web_accession_source) and "assembly.accession" should get a valid path.	5132	2012-04-03 14:28:19	101214	2013-01-24 10:26:57	0
+88	assembly.web_accession_type	0	0	core,presite	For web. \nWhen assembly.accession_souce = NCBI, then set assembly.accession_type = 'GenBank Assembly ID'.\nWhen assembly.accession_souce = ENA, then set assembly.accession_type = 'EMBL-Bank WGS Master'.\n\nWeb code can then concat the text\n"The genome assembly represented here corresponds to ".assembly.accession_type." ".assembly.accession.""	5132	2012-04-04 14:29:53	101214	2013-01-24 10:27:07	0
 89	species.url	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Derived from species.production_name and is used in the URL of a species on the Ensembl website. It conforms to the web rules of upper-cased first letter, remainder is lowercased and no bad names.	97804	2012-04-05 09:48:33	97804	2012-04-05 11:43:30	0
 90	species.display_name	0	0	cdna,core,otherfeatures,rnaseq,vega,presite	Meta key originally named species.ensembl_alias_name. This is meant for display on the website or anywhere we need a more readable name. Used on drop down menus and species pages	97804	2012-04-05 09:52:56	97804	2012-04-05 11:42:58	0
 91	sample.regulation_param	1	0	core,otherfeatures	Overide the sample values from the species.ini file for the ensembl genomes species (sample values are used in the species homepage)	101593	2013-02-21 10:49:24	101593	2013-02-21 10:57:22	0
