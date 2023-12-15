@@ -209,7 +209,7 @@ class RegulationSymlinkFTP:
                 logger.info(f"{source} -> {target} --- was successfully created")
         else:
             if not validator.is_symlink(source, check=True):
-                logger.info("{source} -> {target} -- was successfully removed")
+                logger.info(f"{source} -> {target} -- was successfully removed")
 
     def aliased_paths(self, **kwargs):
         return {key: self.RELEASE_PATH_ALIASES.get(value, value) for key, value in kwargs.items()}
