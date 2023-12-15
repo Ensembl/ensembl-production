@@ -221,7 +221,7 @@ class RegulationSymlinkFTP:
                 )
         else:
             if not validator.is_symlink(source, check=True):
-                logger.info("{source} -> {target} -- was successfully removed")
+                logger.info(f"{source} -> {target} -- was successfully removed")
 
     def aliased_paths(self, **kwargs):
         return {
