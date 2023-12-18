@@ -283,7 +283,7 @@ if __name__ == "__main__":
     logger.info("Searching for signals in data_files ...")
     signals = RegulationSymlinkFTP.search(ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version)
     for signal in signals:
-        signal.symlink2rf("signal", only_remove=args.release_version)
+        signal.symlink2rf("signal", only_remove=args.delete_symlinks)
         signal.symlink2misc("signal", only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")
