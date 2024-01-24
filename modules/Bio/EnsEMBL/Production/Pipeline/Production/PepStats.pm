@@ -103,8 +103,9 @@ sub run_pepstats {
   my $attribs = {};
   my $tid;
   close(OUT);
-  foreach my $line (@lines) {
+  die("pepstats command not found ($PEPSTATS)") if ($lines[0] =~ /command not found/);
 
+  foreach my $line (@lines) {
 	if ($line =~ /PEPSTATS of ([^ ]+)/) {
 	  $tid = $1;
 	} elsif (defined $tid) {
