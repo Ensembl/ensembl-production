@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ sub pipeline_analyses {
       '1->A' => 'schedule_species',
       'A->1' => 'EmailAdvisoryXrefReport'
     },
-    -rc_name    => 'small',
+    -rc_name    => 'default',
   },
   {
     -logic_name => 'schedule_species',
@@ -93,7 +93,7 @@ sub pipeline_analyses {
       '2->A' => 'schedule_source',
       'A->2' => 'schedule_dependent_source'
     },
-    -rc_name    => 'small',
+    -rc_name    => 'default',
   },
   {
     -logic_name => 'schedule_source',
@@ -112,7 +112,7 @@ sub pipeline_analyses {
       xref_pass  => $self->o('xref_pass'),
     },
     -flow_into  => { '2' => 'parse_source' },
-    -rc_name    => 'small',
+    -rc_name    => '1GB_D',
     -analysis_capacity => 10,
   },
   {
@@ -133,7 +133,7 @@ sub pipeline_analyses {
       '2->A' => 'parse_source',
       'A->1' => 'schedule_tertiary_source',
     },
-    -rc_name    => 'small',
+    -rc_name    => '4GB_D',
   },
   {
     -logic_name => 'schedule_tertiary_source',
@@ -153,12 +153,12 @@ sub pipeline_analyses {
       '2->A' => 'parse_source',
       'A->1' => 'dump_ensembl',
     },
-    -rc_name    => 'small',
+    -rc_name    => 'default',
   },
   {
     -logic_name        => 'parse_source',
     -module            => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::ParseSource',
-    -rc_name           => 'large',
+    -rc_name           => '16GB_D',
     -hive_capacity     => 300,
     -analysis_capacity => 50,
     -batch_size        => 30,
@@ -177,7 +177,7 @@ sub pipeline_analyses {
       '2->A' => 'dump_xref',
       'A->1' => 'schedule_mapping'
     },
-    -rc_name    => 'mem',
+    -rc_name    => '16GB_D',
   },
   {
     -logic_name => 'dump_xref',
@@ -188,7 +188,7 @@ sub pipeline_analyses {
       config_file => $self->o('config_file')
     },
     -flow_into  => { 2 => 'align_factory' },
-    -rc_name    => 'normal',
+    -rc_name    => '1GB',
   },
   {
     -logic_name => 'align_factory',
@@ -197,7 +197,7 @@ sub pipeline_analyses {
       base_path => $self->o('base_path'),
       release   => $self->o('release')},
     -flow_into  => { 2 => 'align' },
-    -rc_name    => 'small',
+    -rc_name    => 'default',
   },
   {
     -logic_name        => 'align',
@@ -205,7 +205,7 @@ sub pipeline_analyses {
     -parameters        => {
       base_path => $self->o('base_path')
     },
-    -rc_name           => 'large',
+    -rc_name           => '16GB_D',
     -hive_capacity     => 300,
     -analysis_capacity => 300,
     -batch_size        => 5,
@@ -222,7 +222,7 @@ sub pipeline_analyses {
       '2->A' => ['direct_xrefs', 'rnacentral_mapping'],
       'A->1' => 'mapping'
     },
-    -rc_name    => 'small',
+    -rc_name    => '1GB',
   },
   {
     -logic_name => 'direct_xrefs',
@@ -232,7 +232,7 @@ sub pipeline_analyses {
       release   => $self->o('release')
     },
     -flow_into  => { 1 => 'process_alignment' },
-    -rc_name    => 'normal',
+    -rc_name    => '1GB_D',
     -analysis_capacity => 30
   },
   {
@@ -242,7 +242,7 @@ sub pipeline_analyses {
       base_path => $self->o('base_path'),
       release   => $self->o('release')
     },
-    -rc_name    => 'normal',
+    -rc_name    => '1GB_D',
     -analysis_capacity => 30
   },
   {
@@ -253,7 +253,7 @@ sub pipeline_analyses {
       release   => $self->o('release')
     },
     -flow_into  => { 1 => 'uniparc_mapping' },
-    -rc_name    => 'normal',
+    -rc_name    => 'default',
     -hive_capacity => 300,
     -analysis_capacity => 30
   },
@@ -265,7 +265,7 @@ sub pipeline_analyses {
       release   => $self->o('release')
     },
     -flow_into  => { 1 => 'coordinate_mapping' },
-    -rc_name    => 'normal',
+    -rc_name    => '1GB',
     -hive_capacity => 300,
     -analysis_capacity => 30
   },
@@ -276,7 +276,7 @@ sub pipeline_analyses {
       base_path => $self->o('base_path'),
       release   => $self->o('release')
     },
-    -rc_name    => 'mem',
+    -rc_name    => '16GB',
     -analysis_capacity => 30
   },
   {
@@ -290,25 +290,26 @@ sub pipeline_analyses {
       '1->A' => 'RunXrefCriticalDatacheck',
       'A->1' => 'RunXrefAdvisoryDatacheck'
     },
-    -rc_name    => 'mem',
+    -rc_name    => '16GB_D',
     -analysis_capacity => 30,
   },
   {
-    -logic_name        => 'RunXrefCriticalDatacheck',
-    -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-    -max_retry_count   => 1,
-    -analysis_capacity => 10,
-    -batch_size        => 10,
-    -parameters        => {
-      datacheck_names  => ['ForeignKeys'],
-      datacheck_groups => ['xref_mapping'],
-      datacheck_types  => ['critical'],
-      registry_file    => $self->o('registry'),
-      config_file      => $self->o('dc_config_file'),
-      history_file     => $self->o('history_file'),
-      old_server_uri   => $self->o('old_server_uri'),
-      failures_fatal   => 1,
-    },
+      -logic_name        => 'RunXrefCriticalDatacheck',
+      -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+      -max_retry_count   => 1,
+      -analysis_capacity => 10,
+      -batch_size        => 10,
+      -parameters        => {
+          datacheck_names  => [ 'ForeignKeys' ],
+          datacheck_groups => [ 'xref_mapping' ],
+          datacheck_types  => [ 'critical' ],
+          registry_file    => $self->o('registry'),
+          config_file      => $self->o('dc_config_file'),
+          history_file     => $self->o('history_file'),
+          old_server_uri   => $self->o('old_server_uri'),
+          failures_fatal   => 1,
+      },
+      -rc_name           => '1GB',
   },
   {
     -logic_name        => 'RunXrefAdvisoryDatacheck',
@@ -325,12 +326,14 @@ sub pipeline_analyses {
       old_server_uri   => $self->o('old_server_uri'),
       failures_fatal   => 0,
     },
-    -flow_into         => { 4 => 'AdvisoryXrefReport' }
+    -flow_into         => { 4 => 'AdvisoryXrefReport' },
+    -rc_name           => '1GB',
+
   },
   {
     -logic_name => 'AdvisoryXrefReport',
     -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::AdvisoryXrefReport',
-    -rc_name    => 'small'
+    -rc_name    => 'default'
   },
   {
     -logic_name => 'EmailAdvisoryXrefReport',
@@ -340,7 +343,7 @@ sub pipeline_analyses {
       pipeline_name => $self->o('pipeline_name'),
       base_path => $self->o('base_path')
     },
-    -rc_name    => 'small',
+    -rc_name    => 'default',
     -flow_into  => { 1 => 'notify_by_email' }
   },
   {
@@ -350,22 +353,11 @@ sub pipeline_analyses {
       email        => $self->o('email'),
       pipeline_name => $self->o('pipeline_name')
     },
-    -rc_name    => 'small'
+    -rc_name    => 'default'
   }
   ];
 }
 
-sub resource_classes {
-  my ($self) = @_;
-
-  return {
-    %{$self->SUPER::resource_classes},
-    'small'  => { 'LSF' => '-q production -M 200 -R "rusage[mem=200]"' },
-    'normal' => { 'LSF' => '-q production -M 500 -R "rusage[mem=500]"' },
-    'mem'    => { 'LSF' => '-q production -M 3000 -R "rusage[mem=3000]"' },
-    'large'  => { 'LSF' => '-q production -M 10000 -R "rusage[mem=10000]"' },
-  }
-}
 
 sub pipeline_wide_parameters {
   my ($self) = @_;
