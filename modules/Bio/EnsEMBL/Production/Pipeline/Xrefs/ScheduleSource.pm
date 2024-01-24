@@ -126,7 +126,9 @@ sub run {
       $self->dataflow_output_id($dataflow_params, 2);
     } else {
       # Create list of files
-      my @list_files = `ls $file_name`;
+      opendir(my $dir_handle, $file_name);
+      my @list_files = readdir($dir_handle);
+      closedir($dir_handle);
       if ($preparse) { @list_files = $preparse; }
       foreach my $file (@list_files) {
         $file =~ s/\n//;
