@@ -23,7 +23,7 @@ Fetch Genome Info from the new metadata api
 import argparse
 import logging
 import json
-from ensembl.production.metadata import genomeFactory
+from ensembl.production.factories.metadata import genomeFactory
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)

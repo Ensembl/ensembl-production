@@ -15,8 +15,7 @@ SpeciesFactory for MVP
 """
 
 import eHive
-from dataclasses import asdict
-from ensembl.production.metadata import genomeFactory
+from ensembl.production.factories.metadata import genomeFactory
 
 
 class SpeciesFactory(eHive.BaseRunnable):
