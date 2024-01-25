@@ -100,7 +100,7 @@ sub resource_classes {
         'dm'        => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
         'dm_D'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
         'dm_W'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'dm32_D'    => { 'LSF' => '-q ' . $self->o('datamover_queue') . ' -M 32000 -R "rusage[mem=32000]"', 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'100GB'} . 'm' },
+        'dm32_D'    => { 'LSF' => '-q ' . $self->o('datamover_queue') . ' -M 32000 -R "rusage[mem=32000]"', 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'32GB'} . 'm' },
         'dmMAX_D'    => { 'LSF' => '-q ' . $self->o('datamover_queue') . ' -M 200000 -R "rusage[mem=200000]"', 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'200GB'} . 'm' },
     );
     #Create a dictionary of all possible time and memory combinations. Format would be:
