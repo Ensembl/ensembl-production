@@ -19,9 +19,12 @@ import argparse
 import logging
 import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import aliased
 from sqlalchemy import select
+from sqlalchemy import update
 from ensembl.production.metadata.api.models.genome import Genome, GenomeDataset
 from ensembl.production.metadata.api.models.organism import Organism, OrganismGroup, OrganismGroupMember
 from ensembl.production.metadata.api.models.assembly import Assembly
@@ -34,7 +37,7 @@ logger = logging.getLogger(__name__)
 # Define the Enum type
 class DatasetStatusEnum(graphene.Enum):
     SUBMITTED = 'Submitted'
-    PROGRESSING = 'Progressing'
+    PROCESSING = 'Processing'
     PROCESSED = 'Processed'
 
 
@@ -51,6 +54,8 @@ class GenomeFilterInput(graphene.InputObjectType):
     anti_dataset_type = graphene.List(graphene.String, default=[])
     organism_name = graphene.List(graphene.String, default=[])
     anti_organism_name = graphene.List(graphene.String, default=[])
+    dataset_status = graphene.List(graphene.String, default_value=[])
+    batch_size     = graphene.Int(default_value=50)
 
 
 class AssemblyType(SQLAlchemyObjectType):
@@ -69,10 +74,11 @@ class OrganismType(SQLAlchemyObjectType):
 
     organism_group_members = graphene.List(OrganismGroupMemberType)
 
+
     def resolve_organism_group_members(self, info):
         # Assuming there is a backref named 'organism' in GenomeModel
         return self.organism_group_members
-
+    
 
 class OrganismGroupType(SQLAlchemyObjectType):
     class Meta:
@@ -115,21 +121,36 @@ class GenomeType(SQLAlchemyObjectType):
         return self.assembly
 
     def resolve_genome_datasets(self, info):
-        return self.genome_datasets
-
-
+        filters = info.context.get('filters')
+        dataset_type_filter = filters.get('dataset_type', []) 
+        # Filter datasets based on dataset_type
+        filtered_datasets = (
+            info.context['session']
+            .query(GenomeDataset)
+            .join(Dataset)
+            .filter(GenomeDataset.genome_id == self.genome_id)
+            .filter(Dataset.dataset_type.has(DatasetType.name.in_(dataset_type_filter)))
+            .all()
+        )
+        
+        return filtered_datasets
+    
+    
 class Query(graphene.ObjectType):
     genome_list = graphene.List(GenomeType, filters=GenomeFilterInput())
 
     def resolve_genome_list(self, info, filters=None):
+        
+        info.context['filters'] = filters
+        
         query = GenomeType.get_query(info)
 
         query = query.join(Genome.organism).join(Organism.organism_group_members).join(
             OrganismGroupMember.organism_group) \
             .outerjoin(Genome.genome_datasets).join(GenomeDataset.dataset).join(Dataset.dataset_source).join(
-            Dataset.dataset_type) \
- \
-            # default filter with organism group type to DIVISION
+            Dataset.dataset_type) 
+            
+        # default filter with organism group type to DIVISION
         query = query.filter(OrganismGroup.type == filters.organism_group_type)
 
         if filters:
@@ -140,13 +161,13 @@ class Query(graphene.ObjectType):
                 query = query.filter(OrganismGroup.name.in_(filters.organism_group))
 
             if filters.organism_name:
-                ensembl_names = set(filters.organism_name) - set(filters.anti_organism_name)
-                if ensembl_names:
-                    query = query.filter(Genome.organism.has(Organism.ensembl_name.in_(ensembl_names)))
+                biosample_id = set(filters.organism_name) - set(filters.anti_organism_name)
+                if biosample_id:
+                    query = query.filter(Genome.organism.has(Organism.biosample_id.in_(biosample_id)))
                 else:
-                    query = query.filter(~Genome.organism.has(Organism.ensembl_name.in_(filters.anti_organism_name)))
+                    query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_organism_name)))
             elif filters.anti_organism_name:
-                query = query.filter(~Genome.organism.has(Organism.ensembl_name.in_(filters.anti_organism_name)))
+                query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_organism_name)))
 
             if filters.unreleased_genomes:
                 query = query.filter(~Genome.genome_releases.any())
@@ -177,12 +198,18 @@ class Query(graphene.ObjectType):
                         .distinct()
                     )
                 )
-
+            
+            if filters.dataset_status:
+                query = query.filter(Dataset.status.in_(filters.dataset_status))
+                
             if filters.dataset_source_type:
                 query = query.filter(Genome.genome_datasets.any(DatasetSource.type.in_(filters.dataset_source_type)))
+          
+            if filters.batch_size:
+                query = query.group_by(Genome.genome_id).limit(filters.batch_size)  
 
-        return query.all()
-
+        for result in query.all():
+            yield result 
 
 def list_to_string(data: list = []):
     formatted_data = ', '.join([f'"{element}"' for element in data])
@@ -203,12 +230,14 @@ def get_genomes(
         organism_name: graphene.List = [],
         organism_group: graphene.List = [],
         anti_organism_name: graphene.List = [],
+        batch_size: graphene.Int = '50',
+        dataset_status: graphene.String = ['Submitted'],
+        update_dataset_status: graphene.String = None, 
         query_param: graphene.String = None,
 
 ):
     schema = graphene.Schema(query=Query)
-    DATABASE_URI = metadata_db_uri
-    engine = create_engine(DATABASE_URI)
+    engine = create_engine(metadata_db_uri)
     session = sessionmaker(bind=engine)()
 
     if query_param is None:
@@ -269,7 +298,10 @@ def get_genomes(
             datasetType: {list_to_string(dataset_type)},
             antiDatasetType: {list_to_string(anti_dataset_type)},
             organismName : {list_to_string(organism_name)}, 
-            antiOrganismName : {list_to_string(anti_organism_name)}
+            antiOrganismName : {list_to_string(anti_organism_name)},
+            batchSize : {batch_size},
+            datasetStatus : {list_to_string(dataset_status)}
+            
             }}) {{
               
               {query_param}
@@ -279,10 +311,21 @@ def get_genomes(
       """
 
     result = schema.execute(query, context_value={'session': session})
+    update_dataset_uuids = []
     if result.errors is not None:
         raise ValueError(str(result.errors))
+    
+    #update dataset status
+    if update_dataset_status:
+        session.query(Dataset).filter(Dataset.dataset_uuid.in_([  dataset['dataset']['datasetUuid'] for genomedataset in result.data['genomeList'] for dataset in genomedataset['genomeDatasets']] )).update(
+             {'status': update_dataset_status}, synchronize_session=False
+        )
+        session.commit()
+
     for genome in result.data['genomeList']:
         yield genome
+            
+    
 
 
 def main():
@@ -291,38 +334,64 @@ def main():
         description='Fetch Ensembl genome info from new metadata API'
     )
 
-    parser.add_argument('--genome_uuid', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--released_genomes', default=False, required=False, help='')
-    parser.add_argument('--unreleased_genomes', default=False, required=False, help='')
-    parser.add_argument('--organism_group_type', type=str, default='DIVISION', required=False, help='')
-    parser.add_argument('--organism_group', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--unreleased_datasets', default=False, required=False, help='')
-    parser.add_argument('--released_datasets', default=False, required=False, help='')
-    parser.add_argument('--dataset_source_type', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--dataset_type', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--anti_dataset_type', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--organism_name', type=str, nargs='*', default=[], required=False, help='')
-    parser.add_argument('--anti_organism_name', type=str, nargs='*', default=[], required=False, help='')
+    parser.add_argument('--genome_uuid', type=str, nargs='*', default=[], required=False, help='List of genome UUIDs to filter the query. Default is an empty list.')
+    parser.add_argument('--released_genomes', default=False, required=False, help='Include only released genomes in the query. Default is False.')
+    parser.add_argument('--unreleased_genomes', default=False, required=False, help='Include only unreleased genomes in the query. Default is False.')
+    parser.add_argument('--organism_group_type', type=str, default='DIVISION', required=False, help='Organism group type to filter the query. Default is "DIVISION"')
+    parser.add_argument('--organism_group', type=str, nargs='*', default=[], required=False, help='List of organism group names to filter the query. Default is an empty list.')
+    parser.add_argument('--unreleased_datasets', default=False, required=False, help='Include only genomes with unreleased datasets in the query. Default is False.')
+    parser.add_argument('--released_datasets', default=False, required=False, help='Include only genomes with released datasets in the query. Default is False.')
+    parser.add_argument('--dataset_source_type', type=str, nargs='*', default=[], required=False, help='List of dataset source types to filter the query. Default is an empty list.')
+    parser.add_argument('--dataset_type', type=str, nargs='*', default=[], required=False, help='List of dataset types to filter the query. Default is an empty list.')
+    parser.add_argument('--anti_dataset_type', type=str, nargs='*', default=[], required=False, help='Include genomes which dont have given dataset names. Default is an empty list.')
+    parser.add_argument('--organism_name', type=str, nargs='*', default=[], required=False, help='List of organism names to filter the query by biosample_id. Default is an empty list.')
+    parser.add_argument('--anti_organism_name', type=str, nargs='*', default=[], required=False, help='List of organism names to exclude from the query. Default is an empty list.')
+    parser.add_argument('--batch_size', type=int, default=50, required=False, help='Number of results to retrieve per batch. Default is 50.')
+    parser.add_argument('--dataset_status', type=str, nargs='*', default=[], choices=['Submitted', 'Processing', 'Processed'], required=False, help='List of dataset statuses to filter the query. Default is an empty list.')
+    parser.add_argument('--update_dataset_status', type=str, default='Processing', choices=['Submitted', 'Processing', 'Processed'], required=False, help='Update the status of the selected datasets to the specified value. ')
     parser.add_argument('--metadata_db_uri', type=str, required=True,
                         help='metadata db mysql uri, ex: mysql://ensro@localhost:3366/ensembl_genome_metadata')
     parser.add_argument('--output', type=str, required=True, help='output file ex: genome_info.json')
+    
 
     args = parser.parse_args()
     with open(args.output, 'w') as json_output:
         for genome in get_genomes(metadata_db_uri=args.metadata_db_uri,
-                                  genome_uuid=args.genome_uuid,
-                                  released_genomes=args.released_genomes,
-                                  unreleased_genomes=args.unreleased_genomes,
-                                  organism_group_type=args.organism_group_type,
-                                  organism_group=args.organism_group,
-                                  unreleased_datasets=args.unreleased_datasets,
-                                  released_datasets=args.released_datasets,
-                                  dataset_source_type=args.dataset_source_type,
-                                  dataset_type=args.dataset_type,
-                                  anti_dataset_type=args.anti_dataset_type,
-                                  organism_name=args.organism_name,
-                                  anti_organism_name=args.anti_organism_name,
-                                  ):
+                                genome_uuid=args.genome_uuid,
+                                released_genomes=args.released_genomes,
+                                unreleased_genomes=args.unreleased_genomes,
+                                organism_group_type=args.organism_group_type,
+                                organism_group=args.organism_group,
+                                unreleased_datasets=args.unreleased_datasets,
+                                released_datasets=args.released_datasets,
+                                dataset_source_type=args.dataset_source_type,
+                                dataset_type=args.dataset_type,
+                                anti_dataset_type=args.anti_dataset_type,
+                                organism_name=args.organism_name,
+                                anti_organism_name=args.anti_organism_name,
+                                batch_size=args.batch_size,
+                                dataset_status= args.dataset_status,
+                                update_dataset_status=args.update_dataset_status,
+                                query_param = """
+                                    genomeUuid
+                                    productionName
+                                    organism {
+                                        commonName
+                                        biosampleId
+                                    }
+                                    genomeDatasets {
+                                        dataset {
+                                            datasetUuid
+                                            name
+                                            status
+                                            datasetSource {
+                                                name
+                                                type
+                                            }
+                                        }
+                                    }
+                                """
+                                ):
             json.dump(genome, json_output)
             json_output.write("\n")
 
