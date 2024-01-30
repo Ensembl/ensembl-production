@@ -131,6 +131,7 @@ sub run {
       closedir($dir_handle);
       if ($preparse) { @list_files = $preparse; }
       foreach my $file (@list_files) {
+        next if ($file =~ /^\./);
         $file =~ s/\n//;
         $file = $file_name . "/" . $file;
         if (defined $release_file and $file eq $release_file) { next; }
