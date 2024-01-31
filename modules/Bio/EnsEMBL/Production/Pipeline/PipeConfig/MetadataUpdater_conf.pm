@@ -36,16 +36,17 @@ sub default_options {
         pipeline_name => 'metadata_updater',
         metadata_uri  => undef,
         taxonomy_uri  => undef,
-        registry  => undef,
+        registry      => undef,
         email         => '',
         source        => '',
         comment       => '',
-        species              => [],
-        antispecies          => [],
-        division             => [],
-        run_all              => 0,
-        dbname               => undef,
-        meta_filters         => {},
+        species       => [],
+        antispecies   => [],
+        division      => [],
+        run_all       => 0,
+        dbname        => undef,
+        meta_filters  => {},
+        force         => "0",
     };
 }
 
@@ -163,10 +164,10 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 30,
             -parameters        => {
-                 taxonomy_uri => $self->o('taxonomy_uri'),
+                taxonomy_uri => $self->o('taxonomy_uri'),
+                force        => $self->o('force'),
             },
             -rc_name           => 'default',
-            # Testing Necessary            -rc_name => '2GB',
             -flow_into         => {
                 2 => [ '?table_name=result', ],
             },
