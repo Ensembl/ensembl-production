@@ -98,13 +98,13 @@ sub run {
     open($map, '<', $map_file) or die "Opening map file $map_file failed: $!";
 
     while (my $line = <$map>) {
+        chomp $line;
         # A line from accession_ids.csv looks like this:
         # Uniprot accession, hit start, hit end, Alphafold accession, Alphafold version
         # A0A2I1PIX0,1,200,AF-A0A2I1PIX0-F1,4
         # Currently, all entries in this file have a unique uniprot accession and
         # have a hit starting at 1
         unless ($line =~ /^\w+,\d+,\d+,[\w_-]+,\d+$/) {
-            chomp $line;
             die "Data error. Line is not what we expect: '$line'";
         }
         my @x = split(",", $line, 2);
