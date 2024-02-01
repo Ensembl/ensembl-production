@@ -49,19 +49,20 @@ class SpeciesFactory(eHive.BaseRunnable):
             released_genomes=self.param("released_genomes"),
             unreleased_genomes=self.param("unreleased_genomes"),
             organism_group_type=self.param("organism_group_type"),
-            organism_group=self.param("organism_group"),
+            division=self.param("division"),
             unreleased_datasets=self.param("unreleased_datasets"),
             released_datasets=self.param("released_datasets"),
             dataset_source_type=self.param("dataset_source_type"),
             dataset_type=self.param("dataset_type"),
             anti_dataset_type=self.param("anti_dataset_type"),
-            species_production_name=self.param("species_production_name"),
-            anti_species_production_name=self.param("anti_species_production_name"),
+            species=self.param("species"),
+            anti_species=self.param("anti_species_production_name"),
             biosample_id=self.param("biosample_id"),
             anti_biosample_id=self.param("anti_biosample_id"),
             batch_size=self.param("batch_size"),
             dataset_status= self.param_required("dataset_status"),
             update_dataset_status=self.param("update_dataset_status"),
+            run_all=self.param("run_all"),
             query=query
             
     ):
