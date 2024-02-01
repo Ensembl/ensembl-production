@@ -22,9 +22,10 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import aliased
 from sqlalchemy import select
 from sqlalchemy import update
+
+from ensembl.database import DBConnection
 from ensembl.production.metadata.api.models.genome import Genome, GenomeDataset
 from ensembl.production.metadata.api.models.organism import Organism, OrganismGroup, OrganismGroupMember
 from ensembl.production.metadata.api.models.assembly import Assembly
@@ -52,8 +53,10 @@ class GenomeFilterInput(graphene.InputObjectType):
     dataset_source_type = graphene.List(graphene.String, default=[])
     dataset_type = graphene.List(graphene.String, default=[])
     anti_dataset_type = graphene.List(graphene.String, default=[])
-    organism_name = graphene.List(graphene.String, default=[])
-    anti_organism_name = graphene.List(graphene.String, default=[])
+    species_production_name = graphene.List(graphene.String, default=[])
+    anti_species_production_name = graphene.List(graphene.String, default=[])
+    biosample_id = graphene.List(graphene.String, default=[])
+    anti_biosample_id = graphene.List(graphene.String, default=[])
     dataset_status = graphene.List(graphene.String, default_value=[])
     batch_size     = graphene.Int(default_value=50)
 
@@ -160,14 +163,30 @@ class Query(graphene.ObjectType):
             if filters.organism_group:
                 query = query.filter(OrganismGroup.name.in_(filters.organism_group))
 
-            if filters.organism_name:
-                biosample_id = set(filters.organism_name) - set(filters.anti_organism_name)
+            if filters.species_production_name:
+                species_production_name = set(filters.species_production_name) - set(filters.anti_species_production_name)
+                
+                if species_production_name:
+                    query = query.filter(Genome.production_name.in_(filters.species_production_name))
+                else:
+                    query = query.filter(~Genome.production_name.in_(filters.anti_species_production_name))
+            
+            elif filters.anti_species_production_name:
+                query = query.filter(~Genome.production_name.in_(filters.anti_species_production_name))
+
+
+            if filters.biosample_id:
+                
+                biosample_id = set(filters.biosample_id) - set(filters.anti_biosample_id)
+                
                 if biosample_id:
                     query = query.filter(Genome.organism.has(Organism.biosample_id.in_(biosample_id)))
                 else:
-                    query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_organism_name)))
-            elif filters.anti_organism_name:
-                query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_organism_name)))
+                    query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_biosample_id)))
+                    
+            elif filters.anti_biosample_id:
+                query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_biosample_id)))
+            
 
             if filters.unreleased_genomes:
                 query = query.filter(~Genome.genome_releases.any())
@@ -227,9 +246,11 @@ def get_genomes(
         dataset_source_type: graphene.List = [],
         dataset_type: graphene.List = [],
         anti_dataset_type: graphene.List = [],
-        organism_name: graphene.List = [],
+        species_production_name: graphene.List = [],
+        anti_species_production_name: graphene.List = [],
+        biosample_id: graphene.List = [],
+        anti_biosample_id: graphene.List = [],
         organism_group: graphene.List = [],
-        anti_organism_name: graphene.List = [],
         batch_size: graphene.Int = '50',
         dataset_status: graphene.String = ['Submitted'],
         update_dataset_status: graphene.String = None, 
@@ -237,8 +258,7 @@ def get_genomes(
 
 ):
     schema = graphene.Schema(query=Query)
-    engine = create_engine(metadata_db_uri)
-    session = sessionmaker(bind=engine)()
+    metadata_db = DBConnection(metadata_db_uri)
 
     if query_param is None:
         query_param = """
@@ -297,8 +317,10 @@ def get_genomes(
             organismGroup: {list_to_string(organism_group)},
             datasetType: {list_to_string(dataset_type)},
             antiDatasetType: {list_to_string(anti_dataset_type)},
-            organismName : {list_to_string(organism_name)}, 
-            antiOrganismName : {list_to_string(anti_organism_name)},
+            speciesProductionName : {list_to_string(species_production_name)}, 
+            antiSpeciesProductionName : {list_to_string(anti_species_production_name)},
+            biosampleId : {list_to_string(biosample_id)}, 
+            antiBiosampleId : {list_to_string(anti_biosample_id)},
             batchSize : {batch_size},
             datasetStatus : {list_to_string(dataset_status)}
             
@@ -309,21 +331,25 @@ def get_genomes(
           }}
         }}
       """
-
-    result = schema.execute(query, context_value={'session': session})
-    update_dataset_uuids = []
-    if result.errors is not None:
-        raise ValueError(str(result.errors))
+          
+    #fetch genome results 
+    with metadata_db.session_scope() as session:
+        
+        result = schema.execute(query, context_value={'session': session})
     
-    #update dataset status
-    if update_dataset_status:
-        session.query(Dataset).filter(Dataset.dataset_uuid.in_([  dataset['dataset']['datasetUuid'] for genomedataset in result.data['genomeList'] for dataset in genomedataset['genomeDatasets']] )).update(
-             {'status': update_dataset_status}, synchronize_session=False
-        )
-        session.commit()
+        if result.errors is not None:
+            raise ValueError(str(result.errors))
 
-    for genome in result.data['genomeList']:
-        yield genome
+        #update dataset status
+        if update_dataset_status:
+            session.query(Dataset).filter(Dataset.dataset_uuid.in_([  dataset['dataset']['datasetUuid'] for genomedataset in result.data['genomeList'] for dataset in genomedataset['genomeDatasets']] )).update(
+                {'status': update_dataset_status}, synchronize_session=False
+            )
+            session.commit()
+            
+        #yield genome results 
+        for genome in result.data['genomeList']:
+            yield genome
             
     
 
@@ -344,8 +370,10 @@ def main():
     parser.add_argument('--dataset_source_type', type=str, nargs='*', default=[], required=False, help='List of dataset source types to filter the query. Default is an empty list.')
     parser.add_argument('--dataset_type', type=str, nargs='*', default=[], required=False, help='List of dataset types to filter the query. Default is an empty list.')
     parser.add_argument('--anti_dataset_type', type=str, nargs='*', default=[], required=False, help='Include genomes which dont have given dataset names. Default is an empty list.')
-    parser.add_argument('--organism_name', type=str, nargs='*', default=[], required=False, help='List of organism names to filter the query by biosample_id. Default is an empty list.')
-    parser.add_argument('--anti_organism_name', type=str, nargs='*', default=[], required=False, help='List of organism names to exclude from the query. Default is an empty list.')
+    parser.add_argument('--species_production_name', type=str, nargs='*', default=[], required=False, help='List of Species Production names to filter the query. Default is an empty list.')
+    parser.add_argument('--anti_species_production_name', type=str, nargs='*', default=[], required=False, help='List of Species Production names to exclude from the query. Default is an empty list.')
+    parser.add_argument('--biosample_id', type=str, nargs='*', default=[], required=False, help='List of biosample ids to filter the query. Default is an empty list.')
+    parser.add_argument('--anti_biosample_id', type=str, nargs='*', default=[], required=False, help='List of biosample ids to exclude from the query. Default is an empty list.')
     parser.add_argument('--batch_size', type=int, default=50, required=False, help='Number of results to retrieve per batch. Default is 50.')
     parser.add_argument('--dataset_status', type=str, nargs='*', default=[], choices=['Submitted', 'Processing', 'Processed'], required=False, help='List of dataset statuses to filter the query. Default is an empty list.')
     parser.add_argument('--update_dataset_status', type=str, default='Processing', choices=['Submitted', 'Processing', 'Processed'], required=False, help='Update the status of the selected datasets to the specified value. ')
@@ -367,8 +395,10 @@ def main():
                                 dataset_source_type=args.dataset_source_type,
                                 dataset_type=args.dataset_type,
                                 anti_dataset_type=args.anti_dataset_type,
-                                organism_name=args.organism_name,
-                                anti_organism_name=args.anti_organism_name,
+                                species_production_name=args.species_production_name,
+                                anti_species_production_name=args.anti_species_production_name,
+                                biosample_id=args.biosample_id,
+                                anti_biosample_id=args.anti_biosample_id,
                                 batch_size=args.batch_size,
                                 dataset_status= args.dataset_status,
                                 update_dataset_status=args.update_dataset_status,
