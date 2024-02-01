@@ -90,7 +90,7 @@ sub run {
     # hash collision handling. These are tuned for write speed and for approx. 300M entries.
     # Uniparc has 251M entries at the moment.
     # As with a regular Perl hash, a duplicate entry will overwrite the previous
-    # # value.
+    # value.
     $db->open("$idx_dir/uniparc-to-uniprot.kch#bnum=600000000#msiz=$mapsize_gb#opts=l",
         $db->OWRITER | $db->OCREATE | $db->OTRUNCATE
     ) or die "Error opening DB: " . $db->error();
@@ -105,13 +105,12 @@ sub run {
     my $line;
 
     while ($line = <$map>) {
+        chomp $line;
         unless ($line =~ /^\w+\t[[:print:]\t]+$/) {
-            chomp $line;
             die "Data error: Uniparc accession is not what we expect: '$line'";
         }
         my @x = split("\t", $line, 12);
         unless ($x[10] and $x[10] =~ /^UPI\w+$/) {
-            chomp $line;
             die "Data error: Uniparc accession is not what we expect: '$line'";
         }
         # This is the DB write operation.

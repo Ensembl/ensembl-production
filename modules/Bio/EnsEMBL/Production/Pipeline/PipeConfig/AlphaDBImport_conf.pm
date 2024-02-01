@@ -1,7 +1,7 @@
 =head1 LICENSE
 
  Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
- Copyright [2016-2023] EMBL-European Bioinformatics Institute
+ Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -102,10 +102,13 @@ sub pipeline_analyses {
             -input_ids       => [{}],
             -meadow_type     => 'LOCAL',
             -flow_into  => {
-                '1' => [
+                '1->A' => [
                     'copy_alphafold',
                     'copy_uniparc',
                     'species_factory'
+                ],
+                'A->1' => [
+                    'cleanup'
                 ],
             },
         },
@@ -156,7 +159,6 @@ sub pipeline_analyses {
                 antispecies => $self->o('antispecies'),
             },
             -flow_into  => {
-                '1' => [ 'cleanup' ],
                 '2' => [ 'insert_features' ],
             },
             -rc_name    => '500M',
@@ -184,8 +186,18 @@ sub pipeline_analyses {
             -parameters => {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
-            -flow_into  => 'report',
             -rc_name    => '200M',
+        },
+        {
+            -logic_name        => 'cleanup',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -flow_into  => {
+                '1' => [ 'report' ]
+            },
+            -parameters        => {
+                cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
+            },
         },
         {
             -logic_name        => 'report',
@@ -195,17 +207,6 @@ sub pipeline_analyses {
             -parameters        => {
                 dbname        => $self->o('pipeline_db')->{'-dbname'},
                 email         => $self->o('email'),
-            },
-        },
-        {
-            -logic_name        => 'cleanup',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -wait_for => [
-                'datacheck'
-            ],
-            -parameters        => {
-                cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
             },
         },
     );
