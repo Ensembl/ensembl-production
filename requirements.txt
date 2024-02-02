@@ -20,17 +20,17 @@ ensembl-py @ git+https://github.com/Ensembl/ensembl-py.git
     # via -r requirements.in
 exceptiongroup==1.0.4
     # via pytest
-graphene==3.3
+graphene==2.1.9
     # via
     #   -r requirements.in
     #   graphene-sqlalchemy
-graphene-sqlalchemy==3.0.0b4
+graphene-sqlalchemy==2.3.0
     # via -r requirements.in
-graphql-core==3.2.3
+graphql-core==2.3.2
     # via
     #   graphene
     #   graphql-relay
-graphql-relay==3.2.0
+graphql-relay==2.0.1
     # via graphene
 greenlet==2.0.2
     # via sqlalchemy
