@@ -330,6 +330,10 @@ class GenomeFetcher:
                   update_dataset_status: graphene.String = None,
                   query_param: graphene.String = None,
                   ):
+    
+    if query_param is None:
+      query_param=self.get_query_params()
+      
     query = f"""
           {{
               genomeList(filters: {{
