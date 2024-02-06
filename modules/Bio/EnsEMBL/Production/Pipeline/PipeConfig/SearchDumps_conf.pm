@@ -112,8 +112,12 @@ sub pipeline_analyses {
                       run_all     => $self->o('run_all'),
                      },
 	    -flow_into  => {
-                      '2->A' => [ 'DumpGenomeJson' ],
-                      'A->1' => [ 'WrapGenomeEBeye' ]
+                      '2' => [ 'DumpGenesJson' ],
+                      '7' => ['DumpGenesJson'],
+                      # 'A->1' => [ 'WrapGenomeEBeye' ]
+                      '4' => WHEN('#dump_variant#', [ 'VariantDumpFactory' ]),
+                      '6' => WHEN('#dump_regulation#', [ 'RegulationDumpFactory', 'ProbeDumpFactory' ], ELSE [ 'ProbeDumpFactory' ]),
+
                      },
     },
     {
@@ -125,21 +129,21 @@ sub pipeline_analyses {
                      },
       -flow_into => [ 'ValidateXMLFileWrappedGenomesEBeye' ],
     },
-    {
-      -logic_name => 'DumpGenomeJson',
-      -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
-      -parameters => {
-                       dump_variant => $self->o('dump_variant'),
-                       dump_regulation => $self->o('dump_regulation'),
-                     },
-      -flow_into  => {
-                      2 => [ 'DumpGenesJson' ],
-                      7 => [ 'DumpGenesJson' ],
-                      4 => WHEN('#dump_variant#', [ 'VariantDumpFactory' ]),
-                      6 => WHEN('#dump_regulation#', [ 'RegulationDumpFactory', 'ProbeDumpFactory' ], ELSE [ 'ProbeDumpFactory' ]),
-                     },
-      -analysis_capacity => 10,
-    },
+    # {
+    #   -logic_name => 'DumpGenomeJson',
+    #   -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenomeJson',
+    #   -parameters => {
+    #                    dump_variant => $self->o('dump_variant'),
+    #                    dump_regulation => $self->o('dump_regulation'),
+    #                  },
+    #   -flow_into  => {
+    #                   2 => [ 'DumpGenesJson' ],
+    #                   7 => [ 'DumpGenesJson' ],
+    #                   4 => WHEN('#dump_variant#', [ 'VariantDumpFactory' ]),
+    #                   6 => WHEN('#dump_regulation#', [ 'RegulationDumpFactory', 'ProbeDumpFactory' ], ELSE [ 'ProbeDumpFactory' ]),
+    #                  },
+    #   -analysis_capacity => 10,
+    # },
     {
       -logic_name => 'ValidateXMLFileEBeye',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::ValidateXMLFileEBeye',
@@ -202,14 +206,14 @@ sub pipeline_analyses {
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
       -parameters => { use_pan_compara => $self->o('use_pan_compara') , exclude_xref_external_db_list => $self->o('exclude_xref_external_db_list') },
       -flow_into  => {
-                      1 =>
-                        WHEN ('#gene_search_reformat#' =>
-                          [
-                            'ReformatGenomeAdvancedSearch',
-                            'ReformatGenomeEBeye'
-                          ],
-                        ELSE ['ReformatGenomeEBeye'],
-                      ),
+                      # 1 =>
+                      #   WHEN ('#gene_search_reformat#' =>
+                      #     [
+                      #       'ReformatGenomeAdvancedSearch',
+                      #       'ReformatGenomeEBeye'
+                      #     ],
+                      #   ELSE ['ReformatGenomeEBeye'],
+                      # ),
                       -1 => 'DumpGenesJsonHighmem'
                      },
       -rc_name    => $self->o('resource_class'),
@@ -219,16 +223,16 @@ sub pipeline_analyses {
       -logic_name => 'DumpGenesJsonHighmem',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
       -parameters => { use_pan_compara => $self->o('use_pan_compara') },
-      -flow_into  => {
-                      1 =>
-                        WHEN ('#gene_search_reformat#' =>
-                          [
-                            'ReformatGenomeAdvancedSearch',
-                            'ReformatGenomeEBeye'
-                          ],
-                        ELSE ['ReformatGenomeEBeye'],
-                      ),
-                     },
+      # -flow_into  => {
+      #                 1 =>
+      #                   WHEN ('#gene_search_reformat#' =>
+      #                     [
+      #                       'ReformatGenomeAdvancedSearch',
+      #                       'ReformatGenomeEBeye'
+      #                     ],
+      #                   ELSE ['ReformatGenomeEBeye'],
+      #                 ),
+      #                },
       -rc_name    => '100GB',
       -analysis_capacity => 10
     },
