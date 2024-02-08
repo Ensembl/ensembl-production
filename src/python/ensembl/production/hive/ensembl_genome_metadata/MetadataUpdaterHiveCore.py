@@ -18,6 +18,11 @@ from ensembl.production.metadata.updater.core import CoreMetaUpdater
 class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
-        Run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
-        Run.process_core()
+        if self.param("force") == 0 or self.param("force") is None:
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
+        elif self.param("force") == 1:
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"), force=1)
+        else:
+            raise ValueError(f"Unable to figure out param {self.param('force')}")
+        run.process_core()
 
