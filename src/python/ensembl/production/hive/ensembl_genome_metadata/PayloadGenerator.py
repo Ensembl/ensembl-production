@@ -39,7 +39,7 @@ class PayloadGenerator(BaseProdRunnable):
         data['input']['comment'] = self.param("comment")
         data['input']['database_uri'] = self.param_required('dbs')
         data['input']['email'] = self.param("email")
-        data['input']['metadata_uri'] = self.param("metadata_uri")
+        data['input']['genome_metadata_uri'] = self.param("genome_metadata_uri")
         data['input']['source'] = self.param("source")
         data['input']['taxonomy_uri'] = self.param("taxonomy_uri")
         dt = datetime.now()

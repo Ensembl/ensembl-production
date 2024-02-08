@@ -19,9 +19,9 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
         if self.param("force") == 0 or self.param("force") is None:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"))
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"))
         elif self.param("force") == 1:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("metadata_uri"), self.param("taxonomy_uri"),
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"),
                                   force=1)
         else:
             raise ValueError(f"Unable to figure out param {self.param('force')}")
