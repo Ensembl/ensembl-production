@@ -7,7 +7,7 @@
 
 =head1 LICENSE
     Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-    Copyright [2016-2023] EMBL-European Bioinformatics Institute
+    Copyright [2016-2024] EMBL-European Bioinformatics Institute
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
          http://www.apache.org/licenses/LICENSE-2.0
@@ -36,16 +36,17 @@ sub default_options {
         pipeline_name => 'metadata_updater',
         metadata_uri  => undef,
         taxonomy_uri  => undef,
-        registry  => undef,
+        registry      => undef,
         email         => '',
         source        => '',
         comment       => '',
-        species              => [],
-        antispecies          => [],
-        division             => [],
-        run_all              => 0,
-        dbname               => undef,
-        meta_filters         => {},
+        species       => [],
+        antispecies   => [],
+        division      => [],
+        run_all       => 0,
+        dbname        => [],
+        meta_filters  => {},
+        force         => "0",
     };
 }
 
@@ -163,10 +164,10 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 30,
             -parameters        => {
-                 taxonomy_uri => $self->o('taxonomy_uri'),
+                taxonomy_uri => $self->o('taxonomy_uri'),
+                force        => $self->o('force'),
             },
             -rc_name           => 'default',
-            # Testing Necessary            -rc_name => '2GB',
             -flow_into         => {
                 2 => [ '?table_name=result', ],
             },
