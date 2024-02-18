@@ -140,17 +140,17 @@ class GenomeFilterInput(graphene.InputObjectType):
   released_genomes = graphene.Boolean(default_value=False)
   unreleased_genomes = graphene.Boolean(default_value=False)
   organism_group_type = graphene.String(default_value='DIVISION')
-  division = graphene.List(graphene.String, default=[])
+  division = graphene.List(graphene.String, default=[], required=False)
   unreleased_datasets = graphene.Boolean(default_value=False)
   released_datasets = graphene.Boolean(default_value=False)
-  dataset_source_type = graphene.List(graphene.String, default=[])
-  dataset_type = graphene.List(graphene.String, default=[])
-  anti_dataset_type = graphene.List(graphene.String, default=[])
-  species = graphene.List(graphene.String, default=[])
-  anti_species = graphene.List(graphene.String, default=[])
-  biosample_id = graphene.List(graphene.String, default=[])
-  anti_biosample_id = graphene.List(graphene.String, default=[])
-  dataset_status = graphene.List(graphene.String, default_value=[])
+  dataset_source_type = graphene.List(graphene.String, default=[], required=False)
+  dataset_type = graphene.List(graphene.String, default=[], required=False)
+  anti_dataset_type = graphene.List(graphene.String, default=[], required=False)
+  species = graphene.List(graphene.String, default=[], required=False)
+  anti_species = graphene.List(graphene.String, default=[], required=False)
+  biosample_id = graphene.List(graphene.String, default=[], required=False)
+  anti_biosample_id = graphene.List(graphene.String, default=[], required=False)
+  dataset_status = graphene.List(graphene.String, default_value=[], required=False)
   batch_size = graphene.Int(default_value=50)
   run_all = graphene.Int(default_value=0)
   query_param = graphene.String(default_value="")
@@ -170,6 +170,7 @@ class GenomeFilterInput(graphene.InputObjectType):
 
     if required_fields:
         raise ValueError(f"Required field(s): {', '.join(required_fields)}")
+      
     super().__init__(**kwargs)
     
     
@@ -292,8 +293,8 @@ class DatasetQuery(BaseQuery):
 class GenomeFetcher(DatasetFactory):
 
   def __init__(self, metadata_db_uri):
-    DatasetFactory.__init__(self, metadata_uri=metadata_db_uri)
-    
+    super().__init__(metadata_uri=metadata_db_uri)
+
   @staticmethod
   def get_query_params():
     return """
@@ -343,23 +344,23 @@ class GenomeFetcher(DatasetFactory):
     return f"""
       {{
           genomeList(filters: {{
-          genomeUuid: {self.list_to_string(filters.kwargs.get('genome_uuid', None))},
+          genomeUuid: {self.list_to_string(filters.kwargs.get('genome_uuid', []))},
           unreleasedGenomes: {'true' if filters.kwargs.get('unreleased_genomes',None) else 'false'},
           releasedGenomes: {'true' if filters.kwargs.get('released_genomes', None) else 'false'},
           releasedDatasets: {'true' if filters.kwargs.get('released_datasets', None) else 'false'},
           unreleasedDatasets: {'true' if filters.kwargs.get('unreleased_datasets',None) else 'false'}, 
-          datasetSourceType: {self.list_to_string(filters.kwargs.get('dataset_source_type','[]'))},
-          organismGroupType: "{filters.kwargs.get('organism_group_type', '')}",
-          division: {self.list_to_string(filters.kwargs.get('division', '[]'))},
-          datasetType: {self.list_to_string(filters.kwargs.get('dataset_type', '[]'))},
-          antiDatasetType: {self.list_to_string(filters.kwargs.get('anti_dataset_type','[]'))},
-          species : {self.list_to_string(filters.kwargs.get('species', '[]'))}, 
-          antiSpecies : {self.list_to_string(filters.kwargs.get('anti_species', '[]'))},
-          biosampleId : {self.list_to_string(filters.kwargs.get('biosample_id','[]'))}, 
-          antiBiosampleId : {self.list_to_string(filters.kwargs.get('anti_biosample_id', '[]'))},
+          datasetSourceType: {self.list_to_string(filters.kwargs.get('dataset_source_type',[]))},
+          organismGroupType: "{filters.kwargs.get('organism_group_type', 'DIVISION')}",
+          division: {self.list_to_string(filters.kwargs.get('division', []))},
+          datasetType: {self.list_to_string(filters.kwargs.get('dataset_type', []))},
+          antiDatasetType: {self.list_to_string(filters.kwargs.get('anti_dataset_type', []))},
+          species : {self.list_to_string(filters.kwargs.get('species', []))}, 
+          antiSpecies : {self.list_to_string(filters.kwargs.get('anti_species', []))},
+          biosampleId : {self.list_to_string(filters.kwargs.get('biosample_id',[]))}, 
+          antiBiosampleId : {self.list_to_string(filters.kwargs.get('anti_biosample_id', []))},
           batchSize : {filters.kwargs.get('batch_size', 50)},
           runAll : {filters.kwargs.get('run_all', 0)},
-          datasetStatus : {self.list_to_string(filters.kwargs.get('dataset_status', 'Submitted'))}
+          datasetStatus : {self.list_to_string(filters.kwargs.get('dataset_status', ["Submitted"]))}
 
           }}) {{
 

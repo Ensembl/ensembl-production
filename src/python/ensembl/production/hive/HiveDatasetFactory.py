@@ -42,10 +42,7 @@ class HiveDatasetFactory(eHive.BaseRunnable, DatasetFactory):
     try:
       for request_method in self.request_methods:    
         response = self.dispatch_request(request_method, params=self.request_method_params[request_method])
-        self.dataflow(
-          { request_method: response}, 2  
-        )
-        print(response)
+        
     except KeyError as e:
         raise KeyError(f"Missing request parameters: {str(e)}")
     except Exception as e:
