@@ -79,7 +79,7 @@ class HiveGenomeFactory(eHive.BaseRunnable):
         "biosample_id": genome.get('organism', {}).get('bioSampleId', None),
         "datasets": genome.get('genomeDatasets', [] ),
         "request_methods": ['update_dataset_status'],
-        #expecting only one dataset_type is quiried more than one dataset is quried last one is picked 
+        #If multiple dataset type are queried, only the last one is selected and processed.
         "request_method_params": {"update_dataset_status": { k.replace('datasetUuid', 'dataset_uuid'): v for dataset in genome.get('genomeDatasets', [] ) for k, v in dataset.get('dataset', {}).items() if k=='datasetUuid' } }   
       }
       #standard flow similar to production modules 
