@@ -17,11 +17,7 @@ Hive DatasetFactory module to perform CRUD operation on dataset
 import eHive
 from ensembl.production.metadata.api.hive.dataset_factory import DatasetFactory
 
-class HiveDatasetFactory(eHive.BaseRunnable, DatasetFactory):
-  
-  def __init__(self, read_fileno, write_fileno, debug):
-    super().__init__(read_fileno, write_fileno, debug)
-    DatasetFactory.__init__(self, metadata_uri=self.param_required('metadata_db_uri') )
+class HiveDatasetFactory(eHive.BaseRunnable):
   
   def fetch_input(self):
     #set default request method to update_dataset_status and set default params to update the dataset status
@@ -32,7 +28,7 @@ class HiveDatasetFactory(eHive.BaseRunnable, DatasetFactory):
       
       
   def dispatch_request(self,request, **kwargs):
-    method = getattr(super(), request, None)
+    method = getattr(self.dataset_factory, request, None)
     if method and callable(method):
         method(**kwargs.get('params'))
     else:
@@ -40,6 +36,9 @@ class HiveDatasetFactory(eHive.BaseRunnable, DatasetFactory):
 
   def run(self):
     try:
+      #initiate dataset factory instance      
+      self.dataset_factory = DatasetFactory(metadata_uri=self.param_required('metadata_db_uri'))
+      
       for request_method in self.request_methods:    
         response = self.dispatch_request(request_method, params=self.request_method_params[request_method])
         
