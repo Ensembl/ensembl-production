@@ -27,8 +27,8 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
             self.param("database_uri", payload["input"].get("database_uri", None))
             self.param_required("database_uri")
             self.param("email", payload["input"].get("email", None))
-            self.param("metadata_uri", payload["input"].get("metadata_uri", None))
-            self.param_required("metadata_uri")
+            self.param("genome_metadata_uri", payload["input"].get("genome_metadata_uri", None))
+            self.param_required("genome_metadata_uri")
             self.param("source", payload["input"].get("source", None))
             self.param("timestamp", payload["input"].get("timestamp", None))
             self.param_required("taxonomy_uri")
@@ -40,7 +40,7 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
         db_url = make_url(self.param("database_uri"))
         output = {
             "database_uri": self.param("database_uri"),
-            "metadata_uri": self.param("metadata_uri"),
+            "genome_metadata_uri": self.param("genome_metadata_uri"),
             "taxonomy_uri": self.param("taxonomy_uri"),
         }
         if '_compara_' in db_url.database:
