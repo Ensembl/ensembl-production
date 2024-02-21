@@ -48,6 +48,38 @@ sub default_options {
         work_dir          => catdir('/hps/software/users/ensembl/repositories/', $self->o('user')),
         production_queue  => 'production',
         datamover_queue   => 'datamover',
+
+        #ensembl genome factory and dataset factory default params
+        'metadata_db_uri'    => $self->o('metadata_db_uri'),
+
+        #genome factory params
+        'genome_uuid' => [],
+        'released_genomes' => 0,
+        'unreleased_genomes' => 0,
+        'organism_group_type' => 'DIVISION',
+        'division' => [],
+        'unreleased_datasets' => 0,
+        'released_datasets' => 0,
+        'dataset_source_type' => [],
+        'dataset_type' => [],
+        'anti_dataset_type' =>[],
+        'species' => [],
+        'anti_species' => [],
+        'biosample_id' => [],
+        'anti_biosample_id' => [],
+        'dataset_status' => [],
+        'batch_size' => 50,
+        'run_all' => 0,
+        'antispecies' => [],
+        'query_param' => undef,
+        'query' => undef,
+        'dataset_uuid' => undef, 
+        'meta_filters' => {},   
+        'update_dataset_status' => 0,
+
+        #dbfactory params   
+        'request_methods'    => ['update_dataset_status'],
+        'request_method_params' => {'update_dataset_status' => { 'dataset_uuid' => $self->o('dataset_uuid'), 'status'=> $self->o('dataset_status')}},
     };
 }
 
