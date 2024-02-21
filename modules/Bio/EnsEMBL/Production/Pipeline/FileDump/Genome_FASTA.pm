@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ sub param_defaults {
     data_type      => 'sequence',
     data_types     => ['unmasked', 'softmasked', 'hardmasked'],
     file_type      => 'fa',
+    # For BLAST generation we don't need the timestamped files to be generated
+      # TODO NEED revision
     timestamped    => 1,
     per_chromosome => 0,
     chunk_size     => 30000,
@@ -64,29 +66,40 @@ sub run {
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
 
-  if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
-    if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
-    }
-  } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
-  }
+
+  #set timestamped dir for FTP dumps
+  #$self->param('timestamped', 1);
+
+
+
+  #dump all into single file
+  $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses); 
+  # if ($per_chromosome && scalar(@$chr)) {
+  #   $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
+  #   if (scalar(@$non_chr)) {
+  #     $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
+  #   }
+  # } else {
+  #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
+  # }
 
   $self->unmask($sm_filename, $um_filename);
-  $self->hardmask($sm_filename, $hm_filename);
-
-  if (scalar(@$non_ref)) {
-    my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
-    my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
-    my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
-    path($sm_filename)->copy($sm_non_ref_filename);
-
-    $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
-
-    $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
-    $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
+  if($self->param('hardmasked')){
+    $self->hardmask($sm_filename, $hm_filename);
   }
+  
+
+  # if (scalar(@$non_ref)) {
+  #   my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
+  #   my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
+  #   my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
+  #   path($sm_filename)->copy($sm_non_ref_filename);
+
+  #   $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
+
+  #   $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
+  #   $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
+  # }
 
   if ($blast_index) {
     $self->blast_index($um_filename, 'nucl');
@@ -179,7 +192,7 @@ sub header_function {
     }
     $location =~ s/^$cs_name://;
 
-    return "$name $data_type:$cs_name $location";
+    return "ENSEMBL:$name $data_type:$cs_name $location";
   };
 }
 
@@ -221,8 +234,8 @@ sub blast_index {
 
   my $blast_filename = catdir(
     $web_dir,
-    $blast_dirname,
-    'genomes',
+    #$blast_dirname,
+    #'genomes',
     path($filename)->basename
   );
   path($blast_filename)->parent->mkpath();

@@ -18,13 +18,11 @@ import itertools
 import logging
 import os
 import sys
-from os.path import expanduser
-from ensembl.production.metadata.productionCommon import get_all_species_by_division
+from ensembl.production.factories.metadata.productionCommon import get_all_species_by_division
 import configparser
 import json
 import glob
 
-#os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 logging.basicConfig(

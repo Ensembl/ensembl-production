@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -101,10 +101,14 @@ sub species_name {
   $self->throw("Missing dba parameter: species_name method") unless defined $dba;
 
   my $mca = $dba->get_adaptor("MetaContainer");
-  my $species_name = $mca->single_value_by_key('species.display_name');
+  my $species_name = $mca->single_value_by_key('species.scientific_name');
   if (defined $species_name and $species_name ne '') {
-    $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
-    $species_name =~ s/ /_/g;
+    # Replace non letter chars from string
+    $species_name =~ s/[^a-zA-Z0-9]+/ /g;
+    # Replace consecutive spaces with a single underscore
+    $species_name =~ s/ +/_/g;
+    # Remove leading and trailing underscores (if any)
+    $species_name =~ s/^_+|_+$//g;
   } else {
     $self->throw("No species.display_name");
   }

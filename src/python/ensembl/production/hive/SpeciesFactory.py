@@ -15,47 +15,60 @@ SpeciesFactory for MVP
 """
 
 import eHive
-from dataclasses import asdict
-from ensembl.production.metadata.api.genome import GenomeAdaptor
+from ensembl.production.factories.metadata import genomeFactory
+
 
 class SpeciesFactory(eHive.BaseRunnable):
-  def fetch_input(self):
-    #set default params  
-    self.param("genome_uuid", None)
-    self.param_defaults("species", None) 
-    self.param_defaults("organism_group", None)       
-    self.param_defaults("organism_group_type", None)      
-    self.param_defaults("dataset_name", None)
-    self.param_defaults("dataset_source", None)        
-    self.param_required("unreleased_genomes")
-    self.param_required("metadata_db_uri")  
-    self.param_required("taxonomy_db_uri")   
 
-  def run(self):
-    genome_info_obj = GenomeAdaptor(metadata_uri=self.param("metadata_db_uri"), 
-                                    taxonomy_uri=self.param("taxonomy_db_uri"))           
-    for genome in genome_info_obj.fetch_genomes_info(genome_uuid=self.param("genome_uuid"),
-                                                     ensembl_name=self.param("species"),
-                                                     group=self.param("organism_group"),
-                                                     group_type=self.param("organism_group_type"),
-                                                     dataset_name=self.param("dataset_name"),
-                                                     dataset_source=self.param("dataset_source"),
-                                                     unreleased_genomes=self.param("unreleased_genomes")) or []:
-      
-      genome_info = { 
-                     "genome_uuid": genome[0]['genome'][0].genome_uuid,
-                     "group"      : genome[0]['datasets'][-1][-1].type   #dbtype (core|variation|otherfeatures)
-      }
-      
-      if self.param("species"):
-          genome_info["species"] = genome[0]['genome'][1].ensembl_name
-      
-      if self.param("organism_group"):
-        genome_info["division"] = genome[0]['genome'][-1].name
-      
-      self.dataflow(
-        asdict(genome_info)  , 2
-      )
+    def run(self):
 
-  def write_output(self):
-      pass
+        query = """      
+            genomeId
+            genomeUuid
+            productionName
+            organism {      
+                ensemblName         
+            }
+            genomeDatasets {
+                dataset {
+                datasetSource {
+                    name
+                    type
+                }
+            }
+          }
+        """
+
+        for genome in genomeFactory.get_genomes(
+                metadata_db_uri=self.param("metadata_db_uri"),
+                organism_name=self.param("organism_name"),
+                genome_uuid=self.param("genome_uuid"),
+                unreleased_genomes=self.param("unreleased_genomes"),
+                released_genomes=self.param("released_genomes"),
+                organism_group_type=self.param("organism_group_type"),
+                organism_group=self.param("organism_group"),
+                anti_organism_name=self.param("anti_organism_name"),
+                query_param=query
+        ):
+
+            (database_name, dbtype) = (None, None)
+
+            for each_dataset in genome.get('genomeDatasets', []):
+                if each_dataset.get('dataset', {}).get('name', None) == 'assembly':
+                    database_name = each_dataset.get('dataset', {}).get('datasetSource', {}).get('name', None)
+                    dbtype = each_dataset.get('dataset', {}).get('datasetSource', {}).get('type', None)
+
+            genome_info = {
+                "genome_uuid": genome.get('genomeUuid', None),
+                "species": genome.get('productionName', None),
+                "ensembl_name": genome.get('organism', {}).get('ensemblName', None),
+                "dbname": database_name,
+                "type": dbtype,
+            }
+
+            self.dataflow(
+                genome_info, 2
+            )
+
+    def write_output(self):
+        pass

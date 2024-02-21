@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,13 +42,16 @@ sub default_options {
         'run_all'        => 0,
         'email'          => 'ensembl-production@ebi.ac.uk',
         ## 'job_factory' parameters
-        'species'     => [],
-        'antispecies' => [],
-        'division'    => [],
-        'dbname'      => undef,
+        'species'        => [],
+        'antispecies'    => [],
+        'division'       => [],
+        'dbname'         => undef,
         #checksum params
-        'sequence_type' => [],
-        'hash_type'     => [],
+        'sequence_type'  => [],
+        'hash_type'      => [],
+        #For the new metadata
+        'populate_mvp'   => 1,
+        'metadata_uri'   => undef,
     };
 }
 
@@ -79,6 +82,7 @@ sub pipeline_wide_parameters {
         'release'        => $self->o('release'),
         'sequence_types' => $self->o('sequence_type'),
         'hash_types'     => $self->o('hash_type'),
+        'populate_mvp' => $self->o('populate_mvp'),
     };
 }
 
@@ -103,10 +107,10 @@ sub pipeline_analyses {
                 run_all     => $self->o('run_all'),
             },
             -max_retry_count => 1,
-            -flow_into       => {'2->A' => 'fetch_genome_sequence_info', 'A->2' => 'run_datacheck'},
+            -flow_into       => {'2->A' => 'fetch_info_generate_checksums', 'A->2' => 'run_datacheck'},
         },
         {
-            -logic_name => 'fetch_genome_sequence_info',
+            -logic_name => 'fetch_info_generate_checksums',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
         },
@@ -122,7 +126,31 @@ sub pipeline_analyses {
                 registry_file   => $self->o('registry'),
                 failures_fatal  => 1,
             },
+            -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
         },
+
+         {
+            -logic_name        => 'uri_generator',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
+            -max_retry_count   => 1,
+            -rc_name           => 'default',
+            -parameters      => {
+                populate_mvp => $self->o('populate_mvp'),
+            },
+            -flow_into        => {2 => 'checksum_transfer'},
+
+        },
+        {
+            -logic_name      => 'checksum_transfer',
+            -module          => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
+            -language        => 'python3',
+            -max_retry_count => 1,
+            -parameters      => {
+                hash_type => $self->o('hash_type'),
+                metadata_uri   => $self->o('metadata_uri'),
+            },
+        },
+
         {
             -logic_name => 'email_report',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::NotifyByEmail',
@@ -131,7 +159,7 @@ sub pipeline_analyses {
                 'subject' => 'Pipeline ' . $self->o('pipeline_name') . ' completed!',
                 'text'    => 'Checksum value added to attrib tables'
             },
-        },
+        }
     ];
 }
 

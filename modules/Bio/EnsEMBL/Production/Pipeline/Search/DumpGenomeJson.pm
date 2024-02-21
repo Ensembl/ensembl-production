@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -95,13 +95,18 @@ sub dump_genome {
     my ($self, $species, $compara) = @_;
     my $genome;
     if ($compara && $compara ne 'multi') {
+	$self->{logger}->info("HIIIIII111111111111111111111111111111\n");    
         $genome =
             Bio::EnsEMBL::Production::Search::GenomeFetcher->new(-EG => 1)
                 ->fetch_genome($species);
+
+		$self->{logger}->info("HIIIIIIIIIIIIIIIIIIii1.22222222222222222222222\n");
     }
     else {
+	 $self->{logger}->info("HIIIIII111111111111111111111111111111\n");   
         $genome = Bio::EnsEMBL::Production::Search::GenomeFetcher->new()
             ->fetch_genome($species);
+	    $self->{logger}->info("HIIIIIIIIIIIIIIIIIIii1.22222222222222222222222\n");
     }
     return $self->write_json($species, 'genome', $genome);
 }
