@@ -96,71 +96,10 @@ sub hive_meta_table {
     };
 }
 
-
 sub pipeline_analyses {
-  my $self = shift;
-
+  my ($self) = @_;
   return [
-
-    {
-      -logic_name => 'init_pipeline',
-      -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-      -input_ids  => [{}],
-      -flow_into  => {
-        '1'    => 'GenomeFactory',
-      },
-      -rc_name    => 'default',
-    },
-
-    {
-        -logic_name      => 'GenomeFactory',
-        -module          => 'ensembl.production.hive.HiveGenomeFactory',
-        -language        => 'python3',
-        -rc_name         => 'default', 
-        -parameters => {
-                        'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                        'genome_uuid' => $self->o('genome_uuid'),
-                        'released_genomes' => $self->o('released_genomes'),
-                        'unreleased_genomes' => $self->o('unreleased_genomes'),
-                        'organism_group_type' => $self->o('organism_group_type'),
-                        'division' => $self->o('division'),
-                        'unreleased_datasets' => $self->o('unreleased_datasets'),
-                        'released_datasets' => $self->o('released_datasets'),
-                        'dataset_source_type' => $self->o('dataset_source_type'),
-                        'dataset_type' => $self->o('dataset_type'),
-                        'anti_dataset_type' => $self->o('anti_dataset_type'),
-                        'species' => $self->o('species'),
-                        'antispecies' => $self->o('antispecies'),
-                        'biosample_id' => $self->o('biosample_id'),
-                        'anti_biosample_id' => $self->o('anti_biosample_id'),
-                        'dataset_status' => $self->o('dataset_status'),
-                        'batch_size' => $self->o('batch_size'),
-                        'run_all' => $self->o('run_all'),
-                        'query_param' => $self->o('query_param'),
-                        'query' => $self->o('query'),
-                        'dataset_uuid' => $self->o('dataset_uuid'),   
-                        'update_dataset_status' => $self->o('update_dataset_status'),       
-                      }, 
-        -flow_into  => {
-                        '2->A'    => ['UpdateDatasetStatusToSubmit'],
-                        'A->2'    => 'UpdateDatasetStatus'   
-                      },
-
-    },
-    {
-      -logic_name      => 'UpdateDatasetStatusToSubmit',
-      -module          => 'ensembl.production.hive.HiveDatasetFactory',
-      -language        => 'python3',
-      -rc_name         => 'default', 
-      -parameters      => {
-                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                            'request_method_params' => $self->o('request_method_params'),
-                            'request_methods'    => $self->o('request_methods'),         
-                          },   
-      -flow_into  => {
-                        '1'    => ['SpeciesFactory'],
-                      },
-    },    
+    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::pipeline_analyses($self)},
     {
       -logic_name => 'SpeciesFactory',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
@@ -186,18 +125,7 @@ sub pipeline_analyses {
       -rc_name    => '100GB',
       -analysis_capacity => 10
     },
-    {
-      -logic_name      => 'UpdateDatasetStatus',
-      -module          => 'ensembl.production.hive.HiveDatasetFactory',
-      -language        => 'python3',
-      -rc_name         => 'default', 
-      -parameters      => {
-                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                            'request_method_params' => $self->o('request_method_params'),
-                            'request_methods'    => $self->o('request_methods'),         
-                          },   
-    },
-  ];
+  ]
 }
 
 sub resource_classes {
