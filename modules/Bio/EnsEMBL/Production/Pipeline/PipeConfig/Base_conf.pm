@@ -80,8 +80,96 @@ sub default_options {
         #dbfactory params   
         'request_methods'    => ['update_dataset_status'],
         'request_method_params' => {'update_dataset_status' => { 'dataset_uuid' => $self->o('dataset_uuid'), 'status'=> $self->o('dataset_status')}},
+
+        #param to connect to old pipeline analysis name
+        'next_analysis' => 'SpeciesFactory',
     };
 }
+
+
+
+
+sub pipeline_analyses {
+  my $self = shift @_;
+
+  return [
+
+    {
+      -logic_name => 'EnsemblHivePipeline',
+      -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -input_ids  => [{}],
+      -flow_into  => {
+        '1'    => 'GenomeFactory',
+      },
+      -rc_name    => 'default',
+    },
+    {
+        -logic_name      => 'GenomeFactory',
+        -module          => 'ensembl.production.hive.HiveGenomeFactory',
+        -language        => 'python3',
+        -rc_name         => 'ensemblgenome_2GB', 
+        -parameters => {
+                        'metadata_db_uri'    => $self->o('metadata_db_uri'),
+                        'genome_uuid' => $self->o('genome_uuid'),
+                        'released_genomes' => $self->o('released_genomes'),
+                        'unreleased_genomes' => $self->o('unreleased_genomes'),
+                        'organism_group_type' => $self->o('organism_group_type'),
+                        'division' => $self->o('division'),
+                        'unreleased_datasets' => $self->o('unreleased_datasets'),
+                        'released_datasets' => $self->o('released_datasets'),
+                        'dataset_source_type' => $self->o('dataset_source_type'),
+                        'dataset_type' => $self->o('dataset_type'),
+                        'anti_dataset_type' => $self->o('anti_dataset_type'),
+                        'species' => $self->o('species'),
+                        'antispecies' => $self->o('antispecies'),
+                        'biosample_id' => $self->o('biosample_id'),
+                        'anti_biosample_id' => $self->o('anti_biosample_id'),
+                        'dataset_status' => $self->o('dataset_status'),
+                        'batch_size' => $self->o('batch_size'),
+                        'run_all' => $self->o('run_all'),
+                        'query_param' => $self->o('query_param'),
+                        'query' => $self->o('query'),
+                        'dataset_uuid' => $self->o('dataset_uuid'),   
+                        'update_dataset_status' => $self->o('update_dataset_status'),       
+                      }, 
+        -flow_into  => {
+                        '2->A'    => ['UpdateDatasetStatusToSubmit'],
+                        'A->2'    => 'UpdateDatasetStatus'   
+                      },
+
+    },
+    {
+      -logic_name      => 'UpdateDatasetStatusToSubmit',
+      -module          => 'ensembl.production.hive.HiveDatasetFactory',
+      -language        => 'python3',
+      -rc_name         => 'default', 
+      -parameters      => {
+                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
+                            'request_method_params' => $self->o('request_method_params'),
+                            'request_methods'    => $self->o('request_methods'),         
+                          },   
+      -flow_into  => {
+                        '1'    => [$self->o('next_analysis')],
+                      },
+    },    
+    {
+      -logic_name      => 'UpdateDatasetStatus',
+      -module          => 'ensembl.production.hive.HiveDatasetFactory',
+      -language        => 'python3',
+      -rc_name         => 'default', 
+      -parameters      => {
+                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
+                            'request_method_params' => $self->o('request_method_params'),
+                            'request_methods'    => $self->o('request_methods'),         
+                          },   
+    },
+  ]
+}
+
+
+
+
+
 
 # Force an automatic loading of the registry in all workers.
 sub beekeeper_extra_cmdline_options {
@@ -120,9 +208,10 @@ sub resource_classes {
 
     my %output = (
         #Default is a duplicate of 100M
-        'default'   => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_D' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_W' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'ensemblgenome_2GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"'},
+        'default'           => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default_D'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default_W'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
         #Data mover nodes
         'dm'        => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
         'dm_D'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
