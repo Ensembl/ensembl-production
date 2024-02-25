@@ -50,32 +50,20 @@ sub default_options {
         datamover_queue   => 'datamover',
 
         #ensembl genome factory and dataset factory default params
-        'metadata_db_uri'    => $self->o('metadata_db_uri'),
+        'metadata_db_uri'    => $self->o('metadata_db_uri') ?  $self->o('metadata_db_uri') : $ENV{'METADATA_DB_URI'},
 
         #genome factory params
         'genome_uuid' => [],
-        'released_genomes' => 0,
-        'unreleased_genomes' => 0,
-        'organism_group_type' => 'DIVISION',
+        'dataset_uuid' => [],
         'division' => [],
-        'unreleased_datasets' => 0,
-        'released_datasets' => 0,
-        'dataset_source_type' => [],
         'dataset_type' => [],
-        'anti_dataset_type' =>[],
-        'species' => [],
-        'anti_species' => [],
-        'biosample_id' => [],
-        'anti_biosample_id' => [],
         'dataset_status' => [],
-        'batch_size' => 50,
-        'run_all' => 0,
+        'organism_group_type' => 'DIVISION',
+        'species' => [],
         'antispecies' => [],
-        'query_param' => undef,
-        'query' => undef,
-        'dataset_uuid' => undef, 
+        'batch_size' => 50,
         'meta_filters' => {},   
-        'update_dataset_status' => 0,
+        'update_dataset_status' => 1, #updates dataset status in new metadata db
 
         #dbfactory params   
         'request_methods'    => ['update_dataset_status'],
@@ -85,9 +73,6 @@ sub default_options {
         'next_analysis' => 'SpeciesFactory',
     };
 }
-
-
-
 
 sub pipeline_analyses {
   my $self = shift @_;
@@ -99,59 +84,34 @@ sub pipeline_analyses {
       -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -input_ids  => [{}],
       -flow_into  => {
-        '1'    => 'GenomeFactory',
+        '1'    => ['GenomeFactory'],
+        
       },
       -rc_name    => 'default',
     },
     {
-        -logic_name      => 'GenomeFactory',
-        -module          => 'ensembl.production.hive.HiveGenomeFactory',
-        -language        => 'python3',
-        -rc_name         => 'ensemblgenome_2GB', 
-        -parameters => {
-                        'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                        'genome_uuid' => $self->o('genome_uuid'),
-                        'released_genomes' => $self->o('released_genomes'),
-                        'unreleased_genomes' => $self->o('unreleased_genomes'),
-                        'organism_group_type' => $self->o('organism_group_type'),
-                        'division' => $self->o('division'),
-                        'unreleased_datasets' => $self->o('unreleased_datasets'),
-                        'released_datasets' => $self->o('released_datasets'),
-                        'dataset_source_type' => $self->o('dataset_source_type'),
-                        'dataset_type' => $self->o('dataset_type'),
-                        'anti_dataset_type' => $self->o('anti_dataset_type'),
-                        'species' => $self->o('species'),
-                        'antispecies' => $self->o('antispecies'),
-                        'biosample_id' => $self->o('biosample_id'),
-                        'anti_biosample_id' => $self->o('anti_biosample_id'),
-                        'dataset_status' => $self->o('dataset_status'),
-                        'batch_size' => $self->o('batch_size'),
-                        'run_all' => $self->o('run_all'),
-                        'query_param' => $self->o('query_param'),
-                        'query' => $self->o('query'),
-                        'dataset_uuid' => $self->o('dataset_uuid'),   
-                        'update_dataset_status' => $self->o('update_dataset_status'),       
-                      }, 
-        -flow_into  => {
-                        '2->A'    => ['UpdateDatasetStatusToSubmit'],
-                        'A->2'    => 'UpdateDatasetStatus'   
-                      },
+      -logic_name      => 'GenomeFactory',
+      -module          => 'ensembl.production.hive.HiveGenomeFactory',
+      -language        => 'python3',
+      -rc_name         => 'ensemblgenome_2GB', 
+      -parameters => {
+                      'metadata_db_uri' => $self->o('metadata_db_uri'),
+                      'genome_uuid' => $self->o('genome_uuid'),
+                      'dataset_type' => $self->o('dataset_type'),
+                      'dataset_status' => $self->o('dataset_status'),
+                      'division' => $self->o('division'),
+                      'organism_group_type' => $self->o('organism_group_type'),                        
+                      'species' => $self->o('species'),
+                      'antispecies' => $self->o('antispecies'),                        
+                      'batch_size' => $self->o('batch_size'),
+                      'update_dataset_status' => $self->o('update_dataset_status'),       
+                    }, 
+      -flow_into  => {
+                      '2->A'    => {$self->o('next_analysis') =>  INPUT_PLUS() },
+                      'A->2'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]   
+                    },
 
     },
-    {
-      -logic_name      => 'UpdateDatasetStatusToSubmit',
-      -module          => 'ensembl.production.hive.HiveDatasetFactory',
-      -language        => 'python3',
-      -rc_name         => 'default', 
-      -parameters      => {
-                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                            'request_method_params' => $self->o('request_method_params'),
-                            'request_methods'    => $self->o('request_methods'),         
-                          },   
-      -flow_into  => {
-                        '1'    => [$self->o('next_analysis')],
-                      },
-    },    
     {
       -logic_name      => 'UpdateDatasetStatus',
       -module          => 'ensembl.production.hive.HiveDatasetFactory',
@@ -165,11 +125,6 @@ sub pipeline_analyses {
     },
   ]
 }
-
-
-
-
-
 
 # Force an automatic loading of the registry in all workers.
 sub beekeeper_extra_cmdline_options {
