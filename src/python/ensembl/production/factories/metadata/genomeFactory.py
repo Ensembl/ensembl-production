@@ -20,24 +20,19 @@ import logging
 import re
 import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType
+from graphene_sqlalchemy.converter import convert_sqlalchemy_type
 from sqlalchemy import select
+from sqlalchemy import JSON
 from ensembl.production.metadata.api.models.genome import Genome, GenomeDataset
 from ensembl.production.metadata.api.models.organism import Organism, OrganismGroup, OrganismGroupMember
 from ensembl.production.metadata.api.models.assembly import Assembly
-from ensembl.production.metadata.api.models.dataset import DatasetType, Dataset, DatasetSource
+from ensembl.production.metadata.api.models.dataset import DatasetType, Dataset, DatasetSource, DatasetStatus
 from ensembl.production.metadata.api.hive.dataset_factory import DatasetFactory
 
 from ensembl.database import DBConnection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-
-class DatasetStatusEnum(graphene.Enum):
-    SUBMITTED = 'Submitted'
-    PROCESSING = 'Processing'
-    PROCESSED = 'Processed'
-    RELEASED = 'Released'
 
 
 class AssemblyType(SQLAlchemyObjectType):
@@ -69,6 +64,12 @@ class OrganismGroupType(SQLAlchemyObjectType):
 class GrapheneDatasetTopicType(SQLAlchemyObjectType):
     class Meta:
         model = DatasetType
+    
+    filter_on = graphene.String()
+    @convert_sqlalchemy_type.register(JSON)
+    def convert_column_to_string(type, column, registry=None):
+        return graphene.String()
+
 
 
 class GrapheneDatasetSourceType(SQLAlchemyObjectType):
@@ -80,29 +81,10 @@ class GrapheneDatasetType(SQLAlchemyObjectType):
     class Meta:
         model = Dataset
     
-    status = graphene.Field(DatasetStatusEnum)
-
 
 class GenomeDatasetType(SQLAlchemyObjectType):
     class Meta:
         model = GenomeDataset
-
-
-class GenomeType(SQLAlchemyObjectType):
-    class Meta:
-        model = Genome
-    
-    organism = graphene.Field(OrganismType)
-    genome_datasets = graphene.List(GenomeDatasetType)
-    
-    def resolve_organism(self, info):
-        return self.organism
-    
-    def resolve_assembly(self, info):
-        return self.assembly
-    
-    def resolve_genome_datasets(self, info):
-        return self.genome_datasets
 
 
 class GenomeType(SQLAlchemyObjectType):
@@ -149,7 +131,7 @@ class GenomeFilterInput(graphene.InputObjectType):
     anti_species = graphene.List(graphene.String, default=[], required=False)
     biosample_id = graphene.List(graphene.String, default=[], required=False)
     anti_biosample_id = graphene.List(graphene.String, default=[], required=False)
-    dataset_status = graphene.List(graphene.String, default_value=[DatasetStatusEnum.SUBMITTED], required=False)
+    dataset_status = graphene.List(graphene.String, default_value=["Submitted"], required=False)
     run_all = graphene.Int(default_value=0, required=False)
     batch_size = graphene.Int(default_value=50, required=False)
     organism_group_type = graphene.String(default_value="DIVISION", required=False)
@@ -298,11 +280,8 @@ class DatasetQuery(BaseQuery):
     pass
 
 
-class GenomeFetcher(DatasetFactory):
-    
-    def __init__(self, metadata_db_uri):
-        super().__init__(metadata_uri=metadata_db_uri)
-    
+class GenomeFetcher:
+
     @staticmethod
     def get_query_params():
         return """
@@ -386,8 +365,9 @@ class GenomeFetcher(DatasetFactory):
         return f'[{formatted_data}]'
     
     def get_genomes(self,
+                    metadata_db_uri,
                     query_schema=GenomeQuery,
-                    update_dataset_status=0,
+                    update_dataset_status="",
                     **filters: GenomeFilterInput
                     ):
         
@@ -396,7 +376,10 @@ class GenomeFetcher(DatasetFactory):
         filters = GenomeFilterInput(**filters)
         query_param = filters.kwargs.get('query_param', "")
         query = filters.kwargs.get('query', "")
-        
+        metadata_db = DBConnection(metadata_db_uri)
+        dataset_factory = DatasetFactory()
+
+
         if not query_param:
             query_param = self.get_query_params()
         
@@ -407,27 +390,43 @@ class GenomeFetcher(DatasetFactory):
         schema = graphene.Schema(query=query_schema)
         
         # fetch genome results
-        with self.metadata_db.session_scope() as session:
+        with metadata_db.session_scope() as session:
             result = schema.execute(query, context_value={'session': session})
             if result.errors is not None:
                 raise ValueError(str(result.errors))
         
-        # update dataset status
-        if update_dataset_status:
-            try:
+        try:
+            with metadata_db.session_scope() as session:
                 for genome in result.data.get('genomeList', []):
-                    for dataset in genome.get('genomeDatasets', []):
-                        _, status = self.update_dataset_status(dataset.get('dataset').get('datasetUuid', None))
-                        dataset.get('dataset')['status'] = status
-                        logger.info(
-                            f"Updated Dataset status for dataset uuid: {dataset.get('dataset')['datasetUuid']} to {status}  for genome {genome['genomeUuid']} ")
-            except Exception as e:
-                raise ValueError(str(e))
-        
-        # yield genome results
-        for genome in result.data['genomeList']:
-            yield genome
+                    #check if dataset for genome is updated successfully
+                    process_genome = False
+                    
+                    if update_dataset_status:
+                        for dataset in genome.get('genomeDatasets', []):
+                            _, status = dataset_factory.update_dataset_status(dataset.get('dataset').get('datasetUuid', None), session, update_dataset_status)
 
+                            if update_dataset_status == status:
+                                process_genome = True
+                                dataset.get('dataset')['status'] = status
+                                logger.info(
+                                    f"Updated Dataset status for dataset uuid: {dataset.get('dataset')['datasetUuid']} from {update_dataset_status} to {status}  for genome {genome['genomeUuid']}"
+                                )
+                            else:
+                                logger.warn(
+                                    f"Cannot update status for dataset uuid: {dataset.get('dataset')['datasetUuid']} {update_dataset_status} to {status}  for genome {genome['genomeUuid']}"
+                                )
+
+                        if process_genome:
+                            yield genome
+
+
+                    #NOTE: when update_dataset_status is empty, returns all the genome irrespective to its dependencies and status
+                    else:
+                        yield genome
+
+        except Exception as e:
+            raise ValueError(str(e))
+        
 
 def main():
     parser = argparse.ArgumentParser(
@@ -467,9 +466,9 @@ def main():
     parser.add_argument('--run_all', type=int, default=0, required=False,
                         help='Fetch Genomes for all default ensembl division. Default is 0, ex: EnsemblVertebrates|EnsemblPlants|EnsemblBacteria')
     parser.add_argument('--dataset_status', type=str, nargs='*', default=[],
-                        choices=['Submitted', 'Processing', 'Processed'], required=False,
+                        choices=['Submitted', 'Processing', 'Processed', 'Released'], required=False,
                         help='List of dataset statuses to filter the query. Default is an empty list.')
-    parser.add_argument('--update_dataset_status', default=False, required=False,
+    parser.add_argument('--update_dataset_status', default="", required=False, choices=['Submitted', 'Processing', 'Processed', 'Released', ''],
                         help='Update the status of the selected datasets to the specified value. ')
     parser.add_argument('--metadata_db_uri', type=str, required=True,
                         help='metadata db mysql uri, ex: mysql://ensro@localhost:3366/ensembl_genome_metadata')
@@ -481,12 +480,14 @@ def main():
     with open(args.output, 'w') as json_output:
         logger.info(f'Connecting Metadata DB: host:{meta_details.group(2)} , dbname:{meta_details.group(3)}')
         
-        genome_fetcher = GenomeFetcher(metadata_db_uri=args.metadata_db_uri)
+        genome_fetcher = GenomeFetcher()
         
         logger.info(f'Writing Results to {args.output}')
         
         for genome in genome_fetcher.get_genomes(
+                metadata_db_uri=args.metadata_db_uri,
                 query_schema=GenomeQuery,
+                update_dataset_status=args.update_dataset_status,
                 genome_uuid=args.genome_uuid,
                 released_genomes=args.released_genomes,
                 unreleased_genomes=args.unreleased_genomes,
@@ -504,7 +505,6 @@ def main():
                 batch_size=args.batch_size,
                 run_all=args.run_all,
                 dataset_status=args.dataset_status,
-                update_dataset_status=args.update_dataset_status,
                 query_param="""
                 genomeUuid
                 productionName
