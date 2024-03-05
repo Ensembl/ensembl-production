@@ -28,42 +28,60 @@ class HiveDatasetFactory(eHive.BaseRunnable):
         return DatasetFactory().update_dataset_status(dataset_uuid, update_status, metadata_db_uri=metadata_db_uri)
 
     def run(self):
+
         try:
+            # set next update status
+            next_status = {
+                'Submitted': 'Processing',
+                'Processing': 'Processed',
+                'Processed': 'Released'
+            }
 
-            if not self.param_required('update_dataset_status'):
-                raise ValueError(f"Missing required param update_dataset_status or it set to null")
-
-            if not self.param_required('metadata_db_uri'):
+            if not self.param_required('metadata_db_uri') or self.param('metadata_db_uri') == '':
                 raise ValueError(f"Missing required param metadata_db_uri or it set to null")
 
-            # check if its a species list
-            if self.param_is_defined('all_info'):
-                for genome in self.param_is_defined('all_info'):
-                    _, status = self.update_dataset_status(genome.get('dataset_uuid'), self.param_required('update_dataset_status'),
-                                               self.param_required('metadata_db_uri'))
-                    logger.info(
-                        f"Updated Dataset status for dataset uuid: {genome.get('dataset_uuid')} to {self.param_required('update_dataset_status')} for genome {genome.get('genome_uuid')}"
-                    )
-                    genome['dataset_status'] = status
-                    genome['updated_dataset_status'] = status
+            if not self.param_is_defined('update_dataset_status'):
+                raise ValueError(f"Missing required param update_dataset_status or it set to null")
+
+            update_dataset_status = self.param_is_defined('update_dataset_status')
+
+            # check if it's a species list
+            if not self.param_is_defined('all_info'):
+                genomes = [{
+                    'dataset_source': self.param('dataset_source'),
+                    'dataset_status': self.param('dataset_status'),
+                    'dataset_type': self.param('dataset_type'),
+                    'dataset_uuid': self.param('dataset_uuid'),
+                    'genome_uuid': self.param('genome_uuid'),
+                    'species': self.param('species'),
+                    'updated_dataset_status': self.param('updated_dataset_status'),
+                }]
+
+                self.param('all_info', genomes)
+
+            for genome in self.param('all_info'):
+
+                if genome.get('updated_dataset_status', None) and \
+                        self.param('update_dataset_status') == genome.get('updated_dataset_status', None):
+
+                    update_dataset_status = next_status[genome.get('updated_dataset_status', None)]
+
+                # update dataset status
+                _, status = DatasetFactory().update_dataset_status(genome.get('dataset_uuid'), update_dataset_status,
+                                                                   metadata_uri=self.param_required('metadata_db_uri'))
+                logger.info(
+                    f"Updated Dataset status for dataset uuid: {genome.get('dataset_uuid')} to {update_dataset_status} for genome {genome.get('genome_uuid')}"
+                )
+                genome['dataset_status'] = genome.get('updated_dataset_status', genome.get('dataset_status', None))
+                genome['updated_dataset_status'] = status
 
                 self.dataflow(
-                    self.param_is_defined('all_info'), 2
+                    genome, 2
                 )
-            else:
-                _, status = self.update_dataset_status(self.param_required('dataset_uuid'), self.param_required('update_dataset_status'),
-                                           self.param_required('metadata_db_uri'))
-                logger.info(
-                    f"Updated Dataset status for dataset uuid: {self.param('dataset_uuid')} to {self.param_required('update_dataset_status')} for genome {self.param('genome_uuid')}"
-                )
-                self.dataflow(
-                    {
-                        'dataset_uuid': self.param('dataset_uuid'),
-                        'genome_uuid': self.param('genome_uuid'),
-                        'updated_dataset_status': status,
-                        'dataset_status': status
-                    }, 2
-                )
+
+            self.dataflow(
+                {'all_info': self.param('all_info')}, 3
+            )
 
         except KeyError as error:
             raise KeyError(f"Missing request parameters: {str(error)}")

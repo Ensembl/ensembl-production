@@ -27,14 +27,13 @@ class HiveGenomeFactory(eHive.BaseRunnable):
     def fetch_input(self):
 
         dataset_status = self.param("dataset_status")
-        
         if dataset_status is None:
             self.param('dataset_status', ['Submitted'])
 
     def run(self):
-
+        # default status updated to processing
         fetched_genomes = GenomeFactory().get_genomes(
-            metadata_db_uri=self.param_required("metadata_db_uri"),
+            metadata_db_uri=self.param_required('metadata_db_uri'),
             update_dataset_status=self.param('update_dataset_status'),
             genome_uuid=self.param('genome_uuid'),
             dataset_uuid=self.param('dataset_uuid'),

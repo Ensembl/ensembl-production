@@ -63,14 +63,13 @@ sub default_options {
         'antispecies' => [],
         'batch_size' => 50,
         'meta_filters' => {},   
-        'update_dataset_status' => 1, #updates dataset status in new metadata db
-
-        #dbfactory params   
-        'request_methods'    => ['update_dataset_status'],
-        'request_method_params' => {'update_dataset_status' => { 'dataset_uuid' => $self->o('dataset_uuid'), 'status'=> $self->o('dataset_status')}},
-
+        'update_dataset_status' => 'Processing', #updates dataset status in new metadata db
         #param to connect to old pipeline analysis name
-        'next_analysis' => 'SpeciesFactory',
+        'genome_factory_dynamic_output_flow' => {
+                      '2->A'    => { 'SpeciesFactory'  => INPUT_PLUS()  },
+                      'A->2'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
+
     };
 }
 
@@ -93,7 +92,7 @@ sub pipeline_analyses {
       -logic_name      => 'GenomeFactory',
       -module          => 'ensembl.production.hive.HiveGenomeFactory',
       -language        => 'python3',
-      -rc_name         => 'ensemblgenome_2GB', 
+      -rc_name         => 'ensemblgenome_4GB',
       -parameters => {
                       'metadata_db_uri' => $self->o('metadata_db_uri'),
                       'genome_uuid' => $self->o('genome_uuid'),
@@ -106,10 +105,7 @@ sub pipeline_analyses {
                       'batch_size' => $self->o('batch_size'),
                       'update_dataset_status' => $self->o('update_dataset_status'),       
                     }, 
-      -flow_into  => {
-                      '2->A'    => {$self->o('next_analysis') =>  INPUT_PLUS() },
-                      'A->2'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]   
-                    },
+      -flow_into  => $self->o('genome_factory_dynamic_output_flow'),
 
     },
     {
@@ -119,9 +115,8 @@ sub pipeline_analyses {
       -rc_name         => 'default', 
       -parameters      => {
                             'metadata_db_uri'    => $self->o('metadata_db_uri'),
-                            'request_method_params' => $self->o('request_method_params'),
-                            'request_methods'    => $self->o('request_methods'),         
-                          },   
+                            'update_dataset_status' => $self->o('update_dataset_status'),
+                          },
     },
   ]
 }
@@ -163,7 +158,7 @@ sub resource_classes {
 
     my %output = (
         #Default is a duplicate of 100M
-        'ensemblgenome_2GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 2000 -R "rusage[mem=2000]"'},
+        'ensemblgenome_4GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
         'default'           => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
         'default_D'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
         'default_W'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
