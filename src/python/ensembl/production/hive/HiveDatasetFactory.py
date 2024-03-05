@@ -23,10 +23,6 @@ logger = logging.getLogger(__name__)
 
 class HiveDatasetFactory(eHive.BaseRunnable):
 
-    @staticmethod
-    def update_dataset_status(dataset_uuid, update_status, metadata_db_uri):
-        return DatasetFactory().update_dataset_status(dataset_uuid, update_status, metadata_db_uri=metadata_db_uri)
-
     def run(self):
 
         try:
@@ -90,5 +86,3 @@ class HiveDatasetFactory(eHive.BaseRunnable):
             raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
-def write_output(self):
-    pass
