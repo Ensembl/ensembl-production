@@ -82,6 +82,7 @@ sub default_options {
         rr_ens_version         => $self->o('ENV', 'RR_ENS_VERSION'),
         ref_dbname             => 'ensembl_compara_references',
         compara_host_uri       => '',
+        species_dirname        => 'organisms'
     };
 }
 
