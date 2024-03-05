@@ -14,70 +14,61 @@
 GenomeFactory Module to fetch genome information from new metadata schema
 """
 
+import logging
 import eHive
-from ensembl.production.factories.metadata.genomeFactory import GenomeFetcher, GenomeQuery, DatasetStatusEnum
+from ensembl.production.metadata.api.factories.genome import GenomeFactory
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class HiveGenomeFactory(eHive.BaseRunnable):
     
     def fetch_input(self):
-        query_param = self.param("query_param")
+
         dataset_status = self.param("dataset_status")
         
         if dataset_status is None:
-            self.param('dataset_status', [DatasetStatusEnum.SUBMITTED])
-        
-        if not query_param or query_param is None:
-            query_param = """
-          genomeUuid
-          productionName
-          organism {      
-              biosampleId         
-          }
-          genomeDatasets {
-              dataset {
-                  datasetUuid,
-                  name,
-                  status
-                  datasetSource {
-                      name
-                      type
-                  }
-              }
-          }
-      """
-            self.param("query_param", query_param)
-    
+            self.param('dataset_status', ['Submitted'])
+
     def run(self):
-        genome_fetcher = GenomeFetcher(metadata_db_uri=self.param_required("metadata_db_uri"))
-        for genome in genome_fetcher.get_genomes(
-                GenomeQuery,
-                self.param('update_dataset_status'),
-                genome_uuid=self.param('dataset_uuid'),
-                dataset_type=self.param('dataset_type'),
-                dataset_status=self.param('dataset_status'),
-                division=self.param('division'),
-                organism_group_type=self.param('organism_group_type'),
-                species=self.param('species'),
-                anti_species=self.param('antispecies'),
-                batch_size=self.param('batch_size'),
-        ):
-            genome_info = {
-                "genome_uuid": genome.get('genomeUuid', None),
-                "species": genome.get('productionName', None),
-                "biosample_id": genome.get('organism', {}).get('bioSampleId', None),
-                "datasets": genome.get('genomeDatasets', []),
-                "request_methods": ['update_dataset_status'],
-                # If multiple dataset type are queried, only the last one is selected and processed.
-                "request_method_params": {
-                    "update_dataset_status": {k.replace('datasetUuid', 'dataset_uuid'): v for dataset in
-                                              genome.get('genomeDatasets', []) for k, v in
-                                              dataset.get('dataset', {}).items() if k == 'datasetUuid'}}
-            }
+
+        fetched_genomes = GenomeFactory().get_genomes(
+            metadata_db_uri=self.param_required("metadata_db_uri"),
+            update_dataset_status=self.param('update_dataset_status'),
+            genome_uuid=self.param('genome_uuid'),
+            dataset_uuid=self.param('dataset_uuid'),
+            dataset_type=self.param('dataset_type'),
+            dataset_status=self.param('dataset_status'),
+            division=self.param('division'),
+            organism_group_type=self.param('organism_group_type'),
+            species=self.param('species'),
+            antispecies=self.param('antispecies'),
+            batch_size=self.param('batch_size'),
+        )
+
+        species_list = []
+        all_info = {}
+
+        for genome_info in fetched_genomes:
+
             # standard flow similar to production modules
             self.dataflow(
                 genome_info, 2
             )
-    
+            logger.info(
+                f"Found genome {genome_info}"
+            )
+            species_list.append(genome_info.get('species', None))
+            all_info[genome_info.get('species', None)] = {k: v for k, v in genome_info.items() if k in ['dataset_uuid', 'genome_uuid']}
+
+        # hive flow for all species as a list
+        self.dataflow(
+            {
+                "species": species_list,
+                "all_info": all_info
+             }, 3
+        )
+
     def write_output(self):
         pass

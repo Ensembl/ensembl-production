@@ -26,13 +26,20 @@ from sqlalchemy import JSON
 from ensembl.production.metadata.api.models.genome import Genome, GenomeDataset
 from ensembl.production.metadata.api.models.organism import Organism, OrganismGroup, OrganismGroupMember
 from ensembl.production.metadata.api.models.assembly import Assembly
-from ensembl.production.metadata.api.models.dataset import DatasetType, Dataset, DatasetSource, DatasetStatus
-from ensembl.production.metadata.api.hive.dataset_factory import DatasetFactory
+from ensembl.production.metadata.api.models.dataset import DatasetType, Dataset, DatasetSource
+from ensembl.production.metadata.api.factories.datasets import DatasetFactory
 
 from ensembl.database import DBConnection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+class DatasetStatusEnum(graphene.Enum):
+    Submitted = 'Submitted'
+    Processing = 'Processing'
+    Processed = 'Processed'
+    Released = 'Released'
 
 
 class AssemblyType(SQLAlchemyObjectType):
@@ -48,9 +55,9 @@ class OrganismGroupMemberType(SQLAlchemyObjectType):
 class OrganismType(SQLAlchemyObjectType):
     class Meta:
         model = Organism
-    
+
     organism_group_members = graphene.List(OrganismGroupMemberType)
-    
+
     def resolve_organism_group_members(self, info):
         # Assuming there is a backref named 'organism' in GenomeModel
         return self.organism_group_members
@@ -64,12 +71,12 @@ class OrganismGroupType(SQLAlchemyObjectType):
 class GrapheneDatasetTopicType(SQLAlchemyObjectType):
     class Meta:
         model = DatasetType
-    
+
     filter_on = graphene.String()
+
     @convert_sqlalchemy_type.register(JSON)
     def convert_column_to_string(type, column, registry=None):
         return graphene.String()
-
 
 
 class GrapheneDatasetSourceType(SQLAlchemyObjectType):
@@ -80,7 +87,10 @@ class GrapheneDatasetSourceType(SQLAlchemyObjectType):
 class GrapheneDatasetType(SQLAlchemyObjectType):
     class Meta:
         model = Dataset
-    
+
+    status = graphene.Field(DatasetStatusEnum)
+    updated_dataset_status = graphene.Field(graphene.String, default_value=None)
+
 
 class GenomeDatasetType(SQLAlchemyObjectType):
     class Meta:
@@ -90,16 +100,16 @@ class GenomeDatasetType(SQLAlchemyObjectType):
 class GenomeType(SQLAlchemyObjectType):
     class Meta:
         model = Genome
-    
+
     organism = graphene.Field(OrganismType)
     genome_datasets = graphene.List(GenomeDatasetType)
-    
+
     def resolve_organism(self, info):
         return self.organism
-    
+
     def resolve_assembly(self, info):
         return self.assembly
-    
+
     def resolve_genome_datasets(self, info):
         filters = info.context.get('filters')
         dataset_type_filter = filters.get('dataset_type', [])
@@ -113,7 +123,7 @@ class GenomeType(SQLAlchemyObjectType):
                 .all()
             )
             return filtered_datasets
-        
+
         return self.genome_datasets
 
 
@@ -137,35 +147,35 @@ class GenomeFilterInput(graphene.InputObjectType):
     organism_group_type = graphene.String(default_value="DIVISION", required=False)
     query_param = graphene.String(default_value="", required=False)
     query = graphene.String(default_value="", required=False)
-    
+
     def __init__(self, **kwargs):
-        
+
         declared_fields = [attrib for attrib in GenomeFilterInput.__dict__.keys() if not attrib.startswith('_')]
         invalid_fields = set(kwargs.keys()) - set(declared_fields)
         if invalid_fields:
             raise ValueError(f"Invalid field(s): {', '.join(invalid_fields)}")
-        
+
         required_fields = [field for field in declared_fields
                            if getattr(GenomeFilterInput, field).kwargs.get('required') and
                            'default_value' not in getattr(GenomeFilterInput, field).kwargs
                            ]
-        
+
         if required_fields:
             raise ValueError(f"Required field(s): {', '.join(required_fields)}")
-        
+
         # set default values
         if kwargs.keys():
             for field in declared_fields:
                 default_val = getattr(GenomeFilterInput, field).kwargs.get('default_value', None)
                 if field not in kwargs.keys() and default_val:
                     kwargs[field] = default_val
-        
+
         super().__init__(**kwargs)
 
 
 class BaseQuery(graphene.ObjectType):
     @classmethod
-    def add_query_filters(self, query, filters):
+    def add_query_filters(cls, query, filters):
         """
         
         Args:
@@ -176,7 +186,7 @@ class BaseQuery(graphene.ObjectType):
             .join(OrganismGroupMember.organism_group) \
             .outerjoin(Genome.genome_datasets).join(GenomeDataset.dataset) \
             .join(Dataset.dataset_source).join(Dataset.dataset_type)
-        
+
         # default filter with organism group type to DIVISION
         query = query.filter(OrganismGroup.type == filters.organism_group_type)
         if filters.run_all:
@@ -188,57 +198,57 @@ class BaseQuery(graphene.ObjectType):
                                 'EnsemblFungi',
                                 ]
         if filters:
-            
+
             if filters.genome_uuid:
                 query = query.filter(Genome.genome_uuid.in_(filters.genome_uuid))
-            
+
             if filters.division:
                 ensembl_divisions = filters.division
-                
+
                 if filters.organism_group_type == 'DIVISION':
                     pattern = re.compile(r'^(ensembl)?', re.IGNORECASE)
                     ensembl_divisions = ['Ensembl' + pattern.sub('', d).capitalize() for d in ensembl_divisions if d]
-                
+
                 query = query.filter(OrganismGroup.name.in_(ensembl_divisions))
-            
+
             if filters.species:
                 species = set(filters.species) - set(filters.anti_species)
-                
+
                 if species:
                     query = query.filter(Genome.production_name.in_(filters.species))
                 else:
                     query = query.filter(~Genome.production_name.in_(filters.anti_species))
-            
+
             elif filters.anti_species:
                 query = query.filter(~Genome.production_name.in_(filters.anti_species))
-            
+
             if filters.biosample_id:
-                
+
                 biosample_id = set(filters.biosample_id) - set(filters.anti_biosample_id)
-                
+
                 if biosample_id:
                     query = query.filter(Genome.organism.has(Organism.biosample_id.in_(biosample_id)))
                 else:
                     query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_biosample_id)))
-            
+
             elif filters.anti_biosample_id:
                 query = query.filter(~Genome.organism.has(Organism.biosample_id.in_(filters.anti_biosample_id)))
-            
+
             if filters.unreleased_genomes:
                 query = query.filter(~Genome.genome_releases.any())
-            
+
             if filters.released_genomes:
                 query = query.filter(Genome.genome_releases.any())
-            
+
             if filters.unreleased_datasets:
                 query = query.filter(~GenomeDataset.ensembl_release.has())
-            
+
             if filters.released_datasets:
                 query = query.filter(GenomeDataset.ensembl_release.has())
-            
+
             if filters.dataset_type:
                 query = query.filter(Genome.genome_datasets.any(DatasetType.name.in_(filters.dataset_type)))
-            
+
             if filters.anti_dataset_type:
                 query = query.filter(
                     ~Genome.genome_id.in_(
@@ -253,22 +263,22 @@ class BaseQuery(graphene.ObjectType):
                         .distinct()
                     )
                 )
-            
+
             if filters.dataset_status:
                 query = query.filter(Dataset.status.in_(filters.dataset_status))
-            
+
             if filters.dataset_source_type:
                 query = query.filter(Genome.genome_datasets.any(DatasetSource.type.in_(filters.dataset_source_type)))
-            
+
             if filters.batch_size:
                 query = query.group_by(Genome.genome_id).limit(filters.batch_size)
-        
+
         return query
 
 
 class GenomeQuery(BaseQuery):
     genome_list = graphene.List(GenomeType, filters=GenomeFilterInput())
-    
+
     def resolve_genome_list(self, info, filters=None):
         query = GenomeType.get_query(info)
         info.context['filters'] = filters
@@ -326,7 +336,7 @@ class GenomeFetcher:
             }
         }
     """
-    
+
     def get_query(self, filters, query_param):
         return f"""
       {{
@@ -356,21 +366,21 @@ class GenomeFetcher:
           }}
       }}
     """
-    
+
     @staticmethod
     def list_to_string(data):
         if data is None:
             data = []
         formatted_data = ', '.join([f'"{element}"' for element in data])
         return f'[{formatted_data}]'
-    
+
     def get_genomes(self,
                     metadata_db_uri,
                     query_schema=GenomeQuery,
                     update_dataset_status="",
                     **filters: GenomeFilterInput
                     ):
-        
+
         # validate the params
         logger.info(f'Get Genomes with filters {filters}')
         filters = GenomeFilterInput(**filters)
@@ -379,40 +389,40 @@ class GenomeFetcher:
         metadata_db = DBConnection(metadata_db_uri)
         dataset_factory = DatasetFactory()
 
-
         if not query_param:
             query_param = self.get_query_params()
-        
+
         if not query:
             query = self.get_query(filters, query_param)
-        
+
         # get dynamic query schema, default : GenomeQuery
         schema = graphene.Schema(query=query_schema)
-        
+
         # fetch genome results
         with metadata_db.session_scope() as session:
             result = schema.execute(query, context_value={'session': session})
             if result.errors is not None:
                 raise ValueError(str(result.errors))
-        
+
         try:
             with metadata_db.session_scope() as session:
                 for genome in result.data.get('genomeList', []):
-                    #check if dataset for genome is updated successfully
+                    # check if dataset for genome is updated successfully
                     process_genome = False
-                    
+
                     if update_dataset_status:
                         for dataset in genome.get('genomeDatasets', []):
-                            _, status = dataset_factory.update_dataset_status(dataset.get('dataset').get('datasetUuid', None), session, update_dataset_status)
+                            _, status = dataset_factory.update_dataset_status(
+                                dataset.get('dataset').get('datasetUuid', None), update_dataset_status, session=session)
 
                             if update_dataset_status == status:
                                 process_genome = True
-                                dataset.get('dataset')['status'] = status
+                                dataset.get('dataset')['updatedDatasetStatus'] = status
                                 logger.info(
                                     f"Updated Dataset status for dataset uuid: {dataset.get('dataset')['datasetUuid']} from {update_dataset_status} to {status}  for genome {genome['genomeUuid']}"
                                 )
                             else:
-                                logger.warn(
+                                logger.warning(
                                     f"Cannot update status for dataset uuid: {dataset.get('dataset')['datasetUuid']} {update_dataset_status} to {status}  for genome {genome['genomeUuid']}"
                                 )
 
@@ -420,13 +430,13 @@ class GenomeFetcher:
                             yield genome
 
 
-                    #NOTE: when update_dataset_status is empty, returns all the genome irrespective to its dependencies and status
+                    # NOTE: when update_dataset_status is empty, returns all the genome irrespective to its dependencies and status
                     else:
                         yield genome
 
         except Exception as e:
             raise ValueError(str(e))
-        
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -468,22 +478,23 @@ def main():
     parser.add_argument('--dataset_status', type=str, nargs='*', default=[],
                         choices=['Submitted', 'Processing', 'Processed', 'Released'], required=False,
                         help='List of dataset statuses to filter the query. Default is an empty list.')
-    parser.add_argument('--update_dataset_status', default="", required=False, choices=['Submitted', 'Processing', 'Processed', 'Released', ''],
+    parser.add_argument('--update_dataset_status', default="", required=False,
+                        choices=['Submitted', 'Processing', 'Processed', 'Released', ''],
                         help='Update the status of the selected datasets to the specified value. ')
     parser.add_argument('--metadata_db_uri', type=str, required=True,
                         help='metadata db mysql uri, ex: mysql://ensro@localhost:3366/ensembl_genome_metadata')
     parser.add_argument('--output', type=str, required=True, help='output file ex: genome_info.json')
-    
+
     args = parser.parse_args()
-    
+
     meta_details = re.match(r"mysql:\/\/.*:(.*?)@(.*?):\d+\/(.*)", args.metadata_db_uri)
     with open(args.output, 'w') as json_output:
         logger.info(f'Connecting Metadata DB: host:{meta_details.group(2)} , dbname:{meta_details.group(3)}')
-        
+
         genome_fetcher = GenomeFetcher()
-        
+
         logger.info(f'Writing Results to {args.output}')
-        
+
         for genome in genome_fetcher.get_genomes(
                 metadata_db_uri=args.metadata_db_uri,
                 query_schema=GenomeQuery,
@@ -524,6 +535,7 @@ def main():
                         datasetUuid
                         name
                         status
+                        updatedDatasetStatus
                         datasetSource {
                             name
                             type
@@ -534,7 +546,7 @@ def main():
         ):
             json.dump(genome, json_output)
             json_output.write("\n")
-        
+
         logger.info(f'Completed !')
 
 
