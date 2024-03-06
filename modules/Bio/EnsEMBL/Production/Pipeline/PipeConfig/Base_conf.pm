@@ -158,7 +158,7 @@ sub resource_classes {
 
     my %output = (
         #Default is a duplicate of 100M
-        'ensemblgenome_4GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
+        'default_4GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
         'default'           => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
         'default_D'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
         'default_W'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
