@@ -47,7 +47,7 @@ class HiveGenomeFactory(eHive.BaseRunnable):
         )
 
         species_list = []
-        all_info = {}
+        all_info = []
 
         for genome_info in fetched_genomes:
 
@@ -59,7 +59,7 @@ class HiveGenomeFactory(eHive.BaseRunnable):
                 f"Found genome {genome_info}"
             )
             species_list.append(genome_info.get('species', None))
-            all_info[genome_info.get('species', None)] = {k: v for k, v in genome_info.items() if k in ['dataset_uuid', 'genome_uuid']}
+            all_info.append(genome_info)
 
         # hive flow for all species as a list
         self.dataflow(
