@@ -61,7 +61,7 @@ sub default_options {
     # By default, files are not written if the parent directory
     # (which is the database name) exists.
     overwrite => 0,
-    dump_dir  => '/hps/nobackup/flicek/ensembl/production/ensembl_dumps/ftp/blast_dumps',
+    dump_dir  => undef,
   };
 }
 
