@@ -1,5 +1,5 @@
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2023] EMBL-European Bioinformatics Institute
+# Copyright [2016-2024] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,10 +99,10 @@ my $gene = {
 my $remodeller =
   Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
 
-#diag( Dumper($gene) );
+# diag( Dumper($gene) );
 
 my $new_gene = $remodeller->remodel_gene($gene);
-diag( Dumper($new_gene) );
+# diag( Dumper($new_gene) );
 
 ok( $new_gene, "Gene defined" );
 is( scalar( @{ $new_gene->{BioCyc} } ),           2, "2 BioCyc" );

@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2023] EMBL-European Bioinformatics Institute
+Copyright [2016-2024] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,7 +48,77 @@ sub default_options {
         work_dir          => catdir('/hps/software/users/ensembl/repositories/', $self->o('user')),
         production_queue  => 'production',
         datamover_queue   => 'datamover',
+
+        #ensembl genome factory and dataset factory default params
+        'metadata_db_uri'    => $self->o('metadata_db_uri') ?  $self->o('metadata_db_uri') : $ENV{'METADATA_DB_URI'},
+
+        #genome factory params
+        'genome_uuid' => [],
+        'dataset_uuid' => [],
+        'division' => [],
+        'dataset_type' => [],
+        'dataset_status' => [],
+        'organism_group_type' => 'DIVISION',
+        'species' => [],
+        'antispecies' => [],
+        'batch_size' => 50,
+        'meta_filters' => {},   
+        'update_dataset_status' => 'Processing', #updates dataset status in new metadata db
+        #param to connect to old pipeline analysis name
+        'genome_factory_dynamic_output_flow' => {
+                      '2->A'    => { 'SpeciesFactory'  => INPUT_PLUS()  },
+                      'A->2'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
+
     };
+}
+
+sub pipeline_analyses {
+  my $self = shift @_;
+
+  return [
+
+    {
+      -logic_name => 'EnsemblHivePipeline',
+      -module => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+      -input_ids  => [{}],
+      -flow_into  => {
+        '1'    => ['GenomeFactory'],
+        
+      },
+      -rc_name    => 'default',
+    },
+    {
+      -logic_name      => 'GenomeFactory',
+      -module          => 'ensembl.production.hive.HiveGenomeFactory',
+      -language        => 'python3',
+      -rc_name         => 'ensemblgenome_4GB',
+      -parameters => {
+                      'metadata_db_uri' => $self->o('metadata_db_uri'),
+                      'genome_uuid' => $self->o('genome_uuid'),
+                      'dataset_type' => $self->o('dataset_type'),
+                      'dataset_status' => $self->o('dataset_status'),
+                      'division' => $self->o('division'),
+                      'organism_group_type' => $self->o('organism_group_type'),                        
+                      'species' => $self->o('species'),
+                      'antispecies' => $self->o('antispecies'),                        
+                      'batch_size' => $self->o('batch_size'),
+                      'update_dataset_status' => $self->o('update_dataset_status'),       
+                    }, 
+      -flow_into  => $self->o('genome_factory_dynamic_output_flow'),
+
+    },
+    {
+      -logic_name      => 'UpdateDatasetStatus',
+      -module          => 'ensembl.production.hive.HiveDatasetFactory',
+      -language        => 'python3',
+      -rc_name         => 'default', 
+      -parameters      => {
+                            'metadata_db_uri'    => $self->o('metadata_db_uri'),
+                            'update_dataset_status' => $self->o('update_dataset_status'),
+                          },
+    },
+  ]
 }
 
 # Force an automatic loading of the registry in all workers.
@@ -88,9 +158,10 @@ sub resource_classes {
 
     my %output = (
         #Default is a duplicate of 100M
-        'default'   => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_D' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_W' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default_4GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 4000 -R "rusage[mem=4000]"'},
+        'default'           => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default_D'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default_W'         => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
         #Data mover nodes
         'dm'        => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
         'dm_D'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
