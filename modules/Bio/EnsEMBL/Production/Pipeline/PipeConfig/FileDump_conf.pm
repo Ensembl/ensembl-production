@@ -82,6 +82,7 @@ sub default_options {
         rr_ens_version         => $self->o('ENV', 'RR_ENS_VERSION'),
         ref_dbname             => 'ensembl_compara_references',
         compara_host_uri       => '',
+        species_dirname        => 'organisms'
     };
 }
 
@@ -214,8 +215,9 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-                analysis_types => $self->o('homology_types'),
-                data_category  => 'homology',
+                analysis_types  => $self->o('homology_types'),
+                data_category   => 'homology',
+                species_dirname => $self->o('species_dirname')
             },
             -flow_into         => {
                 '3->A' => $self->o('homology_types'),
@@ -228,8 +230,9 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-                data_category  => 'genome',
-                analysis_types => $self->o('genome_types'),
+                data_category   => 'genome',
+                analysis_types  => $self->o('genome_types'),
+                species_dirname => $self->o('species_dirname')
             },
             -flow_into         => {
                 '3->A' => $self->o('genome_types'),
@@ -242,8 +245,9 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-                data_category  => 'geneset',
-                analysis_types => $self->o('geneset_types'),
+                data_category   => 'geneset',
+                analysis_types  => $self->o('geneset_types'),
+                species_dirname => $self->o('species_dirname')
             },
             -flow_into         => {
                 '3->A' => $self->o('geneset_types'),
@@ -256,8 +260,9 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {
-                data_category  => 'rnaseq',
-                analysis_types => $self->o('rnaseq_types'),
+                data_category   => 'rnaseq',
+                analysis_types  => $self->o('rnaseq_types'),
+                species_dirname => $self->o('species_dirname')
             },
             -flow_into         => {
                 '3' => $self->o('rnaseq_types'),
@@ -577,23 +582,23 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'MySQL_Compress',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                compress=>"#output_filename#"
+                compress => "#output_filename#"
             },
             -rc_name           => '1GB',
         },
         {
             -logic_name        => 'Genome_Compress',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                compress=>"#output_filename#"
+                compress => "#output_filename#"
             },
             -rc_name           => '1GB',
             -flow_into         => {
@@ -602,23 +607,23 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'Genome_Compress_mem',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                compress=>"#output_filename#"
+                compress => "#output_filename#"
             },
             -rc_name           => '4GB',
         },
         {
             -logic_name        => 'Geneset_Compress',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                compress=>"#output_filename#"
+                compress => "#output_filename#"
             },
             -rc_name           => '1GB',
             -flow_into         => {
@@ -627,12 +632,12 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'Geneset_Compress_mem',
-            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                compress=>"#output_filename#"
+                compress => "#output_filename#"
             },
             -rc_name           => '4GB',
         },
