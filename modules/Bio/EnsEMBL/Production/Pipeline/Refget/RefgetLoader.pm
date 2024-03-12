@@ -415,8 +415,16 @@ sub insert_raw_sequence {
     my ($self, $refget_schema, $seq_ref, $ga4gh_id) = @_;
     my $hash = ga4gh_to_trunc512($ga4gh_id);
     my $rs = $refget_schema->resultset('RawSeq');
-    my $raw_seq = $rs->find_or_create({ checksum => $hash, seq => ${$seq_ref} });
-    return $raw_seq;
+    my $row = $rs->search(
+        { checksum => $checksum },
+        { columns => [qw/ checksum /] }
+    )->single();
+    if($row) {
+        return $row;
+    }
+    my $hash = { checksum => $checksum, seq => $sequence };
+    my $raw_seq = $rs->new_result($hash);
+    return $raw_seq->insert();
 }
 
 ##### Batch checksum attribute retrieval and checking
