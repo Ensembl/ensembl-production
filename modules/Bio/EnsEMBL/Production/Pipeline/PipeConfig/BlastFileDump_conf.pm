@@ -78,18 +78,7 @@ sub default_options {
         ref_dbname             => 'ensembl_compara_references',
         compara_host_uri       => '',
 
-        # Default MVP params 
-        'genome_uuid'          => [],       
-        'unreleased_genomes'   => $self->o('unreleased_genomes'),
-        'metadata_db_uri'      => $self->o('metadata_db_uri'),
-        'ensembl_species'      => [],
-        'released_genomes'     => 0, 
-        'unreleased_genomes'   => 0,  
-        'organism_group_type'  => 'DIVISION',      
-        'organism_group'       => [],     
-        'anti_ensembl_name'    => [],  
-
-        #mvp blast param
+        #blast param for new site
         'hardmasked'          => 1,
         'cds'                 => 1,   
         'timestamped_dir'     => 1,         
@@ -130,39 +119,7 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-        {
-            -logic_name        => 'BlastFileDump',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -max_retry_count   => 1,
-            -analysis_capacity => 1,
-            -input_ids         => [ {} ],
-            -parameters        => {},
-            -flow_into         => {
-                '1' => 'MVPSpeciesFactory'
-            }
-        },
-        {
-            -logic_name      => 'MVPSpeciesFactory',
-            -module          => 'production.hive.SpeciesFactory',
-            -language        => 'python3',
-            -rc_name         => 'default', 
-            -parameters => {
-            
-            'metadata_db_uri'      => $self->o('metadata_db_uri'),
-            'organism_name'        => $self->o('ensembl_species'),  
-            'genome_uuid'          => $self->o('genome_uuid'), 
-            'unreleased_genomes'   => $self->o('unreleased_genomes'),    
-            'organism_group'       => $self->o('organism_group'),
-            'released_genomes'     => $self->o('released_genomes'),
-            'organism_group_type'  => $self->o('organism_group_type'),
-            'organism_group'       => $self->o('organism_group'),
-            'anti_organism_name'   => $self->o('anti_ensembl_name'),
-
-            },       
-            -flow_into  => {
-            '2' => 'SpeciesFactory',
-            },
-        },        
+    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::pipeline_analyses($self)},
         {
             -logic_name        => 'SpeciesFactory',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
