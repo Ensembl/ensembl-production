@@ -10,7 +10,8 @@ include {
   ExtractCoreDbDataProteins;
   LoadGeneIntoThoas;
   LoadRegionIntoThoas;
-  CreateIndex;
+  CreateCollectionAndIndex;
+  ShardCollectionData;
 } from '../modules/thoasCommonProcess'
 
 include {
@@ -28,13 +29,8 @@ println """\
          debug                 : ${params.debug}
          release               : ${params.release}
          genome_uuid           : ${params.genome_uuid}
-         species_name          : ${params.species_name}
+         species_name          : ${params.species}
          dataset_type          : ${params.dataset_type}
-         organism_group        : ${params.organism_group}
-         released_genomes      : ${params.released_genomes}
-         unreleased_genomes    : ${params.unreleased_genomes}
-         released_datasets     : ${params.released_datasets}
-         unreleased_datasets   : ${params.unreleased_datasets}
          outdir                : ${params.thoas_data_location}
          thoas_code_location   : ${params.thoas_code_location}
          thoas_data_location   : ${params.thoas_data_location}
@@ -46,7 +42,7 @@ println """\
          xref_lod_mapping_file : ${params.xref_lod_mapping_file}
          log_faulty_urls       : ${params.log_faulty_urls}
          mongo_dbname          : ${params.mongo_db_dbname}
-         mongodb_collection    : ${params.mongo_db_collection}
+         mongo_shard_uri       : ${params.mongo_db_shard_uri}
          mongo_schema          : ${params.mongo_db_schema}
          """
          .stripIndent()
@@ -158,39 +154,48 @@ workflow {
     }
 
     //set user params as list
-    genome_uuid         = convertToList(params.genome_uuid)
-    species_name        = convertToList(params.species_name)
-    organism_group      = convertToList(params.organism_group)
-    dataset_type        = convertToList(params.dataset_type)
-    metadata_db_uri     = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
-    released_genomes    = params.released_genomes ? true : false
-    unreleased_genomes  = params.unreleased_genomes ? true : false
-    released_datasets   = params.released_datasets ? true : false
-    unreleased_datasets = params.unreleased_datasets ? true : false 
-    
+//     metadata_db_password  = (params.metadata_db_password != true || params.metadata_db_password=="") ?  '""' : ":${params.metadata_db_password}"
+    metadata_db_uri       = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
+    update_dataset_status = params.update_dataset_status
+    batch_size            = params.batch_size
+    page                  = params.page
+    dataset_type          = params.dataset_type
+    genome_uuid           = convertToList(params.genome_uuid)
+    dataset_uuid          = convertToList(params.dataset_uuid)
+    organism_group_type   = convertToList(params.organism_group_type)
+    division              = convertToList(params.division)
+    species               = convertToList(params.species)
+    antispecies           = convertToList(params.antispecies)
+    dataset_status        = convertToList(params.dataset_status)
+    columns               = convertToList(params.columns)
+    mongo_db_shard_uri    = ( ! params.mongo_db_shard_uri ||   params.mongo_db_shard_uri=="") ?  helpMessage() : params.mongo_db_shard_uri
+
+
     output_json     = 'genome_info.json'
-    GenomeInfo(genome_uuid, species_name, organism_group,
-              released_genomes, unreleased_genomes, metadata_db_uri,
-              released_datasets, unreleased_datasets, dataset_type, output_json
+    GenomeInfo( metadata_db_uri, genome_uuid, dataset_uuid,
+                organism_group_type, division, dataset_type,
+                species, antispecies, dataset_status, update_dataset_status,
+                batch_size, page, columns, output_json
     )
-    GenerateThoasConfigFile(GenomeInfo.out[0])
- 
-    LoadThoasMetadata(GenerateThoasConfigFile.out[0])
+   GenerateThoasConfigFile(GenomeInfo.out[0])
+   CreateCollectionAndIndex(GenerateThoasConfigFile.out[0])
+   ShardCollectionData(CreateCollectionAndIndex.out[0], mongo_db_shard_uri,  params.mongo_db_dbname)
+
+   LoadThoasMetadata(GenerateThoasConfigFile.out[0], ShardCollectionData.out[0])
 
     ExtractCoreDbDataCDS( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
                      .combine(LoadThoasMetadata.out[0])
     )
-   
+
     ExtractCoreDbDataGeneName( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
                      .combine(LoadThoasMetadata.out[0])
     )
-   
+
     ExtractCoreDbDataProteins( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
                      .combine(LoadThoasMetadata.out[0])
     )
     LoadGeneIntoThoas(ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0],remainder: true).join(ExtractCoreDbDataProteins.out[0],remainder: true))
     LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
-    CreateIndex(LoadRegionIntoThoas.out[0].collect().flatten().last())
 }
 
 

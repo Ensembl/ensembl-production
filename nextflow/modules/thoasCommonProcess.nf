@@ -44,14 +44,71 @@ process GenerateThoasConfigFile {
      --mongo_db_dbname ${params.mongo_db_dbname} \
      --mongo_db_user ${params.mongo_db_user} \
      --mongo_db_password ${params.mongo_db_password} \
-     --mongo_db_schema ${params.mongo_db_schema} \
-     --mongo_db_collection ${params.mongo_db_collection}
+     --mongo_db_schema ${params.mongo_db_schema}
+     """
+}
+
+
+process CreateCollectionAndIndex {
+    /*
+      Description: Create Collection Per Genomic Feature And Its Indexes; shard the data before load
+    */
+
+    debug "${params.debug}"
+    label 'mem2GB'
+    cpus '2'
+    tag 'createIndex'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    path thoas_config_file
+
+    output:
+    val thoas_config_file.name
+
+    """
+    pyenv local production-pipeline-env
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/mongodb_scripts/create_indexes.py --config ${params.thoas_data_location}/${thoas_config_file}
     """
 }
 
+
+process ShardCollectionData {
+    /*
+      Description: Shard the mongoDB collection before loading the data
+    */
+
+    debug "${params.debug}"
+    label 'mem2GB'
+    cpus '2'
+    tag 'shard_collections'
+
+    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
+
+    input:
+    val thoas_config_file
+    val mongo_db_shard_uri
+    val mongo_dbname
+
+    output:
+    val thoas_config_file
+
+    """
+    pyenv local production-pipeline-env
+    export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+    python ${params.thoas_code_location}/src/ensembl/mongodb_scripts/shard_collections.py --uri "${mongo_db_shard_uri}" --db_name "${mongo_dbname}"
+    """
+}
+
+
+
+
+
 process LoadThoasMetadata {
     /*
-      Description: Load  genome data into mongodb collection for thoas
+      Description: Create Collection Per Genomic Feature And Load genome data into those collection
     */
 
     debug "${params.debug}"  
@@ -63,14 +120,15 @@ process LoadThoasMetadata {
 
     input:
     path thoas_config_file
+    val thoas_config_file_name // used to make processor wait for shard
 
     output:
     val thoas_config_file.name
 
     """
-    pyenv local production-nextflow-py-3.8
+    pyenv local production-pipeline-env
     export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
-    python ${params.nf_py_script_path}/thoas_load.py -c ${params.thoas_code_location} -i ${params.thoas_data_location}/${thoas_config_file} --load_metadata 
+    python ${params.nf_py_script_path}/thoas_load.py -c ${params.thoas_code_location} -i ${params.thoas_data_location}/${thoas_config_file} --load_base_data
     """
 }
 
@@ -99,7 +157,7 @@ process ExtractCoreDbDataCDS {
     """
      echo Extract genomic feature for species $species 
      echo $genome
-     pyenv local production-nextflow-py-3.8
+     pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
      -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
@@ -138,7 +196,7 @@ process ExtractCoreDbDataGeneName {
     """
      echo Extract genomic feature for species $species 
      echo $genome
-     pyenv local production-nextflow-py-3.8
+     pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
      -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
@@ -177,7 +235,7 @@ process ExtractCoreDbDataProteins {
     """
      echo Extract genomic feature for species $species 
      echo $genome
-     pyenv local production-nextflow-py-3.8
+     pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
      -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
@@ -214,7 +272,7 @@ process LoadGeneIntoThoas {
     """
     echo $species
     echo Load genes for  $species in  $thoas_conf
-    pyenv local production-nextflow-py-3.8
+    pyenv local production-pipeline-env
     export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
     cd  ${params.thoas_data_location}/
     python ${params.nf_py_script_path}/thoas_load.py \
@@ -252,7 +310,7 @@ process LoadRegionIntoThoas {
     """
     echo $species
      echo Load regions for  $species in $thoas_conf
-     pyenv local production-nextflow-py-3.8
+     pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
      cd  ${params.thoas_data_location}/
      python ${params.nf_py_script_path}/thoas_load.py \
@@ -284,7 +342,7 @@ process CreateIndex {
 
     """
       echo Index in progress 
-      pyenv local production-nextflow-py-3.8
+      pyenv local production-pipeline-env
       export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
       cd  ${params.thoas_data_location}/
       python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/${thoas_conf} --mongo_collection ${params.mongo_db_collection}
@@ -317,7 +375,7 @@ process Validate {
 
     """
       echo Index in progress 
-      pyenv local production-nextflow-py-3.8
+      pyenv local production-pipeline-env
       export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
       cd  ${params.thoas_data_location}/
       python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/$thoas_conf --mongo_collection ${params.mongo_db_collection}
@@ -351,7 +409,7 @@ process Validate {
 //     path "loading_log_${params.release}.out"
 
 //     """
-//     pyenv local production-nextflow-py-3.8
+//     pyenv local production-pipeline-env
 //     #export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
 //     #python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file &> loading_log_${params.release}.out
 //     echo ${genome_info}
@@ -386,7 +444,7 @@ process Validate {
 //     """
 //     echo $species
 //      echo Load genes for  $species in  $thoas_conf
-//      pyenv local production-nextflow-py-3.8
+//      pyenv local production-pipeline-env
 //      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
 //      cd  ${params.thoas_data_location}/
 //      python ${params.nf_py_script_path}/thoas_load.py \
