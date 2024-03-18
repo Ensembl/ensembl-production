@@ -1,0 +1,172 @@
+name: Ensembl/ensembl-production
+on:
+  push:
+    branches:
+    - "**/*"
+  pull_request:
+  schedule: []
+concurrency:
+#   # This item has no matching transformer
+#   maximum_number_of_builds: 0
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+    - uses: shogo82148/actions-setup-perl@v1.27.0
+      with:
+        perl-version: "${{ matrix.perl }}"
+    - run: apt-get update && apt-get -y install unzip sendmail graphviz emboss
+    - run: git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+    - run: export PATH=$PATH:$PWD/ensembl-git-tools/bin
+    - run: export ENSEMBL_BRANCH=master
+    - run: export SECONDARY_BRANCH=main
+    - run: echo "TRAVIS_BRANCH=${{ github.ref }}"
+    - run: if [[ ${{ github.ref }} =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=${{ github.ref }}; export SECONDARY_BRANCH=${{ github.ref }}; fi
+    - run: echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+    - run: echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
+    - run: git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
+    - run: git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+    - run: cd htslib
+    - run: make
+    - run: export HTSLIB_DIR=$(pwd -P)
+    - run: cd ..
+    - run: cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
+    - run: cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
+    - run: cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
+    - run: export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
+    - run: cpanm --sudo -v --installdeps --notest .
+    - run: cpanm --sudo -n Devel::Cover::Report::Coveralls
+    - run: cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
+    - run: mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
+    - run: "./travisci/harness.sh"
+#     # This item has no matching transformer
+#     - email:
+#         on_success: always
+#         on_failure: always
+    - uses: rtCamp/action-slack-notify@v2.2.1
+      env:
+        SLACK_WEBHOOK: "${{ secrets.SLACK_WEBHOOK }}"
+    strategy:
+      matrix:
+        perl:
+        - '5.14'
+        - 5.26.2
+        include:
+        - COVERALLS: 'true'
+          DB: mysql
+    services:
+      mysql:
+        image: mysql
+    env:
+      COVERALLS: "${{ matrix.COVERALLS }}"
+      DB: "${{ matrix.DB }}"
+  test_2:
+    runs-on: ubuntu-latest
+    env:
+      COVERALLS: 'true'
+      DB: mysql
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+    - uses: actions/setup-python@v5.0.0
+      with:
+        python-version: 3.7.6
+    - run: apt-get update && apt-get -y install unzip sendmail graphviz emboss
+    - run: git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+    - run: export PATH=$PATH:$PWD/ensembl-git-tools/bin
+    - run: export ENSEMBL_BRANCH=master
+    - run: export SECONDARY_BRANCH=main
+    - run: echo "TRAVIS_BRANCH=${{ github.ref }}"
+    - run: if [[ ${{ github.ref }} =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=${{ github.ref }}; export SECONDARY_BRANCH=${{ github.ref }}; fi
+    - run: echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+    - run: echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
+    - run: git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
+    - run: git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+    - run: cd htslib
+    - run: make
+    - run: export HTSLIB_DIR=$(pwd -P)
+    - run: cd ..
+    - run: pip install -r requirements-test.txt
+    - run: pip install -e .
+    - run: pytest src/python/test
+#     # This item has no matching transformer
+#     - email:
+#         on_success: always
+#         on_failure: always
+    - uses: rtCamp/action-slack-notify@v2.2.1
+      env:
+        SLACK_WEBHOOK: "${{ secrets.SLACK_WEBHOOK }}"
+    services:
+      mysql:
+        image: mysql
+  test_3:
+    runs-on: ubuntu-latest
+    env:
+      COVERALLS: 'true'
+      DB: mysql
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+    - uses: actions/setup-python@v5.0.0
+      with:
+        python-version: 3.8
+    - run: apt-get update && apt-get -y install unzip sendmail graphviz emboss
+    - run: git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+    - run: export PATH=$PATH:$PWD/ensembl-git-tools/bin
+    - run: export ENSEMBL_BRANCH=master
+    - run: export SECONDARY_BRANCH=main
+    - run: echo "TRAVIS_BRANCH=${{ github.ref }}"
+    - run: if [[ ${{ github.ref }} =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=${{ github.ref }}; export SECONDARY_BRANCH=${{ github.ref }}; fi
+    - run: echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+    - run: echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+    - run: git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
+    - run: git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
+    - run: git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
+    - run: git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+    - run: cd htslib
+    - run: make
+    - run: export HTSLIB_DIR=$(pwd -P)
+    - run: cd ..
+    - run: pip install -r requirements-test.txt
+    - run: pip install -e .
+    - run: pytest src/python/test
+#     # This item has no matching transformer
+#     - email:
+#         on_success: always
+#         on_failure: always
+    - uses: rtCamp/action-slack-notify@v2.2.1
+      env:
+        SLACK_WEBHOOK: "${{ secrets.SLACK_WEBHOOK }}"
+    services:
+      mysql:
+        image: mysql
