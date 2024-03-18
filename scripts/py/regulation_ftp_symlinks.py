@@ -20,7 +20,7 @@ Creates Regulation FTP symlinks.
 
 This script is in charge of creating Regulation FTP symlinks from data files folders to:
     - GENE-SWITCH project folder under the public miscellaneous directory [PEAKS, SIGNALS] - misc/gene-switch/regulation
-    - Release specific folder [PEAKS] - release-[RELEASE_VERSION]/regulation/[SPECIES]/[ASSEMBLY]
+    - Release specific folder [PEAKS, SIGNALS] - release-[RELEASE_VERSION]/regulation/[SPECIES]/[ASSEMBLY]
 
 Typical usage example:
     python3 regulation_ftp_symlinks.py -f /nfs/production/flicek/ensembl/production/ensemblftp/ -r 110
@@ -46,13 +46,21 @@ from pathlib import Path
 SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
 
 # GENE-SWITCH species
-GENE_SWITCH_SPECIES = ["sus_scrofa", "gallus_gallus", "gallus_gallus_gca000002315v5"]
+GENE_SWITCH_SPECIES = [
+    "sus_scrofa",
+    "gallus_gallus",
+    "gallus_gallus_gca000002315v5",
+]
 
 PUBLIC_PUB_PATH = "PUBLIC/pub"
-DATA_FILES_PATH = "data_files/vertebrates/"
-DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/vertebrates/{species}/{assembly}/funcgen"
-RELEASE_FOLDER_PATH_TEMPLATE = "{ftp_path}/release-{release}/regulation/{species}/{assembly}"
-MISC_GENE_SWITCH_PATH_TEMPLATE = "{ftp_path}/misc/gene-switch/regulation/{species}/{assembly}"
+DATA_FILES_PATH = "data_files/"
+DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/{species}/{assembly}/funcgen"
+RELEASE_FOLDER_PATH_TEMPLATE = (
+    "{ftp_path}/release-{release}/regulation/{species}/{assembly}"
+)
+MISC_GENE_SWITCH_PATH_TEMPLATE = (
+    "{ftp_path}/misc/gene-switch/regulation/{species}/{assembly}"
+)
 
 ANALYSIS_TYPE_PEAKS = "peaks"
 ANALYSIS_TYPE_SIGNAL = "signal"
@@ -108,7 +116,6 @@ validator = Validator()
 class Utils:
     @staticmethod
     def get_species_with_analysis_type_folder(analysis_type, ftp_path):
-
         validator.analysis_type_is_valid(analysis_type)
         validator.is_dir(ftp_path)
 
@@ -116,7 +123,7 @@ class Utils:
 
         reg_species = defaultdict(set)
 
-        for (root, dirs, _) in walk(data_files_path):
+        for root, dirs, _ in walk(data_files_path):
             for species in SPECIES_TO_NOT_INCLUDE:
                 if species in dirs:
                     dirs.remove(species)
@@ -133,21 +140,21 @@ class Utils:
     def get_most_recent_release_data_file_path(data_file_path):
         validator.is_dir(Path(data_file_path))
         available_releases = listdir(data_file_path)
-        return Path(data_file_path) / str(max([int(release) for release in available_releases]))
+        return Path(data_file_path) / str(
+            max([int(release) for release in available_releases])
+        )
 
 
 utils = Utils()
 
 
 class RegulationSymlinkFTP:
-
     RELEASE_PATH_ALIASES = {
         "bGalGal1.mat.broiler.GRCg7b": "GRCg7b",
         "gallus_gallus_gca000002315v5": "gallus_gallus",
     }
 
     def __init__(self, **path_specifics):
-
         self.path_specifics = path_specifics
         self.target = Path(
             utils.get_most_recent_release_data_file_path(
@@ -156,10 +163,14 @@ class RegulationSymlinkFTP:
         )
         self.sources = {
             "release_folder": Path(
-                RELEASE_FOLDER_PATH_TEMPLATE.format(**self.aliased_paths(**path_specifics))
+                RELEASE_FOLDER_PATH_TEMPLATE.format(
+                    **self.aliased_paths(**path_specifics)
+                )
             ),
             "misc_folder": Path(
-                MISC_GENE_SWITCH_PATH_TEMPLATE.format(**self.aliased_paths(**path_specifics))
+                MISC_GENE_SWITCH_PATH_TEMPLATE.format(
+                    **self.aliased_paths(**path_specifics)
+                )
             ),
         }
 
@@ -171,18 +182,17 @@ class RegulationSymlinkFTP:
         return self.path_specifics.get(key)
 
     def symlink2rf(self, only_remove=False, relative=True):
-
         target = (
             Path(path.relpath(self.target, self.sources["release_folder"]))
+            / "peaks"
             if relative
-            else self.target
+            else self.target / "peaks"
         )
         source = self.sources["release_folder"] / self.get("analysis_type")
 
         self._symlink(source, target, only_remove)
 
-    def symlink2misc(self, only_remove=False, relative=True):
-
+    def symlink2misc(self, analysis_type, only_remove=False, relative=True):
         if self.get("species") not in GENE_SWITCH_SPECIES:
             return None, None
 
@@ -191,32 +201,39 @@ class RegulationSymlinkFTP:
 
         target = (
             Path(path.relpath(self.target, self.sources["misc_folder"]))
+            / analysis_type
             if relative
-            else self.target
+            else self.target / analysis_type
         )
         source = self.sources["misc_folder"] / self.get("analysis_type")
 
         self._symlink(source, target, only_remove)
 
     def _symlink(self, source, target, only_remove):
-
         if validator.is_symlink(source, check=True):
             source.unlink()
 
         if not only_remove:
             source.symlink_to(target, target_is_directory=True)
-            if validator.is_symlink(source):
-                logger.info(f"{source} -> {target} --- was successfully created")
+            if validator.is_symlink(source, check=True):
+                logger.info(
+                    f"{source} -> {target} --- was successfully created"
+                )
         else:
             if not validator.is_symlink(source, check=True):
                 logger.info("{source} -> {target} -- was successfully removed")
 
     def aliased_paths(self, **kwargs):
-        return {key: self.RELEASE_PATH_ALIASES.get(value, value) for key, value in kwargs.items()}
+        return {
+            key: self.RELEASE_PATH_ALIASES.get(value, value)
+            for key, value in kwargs.items()
+        }
 
     @staticmethod
     def search(analysis_type, ftp_path, release):
-        result = utils.get_species_with_analysis_type_folder(analysis_type, ftp_path)
+        result = utils.get_species_with_analysis_type_folder(
+            analysis_type, ftp_path
+        )
         return [
             RegulationSymlinkFTP(
                 analysis_type=analysis_type,
@@ -250,7 +267,11 @@ def parse_arguments():
     )
 
     required_args.add_argument(
-        "-r", "--release_version", type=int, help="Release version", required=True
+        "-r",
+        "--release_version",
+        type=int,
+        help="Release version",
+        required=True,
     )
 
     parser.add_argument(
@@ -268,21 +289,26 @@ def parse_arguments():
 
 
 if __name__ == "__main__":
-
     logger.info("Script started ...")
 
     args = parse_arguments()
     ftp_path = args.ftp_path / PUBLIC_PUB_PATH
 
     logger.info("Searching for peaks in data_files ...")
-    peaks = RegulationSymlinkFTP.search(ANALYSIS_TYPE_PEAKS, ftp_path, args.release_version)
+    peaks = RegulationSymlinkFTP.search(
+        ANALYSIS_TYPE_PEAKS, ftp_path, args.release_version
+    )
     for peak in peaks:
         peak.symlink2rf(only_remove=args.delete_symlinks)
-        peak.symlink2misc(only_remove=args.delete_symlinks)
+        peak.symlink2misc("peaks", only_remove=args.delete_symlinks)
 
     logger.info("Searching for signals in data_files ...")
-    signals = RegulationSymlinkFTP.search(ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version)
+    signals = RegulationSymlinkFTP.search(
+        ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version
+    )
     for signal in signals:
-        signal.symlink2misc(only_remove=args.delete_symlinks)
+        signal.symlink2rf(only_remove=args.release_version)
+
+        signal.symlink2misc("signal", only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")

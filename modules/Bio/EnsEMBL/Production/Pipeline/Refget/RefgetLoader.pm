@@ -109,10 +109,12 @@ sub param_defaults {
         refget_dba_group => 'refget',
         source => 'Ensembl',
         sequence_type => [qw/toplevel cdna cds pep/],
+	    max_allowed_packet => '1G',
     };
 }
 
 sub run {
+	    
     my ($self) = @_;
     my $group = $self->param('group');
     my $dba = $self->get_DBAdaptor($group);
@@ -120,21 +122,17 @@ sub run {
     $self->{'subseq'}={};
 
     $self->throw("Cannot find adaptor for type $group") unless $dba;
-    # Assumes refget is available from the multi name & refget type
-    #my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
+    ## Assumes refget is available from the multi name & refget type
+    my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
     my $extra_attributes = {};
-    #if($refget_dba->dbc()->driver() eq 'mysql') {
-    # $extra_attributes->{quote_char} = '`';
-	#}
-    #--host mysql-ens-test-1 --port 4508 --user ensadmin --pass ensembl	
- 
+    my $db_conn_string = "dbi:mysql:database=". $refget_dba->dbc()->dbname .";host=". $refget_dba->dbc()->host . ";port=". $refget_dba->dbc()->port . ";max_allowed_packet=" . $self->param('max_allowed_packet');
+
     $extra_attributes->{quote_char} = '`';
-    my $refget_schema = Refget::Schema->connect("dbi:mysql:database=ensgaarefgetpro;host=mysql-ens-production-1.ebi.ac.uk;port=xxxx;max_allowed_packet=1G",
-      "xxxx", "xxxx",  { AutoCommit => 0 }, $extra_attributes);
-    #$refget_schema->{mysql_auto_reconnect} = 1; 
-	    #asub {
-	    #return $refget_dba->dbc()->db_handle()->clone();
-	    #}, $extra_attributes);
+
+    my $refget_schema = Refget::Schema->connect($db_conn_string,
+      $refget_dba->dbc()->user, $refget_dba->dbc()->pass, $extra_attributes);
+
+
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
 

@@ -201,14 +201,13 @@ sub pipeline_analyses {
         },
         {
             -logic_name        => 'MySQL_Compress',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
             -parameters        => {
-                cmd => 'gzip -n -f "#output_filename#"',
+                compress => "#output_filename#",
             },
-            -rc_name           => '1GB',
         },
         {
             -logic_name        => 'Checksum',

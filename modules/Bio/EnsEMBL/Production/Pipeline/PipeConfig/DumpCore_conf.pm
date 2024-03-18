@@ -98,7 +98,7 @@ sub default_options {
             'mus_musculus'                     => 30081,
             'danio_rerio'                      => 30003,
             'gallus_gallus'                    => 30005,
-            'bos_taurus'                       => 30017,
+            'bos_taurus'                       => 30018,
             'oryctolagus_cuniculus'            => 30025,
             'oryzias_latipes'                  => 30026,
             'sus_scrofa'                       => 30039,
@@ -363,7 +363,8 @@ sub pipeline_analyses {
             -parameters    => { type => 'embl', },
             -hive_capacity => 50,
             -rc_name       => '4GB',
-            -flow_into     => { '-1' => 'embl_32GB', },
+            -flow_into     => { '-1' => 'embl_32GB',
+                                 '4' => 'compress_file' },
         },
 
         { -logic_name      => 'embl_32GB',
@@ -371,7 +372,9 @@ sub pipeline_analyses {
             -parameters    => { type => 'embl', },
             -hive_capacity => 50,
             -rc_name       => '32GB',
-            -flow_into     => { '-1' => 'embl_64GB', },
+            -flow_into     => { '-1' => 'embl_64GB',
+                                 '4' => 'compress_file' },
+
         },
 
         { -logic_name      => 'embl_64GB',
@@ -379,7 +382,8 @@ sub pipeline_analyses {
             -parameters    => { type => 'embl', },
             -hive_capacity => 50,
             -rc_name       => '64GB',
-            -flow_into     => { '-1' => 'embl_128GB', },
+            -flow_into     => { '-1' => 'embl_128GB',
+                                 '4' => 'compress_file' },
         },
 
         { -logic_name      => 'embl_128GB',
@@ -387,6 +391,7 @@ sub pipeline_analyses {
             -parameters    => { type => 'embl', },
             -hive_capacity => 50,
             -rc_name       => '128GB',
+            -flow_into => { '4' => 'compress_file' },
         },
 
         ### GENBANK
@@ -395,7 +400,8 @@ sub pipeline_analyses {
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
             -rc_name       => '4GB',
-            -flow_into     => { -1 => 'genbank_32GB', },
+            -flow_into     => { -1 => 'genbank_32GB',
+                                '4' => 'compress_file' },
         },
 
         { -logic_name      => 'genbank_32GB',
@@ -403,7 +409,8 @@ sub pipeline_analyses {
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
             -rc_name       => '32GB',
-            -flow_into     => { -1 => 'genbank_64GB', },
+            -flow_into     => { -1 => 'genbank_64GB',
+                                 '4' => 'compress_file' },
         },
 
         { -logic_name      => 'genbank_64GB',
@@ -411,7 +418,8 @@ sub pipeline_analyses {
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
             -rc_name       => '64GB',
-            -flow_into     => { -1 => 'genbank_128GB', },
+            -flow_into     => { -1 => 'genbank_128GB',
+                                '4' => 'compress_file' },
         },
 
         { -logic_name      => 'genbank_128GB',
@@ -419,6 +427,7 @@ sub pipeline_analyses {
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
             -rc_name       => '128GB',
+            -flow_into => { '4' => 'compress_file' },
         },
 
         ### FASTA (cdna, cds, dna, pep, ncrna)
@@ -585,6 +594,7 @@ sub pipeline_analyses {
             },
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
         },
 
         { -logic_name      => 'tsv_refseq',
@@ -595,6 +605,7 @@ sub pipeline_analyses {
             },
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
         },
 
         { -logic_name      => 'tsv_entrez',
@@ -605,6 +616,7 @@ sub pipeline_analyses {
             },
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
         },
 
 
@@ -612,12 +624,20 @@ sub pipeline_analyses {
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileEna',
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
         },
 
         { -logic_name      => 'tsv_metadata',
             -module        => 'Bio::EnsEMBL::Production::Pipeline::TSV::DumpFileMetadata',
             -hive_capacity => 50,
             -rc_name       => '2GB',
+            -flow_into  => { '4' => 'compress_file', },
+
+        },
+        { -logic_name      => 'compress_file',
+            -module        => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -hive_capacity => 50,
+            -rc_name       => '4GB',
         },
 
     ];
