@@ -56,7 +56,7 @@ jobs:
       matrix:
         perl:
         - '5.14'
-        - 5.26.2
+        - '5.26.2'
         include:
         - COVERALLS: 'true'
           DB: mysql
@@ -73,6 +73,7 @@ jobs:
       COVERALLS: 'true'
       DB: mysql
       MYSQL_ROOT_PASSWORD: "ensembl"
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
@@ -119,6 +120,7 @@ jobs:
       COVERALLS: 'true'
       DB: mysql
       MYSQL_ROOT_PASSWORD: "ensembl"
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
