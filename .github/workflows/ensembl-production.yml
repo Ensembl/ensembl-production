@@ -72,8 +72,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COVERALLS: 'true'
-      MYSQL_ALLOW_EMPTY_PASSWORD
-      MYSQL_RANDOM_ROOT_PASSWORD
       DB: mysql
     steps:
     - name: checkout
