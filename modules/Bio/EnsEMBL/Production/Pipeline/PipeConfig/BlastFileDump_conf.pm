@@ -85,10 +85,7 @@ sub default_options {
         #genome factory params
       	dataset_status => 'Submitted', #fetch genomes with dataset status submitted
     	dataset_type   => 'blast', #fetch genomes with dataset blast
-	    update_dataset_status => 'Processing', #updates dataset status to processing in new metadata db
-
-
-
+    	update_dataset_status => 'Processing', #updates dataset status to processing in new metadata db
     };
 }
 
