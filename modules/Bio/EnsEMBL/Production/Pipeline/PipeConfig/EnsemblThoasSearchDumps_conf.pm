@@ -76,6 +76,11 @@ sub default_options {
       'ENS_LRG_transcript',
     ]
 	};
+	#factory params
+	dataset_status => 'Submitted', #fetch genomes with dataset status submitted
+	dataset_type   => 'thoas_dumps', #fetch genomes with dataset thoas_dumps
+	update_dataset_status => 'Processing', #updates dataset status to processing in new metadata db
+
 }
 
 sub pipeline_wide_parameters {
@@ -99,7 +104,7 @@ sub hive_meta_table {
 sub pipeline_analyses {
   my ($self) = @_;
   return [
-    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::pipeline_analyses($self)},
+    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
     {
       -logic_name => 'SpeciesFactory',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',
