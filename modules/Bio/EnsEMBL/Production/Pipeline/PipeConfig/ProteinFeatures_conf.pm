@@ -227,12 +227,12 @@ sub default_options {
         ipscan_xml      => 'TMHMM',
         ipscan_lookup   => 0,
       },
+      #seg replaces low complexity regions in protein sequences with X characters(https://rothlab.ucdavis.edu/genhelp/seg.html)
       {
         logic_name      => 'seg',
         db              => 'Seg',
       },
     ],
-
     xref_analyses =>
     [
       {
