@@ -63,6 +63,9 @@ jobs:
     services:
       mysql:
         image: mysql
+        env:
+          MYSQL_ROOT_PASSWORD: "ensembl"
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     env:
       COVERALLS: "${{ matrix.COVERALLS }}"
       DB: "${{ matrix.DB }}"
@@ -72,8 +75,6 @@ jobs:
     env:
       COVERALLS: 'true'
       DB: mysql
-      MYSQL_ROOT_PASSWORD: "ensembl"
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
@@ -114,13 +115,14 @@ jobs:
     services:
       mysql:
         image: mysql
+        env:
+          MYSQL_ROOT_PASSWORD: "ensembl"
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
   test_3:
     runs-on: ubuntu-latest
     env:
       COVERALLS: 'true'
       DB: mysql
-      MYSQL_ROOT_PASSWORD: "ensembl"
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
@@ -161,3 +163,6 @@ jobs:
     services:
       mysql:
         image: mysql
+        env:
+          MYSQL_ROOT_PASSWORD: "ensembl"
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
