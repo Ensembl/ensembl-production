@@ -56,7 +56,6 @@ sub default_options {
         'genome_uuid' => [],
         'dataset_uuid' => [],
         'division' => [],
-        'dataset_type' => [],
         'dataset_status' => 'Submitted',
         'organism_group_type' => 'DIVISION',
         'species' => [],
