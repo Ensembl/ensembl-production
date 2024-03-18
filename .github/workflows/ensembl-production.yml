@@ -1,6 +1,4 @@
 name: Ensembl/ensembl-production
-env:
-  MYSQL_ROOT_PASSWORD: ensembl
 on:
   push:
     branches:
@@ -68,11 +66,13 @@ jobs:
     env:
       COVERALLS: "${{ matrix.COVERALLS }}"
       DB: "${{ matrix.DB }}"
+      MYSQL_ROOT_PASSWORD: "ensembl"
   test_2:
     runs-on: ubuntu-latest
     env:
       COVERALLS: 'true'
       DB: mysql
+      MYSQL_ROOT_PASSWORD: "ensembl"
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
@@ -118,6 +118,7 @@ jobs:
     env:
       COVERALLS: 'true'
       DB: mysql
+      MYSQL_ROOT_PASSWORD: "ensembl"
     steps:
     - name: checkout
       uses: actions/checkout@v4.1.0
