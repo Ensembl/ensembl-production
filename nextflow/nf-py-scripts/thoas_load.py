@@ -23,16 +23,9 @@ Generate Thoas Config file
 import argparse
 import logging
 import sys
-import json
-import configparser 
-import json
-import os 
-from datetime import datetime
 import subprocess
-
-from ensembl.create_collection_schema import create_collection_and_schema
 from ensembl.util.mongo import MongoDbClient
-from ensembl.load_metadata import load_metadata
+from ensembl.load_base_data import load_base_data
 from ensembl.util.utils import load_config
 
 def main():  
@@ -48,10 +41,10 @@ def main():
                       required=True,
                       help='thoash genome loading  scripts path')
   
-  ARG_PARSER.add_argument('-l', '--load_metadata',  
+  ARG_PARSER.add_argument('-l', '--load_base_data',
                       action='store_true',
-                      help='Create Mongo Collection declared in config file')
-  
+                      help='Load the genome metadata ')
+
   ARG_PARSER.add_argument('-a', '--load_species',  
                       action='store_true',
                       help='Flag to load species genome features')
@@ -79,22 +72,23 @@ def main():
 
   CONF_PARSER = load_config(CLI_ARGS.config)
 
-  mongo_collection_name = CONF_PARSER["MONGO DB"]["collection"]
-  if CLI_ARGS.load_metadata:
-    #create collection and load 
-    MONGO_CLIENT = MongoDbClient(CONF_PARSER, mongo_collection_name)
-    create_collection_and_schema(MONGO_CLIENT)
-    load_metadata(CONF_PARSER, MONGO_CLIENT)
-    
+
+
+  if CLI_ARGS.load_base_data:
+    #create collection and load
+    MONGO_CLIENT = MongoDbClient(CONF_PARSER)
+    load_base_data(CONF_PARSER, MONGO_CLIENT)
+
+
   if CLI_ARGS.load_species:
     try:
       if not CLI_ARGS.species_name:
         raise("missing species name to load the thoas mongo")
-      load_each_species(CONF_PARSER, CLI_ARGS, mongo_collection_name)
+      load_each_species(CONF_PARSER, CLI_ARGS)
     except Exception as e:
       raise(str(e))
 
-def load_each_species (CONF_PARSER, CLI_ARGS, mongo_collection_name):
+def load_each_species (CONF_PARSER, CLI_ARGS):
   species_details = CONF_PARSER[CLI_ARGS.species_name]
   
   # Get extra parameters from the GENERAL section.
@@ -103,10 +97,10 @@ def load_each_species (CONF_PARSER, CLI_ARGS, mongo_collection_name):
   section_args["config_file"] = CLI_ARGS.config
   section_args["section_name"] = CLI_ARGS.species_name
   
-  run_assembly(mongo_collection_name, CLI_ARGS, args=section_args)
+  run_assembly(CLI_ARGS, args=section_args)
 
   
-def run_assembly(mongo_collection_name, CLI_ARGS, args):
+def run_assembly(CLI_ARGS, args):
     """
     Successively run all the other loading scripts
     """
@@ -129,7 +123,7 @@ def run_assembly(mongo_collection_name, CLI_ARGS, args):
     if CLI_ARGS.extract_genomic_features:
       shell_extract_command={}
       shell_extract_command['cds'] = f"""
-        perl {CLI_ARGS.code_path}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]} --species_production={args["species_production"]} --assembly='{args["assembly"]}' --division={args["division"]}    
+        perl {CLI_ARGS.code_path}/extract_cds_from_ens.pl --host={args["host"]} --user={args["user"]} --port={args["port"]} --species={args["production_name"]}  --assembly='{args["assembly"]}' --division={args["division"]}    
       """
       shell_extract_command['genes'] = f"""
         python {CLI_ARGS.code_path}/prepare_gene_name_metadata.py --section_name {args["section_name"]} --config_file {args["config_file"]}
@@ -144,19 +138,18 @@ def run_assembly(mongo_collection_name, CLI_ARGS, args):
     if CLI_ARGS.load_genomic_features:
       shell_load_command = {}
       shell_load_command['genome'] = f"""
-        python {CLI_ARGS.code_path}/load_genome.py --data_path {data_path} --species {args["production_name"]} --section_name {args["section_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]} --mongo_collection={mongo_collection_name}
+        python {CLI_ARGS.code_path}/load_genome.py --data_path {data_path} --species {args["production_name"]} --section_name {args["section_name"]} --config_file {args["config_file"]} {collection_param} --assembly={args["assembly"]} --release={args["release"]}
       """
       shell_load_command['genes'] = f"""
-        python {CLI_ARGS.code_path}/load_genes.py --data_path {data_path} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly='{args["assembly"]}' --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} --mongo_collection={mongo_collection_name} {log_faulty_urls}
+        python {CLI_ARGS.code_path}/load_genes.py --data_path {data_path} --classifier_path {args["classifier_path"]} --species {args["production_name"]} --config_file {args["config_file"]} {collection_param} --assembly='{args["assembly"]}' --xref_lod_mapping_file={args["xref_lod_mapping_file"]} --release={args["release"]} {log_faulty_urls}
       """
       shell_load_command['regions'] = f"""
-        python {CLI_ARGS.code_path}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]} --mongo_collection={mongo_collection_name}
+        python {CLI_ARGS.code_path}/load_regions.py --section_name {args["section_name"]} --config_file {args["config_file"]}
       """
       for each_feature in CLI_ARGS.load_genomic_features_type:
         log_filename = f"{CLI_ARGS.species_name}.load.{each_feature}.log"
         run_subprocess(shell_load_command[each_feature], log_filename )
         
-
 
 def run_subprocess(cmd, log_filename):
   
