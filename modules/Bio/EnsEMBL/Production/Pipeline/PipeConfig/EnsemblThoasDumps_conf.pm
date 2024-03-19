@@ -75,11 +75,11 @@ sub default_options {
       'ENS_LRG_gene',
       'ENS_LRG_transcript',
     ]
-	};
 	#factory params
 	dataset_status => 'Submitted', #fetch genomes with dataset status submitted
 	dataset_type   => 'thoas_dumps', #fetch genomes with dataset thoas_dumps
 	update_dataset_status => 'Processing', #updates dataset status to processing in new metadata db
+  };
 }
 
 sub pipeline_wide_parameters {
