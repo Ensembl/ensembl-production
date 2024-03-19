@@ -56,8 +56,7 @@ sub default_options {
         'genome_uuid' => [],
         'dataset_uuid' => [],
         'division' => [],
-        'dataset_type' => [],
-        'dataset_status' => [],
+        'dataset_status' => 'Submitted',
         'organism_group_type' => 'DIVISION',
         'species' => [],
         'antispecies' => [],
@@ -73,7 +72,7 @@ sub default_options {
     };
 }
 
-sub pipeline_analyses {
+sub factory_analyses {
   my $self = shift @_;
 
   return [

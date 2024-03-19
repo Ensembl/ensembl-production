@@ -81,8 +81,11 @@ sub default_options {
         #blast param for new site
         'hardmasked'          => 1,
         'cds'                 => 1,   
-        'timestamped_dir'     => 1,         
-
+        'timestamped_dir'     => 1,
+        #genome factory params
+      	'dataset_status' => 'Submitted', #fetch genomes with dataset status submitted
+    	'dataset_type'   => 'blast', #fetch genomes with dataset blast
+    	'update_dataset_status' => 'Processing', #updates dataset status to processing in new metadata db
     };
 }
 
@@ -119,7 +122,7 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::pipeline_analyses($self)},
+    @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             -logic_name        => 'SpeciesFactory',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SpeciesFactory',

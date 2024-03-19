@@ -26,9 +26,22 @@ class HiveGenomeFactory(eHive.BaseRunnable):
     
     def fetch_input(self):
 
-        dataset_status = self.param("dataset_status")
-        if dataset_status is None:
-            self.param('dataset_status', ['Submitted'])
+        for param in ['dataset_status', 'dataset_type']:
+            if not self.param_is_defined(param):
+                raise KeyError(f"Missing Required Param {param}")
+
+            if not isinstance(self.param('dataset_status'), list):
+                self.param('dataset_status', [param_value for param_value in self.param(param).split(',')])
+
+        if not self.param_is_defined('update_dataset_status') or \
+                not isinstance(self.param('update_dataset_status'), str) \
+                or self.param('update_dataset_status') not in ['Submitted',
+                                                               'Processing',
+                                                               'Processed',
+                                                               'Released']:
+
+            raise KeyError("""Missing Required Param update_dataset_status or 
+                            Param update_dataset_status is not a type string""")
 
     def run(self):
         # default status updated to processing
