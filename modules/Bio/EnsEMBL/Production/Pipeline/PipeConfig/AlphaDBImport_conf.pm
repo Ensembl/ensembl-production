@@ -62,7 +62,6 @@ sub default_options {
 
     return {
         %{$self->SUPER::default_options()},
-        rest_server  => 'https://www.ebi.ac.uk/gifts/api/',
         user_r       => 'ensro',
         species      => [],
         division     => [],
@@ -72,7 +71,6 @@ sub default_options {
         user         => 'ensadmin',
         alphafold_data_file => '/nfs/ftp/public/databases/alphafold/accession_ids.csv',
         uniparc_data_file => '/nfs/ftp/public/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz',
-        gifts_dir    => '',
         pipeline_db  => {
             -driver => $self->o('hive_driver'),
             -host   => $self->o('pipe_db_host'),
@@ -81,6 +79,13 @@ sub default_options {
             -pass   => $self->o('password'),
             -dbname => $self->o('dbowner').'_alphafold_'.$self->o('pipeline_name').'_pipe',
         },
+
+        'dataset_type' => 'alpha_fold',
+        'genome_factory_dynamic_output_flow' => {
+                      '3->A'    => { 'start'  => INPUT_PLUS()  },
+                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
+
     };
 }
 
@@ -97,17 +102,20 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     my @analyses = (
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             # branch out to the two copy jobs and the species factory
             -logic_name => 'start',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -input_ids       => [{}],
             -meadow_type     => 'LOCAL',
             -flow_into  => {
-                '1' => [
+                '1->A' => [
                     'copy_alphafold',
                     'copy_uniparc',
                     'species_factory'
+                ],
+                'A->1' => [
+                    'cleanup'
                 ],
             },
         },
@@ -158,8 +166,7 @@ sub pipeline_analyses {
                 antispecies => $self->o('antispecies'),
             },
             -flow_into  => {
-                '2->A' => [ 'insert_features' ],
-                'A->1' => [ 'cleanup' ]
+                '2' => [ 'insert_features' ],
             },
             -rc_name    => '500M',
         },
@@ -167,9 +174,8 @@ sub pipeline_analyses {
             -logic_name => 'insert_features',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::AlphaFold::InsertProteinFeatures',
             -parameters => {
-                rest_server => $self->o('rest_server'),
                 db_dir => $self->o('scratch_large_dir'),
-                gifts_dir => $self->o('gifts_dir'),
+                gifts_pass => $self->o('gifts_pass'),
             },
             -wait_for => [
                 'create_alphafold_db',
@@ -187,8 +193,18 @@ sub pipeline_analyses {
             -parameters => {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
-            -flow_into  => 'report',
             -rc_name    => '200M',
+        },
+        {
+            -logic_name        => 'cleanup',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -flow_into  => {
+                '1' => [ 'report' ]
+            },
+            -parameters        => {
+                cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
+            },
         },
         {
             -logic_name        => 'report',
@@ -198,14 +214,6 @@ sub pipeline_analyses {
             -parameters        => {
                 dbname        => $self->o('pipeline_db')->{'-dbname'},
                 email         => $self->o('email'),
-            },
-        },
-        {
-            -logic_name        => 'cleanup',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -parameters        => {
-                cmd => 'rm -rf ' . $self->o('scratch_large_dir'),
             },
         },
     );
