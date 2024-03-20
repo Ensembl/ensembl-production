@@ -82,7 +82,17 @@ sub default_options {
         rr_ens_version         => $self->o('ENV', 'RR_ENS_VERSION'),
         ref_dbname             => 'ensembl_compara_references',
         compara_host_uri       => '',
-        species_dirname        => 'organisms'
+        species_dirname        => 'organisms',
+
+        #genome factory params
+      	dataset_status         => 'Submitted', #fetch genomes with dataset status submitted
+    	dataset_type           => 'ftp_dumps', #fetch genomes with dataset blast
+    	update_dataset_status  => 'Processed', #updates dataset status to processing in new metadata db
+        genome_factory_dynamic_output_flow => {
+                      '3->A'    => { 'FileDump'  => INPUT_PLUS()  },
+                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
+
     };
 }
 
@@ -119,12 +129,13 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             -logic_name        => 'FileDump',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count   => 1,
             -analysis_capacity => 1,
-            -input_ids         => [ {} ],
+#            -input_ids         => [ {} ],
             -parameters        => {},
             -flow_into         => {
                 '1' => WHEN('#dump_metadata#' =>
