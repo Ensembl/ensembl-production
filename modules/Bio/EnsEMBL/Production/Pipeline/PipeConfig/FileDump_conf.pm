@@ -87,7 +87,7 @@ sub default_options {
         #genome factory params
       	dataset_status         => 'Submitted', #fetch genomes with dataset status submitted
     	dataset_type           => 'ftp_dumps', #fetch genomes with dataset blast
-    	update_dataset_status  => 'Processed', #updates dataset status to processing in new metadata db
+    	update_dataset_status  => 'Processing', #updates dataset status to processing in new metadata db
         genome_factory_dynamic_output_flow => {
                       '3->A'    => { 'FileDump'  => INPUT_PLUS()  },
                       'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
