@@ -27,7 +27,7 @@ class MetadataUpdaterHiveProcessDb(BaseProdRunnable):
             self.param("database_uri", payload["input"].get("database_uri", None))
             self.param_required("database_uri")
             self.param("email", payload["input"].get("email", None))
-            self.param("genome_metadata_uri", payload["input"].get("genome_metadata_uri", None))
+            self.param("genome_metadata_uri", payload["input"].get("metadata_uri", None))
             self.param_required("genome_metadata_uri")
             self.param("source", payload["input"].get("source", None))
             self.param("timestamp", payload["input"].get("timestamp", None))
