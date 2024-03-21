@@ -45,6 +45,8 @@ sub default_options {
         'species'        => [],
         'antispecies'    => [],
         'division'       => [],
+        'run_all'        => 0,
+        'meta_filters'   => {},
         'dbname'         => undef,
         #checksum params
         'sequence_type'  => [],
@@ -52,6 +54,12 @@ sub default_options {
         #For the new metadata
         'populate_mvp'   => 1,
         'metadata_uri'   => undef,
+        #genome factory params
+    	'dataset_type'   => 'checksums', #fetch genomes with dataset blast
+        'genome_factory_dynamic_output_flow' => {
+              '3->A'    => { 'init_checksum'  => INPUT_PLUS()  },
+              'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
     };
 }
 
@@ -84,16 +92,17 @@ sub pipeline_wide_parameters {
         'hash_types'     => $self->o('hash_type'),
         'populate_mvp' => $self->o('populate_mvp'),
     };
+
 }
 
 sub pipeline_analyses {
     my ($self) = @_;
 
     return [
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             -logic_name    => 'init_checksum',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -input_ids     => [{}],
             -flow_into     => {'1->A' => 'species_factory', 'A->1' => 'email_report'}
         },
         {
