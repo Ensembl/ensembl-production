@@ -23,7 +23,7 @@ Bio::EnsEMBL::Compara::PipeConfig::HomologyAnnotation_conf
 =head1 SYNOPSIS
 
     init_pipeline.pl Bio::EnsEMBL::Production::Pipeline::PipeConfig::EnsemblHomologyAnnotation_conf -host mysql-ens-compara-prod-X -port XXXX \
-         -dataset_type  -dataset_status Submitted -metadata_db_uri mysql://ensadmin:ensembl@mysql-ens-test-1:4508/ensembl_genome_metadata
+         -dataset_type  -dataset_status Submitted -metadata_db_uri mysql://localhost:3366/ensembl_genome_metadata
 
 =head1 DESCRIPTION
 
