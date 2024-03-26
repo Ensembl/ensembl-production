@@ -72,6 +72,7 @@ def main():
             query = query.filter(Genome.production_name in species_list)
         datasets: List[Row] = session.execute(query).all()
         for row in datasets:
+            print(f"Processing {row.Genome.production_name} ")
             ftp_path = row.Genome.get_public_path(dataset_type='variation')
             dest_dir_path = Path(f"{args.tgt_root}/{ftp_path[0]['path']}")
 
