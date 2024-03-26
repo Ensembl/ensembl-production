@@ -35,7 +35,7 @@ def main():
         description='Copy submitted VCF files onto FTP related genome directory'
     )
     parser.add_argument('--tgt-root', type=str, required=True)
-    parser.add_argument('--dry-run', type=bool, action='store_true')
+    parser.add_argument('--dry-run', action='store_true', required=False)
     parser.add_argument('-g', '--genome_uuid', type=str, nargs='*', required=False, default=None,
                         help='genome UUID, ex: a23663571,b236571')
     parser.add_argument('-s', '--species', type=str, nargs='*', required=False, default=None,
@@ -60,7 +60,6 @@ def main():
             species_list = list(args.species)
             query = query.filter(Genome.production_name in species_list)
         datasets: List[Row] = session.execute(query).all()
-        out_path = Path(args.tgt_root)
         for row in datasets:
             ftp_path = row.Genome.get_public_path(dataset_type='variation')
             dest_dir_path = Path(f"{args.tgt_root}/{ftp_path[0]['path']}")
@@ -82,7 +81,7 @@ def main():
                 # Copy the file
                 if not args.dry_run:
                     shutil.copy2(src_file, dest_file)
-                print(f"File '{src_file}' copied to '{dest_file}' successfully.")
+                print(f"File '{src_file}' >> '{dest_file}' successfully.")
             except Exception as e:
                 print(f"Error occurred while copying file: {e}")
 
