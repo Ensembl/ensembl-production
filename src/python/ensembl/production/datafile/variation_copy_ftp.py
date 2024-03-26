@@ -80,16 +80,16 @@ def main():
                 print(f"File '{src_file}' >> '{dest_file}'")
                 if not args.dry_run:
                     shutil.copy2(src_file, dest_file)
+                    try:
+                        # update dataset to its new source path
+                        stmt = update(DatasetSource).values(name=dest_file).execution_options(
+                            synchronize_session="fetch")
+                        session.execute(stmt)
+                    except Exception as e:
+                        print(f"Unable to update corresponding DatasetSource with new file path {e}")
                 print("..... copied!")
-                row.DatasetSource.name = dest_file
             except Exception as e:
                 print(f"Error occurred while copying file: {e}")
-            try:
-                # update dataset to its new source path
-                if not args.dry_run:
-                    update(row.DatasetSource.update({'name': dest_file}))
-            except Exception as e:
-                print(f"Unable to update corresponding DatasetSource with new file path {e}")
 
 
 if __name__ == '__main__':
