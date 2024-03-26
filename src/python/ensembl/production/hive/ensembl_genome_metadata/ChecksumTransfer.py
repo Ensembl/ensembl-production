@@ -29,6 +29,7 @@ class ChecksumTransfer(BaseProdRunnable):
                 sha512t24u = 1
         elif "sha512t24u" in hash_type:
             sha512t24u = 1
+            md5 = 0
         else:
             md5 = 1
             sha512t24u = 1

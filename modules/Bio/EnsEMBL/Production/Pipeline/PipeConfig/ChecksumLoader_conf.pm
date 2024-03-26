@@ -98,7 +98,7 @@ sub pipeline_analyses {
                           },
       -hive_capacity   => -1,
       -max_retry_count => 1,
-      -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
+      -flow_into        => {2 => 'uri_generator'},
       -rc_name           => 'default',
         },
         {
@@ -115,7 +115,7 @@ sub pipeline_analyses {
             -language        => 'python3',
             -max_retry_count   => 1,
             -parameters        => {
-                sequence_types => $self->o('hash_type'),
+                hash_type => $self->o('hash_type'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
             -rc_name           => 'default',
