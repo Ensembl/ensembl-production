@@ -13,7 +13,7 @@
 """Production Variation VCF sync script tp target ftp"""
 import logging
 import os
-import shutil
+import subprocess
 from pathlib import Path
 from typing import List
 
@@ -25,6 +25,19 @@ from sqlalchemy.engine import Row
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
+
+
+def rsync(source, destination):
+    try:
+        # Construct the rsync command
+        rsync_cmd = ["rsync", "-av", source, destination]
+
+        # Execute the rsync command
+        subprocess.run(rsync_cmd, check=True)
+
+        print(f"rsync completed successfully from '{source}' to '{destination}'.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred during rsync: {e}")
 
 
 def main():
@@ -79,7 +92,7 @@ def main():
                 # Copy the file
                 print(f"File '{src_file}' >> '{dest_file}'")
                 if not args.dry_run:
-                    shutil.copy2(src_file, dest_file)
+                    rsync(src_file, dest_dir_path)
                     try:
                         # update dataset to its new source path
                         stmt = update(DatasetSource).values(name=dest_file).execution_options(
