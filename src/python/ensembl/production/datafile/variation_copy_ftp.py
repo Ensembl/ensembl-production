@@ -95,7 +95,7 @@ def main():
                     rsync(src_file, dest_dir_path)
                     try:
                         # update dataset to its new source path
-                        stmt = update(DatasetSource).values(name=dest_file).execution_options(
+                        stmt = update(DatasetSource).values(name=f"{dest_dir_path}/{dest_file}").execution_options(
                             synchronize_session="fetch")
                         session.execute(stmt)
                     except Exception as e:
