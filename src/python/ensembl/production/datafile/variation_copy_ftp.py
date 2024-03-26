@@ -96,8 +96,7 @@ def main():
                     rsync(src_file, dest_dir_path)
                     try:
                         # update dataset to its new source path
-                        stmt = update(DatasetSource).values(name=f"{dest_dir_path}/{dest_file}").execution_options(
-                            synchronize_session="fetch")
+                        stmt = update(DatasetSource).values(name=dest_file)
                         session.execute(stmt)
                     except Exception as e:
                         print(f"Unable to update corresponding DatasetSource with new file path {e}")
