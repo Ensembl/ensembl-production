@@ -110,6 +110,7 @@ def main():
                             row.Dataset.status = DatasetStatus.PROCESSED
                             session.execute(update(Dataset).values(status=row.Dataset.status).where(
                                 DatasetSource.dataset_source_id == row.DatasetSource.dataset_source_id))
+                        session.commit()
                     except exc.DatabaseError as e:
                         print(f"Unable to update corresponding DatasetSource with new file path {e}")
 
