@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #  See the NOTICE file distributed with this work for additional information
 #  regarding copyright ownership.
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +21,6 @@ from ensembl.database import DBConnection
 from ensembl.production.metadata.api.models import *
 from ensembl.utils import argparse
 from sqlalchemy import select
-from ensembl.production.metadata.api.factories.datasets import DatasetFactory
-
-from ensembl.production.metadata.api.factories.genomes import GenomeFactory
 from sqlalchemy.engine import Row
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
