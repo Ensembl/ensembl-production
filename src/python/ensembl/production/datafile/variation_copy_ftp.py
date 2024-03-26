@@ -20,7 +20,7 @@ from typing import List
 from ensembl.database import DBConnection
 from ensembl.production.metadata.api.models import *
 from ensembl.utils import argparse
-from sqlalchemy import select, update
+from sqlalchemy import select, update, exc
 from sqlalchemy.engine import Row
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -58,15 +58,16 @@ def main():
     args = parser.parse_args()
     # Should be using GenomeFactory to fetch genomes with a dataset of type name 'vcf'
     logger.info(f'Get Genomes ')
+    # TODO UPDATE corresponding dataset status, first filter should be 'Submitted' and dataset_type 'vcf'
     with DBConnection(args.metadata_db_uri).session_scope() as session:
-        query = select(Genome,
-                       Dataset,
-                       DatasetSource).select_from(Genome) \
-            .join(GenomeDataset, Genome.genome_id == GenomeDataset.genome_id) \
-            .join(Dataset, GenomeDataset.dataset_id == Dataset.dataset_id) \
-            .join(DatasetSource) \
-            .join(DatasetType, Dataset.dataset_type_id == DatasetType.dataset_type_id) \
-            .filter(DatasetType.name == 'variation')
+        query = (select(Genome,
+                        Dataset,
+                        DatasetSource).select_from(Genome) \
+                 .join(GenomeDataset, Genome.genome_id == GenomeDataset.genome_id) \
+                 .join(Dataset, GenomeDataset.dataset_id == Dataset.dataset_id) \
+                 .join(DatasetSource) \
+                 .join(DatasetType, Dataset.dataset_type_id == DatasetType.dataset_type_id) \
+                 .filter(DatasetType.name == 'variation'))
         if args.species is not None:
             species_list = list(args.species)
             query = query.filter(Genome.production_name in species_list)
@@ -93,14 +94,25 @@ def main():
                 # Copy the file
                 print(f"File '{src_file}' >> '{dest_file}'")
                 if not args.dry_run:
-                    rsync(src_file, dest_dir_path)
                     try:
+                        # TODO Use the DatasetFactory
+                        if row.Dataset.status == DatasetStatus.SUBMITTED:
+                            row.Dataset.status = DatasetStatus.PROCESSING
+                            session.execute(update(Dataset).values(status=row.Dataset.status).where(
+                                DatasetSource.dataset_source_id == row.DatasetSource.dataset_source_id))
+                        rsync(src_file, dest_dir_path)
                         # update dataset to its new source path
                         stmt = update(DatasetSource).values(name=dest_file).where(
                             DatasetSource.dataset_source_id == row.DatasetSource.dataset_source_id)
                         session.execute(stmt)
-                    except Exception as e:
+                        # TODO Use the DatasetFactory
+                        if row.Dataset.status == DatasetStatus.PROCESSING:
+                            row.Dataset.status = DatasetStatus.PROCESSED
+                            session.execute(update(Dataset).values(status=row.Dataset.status).where(
+                                DatasetSource.dataset_source_id == row.DatasetSource.dataset_source_id))
+                    except exc.DatabaseError as e:
                         print(f"Unable to update corresponding DatasetSource with new file path {e}")
+
                 print("..... copied!")
             except Exception as e:
                 print(f"Error occurred while copying file: {e}")
