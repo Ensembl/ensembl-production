@@ -3,8 +3,9 @@
 nextflow.enable.dsl=2
 
 include {
-  GenerateThoasConfigFile;
-} from '../modules/thoasCommonProcess'
+  SolrDumps;
+  SolrIndex;
+} from '../modules/genesearchsolrCommonProcess.nf'
 
 include {
   GenomeInfo
@@ -20,14 +21,15 @@ println """\
          =========================================================================
          This Pipeline Generates JSON Files For SOLR(Search Engine)
          debug                 : ${params.debug}
-         release               : ${params.release}
          genome_uuid           : ${params.genome_uuid}
-         species_name          : ${params.species}
+         species               : ${params.species}
          dataset_type          : ${params.dataset_type}
          dataset_status        : ${params.dataset_status}
-         outdir                : ${params.solr_data_location}
          solr_data_location    : ${params.solr_data_location}
-         solr_config_filename  : ${params.solr_data_location}/${params.solr_config_filename}
+         workDir               : ${workDir}
+         load_solr_index       : ${params.load_solr_index}
+         solr_hosts            : ${params.solr_hosts}
+         solr_collection       : ${params.solr_collection}
          """
          .stripIndent()
 
@@ -50,9 +52,6 @@ nextflow run geneSearchForSolr.nf <ARGUMENTS>
   --dataset_type           Ensembl genome source dataset
                            Ex: assembly, geneset
 
-  --solr_config_filename   config filename, contains the species information similar to thoas conf 
-                           Ex: load-110.conf
-
   --release                ensembl release version default set from env variable ENS_VERSION
                            Ex: 110
 
@@ -60,38 +59,20 @@ nextflow run geneSearchForSolr.nf <ARGUMENTS>
   --solr_data_location     path to solor output data location
                            default: ${params.solr_data_location}
 
-  --metadata_db_host      metadata database host name
-                          default: ${params.metadata_db_host}
+  --metadata_db_uri       metadata database uri
+                          default: ${params.metadata_db_uri}
 
-  --metadata_db_port      metadata database port details
-                          default: ${params.metadata_db_port}
+  --core_db_uri           core database uri
+                          default: "${params.coredb_uri}"
 
-  --metadata_db_user      metadata database user name
-                          default: ${params.metadata_db_user}
+  --load_solr_index       Load Gene index file into solr
+                          default: 0
 
-  --metadata_db_dbname    metadata database name
-                          default: ${params.metadata_db_dbname}
+  --solr_hosts            Source solr url to load the gene indexes, load to multiple solr host
+                          Ex: http://localhost-1.caas.ebi.ac.uk:32423,http://localhost-2.caas.ebi.ac.uk:32423
 
-  --taxonomy_db_dbname    ncbi taxonomy database name
-                          default: ${params.taxonomy_db_dbname}
-
-  --metadata_db_password  metadata database passwrod
-                          default: ${params.metadata_password}
-
-  --mongo_db_host         mongo database host name
-                          default: ${params.mongo_host}
-
-  --mongo_db_port         mongo database port details
-                          default: ${params.mongo_port}
-
-  --core_db_host          core database host name
-                          default: "${params.coredb_host}"
-
-  --core_db_port          core database port
-                          default: "${params.coredb_port}"
-
-  --core_db_user          core database user
-                          default: "${params.coredb_user}"
+  --solr_collection       Solr Collection name
+                          Ex: genename
 
   """.stripIndent()
 }
@@ -104,8 +85,8 @@ workflow {
     }
 
     //set user params as list
-    metadata_db_password  = (params.metadata_db_password != true || params.metadata_db_password=="") ?  '' : ":${params.metadata_db_password}"
-    metadata_db_uri       = "mysql://${params.metadata_db_user}${metadata_db_password}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
+    metadata_db_uri       = params.metadata_db_uri
+    core_host_uri         = params.core_host_uri
     update_dataset_status = params.update_dataset_status
     batch_size            = params.batch_size
     page                  = params.page
@@ -118,19 +99,37 @@ workflow {
     antispecies           = convertToList(params.antispecies)
     dataset_status        = convertToList(params.dataset_status)
     columns               = convertToList(params.columns)
-    
+    solr_hosts            = convertToList(params.solr_hosts)
+    solr_collection       = params.solr_collection
+    def jsonSlurper = new groovy.json.JsonSlurper()
     output_json     = 'genome_info.json'
     GenomeInfo( metadata_db_uri, genome_uuid, dataset_uuid,
                 organism_group_type, division, dataset_type,
                 species, antispecies, dataset_status, update_dataset_status,
                 batch_size, page, columns, output_json
     )
-//    GenerateThoasConfigFile(GenomeInfo.out[0])
-   SolrDumps(GenerateThoasConfigFile.out[0], GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')} )
-// SolrIndex()
+
+    SolrDumps(
+        core_host_uri,
+        GenomeInfo.out[0].splitText().map {
+            jsonSlurper.parseText(it.replaceAll('\n', ''))
+        }
+    )
+    // Execute only if flag params.load_solr_index is set
+    //SolrDumps.out[0].combine(solr_hosts).combine([solr_collection])
+    if(params.load_solr_index == 1){
+        SolrIndex(SolrDumps.out[0], solr_hosts, solr_collection)
+    }
+
+}
+
+workflow SolrIndexLoad {
+    main:
+        index_ch = Channel.fromPath( "${params.solr_data_location}/*.json" )
+        SolrIndex(index_ch, params.solr_hosts, params.solr_collection)
 }
 
 workflow.onComplete {
     println "Pipeline completed at: $workflow.complete"
-    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+    println "Execution status: ${ workflow.success ? 'OK' : 'FAILED' }"
 }

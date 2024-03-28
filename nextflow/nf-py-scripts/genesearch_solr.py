@@ -146,17 +146,15 @@ def fetch_gene_info(core_db_connection, specie_production_name, genome_uuid):
     )
     with DBConnection(core_db_connection).session_scope() as session:
         session.execute(query).fetchall()
+        count = 0
         for gene in session.execute(query).fetchall():
+            count += 1
             yield format_to_solr(gene._asdict(), genome_uuid)
 
-
-def is_valid_genome_info(genome):
-    genome_info = json.loads(genome)
-    required_keys = ['genome_uuid', 'species', 'division', 'database_name']
-    if required_keys not in genome_info:
-        raise argparse.ArgumentTypeError(f"Required keys {required_keys} are missing")
-
-    return genome
+        if not count:
+            logger.error(
+                f"No Genes Fetched, Might be issue in Xref ids Not Linked to Gene"
+            )
 
 
 def is_valid_data_path(path):
@@ -249,8 +247,18 @@ if __name__ == "__main__":
         description="Create Json dumps for solr indexing"
     )
     parser.add_argument(
-        "--genome_info",
-        help="Genome information form new metadata db in json string ",
+        "--genome_uuid",
+        help="Unique uuid string for a genome ",
+        required=True
+    )
+    parser.add_argument(
+        "--species",
+        help="Ensembl Species Production Name",
+        required=True
+    )
+    parser.add_argument(
+        "--division",
+        help="Ensembl Species Division Name ex: vertebrates",
         required=True
     )
     parser.add_argument(
@@ -260,7 +268,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--core_db_uri",
-        help="Genome information form new metadata db in json string ",
+        help="Ensembl core db host uri ex: mysql://localhost:3306/homo_sapiens_core_110_38",
+    )
+    parser.add_argument(
+        '--output', type=str,
+        help='output file ex: <genome_uuid>_toplevel_solr.json'
     )
 
     ARGS = parser.parse_args()
@@ -271,22 +283,18 @@ if __name__ == "__main__":
     if ARGS.data_path and ARGS.core_db_uri:
         raise argparse.ArgumentTypeError(f"One of the param required --data_path or --core_db_uri")
 
-    genome_info = json.loads(ARGS.genome_info)
-    database_name = genome_info.get("database_name", None)
-    species = genome_info.get("species", None)
-    division = genome_info.get("division", None)
-
-    logger.info(
-        f"Generating Genesearch index files for species : {species}"
-    )
+    species = ARGS.species
+    division = ARGS.division
+    genome_uuid = ARGS.genome_uuid
     db_collection_regex = re.compile(
         r'^(?P<prefix>\w+_collection)_(?P<type>core|rnaseq|cdna|otherfeatures|variation|funcgen)(_\d+)?_(\d+)_(?P<assembly>\d+)$')
     # replace division name with production division name
     pattern = re.compile(r'^(ensembl)?', re.IGNORECASE)
     division = pattern.sub('', division).lower()
 
-    # collection species have different dir path
-    # prepare species gene file path
+    db_details = re.match(r"mysql:\/\/.*:?(.*?)@(.*?):\d+\/(?P<dbname>.*)", ARGS.core_db_uri)
+    database_name = db_details.group('dbname')
+
     JSON_FILE = ""
     if ARGS.data_path:
         # set search path for species which are not in collection
@@ -301,13 +309,14 @@ if __name__ == "__main__":
         if not os.path.exists(JSON_FILE):
             raise FileNotFoundError(f" File Not Found {JSON_FILE}")
 
-        logger.info(
-            f"Reading Search Dump file from path {JSON_FILE} "
-        )
-
     # dump the json file with gene and assembly information for solr indexes
-    OUTPUT_FILENAME = f"{genome_info.get('genome_uuid', None)}_toplevel_solr.json"
+    OUTPUT_FILENAME = ARGS.output
+    if not OUTPUT_FILENAME:
+        OUTPUT_FILENAME = f"{genome_uuid}_toplevel_solr.json"
 
+    logger.info(
+        f"Generating Genesearch index files for species : {species}"
+    )
     logger.info(
         f"Writing Solr index file to {OUTPUT_FILENAME} "
     )
@@ -316,18 +325,16 @@ if __name__ == "__main__":
             logger.info(
                 f"Fetching Gene information from core db : {database_name}  , host: {ARGS.core_db_uri}"
             )
-            json.dump(JsonIterator(fetch_gene_info(ARGS.core_db_uri, genome_info.get("species", None),
-                                                   genome_info.get("genome_uuid", None)
-                                                   )
-                                   ), out, indent=4)
+            json.dump(JsonIterator(fetch_gene_info(ARGS.core_db_uri, species, genome_uuid)), out, indent=4)
         if ARGS.data_path:
             logger.info(
                 f"Fetching Gene information from Search Dumps {JSON_FILE}"
             )
             json.dump(JsonIterator(
-                dump_gene_search_data(JSON_FILE, genome_info.get("genome_uuid", None))
+                dump_gene_search_data(JSON_FILE, genome_uuid)
             ), out, indent=4)
 
         logger.info(
             f"Solr index file {OUTPUT_FILENAME} Completed!"
         )
+
