@@ -26,7 +26,7 @@ process SolrDumps {
     """
      echo Start solr dumps for $species
      pyenv local production-pipeline-env
-     echo python ${params.nf_py_script_path}/genesearch_solr.py \
+     python ${params.nf_py_script_path}/genesearch_solr.py \
      --genome_uuid $genome_uuid \
      --species $species  \
      --division $division \
