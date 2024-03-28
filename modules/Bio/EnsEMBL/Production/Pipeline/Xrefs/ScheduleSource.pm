@@ -128,6 +128,14 @@ sub run {
       # Create list of files
       my @list_files = `ls $file_name`;
       if ($preparse) { @list_files = $preparse; }
+
+      # For Uniprot and Refseq, files might have been split by species
+      if (!$preparse && ($name =~ /^Uniprot/ || $name =~ /^RefSeq_peptide/ || $name =~ /^RefSeq_dna/)) {
+        my $file_prefix = ($name =~ /SPTREMBL/ ? 'uniprot_trembl' : ($name =~ /SWISSPROT/ ? 'uniprot_sprot' : ($name =~ /_dna/ ? 'refseq_rna' : 'refseq_protein')));
+        @list_files = glob($file_name . "/**/" . $file_prefix . "-" . $species_id);
+        $_ = basename(dirname($_)) . "/" . basename($_) foreach (@list_files);
+      }
+
       foreach my $file (@list_files) {
         $file =~ s/\n//;
         $file = $file_name . "/" . $file;
