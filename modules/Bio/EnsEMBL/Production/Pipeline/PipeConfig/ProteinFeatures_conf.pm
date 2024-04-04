@@ -336,7 +336,7 @@ sub pipeline_analyses {
             -logic_name      => 'InterProScanVersionCheck',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScanVersionCheck',
             -max_retry_count => 0,
-            -input_ids       => [ {} ],
+#            -input_ids       => [ {} ],
             -parameters      => {
                 interproscan_path    => $self->o('interproscan_path'),
                 interproscan_version => $self->o('interproscan_version'),
