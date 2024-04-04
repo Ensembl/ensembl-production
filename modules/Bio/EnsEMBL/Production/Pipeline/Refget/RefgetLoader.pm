@@ -444,14 +444,15 @@ sub insert_raw_sequence {
     my $hash = ga4gh_to_trunc512($ga4gh_id);
     my $rs = $refget_schema->resultset('RawSeq');
     my $row = $rs->search(
-        { checksum => $checksum },
+        { checksum => $hash },
         { columns => [qw/ checksum /] }
     )->single();
     if($row) {
         return $row;
     }
-    my $hash = { checksum => $checksum, seq => $sequence };
-    my $raw_seq = $rs->new_result($hash);
+
+    $row = { checksum => $hash, seq => ${$seq_ref} };
+    my $raw_seq = $rs->new_result($row);
     return $raw_seq->insert();
 }
 
