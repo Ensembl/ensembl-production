@@ -16,7 +16,7 @@ GenomeFactory Module to fetch genome information from new metadata schema
 
 import logging
 import eHive
-from ensembl.production.metadata.api.factories.genome import GenomeFactory
+from ensembl.production.metadata.api.factories.genomes import GenomeFactory
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
