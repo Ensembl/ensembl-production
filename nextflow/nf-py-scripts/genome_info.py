@@ -25,7 +25,7 @@ import logging
 import json
 import re
 from sqlalchemy import text
-from ensembl.production.metadata.api.factories.genome import GenomeFactory
+from ensembl.production.metadata.api.factories.genomes import GenomeFactory
 from ensembl.production.metadata.api.models import Genome, Dataset, DatasetSource, DatasetType, Assembly, OrganismGroup
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')

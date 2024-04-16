@@ -167,6 +167,7 @@ def run_subprocess(cmd, log_filename):
   logger.info(stdout.decode('utf-8'))
   
   if exit_status:
+    print(stderr.decode('utf-8'))
     logger.error(stderr.decode('utf-8'))
     sys.exit(1)
     

@@ -111,3 +111,30 @@ process GenomeInfo {
     $page_param $columns_param $output_json_param
     """
 }
+
+process UpdateDatasetStatus {
+    debug "${params.debug}"
+    label 'ensembl'
+    tag "$dataset_uuid"
+
+    input:
+    val dataset_uuid
+    val metadata_db_uri
+    val update_status
+
+    output:
+    val dataset_uuid
+
+    script :
+    def metadata_db_uri_param        =  metadata_db_uri ?                  "--metadata_db_uri $metadata_db_uri" : ''
+    def dataset_uuid_param           =  dataset_uuid    ?                  "--dataset_uuid ${dataset_uuid}" : ''
+    def update_dataset_status_param  =  update_status   ?                  "--update_status ${update_status}" : ''
+
+    """
+    pyenv local production-pipeline-env
+    echo "update datasetstatus for ${dataset_uuid} to ${update_dataset_status_param}"
+    python ${params.nf_py_script_path}/update_dataset_status.py $metadata_db_uri_param \
+    $dataset_uuid_param \
+    $update_dataset_status_param
+    """
+}
