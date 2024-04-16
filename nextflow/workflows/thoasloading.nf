@@ -195,7 +195,7 @@ workflow {
    LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
    Validate(LoadRegionIntoThoas.out[0])
    Validate.out[0].view()
-  // UpdateDatasetStatus(Validate.out[0][3], metadata_db_uri, "Processed")
+   UpdateDatasetStatus(Validate.out[0][3], metadata_db_uri, "Processed")
 }
 
 workflow.onComplete {
