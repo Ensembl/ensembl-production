@@ -140,7 +140,7 @@ process ExtractCoreDbDataCDS {
     debug "${params.debug}"  
     label 'mem16GB'
     cpus '4'
-    tag 'extractcoredbdata'
+    tag "${genome_info[1]}#${genome_info[2]}#${genome_info[0]}"
 
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
@@ -148,15 +148,15 @@ process ExtractCoreDbDataCDS {
       val genome_info
 
     script:
-      def jsonSlurper = new groovy.json.JsonSlurper()
-      def genome      = jsonSlurper.parseText(genome_info[0])
-      species     = genome['species']
-      assembly    = genome['assembly_name']
-      thoas_conf  = genome_info[1]
+      genome_uuid  = genome_info[0]
+      species      = genome_info[1]
+      assembly     = genome_info[2]
+      dataset_uuid = genome_info[3]
+      thoas_conf   = genome_info[4]
     
     """
      echo Extract genomic feature for species $species 
-     echo $genome
+     echo $genome_uuid
      pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
@@ -167,7 +167,7 @@ process ExtractCoreDbDataCDS {
     """
 
     output:
-      tuple val("${species}"), val(thoas_conf), path("${species}.extract.cds.log"),
+      tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid), path("${species}.extract.cds.log"),
        path("${species}_${assembly}_attrib.csv"), path("${species}_${assembly}.csv"), path("${species}_${assembly}_phase.csv")
 }
 
@@ -179,7 +179,7 @@ process ExtractCoreDbDataGeneName {
     debug "${params.debug}"  
     label 'mem16GB'
     cpus '4'
-    tag 'extractcoredbdata'
+    tag "${genome_info[1]}#${genome_info[2]}#${genome_info[0]}"
 
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
@@ -187,15 +187,15 @@ process ExtractCoreDbDataGeneName {
       val genome_info
 
     script:
-      def jsonSlurper = new groovy.json.JsonSlurper()
-      def genome      = jsonSlurper.parseText(genome_info[0])
-      species     = genome['species']
-      assembly    = genome['assembly_name']
-      thoas_conf  = genome_info[1]
+      genome_uuid  = genome_info[0]
+      species      = genome_info[1]
+      assembly     = genome_info[2]
+      dataset_uuid = genome_info[3]
+      thoas_conf   = genome_info[4]
     
     """
      echo Extract genomic feature for species $species 
-     echo $genome
+     echo $genome_uuid
      pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
@@ -206,7 +206,7 @@ process ExtractCoreDbDataGeneName {
     """
 
     output:
-      tuple val("${species}"), val(thoas_conf), path("${species}.extract.genes.log"),
+      tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid), path("${species}.extract.genes.log"),
        path("${species}_${assembly}_gene_names.json")
 }
 
@@ -218,7 +218,7 @@ process ExtractCoreDbDataProteins {
     debug "${params.debug}"  
     label 'mem16GB'
     cpus '4'
-    tag 'extractcoredbdata'
+    tag  "${genome_info[1]}#${genome_info[2]}#${genome_info[0]}"
 
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
@@ -226,15 +226,15 @@ process ExtractCoreDbDataProteins {
       val genome_info
 
     script:
-      def jsonSlurper = new groovy.json.JsonSlurper()
-      def genome      = jsonSlurper.parseText(genome_info[0])
-      species     = genome['species']
-      assembly    = genome['assembly_name']
-      thoas_conf  = genome_info[1]
+      genome_uuid  = genome_info[0]
+      species      = genome_info[1]
+      assembly     = genome_info[2]
+      dataset_uuid = genome_info[3]
+      thoas_conf   = genome_info[4]
     
     """
      echo Extract genomic feature for species $species 
-     echo $genome
+     echo $genome_uuid
      pyenv local production-pipeline-env
      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/    
      python ${params.nf_py_script_path}/thoas_load.py \
@@ -245,7 +245,7 @@ process ExtractCoreDbDataProteins {
     """
 
     output:
-      tuple val("${species}"), val(thoas_conf), path("${species}.extract.proteins.log"), 
+      tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid), path("${species}.extract.proteins.log"),
       path("${species}_${assembly}_translations.json")
 }
 
@@ -255,9 +255,9 @@ process LoadGeneIntoThoas {
     */
 
     debug "${params.debug}"  
-    label 'mem8GB'
+    label 'mem32GB'
     cpus '8'
-    tag 'extractcoredbdata'
+    tag "${genome_info[0]}#${genome_info[3]}"
     
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
@@ -267,6 +267,8 @@ process LoadGeneIntoThoas {
     script:
       species     = genome_info[0]
       thoas_conf  = genome_info[1]
+      genome_uuid = genome_info[2]
+      dataset_uuid = genome_info[3]
           
 
     """
@@ -283,8 +285,8 @@ process LoadGeneIntoThoas {
     """
     // removed load genome --load_genomic_features_type genome genes regions
     output:
-      tuple val("${species}"), val(thoas_conf)
-    queueSize=10
+      tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid)
+
 }
 
 process LoadRegionIntoThoas {
@@ -293,18 +295,20 @@ process LoadRegionIntoThoas {
     */
 
     debug "${params.debug}"  
-    label 'mem8GB'
+    label 'mem16GB'
     cpus '8'
-    tag 'extractcoredbdata'
+    tag "${genome_info[0]}#${genome_info[3]}"
     
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
     input:
-      val load_species
+      val genome_info
 
     script:
-      species = load_species[0]
-      thoas_conf = load_species[1]
+      species = genome_info[0]
+      thoas_conf = genome_info[1]
+      genome_uuid = genome_info[2]
+      dataset_uuid = genome_info[3]
           
 
     """
@@ -321,37 +325,8 @@ process LoadRegionIntoThoas {
     """
     // removed load genome --load_genomic_features_type genome genes regions
     output:
-      tuple val("${species}"), val(thoas_conf)
-    queueSize=20
+      tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid)
 }
-
-process CreateIndex {
-    /*
-      Description: Create MongoDB Index for gene genome and regions 
-    */
-
-    debug "${params.debug}"  
-    label 'mem8GB'
-    cpus '8'
-    tag 'createindex'
-        
-    publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
-
-    input:
-      val thoas_conf
-
-    """
-      echo Index in progress 
-      pyenv local production-pipeline-env
-      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
-      cd  ${params.thoas_data_location}/
-      python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/${thoas_conf} --mongo_collection ${params.mongo_db_collection}
-    """
-
-}
-
-
-
 
 process Validate {
     /*
@@ -361,100 +336,26 @@ process Validate {
     debug "${params.debug}"  
     label 'mem8GB'
     cpus '8'
-    tag 'createindex'
+    tag "${genome_info[0]}#${genome_info[2]}"
     
     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
 
     input:
-      val load_species
+      val genome_info
 
     script:
-      species = load_species[0]
-      thoas_conf = load_species[1]
+      species = genome_info[0]
+      thoas_conf = genome_info[1]
+      genome_uuid = genome_info[2]
+      dataset_uuid = genome_info[3]
 
 
     """
       echo Index in progress 
       pyenv local production-pipeline-env
-      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
-      cd  ${params.thoas_data_location}/
-      python ${params.thoas_code_location}/src/ensembl/create_index.py --config_file ${params.thoas_data_location}/$thoas_conf --mongo_collection ${params.mongo_db_collection}
+      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
+      python ${params.nf_py_script_path}/validate_thoas.py --config ${params.thoas_data_location}/$thoas_conf --species $species
     """
-
+    output:
+        tuple val("${species}"), val(thoas_conf), val(genome_uuid), val(dataset_uuid), path("${species}_count.txt")
 }
-
-
-
-
-
-
-
-// process LoadThoas {
-//     /*
-//       Description: Load  genome data into mongodb collection for thoas
-//     */
-
-//     debug "${params.debug}"  
-//     label 'mem16GB'
-//     cpus '12'
-//     tag 'thoasloading'
-
-//     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
-
-//     input:
-//     path thoas_config_file
-//     val genome_info
-
-//     output:
-//     path "loading_log_${params.release}.out"
-
-//     """
-//     pyenv local production-pipeline-env
-//     #export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/
-//     #python ${params.thoas_code_location}/src/ensembl/multi_load.py --config ${params.thoas_data_location}/$thoas_config_file &> loading_log_${params.release}.out
-//     echo ${genome_info}
-    
-//     """
-
-//}
-
-// process LoadGeneIntoThoasBack {
-//     /*
-//       Description: Load  genomic feature into mongo
-//     */
-
-//     debug "${params.debug}"  
-//     label 'mem8GB'
-//     cpus '8'
-//     tag 'extractcoredbdata'
-    
-//     publishDir "${params.thoas_data_location}", mode: 'copy', overWrite: true
-
-//     input:
-//       val genome_info
-
-//     script:
-//       def jsonSlurper = new groovy.json.JsonSlurper()
-//       def genome      = jsonSlurper.parseText(genome_info[0])
-//       species     = genome['species']
-//       assembly    = genome['assembly_name']
-//       thoas_conf  = genome_info[1]
-          
-
-//     """
-//     echo $species
-//      echo Load genes for  $species in  $thoas_conf
-//      pyenv local production-pipeline-env
-//      export META_CLASSIFIER_PATH=${params.thoas_code_location}/metadata_documents/metadata_classifiers/   
-//      cd  ${params.thoas_data_location}/
-//      python ${params.nf_py_script_path}/thoas_load.py \
-//      -s $species -c ${params.thoas_code_location}/src/ensembl/ -i ${params.thoas_data_location}/$thoas_conf \
-//      --load_species \
-//      --load_genomic_features \
-//      --load_genomic_features_type genes
-//     """
-//     // removed load genome --load_genomic_features_type genome genes regions
-//     output:
-//       tuple val("${species}"), val(thoas_conf)
-//     queueSize=20
-// }
