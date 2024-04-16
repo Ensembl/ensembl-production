@@ -12,10 +12,12 @@ include {
   LoadRegionIntoThoas;
   CreateCollectionAndIndex;
   ShardCollectionData;
+  Validate;
 } from '../modules/thoasCommonProcess'
 
 include {
-  GenomeInfo
+  GenomeInfo;
+  UpdateDatasetStatus;
 } from '../modules/productionCommon'
 
 include {
@@ -155,6 +157,7 @@ workflow {
 
     //set user params as list
 //     metadata_db_password  = (params.metadata_db_password != true || params.metadata_db_password=="") ?  '""' : ":${params.metadata_db_password}"
+    def jsonSlurper = new groovy.json.JsonSlurper()
     metadata_db_uri       = "mysql://${params.metadata_db_user}@${params.metadata_db_host}:${params.metadata_db_port}/${params.metadata_db_dbname}"
     update_dataset_status = params.update_dataset_status
     batch_size            = params.batch_size
@@ -180,26 +183,20 @@ workflow {
    GenerateThoasConfigFile(GenomeInfo.out[0])
    CreateCollectionAndIndex(GenerateThoasConfigFile.out[0])
    ShardCollectionData(CreateCollectionAndIndex.out[0], mongo_db_shard_uri,  params.mongo_db_dbname)
-
    LoadThoasMetadata(GenerateThoasConfigFile.out[0], ShardCollectionData.out[0])
-
-    ExtractCoreDbDataCDS( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-                     .combine(LoadThoasMetadata.out[0])
-    )
-
-    ExtractCoreDbDataGeneName( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-                     .combine(LoadThoasMetadata.out[0])
-    )
-
-    ExtractCoreDbDataProteins( GenomeInfo.out[0].splitText().map {it.replaceAll('\n', '')}
-                     .combine(LoadThoasMetadata.out[0])
-    )
-    LoadGeneIntoThoas(ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0],remainder: true).join(ExtractCoreDbDataProteins.out[0],remainder: true))
-    LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
+   genomes_ch = GenomeInfo.out[0].splitText().map {
+                    genome_json = jsonSlurper.parseText(it.replaceAll('\n', ''))
+                    return [genome_json['genome_uuid'], genome_json['species'], genome_json['assembly_name'], genome_json['dataset_uuid']]
+                } .combine(LoadThoasMetadata.out[0]).map { it }
+   ExtractCoreDbDataCDS(genomes_ch)
+   ExtractCoreDbDataGeneName(genomes_ch)
+   ExtractCoreDbDataProteins(genomes_ch)
+   LoadGeneIntoThoas(ExtractCoreDbDataCDS.out[0].join(ExtractCoreDbDataGeneName.out[0],remainder: true).join(ExtractCoreDbDataProteins.out[0],remainder: true))
+   LoadRegionIntoThoas(LoadGeneIntoThoas.out[0])
+   Validate(LoadRegionIntoThoas.out[0])
+   Validate.out[0].view()
+  // UpdateDatasetStatus(Validate.out[0][3], metadata_db_uri, "Processed")
 }
-
-
-
 
 workflow.onComplete {
     println "Pipeline completed at: $workflow.complete"
