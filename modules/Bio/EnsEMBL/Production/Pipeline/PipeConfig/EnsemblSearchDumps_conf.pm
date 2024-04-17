@@ -133,7 +133,7 @@ sub pipeline_analyses {
       -logic_name => 'DumpGenesJsonHighmem',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
       -parameters => { use_pan_compara => $self->o('use_pan_compara') },
-      -rc_name    => '100GB',
+      -rc_name    => '100GB_W',
       -analysis_capacity => 10
     },
   ]
@@ -143,7 +143,7 @@ sub resource_classes {
   my ($self) = @_;
   return {
     %{$self->SUPER::resource_classes},
-    '100GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 100000 -R "rusage[mem=100000]"'},
+    '100GB_W' => {'SLURM' => '--partition='.$self->o('production_queue').' --time=7-00:00:00  --mem=100000m'},
   }
 }
 
