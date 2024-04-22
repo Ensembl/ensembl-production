@@ -48,7 +48,7 @@ from ensembl.databases.xref_update_db_model import Base as XrefUpdateDB, Source 
   TranslationDirectXref as TranslationDirectXrefORM, Synonym as SynonymORM, Pairs as PairsORM, Species as SpeciesORM, \
   SourceMappingMethod as SourceMappingMethodORM, MappingJobs as MappingJobsORM, Mapping as MappingORM
 
-from ensembl.databases.core_db_model import Meta as MetaCORM, Gene as GeneORM, Transcript as TranscriptORM, Analysis as AnalysisORM, \
+from ensembl.core.models import Meta as MetaCORM, Gene as GeneORM, Transcript as TranscriptORM, Analysis as AnalysisORM, \
   ExonTranscript as ExonTranscriptORM, SupportingFeature as SupportingFeatureORM, DnaAlignFeature as DnaAlignFeatureORM, \
   TranscriptAttrib as TranscriptAttribORM, AttribType as AttribTypeORM, AnalysisDescription as AnalysisDescriptionORM, \
   SeqRegion as SeqRegionORM, SeqRegionAttrib as SeqRegionAttribORM, CoordSystem as CoordSystemORM, Translation as TranslationORM, \
