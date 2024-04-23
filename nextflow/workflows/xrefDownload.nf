@@ -113,6 +113,7 @@ process ScheduleDownload {
 
 process DownloadSource {
   label 'dm'
+  tag "$src_name"
 
   input:
   val x
@@ -120,6 +121,9 @@ process DownloadSource {
 
   output:
   val 'DownloadSourceDone'
+
+  shell:
+  src_name = (x =~ /"name":\s*"([A-Za-z0-9_.-\/]+)"/)[0][1]
 
   """
   python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.DownloadSource --dataflow '$x' --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --skip_download ${params.skip_download}
@@ -173,6 +177,7 @@ process Checksum {
 
 process CleanupSplitSource {
   label 'mem4GB'
+  tag "$src_name"
 
   input:
   each x
@@ -199,6 +204,7 @@ process CleanupSplitSource {
 
 process CleanupSource {
   label 'mem4GB'
+  tag "$src_name"
 
   input:
   val x
