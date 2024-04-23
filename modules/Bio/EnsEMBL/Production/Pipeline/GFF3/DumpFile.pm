@@ -280,6 +280,7 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
 
   my @tags;
   push(@tags, 'basic') if $self->gencode_basic();
+  push(@tags, 'gencode_primary') if $self->gencode_primary();
   push(@tags, 'Ensembl_canonical') if $self->is_canonical();
 
   # A transcript can have different types of MANE-related attributes (MANE_Select, MANE_Plus_Clinical)
@@ -289,9 +290,6 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
     my $mane_type = $mane->type();
     push(@tags, $mane_type) if ($mane_type);
   }
-
-  my $gencode_primary = $self->get_all_Attributes('gencode_primary');
-  push(@tags, 'GENCODE Primary') if @{$gencode_primary};
 
   $summary{'tag'} = \@tags if @tags;
 
