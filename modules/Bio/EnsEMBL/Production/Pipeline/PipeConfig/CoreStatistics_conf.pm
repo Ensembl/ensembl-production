@@ -130,7 +130,7 @@ sub pipeline_analyses {
                             '3->A' => ['CheckStatistics_Chromosome'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
-      -rc_name         => '2GB',
+      -rc_name         => '2GB_D',
     },
 
 
@@ -211,7 +211,7 @@ sub pipeline_analyses {
         },
         -max_retry_count => 1,
         -hive_capacity   => 50,
-        -rc_name         => 'default_W'
+        -rc_name         => '2GB_W'
     },
 
     {
@@ -262,7 +262,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -flow_into       => ['GeneGC_Datacheck'],
-      -rc_name         => 'default_D',
+      -rc_name         => '2GB_D',
     },
 
     {
@@ -327,7 +327,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'default',
+      -rc_name         => '1GB',
     },
 #
     {

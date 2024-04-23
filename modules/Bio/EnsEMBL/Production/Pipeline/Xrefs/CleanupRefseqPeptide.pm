@@ -89,7 +89,7 @@ sub run {
       while (<$in_fh>) {
         if ($_ =~ /^REFERENCE/ || $_ =~ /^COMMENT/ || $_ =~ /^\s{5}Protein/) {
           $skip_data = 1;
-        } elsif ($_ =~ /^\s{5}source/ || $_ =~ /^\s{5}CDS/) {
+        } elsif ($_ =~ /^\s{5}source/ || $_ =~ /^\s{5}CDS/ || $_ =~ /^ORIGIN/) {
           $skip_data = 0;
         }
         if (!$skip_data) {print $out_fh $_;}

@@ -98,7 +98,7 @@ sub default_options {
             'mus_musculus'                     => 30081,
             'danio_rerio'                      => 30003,
             'gallus_gallus'                    => 30005,
-            'bos_taurus'                       => 30017,
+            'bos_taurus'                       => 30018,
             'oryctolagus_cuniculus'            => 30025,
             'oryzias_latipes'                  => 30026,
             'sus_scrofa'                       => 30039,

@@ -138,6 +138,7 @@ sub run {
     # traverse records by iterator
     while (my ($key, $value) = each(%db)) {
         $alpha_version = (split ',', $value)[-1];
+        chomp($alpha_version);
         last;
     }
     untie %db;
