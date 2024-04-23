@@ -41,9 +41,9 @@ from itertools import groupby
 from configparser import ConfigParser
 from datetime import datetime
 
-from ensembl.databases.xref_source_db_model import Base as XrefSourceDB, Source as SourceSORM, Version as VersionORM, ChecksumXref as ChecksumXrefSORM
+from ensembl.xrefs.xref_source_db_model import Base as XrefSourceDB, Source as SourceSORM, Version as VersionORM, ChecksumXref as ChecksumXrefSORM
 
-from ensembl.databases.xref_update_db_model import Base as XrefUpdateDB, Source as SourceUORM, SourceURL as SourceURLORM, Xref as XrefUORM, \
+from ensembl.xrefs.xref_update_db_model import Base as XrefUpdateDB, Source as SourceUORM, SourceURL as SourceURLORM, Xref as XrefUORM, \
   PrimaryXref as PrimaryXrefORM, DependentXref as DependentXrefUORM, GeneDirectXref as GeneDirectXrefORM, TranscriptDirectXref as TranscriptDirectXrefORM, \
   TranslationDirectXref as TranslationDirectXrefORM, Synonym as SynonymORM, Pairs as PairsORM, Species as SpeciesORM, \
   SourceMappingMethod as SourceMappingMethodORM, MappingJobs as MappingJobsORM, Mapping as MappingORM
