@@ -182,8 +182,6 @@ class Base(Params):
         if db and db == 'checksum':
           file_path = os.path.join(dest_dir, f'{source_name}-{os.path.basename(uri.path)}')
 
-        logging.info(f'I am here inside local ftp with {orig_source_name}')
-
         if not (skip_download_if_file_present and os.path.exists(file_path)):
           shutil.copy(local_file, file_path)
 
@@ -838,11 +836,11 @@ class Base(Params):
     pep_path = self.get_path(base_path, species, release, 'ensembl', 'peptides.fa');
 
     # Try to find a species-specific mapper first
-    module_name = f'ensembl.xrefs.mapper.{species}'
+    module_name = f'ensembl.xrefs.mappers.{species}'
     class_name = species
     found = importlib.find_loader(module_name)
     if not found:
-      module_name = 'ensembl.xrefs.mapper.BasicMapper'
+      module_name = 'ensembl.xrefs.mappers.BasicMapper'
       class_name = 'BasicMapper'
 
     # Create a mapper object
