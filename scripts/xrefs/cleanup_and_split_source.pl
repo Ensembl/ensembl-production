@@ -101,12 +101,12 @@ if ($source_name =~ /^Uniprot/) {
 
 # Extract taxonomy IDs
 my %tax_ids;
-my $skipped_species = 0;
+my ($skipped_species, $added_species) = (0, 0);
 if ($tax_ids_file) {
   open my $fh, '<', $tax_ids_file;
   chomp(my @lines = <$fh>);
   close $fh;
-  my %tax_ids = map { $_ => 1 } @lines;
+  %tax_ids = map { $_ => 1 } @lines;
 
   # Check if any taxonomy IDs already have files
   foreach my $tax_id (keys(%tax_ids)) {
@@ -216,6 +216,12 @@ foreach my $input_file_name (@files) {
         make_path($write_path);
 
         $write_file = $write_path."/".$output_file_name."-".$species_id;
+
+        # Check if creating new file
+        if (!-e $write_file) {
+          $added_species++;
+        }
+
         open($out_fh, '>>', $write_file) or die "Couldn't open output file '$write_file' $!";
 
         $current_species_id = $species_id;
@@ -231,6 +237,7 @@ foreach my $input_file_name (@files) {
 
 add_to_log_file($log_file, "Source $source_name cleaned up");
 add_to_log_file($log_file, "$source_name skipped species = $skipped_species");
+add_to_log_file($log_file, "$source_name species files created = $added_species")
 
 # Save the clean files directory in source db
 my ($user, $pass, $host, $port, $source_db) = parse_url($source_db_url);
