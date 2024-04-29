@@ -237,7 +237,7 @@ foreach my $input_file_name (@files) {
 
 add_to_log_file($log_file, "Source $source_name cleaned up");
 add_to_log_file($log_file, "$source_name skipped species = $skipped_species");
-add_to_log_file($log_file, "$source_name species files created = $added_species")
+add_to_log_file($log_file, "$source_name species files created = $added_species");
 
 # Save the clean files directory in source db
 my ($user, $pass, $host, $port, $source_db) = parse_url($source_db_url);
