@@ -110,15 +110,12 @@ if ($tax_ids_file) {
 
   # Check if any taxonomy IDs already have files
   foreach my $tax_id (keys(%tax_ids)) {
-    print Dumper $tax_id;
     my @tax_files = glob($output_path . "/**/**/**/**/" . $output_file_name . "-" . $tax_id);
-    print Dumper @tax_files;
     if (scalar(@tax_files) > 0) {
       $tax_ids{$tax_id} = 0;
       $skipped_species++;
     }
   }
-  die;
 
   # Do nothing if all taxonomy IDs already have files
   if ($skipped_species == scalar(keys(%tax_ids))) {
