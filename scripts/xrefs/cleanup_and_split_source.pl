@@ -110,12 +110,15 @@ if ($tax_ids_file) {
 
   # Check if any taxonomy IDs already have files
   foreach my $tax_id (keys(%tax_ids)) {
-    my @tax_files = glob($output_path . "/**/" . $output_file_name . "-" . $tax_id);
+    print Dumper $tax_id;
+    my @tax_files = glob($output_path . "/**/**/**/**/" . $output_file_name . "-" . $tax_id);
+    print Dumper @tax_files;
     if (scalar(@tax_files) > 0) {
       $tax_ids{$tax_id} = 0;
       $skipped_species++;
     }
   }
+  die;
 
   # Do nothing if all taxonomy IDs already have files
   if ($skipped_species == scalar(keys(%tax_ids))) {
@@ -211,8 +214,10 @@ foreach my $input_file_name (@files) {
       if (!defined($current_species_id) || (defined($current_species_id) && $species_id ne $current_species_id)) {
         close($out_fh) if (defined($current_species_id));
 
-        my @digits = split('', $species_id);
-        $write_path = catdir($output_path, $digits[0], (scalar(@digits)>1 ? $digits[1] : ""), (scalar(@digits)>2 ? $digits[2] : ""), (scalar(@digits)>3 ? $digits[3] : ""));
+	my $species_id_str = sprintf("%04d", $species_id);
+	my @digits = split('', $species_id_str);
+
+	$write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
         make_path($write_path);
 
         $write_file = $write_path."/".$output_file_name."-".$species_id;
@@ -231,7 +236,7 @@ foreach my $input_file_name (@files) {
     }
 
     close($in_fh);
-    close($out_fh);
+    close($out_fh) if $out_fh;
   }
 }
 

@@ -134,7 +134,7 @@ sub run {
       # For Uniprot and Refseq, files might have been split by species
       if (!$preparse && ($name =~ /^Uniprot/ || $name =~ /^RefSeq_peptide/ || $name =~ /^RefSeq_dna/)) {
         my $file_prefix = ($name =~ /SPTREMBL/ ? 'uniprot_trembl' : ($name =~ /SWISSPROT/ ? 'uniprot_sprot' : ($name =~ /_dna/ ? 'refseq_rna' : 'refseq_protein')));
-        @list_files = glob($file_name . "/**/" . $file_prefix . "-" . $species_id);
+        @list_files = glob($file_name . "/**/**/**/**/" . $file_prefix . "-" . $species_id);
         $_ = basename(dirname($_)) . "/" . basename($_) foreach (@list_files);
       }
 
