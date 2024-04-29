@@ -161,12 +161,13 @@ foreach my $input_file_name (@files) {
       my $species_id;
       if ($is_uniprot) {
         ($species_id) = $record =~ /OX\s+[a-zA-Z_]+=([0-9 ,]+).*;/;
-        $species_id =~ s/\s//;
+        $species_id =~ s/\s// if $species_id;
       } else {
         ($species_id) = $record =~ /db_xref=.taxon:(\d+)/;
       }
 
       # Only continue with wanted species
+      next if (!$species_id);
       next if ($tax_ids_file && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id}));
 
       # Clean up data
