@@ -101,16 +101,16 @@ if ($source_name =~ /^Uniprot/) {
 
 # Extract taxonomy IDs
 my %tax_ids;
-my $skipped_species = 0;
+my ($skipped_species, $added_species) = (0, 0);
 if ($tax_ids_file) {
   open my $fh, '<', $tax_ids_file;
   chomp(my @lines = <$fh>);
   close $fh;
-  my %tax_ids = map { $_ => 1 } @lines;
+  %tax_ids = map { $_ => 1 } @lines;
 
   # Check if any taxonomy IDs already have files
   foreach my $tax_id (keys(%tax_ids)) {
-    my @tax_files = glob($output_path . "/**/" . $output_file_name . "-" . $tax_id);
+    my @tax_files = glob($output_path . "/**/**/**/**/" . $output_file_name . "-" . $tax_id);
     if (scalar(@tax_files) > 0) {
       $tax_ids{$tax_id} = 0;
       $skipped_species++;
@@ -161,12 +161,13 @@ foreach my $input_file_name (@files) {
       my $species_id;
       if ($is_uniprot) {
         ($species_id) = $record =~ /OX\s+[a-zA-Z_]+=([0-9 ,]+).*;/;
-        $species_id =~ s/\s//;
+        $species_id =~ s/\s// if $species_id;
       } else {
         ($species_id) = $record =~ /db_xref=.taxon:(\d+)/;
       }
 
       # Only continue with wanted species
+      next if (!$species_id);
       next if ($tax_ids_file && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id}));
 
       # Clean up data
@@ -211,11 +212,19 @@ foreach my $input_file_name (@files) {
       if (!defined($current_species_id) || (defined($current_species_id) && $species_id ne $current_species_id)) {
         close($out_fh) if (defined($current_species_id));
 
-        my @digits = split('', $species_id);
-        $write_path = catdir($output_path, $digits[0], (scalar(@digits)>1 ? $digits[1] : ""), (scalar(@digits)>2 ? $digits[2] : ""), (scalar(@digits)>3 ? $digits[3] : ""));
+	my $species_id_str = sprintf("%04d", $species_id);
+	my @digits = split('', $species_id_str);
+
+	$write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
         make_path($write_path);
 
         $write_file = $write_path."/".$output_file_name."-".$species_id;
+
+        # Check if creating new file
+        if (!-e $write_file) {
+          $added_species++;
+        }
+
         open($out_fh, '>>', $write_file) or die "Couldn't open output file '$write_file' $!";
 
         $current_species_id = $species_id;
@@ -225,12 +234,13 @@ foreach my $input_file_name (@files) {
     }
 
     close($in_fh);
-    close($out_fh);
+    close($out_fh) if $out_fh;
   }
 }
 
 add_to_log_file($log_file, "Source $source_name cleaned up");
 add_to_log_file($log_file, "$source_name skipped species = $skipped_species");
+add_to_log_file($log_file, "$source_name species files created = $added_species");
 
 # Save the clean files directory in source db
 my ($user, $pass, $host, $port, $source_db) = parse_url($source_db_url);
