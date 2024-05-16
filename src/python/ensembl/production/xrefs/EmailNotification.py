@@ -14,7 +14,7 @@
 
 """Email module to send user emails notifying of xref pipelines end, with important information and statistics."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 from smtplib import SMTP
 from email.message import EmailMessage

@@ -14,7 +14,7 @@
 
 """Scheduling module to create cleanup jobs for specific xref sources."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 class ScheduleCleanup(Base):
   def run(self):
