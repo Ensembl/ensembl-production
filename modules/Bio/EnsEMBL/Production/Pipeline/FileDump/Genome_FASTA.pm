@@ -35,7 +35,7 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     data_type      => 'sequence',
-    data_types     => ['unmasked', 'softmasked', 'hardmasked'],
+    data_types     => ['unmasked', 'softmasked'],
     file_type      => 'fa',
     # For BLAST generation we don't need the timestamped files to be generated
       # TODO NEED revision
@@ -64,7 +64,7 @@ sub run {
 
   my $um_filename = $$filenames{'unmasked'};
   my $sm_filename = $$filenames{'softmasked'};
-  my $hm_filename = $$filenames{'hardmasked'};
+  #my $hm_filename = $$filenames{'hardmasked'};
 
 
   #set timestamped dir for FTP dumps

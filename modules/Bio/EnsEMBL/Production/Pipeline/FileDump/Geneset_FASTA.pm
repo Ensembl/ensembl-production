@@ -34,7 +34,7 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     data_type       => 'sequence',
-    data_types      => ['cdna', 'cds', 'pep'],
+    data_types      => ['cdna', 'pep'],
     file_type       => 'fa',
     chunk_size      => 10000,
     line_width      => 60,
@@ -61,12 +61,11 @@ sub run {
   my ($chr, $non_chr, $non_ref) = $self->get_slices($dba);
 
   my $cdna_filename = $$filenames{'cdna'};
-  my $cds_filename  = $$filenames{'cds'};
   my $pep_filename  = $$filenames{'pep'};
 
   #get everything including nonref  
-  $self->print_to_file([@$chr, @$non_chr ], $cdna_filename, $cds_filename, $pep_filename, '>');
-  $self->print_to_file($non_ref, $cdna_filename, $cds_filename, $pep_filename, '>>');
+  $self->print_to_file([@$chr, @$non_chr ], $cdna_filename, $pep_filename, '>');
+  $self->print_to_file($non_ref, $cdna_filename, $pep_filename, '>>');
 
   #uncomment below code get nonref in seperate file 
   # if (scalar(@$non_ref)) {
@@ -81,20 +80,15 @@ sub run {
 
   if ($blast_index) {
     $self->blast_index($cdna_filename, 'nucl');
-    $self->blast_index($cds_filename, 'nucl');
     $self->blast_index($pep_filename, 'prot');
   }
 }
 
 sub print_to_file {
-  my ($self, $slices, $cdna_filename, $cds_filename, $pep_filename, $mode) = @_;
+  my ($self, $slices, $cdna_filename, $pep_filename, $mode) = @_;
 
   my $cdna_serializer = $self->fasta_serializer($cdna_filename, $mode);
-  my $cds_serializer = "";
 
-  if($self->param('cds')){
-    $cds_serializer  = $self->fasta_serializer($cds_filename, $mode);
-  }
   my $pep_serializer  = $self->fasta_serializer($pep_filename, $mode);
 
   while (my $slice = shift @{$slices}) {
@@ -105,12 +99,6 @@ sub print_to_file {
       $cdna_serializer->print_Seq($cdna_seq);
       
       if ($transcript->translateable_seq ne '') {
-        my $cds_seq = $cdna_seq;
-        if($self->param('cds')){ #no need to dump cds for blast mvp 
-          $cds_seq->seq($transcript->translateable_seq);
-          $cds_seq->display_id($self->header($transcript, 'cds'));
-          $cds_serializer->print_Seq($cds_seq);
-        }
         my $pep_seq = $transcript->translate;
         if (defined $pep_seq) {
           $pep_seq->display_id($self->header($transcript, 'pep'));
