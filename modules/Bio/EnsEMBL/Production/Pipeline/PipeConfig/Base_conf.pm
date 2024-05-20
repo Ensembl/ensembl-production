@@ -93,13 +93,13 @@ sub resource_classes {
 
     my %output = (
         #Default is a duplicate of 100M
-        'default'   => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_D' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'default_W' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'default'   => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'default_D' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'default_W' => { 'LSF' => '-q ' . $self->o('production_queue'), 'SLURM' => $pq . $time{'W'} . ' --mem=' . $memory{'1GB'} . 'm' },
         #Data mover nodes
-        'dm'        => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'dm_D'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'100M'} . 'm' },
-        'dm_W'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'W'} . ' --mem=' . $memory{'100M'} . 'm' },
+        'dm'        => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'dm_D'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'dm_W'      => { 'LSF' => '-q ' . $self->o('datamover_queue'), 'SLURM' => $dq . $time{'W'} . ' --mem=' . $memory{'1GB'} . 'm' },
         'dm32_D'    => { 'LSF' => '-q ' . $self->o('datamover_queue') . ' -M 32000 -R "rusage[mem=32000]"', 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'32GB'} . 'm' },
         'dmMAX_D'    => { 'LSF' => '-q ' . $self->o('datamover_queue') . ' -M 200000 -R "rusage[mem=200000]"', 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'200GB'} . 'm' },
     );
