@@ -292,7 +292,10 @@ sub merge_xrefs {
         $obj->{$dbname} = [];
       }
       for my $ann ( @{ $subobj->{$dbname} } ) {
-        push $obj->{$dbname}, $self->copy_hash($ann);
+        if (ref($obj->{$dbname}) ne 'ARRAY') {
+          $obj->{$dbname} = [];
+        }
+        push @{ $obj->{$dbname} }, $self->copy_hash($ann);
       }
     }
   }
