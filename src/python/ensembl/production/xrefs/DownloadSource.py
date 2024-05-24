@@ -14,7 +14,7 @@
 
 """Download module to download xref and version files."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 class DownloadSource(Base):
   def run(self):

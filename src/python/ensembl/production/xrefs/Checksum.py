@@ -14,7 +14,7 @@
 
 """Checksum module for the Xref Download pipeline."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 class Checksum(Base):
   def run(self):
