@@ -19,7 +19,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Carp;
 use DBI;
-use File::Path qw/make_path/;
+use File::Path qw/make_path rmtree/;
 use File::Spec::Functions;
 use HTTP::Tiny;
 use JSON;
@@ -28,7 +28,7 @@ use POSIX qw(strftime);
 
 use Nextflow::Utils;
 
-my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $log_timestamp);
+my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $update_mode, $log_timestamp);
 GetOptions(
   'base_path=s'     => \$base_path,
   'source_db_url=s' => \$source_db_url,
@@ -37,13 +37,16 @@ GetOptions(
   'clean_files=i'   => \$clean_files,
   'version_file:s'  => \$version_file,
   'tax_ids_file:s'  => \$tax_ids_file,
+  'update_mode:i'   => \$update_mode,
   'log_timestamp:s' => \$log_timestamp
 );
 
 # Check that all mandatory parameters are passed
 if (!defined($base_path) || !defined($source_db_url) || !defined($source_name) || !defined($clean_dir) || !defined($clean_files)) {
-  croak "Usage: cleanup_source.pl --base_path <base_path> --source_db_url <source_db_url> --name <name> --clean_dir <clean_dir> --clean_files <clean_files> [--version_file <version_file>] [--tax_ids_file <tax_ids_file>] [--log_timestamp <log_timestamp>]";
+  croak "Usage: cleanup_source.pl --base_path <base_path> --source_db_url <source_db_url> --name <name> --clean_dir <clean_dir> --clean_files <clean_files> [--version_file <version_file>] [--tax_ids_file <tax_ids_file>] [--update_mode <update_mode>] [--log_timestamp <log_timestamp>]";
 }
+
+if (!defined($update_mode)) {$update_mode = 0;}
 
 my $log_file;
 if (defined($log_timestamp)) {
@@ -71,6 +74,9 @@ $clean_name =~ s/\///g;
 my $output_path = $clean_dir."/".$clean_name;
 
 # Create needed directories
+if (!$update_mode) {
+  rmtree($output_path);
+}
 make_path($output_path);
 
 my $sources_to_remove;
@@ -102,7 +108,7 @@ if ($source_name =~ /^Uniprot/) {
 # Extract taxonomy IDs
 my %tax_ids;
 my ($skipped_species, $added_species) = (0, 0);
-if ($tax_ids_file) {
+if ($tax_ids_file && $update_mode) {
   open my $fh, '<', $tax_ids_file;
   chomp(my @lines = <$fh>);
   close $fh;
@@ -212,10 +218,10 @@ foreach my $input_file_name (@files) {
       if (!defined($current_species_id) || (defined($current_species_id) && $species_id ne $current_species_id)) {
         close($out_fh) if (defined($current_species_id));
 
-	my $species_id_str = sprintf("%04d", $species_id);
-	my @digits = split('', $species_id_str);
+        my $species_id_str = sprintf("%04d", $species_id);
+        my @digits = split('', $species_id_str);
 
-	$write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
+        $write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
         make_path($write_path);
 
         $write_file = $write_path."/".$output_file_name."-".$species_id;
