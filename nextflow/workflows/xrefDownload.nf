@@ -18,6 +18,7 @@ println """\
         sources_config_file       : ${params.sources_config_file}
         clean_dir                 : ${params.clean_dir}
         tax_ids_file              : ${params.tax_ids_file}
+        update_mode               : ${params.update_mode}
         """
         .stripIndent()
 
@@ -57,6 +58,9 @@ def helpMessage() {
 
     --tax_ids_file              (optional)      Path to the file containing the taxonomy IDs of the species to extract data for.
                                                 Used to update the data for the provided species.
+
+    --update_mode               (optional)      If set to 1, pipeline is in update mode, refreshing/updating its data for new taxonomy IDs.
+                                                Only used if --tax_ids_file is set. Default: 0
   """.stripIndent()
 }
 
@@ -198,7 +202,7 @@ process CleanupSplitSource {
   }
 
   """
-  perl ${params.perl_scripts_dir}/cleanup_and_split_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --skip_download ${params.skip_download} --clean_files ${params.clean_files} $cmd_params
+  perl ${params.perl_scripts_dir}/cleanup_and_split_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --clean_files ${params.clean_files} --update_mode ${params.update_mode} $cmd_params
   """
 }
 
