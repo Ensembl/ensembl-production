@@ -227,6 +227,22 @@ sub default_options {
         ipscan_xml      => 'TMHMM',
         ipscan_lookup   => 0,
       },
+      {
+        db               => 'Phobius',
+        ipscan_lookup    => 1,
+        ipscan_name      => 'Phobius',
+        ipscan_xml       => 'PHOBIUS',
+        logic_name       => 'Phobius',
+        program          => 'InterProScan',
+      },
+      {
+        db              => 'SignalP_GRAM_POSITIVE',
+        ipscan_lookup   => 1,
+        ipscan_name     => 'SignalP_GRAM_POSITIVE',
+        ipscan_xml      => 'SIGNALP_GRAM_POSITIVE',
+        logic_name      => 'SignalP_GRAM_POSITIVE',
+        program         => 'InterProScan',
+      },
       #seg replaces low complexity regions in protein sequences with X characters(https://rothlab.ucdavis.edu/genhelp/seg.html)
       {
         logic_name      => 'seg',
