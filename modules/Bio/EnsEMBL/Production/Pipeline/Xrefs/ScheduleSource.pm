@@ -148,6 +148,7 @@ sub run {
 
       foreach my $file (@list_files) {
         $file =~ s/\n//;
+        if (!-f $file) { next; }
         if (defined $release_file and $file eq $release_file) { next; }
   
         $dataflow_params = {
