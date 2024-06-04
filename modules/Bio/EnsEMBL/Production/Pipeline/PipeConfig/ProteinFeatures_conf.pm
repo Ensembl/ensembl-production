@@ -243,6 +243,14 @@ sub default_options {
         logic_name      => 'SignalP_GRAM_POSITIVE',
         program         => 'InterProScan',
       },
+      {
+        db              => 'SignalP_GRAM_NEGATIVE',
+        ipscan_lookup   => 1,
+        ipscan_name     => 'SignalP_GRAM_NEGATIVE',
+        ipscan_xml      => 'SIGNALP_GRAM_NEGATIVE',
+        logic_name      => 'SignalP_GRAM_NEGATIVE',
+        program         => 'InterProScan',
+      },      
       #seg replaces low complexity regions in protein sequences with X characters(https://rothlab.ucdavis.edu/genhelp/seg.html)
       {
         logic_name      => 'seg',
