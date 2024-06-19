@@ -226,7 +226,7 @@
     {
       "name" : "Xenbase",
       "parser" : "XenopusJamboreeParser",
-      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
+      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping_4.1.txt",
       "priority" : 1
     },
     {
