@@ -148,7 +148,7 @@ sub run {
     my $alpha_db = new KyotoCabinet::DB;
     # Set 4 GB mmap size
     $alpha_db->open("$idx_dir_al#msiz=$mapsize_gb#opts=l",
-        $alpha_db->OREADER
+        $alpha_db->OREADER | $alpha_db->ONOLOCK,
     ) or die "Error opening DB: " . $alpha_db->error();
 
     my $gifts_host = $self->param('gifts_host') // 'pgsql-hlvm-051.ebi.ac.uk';
