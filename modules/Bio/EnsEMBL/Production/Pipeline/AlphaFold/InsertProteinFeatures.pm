@@ -164,7 +164,7 @@ sub run {
             -db            => 'alphafold',
             -db_version    => $alpha_version,
             -db_file       => $self->param('db_dir') . '/accession_ids.csv',
-            -display_label => 'AlphaFold DB import',
+            -display_label => 'AFDB-ENSP mapping',
             -displayable   => '1',
             -description   => 'Protein features based on AlphaFold predictions, mapped with GIFTS or UniParc'
     );
