@@ -1,0 +1,175 @@
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
+// Parameters
+params.dataset_uuid = "${params.dataset_uuid}"
+params.initial_directory = "${params.initial_directory}"
+params.final_directory = "${params.final_directory}"
+params.email = "${params.email}"
+params.slack_notification = "${params.slack_notification}"
+params.email_notification = "${params.email_notification}"
+params.datacheck = "${params.datacheck}"
+
+println """\
+         F I L E   T R A N S F E R   P I P E L I N E
+         ===================================
+         debug                 : ${params.debug}
+         file                  : ${params.file}
+         final_directory       : ${params.final_directory}
+         initial_directory     : ${params.initial_directory}
+         email_notification    : ${params.email_notification}
+         slack_notification    : ${params.slack_notification}
+         datacheck             : ${params.datacheck}
+         """
+         .stripIndent()
+
+// Help message
+def helpMessage() {
+    log.info """
+    Usage:
+    nextflow run your_pipeline.nf --initial_directory <path> --final_directory <path> --slack_notification <true|false> --email_notification <true|false> --datacheck <datacheck_name> --email <email_address>
+    """.stripIndent()
+}
+
+workflow {
+    if (params.help) {
+        helpMessage()
+        exit 1
+    }
+
+    // Step 1: Data Check in initial directory if datacheck is specified
+    process DataCheckInitial {
+        label 'mem2GB_H'
+        input:
+        val dataset_uuid from params.dataset_uuid
+        val initial_dir from params.initial_directory
+        val datacheck from params.datacheck
+
+        output:
+        path "initial_check_output.txt"
+        val exit_code
+
+        when:
+        datacheck != null && datacheck != ''
+
+        script:
+        """
+        ensembl-datacheck --file ${initial_dir}/${dataset_uuid} --test=${datacheck} > initial_check_output.txt || exit 1
+        exit_code=\$?
+        """
+    }
+
+    // Step 2: Rsync files to final directory
+    process RsyncFiles {
+        label 'mem2GB_DM'
+        input:
+        val initial_dir from params.initial_directory
+        val final_dir from params.final_directory
+        val exit_code from DataCheckInitial.out.exit_code
+
+        output:
+        path "rsync_output.txt"
+
+        when:
+        exit_code == 0
+
+        script:
+        """
+        rsync -av ${initial_dir}/ ${final_dir}/ > rsync_output.txt
+        """
+    }
+
+    // Step 3: Data Check in final directory if datacheck is specified
+    process DataCheckFinal {
+        label 'mem2GB_H'
+        input:
+        val dataset_uuid from params.dataset_uuid
+        val final_dir from params.final_directory
+        val datacheck from params.datacheck
+        val exit_code from DataCheckInitial.out.exit_code
+
+        output:
+        path "final_check_output.txt"
+        val exit_code_final
+
+        when:
+        exit_code == 0 && datacheck != null && datacheck != ''
+
+        script:
+        """
+        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt || exit 1
+        exit_code_final=\$?
+        """
+    }
+
+    // Step 4: Send notifications
+    process SendNotifications {
+        input:
+        val exit_code from DataCheckInitial.out.exit_code.optional()
+        val exit_code_final from DataCheckFinal.out.exit_code_final.optional()
+        path initial_check_output from DataCheckInitial.out.optional()
+        path final_check_output from DataCheckFinal.out.optional()
+        path rsync_output from RsyncFiles.out.optional()
+
+        script:
+        def datacheck_provided = params.datacheck != null && params.datacheck != ''
+        def initial_check_success = !datacheck_provided || (initial_check_output.exists() && file('initial_check_output.txt').text.contains('No failures'))
+        def final_check_success = !datacheck_provided || (final_check_output.exists() && file('final_check_output.txt').text.contains('No failures'))
+
+        if (!datacheck_provided) {
+            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' <your-slack-webhook-url>
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Pipeline Notification: No Datacheck Run" your_email@example.com
+                """
+            }
+        } else if (exit_code != 0) {
+            def message = "Initial data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' <your-slack-webhook-url>
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Initial Data Check Failed" your_email@example.com
+                """
+            }
+        } else if (exit_code_final != null && exit_code_final != 0) {
+            def message = "Final data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}\nFinal Check:\n${file('final_check_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' <your-slack-webhook-url>
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Final Data Check Failed" your_email@example.com
+                """
+            }
+        } else {
+            def success_message = "Pipeline completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${success_message}"}' <your-slack-webhook-url>
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${success_message}" | mail -s "Pipeline Success" your_email@example.com
+                """
+            }
+        }
+    }
+}
+
+workflow.onComplete {
+    println "Pipeline completed at: $workflow.complete"
+    println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
+}
