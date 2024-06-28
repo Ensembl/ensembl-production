@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 // Parameters
-params.dataset_uuid = "${params.dataset_uuid}" ?: ''
+params.dataset_uuid = "${params.dataset_uuid}"
 params.email = params.email ?: "ensembl-production@ebi.ac.uk"
 params.initial_directory = "${params.initial_directory}"
 params.final_directory = "${params.final_directory}"
 params.slack_email = "${params.slack_email}" ?: "production-crontab-aaaaabe5bbubk2tjx324orx6ke@ebi.org.slack.com"
-params.slack_notification = "${params.slack_notification}" ?: true
-params.email_notification = "${params.email_notification}" ?: true
+params.slack_notification = "${params.slack_notification}"
+params.email_notification = "${params.email_notification}"
 params.datacheck = "${params.datacheck}"
 
 println """\
@@ -23,7 +23,8 @@ println """\
          email_notification    : ${params.email_notification}
          slack_email           : ${params.slack_email}
          slack_notification    : ${params.slack_notification}
-         datacheck             : ${params.datacheck}
+         datache
+         ck             : ${params.datacheck}
          """
          .stripIndent()
 
@@ -35,144 +36,145 @@ def helpMessage() {
     """.stripIndent()
 }
 
-process DataCheckInitial {
-    label 'mem2GB_H'
-    input:
-    val file
-    val initial_dir
-    val datacheck
-
-    output:
-    path "initial_check_output.txt"
-    val exit_code
-
-    when:
-    datacheck != null && datacheck != ''
-
-    script:
-    """
-    ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt
-    exit_code=\$?
-    """
-}
-
-process RsyncFiles {
-    label 'mem2GB_DM'
-    input:
-    val initial_dir
-    val final_dir
-    val file
-
-    output:
-    path "rsync_output.txt"
-
-    when:
-    file != null
-
-    script:
-    """
-    rsync -av ${initial_dir}/${file} ${final_dir}/${file} > rsync_output.txt
-    """
-}
-
-process DataCheckFinal {
-    label 'mem2GB_H'
-    input:
-    val final_dir
-    val datacheck
-
-    output:
-    path "final_check_output.txt"
-    val exit_code_final
-
-    when:
-    datacheck != null && datacheck != ''
-
-    script:
-    """
-    ensembl-datacheck --file ${final_dir}/${params.dataset_uuid} --test=${datacheck} > final_check_output.txt
-    exit_code_final=\$?
-    """
-}
-
 workflow {
     if (params.help) {
         helpMessage()
         exit 1
     }
 
-    if (params.datacheck) {
-        // Define channels
-        Channel.from(params.file).set { fileChannel }
-        Channel.from(params.initial_directory).set { initialDirChannel }
-        Channel.from(params.final_directory).set { finalDirChannel }
-        Channel.from(params.datacheck).set { datacheckChannel }
+    // Step 1: Data Check in initial directory if datacheck is specified
+    process DataCheckInitial {
+        label 'mem2GB_H'
+        input:
+        val dataset_uuid from params.dataset_uuid
+        val initial_dir from params.initial_directory
+        val datacheck from params.datacheck
 
-        // Data check in initial directory
-        DataCheckInitial(file: fileChannel, initial_dir: initialDirChannel, datacheck: datacheckChannel)
+        output:
+        path "initial_check_output.txt"
+        val exit_code
 
-        // Rsync files to final directory
-        RsyncFiles(initial_dir: initialDirChannel, final_dir: finalDirChannel, file: fileChannel)
+        when:
+        datacheck != null && datacheck != ''
 
-        // Data check in final directory
-        DataCheckFinal(final_dir: finalDirChannel, datacheck: datacheckChannel)
+        script:
+        """
+        ensembl-datacheck --file ${initial_dir}/${dataset_uuid} --test=${datacheck} > initial_check_output.txt || exit 1
+        exit_code=\$?
+        """
+    }
 
-        // Notifications for initial check
-        onComplete {
-            def initialCheckMessage = file("initial_check_output.txt").text
-            def initialCheckSubject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
+    // Step 2: Rsync files to final directory
+    process RsyncFiles {
+        label 'mem2GB_DM'
+        input:
+        val initial_dir from params.initial_directory
+        val final_dir from params.final_directory
+        val exit_code from DataCheckInitial.out.exit_code
 
-            if (!workflow.success) {
-                if (params.email_notification.toBoolean()) {
-                    sendMail(
-                        to: params.email,
-                        subject: initialCheckSubject,
-                        body: initialCheckMessage,
-                        attach: "initial_check_output.txt"
-                    )
-                }
-                if (params.slack_notification.toBoolean()) {
-                    sendMail(
-                        to: params.slack_email,
-                        subject: initialCheckSubject,
-                        body: initialCheckMessage,
-                        attach: "initial_check_output.txt"
-                    )
-                }
-                exit 1
-            }
-        }
+        output:
+        path "rsync_output.txt"
 
-        // Notifications for final check
-        onComplete {
-            def finalCheckMessage = file("final_check_output.txt").text
-            def finalCheckSubject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
+        when:
+        exit_code == 0
 
-            if (params.email_notification.toBoolean()) {
-                sendMail(
-                    to: params.email,
-                    subject: finalCheckSubject,
-                    body: finalCheckMessage,
-                    attach: "final_check_output.txt"
-                )
-            }
+        script:
+        """
+        rsync -av ${initial_dir}/ ${final_dir}/ > rsync_output.txt
+        """
+    }
+
+    // Step 3: Data Check in final directory if datacheck is specified
+    process DataCheckFinal {
+        label 'mem2GB_H'
+        input:
+        val dataset_uuid from params.dataset_uuid
+        val final_dir from params.final_directory
+        val datacheck from params.datacheck
+        val exit_code from DataCheckInitial.out.exit_code
+
+        output:
+        path "final_check_output.txt"
+        val exit_code_final
+
+        when:
+        exit_code == 0 && datacheck != null && datacheck != ''
+
+        script:
+        """
+        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt || exit 1
+        exit_code_final=\$?
+        """
+    }
+
+    // Step 4: Send notifications
+    process SendNotifications {
+        input:
+        val exit_code from DataCheckInitial.out.exit_code.optional()
+        val exit_code_final from DataCheckFinal.out.exit_code_final.optional()
+        path initial_check_output from DataCheckInitial.out.optional()
+        path final_check_output from DataCheckFinal.out.optional()
+        path rsync_output from RsyncFiles.out.optional()
+
+        script:
+        def datacheck_provided = params.datacheck != null && params.datacheck != ''
+        def initial_check_success = !datacheck_provided || (initial_check_output.exists() && file('initial_check_output.txt').text.contains('No failures'))
+        def final_check_success = !datacheck_provided || (final_check_output.exists() && file('final_check_output.txt').text.contains('No failures'))
+        def email = params.email
+        def  = params.slack_email
+        if (!datacheck_provided) {
+            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
             if (params.slack_notification.toBoolean()) {
-                sendMail(
-                    to: params.slack_email,
-                    subject: finalCheckSubject,
-                    body: finalCheckMessage,
-                    attach: "final_check_output.txt"
-                )
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}>
+                """
             }
-            if (!workflow.success) {
-                exit 1
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Pipeline Notification: No Datacheck Run" ${email}
+                """
+            }
+        } else if (exit_code != 0) {
+            def message = "Initial data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Initial Data Check Failed" ${email}
+                """
+            }
+        } else if (exit_code_final != null && exit_code_final != 0) {
+            def message = "Final data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}\nFinal Check:\n${file('final_check_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${message}" | mail -s "Final Data Check Failed" ${email}
+                """
+            }
+        } else {
+            def success_message = "Pipeline completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
+            if (params.slack_notification.toBoolean()) {
+                """
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${success_message}"}' ${slack}
+                """
+            }
+            if (params.email_notification.toBoolean()) {
+                """
+                echo "${success_message}" | mail -s "Pipeline Success" ${email}
+                """
             }
         }
     }
+}
 
-    // Workflow completion notifications
-    onComplete {
-        println "Pipeline completed at: $workflow.complete"
-        println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
-    }
+workflow.onComplete {
+    println "Pipeline completed at: $workflow.complete"
+    println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
 }
