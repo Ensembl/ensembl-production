@@ -111,9 +111,9 @@ workflow {
         input:
         def exit_code = DataCheckInitial.out.exit_code.optional()
         def exit_code_final = DataCheckFinal.out.exit_code_final.optional()
-        file initial_check_output = DataCheckInitial.out.optional()
-        file final_check_output = DataCheckFinal.out.optional()
-        file rsync_output = RsyncFiles.out.optional()
+        path initial_check_output = DataCheckInitial.out.path("initial_check_output.txt").optional()
+        path final_check_output = DataCheckFinal.out.path("final_check_output.txt").optional()
+        path rsync_output = RsyncFiles.out.path("rsync_output.txt").optional()
 
         script:
         def datacheck_provided = params.datacheck != ''
