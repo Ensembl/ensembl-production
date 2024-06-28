@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 // Parameters
-params.dataset_uuid = "${params.dataset_uuid}"
+params.dataset_uuid = "${params.dataset_uuid}" ?: ''
 params.email = params.email ?: "ensembl-production@ebi.ac.uk"
 params.initial_directory = "${params.initial_directory}"
 params.final_directory = "${params.final_directory}"
 params.slack_email = "${params.slack_email}" ?: "production-crontab-aaaaabe5bbubk2tjx324orx6ke@ebi.org.slack.com"
-params.slack_notification = "${params.slack_notification}"
-params.email_notification = "${params.email_notification}"
+params.slack_notification = "${params.slack_notification}" ?: True
+params.email_notification = "${params.email_notification}" ?: True
 params.datacheck = "${params.datacheck}"
 
 println """\
