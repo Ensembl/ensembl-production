@@ -3,14 +3,14 @@
 nextflow.enable.dsl=2
 
 // Parameters
-params.dataset_uuid = "${params.dataset_uuid}"
+params.dataset_uuid = params.dataset_uuid ?: ''
 params.email = params.email ?: "ensembl-production@ebi.ac.uk"
-params.initial_directory = "${params.initial_directory}"
-params.final_directory = "${params.final_directory}"
-params.slack_email = "${params.slack_email}" ?: "production-crontab-aaaaabe5bbubk2tjx324orx6ke@ebi.org.slack.com"
-params.slack_notification = "${params.slack_notification}"
-params.email_notification = "${params.email_notification}"
-params.datacheck = "${params.datacheck}"
+params.initial_directory = params.initial_directory ?: ''
+params.final_directory = params.final_directory ?: ''
+params.slack_email = params.slack_email ?: "production-crontab-aaaaabe5bbubk2tjx324orx6ke@ebi.org.slack.com"
+params.slack_notification = params.slack_notification ?: false
+params.email_notification = params.email_notification ?: false
+params.datacheck = params.datacheck ?: ''
 
 println """\
          F I L E   T R A N S F E R   P I P E L I N E
@@ -23,8 +23,7 @@ println """\
          email_notification    : ${params.email_notification}
          slack_email           : ${params.slack_email}
          slack_notification    : ${params.slack_notification}
-         datache
-         ck             : ${params.datacheck}
+         datacheck             : ${params.datacheck}
          """
          .stripIndent()
 
@@ -46,16 +45,16 @@ workflow {
     process DataCheckInitial {
         label 'mem2GB_H'
         input:
-        val dataset_uuid from params.dataset_uuid
-        val initial_dir from params.initial_directory
-        val datacheck from params.datacheck
+        val dataset_uuid = params.dataset_uuid
+        val initial_dir = params.initial_directory
+        val datacheck = params.datacheck
 
         output:
         path "initial_check_output.txt"
         val exit_code
 
         when:
-        datacheck != null && datacheck != ''
+        datacheck
 
         script:
         """
@@ -68,8 +67,8 @@ workflow {
     process RsyncFiles {
         label 'mem2GB_DM'
         input:
-        val initial_dir from params.initial_directory
-        val final_dir from params.final_directory
+        val initial_dir = params.initial_directory
+        val final_dir = params.final_directory
         val exit_code from DataCheckInitial.out.exit_code
 
         output:
@@ -88,9 +87,9 @@ workflow {
     process DataCheckFinal {
         label 'mem2GB_H'
         input:
-        val dataset_uuid from params.dataset_uuid
-        val final_dir from params.final_directory
-        val datacheck from params.datacheck
+        val dataset_uuid = params.dataset_uuid
+        val final_dir = params.final_directory
+        val datacheck = params.datacheck
         val exit_code from DataCheckInitial.out.exit_code
 
         output:
@@ -98,7 +97,7 @@ workflow {
         val exit_code_final
 
         when:
-        exit_code == 0 && datacheck != null && datacheck != ''
+        exit_code == 0 && datacheck
 
         script:
         """
@@ -117,16 +116,16 @@ workflow {
         path rsync_output from RsyncFiles.out.optional()
 
         script:
-        def datacheck_provided = params.datacheck != null && params.datacheck != ''
+        def datacheck_provided = params.datacheck != ''
         def initial_check_success = !datacheck_provided || (initial_check_output.exists() && file('initial_check_output.txt').text.contains('No failures'))
         def final_check_success = !datacheck_provided || (final_check_output.exists() && file('final_check_output.txt').text.contains('No failures'))
         def email = params.email
-        def  = params.slack_email
+        def slack = params.slack_email
         if (!datacheck_provided) {
             def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
             if (params.slack_notification.toBoolean()) {
                 """
-                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}>
+                curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
                 """
             }
             if (params.email_notification.toBoolean()) {
