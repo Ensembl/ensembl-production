@@ -122,7 +122,7 @@ workflow {
         def email = params.email
         def slack = params.slack_email
         if (!datacheck_provided) {
-            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${rsync_output.text}"
+            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${rsync_output.exists() ? rsync_output.text : 'No output'}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -134,7 +134,7 @@ workflow {
                 """
             }
         } else if (exit_code != 0) {
-            def message = "Initial data check failed.\nInitial Check:\n${initial_check_output.text}"
+            def message = "Initial data check failed.\nInitial Check:\n${initial_check_output.exists() ? initial_check_output.text : 'No output'}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -146,7 +146,7 @@ workflow {
                 """
             }
         } else if (exit_code_final != null && exit_code_final != 0) {
-            def message = "Final data check failed.\nInitial Check:\n${initial_check_output.text}\nFinal Check:\n${final_check_output.text}"
+            def message = "Final data check failed.\nInitial Check:\n${initial_check_output.exists() ? initial_check_output.text : 'No output'}\nFinal Check:\n${final_check_output.exists() ? final_check_output.text : 'No output'}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -158,7 +158,7 @@ workflow {
                 """
             }
         } else {
-            def success_message = "Pipeline completed successfully.\nRsync Output:\n${rsync_output.text}"
+            def success_message = "Pipeline completed successfully.\nRsync Output:\n${rsync_output.exists() ? rsync_output.text : 'No output'}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${success_message}"}' ${slack}
