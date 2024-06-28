@@ -35,90 +35,87 @@ def helpMessage() {
     """.stripIndent()
 }
 
+process DataCheckInitial {
+    label 'mem2GB_H'
+    input:
+    val file
+    val initial_dir
+    val datacheck
+
+    output:
+    path "initial_check_output.txt"
+    val exit_code
+
+    when:
+    datacheck != null && datacheck != ''
+
+    script:
+    """
+    ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt
+    exit_code=\$?
+    """
+}
+
+process RsyncFiles {
+    label 'mem2GB_DM'
+    input:
+    val initial_dir
+    val final_dir
+    val file
+
+    output:
+    path "rsync_output.txt"
+
+    when:
+    file != null
+
+    script:
+    """
+    rsync -av ${initial_dir}/${file} ${final_dir}/${file} > rsync_output.txt
+    """
+}
+
+process DataCheckFinal {
+    label 'mem2GB_H'
+    input:
+    val final_dir
+    val datacheck
+
+    output:
+    path "final_check_output.txt"
+    val exit_code_final
+
+    when:
+    datacheck != null && datacheck != ''
+
+    script:
+    """
+    ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt
+    exit_code_final=\$?
+    """
+}
+
 workflow {
     if (params.help) {
         helpMessage()
         exit 1
     }
 
-    // Step 1: Data Check in initial directory if datacheck is specified
-    process DataCheckInitial {
-        label 'mem2GB_H'
-        input:
-        val file from params.file
-        val initial_dir from params.initial_directory
-        val datacheck from params.datacheck
-
-        output:
-        path "initial_check_output.txt"
-        val exit_code
-
-        when:
-        datacheck != null && datacheck != ''
-
-        script:
-        """
-        ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt
-        exit_code=\$?
-        """
-    }
-
-    // Step 2: Rsync files to final directory
-    process RsyncFiles {
-        label 'mem2GB_DM'
-        input:
-        val initial_dir from params.initial_directory
-        val final_dir from params.final_directory
-        val file from params.file
-
-        output:
-        path "rsync_output.txt"
-
-        when:
-        file != null
-
-        script:
-        """
-        rsync -av ${initial_dir}/${file} ${final_dir}/${file} > rsync_output.txt
-        """
-    }
-
-    // Step 3: Data Check in final directory if datacheck is specified
-    process DataCheckFinal {
-        label 'mem2GB_H'
-        input:
-        val final_dir from params.final_directory
-        val datacheck from params.datacheck
-
-        output:
-        path "final_check_output.txt"
-        val exit_code_final
-
-        when:
-        datacheck != null && datacheck != ''
-
-        script:
-        """
-        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt
-        exit_code_final=\$?
-        """
-    }
-
     if (params.datacheck) {
-        DataCheckInitial {
-            exit_code = 0
-        }
+        // Data check in initial directory
+        val checkInitial = DataCheckInitial(file: params.file, initial_dir: params.initial_directory, datacheck: params.datacheck)
+        checkInitial.exit_code = 0
 
-        RsyncFiles {
-            exit_code = 0
-        }
+        // Rsync files to final directory
+        val rsyncFiles = RsyncFiles(initial_dir: params.initial_directory, final_dir: params.final_directory, file: params.file)
+        rsyncFiles.exit_code = 0
 
-        DataCheckFinal {
-            exit_code_final = 0
-        }
+        // Data check in final directory
+        val checkFinal = DataCheckFinal(final_dir: params.final_directory, datacheck: params.datacheck)
+        checkFinal.exit_code_final = 0
 
-        // Notifications
-        DataCheckInitial.onComplete {
+        // Notifications for initial check
+        checkInitial.onComplete {
             def message = file("initial_check_output.txt").text
             def subject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
 
@@ -143,7 +140,8 @@ workflow {
             }
         }
 
-        DataCheckFinal.onComplete {
+        // Notifications for final check
+        checkFinal.onComplete {
             def message = file("final_check_output.txt").text
             def subject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
 
