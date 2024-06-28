@@ -45,9 +45,9 @@ workflow {
     process DataCheckInitial {
         label 'mem2GB_H'
         input:
-        val dataset_uuid = params.dataset_uuid
-        val initial_dir = params.initial_directory
-        val datacheck = params.datacheck
+        def dataset_uuid = params.dataset_uuid
+        def initial_dir = params.initial_directory
+        def datacheck = params.datacheck
 
         output:
         path "initial_check_output.txt"
@@ -67,9 +67,9 @@ workflow {
     process RsyncFiles {
         label 'mem2GB_DM'
         input:
-        val initial_dir = params.initial_directory
-        val final_dir = params.final_directory
-        val exit_code from DataCheckInitial.out.exit_code
+        def initial_dir = params.initial_directory
+        def final_dir = params.final_directory
+        def exit_code = DataCheckInitial.out.exit_code
 
         output:
         path "rsync_output.txt"
@@ -87,10 +87,10 @@ workflow {
     process DataCheckFinal {
         label 'mem2GB_H'
         input:
-        val dataset_uuid = params.dataset_uuid
-        val final_dir = params.final_directory
-        val datacheck = params.datacheck
-        val exit_code from DataCheckInitial.out.exit_code
+        def dataset_uuid = params.dataset_uuid
+        def final_dir = params.final_directory
+        def datacheck = params.datacheck
+        def exit_code = DataCheckInitial.out.exit_code
 
         output:
         path "final_check_output.txt"
@@ -109,11 +109,11 @@ workflow {
     // Step 4: Send notifications
     process SendNotifications {
         input:
-        val exit_code from DataCheckInitial.out.exit_code.optional()
-        val exit_code_final from DataCheckFinal.out.exit_code_final.optional()
-        path initial_check_output from DataCheckInitial.out.optional()
-        path final_check_output from DataCheckFinal.out.optional()
-        path rsync_output from RsyncFiles.out.optional()
+        def exit_code = DataCheckInitial.out.exit_code.optional()
+        def exit_code_final = DataCheckFinal.out.exit_code_final.optional()
+        path initial_check_output = DataCheckInitial.out.optional()
+        path final_check_output = DataCheckFinal.out.optional()
+        path rsync_output = RsyncFiles.out.optional()
 
         script:
         def datacheck_provided = params.datacheck != ''
