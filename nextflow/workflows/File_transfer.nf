@@ -90,7 +90,7 @@ process DataCheckFinal {
 
     script:
     """
-    ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt
+    ensembl-datacheck --file ${final_dir}/${params.dataset_uuid} --test=${datacheck} > final_check_output.txt
     exit_code_final=\$?
     """
 }
@@ -102,37 +102,40 @@ workflow {
     }
 
     if (params.datacheck) {
+        // Define channels
+        Channel.from(params.file).set { fileChannel }
+        Channel.from(params.initial_directory).set { initialDirChannel }
+        Channel.from(params.final_directory).set { finalDirChannel }
+        Channel.from(params.datacheck).set { datacheckChannel }
+
         // Data check in initial directory
-        val checkInitial = DataCheckInitial(file: params.file, initial_dir: params.initial_directory, datacheck: params.datacheck)
-        checkInitial.exit_code = 0
+        DataCheckInitial(file: fileChannel, initial_dir: initialDirChannel, datacheck: datacheckChannel)
 
         // Rsync files to final directory
-        val rsyncFiles = RsyncFiles(initial_dir: params.initial_directory, final_dir: params.final_directory, file: params.file)
-        rsyncFiles.exit_code = 0
+        RsyncFiles(initial_dir: initialDirChannel, final_dir: finalDirChannel, file: fileChannel)
 
         // Data check in final directory
-        val checkFinal = DataCheckFinal(final_dir: params.final_directory, datacheck: params.datacheck)
-        checkFinal.exit_code_final = 0
+        DataCheckFinal(final_dir: finalDirChannel, datacheck: datacheckChannel)
 
         // Notifications for initial check
-        checkInitial.onComplete {
-            def message = file("initial_check_output.txt").text
-            def subject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
+        onComplete {
+            def initialCheckMessage = file("initial_check_output.txt").text
+            def initialCheckSubject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
 
             if (!workflow.success) {
                 if (params.email_notification.toBoolean()) {
                     sendMail(
                         to: params.email,
-                        subject: subject,
-                        body: message,
+                        subject: initialCheckSubject,
+                        body: initialCheckMessage,
                         attach: "initial_check_output.txt"
                     )
                 }
                 if (params.slack_notification.toBoolean()) {
                     sendMail(
                         to: params.slack_email,
-                        subject: subject,
-                        body: message,
+                        subject: initialCheckSubject,
+                        body: initialCheckMessage,
                         attach: "initial_check_output.txt"
                     )
                 }
@@ -141,23 +144,23 @@ workflow {
         }
 
         // Notifications for final check
-        checkFinal.onComplete {
-            def message = file("final_check_output.txt").text
-            def subject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
+        onComplete {
+            def finalCheckMessage = file("final_check_output.txt").text
+            def finalCheckSubject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
 
             if (params.email_notification.toBoolean()) {
                 sendMail(
                     to: params.email,
-                    subject: subject,
-                    body: message,
+                    subject: finalCheckSubject,
+                    body: finalCheckMessage,
                     attach: "final_check_output.txt"
                 )
             }
             if (params.slack_notification.toBoolean()) {
                 sendMail(
                     to: params.slack_email,
-                    subject: subject,
-                    body: message,
+                    subject: finalCheckSubject,
+                    body: finalCheckMessage,
                     attach: "final_check_output.txt"
                 )
             }
