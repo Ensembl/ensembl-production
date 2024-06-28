@@ -51,15 +51,13 @@ workflow {
 
         output:
         path "initial_check_output.txt"
-        val exit_code
 
         when:
         datacheck != null && datacheck != ''
 
         script:
         """
-        ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt || exit 1
-        exit_code=\$?
+        ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt
         """
     }
 
@@ -92,36 +90,68 @@ workflow {
 
         output:
         path "final_check_output.txt"
-        val exit_code_final
 
         when:
         datacheck != null && datacheck != ''
 
         script:
         """
-        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt || exit 1
-        exit_code_final=\$?
+        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt
         """
     }
 
+    // Workflow-level completion
     workflow.onComplete {
+        def initialCheckSuccess = file("initial_check_output.txt").exists()
+        def finalCheckSuccess = file("final_check_output.txt").exists()
+
+        if (initialCheckSuccess) {
+            def message = file("initial_check_output.txt").text
+            def subject = "Initial Data Check Success"
+
+            if (params.email_notification.toBoolean()) {
+                sendMail(
+                    to: params.email,
+                    subject: subject,
+                    body: message,
+                    attach: "initial_check_output.txt"
+                )
+            }
+
+            if (params.slack_notification.toBoolean()) {
+                sendMail(
+                    to: params.slack_email,
+                    subject: subject,
+                    body: message,
+                    attach: "initial_check_output.txt"
+                )
+            }
+        }
+
+        if (finalCheckSuccess) {
+            def message = file("final_check_output.txt").text
+            def subject = "Final Data Check Success"
+
+            if (params.email_notification.toBoolean()) {
+                sendMail(
+                    to: params.email,
+                    subject: subject,
+                    body: message,
+                    attach: "final_check_output.txt"
+                )
+            }
+
+            if (params.slack_notification.toBoolean()) {
+                sendMail(
+                    to: params.slack_email,
+                    subject: subject,
+                    body: message,
+                    attach: "final_check_output.txt"
+                )
+            }
+        }
+
         println "Pipeline completed at: $workflow.complete"
         println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
-
-        if (params.email_notification.toBoolean()) {
-            sendMail(
-                to: params.email,
-                subject: "Pipeline Execution ${workflow.success ? 'Success' : 'Failed'}",
-                body: "The pipeline has completed execution with status: ${workflow.success ? 'OK' : 'FAILED'}"
-            )
-        }
-
-        if (params.slack_notification.toBoolean()) {
-            sendMail(
-                to: params.slack_email,
-                subject: "Pipeline Execution ${workflow.success ? 'Success' : 'Failed'}",
-                body: "The pipeline has completed execution with status: ${workflow.success ? 'OK' : 'FAILED'}"
-            )
-        }
     }
 }
