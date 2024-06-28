@@ -63,6 +63,31 @@ workflow {
         """
     }
 
+    DataCheckInitial.onComplete {
+        def message = file("initial_check_output.txt").text
+        def subject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
+
+        if (!workflow.success) {
+            if (params.email_notification.toBoolean()) {
+                sendMail(
+                    to: params.email,
+                    subject: subject,
+                    body: message,
+                    attach: "initial_check_output.txt"
+                )
+            }
+            if (params.slack_notification.toBoolean()) {
+                sendMail(
+                    to: params.slack_email,
+                    subject: subject,
+                    body: message,
+                    attach: "initial_check_output.txt"
+                )
+            }
+            exit 1
+        }
+    }
+
     // Step 2: Rsync files to final directory
     process RsyncFiles {
         label 'mem2GB_DM'
@@ -104,76 +129,32 @@ workflow {
         """
     }
 
-    // Define the workflow
-    workflow {
-        if (params.datacheck) {
-            DataCheckInitial {
-                exit_code = 0
-            }
+    DataCheckFinal.onComplete {
+        def message = file("final_check_output.txt").text
+        def subject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
 
-            RsyncFiles {
-                exit_code = 0
-            }
-
-            DataCheckFinal {
-                exit_code_final = 0
-            }
-
-            // Notifications
-            DataCheckInitial.onComplete {
-                def message = file("initial_check_output.txt").text
-                def subject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
-
-                if (!workflow.success) {
-                    if (params.email_notification.toBoolean()) {
-                        sendMail(
-                            to: params.email,
-                            subject: subject,
-                            body: message,
-                            attach: "initial_check_output.txt"
-                        )
-                    }
-                    if (params.slack_notification.toBoolean()) {
-                        sendMail(
-                            to: params.slack_email,
-                            subject: subject,
-                            body: message,
-                            attach: "initial_check_output.txt"
-                        )
-                    }
-                    exit 1
-                }
-            }
-
-            DataCheckFinal.onComplete {
-                def message = file("final_check_output.txt").text
-                def subject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
-
-                if (params.email_notification.toBoolean()) {
-                    sendMail(
-                        to: params.email,
-                        subject: subject,
-                        body: message,
-                        attach: "final_check_output.txt"
-                    )
-                }
-                if (params.slack_notification.toBoolean()) {
-                    sendMail(
-                        to: params.slack_email,
-                        subject: subject,
-                        body: message,
-                        attach: "final_check_output.txt"
-                    )
-                }
-                if (!workflow.success) {
-                    exit 1
-                }
-            }
+        if (params.email_notification.toBoolean()) {
+            sendMail(
+                to: params.email,
+                subject: subject,
+                body: message,
+                attach: "final_check_output.txt"
+            )
+        }
+        if (params.slack_notification.toBoolean()) {
+            sendMail(
+                to: params.slack_email,
+                subject: subject,
+                body: message,
+                attach: "final_check_output.txt"
+            )
+        }
+        if (!workflow.success) {
+            exit 1
         }
     }
 
-    // Workflow completion notifications
-    workflow.onComplete {
+    onComplete {
         println "Pipeline completed at: $workflow.complete"
         println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
     }
