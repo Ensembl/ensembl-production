@@ -111,18 +111,18 @@ workflow {
         input:
         def exit_code = DataCheckInitial.out.exit_code.optional()
         def exit_code_final = DataCheckFinal.out.exit_code_final.optional()
-        path initial_check_output = DataCheckInitial.out.optional()
-        path final_check_output = DataCheckFinal.out.optional()
-        path rsync_output = RsyncFiles.out.optional()
+        file initial_check_output = DataCheckInitial.out.optional()
+        file final_check_output = DataCheckFinal.out.optional()
+        file rsync_output = RsyncFiles.out.optional()
 
         script:
         def datacheck_provided = params.datacheck != ''
-        def initial_check_success = !datacheck_provided || (initial_check_output.exists() && file('initial_check_output.txt').text.contains('No failures'))
-        def final_check_success = !datacheck_provided || (final_check_output.exists() && file('final_check_output.txt').text.contains('No failures'))
+        def initial_check_success = !datacheck_provided || (initial_check_output.exists() && initial_check_output.text.contains('No failures'))
+        def final_check_success = !datacheck_provided || (final_check_output.exists() && final_check_output.text.contains('No failures'))
         def email = params.email
         def slack = params.slack_email
         if (!datacheck_provided) {
-            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
+            def message = "No datacheck was run. Rsync completed successfully.\nRsync Output:\n${rsync_output.text}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -134,7 +134,7 @@ workflow {
                 """
             }
         } else if (exit_code != 0) {
-            def message = "Initial data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}"
+            def message = "Initial data check failed.\nInitial Check:\n${initial_check_output.text}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -146,7 +146,7 @@ workflow {
                 """
             }
         } else if (exit_code_final != null && exit_code_final != 0) {
-            def message = "Final data check failed.\nInitial Check:\n${file('initial_check_output.txt').text}\nFinal Check:\n${file('final_check_output.txt').text}"
+            def message = "Final data check failed.\nInitial Check:\n${initial_check_output.text}\nFinal Check:\n${final_check_output.text}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${message}"}' ${slack}
@@ -158,7 +158,7 @@ workflow {
                 """
             }
         } else {
-            def success_message = "Pipeline completed successfully.\nRsync Output:\n${file('rsync_output.txt').text}"
+            def success_message = "Pipeline completed successfully.\nRsync Output:\n${rsync_output.text}"
             if (params.slack_notification.toBoolean()) {
                 """
                 curl -X POST -H 'Content-type: application/json' --data '{"text":"${success_message}"}' ${slack}
