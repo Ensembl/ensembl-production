@@ -58,34 +58,9 @@ workflow {
 
         script:
         """
-        ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt
+        ensembl-datacheck --file ${initial_dir}/${file} --test=${datacheck} > initial_check_output.txt || exit 1
         exit_code=\$?
         """
-    }
-
-    DataCheckInitial.onComplete {
-        def message = file("initial_check_output.txt").text
-        def subject = (workflow.success) ? "Initial Data Check Success" : "Initial Data Check Failed"
-
-        if (!workflow.success) {
-            if (params.email_notification.toBoolean()) {
-                sendMail(
-                    to: params.email,
-                    subject: subject,
-                    body: message,
-                    attach: "initial_check_output.txt"
-                )
-            }
-            if (params.slack_notification.toBoolean()) {
-                sendMail(
-                    to: params.slack_email,
-                    subject: subject,
-                    body: message,
-                    attach: "initial_check_output.txt"
-                )
-            }
-            exit 1
-        }
     }
 
     // Step 2: Rsync files to final directory
@@ -124,38 +99,29 @@ workflow {
 
         script:
         """
-        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt
+        ensembl-datacheck --file ${final_dir}/${dataset_uuid} --test=${datacheck} > final_check_output.txt || exit 1
         exit_code_final=\$?
         """
     }
 
-    DataCheckFinal.onComplete {
-        def message = file("final_check_output.txt").text
-        def subject = (workflow.success) ? "Final Data Check Success" : "Final Data Check Failed"
+    workflow.onComplete {
+        println "Pipeline completed at: $workflow.complete"
+        println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
 
         if (params.email_notification.toBoolean()) {
             sendMail(
                 to: params.email,
-                subject: subject,
-                body: message,
-                attach: "final_check_output.txt"
+                subject: "Pipeline Execution ${workflow.success ? 'Success' : 'Failed'}",
+                body: "The pipeline has completed execution with status: ${workflow.success ? 'OK' : 'FAILED'}"
             )
         }
+
         if (params.slack_notification.toBoolean()) {
             sendMail(
                 to: params.slack_email,
-                subject: subject,
-                body: message,
-                attach: "final_check_output.txt"
+                subject: "Pipeline Execution ${workflow.success ? 'Success' : 'Failed'}",
+                body: "The pipeline has completed execution with status: ${workflow.success ? 'OK' : 'FAILED'}"
             )
         }
-        if (!workflow.success) {
-            exit 1
-        }
-    }
-
-    onComplete {
-        println "Pipeline completed at: $workflow.complete"
-        println "Execution status: ${workflow.success ? 'OK' : 'FAILED'}"
     }
 }
