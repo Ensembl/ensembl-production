@@ -91,9 +91,9 @@ sub resource_classes {
     my $dq = ' --partition=datamover';
     my %output = (
         #Default is a duplicate of 100M
-        'default'   => { 'SLURM' => $time{'H'} . ' --mem=' . $memory{'1G'} . 'm' },
-        'default_D' => { 'SLURM' => $time{'D'} . ' --mem=' . $memory{'1G'} . 'm' },
-        'default_W' => { 'SLURM' => $time{'W'} . ' --mem=' . $memory{'1G'} . 'm' },
+        'default'   => { 'SLURM' => $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'default_D' => { 'SLURM' => $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'default_W' => { 'SLURM' => $time{'W'} . ' --mem=' . $memory{'1GB'} . 'm' },
         #Data mover nodes
         'dm'       => { 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
         'dm_D'     => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
