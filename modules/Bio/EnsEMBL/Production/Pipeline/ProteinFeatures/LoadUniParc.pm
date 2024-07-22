@@ -21,16 +21,25 @@ package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::LoadUniParc;
 
 use strict;
 use warnings;
-
+use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
 use File::Basename;
-
 use base ('Bio::EnsEMBL::Production::Pipeline::Common::Base');
 
 sub run {
   my ($self) = @_;
   my $uniparc_file = $self->param_required('uniparc_file_local');
 
+
   if (-e $uniparc_file) {
+
+    #check if uniparc file is compressed
+    if ($uniparc_file =~ /\.gz$/){
+        my $uniparc_file_decompress = $uniparc_file;
+        $uniparc_file_decompress =~ s/\.gz$//;
+        gunzip $uniparc_file => $uniparc_file_decompress  or $self->throw("gunzip failed: $GunzipError");
+        $uniparc_file = $uniparc_file_decompress;
+    }
+
     my $dbh = $self->hive_dbh;
     my $sql = "LOAD DATA LOCAL INFILE '$uniparc_file' INTO TABLE uniparc FIELDS TERMINATED BY ' '";
     $dbh->do($sql) or self->throw($dbh->errstr);
