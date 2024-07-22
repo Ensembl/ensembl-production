@@ -38,7 +38,7 @@ sub run {
         $uniparc_file_decompress =~ s/\.gz$//;
         gunzip $uniparc_file => $uniparc_file_decompress  or $self->throw("gunzip failed: $GunzipError");
         #delete compressed file .gz
-        unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file");
+        unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file: $!");
         $uniparc_file = $uniparc_file_decompress;
     }
 
