@@ -37,6 +37,8 @@ sub run {
         my $uniparc_file_decompress = $uniparc_file;
         $uniparc_file_decompress =~ s/\.gz$//;
         gunzip $uniparc_file => $uniparc_file_decompress  or $self->throw("gunzip failed: $GunzipError");
+        #delete compressed file .gz
+        unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file");
         $uniparc_file = $uniparc_file_decompress;
     }
 
@@ -50,9 +52,14 @@ sub run {
     my $index_2 = 'ALTER TABLE uniparc ADD KEY md5sum_idx (md5sum) USING HASH';
     $dbh->do($index_2) or self->throw($dbh->errstr);
 
+    #delete upidump file from pipeline direcotry after loading into hive db
+    unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file");
+
   } else {
     $self->throw("Checksum file '$uniparc_file' does not exist");
   }
+
+
 }
 
 1;
