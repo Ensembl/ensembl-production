@@ -53,7 +53,7 @@ sub run {
     $dbh->do($index_2) or self->throw($dbh->errstr);
 
     #delete upidump file from pipeline direcotry after loading into hive db
-    unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file");
+    unlink  $uniparc_file or $self->throw("unable to delete $uniparc_file: $!");
 
   } else {
     $self->throw("Checksum file '$uniparc_file' does not exist");
