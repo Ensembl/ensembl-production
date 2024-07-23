@@ -75,7 +75,7 @@ sub default_options {
 
     interpro_file    => 'names.dat',
     interpro2go_file => 'interpro2go',
-    uniparc_file     => 'upidump.lis',
+    uniparc_file     => 'upidump.lis.gz',
     mapping_file     => 'idmapping_selected.tab.gz',
 
     # Files are retrieved and stored locally with the same name.
