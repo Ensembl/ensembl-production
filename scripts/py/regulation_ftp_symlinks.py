@@ -42,7 +42,6 @@ from os import listdir, makedirs, path, walk
 from pathlib import Path
 
 # Human and Mouse follow a different dir structure
-# SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
 SPECIES_TO_NOT_INCLUDE = []
 
 # GENE-SWITCH species
@@ -243,7 +242,6 @@ class RegulationSymlinkFTP:
         result = utils.get_species_with_analysis_type_folder(
             analysis_type, ftp_path
         )
-        __import__("ipdb").set_trace()
         return [
             RegulationSymlinkFTP(
                 analysis_type=analysis_type,
