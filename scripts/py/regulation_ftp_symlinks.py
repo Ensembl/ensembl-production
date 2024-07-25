@@ -43,6 +43,7 @@ from pathlib import Path
 
 # Human and Mouse follow a different dir structure
 # SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
+SPECIES_TO_NOT_INCLUDE = []
 
 # GENE-SWITCH species
 GENE_SWITCH_SPECIES = [
@@ -139,8 +140,15 @@ class Utils:
     def get_most_recent_release_data_file_path(data_file_path):
         validator.is_dir(Path(data_file_path))
         available_releases = listdir(data_file_path)
+        releases = []
+        for release in available_releases:
+            try:
+                releases.append(int(release))
+            except:
+                continue
+
         return Path(data_file_path) / str(
-            max([int(release) for release in available_releases])
+            max(releases)
         )
 
 
@@ -235,6 +243,7 @@ class RegulationSymlinkFTP:
         result = utils.get_species_with_analysis_type_folder(
             analysis_type, ftp_path
         )
+        __import__("ipdb").set_trace()
         return [
             RegulationSymlinkFTP(
                 analysis_type=analysis_type,
@@ -244,7 +253,7 @@ class RegulationSymlinkFTP:
                 release=release,
             )
             for species, assemblies in result.items()
-            for assembly in assemblies
+            for assembly in assemblies if assembly not in ["GRCh37", "GRCm38", "NCBIM37"]
         ]
 
 
