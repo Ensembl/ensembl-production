@@ -40,7 +40,7 @@ sub default_options {
 
         dump_dir               => undef,
         ftp_root               => undef,
-
+        run_bgz                => 1,
         genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
         geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
         rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
@@ -354,6 +354,7 @@ sub pipeline_analyses {
                 '-1'   => [ 'Genome_FASTA_mem' ],
                 '2->A' => [ 'Genome_Compress' ],
                 'A->2' => [ 'Symlink_Genome_FASTA' ],
+                'A->2' => WHEN('#run_bgz#' => [ 'ProcessFASTA' ]),
             },
         },
         {
@@ -409,7 +410,9 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_GFF3_mem' ],
-                '2'  => [ 'Geneset_Compress' ]
+                '2->A'  => [ 'Geneset_Compress' ]
+                'A->1' =>    WHEN('#run_bgz#' => [ 'ProcessGFF' ]),
+
             },
         },
         {
@@ -497,6 +500,7 @@ sub pipeline_analyses {
             -flow_into       => {
                 '2->A' => [ 'Genome_Compress' ],
                 'A->2' => [ 'Symlink_Genome_FASTA' ],
+                'A->2' => WHEN('#run_bgz#' => [ 'ProcessFASTA' ]),
             },
         },
         {
@@ -541,7 +545,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-                '2' => [ 'Geneset_Compress' ]
+               '2->A' => [ 'Geneset_Compress' ],
+                'A->1' =>    WHEN('#run_bgz#' => [ 'ProcessGFF' ]),
             },
         },
         {
@@ -735,6 +740,36 @@ sub pipeline_analyses {
                 cmd => 'rsync -aLW #output_filename# #ftp_root#',
             },
             -rc_name           => "dm"
+        },
+        {
+          -logic_name        => 'ProcessFASTA',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+          -parameters        => {
+            cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
+            sm_filename    => '#sm_filename#',
+            outdir_suffix  => 'processed_fasta',
+          },
+          -flow_into         => {
+            1 => ['MoveFASTA']
+          },
+          -can_be_empty      => 1,
+          -hive_capacity     => 10,
+          -rc_name           => '4GB',
+        },
+        {
+          -logic_name        => 'ProcessGFF',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+          -parameters        => {
+            cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
+            gff            => '#gff#',
+            outdir_suffix  => 'processed_gff'
+          },
+          -flow_into         => {
+            1 => ['MoveGFF']
+          },
+          -can_be_empty      => 1,
+          -hive_capacity     => 10,
+          -rc_name           => '4GB',
         },
     ];
 }

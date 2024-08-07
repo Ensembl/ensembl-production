@@ -82,8 +82,9 @@ sub run {
   # } else {
   #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
   # }
-
-  $self->unmask($sm_filename, $um_filename);
+  if($self->param('unmasked')){
+      $self->unmask($sm_filename, $um_filename);
+  }
   if($self->param('hardmasked')){
     $self->hardmask($sm_filename, $hm_filename);
   }
