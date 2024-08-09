@@ -127,13 +127,28 @@ sub run {
     } else {
       # Create list of files
       opendir(my $dir_handle, $file_name);
-      my @list_files = readdir($dir_handle);
+      my @temp_list_files = readdir($dir_handle);
       closedir($dir_handle);
-      if ($preparse) { @list_files = $preparse; }
-      foreach my $file (@list_files) {
+
+      my @list_files;
+      foreach my $file (@temp_list_files) {
         next if ($file =~ /^\./);
+        push(@list_files, $file_name . "/" . $file);
+      }
+      if ($preparse) { @list_files = $preparse; }
+
+      # For Uniprot and Refseq, files might have been split by species
+      if (!$preparse && ($name =~ /^Uniprot/ || $name =~ /^RefSeq_peptide/ || $name =~ /^RefSeq_dna/)) {
+        my $file_prefix = ($name =~ /SPTREMBL/ ? 'uniprot_trembl' : ($name =~ /SWISSPROT/ ? 'uniprot_sprot' : ($name =~ /_dna/ ? 'refseq_rna' : 'refseq_protein')));
+        my @species_list_files = glob($file_name . "/**/**/**/**/" . $file_prefix . "-" . $species_id);
+        if (scalar(@species_list_files) > 0) {
+          @list_files = @species_list_files;
+        }
+      }
+
+      foreach my $file (@list_files) {
         $file =~ s/\n//;
-        $file = $file_name . "/" . $file;
+        if (!-f $file) { next; }
         if (defined $release_file and $file eq $release_file) { next; }
   
         $dataflow_params = {

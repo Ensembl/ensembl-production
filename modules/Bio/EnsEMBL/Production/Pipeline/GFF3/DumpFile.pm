@@ -279,7 +279,7 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
 
   my @tags;
-  push(@tags, 'basic') if $self->gencode_basic();
+  push(@tags, 'gencode_basic') if $self->gencode_basic();
   push(@tags, 'gencode_primary') if $self->gencode_primary();
   push(@tags, 'Ensembl_canonical') if $self->is_canonical();
 
