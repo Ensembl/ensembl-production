@@ -232,7 +232,7 @@ sub default_options {
         ipscan_lookup    => 1,
         ipscan_name      => 'Phobius',
         ipscan_xml       => 'PHOBIUS',
-        logic_name       => 'Phobius',
+        logic_name       => 'phobius',
         program          => 'InterProScan',
       },
       {
@@ -240,7 +240,7 @@ sub default_options {
         ipscan_lookup   => 1,
         ipscan_name     => 'SignalP_GRAM_POSITIVE',
         ipscan_xml      => 'SIGNALP_GRAM_POSITIVE',
-        logic_name      => 'SignalP_GRAM_POSITIVE',
+        logic_name      => 'signalp_gram_positive',
         program         => 'InterProScan',
       },
       {
@@ -248,7 +248,7 @@ sub default_options {
         ipscan_lookup   => 1,
         ipscan_name     => 'SignalP_GRAM_NEGATIVE',
         ipscan_xml      => 'SIGNALP_GRAM_NEGATIVE',
-        logic_name      => 'SignalP_GRAM_NEGATIVE',
+        logic_name      => 'signalp_gram_negative',
         program         => 'InterProScan',
       },      
       #seg replaces low complexity regions in protein sequences with X characters(https://rothlab.ucdavis.edu/genhelp/seg.html)
