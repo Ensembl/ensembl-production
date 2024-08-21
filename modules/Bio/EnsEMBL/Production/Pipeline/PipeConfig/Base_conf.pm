@@ -91,15 +91,15 @@ sub resource_classes {
     my $dq = ' --partition=datamover';
     my %output = (
         #Default is a duplicate of 100M
-        'default'   => { 'SLURM' => $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
-        'default_D' => { 'SLURM' => $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
-        'default_W' => { 'SLURM' => $time{'W'} . ' --mem=' . $memory{'1GB'} . 'm' },
+        'default'   => { 'SLURM' => $time{'H'} . ' --mem=' . $memory{'1GB'}  },
+        'default_D' => { 'SLURM' => $time{'D'} . ' --mem=' . $memory{'1GB'}  },
+        'default_W' => { 'SLURM' => $time{'W'} . ' --mem=' . $memory{'1GB'}  },
         #Data mover nodes
-        'dm'       => { 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'1GB'} . 'm' },
-        'dm_D'     => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'1GB'} . 'm' },
-        'dm_W'     => { 'SLURM' => $dq . $time{'W'} . ' --mem=' . $memory{'1GB'} . 'm' },
-        'dm32_D'   => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'32GB'} . 'm' },
-        'dmMAX_D'  => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'200GB'} . 'm' },
+        'dm'       => { 'SLURM' => $dq . $time{'H'} . ' --mem=' . $memory{'1GB'}  },
+        'dm_D'     => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'1GB'}  },
+        'dm_W'     => { 'SLURM' => $dq . $time{'W'} . ' --mem=' . $memory{'1GB'}  },
+        'dm32_D'   => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'32GB'}  },
+        'dmMAX_D'  => { 'SLURM' => $dq . $time{'D'} . ' --mem=' . $memory{'200GB'}  },
     );
 
     while ((my $time_key, my $time_value) = each(%time)) {

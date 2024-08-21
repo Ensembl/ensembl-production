@@ -1,4 +1,5 @@
 language: perl
+dist: focal
 perl:
   - "5.14"
   - "5.26.2"
