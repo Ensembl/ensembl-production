@@ -286,6 +286,7 @@ sub pipeline_analyses {
     -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck',
     -parameters => {
       db_conn       => '#xref_url#',
+      description   => 'Check that the object_xref table has rows'
       query         => 'SELECT object_xref_id FROM object_xref',
       expected_size => '> 0'
     },
