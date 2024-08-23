@@ -59,7 +59,7 @@ sub run {
   }
 
   # Create Xref database
-  my $dbname = $species . "_perl_xref_update_" . $release;
+  my $dbname = $species . "_xref_update_" . $release;
   my $dbc = XrefParser::Database->new({
             host    => $host,
             dbname  => $dbname,
