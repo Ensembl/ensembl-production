@@ -7,13 +7,6 @@
       "priority" : 1
     },
     {
-      "name" : "CCDS",
-      "parser" : "CCDSParser",
-      "file" : "Database",
-      "db" : "ccds",
-      "priority" : 1
-    },
-    {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
       "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
@@ -197,19 +190,19 @@
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "http://zfin.org/data_transfer/Downloads/uniprot.txt",
-      "priority" : 2
+      "priority" : 3
     },
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "http://zfin.org/data_transfer/Downloads/aliases.txt",
-      "priority" : 2
+      "priority" : 3
     },
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/gene_seq.txt",
-      "priority" : 1
+      "file" : "https://zfin.org/downloads/ensembl_1_to_1.txt",
+      "priority" : 3
     },
     {
       "name" : "ZFIN_desc",
@@ -226,7 +219,7 @@
     {
       "name" : "Xenbase",
       "parser" : "XenopusJamboreeParser",
-      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
+      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping_4.1.txt",
       "priority" : 1
     },
     {
@@ -241,7 +234,7 @@
     {
       "name" : "HGNC",
       "parser" : "HGNCParser",
-      "file" : "https://www.genenames.org/cgi-bin/download?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_eg_id&col=gd_pub_ensembl_id&col=gd_pub_refseq_ids&col=gd_ccds_ids&col=gd_lsdb_links&status=Approved&status_opt=2&where=&order_by=gd_app_sym_sort&format=text&limit=&hgnc_dbtag=on&submit=submit",
+      "file" : "https://www.genenames.org/cgi-bin/download/custom?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_eg_id&col=gd_pub_ensembl_id&col=gd_pub_refseq_ids&col=gd_ccds_ids&col=gd_lsdb_links&status=Approved&status_opt=2&where=&order_by=gd_app_sym_sort&format=text&limit=&hgnc_dbtag=on&submit=submit",
       "db" : "ccds",
       "priority" : 3
     }

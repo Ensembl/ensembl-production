@@ -173,6 +173,7 @@ sub pipeline_analyses {
       base_path => $self->o('base_path'),
       release   => $self->o('release')
     },
+    -max_retry_count => 0,
     -flow_into  => {
       '2->A' => 'dump_xref',
       'A->1' => 'schedule_mapping'
@@ -187,6 +188,7 @@ sub pipeline_analyses {
       release     => $self->o('release'),
       config_file => $self->o('config_file')
     },
+    -max_retry_count => 0,
     -flow_into  => { 2 => 'align_factory' },
     -rc_name    => '1GB',
   },
@@ -220,7 +222,7 @@ sub pipeline_analyses {
     },
     -flow_into  => {
       '2->A' => ['direct_xrefs', 'rnacentral_mapping'],
-      'A->1' => 'mapping'
+      'A->1' => 'object_xref_check'
     },
     -rc_name    => '1GB',
   },
@@ -253,7 +255,7 @@ sub pipeline_analyses {
       release   => $self->o('release')
     },
     -flow_into  => { 1 => 'uniparc_mapping' },
-    -rc_name    => 'default',
+    -rc_name    => '16GB_D',
     -hive_capacity => 300,
     -analysis_capacity => 30
   },
@@ -265,7 +267,7 @@ sub pipeline_analyses {
       release   => $self->o('release')
     },
     -flow_into  => { 1 => 'coordinate_mapping' },
-    -rc_name    => '1GB',
+    -rc_name    => '16GB_D',
     -hive_capacity => 300,
     -analysis_capacity => 30
   },
@@ -278,6 +280,17 @@ sub pipeline_analyses {
     },
     -rc_name    => '16GB',
     -analysis_capacity => 30
+  },
+  {
+    -logic_name => 'object_xref_check',
+    -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck',
+    -parameters => {
+      db_conn       => '#xref_url#',
+      query         => 'SELECT object_xref_id FROM object_xref',
+      expected_size => '> 0'
+    },
+    -flow_into  => { 1 => 'mapping' },
+    -rc_name    => 'default',
   },
   {
     -logic_name => 'mapping',

@@ -59,7 +59,7 @@ sub run {
   }
 
   # Create Xref database
-  my $dbname = $species . "_xref_update_" . $release;
+  my $dbname = $species . "_perl_xref_update_" . $release;
   my $dbc = XrefParser::Database->new({
             host    => $host,
             dbname  => $dbname,
@@ -83,12 +83,16 @@ sub run {
   # Retrieve list of sources from versioning database
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id");
+  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id order by name");
   my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $release_file);
   $select_source_sth->execute();
   $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$clean_file_name, \$db, \$priority, \$preparse, \$release_file);
 
+  my $hgnc_path;
+
   while ($select_source_sth->fetch()) {
+    $hgnc_path = $file_name if ($name eq 'HGNC');
+
     if (defined $db && $db eq 'checksum') { next; }
     if ($priority != $order_priority) { next; }
     if (defined $clean_file_name) { $file_name = $clean_file_name; }
@@ -127,21 +131,33 @@ sub run {
     } else {
       # Create list of files
       opendir(my $dir_handle, $file_name);
-      my @list_files = readdir($dir_handle);
+      my @temp_list_files = readdir($dir_handle);
       closedir($dir_handle);
+
+      my @list_files;
+      foreach my $file (@temp_list_files) {
+        next if ($file =~ /^\./);
+        push(@list_files, $file_name . "/" . $file);
+      }
       if ($preparse) { @list_files = $preparse; }
 
       # For Uniprot and Refseq, files might have been split by species
       if (!$preparse && ($name =~ /^Uniprot/ || $name =~ /^RefSeq_peptide/ || $name =~ /^RefSeq_dna/)) {
         my $file_prefix = ($name =~ /SPTREMBL/ ? 'uniprot_trembl' : ($name =~ /SWISSPROT/ ? 'uniprot_sprot' : ($name =~ /_dna/ ? 'refseq_rna' : 'refseq_protein')));
-        @list_files = glob($file_name . "/**/" . $file_prefix . "-" . $species_id);
-        $_ = basename(dirname($_)) . "/" . basename($_) foreach (@list_files);
+        my @species_list_files = glob($file_name . "/**/**/**/**/" . $file_prefix . "-" . $species_id);
+        if (scalar(@species_list_files) > 0) {
+          @list_files = @species_list_files;
+        }
+      }
+
+      # For ZFIN, we only need 1 job (parser handles all the files)
+      if ($name eq 'ZFIN_ID') {
+        @list_files = $list_files[0];
       }
 
       foreach my $file (@list_files) {
-        next if ($file =~ /^\./);
         $file =~ s/\n//;
-        $file = $file_name . "/" . $file;
+        if (!-f $file) { next; }
         if (defined $release_file and $file eq $release_file) { next; }
   
         $dataflow_params = {
@@ -155,6 +171,10 @@ sub run {
           priority      => $priority,
           file_name     => $file
         };
+	if ($name =~ /^Uniprot/) {
+	  my @hgnc_files = glob( $hgnc_path . '/*' );
+	  $dataflow_params->{hgnc_file} = $hgnc_files[0];
+	}
         $self->dataflow_output_id($dataflow_params, 2);
       }
     }
