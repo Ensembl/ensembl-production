@@ -14,7 +14,7 @@
 
 """Scheduling module to create download jobs for all xref sources in config file."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 class ScheduleDownload(Base):
   def run(self):

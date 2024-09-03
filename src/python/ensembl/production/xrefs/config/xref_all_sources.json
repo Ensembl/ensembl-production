@@ -91,7 +91,7 @@
     {
       "name" : "RGD",
       "parser" : "RGDParser",
-      "file" : "https://download.rgd.mcw.edu/pub/data_release/GENES.RAT.txt",
+      "file" : "https://download.rgd.mcw.edu/pub/data_release/GENES_RAT.txt",
       "priority" : 2
     },
     {

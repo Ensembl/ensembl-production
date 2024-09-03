@@ -18,6 +18,7 @@ println """\
         sources_config_file       : ${params.sources_config_file}
         clean_dir                 : ${params.clean_dir}
         tax_ids_file              : ${params.tax_ids_file}
+        update_mode               : ${params.update_mode}
         """
         .stripIndent()
 
@@ -57,6 +58,9 @@ def helpMessage() {
 
     --tax_ids_file              (optional)      Path to the file containing the taxonomy IDs of the species to extract data for.
                                                 Used to update the data for the provided species.
+
+    --update_mode               (optional)      If set to 1, pipeline is in update mode, refreshing/updating its data for new taxonomy IDs.
+                                                Only used if --tax_ids_file is set. Default: 0
   """.stripIndent()
 }
 
@@ -107,7 +111,7 @@ process ScheduleDownload {
   timestamp = new java.util.Date().format("yyyyMMdd_HHmmss")
 
   """
-  python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.ScheduleDownload --config_file ${params.config_file} --source_db_url ${params.source_db_url} --reuse_db ${params.reuse_db} --skip_preparse ${params.skip_preparse} --base_path ${params.base_path} --log_timestamp $timestamp
+  python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleDownload --config_file ${params.config_file} --source_db_url ${params.source_db_url} --reuse_db ${params.reuse_db} --skip_preparse ${params.skip_preparse} --base_path ${params.base_path} --log_timestamp $timestamp
   """
 }
 
@@ -126,7 +130,7 @@ process DownloadSource {
   src_name = (x =~ /"name":\s*"([A-Za-z0-9_.-\/]+)"/)[0][1]
 
   """
-  python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.DownloadSource --dataflow '$x' --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --skip_download ${params.skip_download}
+  python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.DownloadSource --dataflow '$x' --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --skip_download ${params.skip_download}
   """
 }
 
@@ -156,7 +160,7 @@ process ScheduleCleanup {
   path 'dataflow_cleanup_sources.json'
 
   """
-  python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.ScheduleCleanup --base_path ${params.base_path} --source_db_url ${params.source_db_url} --clean_files ${params.clean_files} --clean_dir ${params.clean_dir} --split_files_by_species ${params.split_files_by_species} --log_timestamp $timestamp
+  python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleCleanup --base_path ${params.base_path} --source_db_url ${params.source_db_url} --clean_files ${params.clean_files} --clean_dir ${params.clean_dir} --split_files_by_species ${params.split_files_by_species} --log_timestamp $timestamp
   """
 }
 
@@ -171,7 +175,7 @@ process Checksum {
   val 'ChecksumDone'
 
   """
-  python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.Checksum --base_path ${params.base_path} --source_db_url ${params.source_db_url} --skip_download ${params.skip_download} --log_timestamp $timestamp
+  python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.Checksum --base_path ${params.base_path} --source_db_url ${params.source_db_url} --skip_download ${params.skip_download} --log_timestamp $timestamp
   """
 }
 
@@ -198,7 +202,7 @@ process CleanupSplitSource {
   }
 
   """
-  perl ${params.perl_scripts_dir}/cleanup_and_split_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --skip_download ${params.skip_download} --clean_files ${params.clean_files} $cmd_params
+  perl ${params.perl_scripts_dir}/cleanup_and_split_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --clean_files ${params.clean_files} --update_mode ${params.update_mode} $cmd_params
   """
 }
 
@@ -234,6 +238,6 @@ process NotifyByEmail {
   val timestamp
 
   """
-  python ${params.scripts_dir}/run_module.py --module ensembl.xrefs.EmailNotification --pipeline_name '${params.pipeline_name}' --base_path ${params.base_path} --email ${params.email} --email_server ${params.email_server} --log_timestamp $timestamp
+  python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.EmailNotification --pipeline_name '${params.pipeline_name}' --base_path ${params.base_path} --email ${params.email} --email_server ${params.email_server} --log_timestamp $timestamp
   """
 }

@@ -14,7 +14,7 @@
 
 """Email module to send user emails notifying of xref pipelines end, with important information and statistics."""
 
-from ensembl.xrefs.Base import *
+from ensembl.production.xrefs.Base import *
 
 from smtplib import SMTP
 from email.message import EmailMessage
@@ -37,10 +37,7 @@ class EmailNotification(Base):
       if os.path.exists(log_path):
         log_files = os.listdir(log_path)
 
-        parameters = {}
-        sources = {}
-        added_species = {}
-        skipped_species = {}
+        parameters, sources, added_species, skipped_species = {}, {}, {}, {}
 
         main_log_file = os.path.join(base_path, 'logs', log_timestamp, 'logfile_'+log_timestamp)
 
@@ -92,11 +89,11 @@ class EmailNotification(Base):
           sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file copied from local FTP: (.*)", data)
           for source in sources_list: sources[source[0]].update({'copied' : os.path.dirname(source[1])})
 
-          # skipped_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) skipped species = (\d+)", data)
-          # skipped_species = {source[0]: source[1] for source in skipped_species_list}
+          skipped_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) skipped species = (\d+)", data)
+          skipped_species = {source[0]: source[1] for source in skipped_species_list}
 
-          # added_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) taxonomy IDs added to filter = (\d+)", data)
-          # added_species = {division[0]: division[1] for division in added_species_list}
+          added_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) species files created = (\d+)", data)
+          added_species = {source[0]: source[1] for source in added_species_list}
 
           # Include source statistics
           email_message += '<br>--Source Statistics--<br>'
@@ -106,7 +103,7 @@ class EmailNotification(Base):
 
             if source_values.get('downloaded'):
               (download_type, file_path) = source_values['downloaded'].split("|")
-              email_message += f' File downloaded via {download_type} into {file_path}<br>'
+              email_message += f'&nbsp;&nbsp;&nbsp;File downloaded via {download_type} into {file_path}<br>'
             elif source_values.get('copied'): email_message += '&nbsp;&nbsp;&nbsp;File(s) copied from local FTP into %s<br>' % (source_values['copied'])
             elif source_values.get('skipped'): email_message += '&nbsp;&nbsp;&nbsp;File(s) download skipped, already exists in %s<br>' % (source_values['skipped'])
 
@@ -117,13 +114,13 @@ class EmailNotification(Base):
             if source_values.get('preparsed'): email_message += '&nbsp;&nbsp;&nbsp;Pre-parsed &#10004;<br>'
 
           # Include species statistics
-          # email_message += '<br>--Species Statistics--<br>'
-          # for division,count in added_species.items():
-          #   if division == 'Total': continue
-          #   email_message += f'{species_type} taxonomy IDs = {count}<br>'
-          # email_message += 'Skipped Species per source file:<br>'
-          # for source_name,count in skipped_species.items():
-          #   email_message += f'&nbsp;&nbsp;&nbsp;{source_name}: {count}<br>'
+          email_message += '<br>--Species Statistics--<br>'
+          email_message += 'Skipped Species (files already exist):<br>'
+          for source_name, count in skipped_species.items():
+            email_message += f'&nbsp;&nbsp;&nbsp;{source_name}: {count}<br>'
+          email_message += 'Added Species (files created):<br>'
+          for source_name, count in added_species.items():
+            email_message += f'&nbsp;&nbsp;&nbsp;{source_name}: {count}<br>'
 
           email_message += '<br>To run the Xref Process Pipeline based on the data from this pipeline, use the same <b>--base_path</b>, <b>--source_db_url</b>, and <b>--central_db_url</b> (if preparse was run) values provided to this pipeline.'
 

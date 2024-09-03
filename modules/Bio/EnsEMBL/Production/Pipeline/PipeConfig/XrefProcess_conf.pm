@@ -173,6 +173,7 @@ sub pipeline_analyses {
       base_path => $self->o('base_path'),
       release   => $self->o('release')
     },
+    -max_retry_count => 0,
     -flow_into  => {
       '2->A' => 'dump_xref',
       'A->1' => 'schedule_mapping'
@@ -187,6 +188,7 @@ sub pipeline_analyses {
       release     => $self->o('release'),
       config_file => $self->o('config_file')
     },
+    -max_retry_count => 0,
     -flow_into  => { 2 => 'align_factory' },
     -rc_name    => '1GB',
   },
