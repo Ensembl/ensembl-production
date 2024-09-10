@@ -1,4 +1,4 @@
-1	\N	schema_version	113
+1	\N	schema_version	114
 2	1	assembly.default	NCBI34
 33	1	species.classification	Chordata
 32	1	species.classification	Vertebrata
@@ -131,3 +131,4 @@
 181	\N	patch	patch_111_112_c.sql|Extend meta_key length to 64
 182	\N	patch	patch_112_113_a.sql|schema_version
 183	\N	patch	patch_112_113_b.sql|Ensure meta_value is not null
+184	\N	patch	patch_113_114_a.sql|schema_version
