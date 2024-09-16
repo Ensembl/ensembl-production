@@ -18,7 +18,7 @@ ensembl-hive @ git+https://github.com/Ensembl/ensembl-hive.git
     #   ensembl-py
 ensembl-metadata-api @ git+https://github.com/Ensembl/ensembl-metadata-api.git@2.0.1a2
     # via -r requirements.in
-ensembl-py @ git+https://github.com/Ensembl/ensembl-py.git
+ensembl-py @ git+https://github.com/Ensembl/ensembl-py.git@1.2.2
     # via ensembl-metadata-api
 exceptiongroup==1.2.0
     # via
