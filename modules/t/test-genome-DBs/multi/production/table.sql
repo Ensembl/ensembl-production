@@ -77,7 +77,7 @@ CREATE TABLE `master_biotype` (
 CREATE TABLE `master_external_db` (
   `external_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `db_name` varchar(100) NOT NULL,
-  `db_release` varchar(255) DEFAULT NULL,
+  `db_release` varchar(100) DEFAULT NULL,
   `status` enum('KNOWNXREF','KNOWN','XREF','PRED','ORTH','PSEUDO') NOT NULL,
   `priority` int(11) NOT NULL,
   `db_display_name` varchar(255) NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE `master_external_db` (
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`external_db_id`),
-  UNIQUE KEY `db_name_idx` (`db_name(255)`,`db_release(100)`,`is_current`)
+  UNIQUE KEY `db_name_idx` (`db_name`,`db_release`,`is_current`)
 ) ENGINE=MyISAM  ;
 
 CREATE TABLE `master_misc_set` (
