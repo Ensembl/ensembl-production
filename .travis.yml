@@ -1,5 +1,4 @@
 language: perl
-dist: bionic
 perl:
   - "5.14"
   - "5.26.2"
