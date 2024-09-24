@@ -7,13 +7,6 @@
       "priority" : 1
     },
     {
-      "name" : "CCDS",
-      "parser" : "CCDSParser",
-      "file" : "Database",
-      "db" : "ccds",
-      "priority" : 1
-    },
-    {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
       "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
@@ -197,19 +190,19 @@
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "http://zfin.org/data_transfer/Downloads/uniprot.txt",
-      "priority" : 2
+      "priority" : 3
     },
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "http://zfin.org/data_transfer/Downloads/aliases.txt",
-      "priority" : 2
+      "priority" : 3
     },
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
-      "file" : "http://zfin.org/data_transfer/Downloads/gene_seq.txt",
-      "priority" : 1
+      "file" : "https://zfin.org/downloads/ensembl_1_to_1.txt",
+      "priority" : 3
     },
     {
       "name" : "ZFIN_desc",

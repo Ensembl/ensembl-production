@@ -83,12 +83,16 @@ sub run {
   # Retrieve list of sources from versioning database
   my ($source_user, $source_pass, $source_host, $source_port, $source_db) = $self->parse_url($source_url);
   my $dbi = $self->get_dbi($source_host, $source_port, $source_user, $source_pass, $source_db);
-  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id");
+  my $select_source_sth = $dbi->prepare("SELECT distinct name, parser, uri, clean_uri, index_uri, count_seen, preparse, revision FROM source s, version v WHERE s.source_id = v.source_id order by name");
   my ($name, $parser, $file_name, $clean_file_name, $dataflow_params, $db, $priority, $release_file);
   $select_source_sth->execute();
   $select_source_sth->bind_columns(\$name, \$parser, \$file_name, \$clean_file_name, \$db, \$priority, \$preparse, \$release_file);
 
+  my $hgnc_path;
+
   while ($select_source_sth->fetch()) {
+    $hgnc_path = $file_name if ($name eq 'HGNC');
+
     if (defined $db && $db eq 'checksum') { next; }
     if ($priority != $order_priority) { next; }
     if (defined $clean_file_name) { $file_name = $clean_file_name; }
@@ -146,6 +150,11 @@ sub run {
         }
       }
 
+      # For ZFIN, we only need 1 job (parser handles all the files)
+      if ($name eq 'ZFIN_ID') {
+        @list_files = $list_files[0];
+      }
+
       foreach my $file (@list_files) {
         $file =~ s/\n//;
         if (!-f $file) { next; }
@@ -162,6 +171,10 @@ sub run {
           priority      => $priority,
           file_name     => $file
         };
+        if ($name =~ /^Uniprot/) {
+          my @hgnc_files = glob( $hgnc_path . '/*' );
+          $dataflow_params->{hgnc_file} = $hgnc_files[0];
+        }
         $self->dataflow_output_id($dataflow_params, 2);
       }
     }
