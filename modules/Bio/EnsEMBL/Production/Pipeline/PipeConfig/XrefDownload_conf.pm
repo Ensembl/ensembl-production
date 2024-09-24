@@ -128,7 +128,7 @@ sub pipeline_analyses {
       -rc_name    => 'default'
     },
     {
-      -logic_name => 'checksum_W',
+      -logic_name => 'checksum',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Xrefs::Checksum',
       -comment    => 'Adds all checksum files into a single file and loads it into the checksum_xref table.',
       -parameters => {
