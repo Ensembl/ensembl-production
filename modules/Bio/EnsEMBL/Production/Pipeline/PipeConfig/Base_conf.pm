@@ -74,6 +74,7 @@ sub resource_classes {
     );
 
     my %memory = (
+        '100M'           => '100',
         '500M'           => '500',
         '1GB'            => '1000',
         '2GB'            => '2000',
