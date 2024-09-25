@@ -39,6 +39,7 @@ before_install:
   - cd htslib
   - make
   - export HTSLIB_DIR=$(pwd -P)
+  - mysql -e "SET GLOBAL local_infile=1;"
   - cd ..
 install:
   - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
