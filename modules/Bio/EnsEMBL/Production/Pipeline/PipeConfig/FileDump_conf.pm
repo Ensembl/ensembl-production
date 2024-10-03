@@ -279,6 +279,24 @@ sub pipeline_analyses {
                 '3' => $self->o('rnaseq_types'),
             }
         },
+        #######################NEW HERE. DELETE THIS LINE WHEN DONE.
+        {
+            -logic_name        => 'VEPDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                data_category   => 'vep',
+                species_dirname => $self->o('species_dirname')
+            },
+            -flow_into         => {
+                '3->A' => WHEN('defined #ftp_dir#' => [ 'Checksum' ]),
+                'A->3' => [ 'Verify' ]
+            }
+        },
+        ####################### END OF NEW.
+
+
         {
             -logic_name      => 'Metadata_JSON',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Metadata_JSON',
@@ -741,35 +759,37 @@ sub pipeline_analyses {
             },
             -rc_name           => "dm"
         },
+        #######################NEW HERE. DELETE THIS LINE WHEN DONE.
         {
-          -logic_name        => 'ProcessFASTA',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
-          -parameters        => {
-            cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
-            sm_filename    => '#sm_filename#',
-            outdir_suffix  => 'processed_fasta',
-          },
-          -flow_into         => {
-            1 => ['MoveFASTA']
-          },
-          -can_be_empty      => 1,
-          -hive_capacity     => 10,
-          -rc_name           => '4GB',
+            -logic_name        => 'ProcessFASTA',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+            -parameters        => {
+                cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
+                sm_filename    => '#sm_filename#',
+                outdir_suffix  => 'processed_fasta',
+            },
+            -flow_into         => {
+                1 => ['VEPDirectoryPaths']
+            },
+            -can_be_empty      => 1,
+            -hive_capacity     => 10,
+            -rc_name           => '4GB',
         },
+
         {
-          -logic_name        => 'ProcessGFF',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
-          -parameters        => {
-            cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
-            gff            => '#gff#',
-            outdir_suffix  => 'processed_gff'
-          },
-          -flow_into         => {
-            1 => ['MoveGFF']
-          },
-          -can_be_empty      => 1,
-          -hive_capacity     => 10,
-          -rc_name           => '4GB',
+            -logic_name        => 'ProcessGFF',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+            -parameters        => {
+                cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
+                gff            => '#gff#',
+                outdir_suffix  => 'processed_gff'
+            },
+            -flow_into         => {
+                1 => ['VEPDirectoryPaths']
+            },
+            -can_be_empty      => 1,
+            -hive_capacity     => 10,
+            -rc_name           => '4GB',
         },
     ];
 }

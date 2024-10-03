@@ -87,7 +87,7 @@ sub directories {
   my $assembly              = $self->param('assembly');
 
   my $subdirs;
-  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
+  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "vep", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
       $species_dirname,
@@ -97,8 +97,8 @@ sub directories {
       $self->param_required("${data_category}_dirname"),
     );
   }
-  if ( $data_category =~ /geneset|variation|homology/ ) {
-    # Variation and geneset dirs add a extra `YYYY_MM` subdir.
+  if ( $data_category =~ /geneset|variation|homology|vep/ ) {
+    # Variation, geneset, homology, and VEP dirs add an extra `YYYY_MM` subdir.
     $subdirs = catdir ($subdirs, $self->param('geneset'))
   }
   my $output_dir = catdir(
