@@ -771,9 +771,7 @@ sub pipeline_analyses {
         sm_filename    => '#sm_filename#',
         outdir_suffix  => 'processed_fasta',
     },
-    -flow_into         => {
-        1 => { ':1' => { 'semaphore' => 'semaphore1' } },  # Signals completion
-    },
+    -wait_for          => [ 'UpdateDatasetAttribute' ],
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
@@ -787,9 +785,7 @@ sub pipeline_analyses {
         gff            => '#gff#',
         outdir_suffix  => 'processed_gff',
     },
-    -flow_into         => {
-        1 => { ':1' => { 'semaphore' => 'semaphore2' } },  # Signals completion
-    },
+    -wait_for          => [ 'UpdateDatasetAttribute' ],
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
@@ -805,7 +801,7 @@ sub pipeline_analyses {
             'vep.bgz_location'  => '#output_dir#'  # Only use the directory path, no specific file names
         },
     },
-    -semaphore       => 'semaphore1 + semaphore2',  # Wait for both ProcessFASTA and ProcessGFF
+    -semaphore_count => 2,  # Wait for both ProcessFASTA and ProcessGFF
     -flow_into       => {
         1 => [ 'Verify' ],  # Continue to verification step after attribute update
     },
