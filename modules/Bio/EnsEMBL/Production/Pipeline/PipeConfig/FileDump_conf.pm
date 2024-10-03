@@ -428,7 +428,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_GFF3_mem' ],
-                '2->A'  => [ 'Geneset_Compress' ]
+                '2->A'  => [ 'Geneset_Compress' ],
                 'A->1' =>    WHEN('#run_bgz#' => [ 'ProcessGFF' ]),
 
             },
