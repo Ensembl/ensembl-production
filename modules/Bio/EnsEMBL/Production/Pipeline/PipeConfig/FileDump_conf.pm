@@ -290,8 +290,8 @@ sub pipeline_analyses {
                 species_dirname => $self->o('species_dirname')
             },
             -flow_into         => {
-                '3->A' => WHEN('defined #ftp_dir#' => [ 'Checksum' ]),
-                'A->3' => [ 'Verify' ]
+                '3->A' => [ 'ProcessFASTA', 'ProcessGFF' ],
+                'A->3' => [ 'Checksum' ],
             }
         },
         ####################### END OF NEW.
@@ -769,7 +769,7 @@ sub pipeline_analyses {
                 outdir_suffix  => 'processed_fasta',
             },
             -flow_into         => {
-                1 => ['VEPDirectoryPaths']
+                1 => ['Checksum']
             },
             -can_be_empty      => 1,
             -hive_capacity     => 10,
@@ -785,7 +785,7 @@ sub pipeline_analyses {
                 outdir_suffix  => 'processed_gff'
             },
             -flow_into         => {
-                1 => ['VEPDirectoryPaths']
+                1 => ['Checksum']
             },
             -can_be_empty      => 1,
             -hive_capacity     => 10,
