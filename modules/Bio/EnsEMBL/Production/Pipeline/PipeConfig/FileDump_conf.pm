@@ -762,7 +762,7 @@ sub pipeline_analyses {
         #######################NEW HERE. DELETE THIS LINE WHEN DONE.
         {
             -logic_name        => 'ProcessFASTA',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters        => {
                 cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
                 sm_filename    => '#sm_filename#',
@@ -778,7 +778,7 @@ sub pipeline_analyses {
 
         {
             -logic_name        => 'ProcessGFF',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
             -parameters        => {
                 cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
                 gff            => '#gff#',
