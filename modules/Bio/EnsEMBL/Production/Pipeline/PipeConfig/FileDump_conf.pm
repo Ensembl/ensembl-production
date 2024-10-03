@@ -44,7 +44,7 @@ sub default_options {
         genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
         geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
         rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
-
+        vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
         homology_types         => [], # Possible values : 'Homologies_TSV'
 
         dump_metadata          => 0,
@@ -90,7 +90,8 @@ sub default_options {
     	update_dataset_status  => 'Processing', #updates dataset status to processing in new metadata db
         genome_factory_dynamic_output_flow => {
                       '3->A'    => { 'FileDump'  => INPUT_PLUS()  },
-                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}],
+        attribute_dict       => {},  # Placeholder for attribute dictionary
         },
 
     };
@@ -216,7 +217,8 @@ sub pipeline_analyses {
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
                     'RNASeqDirectoryPaths',
-                    'HomologyDirectoryPaths'
+                    'HomologyDirectoryPaths',
+                    'VEPDirectoryPaths'
                 ],
             }
         },
@@ -287,7 +289,8 @@ sub pipeline_analyses {
             -analysis_capacity => 20,
             -parameters        => {
                 data_category   => 'vep',
-                species_dirname => $self->o('species_dirname')
+                species_dirname => $self->o('species_dirname'),
+                analysis_types  => $self->o('vep_types')
             },
             -flow_into         => {
                 '3->A' => [ 'ProcessFASTA', 'ProcessGFF' ],
@@ -760,37 +763,57 @@ sub pipeline_analyses {
             -rc_name           => "dm"
         },
         #######################NEW HERE. DELETE THIS LINE WHEN DONE.
-        {
-            -logic_name        => 'ProcessFASTA',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters        => {
-                cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
-                sm_filename    => '#sm_filename#',
-                outdir_suffix  => 'processed_fasta',
-            },
-            -flow_into         => {
-                1 => ['Checksum']
-            },
-            -can_be_empty      => 1,
-            -hive_capacity     => 10,
-            -rc_name           => '4GB',
-        },
+{
+    -logic_name        => 'ProcessFASTA',
+    -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+    -parameters        => {
+        cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
+        sm_filename    => '#sm_filename#',
+        outdir_suffix  => 'processed_fasta',
+    },
+    -flow_into         => {
+        1 => { ':1' => { 'semaphore' => 'semaphore1' } },  # Signals completion
+    },
+    -can_be_empty      => 1,
+    -hive_capacity     => 10,
+    -rc_name           => '4GB',
+},
 
-        {
-            -logic_name        => 'ProcessGFF',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters        => {
-                cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
-                gff            => '#gff#',
-                outdir_suffix  => 'processed_gff'
-            },
-            -flow_into         => {
-                1 => ['Checksum']
-            },
-            -can_be_empty      => 1,
-            -hive_capacity     => 10,
-            -rc_name           => '4GB',
+{
+    -logic_name        => 'ProcessGFF',
+    -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SystemCmd',
+    -parameters        => {
+        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
+        gff            => '#gff#',
+        outdir_suffix  => 'processed_gff',
+    },
+    -flow_into         => {
+        1 => { ':1' => { 'semaphore' => 'semaphore2' } },  # Signals completion
+    },
+    -can_be_empty      => 1,
+    -hive_capacity     => 10,
+    -rc_name           => '4GB',
+},
+{
+    -logic_name      => 'UpdateDatasetAttribute',
+    -module          => 'ensembl.production.hive.HiveDatasetFactory',
+    -language        => 'python3',
+    -rc_name         => 'default',
+    -parameters      => {
+        'metadata_db_uri'      => $self->o('metadata_db_uri'),
+        'attribute_dict'       => {
+            'vep.bgz_location'  => '#output_dir#'  # Only use the directory path, no specific file names
         },
+    },
+    -semaphore       => 'semaphore1 + semaphore2',  # Wait for both ProcessFASTA and ProcessGFF
+    -flow_into       => {
+        1 => [ 'Verify' ],  # Continue to verification step after attribute update
+    },
+},
+
+
+
+
     ];
 }
 

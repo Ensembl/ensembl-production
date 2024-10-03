@@ -28,7 +28,7 @@ use Path::Tiny;
 use Data::Dumper;
 sub run {
   my ($self) = @_;
-
+#Why is this here??
   my $analysis_types = $self->param_required('analysis_types');
   my $data_category  = $self->param_required('data_category');
 
