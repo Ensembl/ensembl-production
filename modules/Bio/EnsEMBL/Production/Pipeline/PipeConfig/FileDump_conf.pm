@@ -40,7 +40,6 @@ sub default_options {
 
         dump_dir               => undef,
         ftp_root               => undef,
-        run_bgz                => 1,
         genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
         geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
         rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
@@ -373,9 +372,7 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-                '2->A' => WHEN('#run_bgz#' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } }),
-                'A->B' => [ 'Genome_Compress' ],
-                'B->2' => [ 'Symlink_Genome_FASTA' ],
+                '2' => ['ProcessFASTA' => { 'sm_filename' => '#output_filename#' }],
             },
         },
                 {
@@ -391,11 +388,11 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-                '2->A' => WHEN('#run_bgz#' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } }),
-                'A->B' => [ 'Genome_Compress' ],
-                'B->2' => [ 'Symlink_Genome_FASTA' ],
+                '2' => 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' },
             },
         },
+
+
         {
             -logic_name      => 'Chromosome_TSV',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
@@ -449,27 +446,11 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_GFF3_mem' ],
-                '2->A'  => WHEN('#run_bgz#' => { 'ProcessGFF' => { 'gff' => '#output_filename#' } }),
+                '2->A'  => [ 'ProcessGFF' => { 'gff' => '#output_filename#' } ],
                 'A->1' => [ 'Geneset_Compress' ],
             },
         },
-        {
-            -logic_name      => 'Geneset_GFF3_mem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                per_chromosome       => $self->o('gff3_per_chromosome'),
-                gt_gff3_exe          => $self->o('gt_gff3_exe'),
-                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
-                overwrite            => 1,
-            },
-            -rc_name         => '8GB',
-            -flow_into       => {
-               '2->A' => WHEN('#run_bgz#' => { 'ProcessGFF' => { 'gff' => '#output_filename#' } }),
-                'A->1' =>  [ 'Geneset_Compress' ],
-            },
-        },
+
 
 
         {
@@ -772,6 +753,9 @@ sub pipeline_analyses {
         cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
         outdir_suffix  => 'processed_fasta',
     },
+    -flow_into       => {
+        2 => [ 'Genome_Compress_gf' ],
+    },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
@@ -804,8 +788,21 @@ sub pipeline_analyses {
         },
     },
 },
+        {
+            -logic_name        => 'Genome_Compress_gf',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                compress => "#output_filename#"
+            },
+            -flow_into       => {
+                2 => [ 'Symlink_Genome_FASTA' ],
+            },
 
-
+            -rc_name           => '1GB',
+        },
 
     ];
 }
