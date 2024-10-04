@@ -82,6 +82,7 @@ sub default_options {
         'hardmasked'          => 1,
         'cds'                 => 1,   
         'timestamped_dir'     => 1,
+        'fasta_header_prefix' => 'ENSEMBL:', 
         #genome factory params
       	'dataset_status' => 'Submitted', #fetch genomes with dataset status submitted
     	'dataset_type'   => 'blast', #fetch genomes with dataset blast
@@ -175,6 +176,8 @@ sub pipeline_analyses {
                 per_chromosome => $self->o('dna_per_chromosome'),
                 hardmasked  => $self->o('hardmasked'),
                 timestamped => $self->o('timestamped'),
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
+                
             },
             -rc_name         => '4GB',
             -flow_into       => {
@@ -190,6 +193,7 @@ sub pipeline_analyses {
                 blast_index => 0,
                 blastdb_exe => $self->o('blastdb_exe'),
                 cds         => $self->o('cds'),
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
             -rc_name         => '1GB',
             -flow_into       => {
@@ -207,6 +211,7 @@ sub pipeline_analyses {
                 per_chromosome => $self->o('dna_per_chromosome'),
                 hardmasked     => $self->o('hardmasked'),
                 overwrite      => 1,
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
             -rc_name         => '8GB',
         },
@@ -220,6 +225,7 @@ sub pipeline_analyses {
                 blastdb_exe => $self->o('blastdb_exe'),
                 overwrite   => 1,
                 cds         => $self->o('cds'),
+                fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
             -rc_name         => '4GB',
 
