@@ -751,6 +751,7 @@ sub pipeline_analyses {
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
         cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
+        sm_filename    => '#sm_filename#',
         outdir_suffix  => 'processed_fasta',
     },
     -flow_into       => {
