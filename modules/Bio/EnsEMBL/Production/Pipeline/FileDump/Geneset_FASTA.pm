@@ -47,8 +47,8 @@ sub param_defaults {
 sub run {
   my ($self) = @_;
 
-  my $blast_index = $self->param_required('blast_index');
-  my $filenames   = $self->param_required('filenames');
+  my $blast_index           = $self->param_required('blast_index');
+  my $filenames             = $self->param_required('filenames');
 
   if($self->param_is_defined('geneset')){
     $filenames   = $self->param_required('filenames');
@@ -188,7 +188,16 @@ sub header {
     push @attributes, 'description:"'.$gene->description.'"';
   }
 
-  return 'ENSEMBL:' . join(' ', @attributes);
+  
+  #set header prefix with ENSEMBL for blast files 
+  my $prefix = '';
+
+  if ($self->param_is_defined('fasta_header_prefix')){
+    $prefix = $self->param('fasta_header_prefix');
+  }
+
+
+  return $prefix . join(' ', @attributes);
 }
 
 sub blast_index {
