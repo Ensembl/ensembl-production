@@ -451,23 +451,6 @@ sub pipeline_analyses {
         },
 
 
-
-        {
-            -logic_name      => 'Geneset_GFF3_ENA',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                per_chromosome       => $self->o('gff3_per_chromosome'),
-                gt_gff3_exe          => $self->o('gt_gff3_exe'),
-                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
-            },
-            -rc_name         => '2GB',
-            -flow_into       => {
-                '-1' => [ 'Geneset_GFF3_ENA_mem' ],
-                '2'  => [ 'Geneset_Compress' ]
-            },
-        },
         {
             -logic_name      => 'Geneset_GTF',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
@@ -552,22 +535,6 @@ sub pipeline_analyses {
             },
         },
 
-        {
-            -logic_name      => 'Geneset_GFF3_ENA_mem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                per_chromosome       => $self->o('gff3_per_chromosome'),
-                gt_gff3_exe          => $self->o('gt_gff3_exe'),
-                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
-                overwrite            => 1,
-            },
-            -rc_name         => '8GB',
-            -flow_into       => {
-                '2' => [ 'Geneset_Compress' ]
-            },
-        },
         {
             -logic_name      => 'Geneset_GTF_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
