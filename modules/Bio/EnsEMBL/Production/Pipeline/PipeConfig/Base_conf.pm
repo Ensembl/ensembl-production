@@ -91,7 +91,7 @@ sub factory_analyses {
       -logic_name      => 'GenomeFactory',
       -module          => 'ensembl.production.hive.HiveGenomeFactory',
       -language        => 'python3',
-      -rc_name         => 'default_4GB',
+      -rc_name         => 'default_D',
       -parameters => {
                       'metadata_db_uri' => $self->o('metadata_db_uri'),
                       'genome_uuid' => $self->o('genome_uuid'),

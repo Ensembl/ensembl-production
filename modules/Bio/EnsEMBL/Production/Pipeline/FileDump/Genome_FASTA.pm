@@ -192,7 +192,13 @@ sub header_function {
     }
     $location =~ s/^$cs_name://;
 
-    return "ENSEMBL:$name $data_type:$cs_name $location";
+    my $prefix = '';
+
+    if ($self->param_is_defined('fasta_header_prefix')){
+      $prefix = $self->param('fasta_header_prefix');
+    }
+
+    return "${prefix}$name $data_type:$cs_name $location";
   };
 }
 
