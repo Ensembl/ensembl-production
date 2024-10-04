@@ -372,7 +372,7 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-                '2' => ['ProcessFASTA' => { 'sm_filename' => '#output_filename#' }],
+                '2' => 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' },
             },
         },
                 {
