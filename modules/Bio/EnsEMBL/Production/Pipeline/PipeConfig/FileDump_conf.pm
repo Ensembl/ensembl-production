@@ -373,9 +373,27 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-                '2->A' => [ 'Genome_Compress' ],
-                'A->2' => [ 'Symlink_Genome_FASTA' ],
-                'A->2' => WHEN('#run_bgz#' => [ 'ProcessFASTA' ]),
+                '2->A' => WHEN('#run_bgz#' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } }),
+                'A->B' => [ 'Genome_Compress' ],
+                'B->2' => [ 'Symlink_Genome_FASTA' ],
+            },
+        },
+                {
+            -logic_name      => 'Genome_FASTA_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index    => $self->o('blast_index'),
+                blastdb_exe    => $self->o('blastdb_exe'),
+                per_chromosome => $self->o('dna_per_chromosome'),
+                overwrite      => 1,
+            },
+            -rc_name         => '8GB',
+            -flow_into       => {
+                '2->A' => WHEN('#run_bgz#' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } }),
+                'A->B' => [ 'Genome_Compress' ],
+                'B->2' => [ 'Symlink_Genome_FASTA' ],
             },
         },
         {
@@ -431,11 +449,29 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_GFF3_mem' ],
-                '2->A'  => [ 'Geneset_Compress' ],
-                'A->1' =>    WHEN('#run_bgz#' => [ 'ProcessGFF' ]),
-
+                '2->A'  => WHEN('#run_bgz#' => { 'ProcessGFF' => { 'gff' => '#output_filename#' } }),
+                'A->1' => [ 'Geneset_Compress' ],
             },
         },
+        {
+            -logic_name      => 'Geneset_GFF3_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome       => $self->o('gff3_per_chromosome'),
+                gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+                overwrite            => 1,
+            },
+            -rc_name         => '8GB',
+            -flow_into       => {
+               '2->A' => WHEN('#run_bgz#' => { 'ProcessGFF' => { 'gff' => '#output_filename#' } }),
+                'A->1' =>  [ 'Geneset_Compress' ],
+            },
+        },
+
+
         {
             -logic_name      => 'Geneset_GFF3_ENA',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
@@ -507,24 +543,6 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name      => 'Genome_FASTA_mem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                blast_index    => $self->o('blast_index'),
-                blastdb_exe    => $self->o('blastdb_exe'),
-                per_chromosome => $self->o('dna_per_chromosome'),
-                overwrite      => 1,
-            },
-            -rc_name         => '8GB',
-            -flow_into       => {
-                '2->A' => [ 'Genome_Compress' ],
-                'A->2' => [ 'Symlink_Genome_FASTA' ],
-                'A->2' => WHEN('#run_bgz#' => [ 'ProcessFASTA' ]),
-            },
-        },
-        {
             -logic_name      => 'Geneset_EMBL_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
             -max_retry_count => 1,
@@ -553,23 +571,7 @@ sub pipeline_analyses {
                 '2' => [ 'Geneset_Compress' ]
             },
         },
-        {
-            -logic_name      => 'Geneset_GFF3_mem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                per_chromosome       => $self->o('gff3_per_chromosome'),
-                gt_gff3_exe          => $self->o('gt_gff3_exe'),
-                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
-                overwrite            => 1,
-            },
-            -rc_name         => '8GB',
-            -flow_into       => {
-               '2->A' => [ 'Geneset_Compress' ],
-                'A->1' =>    WHEN('#run_bgz#' => [ 'ProcessGFF' ]),
-            },
-        },
+
         {
             -logic_name      => 'Geneset_GFF3_ENA_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3_ENA',
@@ -768,7 +770,6 @@ sub pipeline_analyses {
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
         cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
-        sm_filename    => '#sm_filename#',
         outdir_suffix  => 'processed_fasta',
     },
     -can_be_empty      => 1,
@@ -785,7 +786,7 @@ sub pipeline_analyses {
         outdir_suffix  => 'processed_gff',
     },
     -flow_into       => {
-        1 => [ 'UpdateDatasetAttribute' ],
+        2 => [ 'UpdateDatasetAttribute' ],
     },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
@@ -802,11 +803,7 @@ sub pipeline_analyses {
             'vep.bgz_location'  => '#output_dir#'  # Only use the directory path, no specific file names
         },
     },
-    -flow_into       => {
-        1 => [ 'Verify' ],  # Continue to verification step after attribute update
-    },
 },
-
 
 
 
