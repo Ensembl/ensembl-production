@@ -42,12 +42,10 @@ sub default_options {
         ftp_root               => undef,
         genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
         geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
-        rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
+        # rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
         vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
-        homology_types         => [], # Possible values : 'Homologies_TSV'
+        # homology_types         => [], # Possible values : 'Homologies_TSV'
 
-        dump_metadata          => 0,
-        dump_mysql             => 0,
         overwrite              => 0,
         per_chromosome         => 0,
 
@@ -77,10 +75,9 @@ sub default_options {
         gff3_per_chromosome    => $self->o('per_chromosome'),
         gtf_per_chromosome     => $self->o('per_chromosome'),
         xref_external_dbs      => [],
-        dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-        rr_ens_version         => $self->o('ENV', 'RR_ENS_VERSION'),
-        ref_dbname             => 'ensembl_compara_references',
-        compara_host_uri       => '',
+        # dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
+        # ref_dbname             => 'ensembl_compara_references',
+        # compara_host_uri       => '',
         species_dirname        => 'organisms',
 
         #genome factory params
@@ -118,8 +115,6 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},
         dump_dir       => $self->o('dump_dir'),
         ftp_root       => $self->o('ftp_root'),
-        dump_metadata  => $self->o('dump_metadata'),
-        dump_mysql     => $self->o('dump_mysql'),
         overwrite      => $self->o('overwrite'),
         run_datachecks => $self->o('run_datachecks'),
     };
@@ -138,22 +133,7 @@ sub pipeline_analyses {
 #            -input_ids         => [ {} ],
             -parameters        => {},
             -flow_into         => {
-                '1' => WHEN('#dump_metadata#' =>
-                    [ 'MetadataDump' ],
-                    ELSE
-                        [ 'DbFactory' ]
-                )
-            }
-        },
-        {
-            -logic_name        => 'MetadataDump',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -max_retry_count   => 1,
-            -analysis_capacity => 1,
-            -parameters        => {},
-            -flow_into         => {
-                '1->A' => [ 'DbFactory' ],
-                'A->1' => [ 'Metadata_JSON' ],
+                '1' =>  [ 'DbFactory' ],
             }
         },
         {
@@ -172,7 +152,6 @@ sub pipeline_analyses {
             -flow_into         => {
                 '2' => WHEN(
                     '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
-                    '#dump_mysql# && !#run_datachecks#' => [ 'MySQL_TXT', 'SpeciesFactory' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
@@ -215,27 +194,27 @@ sub pipeline_analyses {
                 '2' => [
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
-                    'RNASeqDirectoryPaths',
-                    'HomologyDirectoryPaths',
+                    # 'RNASeqDirectoryPaths',
+                    # 'HomologyDirectoryPaths',
                     'VEPDirectoryPaths'
                 ],
             }
         },
-        {
-            -logic_name        => 'HomologyDirectoryPaths',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                analysis_types  => $self->o('homology_types'),
-                data_category   => 'homology',
-                species_dirname => $self->o('species_dirname')
-            },
-            -flow_into         => {
-                '3->A' => $self->o('homology_types'),
-                'A->3' => [ 'Checksum' ]
-            }
-        },
+        # {
+        #     -logic_name        => 'HomologyDirectoryPaths',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         analysis_types  => $self->o('homology_types'),
+        #         data_category   => 'homology',
+        #         species_dirname => $self->o('species_dirname')
+        #     },
+        #     -flow_into         => {
+        #         '3->A' => $self->o('homology_types'),
+        #         'A->3' => [ 'Checksum' ]
+        #     }
+        # },
         {
             -logic_name        => 'GenomeDirectoryPaths',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
@@ -266,20 +245,20 @@ sub pipeline_analyses {
                 'A->3' => [ 'Checksum' ]
             },
         },
-        {
-            -logic_name        => 'RNASeqDirectoryPaths',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                data_category   => 'rnaseq',
-                analysis_types  => $self->o('rnaseq_types'),
-                species_dirname => $self->o('species_dirname')
-            },
-            -flow_into         => {
-                '3' => $self->o('rnaseq_types'),
-            }
-        },
+        # {
+        #     -logic_name        => 'RNASeqDirectoryPaths',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         data_category   => 'rnaseq',
+        #         analysis_types  => $self->o('rnaseq_types'),
+        #         species_dirname => $self->o('species_dirname')
+        #     },
+        #     -flow_into         => {
+        #         '3' => $self->o('rnaseq_types'),
+        #     }
+        # },
         #######################NEW HERE. DELETE THIS LINE WHEN DONE.
         {
             -logic_name        => 'VEPDirectoryPaths',
@@ -299,53 +278,31 @@ sub pipeline_analyses {
         ####################### END OF NEW.
 
 
-        {
-            -logic_name      => 'Metadata_JSON',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Metadata_JSON',
-            -max_retry_count => 1,
-            -parameters      => {},
-            -rc_name         => '1GB',
-            -flow_into       => {
-                '2' => WHEN('defined #ftp_root#' => [ 'Sync_Metadata' ])
-            }
-        },
-        {
-            -logic_name      => 'MySQL_TXT',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::MySQL_TXT',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {},
-            -rc_name         => '1GB',
-            -flow_into       => {
-                '2->A' => [ 'MySQL_Compress' ],
-                'A->3' => [ 'Checksum' ]
-            },
-        },
-        {
-            -logic_name        => 'Homologies_TSV',
-            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                ref_dbname             => $self->o('ref_dbname'),
-                dump_homologies_script => $self->o('dump_homologies_script'),
-                per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('rr_ens_version'),
-            },
-            -flow_into         => {
-                '2' => [
-                    'CompressHomologyTSV',
-                ],
-            }
-        },
-        {
-            -logic_name        => 'CompressHomologyTSV',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
-            },
-        },
+        # {
+        #     -logic_name        => 'Homologies_TSV',
+        #     -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         ref_dbname             => $self->o('ref_dbname'),
+        #         dump_homologies_script => $self->o('dump_homologies_script'),
+        #         per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('rr_ens_version'),
+        #     },
+        #     -flow_into         => {
+        #         '2' => [
+        #             'CompressHomologyTSV',
+        #         ],
+        #     }
+        # },
+        # {
+        #     -logic_name        => 'CompressHomologyTSV',
+        #     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
+        #     },
+        # },
         {
             -logic_name      => 'Assembly_Chain',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
@@ -482,29 +439,29 @@ sub pipeline_analyses {
                 'A->2' => [ 'Symlink_Xref_TSV' ],
             },
         },
-        {
-            -logic_name      => 'RNASeq_Exists',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Exists',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {},
-            -rc_name         => '1GB',
-            -flow_into       => {
-                '2->A' => [ 'Symlink_RNASeq' ],
-                'A->2' => [ 'Verify_Unzipped' ],
-                '3'    => [ 'RNASeq_Missing' ],
-            },
-        },
-        {
-            -logic_name      => 'RNASeq_Missing',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Missing',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -batch_size      => 10,
-            -parameters      => {
-                email => $self->o('rnaseq_email'),
-            }
-        },
+        # {
+        #     -logic_name      => 'RNASeq_Exists',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Exists',
+        #     -max_retry_count => 1,
+        #     -hive_capacity   => 10,
+        #     -parameters      => {},
+        #     -rc_name         => '1GB',
+        #     -flow_into       => {
+        #         '2->A' => [ 'Symlink_RNASeq' ],
+        #         'A->2' => [ 'Verify_Unzipped' ],
+        #         '3'    => [ 'RNASeq_Missing' ],
+        #     },
+        # },
+        # {
+        #     -logic_name      => 'RNASeq_Missing',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Missing',
+        #     -max_retry_count => 1,
+        #     -hive_capacity   => 10,
+        #     -batch_size      => 10,
+        #     -parameters      => {
+        #         email => $self->o('rnaseq_email'),
+        #     }
+        # },
         {
             -logic_name      => 'Geneset_EMBL_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
@@ -567,17 +524,6 @@ sub pipeline_analyses {
             },
         },
         {
-            -logic_name        => 'MySQL_Compress',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#output_filename#"
-            },
-            -rc_name           => '1GB',
-        },
-        {
             -logic_name        => 'Genome_Compress',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
@@ -635,14 +581,14 @@ sub pipeline_analyses {
             -batch_size        => 10,
             -parameters        => {},
         },
-        {
-            -logic_name        => 'Symlink_RNASeq',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink_RNASeq',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {},
-        },
+        # {
+        #     -logic_name        => 'Symlink_RNASeq',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink_RNASeq',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 10,
+        #     -batch_size        => 10,
+        #     -parameters        => {},
+        # },
         {
             -logic_name        => 'Symlink_Xref_TSV',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink',
@@ -668,49 +614,18 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 10,
             -batch_size        => 10,
-            -flow_into         => WHEN('defined #ftp_dir#' => [ 'Sync' ])
         },
-        {
-            -logic_name        => 'Verify_Unzipped',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                check_unzipped => 0,
-            },
-            -flow_into         => WHEN('defined #ftp_dir#' => [ 'Sync' ])
-        },
-        {
-            -logic_name        => 'Sync',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                cmd => 'mkdir -p #ftp_dir#; rsync -aLW #output_dir#/ #ftp_dir#',
-            },
-            -flow_into         => WHEN('#data_category# eq "geneset" || #data_category# eq "genome"' => [ 'README' ]),
-            -rc_name           => "dm"
-        },
-        {
-            -logic_name        => 'README',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::README',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-        },
-        {
-            -logic_name        => 'Sync_Metadata',
-            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                cmd => 'rsync -aLW #output_filename# #ftp_root#',
-            },
-            -rc_name           => "dm"
-        },
+        # {
+        #     -logic_name        => 'Verify_Unzipped',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
+        #     -max_retry_count   => 1,
+        #     -analysis_capacity => 10,
+        #     -batch_size        => 10,
+        #     -parameters        => {
+        #         check_unzipped => 0,
+        #     },
+        #     -flow_into         => WHEN('defined #ftp_dir#' => [ 'Sync' ])
+        # },
         #######################NEW HERE. DELETE THIS LINE WHEN DONE.
 {
     -logic_name        => 'ProcessFASTA',
