@@ -372,7 +372,7 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-                '2' => [ 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } ],
+               '2' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } },
             },
         },
                 {
@@ -388,7 +388,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-               '2' => [ 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } ],
+               '2' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } },
             },
         },
 
@@ -445,8 +445,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '-1' => [ 'Geneset_GFF3_mem' ],
-                '2->A'  => [ 'ProcessGFF' => { 'gff' => '#output_filename#' } ],
+                '2->A'  => { 'ProcessGFF' => { 'gff' => '#output_filename#' } },
                 'A->1' => [ 'Geneset_Compress' ],
             },
         },
