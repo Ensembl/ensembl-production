@@ -44,7 +44,7 @@ sub default_options {
         geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'],
         # rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
         vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
-        # homology_types         => [], # Possible values : 'Homologies_TSV'
+        homology_types         => ['Homologies_TSV'], # Possible values :
 
         overwrite              => 0,
         per_chromosome         => 0,
@@ -71,9 +71,10 @@ sub default_options {
         blast_index            => 0,
         chain_ucsc             => 1,
         xref_external_dbs      => [],
-        # dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-        # ref_dbname             => 'ensembl_compara_references',
-        # compara_host_uri       => '',
+        dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
+        ref_dbname             => 'ensembl_compara_references',
+        ens_version => $self->o('ENV', 'ENS_VERSION'),
+        compara_host_uri       => '',
         species_dirname        => 'organisms',
 
         #genome factory params
@@ -273,31 +274,34 @@ sub pipeline_analyses {
         ####################### END OF NEW.
 
 
-        # {
-        #     -logic_name        => 'Homologies_TSV',
-        #     -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         ref_dbname             => $self->o('ref_dbname'),
-        #         dump_homologies_script => $self->o('dump_homologies_script'),
-        #         per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('rr_ens_version'),
-        #     },
-        #     -flow_into         => {
-        #         '2' => [
-        #             'CompressHomologyTSV',
-        #         ],
-        #     }
-        # },
-        # {
-        #     -logic_name        => 'CompressHomologyTSV',
-        #     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         cmd => 'if [ -s "#filepath#" ]; then gzip -n -f "#filepath#"; fi',
-        #     },
-        # },
+        {
+            -logic_name        => 'Homologies_TSV',
+            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                ref_dbname             => $self->o('ref_dbname'),
+                dump_homologies_script => $self->o('dump_homologies_script'),
+                per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('ens_version'),
+            },
+            -flow_into         => {
+                '2' => [
+                    'CompressHomologyTSV',
+                ],
+            }
+        },
+        {
+            -logic_name        => 'Geneset_CompressCompressHomologyTSV',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                compress => "#filepath#"
+            },
+            -rc_name           => '1GB',
+        },
+
         {
             -logic_name      => 'Assembly_Chain',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
@@ -623,8 +627,7 @@ sub pipeline_analyses {
     -parameters        => {
         output_dir     => '#output_dir#',
         sm_filename    => '#sm_filename#',
-        out_filename   => '#expr(substr("#sm_filename#", rindex("#sm_filename#", "/") + 1, rindex("#sm_filename#", ".") - rindex("#sm_filename#", "/") - 1))#',
-        cmd            => 'bgzip -c #sm_filename# > #output_dir#/#out_filename#.bgz && samtools faidx #output_dir#/#out_filename#.bgz',
+        cmd            => 'bgzip -c #sm_filename# > #output_dir#/unmasked.fa.bgz && samtools faidx #output_dir#/unmasked.fa.bgz',
     },
     -flow_into       => {
         2 => [ 'Genome_Compress_gf' ],
@@ -640,8 +643,7 @@ sub pipeline_analyses {
     -parameters        => {
         output_dir     => '#output_dir#',
         gff            => '#gff#',
-        out_filename   => '#expr(substr("#gff#", rindex("#gff#", "/") + 1, rindex("#gff#", ".") - rindex("#gff#", "/") - 1))#',
-        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/#out_filename#.bgz && tabix -p gff -C #output_dir#/#out_filename#.bgz',
+        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/genes.gff3.bgz && tabix -p gff -C #output_dir#/genes.gff3.bgz',
     },
     -flow_into       => {
         2 => [ 'UpdateDatasetAttribute' ],
@@ -650,6 +652,7 @@ sub pipeline_analyses {
     -hive_capacity     => 10,
     -rc_name           => '4GB',
 },
+
 {
     -logic_name      => 'UpdateDatasetAttribute',
     -module          => 'ensembl.production.hive.HiveDatasetFactory',
@@ -657,8 +660,9 @@ sub pipeline_analyses {
     -rc_name         => 'default',
     -parameters      => {
         'metadata_db_uri'      => $self->o('metadata_db_uri'),
+         'output_dir'     => '#output_dir#',
         'attribute_dict'       => {
-            'vep.bgz_location'  => $self->o('output_dir')  # Only use the directory path, no specific file names
+            'vep.bgz_location'  => '#expr("#output_dir#" =~ s{^.+/organisms/}{organisms/}r =~ s{/[^/]+$}{}r)#'
         },
     },
 },
