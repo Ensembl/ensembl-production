@@ -72,7 +72,7 @@ sub default_options {
         chain_ucsc             => 1,
         xref_external_dbs      => [],
         dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-        ref_dbname             => 'ensembl_compara_references',
+        ref_dbname             => 'ensembl_compara_references_mvp',
         ens_version => $self->o('ENV', 'ENS_VERSION'),
         compara_host_uri       => '',
         species_dirname        => 'organisms',
@@ -323,6 +323,10 @@ sub pipeline_analyses {
             -parameters      => {
                 blast_index    => 0,
                 per_chromosome => 0,
+                unmasked       => 1,
+                hardmasked     => 1,
+                overwrite      => 1,
+
             },
             -rc_name         => '4GB',
             -flow_into       => {
@@ -339,6 +343,8 @@ sub pipeline_analyses {
                 blast_index    => 0,
                 per_chromosome => 0,
                 overwrite      => 1,
+                unmasked       => 1,
+                hardmasked     => 1,
             },
             -rc_name         => '8GB',
             -flow_into       => {
@@ -398,7 +404,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '3'  => ['ProcessGFF']
+                '2' => { 'ProcessGFF' => { 'gff' => '#gff#' } },
             },
         },
 

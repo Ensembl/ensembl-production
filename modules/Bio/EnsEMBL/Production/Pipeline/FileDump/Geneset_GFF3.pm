@@ -90,7 +90,7 @@ sub run {
   foreach (@$output_filenames) {
     $self->tidy($_);
     $self->validate($_);
-    if ($_ =~ /.*\.gff/){
+    if ($_ =~ /.*gff/){
         $self->param('gff', $_);
     }
   }
