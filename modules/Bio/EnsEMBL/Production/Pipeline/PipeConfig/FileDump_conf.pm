@@ -197,21 +197,21 @@ sub pipeline_analyses {
                 ],
             }
         },
-        # {
-        #     -logic_name        => 'HomologyDirectoryPaths',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         analysis_types  => $self->o('homology_types'),
-        #         data_category   => 'homology',
-        #         species_dirname => $self->o('species_dirname')
-        #     },
-        #     -flow_into         => {
-        #         '3->A' => $self->o('homology_types'),
-        #         'A->3' => [ 'Checksum' ]
-        #     }
-        # },
+        {
+            -logic_name        => 'HomologyDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                analysis_types  => $self->o('homology_types'),
+                data_category   => 'homology',
+                species_dirname => $self->o('species_dirname')
+            },
+            -flow_into         => {
+                '3->A' => $self->o('homology_types'),
+                'A->3' => [ 'Checksum' ]
+            }
+        },
         {
             -logic_name        => 'GenomeDirectoryPaths',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
