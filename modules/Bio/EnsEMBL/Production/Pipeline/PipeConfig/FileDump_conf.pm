@@ -291,7 +291,7 @@ sub pipeline_analyses {
             }
         },
         {
-            -logic_name        => 'Geneset_CompressCompressHomologyTSV',
+            -logic_name        => 'CompressHomologyTSV',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
