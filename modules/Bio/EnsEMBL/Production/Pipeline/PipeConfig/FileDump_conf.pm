@@ -621,7 +621,7 @@ sub pipeline_analyses {
     -logic_name        => 'ProcessFASTA',
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
-        output_dir     => $self->o('output_dir'),
+        output_dir     => '#output_dir#',
         sm_filename    => '#sm_filename#',
         out_filename   => '#expr(substr("#sm_filename#", rindex("#sm_filename#", "/") + 1, rindex("#sm_filename#", ".") - rindex("#sm_filename#", "/") - 1))#',
         cmd            => 'bgzip -c #sm_filename# > #output_dir#/#out_filename#.bgz && samtools faidx #output_dir#/#out_filename#.bgz',
@@ -638,11 +638,10 @@ sub pipeline_analyses {
     -logic_name        => 'ProcessGFF',
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
-        output_dir     => $self->o('output_dir'),
-        gff            => $self->o('gff'),
+        output_dir     => '#output_dir#',
+        gff            => '#gff#',
         out_filename   => '#expr(substr("#gff#", rindex("#gff#", "/") + 1, rindex("#gff#", ".") - rindex("#gff#", "/") - 1))#',
         cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/#out_filename#.bgz && tabix -p gff -C #output_dir#/#out_filename#.bgz',
-        gff            => '#gff#',
     },
     -flow_into       => {
         2 => [ 'UpdateDatasetAttribute' ],
