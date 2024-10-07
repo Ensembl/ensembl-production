@@ -65,6 +65,7 @@ sub run {
   my $um_filename = $$filenames{'unmasked'};
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
+  $self->param('$sm_filename', $sm_filename);
 
 
   #set timestamped dir for FTP dumps

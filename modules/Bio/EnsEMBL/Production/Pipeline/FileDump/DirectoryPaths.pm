@@ -28,7 +28,6 @@ use Path::Tiny;
 use Data::Dumper;
 sub run {
   my ($self) = @_;
-#Why is this here??
   my $analysis_types = $self->param_required('analysis_types');
   my $data_category  = $self->param_required('data_category');
 
@@ -40,7 +39,7 @@ sub run {
   $self->param('species_name', $self->species_name($dba));
   $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
-  if ($data_category =~ /geneset|variation|homology/) {
+  if ($data_category =~ /geneset|variation|homology|vep/) {
     $self->param('geneset', $self->geneset($dba));
   }
 

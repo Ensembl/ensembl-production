@@ -70,10 +70,6 @@ sub default_options {
         # Parameters specific to particular dump_types
         blast_index            => 0,
         chain_ucsc             => 1,
-        dna_per_chromosome     => $self->o('per_chromosome'),
-        embl_per_chromosome    => $self->o('per_chromosome'),
-        gff3_per_chromosome    => $self->o('per_chromosome'),
-        gtf_per_chromosome     => $self->o('per_chromosome'),
         xref_external_dbs      => [],
         # dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
         # ref_dbname             => 'ensembl_compara_references',
@@ -271,8 +267,7 @@ sub pipeline_analyses {
                 analysis_types  => $self->o('vep_types')
             },
             -flow_into         => {
-                '3->A' => [ 'ProcessFASTA', 'ProcessGFF' ],
-                'A->3' => [ 'Checksum' ],
+                '3' => [ 'ProcessFASTA', 'ProcessGFF' ],
             }
         },
         ####################### END OF NEW.
@@ -322,9 +317,8 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                blast_index    => $self->o('blast_index'),
-                blastdb_exe    => $self->o('blastdb_exe'),
-                per_chromosome => $self->o('dna_per_chromosome'),
+                blast_index    => 0,
+                per_chromosome => 0,
             },
             -rc_name         => '4GB',
             -flow_into       => {
@@ -338,9 +332,8 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                blast_index    => $self->o('blast_index'),
-                blastdb_exe    => $self->o('blastdb_exe'),
-                per_chromosome => $self->o('dna_per_chromosome'),
+                blast_index    => 0,
+                per_chromosome => 0,
                 overwrite      => 1,
             },
             -rc_name         => '8GB',
@@ -367,7 +360,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                per_chromosome => $self->o('embl_per_chromosome'),
+                per_chromosome => 0,
             },
             -rc_name         => '2GB',
             -flow_into       => {
@@ -381,8 +374,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                blast_index => $self->o('blast_index'),
-                blastdb_exe => $self->o('blastdb_exe'),
+                blast_index => 0,
             },
             -rc_name         => '1GB',
             -flow_into       => {
@@ -396,14 +388,13 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                per_chromosome       => $self->o('gff3_per_chromosome'),
+                per_chromosome       => 0,
                 gt_gff3_exe          => $self->o('gt_gff3_exe'),
                 gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '2->A'  => { 'ProcessGFF' => { 'gff' => '#output_filename#' } },
-                'A->1' => [ 'Geneset_Compress' ],
+                '3'  => ['ProcessGFF']
             },
         },
 
@@ -414,7 +405,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                per_chromosome      => $self->o('gtf_per_chromosome'),
+                per_chromosome      => 0,
                 gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
                 genepred_check_exe  => $self->o('genepred_check_exe'),
             },
@@ -468,7 +459,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                per_chromosome => $self->o('embl_per_chromosome'),
+                per_chromosome => 0,
                 overwrite      => 1,
             },
             -rc_name         => '4GB',
@@ -482,8 +473,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                blast_index => $self->o('blast_index'),
-                blastdb_exe => $self->o('blastdb_exe'),
+                blast_index => 0,
                 overwrite   => 1,
             },
             -rc_name         => '4GB',
@@ -498,7 +488,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {
-                per_chromosome      => $self->o('gtf_per_chromosome'),
+                per_chromosome      => 0,
                 gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
                 genepred_check_exe  => $self->o('genepred_check_exe'),
                 overwrite           => 1,
@@ -631,9 +621,10 @@ sub pipeline_analyses {
     -logic_name        => 'ProcessFASTA',
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
-        cmd            => 'bgzip -c #sm_filename# > #out_filename#.bgz && samtools faidx #out_filename#.bgz',
+        output_dir     => $self->o('output_dir'),
         sm_filename    => '#sm_filename#',
-        outdir_suffix  => 'processed_fasta',
+        out_filename   => '#expr(substr("#sm_filename#", rindex("#sm_filename#", "/") + 1, rindex("#sm_filename#", ".") - rindex("#sm_filename#", "/") - 1))#',
+        cmd            => 'bgzip -c #sm_filename# > #output_dir#/#out_filename#.bgz && samtools faidx #output_dir#/#out_filename#.bgz',
     },
     -flow_into       => {
         2 => [ 'Genome_Compress_gf' ],
@@ -647,9 +638,11 @@ sub pipeline_analyses {
     -logic_name        => 'ProcessGFF',
     -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
     -parameters        => {
-        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #out_filename#.bgz && tabix -p gff -C #out_filename#.bgz',
+        output_dir     => $self->o('output_dir'),
+        gff            => $self->o('gff'),
+        out_filename   => '#expr(substr("#gff#", rindex("#gff#", "/") + 1, rindex("#gff#", ".") - rindex("#gff#", "/") - 1))#',
+        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/#out_filename#.bgz && tabix -p gff -C #output_dir#/#out_filename#.bgz',
         gff            => '#gff#',
-        outdir_suffix  => 'processed_gff',
     },
     -flow_into       => {
         2 => [ 'UpdateDatasetAttribute' ],
@@ -666,7 +659,7 @@ sub pipeline_analyses {
     -parameters      => {
         'metadata_db_uri'      => $self->o('metadata_db_uri'),
         'attribute_dict'       => {
-            'vep.bgz_location'  => '#output_dir#'  # Only use the directory path, no specific file names
+            'vep.bgz_location'  => $self->o('output_dir')  # Only use the directory path, no specific file names
         },
     },
 },
