@@ -40,8 +40,8 @@ sub default_options {
 
         dump_dir               => undef,
         ftp_root               => undef,
-        genome_types           => [], # Possible values: 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'
-        geneset_types          => [], # Possible values: 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'
+        genome_types           => ['Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'],
+        geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'],
         # rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
         vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
         # homology_types         => [], # Possible values : 'Homologies_TSV'
@@ -52,12 +52,12 @@ sub default_options {
         rnaseq_email           => $self->o('email'),
 
         # Pre-dump datachecks
-        run_datachecks         => 0,
+        run_datachecks         => 1,
         config_file            => undef,
         history_file           => undef,
         output_dir             => undef,
         datacheck_names        => [],
-        datacheck_groups       => [],
+        datacheck_groups => ['rapid_release'],
         datacheck_types        => [],
 
         # External programs
