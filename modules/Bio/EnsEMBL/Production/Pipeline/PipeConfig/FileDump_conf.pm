@@ -192,7 +192,7 @@ sub pipeline_analyses {
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
                     # 'RNASeqDirectoryPaths',
-                    # 'HomologyDirectoryPaths',
+                    'HomologyDirectoryPaths',
                     'VEPDirectoryPaths'
                 ],
             }
