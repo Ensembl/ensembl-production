@@ -41,7 +41,7 @@ sub default_options {
         dump_dir               => undef,
         ftp_root               => undef,
         genome_types           => ['Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'],
-        geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GFF3_ENA', 'Geneset_GTF', 'Xref_TSV'],
+        geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'],
         # rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
         vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
         # homology_types         => [], # Possible values : 'Homologies_TSV'
@@ -147,7 +147,7 @@ sub pipeline_analyses {
             },
             -flow_into         => {
                 '2' => WHEN(
-                    '#run_datachecks#'                  => [ 'FTPDumpDummy' ],
+                    '#run_datachecks#' => [ 'FTPDumpDummy' ],
                     ELSE
                         [ 'SpeciesFactory' ]
                 )
