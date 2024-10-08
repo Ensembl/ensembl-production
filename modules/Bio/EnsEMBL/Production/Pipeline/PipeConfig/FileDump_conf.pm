@@ -286,22 +286,10 @@ sub pipeline_analyses {
             },
             -flow_into         => {
                 '2' => [
-                    'CompressHomologyTSV',
+                    'Compress_File',
                 ],
             }
         },
-        {
-            -logic_name        => 'CompressHomologyTSV',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#filepath#"
-            },
-            -rc_name           => '1GB',
-        },
-
         {
             -logic_name      => 'Assembly_Chain',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
@@ -312,7 +300,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '2' => [ 'Genome_Compress' ],
+                '2' => [ 'Compress_File' ],
             },
         },
         {
@@ -331,7 +319,8 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-               '2' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } },
+               '2->A' => [ 'ProcessFASTA' ],
+                'A->1' => [ 'Compress_File' ],
             },
         },
                 {
@@ -348,7 +337,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-               '2' => { 'ProcessFASTA' => { 'sm_filename' => '#output_filename#' } },
+               '2->A' => [ 'ProcessFASTA' ],
+               'A->1' => [ 'Compress_File' ],
             },
         },
 
@@ -361,7 +351,7 @@ sub pipeline_analyses {
             -parameters      => {},
             -rc_name         => '1GB',
             -flow_into       => {
-                '2' => [ 'Genome_Compress' ]
+                '2' => [ 'Compress_File' ]
             },
         },
         {
@@ -375,7 +365,7 @@ sub pipeline_analyses {
             -rc_name         => '2GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_EMBL_mem' ],
-                '2'  => [ 'Geneset_Compress' ]
+                '2'  => [ 'Compress_File' ]
             },
         },
         {
@@ -389,7 +379,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_FASTA_mem' ],
-                '2'  => [ 'Geneset_Compress' ]
+                '2'  => [ 'Compress_File' ]
             },
         },
         {
@@ -422,7 +412,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1' => [ 'Geneset_GTF_mem' ],
-                '2'  => [ 'Geneset_Compress' ],
+                '2'  => [ 'Compress_File' ],
             },
         },
         {
@@ -436,8 +426,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1'   => [ 'Xref_TSV_mem' ],
-                '2->A' => [ 'Geneset_Compress' ],
-                'A->2' => [ 'Symlink_Xref_TSV' ],
+                '2' => [ 'Compress_File' ],
             },
         },
         # {
@@ -448,8 +437,7 @@ sub pipeline_analyses {
         #     -parameters      => {},
         #     -rc_name         => '1GB',
         #     -flow_into       => {
-        #         '2->A' => [ 'Symlink_RNASeq' ],
-        #         'A->2' => [ 'Verify_Unzipped' ],
+        #         '2' => [ 'Verify_Unzipped' ],
         #         '3'    => [ 'RNASeq_Missing' ],
         #     },
         # },
@@ -474,7 +462,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '4GB',
             -flow_into       => {
-                '2' => [ 'Geneset_Compress' ]
+                '2' => [ 'Compress_File' ]
             },
         },
         {
@@ -488,7 +476,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '4GB',
             -flow_into       => {
-                '2' => [ 'Geneset_Compress' ]
+                '2' => [ 'Compress_File' ]
             },
         },
 
@@ -505,7 +493,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '4GB',
             -flow_into       => {
-                '2' => [ 'Geneset_Compress' ]
+                '2' => [ 'Compress_File' ]
             },
         },
         {
@@ -519,12 +507,11 @@ sub pipeline_analyses {
             },
             -rc_name         => '2GB',
             -flow_into       => {
-                '2->A' => [ 'Geneset_Compress' ],
-                'A->2' => [ 'Symlink_Xref_TSV' ],
+                '2' => [ 'Compress_File' ],
             },
         },
         {
-            -logic_name        => 'Genome_Compress',
+            -logic_name        => 'Compress_File',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
@@ -534,11 +521,11 @@ sub pipeline_analyses {
             },
             -rc_name           => '1GB',
             -flow_into         => {
-                '-1' => [ 'Genome_Compress_mem' ],
+                '-1' => [ 'Compress_File_mem' ],
             },
         },
         {
-            -logic_name        => 'Genome_Compress_mem',
+            -logic_name        => 'Compress_File_mem',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
@@ -547,55 +534,6 @@ sub pipeline_analyses {
                 compress => "#output_filename#"
             },
             -rc_name           => '4GB',
-        },
-        {
-            -logic_name        => 'Geneset_Compress',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#output_filename#"
-            },
-            -rc_name           => '1GB',
-            -flow_into         => {
-                '-1' => [ 'Geneset_Compress_mem' ],
-            },
-        },
-        {
-            -logic_name        => 'Geneset_Compress_mem',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#output_filename#"
-            },
-            -rc_name           => '4GB',
-        },
-        {
-            -logic_name        => 'Symlink_Genome_FASTA',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {},
-        },
-        # {
-        #     -logic_name        => 'Symlink_RNASeq',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink_RNASeq',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 10,
-        #     -batch_size        => 10,
-        #     -parameters        => {},
-        # },
-        {
-            -logic_name        => 'Symlink_Xref_TSV',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Symlink',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {},
         },
         {
             -logic_name        => 'Checksum',
@@ -635,9 +573,6 @@ sub pipeline_analyses {
         sm_filename    => '#sm_filename#',
         cmd            => 'bgzip -c #sm_filename# > #output_dir#/unmasked.fa.bgz && samtools faidx #output_dir#/unmasked.fa.bgz',
     },
-    -flow_into       => {
-        2 => [ 'Genome_Compress_gf' ],
-    },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
@@ -650,9 +585,6 @@ sub pipeline_analyses {
         output_dir     => '#output_dir#',
         gff            => '#gff#',
         cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/genes.gff3.bgz && tabix -p gff -C #output_dir#/genes.gff3.bgz',
-    },
-    -flow_into       => {
-        2 => [ 'UpdateDatasetAttribute' ],
     },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
@@ -672,22 +604,6 @@ sub pipeline_analyses {
         },
     },
 },
-        {
-            -logic_name        => 'Genome_Compress_gf',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#output_filename#"
-            },
-            -flow_into       => {
-                2 => [ 'Symlink_Genome_FASTA' ],
-            },
-
-            -rc_name           => '1GB',
-        },
-
     ];
 }
 

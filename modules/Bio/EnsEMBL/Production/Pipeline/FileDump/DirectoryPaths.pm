@@ -39,15 +39,14 @@ sub run {
   $self->param('species_name', $self->species_name($dba));
   $self->param('annotation_source', $self->annotation_source($dba));
   $self->param('assembly', $self->assembly($dba));
-  if ($data_category =~ /geneset|variation|homology|vep/) {
+  if ($data_category =~ /geneset|variation|homology/) {
     $self->param('geneset', $self->geneset($dba));
   }
 
-  my ($output_dir, $timestamped_dir, $web_dir, $ftp_dir) =
+  my ($output_dir, $web_dir, $ftp_dir) =
     $self->directories($data_category);
 
   $self->param('output_dir', $output_dir);
-  $self->param('timestamped_dir', $timestamped_dir);
   $self->param('web_dir', $web_dir);
   $self->param('ftp_dir', $ftp_dir);
   
@@ -63,7 +62,6 @@ sub write_output {
     species_name    => $self->param('species_name'),
     assembly        => $self->param('assembly'),
     output_dir      => $self->param('output_dir'),
-    timestamped_dir => $self->param('timestamped_dir'),
     web_dir         => $self->param('web_dir'),
     ftp_dir         => $self->param('ftp_dir'),
     annotation_source => $self->param_required('annotation_source')
@@ -80,13 +78,12 @@ sub directories {
 
   my $dump_dir              = $self->param_required('dump_dir');
   my $species_dirname       = $self->param_required('species_dirname');
-  my $timestamped_dirname   = $self->param_required('timestamped_dirname');
   my $web_dirname           = $self->param_required('web_dirname');
   my $species_name          = $self->param('species_name');
   my $assembly              = $self->param('assembly');
 
   my $subdirs;
-  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "vep", "stats");
+  my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
     $subdirs = catdir(
       $species_dirname,
@@ -96,18 +93,12 @@ sub directories {
       $self->param_required("${data_category}_dirname"),
     );
   }
-  if ( $data_category =~ /geneset|variation|homology|vep/ ) {
-    # Variation, geneset, homology, and VEP dirs add an extra `YYYY_MM` subdir.
+  if ( $data_category =~ /geneset|variation|homology/ ) {
+    # Variation, geneset, homology add an extra `YYYY_MM` subdir.
     $subdirs = catdir ($subdirs, $self->param('geneset'))
   }
   my $output_dir = catdir(
     $dump_dir,
-    $subdirs
-  );
-
-  my $timestamped_dir = catdir(
-    $dump_dir,
-    $timestamped_dirname,
     $subdirs
   );
 
@@ -124,7 +115,7 @@ sub directories {
     );
   }
 
-  return ($output_dir, $timestamped_dir, $web_dir, $ftp_dir);
+  return ($output_dir, $web_dir, $ftp_dir);
 }
 
 1;

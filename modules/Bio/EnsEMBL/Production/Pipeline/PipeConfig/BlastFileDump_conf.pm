@@ -81,8 +81,7 @@ sub default_options {
         #blast param for new site
         'hardmasked'          => 1,
         'cds'                 => 1,   
-        'timestamped_dir'     => 1,
-        'fasta_header_prefix' => 'ENSEMBL:', 
+        'fasta_header_prefix' => 'ENSEMBL:',
         #genome factory params
       	'dataset_status' => 'Submitted', #fetch genomes with dataset status submitted
     	'dataset_type'   => 'blast', #fetch genomes with dataset blast
@@ -175,7 +174,6 @@ sub pipeline_analyses {
                 blastdb_exe    => $self->o('blastdb_exe'),
                 per_chromosome => $self->o('dna_per_chromosome'),
                 hardmasked  => $self->o('hardmasked'),
-                timestamped => $self->o('timestamped'),
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
                 
             },
