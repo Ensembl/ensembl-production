@@ -531,7 +531,9 @@ sub pipeline_analyses {
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
-    -flow_into         => [ 'UpdateDatasetAttribute' ],
+    -flow_into         => {
+        2 => [ 'UpdateDatasetAttribute' ],
+    },
 },
 {
     -logic_name        => 'GFFbgzip',
@@ -543,7 +545,9 @@ sub pipeline_analyses {
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
-    -flow_into         => [ 'UpdateDatasetAttribute' ],
+    -flow_into         => {
+        2 => [ 'UpdateDatasetAttribute' ],
+    },
 },
 {
     -logic_name      => 'UpdateDatasetAttribute',
@@ -552,9 +556,6 @@ sub pipeline_analyses {
     -rc_name         => 'default',
     -parameters      => {
         'metadata_db_uri'      => $self->o('metadata_db_uri'),
-        'attribute_dict'       => {
-            '#attribute#'  => '#output_location#'
-        },
     },
 },
     ];

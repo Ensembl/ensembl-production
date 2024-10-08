@@ -50,8 +50,8 @@ class GFFbgzip(eHive.BaseRunnable):
         logging.info(f"Compressed file: {bgzip_filename}")
         logging.info(f"Output location: {output_location}")
 
-        # Store the output_location parameter
-        self.param("output_location", output_location)
-        self.param("attribute", "vep.gff_location")
+        # Construct the attribute_dict parameter
+        attribute_dict = {"vep.gff_location": output_location}
 
-
+        # Pass it on
+        self.dataflow({'attribute_dict': attribute_dict}, 2)
