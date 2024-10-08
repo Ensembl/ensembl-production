@@ -250,10 +250,22 @@ sub pipeline_analyses {
             },
             -flow_into         => {
                 '2' => [
-                    'Compress_File',
+                    'CompressHomologyTSV',
                 ],
             }
         },
+        {
+            -logic_name        => 'CompressHomologyTSV',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                compress => "#filepath#"
+            },
+            -rc_name           => '1GB',
+        },
+
         {
             -logic_name      => 'Assembly_Chain',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
