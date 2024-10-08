@@ -31,7 +31,8 @@ class GFFbgzip(eHive.BaseRunnable):
             raise ValueError(f"'organisms' not found in the path: {output_filename}")
 
         # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
-        new_parts = list(path_parts[:org_index + 2]) + ["vep"] + list(path_parts[org_index + 2:] + ".bgz")
+        new_parts = list(path_parts[:org_index + 2]) + ["vep"] + list(path_parts[org_index + 2:] )
+        new_parts[-1] = new_parts[-1] + ".bgz"
         bgzip_filename = str(Path(*new_parts))
 
         # Create the target directory if it does not exist
