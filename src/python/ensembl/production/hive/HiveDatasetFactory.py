@@ -76,10 +76,9 @@ class HiveDatasetFactory(eHive.BaseRunnable):
 
                 # Update dataset attributes if specified
                 if attribute_dict:
-                    DatasetFactory().update_dataset_attributes(
+                    DatasetFactory(self.param_required('metadata_db_uri')).update_dataset_attributes(
                         genome.get('dataset_uuid'),
                         attribute_dict,
-                        metadata_uri=self.param_required('metadata_db_uri')
                     )
                     logger.info(f"Updated Dataset attributes {attribute_dict} for genome {genome.get('genome_uuid')}")
 
