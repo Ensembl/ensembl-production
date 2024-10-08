@@ -98,6 +98,11 @@ sub run {
     $self->blast_index($um_filename, 'nucl');
     $self->blast_index($sm_filename, 'nucl');
     $self->blast_index($hm_filename, 'nucl');
+  }else {
+        $self->dataflow_output_id(
+           { output_filenames => [$sm_filename] }, 2
+         );
+
   }
 }
 
