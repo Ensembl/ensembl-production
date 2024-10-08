@@ -22,6 +22,9 @@ from pathlib import Path
 class FAAbgzip(eHive.BaseRunnable):
     def run(self):
         output_filename = self.param_required("output_filename")
+        #This is total garbage. We should not be creating the six jobs to begin with, but I am done with this for now.
+        if "softmasked.fa" not in output_filename:
+            self.dataflow({'attribute_dict': {}, 'trigger_next_step': 0}, 2)
         softmasked_filename = str(Path(output_filename).parent / "softmasked.fa")
         # Split the path into parts and find the index of "organisms"
         path_parts = Path(softmasked_filename).parts
@@ -52,4 +55,4 @@ class FAAbgzip(eHive.BaseRunnable):
         attribute_dict = {"vep.faa_location": output_location}
 
         # Pass it on
-        self.dataflow({'attribute_dict': attribute_dict}, 2)
+        self.dataflow({'attribute_dict': attribute_dict, 'trigger_next_step': 1}, 2)
