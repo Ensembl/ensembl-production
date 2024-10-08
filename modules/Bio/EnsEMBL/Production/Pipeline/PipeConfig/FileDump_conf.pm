@@ -42,14 +42,10 @@ sub default_options {
         ftp_root               => undef,
         genome_types           => ['Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'],
         geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'],
-        # rnaseq_types           => [], # Possible values: 'RNASeq_Exists'
-        vep_types              => [], # Here just for the sake of completions. Might remove this from the pipeline when things get complicated.
         homology_types         => ['Homologies_TSV'], # Possible values :
 
         overwrite              => 0,
         per_chromosome         => 0,
-
-        rnaseq_email           => $self->o('email'),
 
         # Pre-dump datachecks
         run_datachecks         => 1,
@@ -191,9 +187,7 @@ sub pipeline_analyses {
                 '2' => [
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
-                    # 'RNASeqDirectoryPaths',
                     'HomologyDirectoryPaths',
-                    'VEPDirectoryPaths'
                 ],
             }
         },
@@ -242,36 +236,6 @@ sub pipeline_analyses {
                 'A->3' => [ 'Checksum' ]
             },
         },
-        # {
-        #     -logic_name        => 'RNASeqDirectoryPaths',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         data_category   => 'rnaseq',
-        #         analysis_types  => $self->o('rnaseq_types'),
-        #         species_dirname => $self->o('species_dirname')
-        #     },
-        #     -flow_into         => {
-        #         '3' => $self->o('rnaseq_types'),
-        #     }
-        # },
-        #######################NEW HERE. DELETE THIS LINE WHEN DONE.
-        {
-            -logic_name        => 'VEPDirectoryPaths',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                data_category   => 'vep',
-                species_dirname => $self->o('species_dirname'),
-                analysis_types  => $self->o('vep_types')
-            },
-            -flow_into         => {
-                '3' => [ 'ProcessFASTA', 'ProcessGFF' ],
-            }
-        },
-        ####################### END OF NEW.
 
 
         {
@@ -319,7 +283,7 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-               '2->A' => [ 'ProcessFASTA' ],
+               '2->A' => [ 'FAAbgzip' ],
                 'A->1' => [ 'Compress_File' ],
             },
         },
@@ -337,12 +301,10 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-               '2->A' => [ 'ProcessFASTA' ],
+               '2->A' => [ 'FAAbgzip' ],
                'A->1' => [ 'Compress_File' ],
             },
         },
-
-
         {
             -logic_name      => 'Chromosome_TSV',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
@@ -394,11 +356,27 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '2' => { 'ProcessGFF' => { 'gff' => '#gff#' } },
+                '-1'   => [ 'Geneset_GFF3_mem' ],
+               '2->A' => [ 'GFFbgzip' ],
+                'A->1' => [ 'Compress_File' ],
             },
         },
-
-
+        {
+            -logic_name      => 'Geneset_GFF3_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome       => 0,
+                gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+            },
+            -rc_name         => '1GB',
+            -flow_into       => {
+               '2->A' => [ 'GFFbgzip' ],
+                'A->1' => [ 'Compress_File' ],
+            },
+        },
         {
             -logic_name      => 'Geneset_GTF',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
@@ -429,28 +407,6 @@ sub pipeline_analyses {
                 '2' => [ 'Compress_File' ],
             },
         },
-        # {
-        #     -logic_name      => 'RNASeq_Exists',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Exists',
-        #     -max_retry_count => 1,
-        #     -hive_capacity   => 10,
-        #     -parameters      => {},
-        #     -rc_name         => '1GB',
-        #     -flow_into       => {
-        #         '2' => [ 'Verify_Unzipped' ],
-        #         '3'    => [ 'RNASeq_Missing' ],
-        #     },
-        # },
-        # {
-        #     -logic_name      => 'RNASeq_Missing',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::RNASeq_Missing',
-        #     -max_retry_count => 1,
-        #     -hive_capacity   => 10,
-        #     -batch_size      => 10,
-        #     -parameters      => {
-        #         email => $self->o('rnaseq_email'),
-        #     }
-        # },
         {
             -logic_name      => 'Geneset_EMBL_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
@@ -553,44 +509,30 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -batch_size        => 10,
         },
-        # {
-        #     -logic_name        => 'Verify_Unzipped',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
-        #     -max_retry_count   => 1,
-        #     -analysis_capacity => 10,
-        #     -batch_size        => 10,
-        #     -parameters        => {
-        #         check_unzipped => 0,
-        #     },
-        #     -flow_into         => WHEN('defined #ftp_dir#' => [ 'Sync' ])
-        # },
-        #######################NEW HERE. DELETE THIS LINE WHEN DONE.
 {
-    -logic_name        => 'ProcessFASTA',
-    -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+    -logic_name        => 'FAAbgzip',
+    -module            => 'ensembl.production.hive.filedumps.FAAbgzip',
+    -language        => 'python3',
     -parameters        => {
-        output_dir     => '#output_dir#',
-        sm_filename    => '#sm_filename#',
-        cmd            => 'bgzip -c #sm_filename# > #output_dir#/unmasked.fa.bgz && samtools faidx #output_dir#/unmasked.fa.bgz',
+        output_filename     => '#output_filename#',
     },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
+    -flow_into         => [ 'UpdateDatasetAttribute' ],
 },
-
 {
-    -logic_name        => 'ProcessGFF',
-    -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+    -logic_name        => 'GFFbgzip',
+    -module            => 'ensembl.production.hive.filedumps.GFFbgzip',
+    -language        => 'python3',
     -parameters        => {
-        output_dir     => '#output_dir#',
-        gff            => '#gff#',
-        cmd            => 'sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' #gff# | bgzip -c > #output_dir#/genes.gff3.bgz && tabix -p gff -C #output_dir#/genes.gff3.bgz',
+        output_filename     => '#output_filename#',
     },
     -can_be_empty      => 1,
     -hive_capacity     => 10,
     -rc_name           => '4GB',
+    -flow_into         => [ 'UpdateDatasetAttribute' ],
 },
-
 {
     -logic_name      => 'UpdateDatasetAttribute',
     -module          => 'ensembl.production.hive.HiveDatasetFactory',
@@ -598,9 +540,8 @@ sub pipeline_analyses {
     -rc_name         => 'default',
     -parameters      => {
         'metadata_db_uri'      => $self->o('metadata_db_uri'),
-         'output_dir'     => '#output_dir#',
         'attribute_dict'       => {
-            'vep.bgz_location'  => '#expr("#output_dir#" =~ s{^.+/organisms/}{organisms/}r =~ s{/[^/]+$}{}r)#'
+            '#attribute#'  => '#output_location#'
         },
     },
 },

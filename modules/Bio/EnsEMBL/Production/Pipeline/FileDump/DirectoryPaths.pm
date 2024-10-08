@@ -93,6 +93,15 @@ sub directories {
       $self->param_required("${data_category}_dirname"),
     );
   }
+  #Genome should just have assembly files.
+  if ( $data_category =~ /genome/ ) {
+      $subdirs = catdir(
+      $species_dirname,
+      $species_name,
+      $assembly,
+      $self->param_required("${data_category}_dirname"),
+     );
+  }
   if ( $data_category =~ /geneset|variation|homology/ ) {
     # Variation, geneset, homology add an extra `YYYY_MM` subdir.
     $subdirs = catdir ($subdirs, $self->param('geneset'))
