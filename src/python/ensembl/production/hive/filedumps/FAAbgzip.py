@@ -15,14 +15,16 @@ Compresses gff with bgzip and stores them to a modified VEP location
 """
 
 import logging
-import eHive
 import os
 from pathlib import Path
+
+import eHive
+
 
 class FAAbgzip(eHive.BaseRunnable):
     def run(self):
         output_filename = self.param_required("output_filename")
-        #This is total garbage. We should not be creating the six jobs to begin with, but I am done with this for now.
+        # This is total garbage. We should not be creating the six jobs to begin with, but I am done with this for now.
         if "softmasked.fa" not in output_filename:
             self.dataflow({'attribute_dict': {}, 'trigger_next_step': 0}, 2)
         softmasked_filename = str(Path(output_filename).parent / "softmasked.fa")
@@ -34,7 +36,7 @@ class FAAbgzip(eHive.BaseRunnable):
             raise ValueError(f"'organisms' not found in the path: {softmasked_filename}")
 
         # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
-        new_parts = list(path_parts[:org_index + 2]) + ["vep"] + list(path_parts[org_index + 2:] )
+        new_parts = list(path_parts[:org_index + 3]) + ["vep"] + list(path_parts[org_index + 3:])
         new_parts[-1] = new_parts[-1] + ".bgz"
         bgzip_filename = str(Path(*new_parts))
 

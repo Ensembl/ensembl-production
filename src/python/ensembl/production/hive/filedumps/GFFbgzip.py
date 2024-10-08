@@ -15,9 +15,11 @@ Compresses gff with bgzip and stores them to a modified VEP location
 """
 
 import logging
-import eHive
 import os
 from pathlib import Path
+
+import eHive
+
 
 class GFFbgzip(eHive.BaseRunnable):
     def run(self):
@@ -31,7 +33,7 @@ class GFFbgzip(eHive.BaseRunnable):
             raise ValueError(f"'organisms' not found in the path: {output_filename}")
 
         # Construct the new bgzip path by inserting 'vep' directory right after "organisms" subpath
-        new_parts = list(path_parts[:org_index + 2]) + ["vep"] + list(path_parts[org_index + 2:] )
+        new_parts = list(path_parts[:org_index + 3]) + ["vep"] + list(path_parts[org_index + 3:])
         new_parts[-1] = new_parts[-1] + ".bgz"
         bgzip_filename = str(Path(*new_parts))
 

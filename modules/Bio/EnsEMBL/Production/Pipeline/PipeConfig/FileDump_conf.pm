@@ -31,56 +31,56 @@ sub default_options {
     return {
         %{$self->SUPER::default_options},
 
-        species                => [],
-        antispecies            => [],
-        division               => [],
-        run_all                => 0,
-        dbname                 => [],
-        meta_filters           => {},
+        species                            => [],
+        antispecies                        => [],
+        division                           => [],
+        run_all                            => 0,
+        dbname                             => [],
+        meta_filters                       => {},
 
-        dump_dir               => undef,
-        ftp_root               => undef,
-        genome_types           => ['Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA'],
-        geneset_types          => ['Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV'],
-        homology_types         => ['Homologies_TSV'], # Possible values :
+        dump_dir                           => undef,
+        ftp_root                           => undef,
+        genome_types                       => [ 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA' ],
+        geneset_types                      => [ 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV' ],
+        homology_types                     => [ 'Homologies_TSV' ], # Possible values :
 
-        overwrite              => 0,
-        per_chromosome         => 0,
+        overwrite                          => 0,
+        per_chromosome                     => 0,
 
         # Pre-dump datachecks
-        run_datachecks         => 1,
-        config_file            => undef,
-        history_file           => undef,
-        output_dir             => undef,
-        datacheck_names        => [],
-        datacheck_groups => ['rapid_release'],
-        datacheck_types        => [],
+        run_datachecks                     => 1,
+        config_file                        => undef,
+        history_file                       => undef,
+        output_dir                         => undef,
+        datacheck_names                    => [],
+        datacheck_groups                   => [ 'rapid_release' ],
+        datacheck_types                    => [],
 
         # External programs
-        blastdb_exe            => 'makeblastdb',
-        gtf_to_genepred_exe    => 'gtfToGenePred',
-        genepred_check_exe     => 'genePredCheck',
-        gt_gff3_exe            => 'gt gff3',
-        gt_gff3validator_exe   => 'gt gff3validator',
+        blastdb_exe                        => 'makeblastdb',
+        gtf_to_genepred_exe                => 'gtfToGenePred',
+        genepred_check_exe                 => 'genePredCheck',
+        gt_gff3_exe                        => 'gt gff3',
+        gt_gff3validator_exe               => 'gt gff3validator',
 
         # Parameters specific to particular dump_types
-        blast_index            => 0,
-        chain_ucsc             => 1,
-        xref_external_dbs      => [],
-        dump_homologies_script => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-        ref_dbname             => 'ensembl_compara_references_mvp',
-        ens_version => $self->o('ENV', 'ENS_VERSION'),
-        compara_host_uri       => '',
-        species_dirname        => 'organisms',
+        blast_index                        => 0,
+        chain_ucsc                         => 1,
+        xref_external_dbs                  => [],
+        dump_homologies_script             => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
+        ref_dbname                         => 'ensembl_compara_references_mvp',
+        ens_version                        => $self->o('ENV', 'ENS_VERSION'),
+        compara_host_uri                   => '',
+        species_dirname                    => 'organisms',
 
         #genome factory params
-      	dataset_status         => 'Submitted', #fetch genomes with dataset status submitted
-    	dataset_type           => 'ftp_dumps', #fetch genomes with dataset blast
-    	update_dataset_status  => 'Processing', #updates dataset status to processing in new metadata db
+        dataset_status                     => 'Submitted',  #fetch genomes with dataset status submitted
+        dataset_type                       => 'ftp_dumps',  #fetch genomes with dataset blast
+        update_dataset_status              => 'Processing', #updates dataset status to processing in new metadata db
         genome_factory_dynamic_output_flow => {
-                      '3->A'    => { 'FileDump'  => INPUT_PLUS()  },
-                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}],
-        attribute_dict       => {},  # Placeholder for attribute dictionary
+            '3->A'         => { 'FileDump' => INPUT_PLUS() },
+            'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
+            attribute_dict => {}, # Placeholder for attribute dictionary
         },
 
     };
@@ -123,10 +123,10 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count   => 1,
             -analysis_capacity => 1,
-#            -input_ids         => [ {} ],
+            #            -input_ids         => [ {} ],
             -parameters        => {},
             -flow_into         => {
-                '1' =>  [ 'DbFactory' ],
+                '1' => [ 'DbFactory' ],
             }
         },
         {
@@ -295,11 +295,11 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-               '2->A' => [ 'FAAbgzip' ],
+                '2->A' => [ 'FAAbgzip' ],
                 'A->1' => [ 'Compress_File' ],
             },
         },
-                {
+        {
             -logic_name      => 'Genome_FASTA_mem',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
             -max_retry_count => 1,
@@ -313,8 +313,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-               '2->A' => [ 'FAAbgzip' ],
-               'A->1' => [ 'Compress_File' ],
+                '2->A' => [ 'FAAbgzip' ],
+                'A->1' => [ 'Compress_File' ],
             },
         },
         {
@@ -369,7 +369,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '-1'   => [ 'Geneset_GFF3_mem' ],
-               '2->A' => [ 'GFFbgzip' ],
+                '2->A' => [ 'GFFbgzip' ],
                 'A->1' => [ 'Compress_File' ],
             },
         },
@@ -385,7 +385,7 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-               '2->A' => [ 'GFFbgzip' ],
+                '2->A' => [ 'GFFbgzip' ],
                 'A->1' => [ 'Compress_File' ],
             },
         },
@@ -415,8 +415,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '1GB',
             -flow_into       => {
-                '-1'   => [ 'Xref_TSV_mem' ],
-                '2' => [ 'Compress_File' ],
+                '-1' => [ 'Xref_TSV_mem' ],
+                '2'  => [ 'Compress_File' ],
             },
         },
         {
@@ -521,43 +521,43 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -batch_size        => 10,
         },
-{
-    -logic_name        => 'FAAbgzip',
-    -module            => 'ensembl.production.hive.filedumps.FAAbgzip',
-    -language        => 'python3',
-    -parameters        => {
-        output_filename     => '#output_filename#',
-    },
-    -can_be_empty      => 1,
-    -hive_capacity     => 10,
-    -rc_name           => '4GB',
-    -flow_into         => {
-        2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
-    },
-},
-{
-    -logic_name        => 'GFFbgzip',
-    -module            => 'ensembl.production.hive.filedumps.GFFbgzip',
-    -language        => 'python3',
-    -parameters        => {
-        output_filename     => '#output_filename#',
-    },
-    -can_be_empty      => 1,
-    -hive_capacity     => 10,
-    -rc_name           => '4GB',
-    -flow_into         => {
-        2 => [ 'UpdateDatasetAttribute' ],
-    },
-},
-{
-    -logic_name      => 'UpdateDatasetAttribute',
-    -module          => 'ensembl.production.hive.HiveDatasetFactory',
-    -language        => 'python3',
-    -rc_name         => 'default',
-    -parameters      => {
-        'metadata_db_uri'      => $self->o('metadata_db_uri'),
-    },
-},
+        {
+            -logic_name    => 'FAAbgzip',
+            -module        => 'ensembl.production.hive.filedumps.FAAbgzip',
+            -language      => 'python3',
+            -parameters    => {
+                output_filename => '#output_filename#',
+            },
+            -can_be_empty  => 1,
+            -hive_capacity => 10,
+            -rc_name       => '4GB',
+            -flow_into     => {
+                2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
+            },
+        },
+        {
+            -logic_name    => 'GFFbgzip',
+            -module        => 'ensembl.production.hive.filedumps.GFFbgzip',
+            -language      => 'python3',
+            -parameters    => {
+                output_filename => '#output_filename#',
+            },
+            -can_be_empty  => 1,
+            -hive_capacity => 10,
+            -rc_name       => '4GB',
+            -flow_into     => {
+                2 => [ 'UpdateDatasetAttribute' ],
+            },
+        },
+        {
+            -logic_name => 'UpdateDatasetAttribute',
+            -module     => 'ensembl.production.hive.HiveDatasetFactory',
+            -language   => 'python3',
+            -rc_name    => 'default',
+            -parameters => {
+                'metadata_db_uri' => $self->o('metadata_db_uri'),
+            },
+        },
     ];
 }
 
