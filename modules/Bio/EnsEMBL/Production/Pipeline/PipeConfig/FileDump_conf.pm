@@ -295,8 +295,7 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-               '2->A' => [ 'FAAbgzip' ],
-                'A->1' => [ 'Compress_File' ],
+               '2' => [ 'FAAbgzip' ],
             },
         },
         {
