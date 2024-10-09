@@ -531,7 +531,6 @@ sub pipeline_analyses {
             -rc_name       => '4GB',
             -flow_into     => {
                 2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
-                '3' => [ 'Compress_File' ],
             },
         },
         {
@@ -545,7 +544,7 @@ sub pipeline_analyses {
             -hive_capacity => 10,
             -rc_name       => '4GB',
             -flow_into     => {
-                '2' => [ 'UpdateDatasetAttribute' ],
+                2 => [ 'UpdateDatasetAttribute' ],
             },
         },
         {
