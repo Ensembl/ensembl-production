@@ -295,7 +295,8 @@ sub pipeline_analyses {
             -rc_name         => '4GB',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
-                '2' => [ 'FAAbgzip' ],
+               '2->A' => [ 'FAAbgzip' ],
+                'A->1' => [ 'Compress_File' ],
             },
         },
         {
@@ -312,7 +313,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-                '2' => [ 'FAAbgzip' ],
+               '2->A' => [ 'FAAbgzip' ],
+               'A->1' => [ 'Compress_File' ],
             },
         },
         {
@@ -519,43 +521,43 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -batch_size        => 10,
         },
-        {
-            -logic_name    => 'FAAbgzip',
-            -module        => 'ensembl.production.hive.filedumps.FAAbgzip',
-            -language      => 'python3',
-            -parameters    => {
-                output_filename => '#output_filename#',
-            },
-            -can_be_empty  => 1,
-            -hive_capacity => 10,
-            -rc_name       => '4GB',
-            -flow_into     => {
-                2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
-            },
-        },
-        {
-            -logic_name    => 'GFFbgzip',
-            -module        => 'ensembl.production.hive.filedumps.GFFbgzip',
-            -language      => 'python3',
-            -parameters    => {
-                output_filename => '#output_filename#',
-            },
-            -can_be_empty  => 1,
-            -hive_capacity => 10,
-            -rc_name       => '4GB',
-            -flow_into     => {
-                2 => [ 'UpdateDatasetAttribute' ],
-            },
-        },
-        {
-            -logic_name => 'UpdateDatasetAttribute',
-            -module     => 'ensembl.production.hive.HiveDatasetFactory',
-            -language   => 'python3',
-            -rc_name    => 'default',
-            -parameters => {
-                'metadata_db_uri' => $self->o('metadata_db_uri'),
-            },
-        },
+{
+    -logic_name        => 'FAAbgzip',
+    -module            => 'ensembl.production.hive.filedumps.FAAbgzip',
+    -language        => 'python3',
+    -parameters        => {
+        output_filename     => '#output_filename#',
+    },
+    -can_be_empty      => 1,
+    -hive_capacity     => 10,
+    -rc_name           => '4GB',
+    -flow_into         => {
+        2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
+    },
+},
+{
+    -logic_name        => 'GFFbgzip',
+    -module            => 'ensembl.production.hive.filedumps.GFFbgzip',
+    -language        => 'python3',
+    -parameters        => {
+        output_filename     => '#output_filename#',
+    },
+    -can_be_empty      => 1,
+    -hive_capacity     => 10,
+    -rc_name           => '4GB',
+    -flow_into         => {
+        2 => [ 'UpdateDatasetAttribute' ],
+    },
+},
+{
+    -logic_name      => 'UpdateDatasetAttribute',
+    -module          => 'ensembl.production.hive.HiveDatasetFactory',
+    -language        => 'python3',
+    -rc_name         => 'default',
+    -parameters      => {
+        'metadata_db_uri'      => $self->o('metadata_db_uri'),
+    },
+},
     ];
 }
 
