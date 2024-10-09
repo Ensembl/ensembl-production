@@ -51,34 +51,8 @@ log.info """\
     """
     .stripIndent(true)
 
+include { DB_COPY_SUBMIT } from '../modules/db_cleanup/db_copy_submit.nf'
 
-process DB_COPY_SUBMIT {
-
-    input:
-    val db_name
-
-    output:
-    tuple path('job_id.txt'), val(db_name), emit: job_info_ch
-
-    script:
-    api_url="https://services.ensembl-production.ebi.ac.uk/api/dbcopy/requestjob"
-    source_db="${params.source_host}:${params.source_port}"
-    target_db="${params.target_host}:${params.target_port}"
-
-    println "Submitting dbcopy job for $db_name"
-
-    """
-    # Submit the job via dbcopy-client
-    dbcopy-client -u $api_url -a submit -s $source_db -t $target_db -i $db_name -n ${db_name}_tmp -e $params.email -r $params.user --wipe_target 1 --skip-check &> out.log
-
-    # sleep to allow file to be created
-    sleep 10
-
-    # Extract the job id
-    job_id=\$(grep -o '[0-9a-f\\-]\\{36\\}' out.log)
-    echo \$job_id > job_id.txt
-    """
-}
 
 // process EXTRACT_JOB_ID {
 
