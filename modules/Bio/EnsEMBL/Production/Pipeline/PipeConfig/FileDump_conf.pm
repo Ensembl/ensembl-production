@@ -298,24 +298,24 @@ sub pipeline_analyses {
                '2' => [ 'FAAbgzip' ],
             },
         },
-        {
-            -logic_name      => 'Genome_FASTA_mem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
-            -max_retry_count => 1,
-            -hive_capacity   => 10,
-            -parameters      => {
-                blast_index    => 0,
-                per_chromosome => 0,
-                overwrite      => 1,
-                unmasked       => 1,
-                hardmasked     => 1,
-            },
-            -rc_name         => '8GB',
-            -flow_into       => {
-               '2->A' => [ 'FAAbgzip' ],
-               'A->1' => [ 'Compress_File' ],
-            },
-        },
+        # {
+        #     -logic_name      => 'Genome_FASTA_mem',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+        #     -max_retry_count => 1,
+        #     -hive_capacity   => 10,
+        #     -parameters      => {
+        #         blast_index    => 0,
+        #         per_chromosome => 0,
+        #         overwrite      => 1,
+        #         unmasked       => 1,
+        #         hardmasked     => 1,
+        #     },
+        #     -rc_name         => '8GB',
+        #     -flow_into       => {
+        #        '2->A' => [ 'FAAbgzip' ],
+        #        'A->1' => [ 'Compress_File' ],
+        #     },
+        # },
         {
             -logic_name      => 'Chromosome_TSV',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
