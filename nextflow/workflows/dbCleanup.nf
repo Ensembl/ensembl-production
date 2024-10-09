@@ -18,7 +18,6 @@ nextflow.enable.dsl=2
 // default params
 params.source_host = ""
 params.source_port = ""
-// params.db_list = params.db_list?.split(',') as List // https://github.com/nextflow-io/nextflow/discussions/2821
 params.db_list = []
 params.target_host = "mysql-ens-core-prod-1"
 params.target_port = "4524"
@@ -36,9 +35,18 @@ log.info """\
     workDir                 : ${workDir}
     launchDir               : ${launchDir}
     projectDir              : ${projectDir}
-    db list                 : ${params.db_list}
     email address for HPC   : ${params.email}
     user                    : ${params.user}
+    target path for output  : ${params.target_path}
+
+    Database parameters
+    ===================
+    db list                 : ${params.db_list}
+    source db host          : ${params.source_host}
+    source db port          : ${params.source_port}
+    target db host          : ${params.target_host}
+    target db port          : ${params.target_port}
+    drop source db at end   : ${params.drop_db}
 
     """
     .stripIndent(true)
