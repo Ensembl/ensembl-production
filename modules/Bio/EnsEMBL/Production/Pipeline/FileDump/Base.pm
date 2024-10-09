@@ -33,7 +33,6 @@ sub param_defaults {
     %{$self->SUPER::param_defaults},
     db_type             => 'core',
     species_dirname     => 'species',
-    timestamped_dirname => 'timestamped',
     web_dirname         => 'web',
     genome_dirname      => 'genome',
     geneset_dirname     => 'geneset',
@@ -89,9 +88,8 @@ sub annotation_source {
   my $mca = $dba->get_adaptor("MetaContainer");
   my $annotation_source = $mca->single_value_by_key('species.annotation_source');
   if (!defined $annotation_source || $annotation_source eq '') {
-    return 'ensembl';
+    $self->throw("Missing dba parameter: annotation_source method");
   }
-
   return lc $annotation_source;
 }
 

@@ -37,9 +37,6 @@ sub param_defaults {
     data_type      => 'sequence',
     data_types     => ['unmasked', 'softmasked', 'hardmasked'],
     file_type      => 'fa',
-    # For BLAST generation we don't need the timestamped files to be generated
-      # TODO NEED revision
-    timestamped    => 1,
     per_chromosome => 0,
     chunk_size     => 30000,
     line_width     => 60,
@@ -65,12 +62,7 @@ sub run {
   my $um_filename = $$filenames{'unmasked'};
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
-
-
-  #set timestamped dir for FTP dumps
-  #$self->param('timestamped', 1);
-
-
+  $self->param('$sm_filename', $sm_filename);
 
   #dump all into single file
   $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses); 
@@ -82,8 +74,9 @@ sub run {
   # } else {
   #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
   # }
-
-  $self->unmask($sm_filename, $um_filename);
+  if($self->param('unmasked')){
+      $self->unmask($sm_filename, $um_filename);
+  }
   if($self->param('hardmasked')){
     $self->hardmask($sm_filename, $hm_filename);
   }

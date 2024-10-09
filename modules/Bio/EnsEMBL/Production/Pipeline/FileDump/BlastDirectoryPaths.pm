@@ -45,11 +45,10 @@ sub run {
     $self->param('geneset', $self->geneset($dba));
   }
 
-  my ($output_dir, $timestamped_dir, $web_dir) =
+  my ($output_dir, $web_dir) =
     $self->directories($data_category);
 
   $self->param('output_dir', $output_dir);
-  $self->param('timestamped_dir', $timestamped_dir);
   $self->param('web_dir', $web_dir);
 
 
@@ -65,7 +64,6 @@ sub write_output {
     species_name    => $self->param('species_name'),
     assembly        => $self->param('assembly'),
     output_dir      => $self->param('output_dir'),
-    timestamped_dir => $self->param('timestamped_dir'),
     web_dir         => $self->param('web_dir'),
     genome_uuid     => $self->param_required('genome_uuid'),
   );
@@ -81,7 +79,6 @@ sub directories {
 
   my $dump_dir                    = $self->param_required('dump_dir');
   my $species_dirname             = $self->param_required('species_dirname');
-  my $timestamped_dirname         = $self->param_required('timestamped_dirname');
   my $web_dirname                 = $self->param_required('web_dirname');
   my $species_production_name     = $self->param('species');
   my $assembly                    = $self->param('assembly');
@@ -102,20 +99,13 @@ sub directories {
     $subdirs
   );
 
-  my $timestamped_dir = catdir(
-    $dump_dir,
-    $subdirs
-    # $timestamped_dirname,
-    # $subdirs
-  );
-
   my $web_dir = catdir(
     $dump_dir,
     $subdirs
     #$web_dirname
   );
 
-  return ($output_dir, $timestamped_dir, $web_dir);
+  return ($output_dir, $web_dir);
 }
 
 1;

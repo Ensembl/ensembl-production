@@ -35,7 +35,6 @@ sub param_defaults {
         %{$self->SUPER::param_defaults},
         data_type   => 'mysql',
         file_type   => 'txt',
-        timestamped => 1,
     };
 }
 
@@ -43,7 +42,6 @@ sub fetch_input {
     my ($self) = @_;
 
     my $dump_dir = $self->param_required('dump_dir');
-    my $timestamped_dirname = $self->param_required('timestamped_dirname');
     my $overwrite = $self->param_required('overwrite');
     my $data_type = $self->param_required('data_type');
 
@@ -54,7 +52,6 @@ sub fetch_input {
     else {
         $output_dir = catdir(
             $dump_dir,
-            $timestamped_dirname,
             $data_type,
             $self->timestamp($self->dba)
         );
