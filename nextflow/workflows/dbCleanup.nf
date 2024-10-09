@@ -52,68 +52,7 @@ log.info """\
     .stripIndent(true)
 
 include { DB_COPY_SUBMIT } from '../modules/db_cleanup/db_copy_submit.nf'
-
-
-// process EXTRACT_JOB_ID {
-
-//     input:
-//     val db_name
-//     path job_id_file
-
-//     output:
-//     tuple val(job_id_value), val(db_name), emit: job_info_ch
-
-//     script:
-//     // """
-//     // # Read the job ID from the job_id_file
-//     // #job_id_value=\$(cat $job_id_file)
-//     // #echo "Job ID: \$job_id_value"
-//     // """
-//     // Define a Groovy variable to hold the job ID
-//     // Convert job_id_file (which is a path) to a Groovy File object and read its contents
-//     def job_id_value = job_id_file.newReader().text.trim()  // New unique variable name
-//     println "Job ID: $job_id_value" // Print the job ID for debugging
-// }
-
-process MONITOR_DB_COPY {
-
-    input:
-    tuple val(job_id), val(db_name) // Get job ID and db name from the previous process
-
-    output:
-    tuple val(job_id), val(db_name), emit: monitored_job
-
-    script:
-    """
-    # Define the API endpoint to check the status of the job
-    api_url="https://services.ensembl-production.ebi.ac.uk/api/dbcopy/requestjob/${job_id}"
-    
-    # Set the interval for checking the status (e.g., every so many seconds)
-    interval=60
-
-    # Polling loop
-    while true; do
-        # Fetch job status
-        status=\$(curl -s -X GET \$api_url | jq -r '.overall_status')
-
-        # Print the status to the Nextflow log
-        echo "Job ID: ${job_id} - Status: \$status"
-
-        # Check if the job is completed or failed
-        if [ "\$status" = "Complete" ]; then
-            echo "Job ID: ${job_id} has completed."
-            break
-        elif [ "\$status" = "Failed" ]; then
-            echo "Job ID: ${job_id} has failed."
-            exit 1
-        fi
-
-        # Wait for the next interval before checking the status again
-        sleep \$interval
-    done
-    """
-}
-
+include { MONITOR_DB_COPY } from '../modules/db_cleanup/monitor_db_copy.nf'
 
 process GENERATE_SQL {
 
