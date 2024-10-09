@@ -53,31 +53,7 @@ log.info """\
 
 include { DB_COPY_SUBMIT } from '../modules/db_cleanup/db_copy_submit.nf'
 include { MONITOR_DB_COPY } from '../modules/db_cleanup/monitor_db_copy.nf'
-
-process GENERATE_SQL {
-
-    publishDir "sql/${db_name}", mode: 'copy', overwrite: true  // Publish SQL files to 'sql' directory
-
-    input:
-    tuple val(job_id), val(db_name) // Get job ID and db name from job_info_ch
-
-    output:
-    path "${db_name}.sql", emit: sql_output_file  // Output pattern to capture SQL files
-
-    script:
-    println "Generating SQL for db: ${db_name}"
-    """
-    # add max package size to account for dna db table size
-    mysqldump --max-allowed-packet=2048M --opt --quick --skip-column-statistics -h ${params.target_host} -P ${params.target_port} -u ensro ${db_name}_tmp > ${db_name}.sql
-    sleep 180
-    """
-    // # For each table found in the db, dump it out to file
-    // for table in \$(mysql -h ${params.target_host} -P ${params.target_port} -u ensro -N -e 'SHOW TABLES' ${db_name}_tmp); do
-    //     mysqldump --max-allowed-packet=1G --column-statistics=0 -h ${params.target_host} -P ${params.target_port} -u ensro --routines --triggers --add-drop-table ${db_name}_tmp \${table} > \${table}.sql
-    //     #mysqldump --max-allowed-packet=1G --column-statistics=0 -h ${params.target_host} -P ${params.target_port} -u ensro --no-create-info ${db_name}_tmp \${table} > \${table}.sql
-    // done
-    // """
-}
+include { GENERATE_SQL } from '../modules/db_cleanup/generate_sql.nf'
 
 process COMPRESS_FILES {
 
