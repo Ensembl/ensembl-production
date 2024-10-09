@@ -45,7 +45,7 @@ class GFFbgzip(eHive.BaseRunnable):
         os.system(f"sort -k1,1 -k4,4n -k5,5n -t$\'\\t\' {output_filename} | bgzip -c > {bgzip_filename}")
         os.system(f"tabix -p gff -C {bgzip_filename}")
 
-        output_location = str(Path(*path_parts[org_index + 1:]))
+        output_location = str(Path(*new_parts[org_index + 1:]))
 
         # Log the output paths for debugging purposes
         logging.info(f"Original file: {output_filename}")

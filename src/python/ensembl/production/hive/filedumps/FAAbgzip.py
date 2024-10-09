@@ -49,7 +49,7 @@ class FAAbgzip(eHive.BaseRunnable):
         os.system(f"bgzip -c {softmasked_filename} > {bgzip_filename}")
         os.system(f"samtools faidx {bgzip_filename}")
 
-        output_location = str(Path(*path_parts[org_index + 1:]))
+        output_location = str(Path(*new_parts[org_index + 1:]))
 
         logging.info(f"Original file: {output_filename}")
         logging.info(f"Compressed file: {bgzip_filename}")
