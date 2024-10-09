@@ -313,7 +313,8 @@ sub pipeline_analyses {
             },
             -rc_name         => '8GB',
             -flow_into       => {
-               '2' => [ 'FAAbgzip' ],
+               '2->A' => [ 'FAAbgzip' ],
+               'A->1' => [ 'Compress_File' ],
             },
         },
         {
