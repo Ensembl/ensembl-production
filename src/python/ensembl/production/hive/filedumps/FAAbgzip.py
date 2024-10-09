@@ -27,6 +27,7 @@ class FAAbgzip(eHive.BaseRunnable):
         # This is total garbage. We should not be creating the six jobs to begin with, but I am done with this for now.
         if "softmasked.fa" not in output_filename:
             self.dataflow({'attribute_dict': {}, 'trigger_next_step': 0}, 2)
+            self.dataflow({'output_filename': output_filename}, 3)
             return
         softmasked_filename = str(Path(output_filename).parent / "softmasked.fa")
         # Split the path into parts and find the index of "organisms"
@@ -59,3 +60,5 @@ class FAAbgzip(eHive.BaseRunnable):
 
         # Pass it on
         self.dataflow({'attribute_dict': attribute_dict, 'trigger_next_step': 1}, 2)
+        self.dataflow({'output_filename': output_filename}, 3)
+        return
