@@ -54,35 +54,12 @@ log.info """\
 include { DB_COPY_SUBMIT } from '../modules/db_cleanup/db_copy_submit.nf'
 include { MONITOR_DB_COPY } from '../modules/db_cleanup/monitor_db_copy.nf'
 include { GENERATE_SQL } from '../modules/db_cleanup/generate_sql.nf'
+include { COMPRESS_FILE } from '../modules/db_cleanup/compress_file.nf'
 
-process COMPRESS_FILES {
-
-    // get working and then check which compression method to use
-
-    publishDir "zip/", mode: 'copy', overwrite: true
-
-    input:
-    path sql_file
-
-    output:
-    path "${sql_file}.bz2", emit: compressed_sql_ch  // Output compressed table-named file into a channel
-
-    script:
-    println "Compressing file: ${sql_file}"
-
-    """
-    # Ensure the file is copied to the current work dir, not linked
-    cp ${sql_file} ./temp_file.sql
-
-    # Compress the file
-    #bzip2 \$(realpath temp_file.sql)
-    bzip2 temp_file.sql
-
-    # Rename file
-    mv temp_file.sql.bz2 ${sql_file}.bz2
-    """
-}
-
+// Process not currently in use as changed to using single file
+// for whole db, so no longer archiving a group of table sql files.
+// Leaving here in case need it in future - needs testing before
+// moving to own module file.
 process TAR_COMPRESSED_SQL {
 
     input:
@@ -155,22 +132,11 @@ workflow {
         // Generate SQL files
         GENERATE_SQL(MONITOR_DB_COPY.out.monitored_job)
 
-        // sql_file_ch = Channel.of("sql/${db_name}/${db_name}.sql")
-
+        // View the generated files
         GENERATE_SQL.out.sql_output_file.view()
 
-        // Compress the SQL files
-        compressed_sql_ch = COMPRESS_FILES(GENERATE_SQL.out.sql_output_file)
-        // compressed_sql_ch = COMPRESS_FILES(sql_file_ch)
+        // Compress the SQL file
+        // also outputs compressed file to final storage path
+        compressed_sql_ch = COMPRESS_FILE(GENERATE_SQL.out.sql_output_file)
 
-        // Collect the compressed SQL files into a list
-        // compressed_sql_list = compressed_sql_ch.collect() 
-
-        // compressed_sql_list.view()
-
-        // archive the SQL files
-        // TAR_COMPRESSED_SQL(compressed_sql_list, job_info_mapped_ch)
-
-        // move archives to final storage path
-        // use the datamover queue for copying things over?
 }
