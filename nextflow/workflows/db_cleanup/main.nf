@@ -15,16 +15,32 @@
 
 nextflow.enable.dsl=2
 
+// modules to include
+include { DB_COPY_SUBMIT } from '../../modules/db_cleanup/db_copy_submit.nf'
+include { MONITOR_DB_COPY } from '../../modules/db_cleanup/monitor_db_copy.nf'
+include { GENERATE_SQL } from '../../modules/db_cleanup/generate_sql.nf'
+include { COMPRESS_FILE } from '../../modules/db_cleanup/compress_file.nf'
+
+// nf-schema-related modules
+include { validateParameters; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
+
+// Validate input parameters
+validateParameters()
+
+// Print summary of supplied parameters
+// via nf-schema plugin
+log.info paramsSummaryLog(workflow)
+
 // default params
-params.source_host = ""
-params.source_port = ""
-params.db_list = []
-params.target_host = "mysql-ens-core-prod-1"
-params.target_port = "4524"
-params.target_path = ""
-params.drop_db = false
-params.email = ""
-params.user = "ensro"
+// params.source_host = ""
+// params.source_port = ""
+// params.db_list = []
+// params.target_host = "mysql-ens-core-prod-1"
+// params.target_port = "4524"
+// params.target_path = ""
+// params.drop_db = false
+// params.email = ""
+// params.user = ""
 
 log.info """\
 
@@ -51,10 +67,7 @@ log.info """\
     """
     .stripIndent(true)
 
-include { DB_COPY_SUBMIT } from '../../modules/db_cleanup/db_copy_submit.nf'
-include { MONITOR_DB_COPY } from '../../modules/db_cleanup/monitor_db_copy.nf'
-include { GENERATE_SQL } from '../../modules/db_cleanup/generate_sql.nf'
-include { COMPRESS_FILE } from '../../modules/db_cleanup/compress_file.nf'
+
 
 // Process not currently in use as changed to using single file
 // for whole db, so no longer archiving a group of table sql files.

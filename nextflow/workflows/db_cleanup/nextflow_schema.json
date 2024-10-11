@@ -1,0 +1,56 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Database Cleanup Pipeline",
+    "description": "Pipeline to clean up databases by generating SQL dumps for long-term storage",
+    "type": "object",
+    "properties": {
+        "source_host": {
+            "type": "string",
+            "description": "The host for connecting to the source database",
+            "required": true
+        },
+        "source_port": {
+            "type": "string",
+            "description": "The port for connecting to the source database",
+            "required": true
+        },
+        "db_list": {
+            "type": "string",
+            "description": "Comma-separated list of database names to process",
+            "required": true
+        },
+        "target_host": {
+            "type": "string",
+            "description": "The host for connecting to the target database",
+            "required": true,
+            "default": "mysql-ens-core-prod-1"
+        },
+        "target_port": {
+            "type": "string",
+            "description": "The port for connecting to the target database",
+            "required": true,
+            "default": "4524"
+        },
+        "target_path": {
+            "type": "string",
+            "description": "Path to store final compressed SQL file",
+            "required": true
+        },
+        "drop_db": {
+            "type": "string",
+            "description": "Boolean to drop the source database after put into storage",
+            "default": false
+        },
+        "email": {
+            "type": "string",
+            "description": "Email address of user. Required for dbcopy-client service to run",
+            "required": true
+        },
+        "user": {
+            "type": "string",
+            "description": "User name to use for dbcopy-client service",
+            "required": true
+        }
+    }
+}
