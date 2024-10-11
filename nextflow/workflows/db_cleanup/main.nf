@@ -51,10 +51,10 @@ log.info """\
     """
     .stripIndent(true)
 
-include { DB_COPY_SUBMIT } from '../modules/db_cleanup/db_copy_submit.nf'
-include { MONITOR_DB_COPY } from '../modules/db_cleanup/monitor_db_copy.nf'
-include { GENERATE_SQL } from '../modules/db_cleanup/generate_sql.nf'
-include { COMPRESS_FILE } from '../modules/db_cleanup/compress_file.nf'
+include { DB_COPY_SUBMIT } from '../../modules/db_cleanup/db_copy_submit.nf'
+include { MONITOR_DB_COPY } from '../../modules/db_cleanup/monitor_db_copy.nf'
+include { GENERATE_SQL } from '../../modules/db_cleanup/generate_sql.nf'
+include { COMPRESS_FILE } from '../../modules/db_cleanup/compress_file.nf'
 
 // Process not currently in use as changed to using single file
 // for whole db, so no longer archiving a group of table sql files.
