@@ -17,7 +17,7 @@ nextflow.enable.dsl=2
 
 process GENERATE_SQL {
 
-    publishDir "sql/${db_name}", mode: 'copy', overwrite: true  // Publish SQL files to 'sql' directory
+    // publishDir "sql/${db_name}", mode: 'copy', overwrite: true  // Publish SQL files to 'sql' directory
 
     input:
     tuple val(job_id), val(db_name) // Get job ID and db name from job_info_ch
