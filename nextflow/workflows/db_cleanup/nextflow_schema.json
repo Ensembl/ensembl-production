@@ -42,6 +42,11 @@
             "description": "Boolean to drop the source database after put into storage",
             "default": false
         },
+        "db_pwd": {
+            "type": "string",
+            "description": "Password for db admin user",
+            "required": true
+        },
         "email": {
             "type": "string",
             "description": "Email address of user. Required for dbcopy-client service to run",

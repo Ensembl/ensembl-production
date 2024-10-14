@@ -94,6 +94,29 @@ process TAR_COMPRESSED_SQL {
     """
 }
 
+process CLEANUP_TMP_DB {
+
+    input:
+    path compressed_file
+    tuple val(job_id), val(db_name)
+
+    script:
+    """
+    tmp_db_name="${db_name}_tmp"
+    echo "Checking if target database \${tmp_db_name} exists for removal..."
+
+    db_exists=\$(mysql -h $params.target_host -P $params.target_port -u ensadmin -p $params.db_pwd -e "SHOW DATABASES LIKE '\${tmp_db_name}';")
+
+    if [ ! -z "\${db_exists}" ]; then
+        echo "Database \${tmp_db_name} exists. Dropping the database."
+        mysqladmin -h $params.target_host -P $params.target_port -u $params.user -f drop \${tmp_db_name}
+    else
+        echo "Database \${tmp_db_name} does not exist, skipping drop."
+    fi
+    """
+}
+
+
 
 workflow {
 
@@ -152,4 +175,6 @@ workflow {
         // also outputs compressed file to final storage path
         compressed_sql_ch = COMPRESS_FILE(GENERATE_SQL.out.sql_output_file)
 
+        // Cleanup the temp db created by this pipeline
+        CLEANUP_TMP_DB(compressed_sql_ch, MONITOR_DB_COPY.out.monitored_job)
 }
