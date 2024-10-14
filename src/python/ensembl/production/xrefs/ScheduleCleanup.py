@@ -16,42 +16,48 @@
 
 from ensembl.production.xrefs.Base import *
 
+
 class ScheduleCleanup(Base):
-  def run(self):
-    base_path              = self.param_required('base_path')
-    source_db_url          = self.param_required('source_db_url')
-    clean_files            = self.param('clean_files')
-    clean_dir              = self.param('clean_dir')
-    split_files_by_species = self.param('split_files_by_species')
+    def run(self):
+        base_path              = self.param_required("base_path", {"type": "str"})
+        source_db_url          = self.param_required("source_db_url", {"type": "str"})
+        clean_files            = self.param("clean_files", None, {"type": "bool"})
+        clean_dir              = self.param("clean_dir", None, {"type": "str"})
+        split_files_by_species = self.param("split_files_by_species", None, {"type": "bool"})
 
-    logging.info('ScheduleCleanup starting with parameters:')
-    logging.info(f'Param: base_path = {base_path}')
-    logging.info(f'Param: source_db_url = {source_db_url}')
-    logging.info(f'Param: clean_files = {clean_files}')
-    logging.info(f'Param: clean_dir = {clean_dir}')
-    logging.info(f'Param: split_files_by_species = {split_files_by_species}')
+        logging.info("ScheduleCleanup starting with parameters:")
+        logging.info(f"Param: base_path = {base_path}")
+        logging.info(f"Param: source_db_url = {source_db_url}")
+        logging.info(f"Param: clean_files = {clean_files}")
+        logging.info(f"Param: clean_dir = {clean_dir}")
+        logging.info(f"Param: split_files_by_species = {split_files_by_species}")
 
-    # Connect to source db
-    db_engine = self.get_db_engine(source_db_url)
-    with db_engine.connect() as dbi:
-      # Get name and version file for each source
-      query = select(SourceSORM.name, VersionORM.revision).where(SourceSORM.source_id==VersionORM.source_id).distinct()
-      sources = dbi.execute(query).mappings().all()
+        # Connect to source db
+        db_engine = self.get_db_engine(source_db_url)
+        with db_engine.connect() as dbi:
+            # Get name and version file for each source
+            query = select(SourceSORM.name.distinct(), VersionORM.revision).where(
+                SourceSORM.source_id == VersionORM.source_id
+            )
+            sources = dbi.execute(query).mappings().all()
 
-    for source in sources:
-      # Only cleaning RefSeq and UniProt for now
-      if not (re.search(r"^RefSeq_(dna|peptide)", source.name) or re.search(r"^Uniprot", source.name)): continue
+        for source in sources:
+            # Only cleaning RefSeq and UniProt for now
+            if not (
+                re.search(r"^RefSeq_(dna|peptide)", source.name)
+                or re.search(r"^Uniprot", source.name)
+            ):
+                continue
 
-      # Remove / char from source name to access directory
-      clean_name = source.name
-      clean_name = re.sub(r"\/", "", clean_name)
+            # Remove / char from source name to access directory
+            clean_name = source.name
+            clean_name = re.sub(r"\/", "", clean_name)
 
-      # Send parameters into cleanup jobs for each source
-      if os.path.exists(os.path.join(base_path, clean_name)):
-        logging.info(f'Source to cleanup: {source.name}')
+            # Send parameters into cleanup jobs for each source
+            if os.path.exists(os.path.join(base_path, clean_name)):
+                logging.info(f"Source to cleanup: {source.name}")
 
-        self.write_output('cleanup_sources', {
-          'name'         : source.name,
-          'version_file' : source.revision
-        })
-
+                self.write_output(
+                    "cleanup_sources",
+                    {"name": source.name, "version_file": source.revision},
+                )

@@ -55,7 +55,7 @@ if (defined($log_timestamp)) {
   $log_file = catfile($log_path, "tmp_logfile_CleanupSplitSource_".int(rand(500)));
 
   add_to_log_file($log_file, "CleanupSplitSource starting for source $source_name");
-  add_to_log_file($log_file, "Param: tax_ids_file = $tax_ids_file");
+  add_to_log_file($log_file, "Param: tax_ids_file = $tax_ids_file") if $tax_ids_file;
 }
 
 # Do nothing if not a uniprot or refseq source
