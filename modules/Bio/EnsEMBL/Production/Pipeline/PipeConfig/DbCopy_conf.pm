@@ -39,6 +39,7 @@ sub default_options {
     # Database type factory
     groups => 1,
     group  => [],
+    delete_group => [], 
 
     # Named database factory
     dbname => [],
@@ -200,7 +201,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             ensembl_release => $self->o('delete_release'),
-                            group           => $self->o('delete_group'),
+                            group           => (ref($self->o('delete_group')) eq 'ARRAY' && @{$self->o('delete_group')}) ? $self->o('delete_group') : $self->o('group'),
                             groups          => $self->o('groups'),
                           },
       -flow_into       => {
