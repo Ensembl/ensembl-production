@@ -59,7 +59,6 @@ sub default_options {
     # Drop databases from target, by default the same set that will be copied
     delete_db          => 0,
     delete_release     => $self->o('ensembl_release'),
-    delete_group       => $self->o('group'),
     delete_dbname      => $self->o('dbname'),
     delete_marts       => $self->o('marts'),
     delete_compara     => $self->o('compara'),
