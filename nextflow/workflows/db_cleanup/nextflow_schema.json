@@ -42,9 +42,14 @@
             "description": "Boolean to drop the source database after put into storage",
             "default": false
         },
-        "db_pwd": {
+        "dba_user": {
             "type": "string",
-            "description": "Password for db admin user",
+            "description": "Username for db admin user. Used to drop a database",
+            "required": true
+        },
+        "dba_pwd": {
+            "type": "string",
+            "description": "Password for db admin user. Used to drop a database",
             "required": true
         },
         "email": {
