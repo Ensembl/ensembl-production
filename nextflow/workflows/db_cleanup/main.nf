@@ -103,16 +103,11 @@ process CLEANUP_TMP_DB {
     script:
     """
     tmp_db_name="${db_name}_tmp"
-    echo "Checking if target database \${tmp_db_name} exists for removal..."
+    echo "Attempting to drop database \${tmp_db_name} if it exists..."
 
-    db_exists=\$(mysql -h $params.target_host -P $params.target_port -u ensadmin -p $params.db_pwd -e "SHOW DATABASES LIKE '\${tmp_db_name}';")
+    mysql -h $params.target_host -P $params.target_port -u $params.dba_user -p$params.dba_pwd -e "DROP DATABASE IF EXISTS \${tmp_db_name};"
 
-    if [ ! -z "\${db_exists}" ]; then
-        echo "Database \${tmp_db_name} exists. Dropping the database."
-        mysqladmin -h $params.target_host -P $params.target_port -u $params.user -f drop \${tmp_db_name}
-    else
-        echo "Database \${tmp_db_name} does not exist, skipping drop."
-    fi
+    echo "Drop operation complete."
     """
 }
 
