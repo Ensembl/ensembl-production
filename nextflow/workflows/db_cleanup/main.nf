@@ -20,6 +20,7 @@ include { DB_COPY_SUBMIT } from '../../modules/db_cleanup/db_copy_submit.nf'
 include { MONITOR_DB_COPY } from '../../modules/db_cleanup/monitor_db_copy.nf'
 include { GENERATE_SQL } from '../../modules/db_cleanup/generate_sql.nf'
 include { COMPRESS_FILE } from '../../modules/db_cleanup/compress_file.nf'
+include { CLEANUP_TMP_DB } from '../../modules/db_cleanup/cleanup_tmp_db.nf'
 
 // nf-schema-related modules
 include { validateParameters; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
@@ -93,24 +94,6 @@ process TAR_COMPRESSED_SQL {
     tar -cjf ${db_name}.tar.bz2 ${compressed_sql_list.join(' ')}
     """
 }
-
-process CLEANUP_TMP_DB {
-
-    input:
-    path compressed_file
-    tuple val(job_id), val(db_name)
-
-    script:
-    """
-    tmp_db_name="${db_name}_tmp"
-    echo "Attempting to drop database \${tmp_db_name} if it exists..."
-
-    mysql -h $params.target_host -P $params.target_port -u $params.dba_user -p$params.dba_pwd -e "DROP DATABASE IF EXISTS \${tmp_db_name};"
-
-    echo "Drop operation complete."
-    """
-}
-
 
 
 workflow {
