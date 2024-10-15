@@ -1,67 +1,68 @@
 language: perl
 os: linux
 dist: focal
-perl:
-  - "5.26.4"
-services:
-  - mysql
-env:
-  - COVERALLS=true  DB=mysql
-addons:
-  apt:
-    update: true      
-    packages:
-      - unzip
-      - sendmail
-      - graphviz
-      - emboss
-      - libkyotocabinet-dev
-before_install:
-  - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
-  - export PATH=$PATH:$PWD/ensembl-git-tools/bin
-  - export ENSEMBL_BRANCH=master
-  - export SECONDARY_BRANCH=main
-  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
-  - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
-  - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
-  - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
-  - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
-  - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
-  - cd htslib
-  - make
-  - export HTSLIB_DIR=$(pwd -P)
-  - mysql -e "SET GLOBAL local_infile=1;"
-  - cd ..
-install:
-  - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
-  - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
-  - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
-  - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
-  - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
-  - cpanm --sudo -v --installdeps --notest .
-  - cpanm --sudo -n Devel::Cover::Report::Coveralls
-  - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
-  - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
-script:
-  - ./travisci/harness.sh
+
 jobs:
   include:
-    - language: python
-      os: linux
-      dist: focal
+    - name: "Perl Job"
+      perl: "5.26.4"
+      services:
+        - mysql
+      env:
+        - COVERALLS=true  DB=mysql
+      addons:
+        apt:
+          update: true
+          packages:
+            - unzip
+            - sendmail
+            - graphviz
+            - emboss
+            - libkyotocabinet-dev
+      before_install:
+        - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+        - export PATH=$PATH:$PWD/ensembl-git-tools/bin
+        - export ENSEMBL_BRANCH=master
+        - export SECONDARY_BRANCH=main
+        - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
+        - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
+        - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+        - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+        - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
+        - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
+        - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
+        - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
+        - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+        - cd htslib
+        - make
+        - export HTSLIB_DIR=$(pwd -P)
+        - mysql -e "SET GLOBAL local_infile=1;"
+        - cd ..
+      install:
+        - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
+        - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
+        - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
+        - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
+        - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
+        - cpanm --sudo -v --installdeps --notest .
+        - cpanm --sudo -n Devel::Cover::Report::Coveralls
+        - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
+        - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
+      script:
+        - ./travisci/harness.sh
+
+    - name: "Python Job"
+      language: python
       python:
-        - '3.10'
-        - '3.11'
+        - "3.10"
+        - "3.11"
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
@@ -69,6 +70,7 @@ jobs:
         - mysql -e "SET GLOBAL local_infile=1;"
       script:
         - pytest src/python/test
+
 notifications:
   email:
     on_success: always
