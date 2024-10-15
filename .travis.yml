@@ -63,6 +63,10 @@ jobs:
       python:
         - "3.10"
         - "3.11"
+      services:
+        - mysql
+      env:
+        - COVERALLS=true  DB=mysql
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
