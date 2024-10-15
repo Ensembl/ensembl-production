@@ -128,7 +128,7 @@ sub run {
   } else {
     $self->info('Did not find any non-chromosomal data');
   }
-  
+
   foreach my $slice (@chromosomes) {
     $self->fine('Dumping chromosome %s', $slice->name());
     my $path = $self->_generate_file_name($slice->coord_system_name(), $slice->seq_region_name());

@@ -79,6 +79,13 @@ sub default_options {
             -pass   => $self->o('password'),
             -dbname => $self->o('dbowner').'_alphafold_'.$self->o('pipeline_name').'_pipe',
         },
+
+        'dataset_type' => 'alpha_fold',
+        'genome_factory_dynamic_output_flow' => {
+                      '3->A'    => { 'start'  => INPUT_PLUS()  },
+                      'A->3'    => [{'UpdateDatasetStatus'=> INPUT_PLUS()}]
+        },
+
     };
 }
 
@@ -95,11 +102,11 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     my @analyses = (
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             # branch out to the two copy jobs and the species factory
             -logic_name => 'start',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -input_ids       => [{}],
             -meadow_type     => 'LOCAL',
             -flow_into  => {
                 '1->A' => [

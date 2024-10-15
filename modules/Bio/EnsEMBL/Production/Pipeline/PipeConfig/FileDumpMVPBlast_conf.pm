@@ -17,11 +17,11 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpCore_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMVPBlast_conf;
 
 use strict;
 use warnings;
-use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDump_conf');
+use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::BlastFileDump_conf');
 
 sub default_options {
   my ($self) = @_;
@@ -29,20 +29,12 @@ sub default_options {
     %{$self->SUPER::default_options},
 
     genome_types => [
-      'Assembly_Chain',
-      'Chromosome_TSV',
       'Genome_FASTA',
     ],
     geneset_types => [
-      'Geneset_EMBL',
       'Geneset_FASTA',
-      'Geneset_GFF3',
-      'Geneset_GTF',
-      'Xref_TSV',
     ],
-    rnaseq_types => [
-      'RNASeq_Exists',
-    ],
+    rnaseq_types => [],
 
     dump_metadata => 1,
 

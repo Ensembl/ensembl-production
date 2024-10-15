@@ -64,7 +64,7 @@ sub _write_tsv {
     my ($self) = @_;
 
     my $out_file  = $self->_generate_file_name();
-    my $header    = $self->_build_headers();
+    my $header    = $self->_build_headers();   
 
     open my $fh, '>', $out_file or die "cannot open $out_file for writing!";
     print $fh join ("\t", @$header);
@@ -123,7 +123,7 @@ sub _write_tsv {
     if ($xrefs_exist == 1) {
         $self->dataflow_output_id(
             { "compress" => [ $out_file ] }, 4);
-    }else{
+    } else {
       unlink $out_file  or die "failed to delete $out_file!";
     }
 

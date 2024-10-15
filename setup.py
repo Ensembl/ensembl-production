@@ -13,9 +13,10 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "dc-parser=scripts.dcparse:main",
-            "dc-stat=scripts.dcstat:main",
-            "meta-hive-species=scripts.meta_hive_species:main",
+            "ensprod-dc-parser=scripts.dcparse:main",
+            "ensprod-dc-stat=scripts.dcstat:main",
+            "ensprod-meta-species=scripts.meta_hive_species:main",
+            "ensprod-check-ftp=scripts.checkftpfiles:main",
         ]
     }    
 )

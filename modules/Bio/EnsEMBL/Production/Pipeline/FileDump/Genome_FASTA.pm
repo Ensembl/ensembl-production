@@ -37,7 +37,6 @@ sub param_defaults {
     data_type      => 'sequence',
     data_types     => ['unmasked', 'softmasked', 'hardmasked'],
     file_type      => 'fa',
-    timestamped    => 1,
     per_chromosome => 0,
     chunk_size     => 30000,
     line_width     => 60,
@@ -63,30 +62,37 @@ sub run {
   my $um_filename = $$filenames{'unmasked'};
   my $sm_filename = $$filenames{'softmasked'};
   my $hm_filename = $$filenames{'hardmasked'};
+  $self->param('$sm_filename', $sm_filename);
 
-  if ($per_chromosome && scalar(@$chr)) {
-    $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
-    if (scalar(@$non_chr)) {
-      $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
-    }
-  } else {
-    $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
+  #dump all into single file
+  $self->print_to_file([@$chr, @$non_chr, @$non_ref ], undef, $sm_filename, '>', $repeat_analyses); 
+  # if ($per_chromosome && scalar(@$chr)) {
+  #   $self->print_to_file($chr, 'chr', $sm_filename, '>', $repeat_analyses);
+  #   if (scalar(@$non_chr)) {
+  #     $self->print_to_file($non_chr, 'non_chr', $sm_filename, '>>', $repeat_analyses);
+  #   }
+  # } else {
+  #   $self->print_to_file([@$chr, @$non_chr], undef, $sm_filename, '>', $repeat_analyses);
+  # }
+  if($self->param('unmasked')){
+      $self->unmask($sm_filename, $um_filename);
   }
-
-  $self->unmask($sm_filename, $um_filename);
-  $self->hardmask($sm_filename, $hm_filename);
-
-  if (scalar(@$non_ref)) {
-    my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
-    my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
-    my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
-    path($sm_filename)->copy($sm_non_ref_filename);
-
-    $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
-
-    $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
-    $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
+  if($self->param('hardmasked')){
+    $self->hardmask($sm_filename, $hm_filename);
   }
+  
+
+  # if (scalar(@$non_ref)) {
+  #   my $um_non_ref_filename = $self->generate_non_ref_filename($um_filename);
+  #   my $sm_non_ref_filename = $self->generate_non_ref_filename($sm_filename);
+  #   my $hm_non_ref_filename = $self->generate_non_ref_filename($hm_filename);
+  #   path($sm_filename)->copy($sm_non_ref_filename);
+
+  #   $self->print_to_file($non_ref, undef, $sm_non_ref_filename, '>>', $repeat_analyses);
+
+  #   $self->unmask($sm_non_ref_filename, $um_non_ref_filename);
+  #   $self->hardmask($sm_non_ref_filename, $hm_non_ref_filename);
+  # }
 
   if ($blast_index) {
     $self->blast_index($um_filename, 'nucl');
@@ -179,7 +185,13 @@ sub header_function {
     }
     $location =~ s/^$cs_name://;
 
-    return "$name $data_type:$cs_name $location";
+    my $prefix = '';
+
+    if ($self->param_is_defined('fasta_header_prefix')){
+      $prefix = $self->param('fasta_header_prefix');
+    }
+
+    return "${prefix}$name $data_type:$cs_name $location";
   };
 }
 
@@ -221,8 +233,8 @@ sub blast_index {
 
   my $blast_filename = catdir(
     $web_dir,
-    $blast_dirname,
-    'genomes',
+    #$blast_dirname,
+    #'genomes',
     path($filename)->basename
   );
   path($blast_filename)->parent->mkpath();

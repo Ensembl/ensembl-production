@@ -37,7 +37,7 @@ sub default_options {
 
     # Need to reinstate these from EnsemblGeneric_conf
     # (the variation conf overrides them with values we don't want)
-    ensembl_release => Bio::EnsEMBL::ApiVersion::software_version(), 
+    ensembl_release => Bio::EnsEMBL::ApiVersion::software_version(),
     pipeline_name   => $self->default_pipeline_name().'_'.$self->o('rel_with_suffix'),
 
     # Use 'registry' for consistency with all other Production pipelines
@@ -51,9 +51,9 @@ sub default_options {
     # for RR structure, if/when that becomes necessary.
     pipeline_dir => catdir($self->o('dump_dir'), $self->o('sub_dir')),
 
-    tmp_dir => catdir( '/hps/nobackup/flicek/ensembl/production',
-                                 $self->o('user'),
-                                 $self->o('pipeline_name'), 'scratch' ),
+    tmp_dir => catdir( $ENV{'NOBACKUP_DIR'},
+                        $self->o('user'),
+                        'scratch' ),
 	};
 }
 

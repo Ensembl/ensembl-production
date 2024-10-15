@@ -32,7 +32,6 @@ sub param_defaults {
 
   return {
     %{$self->SUPER::param_defaults},
-    timestamped  => 1,
     data_type    => 'xref',
     file_type    => 'tsv',
     external_dbs => [],

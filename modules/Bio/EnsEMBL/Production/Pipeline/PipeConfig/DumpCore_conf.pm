@@ -418,7 +418,7 @@ sub pipeline_analyses {
             -parameters    => { type => 'genbank', },
             -hive_capacity => 50,
             -rc_name       => '64GB',
-            -flow_into     => { -1 => 'genbank_128GB', 
+            -flow_into     => { -1 => 'genbank_128GB',
                                 '4' => 'compress_file' },
         },
 
