@@ -186,7 +186,7 @@ sub pipeline_analyses {
             -parameters => {
                 datacheck_names => [ 'CheckAlphafoldEntries' ],
             },
-            -rc_name    => '200M',
+            -rc_name    => '500M',
         },
         {
             -logic_name        => 'cleanup',
