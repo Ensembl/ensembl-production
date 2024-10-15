@@ -1,7 +1,8 @@
 language: perl
+os: linux
+dist: focal
 perl:
-  - "5.14"
-  - "5.26.2"
+  - "5.26.4"
 services:
   - mysql
 env:
@@ -56,14 +57,18 @@ script:
 jobs:
   include:
     - language: python
-      python: 3.8
+      os: linux
+      dist: focal
+      python:
+        - '3.10'
+        - '3.11'
       install:
-        - pip install -e .
         - pip install -r requirements-test.txt
+        - pip install -e .
+      before_script:
+        - mysql -e "SET GLOBAL local_infile=1;"
       script:
         - pytest src/python/test
-
-
 notifications:
   email:
     on_success: always
