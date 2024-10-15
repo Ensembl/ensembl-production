@@ -5,8 +5,6 @@ dist: focal
 jobs:
   include:
     - name: "Perl Job"
-      perl:
-      - "5.26.2"
       services:
         - mysql
       env:
@@ -21,6 +19,10 @@ jobs:
             - emboss
             - libkyotocabinet-dev
       before_install:
+        - curl -L https://install.perlbrew.pl | bash
+        - source ~/perl5/perlbrew/etc/bashrc
+        - perlbrew install perl-5.26.4
+        - perlbrew use perl-5.26.4
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
         - export ENSEMBL_BRANCH=master
