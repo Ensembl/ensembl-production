@@ -29,7 +29,7 @@ process GENERATE_SQL {
     println "Generating SQL for db: ${db_name}"
     """
     # add max package size to account for dna db table size
-    mysqldump --max-allowed-packet=2048M --opt --quick --skip-column-statistics -h ${params.target_host} -P ${params.target_port} -u ensro ${db_name}_tmp > ${db_name}.sql
+    mysqldump --max-allowed-packet=2048M --opt --quick -h ${params.target_host} -P ${params.target_port} -u ensro ${db_name}_tmp > ${db_name}.sql
     
     # add sleep to let file system finish file dump
     sleep 180
