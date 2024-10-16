@@ -56,9 +56,8 @@ script:
 jobs:
   include:
     - language: python
-      python:
-        - "3.10"
-        - "3.11"
+      python: 3.10
+
       services:
         - mysql
       env:
