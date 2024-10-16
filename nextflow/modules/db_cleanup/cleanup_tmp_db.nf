@@ -21,7 +21,12 @@ process CLEANUP_TMP_DB {
     path compressed_file
     tuple val(job_id), val(db_name)
 
+    output:
+    tuple val(job_id), val(db_name), emit: cleaned_up
+
     script:
+    println "Cleaning up temporary db: ${db_name}_tmp"
+
     """
     tmp_db_name="${db_name}_tmp"
     echo "Attempting to drop database \${tmp_db_name} if it exists..."

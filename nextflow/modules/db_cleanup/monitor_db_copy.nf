@@ -25,6 +25,8 @@ process MONITOR_DB_COPY {
     tuple val(job_id), val(db_name), emit: monitored_job
 
     script:
+    println "Monitoring job id: ${job_id}"
+
     """
     # Define the API endpoint to check the status of the job
     api_url="https://services.ensembl-production.ebi.ac.uk/api/dbcopy/requestjob/${job_id}"
