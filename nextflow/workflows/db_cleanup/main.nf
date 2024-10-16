@@ -119,12 +119,6 @@ workflow {
         // Print the raw db_list to ensure it's being passed properly
         println "Raw params.db_list: ${params.db_list}"
 
-        // Check if params.db_list is null or empty
-        if (params.db_list == null || params.db_list == '') {
-            println "ERROR: params.db_list is null or empty"
-            exit 1
-        }
-
         // Split the string into a list and print it
         db_list = params.db_list.split(',')
         println "Split db_list: ${db_list}"
