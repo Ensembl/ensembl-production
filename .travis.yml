@@ -1,11 +1,9 @@
 language: perl
 os: linux
-dist: focal
-
 jobs:
   include:
     - name: "Perl Job"
-      perl: "5.26.4"
+      perl: "5.26.2"
       services:
         - mysql
       env:
