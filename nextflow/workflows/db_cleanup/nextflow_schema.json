@@ -37,7 +37,7 @@
             "description": "Path to store final compressed SQL file",
             "required": true
         },
-        "drop_db": {
+        "drop_source_db": {
             "type": "string",
             "description": "Boolean to drop the source database after put into storage",
             "default": false

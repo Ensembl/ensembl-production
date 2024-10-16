@@ -95,6 +95,22 @@ process TAR_COMPRESSED_SQL {
     """
 }
 
+process DROP_SOURCE_DB {
+    
+    input:
+    tuple val(job_id), val(db_name)
+
+    script:
+    """
+    echo "Attempting to drop database ${db_name} if it exists..."
+
+    mysql -h $params.target_host -P $params.target_port -u $params.dba_user -p$params.dba_pwd -e "DROP DATABASE IF EXISTS ${db_name};"
+
+    echo "Drop operation complete."
+    """
+
+}
+
 
 workflow {
 
@@ -155,4 +171,10 @@ workflow {
 
         // Cleanup the temp db created by this pipeline
         CLEANUP_TMP_DB(compressed_sql_ch, MONITOR_DB_COPY.out.monitored_job)
+
+        // Cleanup source db (if flag set to true)
+        if (params.drop_source_db == true) {
+            DROP_SOURCE_DB(CLEANUP_TMP_DB.out.cleaned_up)
+        }
+
 }
