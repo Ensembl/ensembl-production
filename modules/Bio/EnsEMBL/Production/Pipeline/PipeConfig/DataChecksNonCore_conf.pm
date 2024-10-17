@@ -31,7 +31,7 @@ use warnings;
 use base ('Bio::EnsEMBL::DataCheck::Pipeline::DbDataChecks_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version 2.7;
 
 sub default_options {
   my ($self) = @_;
