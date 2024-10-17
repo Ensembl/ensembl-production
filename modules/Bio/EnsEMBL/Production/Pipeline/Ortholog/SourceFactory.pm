@@ -59,7 +59,7 @@ sub write_output {
     my $compara_param = $self->param('compara');
     my $cleanup_dir = $self->param('cleanup_dir');
 
-    foreach my $pair (keys $sp_config) {
+    foreach my $pair (keys %{$sp_config}) {
         my $compara = $sp_config->{$pair}->{'compara'};
         if (defined $compara_param && $compara ne $compara_param) {
             print STDERR "Skipping $compara\n";

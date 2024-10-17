@@ -1,5 +1,5 @@
 requests>=2.25.0,<3
 pydantic~=1.10.5
-graphene~=2.1.9
-graphene-sqlalchemy~=2.3.0
-git+https://github.com/Ensembl/ensembl-metadata-api.git@2.1.0a1#egg=ensembl-metadata-api
+ensembl-py>=2.1.0
+ensembl-utils>=0.4.4
+git+https://github.com/Ensembl/ensembl-metadata-api.git@3.0.1#egg=ensembl-metadata-api

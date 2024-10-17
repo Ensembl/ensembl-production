@@ -107,8 +107,8 @@ sub _write_tsv {
         if(!defined $row->[5]){
 	   $row->[5] = $self->_find_contig($ta, $contig_ids, $row->[3] );
         } elsif( !defined $row->[6] && defined $row->[4]){
-	   $row->[6] = $cds2acc->{$row->[4]}; 
- 	} 
+	   $row->[6] = $cds2acc->{$row->[4]};
+ 	}
 
 	if (defined $row->[5]) {
             $row->[5] =~ s/\.[0-9]+$//;
