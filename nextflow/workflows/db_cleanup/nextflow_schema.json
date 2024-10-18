@@ -38,7 +38,7 @@
             "required": true
         },
         "drop_source_db": {
-            "type": "string",
+            "type": "boolean",
             "description": "Boolean to drop the source database after put into storage",
             "default": false
         },
