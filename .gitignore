@@ -37,3 +37,6 @@ MultiTestDB.conf
 /_Deparsed_XSubs.pm
 __pycache__/
 /build/
+.nextflow.log*
+/.nextflow
+/work
