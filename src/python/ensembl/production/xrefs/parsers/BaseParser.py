@@ -14,8 +14,27 @@
 
 """Base xref parser module to include all common functions used by xref parsers."""
 
-from ensembl.production.xrefs.Base import *
+import re
+from sqlalchemy import select, update, func
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.engine import Connection
+from sqlalchemy.orm import aliased
+from typing import List, Dict, Any, Optional
 
+from ensembl.xrefs.xref_update_db_model import (
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    PrimaryXref as PrimaryXrefORM,
+    DependentXref as DependentXrefUORM,
+    GeneDirectXref as GeneDirectXrefORM,
+    TranscriptDirectXref as TranscriptDirectXrefORM,
+    TranslationDirectXref as TranslationDirectXrefORM,
+    Synonym as SynonymORM,
+    Pairs as PairsORM,
+    Species as SpeciesORM,
+)
+
+from ensembl.production.xrefs.Base import Base
 
 class BaseParser(Base):
     """Class to represent the base of xref parser modules. Inherits the xref Base class."""
@@ -67,9 +86,8 @@ class BaseParser(Base):
             )
 
         result = dbi.execute(query)
-        if result:
-            source_id = result.scalar()
-        else:
+        source_id = result.scalar()
+        if source_id is None:
             raise KeyError(f"No source_id for source_name={source_name}")
 
         return source_id
@@ -117,11 +135,12 @@ class BaseParser(Base):
         dbi: sqlalchemy.engine.Connection
             The database connection to update in
         """
-        dbi.execute(
-            update(SourceUORM)
-            .where(SourceUORM.source_id == source_id)
-            .values(source_release=s_release)
-        )
+        if s_release:
+            dbi.execute(
+                update(SourceUORM)
+                .where(SourceUORM.source_id == source_id)
+                .values(source_release=s_release)
+            )
 
     def upload_xref_object_graphs(self, xrefs: List[Dict[str, Any]], dbi: Connection) -> None:
         """Adds xref data into a database.
@@ -558,7 +577,9 @@ class BaseParser(Base):
                     linkage_annotation=master_source_id,
                     linkage_source_id=dependent_source_id,
                 )
-                .prefix_with("IGNORE")
+                .on_duplicate_key_update(
+                    linkage_source_id=dependent_source_id
+                )
             )
 
             self._xref_dependent_mapped[index] = master_source_id
@@ -620,7 +641,9 @@ class BaseParser(Base):
         dbi.execute(
             insert(SynonymORM)
             .values(xref_id=xref_id, synonym=synonym)
-            .prefix_with("IGNORE")
+            .on_duplicate_key_update(
+                synonym=synonym
+            )
         )
 
     def get_ext_synonyms(self, source_name: str, dbi: Connection) -> Dict[str, List[str]]:
@@ -658,7 +681,7 @@ class BaseParser(Base):
                 ext_syns.setdefault(row.label, []).append(row.synonym)
                 count += 1
 
-            seen[acc_syn] = 1
+            seen[acc_syn] = True
 
         return ext_syns
 
@@ -684,7 +707,7 @@ class BaseParser(Base):
 
         for row in dbi.execute(query).mappings().all():
             self._xref_dependent_mapped[
-                row.master_xref_id + "|" + row.dependent_xref_id
+                f"{row.master_xref_id}|{row.dependent_xref_id}"
             ] = row.linkage_annotation
 
     def get_valid_codes(self, source_name: str, species_id: int, dbi: Connection) -> Dict[str, List[int]]:

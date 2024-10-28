@@ -14,127 +14,134 @@
 
 """Parser module for ZFIN source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import os
+import csv
+import re
+import unicodedata
+from typing import Dict, Any, Tuple
+from sqlalchemy import select
 
+from ensembl.xrefs.xref_update_db_model import (
+    Source as SourceUORM,
+    Xref as XrefUORM,
+)
+
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class ZFINParser(BaseParser):
-    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+    REFSEQ_ACC_PATTERN = re.compile(r"^X[PMR]_")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
+
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
         # Get the ZFIN source ids
-        direct_src_id = self.get_source_id_for_source_name(
-            "ZFIN_ID", xref_dbi, "direct"
-        )
-        dependent_src_id = self.get_source_id_for_source_name(
-            "ZFIN_ID", xref_dbi, "uniprot/refseq"
-        )
-        description_src_id = self.get_source_id_for_source_name(
-            "ZFIN_ID", xref_dbi, "description_only"
-        )
+        direct_src_id = self.get_source_id_for_source_name("ZFIN_ID", xref_dbi, "direct")
+        dependent_src_id = self.get_source_id_for_source_name("ZFIN_ID", xref_dbi, "uniprot/refseq")
+        description_src_id = self.get_source_id_for_source_name("ZFIN_ID", xref_dbi, "description_only")
 
         # Get the ZFIN descriptions
-        description = {}
-        query = select(XrefUORM.accession, XrefUORM.description).where(
-            XrefUORM.source_id == description_src_id
-        )
+        descriptions = {}
+        query = select(XrefUORM.accession, XrefUORM.description).where(XrefUORM.source_id == description_src_id)
         for row in xref_dbi.execute(query).mappings().all():
             if row.description:
-                description[row.accession] = row.description
+                descriptions[row.accession] = row.description
 
         # Get the Uniprot and RefSeq accessions
         swiss = self.get_valid_codes("uniprot/swissprot", species_id, xref_dbi)
         refseq = self.get_valid_codes("refseq", species_id, xref_dbi)
 
-        file_dir = os.path.dirname(file)
+        file_dir = os.path.dirname(xref_file)
         counts = {"direct": 0, "uniprot": 0, "refseq": 0, "synonyms": 0, "mismatch": 0}
 
         # Process ZFIN to ensEMBL mappings
         zfin = {}
-        zfin_io = self.get_filehandle(os.path.join(file_dir, "ensembl_1_to_1.txt"))
-        zfin_csv_reader = csv.DictReader(zfin_io, delimiter="\t", strict=True)
-        zfin_csv_reader.fieldnames = ["zfin", "so", "label", "ensembl_id"]
-        for line in zfin_csv_reader:
-            self.add_to_direct_xrefs(
-                {
-                    "stable_id": line["ensembl_id"],
-                    "ensembl_type": "gene",
-                    "accession": line["zfin"],
-                    "label": line["label"],
-                    "description": description.get(line["zfin"]),
-                    "source_id": direct_src_id,
-                    "species_id": species_id,
-                },
-                xref_dbi,
-            )
+        with self.get_filehandle(os.path.join(file_dir, "ensembl_1_to_1.txt")) as zfin_io:
+            if zfin_io.read(1) == '':
+                raise IOError(f"ZFIN Ensembl file is empty")
+            zfin_io.seek(0)
 
-            zfin[line["zfin"]] = 1
-            counts["direct"] += 1
+            zfin_csv_reader = csv.DictReader(zfin_io, delimiter="\t", strict=True)
+            zfin_csv_reader.fieldnames = ["zfin", "so", "label", "ensembl_id"]
+            for line in zfin_csv_reader:
+                xref_id = self.add_xref(
+                    {
+                        "accession": line["zfin"],
+                        "label": line["label"],
+                        "description": descriptions.get(line["zfin"]),
+                        "source_id": direct_src_id,
+                        "species_id": species_id,
+                        "info_type": "DIRECT",
+                    },
+                    xref_dbi,
+                )
+                self.add_direct_xref(xref_id, line["ensembl_id"], "gene", "", xref_dbi)
 
-        zfin_io.close()
+                zfin[line["zfin"]] = True
+                counts["direct"] += 1
 
         # Process ZFIN to Uniprot mappings
-        swissprot_io = self.get_filehandle(os.path.join(file_dir, "uniprot.txt"))
-        swissprot_csv_reader = csv.DictReader(swissprot_io, delimiter="\t", strict=True)
-        swissprot_csv_reader.fieldnames = ["zfin", "so", "label", "acc"]
-        for line in swissprot_csv_reader:
-            if swiss.get(line["acc"]) and not zfin.get(line["zfin"]):
-                for xref_id in swiss[line["acc"]]:
-                    self.add_dependent_xref(
-                        {
-                            "master_xref_id": xref_id,
-                            "accession": line["zfin"],
-                            "label": line["label"],
-                            "description": description.get(line["zfin"]),
-                            "source_id": dependent_src_id,
-                            "species_id": species_id,
-                        },
-                        xref_dbi,
-                    )
-                    counts["uniprot"] += 1
-            else:
-                counts["mismatch"] += 1
+        with self.get_filehandle(os.path.join(file_dir, "uniprot.txt")) as swissprot_io:
+            if swissprot_io.read(1) == '':
+                raise IOError(f"ZFIN Uniprot file is empty")
+            swissprot_io.seek(0)
 
-        swissprot_io.close()
+            swissprot_csv_reader = csv.DictReader(swissprot_io, delimiter="\t", strict=True)
+            swissprot_csv_reader.fieldnames = ["zfin", "so", "label", "acc"]
+            for line in swissprot_csv_reader:
+                if swiss.get(line["acc"]) and not zfin.get(line["zfin"]):
+                    for xref_id in swiss[line["acc"]]:
+                        self.add_dependent_xref(
+                            {
+                                "master_xref_id": xref_id,
+                                "accession": line["zfin"],
+                                "label": line["label"],
+                                "description": descriptions.get(line["zfin"]),
+                                "source_id": dependent_src_id,
+                                "species_id": species_id,
+                            },
+                            xref_dbi,
+                        )
+                        counts["uniprot"] += 1
+                else:
+                    counts["mismatch"] += 1
 
         # Process ZFIN to RefSeq mappings
-        refseq_io = self.get_filehandle(os.path.join(file_dir, "refseq.txt"))
-        refseq_csv_reader = csv.DictReader(refseq_io, delimiter="\t", strict=True)
-        refseq_csv_reader.fieldnames = ["zfin", "so", "label", "acc"]
-        for line in refseq_csv_reader:
-            # Ignore mappings to predicted RefSeq
-            if (
-                re.search(r"^XP_", line["acc"])
-                or re.search(r"^XM_", line["acc"])
-                or re.search(r"^XR_", line["acc"])
-            ):
-                continue
+        with self.get_filehandle(os.path.join(file_dir, "refseq.txt")) as refseq_io:
+            if refseq_io.read(1) == '':
+                raise IOError(f"ZFIN Refseq file is empty")
+            refseq_io.seek(0)
 
-            if refseq.get(line["acc"]) and not zfin.get(line["zfin"]):
-                for xref_id in refseq[line["acc"]]:
-                    self.add_dependent_xref(
-                        {
-                            "master_xref_id": xref_id,
-                            "accession": line["zfin"],
-                            "label": line["label"],
-                            "description": description.get(line["zfin"]),
-                            "source_id": source_id,
-                            "species_id": species_id,
-                        },
-                        xref_dbi,
-                    )
-                    counts["refseq"] += 1
-            else:
-                counts["mismatch"] += 1
+            refseq_csv_reader = csv.DictReader(refseq_io, delimiter="\t", strict=True)
+            refseq_csv_reader.fieldnames = ["zfin", "so", "label", "acc"]
+            for line in refseq_csv_reader:
+                # Ignore mappings to predicted RefSeq
+                if self.REFSEQ_ACC_PATTERN.search(line["acc"]):
+                    continue
 
-        refseq_io.close()
+                if refseq.get(line["acc"]) and not zfin.get(line["zfin"]):
+                    for xref_id in refseq[line["acc"]]:
+                        self.add_dependent_xref(
+                            {
+                                "master_xref_id": xref_id,
+                                "accession": line["zfin"],
+                                "label": line["label"],
+                                "description": descriptions.get(line["zfin"]),
+                                "source_id": dependent_src_id,
+                                "species_id": species_id,
+                            },
+                            xref_dbi,
+                        )
+                        counts["refseq"] += 1
+                else:
+                    counts["mismatch"] += 1
 
-        # Get the added ZFINs added
+        # Get the added ZFINs
         zfin = self.get_valid_codes("zfin", species_id, xref_dbi)
 
         sources = []
@@ -143,27 +150,31 @@ class ZFINParser(BaseParser):
             sources.append(row[0])
 
         # Process the synonyms
-        aliases_io = self.get_filehandle(os.path.join(file_dir, "aliases.txt"))
-        aliases_csv_reader = csv.DictReader(aliases_io, delimiter="\t", strict=True)
-        aliases_csv_reader.fieldnames = ["acc", "cur_name", "cur_symbol", "syn", "so"]
-        for line in aliases_csv_reader:
-            if zfin.get(line["acc"]):
-                synonym = (
-                    unicodedata.normalize("NFKD", line["syn"])
-                    .encode("ascii", "namereplace")
-                    .decode("ascii")
-                )
-                self.add_to_syn_for_mult_sources(
-                    line["acc"], sources, synonym, species_id, xref_dbi
-                )
-                counts["synonyms"] += 1
+        with self.get_filehandle(os.path.join(file_dir, "aliases.txt")) as aliases_io:
+            if aliases_io.read(1) == '':
+                raise IOError(f"ZFIN Aliases file is empty")
+            aliases_io.seek(0)
 
-        aliases_io.close()
+            aliases_csv_reader = csv.DictReader(aliases_io, delimiter="\t", strict=True)
+            aliases_csv_reader.fieldnames = ["acc", "cur_name", "cur_symbol", "syn", "so"]
+            for line in aliases_csv_reader:
+                if zfin.get(line["acc"]):
+                    synonym = (
+                        unicodedata.normalize("NFKD", line["syn"])
+                        .encode("ascii", "namereplace")
+                        .decode("ascii")
+                    )
+                    self.add_to_syn_for_mult_sources(
+                        line["acc"], sources, synonym, species_id, xref_dbi
+                    )
+                    counts["synonyms"] += 1
 
-        result_message = f"{counts['direct']} direct ZFIN xrefs added and\n"
-        result_message += f"\t{counts['uniprot']} dependent xrefs from UniProt added\n"
-        result_message += f"\t{counts['refseq']} dependent xrefs from RefSeq added\n"
-        result_message += f"\t{counts['mismatch']} dependents ignored\n"
-        result_message += f"\t{counts['synonyms']} synonyms loaded"
+        result_message = (
+            f"{counts['direct']} direct ZFIN xrefs added and\n"
+            f"\t{counts['uniprot']} dependent xrefs from UniProt added\n"
+            f"\t{counts['refseq']} dependent xrefs from RefSeq added\n"
+            f"\t{counts['mismatch']} dependents ignored\n"
+            f"\t{counts['synonyms']} synonyms loaded"
+        )
 
         return 0, result_message

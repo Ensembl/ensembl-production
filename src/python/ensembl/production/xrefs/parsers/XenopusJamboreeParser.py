@@ -14,63 +14,67 @@
 
 """Parser module for Xenbase source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import csv
+import re
+from typing import Any, Dict, Tuple
 
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class XenopusJamboreeParser(BaseParser):
-    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+    DESC_PROVENANCE_PATTERN = re.compile(r"\s*\[.*\]", re.IGNORECASE | re.DOTALL)
+    DESC_LABEL_PATTERN = re.compile(r",\s+\d+\s+of\s+\d+", re.IGNORECASE | re.DOTALL)
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
+
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
         count = 0
 
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.reader(file_io, delimiter="\t")
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError(f"XenopusJamboree file is empty")
+            file_io.seek(0)
 
-        # Read lines
-        for line in csv_reader:
-            accession = line[0]
-            label = line[1]
-            desc = line[2]
-            stable_id = line[3]
+            csv_reader = csv.reader(file_io, delimiter="\t")
 
-            # If there is a description, trim it a bit
-            if desc:
-                desc = self.parse_description(desc)
+            # Read lines
+            for line in csv_reader:
+                accession, label, desc, stable_id = line[:4]
 
-            if label == "unnamed":
-                label = accession
+                # If there is a description, trim it a bit
+                if desc:
+                    desc = self.parse_description(desc)
 
-            self.add_to_direct_xrefs(
-                {
-                    "stable_id": stable_id,
-                    "ensembl_type": "gene",
-                    "accession": accession,
-                    "label": label,
-                    "description": desc,
-                    "source_id": source_id,
-                    "species_id": species_id,
-                },
-                xref_dbi,
-            )
-            count += 1
+                if label == "unnamed":
+                    label = accession
 
-        file_io.close()
+                xref_id = self.add_xref(
+                    {
+                        "accession": accession,
+                        "label": label,
+                        "description": desc,
+                        "source_id": source_id,
+                        "species_id": species_id,
+                        "info_type": "DIRECT",
+                    },
+                    xref_dbi,
+                )
+                self.add_direct_xref(xref_id, stable_id, "gene", "", xref_dbi)
+                count += 1
 
-        result_message = f"{count} XenopusJamboreeParser xrefs succesfully parsed"
-
+        result_message = f"{count} XenopusJamboree xrefs successfully parsed"
         return 0, result_message
 
     def parse_description(self, description: str) -> str:
         # Remove some provenance information encoded in the description
-        description = re.sub(r"\s*\[.*\]", "", description)
+        description = self.DESC_PROVENANCE_PATTERN.sub("", description)
 
         # Remove labels of type 5 of 14 from the description
-        description = re.sub(r",\s+\d+\s+of\s+\d+", "", description)
+        description = self.DESC_LABEL_PATTERN.sub("", description)
 
         return description

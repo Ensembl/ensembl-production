@@ -1,0 +1,8 @@
+A0A075B6P5	R-HSA-109582	https://reactome.org/PathwayBrowser/#/R-HSA-109582	Hemostasis	TAS	Homo sapiens
+A0A075B6S6	R-HSA-1280218	https://reactome.org/PathwayBrowser/#/R-HSA-1280218	Adaptive Immune System	TAS	Homo sapiens
+A0A075B7I6	R-HSA-1280218	https://reactome.org/PathwayBrowser/#/R-HSA-1280218	Adaptive Immune System	IEA	Homo sapiens
+A0A087WPF7	R-HSA-1643685	https://reactome.org/PathwayBrowser/#/R-HSA-1643685	Disease	TAS	Homo sapiens
+A0A087WPF7	R-HSA-1643685	https://reactome.org/PathwayBrowser/#/R-HSA-1643685	Disease	IEA	Homo sapiens
+A0A087WRR7	R-HSA-166658	https://reactome.org/PathwayBrowser/#/R-HSA-166658	Complement cascade	TAS	Homo sapiens
+A0A096LNF2	R-HSA-166663	https://reactome.org/PathwayBrowser/#/R-HSA-166663	Initial triggering of complement	TAS	Homo sapiens
+A0A096MK16	R-HSA-166786	https://reactome.org/PathwayBrowser/#/R-HSA-166786	Creation of C4 and C2 activators	TAS	Homo sapiens

@@ -14,33 +14,50 @@
 
 """Parser module for RFAM source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import logging
+import os
+import re
+import wget
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+from sqlalchemy import and_, select
+from sqlalchemy.engine import Connection
+from sqlalchemy.engine.url import URL
 
+from ensembl.core.models import (
+    Analysis as AnalysisORM,
+    Transcript as TranscriptORM,
+    ExonTranscript as ExonTranscriptORM,
+    SupportingFeature as SupportingFeatureORM,
+    DnaAlignFeature as DnaAlignFeatureORM,
+)
+
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class RFAMParser(BaseParser):
-    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id       = args["source_id"]
-        species_id      = args["species_id"]
-        species_name    = args["species_name"]
-        file            = args["file"]
-        dba             = args["dba"]
-        ensembl_release = args["ensembl_release"]
-        xref_dbi        = args["xref_dbi"]
-        verbose         = args.get("verbose", False)
+    ACCESSION_PATTERN = re.compile(r"^#=GF\sAC\s+(\w+)", re.MULTILINE)
+    LABEL_PATTERN = re.compile(r"^#=GF\sID\s+([^\n]+)", re.MULTILINE)
+    DESCRIPTION_PATTERN = re.compile(r"^#=GF\sDE\s+([^\n]+)", re.MULTILINE)
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        species_name = args.get("species_name")
+        xref_file = args.get("file")
+        dba = args.get("dba")
+        ensembl_release = args.get("ensembl_release")
+        xref_dbi = args.get("xref_dbi")
+        verbose = args.get("verbose", False)
+
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
         # Extract db connection parameters from file
-        wget_url, db_user, db_host, db_port, db_name, db_pass = (
-            self.extract_params_from_string(
-                file, ["wget", "user", "host", "port", "dbname", "pass"]
-            )
+        wget_url, db_user, db_host, db_port, db_name, db_pass = self.extract_params_from_string(
+            xref_file, ["wget", "user", "host", "port", "dbname", "pass"]
         )
-        if not db_user:
-            db_user = "ensro"
-        if not db_port:
-            db_port = "3306"
+        db_user = db_user or "ensro"
+        db_port = db_port or "3306"
 
         # Get the species name(s)
         species_id_to_names = self.species_id_to_names(xref_dbi)
@@ -53,27 +70,34 @@ class RFAMParser(BaseParser):
         species_name = species_id_to_names[species_id][0]
 
         # Connect to the appropriate rfam db
+        rfam_db_url = self.get_rfam_db_url(db_host, db_user, db_pass, db_port, db_name, dba, species_name, ensembl_release, verbose)
+        if not rfam_db_url:
+            raise AttributeError("Could not find RFAM DB.")
+        if verbose:
+            logging.info(f"Found RFAM DB: {rfam_db_url}")
+
+        # Download file through wget if url present
+        if wget_url:
+            xref_file = self.download_file(wget_url, xref_file)
+
+        # Add xrefs
+        xref_count, direct_count = self.process_lines(xref_file, rfam_db_url, source_id, species_id, xref_dbi)
+
+        result_message = f"Added {xref_count} RFAM xrefs and {direct_count} direct xrefs"
+        return 0, result_message
+
+    def get_rfam_db_url(self, db_host: str, db_user: str, db_pass: str, db_port: str, db_name: str, dba: str, species_name: str, ensembl_release: str, verbose: bool) -> Any:
         if db_host:
-            rfam_db_url = URL.create(
-                "mysql", db_user, db_pass, db_host, db_port, db_name
-            )
+            return URL.create("mysql", db_user, db_pass, db_host, db_port, db_name)
         elif dba:
-            rfam_db_url = dba
+            return dba
         else:
             if verbose:
                 logging.info("Looking for db in mysql-ens-sta-1")
             registry = "ensro@mysql-ens-sta-1:4519"
-            rfam_db_url = self.get_db_from_registry(
-                species_name, "core", ensembl_release, registry
-            )
+            return self.get_db_from_registry(species_name, "core", ensembl_release, registry)
 
-        if not rfam_db_url:
-            raise IOError(f"Could not find RFAM DB.")
-        else:
-            if verbose:
-                logging.info(f"Found RFAM DB: {rfam_db_url}")
-
-        # Get data from rfam db
+    def get_rfam_transcript_stable_ids(self, rfam_db_url: Any) -> Dict[str, List[str]]:
         db_engine = self.get_db_engine(rfam_db_url)
         with db_engine.connect() as rfam_dbi:
             query = (
@@ -103,8 +127,7 @@ class RFAMParser(BaseParser):
                 )
                 .join(
                     DnaAlignFeatureORM,
-                    DnaAlignFeatureORM.dna_align_feature_id
-                    == SupportingFeatureORM.feature_id,
+                    DnaAlignFeatureORM.dna_align_feature_id == SupportingFeatureORM.feature_id,
                 )
                 .order_by(DnaAlignFeatureORM.hit_name)
             )
@@ -113,81 +136,61 @@ class RFAMParser(BaseParser):
         # Create a dict with RFAM accessions as keys and value is an array of ensembl transcript stable_ids
         rfam_transcript_stable_ids = {}
         for row in result:
-            rfam_id = None
-
             match = re.search(r"^(RF\d+)", row.hit_name)
             if match:
                 rfam_id = match.group(1)
-
-            if rfam_id:
                 rfam_transcript_stable_ids.setdefault(rfam_id, []).append(row.stable_id)
 
-        # Download file through wget if url present
-        if wget_url:
-            uri = urlparse(wget_url)
-            file = os.path.join(os.path.dirname(file), os.path.basename(uri.path))
-            wget.download(wget_url, file)
+        return rfam_transcript_stable_ids
 
-        # Read data from file
-        lines = []
-        entry = ""
+    def download_file(self, wget_url: str, rfam_file: str) -> str:
+        uri = urlparse(wget_url)
+        rfam_file = os.path.join(os.path.dirname(rfam_file), os.path.basename(uri.path))
+        wget.download(wget_url, rfam_file)
 
-        file_io = gzip.open(file, "r")
-        for line in file_io:
-            line = line.decode("latin-1")
-            if re.search(r"^//", line):
-                lines.append(entry)
-                entry = ""
-            elif (
-                re.search(r"^#=GF\sAC", line)
-                or re.search(r"^#=GF\sID", line)
-                or re.search(r"^#=GF\sDE", line)
-            ):
-                entry += line
-        file_io.close()
+        return rfam_file
 
-        # Add xrefs
+    def process_lines(self, xref_file: str, rfam_db_url: Any, source_id: int, species_id: int, xref_dbi: Connection) -> Tuple[int, int]:
         xref_count, direct_count = 0, 0
 
-        for entry in lines:
-            accession, label, description = None, None, None
+        # Get data from rfam db
+        rfam_transcript_stable_ids = self.get_rfam_transcript_stable_ids(rfam_db_url)
+
+        for section in self.get_file_sections(xref_file, "//\n", "utf-8"):
+            entry = "".join(section)
 
             # Extract data from entry
-            match = re.search(r"^#=GF\sAC\s+(\w+)", entry, flags=re.MULTILINE)
-            if match:
-                accession = match.group(1)
-            match = re.search(r"^#=GF\sID\s+([^\n]+)", entry, flags=re.MULTILINE)
-            if match:
-                label = match.group(1)
-            match = re.search(r"^#=GF\sDE\s+([^\n]+)", entry, flags=re.MULTILINE)
-            if match:
-                description = match.group(1)
+            accession, label, description = self.extract_entry_data(entry)
 
-            if accession:
-                if rfam_transcript_stable_ids.get(accession):
-                    xref_id = self.add_xref(
-                        {
-                            "accession": accession,
-                            "version": 0,
-                            "label": label or accession,
-                            "description": description,
-                            "source_id": source_id,
-                            "species_id": species_id,
-                            "info_type": "DIRECT",
-                        },
-                        xref_dbi,
-                    )
-                    xref_count += 1
+            if accession and rfam_transcript_stable_ids.get(accession):
+                print("accession in dict")
+                xref_id = self.add_xref(
+                    {
+                        "accession": accession,
+                        "version": 0,
+                        "label": label or accession,
+                        "description": description,
+                        "source_id": source_id,
+                        "species_id": species_id,
+                        "info_type": "DIRECT",
+                    },
+                    xref_dbi,
+                )
+                xref_count += 1
 
-                    transcript_stable_ids = rfam_transcript_stable_ids[accession]
-                    for stable_id in transcript_stable_ids:
-                        self.add_direct_xref(
-                            xref_id, stable_id, "Transcript", "", xref_dbi
-                        )
-                        direct_count += 1
+                for stable_id in rfam_transcript_stable_ids[accession]:
+                    self.add_direct_xref(xref_id, stable_id, "Transcript", "", xref_dbi)
+                    direct_count += 1
 
-        result_message = (
-            f"Added {xref_count} RFAM xrefs and {direct_count} direct xrefs"
-        )
+        return xref_count, direct_count
 
-        return 0, result_message
+    def extract_entry_data(self, entry: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        accession = self.extract_pattern(entry, self.ACCESSION_PATTERN)
+        label = self.extract_pattern(entry, self.LABEL_PATTERN)
+        description = self.extract_pattern(entry, self.DESCRIPTION_PATTERN)
+
+        return accession, label, description
+
+    def extract_pattern(self, text: str, pattern: re.Pattern) -> Optional[str]:
+        match = pattern.search(text)
+        return match.group(1) if match else None

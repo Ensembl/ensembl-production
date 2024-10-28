@@ -1,0 +1,94 @@
+********************************************************************************
+RefSeq-release224.txt       ftp://ftp.ncbi.nlm.nih.gov/refseq/release/release-notes/
+
+		NCBI Reference Sequence (RefSeq) Database
+
+			Release 224
+			May 6, 2024
+
+		Distribution Release Notes
+
+Release Size: 
+   150742 organisms
+   4379003578168 nucleotide bases
+   126991769080 amino acids
+   435879646 records
+******************************************************************************
+
+This document describes the format and content of the flat files that 
+comprise releases of the NCBI Reference Sequence (RefSeq) database.
+
+Additional information about RefSeq is available at:
+
+1. NCBI Bookshelf:
+   a) NCBI Handbook:  
+   https://www.ncbi.nlm.nih.gov/books/NBK21091/
+   b) RefSeq Help (FAQ)
+   https://www.ncbi.nlm.nih.gov/books/NBK50680/
+ 
+2. RefSeq Web Sites: 
+   RefSeq Home:  https://www.ncbi.nlm.nih.gov/refseq/
+   RefSeqGene Home: https://www.ncbi.nlm.nih.gov/refseq/rsg/
+
+If you have any questions or comments about RefSeq, the RefSeq release files
+or this document, please contact NCBI by email at:
+   info@ncbi.nlm.nih.gov. 
+
+To receive announcements of future RefSeq releases and large updates please
+subscribe to NCBI's refseq-announce mail list:
+
+   send email to refseq-announce-subscribe@ncbi.nlm.nih.gov
+   with "subscribe" in the subject line (without quotes)
+   and nothing in the email body
+
+OR
+
+subscribe using the web interface at:
+   https://www.ncbi.nlm.nih.gov/mailman/listinfo/refseq-announce
+
+=============================================================================
+TABLE OF CONTENTS
+=============================================================================
+1. INTRODUCTION	 
+	1.1 This release
+	1.2 Cutoff date
+	1.3 RefSeq Project Background
+		1.3.1 Sequence accessions, validation, and annotations
+		1.3.2 Data assembly, curation, and collaboration 
+		1.3.3 Biologically non-redundant data set
+		1.3.4 RefSeq and DDBJ/EMBL/GenBank comparison
+	1.4 Uses and applications of the RefSeq database
+2. CONTENT
+	2.1 Organisms included
+	2.2 Molecule Types included
+	2.3 Known Problems, Redundancies, and Inconsistencies
+	2.4 Release Catalog
+	2.5 Changes since the previous release 
+3. ORGANIZATION OF DATA FILES
+	3.1 FTP Site Organization
+	3.2 Release Contents
+	3.3 File Names and Formats
+        3.4 File Sizes
+        3.5 Statistics
+	3.6 Release Catalog
+	3.7 Removed Records
+      	3.8 Accession Format
+        3.9 Growth of RefSeq        
+4. FLAT FILE ANNOTATION
+	4.1 Main features of RefSeq Flat File
+		4.1.1 LOCUS, DEFLINE, ACCESSION, KEYWORDS, SOURCE, ORGANISM
+		4.1.2 REFERENCE, DIRECT SUBMISSION, COMMENT, PRIMARY
+		4.1.3 NUCLEOTIDE FEATURE ANNOTATION (Gene, mRNA, CDS)
+		4.1.4 PROTEIN FEATURE ANNOTATION
+	4.2 Tracking Identifiers
+		4.2.1 GeneID
+		4.2.2 Transcript ID
+		4.2.3 Protein ID
+		4.2.4 Conserved Domain Database (CDD) ID
+5. REFSEQ ADMINISTRATION
+	5.1 Citing RefSeq
+	5.2 RefSeq Distribution Formats
+	5.3 Other Methods of Accessing RefSeq Data
+	5.4 Request for Corrections and Comments
+	5.5 Credits and Acknowledgements
+	5.6 Disclaimer

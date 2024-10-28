@@ -14,100 +14,112 @@
 
 """Parser module for Uniprot sources."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
-
+import re
+import logging
+import csv
 import codecs
+from typing import Dict, Any, Tuple, List
+from sqlalchemy.engine import Connection
 
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class UniProtParser(BaseParser):
-    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id    = args["source_id"]
-        species_id   = args["species_id"]
-        file         = args["file"]
-        xref_dbi     = args["xref_dbi"]
-        release_file = args["rel_file"]
-        verbose      = args.get("verbose", False)
-        hgnc_file    = args.get("hgnc_file")
+    SWISSPROT_RELEASE_PATTERN = re.compile(r"(UniProtKB/Swiss-Prot Release .*)")
+    TREMBL_RELEASE_PATTERN = re.compile(r"(UniProtKB/TrEMBL Release .*)")
+    TAXON_PATTERN = re.compile(r"[a-zA-Z_]+=([0-9 ,]+).*;")
+    CAUTION_PATTERN = re.compile(r"CAUTION: The sequence shown here is derived from an Ensembl")
+    SP_TYPE_PATTERN = re.compile(r"(\w+)\s+(\w+)")
+    PROTEIN_EVIDENCE_PATTERN = re.compile(r"(\d+)")
+    VERSION_PATTERN = re.compile(r"\d+-\w+-\d+, entry version (\d+)")
+    REVIEWED_PATTERN = re.compile(r"^Reviewed", re.IGNORECASE)
+    UNREVIEWED_PATTERN = re.compile(r"Unreviewed", re.IGNORECASE)
+    DESCRIPTION_PATTERN = re.compile(r"(RecName|SubName): Full=(.*)")
+    ECO_PATTERN = re.compile(r"\s*\{ECO:.*?\}")
+    EC_PATTERN = re.compile(r"EC=([^;]+)")
+    SEQUENCE_PATTERN = re.compile(r"^SEQUENCE")
+    WHITESPACE_PATTERN = re.compile(r"\s+")
+    GENE_NAME_PATTERN = re.compile(r"Name=(.*)")
+    SYNONYMS_PATTERN = re.compile(r"Synonyms=(.*)")
+    SYNONYMS_COMMA_PATTERN = re.compile(r"\s*,\s*")
+    DEPENDENTS_PATTERN = re.compile(r"^(GO|UniGene|RGD|CCDS|IPI|UCSC|SGD|HGNC|MGI|VGNC|Orphanet|ArrayExpress|GenomeRNAi|EPD|Xenbase|Reactome|MIM|GeneCards)")
+    STABLE_ID_PATTERN = re.compile(r"\.[0-9]+")
+    PROTEIN_ID_PATTERN = re.compile(r"([^.]+)\.([^.]+)")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+    def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
+        release_file = args.get("rel_file")
+        verbose = args.get("verbose", False)
+        hgnc_file = args.get("hgnc_file")
+
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
         # Get needed source ids
+        source_ids = self.get_source_ids(xref_dbi, verbose)
+
+        # Parse and set release info
+        self.set_release_info(release_file, source_ids, xref_dbi, verbose)
+
+        result_message = self.create_xrefs(source_ids, species_id, xref_file, xref_dbi, hgnc_file)
+        return 0, result_message
+
+    def get_source_ids(self, dbi: Connection, verbose: bool) -> Dict[str, int]:
+        source_names = {
+            "sp_source_id": ("Uniprot/SWISSPROT", "sequence_mapped"),
+            "sptr_source_id": ("Uniprot/SPTREMBL", "sequence_mapped"),
+            "sptr_non_display_source_id": ("Uniprot/SPTREMBL", "protein_evidence_gt_2"),
+            "sp_direct_source_id": ("Uniprot/SWISSPROT", "direct"),
+            "sptr_direct_source_id": ("Uniprot/SPTREMBL", "direct"),
+            "isoform_source_id": ("Uniprot_isoform", None),
+        }
+
         source_ids = {
-            "sp_source_id": self.get_source_id_for_source_name(
-                "Uniprot/SWISSPROT", xref_dbi, "sequence_mapped"
-            ),
-            "sptr_source_id": self.get_source_id_for_source_name(
-                "Uniprot/SPTREMBL", xref_dbi, "sequence_mapped"
-            ),
-            "sptr_non_display_source_id": self.get_source_id_for_source_name(
-                "Uniprot/SPTREMBL", xref_dbi, "protein_evidence_gt_2"
-            ),
-            "sp_direct_source_id": self.get_source_id_for_source_name(
-                "Uniprot/SWISSPROT", xref_dbi, "direct"
-            ),
-            "sptr_direct_source_id": self.get_source_id_for_source_name(
-                "Uniprot/SPTREMBL", xref_dbi, "direct"
-            ),
-            "isoform_source_id": self.get_source_id_for_source_name(
-                "Uniprot_isoform", xref_dbi
-            ),
+            key: self.get_source_id_for_source_name(name, dbi, type)
+            for key, (name, type) in source_names.items()
         }
 
         if verbose:
-            logging.info(f'SwissProt source ID = {source_ids["sp_source_id"]}')
-            logging.info(f'SpTREMBL source ID = {source_ids["sptr_source_id"]}')
-            logging.info(
-                f'SpTREMBL protein_evidence > 2 source ID = {source_ids["sptr_non_display_source_id"]}'
-            )
-            logging.info(
-                f'SwissProt direct source ID = {source_ids["sp_direct_source_id"]}'
-            )
-            logging.info(
-                f'SpTREMBL direct source ID = {source_ids["sptr_direct_source_id"]}'
-            )
+            for key, value in source_ids.items():
+                logging.info(f'{key} = {value}')
 
-        # Parse and set release info
-        if release_file:
-            sp_release = None
-            sptr_release = None
+        return source_ids
 
-            release_io = self.get_filehandle(release_file)
+    def set_release_info(self, release_file: str, source_ids: Dict[str, int], dbi: Connection, verbose: bool) -> None:
+        if not release_file:
+            return
+
+        sp_release = None
+        sptr_release = None
+
+        with self.get_filehandle(release_file) as release_io:
             for line in release_io:
                 line = line.strip()
                 if not line:
                     continue
 
-                match = re.search(r"(UniProtKB/Swiss-Prot Release .*)", line)
+                match = self.SWISSPROT_RELEASE_PATTERN.search(line)
                 if match:
                     sp_release = match.group(1)
                     if verbose:
                         logging.info(f"Swiss-Prot release is {sp_release}")
                 else:
-                    match = re.search(r"(UniProtKB/TrEMBL Release .*)", line)
+                    match = self.TREMBL_RELEASE_PATTERN.search(line)
                     if match:
                         sptr_release = match.group(1)
                         if verbose:
                             logging.info(f"SpTrEMBL release is {sptr_release}")
 
-            release_io.close()
+        # Set releases
+        self.set_release(source_ids["sp_source_id"], sp_release, dbi)
+        self.set_release(source_ids["sptr_source_id"], sptr_release, dbi)
+        self.set_release(source_ids["sptr_non_display_source_id"], sptr_release, dbi)
+        self.set_release(source_ids["sp_direct_source_id"], sp_release, dbi)
+        self.set_release(source_ids["sptr_direct_source_id"], sptr_release, dbi)
 
-            # Set releases
-            self.set_release(source_ids["sp_source_id"], sp_release, xref_dbi)
-            self.set_release(source_ids["sptr_source_id"], sptr_release, xref_dbi)
-            self.set_release(
-                source_ids["sptr_non_display_source_id"], sptr_release, xref_dbi
-            )
-            self.set_release(source_ids["sp_direct_source_id"], sp_release, xref_dbi)
-            self.set_release(
-                source_ids["sptr_direct_source_id"], sptr_release, xref_dbi
-            )
-
-        result_message = self.create_xrefs(source_ids, species_id, file, xref_dbi, hgnc_file)
-
-        return 0, result_message
-
-    def create_xrefs(self, source_ids: Dict[str, int], species_id: int, file: str, dbi: Connection, hgnc_file: str = None) -> str:
+    def create_xrefs(self, source_ids: Dict[str, int], species_id: int, xref_file: str, dbi: Connection, hgnc_file: str = None) -> str:
         counts = {
             "num_sp": 0,
             "num_sptr": 0,
@@ -120,7 +132,7 @@ class UniProtParser(BaseParser):
         ensembl_derived_protein_count = 0
         count = 0
 
-        # Get sources ids of dependent sources
+        # Get source ids of dependent sources
         dependent_sources = self.get_xref_sources(dbi)
 
         # Extract descriptions from hgnc
@@ -137,71 +149,62 @@ class UniProtParser(BaseParser):
         xrefs = []
 
         # Read file
-        for section in self.get_file_sections(file, "//\n"):
-            if len(section) == 1:
-                continue
-
-            entry = "".join(section)
+        for section in self.get_file_sections(xref_file, "//\n"):
+            entry = self.extract_entry_fields(section)
             xref = {}
 
             # Extract the species taxon id
-            found = 0
-            match = re.search(r"OX\s+[a-zA-Z_]+=([0-9 ,]+).*;", entry)
+            found = False
+            match = self.TAXON_PATTERN.search(entry["OX"][0])
             if match:
                 ox = match.group(1)
                 for taxon_id_from_file in ox.split(", "):
-                    taxon_id_from_file = re.sub(r"\s", "", taxon_id_from_file)
-                    if tax_to_species_id.get(taxon_id_from_file):
-                        found = 1
+                    taxon_id_from_file = taxon_id_from_file.strip()
+                    if tax_to_species_id.get(int(taxon_id_from_file)):
+                        found = True
                         count += 1
 
-            # If no taxon_id's match, skip to next record
+            # If no taxon_id match found, skip to next record
             if not found:
                 continue
 
             # Check for CC (caution) lines containing certain text
             # If sequence is from Ensembl, do not use
-            ensembl_derived_protein = 0
-            if re.search(
-                r"CAUTION: The sequence shown here is derived from an Ensembl", entry
-            ):
-                ensembl_derived_protein = 1
-                ensembl_derived_protein_count += 1
+            ensembl_derived_protein = False
+            for comment in entry.get("CC", []):
+                ensembl_derived_protein = bool(self.CAUTION_PATTERN.search(comment))
+                if ensembl_derived_protein:
+                    ensembl_derived_protein_count += 1
+                    break
 
             # Extract ^AC lines and build list of accessions
-            accessions = []
-            accessions_only = re.findall(r"\nAC\s+(.+)", entry)
-            for accessions_line in accessions_only:
-                for acc in accessions_line.split(";"):
-                    acc = acc.strip()
-                    if acc:
-                        accessions.append(acc)
+            accessions = [acc.strip() for acc in entry["AC"][0].split(";") if acc.strip()]
             accession = accessions[0]
 
             if accession.lower() == "unreviewed":
-                logging.warn(
-                    f"WARNING: entries with accession of {accession} not allowed, will be skipped"
-                )
+                logging.warning(f"WARNING: entries with accession of {accession} not allowed, will be skipped")
                 continue
 
+            # Starting building xref object
             xref["ACCESSION"] = accession
             xref["INFO_TYPE"] = "SEQUENCE_MATCH"
-            xref["SYNONYMS"] = []
-            for i in range(1, len(accessions)):
-                xref["SYNONYMS"].append(accessions[i])
+            xref["SYNONYMS"] = accessions[1:]
 
-            sp_type = re.search(r"ID\s+(\w+)\s+(\w+)", entry).group(2)
-            protein_evidence_code = re.search(r"PE\s+(\d+)", entry).group(1)
-            version = re.search(r"DT\s+\d+-\w+-\d+, entry version (\d+)", entry).group(
-                1
-            )
+            # Extract the type, protein evidence code and version
+            sp_type = self.SP_TYPE_PATTERN.search(entry["ID"][0]).group(2)
+            protein_evidence_code = self.PROTEIN_EVIDENCE_PATTERN.search(entry["PE"][0]).group(1)
+            for dt_line in entry.get("DT", []):
+                match = self.VERSION_PATTERN.search(dt_line)
+                if match:
+                    version = match.group(1)
+                    break
 
-            # SwissProt/SPTrEMBL are differentiated by having STANDARD/PRELIMINARY here
-            if re.search(r"^Reviewed", sp_type, re.IGNORECASE):
+            # SwissProt/SPTrEMBL are differentiated by having Reviewed/Unreviewed here
+            if self.REVIEWED_PATTERN.search(sp_type):
                 xref["SOURCE_ID"] = source_ids["sp_source_id"]
                 counts["num_sp"] += 1
-            elif re.search(r"Unreviewed", sp_type, re.IGNORECASE):
-                # Use normal source only if it is PE levels 1 & 2
+            elif self.UNREVIEWED_PATTERN.search(sp_type):
+                # Use normal source only if PE levels 1 & 2
                 if protein_evidence_code and int(protein_evidence_code) < 3:
                     xref["SOURCE_ID"] = source_ids["sptr_source_id"]
                     counts["num_sptr"] += 1
@@ -220,194 +223,123 @@ class UniProtParser(BaseParser):
             xref["DEPENDENT_XREFS"] = []
             xref["DIRECT_XREFS"] = []
 
-            # Extract ^DE lines only and build cumulative description string
-            description = ""
-            description_lines = re.findall(r"\nDE\s+(.+)", entry)
-            for line in description_lines:
-                match = re.search(r"RecName: Full=(.*);", line)
-                if match:
-                    if description:
-                        description += "; "
-                    description += match.group(1)
-                else:
-                    match = re.search(r"SubName: Full=(.*);", line)
-                    if match:
-                        if description:
-                            description += "; "
-                        description += match.group(1)
-
-                description = re.sub(r"^\s*", "", description)
-                description = re.sub(r"\s*$", "", description)
-                description = re.sub(r"\s*\{ECO:.*?\}", "", description)
-
-                # Parse the EC_NUMBER line, only for S.cerevisiae for now
-                if re.search(r"EC=", line) and species_id == "4932":
-                    # Get the EC Number and make it an xref for S.cer if any
-                    EC = re.search(r"\s*EC=([^;]+);", line).group(1)
-
-                    dependent = {}
-                    dependent["LABEL"] = EC
-                    dependent["ACCESSION"] = EC
-                    dependent["SOURCE_NAME"] = "EC_NUMBER"
-                    dependent["SOURCE_ID"] = dependent_sources["EC_NUMBER"]
-                    dependent["LINKAGE_SOURCE_ID"] = xref["SOURCE_ID"]
-                    xref["DEPENDENT_XREFS"].append(dependent)
-                    dependent_xrefs_counts["EC_NUMBER"] = (
-                        dependent_xrefs_counts.get("EC_NUMBER", 0) + 1
-                    )
-
+            # Extract the description
+            description, ec_number = self.extract_description("".join(entry.get("DE", [])))
             xref["DESCRIPTION"] = description
 
+            # Parse the EC_NUMBER, only for S.cerevisiae for now
+            if ec_number and species_id == 4932:
+                dependent = {}
+                dependent["LABEL"] = ec_number
+                dependent["ACCESSION"] = ec_number
+                dependent["SOURCE_NAME"] = "EC_NUMBER"
+                dependent["SOURCE_ID"] = dependent_sources["EC_NUMBER"]
+                dependent["LINKAGE_SOURCE_ID"] = xref["SOURCE_ID"]
+                xref["DEPENDENT_XREFS"].append(dependent)
+                dependent_xrefs_counts["EC_NUMBER"] = (dependent_xrefs_counts.get("EC_NUMBER", 0) + 1)
+
             # Extract sequence
-            sequence = re.search(r"SQ\s+(.+)", entry, flags=re.DOTALL).group(1)
-            sequence = re.sub(r"\n", "", sequence)
-            sequence = re.sub(r"\/\/", "", sequence)
-            sequence = re.sub(r"\s", "", sequence)
-            sequence = re.sub(r"^.*;", "", sequence)
+            sequence = ""
+            for seq_line in entry.get("SQ", []):
+                if not self.SEQUENCE_PATTERN.search(seq_line):
+                    sequence += seq_line
+            sequence = self.WHITESPACE_PATTERN.sub("", sequence)
             xref["SEQUENCE"] = sequence
 
             # Extract gene names
-            gene_names = re.findall(r"\nGN\s+(.+)", entry)
-            gene_names = " ".join(gene_names).split(";")
+            if not ensembl_derived_protein and entry.get("GN"):
+                gene_name, gene_synonyms = self.extract_gene_name(" ".join(entry["GN"]))
 
-            # Do not allow the addition of UniProt Gene Name dependent Xrefs
-            # if the protein was imported from Ensembl. Otherwise we will
-            # re-import previously set symbols
-            if not ensembl_derived_protein:
-                dependent = {}
-                name_found = 0
-                gene_name = None
-                dep_synonyms = []
-                for line in gene_names:
-                    line = line.strip()
-
-                    if not re.search(r"Name=", line) and not re.search(
-                        r"Synonyms=", line
-                    ):
-                        continue
-
-                    match = re.search(r"Name=([A-Za-z0-9_\-\.\s]+)", line)
-                    if match and not name_found:
-                        gene_name = match.group(1).rstrip()
-                        gene_name = re.sub(r"\nGN", "", gene_name)
-                        name_found = 1
-
-                    match = re.search(r"Synonyms=(.*)", line)
-                    if match:
-                        synonym = match.group(1)
-                        synonym = re.sub(r"\{.*?\}", "", synonym)
-                        synonym = re.sub(r"\s+$", "", synonym)
-                        synonym = re.sub(r"\s*,\s*", ",", synonym)
-                        synonyms = synonym.split(",")
-                        for synonym in synonyms:
-                            if synonym not in dep_synonyms:
-                                dep_synonyms.append(synonym)
-
+                # Add dependent xref for gene name
                 if gene_name:
+                    dependent = {}
                     dependent["LABEL"] = gene_name
                     dependent["ACCESSION"] = xref["ACCESSION"]
                     dependent["SOURCE_NAME"] = "Uniprot_gn"
                     dependent["SOURCE_ID"] = dependent_sources["Uniprot_gn"]
                     dependent["LINKAGE_SOURCE_ID"] = xref["SOURCE_ID"]
-                    dependent["SYNONYMS"] = dep_synonyms
-                    if hgnc_file and hgnc_descriptions.get(gene_name) is not None:
+                    dependent["SYNONYMS"] = gene_synonyms
+                    if hgnc_file and hgnc_descriptions.get(gene_name):
                         dependent["DESCRIPTION"] = hgnc_descriptions[gene_name]
                     xref["DEPENDENT_XREFS"].append(dependent)
-                    dependent_xrefs_counts["Uniprot_gn"] = (
-                        dependent_xrefs_counts.get("Uniprot_gn", 0) + 1
-                    )
+                    dependent_xrefs_counts["Uniprot_gn"] = dependent_xrefs_counts.get("Uniprot_gn", 0) + 1
 
             # Dependent xrefs - only store those that are from sources listed in the source table
-            deps = re.findall(r"\n(DR\s+.+)", entry)
-
             seen = {}
-            for dep in deps:
-                match = re.search(r"^DR\s+(.+)", dep)
-                if match:
-                    vals = re.split(r";\s*", match.group(1))
-                    source = vals[0]
-                    acc = vals[1]
-                    extra = []
-                    if len(vals) > 2:
-                        extra = vals[2 : len(vals)]
+            for dependent_line in entry.get("DR", []):
+                vals = re.split(r";\s*", dependent_line)
+                source = vals[0]
+                dependent_acc = vals[1]
+                extra = vals[2:] if len(vals) > 2 else []
 
-                    # Skip external sources obtained through other files
-                    if re.search(
-                        r"^(GO|UniGene|RGD|CCDS|IPI|UCSC|SGD|HGNC|MGI|VGNC|Orphanet|ArrayExpress|GenomeRNAi|EPD|Xenbase|Reactome|MIM|GeneCards)",
-                        source,
-                    ):
-                        continue
+                # Skip external sources obtained through other files
+                if self.DEPENDENTS_PATTERN.search(source):
+                    continue
 
-                    # If mapped to Ensembl, add as direct xref
-                    if source == "Ensembl":
-                        direct = {}
-                        isoform = {}
+                # If mapped to Ensembl, add as direct xref
+                if source == "Ensembl":
+                    stable_id = self.STABLE_ID_PATTERN.sub("", extra[0])
 
-                        stable_id = extra[0]
-                        stable_id = re.sub(r"\.[0-9]+", "", stable_id)
-                        direct["STABLE_ID"] = stable_id
-                        direct["ENSEMBL_TYPE"] = "Translation"
-                        direct["LINKAGE_TYPE"] = "DIRECT"
-                        if xref["SOURCE_ID"] == source_ids["sp_source_id"]:
-                            direct["SOURCE_ID"] = source_ids["sp_direct_source_id"]
-                            counts["num_direct_sp"] += 1
-                        else:
-                            direct["SOURCE_ID"] = source_ids["sptr_direct_source_id"]
-                            counts["num_direct_sptr"] += 1
-                        xref["DIRECT_XREFS"].append(direct)
+                    direct = {}
+                    direct["STABLE_ID"] = stable_id
+                    direct["ENSEMBL_TYPE"] = "Translation"
+                    direct["LINKAGE_TYPE"] = "DIRECT"
+                    if xref["SOURCE_ID"] == source_ids["sp_source_id"]:
+                        direct["SOURCE_ID"] = source_ids["sp_direct_source_id"]
+                        counts["num_direct_sp"] += 1
+                    else:
+                        direct["SOURCE_ID"] = source_ids["sptr_direct_source_id"]
+                        counts["num_direct_sptr"] += 1
+                    xref["DIRECT_XREFS"].append(direct)
 
-                        match = re.search(r"(%s-[0-9]+)" % accession, extra[1])
-                        if match:
-                            isoform = match.group(1)
-                            self.add_to_direct_xrefs(
-                                {
-                                    "stable_id": stable_id,
-                                    "ensembl_type": "translation",
-                                    "accession": isoform,
-                                    "label": isoform,
-                                    "source_id": source_ids["isoform_source_id"],
-                                    "linkage": "DIRECT",
-                                    "species_id": species_id,
-                                },
-                                dbi,
-                            )
-                            counts["num_isoform"] += 1
+                    match = re.search(r"(%s-[0-9]+)" % accession, extra[1])
+                    if match:
+                        isoform = match.group(1)
 
-                    # Create dependent xref structure & store it
-                    if dependent_sources.get(source):
-                        dependent = {}
+                        xref_id = self.add_xref(
+                            {
+                                "accession": isoform,
+                                "label": isoform,
+                                "source_id": source_ids["isoform_source_id"],
+                                "species_id": species_id,
+                                "info_type": "DIRECT",
+                            },
+                            dbi,
+                        )
+                        self.add_direct_xref(xref_id, stable_id, "translation", "DIRECT", dbi)
+                        counts["num_isoform"] += 1
 
-                        dependent["SOURCE_NAME"] = source
-                        dependent["LINKAGE_SOURCE_ID"] = xref["SOURCE_ID"]
-                        dependent["SOURCE_ID"] = dependent_sources[source]
-                        dependent["ACCESSION"] = acc
+                # Create dependent xref structure & store it
+                if dependent_sources.get(source):
+                    # Only add depenedent accession once for record
+                    if not seen.get(f"{source}:{dependent_acc}"):
+                        dependent = {
+                            "SOURCE_NAME": source,
+                            "LINKAGE_SOURCE_ID": xref["SOURCE_ID"],
+                            "SOURCE_ID": dependent_sources[source],
+                            "ACCESSION": dependent_acc,
+                        }
 
-                        if not seen.get(f"{source}:{acc}"):
+                        xref["DEPENDENT_XREFS"].append(dependent)
+                        dependent_xrefs_counts[source] = dependent_xrefs_counts.get(source, 0) + 1
+                        seen[f"{source}:{dependent_acc}"] = True
+
+                    # For EMBL source, add protein_id as dependent xref
+                    if source == "EMBL":
+                        protein_id = extra[0]
+                        if protein_id != "-" and not seen.get(f"{source}:{protein_id}"):
+                            protein_id_acc = self.PROTEIN_ID_PATTERN.search(protein_id).group(1)
+                            dependent = {
+                                "SOURCE_NAME": source,
+                                "SOURCE_ID": dependent_sources["protein_id"],
+                                "LINKAGE_SOURCE_ID": xref["SOURCE_ID"],
+                                "LABEL": protein_id,
+                                "ACCESSION": protein_id_acc,
+                            }
+
                             xref["DEPENDENT_XREFS"].append(dependent)
-                            dependent_xrefs_counts[source] = (
-                                dependent_xrefs_counts.get(source, 0) + 1
-                            )
-                            seen[f"{source}:{acc}"] = 1
-
-                        if re.search(r"EMBL", dep) and not re.search(r"ChEMBL", dep):
-                            protein_id = extra[0]
-                            if protein_id != "-" and not seen.get(
-                                f"{source}:{protein_id}"
-                            ):
-                                dependent = {}
-
-                                dependent["SOURCE_NAME"] = source
-                                dependent["SOURCE_ID"] = dependent_sources["protein_id"]
-                                dependent["LINKAGE_SOURCE_ID"] = xref["SOURCE_ID"]
-                                dependent["LABEL"] = protein_id
-                                dependent["ACCESSION"] = re.search(
-                                    r"([^.]+)\.([^.]+)", protein_id
-                                ).group(1)
-                                xref["DEPENDENT_XREFS"].append(dependent)
-                                dependent_xrefs_counts[source] = (
-                                    dependent_xrefs_counts.get(source, 0) + 1
-                                )
-                                seen[f"{source}:{protein_id}"] = 1
+                            dependent_xrefs_counts["protein_id"] = dependent_xrefs_counts.get("protein_id", 0) + 1
+                            seen[f"{source}:{protein_id}"] = True
 
             xrefs.append(xref)
 
@@ -416,26 +348,101 @@ class UniProtParser(BaseParser):
                 count = 0
                 xrefs.clear()
 
-        if len(xrefs) > 0:
+        if xrefs:
             self.upload_xref_object_graphs(xrefs, dbi)
 
-        result_message = f'Read {counts["num_sp"]} SwissProt xrefs, {counts["num_sptr"]} SPTrEMBL xrefs with protein evidence codes 1-2, and {counts["num_sptr_non_display"]} SPTrEMBL xrefs with protein evidence codes > 2 from {file}\n'
-        result_message += f'Added {counts["num_direct_sp"]} direct SwissProt xrefs and {counts["num_direct_sptr"]} direct SPTrEMBL xrefs\n'
-        result_message += f'Added {counts["num_isoform"]} direct isoform xrefs\n'
-        result_message += f"Skipped {ensembl_derived_protein_count} ensembl annotations as Gene names\n"
-
-        result_message += f"Added the following dependent xrefs:\n"
+        result_message = (
+            f'Read {counts["num_sp"]} SwissProt xrefs, {counts["num_sptr"]} SPTrEMBL xrefs with protein evidence codes 1-2, '
+            f'and {counts["num_sptr_non_display"]} SPTrEMBL xrefs with protein evidence codes > 2 from {xref_file}\n'
+            f'Added {counts["num_direct_sp"]} direct SwissProt xrefs and {counts["num_direct_sptr"]} direct SPTrEMBL xrefs\n'
+            f'Added {counts["num_isoform"]} direct isoform xrefs\n'
+            f'Skipped {ensembl_derived_protein_count} ensembl annotations as Gene names\n'
+            f'Added the following dependent xrefs:\n'
+        )
         for xref_source, xref_count in dependent_xrefs_counts.items():
             result_message += f"\t{xref_source}\t{xref_count}\n"
 
         return result_message
+
+    def extract_entry_fields(self, section: str) -> Dict[str, List[str]]:
+        entry_dict = {}
+        in_sq_section = False
+
+        for line in section:
+            line = line.strip()
+            if not line:
+                continue
+
+            line_key = line[:2]
+            clean_line = line[2:].strip()
+
+            if line_key == "SQ":
+                in_sq_section = True
+            elif in_sq_section:
+                line_key = "SQ"
+                clean_line = line
+
+            entry_dict.setdefault(line_key, []).append(clean_line)
+
+        return entry_dict
+    
+    def extract_description(self, full_description: str) -> Tuple[str, str]:
+        descriptions = []
+        ec_number = None
+        description = ""
+
+        description_lines = full_description.split(";")
+        for line in description_lines:
+            if not line.strip():
+                continue
+
+            match = self.DESCRIPTION_PATTERN.search(line)
+            if match:
+                descriptions.append(match.group(2))
+            
+            # Get the EC number, if present
+            match = self.EC_PATTERN.search(line)
+            if match:
+                ec_number = match.group(1)
+                ec_number = self.ECO_PATTERN.sub("", ec_number).strip()
+
+        if descriptions:
+            description = "; ".join(descriptions)
+            description = self.ECO_PATTERN.sub("", description).strip()
+
+        return description, ec_number
+    
+    def extract_gene_name(self, full_gene_names: str) -> Tuple[str, List[str]]:
+        name_found = False
+        gene_name = None
+        synonyms_list = []
+
+        gene_name_lines = full_gene_names.split(";")
+        for line in gene_name_lines:
+            if not line.strip():
+                continue
+
+            match = self.GENE_NAME_PATTERN.search(line)
+            if match and not name_found:
+                gene_name = match.group(1)
+                gene_name = self.ECO_PATTERN.sub("", gene_name).strip()
+                name_found = True
+            
+            match = self.SYNONYMS_PATTERN.search(line)
+            if match:
+                synonyms = match.group(1)
+                synonyms = self.ECO_PATTERN.sub("", synonyms).strip()
+                synonyms = self.SYNONYMS_COMMA_PATTERN.sub(",", synonyms)
+                synonyms_list = synonyms.split(",")
+        
+        return gene_name, synonyms_list
 
     def get_hgnc_descriptions(self, hgnc_file: str) -> Dict[str, str]:
         descriptions = {}
 
         # Make sure the file is utf8
         hgnc_file = codecs.encode(hgnc_file, "utf-8").decode("utf-8")
-        hgnc_file = re.sub(r'"', '', hgnc_file)
+        hgnc_file = re.sub(r'"', "", hgnc_file)
 
         hgnc_io = self.get_filehandle(hgnc_file)
         csv_reader = csv.DictReader(hgnc_io, delimiter="\t")

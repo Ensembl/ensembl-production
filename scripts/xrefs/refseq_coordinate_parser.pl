@@ -99,7 +99,7 @@ foreach my $analysis_adaptor (@{ $otherf_aa->fetch_all() }) {
 # Not all species have refseq_import data, skip if not found
 if (!defined $logic_name) {
   print STDERR "No data found for RefSeq_import, skipping import\n";;
-  return;
+  exit 1;
 }
 
 # Get otherfeatures chromosomes

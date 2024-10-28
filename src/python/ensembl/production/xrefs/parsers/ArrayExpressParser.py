@@ -14,33 +14,36 @@
 
 """Parser module for ArrayExpress source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import logging
+from typing import Dict, Any, Tuple, List, Optional
+from sqlalchemy import select
+from sqlalchemy.engine import URL
+from ftplib import FTP
 
+from ensembl.core.models import Gene as GeneORM
+
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class ArrayExpressParser(BaseParser):
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id       = args["source_id"]
-        species_id      = args["species_id"]
-        species_name    = args["species_name"]
-        file            = args["file"]
-        dba             = args["dba"]
-        ensembl_release = args["ensembl_release"]
-        xref_dbi        = args["xref_dbi"]
-        verbose         = args.get("verbose", False)
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        species_name = args.get("species_name")
+        xref_file = args.get("file", "")
+        dba = args.get("dba")
+        ensembl_release = args.get("ensembl_release")
+        xref_dbi = args.get("xref_dbi")
+        verbose = args.get("verbose", False)
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id:
+            raise AttributeError("Missing required arguments: source_id and species_id")
 
         # Extract db connection parameters from file name
-        project, db_user, db_host, db_port, db_name, db_pass = (
-            self.extract_params_from_string(
-                file, ["project", "user", "host", "port", "dbname", "pass"]
-            )
+        project, db_user, db_host, db_port, db_name, db_pass = self.extract_params_from_string(
+            xref_file, ["project", "user", "host", "port", "dbname", "pass"]
         )
-        if not db_user:
-            db_user = "ensro"
-        if not db_port:
-            db_port = "3306"
+        db_user = db_user or "ensro"
+        db_port = db_port or "3306"
 
         # Get the species name(s)
         species_id_to_names = self.species_id_to_names(xref_dbi)
@@ -49,67 +52,31 @@ class ArrayExpressParser(BaseParser):
 
         if not species_id_to_names.get(species_id):
             return 0, "Skipped. Could not find species ID to name mapping"
-        names = species_id_to_names[species_id]
 
         # Look up the species in ftp server and check if active
-        species_lookup = self._get_species()
-        active = self._is_active(species_lookup, names, verbose)
-        if not active:
+        species_lookup = self.get_species_from_ftp()
+        if not self.is_arryaexpress_active(species_lookup, species_id_to_names[species_id], verbose):
             return 0, "Skipped. ArrayExpress source not active for species"
 
         species_name = species_id_to_names[species_id][0]
 
         # Connect to the appropriate arrayexpress db
-        if db_host:
-            arrayexpress_db_url = URL.create(
-                "mysql", db_user, db_pass, db_host, db_port, db_name
-            )
-        elif project and project == "ensembl":
-            if verbose:
-                logging.info("Looking for db in mysql-ens-sta-1")
-            registry = "ensro@mysql-ens-sta-1:4519"
-            arrayexpress_db_url = self.get_db_from_registry(
-                species_name, "core", ensembl_release, registry
-            )
-        elif project and project == "ensemblgenomes":
-            if verbose:
-                logging.info(
-                    "Looking for db in mysql-eg-staging-1 and mysql-eg-staging-2"
-                )
-            registry = "ensro@mysql-eg-staging-1.ebi.ac.uk:4160"
-            arrayexpress_db_url = self.get_db_from_registry(
-                species_name, "core", ensembl_release, registry
-            )
-
-            if not arrayexpress_db_url:
-                registry = "ensro@mysql-eg-staging-2.ebi.ac.uk:4275"
-                arrayexpress_db_url = self.get_db_from_registry(
-                    species_name, "core", ensembl_release, registry
-                )
-        elif dba:
-            arrayexpress_db_url = dba
-        else:
-            arrayexpress_db_url = None
+        arrayexpress_db_url = self.get_arrayexpress_db_url(
+            project, db_user, db_pass, db_host, db_port, db_name, species_name, ensembl_release, dba, verbose
+        )
 
         if not arrayexpress_db_url:
-            raise IOError(
-                f"Could not find ArrayExpress DB. Missing or unsupported project value. Supported values: ensembl, ensemblgenomes."
+            raise AttributeError(
+                "Could not find ArrayExpress DB. Missing or unsupported project value. Supported values: ensembl, ensemblgenomes."
             )
-        else:
-            if verbose:
-                logging.info(f"Found ArrayExpress DB: {arrayexpress_db_url}")
 
         xref_count = 0
 
-        db_engine = self.get_db_engine(arrayexpress_db_url)
-        with db_engine.connect() as arrayexpress_dbi:
-            query = select(GeneORM.stable_id).where(
-                GeneORM.biotype != "LRG_gene", GeneORM.is_current == 1
-            )
-            result = arrayexpress_dbi.execute(query).mappings().all()
+        # Get data from arrayexpress db
+        arrayexpress_data = self.get_arrayexpress_data(arrayexpress_db_url)
 
         # Add direct xref for every current gene found
-        for row in result:
+        for row in arrayexpress_data:
             xref_id = self.add_xref(
                 {
                     "accession": row.stable_id,
@@ -121,41 +88,64 @@ class ArrayExpressParser(BaseParser):
                 xref_dbi,
             )
             self.add_direct_xref(xref_id, row.stable_id, "gene", "", xref_dbi)
-
             xref_count += 1
 
         result_message = f"Added {xref_count} DIRECT xrefs"
-
         return 0, result_message
 
-    def _get_species(self) -> Dict[str, int]:
+    def get_species_from_ftp(self) -> Dict[str, bool]:
         ftp_server = "ftp.ebi.ac.uk"
         ftp_dir = "pub/databases/microarray/data/atlas/bioentity_properties/ensembl"
 
         species_lookup = {}
 
-        ftp = FTP(ftp_server)
-        ftp.login("anonymous", "-anonymous@")
-        ftp.cwd(ftp_dir)
-        remote_files = ftp.nlst()
-        ftp.close()
+        with FTP(ftp_server) as ftp:
+            ftp.login("anonymous", "-anonymous@")
+            ftp.cwd(ftp_dir)
+            remote_files = ftp.nlst()
 
         for file in remote_files:
             species = file.split(".")[0]
-            species_lookup[species] = 1
+            species_lookup[species] = True
 
         return species_lookup
 
-    def _is_active(self, species_lookup: Dict[str, int], names: List[str], verbose: bool) -> bool:
-        # Loop through the names and aliases first. If we get a hit then great
-        active = False
+    def is_arryaexpress_active(self, species_lookup: Dict[str, bool], names: List[str], verbose: bool) -> bool:
         for name in names:
             if species_lookup.get(name):
                 if verbose:
-                    logging.info(
-                        f"Found ArrayExpress has declared the name {name}. This was an alias"
-                    )
-                active = True
-                break
+                    logging.info(f"Found ArrayExpress has declared the name {name}. This was an alias")
+                return True
+        return False
 
-        return active
+    def get_arrayexpress_db_url(self, project: str, db_user: str, db_pass: str, db_host: str, db_port: str, db_name: str, species_name: str, ensembl_release: str, dba: str, verbose: bool) -> Optional[URL]:
+        if db_host:
+            return URL.create("mysql", db_user, db_pass, db_host, db_port, db_name)
+        elif project == "ensembl":
+            if verbose:
+                logging.info("Looking for db in mysql-ens-sta-1")
+            registry = "ensro@mysql-ens-sta-1:4519"
+            return self.get_db_from_registry(species_name, "core", ensembl_release, registry)
+        elif project == "ensemblgenomes":
+            if verbose:
+                logging.info("Looking for db in mysql-eg-staging-1 and mysql-eg-staging-2")
+            registry = "ensro@mysql-eg-staging-1.ebi.ac.uk:4160"
+            db_url = self.get_db_from_registry(species_name, "core", ensembl_release, registry)
+            if not db_url:
+                registry = "ensro@mysql-eg-staging-2.ebi.ac.uk:4275"
+                return self.get_db_from_registry(species_name, "core", ensembl_release, registry)
+            return db_url
+        elif dba:
+            return dba
+
+        return None
+
+    def get_arrayexpress_data(self, arrayexpress_db_url: URL) -> List[Dict[str, Any]]:
+        db_engine = self.get_db_engine(arrayexpress_db_url)
+        with db_engine.connect() as arrayexpress_dbi:
+            query = select(GeneORM.stable_id).where(
+                GeneORM.biotype != "LRG_gene", GeneORM.is_current == 1
+            )
+            result = arrayexpress_dbi.execute(query).mappings().all()
+        
+        return result

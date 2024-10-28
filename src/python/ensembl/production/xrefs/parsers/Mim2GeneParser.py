@@ -14,27 +14,57 @@
 
 """Parser module for MIM to Gene source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import csv
+import re
+import logging
+from typing import Any, Dict, Tuple
+from sqlalchemy.engine import Connection
 
-EXPECTED_NUMBER_OF_COLUMNS = 6
-
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class Mim2GeneParser(BaseParser):
+    EXPECTED_NUMBER_OF_COLUMNS = 6
+
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        general_source_id = args["source_id"]
-        species_id        = args["species_id"]
-        file              = args["file"]
-        xref_dbi          = args["xref_dbi"]
-        verbose           = args.get("verbose", False)
+        general_source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
+        verbose = args.get("verbose", False)
 
-        if not general_source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not general_source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
+        counters = {
+            "all_entries": 0,
+            "dependent_on_entrez": 0,
+            "missed_master": 0,
+            "missed_omim": 0,
+        }
+
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError(f"Mim2Gene file is empty")
+            file_io.seek(0)
+
+            csv_reader = csv.reader(file_io, delimiter="\t")
+
+            self.process_lines(csv_reader, xref_file, species_id, counters, verbose, xref_dbi) 
+
+        result_message = (
+            f"Processed {counters['all_entries']} entries. Out of those\n"
+            f"\t{counters['missed_omim']} had missing OMIM entries,\n"
+            f"\t{counters['dependent_on_entrez']} were dependent EntrezGene xrefs,\n"
+            f"\t{counters['missed_master']} had missing master entries."
+        )
+        # result_message = f"all={counters['all_entries']} -- missed_omim={counters['missed_omim']} -- dependent_on_entrez={counters['dependent_on_entrez']} -- missed_master={counters['missed_master']}"
+
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.reader, xref_file:str, species_id: int, counters: Dict[str, int], verbose: bool, xref_dbi: Connection) -> None:
         # Get needed source IDs
         mim_gene_source_id = self.get_source_id_for_source_name("MIM_GENE", xref_dbi)
-        mim_morbid_source_id = self.get_source_id_for_source_name(
-            "MIM_MORBID", xref_dbi
-        )
+        mim_morbid_source_id = self.get_source_id_for_source_name("MIM_MORBID", xref_dbi)
         entrez_source_id = self.get_source_id_for_source_name("EntrezGene", xref_dbi)
 
         # This will be used to prevent insertion of duplicates
@@ -44,16 +74,6 @@ class Mim2GeneParser(BaseParser):
         mim_gene = self.get_valid_codes("MIM_GENE", species_id, xref_dbi)
         mim_morbid = self.get_valid_codes("MIM_MORBID", species_id, xref_dbi)
         entrez = self.get_valid_codes("EntrezGene", species_id, xref_dbi)
-
-        counters = {
-            "all_entries": 0,
-            "dependent_on_entrez": 0,
-            "missed_master": 0,
-            "missed_omim": 0,
-        }
-
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.reader(file_io, delimiter="\t")
 
         # Read lines
         for line in csv_reader:
@@ -67,34 +87,21 @@ class Mim2GeneParser(BaseParser):
                 if is_comment:
                     patterns = [
                         r"\A[#]?\s*MIM[ ]number",
-                        "GeneID",
-                        "type",
-                        "Source",
-                        "MedGenCUI",
-                        "Comment",
+                        r"^GeneID$",
+                        r"^type$",
+                        r"^Source$",
+                        r"^MedGenCUI$",
+                        r"^Comment$",
                     ]
-                    if len(
-                        line
-                    ) == EXPECTED_NUMBER_OF_COLUMNS and not self.is_file_header_valid(
-                        EXPECTED_NUMBER_OF_COLUMNS, patterns, line, True
-                    ):
-                        raise IOError(
-                            f"Malformed or unexpected header in Mim2Gene file {file}"
-                        )
+                    if not self.is_file_header_valid(self.EXPECTED_NUMBER_OF_COLUMNS, patterns, line, True):
+                        raise ValueError(f"Malformed or unexpected header in Mim2Gene file {xref_file}")
                     continue
 
-            if len(line) != EXPECTED_NUMBER_OF_COLUMNS:
-                raise IOError(
-                    f"Line {csv_reader.line_num} of input file {file} has an incorrect number of columns"
-                )
+            if len(line) != self.EXPECTED_NUMBER_OF_COLUMNS:
+                raise ValueError(f"Line {csv_reader.line_num} of input file has an incorrect number of columns")
 
             fields = [re.sub(r"\s+\Z", "", x) for x in line]
-            omim_acc = fields[0]
-            entrez_id = fields[1]
-            type = fields[2]
-            source = fields[3]
-            medgen = fields[4]
-            comment = fields[5]
+            omim_acc, entrez_id, type = fields[:3]
 
             counters["all_entries"] += 1
 
@@ -109,15 +116,8 @@ class Mim2GeneParser(BaseParser):
                 continue
 
             # Check if type is known
-            if verbose and type not in [
-                "gene",
-                "gene/phenotype",
-                "predominantly phenotypes",
-                "phenotype",
-            ]:
-                logging.warn(
-                    f"Unknown type {type} for MIM Number {omim_acc} ({file}:{csv_reader.line_num})"
-                )
+            if verbose and type not in ["gene", "gene/phenotype", "predominantly phenotypes", "phenotype"]:
+                logging.warning(f"Unknown type {type} for MIM Number {omim_acc} ({xref_file}:{csv_reader.line_num})")
 
             # With all the checks taken care of, insert the mappings. We check
             # both MIM_GENE and MIM_MORBID every time because some MIM entries
@@ -145,26 +145,11 @@ class Mim2GeneParser(BaseParser):
                         xref_dbi,
                     )
 
-        file_io.close()
-
-        result_message = (
-            "Processed %d entries. Out of those\n" % counters["all_entries"]
-        )
-        result_message += "\t%d had missing OMIM entries,\n" % counters["missed_omim"]
-        result_message += (
-            "\t%d were dependent EntrezGene xrefs,\n" % counters["dependent_on_entrez"]
-        )
-        result_message += "\t%d had missing master entries." % counters["missed_master"]
-
-        return 0, result_message
-
     def process_xref_entry(self, args: Dict[str, Any], dbi: Connection) -> int:
         count = 0
-
         for ent_id in args["entrez_xrefs"]:
             self.add_dependent_xref_maponly(
                 args["mim_xref_id"], args["mim_source_id"], ent_id, None, dbi, True
             )
             count += 1
-
         return count

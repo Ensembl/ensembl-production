@@ -14,59 +14,68 @@
 
 """Parser module for MGI source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import csv
+from typing import Dict, Any, Tuple, List
+from sqlalchemy.engine import Connection
 
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class MGIParser(BaseParser):
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
-        syn_hash = self.get_ext_synonyms("MGI", xref_dbi)
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError("MGI file is empty")
+            file_io.seek(0)
 
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.reader(file_io, delimiter="\t", strict=True)
+            csv_reader = csv.reader(file_io, delimiter="\t", strict=True)
 
+            syn_hash = self.get_ext_synonyms("MGI", xref_dbi)
+            count, syn_count = self.process_lines(csv_reader, source_id, species_id, xref_dbi, syn_hash)
+
+        result_message = f"{count} direct MGI xrefs added\n{syn_count} synonyms added"
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.reader, source_id: int, species_id: int, xref_dbi: Connection, syn_hash: Dict[str, List[str]]) -> Tuple[int, int]:
         count = 0
         syn_count = 0
 
-        # Read lines
         for line in csv_reader:
             if not line:
                 continue
 
             accession = line[0]
+            label = line[1]
+            description = line[2]
             ensembl_id = line[5]
 
             xref_id = self.add_xref(
                 {
                     "accession": accession,
                     "version": 0,
-                    "label": line[1],
-                    "description": line[2],
+                    "label": label,
+                    "description": description,
                     "source_id": source_id,
                     "species_id": species_id,
                     "info_type": "DIRECT",
                 },
                 xref_dbi,
             )
-            self.add_direct_xref(xref_id, ensembl_id, "Gene", "", xref_dbi)
+            self.add_direct_xref(xref_id, ensembl_id, "gene", "", xref_dbi)
 
-            if syn_hash.get(accession):
-                for synonym in syn_hash[accession]:
+            synonyms = syn_hash.get(accession)
+            if synonyms:
+                for synonym in synonyms:
                     self.add_synonym(xref_id, synonym, xref_dbi)
                     syn_count += 1
 
             count += 1
 
-        file_io.close()
-
-        result_message = f"{count} direct MGI xrefs added\n"
-        result_message += f"{syn_count} synonyms added"
-
-        return 0, result_message
+        return count, syn_count

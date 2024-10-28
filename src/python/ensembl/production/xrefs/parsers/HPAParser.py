@@ -15,60 +15,64 @@
 """Parser module for HPA source."""
 
 import csv
+from typing import Dict, Any, Tuple
+from sqlalchemy.engine import Connection
 
 from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
-EXPECTED_NUMBER_OF_COLUMNS = 4
-
-
 class HPAParser(BaseParser):
+    EXPECTED_NUMBER_OF_COLUMNS = 4
+
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.reader(file_io, delimiter=",", strict=True)
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError("HPA file is empty")
+            file_io.seek(0)
 
-        # Check if header is valid
-        header = next(csv_reader)
-        patterns = ["antibody", "antibody_id", "ensembl_peptide_id", "link"]
-        if not self.is_file_header_valid(EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
-            raise IOError(f"Malformed or unexpected header in HPA file {file}")
+            csv_reader = csv.reader(file_io, delimiter=",", strict=True)
+            header = next(csv_reader)
+            patterns = [r"^antibody$", r"^antibody_id$", r"^ensembl_peptide_id$", r"^link$"]
+            if not self.is_file_header_valid(self.EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
+                raise ValueError(f"Malformed or unexpected header in HPA file {xref_file}")
 
+            parsed_count = self.process_lines(csv_reader, source_id, species_id, xref_dbi)
+
+        result_message = f"{parsed_count} direct xrefs successfully parsed"
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.reader, source_id: int, species_id: int, xref_dbi: Connection) -> int:
         parsed_count = 0
 
-        # Read lines
         for line in csv_reader:
             if not line:
                 continue
 
-            antibody_name = line[0]
-            antibody_id = line[1]
-            ensembl_id = line[2]
+            if len(line) < self.EXPECTED_NUMBER_OF_COLUMNS:
+                raise ValueError(f"Line {csv_reader.line_num} of input file has an incorrect number of columns")
 
-            self.add_to_direct_xrefs(
+            antibody_name, antibody_id, ensembl_id = line[:3]
+
+            xref_id = self.add_xref(
                 {
                     "accession": antibody_id,
                     "version": "1",
                     "label": antibody_name,
-                    "stable_id": ensembl_id,
-                    "ensembl_type": "translation",
                     "source_id": source_id,
                     "species_id": species_id,
                     "info_type": "DIRECT",
                 },
                 xref_dbi,
             )
+            self.add_direct_xref(xref_id, ensembl_id, "translation", "", xref_dbi)
 
             parsed_count += 1
 
-        file_io.close()
-
-        result_message = f"{parsed_count} direct xrefs succesfully parsed"
-
-        return 0, result_message
+        return parsed_count

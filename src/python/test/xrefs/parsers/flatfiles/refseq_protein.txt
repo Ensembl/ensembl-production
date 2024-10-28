@@ -1,0 +1,291 @@
+LOCUS       NP_001355183             382 aa            linear   PRI 26-JUN-2020
+DEFINITION  killer cell immunoglobulin-like receptor 3DS1-like precursor [Homo
+            sapiens].
+ACCESSION   NP_001355183 XP_024308382
+VERSION     NP_001355183.1
+DBSOURCE    REFSEQ: accession NM_001368254.1
+KEYWORDS    RefSeq; RefSeq Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..382
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="19"
+                     /map="19"
+     CDS             1..382
+                     /gene="LOC112268355"
+                     /coded_by="NM_001368254.1:47..1195"
+                     /db_xref="GeneID:112268355"
+ORIGIN      
+        1 mllmvvsmac vglflvqrag phmggqdkpf lsawpsavvp rgghvtlrch yrhrfnnfml
+       61 ykedrihvpi fhgrifqegf nmspvttaha gnytcrgshp hsptgwsaps npmvimvtgn
+      121 hrwcsnkkkc ccngpracre qk
+//
+LOCUS       NP_001337906              44 aa            linear   PRI 01-JUL-2020
+DEFINITION  putative keratin-associated protein 20-4 [Homo sapiens].
+ACCESSION   NP_001337906
+VERSION     NP_001337906.1
+DBSOURCE    REFSEQ: accession NM_001350977.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..44
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="21"
+                     /map="21q22.11"
+     CDS             1..44
+                     /gene="KRTAP20-4"
+                     /gene_synonym="KAP20.4"
+                     /coded_by="NM_001350977.1:32..166"
+                     /db_xref="CCDS:CCDS86982.1"
+                     /db_xref="GeneID:100151643"
+                     /db_xref="HGNC:HGNC:34002"
+ORIGIN      
+        1 msyyshlsgg lgcglavavt mgrtvavaey grcrhgchss ysar
+//
+LOCUS       XP_001243796             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 30 [Homo
+            sapiens].
+ACCESSION   XP_001243796 XP_001130476 XP_003403824
+VERSION     XP_001243796.1
+DBSOURCE    REFSEQ: accession NM_001256867.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L30"
+                     /coded_by="NM_001256867.1:1..1593"
+                     /db_xref="CCDS:CCDS59471.1"
+                     /db_xref="GeneID:728419"
+                     /db_xref="HGNC:HGNC:44458"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//
+LOCUS       NP_001229257             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 26 [Homo
+            sapiens].
+ACCESSION   NP_001229257 XP_001130428 XP_001721948
+VERSION     NP_001229257.1
+DBSOURCE    REFSEQ: accession NP_001229259.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L26"
+                     /coded_by="NP_001229259.1:1..1593"
+                     /db_xref="CCDS:CCDS59466.1"
+                     /db_xref="GeneID:728379"
+                     /db_xref="HGNC:HGNC:44454"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//
+LOCUS       XP_001243802             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin carboxyl-terminal hydrolase 17-like protein 1 [Homo
+            sapiens].
+ACCESSION   XP_001243802 XP_006725126 XP_011544822
+VERSION     XP_001243802.1
+DBSOURCE    REFSEQ: accession NM_001256873.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="8"
+                     /map="8p23.1"
+     CDS             1..530
+                     /gene="USP17L1"
+                     /gene_synonym="USP17L1P"
+                     /coded_by="NM_001256873.1:1..1593"
+                     /db_xref="CCDS:CCDS78298.1"
+                     /db_xref="GeneID:401447"
+                     /db_xref="HGNC:HGNC:37182"
+ORIGIN      
+        1 mgddslylgg ewqfnhfskl tssrpdaafa eiqrtslpek splssetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy enaslqclty tlplanymls rehsqtcqrp
+      121 kccmlctmqa hitwalhspg hviqpsqala agfhrgkqed vheflmftvd amkkaclpgh
+      181 kqvdhhckdt tlihqifggc wrsqikclhc hgisdtfdpy ldialdiqaa qsvkqaleql
+      241 vkpeelngen ayhcglclqr apasntltlh tsakvlilvl krfsdvagnk laknvqypec
+      301 ldmqpymsqq ntgplvyvly avlvhagwsc hdghyfsyvk aqevqwykmd daevtvcsii
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rrakqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvgkvegtlp pnalvihqsk ykcgmknhhp
+      481 eqqssllnls sttrtdqesm ntgtlaslqg rtrrakgknk hskrallvcq
+//
+LOCUS       XP_001229255             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 25 [Homo
+            sapiens].
+ACCESSION   XP_001229255 XP_001130417
+VERSION     XP_001229255.1
+DBSOURCE    REFSEQ: accession NM_001242326.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L25"
+                     /coded_by="NM_001242326.1:1..1593"
+                     /db_xref="CCDS:CCDS59465.1"
+                     /db_xref="GeneID:728373"
+                     /db_xref="HGNC:HGNC:44452"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//
+LOCUS       NP_001229261             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 29 [Homo
+            sapiens].
+ACCESSION   NP_001229261 XP_001130464
+VERSION     NP_001229261.1
+DBSOURCE    REFSEQ: accession NM_001242332.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L29"
+                     /coded_by="NM_001242332.1:1..1593"
+                     /db_xref="CCDS:CCDS59470.1"
+                     /db_xref="GeneID:728405"
+                     /db_xref="HGNC:HGNC:44457"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//
+LOCUS       NP_001229260             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 28 [Homo
+            sapiens].
+ACCESSION   NP_001229260 XP_001130452
+VERSION     NP_001229260.1
+DBSOURCE    REFSEQ: accession NM_001242331.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Bos taurus (cow)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Bos taurus"
+                     /db_xref="taxon:9913"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L28"
+                     /coded_by="NM_001242331.1:1..1593"
+                     /db_xref="CCDS:CCDS59469.1"
+                     /db_xref="GeneID:728400"
+                     /db_xref="HGNC:HGNC:44456"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//
+LOCUS       NP_001229259             530 aa            linear   PRI 01-JUL-2020
+DEFINITION  ubiquitin specific peptidase 17 like family member 27 [Homo
+            sapiens].
+ACCESSION   NP_001229259 XP_001130444
+VERSION     NP_001229259.1
+DBSOURCE    REFSEQ: accession NM_001242328.1
+KEYWORDS    RefSeq; MANE Select.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..530
+                     /organism="Homo sapiens"
+                     /db_xref="taxon:9606"
+                     /chromosome="4"
+                     /map="4p16.1"
+     CDS             1..530
+                     /gene="USP17L27"
+                     /coded_by="NM_001242328.1:1..1593"
+                     /db_xref="CCDS:CCDS59468.1"
+                     /db_xref="GeneID:728393"
+                     /db_xref="HGNC:HGNC:44455"
+ORIGIN      
+        1 meddslylrg ewqfnhfskl tssrpdaafa eiqrtslpek splscetrvd lcddlapvar
+       61 qlapreklpl ssrrpaavga glqnmgntcy vnaslqclty tpplanymls rehsqtchrh
+      121 kgcmlctmqa hitralhnpg hviqpsqala agfhrgkqed aheflmftvd amkkaclpgh
+      181 kqvdhhskdt tlihqifggy wrsqikclhc hgisdtfdpy ldialdiqaa qsvqqaleql
+      241 vkpeelngen ayhcgvclqr apasktltlh tsakvlilvl krfsdvtgnk iaknvqypec
+      301 ldmqpymsqp ntgplvyvly avlvhagwsc hnghyfsyvk aqegqwykmd daevtassit
+      361 svlsqqayvl fyiqksewer hsesvsrgre pralgaedtd rratqgelkr dhpclqapel
+      421 dehlveratq estldhwkfl qeqnktkpef nvrkvegtlp pdvlvihqsk ykcgmknhhp
+      481 eqqssllnls sstpthqesm ntgtlaslrg rarrskgknk hskrallvcq
+//

@@ -14,47 +14,54 @@
 
 """Parser module for JGI source."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
-
+import re
 from Bio import SeqIO
+from typing import Dict, Any, Tuple
 
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class JGI_ProteinParser(BaseParser):
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
         xrefs = []
 
-        file_io = self.get_filehandle(file)
-        fasta_sequences = SeqIO.parse(file_io, "fasta")
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError(f"JGIProtein file is empty")
+            file_io.seek(0)
 
-        for fasta in fasta_sequences:
-            accession = fasta.id
-            sequence = fasta.seq
+            fasta_sequences = SeqIO.parse(file_io, "fasta")
 
-            # Extract accession value
-            accession = re.search(r"^ci0100(\w+?)$", accession).group(1)
+            for fasta in fasta_sequences:
+                accession = fasta.id
+                sequence = str(fasta.seq)
 
-            # Build an xref object and store it
-            xref = {
-                "ACCESSION": accession,
-                "SEQUENCE": sequence,
-                "SOURCE_ID": source_id,
-                "SPECIES_ID": species_id,
-                "SEQUENCE_TYPE": "peptide",
-            }
-            xrefs.append(xref)
+                # Extract accession value
+                match = re.search(r"^ci0100(\w+?)$", accession)
+                if not match:
+                    continue
+                accession = match.group(1)
 
-        file_io.close()
+                # Build an xref object and store it
+                xref = {
+                    "ACCESSION": accession,
+                    "SEQUENCE": sequence,
+                    "SOURCE_ID": source_id,
+                    "SPECIES_ID": species_id,
+                    "SEQUENCE_TYPE": "peptide",
+                    "INFO_TYPE": "SEQUENCE_MATCH",
+                }
+                xrefs.append(xref)
 
         self.upload_xref_object_graphs(xrefs, xref_dbi)
 
-        result_message = "%d JGI_ xrefs succesfully parsed" % len(xrefs)
+        result_message = f"{len(xrefs)} JGI_ xrefs successfully parsed"
 
         return 0, result_message

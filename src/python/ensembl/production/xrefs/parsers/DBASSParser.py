@@ -14,101 +14,84 @@
 
 """Parser module for DBASS sources."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import csv
+import re
+from typing import Any, Dict, Optional, Tuple
+from sqlalchemy.engine import Connection
 
-EXPECTED_NUMBER_OF_COLUMNS = 23
-
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class DBASSParser(BaseParser):
+    EXPECTED_NUMBER_OF_COLUMNS = 23
+    SLASH_PATTERN = re.compile(r"(.*)\s?/\s?(.*)", re.IGNORECASE | re.DOTALL)
+    PARENS_PATTERN = re.compile(r"(.*)\s?\((.*)\)", re.IGNORECASE | re.DOTALL)
+
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args.get("source_id")
+        source_id = args.get("source_id")
         species_id = args.get("species_id")
-        xref_file  = args.get("file")
-        xref_dbi   = args.get("xref_dbi")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
 
         if not source_id or not species_id or not xref_file:
-            raise AttributeError("Need to pass source_id, species_id and file")
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
-        file_io = self.get_filehandle(xref_file)
-        csv_reader = csv.reader(file_io)
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError(f"DBASS file is empty")
+            file_io.seek(0)
 
-        # Check if header is valid
-        header = next(csv_reader)
-        patterns = [r"^id$", r"^genesymbol$", None, r"^ensemblreference$"]
-        if not self.is_file_header_valid(EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
-            raise IOError(f"Malformed or unexpected header in DBASS file {xref_file}")
+            csv_reader = csv.reader(file_io)
+            header = next(csv_reader)
+            patterns = [r"^id$", r"^genesymbol$", None, r"^ensemblreference$"]
+            if not self.is_file_header_valid(self.EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
+                raise ValueError(f"Malformed or unexpected header in DBASS file {xref_file}")
 
+            processed_count, unmapped_count = self.process_lines(csv_reader, source_id, species_id, xref_dbi)
+
+        result_message = f"{processed_count} direct xrefs successfully processed\n"
+        result_message += f"Skipped {unmapped_count} unmapped xrefs"
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.reader, source_id: int, species_id: int, xref_dbi: Connection) -> Tuple[int, int]:
         processed_count = 0
         unmapped_count = 0
 
-        # Read lines
         for line in csv_reader:
             if not line:
                 continue
 
-            if len(line) < EXPECTED_NUMBER_OF_COLUMNS:
-                line_number = 2 + processed_count + unmapped_count
-                raise IOError(
-                    f"Line {line_number} of input file {xref_file} has an incorrect number of columns"
-                )
+            if len(line) < self.EXPECTED_NUMBER_OF_COLUMNS:
+                raise ValueError(f"Line {csv_reader.line_num} of input file has an incorrect number of columns")
 
-            dbass_gene_id = line[0]
-            dbass_gene_name = line[1]
-            dbass_full_name = line[2]
-            ensembl_id = line[3]
+            dbass_gene_id, dbass_gene_name, dbass_full_name, ensembl_id = line[:4]
 
-            # Do not attempt to create unmapped xrefs. Checking truthiness is good
-            # enough here because the only non-empty string evaluating as false is
-            # not a valid Ensembl stable ID.
-            if ensembl_id:
-                # DBASS files list synonyms in two ways: either "FOO (BAR)" (with or
-                # without space) or "FOO/BAR". Both forms are relevant to us.
-                match = re.search(
-                    r"(.*)\s?/\s?(.*)", dbass_gene_name, re.IGNORECASE | re.DOTALL
-                )
-                if match:
-                    first_gene_name = match.group(1)
-                    second_gene_name = match.group(2)
-                else:
-                    match = re.search(
-                        r"(.*)\s?\((.*)\)", dbass_gene_name, re.IGNORECASE | re.DOTALL
-                    )
-                    if match:
-                        first_gene_name = match.group(1)
-                        second_gene_name = match.group(2)
-                    else:
-                        first_gene_name = dbass_gene_name
-                        second_gene_name = None
-
-                label = first_gene_name
-                synonym = second_gene_name
-                ensembl_type = "gene"
-                version = "1"
-
-                xref_id = self.add_xref(
-                    {
-                        "accession": dbass_gene_id,
-                        "version": version,
-                        "label": label,
-                        "source_id": source_id,
-                        "species_id": species_id,
-                        "info_type": "DIRECT",
-                    },
-                    xref_dbi,
-                )
-
-                if synonym:
-                    self.add_synonym(xref_id, synonym, xref_dbi)
-
-                self.add_direct_xref(xref_id, ensembl_id, ensembl_type, "", xref_dbi)
-
-                processed_count += 1
-            else:
+            if not ensembl_id.strip():
                 unmapped_count += 1
+                continue
 
-        file_io.close()
+            first_gene_name, second_gene_name = self.extract_gene_names(dbass_gene_name)
+            xref_id = self.add_xref(
+                {
+                    "accession": dbass_gene_id,
+                    "version": "1",
+                    "label": first_gene_name,
+                    "source_id": source_id,
+                    "species_id": species_id,
+                    "info_type": "DIRECT",
+                },
+                xref_dbi,
+            )
+            self.add_direct_xref(xref_id, ensembl_id, "gene", "", xref_dbi)
 
-        result_message = f"{processed_count} direct xrefs successfully processed\n"
-        result_message += f"Skipped {unmapped_count} unmapped xrefs"
+            if second_gene_name:
+                self.add_synonym(xref_id, second_gene_name, xref_dbi)
 
-        return 0, result_message
+            processed_count += 1
+
+        return processed_count, unmapped_count
+
+    def extract_gene_names(self, dbass_gene_name: str) -> Tuple[Optional[str], Optional[str]]:
+        match = self.SLASH_PATTERN.search(dbass_gene_name) or self.PARENS_PATTERN.search(dbass_gene_name)
+        if match:
+            return match.groups()
+        return dbass_gene_name, None

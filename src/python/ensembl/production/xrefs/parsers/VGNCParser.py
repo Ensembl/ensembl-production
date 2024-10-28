@@ -14,18 +14,51 @@
 
 """Parser module for VGNC source (uses HGNC Parser as parent)."""
 
-from ensembl.production.xrefs.parsers.HGNCParser import *
+import csv
+from typing import Dict, Any, Tuple
+from sqlalchemy.engine import Connection
 
+from ensembl.production.xrefs.parsers.HGNCParser import HGNCParser
 
 class VGNCParser(HGNCParser):
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
+
+        # Open the VGNC file
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError(f"VGNC file is empty")
+            file_io.seek(0)
+
+            csv_reader = csv.DictReader(file_io, delimiter="\t")
+
+            # Check if header has required columns
+            required_columns = [
+                "taxon_id",
+                "ensembl_gene_id",
+                "vgnc_id",
+                "symbol",
+                "name",
+                "alias_symbol",
+                "prev_symbol",
+            ]
+            if not set(required_columns).issubset(set(csv_reader.fieldnames)):
+                raise ValueError(f"Can't find required columns in VGNC file '{xref_file}'")
+
+            count, syn_count = self.process_lines(csv_reader, source_id, species_id, xref_dbi)
+
+        result_message = f"Loaded a total of {count} VGNC xrefs and added {syn_count} synonyms"
+
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.DictReader, source_id: int, species_id: int, xref_dbi: Connection) -> Tuple[int, int]:
+        count, syn_count = 0, 0
 
         # Create a hash of all valid taxon_ids for this species
         species_id_to_tax = self.species_id_to_taxonomy(xref_dbi)
@@ -34,46 +67,30 @@ class VGNCParser(HGNCParser):
         tax_ids = species_id_to_tax[species_id]
         tax_to_species_id = {tax_id: species_id for tax_id in tax_ids}
 
-        # Open the vgnc file
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.DictReader(file_io, delimiter="\t")
-
-        # Check if header has required columns
-        required_columns = [
-            "taxon_id",
-            "ensembl_gene_id",
-            "vgnc_id",
-            "symbol",
-            "name",
-            "alias_symbol",
-            "prev_symbol",
-        ]
-        if not set(required_columns).issubset(set(csv_reader.fieldnames)):
-            raise IOError(f"Can't find required columns in VGNC file '{file}'")
-
         # Read lines
-        count = 0
         for line in csv_reader:
+            tax_id = int(line["taxon_id"])
             # Skip data for other species
-            if not tax_to_species_id.get(line["taxon_id"]):
+            if not tax_to_species_id.get(tax_id):
                 continue
 
-            # Add ensembl direct xref
+            # Add Ensembl direct xref
             if line["ensembl_gene_id"]:
-                self.add_to_direct_xrefs(
+                xref_id = self.add_xref(
                     {
-                        "stable_id": line["ensembl_gene_id"],
-                        "ensembl_type": "gene",
                         "accession": line["vgnc_id"],
                         "label": line["symbol"],
                         "description": line["name"],
                         "source_id": source_id,
                         "species_id": species_id,
+                        "info_type": "DIRECT",
                     },
                     xref_dbi,
                 )
-
-                self.add_synonyms_for_hgnc(
+                self.add_direct_xref(xref_id, line["ensembl_gene_id"], "gene", "", xref_dbi)
+                
+                # Add synonyms
+                syn_count += self.add_synonyms_for_hgnc(
                     {
                         "source_id": source_id,
                         "name": line["vgnc_id"],
@@ -85,9 +102,5 @@ class VGNCParser(HGNCParser):
                 )
 
                 count += 1
-
-        file_io.close()
-
-        result_message = f"Loaded a total of {count} VGNC xrefs"
-
-        return 0, result_message
+        
+        return count, syn_count

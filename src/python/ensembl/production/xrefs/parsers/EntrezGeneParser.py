@@ -14,70 +14,84 @@
 
 """Parser module for EntrezGene and WikiGene sources."""
 
-from ensembl.production.xrefs.parsers.BaseParser import *
+import csv
+import logging
+import re
+from typing import Any, Dict, Tuple
+from sqlalchemy.engine import Connection
 
-EXPECTED_NUMBER_OF_COLUMNS = 16
-
+from ensembl.production.xrefs.parsers.BaseParser import BaseParser
 
 class EntrezGeneParser(BaseParser):
+    EXPECTED_NUMBER_OF_COLUMNS = 16
+    SYNONYM_SPLITTER = re.compile(r"\|")
+
     def run(self, args: Dict[str, Any]) -> Tuple[int, str]:
-        source_id  = args["source_id"]
-        species_id = args["species_id"]
-        file       = args["file"]
-        xref_dbi   = args["xref_dbi"]
-        verbose    = args.get("verbose", False)
+        source_id = args.get("source_id")
+        species_id = args.get("species_id")
+        xref_file = args.get("file")
+        xref_dbi = args.get("xref_dbi")
+        verbose = args.get("verbose", False)
 
-        if not source_id or not species_id or not file:
-            raise AttributeError("Need to pass source_id, species_id and file as pairs")
+        if not source_id or not species_id or not xref_file:
+            raise AttributeError("Missing required arguments: source_id, species_id, and file")
 
-        wiki_source_id = self.get_source_id_for_source_name("WikiGene", xref_dbi)
-        if verbose:
-            logging.info(f"Wiki source id = {wiki_source_id}")
+        with self.get_filehandle(xref_file) as file_io:
+            if file_io.read(1) == '':
+                raise IOError("EntrezGene file is empty")
+            file_io.seek(0)
 
-        file_io = self.get_filehandle(file)
-        csv_reader = csv.reader(file_io, delimiter="\t")
+            csv_reader = csv.reader(file_io, delimiter="\t")
+            header = next(csv_reader)
+            patterns = [
+                r"\A[#]?\s*tax_id$",
+                r"^geneid$",
+                r"^symbol$",
+                r"^locustag$",
+                r"^synonyms$",
+                r"^dbxrefs$",
+                r"^chromosome$",
+                r"^map_location$",
+                r"^description$",
+                r"^type_of_gene$",
+                r"^symbol_from_nomenclature_authority$",
+                r"^full_name_from_nomenclature_authority$",
+                r"^nomenclature_status$",
+                r"^other_designations$",
+                r"^modification_date$",
+                r"^feature_type$",
+            ]
+            if not self.is_file_header_valid(self.EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
+                raise ValueError(f"Malformed or unexpected header in EntrezGene file {xref_file}")
 
-        # Check if header is valid
-        header = next(csv_reader)
-        patterns = [
-            r"\A[#]?\s*tax_id",
-            "geneid",
-            "symbol",
-            "locustag",
-            "synonyms",
-            "dbxrefs",
-            "chromosome",
-            "map_location",
-            "description",
-            "type_of_gene",
-            "symbol_from_nomenclature_authority",
-            "full_name_from_nomenclature_authority",
-            "nomenclature_status",
-            "other_designations",
-            "modification_date",
-            "feature_type",
-        ]
-        if not self.is_file_header_valid(EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
-            raise IOError(f"Malformed or unexpected header in EntrezGene file {file}")
+            wiki_source_id = self.get_source_id_for_source_name("WikiGene", xref_dbi)
+            if verbose:
+                logging.info(f"Wiki source id = {wiki_source_id}")
 
-        xref_count = 0
+            processed_count, syn_count = self.process_lines(csv_reader, source_id, species_id, wiki_source_id, xref_dbi)
+
+        result_message = f"{processed_count} EntrezGene Xrefs and {processed_count} WikiGene Xrefs added with {syn_count} synonyms"
+        return 0, result_message
+
+    def process_lines(self, csv_reader: csv.reader, source_id: int, species_id: int, wiki_source_id: int, xref_dbi: Connection) -> Tuple[int, int]:
+        processed_count = 0
         syn_count = 0
         seen = {}
 
-        # Read lines
         for line in csv_reader:
             if not line:
                 continue
 
-            tax_id = line[0]
+            if len(line) < self.EXPECTED_NUMBER_OF_COLUMNS:
+                raise ValueError(f"Line {csv_reader.line_num} of input file has an incorrect number of columns")
+
+            tax_id = int(line[0])
             acc = line[1]
             symbol = line[2]
             synonyms = line[4]
             desc = line[8]
 
-            if tax_id != species_id:
-                continue
-            if seen.get(acc):
+            if tax_id != species_id or acc in seen:
                 continue
 
             xref_id = self.add_xref(
@@ -103,18 +117,14 @@ class EntrezGeneParser(BaseParser):
                 xref_dbi,
             )
 
-            xref_count += 1
+            processed_count += 1
 
-            syns = re.split(r"\|", synonyms)
-            for synonym in syns:
-                if synonym != "-":
+            if synonyms.strip() != "-":
+                syns = self.SYNONYM_SPLITTER.split(synonyms)
+                for synonym in syns:
                     self.add_synonym(xref_id, synonym, xref_dbi)
                     syn_count += 1
 
-            seen[acc] = 1
+            seen[acc] = True
 
-        file_io.close()
-
-        result_message = f"{xref_count} EntrezGene Xrefs and {xref_count} WikiGene Xrefs added with {syn_count} synonyms"
-
-        return 0, result_message
+        return processed_count, syn_count
