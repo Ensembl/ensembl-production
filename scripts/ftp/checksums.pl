@@ -25,6 +25,7 @@ use Fcntl qw( :mode );
 use File::Spec;
 use Getopt::Long;
 use Pod::Usage;
+use File::Basename;
 
 my $OPTIONS = options();
 run();
@@ -161,7 +162,8 @@ sub generate_checksums {
     next if ! -f $target; # skip if the file was removed
     my $checksum = `sum $target`;
     chomp($checksum);
-    print $fh "$checksum $file\n";
+    my $filename = basename($file);
+    print $fh "$checksum $filename\n";
   }
   close $fh or die "Cannot close $checksum_file: $!";
 
