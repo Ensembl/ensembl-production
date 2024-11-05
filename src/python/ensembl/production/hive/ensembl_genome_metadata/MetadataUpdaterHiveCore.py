@@ -10,7 +10,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
+import json
 from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
 from ensembl.production.metadata.updater.core import CoreMetaUpdater
 
@@ -18,11 +18,17 @@ from ensembl.production.metadata.updater.core import CoreMetaUpdater
 class MetadataUpdaterHiveCore(BaseProdRunnable):
 
     def run(self):
-        if self.param("force") == 0 or self.param("force") is None:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"))
-        elif self.param("force") == 1:
-            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"), self.param("taxonomy_uri"),
-                                  force=1)
-        else:
-            raise ValueError(f"Unable to figure out param {self.param('force')}")
-        run.process_core()
+        try:
+            run = CoreMetaUpdater(self.param("database_uri"), self.param("genome_metadata_uri"))
+            run.process_core()
+            output = { 'metadata_uri' : self.param("genome_metadata_uri"),
+             'database_uri' : self.param("database_uri"),
+             'email': self.param("email")
+            }
+            self.dataflow({
+			    'job_id' : self.input_job().dbID(),
+			    'output' : json.dumps(output)
+			}, 2);
+
+        except Exception as e : 
+            raise ValueError(str(e))
