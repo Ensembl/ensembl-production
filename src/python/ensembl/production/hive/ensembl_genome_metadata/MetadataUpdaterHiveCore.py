@@ -25,8 +25,9 @@ class MetadataUpdaterHiveCore(BaseProdRunnable):
              'database_uri' : self.param("database_uri"),
              'email': self.param("email")
             }
+            
             self.dataflow({
-			    'job_id' : 2,
+			    'job_id' : self.input_job.dbID,
 			    'output' : json.dumps(output)
 			}, 2);
 
