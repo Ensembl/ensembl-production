@@ -36,11 +36,9 @@ def run_and_validate_parsing(ccds_parser: CCDSParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected 'Parsed CCDS identifiers, added {expected_xrefs} xrefs and {expected_direct_xrefs} direct_xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id and species_id
-def test_ccds_no_source_id(ccds_parser: CCDSParser, test_no_source_id: Callable[[CCDSParser, int], None]) -> None:
-    test_no_source_id(ccds_parser, SPECIES_ID_HUMAN)
-
-def test_ccds_no_species_id(ccds_parser: CCDSParser, test_no_species_id: Callable[[CCDSParser, int], None]) -> None:
-    test_no_species_id(ccds_parser, SOURCE_ID_CCDS)
+def test_ccds_missing_argument(ccds_parser: CCDSParser, test_parser_missing_argument: Callable[[CCDSParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(ccds_parser, "source_id", SOURCE_ID_CCDS, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(ccds_parser, "species_id", SOURCE_ID_CCDS, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when no CCDS database is provided
 def test_no_ccds_db(ccds_parser: CCDSParser) -> None:

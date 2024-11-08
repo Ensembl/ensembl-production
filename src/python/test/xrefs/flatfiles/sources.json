@@ -1,0 +1,16 @@
+[
+    {
+      "name" : "ArrayExpress",
+      "parser" : "ArrayExpressParser",
+      "file" : "Database",
+      "db" : "core",
+      "priority" : 1
+    },
+    {
+      "name" : "RNACentral",
+      "parser" : "ChecksumParser",
+      "file" : "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/md5/md5.tsv.gz",
+      "db" : "checksum",
+      "priority" : 1
+    }
+]

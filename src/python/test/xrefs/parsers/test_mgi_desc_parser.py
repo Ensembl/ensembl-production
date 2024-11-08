@@ -40,14 +40,10 @@ def run_and_validate_parsing(mgi_desc_parser: MGIDescParser, mock_xref_dbi: DBCo
     ), f"{prefix}Expected '{expected_synonyms} synonyms added' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_mgi_desc_no_source_id(mgi_desc_parser: MGIDescParser, test_no_source_id: Callable[[MGIDescParser, int], None]) -> None:
-    test_no_source_id(mgi_desc_parser, SPECIES_ID_MOUSE)
-
-def test_mgi_desc_no_species_id(mgi_desc_parser: MGIDescParser, test_no_species_id: Callable[[MGIDescParser, int], None]) -> None:
-    test_no_species_id(mgi_desc_parser, SOURCE_ID_MGI_DESC)
-
-def test_mgi_desc_no_file(mgi_desc_parser: MGIDescParser, test_no_file: Callable[[MGIDescParser, int, int], None]) -> None:
-    test_no_file(mgi_desc_parser, SOURCE_ID_MGI_DESC, SPECIES_ID_MOUSE)
+def test_mgi_desc_missing_argument(mgi_desc_parser: MGIDescParser, test_parser_missing_argument: Callable[[MGIDescParser, DBConnection, str, int, int, str], None]) -> None:
+    test_parser_missing_argument(mgi_desc_parser, "source_id", SOURCE_ID_MGI_DESC, SPECIES_ID_MOUSE)
+    test_parser_missing_argument(mgi_desc_parser, "species_id", SOURCE_ID_MGI_DESC, SPECIES_ID_MOUSE)
+    test_parser_missing_argument(mgi_desc_parser, "file", SOURCE_ID_MGI_DESC, SPECIES_ID_MOUSE)
 
 # Test case to check if an error is raised when the file is not found
 def test_mgi_desc_file_not_found(mgi_desc_parser: MGIDescParser, test_file_not_found: Callable[[MGIDescParser, int, int], None]) -> None:

@@ -37,14 +37,10 @@ def run_and_validate_parsing(hpa_parser: HPAParser, mock_xref_dbi: DBConnection,
     ), f"{prefix}Expected '{expected_xrefs} direct xrefs successfully parsed' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_hpa_no_source_id(hpa_parser: HPAParser, test_no_source_id: Callable[[HPAParser, int], None]) -> None:
-    test_no_source_id(hpa_parser, SPECIES_ID_HUMAN)
-
-def test_hpa_no_species_id(hpa_parser: HPAParser, test_no_species_id: Callable[[HPAParser, int], None]) -> None:
-    test_no_species_id(hpa_parser, SOURCE_ID_HPA)
-
-def test_hpa_no_file(hpa_parser: HPAParser, test_no_file: Callable[[HPAParser, int, int], None]) -> None:
-    test_no_file(hpa_parser, SOURCE_ID_HPA, SPECIES_ID_HUMAN)
+def test_hpa_missing_argument(hpa_parser: HPAParser, test_parser_missing_argument: Callable[[HPAParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(hpa_parser, "source_id", SOURCE_ID_HPA, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(hpa_parser, "species_id", SOURCE_ID_HPA, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(hpa_parser, "file", SOURCE_ID_HPA, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_hpa_file_not_found(hpa_parser: HPAParser, test_file_not_found: Callable[[HPAParser, int, int], None]) -> None:

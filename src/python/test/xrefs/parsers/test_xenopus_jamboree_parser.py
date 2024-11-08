@@ -34,14 +34,10 @@ def run_and_validate_parsing(xenopus_jamboree_parser: XenopusJamboreeParser, moc
     ), f"{prefix}Expected '{expected_xrefs} XenopusJamboree xrefs successfully parsed' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_xenopus_jamboree_no_source_id(xenopus_jamboree_parser: XenopusJamboreeParser, test_no_source_id: Callable[[XenopusJamboreeParser, int], None]) -> None:
-    test_no_source_id(xenopus_jamboree_parser, SPECIES_ID_XENOPUS)
-
-def test_xenopus_jamboree_no_species_id(xenopus_jamboree_parser: XenopusJamboreeParser, test_no_species_id: Callable[[XenopusJamboreeParser, int], None]) -> None:
-    test_no_species_id(xenopus_jamboree_parser, SOURCE_ID_XENOPUS_JAMBOREE)
-
-def test_xenopus_jamboree_no_file(xenopus_jamboree_parser: XenopusJamboreeParser, test_no_file: Callable[[XenopusJamboreeParser, int, int], None]) -> None:
-    test_no_file(xenopus_jamboree_parser, SOURCE_ID_XENOPUS_JAMBOREE, SPECIES_ID_XENOPUS)
+def test_xenopus_jamboree_missing_argument(xenopus_jamboree_parser: XenopusJamboreeParser, test_parser_missing_argument: Callable[[XenopusJamboreeParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(xenopus_jamboree_parser, "source_id", SOURCE_ID_XENOPUS_JAMBOREE, SPECIES_ID_XENOPUS)
+    test_parser_missing_argument(xenopus_jamboree_parser, "species_id", SOURCE_ID_XENOPUS_JAMBOREE, SPECIES_ID_XENOPUS)
+    test_parser_missing_argument(xenopus_jamboree_parser, "file", SOURCE_ID_XENOPUS_JAMBOREE, SPECIES_ID_XENOPUS)
 
 # Test case to check if an error is raised when the file is not found
 def test_xenopus_jamboree_file_not_found(xenopus_jamboree_parser: XenopusJamboreeParser, test_file_not_found: Callable[[XenopusJamboreeParser, int, int], None]) -> None:

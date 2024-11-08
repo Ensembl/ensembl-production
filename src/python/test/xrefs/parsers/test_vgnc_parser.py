@@ -36,14 +36,10 @@ def run_and_validate_parsing(vgnc_parser: VGNCParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected 'Loaded a total of {expected_xrefs} VGNC xrefs and added {expected_synonyms} synonyms' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_vgnc_no_source_id(vgnc_parser: VGNCParser, test_no_source_id: Callable[[VGNCParser, int], None]) -> None:
-    test_no_source_id(vgnc_parser, SPECIES_ID_P_TROGLODYTES)
-
-def test_vgnc_no_species_id(vgnc_parser: VGNCParser, test_no_species_id: Callable[[VGNCParser, int], None]) -> None:
-    test_no_species_id(vgnc_parser, SOURCE_ID_VGNC)
-
-def test_vgnc_no_file(vgnc_parser: VGNCParser, test_no_file: Callable[[VGNCParser, int, int], None]) -> None:
-    test_no_file(vgnc_parser, SOURCE_ID_VGNC, SPECIES_ID_P_TROGLODYTES)
+def test_vgnc_missing_argument(vgnc_parser: VGNCParser, test_parser_missing_argument: Callable[[VGNCParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(vgnc_parser, "source_id", SOURCE_ID_VGNC, SPECIES_ID_P_TROGLODYTES)
+    test_parser_missing_argument(vgnc_parser, "species_id", SOURCE_ID_VGNC, SPECIES_ID_P_TROGLODYTES)
+    test_parser_missing_argument(vgnc_parser, "file", SOURCE_ID_VGNC, SPECIES_ID_P_TROGLODYTES)
 
 # Test case to check if an error is raised when the file is not found
 def test_vgnc_file_not_found(vgnc_parser: VGNCParser, test_file_not_found: Callable[[VGNCParser, int, int], None]) -> None:

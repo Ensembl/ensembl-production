@@ -142,17 +142,13 @@ def run_and_validate_parsing(refseq_parser: RefSeqParser, mock_xref_dbi: DBConne
     ), f"{prefix}Expected 'WikiGene\t{wiki}' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_refseq_no_source_id(refseq_parser: RefSeqParser, test_no_source_id: Callable[[RefSeqParser, int], None]) -> None:
-    test_no_source_id(refseq_parser, SPECIES_ID_HUMAN)
-
-def test_refseq_no_species_id(refseq_parser: RefSeqParser, test_no_species_id: Callable[[RefSeqParser, int], None]) -> None:
-    test_no_species_id(refseq_parser, SOURCE_ID_REFSEQ_MRNA)
-
-def test_refseq_no_file(refseq_parser: RefSeqParser, test_no_file: Callable[[RefSeqParser, int, int], None]) -> None:
-    test_no_file(refseq_parser, SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
+def test_refseq_missing_argument(refseq_parser: RefSeqParser, test_parser_missing_argument: Callable[[RefSeqParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(refseq_parser, "source_id", SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(refseq_parser, "species_id", SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(refseq_parser, "file", SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the required source_id is missing
-def test_mim2gene_missing_required_source_id(refseq_parser: RefSeqParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[RefSeqParser, DBConnection, str, int, int, str], None]) -> None:
+def test_refseq_missing_required_source_id(refseq_parser: RefSeqParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[RefSeqParser, DBConnection, str, int, int, str], None]) -> None:
     test_missing_required_source_id(refseq_parser, mock_xref_dbi, 'RefSeq_peptide', SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
 
 # Test case to check if parsing is skipped when no species name can be found

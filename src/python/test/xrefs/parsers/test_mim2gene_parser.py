@@ -115,14 +115,10 @@ def run_and_validate_parsing(mim2gene_parser: Mim2GeneParser, mock_xref_dbi: DBC
     ), f"{prefix}Expected '{expected_missed_master} had missing master entries' in result message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_mim2gene_no_source_id(mim2gene_parser: Mim2GeneParser, test_no_source_id: Callable[[Mim2GeneParser, int], None]) -> None:
-    test_no_source_id(mim2gene_parser, SPECIES_ID_HUMAN)
-
-def test_mim2gene_no_species_id(mim2gene_parser: Mim2GeneParser, test_no_species_id: Callable[[Mim2GeneParser, int], None]) -> None:
-    test_no_species_id(mim2gene_parser, SOURCE_ID_MIM2GENE)
-
-def test_mim2gene_no_file(mim2gene_parser: Mim2GeneParser, test_no_file: Callable[[Mim2GeneParser, int, int], None]) -> None:
-    test_no_file(mim2gene_parser, SOURCE_ID_MIM2GENE, SPECIES_ID_HUMAN)
+def test_mim2gene_missing_argument(mim2gene_parser: Mim2GeneParser, test_parser_missing_argument: Callable[[Mim2GeneParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(mim2gene_parser, "source_id", SOURCE_ID_MIM2GENE, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(mim2gene_parser, "species_id", SOURCE_ID_MIM2GENE, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(mim2gene_parser, "file", SOURCE_ID_MIM2GENE, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_mim2gene_file_not_found(mim2gene_parser: Mim2GeneParser, test_file_not_found: Callable[[Mim2GeneParser, int, int], None]) -> None:

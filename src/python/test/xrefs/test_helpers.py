@@ -1,6 +1,8 @@
+import json
 from sqlalchemy import text
+from typing import List, Dict, Any
 
-from ensembl.utils.database import UnitTestDB, DBConnection
+from ensembl.utils.database import DBConnection
 
 # Helper function to check the row count in a specific table
 def check_row_count(db: DBConnection, table: str, expected_count: int, where_clause: str = None) -> None:
@@ -78,3 +80,22 @@ def check_release(db: DBConnection, source_id: str, expected_release: str) -> No
     assert (
         release == expected_release
     ), f"Expected release info '{expected_release}' for source_id {source_id}, but got '{release}'"
+
+# Helper function to check the dataflow content of a dataflow file
+def check_dataflow_content(dataflow_file_path: str, expected_content: List[Dict[str, Any]]) -> None:
+    # Get the content of the dataflow file
+    actual_content = []
+    with open(dataflow_file_path) as fh:
+        for line in fh:
+            actual_content.append(json.loads(line.strip()))
+
+    # Sort both the expected and actual content lists
+    actual_content_sorted = sorted(actual_content, key=lambda x: json.dumps(x, sort_keys=True))
+    expected_content_sorted = sorted(expected_content, key=lambda x: json.dumps(x, sort_keys=True))
+
+    # Compare the expected and actual content
+    assert actual_content_sorted == expected_content_sorted, (
+        f"Dataflow file content does not match expected content.\n"
+        f"Expected (sorted): {expected_content_sorted}\n"
+        f"Actual (sorted): {actual_content_sorted}"
+    )

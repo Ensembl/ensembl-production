@@ -41,14 +41,10 @@ def run_and_validate_parsing(dbass_parser: DBASSParser, mock_xref_dbi: DBConnect
     ), f"{prefix}Expected 'Skipped {expected_skipped_xrefs} unmapped xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_dbass_no_source_id(dbass_parser: DBASSParser, test_no_source_id: Callable[[DBASSParser, int], None]) -> None:
-    test_no_source_id(dbass_parser, SPECIES_ID_HUMAN)
-
-def test_dbass_no_species_id(dbass_parser: DBASSParser, test_no_species_id: Callable[[DBASSParser, int], None]) -> None:
-    test_no_species_id(dbass_parser, SOURCE_ID_DBASS3)
-
-def test_dbass_no_file(dbass_parser: DBASSParser, test_no_file: Callable[[DBASSParser, int, int], None]) -> None:
-    test_no_file(dbass_parser, SOURCE_ID_DBASS3, SPECIES_ID_HUMAN)
+def test_dbass_missing_argument(dbass_parser: DBASSParser, test_parser_missing_argument: Callable[[DBASSParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(dbass_parser, "source_id", SOURCE_ID_DBASS3, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(dbass_parser, "species_id", SOURCE_ID_DBASS3, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(dbass_parser, "file", SOURCE_ID_DBASS3, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_dbass_file_not_found(dbass_parser: DBASSParser, test_file_not_found: Callable[[DBASSParser, int, int], None]) -> None:

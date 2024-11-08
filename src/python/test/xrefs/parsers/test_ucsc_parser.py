@@ -36,14 +36,10 @@ def run_and_validate_parsing(ucsc_parser: UCSCParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected 'Loaded a total of {expected_xrefs} UCSC xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_ucsc_no_source_id(ucsc_parser: UCSCParser, test_no_source_id: Callable[[UCSCParser, int], None]) -> None:
-    test_no_source_id(ucsc_parser, SPECIES_ID_HUMAN)
-
-def test_ucsc_no_species_id(ucsc_parser: UCSCParser, test_no_species_id: Callable[[UCSCParser, int], None]) -> None:
-    test_no_species_id(ucsc_parser, SOURCE_ID_UCSC)
-
-def test_ucsc_no_file(ucsc_parser: UCSCParser, test_no_file: Callable[[UCSCParser, int, int], None]) -> None:
-    test_no_file(ucsc_parser, SOURCE_ID_UCSC, SPECIES_ID_HUMAN)
+def test_ucsc_missing_argument(ucsc_parser: UCSCParser, test_parser_missing_argument: Callable[[UCSCParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(ucsc_parser, "source_id", SOURCE_ID_UCSC, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(ucsc_parser, "species_id", SOURCE_ID_UCSC, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(ucsc_parser, "file", SOURCE_ID_UCSC, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_ucsc_file_not_found(ucsc_parser: UCSCParser, test_file_not_found: Callable[[UCSCParser, int, int], None]) -> None:

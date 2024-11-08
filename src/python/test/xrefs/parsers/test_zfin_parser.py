@@ -108,14 +108,10 @@ def run_and_validate_parsing(zfin_parser: ZFINParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected '{expected_synonyms} synonyms loaded' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_zfin_no_source_id(zfin_parser: ZFINParser, test_no_source_id: Callable[[ZFINParser, int], None]) -> None:
-    test_no_source_id(zfin_parser, SPECIES_ID_ZEBRAFISH)
-
-def test_zfin_no_species_id(zfin_parser: ZFINParser, test_no_species_id: Callable[[ZFINParser, int], None]) -> None:
-    test_no_species_id(zfin_parser, SOURCE_ID_ZFIN)
-
-def test_zfin_no_file(zfin_parser: ZFINParser, test_no_file: Callable[[ZFINParser, int, int], None]) -> None:
-    test_no_file(zfin_parser, SOURCE_ID_ZFIN, SPECIES_ID_ZEBRAFISH)
+def test_zfin_missing_argument(zfin_parser: ZFINParser, test_parser_missing_argument: Callable[[ZFINParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(zfin_parser, "source_id", SOURCE_ID_ZFIN, SPECIES_ID_ZEBRAFISH)
+    test_parser_missing_argument(zfin_parser, "species_id", SOURCE_ID_ZFIN, SPECIES_ID_ZEBRAFISH)
+    test_parser_missing_argument(zfin_parser, "file", SOURCE_ID_ZFIN, SPECIES_ID_ZEBRAFISH)
 
 # Test case to check if an error is raised when the required source_id is missing
 def test_zfin_missing_required_source_id(zfin_parser: ZFINParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[ZFINParser, DBConnection, str, int, int, str], None]) -> None:

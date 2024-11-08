@@ -37,11 +37,9 @@ def run_and_validate_parsing(arrayexpress_parser: ArrayExpressParser, mock_xref_
     ), f"{prefix}Expected 'Added {expected_xrefs} DIRECT xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id and species_id
-def test_arrayexpress_no_source_id(arrayexpress_parser: ArrayExpressParser, test_no_source_id: Callable[[ArrayExpressParser, int], None]) -> None:
-    test_no_source_id(arrayexpress_parser, SPECIES_ID_HUMAN)
-
-def test_arrayexpress_no_species_id(arrayexpress_parser: ArrayExpressParser, test_no_species_id: Callable[[ArrayExpressParser, int], None]) -> None:
-    test_no_species_id(arrayexpress_parser, SOURCE_ID_ARRAYEXPRESS)
+def test_arrayexpress_missing_argument(arrayexpress_parser: ArrayExpressParser, test_parser_missing_argument: Callable[[ArrayExpressParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(arrayexpress_parser, "source_id", SOURCE_ID_ARRAYEXPRESS, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(arrayexpress_parser, "species_id", SOURCE_ID_ARRAYEXPRESS, SPECIES_ID_HUMAN)
 
 # Test case to check if parsing is skipped when no species name can be found
 def test_no_species_name(mock_xref_dbi: DBConnection, arrayexpress_parser: ArrayExpressParser) -> None:

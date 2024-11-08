@@ -66,14 +66,15 @@ def run_and_validate_parsing(hgnc_parser: HGNCParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected '{expected_mismatch} HGNC ids could not be associated in xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_hgnc_no_source_id(hgnc_parser: HGNCParser, test_no_source_id: Callable[[HGNCParser, int], None]) -> None:
-    test_no_source_id(hgnc_parser, SPECIES_ID_HUMAN)
+def test_hgnc_missing_argument(hgnc_parser: HGNCParser, test_parser_missing_argument: Callable[[HGNCParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(hgnc_parser, "source_id", SOURCE_ID_HGNC, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(hgnc_parser, "species_id", SOURCE_ID_HGNC, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(hgnc_parser, "file", SOURCE_ID_HGNC, SPECIES_ID_HUMAN)
 
-def test_hgnc_no_species_id(hgnc_parser: HGNCParser, test_no_species_id: Callable[[HGNCParser, int], None]) -> None:
-    test_no_species_id(hgnc_parser, SOURCE_ID_HGNC)
-
-def test_hgnc_no_file(hgnc_parser: HGNCParser, test_no_file: Callable[[HGNCParser, int, int], None]) -> None:
-    test_no_file(hgnc_parser, SOURCE_ID_HGNC, SPECIES_ID_HUMAN)
+# Test case to check if an error is raised when the required source_id is missing
+def test_hgnc_missing_required_source_id(hgnc_parser: HGNCParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[HGNCParser, DBConnection, str, int, int, str], None]) -> None:
+    hgnc_parser.get_source_name_for_source_id = MagicMock(return_value="HGNC")
+    test_missing_required_source_id(hgnc_parser, mock_xref_dbi, 'HGNC', SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN, 'ccds')
 
 # Test case to check if an error is raised when no CCDS database is provided
 def test_no_ccds_db(hgnc_parser: HGNCParser) -> None:
@@ -106,7 +107,7 @@ def test_successful_parsing_without_existing_xrefs(mock_xref_dbi: DBConnection, 
     hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
     hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
     hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={})
-    hgnc_parser.get_valid_codes = MagicMock(return_value={})
+    hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={})
     hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={})
 
     # Run and validate parsing for HGNC file
@@ -132,7 +133,7 @@ def test_successful_parsing_with_existing_xrefs(mock_xref_dbi: DBConnection, hgn
     hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
     hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
     hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={"CCDS12976": "CCDS12976", "CCDS8856": "CCDS8856", "CCDS53797": "CCDS53797"})
-    hgnc_parser.get_valid_codes = MagicMock(return_value={"NM_130786": [12], "NR_026971": [34, 56], "NR_015380": [78], "NM_001088": [90]})
+    hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_130786": [12], "NR_026971": [34, 56], "NR_015380": [78], "NM_001088": [90]})
     hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={"503538": 123, "441376": 456, "51146": 789})
 
     # Run and validate parsing for HGNC file

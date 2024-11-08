@@ -37,14 +37,10 @@ def run_and_validate_parsing(rfam_parser: RFAMParser, mock_xref_dbi: DBConnectio
     ), f"{prefix}Expected 'Added {expected_xrefs} RFAM xrefs and {expected_direct_xrefs} direct xrefs' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_rfam_no_source_id(rfam_parser: RFAMParser, test_no_source_id: Callable[[RFAMParser, int], None]) -> None:
-    test_no_source_id(rfam_parser, SPECIES_ID_HUMAN)
-
-def test_rfam_no_species_id(rfam_parser: RFAMParser, test_no_species_id: Callable[[RFAMParser, int], None]) -> None:
-    test_no_species_id(rfam_parser, SOURCE_ID_RFAM)
-
-def test_rfam_no_file(rfam_parser: RFAMParser, test_no_file: Callable[[RFAMParser, int, int], None]) -> None:
-    test_no_file(rfam_parser, SOURCE_ID_RFAM, SPECIES_ID_HUMAN)
+def test_rfam_missing_argument(rfam_parser: RFAMParser, test_parser_missing_argument: Callable[[RFAMParser, int, int], None]) -> None:
+    test_parser_missing_argument(rfam_parser, "source_id", SOURCE_ID_RFAM, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(rfam_parser, "species_id", SOURCE_ID_RFAM, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(rfam_parser, "file", SOURCE_ID_RFAM, SPECIES_ID_HUMAN)
 
 # Test case to check if parsing is skipped when no species name can be found
 def test_no_species_name(mock_xref_dbi: DBConnection, rfam_parser: RFAMParser) -> None:

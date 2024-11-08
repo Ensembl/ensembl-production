@@ -46,6 +46,8 @@ def populate_xref_db(mock_xref_dbi: DBConnection):
             }
         )
 
+    mock_xref_dbi.commit()
+
 # Function to run and validate the parsing process
 def run_and_validate_parsing(reactome_parser: ReactomeParser, mock_xref_dbi: DBConnection, file: str, expected_processed: int, expected_dependent: int, expected_direct: int, expected_errors: int, prefix: str = None) -> None:
     if prefix is None:
@@ -77,14 +79,10 @@ def run_and_validate_parsing(reactome_parser: ReactomeParser, mock_xref_dbi: DBC
     ), f"{prefix}Expected '{expected_errors} not found' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_reactome_no_source_id(reactome_parser: ReactomeParser, test_no_source_id: Callable[[ReactomeParser, int], None]) -> None:
-    test_no_source_id(reactome_parser, SPECIES_ID_HUMAN)
-
-def test_reactome_no_species_id(reactome_parser: ReactomeParser, test_no_species_id: Callable[[ReactomeParser, int], None]) -> None:
-    test_no_species_id(reactome_parser, SOURCE_ID_REACTOME)
-
-def test_reactome_no_file(reactome_parser: ReactomeParser, test_no_file: Callable[[ReactomeParser, int, int], None]) -> None:
-    test_no_file(reactome_parser, SOURCE_ID_REACTOME, SPECIES_ID_HUMAN)
+def test_reactome_missing_argument(reactome_parser: ReactomeParser, test_parser_missing_argument: Callable[[ReactomeParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(reactome_parser, "source_id", SOURCE_ID_REACTOME, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(reactome_parser, "species_id", SOURCE_ID_REACTOME, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(reactome_parser, "file", SOURCE_ID_REACTOME, SPECIES_ID_HUMAN)
 
 # Test case to check if parsing is skipped when no species name can be found
 def test_no_species_name(mock_xref_dbi: DBConnection, reactome_parser: ReactomeParser) -> None:
@@ -117,31 +115,30 @@ def test_reactome_empty_file(reactome_parser: ReactomeParser, test_empty_file: C
     reactome_parser.species_id_to_names = MagicMock(return_value={SPECIES_ID_HUMAN: [SPECIES_NAME_HUMAN]})
     test_empty_file(reactome_parser, 'Reactome', SOURCE_ID_REACTOME, SPECIES_ID_HUMAN)
 
-# Test case to check successful parsing of valid Reactome data without existing uniprot xrefs
-def test_successful_parsing_without_existing_uniprot(mock_xref_dbi: DBConnection, reactome_parser: ReactomeParser) -> None:
+# Test case to check successful parsing of valid Reactome data
+def test_successful_parsing(mock_xref_dbi: DBConnection, reactome_parser: ReactomeParser) -> None:
     populate_xref_db(mock_xref_dbi)
 
     # Run and validate parsing for Uniprot and Ensembl Reactome files
     run_and_validate_parsing(reactome_parser, mock_xref_dbi, "reactome_UniProt", 8, 0, 0, 0)
     run_and_validate_parsing(reactome_parser, mock_xref_dbi, "reactome_ensembl", 14, 0, 13, 1)
 
-    # Check the row counts in the xref and direct_xref tables
+    # Check the row counts in the xref, direct_xref, and dependent_xref tables
     check_row_count(mock_xref_dbi, "xref", 6, f"info_type='DIRECT' AND source_id={SOURCE_ID_REACTOME_GENE}")
     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_REACTOME_TRANSCRIPT}")
     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DIRECT' AND source_id={SOURCE_ID_REACTOME_DIRECT}")
     check_row_count(mock_xref_dbi, "gene_direct_xref", 6)
     check_row_count(mock_xref_dbi, "transcript_direct_xref", 4)
     check_row_count(mock_xref_dbi, "translation_direct_xref", 3)
+    check_row_count(mock_xref_dbi, "dependent_xref", 0)
 
     # Check the link between an xref and direct_xref tables
     check_direct_xref_link(mock_xref_dbi, "gene", "R-HSA-1643685", "ENSG00000000419")
     check_direct_xref_link(mock_xref_dbi, "transcript", "R-HSA-199991", "ENST00000000233")
     check_direct_xref_link(mock_xref_dbi, "translation", "R-HSA-199991", "ENSP00000000233")
 
-# Test case to check successful parsing of valid Reactome data with existing uniprot xrefs
-def test_successful_parsing_with_existing_uniprot(mock_xref_dbi: DBConnection, reactome_parser: ReactomeParser) -> None:
-    populate_xref_db(mock_xref_dbi)
-    reactome_parser.get_valid_codes = MagicMock(return_value={"A0A075B6P5": [12], "A0A075B6S6" : [34, 56], "A0A087WPF7": [78], "A0A096LNF2": [90]})
+    # Add uniptot xrefs
+    reactome_parser.get_acc_to_xref_ids = MagicMock(return_value={"A0A075B6P5": [12], "A0A075B6S6" : [34, 56], "A0A087WPF7": [78], "A0A096LNF2": [90]})
  
     # Run and validate re-parsing for Uniprot and Ensembl Reactome files
     run_and_validate_parsing(reactome_parser, mock_xref_dbi, "reactome_UniProt", 8, 6, 0, 0, "Re-parsing: ")

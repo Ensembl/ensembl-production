@@ -38,14 +38,10 @@ def run_and_validate_parsing(mgi_parser: MGIParser, mock_xref_dbi: DBConnection,
     ), f"{prefix}Expected '{expected_synonyms} synonyms added' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_mgi_no_source_id(mgi_parser: MGIParser, test_no_source_id: Callable[[MGIParser, int], None]) -> None:
-    test_no_source_id(mgi_parser, SPECIES_ID_MOUSE)
-
-def test_mgi_no_species_id(mgi_parser: MGIParser, test_no_species_id: Callable[[MGIParser, int], None]) -> None:
-    test_no_species_id(mgi_parser, SOURCE_ID_MGI)
-
-def test_mgi_no_file(mgi_parser: MGIParser, test_no_file: Callable[[MGIParser, int, int], None]) -> None:
-    test_no_file(mgi_parser, SOURCE_ID_MGI, SPECIES_ID_MOUSE)
+def test_mgi_missing_argument(mgi_parser: MGIParser, test_parser_missing_argument: Callable[[MGIParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(mgi_parser, "source_id", SOURCE_ID_MGI, SPECIES_ID_MOUSE)
+    test_parser_missing_argument(mgi_parser, "species_id", SOURCE_ID_MGI, SPECIES_ID_MOUSE)
+    test_parser_missing_argument(mgi_parser, "file", SOURCE_ID_MGI, SPECIES_ID_MOUSE)
 
 # Test case to check if an error is raised when the file is not found
 def test_mgi_file_not_found(mgi_parser: MGIParser, test_file_not_found: Callable[[MGIParser, int, int], None]) -> None:

@@ -52,14 +52,14 @@ def run_and_validate_parsing(mim_parser: MIMParser, mock_xref_dbi: DBConnection,
     ), f"{prefix}Expected '{expected_removed_entries} entries removed' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_mim_no_source_id(mim_parser: MIMParser, test_no_source_id: Callable[[MIMParser, int], None]) -> None:
-    test_no_source_id(mim_parser, SPECIES_ID_HUMAN)
+def test_mim_missing_argument(mim_parser: MIMParser, test_parser_missing_argument: Callable[[MIMParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(mim_parser, "source_id", SOURCE_ID_MIM, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(mim_parser, "species_id", SOURCE_ID_MIM, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(mim_parser, "file", SOURCE_ID_MIM, SPECIES_ID_HUMAN)
 
-def test_mim_no_species_id(mim_parser: MIMParser, test_no_species_id: Callable[[MIMParser, int], None]) -> None:
-    test_no_species_id(mim_parser, SOURCE_ID_MIM)
-
-def test_mim_no_file(mim_parser: MIMParser, test_no_file: Callable[[MIMParser, int, int], None]) -> None:
-    test_no_file(mim_parser, SOURCE_ID_MIM, SPECIES_ID_HUMAN)
+# Test case to check if an error is raised when the required source_id is missing
+def test_mim_missing_required_source_id(mim_parser: MIMParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[MIMParser, DBConnection, str, int, int, str], None]) -> None:
+    test_missing_required_source_id(mim_parser, mock_xref_dbi, 'MIM_GENE', SOURCE_ID_MIM, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_mim_file_not_found(mim_parser: MIMParser, test_file_not_found: Callable[[MIMParser, int, int], None]) -> None:

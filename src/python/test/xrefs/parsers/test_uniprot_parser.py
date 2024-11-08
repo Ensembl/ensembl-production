@@ -63,6 +63,8 @@ def populate_xref_db(mock_xref_dbi: DBConnection):
             }
         )
 
+    mock_xref_dbi.commit()
+
 # Function to run and validate the parsing process
 def run_and_validate_parsing(uniprot_parser: UniProtParser, mock_xref_dbi: DBConnection, file:str, expected_xrefs: Dict[str, int], expected_deps: Dict[str, int], prefix: str = None) -> None:
     if prefix is None:
@@ -107,14 +109,10 @@ def run_and_validate_parsing(uniprot_parser: UniProtParser, mock_xref_dbi: DBCon
         assert f"{count_type}\t{count}" in result_message, f"{prefix}Expected '{count_type}\t{count}' in result_meesgae, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_uniprot_no_source_id(uniprot_parser: UniProtParser, test_no_source_id: Callable[[UniProtParser, int], None]) -> None:
-    test_no_source_id(uniprot_parser, SPECIES_ID_HUMAN)
-
-def test_uniprot_no_species_id(uniprot_parser: UniProtParser, test_no_species_id: Callable[[UniProtParser, int], None]) -> None:
-    test_no_species_id(uniprot_parser, SOURCE_ID_UNIPROT)
-
-def test_uniprot_no_file(uniprot_parser: UniProtParser, test_no_file: Callable[[UniProtParser, int, int], None]) -> None:
-    test_no_file(uniprot_parser, SOURCE_ID_UNIPROT, SPECIES_ID_HUMAN)
+def test_uniprot_missing_argument(uniprot_parser: UniProtParser, test_parser_missing_argument: Callable[[UniProtParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(uniprot_parser, "source_id", SOURCE_ID_UNIPROT, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(uniprot_parser, "species_id", SOURCE_ID_UNIPROT, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(uniprot_parser, "file", SOURCE_ID_UNIPROT, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the required source_id is missing
 def test_uniprot_missing_required_source_id(uniprot_parser: UniProtParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[UniProtParser, DBConnection, str, int, int, str], None]) -> None:

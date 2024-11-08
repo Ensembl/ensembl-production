@@ -45,14 +45,10 @@ def run_and_validate_parsing(rgd_parser: RGDParser, mock_xref_dbi: DBConnection,
     ), f"{prefix}Expected 'Added {expected_synonyms} synonyms, including duplicates' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_rgd_no_source_id(rgd_parser: RGDParser, test_no_source_id: Callable[[RGDParser, int], None]) -> None:
-    test_no_source_id(rgd_parser, SPECIES_ID_RAT)
-
-def test_rgd_no_species_id(rgd_parser: RGDParser, test_no_species_id: Callable[[RGDParser, int], None]) -> None:
-    test_no_species_id(rgd_parser, SOURCE_ID_RGD)
-
-def test_rgd_no_file(rgd_parser: RGDParser, test_no_file: Callable[[RGDParser, int, int], None]) -> None:
-    test_no_file(rgd_parser, SOURCE_ID_RGD, SPECIES_ID_RAT)
+def test_rgd_missing_argument(rgd_parser: RGDParser, test_parser_missing_argument: Callable[[RGDParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(rgd_parser, "source_id", SOURCE_ID_RGD, SPECIES_ID_RAT)
+    test_parser_missing_argument(rgd_parser, "species_id", SOURCE_ID_RGD, SPECIES_ID_RAT)
+    test_parser_missing_argument(rgd_parser, "file", SOURCE_ID_RGD, SPECIES_ID_RAT)
 
 # Test case to check if an error is raised when the file is not found
 def test_rgd_file_not_found(rgd_parser: RGDParser, test_file_not_found: Callable[[RGDParser, int, int], None]) -> None:
@@ -89,7 +85,7 @@ def test_successful_parsing_without_refseqs(mock_xref_dbi: DBConnection, rgd_par
 # Test case to check successful parsing of valid RGD data with refseqs
 def test_successful_parsing_with_refseqs(mock_xref_dbi: DBConnection, rgd_parser: RGDParser) -> None:
     rgd_parser.get_source_id_for_source_name = MagicMock(return_value=SOURCE_ID_DIRECT)
-    rgd_parser.get_valid_codes = MagicMock(return_value={"NM_052979": [12, 34], "XM_039101774" : [56], "XM_063281326": [78]})
+    rgd_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_052979": [12, 34], "XM_039101774" : [56], "XM_063281326": [78]})
 
     # Run and validate parsing for RGD file with existing refseqs
     run_and_validate_parsing(rgd_parser, mock_xref_dbi, 3, 5, 1, 12)

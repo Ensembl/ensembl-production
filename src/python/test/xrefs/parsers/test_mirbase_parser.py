@@ -39,14 +39,10 @@ def run_and_validate_parsing(mirbase_parser: miRBaseParser, mock_xref_dbi: DBCon
     ), f"{prefix}Expected 'Read {expected_xrefs} xrefs from' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_mirbase_no_source_id(mirbase_parser: miRBaseParser, test_no_source_id: Callable[[miRBaseParser, int], None]) -> None:
-    test_no_source_id(mirbase_parser, SPECIES_ID_C_ELEGANS)
-
-def test_mirbase_no_species_id(mirbase_parser: miRBaseParser, test_no_species_id: Callable[[miRBaseParser, int], None]) -> None:
-    test_no_species_id(mirbase_parser, SOURCE_ID_MIRBASE)
-
-def test_mirbase_no_file(mirbase_parser: miRBaseParser, test_no_file: Callable[[miRBaseParser, int, int], None]) -> None:
-    test_no_file(mirbase_parser, SOURCE_ID_MIRBASE, SPECIES_ID_C_ELEGANS)
+def test_mirbase_missing_argument(mirbase_parser: miRBaseParser, test_parser_missing_argument: Callable[[miRBaseParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(mirbase_parser, "source_id", SOURCE_ID_MIRBASE, SPECIES_ID_C_ELEGANS)
+    test_parser_missing_argument(mirbase_parser, "species_id", SOURCE_ID_MIRBASE, SPECIES_ID_C_ELEGANS)
+    test_parser_missing_argument(mirbase_parser, "file", SOURCE_ID_MIRBASE, SPECIES_ID_C_ELEGANS)
 
 # Test case to check if an error is raised when the file is not found
 def test_mirbase_file_not_found(mirbase_parser: miRBaseParser, test_file_not_found: Callable[[miRBaseParser, int, int], None]) -> None:

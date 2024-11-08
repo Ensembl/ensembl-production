@@ -38,14 +38,10 @@ def run_and_validate_parsing(entrezgene_parser: EntrezGeneParser, mock_xref_dbi:
     ), f"{prefix}Expected '{expected_entrez_xrefs} EntrezGene Xrefs and {expected_wiki_xrefs} WikiGene Xrefs added with {expected_synonyms} synonyms' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_entrezgene_no_source_id(entrezgene_parser: EntrezGeneParser, test_no_source_id: Callable[[EntrezGeneParser, int], None]) -> None:
-    test_no_source_id(entrezgene_parser, SPECIES_ID_HUMAN)
-
-def test_entrezgene_no_species_id(entrezgene_parser: EntrezGeneParser, test_no_species_id: Callable[[EntrezGeneParser, int], None]) -> None:
-    test_no_species_id(entrezgene_parser, SOURCE_ID_ENTREZGENE)
-
-def test_entrezgene_no_file(entrezgene_parser: EntrezGeneParser, test_no_file: Callable[[EntrezGeneParser, int, int], None]) -> None:
-    test_no_file(entrezgene_parser, SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN)
+def test_entrezgene_missing_argument(entrezgene_parser: EntrezGeneParser, test_parser_missing_argument: Callable[[EntrezGeneParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(entrezgene_parser, "source_id", SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(entrezgene_parser, "species_id", SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN)
+    test_parser_missing_argument(entrezgene_parser, "file", SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file is not found
 def test_entrezgene_file_not_found(entrezgene_parser: EntrezGeneParser, test_file_not_found: Callable[[EntrezGeneParser, int, int], None]) -> None:
@@ -110,6 +106,10 @@ def test_malformed_headers(entrezgene_parser: EntrezGeneParser, header: str) -> 
                 "xref_dbi": MagicMock(),
             }
         )
+
+# Test case to check if an error is raised when the required source_id is missing
+def test_entrezgene_missing_required_source_id(entrezgene_parser: EntrezGeneParser, mock_xref_dbi: DBConnection, test_missing_required_source_id: Callable[[EntrezGeneParser, DBConnection, str, int, int, str], None]) -> None:
+    test_missing_required_source_id(entrezgene_parser, mock_xref_dbi, 'WikiGene', SOURCE_ID_ENTREZGENE, SPECIES_ID_HUMAN)
 
 # Test case to check if an error is raised when the file has insufficient columns
 def test_insufficient_columns(entrezgene_parser: EntrezGeneParser) -> None:

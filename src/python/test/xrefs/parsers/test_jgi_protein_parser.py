@@ -34,14 +34,10 @@ def run_and_validate_parsing(jgi_protein_parser: JGI_ProteinParser, mock_xref_db
     assert f"{expected_xrefs} JGI_ xrefs successfully parsed" in result_message, f"{prefix}Expected '{expected_xrefs} JGI_ xrefs successfully parsed' in result_message, but got: '{result_message}'"
 
 # Test cases to check if mandatory parser arguments are passed: source_id, species_id, and file
-def test_jgi_no_source_id(jgi_protein_parser: JGI_ProteinParser, test_no_source_id: Callable[[JGI_ProteinParser, int], None]) -> None:
-    test_no_source_id(jgi_protein_parser, SPECIES_ID_C_INTESTINALIS)
-
-def test_jgi_no_species_id(jgi_protein_parser: JGI_ProteinParser, test_no_species_id: Callable[[JGI_ProteinParser, int], None]) -> None:
-    test_no_species_id(jgi_protein_parser, SOURCE_ID_JGI)
-
-def test_jgi_no_file(jgi_protein_parser: JGI_ProteinParser, test_no_file: Callable[[JGI_ProteinParser, int, int], None]) -> None:
-    test_no_file(jgi_protein_parser, SOURCE_ID_JGI, SPECIES_ID_C_INTESTINALIS)
+def test_jgi_missing_argument(jgi_protein_parser: JGI_ProteinParser, test_parser_missing_argument: Callable[[JGI_ProteinParser, str, int, int], None]) -> None:
+    test_parser_missing_argument(jgi_protein_parser, "source_id", SOURCE_ID_JGI, SPECIES_ID_C_INTESTINALIS)
+    test_parser_missing_argument(jgi_protein_parser, "species_id", SOURCE_ID_JGI, SPECIES_ID_C_INTESTINALIS)
+    test_parser_missing_argument(jgi_protein_parser, "file", SOURCE_ID_JGI, SPECIES_ID_C_INTESTINALIS)
 
 # Test case to check if an error is raised when the file is not found
 def test_jgi_file_not_found(jgi_protein_parser: JGI_ProteinParser, test_file_not_found: Callable[[JGI_ProteinParser, int, int], None]) -> None:
