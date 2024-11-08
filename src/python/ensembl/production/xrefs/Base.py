@@ -379,44 +379,76 @@ class Base(Params):
         The path where the checksum files can be found
     url: str
         The database URL to load the checksum data into
+
+    Raises
+    ------
+    LookupError
+        If no source_id found for source name.
     """
     checksum_dir = os.path.join(path, 'Checksum')
     if not os.path.exists(checksum_dir): os.makedirs(checksum_dir, exist_ok = True)
+
+    output_files = []
+    threshold = 50000000
+    counter = 1
+    output_fh = None
 
     # Connect to db
     url = url + "?local_infile=1"
     db_engine = self.get_db_engine(url)
     with db_engine.connect() as dbi:
-      counter = 1
-      source_id = 1
-
-      # Open the checksum output file
+      # Get all checksum files
       files = os.listdir(checksum_dir)
-      checksum_file = os.path.join(checksum_dir, 'checksum.txt')
-      with open(checksum_file, 'w') as output_fh:
-        # Go through all available checksum files
-        for file in files:
-          if re.search("checksum", file): continue
 
-          input_file = os.path.join(checksum_dir, file)
-          match = re.search(r"\/([A-Za-z]*)-.*$", input_file)
-          source_name = match.group(1)
-          source_id = self.get_source_id_from_name(dbi, source_name)
+      # Go through all available checksum files
+      index = 0
+      for checksum_file in files:
+        if re.search("checksum", checksum_file): continue
 
-          input_fh = self.get_filehandle(input_file)
-          for line in input_fh:
-            line = line.rstrip()
-            (id, checksum) = re.split(r"\s+", line)
+        # Get the source name and ID
+        input_file = os.path.join(checksum_dir, checksum_file)
+        match = re.search(r"\/([A-Za-z]*)-.*$", input_file)
+        source_name = match.group(1)
+        source_id = self.get_source_id_from_name(dbi, source_name)
 
-            counter += 1
-            output = [str(counter), str(source_id), id, checksum]
-            output_str = "\t".join(output)
-            output_fh.write(f'{output_str}\n')
+        if not source_id:
+          raise LookupError(f'No source_id found for source name {source_name}')
 
-          input_fh.close()
+        # Open the input file
+        input_fh = self.get_filehandle(input_file)
+        for line in input_fh:
+          # Open the output file
+          if not output_fh or (counter % threshold) == 0:
+            if output_fh: output_fh.close()
+            index += 1
+            output_file = os.path.join(checksum_dir, f'checksum_{index}.txt')
+            output_files.append(output_file)
+            output_fh = open(output_file, 'w')
 
-      query = f'load data local infile \'{checksum_file}\' into table checksum_xref'
-      dbi.execute(text(query))
+          line = line.rstrip()
+          (checksum_id, checksum) = re.split(r"\s+", line)
+
+          output = [str(counter), str(source_id), checksum_id, checksum]
+          output_str = "\t".join(output)
+          output_fh.write(f'{output_str}\n')
+
+          counter += 1
+
+        input_fh.close()
+
+      if output_fh: output_fh.close()
+
+      # Add the data in the files to the db
+      for output_file in output_files:
+        dbi.execute(text(f'load data local infile \'{output_file}\' into table checksum_xref'))
+
+      # Merge  the created files
+      merged_file = os.path.join(checksum_dir, f'checksum.txt')
+      with open(merged_file,'w') as output_fh:
+        for output_file in output_files:
+          with open(output_file,'r') as input_fh:
+            shutil.copyfileobj(input_fh, output_fh)
+          os.remove(output_file)
 
   def get_filehandle(self, filename: str):
     """ Opens an appropriate read filehandle for a file based on its type.
