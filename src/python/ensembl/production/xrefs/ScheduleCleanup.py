@@ -14,16 +14,26 @@
 
 """Scheduling module to create cleanup jobs for specific xref sources."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+import os
+import re
+from typing import Optional
+from sqlalchemy import select
 
+from ensembl.xrefs.xref_source_db_model import (
+    Source as SourceSORM,
+    Version as VersionORM,
+)
+
+from ensembl.production.xrefs.Base import Base
 
 class ScheduleCleanup(Base):
     def run(self):
-        base_path              = self.param_required("base_path", {"type": "str"})
-        source_db_url          = self.param_required("source_db_url", {"type": "str"})
-        clean_files            = self.param("clean_files", None, {"type": "bool"})
-        clean_dir              = self.param("clean_dir", None, {"type": "str"})
-        split_files_by_species = self.param("split_files_by_species", None, {"type": "bool"})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
+        clean_files: Optional[bool] = self.get_param("clean_files", {"type": bool})
+        clean_dir: Optional[str] = self.get_param("clean_dir", {"type": str})
+        split_files_by_species: Optional[bool] = self.get_param("split_files_by_species", {"type": bool})
 
         logging.info("ScheduleCleanup starting with parameters:")
         logging.info(f"Param: base_path = {base_path}")
@@ -41,6 +51,7 @@ class ScheduleCleanup(Base):
             )
             sources = dbi.execute(query).mappings().all()
 
+        cleanup_sources = 0
         for source in sources:
             # Only cleaning RefSeq and UniProt for now
             if not (
@@ -50,14 +61,18 @@ class ScheduleCleanup(Base):
                 continue
 
             # Remove / char from source name to access directory
-            clean_name = source.name
-            clean_name = re.sub(r"\/", "", clean_name)
+            clean_name = re.sub(r"\/", "", source.name)
 
             # Send parameters into cleanup jobs for each source
-            if os.path.exists(os.path.join(base_path, clean_name)):
+            source_path = os.path.join(base_path, clean_name)
+            if os.path.exists(source_path):
+                cleanup_sources += 1
                 logging.info(f"Source to cleanup: {source.name}")
 
                 self.write_output(
                     "cleanup_sources",
                     {"name": source.name, "version_file": source.revision},
                 )
+
+        if cleanup_sources == 0:
+            self.write_output("cleanup_sources", {})

@@ -14,14 +14,18 @@
 
 """Checksum module for the Xref Download pipeline."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+from sqlalchemy import select, func
 
+from ensembl.xrefs.xref_source_db_model import ChecksumXref as ChecksumXrefSORM
+
+from ensembl.production.xrefs.Base import Base
 
 class Checksum(Base):
     def run(self):
-        base_path     = self.param_required("base_path", {"type": "str"})
-        source_db_url = self.param_required("source_db_url", {"type": "str"})
-        skip_download = self.param_required("skip_download", {"type": "bool"})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
+        skip_download: bool = self.get_param("skip_download", {"required": True, "type": bool})
 
         logging.info("Checksum starting with parameters:")
         logging.info(f"Param: base_path = {base_path}")
@@ -32,15 +36,17 @@ class Checksum(Base):
         db_engine = self.get_db_engine(source_db_url)
 
         # Check if checksums already exist
-        table_nonempty = 0
-        if skip_download:
-            with db_engine.connect() as dbi:
-                query = select(func.count(ChecksumXrefSORM.checksum_xref_id))
-                table_nonempty = dbi.execute(query).scalar()
+        table_empty = self.check_table_empty(db_engine) if skip_download else True
 
         # Load checksums from files into db
-        if not table_nonempty:
+        if table_empty:
             self.load_checksum(base_path, source_db_url)
             logging.info("Checksum data loaded")
         else:
             logging.info("Checksum data already exists, skipping loading")
+
+    def check_table_empty(self, db_engine):
+        """Check if the checksum table is empty."""
+        with db_engine.connect() as dbi:
+            query = select(func.count(ChecksumXrefSORM.checksum_xref_id))
+            return dbi.execute(query).scalar() == 0

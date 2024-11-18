@@ -14,14 +14,16 @@
 
 """Scheduling module to create download jobs for all xref sources in config file."""
 
-from ensembl.production.xrefs.Base import *
+import json
+import logging
 
+from ensembl.production.xrefs.Base import Base
 
 class ScheduleDownload(Base):
-    def run(self):
-        config_file   = self.param_required("config_file", {"type": "str"})
-        source_db_url = self.param_required("source_db_url", {"type": "str"})
-        reuse_db      = self.param_required("reuse_db", {"type": "bool"})
+    def run(self) -> None:
+        config_file: str = self.get_param("config_file", {"required": True, "type": str})
+        source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
+        reuse_db: bool = self.get_param("reuse_db", {"required": True, "type": bool})
 
         logging.info("ScheduleDownload starting with parameters:")
         logging.info(f"Param: config_file = {config_file}")
@@ -32,12 +34,11 @@ class ScheduleDownload(Base):
         self.create_source_db(source_db_url, reuse_db)
 
         # Extract sources to download from config file
-        sources = []
         with open(config_file) as conf_file:
             sources = json.load(conf_file)
 
-        if len(sources) < 1:
-            raise IOError(
+        if not sources:
+            raise ValueError(
                 f"No sources found in config file {config_file}. Need sources to run pipeline"
             )
 
