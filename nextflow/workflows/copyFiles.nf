@@ -77,7 +77,7 @@ process COPY {
     val dest_dir
 
     """
-    rsync -avz $src_file $dest_dir
+    rsync -avz  --no-o --no-g --no-perms  $src_file $dest_dir
     """
 }
 
