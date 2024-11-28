@@ -72,6 +72,7 @@ nextflow run copyFiles.nf -c ../filescopy.config --source /path/to/source/data -
 }
 
 process COPY {
+    label 'mem2GB_DM'
     input:
     val src_file
     val dest_dir
