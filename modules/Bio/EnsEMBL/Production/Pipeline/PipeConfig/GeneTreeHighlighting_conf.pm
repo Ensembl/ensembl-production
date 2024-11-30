@@ -32,7 +32,7 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version v2.5;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
@@ -91,7 +91,7 @@ sub pipeline_analyses {
             -flow_into  => {
                 '1->A' => [ 'job_factory' ],
                 # 'A->1' => [ 'check_duplicates_member_xref' ]
-                'A->1' => [ 'run_dc' ]
+                'A->1' => [ 'commence_post_processing' ]
             }
         },
         {
@@ -124,6 +124,44 @@ sub pipeline_analyses {
             -parameters    => {
                 compara_division => $self->o('compara_division'),
             }
+        },
+        {
+            -logic_name => 'commence_post_processing',
+            -module     => 'Bio::EnsEMBL::Compara::RunnableDB::FunnelCheck',
+            -flow_into => {
+                '1->A' => [ 'analyze_optimize_factory' ],
+                'A->1' => [ 'run_dc' ],
+            },
+        },
+        {
+            -logic_name => 'analyze_optimize_factory',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+            -parameters => {
+                'inputlist'    => [ 'external_db', 'member_xref' ],
+                'column_names' => [ 'table' ],
+            },
+            -flow_into  => { 2 => 'analyze' },
+        },
+        {
+            -logic_name => 'analyze',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -parameters => {
+                cmd          => '#compara_host# mysqlcheck --analyze #compara_db# #table#',
+                compara_db   => $self->o('compara_db'),
+                compara_host => $self->o('compara_host'),
+            },
+            -flow_into => {
+                1 => { 'optimize' => { 'table' => '#table#' } },
+            },
+        },
+        {
+            -logic_name => 'optimize',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -parameters => {
+                cmd          => '#compara_host# mysqlcheck --optimize #compara_db# #table#',
+                compara_db   => $self->o('compara_db'),
+                compara_host => $self->o('compara_host'),
+            },
         },
         {
             -logic_name        => 'run_dc',
