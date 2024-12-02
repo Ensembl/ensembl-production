@@ -210,7 +210,7 @@ foreach my $input_file (@files) {
         my $species_id_str = sprintf("%04d", $species_id);
         my @digits = split('', $species_id_str);
 
-        $write_path = catdir($output_path, @digits);
+        $write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
         make_path($write_path);
 
         $write_file = catfile($write_path, "$output_file_name-$species_id");

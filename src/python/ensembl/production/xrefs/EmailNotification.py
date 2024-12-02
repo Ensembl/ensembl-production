@@ -32,7 +32,10 @@ class EmailNotification(Base):
         email_server: str = self.get_param("email_server", {"required": True, "type": str})
         log_timestamp: str = self.get_param("log_timestamp", {"type": str})
 
-        email_message = f"The <b>{pipeline_name}</b> has completed its run.<br>"
+        email_message = f"<p>The <b>{pipeline_name}</b> has completed its run.<br>"
+        if re.search("Download", pipeline_name):
+            email_message += "To run the Xref Process Pipeline based on the data from this pipeline, use the same <b>--source_db_url</b>, <b>--split_files_by_species</b>, and <b>--config_file</b> values provided to this pipeline."
+        email_message += "</p>"
 
         if log_timestamp:
             # Get the path of the log files
@@ -67,6 +70,7 @@ class EmailNotification(Base):
                 "ScheduleDownload",
                 "DownloadSource",
                 "ScheduleCleanup",
+                "Checksum",
                 "Cleanup(.*)Source",
                 "EmailNotification",
             ],
@@ -117,7 +121,7 @@ class EmailNotification(Base):
         return {param[0]: param[1] for param in parameters_list}
 
     def format_parameters(self, parameters: Dict[str, str]) -> str:
-        message = "<br>The pipeline was run with the following parameters:<br>"
+        message = "<br><h5>Run Parameters</h5>"
         for param_name, param_value in parameters.items():
             message += f"<b>{param_name}</b> = {param_value}<br>"
 
@@ -133,12 +137,31 @@ class EmailNotification(Base):
     def extract_sources_data(self, data: str) -> Dict[str, Dict[str, Any]]:
         sources_data = {}
 
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to download: ([\w\/]+)", "to_download"))
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to cleanup: ([\w\/]+)", "to_cleanup"))
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source ([\w\/]+) cleaned up", "cleaned_up"))
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file already exists, skipping download \((.*)\)", "skipped", True))
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file downloaded via (HTTP|FTP): (.*)", "downloaded", True))
-        sources_data.update(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file copied from local FTP: (.*)", "copied", True))
+        # Helper function to update sources_data
+        def update_sources_data(new_data: Dict[str, Dict[str, Any]]):
+            for key, value in new_data.items():
+                if key in sources_data:
+                    sources_data[key].update(value)
+                else:
+                    sources_data[key] = value
+
+        # Get sources set to be downloaded
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to download: ([\w\/]+)", "to_download"))
+
+        # Get sources set to be cleaned up
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to cleanup: ([\w\/]+)", "to_cleanup"))
+
+        # Get sources cleaned up
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source ([\w\/]+) cleaned up", "cleaned_up"))
+
+        # Get sources skipped
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file already exists, skipping download \((.*)\)", "skipped", True))
+
+        # Get sources downloaded
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file downloaded via (HTTP|FTP): (.*)", "downloaded", True))
+
+        # Get sources copied
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file copied from local FTP: (.*)", "copied", True))
 
         return sources_data
 
@@ -151,7 +174,7 @@ class EmailNotification(Base):
                 if key == "skipped" or key == "copied":
                     val = os.path.dirname(match[1])
                 else:
-                    val = f"{match[1]}|" + os.path.dirname(match[2])
+                    val = os.path.dirname(match[2])
                 sources[match[0]] = {key: val}
             else:
                 sources[match] = {key: True}
@@ -167,33 +190,31 @@ class EmailNotification(Base):
         return {species[0]: species[1] for species in added_species_list}
 
     def format_download_statistics(self, sources_data: Dict[str, Dict[str, Any]], added_species: Dict[str, str], skipped_species: Dict[str, str]) -> str:
-        message = "<br>--Source Statistics--<br>"
+        cell_style = 'style="border-right: 1px solid #000; padding: 5px;"'
 
+        message = "<br><h5>Source Statistics</h5>"
+        message += f"<table style=\"border-bottom: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Source</th><th {cell_style}>Scheduled</th><th {cell_style}>Downloaded</th>"
+        message += f"<th {cell_style}>Download Skipped</th><th {cell_style}>Cleaned-up</th><th style=\"padding: 5px;\">Location</th></tr>"
         for source_name, source_values in sources_data.items():
-            message += f"<b>{source_name}:</b><br>"
-            if source_values.get("to_download"):
-                message += f"{self.INDENT}Scheduled for download &#10004;<br>"
-            if source_values.get("downloaded"):
-                download_type, file_path = source_values["downloaded"].split("|")
-                message += f"{self.INDENT}File downloaded via {download_type} into {file_path}<br>"
-            elif source_values.get("copied"):
-                message += f"{self.INDENT}File(s) copied from local FTP into {source_values['copied']}<br>"
-            elif source_values.get("skipped"):
-                message += f"{self.INDENT}File(s) download skipped, already exists in {source_values['skipped']}<br>"
-            if source_values.get("to_cleanup"):
-                message += f"{self.INDENT}Scheduled for cleanup &#10004;<br>"
-            if source_values.get("cleaned_up"):
-                message += f"{self.INDENT}Cleaned up &#10004;<br>"
+            message += f"<tr><td {cell_style}>{source_name}</td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("to_download") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("downloaded") or source_values.get("copied") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("skipped") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("to_cleanup") else f"<td {cell_style}></td>"
+            message += f"<td style=\"padding: 5px;\">{source_values.get('downloaded', source_values.get('copied', source_values.get('skipped', '')))}</td>"
+            message += "</tr>"
+        message += "</table>"
 
-        message += "<br>--Species Statistics--<br>"
-        message += "Skipped Species (files already exist):<br>"
-        for source_name, count in skipped_species.items():
-            message += f"{self.INDENT}{source_name}: {count}<br>"
-        message += "Added Species (files created):<br>"
+        message += "<br><h5>Species Statistics</h5>"
+        message += "<b>Added Species (files created)</b>:<br><ul>"
         for source_name, count in added_species.items():
-            message += f"{self.INDENT}{source_name}: {count}<br>"
+            message += f"<li>{source_name}: {count}</li>"
+        message += "</ul>"
+        message += "<b>Skipped Species (files already exist)</b>:<br><ul>"
+        for source_name, count in skipped_species.items():
+            message += f"<li>{source_name}: {count}</li>"
+        message += "</ul>"
 
-        message += "<br>To run the Xref Process Pipeline based on the data from this pipeline, use the same <b>--source_db_url</b>, <b>--split_files_by_species</b>, and <b>--config_file</b> values provided to this pipeline."
         return message
 
     def extract_process_statistics(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, Dict[str, int]]]:

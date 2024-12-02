@@ -4,6 +4,12 @@
 params.pipeline_name = 'Xref Download Pipeline'
 params.help = false
 
+// Ensure all paths are absolute
+params.scripts_dir = file(params.scripts_dir).toAbsolutePath().toString()
+params.perl_scripts_dir = file(params.perl_scripts_dir).toAbsolutePath().toString()
+params.base_path = file(params.base_path).toAbsolutePath().toString()
+params.clean_dir = file(params.clean_dir).toAbsolutePath().toString()
+
 println """\
         XREF DOWNLOAD PIPELINE
         ======================
@@ -11,11 +17,9 @@ println """\
         base_path                 : ${params.base_path}
         reuse_db                  : ${params.reuse_db}
         skip_download             : ${params.skip_download}
-        skip_preparse             : ${params.skip_preparse}
         clean_files               : ${params.clean_files}
         split_files_by_species    : ${params.split_files_by_species}
         config_file               : ${params.config_file}
-        sources_config_file       : ${params.sources_config_file}
         clean_dir                 : ${params.clean_dir}
         tax_ids_file              : ${params.tax_ids_file}
         update_mode               : ${params.update_mode}
@@ -38,9 +42,6 @@ def helpMessage() {
         --skip_download             (optional)      If set to 1, source files will only be downloaded if they don't already exist in --base_path.
                                                     Default: 0
 
-        --skip_preparse             (optional)      If set to 1, the pre-parse step will be skipped (no central DB).
-                                                    Default: 1
-
         --clean_files               (optional)      If set to 1, the Cleanup analysis will be run for RefSeq and UniProt files.
                                                     Default: 1
 
@@ -49,9 +50,6 @@ def helpMessage() {
 
         --config_file               (optional)      Path to the json file containing information about xref sources to download.
                                                     Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_all_sources.json
-
-        --sources_config_file       (optional)      Path to the ini file containing information about all xref sources and species/divisions.
-                                                    Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_config.ini
 
         --clean_dir                 (optional)      Path where to save the cleaned up files.
                                                     Default: [--base_path]/clean_files
@@ -111,7 +109,7 @@ process ScheduleDownload {
     timestamp = new java.util.Date().format("yyyyMMdd_HHmmss")
 
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleDownload --config_file ${params.config_file} --source_db_url ${params.source_db_url} --reuse_db ${params.reuse_db} --skip_preparse ${params.skip_preparse} --base_path ${params.base_path} --log_timestamp $timestamp
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleDownload --config_file ${params.config_file} --source_db_url ${params.source_db_url} --reuse_db ${params.reuse_db} --base_path ${params.base_path} --log_timestamp $timestamp
     """
 }
 
@@ -144,7 +142,7 @@ process CleanupTmpFiles {
     val 'TmpCleanupDone'
 
     """
-    find ${params.base_path} -type f -name "*.tmp" -delete
+    find ${params.base_path} -path "${params.clean_dir}" -prune -o -type f -name "*.tmp" -exec rm -f {} +
     """
 }
 
@@ -180,7 +178,7 @@ process Checksum {
 }
 
 process CleanupSplitSource {
-    label 'mem4GB'
+    label 'cleanup_mem'
     tag "$src_name"
 
     input:
@@ -207,7 +205,7 @@ process CleanupSplitSource {
 }
 
 process CleanupSource {
-    label 'mem4GB'
+    label 'cleanup_mem'
     tag "$src_name"
 
     input:
