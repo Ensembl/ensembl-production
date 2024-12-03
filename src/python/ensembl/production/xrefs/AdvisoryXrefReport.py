@@ -14,16 +14,17 @@
 
 """Xref module to print out advisory datachecks results (only needed now since we are still using perl datachecks)."""
 
-from ensembl.production.xrefs.Base import *
+import re
 
+from ensembl.production.xrefs.Base import Base
 
 class AdvisoryXrefReport(Base):
     def run(self):
-        base_path        = self.param_required("base_path", {"type": "str"})
-        species_name     = self.param_required("species_name", {"type": "str"})
-        release          = self.param_required("release", {"type": "int"})
-        datacheck_name   = self.param("datacheck_name", None, {"type": "str"})
-        datacheck_output = self.param("datacheck_output", None, {"type": "str"})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        datacheck_name: str = self.get_param("datacheck_name", {"type": str})
+        datacheck_output: str = self.get_param("datacheck_output", {"type": str})
 
         # Create or locate report file
         report_file = self.get_path(

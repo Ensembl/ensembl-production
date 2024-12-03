@@ -14,9 +14,8 @@
 
 """Mapper extension module for species danio_rerio."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
-
 
 class danio_rerio(BasicMapper):
     def set_display_xrefs(self) -> None:

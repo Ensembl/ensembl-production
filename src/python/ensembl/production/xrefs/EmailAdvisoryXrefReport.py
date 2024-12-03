@@ -14,20 +14,22 @@
 
 """Email module to send user emails notifying of advisory DC failures."""
 
-from ensembl.production.xrefs.Base import *
+import os
+import re
 
 from smtplib import SMTP
 from email.message import EmailMessage
 
+from ensembl.production.xrefs.Base import Base
 
 class EmailAdvisoryXrefReport(Base):
     def run(self):
-        base_path     = self.param_required("base_path", {"type": "str"})
-        release       = self.param_required("release", {"type": "int"})
-        pipeline_name = self.param_required("pipeline_name", {"type": "str"})
-        email_address = self.param_required("email", {"type": "str"})
-        email_server  = self.param_required("email_server", {"type": "str"})
-        log_timestamp = self.param("log_timestamp", None, {"type": "str"})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        pipeline_name: str = self.get_param("pipeline_name", {"required": True, "type": str})
+        email_address: str = self.get_param("email", {"required": True, "type": str})
+        email_server: str = self.get_param("email_server", {"required": True, "type": str})
+        log_timestamp: str = self.get_param("log_timestamp", {"type": str})
 
         # Get the path and name of main reports file
         formatted_name = re.sub(r"\s", "_", pipeline_name)
@@ -38,40 +40,38 @@ class EmailAdvisoryXrefReport(Base):
         else:
             log_path = os.path.join(base_path, "logs")
             if not os.path.exists(log_path):
-                os.makedir(log_path)
+                os.makedirs(log_path)
             main_report_file_name = f"{main_report_file_name}.log"
 
         main_report_file = os.path.join(log_path, main_report_file_name)
-        main_fh = open(main_report_file, "a")
+        with open(main_report_file, "a") as main_fh:
 
-        species_with_reports = {}
+            species_with_reports = {}
 
-        # Get species in base path
-        species_list = os.listdir(base_path)
+            # Get species in base path
+            species_list = os.listdir(base_path)
 
-        for species in species_list:
-            # Check if reports exist
-            dc_path = os.path.join(base_path, species, release, "dc_report")
-            if os.path.exists(dc_path):
-                # Get report files
-                dc_files = os.listdir(dc_path)
+            for species in species_list:
+                # Check if reports exist
+                dc_path = os.path.join(base_path, species, str(release), "dc_report")
+                if os.path.exists(dc_path):
+                    # Get report files
+                    dc_files = os.listdir(dc_path)
 
-                # Add each dc report into main report file
-                for dc_file in dc_files:
-                    with open(os.path.join(dc_path, dc_file), "r") as file:
-                        dc_data = file.read()
+                    # Add each dc report into main report file
+                    for dc_file in dc_files:
+                        with open(os.path.join(dc_path, dc_file), "r") as file:
+                            dc_data = file.read()
 
-                    main_fh.write(f"{dc_data}\n")
+                        main_fh.write(f"{dc_data}\n")
 
-                    dc_name = dc_file.replace(".log", "")
-                    if species_with_reports.get(dc_name):
-                        species_with_reports[dc_name].append(species)
-                    else:
-                        species_with_reports[dc_name] = [species]
+                        dc_name = dc_file.replace(".log", "")
+                        if dc_name in species_with_reports:
+                            species_with_reports[dc_name].append(species)
+                        else:
+                            species_with_reports[dc_name] = [species]
 
-                # TO DO: maybe delete individual reports
-
-        main_fh.close()
+                    # TO DO: maybe delete individual reports
 
         email_message = f"Some advisory datachecks have failed for the following species in the xref pipeline run ({pipeline_name}).<br><br>"
         for dc_name, species_list in species_with_reports.items():
@@ -96,5 +96,5 @@ class EmailAdvisoryXrefReport(Base):
             file_data, maintype="text", subtype="plain", filename=main_report_file_name
         )
 
-        smtp = SMTP(email_server)
-        smtp.send_message(message)
+        with SMTP(email_server) as smtp:
+            smtp.send_message(message)

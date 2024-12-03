@@ -14,8 +14,10 @@
 
 """Mapper extension module for species drosophila."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+from typing import Dict, List, Tuple
+from sqlalchemy.sql.expression import Select
 
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class drosophila(BasicMapper):
     def gene_description_filter_regexps(self) -> List[str]:

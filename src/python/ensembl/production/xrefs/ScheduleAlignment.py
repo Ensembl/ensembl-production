@@ -14,24 +14,28 @@
 
 """Scheduling module to create xref/ensEMBL alignment jobs."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+import os
+from typing import Optional
 
+from ensembl.production.xrefs.Base import Base
 
 class ScheduleAlignment(Base):
     def run(self):
-        species_name  = self.param_required("species_name", {"type": "str"})
-        release       = self.param_required("release", {"type": "int"})
-        target_file   = self.param_required("ensembl_fasta", {"type": "str"})
-        source_file   = self.param_required("xref_fasta", {"type": "str"})
-        seq_type      = self.param_required("seq_type", {"type": "str"})
-        xref_db_url   = self.param_required("xref_db_url", {"type": "str"})
-        base_path     = self.param_required("base_path", {"type": "str"})
-        method        = self.param_required("method", {"type": "str"})
-        query_cutoff  = self.param_required("query_cutoff", {"type": "int"})
-        target_cutoff = self.param_required("target_cutoff", {"type": "int"})
-        source_id     = self.param_required("source_id", {"type": "int"})
-        source_name   = self.param_required("source_name", {"type": "str"})
-        job_index     = self.param_required("job_index", {"type": "int"})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        target_file: str = self.get_param("ensembl_fasta", {"required": True, "type": str})
+        source_file: str = self.get_param("xref_fasta", {"required": True, "type": str})
+        seq_type: str = self.get_param("seq_type", {"required": True, "type": str})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        method: str = self.get_param("method", {"required": True, "type": str})
+        query_cutoff: int = self.get_param("query_cutoff", {"required": True, "type": int})
+        target_cutoff: int = self.get_param("target_cutoff", {"required": True, "type": int})
+        source_id: int = self.get_param("source_id", {"required": True, "type": int})
+        source_name: str = self.get_param("source_name", {"required": True, "type": str})
+        job_index: int = self.get_param("job_index", {"required": True, "type": int})
+        chunk_size: Optional[int] = self.get_param("chunk_size", {"type": int, "default": 1000000})
 
         logging.info(
             f"ScheduleAlignment starting for species '{species_name}' with seq_type '{seq_type}' and job_index '{job_index}'"
@@ -39,14 +43,14 @@ class ScheduleAlignment(Base):
 
         # Inspect file size to decide on chunking
         size = os.stat(target_file).st_size
-        chunks = int(size / 1000000) + 1
+        chunks = int(size / chunk_size) + 1
 
         # Create output path
         output_path = self.get_path(base_path, species_name, release, "alignment")
 
         # Pass alignment data for each chunk
         chunklet = 1
-        while chunklet <= chunks:
+        for chunklet in range(1, chunks + 1):
             output_path_chunk = os.path.join(
                 output_path,
                 f"{seq_type}_alignment_{source_id}_{chunklet}_of_{chunks}.map",
@@ -70,4 +74,3 @@ class ScheduleAlignment(Base):
                     "seq_type": seq_type,
                 },
             )
-            chunklet += 1

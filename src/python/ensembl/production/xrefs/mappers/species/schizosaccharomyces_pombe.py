@@ -14,8 +14,10 @@
 
 """Mapper extension module for species schizosaccharomyces_pombe."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+from typing import Dict, List, Tuple
+from sqlalchemy.sql.expression import Select
 
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class schizosaccharomyces_pombe(BasicMapper):
     def gene_display_xref_sources(self) -> Tuple[List[str], Dict[str, Select]]:

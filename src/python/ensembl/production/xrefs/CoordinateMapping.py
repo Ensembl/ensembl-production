@@ -14,26 +14,27 @@
 
 """Xref module to process the coordinate mappings."""
 
-from ensembl.production.xrefs.Base import *
-from ensembl.production.xrefs.mappers.CoordinateMapper import CoordinateMapper
+import logging
+from typing import Optional
 
+from ensembl.production.xrefs.Base import Base
+from ensembl.production.xrefs.mappers.CoordinateMapper import CoordinateMapper
 
 class CoordinateMapping(Base):
     def run(self):
-        xref_db_url  = self.param_required("xref_db_url", {"type": "str"})
-        species_name = self.param_required("species_name", {"type": "str"})
-        base_path    = self.param_required("base_path", {"type": "str"})
-        release      = self.param_required("release", {"type": "int"})
-        scripts_dir  = self.param_required("perl_scripts_dir", {"type": "str"})
-        registry     = self.param("registry_url", None, {"type": "str"})
-        core_db_url  = self.param("species_db", None, {"type": "str"})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        scripts_dir: str = self.get_param("perl_scripts_dir", {"required": True, "type": str})
+        registry: Optional[str] = self.get_param("registry_url", {"type": str})
+        core_db_url: Optional[str] = self.get_param("species_db", {"type": str})
 
         logging.info(f"CoordinateMapping starting for species '{species_name}'")
 
+        # Retrieve core database URL if not provided
         if not core_db_url:
-            core_db_url = self.get_db_from_registry(
-                species_name, "core", release, registry
-            )
+            core_db_url = self.get_db_from_registry(species_name, "core", release, registry)
 
         # Get species id
         db_engine = self.get_db_engine(core_db_url)
@@ -41,9 +42,7 @@ class CoordinateMapping(Base):
             species_id = self.get_taxon_id(core_dbi)
 
         # Get the appropriate mapper
-        mapper = self.get_xref_mapper(
-            xref_db_url, species_name, base_path, release, core_db_url, registry
-        )
+        mapper = self.get_xref_mapper(xref_db_url, species_name, base_path, release, core_db_url, registry)
 
         # Process the coordinate xrefs
         coord = CoordinateMapper(mapper)

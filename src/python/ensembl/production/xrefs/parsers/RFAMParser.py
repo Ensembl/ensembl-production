@@ -17,7 +17,7 @@
 import logging
 import os
 import re
-import wget
+import wget # type: ignore
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from sqlalchemy import and_, select
@@ -44,7 +44,7 @@ class RFAMParser(BaseParser):
         species_id = args.get("species_id")
         species_name = args.get("species_name")
         xref_file = args.get("file")
-        dba = args.get("dba")
+        db_url = args.get("extra_db_url")
         ensembl_release = args.get("ensembl_release")
         xref_dbi = args.get("xref_dbi")
         verbose = args.get("verbose", False)
@@ -70,7 +70,7 @@ class RFAMParser(BaseParser):
         species_name = species_id_to_names[species_id][0]
 
         # Connect to the appropriate rfam db
-        rfam_db_url = self.get_rfam_db_url(db_host, db_user, db_pass, db_port, db_name, dba, species_name, ensembl_release, verbose)
+        rfam_db_url = self.get_rfam_db_url(db_host, db_user, db_pass, db_port, db_name, db_url, species_name, ensembl_release, verbose)
         if not rfam_db_url:
             raise AttributeError("Could not find RFAM DB.")
         if verbose:
@@ -86,11 +86,11 @@ class RFAMParser(BaseParser):
         result_message = f"Added {xref_count} RFAM xrefs and {direct_count} direct xrefs"
         return 0, result_message
 
-    def get_rfam_db_url(self, db_host: str, db_user: str, db_pass: str, db_port: str, db_name: str, dba: str, species_name: str, ensembl_release: str, verbose: bool) -> Any:
+    def get_rfam_db_url(self, db_host: str, db_user: str, db_pass: str, db_port: str, db_name: str, db_url: str, species_name: str, ensembl_release: str, verbose: bool) -> Any:
         if db_host:
             return URL.create("mysql", db_user, db_pass, db_host, db_port, db_name)
-        elif dba:
-            return dba
+        elif db_url:
+            return db_url
         else:
             if verbose:
                 logging.info("Looking for db in mysql-ens-sta-1")

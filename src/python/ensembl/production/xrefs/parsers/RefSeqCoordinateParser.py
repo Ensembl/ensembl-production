@@ -27,7 +27,7 @@ class RefSeqCoordinateParser(BaseParser):
         source_id = args.get("source_id")
         species_id = args.get("species_id")
         species_name = args.get("species_name")
-        dba = args.get("dba")
+        db_url = args.get("extra_db_url")
         xref_dbi = args.get("xref_dbi")
         verbose = args.get("verbose", False)
 
@@ -46,7 +46,7 @@ class RefSeqCoordinateParser(BaseParser):
         species_name = species_id_to_names[species_id][0]
 
         # Connect to the appropriate dbs
-        if dba:
+        if db_url:
             return self.run_perl_script(args, source_ids, species_name)
         else:
             # Not all species have an otherfeatures database, skip if not found
@@ -85,14 +85,15 @@ class RefSeqCoordinateParser(BaseParser):
 
         logging.info(f"Running perl script {scripts_dir}/refseq_coordinate_parser.pl")
         perl_cmd = (
-            f"perl {scripts_dir}/refseq_coordinate_parser.pl "
-            f"--xref_db_url '{xref_db_url}' "
-            f"--core_db_url '{args.get('core_db_url')}' "
-            f"--otherf_db_url '{args.get('dba')}' "
-            f"--source_ids '{source_ids_json}' "
-            f"--species_id {args.get('species_id')} "
-            f"--species_name {species_name} "
-            f"--release {args.get('ensembl_release')}"
+            "perl",
+            f"{scripts_dir}/refseq_coordinate_parser.pl"
+            f"--xref_db_url", xref_db_url
+            f"--core_db_url", args.get('core_db_url'),
+            f"--otherf_db_url", args.get('extra_db_url'),
+            f"--source_ids", source_ids_json,
+            f"--species_id", str(species_id),
+            f"--species_name", species_name
+            f"--release", str(args.get('ensembl_release'))
         )
         cmd_output = subprocess.run(perl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

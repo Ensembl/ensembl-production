@@ -33,7 +33,7 @@ class CCDSParser(BaseParser):
         source_id = args.get("source_id")
         species_id = args.get("species_id")
         xref_file = args.get("file", "")
-        dba = args.get("dba")
+        db_url = args.get("extra_db_url")
         xref_dbi = args.get("xref_dbi")
         verbose = args.get("verbose", False)
 
@@ -53,8 +53,8 @@ class CCDSParser(BaseParser):
             ccds_db_url = URL.create(
                 "mysql", db_user, db_pass, db_host, db_port, db_name
             )
-        elif dba:
-            ccds_db_url = dba
+        elif db_url:
+            ccds_db_url = db_url
 
         if not ccds_db_url:
             return 1, "Could not find CCDS DB."

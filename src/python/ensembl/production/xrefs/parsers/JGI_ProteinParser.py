@@ -60,7 +60,7 @@ class JGI_ProteinParser(BaseParser):
                 }
                 xrefs.append(xref)
 
-        self.upload_xref_object_graphs(xrefs, xref_dbi)
+        self.add_xref_objects(xrefs, xref_dbi)
 
         result_message = f"{len(xrefs)} JGI_ xrefs successfully parsed"
 

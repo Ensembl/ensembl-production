@@ -14,8 +14,25 @@
 
 """Mapper module for setting the feature names."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+import re
+from typing import Any, Dict, Tuple, List
+from sqlalchemy import select, func, update, case, desc, insert, aliased, delete
+from sqlalchemy.engine import Connection
 
+from ensembl.xrefs.xref_update_db_model import (
+    GeneTranscriptTranslation as GeneTranscriptTranslationORM,
+    GeneStableId as GeneStableIdORM,
+    TranscriptStableId as TranscriptStableIdORM,
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    Synonym as SynonymORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class OfficialNaming(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -33,7 +50,7 @@ class OfficialNaming(BasicMapper):
     def run(self, species_id: int, verbose: bool) -> None:
         logging.info("Starting official naming")
 
-        # If no offical name then we do not want to go any further
+        # If no official name then we do not want to go any further
         dbname = self.official_name()
         if not dbname:
             self.update_process_status("official_naming_done")
@@ -42,30 +59,24 @@ class OfficialNaming(BasicMapper):
         xref_dbi = self.xref().connect()
 
         # If there are any official names on transcripts or translations, move them onto gene level
-        if dbname == "MGI":
-            self.biomart_fix("MGI", "Translation", "Gene", xref_dbi)
-            self.biomart_fix("MGI", "Transcript", "Gene", xref_dbi)
-        if dbname == "ZFIN_ID":
-            self.biomart_fix("ZFIN_ID", "Translation", "Gene", xref_dbi)
-            self.biomart_fix("ZFIN_ID", "Transcript", "Gene", xref_dbi)
-        if dbname == "RGD":
-            self.biomart_fix("RGD", "Translation", "Gene", xref_dbi)
-            self.biomart_fix("RGD", "Transcript", "Gene", xref_dbi)
+        for name in ["MGI", "ZFIN_ID", "RGD"]:
+            if dbname == name:
+                self.biomart_fix(name, "Translation", "Gene", xref_dbi)
+                self.biomart_fix(name, "Transcript", "Gene", xref_dbi)
 
         # Get the current max values for xref and object_xref
-        max_xref_id = xref_dbi.execute(select(func.max(XrefUORM.xref_id))).scalar()
-        max_xref_id = int(max_xref_id)
-        max_object_xref_id = xref_dbi.execute(
-            select(func.max(ObjectXrefUORM.object_xref_id))
-        ).scalar()
-        max_object_xref_id = int(max_object_xref_id)
+        max_xref_id = int(xref_dbi.execute(select(func.max(XrefUORM.xref_id))).scalar())
+        max_object_xref_id = int(xref_dbi.execute(select(func.max(ObjectXrefUORM.object_xref_id))).scalar())
 
         # Get labels, descriptions, and synonyms
         display_label_to_desc = self.get_display_label_data(dbname, xref_dbi)
-        synonyms = self.get_synonyms(dbname, xref_dbi)
 
         # Get source IDs
-        dbname_to_source_id = self.get_dbname_to_source_id(dbname, xref_id)
+        dbname_to_source_id = self.get_dbname_to_source_id(dbname, xref_dbi)
+
+        # Delete old data (from previous run)
+        logging.info(f"Deleting old data for sources: {', '.join(dbname_to_source_id.keys())}")
+        self.delete_old_data(dbname_to_source_id.values(), xref_dbi)
 
         # Reset gene and transcript stable id display data
         self.reset_display_xrefs(xref_dbi)
@@ -83,13 +94,12 @@ class OfficialNaming(BasicMapper):
             )
             .where(
                 GeneTranscriptTranslationORM.gene_id == GeneStableIdORM.internal_id,
-                GeneTranscriptTranslationORM.transcript_id
-                == TranscriptStableIdORM.internal_id,
+                GeneTranscriptTranslationORM.transcript_id == TranscriptStableIdORM.internal_id,
             )
             .order_by(GeneStableIdORM.stable_id, TranscriptStableIdORM.stable_id)
         )
         for row in xref_dbi.execute(query).mappings().all():
-            if not gene_to_transcripts.get(row.gene_id):
+            if row.gene_id not in gene_to_transcripts:
                 sorted_gene_ids.append(row.gene_id)
 
             gene_to_transcripts.setdefault(row.gene_id, []).append(row.transcript_id)
@@ -116,7 +126,7 @@ class OfficialNaming(BasicMapper):
             ObjectXrefUORM.ox_status == "DUMP_OUT",
         )
         for row in xref_dbi.execute(query).mappings().all():
-            ignore_object[row.object_xref_id] = 1
+            ignore_object[row.object_xref_id] = True
 
         xref_added, seen_gene, official_name_used = {}, {}, {}
 
@@ -125,7 +135,7 @@ class OfficialNaming(BasicMapper):
             transcript_source = dbname
             gene_symbol, gene_symbol_xref_id, is_lrg = None, None, 0
 
-            # Get offical name if it has one
+            # Get official name if it has one
             gene_symbol, gene_symbol_xref_id = self.get_official_domain_name(
                 {
                     "gene_id": gene_id,
@@ -138,22 +148,15 @@ class OfficialNaming(BasicMapper):
             )
 
             if gene_symbol_xref_id:
-                official_name_used[gene_symbol_xref_id] = 1
+                official_name_used[gene_symbol_xref_id] = True
 
             # If not found see if there is an LRG entry
             if not gene_symbol:
-                gene_symbol, gene_symbol_xref_id, is_lrg = self.find_lrg_hgnc(
-                    gene_id, xref_dbi
-                )
+                gene_symbol, gene_symbol_xref_id, is_lrg = self.find_lrg_hgnc(gene_id, xref_dbi)
 
             # If not found look for other valid database sources (RFAM and miRBase, EntrezGene)
             if not gene_symbol:
-                (
-                    gene_symbol,
-                    gene_symbol_xref_id,
-                    transcript_source,
-                    display_label_to_desc,
-                ) = self.find_from_other_sources(
+                gene_symbol, gene_symbol_xref_id, transcript_source, display_label_to_desc = self.find_from_other_sources(
                     ignore_object,
                     {
                         "gene_id": gene_id,
@@ -173,26 +176,22 @@ class OfficialNaming(BasicMapper):
 
                 if not is_lrg:
                     # Set transcript names
-                    max_xref_id, max_object_xref_id, xref_added, seen_gene = (
-                        self.set_transcript_display_xrefs(
-                            {
-                                "max_xref_id": max_xref_id,
-                                "max_object_xref_id": max_object_xref_id,
-                                "gene_id": gene_id,
-                                "gene_id_to_stable_id": gene_id_to_stable_id,
-                                "gene_symbol": gene_symbol,
-                                "description": description,
-                                "source_id": dbname_to_source_id.get(
-                                    f"{transcript_source}_trans_name"
-                                ),
-                                "xref_added": xref_added,
-                                "seen_gene": seen_gene,
-                                "transcript_ids": gene_to_transcripts.get(gene_id, []),
-                                "transcript_source": transcript_source,
-                                "species_id": species_id,
-                            },
-                            xref_dbi,
-                        )
+                    max_xref_id, max_object_xref_id = self.set_transcript_display_xrefs(
+                        {
+                            "max_xref_id": max_xref_id,
+                            "max_object_xref_id": max_object_xref_id,
+                            "gene_id": gene_id,
+                            "gene_id_to_stable_id": gene_id_to_stable_id,
+                            "gene_symbol": gene_symbol,
+                            "description": description,
+                            "source_id": dbname_to_source_id.get(f"{transcript_source}_trans_name"),
+                            "transcript_ids": gene_to_transcripts.get(gene_id, []),
+                            "transcript_source": transcript_source,
+                            "species_id": species_id,
+                        },
+                        xref_added,
+                        seen_gene,
+                        xref_dbi,
                     )
 
         xref_dbi.close()
@@ -217,49 +216,35 @@ class OfficialNaming(BasicMapper):
             XrefUORM.source_id == SourceUORM.source_id, SourceUORM.name.like(dbname)
         )
         for row in dbi.execute(query).mappings().all():
-            if not row.description:
-                no_descriptions += 1
-            else:
+            if row.description:
                 label_to_desc[row.label] = row.description
+            else:
+                no_descriptions += 1
 
         if no_descriptions:
-            logging.warn(f"Descriptions not defined for {no_descriptions} labels")
+            logging.warning(f"Descriptions not defined for {no_descriptions} labels")
 
         return label_to_desc
-
-    def get_synonyms(self, dbname: str, dbi: Connection) -> Dict[str, str]:
-        synonyms = {}
-
-        # Connect synonyms with xref labels
-        query = select(SynonymORM.synonym, XrefUORM.label).where(
-            XrefUORM.xref_id == SynonymORM.xref_id,
-            SourceUORM.source_id == XrefUORM.source_id,
-            SourceUORM.name.like(dbname),
-        )
-        for row in dbi.execute(query).mappings().all():
-            synonyms[row.synonym] = row.label
-
-        return synonyms
 
     def get_dbname_to_source_id(self, dbname: str, dbi: Connection) -> Dict[str, int]:
         dbname_to_source_id = {}
 
+        # List of source names to look for
         sources_list = [
             "RFAM_trans_name",
             "miRBase_trans_name",
             "EntrezGene_trans_name",
+            f"{dbname}_trans_name",
         ]
-        sources_list.append(f"{dbname}_trans_name")
-        sources_list.append(dbname)
 
         source_error = 0
         for source_name in sources_list:
             source_id = dbi.execute(
-                select(SourceUORM.source_id).where(SourceUORM.name.like(source_name))
+                select(SourceUORM.source_id).where(SourceUORM.name == source_name)
             ).scalar()
 
             if not source_id:
-                logging.warn(f"Could not find external database '{source_name}'")
+                logging.warning(f"Could not find external database '{source_name}'")
                 source_error += 1
             else:
                 dbname_to_source_id[source_name] = source_id
@@ -270,6 +255,23 @@ class OfficialNaming(BasicMapper):
             )
 
         return dbname_to_source_id
+
+    def delete_old_data(self, source_ids_to_delete: List[int], dbi: Connection) -> None:
+        # Delete from synonym
+        query = delete(SynonymORM).where(SynonymORM.xref_id == XrefUORM.xref_id, XrefUORM.source_id.in_(source_ids_to_delete))
+        dbi.execute(query)
+
+        # Delete from identity_xref
+        query = delete(IdentityXrefUORM).where(IdentityXrefUORM.object_xref_id == ObjectXrefUORM.object_xref_id, ObjectXrefUORM.xref_id == XrefUORM.xref_id, XrefUORM.source_id.in_(source_ids_to_delete))
+        dbi.execute(query)
+
+        # Delete from object_xref
+        query = delete(ObjectXrefUORM).where(ObjectXrefUORM.xref_id == XrefUORM.xref_id, XrefUORM.source_id.in_(source_ids_to_delete))
+        dbi.execute(query)
+
+        # Delete from xref
+        query = delete(XrefUORM).where(XrefUORM.source_id.in_(source_ids_to_delete))
+        dbi.execute(query)
 
     def reset_display_xrefs(self, dbi: Connection) -> None:
         dbi.execute(update(TranscriptStableIdORM).values(display_xref_id=None))
@@ -311,12 +313,12 @@ class OfficialNaming(BasicMapper):
 
             if row.priority < best_level:
                 display_names.clear()
-                display_names[row.xref_id] = 1
+                display_names[row.xref_id] = True
                 best_level = row.priority
             elif row.priority == best_level:
-                display_names[row.xref_id] = 1
+                display_names[row.xref_id] = True
 
-        # Check if the best names has been found, and remove the others if so
+        # Check if the best name has been found, and remove the others if so
         if name_count > 1 and len(display_names) == 1:
             if verbose:
                 logging.info(
@@ -336,13 +338,13 @@ class OfficialNaming(BasicMapper):
 
         # Perfect case, one best name found
         if len(display_names) == 1:
-            xref_id = display_names.keys()[0]
+            xref_id = next(iter(display_names))
             return xref_id_to_display[xref_id], xref_id
 
-        # Try to find the best names out of multiple ones
+        # Try to find the best name out of multiple ones
         if len(display_names) > 1:
             temp_best_identity = 0
-            best_ids, best_list = [], []
+            best_ids = {}
 
             # Fail xrefs with worse % identity if we can (query or target identity whichever is greater)
             case_stmt = case(
@@ -371,18 +373,15 @@ class OfficialNaming(BasicMapper):
             for row in dbi.execute(query).mappings().all():
                 if row.best_identity > temp_best_identity:
                     best_ids.clear()
-                    best_ids[row.xref_id] = 1
+                    best_ids[row.xref_id] = True
                     temp_best_identity = row.best_identity
                 elif row.best_identity == temp_best_identity:
-                    best_ids[row.xref_id] = 1
+                    best_ids[row.xref_id] = True
                 else:
                     break
 
-            for xref_id in display_names.keys():
-                best_list[xref_id_to_display[xref_id]] = 1
-
             # Check if we were able to reduce the number of xrefs based on % identity
-            if len(best_ids) > 0 and len(best_ids) < len(display_names):
+            if 0 < len(best_ids) < len(display_names):
                 display_names = best_ids
                 if verbose:
                     logging.info(
@@ -401,15 +400,12 @@ class OfficialNaming(BasicMapper):
                     return gene_symbol, gene_symbol_xref_id
 
             # Take the name which hasn't been already assigned to another gene, if possible
-            xref_not_used = None
-            for xref_id in display_names.keys():
-                if not official_name_used.get(xref_id):
-                    xref_not_used = xref_id
+            xref_not_used = next((xref_id for xref_id in display_names if not official_name_used.get(xref_id)), None)
 
             if xref_not_used:
                 if verbose:
                     logging.info(f"For gene {gene_id_to_stable_id[gene_id]}:")
-                for xref_id in display_names.keys():
+                for xref_id in display_names:
                     if xref_id == xref_not_used:
                         if verbose:
                             logging.info(f"\t{xref_id_to_display[xref_id]} chosen")
@@ -421,9 +417,8 @@ class OfficialNaming(BasicMapper):
                                 f"\t{xref_id_to_display[xref_id]} (left as {dbname} reference but not gene symbol)"
                             )
             else:
-                index = 0
-                for xref_id in display_names.keys():
-                    if not index:
+                for index, xref_id in enumerate(display_names):
+                    if index == 0:
                         if verbose:
                             logging.info(
                                 f"\t{xref_id_to_display[xref_id]} chosen as first"
@@ -435,11 +430,10 @@ class OfficialNaming(BasicMapper):
                             logging.info(
                                 f"\t{xref_id_to_display[xref_id]} (left as {dbname} reference but not gene symbol)"
                             )
-                    index += 1
 
         return gene_symbol, gene_symbol_xref_id
 
-    def set_the_best_display_name(self, display_names: Dict[int, int], xref_list: List[int], object_xref_list: List[int], xref_id_to_display: Dict[int, str], verbose: bool, dbi: Connection) -> Tuple[str, int]:
+    def set_the_best_display_name(self, display_names: Dict[int, bool], xref_list: List[int], object_xref_list: List[int], xref_id_to_display: Dict[int, str], verbose: bool, dbi: Connection) -> Tuple[str, int]:
         gene_symbol, gene_symbol_xref_id = None, None
 
         for xref_id in xref_list:
@@ -462,7 +456,7 @@ class OfficialNaming(BasicMapper):
         gene_symbol, gene_symbol_xref_id = None, None
         is_lrg = False
 
-        # Look for LRG_HGNC_notransfer, if found then find HGNC equiv and set to this
+        # Look for LRG_HGNC_notransfer, if found then find HGNC equivalent and set to this
         query = select(
             XrefUORM.label,
             XrefUORM.xref_id,
@@ -476,11 +470,12 @@ class OfficialNaming(BasicMapper):
             ObjectXrefUORM.ensembl_object_type == "Gene",
         )
         for row in dbi.execute(query).mappings().all():
-            # Set status to NO_DISPLAY as we do not want this transferred, just the equivalent hgnc
+            # Set status to NO_DISPLAY as we do not want this transferred, just the equivalent HGNC
             self.update_object_xref_status(row.object_xref_id, "NO_DISPLAY")
 
-            new_xref_id, priority = None, None
-            query = (
+            # Find the equivalent HGNC xref
+            new_xref_id = None
+            result = dbi.execute(
                 select(XrefUORM.xref_id, SourceUORM.priority)
                 .where(
                     XrefUORM.xref_id == ObjectXrefUORM.xref_id,
@@ -490,10 +485,9 @@ class OfficialNaming(BasicMapper):
                     ObjectXrefUORM.ox_status == "DUMP_OUT",
                 )
                 .order_by(SourceUORM.priority)
-            )
-            result = dbi.execute(query).fetchall()
+            ).fetchall()
             if result:
-                new_xref_id, priority = result[0]
+                new_xref_id = result[0][0]
 
             if new_xref_id:
                 gene_symbol = row.label
@@ -502,7 +496,7 @@ class OfficialNaming(BasicMapper):
 
         return gene_symbol, gene_symbol_xref_id, is_lrg
 
-    def find_from_other_sources(self, ignore: Dict[int, int], args: Dict[str, Any], dbi: Connection) -> Tuple[str, int, str, Dict[str, str]]:
+    def find_from_other_sources(self, ignore: Dict[int, bool], args: Dict[str, Any], dbi: Connection) -> Tuple[str, int, str, Dict[str, str]]:
         gene_id = args["gene_id"]
         display_label_to_desc = args["display_label_to_desc"]
         transcript_source = args["transcript_source"]
@@ -510,6 +504,7 @@ class OfficialNaming(BasicMapper):
         gene_symbol, gene_symbol_xref_id = None, None
         other_name_number, found_gene = {}, {}
 
+        # Iterate through the list of databases to find gene symbols
         for dbname in ["miRBase", "RFAM", "EntrezGene"]:
             query = select(
                 XrefUORM.label,
@@ -549,7 +544,7 @@ class OfficialNaming(BasicMapper):
 
         return gene_symbol, gene_symbol_xref_id, transcript_source, display_label_to_desc
 
-    def set_transcript_display_xrefs(self, args: Dict[str, Any], dbi: Connection) -> Tuple[int, int, Dict[str, int], Dict[str, int]]:
+    def set_transcript_display_xrefs(self, args: Dict[str, Any], xref_added: Dict[str, int], seen_gene: Dict[str, int], dbi: Connection) -> Tuple[int, int]:
         max_xref_id = args["max_xref_id"]
         max_object_xref_id = args["max_object_xref_id"]
         gene_id = args["gene_id"]
@@ -557,21 +552,17 @@ class OfficialNaming(BasicMapper):
         gene_symbol = args["gene_symbol"]
         description = args["description"]
         source_id = args["source_id"]
-        xref_added = args["xref_added"]
-        seen_gene = args["seen_gene"]
         transcript_ids = args["transcript_ids"]
         transcript_source = args["transcript_source"]
         species_id = args["species_id"]
 
-        # Do nothing is LRG
+        # Do nothing if LRG
         if re.search("LRG", gene_id_to_stable_id.get(gene_id)):
-            return
+            return max_xref_id, max_object_xref_id
 
-        ext = 201
-        if seen_gene.get(gene_symbol):
-            ext = seen_gene[gene_symbol]
+        ext = seen_gene.get(gene_symbol, 201)
 
-        # Go thourgh transcripts
+        # Go through transcripts
         for transcript_id in transcript_ids:
             transcript_name = f"{gene_symbol}-{ext}"
 
@@ -581,7 +572,7 @@ class OfficialNaming(BasicMapper):
                 )
 
             index = f"{transcript_name}:{source_id}"
-            if not xref_added.get(index):
+            if index not in xref_added:
                 # Add new xref for the transcript name
                 max_xref_id += 1
                 dbi.execute(
@@ -634,4 +625,4 @@ class OfficialNaming(BasicMapper):
 
         seen_gene[gene_symbol] = ext
 
-        return max_xref_id, max_object_xref_id, xref_added, seen_gene
+        return max_xref_id, max_object_xref_id

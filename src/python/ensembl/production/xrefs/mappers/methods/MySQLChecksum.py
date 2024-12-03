@@ -14,11 +14,14 @@
 
 """Base method module for handling mysql checksums."""
 
-from ensembl.production.xrefs.mappers.methods.ChecksumBasic import *
-
 from sqlalchemy import select
+from typing import Any, Dict, List
+from Bio.SeqRecord import SeqRecord
+from sqlalchemy.engine import Connection
+
 from ensembl.xrefs.xref_source_db_model import ChecksumXref as ChecksumXrefSORM
 
+from ensembl.production.xrefs.mappers.methods.ChecksumBasic import ChecksumBasic
 
 class MySQLChecksum(ChecksumBasic):
     def perform_mapping(self, sequences: List[SeqRecord], source_id: int, object_type: str, dbi: Connection) -> List[Dict[str, Any]]:
@@ -32,13 +35,15 @@ class MySQLChecksum(ChecksumBasic):
                 ChecksumXrefSORM.checksum == checksum,
                 ChecksumXrefSORM.source_id == source_id,
             )
-            for row in dbi.execute(query).mappings().all():
-                local_upi = row.accession
-                if upi:
-                    raise LookupError(
-                        f"The sequence {sequence.id} had a checksum of {checksum} but this resulted in more than one UPI: [{upi}, {local_upi}]"
-                    )
-                upi = local_upi
+            results = dbi.execute(query).mappings().all()
+            
+            if len(results) > 1:
+                upis = [row.accession for row in results]
+                raise LookupError(
+                    f"The sequence {sequence.id} had a checksum of {checksum} but this resulted in more than one UPI: {upis}"
+                )
+            elif results:
+                upi = results[0].accession
 
             if upi:
                 final_results.append(

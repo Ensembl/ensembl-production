@@ -14,23 +14,27 @@
 
 """Parsing module to call specific file/db parsers based on xref source."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+import re
+import importlib
+from typing import Optional
 
+from ensembl.production.xrefs.Base import Base
 
 class ParseSource(Base):
-    def run(self):
-        parser_name  = self.param_required("parser", {"type": "str"})
-        species_name = self.param_required("species_name", {"type": "str"})
-        species_id   = self.param_required("species_id", {"type": "int"})
-        file_name    = self.param_required("file_name", {"type": "str"})
-        source_id    = self.param_required("source_id", {"type": "int"})
-        xref_db_url  = self.param_required("xref_db_url", {"type": "str"})
-        registry     = self.param_required("registry_url", {"type": "str"})
-        release      = self.param_required("release", {"type": "int"})
-        core_db_url  = self.param_required("core_db_url", {"type": "str"})
-        db           = self.param("db", None, {"type": "str"})
-        release_file = self.param("release_file", None, {"type": "str"})
-        source_name  = self.param("source_name", None, {"type": "str"})
+    def run(self) -> None:
+        parser_name: str = self.get_param("parser", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        species_id: int = self.get_param("species_id", {"required": True, "type": int})
+        file_name: str = self.get_param("file_name", {"required": True, "type": str})
+        source_id: int = self.get_param("source_id", {"required": True, "type": int})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        registry_url: str = self.get_param("registry_url", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        core_db_url: str = self.get_param("core_db_url", {"required": True, "type": str})
+        db: Optional[str] = self.get_param("db", {"type": str})
+        release_file: Optional[str] = self.get_param("release_file", {"type": str})
+        source_name: Optional[str] = self.get_param("source_name", {"type": str})
 
         logging.info(
             f"ParseSource starting for source '{source_name}' with parser '{parser_name}' for species '{species_name}'"
@@ -54,22 +58,22 @@ class ParseSource(Base):
 
         # Get the extra db, if any
         if db:
-            dba = self.param(f"{db}_db_url")
-            if not dba:
-                dba = self.get_db_from_registry(species_name, db, release, registry)
+            db_url = self.get_param(f"{db}_db_url", {"type": str})
+            if not db_url:
+                db_url = self.get_db_from_registry(species_name, db, release, registry_url)
 
-            args["dba"] = dba
+            args["extra_db_url"] = db_url
             args["ensembl_release"] = release
             args["core_db_url"] = core_db_url
 
         # For RefSeqCoordinate source, we run a perl script
         if parser_name == "RefSeqCoordinateParser":
-            args["perl_scripts_dir"] = self.param_required("perl_scripts_dir")
+            args["perl_scripts_dir"] = self.get_param("perl_scripts_dir", {"required": True, "type": str})
             args["xref_db_url"] = xref_db_url
 
         # For UniProt we need the hgnc file to extract descriptions
         if re.search(r"^UniProt", parser_name):
-            args['hgnc_file'] = self.param("hgnc_file", None, {"type": "str"})
+            args['hgnc_file'] = self.get_param("hgnc_file", {"type": str})
 
         # Import the parser
         module_name = f"ensembl.production.xrefs.parsers.{parser_name}"
@@ -77,7 +81,7 @@ class ParseSource(Base):
         parser_class = getattr(module, parser_name)
         parser = parser_class()
 
-        (errors, message) = parser.run(args)
+        errors, message = parser.run(args)
         failure += errors
 
         xref_dbi.close()

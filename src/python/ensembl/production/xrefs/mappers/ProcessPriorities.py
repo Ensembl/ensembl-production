@@ -14,8 +14,21 @@
 
 """Mapper module for processing xref priorities."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from typing import List
+from sqlalchemy import select, update, insert, delete, desc
+from sqlalchemy.engine import Connection
 
+from ensembl.xrefs.xref_update_db_model import (
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    Synonym as SynonymORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class ProcessPriorities(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -51,7 +64,7 @@ class ProcessPriorities(BasicMapper):
         # Now ALL object_xrefs have an identity_xref
         # So we can do a straight join and treat all info_types the same way
         for name in names:
-            last_acc, last_name, best_xref_id, last_xref_id, seen = "", "", None, 0, 0
+            last_acc, last_name, best_xref_id, last_xref_id, seen = "", "", None, 0, False
             best_ensembl_id, gone = [], []
 
             query = (
@@ -147,9 +160,7 @@ class ProcessPriorities(BasicMapper):
                                 )
 
                                 # Copy synonyms across if they are missing
-                                query = select(SynonymORM.synonym).where(
-                                    SynonymORM.xref_id == row.xref_id
-                                )
+                                query = select(SynonymORM.synonym).where(SynonymORM.xref_id == row.xref_id)
                                 for synonym_row in (
                                     xref_dbi.execute(query).mappings().all()
                                 ):
@@ -179,12 +190,11 @@ class ProcessPriorities(BasicMapper):
                         best_ensembl_id.append(row.ensembl_id)
 
                     # Best priority failed so another one now found so set dumped
-                    if len(gone) > 0:
-                        if last_name == row.accession:
-                            for x_id in gone:
-                                self.update_xref_dumped(
-                                    x_id, "NO_DUMP_ANOTHER_PRIORITY", xref_dbi
-                                )
+                    if gone and last_name == row.accession:
+                        for x_id in gone:
+                            self.update_xref_dumped(
+                                x_id, "NO_DUMP_ANOTHER_PRIORITY", xref_dbi
+                            )
                 else:
                     # New xref_id
                     if row.ox_status == "DUMP_OUT":
@@ -192,7 +202,7 @@ class ProcessPriorities(BasicMapper):
                         best_xref_id = row.xref_id
                         best_ensembl_id = [row.ensembl_id]
 
-                        if len(gone) > 0 and last_name == row.accession:
+                        if gone and last_name == row.accession:
                             for x_id in gone:
                                 self.update_xref_dumped(
                                     x_id, "NO_DUMP_ANOTHER_PRIORITY", xref_dbi
@@ -226,7 +236,7 @@ class ProcessPriorities(BasicMapper):
         for row in dbi.execute(query).mappings().all():
             if row.name == last_name and not seen.get(row.name):
                 names.append(row.name)
-                seen[row.name] = 1
+                seen[row.name] = True
             last_name = row.name
 
         return names
@@ -238,7 +248,7 @@ class ProcessPriorities(BasicMapper):
 
     def process_dependents(self, old_master_xref_id: int, new_master_xref_id: int, dbi: Connection) -> None:
         master_xrefs = [old_master_xref_id]
-        recursive = 0
+        recursive = False
 
         # Create a hash of all possible mappings for this accession
         ensembl_ids = {}
@@ -296,7 +306,7 @@ class ProcessPriorities(BasicMapper):
             for row in dbi.execute(query).mappings().all():
                 # Remove all mappings to low priority xrefs
                 # Then delete any leftover identity xrefs of it
-                for ensembl_id in old_ensembl_ids.get(row.ensembl_object_type):
+                for ensembl_id in old_ensembl_ids.get(row.ensembl_object_type, []):
                     self._detach_object_xref(
                         xref_id,
                         row.dependent_xref_id,
@@ -319,7 +329,7 @@ class ProcessPriorities(BasicMapper):
                     )
 
                 # Loop through all chosen (best) ensembl ids mapped to priority xref, and connect them with object_xrefs
-                for ensembl_id in ensembl_ids.get(row.ensembl_object_type):
+                for ensembl_id in ensembl_ids.get(row.ensembl_object_type, []):
                     # Add new object_xref for each best_ensembl_id
                     dbi.execute(
                         insert(ObjectXrefUORM)
@@ -357,7 +367,7 @@ class ProcessPriorities(BasicMapper):
                 if row.dependent_xref_id != xref_id:
                     master_xrefs.append(row.dependent_xref_id)
 
-            recursive = 1
+            recursive = True
 
     def _detach_object_xref(self, xref_id: int, dependent_xref_id: int, object_type: str, ensembl_id: int, dbi: Connection) -> None:
         # Drop all the identity and go xrefs for the dependents of an xref

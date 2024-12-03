@@ -14,8 +14,18 @@
 
 """Mapper extension module for species sars_cov_2."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from sqlalchemy import delete, insert, select, update, func
 
+from ensembl.core.models import (
+    Gene as GeneORM,
+    Transcript as TranscriptORM,
+    Xref as XrefCORM,
+    ExternalDb as ExternalDbORM,
+    ObjectXref as ObjectXrefCORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class sars_cov_2(BasicMapper):
     def set_transcript_names(self) -> None:

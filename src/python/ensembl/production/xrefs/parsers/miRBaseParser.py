@@ -49,7 +49,7 @@ class miRBaseParser(BaseParser):
         if not xrefs:
             return 0, "No xrefs added"
 
-        self.upload_xref_object_graphs(xrefs, xref_dbi)
+        self.add_xref_objects(xrefs, xref_dbi)
 
         result_message = f"Read {len(xrefs)} xrefs from {file}"
         return 0, result_message

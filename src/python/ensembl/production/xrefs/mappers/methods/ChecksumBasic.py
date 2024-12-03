@@ -15,7 +15,6 @@
 """Base method module for handling checksums."""
 
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import hashlib
 
@@ -25,7 +24,6 @@ from typing import List, Dict, Any
 
 DEFAULT_BATCH_SIZE = 1000
 DEFAULT_LOG_SIZE = 10000
-
 
 class ChecksumBasic:
     def __init__(self, args: Dict[str, Any] = None) -> None:
@@ -51,36 +49,29 @@ class ChecksumBasic:
         return self._batch_size
 
     def run(self, target: str, source_id: int, object_type: str, dbi: Connection) -> List[Dict[str, Any]]:
-        results, tmp_list = [], []
-        count, total_count = 0, 0
+        results = []
+        tmp_list = []
+        count = 0
+        total_count = 0
         batch_size = self.batch_size()
 
         for record in SeqIO.parse(target, "fasta"):
             tmp_list.append(record)
             count += 1
 
-            if (count % batch_size) == 0:
-                res = self.perform_mapping(tmp_list, source_id, object_type, dbi)
-                for row in res:
-                    results.append(row)
-
+            if count % batch_size == 0:
+                results.extend(self.perform_mapping(tmp_list, source_id, object_type, dbi))
                 total_count += count
-                if total_count % DEFAULT_LOG_SIZE:
-                    self.mapper().log_progress(
-                        f"Finished batch mapping of {total_count} sequences"
-                    )
+                if total_count % DEFAULT_LOG_SIZE == 0:
+                    self.mapper().log_progress(f"Finished batch mapping of {total_count} sequences")
                 count = 0
                 tmp_list.clear()
 
         # Final mapping if there were some left over
-        if len(tmp_list) > 0:
-            self.mapper().log_progress(
-                f"Finished batch mapping of {total_count} sequences"
-            )
-            res = self.perform_mapping(tmp_list, source_id, object_type, dbi)
-            for row in res:
-                results.append(row)
-            tmp_list.clear()
+        if tmp_list:
+            results.extend(self.perform_mapping(tmp_list, source_id, object_type, dbi))
+            total_count += count
+            self.mapper().log_progress(f"Finished batch mapping of {total_count} sequences")
 
         return results
 

@@ -53,8 +53,8 @@ class ZFINParser(BaseParser):
                 descriptions[row.accession] = row.description
 
         # Get the Uniprot and RefSeq accessions
-        swiss = self.get_valid_codes("uniprot/swissprot", species_id, xref_dbi)
-        refseq = self.get_valid_codes("refseq", species_id, xref_dbi)
+        swiss = self.get_acc_to_xref_ids("uniprot/swissprot", species_id, xref_dbi)
+        refseq = self.get_acc_to_xref_ids("refseq", species_id, xref_dbi)
 
         file_dir = os.path.dirname(xref_file)
         counts = {"direct": 0, "uniprot": 0, "refseq": 0, "synonyms": 0, "mismatch": 0}
@@ -142,7 +142,7 @@ class ZFINParser(BaseParser):
                     counts["mismatch"] += 1
 
         # Get the added ZFINs
-        zfin = self.get_valid_codes("zfin", species_id, xref_dbi)
+        zfin = self.get_acc_to_xref_ids("zfin", species_id, xref_dbi)
 
         sources = []
         query = select(SourceUORM.source_id).where(SourceUORM.name.like("ZFIN_ID"))

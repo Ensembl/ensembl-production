@@ -14,8 +14,19 @@
 
 """Mapper module for processing Checksum xref data."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from typing import Any, Dict, List, Optional
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import delete, select
+from sqlalchemy.engine import Connection
 
+from ensembl.xrefs.xref_update_db_model import (
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class ChecksumMapper(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -27,10 +38,9 @@ class ChecksumMapper(BasicMapper):
     def target(self) -> None:
         return None
 
-    def mapper(self, mapper: BasicMapper = None):
+    def mapper(self, mapper: Optional[BasicMapper] = None) -> BasicMapper:
         if mapper:
             self._mapper = mapper
-
         return self._mapper
 
     def upload(self, results: List[Dict[str, Any]], species_id: int) -> None:
@@ -46,7 +56,7 @@ class ChecksumMapper(BasicMapper):
             self._delete_entries("xref", source_id, xref_dbi)
 
         # Start session, in order to get inserted IDs
-        Session = sessionmaker(self.xref())
+        Session = sessionmaker(bind=self.xref().execution_options(isolation_level="READ COMMITTED"))
         with Session.begin() as session:
             logging.info("Starting xref insertion")
 
@@ -54,7 +64,7 @@ class ChecksumMapper(BasicMapper):
             upi_xref_id = {}
             for row in results:
                 upi = row["upi"]
-                if upi_xref_id.get(upi):
+                if upi in upi_xref_id:
                     row["xref_id"] = upi_xref_id[upi]
                 else:
                     xref_object = XrefUORM(
@@ -80,6 +90,8 @@ class ChecksumMapper(BasicMapper):
                     ox_status="DUMP_OUT",
                 )
                 session.add(object_xref_object)
+
+            session.commit()
 
         logging.info("Finished insertions")
 

@@ -100,7 +100,7 @@ class ReactomeParser(BaseParser):
 
         # Get existing uniprot accessions
         is_uniprot = bool(re.search("UniProt", xref_file))
-        uniprot_accessions = self.get_valid_codes("uniprot/", species_id, xref_dbi) if is_uniprot else {}
+        uniprot_accessions = self.get_acc_to_xref_ids("uniprot/", species_id, xref_dbi) if is_uniprot else {}
 
         with self.get_filehandle(xref_file) as file_io:
             if file_io.read(1) == '':

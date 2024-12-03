@@ -14,8 +14,40 @@
 
 """Mapper module for loading xref data into the core DB."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+import re
+from datetime import datetime
+from sqlalchemy import select, func, update, delete
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.orm import sessionmaker, aliased, Session
+from sqlalchemy.engine import Connection
+from sqlalchemy.exc import SQLAlchemyError
+from typing import Any, Dict
 
+from ensembl.core.models import (
+    Gene as GeneORM,
+    ObjectXref as ObjectXrefCORM,
+    Xref as XrefCORM,
+    ExternalDb as ExternalDbORM,
+    UnmappedObject as UnmappedObjectORM,
+    Analysis as AnalysisORM,
+    OntologyXref as OntologyXrefORM,
+    ExternalSynonym as ExternalSynonymORM,
+    DependentXref as DependentXrefCORM,
+    IdentityXref as IdentityXrefCORM
+)
+
+from ensembl.xrefs.xref_update_db_model import (
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    Synonym as SynonymORM,
+    PrimaryXref as PrimaryXrefORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class XrefLoader(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -33,7 +65,8 @@ class XrefLoader(BasicMapper):
         self.delete_projection_data(core_dbi)
 
         # Get the source IDs of relevant external DBs
-        name_to_external_db_id, source_id_to_external_db_id = {}, {}
+        name_to_external_db_id = {}
+        source_id_to_external_db_id = {}
 
         query = select(ExternalDbORM.external_db_id, ExternalDbORM.db_name)
         for row in core_dbi.execute(query).mappings().all():
@@ -46,15 +79,11 @@ class XrefLoader(BasicMapper):
         )
         for row in xref_dbi.execute(query).mappings().all():
             if name_to_external_db_id.get(row.name):
-                source_id_to_external_db_id[row.source_id] = name_to_external_db_id[
-                    row.name
-                ]
+                source_id_to_external_db_id[row.source_id] = name_to_external_db_id[row.name]
             elif re.search(r"notransfer$", row.name):
                 continue
             else:
-                raise LookupError(
-                    f"Could not find {row.name} in external_db table in the core DB"
-                )
+                raise LookupError(f"Could not find {row.name} in external_db table in the core DB")
 
         # Reset dumped field in case module is running again
         xref_dbi.execute(
@@ -64,29 +93,16 @@ class XrefLoader(BasicMapper):
         )
 
         # Delete existing xrefs in core DB (only from relevant sources)
-        self.deleted_existing_xrefs(name_to_external_db_id, xref_dbi, core_dbi)
+        self.deleted_existing_xrefs(name_to_external_db_id, xref_dbi)
 
         # Get the offsets for xref and object_xref tables
-        # This is used to track the xrefs whe mapping onto the core DB
-        xref_offset = core_dbi.execute(select(func.max(XrefCORM.xref_id))).scalar()
-        object_xref_offset = core_dbi.execute(
-            select(func.max(ObjectXrefCORM.object_xref_id))
-        ).scalar()
+        xref_offset = core_dbi.execute(select(func.max(XrefCORM.xref_id))).scalar() or 0
+        object_xref_offset = core_dbi.execute(select(func.max(ObjectXrefCORM.object_xref_id))).scalar() or 0
 
-        if not xref_offset:
-            xref_offset = 0
-        else:
-            xref_offset = int(xref_offset)
         self.add_meta_pair("xref_offset", xref_offset)
-        if not object_xref_offset:
-            object_xref_offset = 0
-        else:
-            object_xref_offset = int(object_xref_offset)
         self.add_meta_pair("object_xref_offset", object_xref_offset)
 
-        logging.info(
-            f"DB offsets: xref={xref_offset}, object_xref={object_xref_offset}"
-        )
+        logging.info(f"DB offsets: xref={xref_offset}, object_xref={object_xref_offset}")
 
         # Get analysis IDs
         analysis_ids = self.get_analysis(core_dbi)
@@ -110,8 +126,6 @@ class XrefLoader(BasicMapper):
             .order_by(XrefUORM.xref_id)
         )
 
-        #### TO DO: transaction
-
         # Get source info from xref DB
         query = (
             select(
@@ -133,9 +147,7 @@ class XrefLoader(BasicMapper):
             # We only care about specific sources
             if not name_to_external_db_id.get(source_row.name):
                 continue
-            logging.info(
-                f"Updating source '{source_row.name}' ({source_row.source_id}) in core"
-            )
+            logging.info(f"Updating source '{source_row.name}' ({source_row.source_id}) in core")
 
             where_from = source_row.priority_description
             if where_from:
@@ -144,319 +156,294 @@ class XrefLoader(BasicMapper):
             external_id = name_to_external_db_id[source_row.name]
             xref_list = []
 
-            if (
-                source_row.info_type == "DIRECT"
-                or source_row.info_type == "INFERRED_PAIR"
-                or source_row.info_type == "MISC"
-            ):
-                count, last_xref_id = 0, 0
+            Session = sessionmaker(bind=self.core().execution_options(isolation_level="READ COMMITTED"))
+            with Session.begin() as session:
+                try:
+                    if source_row.info_type in ["DIRECT", "INFERRED_PAIR", "MISC"]:
+                        count, last_xref_id = 0, 0
 
-                # Get all direct, inferred pair and misc xrefs from intermediate DB
-                query = xref_object_identity_query.where(
-                    XrefUORM.source_id == source_row.source_id,
-                    XrefUORM.info_type == source_row.info_type,
-                )
-                for xref_row in xref_dbi.execute(query).mappings().all():
-                    xref_id = int(xref_row.xref_id)
-                    object_xref_id = int(xref_row.object_xref_id)
+                        # Get all direct, inferred pair and misc xrefs from intermediate DB
+                        query = xref_object_identity_query.where(
+                            XrefUORM.source_id == source_row.source_id,
+                            XrefUORM.info_type == source_row.info_type,
+                        )
+                        for xref_row in xref_dbi.execute(query).mappings().all():
+                            xref_id = int(xref_row.xref_id)
+                            object_xref_id = int(xref_row.object_xref_id)
 
-                    if last_xref_id != xref_id:
-                        xref_list.append(xref_id)
-                        count += 1
+                            if last_xref_id != xref_id:
+                                xref_list.append(xref_id)
+                                count += 1
 
-                        # Add xref into core DB
-                        info_text = xref_row.info_text
-                        if not info_text:
-                            info_text = where_from
-                        xref_args = {
-                            "xref_id": xref_id,
-                            "accession": xref_row.accession,
-                            "external_db_id": external_id,
-                            "label": xref_row.label,
-                            "description": xref_row.description,
-                            "version": xref_row.version,
-                            "info_type": xref_row.info_type,
-                            "info_text": info_text,
-                        }
-                        xref_id = self.add_xref(xref_offset, xref_args, core_dbi)
-                        last_xref_id = xref_id
+                                # Add xref into core DB
+                                info_text = xref_row.info_text or where_from
+                                xref_args = {
+                                    "xref_id": xref_id,
+                                    "accession": xref_row.accession,
+                                    "external_db_id": external_id,
+                                    "label": xref_row.label,
+                                    "description": xref_row.description,
+                                    "version": xref_row.version,
+                                    "info_type": xref_row.info_type,
+                                    "info_text": info_text,
+                                }
+                                xref_id = self.add_xref(xref_offset, xref_args, session)
+                                last_xref_id = xref_id
 
-                    # Add object xref into core DB
-                    object_xref_args = {
-                        "object_xref_id": object_xref_id,
-                        "ensembl_id": xref_row.ensembl_id,
-                        "ensembl_type": xref_row.ensembl_object_type,
-                        "xref_id": xref_id + xref_offset,
-                        "analysis_id": analysis_ids[xref_row.ensembl_object_type],
-                    }
-                    object_xref_id = self.add_object_xref(
-                        object_xref_offset, object_xref_args, core_dbi
-                    )
+                            # Add object xref into core DB
+                            object_xref_args = {
+                                "object_xref_id": object_xref_id,
+                                "ensembl_id": xref_row.ensembl_id,
+                                "ensembl_type": xref_row.ensembl_object_type,
+                                "xref_id": xref_id + xref_offset,
+                                "analysis_id": analysis_ids[xref_row.ensembl_object_type],
+                            }
+                            object_xref_id = self.add_object_xref(object_xref_offset, object_xref_args, session)
 
-                    # Add identity xref into core DB
-                    if xref_row.translation_start:
+                            # Add identity xref into core DB
+                            if xref_row.translation_start:
+                                query = (
+                                    insert(IdentityXrefCORM)
+                                    .values(
+                                        object_xref_id=object_xref_id + object_xref_offset,
+                                        xref_identity=xref_row.query_identity,
+                                        ensembl_identity=xref_row.target_identity,
+                                        xref_start=xref_row.hit_start,
+                                        xref_end=xref_row.hit_end,
+                                        ensembl_start=xref_row.translation_start,
+                                        ensembl_end=xref_row.translation_end,
+                                        cigar_line=xref_row.cigar_line,
+                                        score=xref_row.score,
+                                        evalue=xref_row.evalue,
+                                    )
+                                    .prefix_with("IGNORE")
+                                )
+                                session.execute(query)
+
+                        logging.info(f"\tLoaded {count} {source_row.info_type} xrefs for '{species_name}'")
+                    elif source_row.info_type == "CHECKSUM":
+                        count, last_xref_id = 0, 0
+
+                        # Get all checksum xrefs from intermediate DB
+                        query = xref_object_query.where(
+                            XrefUORM.source_id == source_row.source_id,
+                            XrefUORM.info_type == source_row.info_type,
+                        )
+                        for xref_row in xref_dbi.execute(query).mappings().all():
+                            xref_id = int(xref_row.xref_id)
+                            object_xref_id = int(xref_row.object_xref_id)
+
+                            if last_xref_id != xref_id:
+                                xref_list.append(xref_id)
+                                count += 1
+
+                                # Add xref into core DB
+                                info_text = xref_row.info_text or where_from
+                                xref_args = {
+                                    "xref_id": xref_id,
+                                    "accession": xref_row.accession,
+                                    "external_db_id": external_id,
+                                    "label": xref_row.label,
+                                    "description": xref_row.description,
+                                    "version": xref_row.version,
+                                    "info_type": xref_row.info_type,
+                                    "info_text": info_text,
+                                }
+                                xref_id = self.add_xref(xref_offset, xref_args, session)
+                                last_xref_id = xref_id
+
+                            # Add object xref into core DB
+                            object_xref_args = {
+                                "object_xref_id": object_xref_id,
+                                "ensembl_id": xref_row.ensembl_id,
+                                "ensembl_type": xref_row.ensembl_object_type,
+                                "xref_id": xref_id + xref_offset,
+                                "analysis_id": analysis_ids["checksum"],
+                            }
+                            object_xref_id = self.add_object_xref(object_xref_offset, object_xref_args, session)
+
+                        logging.info(f"\tLoaded {count} CHECKSUM xrefs for '{species_name}'")
+                    elif source_row.info_type == "DEPENDENT":
+                        count, last_xref_id, last_ensembl_id, master_error_count = 0, 0, 0, 0
+                        master_problems = []
+
+                        # Get all dependent xrefs from intermediate DB
+                        MasterXref = aliased(XrefUORM)
                         query = (
-                            insert(IdentityXrefCORM)
-                            .values(
-                                object_xref_id=object_xref_id + object_xref_offset,
-                                xref_identity=xref_row.query_identity,
-                                ensembl_identity=xref_row.target_identity,
-                                xref_start=xref_row.hit_start,
-                                xref_end=xref_row.hit_end,
-                                ensembl_start=xref_row.translation_start,
-                                ensembl_end=xref_row.translation_end,
-                                cigar_line=xref_row.cigar_line,
-                                score=xref_row.score,
-                                evalue=xref_row.evalue,
+                            select(XrefUORM, ObjectXrefUORM)
+                            .where(
+                                ObjectXrefUORM.ox_status == "DUMP_OUT",
+                                ObjectXrefUORM.xref_id == XrefUORM.xref_id,
+                                ObjectXrefUORM.master_xref_id == MasterXref.xref_id,
+                                MasterXref.source_id == SourceUORM.source_id,
+                                XrefUORM.source_id == source_row.source_id,
+                                XrefUORM.info_type == "DEPENDENT",
                             )
-                            .prefix_with("IGNORE")
+                            .order_by(XrefUORM.xref_id, ObjectXrefUORM.ensembl_id, SourceUORM.ordered)
                         )
-                        core_dbi.execute(query)
+                        for xref_row in xref_dbi.execute(query).mappings().all():
+                            xref_id = int(xref_row.xref_id)
+                            object_xref_id = int(xref_row.object_xref_id)
 
-                logging.info(
-                    f"\tLoaded {count} {source_row.info_type} xrefs for '{species_name}'"
-                )
-            elif source_row.info_type == "CHECKSUM":
-                count, last_xref_id = 0, 0
+                            if last_xref_id != xref_id:
+                                xref_list.append(xref_id)
+                                count += 1
 
-                # Get all checksum xrefs from intermediate DB
-                query = xref_object_query.where(
-                    XrefUORM.source_id == source_row.source_id,
-                    XrefUORM.info_type == source_row.info_type,
-                )
-                for xref_row in xref_dbi.execute(query).mappings().all():
-                    xref_id = int(xref_row.xref_id)
-                    object_xref_id = int(xref_row.object_xref_id)
+                                # Add xref into core DB
+                                label = xref_row.label or xref_row.accession
+                                info_text = xref_row.info_text or where_from
+                                xref_args = {
+                                    "xref_id": xref_id,
+                                    "accession": xref_row.accession,
+                                    "external_db_id": external_id,
+                                    "label": label,
+                                    "description": xref_row.description,
+                                    "version": xref_row.version,
+                                    "info_type": xref_row.info_type,
+                                    "info_text": info_text,
+                                }
+                                xref_id = self.add_xref(xref_offset, xref_args, session)
 
-                    if last_xref_id != xref_id:
-                        xref_list.append(xref_id)
-                        count += 1
+                            if last_xref_id != xref_id or last_ensembl_id != xref_row.ensembl_id:
+                                # Add object xref into core DB
+                                object_xref_args = {
+                                    "object_xref_id": object_xref_id,
+                                    "ensembl_id": xref_row.ensembl_id,
+                                    "ensembl_type": xref_row.ensembl_object_type,
+                                    "xref_id": xref_id + xref_offset,
+                                    "analysis_id": analysis_ids[xref_row.ensembl_object_type],
+                                }
+                                object_xref_id = self.add_object_xref(object_xref_offset, object_xref_args, session)
 
-                        # Add xref into core DB
-                        info_text = xref_row.info_text
-                        if not info_text:
-                            info_text = where_from
-                        xref_args = {
-                            "xref_id": xref_id,
-                            "accession": xref_row.accession,
-                            "external_db_id": external_id,
-                            "label": xref_row.label,
-                            "description": xref_row.description,
-                            "version": xref_row.version,
-                            "info_type": xref_row.info_type,
-                            "info_text": info_text,
-                        }
-                        xref_id = self.add_xref(xref_offset, xref_args, core_dbi)
-                        last_xref_id = xref_id
+                                if xref_row.master_xref_id:
+                                    # Add dependent xref into core DB
+                                    session.execute(
+                                        insert(DependentXrefCORM)
+                                        .values(
+                                            object_xref_id=object_xref_id + object_xref_offset,
+                                            master_xref_id=xref_row.master_xref_id + xref_offset,
+                                            dependent_xref_id=xref_id + xref_offset,
+                                        )
+                                        .prefix_with("IGNORE")
+                                    )
+                                else:
+                                    if master_error_count < 10:
+                                        master_problems.append(xref_row.accession)
+                                    master_error_count += 1
 
-                    # Add object xref into core DB
-                    object_xref_args = {
-                        "object_xref_id": object_xref_id,
-                        "ensembl_id": xref_row.ensembl_id,
-                        "ensembl_type": xref_row.ensembl_object_type,
-                        "xref_id": xref_id + xref_offset,
-                        "analysis_id": analysis_ids["checksum"],
-                    }
-                    object_xref_id = self.add_object_xref(
-                        object_xref_offset, object_xref_args, core_dbi
-                    )
+                            last_xref_id = xref_id
+                            last_ensembl_id = xref_row.ensembl_id
 
-                logging.info(f"\tLoaded {count} CHECKSUM xrefs for '{species_name}'")
-            elif source_row.info_type == "DEPENDENT":
-                count, last_xref_id, last_ensembl_id, master_error_count = 0, 0, 0, 0
-                master_problems = []
+                        if master_problems:
+                            logging.warning(
+                                f"For {source_row.name}, there were {master_error_count} problem master xrefs. Examples are: "
+                                + ", ".join(master_problems)
+                            )
 
-                # Get all dependent xrefs from intermediate DB
-                MasterXref = aliased(XrefUORM)
-                query = (
-                    select(XrefUORM, ObjectXrefUORM)
-                    .where(
-                        ObjectXrefUORM.ox_status == "DUMP_OUT",
-                        ObjectXrefUORM.xref_id == XrefUORM.xref_id,
-                        ObjectXrefUORM.master_xref_id == MasterXref.xref_id,
-                        MasterXref.source_id == SourceUORM.source_id,
-                        XrefUORM.source_id == source_row.source_id,
-                        XrefUORM.info_type == "DEPENDENT",
-                    )
-                    .order_by(
-                        XrefUORM.xref_id, ObjectXrefUORM.ensembl_id, SourceUORM.ordered
-                    )
-                )
-                for xref_row in xref_dbi.execute(query).mappings().all():
-                    xref_id = int(xref_row.xref_id)
-                    object_xref_id = int(xref_row.object_xref_id)
+                        logging.info(f"\tLoaded {count} DEPENDENT xrefs for '{species_name}'")
+                    elif source_row.info_type == "SEQUENCE_MATCH":
+                        count, last_xref_id = 0, 0
 
-                    if last_xref_id != xref_id:
-                        xref_list.append(xref_id)
-                        count += 1
-
-                        # Add xref into core DB
-                        label = xref_row.label
-                        if not label:
-                            label = xref_row.accession
-                        info_text = xref_row.info_text
-                        if not info_text:
-                            info_text = where_from
-                        xref_args = {
-                            "xref_id": xref_id,
-                            "accession": xref_row.accession,
-                            "external_db_id": external_id,
-                            "label": label,
-                            "description": xref_row.description,
-                            "version": xref_row.version,
-                            "info_type": xref_row.info_type,
-                            "info_text": info_text,
-                        }
-                        xref_id = self.add_xref(xref_offset, xref_args, core_dbi)
-
-                    if (
-                        last_xref_id != xref_id
-                        or last_ensembl_id != xref_row.ensembl_id
-                    ):
-                        # Add object xref into core DB
-                        object_xref_args = {
-                            "object_xref_id": object_xref_id,
-                            "ensembl_id": xref_row.ensembl_id,
-                            "ensembl_type": xref_row.ensembl_object_type,
-                            "xref_id": xref_id + xref_offset,
-                            "analysis_id": analysis_ids[xref_row.ensembl_object_type],
-                        }
-                        object_xref_id = self.add_object_xref(
-                            object_xref_offset, object_xref_args, core_dbi
+                        # Get all direct, inferred pair and misc xrefs from intermediate DB
+                        query = xref_object_identity_query.where(
+                            XrefUORM.source_id == source_row.source_id,
+                            XrefUORM.info_type == source_row.info_type,
                         )
+                        for xref_row in xref_dbi.execute(query).mappings().all():
+                            xref_id = int(xref_row.xref_id)
+                            object_xref_id = int(xref_row.object_xref_id)
 
-                        if xref_row.master_xref_id:
-                            # Add dependent xref into core DB
-                            core_dbi.execute(
-                                insert(DependentXrefCORM)
+                            if last_xref_id != xref_id:
+                                xref_list.append(xref_id)
+                                count += 1
+
+                                # Add xref into core DB
+                                info_text = xref_row.info_text or where_from
+                                xref_args = {
+                                    "xref_id": xref_id,
+                                    "accession": xref_row.accession,
+                                    "external_db_id": external_id,
+                                    "label": xref_row.label,
+                                    "description": xref_row.description,
+                                    "version": xref_row.version,
+                                    "info_type": xref_row.info_type,
+                                    "info_text": info_text,
+                                }
+                                xref_id = self.add_xref(xref_offset, xref_args, session)
+                                last_xref_id = xref_id
+
+                            # Add object xref into core DB
+                            object_xref_args = {
+                                "object_xref_id": object_xref_id,
+                                "ensembl_id": xref_row.ensembl_id,
+                                "ensembl_type": xref_row.ensembl_object_type,
+                                "xref_id": xref_id + xref_offset,
+                                "analysis_id": analysis_ids[xref_row.ensembl_object_type],
+                            }
+                            object_xref_id = self.add_object_xref(object_xref_offset, object_xref_args, session)
+
+                            # Add identity xref into core DB
+                            query = (
+                                insert(IdentityXrefCORM)
                                 .values(
                                     object_xref_id=object_xref_id + object_xref_offset,
-                                    master_xref_id=xref_row.master_xref_id
-                                    + xref_offset,
-                                    dependent_xref_id=xref_id + xref_offset,
+                                    xref_identity=xref_row.query_identity,
+                                    ensembl_identity=xref_row.target_identity,
+                                    xref_start=xref_row.hit_start,
+                                    xref_end=xref_row.hit_end,
+                                    ensembl_start=xref_row.translation_start,
+                                    ensembl_end=xref_row.translation_end,
+                                    cigar_line=xref_row.cigar_line,
+                                    score=xref_row.score,
+                                    evalue=xref_row.evalue,
                                 )
                                 .prefix_with("IGNORE")
                             )
-                        else:
-                            if master_error_count < 10:
-                                master_problems.append(xref_row.accession)
+                            session.execute(query)
 
-                            master_error_count += 1
+                        logging.info(f"\tLoaded {count} SEQUENCE_MATCH xrefs for '{species_name}'")
+                    else:
+                        logging.debug(f"\tPROBLEM: what type is {source_row.info_type}")
 
-                    last_xref_id = xref_id
-                    last_ensembl_id = xref_row.ensembl_id
+                    # Transfer synonym data
+                    if xref_list:
+                        syn_count = 0
 
-                if len(master_problems) > 0:
-                    logging.warn(
-                        f"For {source_row.name}, there were {master_error_count} problem master xrefs. Examples are: "
-                        + ", ".join(master_problems)
-                    )
-
-                logging.info(f"\tLoaded {count} DEPENDENT xrefs for '{species_name}'")
-            elif source_row.info_type == "SEQUENCE_MATCH":
-                count, last_xref_id = 0, 0
-
-                # Get all direct, inferred pair and misc xrefs from intermediate DB
-                query = xref_object_identity_query.where(
-                    XrefUORM.source_id == source_row.source_id,
-                    XrefUORM.info_type == source_row.info_type,
-                )
-                for xref_row in xref_dbi.execute(query).mappings().all():
-                    xref_id = int(xref_row.xref_id)
-                    object_xref_id = int(xref_row.object_xref_id)
-
-                    if last_xref_id != xref_id:
-                        xref_list.append(xref_id)
-                        count += 1
-
-                        # Add xref into core DB
-                        info_text = xref_row.info_text
-                        if not info_text:
-                            info_text = where_from
-                        xref_args = {
-                            "xref_id": xref_id,
-                            "accession": xref_row.accession,
-                            "external_db_id": external_id,
-                            "label": xref_row.label,
-                            "description": xref_row.description,
-                            "version": xref_row.version,
-                            "info_type": xref_row.info_type,
-                            "info_text": info_text,
-                        }
-                        xref_id = self.add_xref(xref_offset, xref_args, core_dbi)
-                        last_xref_id = xref_id
-
-                    # Add object xref into core DB
-                    object_xref_args = {
-                        "object_xref_id": object_xref_id,
-                        "ensembl_id": xref_row.ensembl_id,
-                        "ensembl_type": xref_row.ensembl_object_type,
-                        "xref_id": xref_id + xref_offset,
-                        "analysis_id": analysis_ids[xref_row.ensembl_object_type],
-                    }
-                    object_xref_id = self.add_object_xref(
-                        object_xref_offset, object_xref_args, core_dbi
-                    )
-
-                    # Add identity xref into core DB
-                    query = (
-                        insert(IdentityXrefCORM)
-                        .values(
-                            object_xref_id=object_xref_id + object_xref_offset,
-                            xref_identity=xref_row.query_identity,
-                            ensembl_identity=xref_row.target_identity,
-                            xref_start=xref_row.hit_start,
-                            xref_end=xref_row.hit_end,
-                            ensembl_start=xref_row.translation_start,
-                            ensembl_end=xref_row.translation_end,
-                            cigar_line=xref_row.cigar_line,
-                            score=xref_row.score,
-                            evalue=xref_row.evalue,
+                        # Get synonyms
+                        query = select(SynonymORM.xref_id, SynonymORM.synonym).where(
+                            SynonymORM.xref_id.in_(xref_list)
                         )
-                        .prefix_with("IGNORE")
-                    )
-                    core_dbi.execute(query)
+                        for syn_row in xref_dbi.execute(query).mappings().all():
+                            session.execute(
+                                insert(ExternalSynonymORM).values(
+                                    xref_id=syn_row.xref_id + xref_offset,
+                                    synonym=syn_row.synonym,
+                                )
+                            )
+                            syn_count += 1
 
-                logging.info(
-                    f"\tLoaded {count} SEQUENCE_MATCH xrefs for '{species_name}'"
-                )
-            else:
-                logging.debug(f"\tPROBLEM: what type is {source_row.info_type}")
+                        logging.info(f"\tLoaded {syn_count} synonyms for '{species_name}'")
 
-            # Transfer synonym data
-            if len(xref_list) > 0:
-                syn_count = 0
-
-                # Get synonyms
-                query = select(SynonymORM.xref_id, SynonymORM.synonym).where(
-                    SynonymORM.xref_id.in_(xref_list)
-                )
-                for syn_row in xref_dbi.execute(query).mappings().all():
-                    core_dbi.execute(
-                        insert(ExternalSynonymORM).values(
-                            xref_id=syn_row.xref_id + xref_offset,
-                            synonym=syn_row.synonym,
+                        # Set dumped status
+                        xref_dbi.execute(
+                            update(XrefUORM)
+                            .values(dumped="MAPPED")
+                            .where(XrefUORM.xref_id.in_(xref_list))
                         )
-                    )
 
-                    syn_count += 1
+                    # Update release info
+                    if source_row.source_release and source_row.source_release != "1":
+                        session.execute(
+                            update(ExternalDbORM)
+                            .values(db_release=source_row.source_release)
+                            .where(ExternalDbORM.external_db_id == external_id)
+                        )
 
-                logging.info(f"\tLoaded {syn_count} synonyms for '{species_name}'")
-
-                # Set dumped status
-                xref_dbi.execute(
-                    update(XrefUORM)
-                    .values(dumped="MAPPED")
-                    .where(XrefUORM.xref_id.in_(xref_list))
-                )
-
-            # Update release info
-            if source_row.source_release and source_row.source_release != "1":
-                core_dbi.execute(
-                    update(ExternalDbORM)
-                    .values(db_release=source_row.source_release)
-                    .where(ExternalDbORM.external_db_id == external_id)
-                )
+                    session.commit()
+                except SQLAlchemyError as e:
+                    session.rollback()
+                    logging.error(f"Failed to load xrefs for source '{source_row.name}': {e}")
+                    raise RuntimeError(f"Transaction failed for source '{source_row.name}'")
 
         # Update the unmapped xrefs
         self.update_unmapped_xrefs(xref_dbi)
@@ -511,7 +498,7 @@ class XrefLoader(BasicMapper):
             f"Deleted all PROJECTIONs rows: {counts['external_synonym']} external_synonyms, {counts['dependent_xref']} dependent_xrefs, {counts['object_xref']} object_xrefs, {counts['xref']} xrefs"
         )
 
-    def deleted_existing_xrefs(self, name_to_external_db_id: Dict[str, int], xref_dbi: Connection, core_dbi: Connection) -> None:
+    def deleted_existing_xrefs(self, name_to_external_db_id: Dict[str, int], xref_dbi: Connection) -> None:
         # For each external_db to be updated, delete the existing xrefs
         query = (
             select(SourceUORM.name, func.count(XrefUORM.xref_id).label("count"))
@@ -522,92 +509,111 @@ class XrefLoader(BasicMapper):
             .group_by(SourceUORM.name)
         )
         for row in xref_dbi.execute(query).mappings().all():
-            if not name_to_external_db_id.get(row.name):
+            name = row.name
+            external_db_id = name_to_external_db_id.get(name)
+            if not external_db_id:
                 continue
 
-            name = row.name
-            external_db_id = name_to_external_db_id[name]
-            counts = {"master_dependent_xref": 0, "master_object_xref": 0}
+            counts = {
+                "gene": 0,
+                "external_synonym": 0,
+                "identity_xref": 0,
+                "object_xref": 0,
+                "master_dependent_xref": 0,
+                "master_object_xref": 0,
+                "dependent_xref": 0,
+                "xref": 0,
+                "unmapped_object": 0,
+            }
 
             logging.info(f"For source '{name}'")
 
-            counts["gene"] = core_dbi.execute(
-                update(GeneORM)
-                .values(display_xref_id=None, description=None)
-                .where(
-                    GeneORM.display_xref_id == XrefCORM.xref_id,
-                    XrefCORM.external_db_id == external_db_id,
-                )
-            ).rowcount
-            logging.info(
-                f"\tSet display_xref_id=NULL and description=NULL for {counts['gene']} gene row(s)"
-            )
-
-            counts["external_synonym"] = core_dbi.execute(
-                delete(ExternalSynonymORM).where(
-                    ExternalSynonymORM.xref_id == XrefCORM.xref_id,
-                    XrefCORM.external_db_id == external_db_id,
-                )
-            ).rowcount
-            counts["identity_xref"] = core_dbi.execute(
-                delete(IdentityXrefCORM).where(
-                    IdentityXrefCORM.object_xref_id == ObjectXrefCORM.object_xref_id,
-                    ObjectXrefCORM.xref_id == XrefCORM.xref_id,
-                    XrefCORM.external_db_id == external_db_id,
-                )
-            ).rowcount
-            counts["object_xref"] = core_dbi.execute(
-                delete(ObjectXrefCORM).where(
-                    ObjectXrefCORM.xref_id == XrefCORM.xref_id,
-                    XrefCORM.external_db_id == external_db_id,
-                )
-            ).rowcount
-
-            MasterXref = aliased(XrefCORM)
-            DependentXref = aliased(XrefCORM)
-
-            query = select(
-                ObjectXrefCORM.object_xref_id,
-                DependentXrefCORM.master_xref_id,
-                DependentXrefCORM.dependent_xref_id,
-            ).where(
-                ObjectXrefCORM.object_xref_id == DependentXrefCORM.object_xref_id,
-                MasterXref.xref_id == DependentXrefCORM.master_xref_id,
-                DependentXref.xref_id == DependentXrefCORM.dependent_xref_id,
-                MasterXref.external_db_id == external_db_id,
-            )
-            for row in core_dbi.execute(query).mappings().all():
-                counts["master_dependent_xref"] += core_dbi.execute(
-                    delete(DependentXrefCORM).where(
-                        DependentXrefCORM.master_xref_id == row.master_xref_id,
-                        DependentXrefCORM.dependent_xref_id == row.dependent_xref_id,
+            Session = sessionmaker(bind=self.core().execution_options(isolation_level="READ COMMITTED"))
+            with Session.begin() as session:
+                try:
+                    counts["gene"] = session.execute(
+                        update(GeneORM)
+                        .values(display_xref_id=None, description=None)
+                        .where(
+                            GeneORM.display_xref_id == XrefCORM.xref_id,
+                            XrefCORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
+                    logging.info(
+                        f"\tSet display_xref_id=NULL and description=NULL for {counts['gene']} gene row(s)"
                     )
-                ).rowcount
-                counts["master_object_xref"] += core_dbi.execute(
-                    delete(ObjectXrefCORM).where(
-                        ObjectXrefCORM.object_xref_id == row.object_xref_id
+
+                    counts["external_synonym"] = session.execute(
+                        delete(ExternalSynonymORM).where(
+                            ExternalSynonymORM.xref_id == XrefCORM.xref_id,
+                            XrefCORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
+                    counts["identity_xref"] = session.execute(
+                        delete(IdentityXrefCORM).where(
+                            IdentityXrefCORM.object_xref_id == ObjectXrefCORM.object_xref_id,
+                            ObjectXrefCORM.xref_id == XrefCORM.xref_id,
+                            XrefCORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
+                    counts["object_xref"] = session.execute(
+                        delete(ObjectXrefCORM).where(
+                            ObjectXrefCORM.xref_id == XrefCORM.xref_id,
+                            XrefCORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
+
+                    MasterXref = aliased(XrefCORM)
+                    DependentXref = aliased(XrefCORM)
+
+                    query = select(
+                        ObjectXrefCORM.object_xref_id,
+                        DependentXrefCORM.master_xref_id,
+                        DependentXrefCORM.dependent_xref_id,
+                    ).where(
+                        ObjectXrefCORM.object_xref_id == DependentXrefCORM.object_xref_id,
+                        MasterXref.xref_id == DependentXrefCORM.master_xref_id,
+                        DependentXref.xref_id == DependentXrefCORM.dependent_xref_id,
+                        MasterXref.external_db_id == external_db_id,
                     )
-                ).rowcount
+                    for sub_row in session.execute(query).mappings().all():
+                        counts["master_dependent_xref"] += session.execute(
+                            delete(DependentXrefCORM).where(
+                                DependentXrefCORM.master_xref_id == sub_row.master_xref_id,
+                                DependentXrefCORM.dependent_xref_id == sub_row.dependent_xref_id,
+                            )
+                        ).rowcount
+                        counts["master_object_xref"] += session.execute(
+                            delete(ObjectXrefCORM).where(
+                                ObjectXrefCORM.object_xref_id == sub_row.object_xref_id
+                            )
+                        ).rowcount
 
-            counts["dependent_xref"] = core_dbi.execute(
-                delete(DependentXrefCORM).where(
-                    DependentXrefCORM.dependent_xref_id == XrefCORM.xref_id,
-                    XrefCORM.external_db_id == external_db_id,
-                )
-            ).rowcount
-            counts["xref"] = core_dbi.execute(
-                delete(XrefCORM).where(XrefCORM.external_db_id == external_db_id)
-            ).rowcount
-            counts["unmapped_object"] = core_dbi.execute(
-                delete(UnmappedObjectORM).where(
-                    UnmappedObjectORM.unmapped_object_type == "xref",
-                    UnmappedObjectORM.external_db_id == external_db_id,
-                )
-            ).rowcount
+                    counts["dependent_xref"] = session.execute(
+                        delete(DependentXrefCORM).where(
+                            DependentXrefCORM.dependent_xref_id == XrefCORM.xref_id,
+                            XrefCORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
+                    counts["xref"] = session.execute(
+                        delete(XrefCORM).where(XrefCORM.external_db_id == external_db_id)
+                    ).rowcount
+                    counts["unmapped_object"] = session.execute(
+                        delete(UnmappedObjectORM).where(
+                            UnmappedObjectORM.unmapped_object_type == "xref",
+                            UnmappedObjectORM.external_db_id == external_db_id,
+                        )
+                    ).rowcount
 
-            logging.info(
-                f"\tDeleted rows: {counts['external_synonym']} external_synonyms, {counts['identity_xref']} identity_xrefs, {counts['object_xref']} object_xrefs, {counts['master_dependent_xref']} master dependent_xrefs, {counts['master_object_xref']} master object_xrefs, {counts['dependent_xref']} dependent_xrefs, {counts['xref']} xrefs, {counts['unmapped_object']} unmapped_objects"
-            )
+                    logging.info(
+                        f"\tDeleted rows: {counts['external_synonym']} external_synonyms, {counts['identity_xref']} identity_xrefs, {counts['object_xref']} object_xrefs, {counts['master_dependent_xref']} master dependent_xrefs, {counts['master_object_xref']} master object_xrefs, {counts['dependent_xref']} dependent_xrefs, {counts['xref']} xrefs, {counts['unmapped_object']} unmapped_objects"
+                    )
+
+                    session.commit()
+                except SQLAlchemyError as e:
+                    session.rollback()
+                    logging.error(f"Failed to delete rows for source '{name}': {e}")
+                    raise RuntimeError(f"Transaction failed for source '{name}'")
 
     def get_analysis(self, dbi: Connection) -> Dict[str, int]:
         analysis_ids = {}
@@ -617,19 +623,21 @@ class XrefLoader(BasicMapper):
             "Translation": "xrefexonerateprotein",
         }
 
-        for object_type in ["Gene", "Transcript", "Translation"]:
-            logic_name = type_to_logic_name[object_type]
+        for object_type, logic_name in type_to_logic_name.items():
             analysis_ids[object_type] = self.get_single_analysis(logic_name, dbi)
 
+        # Add checksum analysis ID
         analysis_ids["checksum"] = self.get_single_analysis("xrefchecksum", dbi)
 
         return analysis_ids
 
     def get_single_analysis(self, logic_name: str, dbi: Connection) -> int:
+        # Retrieve the analysis ID for the given logic name
         analysis_id = dbi.execute(
             select(AnalysisORM.analysis_id).where(AnalysisORM.logic_name == logic_name)
         ).scalar()
 
+        # If the analysis ID does not exist, create a new analysis entry
         if not analysis_id:
             Session = sessionmaker(self.core())
             with Session.begin() as session:
@@ -641,7 +649,7 @@ class XrefLoader(BasicMapper):
 
         return analysis_id
 
-    def add_xref(self, offset: int, args: Dict[str, Any], dbi: Connection) -> int:
+    def add_xref(self, offset: int, args: Dict[str, Any], session: Session) -> int:
         xref_id = args["xref_id"]
         accession = args["accession"]
         external_db_id = args["external_db_id"]
@@ -651,7 +659,8 @@ class XrefLoader(BasicMapper):
         info_type = args["info_type"]
         info_text = args["info_text"]
 
-        new_xref_id = dbi.execute(
+        # Check if the xref already exists
+        new_xref_id = session.execute(
             select(XrefCORM.xref_id).where(
                 XrefCORM.dbprimary_acc == accession,
                 XrefCORM.external_db_id == external_db_id,
@@ -661,8 +670,9 @@ class XrefLoader(BasicMapper):
             )
         ).scalar()
 
+        # If it doesn't exist, insert it
         if not new_xref_id:
-            dbi.execute(
+            session.execute(
                 insert(XrefCORM).values(
                     xref_id=xref_id + offset,
                     external_db_id=external_db_id,
@@ -674,19 +684,19 @@ class XrefLoader(BasicMapper):
                     info_text=info_text,
                 )
             )
-
             return xref_id
         else:
             return int(new_xref_id) - offset
 
-    def add_object_xref(self, offset: int, args: Dict[str, Any], dbi: Connection) -> int:
+    def add_object_xref(self, offset: int, args: Dict[str, Any], session: Session) -> int:
         object_xref_id = args["object_xref_id"]
         ensembl_id = args["ensembl_id"]
         ensembl_type = args["ensembl_type"]
         xref_id = args["xref_id"]
         analysis_id = args["analysis_id"]
 
-        new_object_xref_id = dbi.execute(
+        # Check if the object_xref already exists
+        new_object_xref_id = session.execute(
             select(ObjectXrefCORM.object_xref_id).where(
                 ObjectXrefCORM.xref_id == xref_id,
                 ObjectXrefCORM.ensembl_object_type == ensembl_type,
@@ -695,8 +705,9 @@ class XrefLoader(BasicMapper):
             )
         ).scalar()
 
+        # If it doesn't exist, insert it
         if not new_object_xref_id:
-            dbi.execute(
+            session.execute(
                 insert(ObjectXrefCORM).values(
                     object_xref_id=object_xref_id + offset,
                     ensembl_id=ensembl_id,
@@ -705,7 +716,6 @@ class XrefLoader(BasicMapper):
                     analysis_id=analysis_id,
                 )
             )
-
             return object_xref_id
         else:
             return int(new_object_xref_id) - offset
@@ -724,8 +734,7 @@ class XrefLoader(BasicMapper):
                 XrefUORM.info_type == "DIRECT",
             )
         )
-        result = dbi.execute(query).fetchall()
-        xref_ids = [row[0] for row in result]
+        xref_ids = [row.xref_id for row in dbi.execute(query).mappings().all()]
         dbi.execute(
             update(XrefUORM)
             .values(dumped="UNMAPPED_NO_STABLE_ID")
@@ -761,8 +770,7 @@ class XrefLoader(BasicMapper):
                 DependentXref.info_type == "DEPENDENT",
             )
         )
-        result = dbi.execute(query).fetchall()
-        xref_ids = [row[0] for row in result]
+        xref_ids = [row.xref_id for row in dbi.execute(query).mappings().all()]
         dbi.execute(
             update(XrefUORM)
             .values(dumped="UNMAPPED_MASTER_FAILED")
@@ -784,15 +792,14 @@ class XrefLoader(BasicMapper):
                 XrefUORM.info_type == "SEQUENCE_MATCH",
             )
         )
-        result = dbi.execute(query).fetchall()
-        xref_ids = [row[0] for row in result]
+        xref_ids = [row.xref_id for row in dbi.execute(query).mappings().all()]
         dbi.execute(
             update(XrefUORM)
             .values(dumped="UNMAPPED_NO_MAPPING")
             .where(XrefUORM.xref_id.in_(xref_ids))
         )
 
-        # Dependents with non existent masters (none on time of loading)
+        # Dependents with non-existent masters (none at the time of loading)
         dbi.execute(
             update(XrefUORM)
             .values(dumped="UNMAPPED_NO_MASTER")

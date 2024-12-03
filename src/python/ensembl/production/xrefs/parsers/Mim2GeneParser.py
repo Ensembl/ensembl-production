@@ -71,9 +71,9 @@ class Mim2GeneParser(BaseParser):
         self.build_dependent_mappings(mim_gene_source_id, xref_dbi)
         self.build_dependent_mappings(mim_morbid_source_id, xref_dbi)
 
-        mim_gene = self.get_valid_codes("MIM_GENE", species_id, xref_dbi)
-        mim_morbid = self.get_valid_codes("MIM_MORBID", species_id, xref_dbi)
-        entrez = self.get_valid_codes("EntrezGene", species_id, xref_dbi)
+        mim_gene = self.get_acc_to_xref_ids("MIM_GENE", species_id, xref_dbi)
+        mim_morbid = self.get_acc_to_xref_ids("MIM_MORBID", species_id, xref_dbi)
+        entrez = self.get_acc_to_xref_ids("EntrezGene", species_id, xref_dbi)
 
         # Read lines
         for line in csv_reader:

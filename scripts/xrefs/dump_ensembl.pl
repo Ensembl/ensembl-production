@@ -34,21 +34,21 @@ GetOptions(
 );
 
 # Check that all parameters are passed
-if (!defined($cdna_path) || !defined($pep_path) || !defined($species) || !defined($core_db_url) || !defined($release)) {
-  croak "Usage: dump_ensembl.pl --cdna_path <cdna_path> --pep_path <pep_path> --species <species> --core_db_url <core_db_url> --release <release>";
+foreach my $param ($cdna_path, $pep_path, $species, $core_db_url, $release) {
+  defined $param or croak "Usage: dump_ensembl.pl --cdna_path <cdna_path> --pep_path <pep_path> --species <species> --core_db_url <core_db_url> --release <release>";
 }
 
 # Open fasta files for writing
-my $cdna_fh = IO::File->new($cdna_path ,'w') || throw("Cannot create filehandle $cdna_path");
+my $cdna_fh = IO::File->new($cdna_path, 'w') or croak "Cannot create filehandle $cdna_path";
 my $cdna_writer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new($cdna_fh);
-my $pep_fh = IO::File->new($pep_path ,'w') || throw("Cannot create filehandle $pep_path");
+my $pep_fh = IO::File->new($pep_path, 'w') or croak "Cannot create filehandle $pep_path";
 my $pep_writer = Bio::EnsEMBL::Utils::IO::FASTASerializer->new($pep_fh);
 
 # Load the registry
-my ($user, $pass, $host, $port, $dbname) = parse_url($core_db_url);
+my ($host, $port, $user, $pass, $dbname) = parse_url($core_db_url);
 my $registry = 'Bio::EnsEMBL::Registry';
 my %registry_params = (-HOST => $host, -PORT => $port, -USER => $user, -DB_VERSION => $release);
-$registry_params{-PASS} = $pass if ($pass);
+$registry_params{-PASS} = $pass if $pass;
 $registry->load_registry_from_db(%registry_params);
 
 # Get transcripts
@@ -56,14 +56,13 @@ my $transcript_adaptor = $registry->get_adaptor($species, 'Core', 'Transcript');
 my $transcript_list = $transcript_adaptor->fetch_all();
 
 # Dump sequence data
-while (my $transcript = shift @$transcript_list) {
+foreach my $transcript (@$transcript_list) {
   my $sequence = $transcript->seq();
   $sequence->id($transcript->dbID());
   $cdna_writer->print_Seq($sequence);
 
   # Get and dump translation data
-  my $translation = $transcript->translation;
-  if ($translation) {
+  if (my $translation = $transcript->translation) {
     $sequence = $transcript->translate;
     $sequence->id($translation->dbID());
     $pep_writer->print_Seq($sequence);
@@ -77,10 +76,5 @@ $pep_fh->close;
 sub parse_url {
   my ($url) = @_;
   my $parsed_url = Nextflow::Utils::parse($url);
-  my $user = $parsed_url->{'user'};
-  my $pass = $parsed_url->{'pass'};
-  my $host = $parsed_url->{'host'};
-  my $port = $parsed_url->{'port'};
-  my $db   = $parsed_url->{'dbname'};
-  return ($user, $pass, $host, $port, $db);
+  return @{$parsed_url}{qw(host port user pass dbname)};
 }

@@ -138,10 +138,10 @@ class RefSeqParser(BaseParser):
 
         # Retrieve existing RefSeq mRNA, EntrezGene, and WikiGene xrefs
         entrez_acc_to_label = self.get_acc_to_label("EntrezGene", species_id, dbi)
-        refseq_ids = self.get_valid_codes("RefSeq_mRNA", species_id, dbi)
-        refseq_ids.update(self.get_valid_codes("RefSeq_mRNA_predicted", species_id, dbi))
-        entrez_ids = self.get_valid_codes("EntrezGene", species_id, dbi)
-        wiki_ids = self.get_valid_codes("WikiGene", species_id, dbi)
+        refseq_ids = self.get_acc_to_xref_ids("RefSeq_mRNA", species_id, dbi)
+        refseq_ids.update(self.get_acc_to_xref_ids("RefSeq_mRNA_predicted", species_id, dbi))
+        entrez_ids = self.get_acc_to_xref_ids("EntrezGene", species_id, dbi)
+        wiki_ids = self.get_acc_to_xref_ids("WikiGene", species_id, dbi)
 
         xrefs = []
 
@@ -217,7 +217,7 @@ class RefSeqParser(BaseParser):
             xrefs.append(xref)
 
         if xrefs:
-            self.upload_xref_object_graphs(xrefs, dbi)
+            self.add_xref_objects(xrefs, dbi)
 
         result_message = (
             f'Added {counts["num_mrna"]} mRNA xrefs, {counts["num_pred_mrna"]} predicted mRNA xrefs, '

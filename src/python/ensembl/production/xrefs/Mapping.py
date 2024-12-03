@@ -14,7 +14,9 @@
 
 """Mapping module to map the added xrefs into the core DB."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+
+from ensembl.production.xrefs.Base import Base
 from ensembl.production.xrefs.mappers.ProcessPriorities import ProcessPriorities
 from ensembl.production.xrefs.mappers.ProcessPaired import ProcessPaired
 from ensembl.production.xrefs.mappers.ProcessMoves import ProcessMoves
@@ -23,16 +25,15 @@ from ensembl.production.xrefs.mappers.TestMappings import TestMappings
 from ensembl.production.xrefs.mappers.XrefLoader import XrefLoader
 from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
 
-
 class Mapping(Base):
     def run(self):
-        xref_db_url  = self.param_required("xref_db_url", {"type": "str"})
-        species_name = self.param_required("species_name", {"type": "str"})
-        base_path    = self.param_required("base_path", {"type": "str"})
-        release      = self.param_required("release", {"type": "int"})
-        registry     = self.param("registry_url", None, {"type": "str"})
-        core_db_url  = self.param("species_db", None, {"type": "str"})
-        verbose      = self.param("verbose", None, {"default": False})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        registry: str = self.get_param("registry_url", {"type": str})
+        core_db_url: str = self.get_param("species_db", {"type": str})
+        verbose: bool = self.get_param("verbose", {"type": bool, "default": False})
 
         logging.info(f"Mapping starting for species '{species_name}'")
 
@@ -47,9 +48,7 @@ class Mapping(Base):
             species_id = self.get_taxon_id(core_dbi)
 
         # Get the appropriate mapper
-        mapper = self.get_xref_mapper(
-            xref_db_url, species_name, base_path, release, core_db_url, registry
-        )
+        mapper = self.get_xref_mapper(xref_db_url, species_name, base_path, release, core_db_url, registry)
 
         # Process the xref priorities
         priorities = ProcessPriorities(mapper)

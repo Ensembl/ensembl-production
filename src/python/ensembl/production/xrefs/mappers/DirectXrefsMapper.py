@@ -14,8 +14,26 @@
 
 """Mapper module for processing direct xref data."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+import re
+from typing import Any, Dict
+from sqlalchemy import select, insert
+from sqlalchemy.engine import Connection
 
+from ensembl.xrefs.xref_update_db_model import (
+    GeneStableId as GeneStableIdORM,
+    TranscriptStableId as TranscriptStableIdORM,
+    TranslationStableId as TranslationStableIdORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    GeneDirectXref as GeneDirectXrefORM,
+    TranscriptDirectXref as TranscriptDirectXrefORM,
+    TranslationDirectXref as TranslationDirectXrefORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class DirectXrefsMapper(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -41,9 +59,9 @@ class DirectXrefsMapper(BasicMapper):
         err_count = {}
         object_xref_id = 0
 
-        for table in ["gene", "transcript", "translation"]:
-            direct_table = db_tables[table]["direct"]
-            stable_id_table = db_tables[table]["stable_id"]
+        for object_type, tables in db_tables.items():
+            direct_table = tables["direct"]
+            stable_id_table = tables["stable_id"]
 
             count, duplicate_direct_count, duplicate_dependent_count = 0, 0, 0
 
@@ -89,14 +107,14 @@ class DirectXrefsMapper(BasicMapper):
 
                 # Insert into object xref table
                 object_xref_id = self.get_object_xref_id(
-                    internal_id, xref_id, table, "DIRECT", xref_dbi
+                    internal_id, xref_id, object_type, "DIRECT", xref_dbi
                 )
                 if object_xref_id:
                     duplicate_direct_count += 1
                     continue
                 else:
                     object_xref_id = self.add_object_xref(
-                        internal_id, xref_id, table, "DIRECT", xref_dbi
+                        internal_id, xref_id, object_type, "DIRECT", xref_dbi
                     )
 
                 # Insert into identity xref table
@@ -113,7 +131,7 @@ class DirectXrefsMapper(BasicMapper):
                     {
                         "master_xrefs": master_xref_ids,
                         "dup_count": duplicate_dependent_count,
-                        "table": table,
+                        "table": object_type,
                         "internal_id": internal_id,
                     },
                     xref_dbi,
@@ -121,7 +139,7 @@ class DirectXrefsMapper(BasicMapper):
 
             if duplicate_direct_count or duplicate_dependent_count:
                 logging.info(
-                    f"Duplicate entries ignored for {duplicate_direct_count} direct xrefs and  {duplicate_dependent_count} dependent xrefs"
+                    f"Duplicate entries ignored for {duplicate_direct_count} direct xrefs and {duplicate_dependent_count} dependent xrefs"
                 )
 
         for key, val in err_count.items():

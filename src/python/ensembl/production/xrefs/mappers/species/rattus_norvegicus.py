@@ -14,8 +14,8 @@
 
 """Mapper extension module for species rattus_norvegicus."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
-
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
+from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
 
 class rattus_norvegicus(BasicMapper):
     def official_name(self) -> str:

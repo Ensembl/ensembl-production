@@ -344,12 +344,12 @@ class UniProtParser(BaseParser):
             xrefs.append(xref)
 
             if count > 1000:
-                self.upload_xref_object_graphs(xrefs, dbi)
+                self.add_xref_objects(xrefs, dbi)
                 count = 0
                 xrefs.clear()
 
         if xrefs:
-            self.upload_xref_object_graphs(xrefs, dbi)
+            self.add_xref_objects(xrefs, dbi)
 
         result_message = (
             f'Read {counts["num_sp"]} SwissProt xrefs, {counts["num_sptr"]} SPTrEMBL xrefs with protein evidence codes 1-2, '

@@ -14,8 +14,19 @@
 
 """Mapper extension module for species wormbase."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from typing import List
+from sqlalchemy.sql.expression import select, update
 
+from ensembl.core.models import (
+    Gene as GeneORM,
+    Transcript as TranscriptORM,
+    Xref as XrefCORM,
+    ExternalDb as ExternalDbORM,
+    ObjectXref as ObjectXrefCORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class wormbase(BasicMapper):
     def set_display_xrefs(self) -> None:
@@ -41,7 +52,6 @@ class wormbase(BasicMapper):
                 "Could not find wormbase_transcript and wormbase_locus in external_db table, so doing nothing"
             )
 
-            xref_dbi.close()
             core_dbi.close()
 
             return

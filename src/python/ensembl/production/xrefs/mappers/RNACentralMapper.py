@@ -14,8 +14,7 @@
 
 """Mapper module for processing RNACentral xref data."""
 
-from ensembl.production.xrefs.mappers.ChecksumMapper import *
-
+from ensembl.production.xrefs.mappers.ChecksumMapper import ChecksumMapper
 
 class RNACentralMapper(ChecksumMapper):
     def target(self) -> str:

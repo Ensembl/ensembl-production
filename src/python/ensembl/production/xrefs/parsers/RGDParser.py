@@ -55,7 +55,7 @@ class RGDParser(BaseParser):
         dependent_count, ensembl_count, mismatch_count, syn_count = 0, 0, 0, 0
 
         # Used to assign dbIDs for when RGD Xrefs are dependent on RefSeq xrefs
-        preloaded_refseq = self.get_valid_codes("refseq", species_id, xref_dbi)
+        preloaded_refseq = self.get_acc_to_xref_ids("refseq", species_id, xref_dbi)
 
         for line in csv_reader:
             # Don't bother doing anything if we don't have an RGD ID or if the symbol is an Ensembl ID

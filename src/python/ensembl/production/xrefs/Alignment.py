@@ -14,47 +14,64 @@
 
 """Alignment module to map xref sequences into ensEMBL ones."""
 
-from ensembl.production.xrefs.Base import *
+import re
+import subprocess
+from sqlalchemy.dialects.mysql import insert
 
+from ensembl.xrefs.xref_update_db_model import (
+    MappingJobs as MappingJobsORM,
+    Mapping as MappingORM,
+)
+
+from ensembl.production.xrefs.Base import Base
 
 class Alignment(Base):
+    XREF_HIT_PATTERN = re.compile(r"^xref")
+
     def run(self):
-        base_path     = self.param_required("base_path", {"type": "str"})
-        method        = self.param_required("align_method", {"type": "str"})
-        query_cutoff  = self.param_required("query_cutoff", {"type": "int"})
-        target_cutoff = self.param_required("target_cutoff", {"type": "int"})
-        max_chunks    = self.param_required("max_chunks", {"type": "int"})
-        chunk         = self.param_required("chunk", {"type": "int"})
-        job_index     = self.param_required("job_index", {"type": "int"})
-        source        = self.param_required("source_file", {"type": "str"})
-        target        = self.param_required("target_file", {"type": "str"})
-        xref_db_url   = self.param_required("xref_db_url", {"type": "str"})
-        map_file      = self.param_required("map_file", {"type": "str"})
-        source_id     = self.param_required("source_id", {"type": "int"})
-        seq_type      = self.param_required("seq_type", {"type": "str"})
+        method: str = self.get_param("align_method", {"required": True, "type": str})
+        query_cutoff: int = self.get_param("query_cutoff", {"required": True, "type": int})
+        target_cutoff: int = self.get_param("target_cutoff", {"required": True, "type": int})
+        max_chunks: int = self.get_param("max_chunks", {"required": True, "type": int})
+        chunk: int = self.get_param("chunk", {"required": True, "type": int})
+        job_index: int = self.get_param("job_index", {"required": True, "type": int})
+        source: str = self.get_param("source_file", {"required": True, "type": str})
+        target: str = self.get_param("target_file", {"required": True, "type": str})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        map_file: str = self.get_param("map_file", {"required": True, "type": str})
+        source_id: int = self.get_param("source_id", {"required": True, "type": int})
+        seq_type: str = self.get_param("seq_type", {"required": True, "type": str})
 
         # Construct Exonerate command
         ryo = "xref:%qi:%ti:%ei:%ql:%tl:%qab:%qae:%tab:%tae:%C:%s\n"
-        exe = (
-            subprocess.check_output("which exonerate", shell=True)
-            .decode("utf-8")
-            .strip()
-        )
-        command_string = f"{exe} --showalignment FALSE --showvulgar FALSE --ryo '{ryo}' --gappedextension FALSE --model 'affine:local' {method} --subopt no --query {source} --target {target} --querychunktotal {max_chunks} --querychunkid {chunk}"
+        exe = subprocess.check_output(["which", "exonerate"]).decode("utf-8").strip()
+        command_string = [
+            exe,
+            "--showalignment", "FALSE",
+            "--showvulgar", "FALSE",
+            "--ryo", f"'{ryo}'",
+            "--gappedextension", "FALSE",
+            "--model", "'affine:local'",
+            method,
+            "--subopt", "no",
+            "--query", source,
+            "--target", target,
+            "--querychunktotal", str(max_chunks),
+            "--querychunkid", str(chunk)
+        ]
 
         # Get exonerate hits
-        output = subprocess.run(command_string, shell=True, stdout=subprocess.PIPE)
+        output = subprocess.run(command_string, stdout=subprocess.PIPE, text=True)
 
         exit_code = abs(output.returncode)
         if exit_code == 0:
-            hits = output.stdout.decode("utf-8").split("\n")
+            hits = output.stdout.split("\n")
 
             # Write to mapping file
-            map_fh = open(map_file, "w")
-            for hit in hits:
-                if re.search(r"^xref", hit):
-                    map_fh.write(f"{hit}\n")
-            map_fh.close()
+            with open(map_file, "w") as map_fh:
+                for hit in hits:
+                    if self.XREF_HIT_PATTERN.search(hit):
+                        map_fh.write(f"{hit}\n")
         elif exit_code == 9:
             raise MemoryError(
                 f"Exonerate failed due to insufficient memory (exit code: {exit_code})"

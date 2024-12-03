@@ -14,27 +14,26 @@
 
 """Xref module to process the Uniparc mappings."""
 
-from ensembl.production.xrefs.Base import *
+import logging
+
+from ensembl.production.xrefs.Base import Base
 from ensembl.production.xrefs.mappers.UniParcMapper import UniParcMapper
 from ensembl.production.xrefs.mappers.methods.MySQLChecksum import MySQLChecksum
 
-
 class UniParcMapping(Base):
     def run(self):
-        xref_db_url   = self.param_required("xref_db_url", {"type": "str"})
-        species_name  = self.param_required("species_name", {"type": "str"})
-        base_path     = self.param_required("base_path", {"type": "str"})
-        release       = self.param_required("release", {"type": "int"})
-        source_db_url = self.param_required("source_db_url", {"type": "str"})
-        registry      = self.param("registry_url", None, {"type": "str"})
-        core_db_url   = self.param("species_db", None, {"type": "str"})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
+        registry: str = self.get_param("registry_url", {"type": str})
+        core_db_url: str = self.get_param("species_db", {"type": str})
 
         logging.info(f"UniParcMapping starting for species '{species_name}'")
 
         if not core_db_url:
-            core_db_url = self.get_db_from_registry(
-                species_name, "core", release, registry
-            )
+            core_db_url = self.get_db_from_registry(species_name, "core", release, registry)
 
         # Get species id
         db_engine = self.get_db_engine(core_db_url)
@@ -43,15 +42,13 @@ class UniParcMapping(Base):
 
         # Get the uniparc mapper
         mapper = UniParcMapper(
-            self.get_xref_mapper(
-                xref_db_url, species_name, base_path, release, core_db_url, registry
-            )
+            self.get_xref_mapper(xref_db_url, species_name, base_path, release, core_db_url, registry)
         )
 
         # Get source id
         db_engine = self.get_db_engine(source_db_url)
         with db_engine.connect() as source_dbi:
-            source_id = self.get_source_id_from_name(source_dbi, "UniParc")
+            source_id = self.get_source_id_from_name("UniParc", source_dbi)
 
             method = MySQLChecksum({"MAPPER": mapper})
             results = method.run(

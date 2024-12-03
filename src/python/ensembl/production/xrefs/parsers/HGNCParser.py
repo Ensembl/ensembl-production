@@ -24,7 +24,7 @@ import codecs
 from sqlalchemy import select
 from sqlalchemy.engine import Connection
 from sqlalchemy.engine.url import URL
-from unidecode import unidecode
+from unidecode import unidecode # type: ignore
 
 from ensembl.core.models import (
     Transcript as TranscriptORM,
@@ -39,7 +39,7 @@ class HGNCParser(BaseParser):
         source_id = args.get("source_id")
         species_id = args.get("species_id")
         xref_file = args.get("file")
-        dba = args.get("dba")
+        db_url = args.get("extra_db_url")
         xref_dbi = args.get("xref_dbi")
         verbose = args.get("verbose", False)
 
@@ -66,7 +66,7 @@ class HGNCParser(BaseParser):
         name_count = {key: 0 for key in source_ids}
 
         # Connect to the ccds db
-        ccds_db_url = dba or self.construct_db_url(file_params)
+        ccds_db_url = db_url or self.construct_db_url(file_params)
         if not ccds_db_url:
             raise AttributeError("No ensembl ccds database provided")
         if verbose:
@@ -95,11 +95,13 @@ class HGNCParser(BaseParser):
         result_message += f"{syn_count} synonyms added\n"
         result_message += f"{name_count['desc_only']} HGNC ids could not be associated in xrefs"
 
+        result_message = re.sub(r"\n", "--", result_message)
+
         return 0, result_message
 
     def process_lines(self, csv_reader: csv.DictReader, source_ids: Dict[str, int], name_count: Dict[str, int], species_id: int, ccds_db_url: str, xref_dbi: Connection) -> int:
         # Prepare lookup lists
-        refseq = self.get_valid_codes("refseq", species_id, xref_dbi)
+        refseq = self.get_acc_to_xref_ids("refseq", species_id, xref_dbi)
         source_list = ["refseq_peptide", "refseq_mRNA"]
         entrezgene = self.get_valid_xrefs_for_dependencies("EntrezGene", source_list, xref_dbi)
 

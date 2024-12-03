@@ -14,8 +14,29 @@
 
 """Mapper extension module for species eukaryota."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from typing import Dict, List, Tuple
+from sqlalchemy.orm import aliased
+from sqlalchemy import select, update, func, delete
+from sqlalchemy.sql.expression import Select
+from sqlalchemy.dialects.mysql import insert
 
+from ensembl.xrefs.xref_update_db_model import (
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    DependentXref as DependentXrefUORM,
+    ObjectXref as ObjectXrefUORM
+)
+
+from ensembl.core.models import (
+    Gene as GeneORM,
+    Transcript as TranscriptORM,
+    Xref as XrefCORM,
+    ExternalDb as ExternalDbORM,
+    ObjectXref as ObjectXrefCORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class eukaryota(BasicMapper):
     def gene_display_xref_sources(self) -> Tuple[List[str], Dict[str, Select]]:

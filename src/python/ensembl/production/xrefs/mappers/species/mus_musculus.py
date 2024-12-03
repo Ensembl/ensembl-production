@@ -14,8 +14,8 @@
 
 """Mapper extension module for species mus_musculus."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
-
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
+from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
 
 class mus_musculus(BasicMapper):
     def official_name(self) -> str:

@@ -35,6 +35,10 @@ class EntrezGeneParser(BaseParser):
 
         if not source_id or not species_id or not xref_file:
             raise AttributeError("Missing required arguments: source_id, species_id, and file")
+        
+        wiki_source_id = self.get_source_id_for_source_name("WikiGene", xref_dbi)
+        if verbose:
+            logging.info(f"Wiki source id = {wiki_source_id}")
 
         with self.get_filehandle(xref_file) as file_io:
             if file_io.read(1) == '':
@@ -63,10 +67,6 @@ class EntrezGeneParser(BaseParser):
             ]
             if not self.is_file_header_valid(self.EXPECTED_NUMBER_OF_COLUMNS, patterns, header):
                 raise ValueError(f"Malformed or unexpected header in EntrezGene file {xref_file}")
-
-            wiki_source_id = self.get_source_id_for_source_name("WikiGene", xref_dbi)
-            if verbose:
-                logging.info(f"Wiki source id = {wiki_source_id}")
 
             processed_count, syn_count = self.process_lines(csv_reader, source_id, species_id, wiki_source_id, xref_dbi)
 

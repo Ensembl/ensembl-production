@@ -14,8 +14,8 @@
 
 """Mapper extension module for species homo_sapiens."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
-
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
+from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
 
 class homo_sapiens(BasicMapper):
     def official_name(self) -> str:

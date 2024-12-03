@@ -20,9 +20,10 @@ use Carp;
 use DBI;
 use JSON;
 use Getopt::Long;
+use File::Spec::Functions qw(catfile);
 
 use Nextflow::Utils;
-use Bio::EnsEMBL::DBSQL::DBAdaptor
+use Bio::EnsEMBL::DBSQL::DBAdaptor;
 use Bio::EnsEMBL::Mapper::RangeRegistry;
 
 my ($xref_db_url, $core_db_url, $species_id, $output_dir, $analysis_id);
@@ -35,8 +36,8 @@ GetOptions(
 );
 
 # Check that all parameters are passed
-if (!defined($xref_db_url) || !defined($core_db_url) || !defined($species_id) || !defined($output_dir) || !defined($analysis_id)) {
-  croak "Usage: dump_ensembl.pl --xref_db_url <xref_db_url> --core_db_url <core_db_url> --species_id <species_id> --output_dir <output_dir> --analysis_id <analysis_id>";
+foreach my $param ($xref_db_url, $core_db_url, $species_id, $output_dir, $analysis_id) {
+  defined $param or croak "Usage: dump_ensembl.pl --xref_db_url <xref_db_url> --core_db_url <core_db_url> --species_id <species_id> --output_dir <output_dir> --analysis_id <analysis_id>";
 }
 
 # Set the files to use
@@ -45,27 +46,30 @@ my $object_xref_filename = catfile($output_dir, 'object_xref_coord.txt');
 my $unmapped_reason_filename = catfile($output_dir, 'unmapped_reason_coord.txt');
 my $unmapped_object_filename = catfile($output_dir, 'unmapped_object_coord.txt');
 
-# Connect tp dbs
-my ($core_user, $core_pass, $core_host, $core_port, $core_dbname) = parse_url($core_db_url);
+# Connect to dbs
+my ($core_host, $core_port, $core_user, $core_pass, $core_dbname) = parse_url($core_db_url);
 my $core_dbi = get_dbi($core_host, $core_port, $core_user, $core_pass, $core_dbname);
 my $xref_dbi = get_dbi(parse_url($xref_db_url));
 
 # Figure out the last used IDs in the core DB
-my $xref_id = $core_dbi->selectall_arrayref('SELECT MAX(xref_id) FROM xref')->[0][0];
-my $object_xref_id = $core_dbi->selectall_arrayref('SELECT MAX(object_xref_id) FROM object_xref')->[0][0];
-my $unmapped_object_id = $core_dbi->selectall_arrayref('SELECT MAX(unmapped_object_id) FROM unmapped_object')->[0][0];
-my $unmapped_reason_id = $core_dbi->selectall_arrayref('SELECT MAX(unmapped_reason_id) FROM unmapped_reason')->[0][0];
+my $xref_id = $core_dbi->selectrow_array('SELECT MAX(xref_id) FROM xref') || 0;
+my $object_xref_id = $core_dbi->selectrow_array('SELECT MAX(object_xref_id) FROM object_xref') || 0;
+my $unmapped_object_id = $core_dbi->selectrow_array('SELECT MAX(unmapped_object_id) FROM unmapped_object') || 0;
+my $unmapped_reason_id = $core_dbi->selectrow_array('SELECT MAX(unmapped_reason_id) FROM unmapped_reason') || 0;
 
 my (%unmapped, %mapped);
 my $external_db_id;
 
 # Read and store available Xrefs from the Xref database
-my $xref_sth = $xref_dbi->prepare("SELECT c.coord_xref_id,s.name,c.accession FROM coordinate_xref c,source s WHERE c.source_id=s.source_id AND c.species_id=?");
+my $xref_sth = $xref_dbi->prepare("SELECT c.coord_xref_id, s.name, c.accession FROM coordinate_xref c JOIN source s ON c.source_id = s.source_id WHERE c.species_id = ?");
 $xref_sth->bind_param(1, $species_id, SQL_INTEGER);
 $xref_sth->execute();
 
 while (my $xref = $xref_sth->fetchrow_hashref()) {
-  $external_db_id ||= $core_dbi->selectall_arrayref('SELECT external_db_id FROM external_db WHERE db_name='.$xref->{'name'})->[0][0];
+  my $sth_external_db = $core_dbi->prepare('SELECT external_db_id FROM external_db WHERE db_name = ?');
+  $sth_external_db->execute($xref->{'name'});
+  $external_db_id ||= ($sth_external_db->fetchrow_array())[0];
+  $sth_external_db->finish();
   $external_db_id ||= 11000;    # FIXME (11000 is 'UCSC')
 
   $unmapped{$xref->{'coord_xref_id'}} = {
@@ -77,16 +81,14 @@ while (my $xref = $xref_sth->fetchrow_hashref()) {
 }
 $xref_sth->finish();
 
-if (!defined($external_db_id)) {
-  die "External_db_id is undefined for species_id = $species_id\n";
-}
+defined $external_db_id or die "External_db_id is undefined for species_id = $species_id\n";
 
 # Start the coordinate matching
 my $core_db_adaptor = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-  -host => $core_host,
-  -port => $core_port,
-  -user => $core_user,
-  -pass => $core_pass,
+  -host   => $core_host,
+  -port   => $core_port,
+  -user   => $core_user,
+  -pass   => $core_pass,
   -dbname => $core_dbname,
 );
 
@@ -111,7 +113,7 @@ foreach my $chromosome (@chromosomes) {
   my $chr_name = $chromosome->seq_region_name();
   my @genes = @{ $chromosome->get_all_Genes( undef, undef, 1 ) };
 
-  while (my $gene = shift(@genes)) {
+  foreach my $gene (@genes) {
     my @transcripts = @{ $gene->get_all_Transcripts() };
     my %gene_result;
 
@@ -144,12 +146,7 @@ foreach my $chromosome (@chromosomes) {
       # '$rr1' is the RangeRegistry holding Ensembl exons for one transcript at a time.
       my $rr1 = Bio::EnsEMBL::Mapper::RangeRegistry->new();
 
-      my $coding_transcript;
-      if (defined($transcript->translation())) {
-        $coding_transcript = 1;
-      } else {
-        $coding_transcript = 0;
-      }
+      my $coding_transcript = defined($transcript->translation()) ? 1 : 0;
 
       foreach my $exon (@exons) {
         # Register each exon in the RangeRegistry.  Register both the
@@ -198,7 +195,7 @@ foreach my $chromosome (@chromosomes) {
 
         for (my $i = 0 ; $i < $exonCount ; ++$i) {
           # Register the exons from the external database in the same
-          # was as with the Ensembl exons, and calculate the overlap
+          # way as with the Ensembl exons, and calculate the overlap
           # of the external exons with the previously registered
           # Ensembl exons.
 
@@ -206,9 +203,7 @@ foreach my $chromosome (@chromosomes) {
           $exon_match += $overlap/($exonEnds[$i] - $exonStarts[$i] + 1);
           $rr2->check_and_register('exon', $exonStarts[$i], $exonEnds[$i]);
 
-          if (!defined($cdsStart) || !defined($cdsEnd)) {
-            # Non-coding transcript.
-          } else {
+          if (defined($cdsStart) && defined($cdsEnd)) {
             my $codingStart = ($exonStarts[$i] > $cdsStart ? $exonStarts[$i] : $cdsStart);
             my $codingEnd = ($exonEnds[$i] < $cdsEnd ? $exonEnds[$i] : $cdsEnd);
 
@@ -255,7 +250,7 @@ foreach my $chromosome (@chromosomes) {
           $coding_weight*($coding_count + $ens_weight*$rcoding_count)
         );
 
-        if (!defined( $transcript_result{$coord_xref_id}) || $transcript_result{$coord_xref_id} < $score) {
+        if (!defined($transcript_result{$coord_xref_id}) || $transcript_result{$coord_xref_id} < $score) {
           $transcript_result{$coord_xref_id} = $score;
         }
 
@@ -266,16 +261,16 @@ foreach my $chromosome (@chromosomes) {
       # this transcript.
 
       my $best_score;
-      foreach my $coord_xref_id (sort( { $transcript_result{$b} <=> $transcript_result{$a} } keys(%transcript_result) )) {
+      foreach my $coord_xref_id (sort { $transcript_result{$b} <=> $transcript_result{$a} } keys(%transcript_result)) {
         my $score = $transcript_result{$coord_xref_id};
 
         if ($score > $transcript_score_threshold) {
           $best_score ||= $score;
 
           if (sprintf("%.3f", $score) eq sprintf("%.3f", $best_score)) {
-            if (exists( $unmapped{$coord_xref_id})) {
+            if (exists($unmapped{$coord_xref_id})) {
               $mapped{$coord_xref_id} = $unmapped{$coord_xref_id};
-              delete( $unmapped{$coord_xref_id} );
+              delete($unmapped{$coord_xref_id});
               $mapped{$coord_xref_id}{'reason'}      = undef;
               $mapped{$coord_xref_id}{'reason_full'} = undef;
               $mapped{$coord_xref_id}{'chr_name'} = $chr_name;
@@ -287,21 +282,21 @@ foreach my $chromosome (@chromosomes) {
             });
 
             # This is now a candidate Xref for the gene.
-            if (!defined( $gene_result{$coord_xref_id}) || $gene_result{$coord_xref_id} < $score) {
+            if (!defined($gene_result{$coord_xref_id}) || $gene_result{$coord_xref_id} < $score) {
               $gene_result{$coord_xref_id} = $score;
             }
           } elsif (exists($unmapped{$coord_xref_id})) {
             $unmapped{$coord_xref_id}{'reason'} = 'Was not best match';
             $unmapped{$coord_xref_id}{'reason_full'} = sprintf("Did not top best transcript match score (%.2f)", $best_score);
-            if (!defined( $unmapped{$coord_xref_id}{'score'}) || $score > $unmapped{$coord_xref_id}{'score'}) {
+            if (!defined($unmapped{$coord_xref_id}{'score'}) || $score > $unmapped{$coord_xref_id}{'score'}) {
               $unmapped{$coord_xref_id}{'score'} = $score;
               $unmapped{$coord_xref_id}{'ensembl_id'} = $transcript->dbID();
             }
           }
-        } elsif (exists( $unmapped{$coord_xref_id}) && $unmapped{$coord_xref_id}{'reason'} ne 'Was not best match') {
+        } elsif (exists($unmapped{$coord_xref_id}) && $unmapped{$coord_xref_id}{'reason'} ne 'Was not best match') {
           $unmapped{$coord_xref_id}{'reason'} = 'Did not meet threshold';
-          $unmapped{$coord_xref_id}{'reason_full'} = sprintf( "Match score for transcript lower than threshold (%.2f)", $transcript_score_threshold);
-          if (!defined( $unmapped{$coord_xref_id}{'score'}) || $score > $unmapped{$coord_xref_id}{'score'}) {
+          $unmapped{$coord_xref_id}{'reason_full'} = sprintf("Match score for transcript lower than threshold (%.2f)", $transcript_score_threshold);
+          if (!defined($unmapped{$coord_xref_id}{'score'}) || $score > $unmapped{$coord_xref_id}{'score'}) {
             $unmapped{$coord_xref_id}{'score'} = $score;
             $unmapped{$coord_xref_id}{'ensembl_id'} = $transcript->dbID();
           }
@@ -325,35 +320,21 @@ upload_data('xref', $xref_filename, $external_db_id, $core_dbi);
 
 sub parse_url {
   my ($url) = @_;
-
   my $parsed_url = Nextflow::Utils::parse($url);
-  my $user = $parsed_url->{'user'};
-  my $pass = $parsed_url->{'pass'};
-  my $host = $parsed_url->{'host'};
-  my $port = $parsed_url->{'port'};
-  my $db   = $parsed_url->{'dbname'};
-
-  return ($host, $port, $user, $pass, $db)
+  return @{$parsed_url}{qw(host port user pass dbname)};
 }
 
 sub get_dbi {
   my ($host, $port, $user, $pass, $dbname) = @_;
-
-  my $dbconn;
-  if (defined $dbname) {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  } else {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
-  }
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
-
+  my $dbconn = defined $dbname ? sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname) : sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
+  my $dbi = DBI->connect($dbconn, $user, $pass, { 'RaiseError' => 1 }) or croak("Can't connect to database: " . $DBI::errstr);
   return $dbi;
 }
 
 sub dump_xref {
   my ($filename, $xref_id, $mapped, $unmapped) = @_;
 
-  my $fh = IO::File->new('>' . $filename) or croak(sprintf("Can not open '%s' for writing", $filename));
+  my $fh = IO::File->new($filename, 'w') or croak(sprintf("Can not open '%s' for writing", $filename));
 
   foreach my $xref (values(%{$unmapped}), values(%{$mapped})) {
     # Assign 'xref_id' to this Xref.
@@ -382,7 +363,7 @@ sub dump_xref {
 sub dump_object_xref {
   my ($filename, $object_xref_id, $analysis_id, $mapped) = @_;
 
-  my $fh = IO::File->new('>' . $filename) or croak(sprintf("Can not open '%s' for writing", $filename));
+  my $fh = IO::File->new($filename, 'w') or croak(sprintf("Can not open '%s' for writing", $filename));
 
   foreach my $xref (values(%{$mapped})) {
     foreach my $object_xref (@{ $xref->{'mapped_to'} }) {
@@ -417,7 +398,7 @@ sub dump_unmapped_reason {
     }
   }
 
-  my $fh = IO::File->new('>' . $filename) or croak(sprintf("Can not open '%s' for writing", $filename));
+  my $fh = IO::File->new($filename, 'w') or croak(sprintf("Can not open '%s' for writing", $filename));
 
   my $sth = $core_dbi->prepare('SELECT unmapped_reason_id FROM unmapped_reason WHERE full_description = ?');
 
@@ -457,7 +438,7 @@ sub dump_unmapped_reason {
 sub dump_unmapped_object {
   my ($filename, $unmapped_object_id, $analysis_id, $unmapped) = @_;
 
-  my $fh = IO::File->new('>' . $filename) or croak(sprintf("Can not open '%s' for writing", $filename));
+  my $fh = IO::File->new($filename, 'w') or croak(sprintf("Can not open '%s' for writing", $filename));
 
   foreach my $xref (values(%{$unmapped})) {
     # Assign 'unmapped_object_id' to this Xref.
@@ -523,7 +504,7 @@ sub upload_data {
 
   my $load_sql = sprintf("LOAD DATA LOCAL INFILE ? REPLACE INTO TABLE %s", $table_name);
 
-  my $rows = $dbi->do($cleanup_sql, undef, $external_db_id) or croak($dbi->strerr());
+  my $rows = $dbi->do($cleanup_sql, undef, $external_db_id) or croak($dbi->errstr());
 
   $rows = $dbi->do($load_sql, undef, $filename) or croak($dbi->errstr());
 

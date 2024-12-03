@@ -14,8 +14,22 @@
 
 """Mapper module for processing paired xrefs."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+from sqlalchemy import select, update, insert
+from sqlalchemy.orm import aliased
+from sqlalchemy.engine import Connection
 
+from ensembl.xrefs.xref_update_db_model import (
+    GeneTranscriptTranslation as GeneTranscriptTranslationORM,
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    Pairs as PairsORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class ProcessPaired(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -28,7 +42,6 @@ class ProcessPaired(BasicMapper):
 
         xref_dbi = self.xref().connect()
 
-        object_xref_id = None
         change = {
             "translation object xrefs added": 0,
             "translation object xrefs removed": 0,
@@ -67,6 +80,7 @@ class ProcessPaired(BasicMapper):
         )
         for row in xref_dbi.execute(query).mappings().all():
             # Check if translation is linked to the paired RefSeq peptide
+            transl_object_xref_id = None
             if row.translation_id:
                 query = (
                     select(ObjectXrefUORM.object_xref_id, ObjectXrefUORM.xref_id)
@@ -83,8 +97,6 @@ class ProcessPaired(BasicMapper):
                 if result.rowcount > 0:
                     object_xref_row = result.mappings().all()[0]
                     transl_object_xref_id = object_xref_row.object_xref_id
-                else:
-                    transl_object_xref_id = None
 
                 # If it's already linked we don't have to do anything
                 if not transl_object_xref_id:
@@ -167,10 +179,7 @@ class ProcessPaired(BasicMapper):
         )
         for row in xref_dbi.execute(query).mappings().all():
             if RefSeq_pep_translation.get(row.accession):
-                found = 0
-                for tr_id in RefSeq_pep_translation[row.accession]:
-                    if tr_id == row.ensembl_id:
-                        found = 1
+                found = any(tr_id == row.ensembl_id for tr_id in RefSeq_pep_translation[row.accession])
 
                 if not found:
                     # This translations's transcript is not matched with the paired RefSeq_mRNA%,
@@ -194,23 +203,18 @@ class ProcessPaired(BasicMapper):
         self.update_process_status("processed_pairs")
 
     def process_dependents(self, translation_object_xref_id: int, translation_id: int, transcript_id: int, dbi: Connection) -> None:
-        master_object_xrefs = []
-        new_master_object_xref_id = None
-        master_object_xref_ids = {}
-
-        master_object_xrefs.append(translation_object_xref_id)
-        master_object_xref_ids[translation_object_xref_id] = 1
+        master_object_xrefs = [translation_object_xref_id]
+        master_object_xref_ids = set(master_object_xrefs)
 
         while master_object_xrefs:
             master_object_xref_id = master_object_xrefs.pop()
-            dependent_object_xref_id = None
 
             MasterObjectXref = aliased(ObjectXrefUORM)
             DependentObjectXref = aliased(ObjectXrefUORM)
-
             MasterXref = aliased(XrefUORM)
             DependentXref = aliased(XrefUORM)
 
+            # Process dependent xrefs for Translation
             query = select(DependentObjectXref.object_xref_id.distinct()).where(
                 DependentXref.xref_id == DependentXrefUORM.dependent_xref_id,
                 MasterXref.xref_id == DependentXrefUORM.master_xref_id,
@@ -225,10 +229,11 @@ class ProcessPaired(BasicMapper):
             for row in dbi.execute(query).mappings().all():
                 self.update_object_xref_status(row.object_xref_id, "MULTI_DELETE", dbi)
 
-                if not master_object_xref_ids.get(row.object_xref_id):
-                    master_object_xref_ids[row.object_xref_id] = 1
+                if row.object_xref_id not in master_object_xref_ids:
+                    master_object_xref_ids.add(row.object_xref_id)
                     master_object_xrefs.append(row.object_xref_id)
 
+            # Process dependent xrefs for Transcript
             query = select(DependentObjectXref.object_xref_id.distinct()).where(
                 DependentXref.xref_id == DependentXrefUORM.dependent_xref_id,
                 MasterXref.xref_id == DependentXrefUORM.master_xref_id,
@@ -243,6 +248,6 @@ class ProcessPaired(BasicMapper):
             for row in dbi.execute(query).mappings().all():
                 self.update_object_xref_status(row.object_xref_id, "MULTI_DELETE", dbi)
 
-                if not master_object_xref_ids.get(row.object_xref_id):
-                    master_object_xref_ids[row.object_xref_id] = 1
+                if row.object_xref_id not in master_object_xref_ids:
+                    master_object_xref_ids.add(row.object_xref_id)
                     master_object_xrefs.append(row.object_xref_id)

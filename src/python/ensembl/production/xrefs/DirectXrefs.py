@@ -14,25 +14,25 @@
 
 """Xref module to process direct xrefs."""
 
-from ensembl.production.xrefs.Base import *
-from ensembl.production.xrefs.mappers.DirectXrefsMapper import DirectXrefsMapper
+import logging
+from typing import Optional
 
+from ensembl.production.xrefs.Base import Base
+from ensembl.production.xrefs.mappers.DirectXrefsMapper import DirectXrefsMapper
 
 class DirectXrefs(Base):
     def run(self):
-        xref_db_url  = self.param_required("xref_db_url", {"type": "str"})
-        species_name = self.param_required("species_name", {"type": "str"})
-        base_path    = self.param_required("base_path", {"type": "str"})
-        release      = self.param_required("release", {"type": "int"})
-        registry     = self.param("registry_url", None, {"type": "str"})
-        core_db_url  = self.param("species_db", None, {"type": "str"})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        registry: Optional[str] = self.get_param("registry_url", {"type": str})
+        core_db_url: Optional[str] = self.get_param("species_db", {"type": str})
 
         logging.info(f"DirectXrefs starting for species '{species_name}'")
 
         # Get the appropriate mapper
-        mapper = self.get_xref_mapper(
-            xref_db_url, species_name, base_path, release, core_db_url, registry
-        )
+        mapper = self.get_xref_mapper(xref_db_url, species_name, base_path, release, core_db_url, registry)
 
         # Process the direct xrefs
         direct_mappings = DirectXrefsMapper(mapper)

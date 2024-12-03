@@ -142,7 +142,7 @@ class BaseParser(Base):
                 .values(source_release=s_release)
             )
 
-    def upload_xref_object_graphs(self, xrefs: List[Dict[str, Any]], dbi: Connection) -> None:
+    def add_xref_objects(self, xrefs: List[Dict[str, Any]], dbi: Connection) -> None:
         """Adds xref data into a database.
         Uploads main xref data, related direct xrefs, dependent xrefs, and synonyms.
 
@@ -355,45 +355,6 @@ class BaseParser(Base):
                 linkage_xref=linkage_type,
             )
         )
-
-    def add_to_direct_xrefs(self, args: Dict[str, Any], dbi: Connection) -> None:
-        """Adds direct xref data into both the xref table and direct xref tables in a database.
-        This calls the functions add_xref and add_direct_xref.
-
-        Parameters
-        ----------
-        args: dict
-            The direct xref arguments. These include:
-            - stable_id: The ensEMBL feature stable ID
-            - ensembl_type: The feature type (gene, transcript, or translation)
-            - accession: The xref accession
-            - source_id: The xref source ID
-            - species_id: The species ID
-            - version (optional): The xref version (default is 0)
-            - label (optional): The xref label (default is the xref accession)
-            - description (optional): The xref description
-            - linkage (optional): The type of link between the xref and ensEMBL
-            - info_text (optional): Additional info related to the xref (default is empty string)
-            - info_type (optional): The type of xref being added (default is DIRECT)
-        dbi: sqlalchemy.engine.Connection
-            The database connection to update in
-        """
-        stable_id = args["stable_id"]
-        ensembl_type = args["ensembl_type"]
-        accession = args["accession"]
-        source_id = args["source_id"]
-        species_id = args["species_id"]
-        version = args.get("version", 0)
-        label = args.get("label", accession)
-        description = args.get("description")
-        linkage = args.get("linkage")
-        info_text = args.get("info_text", "")
-
-        args["info_type"] = args.get("info_type", "DIRECT")
-
-        # If the accession already has an xref find it else cretae a new one
-        direct_xref_id = self.add_xref(args, dbi)
-        self.add_direct_xref(direct_xref_id, stable_id, ensembl_type, linkage, dbi)
 
     def get_direct_xref_id(self, stable_id: str, ensembl_type: str, link: str, dbi: Connection) -> int:
         """Retrieves the direct xref row ID from stable ID, ensEMBL type and linkage type.
@@ -710,7 +671,7 @@ class BaseParser(Base):
                 f"{row.master_xref_id}|{row.dependent_xref_id}"
             ] = row.linkage_annotation
 
-    def get_valid_codes(self, source_name: str, species_id: int, dbi: Connection) -> Dict[str, List[int]]:
+    def get_acc_to_xref_ids(self, source_name: str, species_id: int, dbi: Connection) -> Dict[str, List[int]]:
         """Retrieves the xref accessions and IDs related to a specific xref source and species from a database.
 
         Parameters
@@ -726,7 +687,7 @@ class BaseParser(Base):
         -------
         A dict variable containing {'accession' : [list of xref IDs]} items.
         """
-        valid_codes = {}
+        acc_to_xref_ids = {}
         sources = []
 
         big_name = "%" + source_name.upper() + "%"
@@ -741,9 +702,9 @@ class BaseParser(Base):
                 XrefUORM.species_id == species_id, XrefUORM.source_id == source_id
             )
             for row in dbi.execute(query).fetchall():
-                valid_codes.setdefault(row[0], []).append(row[1])
+                acc_to_xref_ids.setdefault(row[0], []).append(row[1])
 
-        return valid_codes
+        return acc_to_xref_ids
 
     def is_file_header_valid(self, columns_count: int, field_patterns: List[str], header: List[str], case_sensitive: bool = False) -> bool:
         """Checks whether the provided file header is valid by checking length and column patterns.
@@ -780,7 +741,7 @@ class BaseParser(Base):
         return True
 
     def add_to_syn(self, accession: str, source_id: int, synonym: str, species_id: int, dbi: Connection) -> None:
-        """Add synomyn data for an xref given its accession and source ID.
+        """Adds synomyn data for an xref given its accession and source ID.
 
         Parameters
         ----------

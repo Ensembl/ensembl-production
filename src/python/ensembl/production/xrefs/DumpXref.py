@@ -14,22 +14,37 @@
 
 """Dumping module to dump xref sequence data from an xref intermediate db."""
 
-from ensembl.production.xrefs.Base import *
-
+import json
+import logging
+import os
+import re
+from sqlalchemy import select
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
+from ensembl.xrefs.xref_update_db_model import (
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    PrimaryXref as PrimaryXrefORM,
+)
+
+from ensembl.production.xrefs.Base import Base
 
 class DumpXref(Base):
+    REFSEQ_DNA_PATTERN = re.compile(r"RefSeq_.*RNA")
+    REFSEQ_PEP_PATTERN = re.compile(r"RefSeq_peptide")
+    FILE_NAME_PATTERN = re.compile(r"\/")
+    SEQUENCE_PATTERN = re.compile(r"(J|O|U)")
+
     def run(self):
-        species_name = self.param_required("species_name", {"type": "str"})
-        base_path    = self.param_required("base_path", {"type": "str"})
-        release      = self.param_required("release", {"type": "int"})
-        xref_db_url  = self.param_required("xref_db_url", {"type": "str"})
-        file_path    = self.param_required("file_path", {"type": "str"})
-        seq_type     = self.param_required("seq_type", {"type": "str"})
-        config_file  = self.param_required("config_file", {"type": "str"})
+        species_name: str = self.get_param("species_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        release: int = self.get_param("release", {"required": True, "type": int})
+        xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
+        file_path: str = self.get_param("file_path", {"required": True, "type": str})
+        seq_type: str = self.get_param("seq_type", {"required": True, "type": str})
+        config_file: str = self.get_param("config_file", {"required": True, "type": str})
 
         logging.info(
             f"DumpXref starting for species '{species_name}' with file_path '{file_path}' and seq_type '{seq_type}'"
@@ -42,19 +57,13 @@ class DumpXref(Base):
         full_path = self.get_path(base_path, species_name, release, "xref")
 
         # Extract sources to download from config file
-        sources = []
         with open(config_file) as conf_file:
             sources = json.load(conf_file)
 
         # Create hash of available alignment methods
-        method = {}
-        query_cutoff = {}
-        target_cutoff = {}
-        for source in sources:
-            if source.get("method"):
-                method[source["name"]] = source["method"]
-                query_cutoff[source["name"]] = source.get("query_cutoff")
-                target_cutoff[source["name"]] = source.get("target_cutoff")
+        method = {source["name"]: source["method"] for source in sources if source.get("method")}
+        query_cutoff = {source["name"]: source.get("query_cutoff") for source in sources if source.get("method")}
+        target_cutoff = {source["name"]: source.get("target_cutoff") for source in sources if source.get("method")}
 
         job_index = 1
 
@@ -68,46 +77,42 @@ class DumpXref(Base):
             source_name = source.name
             source_id = source.source_id
 
-            if re.search(r"RefSeq_.*RNA", source_name):
+            if self.REFSEQ_DNA_PATTERN.search(source_name):
                 source_name = "RefSeq_dna"
-            if re.search("RefSeq_peptide", source_name):
+            if self.REFSEQ_PEP_PATTERN.search(source_name):
                 source_name = "RefSeq_peptide"
 
-            if method.get(source_name):
+            if source_name in method:
                 method_name = method[source_name]
                 source_query_cutoff = query_cutoff[source_name]
                 source_target_cutoff = target_cutoff[source_name]
 
                 # Open fasta file
-                file_source_name = source.name
-                file_source_name = re.sub(r"\/", "", file_source_name)
+                file_source_name = self.FILE_NAME_PATTERN.sub("", source.name)
                 filename = os.path.join(
                     full_path, f"{seq_type}_{file_source_name}_{source_id}.fasta"
                 )
-                fasta_fh = open(filename, "w")
-
-                # Get xref sequences
-                sequence_query = select(
-                    PrimaryXrefORM.xref_id, PrimaryXrefORM.sequence
-                ).where(
-                    XrefUORM.xref_id == PrimaryXrefORM.xref_id,
-                    PrimaryXrefORM.sequence_type == seq_type,
-                    XrefUORM.source_id == source_id,
-                )
-                for sequence in xref_dbi.execute(sequence_query).mappings().all():
-                    # Ambiguous peptides must be cleaned out to protect Exonerate from J,O and U codes
-                    seq = sequence.sequence.upper()
-                    if seq_type == "peptide":
-                        seq = re.sub(r"(J|O|U)", "X", seq)
-
-                    # Print sequence
-                    SeqIO.write(
-                        SeqRecord(Seq(seq), id=str(sequence.xref_id), description=""),
-                        fasta_fh,
-                        "fasta",
+                with open(filename, "w") as fasta_fh:
+                    # Get xref sequences
+                    sequence_query = select(
+                        PrimaryXrefORM.xref_id, PrimaryXrefORM.sequence
+                    ).where(
+                        XrefUORM.xref_id == PrimaryXrefORM.xref_id,
+                        PrimaryXrefORM.sequence_type == seq_type,
+                        XrefUORM.source_id == source_id,
                     )
+                    for sequence in xref_dbi.execute(sequence_query).mappings().all():
+                        # Ambiguous peptides must be cleaned out to protect Exonerate from J,O and U codes
+                        seq = sequence.sequence.upper()
+                        if seq_type == "peptide":
+                            seq = self.SEQUENCE_PATTERN.sub("X", seq)
 
-                fasta_fh.close()
+                        # Print sequence
+                        SeqIO.write(
+                            SeqRecord(Seq(seq), id=str(sequence.xref_id), description=""),
+                            fasta_fh,
+                            "fasta",
+                        )
 
                 # Pass data into alignment jobs
                 self.write_output(

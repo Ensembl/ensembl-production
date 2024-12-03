@@ -14,8 +14,7 @@
 
 """Mapper module for processing UniParc xref data."""
 
-from ensembl.production.xrefs.mappers.ChecksumMapper import *
-
+from ensembl.production.xrefs.mappers.ChecksumMapper import ChecksumMapper
 
 class UniParcMapper(ChecksumMapper):
     def target(self) -> str:

@@ -30,7 +30,7 @@ class ArrayExpressParser(BaseParser):
         species_id = args.get("species_id")
         species_name = args.get("species_name")
         xref_file = args.get("file", "")
-        dba = args.get("dba")
+        db_url = args.get("extra_db_url")
         ensembl_release = args.get("ensembl_release")
         xref_dbi = args.get("xref_dbi")
         verbose = args.get("verbose", False)
@@ -62,7 +62,7 @@ class ArrayExpressParser(BaseParser):
 
         # Connect to the appropriate arrayexpress db
         arrayexpress_db_url = self.get_arrayexpress_db_url(
-            project, db_user, db_pass, db_host, db_port, db_name, species_name, ensembl_release, dba, verbose
+            project, db_user, db_pass, db_host, db_port, db_name, species_name, ensembl_release, db_url, verbose
         )
 
         if not arrayexpress_db_url:
@@ -118,7 +118,7 @@ class ArrayExpressParser(BaseParser):
                 return True
         return False
 
-    def get_arrayexpress_db_url(self, project: str, db_user: str, db_pass: str, db_host: str, db_port: str, db_name: str, species_name: str, ensembl_release: str, dba: str, verbose: bool) -> Optional[URL]:
+    def get_arrayexpress_db_url(self, project: str, db_user: str, db_pass: str, db_host: str, db_port: str, db_name: str, species_name: str, ensembl_release: str, db_url: str, verbose: bool) -> Optional[URL]:
         if db_host:
             return URL.create("mysql", db_user, db_pass, db_host, db_port, db_name)
         elif project == "ensembl":
@@ -130,13 +130,13 @@ class ArrayExpressParser(BaseParser):
             if verbose:
                 logging.info("Looking for db in mysql-eg-staging-1 and mysql-eg-staging-2")
             registry = "ensro@mysql-eg-staging-1.ebi.ac.uk:4160"
-            db_url = self.get_db_from_registry(species_name, "core", ensembl_release, registry)
-            if not db_url:
+            sta_db_url = self.get_db_from_registry(species_name, "core", ensembl_release, registry)
+            if not sta_db_url:
                 registry = "ensro@mysql-eg-staging-2.ebi.ac.uk:4275"
                 return self.get_db_from_registry(species_name, "core", ensembl_release, registry)
+            return sta_db_url
+        elif db_url:
             return db_url
-        elif dba:
-            return dba
 
         return None
 

@@ -14,8 +14,39 @@
 
 """Mapper module for setting display xrefs in the core DB."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+import logging
+import re
+from datetime import datetime
+from typing import Dict, List, Tuple
+from sqlalchemy import select, insert, update, delete, case, desc, func, aliased
+from sqlalchemy.engine import Connection
+from sqlalchemy.sql import Select
 
+from ensembl.core.models import (
+    Gene as GeneORM,
+    Transcript as TranscriptORM,
+    Translation as TranslationORM,
+    Meta as MetaCORM,
+    ObjectXref as ObjectXrefCORM,
+    Xref as XrefCORM,
+    ExternalDb as ExternalDbORM,
+    ExternalSynonym as ExternalSynonymORM
+)
+
+from ensembl.xrefs.xref_update_db_model import (
+    GeneTranscriptTranslation as GeneTranscriptTranslationORM,
+    GeneStableId as GeneStableIdORM,
+    TranscriptStableId as TranscriptStableIdORM,
+    ObjectXref as ObjectXrefUORM,
+    Source as SourceUORM,
+    Xref as XrefUORM,
+    IdentityXref as IdentityXrefUORM,
+    DependentXref as DependentXrefUORM,
+    DisplayXrefPriority as DisplayXrefPriorityORM,
+    GeneDescPriority as GeneDescPriorityORM
+)
+
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class DisplayXrefs(BasicMapper):
     def __init__(self, mapper: BasicMapper) -> None:
@@ -36,16 +67,14 @@ class DisplayXrefs(BasicMapper):
         mapper = self.mapper()
 
         # Set the display xrefs
+        set_transcript_display_xrefs = hasattr(mapper, "set_transcript_names")
         if hasattr(mapper, "set_display_xrefs"):
             mapper.set_display_xrefs()
         else:
-            set_transcript_display_xrefs = False
-            if hasattr(mapper, "set_transcript_names"):
-                set_transcript_display_xrefs = True
             self.set_display_xrefs(set_transcript_display_xrefs)
 
         # Set transcript names
-        if hasattr(mapper, "set_transcript_names"):
+        if set_transcript_display_xrefs:
             mapper.set_transcript_names()
         else:
             self.set_transcript_names()
@@ -64,47 +93,33 @@ class DisplayXrefs(BasicMapper):
         logging.info("Setting Transcript and Gene display xrefs")
 
         # Get the xref offset used when adding the xrefs into the core DB
-        xref_offset = self.get_meta_value("xref_offset")
-        xref_offset = int(xref_offset)
+        xref_offset = int(self.get_meta_value("xref_offset"))
         logging.info(f"Using xref offset of {xref_offset}")
 
         xref_dbi = self.xref().connect()
         core_dbi = self.core().connect()
         mapper = self.mapper()
 
-        # Reset transcript display xrefs
+        # Reset transcript display xrefs if required
         if set_transcript_display_xrefs:
             core_dbi.execute(
                 update(TranscriptORM)
                 .values(display_xref_id=None)
-                .where(TranslationORM.biotype != "LRG_gene")
+                .where(TranscriptORM.biotype != "LRG_gene")
             )
 
         for object_type in ["Gene", "Transcript"]:
             if object_type == "Transcript" and not set_transcript_display_xrefs:
                 continue
-            precedence_list, ignore = None, None
 
             # Get name source priorities and ignore queries
             method = f"{object_type.lower()}_display_xref_sources"
-            if hasattr(mapper, method):
-                precedence_list, ignore = getattr(mapper, method)()
-            else:
-                precedence_list, ignore = getattr(self, method)()
+            precedence_list, ignore = getattr(mapper, method)() if hasattr(mapper, method) else getattr(self, method)()
 
             # Add the priorities into the DB
-            priority = 0
             logging.info(f"Precedence for {object_type} display xrefs (1- best name)")
-
-            for source_name in precedence_list:
-                priority += 1
-
-                # Get the source ID
-                query = (
-                    select(SourceUORM.source_id, SourceUORM.name)
-                    .where(SourceUORM.name.like(source_name))
-                    .order_by(SourceUORM.priority)
-                )
+            for priority, source_name in enumerate(precedence_list, start=1):
+                query = select(SourceUORM.source_id, SourceUORM.name).where(SourceUORM.name.like(source_name))
                 for row in xref_dbi.execute(query).mappings().all():
                     xref_dbi.execute(
                         insert(DisplayXrefPriorityORM).values(
@@ -113,8 +128,7 @@ class DisplayXrefs(BasicMapper):
                             priority=priority,
                         )
                     )
-
-                logging.info(f"{priority} - {row.name}")
+                    logging.info(f"{priority} - {row.name}")
 
             # Execute ignore queries
             self._apply_ignore(ignore, xref_dbi)
@@ -129,34 +143,19 @@ class DisplayXrefs(BasicMapper):
             gene_case_stmt = case(
                 [
                     (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
-                    (
-                        ObjectXrefUORM.ensembl_object_type == "Transcript",
-                        GTTTranscript.gene_id,
-                    ),
-                    (
-                        ObjectXrefUORM.ensembl_object_type == "Translation",
-                        GTTTranslation.gene_id,
-                    ),
+                    (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
+                    (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
                 ],
             ).label("d_gene_id")
             transcript_case_stmt = case(
                 [
-                    (
-                        ObjectXrefUORM.ensembl_object_type == "Gene",
-                        GTTGene.transcript_id,
-                    ),
-                    (
-                        ObjectXrefUORM.ensembl_object_type == "Transcript",
-                        GTTTranscript.transcript_id,
-                    ),
-                    (
-                        ObjectXrefUORM.ensembl_object_type == "Translation",
-                        GTTTranslation.transcript_id,
-                    ),
+                    (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.transcript_id),
+                    (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.transcript_id),
+                    (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.transcript_id),
                 ],
             ).label("d_transcript_id")
 
-            # Get all relevent xrefs for this object type based on precendence sources
+            # Get all relevant xrefs for this object type based on precedence sources
             query = (
                 select(
                     gene_case_stmt,
@@ -164,24 +163,13 @@ class DisplayXrefs(BasicMapper):
                     DisplayXrefPriorityORM.priority,
                     XrefUORM.xref_id,
                 )
-                .join(
-                    SourceUORM, SourceUORM.source_id == DisplayXrefPriorityORM.source_id
-                )
+                .join(SourceUORM, SourceUORM.source_id == DisplayXrefPriorityORM.source_id)
                 .join(XrefUORM, XrefUORM.source_id == SourceUORM.source_id)
                 .join(ObjectXrefUORM, ObjectXrefUORM.xref_id == XrefUORM.xref_id)
-                .join(
-                    IdentityXrefUORM,
-                    IdentityXrefUORM.object_xref_id == ObjectXrefUORM.object_xref_id,
-                )
+                .join(IdentityXrefUORM, IdentityXrefUORM.object_xref_id == ObjectXrefUORM.object_xref_id)
                 .outerjoin(GTTGene, GTTGene.gene_id == ObjectXrefUORM.ensembl_id)
-                .outerjoin(
-                    GTTTranscript,
-                    GTTTranscript.transcript_id == ObjectXrefUORM.ensembl_id,
-                )
-                .outerjoin(
-                    GTTTranslation,
-                    GTTTranslation.translation_id == ObjectXrefUORM.ensembl_id,
-                )
+                .outerjoin(GTTTranscript, GTTTranscript.transcript_id == ObjectXrefUORM.ensembl_id)
+                .outerjoin(GTTTranslation, GTTTranslation.translation_id == ObjectXrefUORM.ensembl_id)
                 .where(
                     ObjectXrefUORM.ox_status == "DUMP_OUT",
                     DisplayXrefPriorityORM.ensembl_object_type == object_type,
@@ -190,32 +178,22 @@ class DisplayXrefs(BasicMapper):
                     "d_gene_id",
                     ObjectXrefUORM.ensembl_object_type,
                     DisplayXrefPriorityORM.priority,
-                    desc(
-                        IdentityXrefUORM.target_identity
-                        + IdentityXrefUORM.query_identity
-                    ),
+                    desc(IdentityXrefUORM.target_identity + IdentityXrefUORM.query_identity),
                     ObjectXrefUORM.unused_priority.desc(),
                     XrefUORM.accession,
                 )
             )
             for row in xref_dbi.execute(query).mappings().all():
-                object_id = None
-                if object_type == "Gene":
-                    object_id = row.d_gene_id
-                elif object_type == "Transcript":
-                    object_id = row.d_transcript_id
+                object_id = row.d_gene_id if object_type == "Gene" else row.d_transcript_id
 
                 # Update the display xrefs
-                if not object_seen.get(object_id):
+                if object_id not in object_seen:
                     xref_id = int(row.xref_id)
                     if object_type == "Gene":
                         core_dbi.execute(
                             update(GeneORM)
                             .values(display_xref_id=xref_id + xref_offset)
-                            .where(
-                                GeneORM.gene_id == object_id,
-                                GeneORM.display_xref_id == None,
-                            )
+                            .where(GeneORM.gene_id == object_id, GeneORM.display_xref_id == None)
                         )
                     elif object_type == "Transcript":
                         core_dbi.execute(
@@ -225,7 +203,7 @@ class DisplayXrefs(BasicMapper):
                         )
 
                     display_xref_count += 1
-                    object_seen[object_id] = 1
+                    object_seen[object_id] = True
 
             logging.info(f"Updated {display_xref_count} {object_type} display_xrefs")
 
@@ -242,8 +220,7 @@ class DisplayXrefs(BasicMapper):
             .outerjoin(GeneORM, GeneORM.display_xref_id == XrefCORM.xref_id)
             .where(GeneORM.display_xref_id == None)
         )
-        result = core_dbi.execute(query).fetchall()
-        xref_ids = [row[0] for row in result]
+        xref_ids = [row[0] for row in core_dbi.execute(query).fetchall()]
 
         core_dbi.execute(
             delete(ExternalSynonymORM).where(ExternalSynonymORM.xref_id.in_(xref_ids))
@@ -286,6 +263,7 @@ class DisplayXrefs(BasicMapper):
         )
         ignore_queries["EntrezGene"] = query
 
+        # Ignore LOC-prefixed labels
         query = (
             select(ObjectXrefUORM.object_xref_id)
             .join(XrefUORM, XrefUORM.xref_id == ObjectXrefUORM.xref_id)
@@ -304,22 +282,23 @@ class DisplayXrefs(BasicMapper):
 
     def _apply_ignore(self, ignore_queries: Dict[str, Select], dbi: Connection) -> None:
         # Set status to NO_DISPLAY for object_xrefs with a display_label that is just numeric
-        query = (
+        numeric_label_query = (
             update(ObjectXrefUORM)
             .values(ox_status="NO_DISPLAY")
             .where(
                 ObjectXrefUORM.xref_id == XrefUORM.xref_id,
                 XrefUORM.source_id == SourceUORM.source_id,
-                ObjectXrefUORM.ox_status.like("DUMP_OUT"),
+                ObjectXrefUORM.ox_status == "DUMP_OUT",
                 XrefUORM.label.regexp_match("^[0-9]+$"),
             )
         )
-        dbi.execute(query)
+        dbi.execute(numeric_label_query)
 
         # Go through ignore queries
         for ignore_type, ignore_query in ignore_queries.items():
             # Set status to NO_DISPLAY for ignore results
-            for row in dbi.execute(ignore_query).mappings().all():
+            ignore_results = dbi.execute(ignore_query).mappings().all()
+            for row in ignore_results:
                 dbi.execute(
                     update(ObjectXrefUORM)
                     .values(ox_status="NO_DISPLAY")
@@ -339,12 +318,8 @@ class DisplayXrefs(BasicMapper):
         )
 
         # Get the max xref and object_xref IDs
-        xref_id = core_dbi.execute(select(func.max(XrefCORM.xref_id))).scalar()
-        xref_id = int(xref_id)
-        object_xref_id = core_dbi.execute(
-            select(func.max(ObjectXrefCORM.object_xref_id))
-        ).scalar()
-        object_xref_id = int(object_xref_id)
+        xref_id = core_dbi.execute(select(func.max(XrefCORM.xref_id))).scalar() or 0
+        object_xref_id = core_dbi.execute(select(func.max(ObjectXrefCORM.object_xref_id))).scalar() or 0
 
         # Get all genes with set display_xref_id
         query = select(
@@ -373,12 +348,12 @@ class DisplayXrefs(BasicMapper):
                 )
 
             # Get transcripts related to current gene
-            query = (
+            transcript_query = (
                 select(TranscriptORM.transcript_id)
                 .where(TranscriptORM.gene_id == row.gene_id)
                 .order_by(TranscriptORM.seq_region_start, TranscriptORM.seq_region_end)
             )
-            for transcript_row in core_dbi.execute(query).mappings().all():
+            for transcript_row in core_dbi.execute(transcript_query).mappings().all():
                 object_xref_id += 1
 
                 display_label = f"{row.display_label}-{ext}"
@@ -424,7 +399,7 @@ class DisplayXrefs(BasicMapper):
                     )
                 )
 
-                # Set transcript dispay xref
+                # Set transcript display xref
                 core_dbi.execute(
                     update(TranscriptORM)
                     .values(display_xref_id=insert_xref_id)
@@ -434,13 +409,12 @@ class DisplayXrefs(BasicMapper):
                 ext += 1
 
         # Delete object xrefs with no matching xref
-        query = (
+        delete_query = (
             select(ObjectXrefCORM.object_xref_id)
             .outerjoin(XrefCORM, XrefCORM.xref_id == ObjectXrefCORM.xref_id)
             .where(XrefCORM.xref_id == None)
         )
-        result = core_dbi.execute(query).fetchall()
-        object_xref_ids = [row[0] for row in result]
+        object_xref_ids = [row[0] for row in core_dbi.execute(delete_query).fetchall()]
 
         core_dbi.execute(
             delete(ObjectXrefCORM).where(
@@ -460,61 +434,41 @@ class DisplayXrefs(BasicMapper):
         # Reset the gene descriptions
         core_dbi.execute(update(GeneORM).values(description=None))
 
-        # Get external display names
-        name_to_external_name = {}
-        query = select(
-            ExternalDbORM.external_db_id,
-            ExternalDbORM.db_name,
-            ExternalDbORM.db_display_name,
-        )
-        for row in core_dbi.execute(query).mappings().all():
-            name_to_external_name[row.db_name] = row.db_display_name
-
         # Get source ID to external names mappings
-        if hasattr(mapper, "set_source_id_to_external_name"):
-            source_id_to_external_name, name_to_source_id = (
-                mapper.set_source_id_to_external_name(name_to_external_name, xref_dbi)
-            )
-        else:
-            source_id_to_external_name, name_to_source_id = (
-                self.set_source_id_to_external_name(name_to_external_name, xref_dbi)
-            )
+        source_id_to_external_name, name_to_source_id = self.get_external_name_mappings(core_dbi, xref_dbi)
 
         # Get description source priorities and ignore queries
-        if hasattr(mapper, "gene_description_sources"):
-            precedence_list = mapper.gene_description_sources()
-            ignore = None
-        else:
-            precedence_list, ignore = self.gene_description_sources()
+        precedence_list, ignore = (
+            mapper.gene_description_sources()
+            if hasattr(mapper, "gene_description_sources")
+            else self.gene_description_sources()
+        )
 
         # Get description regular expressions
-        if hasattr(mapper, "gene_description_filter_regexps"):
-            reg_exps = mapper.gene_description_filter_regexps()
-        else:
-            reg_exps = self.gene_description_filter_regexps()
+        reg_exps = (
+            mapper.gene_description_filter_regexps()
+            if hasattr(mapper, "gene_description_filter_regexps")
+            else self.gene_description_filter_regexps()
+        )
 
         # Add the description priorities into the DB
-        priority = 0
         logging.info("Precedence for Gene descriptions (1- best description)")
-
-        for source_name in precedence_list:
-            priority += 1
-
-            # Get the source ID
-            query = select(SourceUORM.source_id, SourceUORM.name).where(
-                SourceUORM.name.like(source_name)
-            )
-            for row in xref_dbi.execute(query).mappings().all():
+        for priority, source_name in enumerate(precedence_list, start=1):
+            for row in xref_dbi.execute(
+                select(SourceUORM.source_id, SourceUORM.name).where(
+                    SourceUORM.name.like(source_name)
+                )
+            ).mappings().all():
                 xref_dbi.execute(
                     insert(GeneDescPriorityORM)
                     .values(source_id=row.source_id, priority=priority)
                     .prefix_with("IGNORE")
                 )
-
-            logging.info(f"{priority} - {row.name}")
+                logging.info(f"{priority} - {row.name}")
 
         # Execute ignore queries
-        self._apply_ignore(ignore, xref_dbi)
+        if ignore:
+            self._apply_ignore(ignore, xref_dbi)
 
         no_source_name_in_desc = {}
         if hasattr(mapper, "no_source_label_list"):
@@ -522,9 +476,9 @@ class DisplayXrefs(BasicMapper):
                 source_id = name_to_source_id.get(source_name)
                 if source_id:
                     logging.info(
-                        f"Source '{name}' will not have [Source:...] info in description"
+                        f"Source '{source_name}' will not have [Source:...] info in description"
                     )
-                    no_source_name_in_desc[source_id] = 1
+                    no_source_name_in_desc[source_id] = True
 
         gene_desc_updated = {}
 
@@ -535,18 +489,12 @@ class DisplayXrefs(BasicMapper):
         gene_case_stmt = case(
             [
                 (ObjectXrefUORM.ensembl_object_type == "Gene", GTTGene.gene_id),
-                (
-                    ObjectXrefUORM.ensembl_object_type == "Transcript",
-                    GTTTranscript.gene_id,
-                ),
-                (
-                    ObjectXrefUORM.ensembl_object_type == "Translation",
-                    GTTTranslation.gene_id,
-                ),
+                (ObjectXrefUORM.ensembl_object_type == "Transcript", GTTTranscript.gene_id),
+                (ObjectXrefUORM.ensembl_object_type == "Translation", GTTTranslation.gene_id),
             ],
         ).label("d_gene_id")
 
-        # Get all relevent xrefs for this object type based on precendence sources
+        # Get all relevant xrefs for this object type based on precedence sources
         query = (
             select(
                 gene_case_stmt,
@@ -558,53 +506,40 @@ class DisplayXrefs(BasicMapper):
             .join(SourceUORM, SourceUORM.source_id == GeneDescPriorityORM.source_id)
             .join(XrefUORM, XrefUORM.source_id == SourceUORM.source_id)
             .join(ObjectXrefUORM, ObjectXrefUORM.xref_id == XrefUORM.xref_id)
-            .join(
-                IdentityXrefUORM,
-                IdentityXrefUORM.object_xref_id == ObjectXrefUORM.object_xref_id,
-            )
+            .join(IdentityXrefUORM, IdentityXrefUORM.object_xref_id == ObjectXrefUORM.object_xref_id)
             .outerjoin(GTTGene, GTTGene.gene_id == ObjectXrefUORM.ensembl_id)
-            .outerjoin(
-                GTTTranscript, GTTTranscript.transcript_id == ObjectXrefUORM.ensembl_id
-            )
-            .outerjoin(
-                GTTTranslation,
-                GTTTranslation.translation_id == ObjectXrefUORM.ensembl_id,
-            )
+            .outerjoin(GTTTranscript, GTTTranscript.transcript_id == ObjectXrefUORM.ensembl_id)
+            .outerjoin(GTTTranslation, GTTTranslation.translation_id == ObjectXrefUORM.ensembl_id)
             .where(ObjectXrefUORM.ox_status == "DUMP_OUT")
             .order_by(
                 "d_gene_id",
                 ObjectXrefUORM.ensembl_object_type,
                 GeneDescPriorityORM.priority,
-                desc(
-                    IdentityXrefUORM.target_identity + IdentityXrefUORM.query_identity
-                ),
+                desc(IdentityXrefUORM.target_identity + IdentityXrefUORM.query_identity),
             )
         )
         for row in xref_dbi.execute(query).mappings().all():
-            if gene_desc_updated.get(row.d_gene_id):
+            if row.d_gene_id in gene_desc_updated:
                 continue
 
             if row.description:
                 # Apply regular expressions to description
                 filtered_description = self.filter_by_regexp(row.description, reg_exps)
-                if filtered_description != "":
-                    source_name = source_id_to_external_name.get(row.source_id)
-                    filtered_description += (
-                        f" [Source:{source_name};Acc:{row.accession}]"
+                if filtered_description:
+                    if row.source_id not in no_source_name_in_desc:
+                        source_name = source_id_to_external_name.get(row.source_id)
+                        filtered_description += f" [Source:{source_name};Acc:{row.accession}]"
+
+                    # Update the gene description
+                    core_dbi.execute(
+                        update(GeneORM)
+                        .values(description=filtered_description)
+                        .where(GeneORM.gene_id == row.d_gene_id, GeneORM.description == None)
                     )
 
-                # Update the gene description
-                core_dbi.execute(
-                    update(GeneORM)
-                    .values(description=filtered_description)
-                    .where(
-                        GeneORM.gene_id == row.d_gene_id, GeneORM.description == None
-                    )
-                )
+                    gene_desc_updated[row.d_gene_id] = True
 
-                gene_desc_updated[row.d_gene_id] = 1
-
-        logging.info(f"{len(gene_desc_updated.keys())} gene descriptions added")
+        logging.info(f"{len(gene_desc_updated)} gene descriptions added")
 
         # Reset ignored object xrefs
         xref_dbi.execute(
@@ -618,14 +553,16 @@ class DisplayXrefs(BasicMapper):
 
     def get_external_name_mappings(self, core_dbi: Connection, xref_dbi: Connection) -> Tuple[Dict[int, str], Dict[str, int]]:
         # Get external display names
-        external_name_to_display_name = {}
-        query = select(
-            ExternalDbORM.external_db_id,
-            ExternalDbORM.db_name,
-            ExternalDbORM.db_display_name,
-        )
-        for row in core_dbi.execute(query).mappings().all():
-            external_name_to_display_name[row.db_name] = row.db_display_name
+        external_name_to_display_name = {
+            row.db_name: row.db_display_name
+            for row in core_dbi.execute(
+                select(
+                    ExternalDbORM.external_db_id,
+                    ExternalDbORM.db_name,
+                    ExternalDbORM.db_display_name,
+                )
+            ).mappings().all()
+        }
 
         # Get sources for available xrefs
         source_id_to_external_name, source_name_to_source_id = {}, {}
@@ -644,26 +581,6 @@ class DisplayXrefs(BasicMapper):
                 raise LookupError(f"Could not find {row.name} in external_db table")
 
         return source_id_to_external_name, source_name_to_source_id
-
-    def set_source_id_to_external_name(self, name_to_external_name: Dict[str, str], dbi: Connection) -> Tuple[Dict[int, str], Dict[str, int]]:
-        source_id_to_external_name, name_to_source_id = {}, {}
-
-        # Get sources for available xrefs
-        query = (
-            select(SourceUORM.source_id, SourceUORM.name)
-            .where(SourceUORM.source_id == XrefUORM.source_id)
-            .group_by(SourceUORM.source_id)
-        )
-        for row in dbi.execute(query).mappings().all():
-            if name_to_external_name.get(row.name):
-                source_id_to_external_name[row.source_id] = name_to_external_name[row.name]
-                name_to_source_id[row.name] = row.source_id
-            elif re.search(r"notransfer$", row.name):
-                logging.info(f"Ignoring notransfer source '{row.name}'")
-            else:
-                raise LookupError(f"Could not find {row.name} in external_db table")
-
-        return source_id_to_external_name, name_to_source_id
 
     def gene_description_sources(self) -> Tuple[List[str], Dict[str, Select]]:
         return self.gene_display_xref_sources()
@@ -746,20 +663,25 @@ class DisplayXrefs(BasicMapper):
         return string
 
     def set_meta_timestamp(self) -> None:
+        logging.info("Setting meta timestamp for xrefs")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         with self.core().connect() as dbi:
+            # Delete existing xref timestamp
             dbi.execute(delete(MetaCORM).where(MetaCORM.meta_key == "xref.timestamp"))
 
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Insert new xref timestamp
             dbi.execute(
                 insert(MetaCORM).values(meta_key="xref.timestamp", meta_value=now)
             )
+
+        logging.info(f"Meta timestamp set to {now}")
 
     def set_display_xrefs_from_stable_table(self) -> None:
         logging.info("Setting Transcript and Gene display xrefs using stable IDs")
 
         # Get the xref offset used when adding the xrefs into the core DB
-        xref_offset = self.get_meta_value("xref_offset")
-        xref_offset = int(xref_offset)
+        xref_offset = int(self.get_meta_value("xref_offset"))
         logging.info(f"Using xref offset of {xref_offset}")
 
         xref_dbi = self.xref().connect()
@@ -776,26 +698,8 @@ class DisplayXrefs(BasicMapper):
             .where(GeneORM.description.like("%[Source:%]%"))
         )
 
-        # Get external names and IDs
-        name_to_external_name, source_id_to_external_name = {}, {}
-        query = select(
-            ExternalDbORM.external_db_id,
-            ExternalDbORM.db_name,
-            ExternalDbORM.db_display_name,
-        )
-        for row in core_dbi.execute(query).mappings().all():
-            name_to_external_name[row.db_name] = row.db_display_name
-
-        query = (
-            select(SourceUORM.source_id, SourceUORM.name)
-            .where(SourceUORM.source_id == XrefUORM.source_id)
-            .group_by(SourceUORM.source_id)
-        )
-        for row in xref_dbi.execute(query).mappings().all():
-            if name_to_external_name.get(row.name):
-                source_id_to_external_name[row.source_id] = name_to_external_name[
-                    row.name
-                ]
+        # Get source ID to external names mappings
+        source_id_to_external_name, name_to_source_id = self.get_external_name_mappings(core_dbi, xref_dbi)
 
         gene_count = 0
 
@@ -818,7 +722,7 @@ class DisplayXrefs(BasicMapper):
             )
 
             # Set description
-            if row.description is not None and row.description != "":
+            if row.description:
                 description = f"{row.description} [Source:{source_id_to_external_name[row.source_id]};Acc:{row.accession}]"
                 core_dbi.execute(
                     update(GeneORM)

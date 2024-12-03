@@ -14,8 +14,8 @@
 
 """Mapper extension module for species sus_scrofa."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
-
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
+from ensembl.production.xrefs.mappers.DisplayXrefs import DisplayXrefs
 
 class sus_scrofa(BasicMapper):
     def official_name(self) -> str:

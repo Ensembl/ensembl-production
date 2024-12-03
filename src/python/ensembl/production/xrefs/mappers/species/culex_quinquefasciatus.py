@@ -14,8 +14,10 @@
 
 """Mapper extension module for species culex_quinquefasciatus."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+from typing import Dict, List, Tuple
+from sqlalchemy.sql.expression import Select
 
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class culex_quinquefasciatus(BasicMapper):
     def gene_description_sources(self) -> List[str]:

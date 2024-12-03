@@ -37,8 +37,8 @@ GetOptions(
 );
 
 # Check that all parameters are passed
-if (!defined($xref_db_url) || !defined($core_db_url) || !defined($otherf_db_url) || !defined($source_ids_json) || !defined($species_id) || !defined($species_name) || !defined($release)) {
-  croak "Usage: dump_ensembl.pl --xref_db_url <xref_db_url> --core_db_url <core_db_url> --otherf_db_url <otherf_db_url> --source_ids <source_ids [json]> --species_id <species_id> --species_name <species_name> --release <release>";
+foreach my $param ($xref_db_url, $core_db_url, $otherf_db_url, $source_ids_json, $species_id, $species_name, $release) {
+  defined $param or croak "Usage: refseq_coordinate_parser.pl --xref_db_url <xref_db_url> --core_db_url <core_db_url> --otherf_db_url <otherf_db_url> --source_ids <source_ids [json]> --species_id <species_id> --species_name <species_name> --release <release>";
 }
 
 my $transcript_score_threshold = 0.75;
@@ -48,13 +48,12 @@ my $tl_transcript_score_threshold = 0.75;
 my $source_ids = decode_json($source_ids_json);
 
 # Connect to the xref db
-my ($user, $pass, $host, $port, $xref_db) = parse_url($xref_db_url);
-my $dbi = get_dbi($host, $port, $user, $pass, $xref_db);
+my $dbi = get_dbi(parse_url($xref_db_url));
 
 # Load the registry
 my $registry = 'Bio::EnsEMBL::Registry';
-my ($core_user, $core_pass, $core_host, $core_port, $core_dbname) = parse_url($core_db_url);
-my ($otherf_user, $otherf_pass, $otherf_host, $otherf_port, $otherf_dbname) = parse_url($otherf_db_url);
+my ($core_host, $core_port, $core_user, $core_pass, $core_dbname) = parse_url($core_db_url);
+my ($otherf_host, $otherf_port, $otherf_user, $otherf_pass, $otherf_dbname) = parse_url($otherf_db_url);
 $registry->load_registry_from_multiple_dbs(
   {
     -host => $core_host,
@@ -73,11 +72,11 @@ $registry->load_registry_from_multiple_dbs(
 );
 
 # Get the EntrezGene and WikiGene accessions
-my (%entrez_ids) = %{ get_valid_codes("EntrezGene", $species_id, $dbi) };
-my (%wiki_ids)   = %{ get_valid_codes('WikiGene', $species_id, $dbi) };
+my %entrez_ids = %{ get_valid_codes("EntrezGene", $species_id, $dbi) };
+my %wiki_ids   = %{ get_valid_codes('WikiGene', $species_id, $dbi) };
 
 # Prepare link sql
-my $add_dependent_xref_sth = $dbi->prepare("INSERT INTO dependent_xref (master_xref_id, dependent_xref_id, linkage_source_id) VALUES (?,?,?)");
+my $add_dependent_xref_sth = $dbi->prepare("INSERT IGNORE INTO dependent_xref (master_xref_id, dependent_xref_id, linkage_source_id) VALUES (?,?,?)");
 
 # Get the db adaptors
 my $otherf_dba = $registry->get_DBAdaptor($species_name, 'otherfeatures');
@@ -98,8 +97,8 @@ foreach my $analysis_adaptor (@{ $otherf_aa->fetch_all() }) {
 
 # Not all species have refseq_import data, skip if not found
 if (!defined $logic_name) {
-  print STDERR "No data found for RefSeq_import, skipping import\n";;
-  exit 1;
+  print STDERR "No data found for RefSeq_import, skipping import\n";
+  exit 0;
 }
 
 # Get otherfeatures chromosomes
@@ -170,7 +169,7 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
           $start = $core_exon->seq_region_start();
           $end = $core_exon->seq_region_end();
           $overlap = $rr1->overlap_size('exon', $start, $end);
-          $core_exon_match += $overlap/($end - $start + 1);
+          $core_exon_match += $overlap / ($end - $start + 1);
           $rr2->check_and_register('exon', $start, $end);
         }
 
@@ -178,30 +177,30 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
           $start = $core_tl_exon->seq_region_start();
           $end = $core_tl_exon->seq_region_end();
           $overlap = $rr3->overlap_size('exon', $start, $end);
-          $core_tl_exon_match += $overlap/($end - $start + 1);
+          $core_tl_exon_match += $overlap / ($end - $start + 1);
           $rr4->check_and_register('exon', $start, $end);
         }
 
-        # Look for oeverlap between the two sets of exons
+        # Look for overlap between the two sets of exons
         foreach my $otherf_exon (@$otherf_exons) {
           $start = $otherf_exon->seq_region_start();
           $end = $otherf_exon->seq_region_end();
           $overlap = $rr2->overlap_size('exon', $start, $end);
-          $otherf_exon_match += $overlap/($end - $start + 1);
+          $otherf_exon_match += $overlap / ($end - $start + 1);
         }
 
         foreach my $otherf_tl_exon (@$otherf_tl_exons) {
           $start = $otherf_tl_exon->seq_region_start();
           $end = $otherf_tl_exon->seq_region_end();
           $overlap = $rr4->overlap_size('exon', $start, $end);
-          $otherf_tl_exon_match += $overlap/($end - $start + 1);
+          $otherf_tl_exon_match += $overlap / ($end - $start + 1);
         }
 
         # Compare exon matching with number of exons to give a score
-        my $score = ( ($otherf_exon_match + $core_exon_match)) / (scalar(@$otherf_exons) + scalar(@$core_exons) );
+        my $score = ($otherf_exon_match + $core_exon_match) / (scalar(@$otherf_exons) + scalar(@$core_exons));
         my $tl_score = 0;
         if (scalar(@$otherf_tl_exons) > 0) {
-          $tl_score = ( ($otherf_tl_exon_match + $core_tl_exon_match)) / (scalar(@$otherf_tl_exons) + scalar(@$core_tl_exons) );
+          $tl_score = ($otherf_tl_exon_match + $core_tl_exon_match) / (scalar(@$otherf_tl_exons) + scalar(@$core_tl_exons));
         }
         if ($core_transcript->biotype eq $otherf_transcript->biotype) {
           $transcript_result{$core_transcript->stable_id} = $score;
@@ -216,7 +215,7 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
       my ($best_id, $score, $tl_score);
 
       # Compare the scores based on coding exon overlap
-      # If there is a stale mate, chose best exon overlap score
+      # If there is a stale mate, choose best exon overlap score
       foreach my $tid (sort { $transcript_result{$b} <=> $transcript_result{$a} } keys(%transcript_result)) {
         $score = $transcript_result{$tid};
         $tl_score = $tl_transcript_result{$tid};
@@ -234,7 +233,7 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
               }
             }
           }
-          if (!defined $best_id) { 
+          if (!defined $best_id) {
             if ($score >= $best_score) {
               $best_id = $tid;
               $best_score = $score;
@@ -276,7 +275,7 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
         my $translation = $transcript->translation();
 
         # Add link between Ensembl gene and EntrezGene (and WikiGene)
-        if (defined $entrez_ids{$entrez_id} ) {
+        if (defined $entrez_ids{$entrez_id}) {
           foreach my $dependent_xref_id (@{$entrez_ids{$entrez_id}}) {
             $add_dependent_xref_sth->execute($xref_id, $dependent_xref_id, $source_ids->{'entrezgene'});
           }
@@ -288,7 +287,7 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
         # Also store refseq protein as direct xref for ensembl translation, if translation exists
         if (defined $translation && defined $otherf_translation && ($otherf_translation->seq eq $translation->seq)) {
           my $translation_id = $otherf_translation->stable_id();
-          my @xrefs = grep {$_->{dbname} eq 'GenBank'} @{$otherf_translation->get_all_DBEntries};
+          my @xrefs = grep { $_->{dbname} eq 'GenBank' } @{$otherf_translation->get_all_DBEntries};
           if (scalar @xrefs == 1) {
             $translation_id = $xrefs[0]->primary_id();
           }
@@ -298,14 +297,14 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
           $source_id = $source_ids->{'peptide'};
           $source_id = $source_ids->{'peptide_predicted'} if $acc =~ /^XP_/;
           my $tl_xref_id = add_xref({
-            acc => $acc,
-            version => $version,
-            label => $translation_id,
-            desc => undef,
-            source_id => $source_id,
+            acc        => $acc,
+            version    => $version,
+            label      => $translation_id,
+            desc       => undef,
+            source_id  => $source_id,
             species_id => $species_id,
-            dbi => $dbi,
-            info_type => 'DIRECT'
+            dbi        => $dbi,
+            info_type  => 'DIRECT'
           });
           add_direct_xref($tl_xref_id, $translation->stable_id(), "Translation", "", $dbi);
         }
@@ -316,39 +315,25 @@ foreach my $otherf_chromosome (@$otherf_chromosomes) {
 
 sub parse_url {
   my ($url) = @_;
-
   my $parsed_url = Nextflow::Utils::parse($url);
-  my $user = $parsed_url->{'user'};
-  my $pass = $parsed_url->{'pass'};
-  my $host = $parsed_url->{'host'};
-  my $port = $parsed_url->{'port'};
-  my $db   = $parsed_url->{'dbname'};
-
-  return ($user, $pass, $host, $port, $db);
+  return @{$parsed_url}{qw(host port user pass dbname)};
 }
 
 sub get_dbi {
   my ($host, $port, $user, $pass, $dbname) = @_;
-
-  my $dbconn;
-  if (defined $dbname) {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  } else {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
-  }
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
-
+  my $dbconn = defined $dbname ? sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname) : sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
+  my $dbi = DBI->connect($dbconn, $user, $pass, { 'RaiseError' => 1 }) or croak("Can't connect to database: " . $DBI::errstr);
   return $dbi;
 }
 
-sub get_valid_codes{
+sub get_valid_codes {
   my ($source_name, $species_id, $dbi) = @_;
 
   my %valid_codes;
   my @sources;
 
   my $big_name = uc $source_name;
-  my $sql = "select source_id from source where upper(name) like '%$big_name%'";
+  my $sql = "SELECT source_id FROM source WHERE UPPER(name) LIKE '%$big_name%'";
   my $sth = $dbi->prepare($sql);
   $sth->execute();
   while(my @row = $sth->fetchrow_array()){
@@ -357,7 +342,7 @@ sub get_valid_codes{
   $sth->finish;
 
   foreach my $source (@sources){
-    $sql = "select accession, xref_id from xref where species_id = $species_id and source_id = $source";
+    $sql = "SELECT accession, xref_id FROM xref WHERE species_id = $species_id AND source_id = $source";
     $sth = $dbi->prepare($sql);
     $sth->execute();
     while(my @row = $sth->fetchrow_array()){
@@ -395,7 +380,7 @@ sub add_xref {
     return $xref_id;
   }
 
-  my $add_xref_sth = $dbi->prepare('INSERT INTO xref (accession,version,label,description,source_id,species_id, info_type, info_text) VALUES(?,?,?,?,?,?,?,?)');
+  my $add_xref_sth = $dbi->prepare('INSERT INTO xref (accession,version,label,description,source_id,species_id, info_type, info_text) VALUES (?,?,?,?,?,?,?,?)');
 
   # If the description is more than 255 characters, chop it off
   if (defined $description && ((length $description) > 255 )) {
@@ -430,7 +415,7 @@ sub add_direct_xref {
   return;
 }
 
-sub get_direct_xref{
+sub get_direct_xref {
   my ($stable_id, $type, $link, $dbi) = @_;
 
   $type = lc $type;

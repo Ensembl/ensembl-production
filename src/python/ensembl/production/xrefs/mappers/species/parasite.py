@@ -14,8 +14,9 @@
 
 """Mapper extension module for species parasite."""
 
-from ensembl.production.xrefs.mappers.BasicMapper import *
+from typing import List
 
+from ensembl.production.xrefs.mappers.BasicMapper import BasicMapper
 
 class parasite(BasicMapper):
     def set_transcript_names(self) -> None:

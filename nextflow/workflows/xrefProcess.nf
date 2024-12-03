@@ -4,6 +4,11 @@
 params.pipeline_name = 'Xref Process Pipeline'
 params.help = false
 
+// Ensure all paths are absolute
+params.scripts_dir = file(params.scripts_dir).toAbsolutePath().toString()
+params.perl_scripts_dir = file(params.perl_scripts_dir).toAbsolutePath().toString()
+params.base_path = file(params.base_path).toAbsolutePath().toString()
+
 println """\
         XREF PROCESS PIPELINE
         ======================
@@ -622,6 +627,6 @@ process NotifyByEmail {
     val timestamp
 
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.EmailNotification --pipeline_name '${params.pipeline_name}' --base_path ${params.base_path} --release ${params.release} --email ${params.email} --email_server ${params.email_server} --log_timestamp $timestamp
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.EmailNotification --pipeline_name '${params.pipeline_name}' --base_path ${params.base_path} --email ${params.email} --email_server ${params.email_server} --log_timestamp $timestamp
     """
 }
