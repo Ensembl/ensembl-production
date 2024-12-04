@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeatures_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeaturesReferenceDB_conf;
 
 use strict;
 use warnings;
@@ -33,25 +33,7 @@ sub default_options {
   my ($self) = @_;
   return {
     %{$self->SUPER::default_options},
-
-    species      => [],
-    antispecies  => [],
-    division     => [],
-    run_all      => 0,
-    meta_filters => {},
-
-    # Parameters for dumping and splitting Fasta protein files
-    max_seqs_per_file       => 100,
-    max_seq_length_per_file => undef,
-    max_files_per_directory => 100,
-    max_dirs_per_directory  => $self->o('max_files_per_directory'),
-
-    # InterPro settings
-    interproscan_path         => '/hps/software/interproscan',
-    interproscan_version      => 'current',
-   	run_interproscan          => 1,
-    local_computation         => 0,
-    check_interpro_db_version => 0,
+    protein_reference_db_uri => self->o('protein_reference_db_uri')
 
     # Load UniParc/UniProt xrefs.
     uniparc_xrefs => 0,
@@ -84,218 +66,8 @@ sub default_options {
     uniparc_file_local     => catdir($self->o('pipeline_dir'), $self->o('uniparc_file')),
     mapping_file_local     => catdir($self->o('pipeline_dir'), $self->o('mapping_file')),
     uniprot_file_local     => catdir($self->o('pipeline_dir'), 'uniprot.txt'),
-
-    interpro2go_logic_name => 'interpro2go',
-    uniparc_logic_name     => 'uniparc_checksum',
-    uniprot_logic_name     => 'uniprot_checksum',
-
-    protein_feature_analyses =>
-    [
-      {
-        logic_name      => 'cdd',
-        db              => 'CDD',
-        program         => 'InterProScan',
-        ipscan_name     => 'CDD',
-        ipscan_xml      => 'CDD',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'gene3d',
-        db              => 'Gene3D',
-        program         => 'InterProScan',
-        ipscan_name     => 'Gene3D',
-        ipscan_xml      => 'GENE3D',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'hamap',
-        db              => 'HAMAP',
-        program         => 'InterProScan',
-        ipscan_name     => 'Hamap',
-        ipscan_xml      => 'HAMAP',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'hmmpanther',
-        db              => 'PANTHER',
-        program         => 'InterProScan',
-        ipscan_name     => 'PANTHER',
-        ipscan_xml      => 'PANTHER',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'pfam',
-        db              => 'Pfam',
-        program         => 'InterProScan',
-        ipscan_name     => 'Pfam',
-        ipscan_xml      => 'PFAM',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'pfscan',
-        db              => 'Prosite_profiles',
-        program         => 'InterProScan',
-        ipscan_name     => 'ProSiteProfiles',
-        ipscan_xml      => 'PROSITE_PROFILES',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'pirsf',
-        db              => 'PIRSF',
-        program         => 'InterProScan',
-        ipscan_name     => 'PIRSF',
-        ipscan_xml      => 'PIRSF',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'prints',
-        db              => 'PRINTS',
-        program         => 'InterProScan',
-        ipscan_name     => 'PRINTS',
-        ipscan_xml      => 'PRINTS',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'scanprosite',
-        db              => 'Prosite_patterns',
-        program         => 'InterProScan',
-        ipscan_name     => 'ProSitePatterns',
-        ipscan_xml      => 'PROSITE_PATTERNS',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'sfld',
-        db              => 'SFLD',
-        program         => 'InterProScan',
-        ipscan_name     => 'SFLD',
-        ipscan_xml      => 'SFLD',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'smart',
-        db              => 'Smart',
-        program         => 'InterProScan',
-        ipscan_name     => 'SMART',
-        ipscan_xml      => 'SMART',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'superfamily',
-        db              => 'SuperFamily',
-        program         => 'InterProScan',
-        ipscan_name     => 'SUPERFAMILY',
-        ipscan_xml      => 'SUPERFAMILY',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'ncbifam',
-        db              => 'NCBIfam',
-        program         => 'InterProScan',
-        ipscan_name     => 'NCBIfam',
-        ipscan_xml      => 'NCBIFAM',
-        ipscan_lookup   => 1,
-      },
-      {
-        logic_name      => 'mobidblite',
-        db              => 'MobiDBLite',
-        program         => 'InterProScan',
-        ipscan_name     => 'MobiDBLite',
-        ipscan_xml      => 'MOBIDB_LITE',
-        ipscan_lookup   => 0,
-      },
-      {
-        logic_name      => 'ncoils',
-        db              => 'ncoils',
-        program         => 'InterProScan',
-        ipscan_name     => 'Coils',
-        ipscan_xml      => 'COILS',
-        ipscan_lookup   => 0,
-      },
-      {
-        logic_name      => 'signalp',
-        db              => 'SignalP',
-        program         => 'InterProScan',
-        ipscan_name     => 'SignalP_EUK',
-        ipscan_xml      => 'SIGNALP_EUK',
-        ipscan_lookup   => 0,
-      },
-      {
-        logic_name      => 'tmhmm',
-        db              => 'TMHMM',
-        program         => 'InterProScan',
-        ipscan_name     => 'TMHMM',
-        ipscan_xml      => 'TMHMM',
-        ipscan_lookup   => 0,
-      },
-      {
-        db               => 'Phobius',
-        ipscan_lookup    => 1,
-        ipscan_name      => 'Phobius',
-        ipscan_xml       => 'PHOBIUS',
-        logic_name       => 'phobius',
-        program          => 'InterProScan',
-      },
-      {
-        db              => 'SignalP_GRAM_POSITIVE',
-        ipscan_lookup   => 1,
-        ipscan_name     => 'SignalP_GRAM_POSITIVE',
-        ipscan_xml      => 'SIGNALP_GRAM_POSITIVE',
-        logic_name      => 'signalp_gram_positive',
-        program         => 'InterProScan',
-      },
-      {
-        db              => 'SignalP_GRAM_NEGATIVE',
-        ipscan_lookup   => 1,
-        ipscan_name     => 'SignalP_GRAM_NEGATIVE',
-        ipscan_xml      => 'SIGNALP_GRAM_NEGATIVE',
-        logic_name      => 'signalp_gram_negative',
-        program         => 'InterProScan',
-      },      
-      #seg replaces low complexity regions in protein sequences with X characters(https://rothlab.ucdavis.edu/genhelp/seg.html)
-      {
-        logic_name      => 'seg',
-        db              => 'Seg',
-      },
-    ],
-    xref_analyses =>
-    [
-      {
-        logic_name => $self->o('interpro2go_logic_name'),
-        db         => 'InterPro2GO',
-        annotate   => 1,
-        local_file => $self->o('interpro2go_file_local'),
-      },
-      {
-        logic_name => $self->o('uniparc_logic_name'),
-        db         => 'UniParc',
-        annotate   => $self->o('uniparc_xrefs'),
-        local_file => $self->o('uniparc_file_local'),
-      },
-      {
-        logic_name => $self->o('uniprot_logic_name'),
-        db         => 'UniProt',
-        annotate   => $self->o('uniprot_xrefs'),
-        local_file => $self->o('mapping_file_local'),
-      },
-    ],
-
-    # Remove existing analyses; if =0 then existing analyses
-    # will remain, with the logic_name suffixed by '_bkp'.
-    delete_existing => 1,
-
-    # seg analysis is not part of InterProScan, so is always run locally.
-    run_seg    => 0,
-    seg_exe    => 'seg',
-    seg_params => '-l -n',
-
-    # Config/history files for storing record of datacheck run.
-    config_file  => undef,
-    history_file => undef,
-
-    # By default the pipeline won't email with a summary of the results.
-    # If this is switched on, you get one email per species.
-    email_report => 0,
   };
+
 }
 
 # Ensures that species output parameter gets propagated implicitly.
@@ -342,7 +114,6 @@ sub pipeline_wide_parameters {
     %{$self->SUPER::pipeline_wide_parameters},
     pipeline_dir => $self->o('pipeline_dir'),
     scratch_dir  => $self->o('scratch_large_dir'),
-    email_report => $self->o('email_report'),
   };
 }
 
@@ -354,14 +125,8 @@ sub pipeline_analyses {
       -logic_name      => 'FetchFiles',
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
-      -parameters      => {
-                            local_computation => $self->o('local_computation'),
-                          },
-      -flow_into       => WHEN('#local_computation#' =>
-                            ['FetchInterPro', 'FetchInterPro2GO'],
-                          ELSE
-                            ['FetchUniParc', 'FetchInterPro', 'FetchInterPro2GO']
-                          ),
+      -flow_into       => ['FetchUniParc', 'FetchInterPro', 'FetchInterPro2GO']
+                          
     },
 
     {
@@ -442,8 +207,74 @@ sub pipeline_analyses {
                             mapping_file_local => $self->o('mapping_file_local'),
                             uniprot_file_local => $self->o('uniprot_file_local'),
                           },
+      -flow_into       => ['dump_unparc_table_into_protein_reference_db'],
+    },
+    {
+      -logic_name => 'dump_unparc_table_into_protein_reference_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
+      -parameters => {
+                       dest_db_conn => $self->o('protein_reference_db_uri'),
+                       table => 'uniparc',
+                       renamed_table => 'uniparc_new'
+                      },
+      -flow_into  => { 1 => 'create_taxonomy_table_in_metadata_db_if_not_exists' },
+    },
+    {
+      -logic_name => 'dump_unprot_table_into_protein_reference_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
+      -parameters => {
+                       dest_db_conn => $self->o('protein_reference_db_uri'),
+                       table => 'uniprot',
+                       renamed_table => 'uniprot_new'
+                      },
+      -flow_into  => { 1 => 'rename_tables_in_target_db' },
     },
 
+    {
+      -logic_name => 'rename_tables_in_target_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                        db_conn => $self->o('protein_reference_db_uri'),
+                        sql => [
+                                qw{
+                                 },
+
+                                 "RENAME TABLE uniparc TO uniparc_back",
+                                 "RENAME TABLE uniparc_new TO uniparc",
+                                 "RENAME TABLE uniprot TO uniprot_back",
+                                 "RENAME TABLE uniprot_new TO uniprot",
+                               ]
+                      },
+      -flow_into  => { 1 => 'drop_back_up_in_reference_db' },
+    },
+    {
+      -logic_name => 'drop_back_up_in_reference_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        sql => [
+                                 "DROP TABLE IF EXISTS uniparc_back",
+                                 "DROP TABLE IF EXISTS uniprot_back",
+                               ]
+                      },
+      -flow_into  => { 1 => 'TidyScratch' },
+    },
+    {
+      -logic_name        => 'TidyScratch',
+      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -max_retry_count   => 1,
+      -parameters        => {
+                              cmd => 'rm -rf #scratch_dir# && rm -rf #pipeline_dir#',
+                            },
+      -flow_into  => 'CleanTables',
+    }
+    {
+        -logic_name => 'CleanTables',
+        -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+        -parameters => {
+            sql => 'DROP table uniparc; drop table uniprot',
+        },
+    },
   ];
 }
 
