@@ -944,7 +944,7 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
       -parameters        => {
-                              cmd => 'rm -rf #scratch_dir#',
+                              cmd => 'rm -rf #scratch_dir# && rm -rf #pipeline_dir# ',
                             },
      -flow_into  => 'CleanTables',
     },
