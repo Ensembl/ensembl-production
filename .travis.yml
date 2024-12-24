@@ -50,7 +50,13 @@ install:
   - cpanm --sudo -v --installdeps --notest .
   - cpanm --sudo -n Devel::Cover::Report::Coveralls
   - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
+  
+before_script:
+  # In MySQL 8, local_infile is disabled by default for security reasons.
+  # By adding SET GLOBAL local_infile=1;, we enable this feature at runtime.
+  - mysql -e "SET GLOBAL local_infile=1;"
   - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
+
 script:
   - ./travisci/harness.sh
 # jobs:
