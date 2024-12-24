@@ -43,7 +43,7 @@ my $production = $multi_db->get_DBAdaptor('production') or BAIL_OUT 'Cannot get 
 
 my $module = 'Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatistics_conf';
 my $pipeline = Bio::EnsEMBL::Test::RunPipeline->new($module, $options);
-$pipeline->run();
+#$pipeline->run();
 
 my $dfa  = $human_dba->get_DensityFeatureAdaptor();
 my $sa = $human_dba->get_SliceAdaptor();
