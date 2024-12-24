@@ -31,7 +31,7 @@ before_install:
   - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
   - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
   - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
+  - git-ensembl --clone --branch version/2.7.0 --secondary_branch main --depth 1 ensembl-hive
   - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
   - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
   - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
@@ -56,14 +56,14 @@ script:
 jobs:
   include:
     - language: python
-      python: 3.7.6
+      python: 3.10
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
       script:
         - pytest src/python/test
     - language: python
-      python: 3.8
+      python: 3.11
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
@@ -71,9 +71,9 @@ jobs:
         - pytest src/python/test
 
 
-notifications:
-  email:
-    on_success: always
-    on_failure: always
-  slack:
-    secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
+# notifications:
+#   email:
+#     on_success: always
+#     on_failure: always
+#   slack:
+#     secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
