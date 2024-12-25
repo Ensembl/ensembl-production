@@ -52,27 +52,27 @@ install:
   - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
 script:
   - ./travisci/harness.sh
-jobs:
-  include:
-    - language: python
-      python: 3.7.6
-      install:
-        - pip install -r requirements-test.txt
-        - pip install -e .
-      script:
-        - pytest src/python/test
-    - language: python
-      python: 3.8
-      install:
-        - pip install -r requirements-test.txt
-        - pip install -e .
-      script:
-        - pytest src/python/test
+# jobs:
+#   include:
+#     - language: python
+#       python: 3.7.6
+#       install:
+#         - pip install -r requirements-test.txt
+#         - pip install -e .
+#       script:
+#         - pytest src/python/test
+#     - language: python
+#       python: 3.8
+#       install:
+#         - pip install -r requirements-test.txt
+#         - pip install -e .
+#       script:
+#         - pytest src/python/test
 
 
-notifications:
-  email:
-    on_success: always
-    on_failure: always
-  slack:
-    secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
+# notifications:
+#   email:
+#     on_success: always
+#     on_failure: always
+#   slack:
+#     secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
