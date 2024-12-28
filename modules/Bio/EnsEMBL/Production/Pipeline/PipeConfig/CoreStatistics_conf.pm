@@ -38,7 +38,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use Bio::EnsEMBL::Hive::Version 2.7;
+use Bio::EnsEMBL::Hive::Version 2.7.0;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
