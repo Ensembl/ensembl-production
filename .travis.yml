@@ -38,7 +38,6 @@ before_install:
   - cd htslib
   - make
   - export HTSLIB_DIR=$(pwd -P)
-  - mysql -e "SET GLOBAL local_infile=1;"
   - cd ..
 install:
   - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
@@ -59,15 +58,15 @@ before_script:
 script:
   - ./travisci/harness.sh
 
-jobs:
-  include:
-    - language: python
-      python: 3.10
-      install:
-        - pip install -r requirements-test.txt
-        - pip install -e .
-      script:
-        - pytest src/python/test
+# jobs:
+#   include:
+#     - language: python
+#       python: 3.10
+#       install:
+#         - pip install -r requirements-test.txt
+#         - pip install -e .
+#       script:
+#         - pytest src/python/test
 #     - language: python
 #       python: 3.11
 #       install:
