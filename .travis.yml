@@ -17,7 +17,7 @@ jobs:
             - graphviz
             - emboss
             - libkyotocabinet-dev
-            - ruby-kyotocabinet
+            - kyotocabinet
       before_install:
         - dpkg -l | grep ruby-kyotocabinet
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
