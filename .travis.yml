@@ -23,8 +23,8 @@ before_install:
   - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
   - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
   - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
-  - git-ensembl --clone --branch release/114 --depth 1 ensembl-test
-  - git-ensembl --clone --branch release/114 --depth 1 ensembl
+  - git-ensembl --clone --branch main --depth 1 ensembl-test
+  - git-ensembl --clone --branch main --depth 1 ensembl
   - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
   - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
   - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
@@ -59,15 +59,15 @@ before_script:
 script:
   - ./travisci/harness.sh
 
-# jobs:
-#   include:
-#     - language: python
-#       python: 3.10
-#       install:
-#         - pip install -r requirements-test.txt
-#         - pip install -e .
-#       script:
-#         - pytest src/python/test
+jobs:
+  include:
+    - language: python
+      python: 3.10
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      script:
+        - pytest src/python/test
 #     - language: python
 #       python: 3.11
 #       install:
@@ -77,9 +77,9 @@ script:
 #         - pytest src/python/test
 
 
-# notifications:
-#   email:
-#     on_success: always
-#     on_failure: always
-#   slack:
-#     secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
+notifications:
+  email:
+    on_success: always
+    on_failure: always
+  slack:
+    secure: BkrSPAkOM5aTOpeyO9vZnHdZ0LF1PLk0r2HtcXN2eTMyiHoGXkl6VUjdAL8EkzI4gunW2GProdSIjHpf60WdiEmKAulMdJRI+xyUbuxnY31mwiikS9HYwqmPBbMTf0Mh2pMBngZRFs+gaFZDUMTfLfp+8MQfU1R54yb6hPuVt5I=
