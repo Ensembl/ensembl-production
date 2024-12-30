@@ -68,13 +68,13 @@ jobs:
         - pip install -e .
       script:
         - pytest src/python/test
-#     - language: python
-#       python: 3.11
-#       install:
-#         - pip install -r requirements-test.txt
-#         - pip install -e .
-#       script:
-#         - pytest src/python/test
+    - language: python
+      python: 3.11
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      script:
+        - pytest src/python/test
 
 
 notifications:
