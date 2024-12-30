@@ -1,6 +1,5 @@
 language: perl
 os: linux
-dist: bionic
 jobs:
   include:
     - name: "Perl Jobs"
@@ -21,20 +20,20 @@ jobs:
       before_install:
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
-        - export ENSEMBL_BRANCH=master
+        - export ENSEMBL_BRANCH=main
         - export SECONDARY_BRANCH=main
         - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
         - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
         - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
         - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
-        - git-ensembl --clone --branch main --depth 1 ensembl-test
-        - git-ensembl --clone --branch main --depth 1 ensembl
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
-        - git-ensembl --clone --branch version/2.7.0 --secondary_branch main --depth 1 ensembl-hive
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+        - git-ensembl --clone --branch version/2.7.0   --secondary_branch main --depth 1 ensembl-hive
         - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
         - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
         - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
@@ -62,10 +61,24 @@ jobs:
       script:
         - ./travisci/harness.sh
 
-    - name: "Python Job"
+    - name: "Python 3.10"
       language: python
       python:
         - "3.10"
+      services:
+        - mysql
+      env:
+        - COVERALLS=true  DB=mysql
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      before_script:
+        - mysql -e "SET GLOBAL local_infile=1;"
+      script:
+        - pytest src/python/test
+    - name: "Python 3.11"
+      language: python
+      python:
         - "3.11"
       services:
         - mysql
@@ -78,7 +91,7 @@ jobs:
         - mysql -e "SET GLOBAL local_infile=1;"
       script:
         - pytest src/python/test
-        
+
 #########################################Test##############
 # dist: bionic
 # language: perl
