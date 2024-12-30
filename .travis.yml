@@ -1,4 +1,5 @@
 dist: jammy
+language: perl
 jobs:
   include:
     - name: "Perl Jobs"
@@ -16,7 +17,11 @@ jobs:
             - graphviz
             - emboss
             - libkyotocabinet-dev
+            - kyoto-cabinet
       before_install:
+        - dpkg -l | grep kyoto-cabinet
+        - sudo apt-get update
+        - sudo apt-get install -y libkyotocabinet-dev kyoto-cabinet
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
         - export ENSEMBL_BRANCH=main
