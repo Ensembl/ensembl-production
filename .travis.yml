@@ -19,6 +19,11 @@ jobs:
             - libkyotocabinet-dev
             - ruby-kyotocabinet
       before_install:
+        - curl -L https://install.perlbrew.pl | bash
+        - source ~/perl5/perlbrew/etc/bashrc
+        - perlbrew install perl-5.26.2
+        - perlbrew use perl-5.26.2
+        - perl -v
         - dpkg -l | grep ruby-kyotocabinet
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
@@ -49,7 +54,7 @@ jobs:
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
         - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
-        - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
+        # - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
         - cpanm --sudo -v --installdeps --notest .
         - cpanm --sudo -n Devel::Cover::Report::Coveralls
         - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
