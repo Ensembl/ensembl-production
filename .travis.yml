@@ -1,5 +1,7 @@
+dist: focal
 language: perl
 perl:
+  - "5.14"
   - "5.26.2"
 services:
   - mysql
@@ -58,15 +60,15 @@ before_script:
 script:
   - ./travisci/harness.sh
 
-# jobs:
-#   include:
-#     - language: python
-#       python: 3.10
-#       install:
-#         - pip install -r requirements-test.txt
-#         - pip install -e .
-#       script:
-#         - pytest src/python/test
+jobs:
+  include:
+    - language: python
+      python: 3.10
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      script:
+        - pytest src/python/test
 #     - language: python
 #       python: 3.11
 #       install:
