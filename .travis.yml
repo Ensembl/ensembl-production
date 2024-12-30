@@ -1,5 +1,4 @@
-language: perl
-os: linux
+dist: jammy
 jobs:
   include:
     - name: "Perl Jobs"
