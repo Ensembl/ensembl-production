@@ -45,7 +45,7 @@ jobs:
         - cd ..
         - echo "test............................."
         - ls
-        - ls ../
+        - ls travisci/
       install:
         - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
