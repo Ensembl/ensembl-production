@@ -16,6 +16,8 @@ jobs:
             - graphviz
             - emboss
             - libkyotocabinet-dev
+            - build-essential
+            - perlbrew
       before_install:
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
@@ -41,6 +43,9 @@ jobs:
         - make
         - export HTSLIB_DIR=$(pwd -P)
         - cd ..
+        - echo "test............................."
+        - ls
+        - ls ../
       install:
         - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
