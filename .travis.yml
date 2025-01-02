@@ -43,7 +43,7 @@ jobs:
         - make
         - export HTSLIB_DIR=$(pwd -P)
         - cd ..
-        - echo "test............................."
+        - cpanm --sudo -v --installdeps --notest travisci/kyotocabinet-perl-1.20.tar.gz
         - ls
         - ls travisci/
       install:
