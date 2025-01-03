@@ -1,5 +1,4 @@
 language: perl
-dist: focal
 jobs:
   include:
     - name: "Perl Jobs"
