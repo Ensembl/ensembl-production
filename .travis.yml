@@ -1,5 +1,5 @@
 language: perl
-dist: jammy
+dist: focal
 jobs:
   include:
     - name: "Perl Jobs"
@@ -19,6 +19,7 @@ jobs:
             - libkyotocabinet-dev
             - build-essential
             - perlbrew
+            - mysql-server-5.7
       before_install:
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
@@ -29,7 +30,7 @@ jobs:
         - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
         - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
         - git-ensembl --clone --branch main --depth 1 ensembl-test
-        - git-ensembl --clone --branch main --depth 1 ensembl
+        - git-ensembl --clone --branch release/114 --depth 1 ensembl
         - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
         - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
         - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
