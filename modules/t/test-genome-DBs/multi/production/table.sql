@@ -91,7 +91,7 @@ CREATE TABLE `master_external_db` (
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`external_db_id`),
-  UNIQUE KEY `db_name_idx` (`db_name`,`db_release`,`is_current`)
+  UNIQUE KEY `db_name_idx` (`db_name`(50), `db_release`(100), `is_current`)
 ) ENGINE=MyISAM  ;
 
 CREATE TABLE `master_misc_set` (

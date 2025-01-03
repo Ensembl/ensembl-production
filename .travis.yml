@@ -19,7 +19,6 @@ jobs:
             - libkyotocabinet-dev
             - build-essential
             - perlbrew
-            - mysql-server-5.7
       before_install:
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
