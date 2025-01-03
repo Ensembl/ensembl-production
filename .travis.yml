@@ -1,4 +1,5 @@
 language: perl
+dist: jammy
 jobs:
   include:
     - name: "Perl Jobs"
@@ -62,21 +63,21 @@ jobs:
       script:
         - ./travisci/harness.sh
 
-    # - name: "Python 3.10"
-    #   language: python
-    #   python:
-    #     - "3.10"
-    #   services:
-    #     - mysql
-    #   env:
-    #     - COVERALLS=true  DB=mysql
-    #   install:
-    #     - pip install -r requirements-test.txt
-    #     - pip install -e .
-    #   before_script:
-    #     - mysql -e "SET GLOBAL local_infile=1;"
-    #   script:
-    #     - pytest src/python/test
+    - name: "Python 3.10"
+      language: python
+      python:
+        - "3.10"
+      services:
+        - mysql
+      env:
+        - COVERALLS=true  DB=mysql
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      before_script:
+        - mysql -e "SET GLOBAL local_infile=1;"
+      script:
+        - pytest src/python/test
     # - name: "Python 3.11"
     #   language: python
     #   python:
