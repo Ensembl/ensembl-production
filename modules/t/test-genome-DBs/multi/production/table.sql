@@ -128,8 +128,8 @@ CREATE TABLE `meta` (
   `meta_value` text NOT NULL,
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
-  KEY `species_value_idx` (`species_id`,`meta_value`(50))
-) ENGINE=MyISAM  ;
+  KEY `species_value_idx` (`species_id`,`meta_value`(255))
+) ENGINE=InnoDB  ;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
