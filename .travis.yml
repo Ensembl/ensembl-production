@@ -43,15 +43,12 @@ jobs:
         - make
         - export HTSLIB_DIR=$(pwd -P)
         - cd ..
-        - cpanm --sudo -v --installdeps --notest travisci/kyotocabinet-perl-1.20.tar.gz
-        - ls
-        - ls travisci/
       install:
         - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
         - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
         - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
-        # - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
+        - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
         - cpanm --sudo -v --installdeps --notest .
         - cpanm --sudo -n Devel::Cover::Report::Coveralls
         - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
