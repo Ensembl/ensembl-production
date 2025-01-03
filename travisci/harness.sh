@@ -13,11 +13,6 @@ if [ "$COVERALLS" = 'true' ]; then
 else
   perl $PWD/ensembl-test/scripts/runtests.pl $PWD/modules/t $SKIP_TESTS
   perl $PWD/ensembl-test/scripts/runtests.pl $PWD/scripts/t $SKIP_TESTS
-  db=`mysql --host 127.0.0.1 --port 3306 --user travis -eN "show databases like '%travis_test_db_hive_hive_20241228%'"`
-  echo "My test hive database ....."
-  echo $db
-  echo "end..........."
-
 fi
 
 rt=$?
