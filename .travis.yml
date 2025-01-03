@@ -1,4 +1,5 @@
 language: perl
+dist: focal
 jobs:
   include:
     - name: "Perl Jobs"
@@ -19,6 +20,12 @@ jobs:
             - build-essential
             - perlbrew
       before_install:
+        - wget https://dev.mysql.com/get/mysql-apt-config_0.8.23-1_all.deb
+        - echo "mysql-apt-config mysql-apt-config/select-server select mysql-5.7" | sudo debconf-set-selections
+        - sudo dpkg -i mysql-apt-config_0.8.23-1_all.deb
+        - sudo apt-get update
+        # Install MySQL 5.7
+        - sudo apt-get install -y mysql-server
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
         - export ENSEMBL_BRANCH=main
