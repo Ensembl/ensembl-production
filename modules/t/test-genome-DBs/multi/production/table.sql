@@ -91,7 +91,7 @@ CREATE TABLE `master_external_db` (
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`external_db_id`),
-  UNIQUE KEY `db_name_idx` (`db_name`(50), `db_release`(100), `is_current`)
+  UNIQUE KEY `db_name_idx` (`db_name`,`db_release`,`is_current`)
 ) ENGINE=MyISAM  ;
 
 CREATE TABLE `master_misc_set` (
@@ -129,7 +129,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=InnoDB  ;
+) ENGINE=MyISAM  ;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -172,4 +172,3 @@ CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `ext
 CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;
-
