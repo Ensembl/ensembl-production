@@ -63,7 +63,7 @@ jobs:
         
       before_script:
         # Update permissions for Travis user on Dockerized MySQL
-        - docker exec mysql57 mysql -uroot -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%' IDENTIFIED BY 'travis'; FLUSH PRIVILEGES;"
+        - docker exec mysql57 mysql -uroot -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%' IDENTIFIED BY ''; FLUSH PRIVILEGES;"
         - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
         - docker exec mysql57 mysql -uroot -proot -e "CREATE DATABASE test;"
 
