@@ -5,9 +5,9 @@ jobs:
     - name: "Perl Jobs"
       perl: "5.26"
       services:
-        - mysql
+        - docker
       env:
-        - COVERALLS=true  DB=mysql
+        - COVERALLS=true DB=mysql
       addons:
         apt:
           update: true
@@ -20,29 +20,13 @@ jobs:
             - build-essential
             - perlbrew
       before_install:
-        # Add MySQL APT repository for MySQL 5.7
-        - wget https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
-        - echo "mysql-apt-config mysql-apt-config/select-server select mysql-5.7" | sudo debconf-set-selections
-        - sudo dpkg -i mysql-apt-config_0.8.24-1_all.deb
+        # Run MySQL 5.7 Docker container
+        - docker pull mysql:5.7
+        - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test -d -p 3306:3306 mysql:5.7
+        # Wait for MySQL to initialize
+        - until docker exec mysql57 mysqladmin ping -h127.0.0.1 --silent; do echo "Waiting for MySQL..."; sleep 2; done
 
-  
-        # Install MySQL 5.7
-        - sudo apt-get install -y mysql-server
-  
-        # Start MySQL service
-        - sudo service mysql start
-  
-        # Set up MySQL root user and test database
-        - sudo mysql -e "CREATE USER 'travis'@'localhost' IDENTIFIED BY '';"
-        - sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'localhost' WITH GRANT OPTION;"
-        - sudo mysql -e "FLUSH PRIVILEGES;"
-        - sudo mysql -e "CREATE DATABASE test;"
-        - wget https://dev.mysql.com/get/mysql-apt-config_0.8.23-1_all.deb
-        - echo "mysql-apt-config mysql-apt-config/select-server select mysql-5.7" | sudo debconf-set-selections
-        - sudo dpkg -i mysql-apt-config_0.8.23-1_all.deb
-        # Install MySQL 5.7
-        - sudo apt-get install -y mysql-server
-        
+        # Clone necessary repositories
         - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
         - export PATH=$PATH:$PWD/ensembl-git-tools/bin
         - export ENSEMBL_BRANCH=main
@@ -78,10 +62,10 @@ jobs:
         - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
         
       before_script:
-        # In MySQL 8, local_infile is disabled by default for security reasons.
-        # By adding SET GLOBAL local_infile=1;, we enable this feature at runtime.
-        - mysql -e "SET GLOBAL local_infile=1;"
-        - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
+        # Update permissions for Travis user on Dockerized MySQL
+        - docker exec mysql57 mysql -uroot -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%' IDENTIFIED BY 'travis'; FLUSH PRIVILEGES;"
+        - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
+        - docker exec mysql57 mysql -uroot -proot -e "CREATE DATABASE test;"
 
       script:
         - ./travisci/harness.sh
@@ -91,14 +75,21 @@ jobs:
       python:
         - "3.10"
       services:
-        - mysql
+        - docker
       env:
-        - COVERALLS=true  DB=mysql
+        - COVERALLS=true DB=mysql
+      before_install:
+        # Run MySQL 5.7 Docker container
+        - docker pull mysql:5.7
+        - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test -d -p 3306:3306 mysql:5.7
+        # Wait for MySQL to initialize
+        - until docker exec mysql57 mysqladmin ping -h127.0.0.1 --silent; do echo "Waiting for MySQL..."; sleep 2; done
+
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
       before_script:
-        - mysql -e "SET GLOBAL local_infile=1;"
+        - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
       script:
         - pytest src/python/test
     # - name: "Python 3.11"
