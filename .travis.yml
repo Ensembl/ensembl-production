@@ -35,13 +35,13 @@ jobs:
         - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
         - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
         - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
-        - git-ensembl --clone --branch main --depth 1 ensembl-test
-        - git-ensembl --clone --branch release/114 --depth 1 ensembl
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl-test
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
         - git-ensembl --clone --branch version/2.7.0   --secondary_branch main --depth 1 ensembl-hive
         - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
         - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
@@ -74,23 +74,21 @@ jobs:
       language: python
       python:
         - "3.10"
-        - "3.11"
-      services:
-        - docker
       env:
         - COVERALLS=true DB=mysql
-      before_install:
-        # Run MySQL 5.7 Docker container
-        - docker pull mysql:5.7
-        - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=test -d -p 3306:3306 mysql:5.7
-        # Wait for MySQL to initialize
-        - until docker exec mysql57 mysqladmin ping -h127.0.0.1 --silent; do echo "Waiting for MySQL..."; sleep 2; done
-
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
-      before_script:
-        - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
+      script:
+        - pytest src/python/test
+
+    - name: "Python 3.11"
+      language: python
+      python:
+        - "3.11"
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
       script:
         - pytest src/python/test
 
