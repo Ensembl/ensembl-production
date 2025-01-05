@@ -38,7 +38,7 @@ jobs:
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl-test
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
-        - git-ensembl --clone --branch release/114 --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
         - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
