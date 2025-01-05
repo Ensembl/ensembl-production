@@ -20,7 +20,7 @@ jobs:
             - build-essential
             - perlbrew
       before_install:
-        # Run MySQL 5.7 Docker container
+        # Run MySQL 5.7 Docker container which match to production staging servers
         - docker pull mysql:5.7
         - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=ensembl_test -d -p 3306:3306 mysql:5.7
         # Wait for MySQL to initialize
