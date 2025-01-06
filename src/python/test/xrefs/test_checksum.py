@@ -2,6 +2,7 @@ import pytest
 import os
 import shutil
 import datetime
+from sqlalchemy import text
 from typing import Any, Dict, Callable, Optional
 from ensembl.utils.database import DBConnection
 from test_helpers import check_row_count
@@ -24,6 +25,20 @@ def checksum() -> Callable[[Optional[Dict[str, Any]]], Checksum]:
         return Checksum(args, True, True)
     return _create_checksum
 
+# Function to populate the database with sources
+def populate_source_db(mock_source_dbi: DBConnection):
+    source_data = [
+        [1, 'RNACentral', 'ChecksumParser'],
+        [2, 'UniParc', 'ChecksumParser'],
+    ]
+    for row in source_data:
+        mock_source_dbi.execute(
+            text("INSERT INTO source (source_id, name, parser) VALUES (:source_id, :name, :parser)"),
+            {"source_id": row[0], "name": row[1], "parser": row[2],}
+        )
+
+    mock_source_dbi.commit()
+
 # Test case to check if an error is raised when a mandatory parameter is missing
 def test_checksum_missing_required_param(test_missing_required_param: Callable[[str, Dict[str, Any], str], None]):
     test_missing_required_param("Checksum", DEFAULT_ARGS, "base_path")
@@ -32,6 +47,8 @@ def test_checksum_missing_required_param(test_missing_required_param: Callable[[
 
 # Test case to check successful run
 def test_successful_run(mock_source_dbi: DBConnection, checksum: Checksum, pytestconfig: pytest.Config):
+    populate_source_db(mock_source_dbi)
+
     # Setup for test parameters and create a Checksum instance
     test_scratch_path = pytestconfig.getoption("test_scratch_path")
     args = {

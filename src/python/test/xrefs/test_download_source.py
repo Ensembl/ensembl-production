@@ -30,13 +30,9 @@ def download_source() -> Callable[[Optional[Dict[str, Any]]], DownloadSource]:
 
 # Test case to check if an error is raised when a mandatory parameter is missing
 def test_download_source_missing_required_param(test_missing_required_param: Callable[[str, Dict[str, Any], str], None]):
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "base_path")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "parser")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "name")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "priority")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "source_db_url")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "file")
-    test_missing_required_param("DownloadSource", DEFAULT_ARGS, "skip_download")
+    required_params = ["base_path", "parser", "name", "priority", "source_db_url", "file", "skip_download"]
+    for param in required_params:
+        test_missing_required_param("DownloadSource", DEFAULT_ARGS, param)
 
 # Test case to check if an error is raised when an invalid URL scheme is provided
 def test_invalid_url_scheme(download_source: DownloadSource, pytestconfig):

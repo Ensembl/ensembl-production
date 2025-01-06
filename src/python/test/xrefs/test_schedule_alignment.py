@@ -35,19 +35,9 @@ def schedule_alignment() -> Callable[[Optional[Dict[str, Any]]], ScheduleAlignme
 
 # Test case to check if an error is raised when a mandatory parameter is missing
 def test_schedule_alignment_missing_required_param(test_missing_required_param: Callable[[str, Dict[str, Any], str], None]):
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "species_name")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "release")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "ensembl_fasta")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "xref_fasta")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "seq_type")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "xref_db_url")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "base_path")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "method")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "query_cutoff")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "target_cutoff")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "source_id")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "source_name")
-    test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, "job_index")
+    required_params = ["species_name", "release", "ensembl_fasta", "xref_fasta", "seq_type", "xref_db_url", "base_path", "method", "query_cutoff", "target_cutoff", "source_id", "source_name", "job_index"]
+    for param in required_params:
+        test_missing_required_param("ScheduleAlignment", DEFAULT_ARGS, param)
 
 # Test case to check successful run
 def test_successful_run(schedule_alignment: ScheduleAlignment, pytestconfig: pytest.Config):

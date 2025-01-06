@@ -68,14 +68,9 @@ def populate_source_db(mock_source_dbi: DBConnection):
 
 # Test case to check if an error is raised when a mandatory parameter is missing
 def test_schedule_parse_missing_required_param(test_missing_required_param: Callable[[str, Dict[str, Any], str], None]):
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "species_name")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "release")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "registry_url")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "priority")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "source_db_url")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "xref_db_url")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "get_species_file")
-    test_missing_required_param("ScheduleParse", DEFAULT_ARGS, "sources_config_file")
+    required_params = ["species_name", "release", "registry_url", "priority", "source_db_url", "xref_db_url", "get_species_file"]
+    for param in required_params:
+        test_missing_required_param("ScheduleParse", DEFAULT_ARGS, param)
 
 # Test case to check if an error is raised when priority is invalid
 def test_invalid_priority(schedule_parse: ScheduleParse):

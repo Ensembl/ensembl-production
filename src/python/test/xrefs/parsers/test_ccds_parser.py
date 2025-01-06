@@ -25,7 +25,7 @@ def run_and_validate_parsing(ccds_parser: CCDSParser, mock_xref_dbi: DBConnectio
         {
             "source_id": SOURCE_ID_CCDS,
             "species_id": SPECIES_ID_HUMAN,
-            "dba": "mock_ccds_db_url",
+            "extra_db_url": "mock_ccds_db_url",
             "xref_dbi": mock_xref_dbi,
         }
     )
