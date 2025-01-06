@@ -18,7 +18,8 @@ import logging
 import re
 from datetime import datetime
 from typing import Dict, List, Tuple
-from sqlalchemy import select, insert, update, delete, case, desc, func, aliased
+from sqlalchemy import select, insert, update, delete, case, desc, func
+from sqlalchemy.orm import aliased
 from sqlalchemy.engine import Connection
 from sqlalchemy.sql import Select
 
@@ -744,9 +745,9 @@ class DisplayXrefs(BasicMapper):
             TranscriptStableIdORM.internal_id, TranscriptStableIdORM.display_xref_id
         )
         for row in xref_dbi.execute(query).mappings().all():
-            xref_id = int(row.display_xref_id)
+            if row.display_xref_id:
+                xref_id = int(row.display_xref_id)
 
-            if xref_id:
                 # Set display xref ID
                 core_dbi.execute(
                     update(TranscriptORM)
@@ -757,9 +758,9 @@ class DisplayXrefs(BasicMapper):
         # Clean up synonyms linked to xrefs which are not display xrefs
         query = (
             select(ExternalSynonymORM)
+            .join(XrefCORM, XrefCORM.xref_id == ExternalSynonymORM.xref_id)
             .outerjoin(GeneORM, GeneORM.display_xref_id == XrefCORM.xref_id)
             .where(
-                ExternalSynonymORM.xref_id == XrefCORM.xref_id,
                 GeneORM.display_xref_id == None,
             )
         )

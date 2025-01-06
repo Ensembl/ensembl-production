@@ -24,7 +24,7 @@ import codecs
 from sqlalchemy import select
 from sqlalchemy.engine import Connection
 from sqlalchemy.engine.url import URL
-from unidecode import unidecode # type: ignore
+from unidecode import unidecode
 
 from ensembl.core.models import (
     Transcript as TranscriptORM,

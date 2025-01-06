@@ -33,14 +33,12 @@ class ScheduleCleanup(Base):
         source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
         clean_files: Optional[bool] = self.get_param("clean_files", {"type": bool})
         clean_dir: Optional[str] = self.get_param("clean_dir", {"type": str})
-        split_files_by_species: Optional[bool] = self.get_param("split_files_by_species", {"type": bool})
 
         logging.info("ScheduleCleanup starting with parameters:")
         logging.info(f"Param: base_path = {base_path}")
         logging.info(f"Param: source_db_url = {source_db_url}")
         logging.info(f"Param: clean_files = {clean_files}")
         logging.info(f"Param: clean_dir = {clean_dir}")
-        logging.info(f"Param: split_files_by_species = {split_files_by_species}")
 
         # Connect to source db
         db_engine = self.get_db_engine(source_db_url)

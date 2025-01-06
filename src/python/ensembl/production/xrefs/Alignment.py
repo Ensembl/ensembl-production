@@ -15,6 +15,7 @@
 """Alignment module to map xref sequences into ensEMBL ones."""
 
 import re
+import shlex
 import subprocess
 from sqlalchemy.dialects.mysql import insert
 
@@ -45,23 +46,11 @@ class Alignment(Base):
         # Construct Exonerate command
         ryo = "xref:%qi:%ti:%ei:%ql:%tl:%qab:%qae:%tab:%tae:%C:%s\n"
         exe = subprocess.check_output(["which", "exonerate"]).decode("utf-8").strip()
-        command_string = [
-            exe,
-            "--showalignment", "FALSE",
-            "--showvulgar", "FALSE",
-            "--ryo", f"'{ryo}'",
-            "--gappedextension", "FALSE",
-            "--model", "'affine:local'",
-            method,
-            "--subopt", "no",
-            "--query", source,
-            "--target", target,
-            "--querychunktotal", str(max_chunks),
-            "--querychunkid", str(chunk)
-        ]
+        command_string = f"{exe} --showalignment FALSE --showvulgar FALSE --ryo '{ryo}' --gappedextension FALSE --model 'affine:local' {method} --subopt no --query {source} --target {target} --querychunktotal {max_chunks} --querychunkid {chunk}"
+        command_list = shlex.split(command_string)
 
         # Get exonerate hits
-        output = subprocess.run(command_string, stdout=subprocess.PIPE, text=True)
+        output = subprocess.run(command_list, capture_output=True, text=True)
 
         exit_code = abs(output.returncode)
         if exit_code == 0:

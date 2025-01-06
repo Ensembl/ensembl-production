@@ -14,6 +14,7 @@
 
 """Parser module for RefSeq coordinate xrefs."""
 
+import os
 import json
 import logging
 import subprocess
@@ -47,7 +48,7 @@ class RefSeqCoordinateParser(BaseParser):
 
         # Connect to the appropriate dbs
         if db_url:
-            return self.run_perl_script(args, source_ids, species_name)
+            return self.run_perl_script(args, source_ids, species_id, species_name)
         else:
             # Not all species have an otherfeatures database, skip if not found
             return 0, f"Skipped. No otherfeatures database for '{species_name}'."
@@ -74,7 +75,7 @@ class RefSeqCoordinateParser(BaseParser):
         
         return source_ids
 
-    def run_perl_script(self, args: Dict[str, Any], source_ids: Dict[str, int], species_name: str) -> Tuple[int, str]:
+    def run_perl_script(self, args: Dict[str, Any], source_ids: Dict[str, int], species_id: int, species_name: str) -> Tuple[int, str]:
         # For now, we run a perl script to add the xrefs, which has some mandatory arguments
         scripts_dir = args.get("perl_scripts_dir")
         xref_db_url = args.get("xref_db_url")
@@ -83,22 +84,22 @@ class RefSeqCoordinateParser(BaseParser):
 
         source_ids_json = json.dumps(source_ids)
 
-        logging.info(f"Running perl script {scripts_dir}/refseq_coordinate_parser.pl")
-        perl_cmd = (
-            "perl",
-            f"{scripts_dir}/refseq_coordinate_parser.pl"
-            f"--xref_db_url", xref_db_url
-            f"--core_db_url", args.get('core_db_url'),
-            f"--otherf_db_url", args.get('extra_db_url'),
-            f"--source_ids", source_ids_json,
-            f"--species_id", str(species_id),
-            f"--species_name", species_name
-            f"--release", str(args.get('ensembl_release'))
-        )
-        cmd_output = subprocess.run(perl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        parser_script = os.path.join(scripts_dir, 'refseq_coordinate_parser.pl')
+        logging.info(f"Running perl script {parser_script}")
+        perl_cmd = [
+            "perl", parser_script,
+            "--xref_db_url", xref_db_url,
+            "--core_db_url", args.get('core_db_url'),
+            "--otherf_db_url", args.get('extra_db_url'),
+            "--source_ids", source_ids_json,
+            "--species_id", str(species_id),
+            "--species_name", species_name,
+            "--release", str(args.get('ensembl_release'))
+        ]
+        cmd_output = subprocess.run(perl_cmd, capture_output=True, text=True)
 
         if cmd_output.returncode != 0:
-            logging.error(f"Perl script ({scripts_dir}/refseq_coordinate_parser.pl) failed with error: {cmd_output.stderr.decode('utf-8')}")
+            logging.error(f"Perl script ({scripts_dir}/refseq_coordinate_parser.pl) failed with error: {cmd_output.stderr}")
             return 1, "Failed to add refseq_import xrefs."
 
         return 0, "Added refseq_import xrefs."

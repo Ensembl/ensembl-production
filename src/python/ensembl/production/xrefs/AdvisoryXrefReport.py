@@ -26,15 +26,17 @@ class AdvisoryXrefReport(Base):
         datacheck_name: str = self.get_param("datacheck_name", {"type": str})
         datacheck_output: str = self.get_param("datacheck_output", {"type": str})
 
-        # Create or locate report file
-        report_file = self.get_path(
-            base_path, species_name, release, "dc_report", f"{datacheck_name}.log"
-        )
-
         # Return the quotation marks into the output
         datacheck_output = re.sub("__", "'", datacheck_output)
 
-        # Write datacheck result into file
-        with open(report_file, "a") as fh:
-            fh.write(datacheck_output)
-            fh.write("\n")
+        # Only interested in failed tests
+        if re.search("Failed test", datacheck_output):
+            # Create or locate report file
+            report_file = self.get_path(
+                base_path, species_name, release, "dc_report", f"{datacheck_name}.log"
+            )
+
+            # Write datacheck result into file
+            with open(report_file, "a") as fh:
+                fh.write(datacheck_output)
+                fh.write("\n")

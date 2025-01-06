@@ -40,18 +40,17 @@ class DumpEnsembl(Base):
             logging.info(f"Dna and peptide data already dumped for species '{species_name}', skipping.")
         else:
             scripts_dir: str = self.get_param("perl_scripts_dir", {"required": True, "type": str})
+            dump_script = os.path.join(scripts_dir, 'dump_ensembl.pl')
 
-            logging.info(f"Running perl script {scripts_dir}/dump_ensembl.pl")
+            logging.info(f"Running perl script {dump_script}")
             perl_cmd = [
-                "perl",
-                f"{scripts_dir}/dump_ensembl.pl",
+                "perl", dump_script,
                 "--cdna_path", cdna_path,
                 "--pep_path", pep_path,
                 "--species", species_name,
                 "--core_db_url", core_db_url,
                 "--release", str(release)
             ]
-            # subprocess.run(perl_cmd, check=True, stdout=subprocess.PIPE)
             subprocess.run(perl_cmd, capture_output=True, text=True, check=True)
 
         # Create jobs for peptide dumping and alignment

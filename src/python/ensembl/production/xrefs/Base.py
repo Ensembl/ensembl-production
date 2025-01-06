@@ -21,7 +21,7 @@ import requests
 import fnmatch
 import gzip
 import importlib
-import wget # type: ignore
+import wget
 import threading
 import logging
 import random

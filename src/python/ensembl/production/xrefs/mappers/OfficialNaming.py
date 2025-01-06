@@ -17,7 +17,8 @@
 import logging
 import re
 from typing import Any, Dict, Tuple, List
-from sqlalchemy import select, func, update, case, desc, insert, aliased, delete
+from sqlalchemy import select, func, update, case, desc, insert, delete
+from sqlalchemy.orm import aliased
 from sqlalchemy.engine import Connection
 
 from ensembl.xrefs.xref_update_db_model import (
@@ -436,13 +437,13 @@ class OfficialNaming(BasicMapper):
     def set_the_best_display_name(self, display_names: Dict[int, bool], xref_list: List[int], object_xref_list: List[int], xref_id_to_display: Dict[int, str], verbose: bool, dbi: Connection) -> Tuple[str, int]:
         gene_symbol, gene_symbol_xref_id = None, None
 
-        for xref_id in xref_list:
+        for index,xref_id in enumerate(xref_list):
             # Remove object xrefs that are not in the best display names list
             if not display_names.get(xref_id):
                 if verbose:
                     logging.info(f"Removing {xref_id_to_display[xref_id]} from gene")
                 self.update_object_xref_status(
-                    object_xref_list[xref_id], "MULTI_DELETE", dbi
+                    object_xref_list[index], "MULTI_DELETE", dbi
                 )
             else:
                 if verbose:

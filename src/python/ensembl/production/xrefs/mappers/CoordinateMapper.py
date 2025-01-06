@@ -114,10 +114,10 @@ class CoordinateMapper(BasicMapper):
             if analysis_id:
                 logging.info(f"Analysis ID is {analysis_id}")
 
-            logging.info(f"Running perl script {scripts_dir}/coordinate_mapper.pl")
+            mapper_script = os.path.join(scripts_dir, 'coordinate_mapper.pl')
+            logging.info(f"Running perl script {mapper_script}")
             perl_cmd = [
-                "perl",
-                f"{scripts_dir}/coordinate_mapper.pl",
+                "perl", mapper_script,
                 "--xref_db_url", str(self.xref()),
                 "--core_db_url", str(self.core()),
                 "--species_id", str(species_id),

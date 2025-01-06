@@ -93,7 +93,7 @@ class XrefLoader(BasicMapper):
         )
 
         # Delete existing xrefs in core DB (only from relevant sources)
-        self.deleted_existing_xrefs(name_to_external_db_id, xref_dbi)
+        self.deleted_existing_xrefs(name_to_external_db_id, xref_dbi, core_dbi)
 
         # Get the offsets for xref and object_xref tables
         xref_offset = core_dbi.execute(select(func.max(XrefCORM.xref_id))).scalar() or 0
@@ -498,7 +498,7 @@ class XrefLoader(BasicMapper):
             f"Deleted all PROJECTIONs rows: {counts['external_synonym']} external_synonyms, {counts['dependent_xref']} dependent_xrefs, {counts['object_xref']} object_xrefs, {counts['xref']} xrefs"
         )
 
-    def deleted_existing_xrefs(self, name_to_external_db_id: Dict[str, int], xref_dbi: Connection) -> None:
+    def deleted_existing_xrefs(self, name_to_external_db_id: Dict[str, int], xref_dbi: Connection, core_dbi: Connection) -> None:
         # For each external_db to be updated, delete the existing xrefs
         query = (
             select(SourceUORM.name, func.count(XrefUORM.xref_id).label("count"))
@@ -528,92 +528,87 @@ class XrefLoader(BasicMapper):
 
             logging.info(f"For source '{name}'")
 
-            Session = sessionmaker(bind=self.core().execution_options(isolation_level="READ COMMITTED"))
-            with Session.begin() as session:
-                try:
-                    counts["gene"] = session.execute(
-                        update(GeneORM)
-                        .values(display_xref_id=None, description=None)
-                        .where(
-                            GeneORM.display_xref_id == XrefCORM.xref_id,
-                            XrefCORM.external_db_id == external_db_id,
-                        )
-                    ).rowcount
-                    logging.info(
-                        f"\tSet display_xref_id=NULL and description=NULL for {counts['gene']} gene row(s)"
+            try:
+                counts["gene"] = core_dbi.execute(
+                    update(GeneORM)
+                    .values(display_xref_id=None, description=None)
+                    .where(
+                        GeneORM.display_xref_id == XrefCORM.xref_id,
+                        XrefCORM.external_db_id == external_db_id,
                     )
+                ).rowcount
+                logging.info(
+                    f"\tSet display_xref_id=NULL and description=NULL for {counts['gene']} gene row(s)"
+                )
 
-                    counts["external_synonym"] = session.execute(
-                        delete(ExternalSynonymORM).where(
-                            ExternalSynonymORM.xref_id == XrefCORM.xref_id,
-                            XrefCORM.external_db_id == external_db_id,
-                        )
-                    ).rowcount
-                    counts["identity_xref"] = session.execute(
-                        delete(IdentityXrefCORM).where(
-                            IdentityXrefCORM.object_xref_id == ObjectXrefCORM.object_xref_id,
-                            ObjectXrefCORM.xref_id == XrefCORM.xref_id,
-                            XrefCORM.external_db_id == external_db_id,
-                        )
-                    ).rowcount
-                    counts["object_xref"] = session.execute(
-                        delete(ObjectXrefCORM).where(
-                            ObjectXrefCORM.xref_id == XrefCORM.xref_id,
-                            XrefCORM.external_db_id == external_db_id,
-                        )
-                    ).rowcount
-
-                    MasterXref = aliased(XrefCORM)
-                    DependentXref = aliased(XrefCORM)
-
-                    query = select(
-                        ObjectXrefCORM.object_xref_id,
-                        DependentXrefCORM.master_xref_id,
-                        DependentXrefCORM.dependent_xref_id,
-                    ).where(
-                        ObjectXrefCORM.object_xref_id == DependentXrefCORM.object_xref_id,
-                        MasterXref.xref_id == DependentXrefCORM.master_xref_id,
-                        DependentXref.xref_id == DependentXrefCORM.dependent_xref_id,
-                        MasterXref.external_db_id == external_db_id,
+                counts["external_synonym"] = core_dbi.execute(
+                    delete(ExternalSynonymORM).where(
+                        ExternalSynonymORM.xref_id == XrefCORM.xref_id,
+                        XrefCORM.external_db_id == external_db_id,
                     )
-                    for sub_row in session.execute(query).mappings().all():
-                        counts["master_dependent_xref"] += session.execute(
-                            delete(DependentXrefCORM).where(
-                                DependentXrefCORM.master_xref_id == sub_row.master_xref_id,
-                                DependentXrefCORM.dependent_xref_id == sub_row.dependent_xref_id,
-                            )
-                        ).rowcount
-                        counts["master_object_xref"] += session.execute(
-                            delete(ObjectXrefCORM).where(
-                                ObjectXrefCORM.object_xref_id == sub_row.object_xref_id
-                            )
-                        ).rowcount
+                ).rowcount
+                counts["identity_xref"] = core_dbi.execute(
+                    delete(IdentityXrefCORM).where(
+                        IdentityXrefCORM.object_xref_id == ObjectXrefCORM.object_xref_id,
+                        ObjectXrefCORM.xref_id == XrefCORM.xref_id,
+                        XrefCORM.external_db_id == external_db_id,
+                    )
+                ).rowcount
+                counts["object_xref"] = core_dbi.execute(
+                    delete(ObjectXrefCORM).where(
+                        ObjectXrefCORM.xref_id == XrefCORM.xref_id,
+                        XrefCORM.external_db_id == external_db_id,
+                    )
+                ).rowcount
 
-                    counts["dependent_xref"] = session.execute(
+                MasterXref = aliased(XrefCORM)
+                DependentXref = aliased(XrefCORM)
+
+                query = select(
+                    ObjectXrefCORM.object_xref_id,
+                    DependentXrefCORM.master_xref_id,
+                    DependentXrefCORM.dependent_xref_id,
+                ).where(
+                    ObjectXrefCORM.object_xref_id == DependentXrefCORM.object_xref_id,
+                    MasterXref.xref_id == DependentXrefCORM.master_xref_id,
+                    DependentXref.xref_id == DependentXrefCORM.dependent_xref_id,
+                    MasterXref.external_db_id == external_db_id,
+                )
+                for sub_row in core_dbi.execute(query).mappings().all():
+                    counts["master_dependent_xref"] += core_dbi.execute(
                         delete(DependentXrefCORM).where(
-                            DependentXrefCORM.dependent_xref_id == XrefCORM.xref_id,
-                            XrefCORM.external_db_id == external_db_id,
+                            DependentXrefCORM.master_xref_id == sub_row.master_xref_id,
+                            DependentXrefCORM.dependent_xref_id == sub_row.dependent_xref_id,
                         )
                     ).rowcount
-                    counts["xref"] = session.execute(
-                        delete(XrefCORM).where(XrefCORM.external_db_id == external_db_id)
-                    ).rowcount
-                    counts["unmapped_object"] = session.execute(
-                        delete(UnmappedObjectORM).where(
-                            UnmappedObjectORM.unmapped_object_type == "xref",
-                            UnmappedObjectORM.external_db_id == external_db_id,
+                    counts["master_object_xref"] += core_dbi.execute(
+                        delete(ObjectXrefCORM).where(
+                            ObjectXrefCORM.object_xref_id == sub_row.object_xref_id
                         )
                     ).rowcount
 
-                    logging.info(
-                        f"\tDeleted rows: {counts['external_synonym']} external_synonyms, {counts['identity_xref']} identity_xrefs, {counts['object_xref']} object_xrefs, {counts['master_dependent_xref']} master dependent_xrefs, {counts['master_object_xref']} master object_xrefs, {counts['dependent_xref']} dependent_xrefs, {counts['xref']} xrefs, {counts['unmapped_object']} unmapped_objects"
+                counts["dependent_xref"] = core_dbi.execute(
+                    delete(DependentXrefCORM).where(
+                        DependentXrefCORM.dependent_xref_id == XrefCORM.xref_id,
+                        XrefCORM.external_db_id == external_db_id,
                     )
+                ).rowcount
+                counts["xref"] = core_dbi.execute(
+                    delete(XrefCORM).where(XrefCORM.external_db_id == external_db_id)
+                ).rowcount
+                counts["unmapped_object"] = core_dbi.execute(
+                    delete(UnmappedObjectORM).where(
+                        UnmappedObjectORM.unmapped_object_type == "xref",
+                        UnmappedObjectORM.external_db_id == external_db_id,
+                    )
+                ).rowcount
 
-                    session.commit()
-                except SQLAlchemyError as e:
-                    session.rollback()
-                    logging.error(f"Failed to delete rows for source '{name}': {e}")
-                    raise RuntimeError(f"Transaction failed for source '{name}'")
+                logging.info(
+                    f"\tDeleted rows: {counts['external_synonym']} external_synonyms, {counts['identity_xref']} identity_xrefs, {counts['object_xref']} object_xrefs, {counts['master_dependent_xref']} master dependent_xrefs, {counts['master_object_xref']} master object_xrefs, {counts['dependent_xref']} dependent_xrefs, {counts['xref']} xrefs, {counts['unmapped_object']} unmapped_objects"
+                )
+            except SQLAlchemyError as e:
+                logging.error(f"Failed to delete existing rows for source '{name}': {e}")
+                raise RuntimeError(f"Failed to delete existing rows for source '{name}': {e}")
 
     def get_analysis(self, dbi: Connection) -> Dict[str, int]:
         analysis_ids = {}

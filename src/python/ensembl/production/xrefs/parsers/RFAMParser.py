@@ -17,7 +17,7 @@
 import logging
 import os
 import re
-import wget # type: ignore
+import wget
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from sqlalchemy import and_, select

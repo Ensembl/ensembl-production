@@ -122,12 +122,16 @@ class ScheduleParse(Base):
 
         hgnc_path = None
         total_sources = 0
+        zfin_scheduled = False
 
         for source in sources:
             if source.name == "HGNC":
                 hgnc_path = source.file_path
 
             if source.db == "checksum" or source.priority != order_priority:
+                continue
+            
+            if source.name == "ZFIN_ID" and zfin_scheduled:
                 continue
 
             dataflow_params = {
@@ -205,6 +209,7 @@ class ScheduleParse(Base):
 
                 if source.name == "ZFIN_ID":
                     list_files = [list_files[0]]
+                    zfin_scheduled = True
 
                 for file in list_files:
                     if source.revision and file == source.revision:
@@ -213,8 +218,7 @@ class ScheduleParse(Base):
                     dataflow_params["file_name"] = file
 
                     if re.search(r"^Uniprot", source.name) and hgnc_path:
-                        
-                        hgnc_files = glob.glob(hgnc_path + "/*")
+                        hgnc_files = glob.glob(os.path.join(hgnc_path, "*"))
                         dataflow_params["hgnc_file"] = hgnc_files[0]
 
                     self.write_output(dataflow_suffix, dataflow_params)
