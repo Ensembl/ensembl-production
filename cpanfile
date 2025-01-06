@@ -17,4 +17,4 @@ requires 'Time::Duration';
 requires 'IO::Zlib';
 requires 'File::Temp';
 requires 'Fcntl';
-requires 'KyotoCabinet';
+# requires 'KyotoCabinet';
