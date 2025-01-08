@@ -232,6 +232,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '-1' => ['RunDatachecksControlledTables_HighMem'],
                             },
+      -rc_name           => '1GB_D',
     },
     {
       -logic_name        => 'RunDatachecksControlledTables_HighMem',
@@ -246,7 +247,7 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ControlledTables.txt'),
                               failures_fatal   => 1,
                             },
-      -rc_name           => '16GB',
+      -rc_name           => '16GB_D',
     },
     {
       -logic_name        => 'RunDatachecksADCritical',
@@ -261,6 +262,7 @@ sub pipeline_analyses {
                               output_file      => catdir($self->o('datacheck_output_dir'), '#dbname#_ADCritical.txt'),
                               failures_fatal   => 1,
                             },
+      -rc_name           => '1GB_D',
       -flow_into         => {
                               '-1' => ['RunDatachecksADCritical_HighMem'],
                             },
