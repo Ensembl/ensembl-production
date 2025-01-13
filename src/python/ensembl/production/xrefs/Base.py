@@ -892,8 +892,19 @@ class Base(Params):
         if not core_url:
             core_url = self.get_db_from_registry(species, "core", release, registry)
 
-        core_db = self.get_db_engine(core_url)
-        xref_db = self.get_db_engine(xref_url)
+        core_db = create_engine(
+            make_url(core_url),
+            isolation_level="AUTOCOMMIT",
+            pool_recycle=18000,
+            pool_pre_ping=True
+        )
+
+        xref_db = create_engine(
+            make_url(xref_url),
+            isolation_level="AUTOCOMMIT",
+            pool_recycle=18000,
+            pool_pre_ping=True
+        )
 
         # Extract host and dbname from xref URL
         xref_url_obj = make_url(xref_url)

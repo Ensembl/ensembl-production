@@ -14,6 +14,7 @@
 
 """Mapper module for processing coordinate xref data."""
 
+import os
 import subprocess
 import logging
 from datetime import datetime

@@ -18,10 +18,11 @@ import logging
 import re
 from datetime import datetime
 from typing import Dict, List, Tuple
-from sqlalchemy import select, insert, update, delete, case, desc, func
+from sqlalchemy import select, update, delete, case, desc, func
 from sqlalchemy.orm import aliased
 from sqlalchemy.engine import Connection
 from sqlalchemy.sql import Select
+from sqlalchemy.dialects.mysql import insert
 
 from ensembl.core.models import (
     Gene as GeneORM,
@@ -127,7 +128,7 @@ class DisplayXrefs(BasicMapper):
                             ensembl_object_type=object_type,
                             source_id=row.source_id,
                             priority=priority,
-                        )
+                        ).on_duplicate_key_update(priority=priority)
                     )
                     logging.info(f"{priority} - {row.name}")
 
