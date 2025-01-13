@@ -28,7 +28,7 @@ use POSIX qw(strftime);
 
 use Nextflow::Utils;
 
-my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $update_mode, $log_timestamp);
+my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $tax_ids_list, $update_mode, $log_timestamp);
 GetOptions(
   'base_path=s'     => \$base_path,
   'source_db_url=s' => \$source_db_url,
@@ -37,6 +37,7 @@ GetOptions(
   'clean_files=i'   => \$clean_files,
   'version_file:s'  => \$version_file,
   'tax_ids_file:s'  => \$tax_ids_file,
+  'tax_ids_list:s'  => \$tax_ids_list,
   'update_mode:i'   => \$update_mode,
   'log_timestamp:s' => \$log_timestamp
 );
@@ -56,6 +57,7 @@ if (defined($log_timestamp)) {
 
   add_to_log_file($log_file, "CleanupSplitSource starting for source $source_name");
   add_to_log_file($log_file, "Param: tax_ids_file = $tax_ids_file") if $tax_ids_file;
+  add_to_log_file($log_file, "Param: tax_ids_list = $tax_ids_list") if $tax_ids_list;
 }
 
 # Do nothing if not a uniprot or refseq source
@@ -100,13 +102,19 @@ if ($source_name =~ /^Uniprot/) {
 
 # Extract taxonomy IDs
 my %tax_ids;
-my ($skipped_species, $added_species) = (0, 0);
-if ($tax_ids_file && $update_mode) {
+if ($tax_ids_list) {
+  $tax_ids_list =~ s/\s*,\s*/,/g;
+  %tax_ids = map { $_ => 1} split(",", $tax_ids_list);
+} elsif ($tax_ids_file) {
   open my $fh, '<', $tax_ids_file or die "Couldn't open tax_ids_file '$tax_ids_file' $!";
   chomp(my @lines = <$fh>);
   close $fh;
   %tax_ids = map { $_ => 1 } @lines;
+}
 
+my $tax_ids_filter = ($tax_ids_file || $tax_ids_list ? 1 : 0);
+my ($skipped_species, $added_species) = (0, 0);
+if ($tax_ids_filter && $update_mode) {
   # Check if any taxonomy IDs already have files
   foreach my $tax_id (keys %tax_ids) {
     my @tax_files = glob(catfile($output_path, "**", "**", "**", "**", "$output_file_name-$tax_id"));
@@ -165,7 +173,7 @@ foreach my $input_file (@files) {
 
       # Only continue with wanted species
       next unless $species_id;
-      next if $tax_ids_file && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id});
+      next if $tax_ids_filter && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id});
 
       # Clean up data
       if ($clean_files) {

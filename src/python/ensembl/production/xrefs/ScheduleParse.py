@@ -37,7 +37,6 @@ class ScheduleParse(Base):
         order_priority: int = self.get_param("priority", {"required": True, "type": int})
         source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
         xref_db_url: str = self.get_param("xref_db_url", {"required": True, "type": str})
-        get_species_file: bool = self.get_param("get_species_file", {"required": True, "type": bool})
         core_db_url: Optional[str] = self.get_param("species_db", {"type": str})
 
         logging.info(f"ScheduleParse starting for species '{species_name}'")
@@ -194,18 +193,17 @@ class ScheduleParse(Base):
                 )
 
                 # For Uniprot and Refseq, files might have been split by species
-                if get_species_file:
-                    file_prefix = {
-                        "Uniprot/SWISSPROT": "uniprot_sprot",
-                        "Uniprot/SPTREMBL": "uniprot_trembl",
-                        "RefSeq_dna": "refseq_rna",
-                        "RefSeq_peptide": "refseq_protein",
-                    }.get(source.name)
+                file_prefix = {
+                    "Uniprot/SWISSPROT": "uniprot_sprot",
+                    "Uniprot/SPTREMBL": "uniprot_trembl",
+                    "RefSeq_dna": "refseq_rna",
+                    "RefSeq_peptide": "refseq_protein",
+                }.get(source.name)
 
-                    if file_prefix:
-                        list_files = glob.glob(
-                            f"{file_name}/**/{file_prefix}-{species_id}", recursive=True
-                        )
+                if file_prefix:
+                    list_files = glob.glob(
+                        f"{file_name}/**/{file_prefix}-{species_id}", recursive=True
+                    )
 
                 if source.name == "ZFIN_ID":
                     list_files = [list_files[0]]
@@ -218,8 +216,7 @@ class ScheduleParse(Base):
                     dataflow_params["file_name"] = file
 
                     if re.search(r"^Uniprot", source.name) and hgnc_path:
-                        hgnc_files = glob.glob(os.path.join(hgnc_path, "*"))
-                        dataflow_params["hgnc_file"] = hgnc_files[0]
+                        dataflow_params["hgnc_file"] = hgnc_path
 
                     self.write_output(dataflow_suffix, dataflow_params)
                     total_sources += 1

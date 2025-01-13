@@ -4,11 +4,6 @@
 params.pipeline_name = 'Xref Process Pipeline'
 params.help = false
 
-// Ensure all paths are absolute
-params.scripts_dir = file(params.scripts_dir).toAbsolutePath().toString()
-params.perl_scripts_dir = file(params.perl_scripts_dir).toAbsolutePath().toString()
-params.base_path = file(params.base_path).toAbsolutePath().toString()
-
 println """\
         XREF PROCESS PIPELINE
         ======================
@@ -21,7 +16,6 @@ println """\
         species                   : ${params.species}
         antispecies               : ${params.antispecies}
         division                  : ${params.division}
-        split_files_by_species    : ${params.split_files_by_species}
         sources_config_file       : ${params.sources_config_file}
         registry_file             : ${params.registry_file}
         dc_config_file            : ${params.dc_config_file}
@@ -56,9 +50,6 @@ def helpMessage() {
 
     --division                  (optional)      Comma-separated list of divisions to run pipeline on.
                                                 Will be disregarded if --run_all is set to 1.
-
-    --split_files_by_species    (optional)      If set to 1, UniProt and RefSeq file will be split according to taxonomy ID.
-                                                Default: 1
 
     --sources_config_file       (optional)      Path to the ini file containing information about all xref sources and species/divisions.
                                                 Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_config.ini
@@ -175,7 +166,10 @@ workflow species_flow {
         // Run datachecks
         RunXrefCriticalDatacheck(Mapping.out)
         RunXrefAdvisoryDatacheck(RunXrefCriticalDatacheck.out)
-        advisory_report_ch = process_output(RunXrefAdvisoryDatacheck.out)
+
+	    dataflow_combined = RunXrefAdvisoryDatacheck.out.dataflow_success
+            .mix(RunXrefAdvisoryDatacheck.out.dataflow_fail)
+        advisory_report_ch = process_output(dataflow_combined)
 
         // Collect advisory datacheck outputs
         AdvisoryXrefReport(advisory_report_ch, timestamp)
@@ -248,14 +242,8 @@ process ScheduleParse {
     tuple val(species_name), path('dataflow_primary_sources.json')
     tuple val(species_name), path('dataflow_schedule_secondary.json')
 
-    shell:
-    cmd_params = ""
-    if (params.split_files_by_species) {
-        cmd_params = "${cmd_params} --get_species_file 1"
-    }
-
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 1 --sources_config_file ${params.sources_config_file} --source_db_url ${params.source_db_url} --xref_db_url ${params.xref_db_url} --base_path ${params.base_path} --log_timestamp $timestamp $cmd_params
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 1 --sources_config_file ${params.sources_config_file} --source_db_url ${params.source_db_url} --xref_db_url ${params.xref_db_url} --base_path ${params.base_path} --log_timestamp $timestamp
     """
 }
 
@@ -291,14 +279,8 @@ process ScheduleSecondaryParse {
     tuple val(species_name), path('dataflow_secondary_sources.json')
     tuple val(species_name), path('dataflow_schedule_tertiary.json')
 
-    shell:
-    cmd_params = ""
-    if (params.split_files_by_species) {
-        cmd_params = "${cmd_params} --get_species_file 1"
-    }
-
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 2 --source_db_url ${params.source_db_url} --base_path ${params.base_path} --log_timestamp $timestamp $cmd_params
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 2 --source_db_url ${params.source_db_url} --base_path ${params.base_path} --log_timestamp $timestamp
     """
 }
 
@@ -334,14 +316,8 @@ process ScheduleTertiaryParse {
     tuple val(species_name), path('dataflow_tertiary_sources.json')
     tuple val(species_name), path('dataflow_dump_ensembl.json')
 
-    shell:
-    cmd_params = ""
-    if (params.split_files_by_species) {
-        cmd_params = "${cmd_params} --get_species_file 1"
-    }
-
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 3 --source_db_url ${params.source_db_url} --base_path ${params.base_path} --log_timestamp $timestamp $cmd_params
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleParse --dataflow '$dataflow' --release ${params.release} --registry_url ${params.registry_url} --priority 3 --source_db_url ${params.source_db_url} --base_path ${params.base_path} --log_timestamp $timestamp
     """
 }
 
@@ -365,7 +341,7 @@ process ParseTertiarySource {
 }
 
 process DumpEnsembl {
-    label 'default_process'
+    label 'mem10GB'
     tag "$species_name"
 
     input:
@@ -386,7 +362,7 @@ process DumpEnsembl {
 }
 
 process DumpXref {
-    label 'mem1GB'
+    label 'mem4GB'
     tag "$species_name"
 
     input:
@@ -439,7 +415,7 @@ process Alignment {
 }
 
 process ScheduleMapping {
-    label 'small_process'
+    label 'mem1GB'
     tag "$species_name"
 
     input:
@@ -564,7 +540,7 @@ process RunXrefCriticalDatacheck {
     val species_name
 
     """
-    perl ${params.perl_scripts_dir}/run_process.pl -class='Nextflow::RunDataChecks' -datacheck_names='ForeignKeys' -datacheck_groups='xref_mapping' -datacheck_types='critical' -registry_file=${params.registry_file} -config_file=${params.dc_config_file} -history_file='${params.history_file}' -old_server_uri='${params.old_server_uri}' -failures_fatal=1 -species=$species_name
+    perl ${params.perl_scripts_dir}/run_process.pl -class='Nextflow::RunDataChecks' -datacheck_names='ForeignKeys' -datacheck_groups='xref_mapping' -datacheck_types='critical' -registry_file=${params.registry_file} -config_file=${params.dc_config_file} -failures_fatal=1 -species=$species_name
     """
 }
 
@@ -576,16 +552,17 @@ process RunXrefAdvisoryDatacheck {
     val species_name
 
     output:
-    tuple val(species_name), path('dataflow_4.json')
+    tuple val(species_name), path('dataflow_3.json'), emit: dataflow_success, optional: true
+    tuple val(species_name), path('dataflow_4.json'), emit: dataflow_fail, optional: true
 
     """
-    perl ${params.perl_scripts_dir}/run_process.pl -class='Nextflow::RunDataChecks' -datacheck_groups='xref_mapping' -datacheck_types='advisory' -registry_file=${params.registry_file} -config_file=${params.dc_config_file} -history_file='${params.history_file}' -old_server_uri='${params.old_server_uri}' -failures_fatal=0 -species=$species_name
+    perl ${params.perl_scripts_dir}/run_process.pl -class='Nextflow::RunDataChecks' -datacheck_groups='xref_mapping' -datacheck_types='advisory' -registry_file=${params.registry_file} -config_file=${params.dc_config_file} -failures_fatal=0 -species=$species_name
     """
 }
 
 process AdvisoryXrefReport {
     label 'default_process'
-    tag "$species_name - $dc_name"
+    tag "$species_name"
 
     input:
     tuple val(species_name), val(dataflow)
@@ -593,9 +570,6 @@ process AdvisoryXrefReport {
 
     output:
     val species_name
-
-    shell:
-    dc_name = (dataflow =~ /"datacheck_name":\s*"([A-Za-z]+)"/)[0][1]
 
     script:
     formatted_dataflow = dataflow.replace("'", '__')

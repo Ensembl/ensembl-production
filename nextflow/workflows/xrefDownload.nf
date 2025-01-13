@@ -4,12 +4,6 @@
 params.pipeline_name = 'Xref Download Pipeline'
 params.help = false
 
-// Ensure all paths are absolute
-params.scripts_dir = file(params.scripts_dir).toAbsolutePath().toString()
-params.perl_scripts_dir = file(params.perl_scripts_dir).toAbsolutePath().toString()
-params.base_path = file(params.base_path).toAbsolutePath().toString()
-params.clean_dir = file(params.clean_dir).toAbsolutePath().toString()
-
 println """\
         XREF DOWNLOAD PIPELINE
         ======================
@@ -18,10 +12,10 @@ println """\
         reuse_db                  : ${params.reuse_db}
         skip_download             : ${params.skip_download}
         clean_files               : ${params.clean_files}
-        split_files_by_species    : ${params.split_files_by_species}
         config_file               : ${params.config_file}
         clean_dir                 : ${params.clean_dir}
         tax_ids_file              : ${params.tax_ids_file}
+        tax_ids_list              : ${params.tax_ids_list}
         update_mode               : ${params.update_mode}
         """
         .stripIndent()
@@ -45,9 +39,6 @@ def helpMessage() {
         --clean_files               (optional)      If set to 1, the Cleanup analysis will be run for RefSeq and UniProt files.
                                                     Default: 1
 
-        --split_files_by_species    (optional)      If set to 1, UniProt and RefSeq file will be split according to taxonomy ID.
-                                                    Default: 1
-
         --config_file               (optional)      Path to the json file containing information about xref sources to download.
                                                     Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_all_sources.json
 
@@ -55,10 +46,13 @@ def helpMessage() {
                                                     Default: [--base_path]/clean_files
 
         --tax_ids_file              (optional)      Path to the file containing the taxonomy IDs of the species to extract data for.
-                                                    Used to update the data for the provided species.
+                                                    Each taxonomy ID on a line.
+        
+        --tax_ids_list              (optional)      List of taxonomy IDs of the species to extract data for, separated by commas.
+                                                    Takes precedence over --tax_ids_file.
 
         --update_mode               (optional)      If set to 1, pipeline is in update mode, refreshing/updating its data for new taxonomy IDs.
-                                                    Only used if --tax_ids_file is set. Default: 0
+                                                    Only used if --tax_ids_file or --tax_ids_list are set. Default: 0
     """.stripIndent()
 }
 
@@ -89,13 +83,8 @@ workflow {
     ScheduleCleanup(CleanupTmpFiles.out, timestamp)
 
     Checksum(ScheduleCleanup.out[0], timestamp)
-    if (params.split_files_by_species) {
-        CleanupSplitSource(ScheduleCleanup.out[1].ifEmpty([]).splitText(), timestamp)
-        NotifyByEmail(Checksum.out.concat(CleanupSplitSource.out.collect()).collect(), timestamp)
-    } else {
-        CleanupSource(ScheduleCleanup.out[1].ifEmpty([]).splitText(), timestamp)
-        NotifyByEmail(Checksum.out.concat(CleanupSource.out.collect()).collect(), timestamp)
-    }
+    CleanupSplitSource(ScheduleCleanup.out[1].ifEmpty([]).splitText(), timestamp)
+    NotifyByEmail(Checksum.out.concat(CleanupSplitSource.out.collect()).collect(), timestamp)
 }
 
 process ScheduleDownload {
@@ -158,7 +147,7 @@ process ScheduleCleanup {
     path 'dataflow_cleanup_sources.json'
 
     """
-    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleCleanup --base_path ${params.base_path} --source_db_url ${params.source_db_url} --clean_files ${params.clean_files} --clean_dir ${params.clean_dir} --split_files_by_species ${params.split_files_by_species} --log_timestamp $timestamp
+    python ${params.scripts_dir}/run_module.py --module ensembl.production.xrefs.ScheduleCleanup --base_path ${params.base_path} --source_db_url ${params.source_db_url} --clean_files ${params.clean_files} --clean_dir ${params.clean_dir} --log_timestamp $timestamp
     """
 }
 
@@ -195,36 +184,14 @@ process CleanupSplitSource {
         version_file = (x =~ /"version_file":\s*"(.*?)"/)[0][1]
         cmd_params = "${cmd_params} --version_file '${version_file}'"
     }
-    if (params.tax_ids_file) {
+    if (params.tax_ids_list) {
+        cmd_params = "${cmd_params} --tax_ids_list ${params.tax_ids_list}"
+    } else if (params.tax_ids_file) {
         cmd_params = "${cmd_params} --tax_ids_file ${params.tax_ids_file}"
     }
 
     """
     perl ${params.perl_scripts_dir}/cleanup_and_split_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --clean_files ${params.clean_files} --update_mode ${params.update_mode} $cmd_params
-    """
-}
-
-process CleanupSource {
-    label 'cleanup_mem'
-    tag "$src_name"
-
-    input:
-    val x
-    val timestamp
-
-    output:
-    val 'CleanupDone'
-
-    shell:
-    cmd_params = ""
-    src_name = (x =~ /"name":\s*"([A-Za-z0-9_.-\/]+)"/)[0][1]
-    if (x =~ /"version_file":/) {
-        version_file = (x =~ /"version_file":\s*"(.*?)"/)[0][1]
-        cmd_params = "${cmd_params} --version_file '${version_file}'"
-    }
-
-    """
-    perl ${params.perl_scripts_dir}/cleanup_source.pl --base_path ${params.base_path} --log_timestamp $timestamp --source_db_url ${params.source_db_url} --name $src_name --clean_dir ${params.clean_dir} --skip_download ${params.skip_download} --clean_files ${params.clean_files} $cmd_params
     """
 }
 
