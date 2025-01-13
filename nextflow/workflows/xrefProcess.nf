@@ -16,6 +16,7 @@ println """\
         species                   : ${params.species}
         antispecies               : ${params.antispecies}
         division                  : ${params.division}
+        config_file               : ${params.config_file}
         sources_config_file       : ${params.sources_config_file}
         registry_file             : ${params.registry_file}
         dc_config_file            : ${params.dc_config_file}
@@ -50,6 +51,9 @@ def helpMessage() {
 
     --division                  (optional)      Comma-separated list of divisions to run pipeline on.
                                                 Will be disregarded if --run_all is set to 1.
+
+    --config_file               (optional)      Path to the json file containing information about xref sources to download.
+                                                Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_all_sources.json
 
     --sources_config_file       (optional)      Path to the ini file containing information about all xref sources and species/divisions.
                                                 Default: $BASE_DIR/ensembl_nf/src/python/ensembl/xrefs/config/xref_config.ini
