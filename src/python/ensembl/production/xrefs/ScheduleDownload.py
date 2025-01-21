@@ -14,60 +14,57 @@
 
 """Scheduling module to create download jobs for all xref sources in config file."""
 
-from ensembl.production.xrefs.Base import *
+import json
+import logging
+
+from ensembl.production.xrefs.Base import Base
 
 class ScheduleDownload(Base):
-  def run(self):
-    config_file     = self.param_required('config_file')
-    source_db_url   = self.param_required('source_db_url')
-    reuse_db        = self.param_required('reuse_db', {'type': 'bool'})
-    skip_preparse   = self.param('skip_preparse', None, {'type': 'bool', 'default' : False})
+    def run(self) -> None:
+        config_file: str = self.get_param("config_file", {"required": True, "type": str})
+        source_db_url: str = self.get_param("source_db_url", {"required": True, "type": str})
+        reuse_db: bool = self.get_param("reuse_db", {"required": True, "type": bool})
 
-    logging.info('ScheduleDownload starting with parameters:')
-    logging.info(f'Param: config_file = {config_file}')
-    logging.info(f'Param: source_db_url = {source_db_url}')
-    logging.info(f'Param: reuse_db = {reuse_db}')
-    logging.info(f'Param: skip_preparse = {skip_preparse}')
+        logging.info("ScheduleDownload starting with parameters:")
+        logging.info(f"\tParam: config_file = {config_file}")
+        logging.info(f"\tParam: source_db_url = {source_db_url}")
+        logging.info(f"\tParam: reuse_db = {reuse_db}")
 
-    # Create the source db from url
-    self.create_source_db(source_db_url, reuse_db)
+        # Create the source db from url
+        self.create_source_db(source_db_url, reuse_db)
 
-    # Extract sources to download from config file
-    sources = []
-    with open(config_file) as conf_file:
-      sources = json.load(conf_file)
+        # Extract sources to download from config file
+        with open(config_file) as conf_file:
+            sources = json.load(conf_file)
 
-    if len(sources) < 1:
-      raise IOError(f'No sources found in config file {config_file}. Need sources to run pipeline')
+        if not sources:
+            raise ValueError(
+                f"No sources found in config file {config_file}. Need sources to run pipeline"
+            )
 
-    for source_data in sources:
-      name         = source_data['name']
-      parser       = source_data['parser']
-      priority     = source_data['priority']
-      file         = source_data['file']
-      db           = source_data.get('db')
-      version_file = source_data.get('release')
-      preparse     = source_data.get('preparse')
-      rel_number   = source_data.get('release_number')
-      catalog      = source_data.get('catalog')
+        for source_data in sources:
+            name = source_data["name"]
+            parser = source_data["parser"]
+            priority = source_data["priority"]
+            file = source_data["file"]
+            db = source_data.get("db")
+            version_file = source_data.get("release")
+            rel_number = source_data.get("release_number")
+            catalog = source_data.get("catalog")
 
-      logging.info(f'Source to download: {name}')
+            logging.info(f"Source to download: {name}")
 
-      # Revert to the old parser if not pre-parsing
-      if preparse and skip_preparse:
-        parser = source_data['old_parser']
-        preparse = 0
-
-      # Pass the source parameters into download jobs
-      self.write_output('sources', {
-        'parser'       : parser,
-        'name'         : name,
-        'priority'     : priority,
-        'db'           : db,
-        'version_file' : version_file,
-        'preparse'     : preparse,
-        'file'         : file,
-        'rel_number'   : rel_number,
-        'catalog'      : catalog
-      })
-
+            # Pass the source parameters into download jobs
+            self.write_output(
+                "sources",
+                {
+                    "parser": parser,
+                    "name": name,
+                    "priority": priority,
+                    "db": db,
+                    "version_file": version_file,
+                    "file": file,
+                    "rel_number": rel_number,
+                    "catalog": catalog,
+                },
+            )

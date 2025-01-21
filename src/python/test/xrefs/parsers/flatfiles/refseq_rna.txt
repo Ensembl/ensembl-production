@@ -1,0 +1,508 @@
+LOCUS       NR_168385               3420 bp    RNA     linear   PRI 13-MAY-2020
+DEFINITION  Homo sapiens LOC105373289 (LOC105373289), transcript variant 6,
+            long non-coding RNA.
+ACCESSION   NR_168385
+VERSION     NR_168385.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..3420
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="1"
+                     /map="1q42.13"
+     gene            1..3420
+                     /gene="LOC105373289"
+                     /note="LOC105373289"
+                     /db_xref="GeneID:105373289"
+     ncRNA           1..3420
+                     /ncRNA_class="lncRNA"
+                     /gene="LOC105373289"
+                     /product="LOC105373289, transcript variant 6"
+                     /db_xref="GeneID:105373289"
+ORIGIN      
+        1 agcagggcgt ccagcggaga aggcagagga ggggagatgc gggctcctcc aggtagcgca
+       61 ggagcccctc cggctgccgg agccccgcga gggcgcgagt ggagggcagg agcccgggcg
+      121 gcggaggagc ggaagggatg ctgcgttgcc ttggagtgtc agggtggggg aggaaagacc
+      181 aagggaccca cgtccttcgc ccccgccgcg gagtcccggg ccggcgagac ttccgcagcc
+      241 tgcccagcgc cggggaccta gggctttgca ggagtccgcc cgggagctct atcagagcgg
+      301 gcgtcctccc cgccgctcca aaggtggctt ggggcaggtg gggcgtcccg gagggaatgg
+      361 agggaccctg cctagggaag gagggatttc gctgcctgtg gggcttcagt gctgaaccag
+      421 gcagccctga gcagaccagg accgagcttc ccaaacctga ccgggaagga gccctggttg
+      481 catctgggat ccacgtggtc gacagagaat cagctcgcag ctcaccaccc cagtgacttc
+      541 agggcagccc accttcccct ggcgctcctc aaacgagcca gggagtggcc cctgctcaga
+      601 ctcccctcct gcctcccgga ccctgcaggc ctacccgccc cagttgccct ttgccctcct
+      661 gcagccttct gggggtgcta catgtctgag gcccggtctt ctgtcctgct cctcctgatg
+      721 gggggtctgg gcactctccc taattcatcg cgaagactct gacacccaat gcccgtcttc
+      781 aggccccggc agatgcagag aagtgggctt cacacccaca tctgcctgac ctcaggtgct
+      841 ggctcctgca gtcacagccc tgagccccgg cccctccagg ctgtctcctg cttgtccagg
+      901 tgggcatgag ctggtcagtt cctggccact gcccttcaga ccccatgcca ggactttggg
+      961 ttgggctctg ggcatggcac tagccaggcc tgggtgcctc cttgagcagc tgagggctgg
+     1021 gagggatgac aatgtaagcg gctatctggc ttcaggccca ggctggccat ctggtggcca
+//
+LOCUS       NR_168384               3463 bp    RNA     linear   PRI 13-MAY-2020
+DEFINITION  Homo sapiens LOC105373289 (LOC105373289), transcript variant 5,
+            long non-coding RNA.
+ACCESSION   NR_168384
+VERSION     NR_168384.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..3463
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="1"
+                     /map="1q42.13"
+     gene            1..3463
+                     /gene="LOC105373289"
+                     /note="LOC105373289"
+                     /db_xref="GeneID:105373289"
+     ncRNA           1..3463
+                     /ncRNA_class="lncRNA"
+                     /gene="LOC105373289"
+                     /product="LOC105373289, transcript variant 5"
+                     /db_xref="GeneID:105373289"
+ORIGIN      
+        1 agcagggcgt ccagcggaga aggcagagga ggggagatgc gggctcctcc aggtagcgca
+       61 ggagcccctc cggctgccgg agccccgcga gggcgcgagt ggagggcagg agcccgggcg
+      121 gcggaggagc ggaagggatg ctgcgttgcc ttggagtgtc agggtggggg aggaaagacc
+      181 aagggaccca cgtccttcgc ccccgccgcg gagtcccggg ccggcgagac ttccgcagcc
+      241 tgcccagcgc cggggaccta gggctttgca ggagtccgcc cgggagctct atcagagcgg
+      301 gcgtcctccc cgccgctcca aaggtggctt ggggcaggtg gggcgtcccg gagggaatgg
+      361 agggaccctg cctagggaag tctggcacat tcctccccaa acaccggcgt cttcccatgg
+      421 caggagggat ttcgctgcct gtggggcttc agtgctgaac caggcagccc tgagcagacc
+      481 aggaccgagc ttcccaaacc tgaccgggaa ggagccctgg ttgcatctgg gatccacgtg
+      541 gtcgacagag aatcagctcg cagctcacca ccccagtgac ttcagggcag cccaccttcc
+      601 cctggcgctc ctcaaacgag ccagggagtg gcccctgctc agactcccct cctgcctccc
+      661 ggaccctgca ggcctacccg ccccagttgc cctttgccct cctgcagcct tctgggggtg
+      721 ctacatgtct gaggcccggt cttctgtcct gctcctcctg atggggggtc tgggcactct
+      781 ccctaattca tcgcgaagac tctgacaccc aatgcccgtc ttcaggcccc ggcagatgca
+      841 gagaagtggg cttcacaccc acatctgcct gacctcaggt gctggctcct gcagtcacag
+      901 ccctgagccc cggcccctcc aggctgtctc ctgcttgtcc aggtgggcat gagctggtca
+      961 gttcctggcc actgcccttc agaccccatg ccaggacttt gggttgggct ctgggcatgg
+     1021 agaagtattc tgcttgacat acataaaaat gcataattca aaa
+//
+LOCUS       XR_168380               3423 bp    RNA     linear   PRI 13-MAY-2020
+DEFINITION  Homo sapiens LOC105373289 (LOC105373289), transcript variant 1,
+            long non-coding RNA.
+ACCESSION   XR_168380
+VERSION     XR_168380.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..3423
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="1"
+                     /map="1q42.13"
+     gene            1..3423
+                     /gene="LOC105373289"
+                     /note="LOC105373289"
+                     /db_xref="GeneID:105373289"
+     ncRNA           1..3423
+                     /ncRNA_class="lncRNA"
+                     /gene="LOC105373289"
+                     /product="LOC105373289, transcript variant 1"
+                     /db_xref="GeneID:105373289"
+ORIGIN      
+        1 agtcccaggg aggagaccgc gggagaggcg gcgggaccag ggtcccggcc ttcagcggct
+       61 tgctccgcac actcagggtt ccccggccct ctggcgctgg gggagttggg tcggttgtgc
+      121 atgctgcatg gccggaggct cggggccaag gccacccttc cgcacccacc actctgggag
+      181 gctccagagc gcggccctga gatagtgcca cactcacccc ctggaaagga ggcaaggccg
+      241 ccctggacgg aggcgactcg gagtcccggg aggaaggaac ggacacaccg gcctccctgc
+      301 ggaggaggga gaacgtggtc cccagtggta tcaggaagag tctggcacat tcctccccaa
+      361 acaccggcgt cttcccatgg caggagggat ttcgctgcct gtggggcttc agtgctgaac
+      421 caggcagccc tgagcagacc aggaccgagc ttcccaaacc tgaccgggaa ggagccctgg
+      481 ttgcatctgg gatccacgtg gtcgacagag aatcagctcg cagctcacca ccccagtgac
+      541 ttcagggcag cccaccttcc cctggcgctc ctcaaacgag ccagggagtg gcccctgctc
+      601 agactcccct cctgcctccc ggaccctgca ggcctacccg ccccagttgc cctttgccct
+      661 cctgcagcct tctgggggtg ctacatgtct gaggcccggt cttctgtcct gctcctcctg
+      721 atggggggtc tgggcactct ccctaattca tcgcgaagac tctgacaccc aatgcccgtc
+      781 ttcaggcccc ggcagatgca gagaagtggg cttcacaccc acatctgcct gacctcaggt
+      841 gctggctcct gcagtcacag ccctgagccc cggcccctcc aggctgtctc ctgcttgtcc
+      901 aggtgggcat gagctggtca gttcctggcc actgcccttc agaccccatg ccaggacttt
+      961 gggttgggct ctgggcatgg cactagccag gcctgggtgc ctccttgagc agctgagggc
+     1021 tgggagggat gacaatgtaa gcggctatct ggcttcaggc ccaggctggc catctggtgg
+     1081 aaa
+//
+LOCUS       NM_001242328                925 bp    RNA     linear   PRI 14-MAY-2020
+DEFINITION  Homo sapiens uncharacterized LOC107985524 (LOC107985524), long
+            non-coding RNA.
+ACCESSION   NM_001242328 XM_024452028
+VERSION     NM_001242328.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..925
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="1"
+                     /map="1p11.2"
+     gene            1..925
+                     /gene="LOC107985524"
+                     /note="uncharacterized LOC107985524"
+                     /db_xref="GeneID:107985524"
+     ncRNA           1..925
+                     /ncRNA_class="lncRNA"
+                     /gene="LOC107985524"
+                     /product="uncharacterized LOC107985524"
+                     /db_xref="GeneID:107985524"
+ORIGIN      
+        1 gcacacctgg ctcacggcga gtgcggagca gaaagcacta ctggcgcggg ccacagccag
+       61 ccgctttcat ctgctaagac ctcacctgaa aggcgcacca gtgccctcaa ggatcctccc
+      121 gcctctgcag gatgtcgagg ctcctcctcg ccgggaggag aaagcggaat cccctccctg
+      181 cattctcgga cagtgccacg tcctccggct gccagcgggg cagcgccgct aggtatgtga
+      241 gcttcaaagt tggaagaaat taagcaacat gctttggaat ctatggtgat ctatagaaag
+      301 gcaaagtttc tggactcacc ctgactgatg gaaagacaga ctgcctgcca ggacactacc
+      361 ctgctgtacc cagtcttaag tataataaag atctcatttt ttactgtcaa tgcaagccac
+      421 attttcctat taggaaaatg tgaatgaaac aaagtgctct tcaagagcaa accctgaatt
+      481 atactttggg ttattctctg ttcctcaaaa ggattttgca tctaactgat agtctccaaa
+      541 ttgtaatgac agtatataga tagcttggtg tagacataca ggtcaataca aatggagaaa
+      601 aggcaatttg ccattgaaga atatgtttgc tttaagtaaa gatcaatata ctaagaaagc
+      661 tatacatatc tagacttcca aaaacagatg ggaataaact actcagcaat cagaatattc
+      721 gaagatggca ctctgttcac ttccagagaa aatagttcaa aactgtatct caaagtggat
+      781 ataagctatt gtactagaat tagtccctgt gtgagcattt ggcattataa aataagatgt
+      841 tcccaatgaa aagatcactg gtatgtagat aataaaatgt gaaaataaaa atttaaaaat
+      901 aaaacaaaaa ttatgtgata ataaa
+//
+LOCUS       NM_028389               2517 bp    RNA     linear   PRI 17-MAY-2020
+DEFINITION  Homo sapiens ACVR2B antisense RNA 1 (ACVR2B-AS1), long non-coding
+            RNA.
+ACCESSION   NM_028389 XM_001717717
+VERSION     NM_028389.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..2517
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="3"
+                     /map="3p22.2"
+     gene            1..2517
+                     /gene="ACVR2B-AS1"
+                     /note="ACVR2B antisense RNA 1"
+                     /db_xref="GeneID:100128640"
+                     /db_xref="HGNC:HGNC:44161"
+     ncRNA           1..2517
+                     /ncRNA_class="lncRNA"
+                     /gene="ACVR2B-AS1"
+                     /product="ACVR2B antisense RNA 1"
+                     /db_xref="GeneID:100128640"
+                     /db_xref="HGNC:HGNC:44161"
+ORIGIN      
+        1 gctacactta gtgactctga gggacatgca accctccccg catgctgctg ctgctgctgc
+       61 acctacaatc ctgccacccc caatgagatc tgcccacccc tcttggccgc cttccccacg
+      121 ctcaggtttt cctcactctt tccctgggtt ccacgcgccc gcgtagcccg aactccgacc
+      181 ctgaggctcc gcgtcccggc ccccatcgca ggggcgcctc taggaaccag aatcccgcag
+      241 atgactgcac agacaagatc gtgcccccaa gttcggcgag ccgggcgccc accgcgcccc
+      301 cagcccacgc ccccggagtt cctgcgccac ccacagcggc cctgagcttc aatctgcact
+      361 gactgcactc ccatctcctt ggctgcagca cctgattaaa gccttcttcc ttggcaa
+//
+LOCUS       NM_039609                 79 bp    RNA     linear   PRI 17-MAY-2020
+DEFINITION  Homo sapiens microRNA 378e (MIR378E), microRNA.
+ACCESSION   NM_039609
+VERSION     NM_039609.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..79
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="5"
+                     /map="5q35.1"
+     gene            1..79
+                     /gene="MIR378E"
+                     /gene_synonym="mir-378e"
+                     /note="microRNA 378e"
+                     /db_xref="GeneID:100616498"
+                     /db_xref="HGNC:HGNC:41671"
+                     /db_xref="miRBase:MI0016750"
+     precursor_RNA   1..79
+                     /gene="MIR378E"
+                     /gene_synonym="mir-378e"
+                     /product="microRNA 378e"
+                     /db_xref="GeneID:100616498"
+                     /db_xref="HGNC:HGNC:41671"
+                     /db_xref="miRBase:MI0016750"
+ORIGIN      
+        1 ctgactccag tgtccaggcc aggggcagac agtggacaga gaacagtgcc caagaccact
+       61 ggacttggag tcaggacat
+//
+LOCUS       NM_039939                 83 bp    RNA     linear   PRI 24-MAY-2020
+DEFINITION  Homo sapiens microRNA 4779 (MIR4779), microRNA.
+ACCESSION   NM_039939
+VERSION     NM_039939.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..83
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="2"
+                     /map="2p11.2"
+     gene            1..83
+                     /gene="MIR4779"
+                     /note="microRNA 4779"
+                     /db_xref="GeneID:100616159"
+                     /db_xref="HGNC:HGNC:41747"
+                     /db_xref="miRBase:MI0017423"
+     precursor_RNA   1..83
+                     /gene="MIR4779"
+                     /product="microRNA 4779"
+                     /db_xref="GeneID:100616159"
+                     /db_xref="HGNC:HGNC:41747"
+                     /db_xref="miRBase:MI0017423"
+ORIGIN      
+        1 taaatgtctt actgctttta ctgttccctc ctagagtcca ttctttactc taggagggaa
+       61 tagtaaaagc agtaagacat tta
+//
+LOCUS       NM_003928               2843 bp    RNA     linear   PRI 31-MAY-2020
+DEFINITION  Homo sapiens chitinase, acidic pseudogene 2 (CHIAP2), non-coding
+            RNA.
+ACCESSION   NM_003928
+VERSION     NM_003928.2
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..2843
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="1"
+                     /map="1p13.2"
+     gene            1..2843
+                     /gene="CHIAP2"
+                     /note="chitinase, acidic pseudogene 2"
+                     /pseudo
+                     /db_xref="GeneID:149620"
+                     /db_xref="HGNC:HGNC:44463"
+     misc_RNA        1..2843
+                     /gene="CHIAP2"
+                     /product="chitinase, acidic pseudogene 2"
+                     /pseudo
+                     /db_xref="GeneID:149620"
+                     /db_xref="HGNC:HGNC:44463"
+ORIGIN      
+        1 gtctgctcct tgtgctgaca gctgaaatag gctctgccta ccagctgaca tgttacttca
+       61 ccaactgggc ccagaaccag ccaggcctgg ggtgcttcaa gcctgatgac atcgacccct
+      121 gcctctgtac ccacttgatc tacgcctttg ctggaatgca gaacaacgag atcaccacca
+      181 tcgaatggga tgacatgact ctctaccaag ctttcaatgg cctgaaaaac aagtaaatga
+      241 cggaaaacct gagtttcaaa tcttttaacc tttaaggaca gtttaaacaa gatcttccac
+      301 agcagacttc aggctgaaat tccaaacagg ccaacaagca ggtaaattca gctttcttat
+      361 tatttcaagt gcaagaatga ctctaatttt aaggggaatg gctggctcac agaagctagc
+      421 tgctaactaa agcccagctc agttgccaag ggaagcttat aagtccaact actggtggac
+      481 tcagttgaga acaatcttcc acttagaagc aatccaaagc tggcattgat aaagcattca
+      541 gtctccttgg tcaggagatt cactcctagg gaaataattg gaactgtgga gacattgggg
+      601 aaaaaaaaaa aaaaaaaaaa aaa
+//
+LOCUS       XM_107042                 80 bp    RNA     linear   PRI 31-MAY-2020
+DEFINITION  Homo sapiens microRNA 8075 (MIR8075), microRNA.
+ACCESSION   XM_107042
+VERSION     XM_107042.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..80
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="13"
+                     /map="13q34"
+     gene            1..80
+                     /gene="MIR8075"
+                     /gene_synonym="hsa-mir-8075"
+                     /note="microRNA 8075"
+                     /db_xref="GeneID:102465874"
+                     /db_xref="HGNC:HGNC:50172"
+                     /db_xref="miRBase:MI0025911"
+     precursor_RNA   1..80
+                     /gene="MIR8075"
+                     /gene_synonym="hsa-mir-8075"
+                     /product="microRNA 8075"
+                     /db_xref="GeneID:102465874"
+                     /db_xref="HGNC:HGNC:50172"
+                     /db_xref="miRBase:MI0025911"
+ORIGIN      
+        1 ccttgctgat ggcagatgtc ggatctgcct cgcttatacg tgcccttgct gatggcagat
+       61 gtcgggtctg cctcgcttat
+//
+LOCUS       XM_120501                718 bp    RNA     linear   PRI 31-MAY-2020
+DEFINITION  Homo sapiens SYNE1 antisense RNA 1 (SYNE1-AS1), long non-coding
+            RNA.
+ACCESSION   XM_120501
+VERSION     XM_120501.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..718
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="6"
+                     /map="6q25.2"
+     gene            1..718
+                     /gene="SYNE1-AS1"
+                     /note="SYNE1 antisense RNA 1"
+                     /db_xref="GeneID:100505475"
+                     /db_xref="HGNC:HGNC:40793"
+     ncRNA           1..718
+                     /ncRNA_class="lncRNA"
+                     /gene="SYNE1-AS1"
+                     /product="SYNE1 antisense RNA 1"
+                     /db_xref="GeneID:100505475"
+                     /db_xref="HGNC:HGNC:40793"
+ORIGIN      
+        1 aaaaccacac agaggagagc taatcgggga gataactatt tgctgtgctg taggagatta
+       61 ccaagagggt taactgctga gcccaggttt tcagaagggc actgaactgt tccagggcct
+      121 gctccagttg agccacttgg cctgagaatt cctgctccga aagggccatc tggctgacca
+      181 ggttctccaa acagctctgc gtttggaata cactgtcttc ccactgcttc cagtcggcac
+      241 gcagggcctg catctccgtg tgcatgagct cacacccact ggcagttgtg ttctgtttca
+      301 cttcgggagc cagcgactcc actctgctga gacggcttgc accaatctct ctggaatcta
+      361 tcagctcctg taatggaata tcaccatggt aactgaagag cctgtgagtc acttggactg
+      421 caagttttca actgtgtaca cagggggacc ctgtcctgcc aggaagtttt aacaagtgtg
+      481 ccacaaggac ccagaatcaa ttcatctgtc cactcttaaa ttataatagc gggagttgtc
+      541 atcacgagtg cctaaggctt atggcaaaaa aatcccgaga atcctcaata tcctgaaaca
+      601 gactaaacag agaccctgaa atcaggcatt attcgcacac gtgaaaatgt ttagtgactc
+      661 aagtgtttgc ctgtggtgga ttgctcctgt gaatgattaa acccatattt ccctcaaa
+//
+LOCUS       NR_038942               1432 bp    RNA     linear   PRI 31-MAY-2020
+DEFINITION  Bos taurus promoter of MAT2A antisense radiation-induced
+            circulating long non-coding RNA (PARTICL), long non-coding RNA.
+ACCESSION   NR_038942
+VERSION     NR_038942.1
+KEYWORDS    RefSeq.
+SOURCE      Bos taurus (cow)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..1432
+                     /organism="Bos taurus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9913"
+                     /chromosome="2"
+                     /map="2p11.2"
+     gene            1..1432
+                     /gene="PARTICL"
+                     /gene_synonym="PARTICLE"
+                     /note="promoter of MAT2A antisense radiation-induced
+                     circulating long non-coding RNA"
+                     /db_xref="GeneID:100630918"
+                     /db_xref="HGNC:HGNC:50886"
+                     /db_xref="MIM:616350"
+     ncRNA           1..1432
+                     /ncRNA_class="lncRNA"
+                     /gene="PARTICL"
+                     /gene_synonym="PARTICLE"
+                     /product="promoter of MAT2A antisense radiation-induced
+                     circulating long non-coding RNA"
+                     /db_xref="GeneID:100630918"
+                     /db_xref="HGNC:HGNC:50886"
+                     /db_xref="MIM:616350"
+ORIGIN      
+        1 tgtgggagaa aaagcgactg gggcttgctg gacccgctcc cctgtgcggt gacatggcac
+       61 ctcccttccg accgttggcc gggatagctt tcccggaggt cgcgtccccc agcggaggcg
+      121 gcgggaatcg cggaggtttt gtgctgcggc tggggtcttt ctggccgtcc cgcctctaga
+      181 tgccgggtgg cagggagccg gtggcggtcg gccatgtgaa ggtggccatc ttggccggcc
+      241 agcgagggct cctcacggcc ttccttcggc gtccctgccc ggctcgttgc cggccccggg
+      301 atatctgagg ggcgcaggcc caccttctag tcgtttcctg gtgaatggct ctgctgaaga
+      361 tggccggaaa gcagattaat gaaggtgctg ccatcgattt aaacaatcgc cctcctgccc
+      421 gctcccctgc gctaaagttt ctgagggatc ctcacccttc gtggttcgtg gacttaaaag
+      481 tggaggcagc gctccagcct ttccctccag agagaaagga ggccgctccc aagtccgtcc
+      541 ttgccccgtg gccttcctgt tcctttgaag ggggggggaa tcgatgtttc aatcctctgt
+      601 tcaggagaat atggaacgaa catttctttt ttggtgggtg ggggctattc gttcccttga
+      661 atgtgcttaa gcagatctct tgacggcgtg gaatgggctg tttcatgaag ctttcacttt
+      721 aaaatgtcca cctgcgtttg tcccagtttt gcccaataaa ggaattacag ggaaaaagag
+      781 cgaaacaaaa cttgagccag caaggagtat ggagtcccgt ttggagggag cccgccttgg
+      841 gggcgggggt ctctgcagcc tgttctgggg ctgggcctcg gtgcaggtct ggtcgggctg
+      901 gtggcctggt ggccctgagc ggagcgcgtg acaagaacgc cgggtttaat gaggttctca
+      961 gggaacggcc tgctcctagc atgggatgta ctttacgctg gggaggtgaa ggagacccct
+     1021 agtaacagtc tccagctgcc tactgctggc ggcagtagaa caaggtgcat tcccaagaac
+     1081 aatcctctcc gtcggtgcag gaggaaaggt gggatttgct aaaggctcag tgggaaacaa
+     1141 aggaagcact tgggctgtgc tgggggcatc cacaaagaag ataaagggct cctccccaga
+     1201 ctcagtgacc acatccacgg tcgctcaaag caggcagcaa gaaaaggttc gaccacaaaa
+     1261 gagacaatag gtgatgatat ttttattcgt tgctttttac ttttcaagct aacccttcat
+     1321 gggaaagtaa ctgtataaga ctattaaatt tttttgttat tttttaaagg agaatgccaa
+     1381 tttattaact tacaatgtgt aataaaattg tcaactggaa aaaaaaaaaa aa
+//
+LOCUS       NY_108110                808 bp    RNA     linear   PRI 31-MAY-2020
+DEFINITION  Homo sapiens B4GALT1 antisense RNA 1 (B4GALT1-AS1), transcript
+            variant 3, long non-coding RNA.
+ACCESSION   NY_108110
+VERSION     NY_108110.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+     source          1..808
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="9"
+                     /map="9p21.1"
+     gene            1..808
+                     /gene="B4GALT1-AS1"
+                     /note="B4GALT1 antisense RNA 1"
+                     /db_xref="GeneID:101929639"
+                     /db_xref="HGNC:HGNC:49910"
+     ncRNA           1..808
+                     /ncRNA_class="lncRNA"
+                     /gene="B4GALT1-AS1"
+                     /product="B4GALT1 antisense RNA 1, transcript variant 3"
+                     /db_xref="GeneID:101929639"
+                     /db_xref="HGNC:HGNC:49910"
+ORIGIN      
+        1 ggaggactgc ccgatggcgg cggcactgtt cgagccgccc tgcagcggtg tggagactcc
+       61 gaccagttgg ggcaggcggc tcaggtcgcg gccagccagg ggttgggaaa ctagtttcca
+      121 tggccaaacc tagcccaccg tctgttttgt ttcctgttct tcccaacctg cgctatggac
+      181 ttcatcagat ttcagcatca gagagaatat ggaaggacat cgaccctaac ttcatccagt
+      241 gaggatttcc acacaccata cactctctga gagttctctt ggctttgtgt gcacacctcc
+      301 agtgacaggg agctcgctat gtcatgaggc agcctgctcc cttgtggcta tcactgaacc
+      361 aactattaag ccttcttata caaacagtcc ctgacttact gttagactta caactttttg
+      421 attttacagt ggtgcaaaag caatatgcat tccatagaaa ctgtatttca aattttgaat
+      481 tttgatcttt tccaggctag caacatatga agaccaacct tctattttta aaataggctt
+      541 tgtgttagat gcttttgccc aactataggt taatgtaaat gttctgagaa tatttgagga
+      601 aggctaggct aaactgtgat ctttgggagc ttagatatgt taagtgcatt ttcaacttac
+      661 aatattttca acttacgatg agtttattgg gatgaagccc gttgtaagta aaggagcatc
+      721 tgcattaagc taaaatccat gtctataact tcctcagtaa tatcaagttt gttccttgga
+      781 gccagagaat aaactgaatc cttttcca
+//

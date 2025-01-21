@@ -1,0 +1,10 @@
+#MIM number	GeneID	type	Source	MedGenCUI	Comment
+100050	-	phenotype	-	C3149220	-
+100070	-	phenotype	-	C1853365	-
+100100	1131	phenotype	 GeneMap	C0033770	question
+100200	-	phenotype	-	C4551519	-
+100300	57514	phenotype	 GeneMap	C4551482	-
+100600	-	phenotype	-	C0000889	-
+100640	216	gene	-	-	-
+100650	217	gene	-	-	-
+100660	218	gene	-	-	-

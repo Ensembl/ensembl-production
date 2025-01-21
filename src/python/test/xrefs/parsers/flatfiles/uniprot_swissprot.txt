@@ -1,0 +1,591 @@
+ID   1433B_HUMAN             Reviewed;         246 AA.
+AC   P31946; A8K9K2; E1P616;
+DT   01-JUL-1993, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 3.
+DT   29-MAY-2024, entry version 248.
+DE   RecName: Full=14-3-3 protein beta/alpha;
+DE   AltName: Full=Protein 1054;
+DE   AltName: Full=Protein kinase C inhibitor protein 1;
+DE            Short=KCIP-1;
+DE   Contains:
+DE     RecName: Full=14-3-3 protein beta/alpha, N-terminally processed;
+GN   Name=YWHAB;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+OX   NCBI_TaxID=9606;
+DR   EMBL; X57346; CAA40621.1; -; mRNA.
+DR   EMBL; AK292717; BAF85406.1; -; mRNA.
+DR   EMBL; AL008725; -; NOT_ANNOTATED_CDS; Genomic_DNA.
+DR   EMBL; CH471077; EAW75893.1; -; Genomic_DNA.
+DR   EMBL; CH471077; EAW75894.1; -; Genomic_DNA.
+DR   EMBL; CH471077; EAW75896.1; -; Genomic_DNA.
+DR   EMBL; BC001359; AAH01359.1; -; mRNA.
+DR   PIR; S34755; S34755.
+DR   RefSeq; NP_003395.1; NM_003404.4. [P31946-1]
+DR   RefSeq; NP_647539.1; NM_139323.3. [P31946-1]
+DR   RefSeq; XP_016883528.1; XM_017028039.1.
+DR   PDB; 2BQ0; X-ray; 2.50 A; A/B=2-239.
+DR   PDB; 2C23; X-ray; 2.65 A; A=2-239.
+DR   PDB; 4DNK; X-ray; 2.20 A; A/B=1-246.
+DR   PDB; 5N10; X-ray; 1.60 A; A/B=1-246.
+DR   PDB; 6A5Q; X-ray; 2.00 A; A/B/C=1-246.
+DR   PDB; 6BYK; X-ray; 3.00 A; A/B/C/D=3-232.
+DR   PDB; 6GN0; X-ray; 3.24 A; A/B/C/D=1-239.
+DR   PDB; 6GN8; X-ray; 2.34 A; A/B=1-234.
+DR   PDB; 6GNJ; X-ray; 3.24 A; A/B=1-234.
+DR   PDB; 6GNK; X-ray; 2.55 A; A/B=1-234.
+DR   PDB; 6GNN; X-ray; 3.79 A; A=1-239.
+DR   PDB; 6HEP; X-ray; 1.86 A; A/B/C/D=1-232.
+DR   PDB; 8DP5; EM; 3.10 A; C=1-246.
+DR   PDB; 8EQ8; X-ray; 1.50 A; A/B=1-239.
+DR   PDB; 8EQH; X-ray; 1.90 A; A/B=1-239.
+DR   PDBsum; 2BQ0; -.
+DR   PDBsum; 2C23; -.
+DR   PDBsum; 4DNK; -.
+DR   PDBsum; 5N10; -.
+DR   PDBsum; 6A5Q; -.
+DR   PDBsum; 6BYK; -.
+DR   PDBsum; 6GN0; -.
+DR   PDBsum; 6GN8; -.
+DR   PDBsum; 6GNJ; -.
+DR   PDBsum; 6GNK; -.
+DR   PDBsum; 6GNN; -.
+DR   PDBsum; 6HEP; -.
+DR   PDBsum; 8DP5; -.
+DR   PDBsum; 8EQ8; -.
+DR   PDBsum; 8EQH; -.
+DR   AlphaFoldDB; P31946; -.
+DR   EMDB; EMD-27630; -.
+DR   SASBDB; P31946; -.
+DR   SMR; P31946; -.
+DR   BioGRID; 113361; 1082.
+DR   CORUM; P31946; -.
+DR   DIP; DIP-743N; -.
+DR   ELM; P31946; -.
+DR   IntAct; P31946; 656.
+DR   MINT; P31946; -.
+DR   STRING; 9606.ENSP00000361930; -.
+DR   BindingDB; P31946; -.
+DR   ChEMBL; CHEMBL3710403; -.
+DR   DrugBank; DB09130; Copper.
+DR   DrugBank; DB12695; Phenethyl Isothiocyanate.
+DR   GlyGen; P31946; 1 site, 1 O-linked glycan (1 site).
+DR   iPTMnet; P31946; -.
+DR   MetOSite; P31946; -.
+DR   PhosphoSitePlus; P31946; -.
+DR   SwissPalm; P31946; -.
+DR   BioMuta; YWHAB; -.
+DR   DMDM; 1345590; -.
+DR   OGP; P31946; -.
+DR   REPRODUCTION-2DPAGE; IPI00216318; -.
+DR   CPTAC; CPTAC-142; -.
+DR   jPOST; P31946; -.
+DR   MassIVE; P31946; -.
+DR   MaxQB; P31946; -.
+DR   PaxDb; 9606-ENSP00000361930; -.
+DR   PeptideAtlas; P31946; -.
+DR   PRIDE; P31946; -.
+DR   ProteomicsDB; 54816; -.
+DR   ProteomicsDB; 54817; -. [P31946-2]
+DR   Pumba; P31946; -.
+DR   TopDownProteomics; P31946-1; -. [P31946-1]
+DR   TopDownProteomics; P31946-2; -. [P31946-2]
+DR   Antibodypedia; 1906; 847 antibodies from 46 providers.
+DR   CPTC; P31946; 3 antibodies.
+DR   DNASU; 7529; -.
+DR   Ensembl; ENST00000353703.9; ENSP00000300161.4; ENSG00000166913.13. [P31946-1]
+DR   Ensembl; ENST00000372839.7; ENSP00000361930.3; ENSG00000166913.13. [P31946-1]
+DR   GeneID; 7529; -.
+DR   KEGG; hsa:7529; -.
+DR   MANE-Select; ENST00000353703.9; ENSP00000300161.4; NM_139323.4; NP_647539.1.
+DR   AGR; HGNC:12849; -.
+DR   CTD; 7529; -.
+DR   DisGeNET; 7529; -.
+DR   GeneCards; YWHAB; -.
+DR   HPA; ENSG00000166913; Low tissue specificity.
+DR   neXtProt; NX_P31946; -.
+DR   OpenTargets; ENSG00000166913; -.
+DR   PharmGKB; PA37438; -.
+DR   VEuPathDB; HostDB:ENSG00000166913; -.
+DR   eggNOG; KOG0841; Eukaryota.
+DR   GeneTree; ENSGT01090000260040; -.
+DR   HOGENOM; CLU_058290_1_0_1; -.
+DR   InParanoid; P31946; -.
+DR   OMA; EQHVTII; -.
+DR   OrthoDB; 920089at2759; -.
+DR   PhylomeDB; P31946; -.
+DR   TreeFam; TF102003; -.
+DR   PathwayCommons; P31946; -.
+DR   SignaLink; P31946; -.
+DR   SIGNOR; P31946; -.
+DR   BioGRID-ORCS; 7529; 19 hits in 1156 CRISPR screens.
+DR   ChiTaRS; YWHAB; human.
+DR   EvolutionaryTrace; P31946; -.
+DR   GeneWiki; YWHAB; -.
+DR   Pharos; P31946; Tbio.
+DR   PRO; PR:P31946; -.
+DR   Proteomes; UP000005640; Chromosome 20.
+DR   RNAct; P31946; Protein.
+DR   Bgee; ENSG00000166913; Expressed in endothelial cell and 214 other cell types or tissues.
+DR   ExpressionAtlas; P31946; baseline and differential.
+DR   CDD; cd10022; 14-3-3_beta_zeta; 1.
+DR   Gene3D; 1.20.190.20; 14-3-3 domain; 1.
+DR   IDEAL; IID00038; -.
+DR   InterPro; IPR000308; 14-3-3.
+DR   InterPro; IPR023409; 14-3-3_CS.
+DR   InterPro; IPR036815; 14-3-3_dom_sf.
+DR   InterPro; IPR023410; 14-3-3_domain.
+DR   PANTHER; PTHR18860; 14-3-3 PROTEIN; 1.
+DR   PANTHER; PTHR18860:SF28; 14-3-3 PROTEIN BETA_ALPHA; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PIRSF; PIRSF000868; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   SUPFAM; SSF48445; 14-3-3 protein; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+PE   1: Evidence at protein level;
+KW   3D-structure; Acetylation; Alternative initiation; Cytoplasm;
+KW   Direct protein sequencing; Host-virus interaction; Isopeptide bond;
+KW   Membrane; Nitration; Phosphoprotein; Reference proteome; Ubl conjugation;
+KW   Vacuole.
+SQ   SEQUENCE   246 AA;  28082 MW;  6BE1A9BF97468017 CRC64;
+     MTMDKSELVQ KAKLAEQAER YDDMAAAMKA VTEQGHELSN EERNLLSVAY KNVVGARRSS
+     WRVISSIEQK TERNEKKQQM GKEYREKIEA ELQDICNDVL ELLDKYLIPN ATQPESKVFY
+     LKMKGDYFRY LSEVASGDNK QTTVSNSQQA YQEAFEISKK EMQPTHPIRL GLALNFSVFY
+     YEILNSPEKA CSLAKTAFDE AIAELDTLNE ESYKDSTLIM QLLRDNLTLW TSENQGDEGD
+     AGEGEN
+//
+ID   1433E_HUMAN             Reviewed;         255 AA.
+AC   P62258; B3KY71; D3DTH5; P29360; P42655; Q4VJB6; Q53XZ5; Q63631; Q7M4R4;
+DT   05-JUL-2004, integrated into UniProtKB/Swiss-Prot.
+DT   05-JUL-2004, sequence version 1.
+DT   29-MAY-2024, entry version 207.
+DE   RecName: Full=14-3-3 protein epsilon;
+DE            Short=14-3-3E;
+DE            EC=2.1.1.148 {ECO:0000256|HAMAP-Rule:MF_01408};
+GN   Name=YWHAE; Synonyms=YWHAE1;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+OX   NCBI_TaxID=9606;
+DR   EMBL; U20972; AAC50175.1; -; mRNA.
+DR   EMBL; U54778; AAC50710.1; -; mRNA.
+DR   EMBL; U43399; AAC50625.1; -; mRNA.
+DR   EMBL; U43430; AAD00026.1; -; mRNA.
+DR   EMBL; U28936; AAA75301.1; -; mRNA.
+DR   EMBL; AB017103; BAA32538.1; -; Genomic_DNA.
+DR   EMBL; AY883089; AAX68683.1; -; mRNA.
+DR   EMBL; AK128785; BAG54733.1; -; mRNA.
+DR   EMBL; AK295260; BAG58249.1; -; mRNA.
+DR   EMBL; AK316185; BAH14556.1; -; mRNA.
+DR   EMBL; BT007161; AAP35825.1; -; mRNA.
+DR   EMBL; CH471108; EAW90628.1; -; Genomic_DNA.
+DR   EMBL; CH471108; EAW90629.1; -; Genomic_DNA.
+DR   EMBL; BC000179; AAH00179.1; -; mRNA.
+DR   EMBL; BC001440; AAH01440.1; -; mRNA.
+DR   PIR; A61235; A61235.
+DR   PIR; I38947; I38947.
+DR   RefSeq; NP_006752.1; NM_006761.4. [P62258-1]
+DR   PDB; 2BR9; X-ray; 1.75 A; A=1-233.
+DR   PDB; 3UAL; X-ray; 1.80 A; A=1-232.
+DR   PDB; 3UBW; X-ray; 1.90 A; A=1-234.
+DR   PDB; 6EIH; X-ray; 2.70 A; A=3-232.
+DR   PDB; 7C8E; X-ray; 3.16 A; A/B=1-232.
+DR   PDB; 7V9B; X-ray; 1.85 A; A=1-232.
+DR   PDB; 8DGM; X-ray; 3.20 A; A=1-255.
+DR   PDB; 8DGN; X-ray; 3.16 A; A=1-255.
+DR   PDB; 8DGP; X-ray; 2.70 A; A/B/C/D=1-255.
+DR   PDB; 8DP5; EM; 3.10 A; D=1-255.
+DR   PDB; 8Q1S; X-ray; 3.23 A; A/B=1-255.
+DR   PDBsum; 2BR9; -.
+DR   PDBsum; 3UAL; -.
+DR   PDBsum; 3UBW; -.
+DR   PDBsum; 6EIH; -.
+DR   PDBsum; 7C8E; -.
+DR   PDBsum; 7V9B; -.
+DR   PDBsum; 8DGM; -.
+DR   PDBsum; 8DGN; -.
+DR   PDBsum; 8DGP; -.
+DR   PDBsum; 8DP5; -.
+DR   PDBsum; 8Q1S; -.
+DR   AlphaFoldDB; P62258; -.
+DR   EMDB; EMD-27630; -.
+DR   SMR; P62258; -.
+DR   BioGRID; 113363; 1160.
+DR   CORUM; P62258; -.
+DR   DIP; DIP-36676N; -.
+DR   ELM; P62258; -.
+DR   IntAct; P62258; 679.
+DR   MINT; P62258; -.
+DR   STRING; 9606.ENSP00000264335; -.
+DR   ChEMBL; CHEMBL3329082; -.
+DR   DrugBank; DB01780; Fusicoccin.
+DR   DrugBank; DB12695; Phenethyl Isothiocyanate.
+DR   MoonDB; P62258; Predicted.
+DR   TCDB; 8.A.98.1.10; the 14-3-3 protein (14-3-3) family.
+DR   GlyGen; P62258; 1 site, 1 O-linked glycan (1 site).
+DR   iPTMnet; P62258; -.
+DR   MetOSite; P62258; -.
+DR   PhosphoSitePlus; P62258; -.
+DR   SwissPalm; P62258; -.
+DR   BioMuta; YWHAE; -.
+DR   DMDM; 51702210; -.
+DR   OGP; P42655; -.
+DR   jPOST; P62258; -.
+DR   MassIVE; P62258; -.
+DR   MaxQB; P62258; -.
+DR   PaxDb; 9606-ENSP00000264335; -.
+DR   PeptideAtlas; P62258; -.
+DR   PRIDE; P62258; -.
+DR   ProteomicsDB; 57377; -.
+DR   ProteomicsDB; 57378; -. [P62258-2]
+DR   Pumba; P62258; -.
+DR   TopDownProteomics; P62258-1; -. [P62258-1]
+DR   Antibodypedia; 1898; 612 antibodies from 40 providers.
+DR   CPTC; P62258; 3 antibodies.
+DR   DNASU; 7531; -.
+DR   Ensembl; ENST00000264335.13; ENSP00000264335.8; ENSG00000108953.17. [P62258-1]
+DR   Ensembl; ENST00000571732.5; ENSP00000461762.1; ENSG00000108953.17. [P62258-2]
+DR   Ensembl; ENST00000616643.3; ENSP00000481059.2; ENSG00000274474.3. [P62258-2]
+DR   Ensembl; ENST00000627231.2; ENSP00000487356.1; ENSG00000274474.3. [P62258-1]
+DR   GeneID; 7531; -.
+DR   KEGG; hsa:7531; -.
+DR   MANE-Select; ENST00000264335.13; ENSP00000264335.8; NM_006761.5; NP_006752.1.
+DR   AGR; HGNC:12851; -.
+DR   CTD; 7531; -.
+DR   DisGeNET; 7531; -.
+DR   GeneCards; YWHAE; -.
+DR   HPA; ENSG00000108953; Low tissue specificity.
+DR   MalaCards; YWHAE; -.
+DR   neXtProt; NX_P62258; -.
+DR   OpenTargets; ENSG00000108953; -.
+DR   PharmGKB; PA37440; -.
+DR   VEuPathDB; HostDB:ENSG00000108953; -.
+DR   eggNOG; KOG0841; Eukaryota.
+DR   GeneTree; ENSGT01110000267238; -.
+DR   HOGENOM; CLU_058290_0_0_1; -.
+DR   InParanoid; P62258; -.
+DR   OMA; KGCQLAR; -.
+DR   OrthoDB; 920089at2759; -.
+DR   PhylomeDB; P62258; -.
+DR   TreeFam; TF102003; -.
+DR   PathwayCommons; P62258; -.
+DR   SignaLink; P62258; -.
+DR   SIGNOR; P62258; -.
+DR   BioGRID-ORCS; 7531; 212 hits in 1128 CRISPR screens.
+DR   ChiTaRS; YWHAE; human.
+DR   EvolutionaryTrace; P62258; -.
+DR   GeneWiki; YWHAE; -.
+DR   Pharos; P62258; Tbio.
+DR   PRO; PR:P62258; -.
+DR   Proteomes; UP000005640; Chromosome 17.
+DR   RNAct; P62258; Protein.
+DR   Bgee; ENSG00000108953; Expressed in superior frontal gyrus and 116 other cell types or tissues.
+DR   ExpressionAtlas; P62258; baseline and differential.
+DR   CDD; cd10020; 14-3-3_epsilon; 1.
+DR   Gene3D; 1.20.190.20; 14-3-3 domain; 1.
+DR   IDEAL; IID00512; -.
+DR   InterPro; IPR000308; 14-3-3.
+DR   InterPro; IPR023409; 14-3-3_CS.
+DR   InterPro; IPR036815; 14-3-3_dom_sf.
+DR   InterPro; IPR023410; 14-3-3_domain.
+DR   PANTHER; PTHR18860; 14-3-3 PROTEIN; 1.
+DR   PANTHER; PTHR18860:SF17; 14-3-3 PROTEIN EPSILON; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PIRSF; PIRSF000868; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   SUPFAM; SSF48445; 14-3-3 protein; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+PE   1: Evidence at protein level;
+KW   3D-structure; Acetylation; Alternative splicing; Cytoplasm;
+KW   Direct protein sequencing; Host-virus interaction; Isopeptide bond;
+KW   Nucleus; Phosphoprotein; Reference proteome; Ubl conjugation.
+SQ   SEQUENCE   255 AA;  29174 MW;  07817CCBD1F75B26 CRC64;
+     MDDREDLVYQ AKLAEQAERY DEMVESMKKV AGMDVELTVE ERNLLSVAYK NVIGARRASW
+     RIISSIEQKE ENKGGEDKLK MIREYRQMVE TELKLICCDI LDVLDKHLIP AANTGESKVF
+     YYKMKGDYHR YLAEFATGND RKEAAENSLV AYKAASDIAM TELPPTHPIR LGLALNFSVF
+     YYEILNSPDR ACRLAKAAFD DAIAELDTLS EESYKDSTLI MQLLRDNLTL WTSDMQGDGE
+     EQNKEALQDV EDENQ
+//
+ID   1433F_HUMAN             Reviewed;         246 AA.
+AC   Q04917;
+DT   01-OCT-1993, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 4.
+DT   29-MAY-2024, entry version 238.
+DE   RecName: Full=14-3-3 protein eta;
+DE   AltName: Full=Protein AS1;
+GN   Name=YWHAH; Synonyms=YWHA1;
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+OX   NCBI_TaxID=9606;
+CC   CAUTION: The sequence shown here is derived from an Ensembl
+DR   EMBL; L20422; AAA35483.1; -; mRNA.
+DR   EMBL; X80536; CAA56676.1; -; Genomic_DNA.
+DR   EMBL; X78138; CAA55017.1; -; mRNA.
+DR   EMBL; X57345; CAA40620.1; -; mRNA.
+DR   EMBL; D78577; BAA11418.1; -; Genomic_DNA.
+DR   EMBL; S80794; AAB36036.1; -; mRNA.
+DR   EMBL; CR456612; CAG30498.1; -; mRNA.
+DR   EMBL; Z82248; -; NOT_ANNOTATED_CDS; Genomic_DNA.
+DR   EMBL; BC003047; AAH03047.1; -; mRNA.
+DR   PIR; S34756; S34756.
+DR   PIR; S38509; S38509.
+DR   PIR; S38532; S38532.
+DR   RefSeq; NP_003396.1; NM_003405.3.
+DR   PDB; 2C63; X-ray; 2.15 A; A/B/C/D=2-246.
+DR   PDB; 2C74; X-ray; 2.70 A; A/B=2-246.
+DR   PDB; 7NMZ; X-ray; 2.30 A; AA/BA=1-234.
+DR   PDBsum; 2C63; -.
+DR   PDBsum; 2C74; -.
+DR   PDBsum; 7NMZ; -.
+DR   AlphaFoldDB; Q04917; -.
+DR   SMR; Q04917; -.
+DR   BioGRID; 113365; 1114.
+DR   CORUM; Q04917; -.
+DR   DIP; DIP-27566N; -.
+DR   ELM; Q04917; -.
+DR   IntAct; Q04917; 937.
+DR   MINT; Q04917; -.
+DR   STRING; 9606.ENSP00000248975; -.
+DR   BindingDB; Q04917; -.
+DR   ChEMBL; CHEMBL3708585; -.
+DR   DrugBank; DB12695; Phenethyl Isothiocyanate.
+DR   GlyGen; Q04917; 1 site, 1 O-linked glycan (1 site).
+DR   iPTMnet; Q04917; -.
+DR   MetOSite; Q04917; -.
+DR   PhosphoSitePlus; Q04917; -.
+DR   SwissPalm; Q04917; -.
+DR   BioMuta; YWHAH; -.
+DR   DMDM; 1345593; -.
+DR   jPOST; Q04917; -.
+DR   MassIVE; Q04917; -.
+DR   MaxQB; Q04917; -.
+DR   PaxDb; 9606-ENSP00000248975; -.
+DR   PeptideAtlas; Q04917; -.
+DR   ProteomicsDB; 58300; -.
+DR   Pumba; Q04917; -.
+DR   TopDownProteomics; Q04917; -.
+DR   Antibodypedia; 11204; 346 antibodies from 37 providers.
+DR   DNASU; 7533; -.
+DR   Ensembl; ENST00000248975.6; ENSP00000248975.5; ENSG00000128245.15.
+DR   GeneID; 7533; -.
+DR   KEGG; hsa:7533; -.
+DR   MANE-Select; ENST00000248975.6; ENSP00000248975.5; NM_003405.4; NP_003396.1.
+DR   AGR; HGNC:12853; -.
+DR   CTD; 7533; -.
+DR   DisGeNET; 7533; -.
+DR   GeneCards; YWHAH; -.
+DR   HPA; ENSG00000128245; Tissue enriched (brain).
+DR   neXtProt; NX_Q04917; -.
+DR   OpenTargets; ENSG00000128245; -.
+DR   PharmGKB; PA37442; -.
+DR   VEuPathDB; HostDB:ENSG00000128245; -.
+DR   eggNOG; KOG0841; Eukaryota.
+DR   GeneTree; ENSGT01090000260040; -.
+DR   HOGENOM; CLU_058290_0_0_1; -.
+DR   InParanoid; Q04917; -.
+DR   OMA; IEQKTMS; -.
+DR   OrthoDB; 920089at2759; -.
+DR   PhylomeDB; Q04917; -.
+DR   TreeFam; TF102003; -.
+DR   PathwayCommons; Q04917; -.
+DR   SignaLink; Q04917; -.
+DR   SIGNOR; Q04917; -.
+DR   BioGRID-ORCS; 7533; 15 hits in 1154 CRISPR screens.
+DR   ChiTaRS; YWHAH; human.
+DR   EvolutionaryTrace; Q04917; -.
+DR   GeneWiki; YWHAH; -.
+DR   Pharos; Q04917; Tbio.
+DR   PRO; PR:Q04917; -.
+DR   Proteomes; UP000005640; Chromosome 22.
+DR   RNAct; Q04917; Protein.
+DR   Bgee; ENSG00000128245; Expressed in frontal pole and 196 other cell types or tissues.
+DR   ExpressionAtlas; Q04917; baseline and differential.
+DR   CDD; cd10025; 14-3-3_eta; 1.
+DR   Gene3D; 1.20.190.20; 14-3-3 domain; 1.
+DR   InterPro; IPR000308; 14-3-3.
+DR   InterPro; IPR023409; 14-3-3_CS.
+DR   InterPro; IPR036815; 14-3-3_dom_sf.
+DR   InterPro; IPR023410; 14-3-3_domain.
+DR   PANTHER; PTHR18860; 14-3-3 PROTEIN; 1.
+DR   PANTHER; PTHR18860:SF16; 14-3-3 PROTEIN ETA; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PIRSF; PIRSF000868; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   SUPFAM; SSF48445; 14-3-3 protein; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+PE   1: Evidence at protein level;
+KW   3D-structure; Acetylation; Direct protein sequencing; Phosphoprotein;
+KW   Reference proteome.
+SQ   SEQUENCE   246 AA;  28219 MW;  D70FBC100C45D6E5 CRC64;
+     MGDREQLLQR ARLAEQAERY DDMASAMKAV TELNEPLSNE DRNLLSVAYK NVVGARRSSW
+     EAGEGN
+//
+ID   1433G_HUMAN             Reviewed;         247 AA.
+AC   P61981; O70457; P35214; Q6FH52; Q9UDP2; Q9UN99;
+DT   07-JUN-2004, integrated into UniProtKB/Swiss-Prot.
+DT   23-JAN-2007, sequence version 2.
+DT   29-MAY-2024, entry version 197.
+DE   RecName: Full=14-3-3 protein gamma {ECO:0000305};
+DE   AltName: Full=Protein kinase C inhibitor protein 1;
+DE            Short=KCIP-1;
+DE   Contains:
+DE     RecName: Full=14-3-3 protein gamma, N-terminally processed;
+GN   Name=YWHAG {ECO:0000312|HGNC:HGNC:12852};
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+OX   NCBI_TaxID=9606;
+DR   EMBL; AF142498; AAD48408.1; -; mRNA.
+DR   EMBL; AB024334; BAA85184.1; -; mRNA.
+DR   EMBL; CR541904; CAG46702.1; -; mRNA.
+DR   EMBL; CR541925; CAG46723.1; -; mRNA.
+DR   EMBL; AC006388; -; NOT_ANNOTATED_CDS; Genomic_DNA.
+DR   EMBL; BC020963; AAH20963.1; -; mRNA.
+DR   RefSeq; NP_036611.2; NM_012479.3.
+DR   PDB; 2B05; X-ray; 2.55 A; A/B/C/D/E/F=2-247.
+DR   PDB; 3UZD; X-ray; 1.86 A; A=1-247.
+DR   PDB; 4E2E; X-ray; 2.25 A; A=1-247.
+DR   PDB; 4J6S; X-ray; 3.08 A; A/B/C/D=1-247.
+DR   PDB; 4O46; X-ray; 2.90 A; A/B/C/D/E/F=1-247.
+DR   PDB; 5D3E; X-ray; 2.75 A; A/B/E/F/I/J=1-238.
+DR   PDB; 6A5S; X-ray; 2.10 A; A/B/D/G=1-247.
+DR   PDB; 6BYJ; X-ray; 2.90 A; A/B/C/D/E/F=2-241.
+DR   PDB; 6BYL; X-ray; 3.35 A; A/B/C/D/E/F=2-241.
+DR   PDB; 6BZD; X-ray; 2.67 A; A/B/C/D=2-247.
+DR   PDB; 6FEL; X-ray; 2.84 A; A/B/C/D=1-234.
+DR   PDB; 6GKF; X-ray; 2.60 A; A/B/C/D/E/F/G/H=1-234.
+DR   PDB; 6GKG; X-ray; 2.85 A; A/B/C/D/E/F/G/H=1-234.
+DR   PDB; 6S9K; X-ray; 1.60 A; A=1-234.
+DR   PDB; 6SAD; X-ray; 2.75 A; A/B=1-234.
+DR   PDB; 6Y4K; X-ray; 3.00 A; A/B=1-234.
+DR   PDB; 6Y6B; X-ray; 3.08 A; A/B=1-234.
+DR   PDB; 6ZBT; X-ray; 1.80 A; A/B/C/D=1-234.
+DR   PDB; 6ZC9; X-ray; 1.90 A; A/B/C/D=1-234.
+DR   PDB; 7A6R; X-ray; 2.70 A; A/B/C/D=1-234.
+DR   PDB; 7A6Y; X-ray; 2.50 A; A/B/C/D=1-234.
+DR   PDBsum; 2B05; -.
+DR   PDBsum; 3UZD; -.
+DR   PDBsum; 4E2E; -.
+DR   PDBsum; 4J6S; -.
+DR   PDBsum; 4O46; -.
+DR   PDBsum; 5D3E; -.
+DR   PDBsum; 6A5S; -.
+DR   PDBsum; 6BYJ; -.
+DR   PDBsum; 6BYL; -.
+DR   PDBsum; 6BZD; -.
+DR   PDBsum; 6FEL; -.
+DR   PDBsum; 6GKF; -.
+DR   PDBsum; 6GKG; -.
+DR   PDBsum; 6S9K; -.
+DR   PDBsum; 6SAD; -.
+DR   PDBsum; 6Y4K; -.
+DR   PDBsum; 6Y6B; -.
+DR   PDBsum; 6ZBT; -.
+DR   PDBsum; 6ZC9; -.
+DR   PDBsum; 7A6R; -.
+DR   PDBsum; 7A6Y; -.
+DR   AlphaFoldDB; P61981; -.
+DR   SASBDB; P61981; -.
+DR   SMR; P61981; -.
+DR   BioGRID; 113364; 1250.
+DR   CORUM; P61981; -.
+DR   DIP; DIP-33406N; -.
+DR   ELM; P61981; -.
+DR   IntAct; P61981; 1062.
+DR   MINT; P61981; -.
+DR   STRING; 9606.ENSP00000306330; -.
+DR   BindingDB; P61981; -.
+DR   ChEMBL; CHEMBL1293296; -.
+DR   TCDB; 8.A.98.1.11; the 14-3-3 protein (14-3-3) family.
+DR   GlyGen; P61981; 1 site, 1 O-linked glycan (1 site).
+DR   iPTMnet; P61981; -.
+DR   MetOSite; P61981; -.
+DR   PhosphoSitePlus; P61981; -.
+DR   SwissPalm; P61981; -.
+DR   BioMuta; YWHAG; -.
+DR   DMDM; 48428721; -.
+DR   REPRODUCTION-2DPAGE; IPI00220642; -.
+DR   CPTAC; CPTAC-450; -.
+DR   CPTAC; CPTAC-451; -.
+DR   jPOST; P61981; -.
+DR   MassIVE; P61981; -.
+DR   MaxQB; P61981; -.
+DR   PaxDb; 9606-ENSP00000306330; -.
+DR   PeptideAtlas; P61981; -.
+DR   PRIDE; P61981; -.
+DR   ProteomicsDB; 57355; -.
+DR   Pumba; P61981; -.
+DR   TopDownProteomics; P61981; -.
+DR   Antibodypedia; 4339; 621 antibodies from 41 providers.
+DR   DNASU; 7532; -.
+DR   Ensembl; ENST00000307630.5; ENSP00000306330.3; ENSG00000170027.7.
+DR   GeneID; 7532; -.
+DR   KEGG; hsa:7532; -.
+DR   MANE-Select; ENST00000307630.5; ENSP00000306330.3; NM_012479.4; NP_036611.2.
+DR   AGR; HGNC:12852; -.
+DR   CTD; 7532; -.
+DR   DisGeNET; 7532; -.
+DR   GeneCards; YWHAG; -.
+DR   HPA; ENSG00000170027; Tissue enhanced (brain, skeletal muscle).
+DR   MalaCards; YWHAG; -.
+DR   neXtProt; NX_P61981; -.
+DR   OpenTargets; ENSG00000170027; -.
+DR   PharmGKB; PA37441; -.
+DR   VEuPathDB; HostDB:ENSG00000170027; -.
+DR   eggNOG; KOG0841; Eukaryota.
+DR   GeneTree; ENSGT01090000260040; -.
+DR   HOGENOM; CLU_058290_0_0_1; -.
+DR   InParanoid; P61981; -.
+DR   OMA; AYGEAHE; -.
+DR   OrthoDB; 920089at2759; -.
+DR   PhylomeDB; P61981; -.
+DR   TreeFam; TF102003; -.
+DR   PathwayCommons; P61981; -.
+DR   SignaLink; P61981; -.
+DR   SIGNOR; P61981; -.
+DR   BioGRID-ORCS; 7532; 29 hits in 1163 CRISPR screens.
+DR   ChiTaRS; YWHAG; human.
+DR   EvolutionaryTrace; P61981; -.
+DR   GeneWiki; YWHAG; -.
+DR   Pharos; P61981; Tchem.
+DR   PRO; PR:P61981; -.
+DR   Proteomes; UP000005640; Chromosome 7.
+DR   RNAct; P61981; Protein.
+DR   Bgee; ENSG00000170027; Expressed in lateral nuclear group of thalamus and 193 other cell types or tissues.
+DR   CDD; cd10024; 14-3-3_gamma; 1.
+DR   Gene3D; 1.20.190.20; 14-3-3 domain; 1.
+DR   InterPro; IPR000308; 14-3-3.
+DR   InterPro; IPR023409; 14-3-3_CS.
+DR   InterPro; IPR036815; 14-3-3_dom_sf.
+DR   InterPro; IPR023410; 14-3-3_domain.
+DR   PANTHER; PTHR18860; 14-3-3 PROTEIN; 1.
+DR   PANTHER; PTHR18860:SF22; 14-3-3 PROTEIN GAMMA; 1.
+DR   Pfam; PF00244; 14-3-3; 1.
+DR   PIRSF; PIRSF000868; 14-3-3; 1.
+DR   PRINTS; PR00305; 1433ZETA.
+DR   SMART; SM00101; 14_3_3; 1.
+DR   SUPFAM; SSF48445; 14-3-3 protein; 1.
+DR   PROSITE; PS00796; 1433_1; 1.
+DR   PROSITE; PS00797; 1433_2; 1.
+PE   1: Evidence at protein level;
+KW   3D-structure; Acetylation; Cytoplasm; Direct protein sequencing;
+KW   Disease variant; Epilepsy; Phosphoprotein; Reference proteome.
+SQ   SEQUENCE   247 AA;  28303 MW;  B0D16C6DE1F4455D CRC64;
+     MVDREQLVQK ARLAEQAERY DDMAAAMKNV TELNEPLSNE ERNLLSVAYK NVVGARRSSW
+     RVISSIEQKT SADGNEKKIE MVRAYREKIE KELEAVCQDV LSLLDNYLIK NCSETQYESK
+     VFYLKMKGDY YRYLAEVATG EKRATVVESS EKAYSEAHEI SKEHMQPTHP IRLGLALNYS
+     VFYYEIQNAP EQACHLAKTA FDDAIAELDT LNEDSYKDST LIMQLLRDNL TLWTSDQQDD
+     DGGEGNN
+//
