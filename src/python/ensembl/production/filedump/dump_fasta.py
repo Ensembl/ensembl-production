@@ -3,6 +3,8 @@ url =\
 username = "ensro"
 pwd = ""
 
+
+
 import sys
 sys.path.append('/Users/mira/ensembl-api/src/python/')
 from pyspark import SparkConf
@@ -10,6 +12,25 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, col, concat, length, udf
 from ensembl.core.TranscriptSparkService import TranscriptSparkService
 from pyspark.sql.types import StringType
+import argparse
+
+
+# Define the parser
+parser = argparse.ArgumentParser(description='Fasta files dump')
+parser.add_argument('--password', action="store", dest='algo', default="")
+parser.add_argument('--username', action="store", dest='algo', default="ensro")
+parser.add_argument('--db', action="store", dest='algo', default="")
+parser.add_argument('--dest', action="store", dest='algo', default="")
+
+args = parser.parse_args()
+
+# Individual arguments can be accessed as attributes...
+pwd = args.password
+username = args.username
+url = args.url
+dest = args.dest
+
+
 
 confi=SparkConf()
 confi.set("spark.executor.memory", "14g")
@@ -87,7 +108,7 @@ pep_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./fasta")
+    .csv("./" + dest + "/fasta_pep")
 
 #Unite header
 cdna_fasta = cdna_fasta\
@@ -110,6 +131,6 @@ cdna_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./fasta_cdna")
+    .csv("./" + dest + "/fasta_cdna")
     
     
