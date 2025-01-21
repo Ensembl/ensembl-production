@@ -26,9 +26,9 @@ class ScheduleDownload(Base):
         reuse_db: bool = self.get_param("reuse_db", {"required": True, "type": bool})
 
         logging.info("ScheduleDownload starting with parameters:")
-        logging.info(f"Param: config_file = {config_file}")
-        logging.info(f"Param: source_db_url = {source_db_url}")
-        logging.info(f"Param: reuse_db = {reuse_db}")
+        logging.info(f"\tParam: config_file = {config_file}")
+        logging.info(f"\tParam: source_db_url = {source_db_url}")
+        logging.info(f"\tParam: reuse_db = {reuse_db}")
 
         # Create the source db from url
         self.create_source_db(source_db_url, reuse_db)

@@ -58,8 +58,8 @@ class EmailNotification(Base):
                     sources_data, added_species, skipped_species = self.extract_download_statistics(data)
                     email_message += self.format_download_statistics(sources_data, added_species, skipped_species)
                 elif re.search("Process", pipeline_name):
-                    parsed_sources, species_counts = self.extract_process_statistics(data)
-                    email_message += self.format_process_statistics(parsed_sources, species_counts)
+                    parsed_sources, absolute_sources, species_counts = self.extract_process_statistics(data)
+                    email_message += self.format_process_statistics(parsed_sources, species_counts, absolute_sources)
 
         # Send email
         self.send_email(email_address, email_server, pipeline_name, email_message)
@@ -117,8 +117,8 @@ class EmailNotification(Base):
         return main_log_file
 
     def extract_parameters(self, data: str) -> Dict[str, str]:
-        parameters_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Param: (\w+) = (.*)", data)
-        return {param[0]: param[1] for param in parameters_list}
+        parameters_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| \tParam: (\w+) = (.*)", data)
+        return {param[0]: param[1] for param in parameters_list if param[0] != 'order_priority'}
 
     def format_parameters(self, parameters: Dict[str, str]) -> str:
         message = "<br><h5>Run Parameters</h5>"
@@ -217,14 +217,15 @@ class EmailNotification(Base):
 
         return message
 
-    def extract_process_statistics(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, Dict[str, int]]]:
-        parsed_sources = self.extract_parsed_sources(data)
+    def extract_process_statistics(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, bool], Dict[str, Dict[str, int]]]:
+        parsed_sources, absolute_sources = self.extract_parsed_sources(data)
         species_counts = self.extract_species_counts(data)
 
-        return parsed_sources, species_counts
+        return parsed_sources, absolute_sources, species_counts
 
-    def extract_parsed_sources(self, data: str) -> Dict[str, Dict[str, str]]:
+    def extract_parsed_sources(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, bool]]:
         parsed_sources = {}
+        absolute_sources = {}
 
         matches_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ParseSource starting for source '([\w\/]+)' with parser '([\w\/]+)' for species '([\w\/]+)'", data)
         for species in matches_list:
@@ -232,8 +233,9 @@ class EmailNotification(Base):
             if species_name not in parsed_sources:
                 parsed_sources[species_name] = {}
             parsed_sources[species_name][source_name] = parser
+            absolute_sources[source_name] = True
 
-        return parsed_sources
+        return parsed_sources, absolute_sources
 
     def extract_species_counts(self, data: str) -> Dict[str, Dict[str, int]]:
         species_counts = {}
@@ -258,18 +260,36 @@ class EmailNotification(Base):
 
         return species_counts
 
-    def format_process_statistics(self, parsed_sources: Dict[str, Dict[str, str]], species_counts: Dict[str, Dict[str, int]]) -> str:
-        message = "<br>--Species Statistics--<br>"
+    def format_process_statistics(self, parsed_sources: Dict[str, Dict[str, str]], species_counts: Dict[str, Dict[str, int]], absolute_sources: Dict[str, bool]) -> str:
+        cell_style = 'style="border-right: 1px solid #000; padding: 5px;"'
+
+        message = "<br><h5>Source Statistics</h5>"
+        message += f"<table style=\"border: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Species</th>"
+        for source_name in sorted(absolute_sources):
+            message += f"<th {cell_style}>{source_name}</th>"
+        message += f"</tr>"
 
         for species_name, species_data in parsed_sources.items():
-            message += f"<b>{species_name}:</b><br>"
-            message += f"{self.INDENT}Sources parsed: " + ",".join(species_data.keys()) + "<br>"
+            message += f"<tr><td {cell_style}>{species_name}</td>"
+            for source_name in sorted(absolute_sources):
+                message += f"<td {cell_style}>X</td>" if source_name in species_data else f"<td {cell_style}></td>"
+            message += "</tr>"
+        message += "</table>"
 
-            xref_counts = species_counts[species_name]
-            message += f"{self.INDENT}Xrefs added: "
-            for xref_type, count in xref_counts.items():
-                message += f"{count} {xref_type} "
-            message += "<br>"
+        message += "<br><h5>Xref Data Statistics</h5>"
+        message += f"<table style=\"border: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Species</th><th {cell_style}>DIRECT</th><th {cell_style}>DEPENDENT</th>"
+        message += f"<th {cell_style}>INFERRED_PAIR</th><th {cell_style}>CHECKSUM</th><th {cell_style}>SEQUENCE_MATCH</th><th {cell_style}>MISC</th></tr>"
+
+        for species_name, species_data in species_counts.items():
+            message += f"<tr><td {cell_style}>{species_name}</td>"
+            message += f"<td {cell_style}>{species_data['DIRECT']}</td>"
+            message += f"<td {cell_style}>{species_data['DEPENDENT']}</td>"
+            message += f"<td {cell_style}>{species_data['INFERRED_PAIR']}</td>"
+            message += f"<td {cell_style}>{species_data['CHECKSUM']}</td>"
+            message += f"<td {cell_style}>{species_data['SEQUENCE_MATCH']}</td>"
+            message += f"<td {cell_style}>{species_data['MISC']}</td>"
+            message += "</tr>"
+        message += "</table>"
 
         return message
 

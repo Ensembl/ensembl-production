@@ -119,8 +119,8 @@ class CoordinateMapper(BasicMapper):
             logging.info(f"Running perl script {mapper_script}")
             perl_cmd = [
                 "perl", mapper_script,
-                "--xref_db_url", str(self.xref()),
-                "--core_db_url", str(self.core()),
+                "--xref_db_url", str(self.xref().url),
+                "--core_db_url", str(self.core().url),
                 "--species_id", str(species_id),
                 "--output_dir", output_dir,
                 "--analysis_id", str(analysis_id)

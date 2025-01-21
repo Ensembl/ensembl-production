@@ -28,9 +28,9 @@ class Checksum(Base):
         skip_download: bool = self.get_param("skip_download", {"required": True, "type": bool})
 
         logging.info("Checksum starting with parameters:")
-        logging.info(f"Param: base_path = {base_path}")
-        logging.info(f"Param: source_db_url = {source_db_url}")
-        logging.info(f"Param: skip_download = {skip_download}")
+        logging.info(f"\tParam: base_path = {base_path}")
+        logging.info(f"\tParam: source_db_url = {source_db_url}")
+        logging.info(f"\tParam: skip_download = {skip_download}")
 
         # Connect to source db
         db_engine = self.get_db_engine(source_db_url)
