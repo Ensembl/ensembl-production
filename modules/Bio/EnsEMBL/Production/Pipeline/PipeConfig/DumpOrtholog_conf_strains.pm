@@ -24,7 +24,7 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf');
 
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 
 sub default_options {
 	my ($self) = @_;
