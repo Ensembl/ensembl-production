@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from pyspark.sql import SparkSession
-from pyspark.sql.types import *
 import os
 import shutil
-from ensembl.core.FileSystemSparkService import FileSystemSparkService
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 
 __all__ = ['TranslationSparkService']
 

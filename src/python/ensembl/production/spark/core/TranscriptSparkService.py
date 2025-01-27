@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import shutil
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import regexp_replace, expr, concat, concat_ws, collect_list
 from pyspark.sql.types import *
 from Bio.Seq import Seq
-import os
-import shutil
 from pyspark.sql.functions import udf, lit
-from ensembl.core.FileSystemSparkService import FileSystemSparkService
-from ensembl.core.ExonSparkService import ExonSparkService
-from ensembl.core.TranslationSparkService import TranslationSparkService
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
+from ensembl.production.spark.core.ExonSparkService import ExonSparkService
+from ensembl.production.spark.core.TranslationSparkService import TranslationSparkService
 from functools import reduce
 
 __all__ = ['TranscriptSparkService']

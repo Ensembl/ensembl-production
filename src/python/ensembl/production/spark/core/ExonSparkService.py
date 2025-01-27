@@ -11,17 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from pyspark.sql import SparkSession
-from pyspark.sql.types import *
 import sqlalchemy
 import os
-import sqlalchemy
-from sqlalchemy import text
 import shutil
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+from sqlalchemy import text
 from pyspark.sql.functions import lit, udf
 from Bio.Seq import Seq
-from ensembl.core.TranslationSparkService import TranslationSparkService
-from ensembl.core.FileSystemSparkService import FileSystemSparkService
+from ensembl.production.spark.core.TranslationSparkService import TranslationSparkService
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 __all__ = ['ExonSparkService']
 
 
