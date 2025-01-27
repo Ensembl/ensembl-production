@@ -198,10 +198,10 @@ sub header {
     #add addition attributes version & is_canonical for fata header only 
     
     if ($seq_type eq 'cdna' || $seq_type eq 'cds') {
-      push @attributes, 'version:'.$transcript->stable_id_version;
+      push @attributes, 'version:'.$transcript->version;
       push @attributes, 'is_canonical:'.$transcript->is_canonical();
     } elsif ($seq_type eq 'pep') {
-      push @attributes, 'version:'.$transcript->translation->stable_id_version;
+      push @attributes, 'version:'.$transcript->translation->version;
       push @attributes, 'is_canonical:'.$transcript->is_canonical;
     }
 
