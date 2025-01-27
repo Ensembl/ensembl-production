@@ -15,20 +15,20 @@ from pyspark.sql.types import StringType
 import argparse
 import glob
 import shutil
+import os
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
-parser.add_argument('--password', action="store", dest='algo', default="")
-parser.add_argument('--username', action="store", dest='algo', default="ensro")
-parser.add_argument('--db', action="store", dest='algo', default="")
-parser.add_argument('--dest', action="store", dest='algo', default="")
+parser.add_argument('--password', action="store", dest='password', default="")
+parser.add_argument('--username', action="store", dest='username', default="ensro")
+parser.add_argument('--db', action="store", dest='db', default="")
+parser.add_argument('--dest', action="store", dest='dest', default="")
 
 args = parser.parse_args()
-
 # Individual arguments can be accessed as attributes...
 pwd = args.password
 username = args.username
-url = args.url
+url = args.db
 dest = args.dest
 
 
@@ -86,6 +86,7 @@ csversion = spark_session.read\
 
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
+os.makedirs(os.path.dirname(dest), exist_ok=True)
 
 #Unite pep header
 pep_fasta = pep_fasta\
@@ -111,7 +112,7 @@ pep_fasta.repartition(1)\
     .option("delimiter", "\n")\
     .csv("./" + dest + "/fasta_pep")
 file = glob.glob("./" + dest + "/fasta_pep" + "/part-0000*")[0]
-shutil.copy(file, dest)
+shutil.copy(file, dest + "pep.fa")
 
 #Unite header
 cdna_fasta = cdna_fasta\
@@ -134,8 +135,11 @@ cdna_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./" + dest + "/fasta_cdna")
-file = glob.glob("./" + dest + "/fasta_pep" + "/part-0000*")[0]
-shutil.copy(file, dest)
+    .csv("./" + dest + "fasta_cdna")
+file = glob.glob("." + dest + "fasta_cdna" + "/part-0000*")[0]
+
+print(file)
+print(dest)
+shutil.copy(file, dest + "cdna.fa")
     
     
