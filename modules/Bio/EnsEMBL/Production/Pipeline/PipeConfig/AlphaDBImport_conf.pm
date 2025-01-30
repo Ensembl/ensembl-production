@@ -45,7 +45,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.6;
+use Bio::EnsEMBL::Hive::Version 2.7;
 
 
 =head2 default_options

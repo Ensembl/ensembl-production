@@ -66,7 +66,9 @@ sub run {
   my $compara_dba = $compara_dbas[0];
   $self->param('compara_url', $compara_dba->url);
   my $schema_version = $compara_dba->get_MetaContainer->get_schema_version();
-  $compara_dba->dbc()->sql_helper()->execute_update(-SQL=>'delete family.*,family_member.* from family left join family_member using (family_id)');
+  my $compara_sql_helper = $compara_dba->dbc()->sql_helper();
+  $compara_sql_helper->execute_update(-SQL=>'delete family.*,family_member.* from family left join family_member using (family_id)');
+
   # get compara
   my $genome_dba = $compara_dba->get_GenomeDBAdaptor();
 
@@ -143,25 +145,36 @@ sub run {
   print "Found ".scalar(keys(%{$families}))." familes\n";
 
   # create and store MLSS
-  my $sso = Bio::EnsEMBL::Compara::SpeciesSet->new(
-    -GENOME_DBS => $genome_dbs,
-    -NAME => "collection-all_division",
-  );
-  $sso->first_release($schema_version);
-  $compara_dba->get_SpeciesSetAdaptor()->store($sso);
+  my $sql = q/
+      insert ignore into method_link (method_link_id, type, class, display_name)
+      values (301, 'FAMILY', 'Family.family', 'families')/;
+  $compara_sql_helper->execute_update( -SQL => $sql );
+  my $method_dba = $compara_dba->get_MethodAdaptor();
+  my $method = $method_dba->fetch_by_type('FAMILY');
 
-  my $mlss =
-    Bio::EnsEMBL::Compara::MethodLinkSpeciesSet->new(
-      -method =>
-        Bio::EnsEMBL::Compara::Method->new(
-          -type  => 'FAMILY',
-          -class => 'Family.family',
-          -display_name => 'families'
-        ),
-      -species_set => $sso );
-  $mlss->first_release($schema_version);
+  my $species_set_dba = $compara_dba->get_SpeciesSetAdaptor();
+  my $sso = $species_set_dba->fetch_by_GenomeDBs($genome_dbs);
+  if (!defined $sso) {
+    $sso = Bio::EnsEMBL::Compara::SpeciesSet->new(
+      -GENOME_DBS => $genome_dbs,
+      -NAME => "collection-all_division",
+    );
+    $sso->first_release($schema_version);
+    $species_set_dba->store($sso);
+  }
 
-  $compara_dba->get_MethodLinkSpeciesSetAdaptor()->store($mlss);
+  my $mlss_dba = $compara_dba->get_MethodLinkSpeciesSetAdaptor();
+  my $mlss = $mlss_dba->fetch_by_method_link_type_GenomeDBs($method->type, $genome_dbs);
+  if (!defined $mlss) {
+    $mlss =
+      Bio::EnsEMBL::Compara::MethodLinkSpeciesSet->new(
+        -method => $method,
+        -name => 'all_division families',
+        -species_set => $sso );
+    $mlss->first_release($schema_version);
+    $mlss_dba->store($mlss);
+  }
+
   my $family_dba = $compara_dba->get_FamilyAdaptor();
   while ( my ( $id, $name ) = each %$families ) {
     print "Storing family $id $name\n";

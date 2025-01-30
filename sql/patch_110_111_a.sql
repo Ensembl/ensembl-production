@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_108_109_a.sql
+# patch_110_111_a.sql
 #
 # Title: Update schema version.
 #
