@@ -60,7 +60,7 @@ jobs:
         - cpanm --sudo -v --installdeps --notest .
         - cpanm --sudo -n Devel::Cover::Report::Coveralls
         - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
-        
+
       before_script:
         # Update permissions for Travis user on Dockerized MySQL
         - docker exec mysql57 mysql -uroot -proot -e "CREATE USER 'travis'@'%'; GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%'; FLUSH PRIVILEGES;"
@@ -81,16 +81,14 @@ jobs:
         - pip install -e .
       script:
         - pytest src/python/test
-
-    - name: "Python 3.11"
-      language: python
-      python:
-        - "3.11"
+    - language: python
+      python: 3.8
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
       script:
         - pytest src/python/test
+
 
 notifications:
   email:
