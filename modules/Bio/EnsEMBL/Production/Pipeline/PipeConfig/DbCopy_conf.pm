@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -39,6 +39,7 @@ sub default_options {
     # Database type factory
     groups => 1,
     group  => [],
+    delete_group => [], 
 
     # Named database factory
     dbname => [],
@@ -58,7 +59,6 @@ sub default_options {
     # Drop databases from target, by default the same set that will be copied
     delete_db          => 0,
     delete_release     => $self->o('ensembl_release'),
-    delete_group       => $self->o('group'),
     delete_dbname      => $self->o('dbname'),
     delete_marts       => $self->o('marts'),
     delete_compara     => $self->o('compara'),
@@ -200,7 +200,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -parameters      => {
                             ensembl_release => $self->o('delete_release'),
-                            group           => $self->o('delete_group'),
+                            group           => (ref($self->o('delete_group')) eq 'ARRAY' && @{$self->o('delete_group')}) ? $self->o('delete_group') : $self->o('group'),
                             groups          => $self->o('groups'),
                           },
       -flow_into       => {

@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
@@ -222,7 +222,7 @@ sub pipeline_analyses {
     },
     -flow_into  => {
       '2->A' => ['direct_xrefs', 'rnacentral_mapping'],
-      'A->1' => 'mapping'
+      'A->1' => 'object_xref_check'
     },
     -rc_name    => '1GB',
   },
@@ -280,6 +280,18 @@ sub pipeline_analyses {
     },
     -rc_name    => '16GB',
     -analysis_capacity => 30
+  },
+  {
+    -logic_name => 'object_xref_check',
+    -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlHealthcheck',
+    -parameters => {
+      db_conn       => '#xref_url#',
+      description   => 'Check that the object_xref table has rows',
+      query         => 'SELECT object_xref_id FROM object_xref',
+      expected_size => '> 0'
+    },
+    -flow_into  => { 1 => 'mapping' },
+    -rc_name    => 'default',
   },
   {
     -logic_name => 'mapping',

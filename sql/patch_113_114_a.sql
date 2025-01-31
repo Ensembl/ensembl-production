@@ -13,15 +13,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-# patch_96_97_d.sql
+# patch_112_113_a.sql
 #
-# Title: Meta_key update
+# Title: Update schema version.
 #
 # Description:
-#   Update meta_key to add is_multi_value and remove species link
-ALTER TABLE meta_key ADD COLUMN is_multi_value  BOOLEAN NOT NULL DEFAULT false;
-DROP TABLE meta_key_species;
+#   Update schema_version in meta table to 112.
+
+UPDATE meta SET meta_value='114' WHERE meta_key='schema_version';
 
 # Patch identifier
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_96_97_c.sql|meta_key_update');
+VALUES (NULL, 'patch', 'patch_113_114_a.sql|schema_version');

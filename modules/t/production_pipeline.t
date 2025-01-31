@@ -1,5 +1,5 @@
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2024] EMBL-European Bioinformatics Institute
+# Copyright [2016-2025] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,6 +62,13 @@ my $translation = $tla->fetch_by_stable_id('ENSP00000334263');
 my $exon = $ea->fetch_by_stable_id('ENSE00001654835');
 my $exon2 = $ea->fetch_by_stable_id('ENSE00001730680');
 
+print("Test human db...................");
+print($human_dba->dbc->host);
+print($human_dba->dbc->port);
+print($human_dba->dbc->dbname);
+print($human_dba->dbc->user);
+use Data::Dumper;
+print(Dumper($genome_container));
 
 # Check coding density for chromosome 6
 my @coding_density = @{ $dfa->fetch_all_by_Slice($slice, 'codingdensity') };

@@ -16,7 +16,7 @@
     {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
-      "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis",
+      "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis.gz",
       "db" : "checksum",
       "priority" : 1
     },

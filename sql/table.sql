@@ -1,5 +1,5 @@
 -- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
--- Copyright [2016-2024] EMBL-European Bioinformatics Institute
+-- Copyright [2016-2025] EMBL-European Bioinformatics Institute
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS meta (
 # Add schema type and schema version to the meta table
 INSERT INTO meta (species_id, meta_key, meta_value) VALUES
   (NULL, 'schema_type', 'production'),
-  (NULL, 'schema_version', 113);
+  (NULL, 'schema_version', 114);
 
 # Patches included in this schema file
 INSERT INTO meta (species_id, meta_key, meta_value)
-  VALUES (NULL, 'patch', 'patch_112_113_a.sql|schema version');
+  VALUES (NULL, 'patch', 'patch_113_114_a.sql|schema version');
 
 -- The 'master_biotype' table.
 -- Contains all the valid biotypes used for genes and transcripts.
