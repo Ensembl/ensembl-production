@@ -9,9 +9,6 @@
       "type": "string",
       "default": "$BASE_DIR/ensembl-hive/scripts/"
     },
-    "config": {
-      "type": "string"
-    },
     "species": {
       "type": "string"
     },
@@ -19,9 +16,6 @@
       "type": "string"
     },
     "antispecies": {
-      "type": "string"
-    },
-    "run_all": {
       "type": "string"
     },
     "meta_filters": {
@@ -43,7 +37,7 @@
     },
     "nf_py_script_path": {
       "type": "string",
-      "default": "/Users/mira//ensembl-production/nextflow/nf-py-scripts/"
+      "default": "$BASE_DIR/ensembl-production/nextflow/nf-py-scripts/"
     },
     "core_filetype": {
       "type": "string"

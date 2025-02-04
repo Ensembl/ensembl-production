@@ -21,12 +21,10 @@
 params.species            = "''"
 params.division           = "''"
 params.antispecies        = "''"
-params.run_all            = 0
 params.meta_filters       = "''"
 params.group              = 'core'
 params.core_filetype      = "embl,tsv,genbank,gtf,gff3,json,fasta_pep,fasta_cdna,fasta_cds,fasta_dna,fasta_dna_index,vep"
 params.variation_filetype = "vcf,gvf"  
-params.conf_file          = false
 params.output             = ""
 params.ftp_path           = ""
 params.base_dir           = "$BASE_DIR"
@@ -40,6 +38,21 @@ validateParameters()
  
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
+
+def helpMessage() {
+    log.info"""
+Usage:
+nextflow run ensembl-production/nextflow/workflows/filedumpPipeline/main.nf <ARGUMENTS>
+  --ftp_path            Folder containing FTP Core dumps,
+                        containing TSV/ENSEMBL/GFF/GTF/GENBANK etc. files.
+
+  Mysql server datails 
+ --server                Example: jdbc:mysql://mysql-ens-core-prod-1:4524
+ --user
+ --password
+  
+  """.stripIndent()
+}
 
 workflow {
  

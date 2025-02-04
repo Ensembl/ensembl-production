@@ -33,12 +33,12 @@ dest = args.dest
 base_dir = args.base_dir
 
 import os
-
+print(base_dir)
 confi=SparkConf()
 confi.set("spark.executor.memory", "14g")
 confi.set("spark.driver.memory", "40g")
 confi.set("spark.cores.max", "4")
-confi.set("spark.jars",  base_dir + "mysql-connector-j-8.1.0.jar")
+confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
 confi.set("spark.driver.maxResultSize", "15G")
