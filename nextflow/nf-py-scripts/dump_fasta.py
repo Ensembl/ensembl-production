@@ -31,9 +31,9 @@ username = args.username
 url = args.db
 dest = args.dest
 base_dir = args.base_dir
+out_subfolder = url.split("/")[3]
 
 import os
-print(base_dir)
 confi=SparkConf()
 confi.set("spark.executor.memory", "14g")
 confi.set("spark.driver.memory", "40g")
@@ -42,8 +42,9 @@ confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
 confi.set("spark.driver.maxResultSize", "15G")
+confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
-
+spark_session.sparkContext.setLogLevel("ERROR")
 transcript_service = TranscriptSparkService(spark_session)
 #need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
 # we assume the following data categories for core fd:  
@@ -87,7 +88,7 @@ csversion = spark_session.read\
 
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
-os.makedirs(os.path.dirname(dest), exist_ok=True)
+os.makedirs(os.path.dirname(dest + "/" + out_subfolder + "/"), exist_ok=True)
 
 #Unite pep header
 pep_fasta = pep_fasta\
@@ -113,7 +114,7 @@ pep_fasta.repartition(1)\
     .option("delimiter", "\n")\
     .csv("./" + dest + "/fasta_pep")
 file = glob.glob("./" + dest + "/fasta_pep" + "/part-0000*")[0]
-shutil.copy(file, dest + "pep.fa")
+shutil.copy(file, dest + "/" + out_subfolder + "/pep.fa")
 
 #Unite header
 cdna_fasta = cdna_fasta\
@@ -136,11 +137,11 @@ cdna_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./" + dest + "fasta_cdna")
-file = glob.glob("." + dest + "fasta_cdna" + "/part-0000*")[0]
+    .csv("./" + dest + "/fasta_cdna")
+file = glob.glob("." + dest + "/fasta_cdna"  + "/part-0000*")[0]
 
 print(file)
 print(dest)
-shutil.copy(file, dest + "cdna.fa")
+shutil.copy(file, dest + "/" + out_subfolder + "/cdna.fa")
     
     

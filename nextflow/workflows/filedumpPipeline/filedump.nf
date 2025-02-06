@@ -32,8 +32,8 @@ process DumpFastaFiles {
   export SPARK_LOCAL_IP="127.0.0.1"
 
   ${params.nf_py_script_path}/dump_fasta.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password "" --dest "${BASE_DIR}/test-out/"\
-   --db ${params.server}/${db_name}
+   --username ${params.user} --password "" --dest "${params.ftp_path}"\
+   --db ${params.server}/${db_name} > fastadump_log.txt
   """
 
 }
