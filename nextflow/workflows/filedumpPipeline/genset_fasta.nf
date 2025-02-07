@@ -17,7 +17,7 @@ process DumpFastaFiles {
 
   debug 'ture'
   label 'mem20GB'
-  tag 'dump_fasta'
+  tag '${db_name}-dump_fasta'
   errorStrategy 'finish'
   publishDir "${params.output}"
 
