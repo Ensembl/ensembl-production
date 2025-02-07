@@ -33,7 +33,8 @@ process DumpFastaFiles {
 
   ${params.nf_py_script_path}/dump_fasta.py --base_dir=${BASE_DIR}\
    --username ${params.user} --password "" --dest "${params.ftp_path}"\
-   --db ${params.server}/${db_name} > fastadump_log.txt
+   --db ${params.server}/${db_name} > ${db_name}.log
+
   """
 
 }

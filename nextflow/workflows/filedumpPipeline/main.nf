@@ -77,7 +77,6 @@ workflow CoreDumpGensetFastaFlow {
 
     take: 
       database
- 
     main:          
       output_files=DumpFastaFiles(database)
     emit:

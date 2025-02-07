@@ -140,6 +140,8 @@ cdna_fasta.repartition(1)\
     .csv("./" + dest + "/fasta_cdna")
 file = glob.glob("." + dest + "/fasta_cdna"  + "/part-0000*")[0]
 
+print(file)
+print(dest)
 shutil.copy(file, dest + "/" + out_subfolder + "/cdna.fa")
     
     
