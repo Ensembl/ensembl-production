@@ -36,7 +36,7 @@ class TranscriptSparkService:
             raise ValueError(
                 'Connection details and session is required')
         self._spark = session
-
+        self._spark.sparkContext.setLogLevel("ERROR")
     """
     Returns seq_edits DF, loaded directly from database
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
@@ -196,7 +196,7 @@ class TranscriptSparkService:
 
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
-         translated_seq.show(1)
+         #translated_seq.show(1)
          
          @udf(returnType=StringType())
          def translate_sequence(sequence, codon_table, cds_start_nf, id):
@@ -208,8 +208,8 @@ class TranscriptSparkService:
              if sequence[-1:] == "*":
                  sequence = sequence[:-1]
              if sequence[:1] != 'M' and not cds_start_nf:
-                 if(str(seq)[:1] == "N"):
-                     print("WARNING appending M to non-zero phase: " + id)
+                # if(str(seq)[:1] == "N"):
+                #     print("WARNING appending M to non-zero phase: " + id)
                  sequence = "M" + sequence[1:]
              return sequence
          cds_start_nf_df = self._spark.read\
