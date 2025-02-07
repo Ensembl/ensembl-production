@@ -30,7 +30,7 @@ params.ftp_path           = ""
 params.base_dir           = "$BASE_DIR"
 
 // Import Production Common Factories
-include { DumpFastaFiles } from './filedump.nf'
+include { DumpFastaFiles } from './genset_fasta.nf'
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
 // Validate input parameters
