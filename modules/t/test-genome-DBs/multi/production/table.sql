@@ -13,7 +13,7 @@ CREATE TABLE `analysis_description` (
   `displayable` tinyint(1) NOT NULL,
   PRIMARY KEY (`analysis_description_id`),
   UNIQUE KEY `logic_name_idx` (`logic_name`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=5942 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_attrib` (
   `attrib_id` int(11) unsigned NOT NULL DEFAULT '0',
@@ -26,7 +26,7 @@ CREATE TABLE `master_attrib` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`attrib_id`),
   UNIQUE KEY `type_val_idx` (`attrib_type_id`,`value`(80))
-) ENGINE=MyISAM ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_attrib_set` (
   `attrib_set_id` int(11) unsigned NOT NULL DEFAULT '0',
@@ -38,7 +38,7 @@ CREATE TABLE `master_attrib_set` (
   `modified_at` datetime DEFAULT NULL,
   UNIQUE KEY `set_idx` (`attrib_set_id`,`attrib_id`),
   KEY `attrib_idx` (`attrib_id`)
-) ENGINE=MyISAM ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_attrib_type` (
   `attrib_type_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
@@ -52,7 +52,7 @@ CREATE TABLE `master_attrib_type` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`attrib_type_id`),
   UNIQUE KEY `code_idx` (`code`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=460 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_biotype` (
   `biotype_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -72,7 +72,7 @@ CREATE TABLE `master_biotype` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`biotype_id`),
   UNIQUE KEY `name_type_idx` (`name`,`object_type`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=229 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_external_db` (
   `external_db_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -92,7 +92,7 @@ CREATE TABLE `master_external_db` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`external_db_id`),
   UNIQUE KEY `db_name_idx` (`db_name`,`db_release`,`is_current`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=50748 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_misc_set` (
   `misc_set_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
@@ -107,7 +107,7 @@ CREATE TABLE `master_misc_set` (
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`misc_set_id`),
   UNIQUE KEY `code_idx` (`code`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `master_unmapped_reason` (
   `unmapped_reason_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -119,7 +119,7 @@ CREATE TABLE `master_unmapped_reason` (
   `modified_by` int(11) DEFAULT NULL,
   `modified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`unmapped_reason_id`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=139 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta` (
   `meta_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -129,7 +129,7 @@ CREATE TABLE `meta` (
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`(255)),
   KEY `species_value_idx` (`species_id`,`meta_value`(255))
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=86 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_key` (
   `meta_key_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -145,7 +145,7 @@ CREATE TABLE `meta_key` (
   `is_multi_value` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`meta_key_id`),
   KEY `name_type_idx` (`name`,`db_type`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=217 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `web_data` (
   `web_data_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -157,18 +157,19 @@ CREATE TABLE `web_data` (
   `modified_at` datetime DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`web_data_id`)
-) ENGINE=MyISAM  ;
+) ENGINE=MyISAM AUTO_INCREMENT=2927 DEFAULT CHARSET=latin1;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib` AS select `master_attrib`.`attrib_id` AS `attrib_id`,`master_attrib`.`attrib_type_id` AS `attrib_type_id`,`master_attrib`.`value` AS `value` from `master_attrib` where (`master_attrib`.`is_current` = 1) order by `master_attrib`.`attrib_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_set` AS select `master_attrib_set`.`attrib_set_id` AS `attrib_set_id`,`master_attrib_set`.`attrib_id` AS `attrib_id` from `master_attrib_set` where (`master_attrib_set`.`is_current` = 1) order by `master_attrib_set`.`attrib_set_id`,`master_attrib_set`.`attrib_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `attrib_type` AS select `master_attrib_type`.`attrib_type_id` AS `attrib_type_id`,`master_attrib_type`.`code` AS `code`,`master_attrib_type`.`name` AS `name`,`master_attrib_type`.`description` AS `description` from `master_attrib_type` where (`master_attrib_type`.`is_current` = 1) order by `master_attrib_type`.`attrib_type_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc`,`master_biotype`.`so_term` AS `so_term` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `biotype` AS select `master_biotype`.`biotype_id` AS `biotype_id`,`master_biotype`.`name` AS `name`,`master_biotype`.`object_type` AS `object_type`,`master_biotype`.`db_type` AS `db_type`,`master_biotype`.`attrib_type_id` AS `attrib_type_id`,`master_biotype`.`description` AS `description`,`master_biotype`.`biotype_group` AS `biotype_group`,`master_biotype`.`so_acc` AS `so_acc`,`master_biotype`.`so_term` AS `so_term` from `master_biotype` where (`master_biotype`.`is_current` = 1) order by `master_biotype`.`biotype_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `external_db` AS select `master_external_db`.`external_db_id` AS `external_db_id`,`master_external_db`.`db_name` AS `db_name`,`master_external_db`.`db_release` AS `db_release`,`master_external_db`.`status` AS `status`,`master_external_db`.`priority` AS `priority`,`master_external_db`.`db_display_name` AS `db_display_name`,`master_external_db`.`TYPE` AS `type`,`master_external_db`.`secondary_db_name` AS `secondary_db_name`,`master_external_db`.`secondary_db_table` AS `secondary_db_table`,`master_external_db`.`description` AS `description` from `master_external_db` where (`master_external_db`.`is_current` = 1) order by `master_external_db`.`external_db_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `external_db` AS select `master_external_db`.`external_db_id` AS `external_db_id`,`master_external_db`.`db_name` AS `db_name`,`master_external_db`.`db_release` AS `db_release`,`master_external_db`.`status` AS `status`,`master_external_db`.`priority` AS `priority`,`master_external_db`.`db_display_name` AS `db_display_name`,`master_external_db`.`TYPE` AS `type`,`master_external_db`.`secondary_db_name` AS `secondary_db_name`,`master_external_db`.`secondary_db_table` AS `secondary_db_table`,`master_external_db`.`description` AS `description` from `master_external_db` where (`master_external_db`.`is_current` = 1) order by `master_external_db`.`external_db_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`ensadmin`@`%` SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;
+
