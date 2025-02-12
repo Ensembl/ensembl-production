@@ -1,5 +1,5 @@
 1	schema_type	ontology	\N
-2	schema_version	103	\N
+2	schema_version	115	\N
 3	patch	patch_79_80_a.sql|schema_version	\N
 4	OBO_file_date	GO.obo/18:03:2015 17:12	\N
 5	OBO_load_date	GO.obo/Thu Mar 19 13:49:08 2015	\N
@@ -37,3 +37,18 @@
 37	patch	patch_100_101_a.sql|schema_version	\N
 38	patch	patch_101_102_a.sql|schema_version	\N
 39	patch	patch_102_103_a.sql|schema_version	\N
+40	patch	patch_103_104_a.sql|schema_version	\N
+41	patch	patch_104_105_a.sql|schema_version	\N
+42	patch	patch_105_106_a.sql|schema_version	\N
+43	patch	patch_106_107_a.sql|schema_version	\N
+44	patch	patch_107_108_a.sql|schema_version	\N
+45	patch	patch_108_109_a.sql|schema_version	\N
+46	patch	patch_109_110_a.sql|schema_version	\N
+47	patch	patch_110_111_a.sql|schema_version	\N
+48	patch	patch_111_112_a.sql|schema_version	\N
+49	patch	patch_111_112_b.sql|Allow meta_value to be null	\N
+50	patch	patch_111_112_c.sql|Extend meta_key length to 64	\N
+51	patch	patch_112_113_a.sql|schema_version	\N
+52	patch	patch_112_113_b.sql|Ensure meta_value is not null	\N
+53	patch	patch_113_114_a.sql|schema_version	\N
+54	patch	patch_114_115_a.sql|schema_version	\N

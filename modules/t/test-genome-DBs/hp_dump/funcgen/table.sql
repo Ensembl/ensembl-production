@@ -181,7 +181,7 @@ CREATE TABLE `chance` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `data_file` (
-  `data_file_id` int(11) NOT NULL AUTO_INCREMENT,
+  `data_file_id` int(10) NOT NULL AUTO_INCREMENT,
   `table_id` int(10) unsigned NOT NULL,
   `table_name` varchar(32) NOT NULL,
   `path` varchar(255) NOT NULL,
@@ -205,6 +205,16 @@ CREATE TABLE `epigenome` (
   UNIQUE KEY `name_idx` (`name`),
   UNIQUE KEY `short_name_idx` (`short_name`)
 ) ENGINE=MyISAM AUTO_INCREMENT=241 DEFAULT CHARSET=latin1;
+
+CREATE TABLE `epigenome_track` (
+  `epigenome_track_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `epigenome_id` int(10) unsigned NOT NULL,
+  `feature_type_id` int(10) unsigned NOT NULL,
+  `data_file_id` int(10) unsigned NOT NULL,
+  `track_type` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`epigenome_track_id`),
+  KEY `et_index` (`epigenome_id`,`feature_type_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `execution_plan` (
   `execution_plan_id` int(18) unsigned NOT NULL AUTO_INCREMENT,
@@ -376,12 +386,12 @@ CREATE TABLE `idr` (
 CREATE TABLE `meta` (
   `meta_id` int(10) NOT NULL AUTO_INCREMENT,
   `species_id` int(10) unsigned DEFAULT '1',
-  `meta_key` varchar(46) NOT NULL,
-  `meta_value` varchar(950) NOT NULL,
+  `meta_key` varchar(64) NOT NULL,
+  `meta_value` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`meta_id`),
   UNIQUE KEY `species_key_value_idx` (`species_id`,`meta_key`,`meta_value`),
   KEY `species_value_idx` (`species_id`,`meta_value`)
-) ENGINE=MyISAM AUTO_INCREMENT=770 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=786 DEFAULT CHARSET=latin1;
 
 CREATE TABLE `meta_coord` (
   `table_name` varchar(40) NOT NULL,
@@ -444,7 +454,8 @@ CREATE TABLE `motif_feature_regulatory_feature` (
   PRIMARY KEY (`motif_feature_regulatory_feature_id`),
   UNIQUE KEY `mf_rf_ep_idx` (`motif_feature_id`,`regulatory_feature_id`,`epigenome_id`),
   KEY `motif_feature_idx` (`motif_feature_id`),
-  KEY `regulatory_feature_idx` (`regulatory_feature_id`)
+  KEY `regulatory_feature_idx` (`regulatory_feature_id`),
+  KEY `speedup` (`regulatory_feature_id`,`has_matching_Peak`,`motif_feature_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `object_xref` (
@@ -480,7 +491,8 @@ CREATE TABLE `peak` (
   `summit` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`peak_id`),
   UNIQUE KEY `seq_region_feature_set_idx` (`seq_region_id`,`seq_region_start`,`peak_calling_id`),
-  KEY `feature_set_idx` (`peak_calling_id`)
+  KEY `feature_set_idx` (`peak_calling_id`),
+  KEY `peak_track` (`peak_calling_id`,`seq_region_id`,`seq_region_start`,`seq_region_end`,`score`,`seq_region_strand`,`summit`,`peak_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=12158297 DEFAULT CHARSET=latin1 MAX_ROWS=100000000 AVG_ROW_LENGTH=39;
 
 CREATE TABLE `peak_calling` (

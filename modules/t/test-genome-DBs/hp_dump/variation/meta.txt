@@ -1,5 +1,5 @@
 1	\N	schema_type	variation
-2	\N	schema_version	103
+2	\N	schema_version	115
 3	\N	patch	patch_98_99_a.sql|schema version
 54	\N	pairwise_ld.default_population	679
 12	\N	patch	patch_70_71_e.sql|create study_variation table
@@ -122,3 +122,24 @@
 129	\N	patch	patch_101_102_a.sql|schema version
 130	\N	patch	patch_101_102_b.sql|Add new clinical_significance to variation, variation_feature and structural_variation
 131	\N	patch	patch_102_103_a.sql|schema version
+132	\N	patch	patch_103_104_a.sql|schema version
+133	\N	patch	patch_104_105_a.sql|schema version
+134	\N	patch	patch_104_105_b.sql|Increase publication title size
+135	\N	patch	patch_105_106_a.sql|schema version
+136	\N	patch	patch_106_107_a.sql|schema version
+137	\N	patch	patch_106_107_b.sql|consequences update
+138	\N	patch	patch_106_107_c.sql|remove regulatory and TFBS consequences from consequence_types in transcript_variation
+139	\N	patch	patch_107_108_a.sql|schema version
+140	\N	patch	patch_107_108_b.sql|fix SAS population description
+141	\N	patch	patch_108_109_a.sql|schema version
+142	\N	patch	patch_109_110_a.sql|schema version
+143	\N	patch	patch_109_110_b.sql|Add DDG2P data_source_attrib to variation_citation
+144	\N	patch	patch_109_110_c.sql|Add new clinical_significance values to variation, variation_feature and structural_variation
+145	\N	patch	patch_110_111_a.sql|schema version
+146	\N	patch	patch_110_111_b.sql|Update transcript_variation primary key
+147	\N	patch	patch_111_112_a.sql|schema version
+148	\N	patch	patch_112_113_a.sql|schema version
+149	\N	patch	patch_112_113_b.sql|Update meta_key length
+150	\N	patch	patch_113_114_a.sql|schema version
+151	\N	patch	patch_114_115_a.sql|schema version
+152	\N	patch	patch_114_115_b.sql|Add column DNA_type to phenotype_feature

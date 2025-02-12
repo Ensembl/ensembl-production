@@ -1,5 +1,5 @@
 1	1	schema_type	funcgen
-2	\N	schema_version	104
+2	\N	schema_version	115
 3	\N	patch	patch_88_89_a.sql|schema_version
 4	\N	patch	patch_88_89_b.sql|Created probe_seq table
 5	\N	patch	patch_88_89_c.sql|created probe_feature_transcript table
@@ -11,7 +11,7 @@
 11	\N	patch	patch_88_89_i.sql|New columns for array table
 12	\N	patch	patch_88_89_j.sql|Added array_chip_id column to probe_set table
 13	\N	patch	patch_88_89_k.sql|Added probe_seq_id column to probe table
-534	\N	schema_version	104
+534	\N	schema_version	115
 156	1	species.production_name	homo_sapiens
 223	\N	schema_type	funcgen
 589	\N	patch	patch_78_79_a.sql|schema_version
@@ -190,3 +190,19 @@
 767	\N	patch	patch_101_102_b.sql|Drop underlying_structure table
 768	\N	patch	patch_102_103_a.sql|schema_version
 769	\N	patch	patch_103_104_a.sql|schema_version
+770	\N	patch	patch_104_105_a.sql|schema_version
+771	\N	patch	patch_104_105_b.sql|New indices
+772	\N	patch	patch_105_106_a.sql|schema_version
+773	\N	patch	patch_106_107_a.sql|schema_version
+774	\N	patch	patch_107_108_a.sql|schema_version
+775	\N	patch	patch_107_108_b.sql|New epigenome_track table
+776	\N	patch	patch_108_109_a.sql|schema_version
+777	\N	patch	patch_109_110_a.sql|schema_version
+778	\N	patch	patch_110_111_a.sql|schema_version
+779	\N	patch	patch_111_112_a.sql|schema_version
+780	\N	patch	patch_111_112_b.sql|fix data_file_id length
+781	\N	patch	patch_111_112_c.sql|set data_file_id to not null auto increment
+782	\N	patch	patch_112_113_a.sql|schema_version
+783	\N	patch	patch_112_113_b.sql|fix_compatibility_issues
+784	\N	patch	patch_113_114_a.sql|schema_version
+785	\N	patch	patch_114_115_a.sql|schema_version

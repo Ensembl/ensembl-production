@@ -18,7 +18,7 @@
 # Title: Update schema version.
 #
 # Description:
-#   Update schema_version in meta table to 112.
+#   Update schema_version in meta table to 114.
 
 UPDATE meta SET meta_value='114' WHERE meta_key='schema_version';
 

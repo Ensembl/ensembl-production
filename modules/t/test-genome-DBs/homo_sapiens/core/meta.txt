@@ -1,5 +1,5 @@
 1	\N	schema_type	core
-2	\N	schema_version	114
+2	\N	schema_version	115
 3	\N	patch	patch_98_99_a.sql|schema_version
 2124	1	xref.timestamp	2013-07-22 11:20:10
 4	\N	patch	patch_52_53_c.sql|identity_xref_rename
@@ -267,3 +267,4 @@
 2223	\N	patch	patch_112_113_a.sql|schema_version
 2224	\N	patch	patch_112_113_b.sql|Ensure meta_value is not null
 2225	\N	patch	patch_113_114_a.sql|schema_version
+2226	\N	patch	patch_114_115_a.sql|schema_version
