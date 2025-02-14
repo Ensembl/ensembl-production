@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-process DumpFastaFiles {
+process DumpGFF3_GTFFiles {
 
   debug 'ture'
   label 'mem20GB'
-  tag '${db_name}-dump_fasta'
+  tag '${db_name}-dump_gff'
   errorStrategy 'finish'
   publishDir "${params.output}"
 
@@ -31,10 +31,9 @@ process DumpFastaFiles {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
 
-  ${params.nf_py_script_path}/file_dump/dump_fasta.py --base_dir=${BASE_DIR}\
+  ${params.nf_py_script_path}/file_dump/dump_gff3_gtf.py --base_dir=${BASE_DIR}\
    --username ${params.user} --password "" --dest "${params.ftp_path}"\
    --db ${params.server}/${db_name} > ${db_name}.log
 
   """
-
 }

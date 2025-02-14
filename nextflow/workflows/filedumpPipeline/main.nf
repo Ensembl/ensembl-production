@@ -31,6 +31,7 @@ params.base_dir           = "$BASE_DIR"
 
 // Import Production Common Factories
 include { DumpFastaFiles } from './genset_fasta.nf'
+include { DumpGFF3_GTFFiles} from './gff3_gtf.nf'
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
 // Validate input parameters
@@ -63,25 +64,17 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-
+database = ["mus_musculus_casteij_core_114_2"]
 division = channel.of(params.division.split(","))
 
 // Dump fasta files
-core_out_ch = CoreDumpGensetFastaFlow("mus_musculus_casteij_core_114_2")
+Channel.of(databases)
+| DumpFastaFiles & DumpGFF3_GTFFiles
+| mix
+| view
   
 //clean the empty log files  
  
-}
-
-workflow CoreDumpGensetFastaFlow {
-
-    take: 
-      database
-    main:          
-      output_files=DumpFastaFiles(database)
-    emit:
-      output_files.collect() 
-
 }
 
 workflow.onComplete {
