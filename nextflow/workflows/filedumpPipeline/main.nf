@@ -64,14 +64,11 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-database = ["mus_musculus_casteij_core_114_2"]
+databases = "mus_musculus_casteij_core_114_2"
 division = channel.of(params.division.split(","))
 
-// Dump fasta files
-Channel.of(databases)
-| DumpFastaFiles & DumpGFF3_GTFFiles
-| mix
-| view
+// Dump fasta files commented while testing gff
+Channel.of(databases) | /*DumpFastaFiles &*/ DumpGFF3_GTFFiles | view
   
 //clean the empty log files  
  

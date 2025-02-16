@@ -21,13 +21,8 @@ pwd = ""
 import sys
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, concat, length, udf
-from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
-from pyspark.sql.types import StringType
+from ensembl.production.spark.fileio.GFFService import GFFService
 import argparse
-import glob
-import shutil
-import os
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -58,9 +53,10 @@ confi.set("spark.driver.maxResultSize", "15G")
 confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
-transcript_service = TranscriptSparkService(spark_session)
 #need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
-# Assembly chain
+gff_service = GFFService(spark_session)
+
+gff_service.dump_all_features("/Users/mira/test_gff", url, username, pwd)

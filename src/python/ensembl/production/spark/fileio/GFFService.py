@@ -12,27 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-__all__ = ['GFF', 'GFFAdaptor']
+__all__ = ['GFFService']
 from pyspark.sql.types import StringType
 from pathlib import Path
 import glob
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature, FeatureLocation
-from pyspark.sql.types import StructType
-from pyspark.sql import SparkSession
 import warnings
-from pyspark.sql.functions import col, udf
+from pyspark.sql.functions import udf
 from typing import Optional
 import os
 from pyspark.sql.functions import lit
-"""
-TO BE IMPLEMENTED!!!
-"""
 
-
-class GFF3():
+class GFFService():
 
     feature_type = {
         'gene': 'gene',
@@ -81,13 +71,9 @@ class GFF3():
         'pseudogenic_exon': 'exon',
         'CDS': 'translation'
     }
-    def __init__(self, db, user, password) -> None:
+    def __init__(self, spark_session) -> None:
             # Create SparkSession
-            self._db = db
-            self._user = user
-            self._password = password
-            self._spark = SparkSession.builder.appName('SparkByExamples.com').config(
-                "spark.jars", "mysql-connector-j-8.1.0.jar").getOrCreate()
+            self._spark = spark_session
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(????)'
@@ -405,52 +391,52 @@ class GFF3():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, file_path) -> None:
+    def dump_all_features (self, file_path, db, user, password) -> None:
         if self._check_gff_file(file_path) == False:
             return
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","seq_region")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._transcripts = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","transcript")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._genes = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","gene")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._exons = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","exon")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user",  user)\
+                .option("password", password)\
                 .load()
 
         self._exon_transcript = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","exon_transcript")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         tmp_fp = file_path + "_tpm"
@@ -605,7 +591,6 @@ class GFF3():
 
         #write exons
         return None
-
 
     def _check_gff_file (self, file_path) -> bool:
         if (os.path.exists(file_path) == False):
