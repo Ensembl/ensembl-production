@@ -114,8 +114,8 @@ sub pipeline_analyses {
             -module            => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
             -language        => 'python3',
             -max_retry_count   => 1,
+            -analysis_capacity => 1,
             -parameters        => {
-                hash_type => $self->o('hash_type'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
             -rc_name           => 'default',
