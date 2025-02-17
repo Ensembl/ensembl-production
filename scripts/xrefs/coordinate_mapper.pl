@@ -17,7 +17,8 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Carp;
-use DBI;
+use Text::CSV;
+use DBI qw(:sql_types);
 use JSON;
 use Getopt::Long;
 use File::Spec::Functions qw(catfile);
@@ -39,6 +40,11 @@ GetOptions(
 foreach my $param ($xref_db_url, $core_db_url, $species_id, $output_dir, $analysis_id) {
   defined $param or croak "Usage: dump_ensembl.pl --xref_db_url <xref_db_url> --core_db_url <core_db_url> --species_id <species_id> --output_dir <output_dir> --analysis_id <analysis_id>";
 }
+
+# Initialize the weights for the matching algorithm
+my $ens_weight = 3;
+my $coding_weight = 2;
+my $transcript_score_threshold = 0.75;
 
 # Set the files to use
 my $xref_filename = catfile($output_dir, 'xref_coord.txt');
@@ -306,11 +312,21 @@ foreach my $chromosome (@chromosomes) {
   }
 }
 
+# Ensure we have a db connection
+unless ($core_dbi->ping) {
+  $core_dbi = get_dbi($core_host, $core_port, $core_user, $core_pass, $core_dbname); 
+}
+
 # Make all dumps.  Order is important.
 dump_xref($xref_filename, $xref_id, \%mapped, \%unmapped);
 dump_object_xref($object_xref_filename, $object_xref_id, $analysis_id, \%mapped);
 dump_unmapped_reason($unmapped_reason_filename, $unmapped_reason_id, \%unmapped, $core_dbi);
 dump_unmapped_object($unmapped_object_filename, $unmapped_object_id, $analysis_id, \%unmapped);
+
+# Ensure we have a db connection, again
+unless ($core_dbi->ping) {
+  $core_dbi = get_dbi($core_host, $core_port, $core_user, $core_pass, $core_dbname); 
+}
 
 # Upload the dumps. Order is important.
 upload_data('unmapped_reason', $unmapped_reason_filename, $external_db_id, $core_dbi);
@@ -327,7 +343,7 @@ sub parse_url {
 sub get_dbi {
   my ($host, $port, $user, $pass, $dbname) = @_;
   my $dbconn = defined $dbname ? sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname) : sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
-  my $dbi = DBI->connect($dbconn, $user, $pass, { 'RaiseError' => 1 }) or croak("Can't connect to database: " . $DBI::errstr);
+  my $dbi = DBI->connect($dbconn, $user, $pass, { 'RaiseError' => 1, 'mysql_auto_reconnect' => 1 }) or croak("Can't connect to database: " . $DBI::errstr);
   return $dbi;
 }
 
@@ -470,6 +486,8 @@ sub upload_data {
   }
 
   my $cleanup_sql = '';
+  my $extra_sql = '';
+  my @columns;
   if ($table_name eq 'unmapped_reason') {
     $cleanup_sql = qq(
       DELETE  ur
@@ -478,12 +496,17 @@ sub upload_data {
       WHERE   uo.external_db_id       = ?
       AND     ur.unmapped_reason_id   = uo.unmapped_reason_id
     );
+
+    @columns = ('unmapped_reason_id', 'summary_description', 'full_description');
+    $extra_sql = "ON DUPLICATE KEY UPDATE summary_description=?, full_description=?";
   } elsif ($table_name eq 'unmapped_object') {
     $cleanup_sql = qq(
       DELETE  uo
       FROM    unmapped_object uo
       WHERE   uo.external_db_id = ?
     );
+
+    @columns = ('unmapped_object_id', 'type', 'analysis_id', 'external_db_id', 'identifier', 'unmapped_reason_id', 'query_score', 'target_score', 'ensembl_id', 'ensembl_object_type', 'parent');
   } elsif ($table_name eq 'object_xref') {
     $cleanup_sql = qq(
       DELETE  ox
@@ -492,21 +515,54 @@ sub upload_data {
       WHERE   x.external_db_id    = ?
       AND     ox.xref_id          = x.xref_id
     );
+
+    @columns = ('object_xref_id', 'ensembl_id', 'ensembl_object_type', 'xref_id', 'linkage_annotation', 'analysis_id');
+    $extra_sql = "ON DUPLICATE KEY UPDATE analysis_id=?";
   } elsif ($table_name eq 'xref') {
     $cleanup_sql = qq(
       DELETE  x
       FROM    xref x
       WHERE   x.external_db_id    = ?
     );
+
+    @columns = ('xref_id', 'external_db_id', 'dbprimary_acc', 'display_label', 'version', 'description', 'info_type', 'info_text');
   } else {
     croak(sprintf("Table '%s' is unknown\n", $table_name));
   }
 
-  my $load_sql = sprintf("LOAD DATA LOCAL INFILE ? REPLACE INTO TABLE %s", $table_name);
-
+  # Cleanup existing data
   my $rows = $dbi->do($cleanup_sql, undef, $external_db_id) or croak($dbi->errstr());
 
-  $rows = $dbi->do($load_sql, undef, $filename) or croak($dbi->errstr());
+  # Open the file for reading
+  my $csv = Text::CSV->new({
+    sep_char => "\t"
+  }) || confess 'Failed to initialise CSV parser: ' . Text::CSV->error_diag();
+  my $file_io = IO::File->new($filename, 'r') or croak(sprintf("Can not open '%s' for reading", $filename));
+  $csv->column_names(@columns);
 
+  # Prepare the query for insertion
+  my $placeholders = join(',', ('?') x scalar(@columns));
+  my $sql = "INSERT INTO $table_name (" . join(',', @columns) . ") VALUES ($placeholders) $extra_sql";
+  my $load_sth = $dbi->prepare($sql);
+
+  # Load data
+  while (defined(my $line = $csv->getline($file_io))) {
+    # Handle "\N" and convert it to undef (NULL in DB)
+    for my $i (0..$#$line) {
+      $line->[$i] = undef if $line->[$i] eq '\\N';
+    }
+
+    if ($table_name eq 'unmapped_reason') {
+      $load_sth->execute(@$line, $line->[1], $line->[2]) or die "Failed to insert line: " . $load_sth->errstr;
+    } elsif ($table_name eq 'object_xref') {
+      $load_sth->execute(@$line, $line->[5]) or die "Failed to insert line: " . $load_sth->errstr;
+    } else {
+      $load_sth->execute(@$line) or die "Failed to insert line: " . $load_sth->errstr;
+    }
+  }
+  $file_io->close();
+  $load_sth->finish();
+
+  # Optimize the table
   $dbi->do("OPTIMIZE TABLE $table_name") or croak($dbi->errstr());
 }

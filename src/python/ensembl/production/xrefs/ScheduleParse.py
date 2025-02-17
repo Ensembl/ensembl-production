@@ -208,6 +208,8 @@ class ScheduleParse(Base):
                 if source.name == "ZFIN_ID":
                     list_files = [list_files[0]]
                     zfin_scheduled = True
+                elif re.search(r"^UCSC_", source.name):
+                    dataflow_params["parser"] = "UCSCParser"
 
                 for file in list_files:
                     if source.revision and file == source.revision:
