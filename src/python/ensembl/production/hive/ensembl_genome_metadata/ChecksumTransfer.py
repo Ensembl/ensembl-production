@@ -10,32 +10,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
-from sqlalchemy.engine.url import make_url
-from sqlalchemy.orm.exc import NoResultFound
 from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSystem, Meta
 from ensembl.database import DBConnection
 from ensembl.production.metadata.api.models import Assembly, AssemblySequence
+from sqlalchemy import update
+from sqlalchemy.engine.url import make_url
+from sqlalchemy.sql import bindparam
+
+from ensembl.production.hive.BaseProdRunnable import BaseProdRunnable
 
 
 class ChecksumTransfer(BaseProdRunnable):
     def run(self):
         db_uri = make_url(self.param_required("database_uri"))
         md_uri = make_url(self.param_required("metadata_uri"))
-        hash_type = self.param_required("hash_type")
-        if "md5" in hash_type:
-            md5 = 1
-            if "sha512t24u" in hash_type:
-                sha512t24u = 1
-        elif "sha512t24u" in hash_type:
-            sha512t24u = 1
-            md5 = 0
-        else:
-            md5 = 1
-            sha512t24u = 1
-
         data = self.extract_data_from_core(db_uri)
-        self.deposit_data_in_meta(md_uri, data, md5, sha512t24u)
+        self.deposit_data_in_meta(md_uri, data)
 
     def extract_data_from_core(self, db_uri):
         db = DBConnection(db_uri)
@@ -76,7 +66,7 @@ class ChecksumTransfer(BaseProdRunnable):
                     result[species_id]['seq_regions'][name]['sha512t24u'] = value
             return result
 
-    def deposit_data_in_meta(self, md_uri, data, md5=1, sha512t24u=1):
+    def deposit_data_in_meta(self, md_uri, data):
         md = DBConnection(md_uri)
         with md.session_scope() as session:
             updates = []
@@ -103,22 +93,27 @@ class ChecksumTransfer(BaseProdRunnable):
                 for seq_name, checksums in seq_regions.items():
                     assembly_seq = assembly_seq_dict.get(seq_name)
                     if not assembly_seq:
-                        # Check Seq_region for a particular species not found in metadata database
                         raise ValueError(
                             f"AssemblySequence with name {seq_name} not found in metadata database for assembly {assembly_acc}")
 
-                    # Prepare the update data
+                    # Prepare the update data (EXCLUDE assembly_sequence_id from SET values)
                     update_data = {}
-                    if md5 and 'md5' in checksums:
+                    if 'md5' in checksums:
                         update_data['md5'] = checksums['md5']
-                    if sha512t24u and 'sha512t24u' in checksums:
+                    if 'sha512t24u' in checksums:
                         update_data['sha512t24u'] = checksums['sha512t24u']
 
-                    # Add to updates list
-                    if update_data:
-                        update_data['assembly_sequence_id'] = assembly_seq.assembly_sequence_id
+                    if update_data:  # Ensure there's something to update
+                        # Rename bindparam key for primary key to avoid conflict
+                        update_data["pk_assembly_sequence_id"] = assembly_seq.assembly_sequence_id
                         updates.append(update_data)
 
-            # Perform the bulk update
+            # Perform the bulk update using the correct syntax
             if updates:
-                session.bulk_update_mappings(AssemblySequence, updates)
+                stmt = update(AssemblySequence).where(
+                    AssemblySequence.assembly_sequence_id == bindparam("pk_assembly_sequence_id")
+                ).values(
+                    md5=bindparam("md5"),
+                    sha512t24u=bindparam("sha512t24u")
+                )
+                session.execute(stmt, updates)

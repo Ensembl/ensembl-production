@@ -155,7 +155,6 @@ sub pipeline_analyses {
             -language        => 'python3',
             -max_retry_count => 1,
             -parameters      => {
-                hash_type => $self->o('hash_type'),
                 metadata_uri   => $self->o('metadata_uri'),
             },
         },
