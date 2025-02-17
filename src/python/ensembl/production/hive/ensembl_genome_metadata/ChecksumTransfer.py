@@ -81,7 +81,6 @@ class ChecksumTransfer(BaseProdRunnable):
                     AssemblySequence.name.in_(seq_regions.keys())
                 ).all()
 
-                # Map AssemblySequence records to their names for easy access
                 assembly_seq_dict = {seq.name: seq for seq in assembly_seqs}
 
                 # Check Seq_region exists in metadata database but not in our dictionary
@@ -96,19 +95,17 @@ class ChecksumTransfer(BaseProdRunnable):
                         raise ValueError(
                             f"AssemblySequence with name {seq_name} not found in metadata database for assembly {assembly_acc}")
 
-                    # Prepare the update data (EXCLUDE assembly_sequence_id from SET values)
                     update_data = {}
                     if 'md5' in checksums:
                         update_data['md5'] = checksums['md5']
                     if 'sha512t24u' in checksums:
                         update_data['sha512t24u'] = checksums['sha512t24u']
 
-                    if update_data:  # Ensure there's something to update
-                        # Rename bindparam key for primary key to avoid conflict
+                    if update_data:
                         update_data["pk_assembly_sequence_id"] = assembly_seq.assembly_sequence_id
                         updates.append(update_data)
 
-            # Perform the bulk update using the correct syntax
+            # Perform the bulk update
             if updates:
                 stmt = update(AssemblySequence).where(
                     AssemblySequence.assembly_sequence_id == bindparam("pk_assembly_sequence_id")
