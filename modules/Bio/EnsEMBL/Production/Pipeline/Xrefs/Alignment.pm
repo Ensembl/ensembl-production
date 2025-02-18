@@ -84,10 +84,18 @@ sub run {
   $exe =~ s/\n//g;
   my $command_string = sprintf ("%s --showalignment FALSE --showvulgar FALSE --ryo '%s' --gappedextension FALSE --model 'affine:local' %s --subopt no --query %s --target %s --querychunktotal %s --querychunkid %s", $exe, $ryo, $method, $source, $target, $max_chunks, $chunk);
   my $output = `$command_string`;
-  my @hits = grep {$_ =~ /^xref/} split "\n", $output; # not all lines in output are alignments
 
-  while (my $hit = shift @hits) {
-    print $fh $hit . "\n";
+  if ($? == 0) {
+    my @hits = grep {$_ =~ /^xref/} split "\n", $output; # not all lines in output are alignments
+
+    while (my $hit = shift @hits) {
+      print $fh $hit . "\n";
+    }
+  } else {
+    my $job = $self->input_job();
+    $job->adaptor()->db()->get_LogMessageAdaptor()->store_job_message($job->dbID(), $output, 'WORKER_ERROR');  
+
+    throw("Exonerate failed with exit_code: $?\n");
   }
 
   $fh->close();

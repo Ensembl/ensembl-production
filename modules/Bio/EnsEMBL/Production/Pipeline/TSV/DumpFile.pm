@@ -55,7 +55,6 @@ return;
 
 sub run {
     my ($self) = @_;
-
     $self->info( "Starting tsv dump for " . $self->param('species'));
     $self->_write_tsv();
     $self->_create_README();
@@ -115,7 +114,7 @@ sub _write_tsv {
          }#transcript
       }#gene
   }#slice 
-  close $fh; 
+  close $fh;
   $self->core_dbc()->disconnect_if_idle();
 return;
 }

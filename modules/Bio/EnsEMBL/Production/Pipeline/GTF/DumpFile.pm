@@ -383,7 +383,8 @@ feature for the position of this on the genome
 - cds_start_NF: the coding region start could not be confirmed
 - mRNA_end_NF: the mRNA end could not be confirmed
 - mRNA_start_NF: the mRNA start could not be confirmed.
-- basic: the transcript is part of the gencode basic geneset
+- gencode_basic: the transcript is part of the gencode basic geneset
+- gencode_primary: the transcript is part of the gencode primary geneset
 
 Comments
 

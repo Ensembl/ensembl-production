@@ -218,7 +218,7 @@ sub all_hashes {
     } ## end foreach my $slice (@slices)
 
     for my $seq_type (keys %$batch) {
-        for my $attrib_table (keys $batch->{$seq_type}) {
+        for my $attrib_table (keys %{$batch->{$seq_type}}) {
             $attribute_adaptor->store_batch_on_Object($attrib_table, $batch->{$seq_type}->{$attrib_table}, 1000);
         }
     }
