@@ -448,21 +448,19 @@ class GFFService():
         def joinColumnsExon(feature_id, parent, version, rank, start_phase,
                         end_phase, constitutive):
             result = ""
-            if feature_id:
-                result = result + "ID=" + feature_id + ";"
             if parent:
                 result = result + "Parent=transcript:"
                 result = result + parent + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
-            if rank:
-                result = result + "rank=" + str(rank) + ";"
-            if start_phase:
-                result = result + "ensembl_phase=" + str(start_phase) + ";"
-            if end_phase:
-                result = result + "ensembl_end_phase=" + str(end_phase) + ";"
             if constitutive:
                 result = result + "constitutive=" + str(constitutive) + ";"
+            else: 
+                result = result + "constitutive=0;"
+            if feature_id:
+                result = result + "exon_id=" + feature_id + ";"
+            if rank:
+                result = result + "rank=" + str(rank) + ";"
+            if version:
+                result = result + "version=" + str(version) + ";"
 
             return result
 
@@ -580,7 +578,7 @@ class GFFService():
                                                                  ))\
                 .withColumn("type", lit("exon"))\
                 .withColumn("score", lit("."))\
-                 .withColumn("source", lit("."))
+                 .withColumn("source", lit("ensembl"))
 
         exons = exons.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
