@@ -32,7 +32,7 @@ process DumpGFF3_GTFFiles {
   export SPARK_LOCAL_IP="127.0.0.1"
 
   ${params.nf_py_script_path}file_dump/dump_gff3_gtf.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password "" --dest "${params.ftp_path}"\
+   --username ${params.user} --password ${params.password} --dest "${params.ftp_path}"\
    --db ${params.server}/${db_name} > ${db_name}.log
 
   """

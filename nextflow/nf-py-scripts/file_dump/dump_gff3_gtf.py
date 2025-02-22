@@ -59,4 +59,4 @@ spark_session.sparkContext.setLogLevel("ERROR")
 
 gff_service = GFFService(spark_session)
 
-gff_service.dump_all_features("/Users/mira/test_gff", url, username, pwd)
+gff_service.dump_all_features(dest + "test_gff.gff", url, username, pwd)

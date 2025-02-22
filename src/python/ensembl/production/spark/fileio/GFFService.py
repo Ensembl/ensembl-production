@@ -272,7 +272,6 @@ class GFFService():
                 .option("user", self._user)\
                 .option("password", self._password)\
                 .load()
-        print(exons.show())
         # Write exon_transcripts
         exon_transcript_df = exons.join(exons_df.select("stable_id", "rank",
                                                         "transcript_stable_id"),
@@ -285,7 +284,6 @@ class GFFService():
                                 on=[exon_transcript_df.transcript_stable_id == self._transcripts.stable_id])
         print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.select("exon_id", "transcript_id", "rank")
-        print(exon_transcript_df.show())
         exon_transcript_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -392,8 +390,7 @@ class GFFService():
             self.write_translations(gff_frame["translation"])
 
     def dump_all_features (self, file_path, db, user, password) -> None:
-        if self._check_gff_file(file_path) == False:
-            return
+        
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -416,7 +413,9 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("dbtable","gene")\
+                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
+                     and ox.ensembl_object_type=\"Gene\" \
+                    left join xref x on x.xref_id = ox.xref_id")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -485,16 +484,32 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsGene(feature_id, version, biotype):
+        def joinColumnsGene(feature_id, version, name, biotype, description):
             result = ""
             if feature_id:
-                result = result + "ID=" + feature_id + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
+                result = result + "ID=gene:" + feature_id + ";"
+            if name:
+                result = result + "Name=" + str(name) + ";"
             if biotype:
                 result = result + "biotype=" + biotype + ";"
+            if description:
+                result = result + "description=" + str(description) + ";"
+            if feature_id:
+                result = result + "gene_id=" + str(feature_id)
+            if version:
+                result = result + "version=" + str(version)
+
 
             return result
+        
+        # Strand
+        @udf(returnType=StringType())
+        def code_strand(strand):
+            result = "+"
+            if(strand == -1):
+                result = "-"
+            return result
+
 
         genes = self._genes.join(self._regions.select("seq_region_id",
                                                     "name"), on =
@@ -504,8 +519,10 @@ class GFFService():
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
                                                        "version",\
-                                                       "biotype"))\
-                .withColumn("type", lit("."))\
+                                                       "gene_name",\
+                                                       "biotype",\
+                                                       "description"))\
+                .withColumn("type", lit("gene"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
@@ -529,7 +546,7 @@ class GFFService():
                                                                    "transcript_stable_id",
                                                                    "version",
                                                                    "biotype"))\
-                .withColumn("type", lit("."))\
+                .withColumn("type", lit("transcript"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
@@ -561,7 +578,7 @@ class GFFService():
                                                                    "end_phase",\
                                                                 "is_constitutive",\
                                                                  ))\
-                .withColumn("type", lit("."))\
+                .withColumn("type", lit("exon"))\
                 .withColumn("score", lit("."))\
                  .withColumn("source", lit("."))
 
@@ -571,13 +588,18 @@ class GFFService():
 
 
         combined_df = genes
+        print(genes.count())
         # Combined df append transcripts
         combined_df = combined_df.union(transcripts)
         combined_df = combined_df.union(exons)
-        combined_df.write.option("header", False).option("delimiter", "\t").csv(tmp_fp)
+        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
+        combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp)
         # Find file in temp spark dir
         files = glob.glob(tmp_fp + "/part-0000*")
-
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
         f = open(file_path, "a")
         for file in files:
             f_cvs = open(file)

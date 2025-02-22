@@ -28,6 +28,7 @@ params.variation_filetype = "vcf,gvf"
 params.output             = ""
 params.ftp_path           = ""
 params.base_dir           = "$BASE_DIR"
+params.password           = ""
 
 // Import Production Common Factories
 include { DumpFastaFiles } from './genset_fasta.nf'
@@ -64,7 +65,7 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = "mus_musculus_casteij_core_114_2"
+databases = "abramis_brama_gca022829085v1_core_110_1"
 division = channel.of(params.division.split(","))
 
 // Dump fasta files commented while testing gff
