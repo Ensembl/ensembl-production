@@ -481,13 +481,16 @@ class GFFService():
         def joinColumnsTranscript(parent, feature_id, version, biotype):
             result = ""
             if feature_id:
-                result = result + "ID=" + feature_id + ";"
+                result = result + "ID=transcript" + feature_id + ";"
             if parent:
                 result = result + "Parent=gene:" + parent + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
             if biotype:
                 result = result + "biotype=" + biotype + ";"
+            if feature_id:
+                result = result + "transcript_id=" + feature_id + ";"
+            if version:
+                result = result + "version=" + str(version) + ";"
+
 
             return result
 
@@ -619,6 +622,7 @@ class GFFService():
         combined_df = combined_df.union(transcripts)
         combined_df = combined_df.union(exons)
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
+        combined_df = combined_df.repartition(1).orderBy("name", "seq_region_start")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp)
         # Find file in temp spark dir
         files = glob.glob(tmp_fp + "/part-0000*")
