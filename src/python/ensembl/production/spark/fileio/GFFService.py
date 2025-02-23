@@ -437,6 +437,17 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
+                
+        biotype_df = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","biotype")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+        
+        biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
 
         tmp_fp = file_path + "_tpm"
         schema = ["seq_name", "source", "type", "seq_region_start",
@@ -507,12 +518,26 @@ class GFFService():
             if(strand == -1):
                 result = "-"
             return result
+        
+        # Type
+        @udf(returnType=StringType())
+        def type(type, so_term):
+            result = "type"
+            if(len(so_term)>1):
+                if so_term == "protein_coding_gene":
+                    so_term ="gene"
+                result = so_term
+            return result
 
 
         genes = self._genes.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                [self._genes.seq_region_id ==
-                                self._regions.seq_region_id])
+                                self._regions.seq_region_id])\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._genes.biotype])\
+                            .drop("biotype_name")
+        
 
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
@@ -520,7 +545,7 @@ class GFFService():
                                                        "gene_name",\
                                                        "biotype",\
                                                        "description"))\
-                .withColumn("type", lit("gene"))\
+                .withColumn("type", type(lit("gene"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
@@ -531,7 +556,10 @@ class GFFService():
         transcripts = self._transcripts.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                [self._transcripts.seq_region_id ==
-                                self._regions.seq_region_id])
+                                self._regions.seq_region_id])\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
+                            .drop("biotype_name")
 
         transcripts = transcripts.withColumnRenamed("stable_id",
                                                     "transcript_stable_id")
@@ -544,7 +572,7 @@ class GFFService():
                                                                    "transcript_stable_id",
                                                                    "version",
                                                                    "biotype"))\
-                .withColumn("type", lit("transcript"))\
+                .withColumn("type", type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
