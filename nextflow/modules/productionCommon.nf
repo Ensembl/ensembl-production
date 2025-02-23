@@ -51,54 +51,90 @@ process DbFactory {
   """
 }
 
+/* use new genome factory */
 process GenomeInfo {
-    /*
-      Description: Fetch the genome information from the ensembl production metadata-api
-      Input:
-            genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
-            species_name        (list): Ensembl Species Name. Defaults to [].
-            organism_group      (list): Ensembl species Divisions. Defaults [].
-            unreleased_datasets (bool): Fetch genomes UUID for unreleased dataset. Default True 
-            dataset_topic       (str) : dataset topic name to fetch the unique genome ids Default 'assembly'
-            metadata_uri        (str, Required): Mysql URI string to connect the metadata database.
-            taxonomy_uri        (str, Required): Mysql URI string to connect the ncbi taxonomy db.
-            output_json         (str, Required): path to genome info json file 
+  /*
+    Description: Fetch the genome information from the ensembl production metadata-api
+    Input:
+      genome_uuid         (list): genome Universally Unique IDentifier. Defaults to [].
+      species_name        (list): Ensembl Species Name. Defaults to [].
+      organism_group      (list): Ensembl species Divisions. Defaults [].
+      output_json         (str, Required): path to genome info json file
+    Output:
+        String: Json file with genome information
+  */
 
-      Output:
-          String: Json file with genome information 
-    */
-
-    debug "${params.debug}"  
+    debug "${params.debug}"
     label 'mem4GB'
     tag 'genomeinfo'
-  
+
     input:
+    val metadata_db_uri
     val genome_uuid
-    val species_name
-    val organism_group
-    val unreleased_genomes
+    val dataset_uuid
+    val organism_group_type
+    val division
     val dataset_type
-    val metadata_uri
-    val taxonomy_uri
+    val species
+    val antispecies
+    val dataset_status
+    val update_dataset_status
+    val batch_size
+    val page
+    val columns
     val output_json
-    
+
     output:
     path "$output_json"
 
-  script :
-  def metadata_db_uri          =  metadata_uri ? "--metadata_db_uri $metadata_uri" : '' 
-  def taxonomy_db_uri          =  taxonomy_uri ? "--taxonomy_db_uri $taxonomy_uri" : ''
-  def genome_uuid_param        =  genome_uuid.size() > 0 ?  "--genome_uuid ${genome_uuid.join(" ")}" : ''             
-  def species_name_param       =  species_name.size() > 0 ?  "--species_name ${species_name.join(" ")}" : ''        
-  def organism_group_param     =  organism_group.size() > 0 ?  "--organism_group ${organism_group.join(" ")}" : ''        
-  def unreleased_genomes_param =  unreleased_genomes ? "--unreleased_genomes" : ''         
-  def dataset_type_param       =  dataset_type.size() > 0 ?  "--dataset_name ${dataset_type.join(" ")}" : ''        
-  
-  """
-  pyenv local production-nextflow-py-3.8
+    script :
+    def metadata_db_uri_param        =  metadata_db_uri ?                  "--metadata_db_uri $metadata_db_uri" : ''
+    def genome_uuid_param            =  genome_uuid.size() > 0 ?           "--genome_uuid ${genome_uuid.join(" ")}" : ''
+    def dataset_uuid_param           =  dataset_uuid.size() > 0 ?          "--dataset_uuid ${genome_uuid.join(" ")}" : ''
+    def organism_group_type_param    =  organism_group_type.size() > 0 ?   "--organism_group_type ${organism_group_type.join(" ")}" : ''
+    def division_param               =  division.size() > 0 ?              "--division ${division.join(" ")}" : ''
+    def dataset_type_param           =  dataset_type ?                     "--dataset_type $dataset_type" : ''
+    def species_param                =  species.size() > 0 ?               "--species ${species.join(" ")}" : ''
+    def antispecies_param            =  antispecies.size() > 0 ?           "--antispecies ${antispecies.join(" ")}" : ''
+    def dataset_status_param         =  dataset_status.size() > 0 ?        "--dataset_status ${dataset_status.join(" ")}" : ''
+    def update_dataset_status_param  =  update_dataset_status ?            "--update_dataset_status $update_dataset_status" : ''
+    def batch_size_param             =  batch_size > 0 ?                   "--batch_size $batch_size" : '--batch_size 0'
+    def page_param                   =  page ?                             "--page $page" : ''
+    def columns_param                =  columns.size() > 0 ?               "--columns ${columns.join(" ")}" : ''
+    def output_json_param            =  output_json ?                      "--output $output_json" : '--output genome_info.json'
 
-  ${params.nf_py_script_path}/genome_info.py \
-    $metadata_db_uri $taxonomy_db_uri $genome_uuid_param $species_name_param $organism_group_param \
-    $unreleased_genomes_param $dataset_type_param -o $output_json
-  """
+    """
+    pyenv local production-pipeline-env
+    ${params.nf_py_script_path}/genome_info.py $metadata_db_uri_param $genome_uuid_param $dataset_uuid_param \
+    $organism_group_type_param $division_param $dataset_type_param $species_param \
+    $antispecies_param $dataset_status_param $update_dataset_status_param $batch_size_param \
+    $page_param $columns_param $output_json_param
+    """
+}
+
+process UpdateDatasetStatus {
+    debug "${params.debug}"
+    label 'ensembl'
+    tag "$dataset_uuid"
+
+    input:
+    val dataset_uuid
+    val metadata_db_uri
+    val update_status
+
+    output:
+    val dataset_uuid
+
+    script :
+    def metadata_db_uri_param        =  metadata_db_uri ?                  "--metadata_db_uri $metadata_db_uri" : ''
+    def dataset_uuid_param           =  dataset_uuid    ?                  "--dataset_uuid ${dataset_uuid}" : ''
+    def update_dataset_status_param  =  update_status   ?                  "--update_status ${update_status}" : ''
+
+    """
+    pyenv local production-pipeline-env
+    echo "update datasetstatus for ${dataset_uuid} to ${update_dataset_status_param}"
+    python ${params.nf_py_script_path}/update_dataset_status.py $metadata_db_uri_param \
+    $dataset_uuid_param \
+    $update_dataset_status_param
+    """
 }

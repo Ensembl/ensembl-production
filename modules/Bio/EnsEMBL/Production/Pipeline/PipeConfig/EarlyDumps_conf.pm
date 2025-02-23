@@ -131,14 +131,14 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
       -parameters        => {
-			                        nfs_early_dump_path_vert         => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('ensembl_version')), 
-			                        nfs_early_dump_path_nonvert      => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('eg_version')), 
+			                        nfs_early_dump_path_vert         => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('ensembl_version')),
+			                        nfs_early_dump_path_nonvert      => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('eg_version')),
                               cmd              => q{ 
-			      	                                        rsync -avW  --include={'vertebrates'}  --exclude={'plants','protists', 'fungi', 'bacteria', 'metazoa'} #early_dump_base_path# #nfs_early_dump_path_vert# 	
+			      	                                        rsync -avW  --include={'vertebrates'}  --exclude={'plants','protists', 'fungi', 'bacteria', 'metazoa'} #early_dump_base_path# #nfs_early_dump_path_vert#
 							                                        rsync -avW  --include={'plants','protists', 'fungi', 'bacteria', 'metazoa'} --exclude={'vertebrates'}  #early_dump_base_path# #nfs_early_dump_path_nonvert#
                                                    },
                             },
-      -flow_into         => { '1' => 'Email' },			    
+      -flow_into         => { '1' => 'Email' },
     },
     {
       -logic_name        => 'MetaDataReport',

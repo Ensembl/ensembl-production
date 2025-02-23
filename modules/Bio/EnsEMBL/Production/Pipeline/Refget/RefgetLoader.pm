@@ -109,23 +109,30 @@ sub param_defaults {
         refget_dba_group => 'refget',
         source => 'Ensembl',
         sequence_type => [qw/toplevel cdna cds pep/],
+	    max_allowed_packet => '1G',
     };
 }
 
 sub run {
+
     my ($self) = @_;
     my $group = $self->param('group');
     my $dba = $self->get_DBAdaptor($group);
+    #set sequence and hash
+    $self->{'subseq'}={};
+
     $self->throw("Cannot find adaptor for type $group") unless $dba;
-    # Assumes refget is available from the multi name & refget type
+    ## Assumes refget is available from the multi name & refget type
     my $refget_dba = Bio::EnsEMBL::Registry->get_DBAdaptor($self->param('refget_dba_name'), $self->param('refget_dba_group'));
     my $extra_attributes = {};
-    if($refget_dba->dbc()->driver() eq 'mysql') {
-        $extra_attributes->{quote_char} = '`';
-    }
-    my $refget_schema = Refget::Schema->connect(sub {
-        return $refget_dba->dbc()->db_handle();
-    }, $extra_attributes);
+    my $db_conn_string = "dbi:mysql:database=". $refget_dba->dbc()->dbname .";host=". $refget_dba->dbc()->host . ";port=". $refget_dba->dbc()->port . ";max_allowed_packet=" . $self->param('max_allowed_packet');
+
+    $extra_attributes->{quote_char} = '`';
+
+    my $refget_schema = Refget::Schema->connect($db_conn_string,
+      $refget_dba->dbc()->user, $refget_dba->dbc()->pass, $extra_attributes);
+
+
     #Setup refget objects
     $self->create_basic_refget_objects($dba, $refget_schema);
 
@@ -135,28 +142,33 @@ sub run {
     my @slices = reverse @{$slice_adaptor->fetch_all('toplevel', undef, 1, undef, undef)};
 
     # Get the checksum lookups
-    my $checksum_lookup = {};
+        my $checksum_lookup = {};
     if($self->param('verify_checksums')) {
         foreach my $type (@{$self->param('sequence_type')}) {
             foreach my $checksum (qw/md5 sha512t24u/) {
                 $checksum_lookup->{$type}->{$checksum} = $self->_get_checksums_from_db($dba, $type, $checksum);
             }
         }
-    }
+     }
 
     while(my $slice = shift @slices) {
         # Transaction block is left at just one per toplevel region. 
         # Sometimes it'll be fine and others it won't be
         # Rows only inserted into molecule if there's a new id+seq+release+type
-        $refget_schema->txn_do(sub {
-            $self->generate_and_load_toplevel($slice, $checksum_lookup, $sequence_adaptor, $refget_schema);
-            $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
-        });
+	$refget_schema->txn_do(sub {
+	    $self->generate_and_load_toplevel($slice, $checksum_lookup, $sequence_adaptor, $refget_schema);
+	    $self->generate_and_load_transcripts_and_proteins($slice, $checksum_lookup, $refget_schema);
+	});
     }
 
     # cleanup
+    #$refget_dba->dbc()->db_handle()->{'AutoCommit'} = 1;
     $dba->dbc->disconnect_if_idle();
-    $refget_dba->dbc->disconnect_if_idle();
+    $refget_schema->txn_commit;
+
+    #$refget_schema->storage->disconnect();
+
+    #$refget_dba->dbc->disconnect_if_idle();
 }
 
 ##### DBIX::Class/Ensembl object loading methods
@@ -165,6 +177,8 @@ sub run {
 # into a refget instance.
 sub create_basic_refget_objects {
     my ($self, $dba, $refget_schema) = @_;
+    print($dba->dbc->dbname);
+    print("\n", $dba->dbc->host);
     my $mc = $dba->get_MetaContainer();
     my $csa = $dba->get_CoordSystemAdaptor();
     my ($cs) = @{$csa->fetch_all()};
@@ -172,6 +186,14 @@ sub create_basic_refget_objects {
     my $species_name = $mc->get_scientific_name();
     my $species_assembly = $cs->version();
     my $species_division = $mc->single_value_by_key('species.division');
+
+    #check species stain group and select assembly version name
+    my $strain_group = $mc->single_value_by_key('species.strain_group');
+    if(defined $strain_group){
+      $species_assembly =  $mc->single_value_by_key('assembly.name');
+    }
+
+
     my $species_release = $self->param('release');
     my $source = $self->param('source');
 
@@ -197,6 +219,7 @@ sub create_basic_refget_objects {
             $self->throw("No source object found for source '${source}'. Is the DB pre-populated?");
         }
         $self->param('source_obj', $source_obj);
+	$refget_schema->txn_commit;
     });
     return;
 }
@@ -225,7 +248,8 @@ sub generate_and_load_toplevel {
                     'The stored %s checksum (%s) for seq_region_name %s seq_region_id %d does not match the calculated checksum (%s)',
                     $checksum, $existing_checksum, $seq_region_name, $seq_region_id, $slice_checksums->{$checksum}
                 );
-                $self->throw($error_string);
+		print($slice->seq_region_name(), "\n");
+		$self->throw($error_string);
             }
         }
     }
@@ -238,6 +262,7 @@ sub generate_and_load_toplevel {
     }
 
     # Load if it wasn't found in refget
+    my $seq_region_id = $slice->get_seq_region_id(); #remove it
     if(! $exists_in_refget) {
         my $seq_hash = {
             trunc512 => $slice_checksums->{trunc512},
@@ -378,6 +403,7 @@ sub insert_molecule {
     # This is an option to insert but we don't do it in refget main ...
     # my $division_obj = $self->param('division_obj');
     my $source_obj = $self->param('source_obj');
+
     my ($seq_obj, $first_seen) = $self->insert_sequence($refget_schema, $seq_ref, $seq_hash);
     my $molecule_obj = $seq_obj->find_or_create_related(
         'molecules',
@@ -415,8 +441,17 @@ sub insert_raw_sequence {
     my ($self, $refget_schema, $seq_ref, $ga4gh_id) = @_;
     my $hash = ga4gh_to_trunc512($ga4gh_id);
     my $rs = $refget_schema->resultset('RawSeq');
-    my $raw_seq = $rs->find_or_create({ checksum => $hash, seq => ${$seq_ref} });
-    return $raw_seq;
+    my $row = $rs->search(
+        { checksum => $hash },
+        { columns => [qw/ checksum /] }
+    )->single();
+    if($row) {
+        return $row;
+    }
+
+    $row = { checksum => $hash, seq => ${$seq_ref} };
+    my $raw_seq = $rs->new_result($row);
+    return $raw_seq->insert();
 }
 
 ##### Batch checksum attribute retrieval and checking

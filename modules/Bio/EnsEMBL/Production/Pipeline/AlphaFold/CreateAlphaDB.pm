@@ -78,7 +78,7 @@ sub run {
         $copy_to = $idx_dir;
         $idx_dir = tempdir(DIR => '/dev/shm/');
     }
- 
+
     my $db = new KyotoCabinet::DB;
 
     # Set 4 GB mmap size

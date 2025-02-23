@@ -45,7 +45,7 @@ CREATE TABLE species (
 ) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 CREATE TABLE stable_id_lookup (
-  stable_id   VARCHAR(100) NOT NULL,	      
+  stable_id   VARCHAR(100) NOT NULL,
   species_id  INTEGER UNSIGNED NOT NULL,
   db_type     VARCHAR(20) NOT NULL,
   object_type VARCHAR(20) NOT NULL

@@ -62,13 +62,6 @@ my $translation = $tla->fetch_by_stable_id('ENSP00000334263');
 my $exon = $ea->fetch_by_stable_id('ENSE00001654835');
 my $exon2 = $ea->fetch_by_stable_id('ENSE00001730680');
 
-print("Test human db...................");
-print($human_dba->dbc->host);
-print($human_dba->dbc->port);
-print($human_dba->dbc->dbname);
-print($human_dba->dbc->user);
-use Data::Dumper;
-print(Dumper($genome_container));
 
 # Check coding density for chromosome 6
 my @coding_density = @{ $dfa->fetch_all_by_Slice($slice, 'codingdensity') };

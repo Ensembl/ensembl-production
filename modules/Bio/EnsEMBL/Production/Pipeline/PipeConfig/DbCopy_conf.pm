@@ -39,7 +39,7 @@ sub default_options {
     # Database type factory
     groups => 1,
     group  => [],
-    delete_group => [], 
+    delete_group => [],
 
     # Named database factory
     dbname => [],

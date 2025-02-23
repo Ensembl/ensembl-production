@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/filedumpPipeline//nextflow_schema.json",
+  "title": "filedumpPipeline pipeline parameters",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "pipeline_dir": {
+      "type": "string",
+      "default": "$BASE_DIR/ensembl-hive/scripts/"
+    },
+    "species": {
+      "type": "string"
+    },
+    "server": {
+      "type": "string"
+    },
+    "user": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "division": {
+      "type": "string"
+    },
+    "antispecies": {
+      "type": "string"
+    },
+    "meta_filters": {
+      "type": "string"
+    },
+    "dbname": {
+      "type": "string",
+      "default": "\\'\\"
+    },
+    "group": {
+      "type": "string"
+    },
+    "release": {
+      "type": "string",
+      "default": "[:]"
+    },
+    "output": {
+      "type": "string"
+    },
+    "nf_py_script_path": {
+      "type": "string",
+      "default": "$BASE_DIR/ensembl-production/nextflow/nf-py-scripts/"
+    },
+    "core_filetype": {
+      "type": "string"
+    },
+    "variation_filetype": {
+      "type": "string"
+    },
+    "conf_file": {
+      "type": "string"
+    },
+    "ftp_path": {
+      "type": "string"
+    },
+    "base_dir": {
+      "type": "string"
+    }
+  }
+}

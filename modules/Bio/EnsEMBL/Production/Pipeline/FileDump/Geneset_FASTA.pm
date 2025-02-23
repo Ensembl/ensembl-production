@@ -47,8 +47,14 @@ sub param_defaults {
 sub run {
   my ($self) = @_;
 
-  my $blast_index = $self->param_required('blast_index');
-  my $filenames   = $self->param_required('filenames');
+  my $blast_index           = $self->param_required('blast_index');
+  my $filenames             = $self->param_required('filenames');
+
+  if($self->param_is_defined('geneset')){
+    $filenames   = $self->param_required('filenames');
+  }
+
+
 
   my $dba = $self->dba;
 
@@ -58,17 +64,20 @@ sub run {
   my $cds_filename  = $$filenames{'cds'};
   my $pep_filename  = $$filenames{'pep'};
 
-  $self->print_to_file([@$chr, @$non_chr], $cdna_filename, $cds_filename, $pep_filename, '>');
+  #get everything including nonref
+  $self->print_to_file([@$chr, @$non_chr ], $cdna_filename, $cds_filename, $pep_filename, '>');
+  $self->print_to_file($non_ref, $cdna_filename, $cds_filename, $pep_filename, '>>');
 
-  if (scalar(@$non_ref)) {
-    my $non_ref_cdna_filename = $self->generate_non_ref_filename($cdna_filename);
-    my $non_ref_cds_filename  = $self->generate_non_ref_filename($cds_filename);
-    my $non_ref_pep_filename  = $self->generate_non_ref_filename($pep_filename);
-    path($cdna_filename)->copy($non_ref_cdna_filename);
-    path($cds_filename)->copy($non_ref_cds_filename);
-    path($pep_filename)->copy($non_ref_pep_filename);
-    $self->print_to_file($non_ref, $non_ref_cdna_filename, $non_ref_cds_filename, $non_ref_pep_filename, '>>');
-  }
+  #uncomment below code get nonref in seperate file
+  # if (scalar(@$non_ref)) {
+  #   my $non_ref_cdna_filename = $self->generate_non_ref_filename($cdna_filename);
+  #   my $non_ref_cds_filename  = $self->generate_non_ref_filename($cds_filename);
+  #   my $non_ref_pep_filename  = $self->generate_non_ref_filename($pep_filename);
+  #   path($cdna_filename)->copy($non_ref_cdna_filename);
+  #   path($cds_filename)->copy($non_ref_cds_filename);
+  #   path($pep_filename)->copy($non_ref_pep_filename);
+  #   $self->print_to_file($non_ref, $non_ref_cdna_filename, $non_ref_cds_filename, $non_ref_pep_filename, '>>');
+  # }
 
   if ($blast_index) {
     $self->blast_index($cdna_filename, 'nucl');
@@ -81,7 +90,11 @@ sub print_to_file {
   my ($self, $slices, $cdna_filename, $cds_filename, $pep_filename, $mode) = @_;
 
   my $cdna_serializer = $self->fasta_serializer($cdna_filename, $mode);
-  my $cds_serializer  = $self->fasta_serializer($cds_filename, $mode);
+  my $cds_serializer = "";
+
+  if($self->param('cds')){
+    $cds_serializer  = $self->fasta_serializer($cds_filename, $mode);
+  }
   my $pep_serializer  = $self->fasta_serializer($pep_filename, $mode);
 
   while (my $slice = shift @{$slices}) {
@@ -93,10 +106,11 @@ sub print_to_file {
       
       if ($transcript->translateable_seq ne '') {
         my $cds_seq = $cdna_seq;
-        $cds_seq->seq($transcript->translateable_seq);
-        $cds_seq->display_id($self->header($transcript, 'cds'));
-        $cds_serializer->print_Seq($cds_seq);
-
+        if($self->param('cds')){ #no need to dump cds for blast mvp
+          $cds_seq->seq($transcript->translateable_seq);
+          $cds_seq->display_id($self->header($transcript, 'cds'));
+          $cds_serializer->print_Seq($cds_seq);
+        }
         my $pep_seq = $transcript->translate;
         if (defined $pep_seq) {
           $pep_seq->display_id($self->header($transcript, 'pep'));
@@ -174,7 +188,27 @@ sub header {
     push @attributes, 'description:"'.$gene->description.'"';
   }
 
-  return join(' ', @attributes);
+
+  #set header prefix with ENSEMBL for blast files
+  my $prefix = '';
+
+  if ($self->param_is_defined('fasta_header_prefix')){
+
+    $prefix = $self->param('fasta_header_prefix');
+
+    #add addition attributes version & is_canonical for fata header only
+    if ($seq_type eq 'cdna' || $seq_type eq 'cds') {
+      push @attributes, 'version:'.$transcript->version;
+      push @attributes, 'is_canonical:'.$transcript->is_canonical();
+    } elsif ($seq_type eq 'pep') {
+      push @attributes, 'version:'.$transcript->translation->version;
+      push @attributes, 'is_canonical:'.$transcript->is_canonical;
+    }
+
+  }
+
+
+  return $prefix . join(' ', @attributes);
 }
 
 sub blast_index {
@@ -191,8 +225,8 @@ sub blast_index {
 
   my $blast_filename = catdir(
     $web_dir,
-    $blast_dirname,
-    'genes',
+    #$blast_dirname,
+    #'genes',
     $basename
   );
   path($blast_filename)->parent->mkpath();

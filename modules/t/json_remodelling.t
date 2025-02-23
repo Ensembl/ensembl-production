@@ -99,10 +99,10 @@ my $gene = {
 my $remodeller =
   Bio::EnsEMBL::Production::Search::AdvancedSearchFormatter->new();
 
-#diag( Dumper($gene) );
+# diag( Dumper($gene) );
 
 my $new_gene = $remodeller->remodel_gene($gene);
-diag( Dumper($new_gene) );
+# diag( Dumper($new_gene) );
 
 ok( $new_gene, "Gene defined" );
 is( scalar( @{ $new_gene->{BioCyc} } ),           2, "2 BioCyc" );

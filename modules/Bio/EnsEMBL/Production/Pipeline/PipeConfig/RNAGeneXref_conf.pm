@@ -64,6 +64,11 @@ sub default_options {
     # Config/history files for storing record of datacheck run.
     config_file  => undef,
     history_file => undef,
+    'dataset_type' => 'xrefs',
+    'genome_factory_dynamic_output_flow' => {
+        '3->A' => { 'RNAGeneXref' => INPUT_PLUS() },
+        'A->3' => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ]
+    },
   };
 }
 
@@ -98,11 +103,12 @@ sub pipeline_analyses {
   my $self = shift @_;
 
   return [
+  @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
     {
       -logic_name      => 'RNAGeneXref',
       -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
       -max_retry_count => 0,
-      -input_ids       => [ {} ],
+#      -input_ids       => [ {} ],
       -parameters      => {},
       -flow_into       => {
                             '1->A' => ['FetchRNACentral'],

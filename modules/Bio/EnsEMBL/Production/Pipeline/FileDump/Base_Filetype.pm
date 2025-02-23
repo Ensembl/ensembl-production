@@ -33,7 +33,6 @@ sub param_defaults {
   return {
     %{$self->SUPER::param_defaults},
     data_types  => [],
-    timestamped => 0,
     overwrite   => 0,
   };
 }
@@ -101,21 +100,10 @@ sub filenames {
   my $data_type    = $self->param_required('data_type');
   my $data_types   = $self->param_required('data_types');
   my $file_type    = $self->param_required('file_type');
-  my $timestamped  = $self->param_required('timestamped');
   my $species_name = $self->param_required('species_name');
   my $assembly     = $self->param_required('assembly');
 
-  my $dir;
-  if ($timestamped) {
-    $dir = catdir(
-      $self->param('timestamped_dir'),
-      $data_type,
-      $self->timestamp($self->dba),
-    );
-  } else {
-    $dir = $self->param('output_dir');
-  }
-
+  my $dir = $self->param('output_dir');
   $self->create_dir($dir);
 
   my %filenames;
@@ -128,20 +116,10 @@ sub filenames {
 
   foreach my $data_type (@data_types) {
     my $filename;
-
-    if ($self->param_is_defined('geneset')) {
-      my $geneset = $self->param('geneset');
-      $filename = catdir(
-        $dir,
-        "$species_name-$assembly-$geneset-$data_type.$file_type"
-      );
-    } else {
-      $filename = catdir(
-        $dir,
-        "$species_name-$assembly-$data_type.$file_type"
-      );
-    }
-
+    $filename = catdir(
+      $dir,
+      "$data_type.$file_type"
+    );
     $filenames{$data_type} = $filename;
   }
 

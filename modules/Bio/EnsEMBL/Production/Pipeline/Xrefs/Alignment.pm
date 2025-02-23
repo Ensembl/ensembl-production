@@ -93,7 +93,7 @@ sub run {
     }
   } else {
     my $job = $self->input_job();
-    $job->adaptor()->db()->get_LogMessageAdaptor()->store_job_message($job->dbID(), $output, 'WORKER_ERROR');  
+    $job->adaptor()->db()->get_LogMessageAdaptor()->store_job_message($job->dbID(), $output, 'WORKER_ERROR');
 
     throw("Exonerate failed with exit_code: $?\n");
   }

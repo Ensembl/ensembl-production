@@ -33,7 +33,6 @@ sub param_defaults {
     %{$self->SUPER::param_defaults},
     db_type             => 'core',
     species_dirname     => 'species',
-    timestamped_dirname => 'timestamped',
     web_dirname         => 'web',
     genome_dirname      => 'genome',
     geneset_dirname     => 'geneset',
@@ -73,9 +72,8 @@ sub geneset {
 
   my $mca = $dba->get_adaptor('MetaContainer');
   my $geneset = $mca->single_value_by_key('genebuild.last_geneset_update');
-  if (! defined $geneset) {
-    $geneset = $mca->single_value_by_key('genebuild.start_date');
-    $geneset =~ s/(\d+\-\d+).*/$1/;
+  if (!defined $geneset || $geneset eq '') {
+    $self->throw("Missing dba parameter: genebuild.last_geneset_update");
   }
   $geneset =~ s/[\-\s]/_/g;
 
@@ -87,11 +85,10 @@ sub annotation_source {
   $self->throw("Missing dba parameter: annotation_source method") unless defined $dba;
 
   my $mca = $dba->get_adaptor("MetaContainer");
-  my $annotation_source = $mca->single_value_by_key('species.annotation_source');
+  my $annotation_source = $mca->single_value_by_key('genebuild.annotation_source');
   if (!defined $annotation_source || $annotation_source eq '') {
-    return 'ensembl';
+    $self->throw("Missing dba parameter: genebuild.annotation_source");
   }
-
   return lc $annotation_source;
 }
 
@@ -101,12 +98,16 @@ sub species_name {
   $self->throw("Missing dba parameter: species_name method") unless defined $dba;
 
   my $mca = $dba->get_adaptor("MetaContainer");
-  my $species_name = $mca->single_value_by_key('species.display_name');
+  my $species_name = $mca->single_value_by_key('organism.scientific_name');
   if (defined $species_name and $species_name ne '') {
-    $species_name =~ s/^([\w ]+) [\-\(].+/$1/;
-    $species_name =~ s/ /_/g;
+    # Replace non letter chars from string
+    $species_name =~ s/[^a-zA-Z0-9]+/ /g;
+    # Replace consecutive spaces with a single underscore
+    $species_name =~ s/ +/_/g;
+    # Remove leading and trailing underscores (if any)
+    $species_name =~ s/^_+|_+$//g;
   } else {
-    $self->throw("No species.display_name");
+    $self->throw("No organism.scientific_name");
   }
 
   return $species_name;
