@@ -395,7 +395,7 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("dbtable","seq_region")\
+                .option("query","select s.*, syn.synonym as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -446,13 +446,20 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
+                
+        assembly_df = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","meta")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+        assembly_df = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         
         biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
 
         tmp_fp = file_path + "_tpm"
-        schema = ["seq_name", "source", "type", "seq_region_start",
-                  "seq_region_end", "score",
-                  "seq_region_strand", "phase", "attributes"]
 
         # Join attribs
         @udf(returnType=StringType())
@@ -471,7 +478,7 @@ class GFFService():
             if rank:
                 result = result + "rank=" + str(rank) + ";"
             if version:
-                result = result + "version=" + str(version) + ";"
+                result = result + "version=" + str(version)
 
             return result
 
@@ -481,7 +488,7 @@ class GFFService():
         def joinColumnsTranscript(parent, feature_id, version, biotype):
             result = ""
             if feature_id:
-                result = result + "ID=transcript" + feature_id + ";"
+                result = result + "ID=transcript:" + feature_id + ";"
             if parent:
                 result = result + "Parent=gene:" + parent + ";"
             if biotype:
@@ -489,7 +496,7 @@ class GFFService():
             if feature_id:
                 result = result + "transcript_id=" + feature_id + ";"
             if version:
-                result = result + "version=" + str(version) + ";"
+                result = result + "version=" + str(version)
 
 
             return result
@@ -507,11 +514,20 @@ class GFFService():
             if description:
                 result = result + "description=" + str(description) + ";"
             if feature_id:
-                result = result + "gene_id=" + str(feature_id)
+                result = result + "gene_id=" + str(feature_id)  + ";"
             if version:
                 result = result + "version=" + str(version)
+            return result
 
-
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsRegion(name, synonym):
+            result = ""
+            if name:
+                result = result + "ID=region:" + name + ";"
+            if synonym:
+                result = result + "Alias=" + str(synonym)
+     
             return result
         
         # Strand
@@ -531,6 +547,19 @@ class GFFService():
                     so_term ="gene"
                 result = so_term
             return result
+        regions = self._regions.select("name", "synonym", "length")\
+                    .withColumn("source", lit(assembly_df))\
+                    .withColumn("type", lit("region"))\
+                    .withColumn("seq_region_start", self._regions.name)\
+                    .withColumnRenamed("length", "seq_region_end")\
+                    .withColumn("score", lit("."))\
+                    .withColumn("phase", lit("."))\
+                    .withColumn("seq_region_strand", lit("."))\
+                    .withColumn("attributes", joinColumnsRegion("name", "synonym"))
+        regions = regions.select("name", "source", "type",\
+                                       "seq_region_start", "seq_region_end",\
+                                         "score", "seq_region_strand", "phase", "attributes")
+
 
 
         genes = self._genes.join(self._regions.select("seq_region_id",
@@ -555,7 +584,7 @@ class GFFService():
         genes = genes.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-
+        genes.filter("seq_region_start=10026080").show()
         transcripts = self._transcripts.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                [self._transcripts.seq_region_id ==
@@ -616,13 +645,13 @@ class GFFService():
                                          "score", "seq_region_strand", "phase", "attributes")
 
 
-        combined_df = genes
-        print(genes.count())
+        combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts)
-        combined_df = combined_df.union(exons)
-        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
-        combined_df = combined_df.repartition(1).orderBy("name", "seq_region_start")
+        combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
+        combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp)
         # Find file in temp spark dir
         files = glob.glob(tmp_fp + "/part-0000*")
@@ -635,12 +664,14 @@ class GFFService():
             f_cvs = open(file)
             file_line = f_cvs.readline()
             while file_line:
+                if(file_line.find("ID=gene:") > -1):
+                    f.write("###\n")
                 f.write(file_line)
                 file_line = f_cvs.readline()
             f_cvs.close()
         f.close()
         #os.rmdir(tmp_fp)
-
+ 
         #write exons
         return None
 
