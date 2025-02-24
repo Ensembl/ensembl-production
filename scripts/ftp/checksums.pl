@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2024] EMBL-European Bioinformatics Institute
+# Copyright [2016-2025] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ use Fcntl qw( :mode );
 use File::Spec;
 use Getopt::Long;
 use Pod::Usage;
+use File::Basename;
 
 my $OPTIONS = options();
 run();
@@ -161,7 +162,8 @@ sub generate_checksums {
     next if ! -f $target; # skip if the file was removed
     my $checksum = `sum $target`;
     chomp($checksum);
-    print $fh "$checksum $file\n";
+    my $filename = basename($file);
+    print $fh "$checksum $filename\n";
   }
   close $fh or die "Cannot close $checksum_file: $!";
 

@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 
 use File::Spec::Functions qw(catdir);
 
@@ -61,7 +61,7 @@ sub default_options {
         'species' => [],
         'antispecies' => [],
         'batch_size' => 50,
-        'meta_filters' => {},   
+        'meta_filters' => {},
         'update_dataset_status' => 'Processing', #updates dataset status in new metadata db
         #param to connect to old pipeline analysis name
         'genome_factory_dynamic_output_flow' => {
@@ -83,7 +83,7 @@ sub factory_analyses {
       -input_ids  => [{}],
       -flow_into  => {
         '1'    => ['GenomeFactory'],
-        
+
       },
       -rc_name    => 'default',
     },
@@ -98,12 +98,12 @@ sub factory_analyses {
                       'dataset_type' => $self->o('dataset_type'),
                       'dataset_status' => $self->o('dataset_status'),
                       'division' => $self->o('division'),
-                      'organism_group_type' => $self->o('organism_group_type'),                        
+                      'organism_group_type' => $self->o('organism_group_type'),
                       'species' => $self->o('species'),
-                      'antispecies' => $self->o('antispecies'),                        
+                      'antispecies' => $self->o('antispecies'),
                       'batch_size' => $self->o('batch_size'),
-                      'update_dataset_status' => $self->o('update_dataset_status'),       
-                    }, 
+                      'update_dataset_status' => $self->o('update_dataset_status'),
+                    },
       -flow_into  => $self->o('genome_factory_dynamic_output_flow'),
 
     },
@@ -111,7 +111,7 @@ sub factory_analyses {
       -logic_name      => 'UpdateDatasetStatus',
       -module          => 'ensembl.production.hive.HiveDatasetFactory',
       -language        => 'python3',
-      -rc_name         => 'default', 
+      -rc_name         => 'default',
       -parameters      => {
                             'metadata_db_uri'    => $self->o('metadata_db_uri'),
                             'update_dataset_status' => $self->o('update_dataset_status'),
@@ -143,6 +143,7 @@ sub resource_classes {
     );
 
     my %memory = (
+        '100M'           => '100',
         '500M'           => '500',
         '1GB'            => '1000',
         '2GB'            => '2000',

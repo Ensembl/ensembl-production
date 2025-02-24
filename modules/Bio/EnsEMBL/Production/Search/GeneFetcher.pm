@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ sub new {
   my $self = bless({}, ref($class) || $class);
   ($self->{external_dbs}) =
     rearrange(['EXCLUDE_EXTERNAL_DBS'], @args);
-  $self->{external_dbs} ||= []; 
+  $self->{external_dbs} ||= [];
   $self->{fetcher} =
       Bio::EnsEMBL::Production::DBSQL::BulkFetcher->new(
           -LEVEL      => 'protein_feature',
@@ -84,10 +84,10 @@ sub fetch_genes_for_dba {
   $logger->debug("Retrieving genes for " . $dba->species());
   $dba->dbc()->db_handle()->{mysql_use_result} = 1;
   my @genes = grep {_include_gene($_)} @{$self->{fetcher}->export_genes($dba)};
-  
+
   #filter depricated xrefs
   _exclude_xrefs(\@genes, $exclude_xref_external_db_list);
-  
+
   $self->{fetcher}->add_funcgen(\@genes, $funcgen_dba) if defined $funcgen_dba;
   $self->{fetcher}->add_compara($dba->species(), \@genes, $compara_dba) if defined $compara_dba;
   $self->{fetcher}->add_pan_compara($dba->species(), \@genes, $pan_compara_dba) if defined $pan_compara_dba;
@@ -102,9 +102,9 @@ sub _include_gene {
 
 sub _exclude_xrefs {
 
-  my $gene = shift; 
+  my $gene = shift;
   my $exclude_xref_external_db_list = shift;
-  
+
   foreach my $gene_entry (@$gene) {
       my @filtered_xrefs;
       foreach my $xref (@{$gene_entry->{xrefs}}) {

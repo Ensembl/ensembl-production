@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 
 use Bio::EnsEMBL::ApiVersion qw/software_version/;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
 
 sub default_options {
@@ -130,7 +130,7 @@ sub pipeline_analyses {
                             '3->A' => ['CheckStatistics_Chromosome'],
                             'A->1' => ['SpeciesFactory_All'],
                           },
-      -rc_name         => '2GB',
+      -rc_name         => '2GB_D',
     },
 
 
@@ -211,7 +211,7 @@ sub pipeline_analyses {
         },
         -max_retry_count => 1,
         -hive_capacity   => 50,
-        -rc_name         => 'default_W'
+        -rc_name         => '2GB_W'
     },
 
     {
@@ -262,7 +262,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -flow_into       => ['GeneGC_Datacheck'],
-      -rc_name         => 'default_D',
+      -rc_name         => '2GB_D',
     },
 
     {
@@ -327,7 +327,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => 'default',
+      -rc_name         => '1GB',
     },
 #
     {

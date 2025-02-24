@@ -172,4 +172,3 @@ CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `ext
 CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `misc_set` AS select `master_misc_set`.`misc_set_id` AS `misc_set_id`,`master_misc_set`.`code` AS `code`,`master_misc_set`.`name` AS `name`,`master_misc_set`.`description` AS `description`,`master_misc_set`.`max_length` AS `max_length` from `master_misc_set` where (`master_misc_set`.`is_current` = 1) order by `master_misc_set`.`misc_set_id`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=CURRENT_USER() SQL SECURITY INVOKER VIEW `unmapped_reason` AS select `master_unmapped_reason`.`unmapped_reason_id` AS `unmapped_reason_id`,`master_unmapped_reason`.`summary_description` AS `summary_description`,`master_unmapped_reason`.`full_description` AS `full_description` from `master_unmapped_reason` where (`master_unmapped_reason`.`is_current` = 1) order by `master_unmapped_reason`.`unmapped_reason_id`;
-

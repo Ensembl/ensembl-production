@@ -1,5 +1,5 @@
 -- Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
--- Copyright [2016-2024] EMBL-European Bioinformatics Institute
+-- Copyright [2016-2025] EMBL-European Bioinformatics Institute
 -- 
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
 -- limitations under the License.
 
 CREATE TABLE archive_id_lookup (
-  archive_id  VARCHAR(128) NOT NULL,
+  archive_id  VARCHAR(100) NOT NULL,
   species_id  INTEGER UNSIGNED NOT NULL,
-  db_type     VARCHAR(255) NOT NULL,
-  object_type VARCHAR(255) NOT NULL,
+  db_type     VARCHAR(20) NOT NULL,
+  object_type VARCHAR(20) NOT NULL,
 
-  UNIQUE INDEX archive_id_lookup_idx (archive_id, species_id, db_type, object_type),
-  KEY archive_id_db_type (archive_id, db_type, object_type),
-  KEY archive_id_object_type (archive_id, object_type)
-
+  UNIQUE INDEX archive_id_lookup_idx (archive_id, object_type, db_type, species_id)
 ) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 CREATE TABLE meta (
@@ -48,9 +45,9 @@ CREATE TABLE species (
 ) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 CREATE TABLE stable_id_lookup (
-  stable_id   VARCHAR(128) NOT NULL,	      
+  stable_id   VARCHAR(100) NOT NULL,
   species_id  INTEGER UNSIGNED NOT NULL,
-  db_type     VARCHAR(255) NOT NULL,
-  object_type VARCHAR(255) NOT NULL
+  db_type     VARCHAR(20) NOT NULL,
+  object_type VARCHAR(20) NOT NULL
 
 ) COLLATE=latin1_swedish_ci ENGINE=MyISAM;

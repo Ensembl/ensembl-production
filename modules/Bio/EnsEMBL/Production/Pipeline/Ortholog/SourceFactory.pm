@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ sub write_output {
     my $compara_param = $self->param('compara');
     my $cleanup_dir = $self->param('cleanup_dir');
 
-    foreach my $pair (keys $sp_config) {
+    foreach my $pair (keys %{$sp_config}) {
         my $compara = $sp_config->{$pair}->{'compara'};
         if (defined $compara_param && $compara ne $compara_param) {
             print STDERR "Skipping $compara\n";

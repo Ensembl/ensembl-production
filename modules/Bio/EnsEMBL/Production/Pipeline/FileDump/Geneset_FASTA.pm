@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ sub run {
   if($self->param_is_defined('geneset')){
     $filenames   = $self->param_required('filenames');
   }
-  
+
 
 
   my $dba = $self->dba;
@@ -64,11 +64,11 @@ sub run {
   my $cds_filename  = $$filenames{'cds'};
   my $pep_filename  = $$filenames{'pep'};
 
-  #get everything including nonref  
+  #get everything including nonref
   $self->print_to_file([@$chr, @$non_chr ], $cdna_filename, $cds_filename, $pep_filename, '>');
   $self->print_to_file($non_ref, $cdna_filename, $cds_filename, $pep_filename, '>>');
 
-  #uncomment below code get nonref in seperate file 
+  #uncomment below code get nonref in seperate file
   # if (scalar(@$non_ref)) {
   #   my $non_ref_cdna_filename = $self->generate_non_ref_filename($cdna_filename);
   #   my $non_ref_cds_filename  = $self->generate_non_ref_filename($cds_filename);
@@ -106,7 +106,7 @@ sub print_to_file {
       
       if ($transcript->translateable_seq ne '') {
         my $cds_seq = $cdna_seq;
-        if($self->param('cds')){ #no need to dump cds for blast mvp 
+        if($self->param('cds')){ #no need to dump cds for blast mvp
           $cds_seq->seq($transcript->translateable_seq);
           $cds_seq->display_id($self->header($transcript, 'cds'));
           $cds_serializer->print_Seq($cds_seq);
@@ -188,15 +188,15 @@ sub header {
     push @attributes, 'description:"'.$gene->description.'"';
   }
 
-  
-  #set header prefix with ENSEMBL for blast files 
+
+  #set header prefix with ENSEMBL for blast files
   my $prefix = '';
 
   if ($self->param_is_defined('fasta_header_prefix')){
-    
+
     $prefix = $self->param('fasta_header_prefix');
 
-    #add addition attributes version & is_canonical for fata header only 
+    #add addition attributes version & is_canonical for fata header only
     if ($seq_type eq 'cdna' || $seq_type eq 'cds') {
       push @attributes, 'version:'.$transcript->version;
       push @attributes, 'is_canonical:'.$transcript->is_canonical();

@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -79,13 +79,17 @@ sub run {
                              file       => $file_name}) ;
     $self->cleanup_DBAdaptor($db);
   } else {
-    $failure += $xref_run->run( { source_id  => $source_id,
-                      species_id => $species_id,
-                      species    => $species,
-                      rel_file   => $release_file,
-                      dbi        => $dbi,
-		      xref_source => $source_dbi,
-                      files      => [@files] }) ;
+    my $run_params = {
+      source_id  => $source_id,
+      species_id => $species_id,
+      species    => $species,
+      rel_file   => $release_file,
+      dbi        => $dbi,
+      xref_source => $source_dbi,
+      files      => [@files]
+    };
+    $run_params->{hgnc_file} = $self->param('hgnc_file') if ($parser =~ /^UniProt/);
+    $failure += $xref_run->run( $run_params ) ;
   }
   if ($failure) { die; }
 
