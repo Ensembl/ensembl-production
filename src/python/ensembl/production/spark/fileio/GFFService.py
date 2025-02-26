@@ -438,6 +438,15 @@ class GFFService():
                 .option("password", password)\
                 .load()
                 
+        transcript_attrib = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","transcript_attrib")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+                
         biotype_df = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -455,11 +464,17 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
+                
         assembly_df = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         
         biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
 
         tmp_fp = file_path + "_tpm"
+        
+        transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
+        transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
+        transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
+        
 
         # Join attribs
         @udf(returnType=StringType())
@@ -485,7 +500,7 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsTranscript(parent, feature_id, version, biotype):
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical):
             result = ""
             if feature_id:
                 result = result + "ID=transcript:" + feature_id + ";"
@@ -493,6 +508,16 @@ class GFFService():
                 result = result + "Parent=gene:" + parent + ";"
             if biotype:
                 result = result + "biotype=" + biotype + ";"
+            if canonical or basic or mane_select or mane_clinical:
+                result = result + "tag="
+            if canonical:
+                result = result + "Ensembl_canonical;"
+            if basic:
+                result = result + "basic;"
+            if mane_clinical:
+                result = result + "mane_clinical;"
+            if mane_select:
+                result = result + "mane_select;"
             if feature_id:
                 result = result + "transcript_id=" + feature_id + ";"
             if version:
@@ -563,9 +588,7 @@ class GFFService():
 
 
         genes = self._genes.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               [self._genes.seq_region_id ==
-                                self._regions.seq_region_id])\
+                                                    "name"), on = "seq_region_id")\
                             .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
                                 , on=[biotype_df.biotype_name==self._genes.biotype])\
                             .drop("biotype_name")
@@ -595,15 +618,27 @@ class GFFService():
 
         transcripts = transcripts.withColumnRenamed("stable_id",
                                                     "transcript_stable_id")
-
+    
         transcripts = transcripts.join(self._genes.select("stable_id",
-                                                          "gene_id"),
-                                       on=[self._genes.gene_id==transcripts.gene_id])
+                                                          "gene_id", "canonical_transcript_id"),
+                                       on="gene_id")\
+                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
+                                    on= "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
+                                    on = "transcript_id", how = "left") 
+                                                                                      
+    
         transcripts = transcripts.withColumn("attributes",
                                              joinColumnsTranscript("stable_id",
                                                                    "transcript_stable_id",
                                                                    "version",
-                                                                   "biotype"))\
+                                                                   "biotype", 
+                                                                   "canonical_transcript_id",
+                                                                   "basic",
+                                                                   "mane_select",
+                                                                   "mane_clinical"))\
                 .withColumn("type", type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
