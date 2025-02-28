@@ -1,7 +1,7 @@
 #/bin/sh
 # NOTE THIS script need `gh` command line tool available on https://github.com/cli/cli#installation
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2024] EMBL-European Bioinformatics Institute
+# Copyright [2016-2025] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ for repo in $repositories; do
   git clone --depth 1 --branch main git@github.com:${repo} ${tmp_dir}/${repo}
   if [ $? -eq 0 ]; then
     cd ${tmp_dir}/${repo}
+    git push origin --delete bau/copyright-${year}
     git checkout -b bau/copyright-${year}
     perl ${ENSEMBL_ROOT_DIR}/ensembl/misc-scripts/annual_copyright_updater.sh
     git commit -a -m "${year} copyright update"
@@ -65,6 +66,7 @@ for repo in $repositories; do
         fi
       else
         echo 'failed to push commits and open a pull request.';
+        git push origin --delete bau/copyright-${year}
       fi
     else
       echo 'failed to commit updates.';

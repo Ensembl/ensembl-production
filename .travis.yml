@@ -1,65 +1,96 @@
 language: perl
-perl:
-  - "5.14"
-  - "5.26.2"
-services:
-  - mysql
-env:
-  - COVERALLS=true  DB=mysql
-addons:
-  apt:
-    update: true      
-    packages:
-      - unzip
-      - sendmail
-      - graphviz
-      - emboss
-before_install:
-  - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
-  - export PATH=$PATH:$PWD/ensembl-git-tools/bin
-  - export ENSEMBL_BRANCH=master
-  - export SECONDARY_BRANCH=main
-  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
-  - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
-  - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
-  - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-test
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
-  - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-hive
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
-  - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
-  - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
-  - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
-  - cd htslib
-  - make
-  - export HTSLIB_DIR=$(pwd -P)
-  - cd ..
-install:
-  - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
-  - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
-  - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
-  - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
-  - cpanm --sudo -v --installdeps --notest .
-  - cpanm --sudo -n Devel::Cover::Report::Coveralls
-  - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
-  - mysql -u root -h localhost -e 'GRANT ALL PRIVILEGES ON *.* TO "travis"@"%"'
-script:
-  - ./travisci/harness.sh
+dist: focal
 jobs:
   include:
-    - language: python
-      python: 3.8
+    - name: "Perl Jobs"
+      perl: "5.26"
+      services:
+        - docker
+      env:
+        - COVERALLS=true DB=mysql
+      addons:
+        apt:
+          update: true
+          packages:
+            - unzip
+            - sendmail
+            - graphviz
+            - emboss
+            - libkyotocabinet-dev
+            - build-essential
+            - perlbrew
+      before_install:
+        # Run MySQL 5.7 Docker container which match to production staging servers
+        - docker pull mysql:5.7
+        - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=ensembl_test -d -p 3306:3306 mysql:5.7
+        # Wait for MySQL to initialize
+        - until docker exec mysql57 mysqladmin ping -h127.0.0.1 --silent; do echo "Waiting for MySQL..."; sleep 2; done
+
+        # Clone necessary repositories
+        - git clone --depth 1 https://github.com/Ensembl/ensembl-git-tools.git
+        - export PATH=$PATH:$PWD/ensembl-git-tools/bin
+        - export ENSEMBL_BRANCH=main
+        - export SECONDARY_BRANCH=main
+        - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
+        - if [[ $TRAVIS_BRANCH =~ ^release\/[0-9]+$ ]]; then export ENSEMBL_BRANCH=$TRAVIS_BRANCH; export SECONDARY_BRANCH=$TRAVIS_BRANCH; fi
+        - echo "ENSEMBL_BRANCH=$ENSEMBL_BRANCH"
+        - echo "SECONDARY_BRANCH=$SECONDARY_BRANCH"
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl-test
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --depth 1 ensembl
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-compara
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-datacheck
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-variation
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-metadata
+        - git-ensembl --clone --branch $ENSEMBL_BRANCH --secondary_branch $SECONDARY_BRANCH --depth 1 ensembl-funcgen
+        - git-ensembl --clone --branch version/2.7.0   --secondary_branch main --depth 1 ensembl-hive
+        - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-orm
+        - git-ensembl --clone --branch master --secondary_branch main --depth 1 ensembl-taxonomy
+        - git clone --branch 1.9 --depth 1 https://github.com/samtools/htslib.git
+        - git clone --branch release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-live.git
+        - cd htslib
+        - make
+        - export HTSLIB_DIR=$(pwd -P)
+        - cd ..
       install:
-        - pip install -e .
+        - cpanm --sudo -v --installdeps --with-recommends --notest --cpanfile ensembl/cpanfile .
+        - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-hive/cpanfile .
+        - cpanm --sudo -v --installdeps --notest --cpanfile ensembl-datacheck/cpanfile .
+        - export PERL5LIB=$PERL5LIB:$PWD/bioperl-live
+        - cpanm travisci/kyotocabinet-perl-1.20.tar.gz
+        - cpanm --sudo -v --installdeps --notest .
+        - cpanm --sudo -n Devel::Cover::Report::Coveralls
+        - cp travisci/MultiTestDB.conf.travisci  modules/t/MultiTestDB.conf
+        
+      before_script:
+        # Update permissions for Travis user on Dockerized MySQL
+        - docker exec mysql57 mysql -uroot -proot -e "CREATE USER 'travis'@'%'; GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%'; FLUSH PRIVILEGES;"
+        - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
+        - docker exec mysql57 mysql -uroot -proot -e "CREATE DATABASE test;"
+
+      script:
+        - ./travisci/harness.sh
+
+    - name: "Python 3.10"
+      language: python
+      python:
+        - "3.10"
+      env:
+        - COVERALLS=true DB=mysql
+      install:
         - pip install -r requirements-test.txt
+        - pip install -e .
       script:
         - pytest src/python/test
 
+    - name: "Python 3.11"
+      language: python
+      python:
+        - "3.11"
+      install:
+        - pip install -r requirements-test.txt
+        - pip install -e .
+      script:
+        - pytest src/python/test
 
 notifications:
   email:

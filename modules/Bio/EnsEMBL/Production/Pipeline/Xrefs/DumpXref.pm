@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ sub run {
         # Ambiguous peptides must be cleaned out to protect Exonerate from J,O and U codes
         $row[1] = uc($row[1]);
         $row[1] =~ s/(.{60})/$1\n/g;
-        if ($seq_type eq 'pep') { $row[1] =~ tr/JOU/X/ }
+        if ($seq_type eq 'peptide') { $row[1] =~ tr/JOU/X/ }
         print $DH ">".$row[0]."\n".$row[1]."\n";
       }
       $mapping_source_sth->execute($source_id, $seq_type);

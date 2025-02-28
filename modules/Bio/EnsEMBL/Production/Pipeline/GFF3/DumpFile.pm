@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -279,7 +279,8 @@ sub Bio::EnsEMBL::Transcript::summary_as_hash {
   $summary{'transcript_support_level'} = $self->tsl if $self->tsl;
 
   my @tags;
-  push(@tags, 'basic') if $self->gencode_basic();
+  push(@tags, 'gencode_basic') if $self->gencode_basic();
+  push(@tags, 'gencode_primary') if $self->gencode_primary();
   push(@tags, 'Ensembl_canonical') if $self->is_canonical();
 
   # A transcript can have different types of MANE-related attributes (MANE_Select, MANE_Plus_Clinical)

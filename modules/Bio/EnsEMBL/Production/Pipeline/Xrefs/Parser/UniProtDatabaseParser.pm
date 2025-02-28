@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -242,7 +242,7 @@ sub run {
         # Make sure these are still lines with Name or Synonyms
         if (($gn !~ /^GN/ || $gn !~ /Name=/) && $gn !~ /Synonyms=/) { last; }
 
-        if ($gn =~ / Name=([A-Za-z0-9_\-\.\s]+)/s) { #/s for multi-line entries ; is the delimiter
+        if ($gn =~ / Name=([A-Za-z0-9_\-\.\s:]+)/s) { #/s for multi-line entries ; is the delimiter
           # Example line 
           # GN   Name=ctrc {ECO:0000313|Xenbase:XB-GENE-5790348};
           my $name = $1;

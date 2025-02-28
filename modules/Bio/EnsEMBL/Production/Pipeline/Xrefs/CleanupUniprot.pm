@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ sub run {
         $_ =~ s/\nCC\s{3}.*//g; # Remove comments
         $_ =~ s/\nCT(\s{3}.*)CAUTION: The sequence shown here is derived from an Ensembl(.*)/\nCC$1CAUTION: The sequence shown here is derived from an Ensembl$2/g; # Set temp line back to comment
 	$_ =~ s/\nFT\s{3}.*//g; # Remove feature coordinates
-        $_ =~ s/\nDR\s{3}($sources_to_remove);.*\n//g; # Remove sources skipped at processing
+        $_ =~ s/\nDR\s{3}($sources_to_remove);.*//g; # Remove sources skipped at processing
 
         # Added lines that we do need into output
         print $out_fh $_;

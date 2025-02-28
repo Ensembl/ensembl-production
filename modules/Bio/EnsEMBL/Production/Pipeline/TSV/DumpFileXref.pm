@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -66,7 +66,9 @@ sub run {
 
 return;
 }
+sub write {
 
+}
 #############
 ##SUBROUTINES
 #############
@@ -74,7 +76,7 @@ sub _write_tsv {
     my ($self) = @_;
 
     my $out_file  = $self->_generate_file_name();
-    my $header    = $self->_build_headers();   
+    my $header    = $self->_build_headers();
 
     open my $fh, '>', $out_file or die "cannot open $out_file for writing!";
     print $fh join ("\t", @$header);
@@ -112,9 +114,9 @@ sub _write_tsv {
                    my $xref_db       = $dbentry->dbname();
                    my $xref_info_type= $dbentry->info_type();
 
-                   if ($dbentry->isa('Bio::EnsEMBL::IdentityXref')){ 
- 		      $src_identity  = $dbentry->ensembl_identity(); 
-                      $xref_identity = $dbentry->xref_identity(); 
+                   if ($dbentry->isa('Bio::EnsEMBL::IdentityXref')){
+ 		      $src_identity  = $dbentry->ensembl_identity();
+                      $xref_identity = $dbentry->xref_identity();
                    }
 		   $linkage_type = join(' ', @{$dbentry->get_all_linkage_types()})if($dbentry->isa('Bio::EnsEMBL::OntologyXref'));
                    print $fh "$g_id\t$tr_id\t$tl_id\t$xref_id\t$xref_db\t$xref_info_type\t$src_identity\t$xref_identity\t$linkage_type\n";
@@ -122,8 +124,9 @@ sub _write_tsv {
 	       }#dbentry
          }#transcript
       }#gene
-  }#slice 
-  close $fh; 
+  }#slice
+  close $fh;
+
 
   if ($xrefs_exist == 1) {
       $self->dataflow_output_id(
@@ -132,7 +135,6 @@ sub _write_tsv {
     # If we have no xrefs, delete the file (which will just have a header).
     unlink $out_file  or die "failed to delete $out_file!";
   }
-
 return;
 }
 

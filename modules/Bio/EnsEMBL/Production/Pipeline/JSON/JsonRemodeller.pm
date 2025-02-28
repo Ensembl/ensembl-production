@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -292,7 +292,10 @@ sub merge_xrefs {
         $obj->{$dbname} = [];
       }
       for my $ann ( @{ $subobj->{$dbname} } ) {
-        push $obj->{$dbname}, $self->copy_hash($ann);
+        if (ref($obj->{$dbname}) ne 'ARRAY') {
+          $obj->{$dbname} = [];
+        }
+        push @{ $obj->{$dbname} }, $self->copy_hash($ann);
       }
     }
   }

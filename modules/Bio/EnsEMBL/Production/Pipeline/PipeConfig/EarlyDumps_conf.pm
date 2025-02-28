@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
 use Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMySQL_conf;
 use Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpCore_conf;
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 use File::Spec::Functions qw(catdir);
 
 
@@ -56,7 +56,7 @@ sub default_options {
     metadata_base_dir => catdir($self->o('ENV', 'NOBACKUP_DIR'), $self->o('username'), 'genome_reports_'.$self->o('ensembl_version')),
     metadata_script   => catdir($self->o('base_dir'), '/ensembl-metadata/misc_scripts/report_genomes.pl'),
     division_pattern_nonvert  => '.fungi,.metazoa,.plants,.protists',
-    early_dump_base_path      => catdir($self->o('ENV', 'NOBACKUP_DIR'), '/release_dumps/'),
+    early_dump_base_path      => catdir($self->o('ENV', 'NOBACKUP_DIR'), '/release_dumps/', '/release-'.$self->o('ensembl_version').'/ftp_dumps/'),
     nfs_early_dump_path       => '/nfs/production/flicek/ensembl/production/ensemblftp/',
     early_dumps_private_ftp   => catdir('/nfs/ftp/private/ensembl/pre-releases','/release-'.$self->o('ensembl_version').'_'.$self->o('eg_version')),
     #flags to restrict division
@@ -131,37 +131,14 @@ sub pipeline_analyses {
       -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
       -max_retry_count   => 1,
       -parameters        => {
-                              early_dump_path_vert             => catdir($self->o('early_dump_base_path'), '/release-'.$self->o('ensembl_version')),
-			      nfs_early_dump_path_vert         => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('ensembl_version')), 
-			      early_dump_path_nonvert          => catdir($self->o('early_dump_base_path'), '/release-'.$self->o('eg_version')),	
-			      nfs_early_dump_path_nonvert      => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('eg_version')), 
+			                        nfs_early_dump_path_vert         => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('ensembl_version')),
+			                        nfs_early_dump_path_nonvert      => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('eg_version')),
                               cmd              => q{ 
-			      				rsync -avW #early_dump_path_vert# #nfs_early_dump_path_vert# 	
-							rsync -avW #early_dump_path_nonvert# #nfs_early_dump_path_nonvert#
-			      				
+			      	                                        rsync -avW  --include={'vertebrates'}  --exclude={'plants','protists', 'fungi', 'bacteria', 'metazoa'} #early_dump_base_path# #nfs_early_dump_path_vert#
+							                                        rsync -avW  --include={'plants','protists', 'fungi', 'bacteria', 'metazoa'} --exclude={'vertebrates'}  #early_dump_base_path# #nfs_early_dump_path_nonvert#
                                                    },
                             },
-      -flow_into         => { '1' => 'CopyToPublicFtp' },			    
-     			    
-
-    },
-    {
-      -logic_name        => 'CopyToPublicFtp',
-      -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-      -max_retry_count   => 1,
-      -parameters        => {
-                              nfs_early_dump_path_vert         => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('ensembl_version')),     
-                              nfs_early_dump_path_nonvert      => catdir($self->o('nfs_early_dump_path'), '/release-'.$self->o('eg_version')),
-		              early_dumps_private_ftp          => $self->o('early_dumps_private_ftp'),	      
-                              cmd              => q{ 
-                                                        rsync -avW  #nfs_early_dump_path_vert#/verterates/ #early_dumps_private_ftp#   
-                                                        rsync -avW  #nfs_early_dump_path_nonvert#/ #early_dumps_private_ftp# 
-                                                        
-                                                   },
-                            },
-
-     -flow_into         => { '1' => 'Email' }, 			    
-      
+      -flow_into         => { '1' => 'Email' },
     },
     {
       -logic_name        => 'MetaDataReport',

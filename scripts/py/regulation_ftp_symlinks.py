@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-# Copyright [2016-2024] EMBL-European Bioinformatics Institute
+# Copyright [2016-2025] EMBL-European Bioinformatics Institute
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,15 +35,14 @@ Optional Args:
 """
 
 
+import logging
 from argparse import ArgumentParser
 from collections import defaultdict
-import logging
-from os import walk, path, listdir, makedirs
+from os import listdir, makedirs, path, walk
 from pathlib import Path
 
-
 # Human and Mouse follow a different dir structure
-SPECIES_TO_NOT_INCLUDE = ["homo_sapiens", "mus_musculus"]
+SPECIES_TO_NOT_INCLUDE = []
 
 # GENE-SWITCH species
 GENE_SWITCH_SPECIES = [
@@ -140,8 +139,15 @@ class Utils:
     def get_most_recent_release_data_file_path(data_file_path):
         validator.is_dir(Path(data_file_path))
         available_releases = listdir(data_file_path)
+        releases = []
+        for release in available_releases:
+            try:
+                releases.append(int(release))
+            except:
+                continue
+
         return Path(data_file_path) / str(
-            max([int(release) for release in available_releases])
+            max(releases)
         )
 
 
@@ -181,12 +187,12 @@ class RegulationSymlinkFTP:
     def get(self, key):
         return self.path_specifics.get(key)
 
-    def symlink2rf(self, only_remove=False, relative=True):
+    def symlink2rf(self, analysis_type, only_remove=False, relative=True):
         target = (
             Path(path.relpath(self.target, self.sources["release_folder"]))
-            / "peaks"
+            / analysis_type
             if relative
-            else self.target / "peaks"
+            else self.target / analysis_type
         )
         source = self.sources["release_folder"] / self.get("analysis_type")
 
@@ -221,7 +227,9 @@ class RegulationSymlinkFTP:
                 )
         else:
             if not validator.is_symlink(source, check=True):
-                logger.info("{source} -> {target} -- was successfully removed")
+                logger.info(
+                    f"{source} -> {target} -- was successfully removed"
+                )
 
     def aliased_paths(self, **kwargs):
         return {
@@ -243,7 +251,7 @@ class RegulationSymlinkFTP:
                 release=release,
             )
             for species, assemblies in result.items()
-            for assembly in assemblies
+            for assembly in assemblies if assembly not in ["GRCh37", "GRCm38", "NCBIM37"]
         ]
 
 
@@ -299,7 +307,7 @@ if __name__ == "__main__":
         ANALYSIS_TYPE_PEAKS, ftp_path, args.release_version
     )
     for peak in peaks:
-        peak.symlink2rf(only_remove=args.delete_symlinks)
+        peak.symlink2rf("peaks", only_remove=args.delete_symlinks)
         peak.symlink2misc("peaks", only_remove=args.delete_symlinks)
 
     logger.info("Searching for signals in data_files ...")
@@ -307,8 +315,7 @@ if __name__ == "__main__":
         ANALYSIS_TYPE_SIGNAL, ftp_path, args.release_version
     )
     for signal in signals:
-        signal.symlink2rf(only_remove=args.release_version)
-
+        signal.symlink2rf("signal", only_remove=args.delete_symlinks)
         signal.symlink2misc("signal", only_remove=args.delete_symlinks)
 
     logger.info("Process Completed")

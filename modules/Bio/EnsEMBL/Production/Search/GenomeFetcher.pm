@@ -2,7 +2,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,7 +98,6 @@ sub new {
 
 sub fetch_genome {
 	my ( $self, $name ) = @_;
-	$logger->info("H2222222222222222222222222222222222222222222222 $name" );
 	my $md = $self->fetch_metadata($name);
 	croak "Could not find genome $name" unless defined $md;
 	return $self->metadata_to_hash($md);

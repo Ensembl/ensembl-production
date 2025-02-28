@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -82,7 +82,24 @@ sub _meta {
   $self->warning('Querying Taxonomy');
   #my $tdba =  Bio::EnsEMBL::Registry->get_DBAdaptor( "multi", "taxonomy" );
   my $taxonomy  = $self->_taxonomy( $tdba, $metadata->{'species.taxonomy_id'});
-  $metadata->{'species.classification'} = $taxonomy; 	
+
+  if (scalar(@{$taxonomy}) == 0) {
+    my $dbname = $self->param('dbname');
+    my $species = $self->param('species');
+    my $taxon_id = $metadata->{'species.taxonomy_id'};
+    my $msg = "Cannot retrieve taxonomy classification for species $species with taxonomy_id $taxon_id in database $dbname;";
+
+    my $primary_taxon_id = $self->_fetch_primary_taxon_id($tdba, $taxon_id);
+    if (defined $primary_taxon_id) {
+      $msg = $msg
+             ." taxon_id $taxon_id has been merged into primary taxon_id $primary_taxon_id."
+             ." Would you kindly set the 'species.taxonomy_id' meta entry for this species to the"
+             ." primary taxon_id and ensure the change is propagated to other relevant databases ?";
+    }
+    throw $msg;
+  }
+
+  $metadata->{'species.classification'} = $taxonomy;
   $self->warning('Updating meta');
   foreach my $key ( keys %{$metadata} ) {
     my $array = wrap_array( $metadata->{$key} );
@@ -147,6 +164,34 @@ SQL
   );
   #$self->warning( 'Classification is [%s]', join( q{, }, @{$res} ) );
   return $res;
+}
+
+
+sub _fetch_primary_taxon_id {
+  my ( $self, $tdba, $taxon_id ) = @_;
+  $self->warning('Querying taxonomy to fetch primary taxon_id');
+  my $sql            = <<'SQL';
+select taxon_id
+from ncbi_taxa_name
+where name = ?
+and name_class = 'merged_taxon_id'
+SQL
+  my $dbc = $tdba->dbc();
+  my $res = $dbc->sql_helper()->execute_simple(
+    -SQL    => $sql,
+    -PARAMS => [ $taxon_id ]
+  );
+  $self->debug( 'Result is [%s]', join( q{, }, @{$res} ) );
+  my $result_count = scalar(@{$res});
+
+  my $primary_taxon_id;
+  if ($result_count == 1) {
+    $primary_taxon_id = $res->[0];
+  } elsif ($result_count > 1) {
+    throw "Expected at most 1 primary taxon_id for $taxon_id but got $result_count";
+  }
+
+  return $primary_taxon_id;
 }
 
 

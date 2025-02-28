@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,11 +78,13 @@ sub run {
   # create a hash first though, which can then be processed
   # gene_id as key, then sets of protein-family pairs
   my $gene_families = {};
+  # retrieve family data for canonical translations
   my $sql = qq/select t.gene_id, t.transcript_id, pf.hit_name
 		from coord_system c
 		join seq_region s using (coord_system_id)
-		join transcript t using (seq_region_id)
-		join translation tl using (transcript_id)
+        join gene g using(seq_region_id)
+        join transcript t on t.transcript_id = g.canonical_transcript_id
+        join translation tl on tl.translation_id = t.canonical_translation_id
 		join protein_feature pf using (translation_id)
 		join analysis pfa ON (pf.analysis_id=pfa.analysis_id)
 		where pfa.logic_name in ($logic_names)
@@ -104,37 +106,52 @@ sub run {
   my $family_members     = {};
   while ( my ( $gene_id, $hits ) = each %$gene_families ) {
     my $gene = $gene_adaptor->fetch_by_dbID($gene_id);
-    # create and store gene member
-    my $gene_member =
-      Bio::EnsEMBL::Compara::GeneMember->new_from_Gene(
-        -GENE          => $gene,
-        -GENOME_DB     => $genome_db,
-        -BIOTYPE_GROUP => $gene->get_Biotype->biotype_group()
-      );
-    # If there are duplicate stable IDs, trap fatal error from compara
-    # method, so we can skip it and carry on with others.
-    eval {
-      $gene_member_dba->store($gene_member);
-    };
-    if ($@) {
-      my ($msg) = $@ =~ /MSG:\s+([^\n]+)/m;
-      $self->warning('Duplicate stable ID: '.$msg);
+
+    # retrieve or create-and-store gene_member from the current genome_db
+    my $gene_member = $gene_member_dba->fetch_by_stable_id_GenomeDB($gene->stable_id,
+                                                                    $genome_db);
+    my $existing_canonical;
+    if (defined $gene_member) {
+      $existing_canonical = $seq_member_dba->fetch_by_dbID( $gene_member->canonical_member_id );
     } else {
-      for my $hit (@$hits) {
-        my $transcript =
-          $transcript_adaptor->fetch_by_dbID( $hit->[0] );
-          my $seq_member =
-            Bio::EnsEMBL::Compara::SeqMember->new_from_Transcript(
-              -TRANSCRIPT => $transcript,
-              -TRANSLATE  => 'yes',
-              -GENOME_DB  => $genome_db
-            );
+      $gene_member =
+        Bio::EnsEMBL::Compara::GeneMember->new_from_Gene(
+          -GENE          => $gene,
+          -GENOME_DB     => $genome_db,
+          -BIOTYPE_GROUP => $gene->get_Biotype->biotype_group()
+        );
+      $gene_member_dba->store($gene_member);
+    }
+
+    for my $hit (@$hits) {
+      my $transcript =
+        $transcript_adaptor->fetch_by_dbID( $hit->[0] );
+      my $translation_stable_id = $transcript->translation->stable_id;
+
+      if (defined $existing_canonical && $translation_stable_id ne $existing_canonical->stable_id) {
+        $self->warning(sprintf('skipping translation %s because stable ID does not match canonical member %s',
+                               $translation_stable_id, $existing_canonical->stable_id));
+        next;
+      }
+
+      # retrieve or create-and-store seq_member from the current genome_db
+      my $seq_member =
+        $seq_member_dba->fetch_by_stable_id_GenomeDB($translation_stable_id,
+                                                     $genome_db);
+      if (!defined $seq_member) {
+        $seq_member =
+          Bio::EnsEMBL::Compara::SeqMember->new_from_Transcript(
+            -TRANSCRIPT => $transcript,
+            -TRANSLATE  => 'yes',
+            -GENOME_DB  => $genome_db
+          );
         # TODO store CDS too?
         $seq_member->gene_member_id( $gene_member->dbID );
         $seq_member_dba->store($seq_member);
         $seq_member_dba->_set_member_as_canonical($seq_member);
-        push @{ $family_members->{ $hit->[1] } }, $seq_member->dbID();
       }
+
+      push @{ $family_members->{ $hit->[1] } }, $seq_member->dbID();
     }
   } ## end while ( my ( $gene_id, $hits...))
   print "Saving familes for ".$dba->species()."\n";

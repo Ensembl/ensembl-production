@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ sub param_defaults {
 }
 
 sub run {
-	    
+
     my ($self) = @_;
     my $group = $self->param('group');
     my $dba = $self->get_DBAdaptor($group);
@@ -162,12 +162,12 @@ sub run {
     }
 
     # cleanup
-    #$refget_dba->dbc()->db_handle()->{'AutoCommit'} = 1; 
+    #$refget_dba->dbc()->db_handle()->{'AutoCommit'} = 1;
     $dba->dbc->disconnect_if_idle();
     $refget_schema->txn_commit;
 
     #$refget_schema->storage->disconnect();
-    
+
     #$refget_dba->dbc->disconnect_if_idle();
 }
 
@@ -186,8 +186,8 @@ sub create_basic_refget_objects {
     my $species_name = $mc->get_scientific_name();
     my $species_assembly = $cs->version();
     my $species_division = $mc->single_value_by_key('species.division');
-    
-    #check species stain group and select assembly version name 
+
+    #check species stain group and select assembly version name
     my $strain_group = $mc->single_value_by_key('species.strain_group');
     if(defined $strain_group){
       $species_assembly =  $mc->single_value_by_key('assembly.name');
@@ -262,7 +262,7 @@ sub generate_and_load_toplevel {
     }
 
     # Load if it wasn't found in refget
-    my $seq_region_id = $slice->get_seq_region_id(); #remove it 
+    my $seq_region_id = $slice->get_seq_region_id(); #remove it
     if(! $exists_in_refget) {
         my $seq_hash = {
             trunc512 => $slice_checksums->{trunc512},
@@ -397,7 +397,6 @@ sub sequence_exists {
 
 sub insert_molecule {
     my ($self, $refget_schema, $seq_ref, $seq_hash, $id, $mol_type) = @_;
-    print($mol_type, "\n");
     my $molecule_type_obj = $self->param('mol_type_objs')->{$mol_type};
     my $release_obj = $self->param('release_obj');
     my $species_obj = $self->param('species_obj');
@@ -428,7 +427,6 @@ sub insert_sequence {
     delete $seq_hash_clone{sha512t24u};
     # Logic taken from Refget::Schema::ResultSet::Seq so there is logic bleed here
     # Could be moved up
-    print("$ga4gh_id\n......\n");
     my $seq_obj = $rs->find_or_new(\%seq_hash_clone, {key => 'seq_trunc512_uniq'});
     my $first_seen = 0;
     if(!$seq_obj->in_storage()) {

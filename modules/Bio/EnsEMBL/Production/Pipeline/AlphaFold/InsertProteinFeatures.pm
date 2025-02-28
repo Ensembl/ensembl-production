@@ -1,7 +1,7 @@
 =head1 LICENSE
 
  Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
- Copyright [2016-2024] EMBL-European Bioinformatics Institute
+ Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ sub run {
             -db            => 'alphafold',
             -db_version    => $alpha_version,
             -db_file       => $self->param('db_dir') . '/accession_ids.csv',
-            -display_label => 'AlphaFold DB import',
+            -display_label => 'AFDB-ENSP mapping',
             -displayable   => '1',
             -description   => 'Protein features based on AlphaFold predictions, mapped with GIFTS or UniParc'
     );

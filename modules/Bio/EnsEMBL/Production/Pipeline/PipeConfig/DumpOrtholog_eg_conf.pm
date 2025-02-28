@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2024] EMBL-European Bioinformatics Institute
+Copyright [2016-2025] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ use warnings;
 
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::DumpOrtholog_conf');
 
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 
 sub default_options {
 	my ($self) = @_;
@@ -92,17 +92,17 @@ sub default_options {
                   compara     => 'metazoa',
                   source      => 'drosophila_melanogaster',
                   species     => [
-                    'drosophila_ananassae',
-                    'drosophila_erecta',
-                    'drosophila_grimshawi',
-                    'drosophila_mojavensis',
-                    'drosophila_persimilis',
-                    'drosophila_pseudoobscura',
-                    'drosophila_sechellia',
-                    'drosophila_simulans',
-                    'drosophila_virilis',
-                    'drosophila_willistoni',
-                    'drosophila_yakuba'
+                    'drosophila_ananassae_gca017639315v2rs',
+                    'drosophila_erecta_gca003286155v2rs',
+                    'drosophila_grimshawi_gca018153295v1rs',
+                    'drosophila_mojavensis_gca018153725v1rs',
+                    'drosophila_persimilis_gca003286085v2rs',
+                    'drosophila_pseudoobscura_gca009870125v2rs',
+                    'drosophila_sechellia_gca004382195v2rs',
+                    'drosophila_simulans_gca016746395v2rs',
+                    'drosophila_virilis_gca003285735v2rs',
+                    'drosophila_willistoni_gca018902025v2rs',
+                    'drosophila_yakuba_gca016746365v2rs'
                   ],
                   antispecies => 'drosophila_melanogaster',
                   division    => 'EnsemblMetazoa',
