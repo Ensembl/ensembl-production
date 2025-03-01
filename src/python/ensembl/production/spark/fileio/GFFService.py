@@ -14,6 +14,7 @@
 
 __all__ = ['GFFService']
 from pyspark.sql.types import StringType
+from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
 import warnings
@@ -650,16 +651,14 @@ class GFFService():
 
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
-                               [self._exons.seq_region_id ==
-                                self._regions.seq_region_id], how="left")
+                               ["seq_region_id"], how="left")
 
-        exons = exons.join(self._exon_transcript, on = [exons.exon_id ==
-                                                        self._exon_transcript.exon_id],
+        exons = exons.join(self._exon_transcript, on = ["exon_id"],
                           how = "inner")
         exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
 
         exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
-                                       on=[exons.transcript_id==self._transcripts.transcript_id])
+                                       on=["transcript_id"])
 
         print("Exons dumped: " + str(exons.count()))
         exons = exons.withColumn("attributes",
@@ -679,7 +678,9 @@ class GFFService():
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
 
-
+        transcript_service = TranscriptSparkService(self._spark)
+        cds = transcript_service.translatable_exons(db, user, password)
+        print(cds.show())
         combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
         # Combined df append transcripts
         combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
