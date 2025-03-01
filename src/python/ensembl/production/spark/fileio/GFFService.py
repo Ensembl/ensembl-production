@@ -501,6 +501,23 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
+        def joinColumnsCds(feature_id, parent, version, protein):
+            result = ""
+            if feature_id:
+                result = result + "ID=CDS:" + feature_id + ";"
+            if parent:
+                result = result + "Parent=transcript:"
+                result = result + parent + ";"
+            if protein:
+                result = result + "protein_id=" + str(protein) + ";"
+            if version:
+                result = result + "version=" + str(version)
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
         def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical):
             result = ""
             if feature_id:
@@ -660,7 +677,6 @@ class GFFService():
         exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
                                        on=["transcript_id"])
 
-        print("Exons dumped: " + str(exons.count()))
         exons = exons.withColumn("attributes",
                                              joinColumnsExon("exon_stable_id",\
                                                                    "stable_id",\
@@ -680,11 +696,28 @@ class GFFService():
 
         transcript_service = TranscriptSparkService(self._spark)
         cds = transcript_service.translatable_exons(db, user, password)
-        print(cds.show())
+        cds = cds.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+        cds = cds.withColumn("attributes",
+                                             joinColumnsCds("exon_stable_id",\
+                                                                   "transcript_stable_id",\
+                                                                   "version",\
+                                                                  "stable_id"
+                                                                 ))\
+                .withColumn("type", lit("CDS"))\
+                .withColumn("score", lit("."))\
+                .withColumn("source", lit("ensembl"))
+        cds = cds.select("name", "source", "type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+
+
         combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
         # Combined df append transcripts
         combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
         combined_df = combined_df.union(exons.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
         combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")

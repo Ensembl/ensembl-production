@@ -397,11 +397,15 @@ class TranscriptSparkService:
             exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder);
             if (exons_df == None):
                 return
-        transcripts_df = self.load_transcripts_fs(db, user, password, tmp_folder)  
+        transcripts_df = self.load_transcripts_fs(db, user, password, tmp_folder) 
+        exons_df=exons_df.withColumnRenamed("stable_id", "exon_stable_id") 
         #Find all canonical translations    
         translations_df = translation_service.load_translations_fs(db, user, password, tmp_folder)
-        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id").withColumnRenamed("canonical_translation_id", "translation_id")
-        transcripts_df = transcripts_df.join(translations_df.drop("transcript_id"), on=["translation_id"], how="right")
+        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id")\
+            .withColumnRenamed("canonical_translation_id", "translation_id")\
+            .withColumnRenamed("stable_id", "transcript_stable_id")\
+                
+        transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "version", "created_date", "modified_date"), on=["translation_id"], how="right")
         
         #Find translation seq start and end
 
@@ -415,7 +419,7 @@ class TranscriptSparkService:
         result = exons_df.join(transcripts_df, on=["transcript_id"])
         result = result.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
         result=result.filter("translatable > 0")
-        result = result.withColumn("seq_region_start", crop_exon("seq_region_start", "tl_start", "exon_id", "start_exon_id"))
+        result = result.withColumn("seq_region_start", crop_exon("seq_region_start", "tl_start", "exon_id", "start_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_exon("seq_region_end", "tl_end", "exon_id", "end_exon_id"))
         return result
         
