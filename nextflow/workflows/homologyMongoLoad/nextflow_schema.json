@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/filedumpPipeline/nextflow_schema.json",
+  "title": "Homology Load Into Mongo DB",
+  "description": "Pipeline to load the homology stats from compara db to mongo",
+  "type": "object",
+  "required": [
+    "release",
+    "genome_uuid",
+    "species_name",
+    "dataset_type",
+    "mongo_url_rw",
+    "mongo_url_admin",
+    "metadata_grpc_url",
+    "metadata_db_uri"
+  ],
+  "properties": {
+    "debug": {
+      "type": "boolean",
+      "default": false
+    },
+    "release": {
+      "type": "string"
+    },
+    "genome_uuid": {
+      "type": "string"
+    },
+    "species_name": {
+      "type": "string"
+    },
+    "dataset_type": {
+      "type": "string"
+    },
+    "mongo_url_rw": {
+      "type": "string"
+    },
+    "mongo_url_admin": {
+      "type": "string"
+    },
+    "metadata_grpc_url": {
+      "type": "string"
+    },
+    "metadata_db_uri": {
+      "type": "string"
+    }
+  }
+}
