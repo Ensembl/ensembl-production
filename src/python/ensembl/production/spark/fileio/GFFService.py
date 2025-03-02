@@ -504,7 +504,7 @@ class GFFService():
         def joinColumnsCds(feature_id, parent, version, protein):
             result = ""
             if feature_id:
-                result = result + "ID=CDS:" + feature_id + ";"
+                result = result + "ID=CDS:" + str(protein) + ";"
             if parent:
                 result = result + "Parent=transcript:"
                 result = result + parent + ";"
