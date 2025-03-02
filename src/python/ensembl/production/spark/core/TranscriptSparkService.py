@@ -373,35 +373,38 @@ class TranscriptSparkService:
             return  result
 
         @udf(returnType=IntegerType())
-        def tl_start(start, end, tl_start):
-            if (start < end):
-                return start + tl_start
-            return start - tl_start
+        def tl_start(start, end, tl_start, tl_end,  strand):
+            if (strand > 0):
+                return start + tl_start - 1
+            else:
+                return end - tl_start + 1
         
         @udf(returnType=IntegerType())
-        def tl_end(start, end, tl_end):
-            if (start < end):
-                return start + tl_end
-            return start - tl_end
+        def tl_end(start, end, tl_start, tl_end, strand):
+            if (strand > 0):
+                return start + tl_end - 1
+            else: 
+                return end - tl_end + 1
+
         
         @udf(returnType=IntegerType())
-        def crop_tl_start(exon_start, exon_end, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
+        def crop_tl_start(exon_start, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
             if (exon_id == tl_end_exon_id):
                 if(tl_start > tl_end):
-                    return exon_start + tl_start
+                    return tl_end
             if (exon_id == tl_start_exon_id):
                 if(tl_start < tl_end):
-                    return exon_start + tl_start
+                    return tl_start
             return exon_start
         
         @udf(returnType=IntegerType())
-        def crop_tl_end(exon_start, exon_end, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
+        def crop_tl_end(exon_end, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
             if (exon_id == tl_end_exon_id):
                 if(tl_start < tl_end):
-                    return exon_start + tl_end - 1
+                    return tl_end
             if (exon_id == tl_start_exon_id):
                 if(tl_start > tl_end):
-                    return exon_start + tl_end - 1
+                    return tl_start
             return exon_end
 
         
@@ -424,18 +427,18 @@ class TranscriptSparkService:
         
         #Find translation seq start and end
 
-        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
-        transcripts_df = transcripts_df.withColumn("tl_start", tl_start("seq_region_start", "seq_region_end", "seq_start")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_start")
+        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
+        transcripts_df = transcripts_df.withColumn("tl_start", tl_start("seq_region_start", "seq_region_end", "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand")
         
-        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
-        transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end", "seq_end")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end")
+        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
+        transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
         
         transcripts_df.filter("stable_id=\"ENSABMP00000001148\"").show()
         result = exons_df.join(transcripts_df, on=["transcript_id"])
         result = result.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
         result=result.filter("translatable > 0")
-        result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
-        result = result.withColumn("seq_region_end", crop_tl_end("seq_region_start", "seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
+        result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
+        result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
         return result
         
         
