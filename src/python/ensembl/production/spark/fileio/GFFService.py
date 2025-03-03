@@ -236,7 +236,6 @@ class GFFService():
                                         on=[genes_df.seq_region_name ==
                           self._regions.name], how = 'left' )
         genes_df = genes_df.drop("seq_region_name").drop("name")
-        print(genes_df.show())
         genes_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -256,7 +255,6 @@ class GFFService():
         exons_df = exons_df.drop("seq_region_name").drop("name")
         exons_df = exons_df.withColumnRenamed("exon_stable_id", "stable_id")
         exons_df_final = exons_df.drop("transcript_stable_id").drop("rank")
-        print(exons_df_final.show())
         exons_df_final.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -308,7 +306,6 @@ class GFFService():
         # Translation stable id cant be initially just stable id, not to mess
         # with transcript stable id.
         translations_df = translations_df.withColumnRenamed("translation_stable_id", "stable_id")
-        print(translations_df.show())
         translations_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -338,7 +335,6 @@ class GFFService():
         # Transcript stable id cant be initially just stable id, not to mess
         # with gene stable id.
         transcripts_df = transcripts_df.withColumnRenamed("transcript_stable_id", "stable_id")
-        print(transcripts_df.show())
         transcripts_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -705,7 +701,6 @@ class GFFService():
                                                                    "version",\
                                                                   "stable_id"
                                                                  ))\
-                .withColumn("type", lit("CDS"))\
                 .withColumn("score", lit("."))\
                 .withColumn("source", lit("ensembl"))
         cds = cds.select("name", "source", "type",

@@ -358,7 +358,7 @@ class TranscriptSparkService:
     Returns all translatable exons of the database
     """
     def translatable_exons(self, db: str, user: str, password: str,
-                         exons_df=None, tmp_folder=None):
+                         exons_df=None, tmp_folder=None, utr=True):
 
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
@@ -433,12 +433,37 @@ class TranscriptSparkService:
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
         
-        transcripts_df.filter("stable_id=\"ENSABMP00000001148\"").show()
-        result = exons_df.join(transcripts_df, on=["transcript_id"])
-        result = result.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
+        exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
+        result = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
         result=result.filter("translatable > 0")
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
-        return result
+        result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
+                                       "seq_region_start", "seq_region_end",
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id")
+        if (utr):
+            exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
+            exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
+            
+            result_prime_utr = result.join(exons_df, on=[result.exon_id == exons_df.orig_exon_id], how = "left")
+            result_prime_utr.filter("exon_stable_id=\"ENSABME00000005130\"").show()
+            result_three_prime_utr = result_prime_utr.filter("seq_region_start != orig_start")\
+                    .drop("seq_region_end").withColumnRenamed("seq_region_start", "seq_region_end").drop("seq_region_start").withColumnRenamed("orig_start", "seq_region_start")\
+                    .withColumn("type", lit("three_prime_UTR"))
+            result_five_prime_utr = result_prime_utr.filter("seq_region_end != orig_end")\
+                    .drop("seq_region_start").withColumnRenamed("seq_region_end", "seq_region_start").withColumnRenamed("orig_end", "seq_region_end")\
+                    .withColumn("type", lit("five_prime_UTR"))
+
+            result_five_prime_utr = result_five_prime_utr.select\
+                ("exon_id", "type", "seq_region_start", "seq_region_end",
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+            result_three_prime_utr = result_three_prime_utr.select\
+                ("exon_id", "type", "seq_region_start", "seq_region_end",
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+            result_three_prime_utr = result_three_prime_utr.withColumn("seq_region_end", result_three_prime_utr.seq_region_end - 1)
+            result_five_prime_utr = result_five_prime_utr.withColumn("seq_region_start", result_five_prime_utr.seq_region_start + 1)
+            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr)
+
+        return result.union(result_five_prime_utr)
         
         
