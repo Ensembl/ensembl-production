@@ -716,23 +716,45 @@ class GFFService():
         combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
-        combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp)
-        # Find file in temp spark dir
-        files = glob.glob(tmp_fp + "/part-0000*")
+        combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+        head = "##sequence-region"
+        regions_header = self._regions.withColumn("prompt", lit(head)).withColumn("start", lit("1"))
+        regions_header = regions_header.select("prompt", "name", "start", "length")
+        regions_header.dropDuplicates().repartition(1).orderBy("name").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\t").csv(tmp_fp + "_regions")
+        
         try:
             os.remove(file_path)
         except OSError:
             pass
+        
+        
+        # Find file in temp spark dir
+        feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
+        region_file = glob.glob(tmp_fp + "_regions/part-0000*")[0]
+        print(region_file)
         f = open(file_path, "a")
-        for file in files:
-            f_cvs = open(file)
+        #Write header
+        f.write("##gff-version 3\n")
+        #Write regions
+        f_cvs = open(region_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            if(file_line.find("ID=gene:") > -1):
+                f.write("###\n")
+            f.write(file_line)
             file_line = f_cvs.readline()
-            while file_line:
-                if(file_line.find("ID=gene:") > -1):
-                    f.write("###\n")
-                f.write(file_line)
-                file_line = f_cvs.readline()
-            f_cvs.close()
+        f_cvs.close()
+        #Write assembly
+        
+        #Write features       
+        f_cvs = open(feature_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            if(file_line.find("ID=gene:") > -1):
+                f.write("###\n")
+            f.write(file_line)
+            file_line = f_cvs.readline()
+        f_cvs.close()
         f.close()
         #os.rmdir(tmp_fp)
  
