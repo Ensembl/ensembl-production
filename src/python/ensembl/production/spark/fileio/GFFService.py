@@ -461,11 +461,13 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
-                
-        assembly_df = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
-        
-        biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
 
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
+        
         tmp_fp = file_path + "_tpm"
         
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
@@ -587,7 +589,7 @@ class GFFService():
                 result = so_term
             return result
         regions = self._regions.select("name", "synonym", "length")\
-                    .withColumn("source", lit(assembly_df))\
+                    .withColumn("source", lit(assembly_name))\
                     .withColumn("type", lit("region"))\
                     .withColumn("seq_region_start", self._regions.name)\
                     .withColumnRenamed("length", "seq_region_end")\
@@ -739,13 +741,18 @@ class GFFService():
         f_cvs = open(region_file)
         file_line = f_cvs.readline()
         while file_line:
-            if(file_line.find("ID=gene:") > -1):
-                f.write("###\n")
             f.write(file_line)
             file_line = f_cvs.readline()
         f_cvs.close()
         #Write assembly
+
         
+        f.write("#!genome-build " + assembly_name)
+        f.write("\n#!genome-version " + assembly_name)
+        f.write("\n#!genome-date " + assembly_date)
+        f.write("\n#!genome-build-accession " + assembly_acc)
+        f.write("\n#!genebuild-last-updated " + genebuild_date + "\n")
+
         #Write features       
         f_cvs = open(feature_file)
         file_line = f_cvs.readline()

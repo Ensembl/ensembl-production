@@ -150,7 +150,7 @@ class TranscriptSparkService:
                                                 spliced_sequence("sequence",\
                                                                  "translation_region_start",\
                                                                  "translation_region_end"))
-        return transcripts_with_seq;
+        return transcripts_with_seq
 
     """
     Returns transcripts with translatable sequence
