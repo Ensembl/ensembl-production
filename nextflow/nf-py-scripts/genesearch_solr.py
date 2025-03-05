@@ -126,7 +126,7 @@ def fetch_gene_info(core_db_connection, specie_production_name, genome_uuid):
     ) \
         .select_from(Gene) \
         .join(Transcript, Transcript.gene_id == Gene.gene_id) \
-        .join(Xref, Gene.display_xref_id == Xref.xref_id) \
+        .outerjoin(Xref, Gene.display_xref_id == Xref.xref_id) \
         .join(SeqRegion, Gene.seq_region_id == SeqRegion.seq_region_id) \
         .join(CoordSystem, SeqRegion.coord_system_id == CoordSystem.coord_system_id) \
         .join(SeqRegionAttrib, SeqRegion.seq_region_id == SeqRegionAttrib.seq_region_id) \
