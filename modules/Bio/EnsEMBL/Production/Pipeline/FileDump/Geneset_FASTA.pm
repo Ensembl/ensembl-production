@@ -193,16 +193,17 @@ sub header {
   my $prefix = '';
 
   if ($self->param_is_defined('fasta_header_prefix')){
-
+    
     $prefix = $self->param('fasta_header_prefix');
 
-    #add addition attributes version & is_canonical for fata header only
-    if ($seq_type eq 'cdna' || $seq_type eq 'cds') {
-      push @attributes, 'version:'.$transcript->version;
+    #add addition attributes version & is_canonical for fata header only 
+    if ($seq_type eq 'cdna' || $seq_type eq 'cds' || $seq_type eq 'pep' ) {
+      push @attributes, 'gene_version:'.$gene->version;
+      push @attributes, 'transcript_version:'.$transcript->version;
       push @attributes, 'is_canonical:'.$transcript->is_canonical();
-    } elsif ($seq_type eq 'pep') {
-      push @attributes, 'version:'.$transcript->translation->version;
-      push @attributes, 'is_canonical:'.$transcript->is_canonical;
+    } 
+    if ($seq_type eq 'pep') {
+      push @attributes, 'translation_version:'.$transcript->translation->version;
     }
 
   }
