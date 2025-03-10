@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
 
 url =\
 "jdbc:mysql://mysql-ens-core-prod-1:4524/mus_musculus_casteij_core_114_2"
@@ -49,8 +62,6 @@ transcript_service = TranscriptSparkService(spark_session)
 #need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
-
-# Assembly chain
 
 # Genome fasta
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)

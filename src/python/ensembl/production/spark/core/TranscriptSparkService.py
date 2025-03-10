@@ -22,6 +22,7 @@ from ensembl.production.spark.core.FileSystemSparkService import FileSystemSpark
 from ensembl.production.spark.core.ExonSparkService import ExonSparkService
 from ensembl.production.spark.core.TranslationSparkService import TranslationSparkService
 from functools import reduce
+from pyspark.sql.types import IntegerType
 
 __all__ = ['TranscriptSparkService']
 
@@ -149,7 +150,7 @@ class TranscriptSparkService:
                                                 spliced_sequence("sequence",\
                                                                  "translation_region_start",\
                                                                  "translation_region_end"))
-        return transcripts_with_seq;
+        return transcripts_with_seq
 
     """
     Returns transcripts with translatable sequence
@@ -196,7 +197,6 @@ class TranscriptSparkService:
 
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
-         #translated_seq.show(1)
          
          @udf(returnType=StringType())
          def translate_sequence(sequence, codon_table, cds_start_nf, id):
@@ -256,7 +256,7 @@ class TranscriptSparkService:
             return  str(abs(int(end) - int(start) + 1)) + ":" + str(id)
 
         @udf(returnType=StringType())
-        def get_translation_start(length, start, start_id, strand):
+        def get_translation_start(length, start, start_id):
             result = 0
             for exon in length.split(" "):
                 exon = exon.split(":")
@@ -267,7 +267,7 @@ class TranscriptSparkService:
             return result
 
         @udf(returnType=StringType())
-        def get_translation_end(length, end, end_id, strand):
+        def get_translation_end(length, end, end_id):
             result = 0
             for exon in length.split(" "):
                 exon = exon.split(":")
@@ -277,7 +277,7 @@ class TranscriptSparkService:
                 result = result + int(exon[0])
             return result
 
-        translation_df = translation_service.load_translations(db, user, password)
+        translation_df = translation_service.load_translations_fs(db, user, password)
         result = None
         regions = self._spark.read\
             .format("jdbc")\
@@ -339,13 +339,11 @@ class TranscriptSparkService:
         result.withColumn("translation_region_start",
                                         get_translation_start("length",
                                                               "seq_start",
-                                                              "start_exon_id",
-                                                             "seq_region_strand"))\
+                                                              "start_exon_id"))\
                             .withColumn("translation_region_end",
                                         get_translation_end("length",
                                                             "seq_end",
-                                                            "end_exon_id",
-                                                            "seq_region_strand"))
+                                                            "end_exon_id"))
         #Apply transcript edits
 
         edit_codes = ['_rna_edit']
@@ -354,3 +352,118 @@ class TranscriptSparkService:
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts_with_seq,
                                             "transcripts_with_seq", tmp_folder)
+        
+        
+    """
+    Returns all translatable exons of the database
+    """
+    def translatable_exons(self, db: str, user: str, password: str,
+                         exons_df=None, tmp_folder=None, utr=True):
+
+        @udf(returnType=IntegerType())
+        def translatable(start, end, tl_start, tl_end):
+            result = 0
+            if (tl_start < tl_end):
+                if(start >= tl_start and start <= tl_end or end >= tl_start and end <= tl_end):
+                    result = 1
+            if (tl_start > tl_end):
+                if(start <= tl_start and start >= tl_end or end <= tl_start and end >= tl_end):
+                    result = 1
+                    
+            return  result
+
+        @udf(returnType=IntegerType())
+        def tl_start(start, end, tl_start, tl_end,  strand):
+            if (strand > 0):
+                return start + tl_start - 1
+            else:
+                return end - tl_start + 1
+        
+        @udf(returnType=IntegerType())
+        def tl_end(start, end, tl_start, tl_end, strand):
+            if (strand > 0):
+                return start + tl_end - 1
+            else: 
+                return end - tl_end + 1
+
+        
+        @udf(returnType=IntegerType())
+        def crop_tl_start(exon_start, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
+            if (exon_id == tl_end_exon_id):
+                if(tl_start > tl_end):
+                    return tl_end
+            if (exon_id == tl_start_exon_id):
+                if(tl_start < tl_end):
+                    return tl_start
+            return exon_start
+        
+        @udf(returnType=IntegerType())
+        def crop_tl_end(exon_end, tl_start, tl_end, exon_id, tl_start_exon_id, tl_end_exon_id):
+            if (exon_id == tl_end_exon_id):
+                if(tl_start < tl_end):
+                    return tl_end
+            if (exon_id == tl_start_exon_id):
+                if(tl_start > tl_end):
+                    return tl_start
+            return exon_end
+
+        
+            
+        translation_service = TranslationSparkService(self._spark)
+        if (exons_df == None):
+            exon_service = ExonSparkService(self._spark)
+            exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder);
+            if (exons_df == None):
+                return
+        transcripts_df = self.load_transcripts_fs(db, user, password, tmp_folder) 
+        exons_df=exons_df.withColumnRenamed("stable_id", "exon_stable_id") 
+        #Find all canonical translations    
+        translations_df = translation_service.load_translations_fs(db, user, password, tmp_folder)
+        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id")\
+            .withColumnRenamed("canonical_translation_id", "translation_id")\
+            .withColumnRenamed("stable_id", "transcript_stable_id")\
+                
+        transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "version", "created_date", "modified_date"), on=["translation_id"], how="right")
+        
+        #Find translation seq start and end
+
+        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
+        transcripts_df = transcripts_df.withColumn("tl_start", tl_start("seq_region_start", "seq_region_end", "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand")
+        
+        transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
+        transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
+        
+        exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
+        result = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
+        result=result.filter("translatable > 0")
+        result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
+        result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
+        result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
+                                       "seq_region_start", "seq_region_end",
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id")
+        if (utr):
+            exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
+            exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
+            
+            result_prime_utr = result.join(exons_df, on=[result.exon_id == exons_df.orig_exon_id], how = "left")
+            result_prime_utr.filter("exon_stable_id=\"ENSABME00000005130\"").show()
+            result_three_prime_utr = result_prime_utr.filter("seq_region_start != orig_start")\
+                    .drop("seq_region_end").withColumnRenamed("seq_region_start", "seq_region_end").drop("seq_region_start").withColumnRenamed("orig_start", "seq_region_start")\
+                    .withColumn("type", lit("three_prime_UTR"))
+            result_five_prime_utr = result_prime_utr.filter("seq_region_end != orig_end")\
+                    .drop("seq_region_start").withColumnRenamed("seq_region_end", "seq_region_start").withColumnRenamed("orig_end", "seq_region_end")\
+                    .withColumn("type", lit("five_prime_UTR"))
+
+            result_five_prime_utr = result_five_prime_utr.select\
+                ("exon_id", "type", "seq_region_start", "seq_region_end",
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+            result_three_prime_utr = result_three_prime_utr.select\
+                ("exon_id", "type", "seq_region_start", "seq_region_end",
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+            result_three_prime_utr = result_three_prime_utr.withColumn("seq_region_end", result_three_prime_utr.seq_region_end - 1)
+            result_five_prime_utr = result_five_prime_utr.withColumn("seq_region_start", result_five_prime_utr.seq_region_start + 1)
+            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr)
+
+        return result.union(result_five_prime_utr)
+        
+        

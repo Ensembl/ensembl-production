@@ -12,27 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-__all__ = ['GFF', 'GFFAdaptor']
+__all__ = ['GFFService']
 from pyspark.sql.types import StringType
+from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature, FeatureLocation
-from pyspark.sql.types import StructType
-from pyspark.sql import SparkSession
 import warnings
-from pyspark.sql.functions import col, udf
+from pyspark.sql.functions import udf
 from typing import Optional
 import os
 from pyspark.sql.functions import lit
-"""
-TO BE IMPLEMENTED!!!
-"""
 
-
-class GFF3():
+class GFFService():
 
     feature_type = {
         'gene': 'gene',
@@ -81,13 +72,9 @@ class GFF3():
         'pseudogenic_exon': 'exon',
         'CDS': 'translation'
     }
-    def __init__(self, db, user, password) -> None:
+    def __init__(self, spark_session) -> None:
             # Create SparkSession
-            self._db = db
-            self._user = user
-            self._password = password
-            self._spark = SparkSession.builder.appName('SparkByExamples.com').config(
-                "spark.jars", "mysql-connector-j-8.1.0.jar").getOrCreate()
+            self._spark = spark_session
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(????)'
@@ -249,7 +236,6 @@ class GFF3():
                                         on=[genes_df.seq_region_name ==
                           self._regions.name], how = 'left' )
         genes_df = genes_df.drop("seq_region_name").drop("name")
-        print(genes_df.show())
         genes_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -269,7 +255,6 @@ class GFF3():
         exons_df = exons_df.drop("seq_region_name").drop("name")
         exons_df = exons_df.withColumnRenamed("exon_stable_id", "stable_id")
         exons_df_final = exons_df.drop("transcript_stable_id").drop("rank")
-        print(exons_df_final.show())
         exons_df_final.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -286,7 +271,6 @@ class GFF3():
                 .option("user", self._user)\
                 .option("password", self._password)\
                 .load()
-        print(exons.show())
         # Write exon_transcripts
         exon_transcript_df = exons.join(exons_df.select("stable_id", "rank",
                                                         "transcript_stable_id"),
@@ -299,7 +283,6 @@ class GFF3():
                                 on=[exon_transcript_df.transcript_stable_id == self._transcripts.stable_id])
         print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.select("exon_id", "transcript_id", "rank")
-        print(exon_transcript_df.show())
         exon_transcript_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -323,7 +306,6 @@ class GFF3():
         # Translation stable id cant be initially just stable id, not to mess
         # with transcript stable id.
         translations_df = translations_df.withColumnRenamed("translation_stable_id", "stable_id")
-        print(translations_df.show())
         translations_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -353,7 +335,6 @@ class GFF3():
         # Transcript stable id cant be initially just stable id, not to mess
         # with gene stable id.
         transcripts_df = transcripts_df.withColumnRenamed("transcript_stable_id", "stable_id")
-        print(transcripts_df.show())
         transcripts_df.write.mode("append")\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -405,145 +386,276 @@ class GFF3():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, file_path) -> None:
-        if self._check_gff_file(file_path) == False:
-            return
+    def dump_all_features (self, file_path, db, user, password) -> None:
+        
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
-                .option("dbtable","seq_region")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("url", db)\
+                .option("query","select s.*, syn.synonym as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id")\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._transcripts = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","transcript")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._genes = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
-                .option("dbtable","gene")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("url", db)\
+                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
+                     and ox.ensembl_object_type=\"Gene\" \
+                    left join xref x on x.xref_id = ox.xref_id")\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
         self._exons = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","exon")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user",  user)\
+                .option("password", password)\
                 .load()
 
         self._exon_transcript = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
-                .option("url", self._db)\
+                .option("url", db)\
                 .option("dbtable","exon_transcript")\
-                .option("user", self._user)\
-                .option("password", self._password)\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+                
+        transcript_attrib = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","transcript_attrib")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+                
+        biotype_df = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","biotype")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+                
+        assembly_df = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","meta")\
+                .option("user", user)\
+                .option("password", password)\
                 .load()
 
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
+        
         tmp_fp = file_path + "_tpm"
-        schema = ["seq_name", "source", "type", "seq_region_start",
-                  "seq_region_end", "score",
-                  "seq_region_strand", "phase", "attributes"]
+        
+        transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
+        transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
+        transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
+        
 
         # Join attribs
         @udf(returnType=StringType())
         def joinColumnsExon(feature_id, parent, version, rank, start_phase,
                         end_phase, constitutive):
             result = ""
-            if feature_id:
-                result = result + "ID=" + feature_id + ";"
             if parent:
                 result = result + "Parent=transcript:"
                 result = result + parent + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
-            if rank:
-                result = result + "rank=" + str(rank) + ";"
-            if start_phase:
-                result = result + "ensembl_phase=" + str(start_phase) + ";"
-            if end_phase:
-                result = result + "ensembl_end_phase=" + str(end_phase) + ";"
             if constitutive:
                 result = result + "constitutive=" + str(constitutive) + ";"
+            else: 
+                result = result + "constitutive=0;"
+            if feature_id:
+                result = result + "exon_id=" + feature_id + ";"
+            if rank:
+                result = result + "rank=" + str(rank) + ";"
+            if version:
+                result = result + "version=" + str(version)
 
             return result
 
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsTranscript(parent, feature_id, version, biotype):
+        def joinColumnsCds(feature_id, parent, version, protein):
             result = ""
             if feature_id:
-                result = result + "ID=" + feature_id + ";"
+                result = result + "ID=CDS:" + str(protein) + ";"
+            if parent:
+                result = result + "Parent=transcript:"
+                result = result + parent + ";"
+            if protein:
+                result = result + "protein_id=" + str(protein) + ";"
+            if version:
+                result = result + "version=" + str(version)
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical):
+            result = ""
+            if feature_id:
+                result = result + "ID=transcript:" + feature_id + ";"
             if parent:
                 result = result + "Parent=gene:" + parent + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
             if biotype:
                 result = result + "biotype=" + biotype + ";"
+            if canonical or basic or mane_select or mane_clinical:
+                result = result + "tag="
+            if canonical:
+                result = result + "Ensembl_canonical;"
+            if basic:
+                result = result + "basic;"
+            if mane_clinical:
+                result = result + "mane_clinical;"
+            if mane_select:
+                result = result + "mane_select;"
+            if feature_id:
+                result = result + "transcript_id=" + feature_id + ";"
+            if version:
+                result = result + "version=" + str(version)
+
 
             return result
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsGene(feature_id, version, biotype):
+        def joinColumnsGene(feature_id, version, name, biotype, description):
             result = ""
             if feature_id:
-                result = result + "ID=" + feature_id + ";"
-            if version:
-                result = result + "version=" + str(version) + ";"
+                result = result + "ID=gene:" + feature_id + ";"
+            if name:
+                result = result + "Name=" + str(name) + ";"
             if biotype:
                 result = result + "biotype=" + biotype + ";"
-
+            if description:
+                result = result + "description=" + str(description) + ";"
+            if feature_id:
+                result = result + "gene_id=" + str(feature_id)  + ";"
+            if version:
+                result = result + "version=" + str(version)
             return result
 
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsRegion(name, synonym):
+            result = ""
+            if name:
+                result = result + "ID=region:" + name + ";"
+            if synonym:
+                result = result + "Alias=" + str(synonym)
+     
+            return result
+        
+        # Strand
+        @udf(returnType=StringType())
+        def code_strand(strand):
+            result = "+"
+            if(strand == -1):
+                result = "-"
+            return result
+        
+        # Type
+        @udf(returnType=StringType())
+        def type(type, so_term):
+            result = "type"
+            if(len(so_term)>1):
+                if so_term == "protein_coding_gene":
+                    so_term ="gene"
+                result = so_term
+            return result
+        regions = self._regions.select("name", "synonym", "length")\
+                    .withColumn("source", lit(assembly_name))\
+                    .withColumn("type", lit("region"))\
+                    .withColumn("seq_region_start", self._regions.name)\
+                    .withColumnRenamed("length", "seq_region_end")\
+                    .withColumn("score", lit("."))\
+                    .withColumn("phase", lit("."))\
+                    .withColumn("seq_region_strand", lit("."))\
+                    .withColumn("attributes", joinColumnsRegion("name", "synonym"))
+        regions = regions.select("name", "source", "type",\
+                                       "seq_region_start", "seq_region_end",\
+                                         "score", "seq_region_strand", "phase", "attributes")
+
+
+
         genes = self._genes.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               [self._genes.seq_region_id ==
-                                self._regions.seq_region_id])
+                                                    "name"), on = "seq_region_id")\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._genes.biotype])\
+                            .drop("biotype_name")
+        
 
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
                                                        "version",\
-                                                       "biotype"))\
-                .withColumn("type", lit("."))\
+                                                       "gene_name",\
+                                                       "biotype",\
+                                                       "description"))\
+                .withColumn("type", type(lit("gene"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
         genes = genes.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-
+        genes.filter("seq_region_start=10026080").show()
         transcripts = self._transcripts.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                [self._transcripts.seq_region_id ==
-                                self._regions.seq_region_id])
+                                self._regions.seq_region_id])\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
+                            .drop("biotype_name")
 
         transcripts = transcripts.withColumnRenamed("stable_id",
                                                     "transcript_stable_id")
-
+    
         transcripts = transcripts.join(self._genes.select("stable_id",
-                                                          "gene_id"),
-                                       on=[self._genes.gene_id==transcripts.gene_id])
+                                                          "gene_id", "canonical_transcript_id"),
+                                       on="gene_id")\
+                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
+                                    on= "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
+                                    on = "transcript_id", how = "left") 
+                                                                                      
+    
         transcripts = transcripts.withColumn("attributes",
                                              joinColumnsTranscript("stable_id",
                                                                    "transcript_stable_id",
                                                                    "version",
-                                                                   "biotype"))\
-                .withColumn("type", lit("."))\
+                                                                   "biotype", 
+                                                                   "canonical_transcript_id",
+                                                                   "basic",
+                                                                   "mane_select",
+                                                                   "mane_clinical"))\
+                .withColumn("type", type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
@@ -554,18 +666,15 @@ class GFF3():
 
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
-                               [self._exons.seq_region_id ==
-                                self._regions.seq_region_id], how="left")
+                               ["seq_region_id"], how="left")
 
-        exons = exons.join(self._exon_transcript, on = [exons.exon_id ==
-                                                        self._exon_transcript.exon_id],
+        exons = exons.join(self._exon_transcript, on = ["exon_id"],
                           how = "inner")
         exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
 
         exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
-                                       on=[exons.transcript_id==self._transcripts.transcript_id])
+                                       on=["transcript_id"])
 
-        print("Exons dumped: " + str(exons.count()))
         exons = exons.withColumn("attributes",
                                              joinColumnsExon("exon_stable_id",\
                                                                    "stable_id",\
@@ -575,37 +684,89 @@ class GFF3():
                                                                    "end_phase",\
                                                                 "is_constitutive",\
                                                                  ))\
-                .withColumn("type", lit("."))\
+                .withColumn("type", lit("exon"))\
                 .withColumn("score", lit("."))\
-                 .withColumn("source", lit("."))
+                 .withColumn("source", lit("ensembl"))
 
         exons = exons.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
 
+        transcript_service = TranscriptSparkService(self._spark)
+        cds = transcript_service.translatable_exons(db, user, password)
+        cds = cds.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+        cds = cds.withColumn("attributes",
+                                             joinColumnsCds("exon_stable_id",\
+                                                                   "transcript_stable_id",\
+                                                                   "version",\
+                                                                  "stable_id"
+                                                                 ))\
+                .withColumn("score", lit("."))\
+                .withColumn("source", lit("ensembl"))
+        cds = cds.select("name", "source", "type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
 
-        combined_df = genes
+
+        combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts)
-        combined_df = combined_df.union(exons)
-        combined_df.write.option("header", False).option("delimiter", "\t").csv(tmp_fp)
+        combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
+        combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
+        combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+        head = "##sequence-region"
+        regions_header = self._regions.withColumn("prompt", lit(head)).withColumn("start", lit("1"))
+        regions_header = regions_header.select("prompt", "name", "start", "length")
+        regions_header.dropDuplicates().repartition(1).orderBy("name").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\t").csv(tmp_fp + "_regions")
+        
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        
+        
         # Find file in temp spark dir
-        files = glob.glob(tmp_fp + "/part-0000*")
-
+        feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
+        region_file = glob.glob(tmp_fp + "_regions/part-0000*")[0]
+        print(region_file)
         f = open(file_path, "a")
-        for file in files:
-            f_cvs = open(file)
+        #Write header
+        f.write("##gff-version 3\n")
+        #Write regions
+        f_cvs = open(region_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            f.write(file_line)
             file_line = f_cvs.readline()
-            while file_line:
-                f.write(file_line)
-                file_line = f_cvs.readline()
-            f_cvs.close()
+        f_cvs.close()
+        #Write assembly
+
+        
+        f.write("#!genome-build " + assembly_name)
+        f.write("\n#!genome-version " + assembly_name)
+        f.write("\n#!genome-date " + assembly_date)
+        f.write("\n#!genome-build-accession " + assembly_acc)
+        f.write("\n#!genebuild-last-updated " + genebuild_date + "\n")
+
+        #Write features       
+        f_cvs = open(feature_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            if(file_line.find("ID=gene:") > -1):
+                f.write("###\n")
+            f.write(file_line)
+            file_line = f_cvs.readline()
+        f_cvs.close()
         f.close()
         #os.rmdir(tmp_fp)
-
+ 
         #write exons
         return None
-
 
     def _check_gff_file (self, file_path) -> bool:
         if (os.path.exists(file_path) == False):
