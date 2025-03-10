@@ -58,5 +58,6 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
 gff_service = GFFService(spark_session)
-
-gff_service.dump_all_features(dest + "test_gff.gff", url, username, pwd)
+features = gff_service.dump_all_features(url, username, pwd)
+gff_service.write_gff(dest + "/test_gff.gff", features)
+gff_service.write_gtf(dest + "/test_gtf.gtf", features)

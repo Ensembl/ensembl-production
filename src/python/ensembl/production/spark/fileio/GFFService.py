@@ -386,7 +386,7 @@ class GFFService():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, file_path, db, user, password) -> None:
+    def dump_all_features (self, db, user, password) -> None:
         
         self._regions = self._spark.read\
                 .format("jdbc")\
@@ -462,14 +462,9 @@ class GFFService():
                 .option("password", password)\
                 .load()
 
-        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
-        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
         biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
-        
-        tmp_fp = file_path + "_tpm"
-        
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
@@ -571,14 +566,6 @@ class GFFService():
      
             return result
         
-        # Strand
-        @udf(returnType=StringType())
-        def code_strand(strand):
-            result = "+"
-            if(strand == -1):
-                result = "-"
-            return result
-        
         # Type
         @udf(returnType=StringType())
         def type(type, so_term):
@@ -620,10 +607,6 @@ class GFFService():
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
-        genes = genes.select("name", "source", "type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
-        genes.filter("seq_region_start=10026080").show()
         transcripts = self._transcripts.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                [self._transcripts.seq_region_id ==
@@ -659,11 +642,6 @@ class GFFService():
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
-        transcripts = transcripts.select("name", "source", "type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
-
-
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                ["seq_region_id"], how="left")
@@ -688,9 +666,7 @@ class GFFService():
                 .withColumn("score", lit("."))\
                  .withColumn("source", lit("ensembl"))
 
-        exons = exons.select("name", "source", "type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
+        
 
         transcript_service = TranscriptSparkService(self._spark)
         cds = transcript_service.translatable_exons(db, user, password)
@@ -705,16 +681,54 @@ class GFFService():
                                                                  ))\
                 .withColumn("score", lit("."))\
                 .withColumn("source", lit("ensembl"))
+        
+        
+        return [genes, transcripts, exons, cds, assembly_df, regions]
+
+    def write_gff(self, file_path,features=None, db="", user="", password="") -> None:
+        
+        if (features is None):
+            features = self.dump_all_features(db, user, password)
+        
+        [genes, transcripts, exons, cds, assembly_df, regions] = features       
+        tmp_fp = file_path + "_tpm"
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        
+                
+        # Strand
+        @udf(returnType=StringType())
+        def code_strand(strand):
+            result = "+"
+            if(strand == -1):
+                result = "-"
+            return result
+        
+        genes = genes.select("name", "source", "type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        
+        transcripts = transcripts.select("name", "source", "type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+
+        exons = exons.select("name", "source", "type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        
         cds = cds.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
 
 
-        combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
+        combined_df = genes.withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
-        combined_df = combined_df.union(exons.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
-        combined_df = combined_df.union(cds.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
+        combined_df = combined_df.union(transcripts.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
+        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
         combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
@@ -764,9 +778,90 @@ class GFFService():
         f_cvs.close()
         f.close()
         #os.rmdir(tmp_fp)
- 
-        #write exons
-        return None
+
+        return
+    
+    
+    def write_gtf(self, file_path, features=None, db="", user="", password="", ) -> None:
+        
+        if (features is None):
+            features = self.dump_all_features(db, user, password)
+        
+        [genes, transcripts, exons, cds, assembly_df, regions] = features
+                
+        tmp_fp = file_path + "_tpm"
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        
+                
+        # Strand
+        @udf(returnType=StringType())
+        def code_strand(strand):
+            result = "+"
+            if(strand == -1):
+                result = "-"
+            return result
+        
+        genes = genes.select("name", "source", "type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        
+        transcripts = transcripts.select("name", "source", "type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+
+        exons = exons.select("name", "source", "type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        
+        cds = cds.select("name", "source", "type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+
+
+        combined_df = genes.withColumn("priority", lit("3"))
+        # Combined df append transcripts
+        combined_df = combined_df.union(transcripts.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
+        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
+        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
+        combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
+        combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+        
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        
+        
+        # Find file in temp spark dir
+        feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
+
+        f = open(file_path, "a")
+        #Write assembly
+        
+        f.write("#!genome-build " + assembly_name)
+        f.write("\n#!genome-version " + assembly_name)
+        f.write("\n#!genome-date " + assembly_date)
+        f.write("\n#!genome-build-accession " + assembly_acc)
+
+        #Write features       
+        f_cvs = open(feature_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            if(file_line.find("ID=gene:") > -1):
+                f.write("###\n")
+            f.write(file_line)
+            file_line = f_cvs.readline()
+        f_cvs.close()
+        f.close()
+        #os.rmdir(tmp_fp)
+
+        return
 
     def _check_gff_file (self, file_path) -> bool:
         if (os.path.exists(file_path) == False):
