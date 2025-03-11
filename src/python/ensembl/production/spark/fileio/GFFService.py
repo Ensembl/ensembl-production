@@ -469,7 +469,92 @@ class GFFService():
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
         
+        # Type
+        @udf(returnType=StringType())
+        def type(type, so_term):
+            result = "type"
+            if(len(so_term)>1):
+                if so_term == "protein_coding_gene":
+                    so_term ="gene"
+                result = so_term
+            return result
+        regions = self._regions.select("name", "synonym", "length")\
+                    .withColumn("source", lit(assembly_name))\
+                    .withColumn("type", lit("region"))\
+                    .withColumn("seq_region_start", self._regions.name)\
+                    .withColumnRenamed("length", "seq_region_end")\
+                    .withColumn("score", lit("."))\
+                    .withColumn("phase", lit("."))\
+                    .withColumn("seq_region_strand", lit("."))
 
+        genes = self._genes.join(self._regions.select("seq_region_id",
+                                                    "name"), on = "seq_region_id")\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._genes.biotype])\
+                            .drop("biotype_name")
+        
+        genes = genes\
+                .withColumn("type", type(lit("gene"), "so_term"))\
+                .withColumn("score", lit("."))\
+                .withColumn("phase", lit("."))
+
+        transcripts = self._transcripts.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               [self._transcripts.seq_region_id ==
+                                self._regions.seq_region_id])\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
+                            .drop("biotype_name")
+
+        transcripts = transcripts.withColumnRenamed("stable_id",
+                                                    "transcript_stable_id")
+    
+        transcripts = transcripts.join(self._genes.select("stable_id",
+                                                          "gene_id", "canonical_transcript_id"),
+                                       on="gene_id")\
+                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
+                                    on= "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
+                                    on = "transcript_id", how = "left") 
+                                                                                      
+        transcripts = transcripts\
+                .withColumn("type", type(lit("transcript"), "so_term"))\
+                .withColumn("score", lit("."))\
+                .withColumn("phase", lit("."))
+
+        exons = self._exons.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+
+        exons = exons.join(self._exon_transcript, on = ["exon_id"],
+                          how = "inner")
+        exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
+
+        exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
+                                       on=["transcript_id"])
+
+        exons = exons\
+                .withColumn("type", lit("exon"))\
+                .withColumn("score", lit("."))\
+                 .withColumn("source", lit("ensembl"))
+
+        
+        transcript_service = TranscriptSparkService(self._spark)
+        cds = transcript_service.translatable_exons(db, user, password)
+        cds = cds.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+        cds = cds\
+                .withColumn("score", lit("."))\
+                .withColumn("source", lit("ensembl"))
+        
+        
+        return [genes, transcripts, exons, cds, assembly_df, regions]
+
+    def write_gff(self, file_path,features=None, db="", user="", password="") -> None:
+        
         # Join attribs
         @udf(returnType=StringType())
         def joinColumnsExon(feature_id, parent, version, rank, start_phase,
@@ -566,127 +651,6 @@ class GFFService():
      
             return result
         
-        # Type
-        @udf(returnType=StringType())
-        def type(type, so_term):
-            result = "type"
-            if(len(so_term)>1):
-                if so_term == "protein_coding_gene":
-                    so_term ="gene"
-                result = so_term
-            return result
-        regions = self._regions.select("name", "synonym", "length")\
-                    .withColumn("source", lit(assembly_name))\
-                    .withColumn("type", lit("region"))\
-                    .withColumn("seq_region_start", self._regions.name)\
-                    .withColumnRenamed("length", "seq_region_end")\
-                    .withColumn("score", lit("."))\
-                    .withColumn("phase", lit("."))\
-                    .withColumn("seq_region_strand", lit("."))\
-                    .withColumn("attributes", joinColumnsRegion("name", "synonym"))
-        regions = regions.select("name", "source", "type",\
-                                       "seq_region_start", "seq_region_end",\
-                                         "score", "seq_region_strand", "phase", "attributes")
-
-
-
-        genes = self._genes.join(self._regions.select("seq_region_id",
-                                                    "name"), on = "seq_region_id")\
-                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
-                                , on=[biotype_df.biotype_name==self._genes.biotype])\
-                            .drop("biotype_name")
-        
-
-        genes = genes.withColumn("attributes",
-                                 joinColumnsGene("stable_id",\
-                                                       "version",\
-                                                       "gene_name",\
-                                                       "biotype",\
-                                                       "description"))\
-                .withColumn("type", type(lit("gene"), "so_term"))\
-                .withColumn("score", lit("."))\
-                .withColumn("phase", lit("."))
-
-        transcripts = self._transcripts.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               [self._transcripts.seq_region_id ==
-                                self._regions.seq_region_id])\
-                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
-                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
-                            .drop("biotype_name")
-
-        transcripts = transcripts.withColumnRenamed("stable_id",
-                                                    "transcript_stable_id")
-    
-        transcripts = transcripts.join(self._genes.select("stable_id",
-                                                          "gene_id", "canonical_transcript_id"),
-                                       on="gene_id")\
-                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
-                                    on = "transcript_id", how = "left")\
-                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
-                                    on= "transcript_id", how = "left")\
-                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
-                                    on = "transcript_id", how = "left") 
-                                                                                      
-    
-        transcripts = transcripts.withColumn("attributes",
-                                             joinColumnsTranscript("stable_id",
-                                                                   "transcript_stable_id",
-                                                                   "version",
-                                                                   "biotype", 
-                                                                   "canonical_transcript_id",
-                                                                   "basic",
-                                                                   "mane_select",
-                                                                   "mane_clinical"))\
-                .withColumn("type", type(lit("transcript"), "so_term"))\
-                .withColumn("score", lit("."))\
-                .withColumn("phase", lit("."))
-
-        exons = self._exons.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               ["seq_region_id"], how="left")
-
-        exons = exons.join(self._exon_transcript, on = ["exon_id"],
-                          how = "inner")
-        exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
-
-        exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
-                                       on=["transcript_id"])
-
-        exons = exons.withColumn("attributes",
-                                             joinColumnsExon("exon_stable_id",\
-                                                                   "stable_id",\
-                                                                   "version",\
-                                                                  "rank",\
-                                                                  "phase",\
-                                                                   "end_phase",\
-                                                                "is_constitutive",\
-                                                                 ))\
-                .withColumn("type", lit("exon"))\
-                .withColumn("score", lit("."))\
-                 .withColumn("source", lit("ensembl"))
-
-        
-
-        transcript_service = TranscriptSparkService(self._spark)
-        cds = transcript_service.translatable_exons(db, user, password)
-        cds = cds.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               ["seq_region_id"], how="left")
-        cds = cds.withColumn("attributes",
-                                             joinColumnsCds("exon_stable_id",\
-                                                                   "transcript_stable_id",\
-                                                                   "version",\
-                                                                  "stable_id"
-                                                                 ))\
-                .withColumn("score", lit("."))\
-                .withColumn("source", lit("ensembl"))
-        
-        
-        return [genes, transcripts, exons, cds, assembly_df, regions]
-
-    def write_gff(self, file_path,features=None, db="", user="", password="") -> None:
-        
         if (features is None):
             features = self.dump_all_features(db, user, password)
         
@@ -695,7 +659,7 @@ class GFFService():
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
         assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
         
                 
         # Strand
@@ -706,18 +670,53 @@ class GFFService():
                 result = "-"
             return result
         
+        regions = regions.withColumn("attributes", joinColumnsRegion("name", "synonym"))
+                            
+        regions = regions.select("name", "source", "type",\
+                                       "seq_region_start", "seq_region_end",\
+                                         "score", "seq_region_strand", "phase", "attributes")
+        genes = genes.withColumn("attributes",
+                                 joinColumnsGene("stable_id",\
+                                                       "version",\
+                                                       "gene_name",\
+                                                       "biotype",\
+                                                       "description"))
         genes = genes.select("name", "source", "type",
                         "seq_region_start", "seq_region_end",
                         "score", "seq_region_strand", "phase", "attributes")
         
+        transcripts = transcripts.withColumn("attributes",
+                                             joinColumnsTranscript("stable_id",
+                                                                   "transcript_stable_id",
+                                                                   "version",
+                                                                   "biotype", 
+                                                                   "canonical_transcript_id",
+                                                                   "basic",
+                                                                   "mane_select",
+                                                                   "mane_clinical"))
         transcripts = transcripts.select("name", "source", "type",
                         "seq_region_start", "seq_region_end",
                         "score", "seq_region_strand", "phase", "attributes")
-
+        
+        exons = exons.withColumn("attributes",
+                                             joinColumnsExon("exon_stable_id",\
+                                                                   "stable_id",\
+                                                                   "version",\
+                                                                  "rank",\
+                                                                  "phase",\
+                                                                   "end_phase",\
+                                                                "is_constitutive",\
+                                                                 ))
         exons = exons.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
         
+        cds = cds.withColumn("attributes",
+                                             joinColumnsCds("exon_stable_id",\
+                                                                   "transcript_stable_id",\
+                                                                   "version",\
+                                                                  "stable_id"
+                                                                 ))
         cds = cds.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
@@ -777,7 +776,8 @@ class GFFService():
             file_line = f_cvs.readline()
         f_cvs.close()
         f.close()
-        #os.rmdir(tmp_fp)
+       # os.rmdir(tmp_fp + "_features")
+       # os.rmdir(tmp_fp + "_regions")
 
         return
     
@@ -793,8 +793,93 @@ class GFFService():
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
         assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
         
+               
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsExon(feature_id, parent, version, rank, start_phase,
+                        end_phase, constitutive):
+            result = ""
+            if parent:
+                result = result + "Parent=transcript:"
+                result = result + parent + ";"
+            if constitutive:
+                result = result + "constitutive=" + str(constitutive) + ";"
+            else: 
+                result = result + "constitutive=0;"
+            if feature_id:
+                result = result + "exon_id=" + feature_id + ";"
+            if rank:
+                result = result + "rank=" + str(rank) + ";"
+            if version:
+                result = result + "version=" + str(version)
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsCds(feature_id, parent, version, protein):
+            result = ""
+            if feature_id:
+                result = result + "ID=CDS:" + str(protein) + ";"
+            if parent:
+                result = result + "Parent=transcript:"
+                result = result + parent + ";"
+            if protein:
+                result = result + "protein_id=" + str(protein) + ";"
+            if version:
+                result = result + "version=" + str(version)
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical):
+            result = ""
+            if feature_id:
+                result = result + "ID=transcript:" + feature_id + ";"
+            if parent:
+                result = result + "Parent=gene:" + parent + ";"
+            if biotype:
+                result = result + "biotype=" + biotype + ";"
+            if canonical or basic or mane_select or mane_clinical:
+                result = result + "tag="
+            if canonical:
+                result = result + "Ensembl_canonical;"
+            if basic:
+                result = result + "basic;"
+            if mane_clinical:
+                result = result + "mane_clinical;"
+            if mane_select:
+                result = result + "mane_select;"
+            if feature_id:
+                result = result + "transcript_id=" + feature_id + ";"
+            if version:
+                result = result + "version=" + str(version)
+
+
+            return result
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsGene(feature_id, version, name, biotype, description):
+            result = ""
+            if feature_id:
+                result = result + "ID=gene:" + feature_id + ";"
+            if name:
+                result = result + "Name=" + str(name) + ";"
+            if biotype:
+                result = result + "biotype=" + biotype + ";"
+            if description:
+                result = result + "description=" + str(description) + ";"
+            if feature_id:
+                result = result + "gene_id=" + str(feature_id)  + ";"
+            if version:
+                result = result + "version=" + str(version)
+            return result
                 
         # Strand
         @udf(returnType=StringType())
@@ -804,22 +889,54 @@ class GFFService():
                 result = "-"
             return result
         
-        genes = genes.select("name", "source", "type",
+        genes = genes.withColumn("attributes",
+                                 joinColumnsGene("stable_id",\
+                                                       "version",\
+                                                       "gene_name",\
+                                                       "biotype",\
+                                                       "description"))        
+        genes = genes.withColumn("feature_type", lit("gene"))
+        genes = genes.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        transcripts = transcripts.withColumn("attributes",
+                                             joinColumnsTranscript("stable_id",
+                                                                   "transcript_stable_id",
+                                                                   "version",
+                                                                   "biotype", 
+                                                                   "canonical_transcript_id",
+                                                                   "basic",
+                                                                   "mane_select",
+                                                                   "mane_clinical"))
+        
+        transcripts = transcripts.withColumn("feature_type", lit("transcript"))
+        transcripts = transcripts.select("name", "source", "feature_type",
                         "seq_region_start", "seq_region_end",
                         "score", "seq_region_strand", "phase", "attributes")
         
-        transcripts = transcripts.select("name", "source", "type",
-                        "seq_region_start", "seq_region_end",
-                        "score", "seq_region_strand", "phase", "attributes")
-
-        exons = exons.select("name", "source", "type",
+        exons = exons.withColumn("attributes",
+                                             joinColumnsExon("exon_stable_id",\
+                                                                   "stable_id",\
+                                                                   "version",\
+                                                                  "rank",\
+                                                                  "phase",\
+                                                                   "end_phase",\
+                                                                "is_constitutive",\
+                                                                 ))
+        exons = exons.withColumn("feature_type", lit("exon"))
+        exons = exons.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-        
-        cds = cds.select("name", "source", "type",
+        cds = cds.withColumn("attributes",
+                                             joinColumnsCds("exon_stable_id",\
+                                                                   "transcript_stable_id",\
+                                                                   "version",\
+                                                                  "stable_id"
+                                                                 ))        
+        cds = cds.withColumn("feature_type", lit("CDS"))
+        cds = cds.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-
 
         combined_df = genes.withColumn("priority", lit("3"))
         # Combined df append transcripts
@@ -827,9 +944,8 @@ class GFFService():
         combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
         combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
-        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
-        combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
+        combined_df = combined_df.repartition(1).orderBy("name", "priority").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
         
         try:
@@ -848,18 +964,17 @@ class GFFService():
         f.write("\n#!genome-version " + assembly_name)
         f.write("\n#!genome-date " + assembly_date)
         f.write("\n#!genome-build-accession " + assembly_acc)
+        f.write("\n#!genbuild-last-updated " + genebuild_date + "\n")
 
         #Write features       
         f_cvs = open(feature_file)
         file_line = f_cvs.readline()
         while file_line:
-            if(file_line.find("ID=gene:") > -1):
-                f.write("###\n")
             f.write(file_line)
             file_line = f_cvs.readline()
         f_cvs.close()
         f.close()
-        #os.rmdir(tmp_fp)
+       # os.rmdir(tmp_fp + "_feature/")
 
         return
 
