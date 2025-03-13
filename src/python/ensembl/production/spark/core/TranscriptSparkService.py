@@ -423,7 +423,7 @@ class TranscriptSparkService:
             .withColumnRenamed("canonical_translation_id", "translation_id")\
             .withColumnRenamed("stable_id", "transcript_stable_id")\
                 
-        transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "version", "created_date", "modified_date"), on=["translation_id"], how="right")
+        transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "created_date", "modified_date").withColumnRenamed("version", "tl_version"), on=["translation_id"], how="right")
         
         #Find translation seq start and end
 
@@ -440,13 +440,13 @@ class TranscriptSparkService:
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
-                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id")
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank")
         if (utr):
             exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
             exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
             
             result_prime_utr = result.join(exons_df, on=[result.exon_id == exons_df.orig_exon_id], how = "left")
-            result_prime_utr.filter("exon_stable_id=\"ENSABME00000005130\"").show()
+
             result_three_prime_utr = result_prime_utr.filter("seq_region_start != orig_start")\
                     .drop("seq_region_end").withColumnRenamed("seq_region_start", "seq_region_end").drop("seq_region_start").withColumnRenamed("orig_start", "seq_region_start")\
                     .withColumn("type", lit("three_prime_UTR"))
@@ -456,10 +456,10 @@ class TranscriptSparkService:
 
             result_five_prime_utr = result_five_prime_utr.select\
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
-                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id", "tl_version", "rank")
             result_three_prime_utr = result_three_prime_utr.select\
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
-                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id")
+                                         "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id", "tl_version", "rank")
             result_three_prime_utr = result_three_prime_utr.withColumn("seq_region_end", result_three_prime_utr.seq_region_end - 1)
             result_five_prime_utr = result_five_prime_utr.withColumn("seq_region_start", result_five_prime_utr.seq_region_start + 1)
             result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr)
