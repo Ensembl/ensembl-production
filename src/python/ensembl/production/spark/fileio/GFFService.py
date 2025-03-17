@@ -388,6 +388,7 @@ class GFFService():
 
     def dump_all_features (self, db, user, password) -> None:
         
+        #Read all features from db
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -462,23 +463,29 @@ class GFFService():
                 .option("password", password)\
                 .load()
 
+        #To differ biotype name from seq_region name
         biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
+        
+        #Assembly name
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
 
+        #Find transcript attributesrelated to transcript tags
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
         
-        # Type
+        #Type for transcripts and genes is by default feature type - if so_term is not defined. 
         @udf(returnType=StringType())
-        def type(type, so_term):
-            result = "type"
+        def construct_type(type, so_term):
+            result = type
             if(len(so_term)>1):
+                #Special type case
                 if so_term == "protein_coding_gene":
                     so_term ="gene"
                 result = so_term
             return result
-        # Phase
+        
+        #Phase of the exon should be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase < 0):
@@ -501,7 +508,7 @@ class GFFService():
                             .drop("biotype_name")
         
         genes = genes\
-                .withColumn("type", type(lit("gene"), "so_term"))\
+                .withColumn("type", construct_type(lit("gene"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
@@ -531,7 +538,7 @@ class GFFService():
                                     on = "transcript_id", how = "left") 
                                                                                       
         transcripts = transcripts\
-                .withColumn("type", type(lit("transcript"), "so_term"))\
+                .withColumn("type", construct_type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", lit("."))
 
