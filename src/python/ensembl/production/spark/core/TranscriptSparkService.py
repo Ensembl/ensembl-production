@@ -368,7 +368,7 @@ class TranscriptSparkService:
                 if(end < tl_start):
                     return(-1)
             if (tl_start > tl_end):
-                if(start <= tl_start and start >= tl_end or end <= tl_start and end >= tl_end):
+                if(start <= tl_start and start >= tl_end or end <= tl_start and end >= tl_end or tl_start > start and tl_end < end):
                     return 0
                 if(start > tl_start):
                     return -1

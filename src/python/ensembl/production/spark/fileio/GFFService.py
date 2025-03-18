@@ -23,6 +23,7 @@ from typing import Optional
 import os
 from pyspark.sql.functions import lit
 
+
 class GFFService():
 
     feature_type = {
@@ -165,9 +166,9 @@ class GFFService():
             'gene': [],
             'transcript': [],
             'translation': []
-        };
+        }
 
-        empty = True;
+        empty = True
         #Create dataframes if any feature of a kind is found 
         if (len(exons) > 0):
             empty = False
@@ -754,9 +755,8 @@ class GFFService():
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
-        head = "##sequence-region"
-        regions_header = self._regions.withColumn("prompt", lit(head)).withColumn("start", lit("1"))
-        regions_header = regions_header.select("prompt", "name", "start", "length")
+        regions_header = self._regions.withColumn("start", lit("1"))
+        regions_header = regions_header.select("name", "start", "length")
         regions_header.dropDuplicates().repartition(1).orderBy("name").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\t").csv(tmp_fp + "_regions")
         
         try:
@@ -776,7 +776,7 @@ class GFFService():
         f_cvs = open(region_file)
         file_line = f_cvs.readline()
         while file_line:
-            f.write(file_line)
+            f.write("##sequence-region " + file_line)
             file_line = f_cvs.readline()
         f_cvs.close()
         #Write assembly
