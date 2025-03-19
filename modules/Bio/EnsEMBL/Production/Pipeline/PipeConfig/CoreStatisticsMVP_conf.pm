@@ -179,7 +179,7 @@ sub pipeline_analyses {
                           },
       -max_retry_count => 1,
       -hive_capacity   => 50,
-      -rc_name         => '4GB_D',
+      -rc_name         => '8GB_D',
       -flow_into       => ['PepStats_Datacheck'],
     },
     {
@@ -193,7 +193,7 @@ sub pipeline_analyses {
       -max_retry_count => 1,
       -hive_capacity   => 50,
       -batch_size      => 10,
-      -rc_name         => '4GB_D',
+      -rc_name         => '8GB_D',
     },
     {
       -logic_name => 'Notify',
