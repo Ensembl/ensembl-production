@@ -22,7 +22,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatistics_conf
+Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatisticsMVP_conf
 
 =head1 DESCRIPTION
 
@@ -30,7 +30,7 @@ Configuration for calculating statistics and density features.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatistics_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::CoreStatisticsMVP_conf;
 
 use strict;
 use warnings;
