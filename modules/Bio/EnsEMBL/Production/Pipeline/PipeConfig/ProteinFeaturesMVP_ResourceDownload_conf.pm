@@ -362,7 +362,7 @@ sub pipeline_analyses {
             },
             -flow_into       => {
                 '3->A' => [ 'FetchFiles' ],
-                'A->3' => [ 'EmailReport', 'TidyScratch' ],
+                'A->3' => [ 'EmailReport' ],
             },
             -rc_name           => '4GB_D',
         },
@@ -465,6 +465,7 @@ sub pipeline_analyses {
                 subject => 'Protein features pipeline: report for #dbname#',
             },
             -rc_name           => '2GB_D',
+            -flow_into         => [ 'TidyScratch' ],
         },
         {
           -logic_name        => 'TidyScratch',
