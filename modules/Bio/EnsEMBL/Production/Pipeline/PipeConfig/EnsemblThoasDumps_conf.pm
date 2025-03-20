@@ -45,7 +45,7 @@ sub default_options {
     regulatory_length => 100000,
     dump_variant      => 1,
     dump_regulation   => 1,
-    resource_class    => '32GB',
+    resource_class    => '32GB_D',
 
     gene_search_reformat => 0,
 
@@ -112,6 +112,7 @@ sub pipeline_analyses {
                       '2' => [ 'DumpGenesJson' ], #core
                       '7' => ['DumpGenesJson'], #otherfeature
                      },
+      -rc_name      => '4GB_D'
     },
     {
       -logic_name => 'DumpGenesJson',
@@ -121,13 +122,14 @@ sub pipeline_analyses {
                       -1 => 'DumpGenesJsonHighmem'
                      },
       -rc_name    => $self->o('resource_class'),
-      -analysis_capacity => 10
+      -analysis_capacity => 10,
+      -rc_name           => '50GB_D'
     },
     {
       -logic_name => 'DumpGenesJsonHighmem',
       -module     => 'Bio::EnsEMBL::Production::Pipeline::Search::DumpGenesJson',
       -parameters => { use_pan_compara => $self->o('use_pan_compara') },
-      -rc_name    => '100GB',
+      -rc_name    => '100GB_D',
       -analysis_capacity => 10
     },
   ]
@@ -137,7 +139,7 @@ sub resource_classes {
   my ($self) = @_;
   return {
     %{$self->SUPER::resource_classes},
-    '100GB' => {'LSF' => '-q '.$self->o('production_queue').' -M 100000 -R "rusage[mem=100000]"'},
+    '100GB_D' => {'SLURM' => '--partition='.$self->o('production_queue').' --time=7-00:00:00  --mem=100000m'},
   }
 }
 

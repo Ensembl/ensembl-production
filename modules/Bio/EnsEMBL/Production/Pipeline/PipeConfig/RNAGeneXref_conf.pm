@@ -137,6 +137,7 @@ sub pipeline_analyses {
       -parameters      => {
                             rnacentral_file_local => $self->o('rnacentral_file_local'),
                           },
+      -rc_name         => '8GB_D',
     },
 
     {
@@ -153,6 +154,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '2' => ['AnalysisConfiguration'],
                           }
+      -rc_name         => '4GB_D',                     
     },
 
     {
@@ -166,6 +168,7 @@ sub pipeline_analyses {
                               '2->A' => ['BackupTables'],
                               'A->3' => ['SpeciesFactory'],
                             }
+      -rc_name         => '4GB_D',
     },
 
     {
@@ -184,6 +187,7 @@ sub pipeline_analyses {
                               overwrite   => 1,
                             },
       -flow_into         => ['AnalysisSetup'],
+      -rc_name         => '4GB_D',
     },
 
     {
@@ -198,6 +202,7 @@ sub pipeline_analyses {
                               linked_tables      => ['object_xref'],
                               production_lookup  => 1,
                             },
+      -rc_name         => '4GB_D',
     },
 
     {
@@ -209,6 +214,7 @@ sub pipeline_analyses {
       -flow_into         => {
                               '2' => ['RNACentralXref'],
                             }
+      -rc_name         => '2GB_D',
     },
 
     {
@@ -220,6 +226,7 @@ sub pipeline_analyses {
                               logic_name => $self->o('rnacentral_logic_name'),
                             },
       -flow_into         => ['RunDatachecks'],
+      -rc_name         => '4GB_D',
     },
 
     {
@@ -233,8 +240,8 @@ sub pipeline_analyses {
                               history_file     => $self->o('history_file'),
                               failures_fatal   => 1,
                             },
+      -rc_name         => '4GB_D',
     },
-
   ];
 }
 

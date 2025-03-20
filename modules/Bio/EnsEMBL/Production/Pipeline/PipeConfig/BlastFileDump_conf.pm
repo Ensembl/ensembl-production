@@ -136,6 +136,7 @@ sub pipeline_analyses {
                     'GenesetDirectoryPaths',
                 ],
             }
+            -rc_name           => '4GB_D',
             
         },        
         {
@@ -150,6 +151,7 @@ sub pipeline_analyses {
             -flow_into         => {
                 '3' => $self->o('genome_types'),
             },
+            -rc_name           => '4GB_D',
         },
         {
             -logic_name        => 'GenesetDirectoryPaths',
@@ -164,6 +166,7 @@ sub pipeline_analyses {
                 '3' => $self->o('geneset_types'),
                 
             },
+            -rc_name           => '4GB_D',
         },
         {
             -logic_name      => 'Genome_FASTA',
@@ -179,7 +182,7 @@ sub pipeline_analyses {
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
                 
             },
-            -rc_name         => '4GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
             },
@@ -195,7 +198,7 @@ sub pipeline_analyses {
                 cds         => $self->o('cds'),
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '32GB_D',,
             -flow_into       => {
                 '-1' => [ 'Geneset_FASTA_mem' ],
             },
@@ -214,7 +217,7 @@ sub pipeline_analyses {
                 overwrite      => 1,
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
-            -rc_name         => '8GB',
+            -rc_name           => '50GB_D',
         },
         {
             -logic_name      => 'Geneset_FASTA_mem',
@@ -228,7 +231,7 @@ sub pipeline_analyses {
                 cds         => $self->o('cds'),
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
-            -rc_name         => '4GB',
+            -rc_name           => '50GB_D',
 
         },
         {

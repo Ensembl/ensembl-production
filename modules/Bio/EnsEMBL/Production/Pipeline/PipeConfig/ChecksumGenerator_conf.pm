@@ -122,6 +122,7 @@ sub pipeline_analyses {
             -logic_name => 'fetch_info_generate_checksums',
             -module     => 'Bio::EnsEMBL::Production::Pipeline::Ga4ghChecksum::ChecksumGenerator',
             -analysis_capacity => 20,
+            -rc_name           => '16GB_D'
         },
         {
             -logic_name        => 'run_datacheck',
@@ -136,6 +137,7 @@ sub pipeline_analyses {
                 failures_fatal  => 1,
             },
             -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
+            -rc_name           => '4GB_D'
         },
 
          {
@@ -147,6 +149,7 @@ sub pipeline_analyses {
                 populate_mvp => $self->o('populate_mvp'),
             },
             -flow_into        => {2 => 'checksum_transfer'},
+            -rc_name           => '1GB_D'
 
         },
         {
@@ -157,6 +160,7 @@ sub pipeline_analyses {
             -parameters      => {
                 metadata_uri   => $self->o('metadata_uri'),
             },
+            -rc_name           => '4GB_D'
         },
 
         {
