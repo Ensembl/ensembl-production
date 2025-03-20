@@ -408,6 +408,12 @@ class TranscriptSparkService:
                 if(tl_start > tl_end):
                     return tl_start
             return exon_end
+        
+        @udf(returnType=StringType())
+        def utr_type(strand, end):
+            if (strand > 0 and end == "end" or strand < 0 and end == "start"):
+                return "three_prime_UTR"
+            return "five_prime_UTR"
 
         
             
@@ -454,10 +460,10 @@ class TranscriptSparkService:
             result_prime_utr = result.join(exons_df, on=[result.exon_id == exons_df.orig_exon_id], how = "left")
             result_three_prime_utr = result_prime_utr.filter("seq_region_start != orig_start")\
                     .drop("seq_region_end").withColumnRenamed("seq_region_start", "seq_region_end").drop("seq_region_start").withColumnRenamed("orig_start", "seq_region_start")\
-                    .withColumn("type", lit("three_prime_UTR"))
+                    .withColumn("type", utr_type("seq_region_strand", lit("start")))
             result_five_prime_utr = result_prime_utr.filter("seq_region_end != orig_end")\
                     .drop("seq_region_start").withColumnRenamed("seq_region_end", "seq_region_start").withColumnRenamed("orig_end", "seq_region_end")\
-                    .withColumn("type", lit("five_prime_UTR"))
+                    .withColumn("type", utr_type("seq_region_strand", lit("end")))
 
             result_five_prime_utr = result_five_prime_utr.select\
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
@@ -468,14 +474,14 @@ class TranscriptSparkService:
             result_three_prime_utr = result_three_prime_utr.withColumn("seq_region_end", result_three_prime_utr.seq_region_end - 1)
             result_five_prime_utr = result_five_prime_utr.withColumn("seq_region_start", result_five_prime_utr.seq_region_start + 1)
             
-            five_prime_utr=translatables.filter("translatable<0").withColumn("type", lit("three_prime_UTR")).select\
+            five_prime_utr=translatables.filter("translatable<0").withColumn("type", lit("five_prime_UTR")).select\
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
                                          "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id", "tl_version", "rank")   
-            three_prime_utr=translatables.filter("translatable>0").withColumn("type", lit("five_prime_UTR")).select\
+            three_prime_utr=translatables.filter("translatable>0").withColumn("type", lit("three_prime_UTR")).select\
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
                                          "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id", "tl_version", "rank")
             
-            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr)
+            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr).dropDuplicates()
 
         return result.union(result_five_prime_utr)
         

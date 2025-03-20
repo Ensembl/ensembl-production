@@ -600,7 +600,9 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, parent, version, protein):
+        def joinColumnsCds(feature_id, parent, version, protein, typec):
+            if (typec != "CDS"):
+                return "Parent=transcript:" + parent
             result = ""
             if feature_id:
                 result = result + "ID=CDS:" + str(protein) + ";"
@@ -738,7 +740,7 @@ class GFFService():
                                              joinColumnsCds("exon_stable_id",\
                                                                    "transcript_stable_id",\
                                                                    "version",\
-                                                                  "stable_id"
+                                                                  "stable_id", "type"
                                                                  ))
         cds = cds.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
@@ -776,17 +778,17 @@ class GFFService():
         f_cvs = open(region_file)
         file_line = f_cvs.readline()
         while file_line:
-            f.write("##sequence-region " + file_line)
+            f.write("##sequence-region\t" + file_line)
             file_line = f_cvs.readline()
         f_cvs.close()
         #Write assembly
 
         
-        f.write("#!genome-build " + assembly_name)
-        f.write("\n#!genome-version " + assembly_name)
-        f.write("\n#!genome-date " + assembly_date)
-        f.write("\n#!genome-build-accession " + assembly_acc)
-        f.write("\n#!genebuild-last-updated " + genebuild_date + "\n")
+        f.write("#!genome-build " + assembly_name.strip())
+        f.write("\n#!genome-version " + assembly_name.strip())
+        f.write("\n#!genome-date " + assembly_date.strip())
+        f.write("\n#!genome-build-accession " + assembly_acc.strip())
+        f.write("\n#!genebuild-last-updated " + genebuild_date.strip() + "\n")
 
         #Write features       
         f_cvs = open(feature_file)
@@ -1027,7 +1029,8 @@ class GFFService():
                                               "gene_source",
                                               "gene_version",
                                               "stable_id",
-                                              "transcript_stable_id")\
+                                              "transcript_stable_id"\
+                                              )\
             .withColumnRenamed("source", "transcript_source")\
             .withColumnRenamed("stable_id", "gene_stable_id")\
             .withColumnRenamed("version", "transcript_version")\
@@ -1081,11 +1084,11 @@ class GFFService():
         f = open(file_path, "a")
         #Write assembly
         
-        f.write("#!genome-build " + assembly_name)
-        f.write("\n#!genome-version " + assembly_name)
-        f.write("\n#!genome-date " + assembly_date)
-        f.write("\n#!genome-build-accession " + assembly_acc)
-        f.write("\n#!genbuild-last-updated " + genebuild_date + "\n")
+        f.write("#!genome-build\t" + assembly_name)
+        f.write("\n#!genome-version\t" + assembly_name)
+        f.write("\n#!genome-date\t" + assembly_date)
+        f.write("\n#!genome-build-accession\t" + assembly_acc)
+        f.write("\n#!genbuild-last-updated\t" + genebuild_date + "\n")
 
         #Write features       
         f_cvs = open(feature_file)
