@@ -394,7 +394,7 @@ class GFFService():
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select s.*, syn.synonym as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id")\
+                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id group by s.seq_region_id, s.name, s.length, s.coord_system_id")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -551,14 +551,13 @@ class GFFService():
                           how = "inner")
         exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
 
-        exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
+        exons = exons.join(self._transcripts.select("stable_id", "transcript_id", "source"),
                                        on=["transcript_id"])
 
         exons = exons\
                 .withColumn("type", lit("exon"))\
                 .withColumn("score", lit("."))\
-                 .withColumn("source", lit("ensembl"))\
-                 .withColumn("phase", map_phase("phase"))
+                .withColumn("phase", map_phase("phase"))
 
         
         transcript_service = TranscriptSparkService(self._spark)
@@ -566,9 +565,9 @@ class GFFService():
         cds = cds.join(self._regions.select("seq_region_id",
                                                     "name"), on =
                                ["seq_region_id"], how="left")
+
         cds = cds\
                 .withColumn("score", lit("."))\
-                .withColumn("source", lit("ensembl"))\
                 .withColumn("phase", map_phase("phase"))
         
         
