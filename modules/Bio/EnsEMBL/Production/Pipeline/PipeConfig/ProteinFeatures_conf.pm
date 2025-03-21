@@ -494,7 +494,7 @@ sub pipeline_analyses {
             -flow_into       => {
                 '2->A' => [ 'BackupTables' ],
                 'A->2' => [ 'RunDatachecks' ],
-            }
+            },
             -rc_name           => '4GB_D',
         },
 
