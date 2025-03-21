@@ -548,7 +548,7 @@ sub pipeline_analyses {
                 delete_existing    => $self->o('delete_existing'),
                 linked_tables      => [ 'protein_feature', 'object_xref' ],
                 production_lookup  => 1,
-            }
+            },
             -rc_name           => '8GB_D',
         },
 
