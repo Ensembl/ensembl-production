@@ -476,7 +476,7 @@ sub pipeline_analyses {
             -flow_into       => {
                 '1->A' => [ 'DbFactory' ],
                 'A->1' => [ 'TidyScratch' ],
-            }
+            },
             -rc_name           => '1GB_D',
         },
 
