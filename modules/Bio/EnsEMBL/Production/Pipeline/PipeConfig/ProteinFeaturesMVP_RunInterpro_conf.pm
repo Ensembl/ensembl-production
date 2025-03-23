@@ -562,7 +562,7 @@ sub pipeline_analyses {
                 },
             -rc_name         => '50GB_W',
             -flow_into       => {
-                '3' => [ 'StoreInterProxmlforProteinFeatures' ],
+                '3' => [ 'StoreInterProResultsforProteinFeatures' ],
             },
         },
 
@@ -580,7 +580,7 @@ sub pipeline_analyses {
           },
           -rc_name           => '32GB_8CPU',
           -flow_into         => {
-                                  '3' => ['StoreInterProxmlforProteinFeatures'],
+                                  '3' => ['StoreInterProResultsforProteinFeatures'],
                                   '-1' => ['InterProScanNoLookup_HighMem'],
                                 },
         },
@@ -599,7 +599,7 @@ sub pipeline_analyses {
                 },
             -rc_name         => '64GB_8CPU',
             -flow_into       => {
-                '3' => [ 'StoreInterProxmlforProteinFeatures' ],
+                '3' => [ 'StoreInterProResultsforProteinFeatures' ],
             },
         },
 
@@ -617,7 +617,7 @@ sub pipeline_analyses {
           },
           -rc_name           => '32GB_8CPU',
           -flow_into         => {
-                                  '3' => ['StoreInterProxmlforProteinFeatures'],
+                                  '3' => ['StoreInterProResultsforProteinFeatures'],
                                   '0' => ['InterProScanLocal_HighMem'],
                                 },
         },
@@ -636,12 +636,12 @@ sub pipeline_analyses {
                 },
             -rc_name         => '64GB_8CPU',
             -flow_into       => {
-                '3' => [ 'StoreInterProxmlforProteinFeatures' ],
+                '3' => [ 'StoreInterProResultsforProteinFeatures' ],
             },
         },
 
         {
-          -logic_name        => 'StoreInterProxmlforProteinFeatures',
+          -logic_name        => 'StoreInterProResultsforProteinFeatures',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
           -analysis_capacity => 10,
           -batch_size        => 50,
@@ -651,12 +651,12 @@ sub pipeline_analyses {
                                 },
           -rc_name           => '8GB_D',
           -flow_into         => {
-                                  '-1' => ['StoreInterProxmlforProteinFeatures_HighMem'],
+                                  '-1' => ['StoreInterProResultsforProteinFeatures_HighMem'],
                                 },
         },
     
         {
-          -logic_name        => 'StoreInterProxmlforProteinFeatures_HighMem',
+          -logic_name        => 'StoreInterProResultsforProteinFeatures_HighMem',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
           -analysis_capacity => 10,
           -batch_size        => 50,
@@ -667,35 +667,7 @@ sub pipeline_analyses {
           -rc_name           => '32GB_D',
         },
 
-        {
-          -logic_name        => 'StoreGoXrefs',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreGoXrefs',
-          -analysis_capacity => 10,
-          -max_retry_count   => 1,
-          -parameters        => {
-                                  interpro2go_file => $self->o('interpro2go_file_local'),
-                                  logic_name       => $self->o('interpro2go_logic_name')
-                                },
-          -rc_name           => '4GB_D',
-          -flow_into         => ['StoreInterProXrefs'],
-        },
 
-        {
-            -logic_name        => 'StoreInterProXrefs',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
-            -analysis_capacity => 10,
-            -max_retry_count   => 1,
-            -parameters        => {
-                sql =>
-                    [
-                        'CREATE TEMPORARY TABLE tmp_xref (acc VARCHAR(255), description VARCHAR(255))',
-                        "LOAD DATA LOCAL INFILE '" . $self->o('interpro_file_local') . "' INTO TABLE tmp_xref",
-                        'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type) SELECT external_db_id, acc, acc, 0, tmp_xref.description, "DIRECT" FROM tmp_xref, external_db WHERE db_name = "Interpro"',
-                        'DROP TEMPORARY TABLE tmp_xref',
-                    ],
-            },
-            -rc_name           => '4GB_D',
-        },
 
         {
             -logic_name        => 'EmailReport',

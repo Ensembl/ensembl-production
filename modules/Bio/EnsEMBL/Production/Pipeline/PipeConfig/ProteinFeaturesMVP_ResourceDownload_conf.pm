@@ -33,7 +33,7 @@ sub default_options {
     my ($self) = @_;
     return {
         %{$self->SUPER::default_options},
-
+                            
         species                              => [],
         antispecies                          => [],
         division                             => [],
@@ -472,7 +472,7 @@ sub pipeline_analyses {
           -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
           -max_retry_count   => 1,
           -parameters        => {
-                                  cmd => 'rm -rf #scratch_dir# && rm -rf #pipeline_dir# ',
+                                  cmd => 'rm -rf #scratch_dir# ',
                                 },
           -rc_name           => '8GB_D',
         },
