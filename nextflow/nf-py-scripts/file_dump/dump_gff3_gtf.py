@@ -59,5 +59,5 @@ spark_session.sparkContext.setLogLevel("ERROR")
 
 gff_service = GFFService(spark_session)
 features = gff_service.dump_all_features(url, username, pwd)
-gff_service.write_gff(dest + "/test_gff.gff", features)
-#gff_service.write_gtf(dest + "/test_gtf.gtf", features)
+#gff_service.write_gff(dest + "/test_gff.gff", features)
+gff_service.write_gtf(dest + "/test_gtf.gtf", features)

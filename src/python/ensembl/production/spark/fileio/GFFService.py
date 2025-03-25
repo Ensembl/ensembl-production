@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __all__ = ['GFFService']
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, BooleanType
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
@@ -493,6 +493,11 @@ class GFFService():
                 return "."
             return str(phase)
         
+        #Is transcript canonical
+        @udf(returnType=BooleanType())
+        def is_canonical(canonical, transcript_id):
+            return canonical == transcript_id
+        
         regions = self._regions.select("name", "synonym", "length")\
                     .withColumn("source", lit(assembly_name))\
                     .withColumn("type", lit("region"))\
@@ -541,7 +546,9 @@ class GFFService():
         transcripts = transcripts\
                 .withColumn("type", construct_type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
-                .withColumn("phase", lit("."))
+                .withColumn("phase", lit("."))\
+                .withColumn("canonical", is_canonical("canonical_transcript_id", "transcript_id"))
+
 
         exons = self._exons.join(self._regions.select("seq_region_id",
                                                     "name"), on =
@@ -569,7 +576,6 @@ class GFFService():
         cds = cds\
                 .withColumn("score", lit("."))\
                 .withColumn("phase", map_phase("phase"))
-        
         
         return [genes, transcripts, exons, cds, assembly_df, regions]
 
@@ -712,7 +718,7 @@ class GFFService():
                                                                    "transcript_stable_id",
                                                                    "version",
                                                                    "biotype", 
-                                                                   "canonical_transcript_id",
+                                                                   "canonical",
                                                                    "basic",
                                                                    "mane_select",
                                                                    "mane_clinical"))
@@ -818,10 +824,9 @@ class GFFService():
         assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
         genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
         
-               
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical):
+        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -833,6 +838,8 @@ class GFFService():
                 result = result + "transcript_version \"" + str(tr_version) + "\"; "
             if rank:
                 result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
             if g_source:
                 result = result + "gene_source \"" + g_source + "\"; "
             if g_biotype:
@@ -861,7 +868,7 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version):
+        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -873,6 +880,8 @@ class GFFService():
                 result = result + "transcript_version \"" + str(tr_version) + "\"; "
             if rank:
                 result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
             if g_source:
                 result = result + "gene_source \"" + g_source + "\"; "
             if g_biotype:
@@ -881,10 +890,6 @@ class GFFService():
                 result = result + "transcript_source \"" + tr_source + "\"; "
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
-            if feature_id: 
-                result = result + "exon_id \"" + feature_id + "\"; "
-            if version:
-                result = result + "exon_version \"" + str(version) + "\"; "
             if protein:
                 result = result + "protein_id \"" + str(protein) + "\"; "
             if tl_version:
@@ -936,13 +941,14 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsGene(feature_id, version, biotype, gene_source):
+        def joinColumnsGene(feature_id, version, biotype, gene_source, name, g_name):
             result = ""
             if feature_id:
                 result = result + "gene_id \"" + feature_id + "\"; "
             if version:
                 result = result + "gene_version \"" + str(version) + "\"; "
-
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
             result = result + "gene_source \"" + gene_source +"\"; "
             if biotype:
                 result = result + "gene_biotype \"" + biotype + "\"; "
@@ -957,20 +963,12 @@ class GFFService():
                 result = "-"
             return result
         
-        genes = genes.withColumn("attributes",
-                                 joinColumnsGene("stable_id",\
-                                                       "version",\
-                                                       "biotype", "source"))        
-        genes = genes.withColumn("feature_type", lit("gene"))
-        genes = genes.select("name", "source", "feature_type",
-                        "seq_region_start", "seq_region_end",
-                        "score", "seq_region_strand", "phase", "attributes")
         transcripts = transcripts.withColumn("attributes",
                                              joinColumnsTranscript("stable_id",
                                                                    "transcript_stable_id",
                                                                    "version",
                                                                    "biotype", 
-                                                                   "canonical_transcript_id",
+                                                                   "canonical",
                                                                    "basic",
                                                                    "mane_select",
                                                                    "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source"))
@@ -978,7 +976,7 @@ class GFFService():
         transcripts = transcripts.withColumn("feature_type", lit("transcript"))
 
         exons = exons.join(transcripts.select("transcript_id",
-                                              "canonical_transcript_id",
+                                              "canonical",
                                               "basic",
                                               "mane_select",
                                               "mane_clinical",
@@ -989,12 +987,13 @@ class GFFService():
                                               "gene_source",
                                               "gene_version",
                                               "stable_id",
-                                              "transcript_stable_id")\
+                                              "transcript_stable_id", "gene_id")\
             .withColumnRenamed("source", "transcript_source")\
             .withColumnRenamed("stable_id", "gene_stable_id")\
             .withColumnRenamed("version", "transcript_version")\
             .withColumnRenamed("biotype", "transcript_biotype"),\
             on = ["transcript_id"])
+        exons = exons.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
 
         exons = exons.withColumn("attributes",
                                              joinColumnsExon("exon_stable_id",\
@@ -1011,13 +1010,13 @@ class GFFService():
                                                                 "basic",
                                                                 "mane_select",
                                                                 "mane_clinical",
-                                                                "canonical_transcript_id"))
+                                                                "canonical", "gene_name"))
         exons = exons.withColumn("feature_type", lit("exon"))
 
         exons = exons.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-        cds = cds.join(transcripts.select("canonical_transcript_id",
+        cds = cds.join(transcripts.select("canonical",
                                               "basic",
                                               "mane_select",
                                               "mane_clinical",
@@ -1028,14 +1027,15 @@ class GFFService():
                                               "gene_source",
                                               "gene_version",
                                               "stable_id",
-                                              "transcript_stable_id"\
+                                              "transcript_stable_id",\
+                                              "gene_id"\
                                               )\
             .withColumnRenamed("source", "transcript_source")\
             .withColumnRenamed("stable_id", "gene_stable_id")\
             .withColumnRenamed("version", "transcript_version")\
             .withColumnRenamed("biotype", "transcript_biotype"),\
             on = ["transcript_stable_id"])
-
+        cds = cds.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
         cds = cds.withColumn("attributes", joinColumnsCds("exon_stable_id",\
                                                 "version",\
                                                 "rank",\
@@ -1050,14 +1050,24 @@ class GFFService():
                                                 "basic",\
                                                 "mane_select",\
                                                 "mane_clinical",\
-                                                "canonical_transcript_id",\
+                                                "canonical",\
                                                 "stable_id",\
-                                                "tl_version"\
+                                                "tl_version",\
+                                                "name",\
+                                                "gene_name"\
                                                 ))        
-        cds = cds.withColumn("feature_type", lit("CDS"))
+        cds = cds.withColumnRenamed("type", "feature_type")
         cds = cds.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
+        genes = genes.withColumn("attributes",
+                                 joinColumnsGene("stable_id",\
+                                                       "version",\
+                                                       "biotype", "source", "name",  "gene_name"))        
+        genes = genes.withColumn("feature_type", lit("gene"))
+        genes = genes.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
         transcripts = transcripts.select("name", "source", "feature_type",
                         "seq_region_start", "seq_region_end",
                         "score", "seq_region_strand", "phase", "attributes")
@@ -1087,7 +1097,7 @@ class GFFService():
         f.write("\n#!genome-version\t" + assembly_name)
         f.write("\n#!genome-date\t" + assembly_date)
         f.write("\n#!genome-build-accession\t" + assembly_acc)
-        f.write("\n#!genbuild-last-updated\t" + genebuild_date + "\n")
+        f.write("\n#!genebuild-last-updated\t" + genebuild_date + "\n")
 
         #Write features       
         f_cvs = open(feature_file)

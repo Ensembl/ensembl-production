@@ -432,7 +432,6 @@ class TranscriptSparkService:
             .withColumnRenamed("stable_id", "transcript_stable_id")\
                 
         transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "created_date", "modified_date").withColumnRenamed("version", "tl_version"), on=["translation_id"], how="right")
-        transcripts_df.filter("translation_id=2963").show()
         #Find translation seq start and end
 
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
@@ -442,12 +441,9 @@ class TranscriptSparkService:
         transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
         
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
-        print(exons_df)
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
-        translatables.filter("stable_id=\"ENSABMP00000002964\"").show()
 
         result=translatables.filter("translatable = 0")
-        result.filter("stable_id=\"ENSABMP00000002964\"").show()
 
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
