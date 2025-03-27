@@ -113,7 +113,7 @@ sub pipeline_analyses {
       -flow_into       => {
                             '1->A' => ['FetchRNACentral'],
                             'A->1' => ['DbFactory'],
-                          }
+                          },
     },
 
     {
@@ -167,7 +167,7 @@ sub pipeline_analyses {
       -flow_into 	       => {
                               '2->A' => ['BackupTables'],
                               'A->3' => ['SpeciesFactory'],
-                            }
+                            },
       -rc_name         => '4GB_D',
     },
 
@@ -213,7 +213,7 @@ sub pipeline_analyses {
       -parameters        => {},
       -flow_into         => {
                               '2' => ['RNACentralXref'],
-                            }
+                            },
       -rc_name         => '2GB_D',
     },
 
