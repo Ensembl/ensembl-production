@@ -316,27 +316,27 @@ sub hive_meta_table {
 sub pipeline_create_commands {
     my ($self) = @_;
 
-    my $uniparc_table_sql = q/
-    CREATE TABLE uniparc (
-      upi VARCHAR(13) NOT NULL,
-      md5sum VARCHAR(32) NOT NULL COLLATE latin1_swedish_ci
-    );
-  /;
+  #   my $uniparc_table_sql = q/
+  #   CREATE TABLE uniparc (
+  #     upi VARCHAR(13) NOT NULL,
+  #     md5sum VARCHAR(32) NOT NULL COLLATE latin1_swedish_ci
+  #   );
+  # /;
 
-    my $uniprot_table_sql = q/
-    CREATE TABLE uniprot (
-      acc VARCHAR(10) NOT NULL,
-      upi VARCHAR(13) NOT NULL,
-      tax_id INT NOT NULL
-    );
-  /;
+  #   my $uniprot_table_sql = q/
+  #   CREATE TABLE uniprot (
+  #     acc VARCHAR(10) NOT NULL,
+  #     upi VARCHAR(13) NOT NULL,
+  #     tax_id INT NOT NULL
+  #   );
+  # /;
 
     return [
         @{$self->SUPER::pipeline_create_commands},
         'mkdir -p ' . $self->o('pipeline_dir'),
         'mkdir -p ' . $self->o('scratch_large_dir'),
-        $self->db_cmd($uniparc_table_sql),
-        $self->db_cmd($uniprot_table_sql),
+        # $self->db_cmd($uniparc_table_sql),
+        # $self->db_cmd($uniprot_table_sql),
     ];
 }
 
