@@ -13,12 +13,13 @@
 # limitations under the License.
 
 __all__ = ['GFFService']
-from pyspark.sql.types import StringType, BooleanType
+from pyspark.sql.types import StringType, BooleanType, IntegerType
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
 import warnings
-from pyspark.sql.functions import udf
+from pyspark.sql.functions import udf, col, row_number
+from pyspark.sql.window import Window
 from typing import Optional
 import os
 from pyspark.sql.functions import lit
@@ -810,6 +811,59 @@ class GFFService():
 
         return
     
+    def get_stop_codons(self, cds) -> None:
+        windowRank = Window.partitionBy("transcript_stable_id").orderBy(col("rank").desc())
+        cds = cds.withColumn("seq_region_start", cds["seq_region_start"].cast(IntegerType()))
+        cds = cds.withColumn("seq_region_end", cds["seq_region_end"].cast(IntegerType()))
+
+        win = cds.withColumn("row",row_number().over(windowRank))
+        stop_codons = win.filter(col("row") == 1).drop("row")
+        stop_codons = stop_codons.withColumn("length", stop_codons["seq_region_end"] - stop_codons["seq_region_start"])
+        
+        small_cds = stop_codons.filter(stop_codons.length < 2)
+        rank_prev = win.filter(col("row") == 2).drop("row")
+        rank_prev = rank_prev.join(small_cds.select("length", "exon_id"), on = ["exon_id"], how = "right").dropDuplicates()
+        rank_prev_pos = rank_prev.filter("seq_region_strand < 0")
+        rank_prev_pos = rank_prev_pos.withColumn("seq_region_end", rank_prev_pos["seq_region_start"] + 2 - rank_prev_pos["length"])
+        rank_prev_neg = rank_prev.filter("seq_region_strand > 0")
+        rank_prev_neg = rank_prev_neg.withColumn("seq_region_start", rank_prev_neg["seq_region_end"] - 2 + rank_prev_neg["length"])
+        rank_prev = rank_prev_neg.union(rank_prev_pos)
+        
+        normal_cds = stop_codons.filter(stop_codons.length >= 2)
+        normal_cds_pos = normal_cds.filter("seq_region_strand < 0")
+        normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
+        normal_cds_neg = normal_cds.filter("seq_region_strand > 0")
+        normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
+        stop_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("length")
+
+        return stop_codons
+    
+    def get_start_codons(self, cds) -> None:
+        windowRank = Window.partitionBy("transcript_stable_id").orderBy(col("rank").asc())
+        cds = cds.withColumn("seq_region_start", cds["seq_region_start"].cast(IntegerType()))
+        cds = cds.withColumn("seq_region_end", cds["seq_region_end"].cast(IntegerType()))
+
+        win = cds.withColumn("row",row_number().over(windowRank))
+        start_codons = win.filter(col("row") == 1).drop("row")
+        start_codons = start_codons.withColumn("length", start_codons["seq_region_end"] - start_codons["seq_region_start"])
+        
+        small_cds = start_codons.filter(start_codons.length < 2)
+        rank_prev = win.filter(col("row") == 2).drop("row")
+        rank_prev = rank_prev.join(small_cds.select("length", "exon_id"), on = ["exon_id"], how = "right").dropDuplicates()
+        rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
+        rank_prev_pos = rank_prev_pos.withColumn("seq_region_end", rank_prev_pos["seq_region_start"] + 2 - rank_prev_pos["length"])
+        rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
+        rank_prev_neg = rank_prev_neg.withColumn("seq_region_start", rank_prev_neg["seq_region_end"] - 2 + rank_prev_neg["length"])
+        rank_prev = rank_prev_neg.union(rank_prev_pos)
+        
+        normal_cds = start_codons.filter(start_codons.length >= 2)
+        normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
+        normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
+        normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
+        normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
+        start_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("length")
+
+        return start_codons
     
     def write_gtf(self, file_path, features=None, db="", user="", password="", ) -> None:
         
@@ -868,7 +922,48 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name):
+        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name, f_type):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank and f_type == "CDS" :
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
+            if protein:
+                result = result + "protein_id \"" + str(protein) + "\"; "
+            if tl_version:
+                result = result + "protein_version \"" + str(version) + "\"; "
+            if canonical or basic or mane_select or mane_clinical:
+                result = result + "tag "
+            if canonical:
+                result = result + "\"Ensembl_canonical\";"
+            if basic:
+                result = result + "\"basic\";"
+            if mane_clinical:
+                result = result + "\"mane_clinical\";"
+            if mane_select:
+                result = result + "\"mane_select\";"
+
+            return result
+        
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -890,10 +985,43 @@ class GFFService():
                 result = result + "transcript_source \"" + tr_source + "\"; "
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
-            if protein:
-                result = result + "protein_id \"" + str(protein) + "\"; "
-            if tl_version:
-                result = result + "protein_version \"" + str(version) + "\"; "
+            if canonical or basic or mane_select or mane_clinical:
+                result = result + "tag "
+            if canonical:
+                result = result + "\"Ensembl_canonical\";"
+            if basic:
+                result = result + "\"basic\";"
+            if mane_clinical:
+                result = result + "\"mane_clinical\";"
+            if mane_select:
+                result = result + "\"mane_select\";"
+
+            return result
+        
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank:
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
             if canonical or basic or mane_select or mane_clinical:
                 result = result + "tag "
             if canonical:
@@ -1036,6 +1164,50 @@ class GFFService():
             .withColumnRenamed("biotype", "transcript_biotype"),\
             on = ["transcript_stable_id"])
         cds = cds.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
+
+        stop_codons = self.get_stop_codons(cds).drop("type")
+        stop_codons = stop_codons.withColumn("feature_type", lit("stop_codon"))
+        start_codons = self.get_start_codons(cds).drop("type")
+        start_codons =start_codons.withColumn("feature_type", lit("start_codon"))
+
+        start_codons = start_codons.withColumn("attributes", joinColumnsStartCodon("exon_stable_id",\
+                                                "version",\
+                                                "rank",\
+                                                "transcript_stable_id",\
+                                                "transcript_biotype",\
+                                                "transcript_source",\
+                                                "transcript_version",\
+                                                "gene_stable_id",\
+                                                "gene_biotype",\
+                                                "gene_source",\
+                                                "gene_version",\
+                                                "basic",\
+                                                "mane_select",\
+                                                "mane_clinical",\
+                                                "canonical",\
+                                                "name",\
+                                                "gene_name"\
+                                                ))   
+        stop_codons = stop_codons.withColumn("attributes", joinColumnsStopCodon("exon_stable_id",\
+                                                "version",\
+                                                "rank",\
+                                                "transcript_stable_id",\
+                                                "transcript_biotype",\
+                                                "transcript_source",\
+                                                "transcript_version",\
+                                                "gene_stable_id",\
+                                                "gene_biotype",\
+                                                "gene_source",\
+                                                "gene_version",\
+                                                "basic",\
+                                                "mane_select",\
+                                                "mane_clinical",\
+                                                "canonical",\
+                                                "name",\
+                                                "gene_name"\
+                                                ))   
+
+  
         cds = cds.withColumn("attributes", joinColumnsCds("exon_stable_id",\
                                                 "version",\
                                                 "rank",\
@@ -1054,12 +1226,23 @@ class GFFService():
                                                 "stable_id",\
                                                 "tl_version",\
                                                 "name",\
-                                                "gene_name"\
-                                                ))        
+                                                "gene_name", "type"\
+                                                ))   
+
         cds = cds.withColumnRenamed("type", "feature_type")
+        
         cds = cds.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
+        start_codons = start_codons.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        stop_codons = stop_codons.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        
+        #start_codons = self.get_start_codons(cds)
+        
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
                                                        "version",\
@@ -1076,6 +1259,8 @@ class GFFService():
         combined_df = combined_df.union(transcripts.withColumn("priority", lit("3")))
         combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
         combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(start_codons.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(stop_codons.withColumn("priority", lit("3")))
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
