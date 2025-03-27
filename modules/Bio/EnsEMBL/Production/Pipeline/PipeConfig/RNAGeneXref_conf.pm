@@ -153,7 +153,7 @@ sub pipeline_analyses {
                           },
       -flow_into       => {
                             '2' => ['AnalysisConfiguration'],
-                          }
+                          },
       -rc_name         => '4GB_D',                     
     },
 
