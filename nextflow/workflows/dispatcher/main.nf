@@ -83,10 +83,10 @@ process run_beekeeper {
       #set hive db string
       hive_db_uri=${mysqlString}
       echo "beekeeper.pl -url ${mysqlString} ${regConfPath}"
-      echo beekeeper.pl -url ${mysqlString} ${regConfPath} -dead
-      echo beekeeper.pl -url ${mysqlString} ${regConfPath} -sync
-      echo beekeeper.pl -url ${mysqlString} ${regConfPath} -reset_failed_jobs
-      echo beekeeper.pl -url ${mysqlString} ${regConfPath} -loop_until ANALYSIS_FAILURE
+      beekeeper.pl -url ${mysqlString} ${regConfPath} -dead
+      beekeeper.pl -url ${mysqlString} ${regConfPath} -sync
+      beekeeper.pl -url ${mysqlString} ${regConfPath} -reset_failed_jobs
+      beekeeper.pl -url ${mysqlString} ${regConfPath} -loop_until ANALYSIS_FAILURE
     """
 }
 
@@ -117,12 +117,16 @@ process check_status {
 
     msg = f"Hive Pipeline ${hive_mysql_db_uri} Failed Or Not Completed ...!"
 
-    non_done_jobs_count = s.query(func.count(Job.job_id)).filter(Job.status != 'DONE').scalar()
+    #'SEMAPHORED','READY','CLAIMED','COMPILATION','PRE_CLEANUP','FETCH_INPUT','RUN','WRITE_OUTPUT','POST_HEALTHCHECK','POST_CLEANUP','DONE','FAILED','PASSED_ON'
+
+    non_done_jobs_count = s.query(func.count(Job.job_id)).filter(Job.status.in_(['SEMAPHORED','READY','RUN','FAILED'])).scalar()
+    
     if non_done_jobs_count:
         raise ValueError(msg)
 
     result = s.query(Beekeeper).order_by(Beekeeper.beekeeper_id.desc()).first()
-    if (result is None) or (result.cause_of_death not in ['NO_WORK', 'LOOP_LIMIT']):
+    
+    f (result is None) or (result.cause_of_death not in ['NO_WORK', 'LOOP_LIMIT']):
         raise ValueError(msg)
     """
 }
