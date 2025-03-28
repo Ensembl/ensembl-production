@@ -53,7 +53,7 @@ class TrackUtils:
         self.custom_variant_track_data = self.get_variant_track_data()
         self.custom_gene_track_data = self.get_gene_track_data()
 
-    def submit_tracks(self, track_file:str)-> None:
+    def submit_tracks(self, track_file: str) -> None:
         filename = os.path.splitext(track_file)[0]
         # Skip file
         if filename == "variant-details" or filename.endswith("-summary"):
@@ -72,12 +72,14 @@ class TrackUtils:
                 multimatch = True
             # Template matches a datafile with different suffix (e.g. repeats.repeatmask*.bb)
             if not multimatch and filename.startswith(template_name):
-                track_payload=self.get_track_payload(template_name)
-                track_payload = self.update_track_payload(track_payload, datafile=track_file)
+                track_payload = self.get_track_payload(template_name)
+                track_payload = self.update_track_payload(
+                    track_payload, datafile=track_file
+                )
                 self.post_track(track_payload)
                 return
 
-    def get_track_payload(self, template_name:str)-> dict:
+    def get_track_payload(self, template_name: str) -> dict:
         track_api_json = self.read_yaml_template(template_name=f"{template_name}.yaml")
         track_api_json["genome_id"] = self.genome_uuid
         if track_api_json["type"] == "gene":
@@ -87,7 +89,7 @@ class TrackUtils:
         return track_api_json
 
     @staticmethod
-    def update_track_payload(track_payload: dict, datafile: str)-> dict:
+    def update_track_payload(track_payload: dict, datafile: str) -> dict:
         for key, value in track_payload["datafiles"].items():
             # derive bw filename for bb/bw datafile pairs
             if key.endswith("summary") and value:
@@ -96,14 +98,15 @@ class TrackUtils:
             else:
                 track_payload["datafiles"][key] = datafile
         return track_payload
+
     @staticmethod
-    def check_directory(path:str)->str:
+    def check_directory(path: str) -> str:
         if not os.path.isdir(path):
             raise argparse.ArgumentTypeError(f"The directory '{path}' does not exist.")
         return path
 
     @staticmethod
-    def read_yaml_template(template_name:str)->dict:
+    def read_yaml_template(template_name: str) -> dict:
         track_template = ARGS.track_templates_dir + template_name
         if Path(track_template).is_file():
             with open(track_template, "r") as template_file:
@@ -111,7 +114,7 @@ class TrackUtils:
             return track_payload
 
     @staticmethod
-    def post_track(track_payload:dict)-> None:
+    def post_track(track_payload: dict) -> None:
         try:
             request = requests.post(f"{ARGS.track_api_url}/track", json=track_payload)
             if request.status_code == 201:
@@ -133,27 +136,36 @@ class TrackUtils:
                 variant_data_dict = {}
                 for line in reader:
                     if self.genome_uuid == line["Genome_UUID"]:
-                        variant_data_dict={
+                        variant_data_dict = {
                             "description": line["Description"],
-                            "track_name": line["Track_name"] if "Track_name" in line else "",
+                            "track_name": (
+                                line["Track_name"] if "Track_name" in line else ""
+                            ),
                             "source_names": line["Source_name"].split(","),
                             "source_urls": line["Source_URL"].split(","),
                         }
                         # Remove key, value if value is empty:
-                        variant_data_dict = {k: v for k, v in variant_data_dict.items() if v}
+                        variant_data_dict = {
+                            k: v for k, v in variant_data_dict.items() if v
+                        }
                         break
 
-                return variant_data_dict.get(self.genome_uuid,{})
+                return variant_data_dict.get(self.genome_uuid, {})
         except FileNotFoundError:
-            logger.error(f"Error: track description CSV file not found in {variant_data_csv}")
+            logger.error(
+                f"Error: track description CSV file not found in {variant_data_csv}"
+            )
         except KeyError as e:
             logger.error(f"Error: unexpected CSV format in {variant_data_csv} ({e})")
-    def get_gene_track_data(self)-> dict:
+
+    def get_gene_track_data(self) -> dict:
         try:
             query = (
                 select(Dataset)
                 .outerjoin(Dataset.genome_datasets)
-                .filter(Dataset.dataset_type.has(DatasetType.name.in_([ARGS.dataset_type])))
+                .filter(
+                    Dataset.dataset_type.has(DatasetType.name.in_([ARGS.dataset_type]))
+                )
             )
             if self.genome_uuid:
                 query = query.filter(
@@ -188,8 +200,7 @@ class TrackUtils:
                     result_dict[genome.genome_uuid] = row_data
             return result_dict
         except Exception as e:
-            logger.error("Error connecting to DB",e)
-
+            logger.error("Error connecting to DB", e)
 
 
 if __name__ == "__main__":
@@ -237,7 +248,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file_path",
         type=TrackUtils.check_directory,
-        required=False,
+        required=True,
         help="Path to the genome browser files directory ",
     )
 
@@ -257,18 +268,19 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
     logger.info(f"Provided Arguments  {ARGS} ")
 
-
-    genome_uuid_directory = [path.name for path in Path(ARGS.file_path).iterdir() if path.is_dir()]
+    genome_uuid_directory = [
+        path.name for path in Path(ARGS.file_path).iterdir() if path.is_dir()
+    ]
     genome_uuid_list = ARGS.genome_uuid if ARGS.genome_uuid else genome_uuid_directory
     for genome_uuid in genome_uuid_list:
         track_utils = TrackUtils(genome_uuid=genome_uuid)
         gene_track_data = track_utils.get_gene_track_data()
 
-
-        track_data_dir = Path(track_utils.check_directory(ARGS.file_path + genome_uuid + "/"))
+        track_data_dir = Path(
+            track_utils.check_directory(ARGS.file_path + genome_uuid + "/")
+        )
         track_data_file_list = [
             entry.stem for entry in track_data_dir.iterdir() if entry.is_file()
         ]
         for track_file in track_data_file_list:
             track_utils.submit_tracks(track_file)
-
