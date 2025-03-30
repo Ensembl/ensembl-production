@@ -565,7 +565,7 @@ class GFFService():
         exons = exons\
                 .withColumn("type", lit("exon"))\
                 .withColumn("score", lit("."))\
-                .withColumn("phase", map_phase("phase"))
+                .withColumn("phase", lit("."))
 
         
         transcript_service = TranscriptSparkService(self._spark)
@@ -753,13 +753,13 @@ class GFFService():
                                          "score", "seq_region_strand", "phase", "attributes")
 
 
-        combined_df = genes.withColumn("priority", lit("3"))
+        combined_df = genes.dropDuplicates().withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(transcripts.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.dropDuplicates().withColumn("priority", lit("3")))
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
-        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
+        combined_df = combined_df.union(regions.dropDuplicates().withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
@@ -1254,15 +1254,15 @@ class GFFService():
         transcripts = transcripts.select("name", "source", "feature_type",
                         "seq_region_start", "seq_region_end",
                         "score", "seq_region_strand", "phase", "attributes")
-        combined_df = genes.withColumn("priority", lit("3"))
+        combined_df = genes.dropDuplicates().withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(exons.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(cds.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(start_codons.withColumn("priority", lit("3")))
-        combined_df = combined_df.union(stop_codons.withColumn("priority", lit("3")))
+        combined_df = combined_df.union(transcripts.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(start_codons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(stop_codons.dropDuplicates().withColumn("priority", lit("3")))
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
-        combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.withColumn("seq_region_start", combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("quote", "").option("escape", "\"").option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
         
