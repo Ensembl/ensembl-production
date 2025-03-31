@@ -487,13 +487,6 @@ class GFFService():
                 result = so_term
             return result
         
-        #Phase of the exon should be . of it is -1
-        @udf(returnType=StringType())
-        def map_phase(phase):
-            if(phase < 0):
-                return "."
-            return str(phase)
-        
         #Is transcript canonical
         @udf(returnType=BooleanType())
         def is_canonical(canonical, transcript_id):
@@ -502,7 +495,7 @@ class GFFService():
         regions = self._regions.select("name", "synonym", "length")\
                     .withColumn("source", lit(assembly_name))\
                     .withColumn("type", lit("region"))\
-                    .withColumn("seq_region_start", self._regions.name)\
+                    .withColumn("seq_region_start", lit("1"))\
                     .withColumnRenamed("length", "seq_region_end")\
                     .withColumn("score", lit("."))\
                     .withColumn("phase", lit("."))\
@@ -575,8 +568,7 @@ class GFFService():
                                ["seq_region_id"], how="left")
 
         cds = cds\
-                .withColumn("score", lit("."))\
-                .withColumn("phase", map_phase("phase"))
+                .withColumn("score", lit("."))
         
         return [genes, transcripts, exons, cds, assembly_df, regions]
 

@@ -415,7 +415,12 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-        
+                #Phase of the exon should be . of it is -1
+        @udf(returnType=StringType())
+        def map_phase(phase):
+            if(phase > 2):
+                return "0"
+            return str(phase)
             
         translation_service = TranslationSparkService(self._spark)
         if (exons_df == None):
@@ -447,10 +452,14 @@ class TranscriptSparkService:
 
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
+        result = result.withColumn("phase", map_phase(3 - result.phase))
+        
+        
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
                                           "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
         
+
         
         if (utr):
             exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
@@ -480,7 +489,7 @@ class TranscriptSparkService:
                 ("exon_id", "type", "seq_region_start", "seq_region_end",
                                          "seq_region_strand", "phase", "seq_region_id", "exon_stable_id", "transcript_stable_id", "version", "stable_id", "tl_version", "rank", "source")
             
-            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr).dropDuplicates()
+            result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr).dropDuplicates().withColumn("phase",lit("."))
 
         return result.union(result_five_prime_utr)
         
