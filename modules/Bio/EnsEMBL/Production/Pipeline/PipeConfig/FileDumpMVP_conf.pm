@@ -41,7 +41,7 @@ sub default_options {
         dump_dir                           => undef,
         ftp_root                           => undef,
         genome_types                       => [ 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA' ],
-        geneset_types                      => [ 'Geneset_EMBL' ,  'Geneset_FASTA'],  #, 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV' ],
+        geneset_types                      => [ 'Geneset_EMBL' ,  'Geneset_FASTA', 'Geneset_GFF3'], #, 'Geneset_GTF', 'Xref_TSV' ],
         homology_types                     => [ 'Homologies_TSV' ], # Possible values :
 
         overwrite                          => 0,
@@ -403,9 +403,64 @@ sub pipeline_analyses {
                 '2' => [ 'Compress_File' ]
             },
         },
+                {
+            -logic_name      => 'Geneset_GFF3',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome       => 0,
+                gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+            },
+            -rc_name         => '1GB',
+            -flow_into       => {
+                '-1'   => [ 'Geneset_GFF3_mem' ],
+                '2->A' => [ 'GFFbgzip' ],
+                'A->1' => [ 'Compress_File' ],
+            },
+        },
+        {
+            -logic_name      => 'Geneset_GFF3_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GFF3',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome       => 0,
+                gt_gff3_exe          => $self->o('gt_gff3_exe'),
+                gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
+            },
+            -rc_name         => '1GB',
+            -flow_into       => {
+                '2->A' => [ 'GFFbgzip' ],
+                'A->1' => [ 'Compress_File' ],
+            },
+        },
 
 
-
+        {
+            -logic_name    => 'GFFbgzip',
+            -module        => 'ensembl.production.hive.filedumps.GFFbgzip',
+            -language      => 'python3',
+            -parameters    => {
+                output_filename => '#output_filename#',
+            },
+            -can_be_empty  => 1,
+            -hive_capacity => 10,
+            -rc_name       => '4GB',
+            -flow_into     => {
+                2 => [ 'UpdateDatasetAttribute' ],
+            },
+        },
+        {
+            -logic_name => 'UpdateDatasetAttribute',
+            -module     => 'ensembl.production.hive.HiveDatasetFactory',
+            -language   => 'python3',
+            -rc_name    => 'default',
+            -parameters => {
+                'metadata_db_uri' => $self->o('metadata_db_uri'),
+            },
+        },
         {
             -logic_name        => 'Compress_File',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
