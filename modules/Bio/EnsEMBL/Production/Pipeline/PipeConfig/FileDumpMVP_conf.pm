@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDump_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMVP_conf;
 
 use strict;
 use warnings;
