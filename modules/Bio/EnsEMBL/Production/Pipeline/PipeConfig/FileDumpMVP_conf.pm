@@ -263,11 +263,118 @@ sub pipeline_analyses {
                 analysis_types  => $self->o('genome_types'),
                 species_dirname => $self->o('species_dirname')
             },
-            # -flow_into         => {
-            #     '3->A' => $self->o('genome_types'),
-            #     'A->3' => [ 'Checksum' ]
-            # },
+            -flow_into         => {
+                '3->A' => $self->o('genome_types'),
+                'A->3' => [ 'Checksum' ]
+            },
         },
+
+        {
+            -logic_name      => 'Assembly_Chain',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Assembly_Chain',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                ucsc => $self->o('chain_ucsc'),
+            },
+            -rc_name         => '1GB',
+            -flow_into       => {
+                '2' => [ 'Compress_File' ],
+            },
+        },
+        {
+            -logic_name      => 'Genome_FASTA',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index    => 0,
+                per_chromosome => 0,
+                unmasked       => 1,
+                hardmasked     => 1,
+                overwrite      => 1,
+
+            },
+            -rc_name         => '4GB',
+            -flow_into       => {
+                '-1'   => [ 'Genome_FASTA_mem' ],
+               '2' => [ 'FAAbgzip' ],
+            },
+        },
+        {
+            -logic_name      => 'Genome_FASTA_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Genome_FASTA',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                blast_index    => 0,
+                per_chromosome => 0,
+                overwrite      => 1,
+                unmasked       => 1,
+                hardmasked     => 1,
+            },
+            -rc_name         => '8GB',
+            -flow_into       => {
+               '2' => [ 'FAAbgzip' ],
+            },
+        },
+        {
+            -logic_name    => 'FAAbgzip',
+            -module        => 'ensembl.production.hive.filedumps.FAAbgzip',
+            -language      => 'python3',
+            -parameters    => {
+                output_filename => '#output_filename#',
+            },
+            -can_be_empty  => 1,
+            -hive_capacity => 10,
+            -rc_name       => '4GB',
+            -flow_into     => {
+                #TODO: trigger_next_step not declared  2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
+                3 => [ 'Compress_File' ],
+            },
+        },
+
+
+        {
+            -logic_name      => 'Chromosome_TSV',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {},
+            -rc_name         => '1GB',
+            -flow_into       => {
+                '2' => [ 'Compress_File' ]
+            },
+        },
+
+
+
+        {
+            -logic_name        => 'Compress_File',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                compress => "#output_filename#"
+            },
+            -rc_name           => '1GB',
+            -flow_into         => {
+                '-1' => [ 'Compress_File_mem' ],
+            },
+        },
+        {
+            -logic_name        => 'Compress_File_mem',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
+            -parameters        => {
+                compress => "#output_filename#"
+            },
+            -rc_name           => '4GB',
+        },          
+
         {
             -logic_name        => 'GenesetDirectoryPaths',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
