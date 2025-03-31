@@ -347,6 +347,35 @@ sub pipeline_analyses {
             },
         },
 
+        {
+            -logic_name      => 'Geneset_EMBL',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome => 0,
+            },
+            -rc_name         => '2GB',
+            -flow_into       => {
+                '-1' => [ 'Geneset_EMBL_mem' ],
+                '2'  => [ 'Compress_File' ]
+            },
+        },
+        {
+            -logic_name      => 'Geneset_EMBL_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome => 0,
+                overwrite      => 1,
+            },
+            -rc_name         => '4GB',
+            -flow_into       => {
+                '2' => [ 'Compress_File' ]
+            },
+        },
+
 
 
         {
