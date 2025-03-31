@@ -41,7 +41,7 @@ sub default_options {
         dump_dir                           => undef,
         ftp_root                           => undef,
         genome_types                       => [ 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA' ],
-        geneset_types                      => [ 'Geneset_EMBL' ,  'Geneset_FASTA', 'Geneset_GFF3'], #, 'Geneset_GTF', 'Xref_TSV' ],
+        geneset_types                      => [ 'Geneset_EMBL' ,  'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF'], #'Xref_TSV' ],
         homology_types                     => [ 'Homologies_TSV' ], # Possible values :
 
         overwrite                          => 0,
@@ -500,6 +500,38 @@ sub pipeline_analyses {
             -flow_into         => {
                 '3->A' => $self->o('geneset_types'),
                 'A->3' => [ 'Checksum' ]
+            },
+        },
+        {
+            -logic_name      => 'Geneset_GTF',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome      => 0,
+                gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
+                genepred_check_exe  => $self->o('genepred_check_exe'),
+            },
+            -rc_name         => '1GB',
+            -flow_into       => {
+                '-1' => [ 'Geneset_GTF_mem' ],
+                '2'  => [ 'Compress_File' ],
+            },
+        },
+        {
+            -logic_name      => 'Geneset_GTF_mem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_GTF',
+            -max_retry_count => 1,
+            -hive_capacity   => 10,
+            -parameters      => {
+                per_chromosome      => 0,
+                gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
+                genepred_check_exe  => $self->o('genepred_check_exe'),
+                overwrite           => 1,
+            },
+            -rc_name         => '4GB',
+            -flow_into       => {
+                '2' => [ 'Compress_File' ]
             },
         },
 
