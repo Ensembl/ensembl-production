@@ -17,13 +17,13 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDumpMVP_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::FileDump_conf;
 
 use strict;
 use warnings;
 use base ('Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf');
+
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version;
 use File::Spec::Functions qw(catdir);
 
 sub default_options {
@@ -77,11 +77,11 @@ sub default_options {
         dataset_status                     => 'Submitted',  #fetch genomes with dataset status submitted
         dataset_type                       => 'ftp_dumps',  #fetch genomes with dataset blast
         update_dataset_status              => 'Processing', #updates dataset status to processing in new metadata db
-        # genome_factory_dynamic_output_flow => {
-        #     '3->A'         => { 'FileDump' => INPUT_PLUS() },
-        #     'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
-        #     attribute_dict => {}, # Placeholder for attribute dictionary
-        # },
+        genome_factory_dynamic_output_flow => {
+            '3->A'         => { 'FileDump' => INPUT_PLUS() },
+            'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
+            # attribute_dict => {}, # Placeholder for attribute dictionary
+        },
 
     };
 }
@@ -117,13 +117,13 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-        # @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
+        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             -logic_name        => 'FileDump',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count   => 1,
             -analysis_capacity => 1,
-            # -input_ids         => [ {} ],
+            #            -input_ids         => [ {} ],
             -parameters        => {},
             -flow_into         => {
                 '1' => [ 'DbFactory' ],
@@ -142,6 +142,13 @@ sub pipeline_analyses {
                 dbname       => $self->o('dbname'),
                 meta_filters => $self->o('meta_filters'),
             },
+            # -flow_into         => {
+            #     '2' => WHEN(
+            #         '#run_datachecks#' => [ 'FTPDumpDummy' ],
+            #         ELSE
+            #             [ 'SpeciesFactory' ]
+            #     )
+            # },
         },
         # {
         #     -logic_name        => 'FTPDumpDummy',
