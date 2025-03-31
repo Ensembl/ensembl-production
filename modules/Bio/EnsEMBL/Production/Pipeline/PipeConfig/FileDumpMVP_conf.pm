@@ -140,13 +140,6 @@ sub pipeline_analyses {
                 dbname       => $self->o('dbname'),
                 meta_filters => $self->o('meta_filters'),
             },
-            # -flow_into         => {
-            #     '2' => WHEN(
-            #         '#run_datachecks#' => [ 'FTPDumpDummy' ],
-            #         ELSE
-            #             [ 'SpeciesFactory' ]
-            #     )
-            # },
         },
         # {
         #     -logic_name        => 'FTPDumpDummy',
