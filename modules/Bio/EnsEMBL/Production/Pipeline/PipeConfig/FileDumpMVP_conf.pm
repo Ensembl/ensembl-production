@@ -141,6 +141,48 @@ sub pipeline_analyses {
                 dbname       => $self->o('dbname'),
                 meta_filters => $self->o('meta_filters'),
             },
+            -flow_into         => {
+                '2' => WHEN(
+                    '#run_datachecks#' => [ 'FTPDumpDummy' ],
+                    ELSE
+                        [ 'SpeciesFactory' ]
+                )
+            },
+        },
+                {
+            -logic_name        => 'FTPDumpDummy',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count   => 1,
+            -analysis_capacity => 1,
+            -parameters        => {},
+            -flow_into         => {
+                '1->A' => [ 'RunDataChecks' ],
+                'A->1' => [ 'SpeciesFactory' ],
+            }
+        },
+        {
+            -logic_name        => 'RunDataChecks',
+            -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -parameters        => {
+                registry_file    => $self->o('registry'),
+                history_file     => $self->o('history_file'),
+                output_dir       => $self->o('output_dir'),
+                config_file      => $self->o('config_file'),
+                datacheck_names  => $self->o('datacheck_names'),
+                datacheck_groups => $self->o('datacheck_groups'),
+                datacheck_types  => $self->o('datacheck_types'),
+                failures_fatal   => 1,
+            },
+        },
+        {
+            -logic_name        => 'SpeciesFactory',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {},
+       
         },
     ];
 }
