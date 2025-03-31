@@ -126,7 +126,7 @@ process check_status {
 
     result = s.query(Beekeeper).order_by(Beekeeper.beekeeper_id.desc()).first()
     
-    f (result is None) or (result.cause_of_death not in ['NO_WORK', 'LOOP_LIMIT']):
+    if (result is None) or (result.cause_of_death not in ['NO_WORK', 'LOOP_LIMIT']):
         raise ValueError(msg)
     """
 }
