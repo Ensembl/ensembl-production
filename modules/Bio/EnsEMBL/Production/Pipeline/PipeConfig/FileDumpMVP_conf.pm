@@ -205,7 +205,7 @@ sub pipeline_analyses {
                 'A->3' => [ 'Checksum' ]
             }
         },
-                {
+        {
             -logic_name        => 'Homologies_TSV',
             -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
             -max_retry_count   => 1,
@@ -231,6 +231,24 @@ sub pipeline_analyses {
                 compress => "#filepath#"
             },
             -rc_name           => '1GB',
+        },
+        {
+            -logic_name        => 'Checksum',
+            -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -parameters        => {
+                cmd => 'cd "#output_dir#"; find -L . -type f ! -name "md5sum.txt" | sed \'s!^\./!!\' | xargs md5sum > md5sum.txt',
+            },
+            -rc_name           => '1GB',
+            -flow_into         => [ 'Verify' ],
+        },
+        {
+            -logic_name        => 'Verify',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Verify',
+            -max_retry_count   => 1,
+            -analysis_capacity => 10,
+            -batch_size        => 10,
         },
 
 
