@@ -80,7 +80,6 @@ sub default_options {
         genome_factory_dynamic_output_flow => {
             '3->A'         => { 'FileDump' => INPUT_PLUS() },
             'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
-            attribute_dict => {}, # Placeholder for attribute dictionary
         },
 
     };
