@@ -41,7 +41,7 @@ sub default_options {
         dump_dir                           => undef,
         ftp_root                           => undef,
         genome_types                       => [ 'Assembly_Chain', 'Chromosome_TSV', 'Genome_FASTA' ],
-        geneset_types                      => [ 'Geneset_EMBL', 'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV' ],
+        geneset_types                      => [ 'Geneset_EMBL' ], #,  'Geneset_FASTA', 'Geneset_GFF3', 'Geneset_GTF', 'Xref_TSV' ],
         homology_types                     => [ 'Homologies_TSV' ], # Possible values :
 
         overwrite                          => 0,
@@ -414,10 +414,10 @@ sub pipeline_analyses {
                 analysis_types  => $self->o('geneset_types'),
                 species_dirname => $self->o('species_dirname')
             },
-            # -flow_into         => {
-            #     '3->A' => $self->o('geneset_types'),
-            #     'A->3' => [ 'Checksum' ]
-            # },
+            -flow_into         => {
+                '3->A' => $self->o('geneset_types'),
+                'A->3' => [ 'Checksum' ]
+            },
         },
 
 
