@@ -182,8 +182,64 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {},
-       
+            -flow_into         => {
+                '2' => [
+                    'GenomeDirectoryPaths',
+                    'GenesetDirectoryPaths',
+                    'HomologyDirectoryPaths',
+                ],
+            },
         },
+        {
+            -logic_name        => 'HomologyDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                analysis_types  => $self->o('homology_types'),
+                data_category   => 'homology',
+                species_dirname => $self->o('species_dirname')
+            },
+            # -flow_into         => {
+            #     '3->A' => $self->o('homology_types'),
+            #     'A->3' => [ 'Checksum' ]
+            # }
+        },
+        {
+            -logic_name        => 'GenomeDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                data_category   => 'genome',
+                analysis_types  => $self->o('genome_types'),
+                species_dirname => $self->o('species_dirname')
+            },
+            # -flow_into         => {
+            #     '3->A' => $self->o('genome_types'),
+            #     'A->3' => [ 'Checksum' ]
+            # },
+        },
+        {
+            -logic_name        => 'GenesetDirectoryPaths',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
+            -max_retry_count   => 1,
+            -analysis_capacity => 20,
+            -parameters        => {
+                data_category   => 'geneset',
+                analysis_types  => $self->o('geneset_types'),
+                species_dirname => $self->o('species_dirname')
+            },
+            # -flow_into         => {
+            #     '3->A' => $self->o('geneset_types'),
+            #     'A->3' => [ 'Checksum' ]
+            # },
+        },
+
+
+
+
+
     ];
 }
 
