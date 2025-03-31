@@ -75,11 +75,11 @@ sub default_options {
         dataset_status                     => 'Submitted',  #fetch genomes with dataset status submitted
         dataset_type                       => 'ftp_dumps',  #fetch genomes with dataset blast
         update_dataset_status              => 'Processing', #updates dataset status to processing in new metadata db
-        genome_factory_dynamic_output_flow => {
-            '3->A'         => { 'FileDump' => INPUT_PLUS() },
-            'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
-            attribute_dict => {}, # Placeholder for attribute dictionary
-        },
+        # genome_factory_dynamic_output_flow => {
+        #     '3->A'         => { 'FileDump' => INPUT_PLUS() },
+        #     'A->3'         => [ { 'UpdateDatasetStatus' => INPUT_PLUS() } ],
+        #     attribute_dict => {}, # Placeholder for attribute dictionary
+        # },
 
     };
 }
@@ -115,7 +115,7 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-        @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
+        # @{Bio::EnsEMBL::Production::Pipeline::PipeConfig::Base_conf::factory_analyses($self)},
         {
             -logic_name        => 'FileDump',
             -module            => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
