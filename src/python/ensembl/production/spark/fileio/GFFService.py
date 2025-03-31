@@ -826,7 +826,8 @@ class GFFService():
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand > 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
-        stop_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("length")
+        stop_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("length").drop("phase")
+        stop_codons = stop_codons.withColumn("phase", lit("0"))
 
         return stop_codons
     
@@ -885,7 +886,7 @@ class GFFService():
             if rank:
                 result = result + "exon_number \"" + str(rank) + "\"; "
             if g_name:
-                result = result + "gene_name \"" + str(g_name) + "\";"
+                result = result + "gene_name \"" + str(g_name) + "\"; "
             if g_source:
                 result = result + "gene_source \"" + g_source + "\"; "
             if g_biotype:
@@ -924,10 +925,10 @@ class GFFService():
                 result = result + "transcript_id \"" + tr_stable_id + "\"; "
             if tr_version:
                 result = result + "transcript_version \"" + str(tr_version) + "\"; "
-            if rank and f_type == "CDS" :
+            if rank and f_type == "CDS":
                 result = result + "exon_number \"" + str(rank) + "\"; "
             if g_name:
-                result = result + "gene_name \"" + str(g_name) + "\";"
+                result = result + "gene_name \"" + str(g_name) + "\"; "
             if g_source:
                 result = result + "gene_source \"" + g_source + "\"; "
             if g_biotype:
@@ -936,9 +937,9 @@ class GFFService():
                 result = result + "transcript_source \"" + tr_source + "\"; "
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
-            if protein:
+            if protein and f_type == "CDS":
                 result = result + "protein_id \"" + str(protein) + "\"; "
-            if tl_version:
+            if tl_version and f_type == "CDS":
                 result = result + "protein_version \"" + str(version) + "\"; "
             if canonical or basic or mane_select or mane_clinical:
                 result = result + "tag "
@@ -968,7 +969,7 @@ class GFFService():
             if rank:
                 result = result + "exon_number \"" + str(rank) + "\"; "
             if g_name:
-                result = result + "gene_name \"" + str(g_name) + "\";"
+                result = result + "gene_name \"" + str(g_name) + "\"; "
             if g_source:
                 result = result + "gene_source \"" + g_source + "\"; "
             if g_biotype:
