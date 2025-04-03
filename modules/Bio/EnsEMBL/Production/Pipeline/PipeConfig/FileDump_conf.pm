@@ -367,7 +367,7 @@ sub pipeline_analyses {
             -flow_into       => {
                 '-1'   => [ 'Geneset_GFF3_mem' ],
                 '2->A' => [ 'GFFbgzip' ],
-                'A->1' => [ 'Compress_File' ],
+                'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -383,7 +383,7 @@ sub pipeline_analyses {
             -rc_name         => '1GB',
             -flow_into       => {
                 '2->A' => [ 'GFFbgzip' ],
-                'A->1' => [ 'Compress_File' ],
+                'A->2' => [ 'Compress_File' ],
             },
         },
         {
