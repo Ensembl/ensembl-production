@@ -826,7 +826,7 @@ class GFFService():
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand > 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
-        stop_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("length").drop("phase")
+        stop_codons = normal_cds_neg.union(normal_cds_pos).union(rank_prev).drop("phase")
         stop_codons = stop_codons.withColumn("phase", lit("0"))
 
         return stop_codons
@@ -1031,7 +1031,7 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source):
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source, g_name):
             result = ""
 
             if parent:
@@ -1042,7 +1042,10 @@ class GFFService():
                 result = result + "transcript_id \"" + feature_id + "\"; "           
             if version:
                 result = result + "transcript_version \"" + str(version) + "\"; "  
-            result = result + "gene_source \"" + gene_source +"\"; " 
+            if g_name:
+                result = result + "gene_name \"" + g_name +"\"; " 
+            if gene_source:
+                result = result + "gene_source \"" + gene_source +"\"; " 
             if gene_biotype:
                 result = result + "gene_biotype \"" + gene_biotype + "\"; "
             result = result + "transcript_source \"" + transcript_source +"\"; " 
@@ -1083,7 +1086,7 @@ class GFFService():
             if(strand == -1):
                 result = "-"
             return result
-        
+        transcripts = transcripts.join(genes.select("gene_id", "gene_name"), on = ["gene_id"], how = "left").dropDuplicates()
         transcripts = transcripts.withColumn("attributes",
                                              joinColumnsTranscript("stable_id",
                                                                    "transcript_stable_id",
@@ -1092,7 +1095,7 @@ class GFFService():
                                                                    "canonical",
                                                                    "basic",
                                                                    "mane_select",
-                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source"))
+                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source", "gene_name"))
         
         transcripts = transcripts.withColumn("feature_type", lit("transcript"))
 
@@ -1223,18 +1226,42 @@ class GFFService():
                                                 ))   
 
         cds = cds.withColumnRenamed("type", "feature_type")
+
+        stop_codons_cds = stop_codons.withColumnRenamed("seq_region_start", "c_seq_region_start").withColumnRenamed("seq_region_end", "c_seq_region_end")
+        
+        cds_pos = cds.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "length"), on = ["exon_stable_id"], how= "right")
+        cds_pos = cds_pos.filter("length > 2")
+        
+        cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
+        cds_pos.filter("stable_id=\"ENSABMP00000002941\"").show(truncate = False)
+        cds_neg = cds.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "length"), on = ["exon_stable_id"], how= "right")
+        cds_neg = cds_neg.filter("length > 2")
+        cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_pos.c_seq_region_end + 1)
+        cds_neg = cds_neg.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id")
+        cds_pos = cds_pos.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id")
+        cds_croped = cds_neg.union(cds_pos)
+        
+        
+        cds = cds.join(cds_croped, on = ["exon_stable_id"], how = "anti")
+
+        cds_croped = cds_croped.drop("exon_stable_id")
         
         cds = cds.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-        start_codons = start_codons.select("name", "source", "feature_type",
+        start_codons = start_codons.select("name", "source", "feature_type", 
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
         stop_codons = stop_codons.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-        
-        #start_codons = self.get_start_codons(cds)
+      
+        cds = cds.union(cds_croped)
+
         
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
