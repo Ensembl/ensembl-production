@@ -26,6 +26,16 @@ from pyspark.sql.types import IntegerType
 
 __all__ = ['TranscriptSparkService']
 
+#Class performs functionality on the transcript level such as: 
+# 
+# - sequence build 
+# - translatable exons of the transcript 
+# - seq edits
+# Most functions takes database details as input and produces dataframe on the output
+# All function is performed withing a spark session passed to the class construtor (init)
+# To boost the performance after data is read from database it is droped to the disk with 
+# file system functions and after it dataframe is loaded from disk that allows to use
+# parralel calculations and split to chuncks and in case of big data also use disk space
 class TranscriptSparkService:
 
     __type = 'transcript_spark_service'
@@ -35,19 +45,25 @@ class TranscriptSparkService:
                  ) -> None:
         if not session:
             raise ValueError(
-                'Connection details and session is required')
+                'Session is required')
         self._spark = session
         self._spark.sparkContext.setLogLevel("ERROR")
     """
-    Returns seq_edits DF, loaded directly from database
+    Returns: seq_edits DF, loaded directly from database
+    Input: is database details and edit_codes that is a codes in attrib_type table - what attributes we consider as edits
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
+    For the optimization not used directly but wrapped in _load_seq_edits_fs - dumped to disk
     """
-    def load_seq_edits(self, db: str, user: str, password: str, edit_codes,
+    def _load_seq_edits(self, db: str, user: str, password: str, edit_codes,
                        translation=False):
         edits_str = "(\'" + str(reduce(lambda x,y: x + "\', \'" + y, edit_codes)) + "\')"
+        #Hardcoded name of the fature is inside seq_edit function and not transfered as a string, to isolate db specific hardcode 
+        # withing function that work with database
         feature = "transcript"
         if (translation):
             feature = "translation"
+        
+        #Query to fetch transcript or translation attributes that has codes considered as edits
         seq_edits = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
@@ -65,16 +81,16 @@ class TranscriptSparkService:
     """
     Load seq_edits with fs dump, performance boost
     """
-    def load_seq_edits_fs(self, db: str, user: str, password: str, edit_codes,
-                         translation=False,  tmp_folder=None):
-        seq_edits = self.load_seq_edits(db, user, password, edit_codes\
+    def _load_seq_edits_fs(self, db: str, user: str, password: str, edit_codes,
+                         translation="False",  tmp_folder=None):
+        seq_edits = self._load_seq_edits(db, user, password, edit_codes\
                                        , translation)
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(seq_edits, "seq_edits", tmp_folder)
 
 
     """
-    Returns transcripts DF, loaded directly from database
+    Returns: transcripts DF, loaded directly from database
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
     """
     def load_transcripts(self, db: str, user: str, password: str):
@@ -100,26 +116,46 @@ class TranscriptSparkService:
 
     """
     Apply edits to the list of transcripts or translations
-    sequnce row must be in data frame
+    sequence must be  in dataFrame
+    Returns: dataFrame with edits applied to the sequence
+    Input: dataFrame, edits dataframe and feature type
     """
-    def apply_edits(self, sequence_df, edits_df, feature="transcript"):
+    def apply_edits(self, sequence_df, edits_df, translation=False):
+        #Database specific hardcode isolated withing function
+        feature = "transcript"
+        if (translation):
+            feature = "translation"
+
+        #Function applies single sequence edit list to the sequence
         @udf(returnType=StringType())
         def sequence_edits(sequence, edits_list):
             if(edits_list == None):
                 return sequence
+            #Every edit in list is three values: start coordinate, new-seq and end coordinate
+            #We take seq from start to edit start, then concat new-seq and from edit end to seq end: 
+            #--original_seq[edit start coordinate]new_seq[edit end coordinate]orig_seq----
             for edit in edits_list:
                 edit = edit.split(" ")
                 sequence = sequence[:int(edit[0])-1] + edit[2] +\
                 sequence[int(edit[1]):]
             return sequence
+        
+        #Group all edits and concatinate them to a list for every feature 
         edits_df =\
         edits_df.groupby(feature +"_id").agg(concat(collect_list("value")).alias("c_value"))
+        
+        #Add edits column to the sequence df
         sequence_df = sequence_df.join(edits_df, on=[feature + "_id"], how="leftouter")
+        
+        #Apply sequence edits to every sequence
         sequence_df = sequence_df.withColumn("sequence",\
                                              sequence_edits("sequence","c_value")).drop("c_value")
         return sequence_df
+    
     """
     Returns transcripts with spliced sequnce
+    Splice sequence is transcript sequence which translatable part (CDS) is CAPITAL letters and 
+    UTR (Untranslated regions) is regular font. It was historically used in perl API
     """
     def spliced_seq(self, db: str, user: str, password: str,
                     exons_df=None):
@@ -227,10 +263,10 @@ class TranscriptSparkService:
          #Apply translation edits
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
-         seq_edits = self.load_seq_edits_fs(db, user, password, edit_codes,
+         seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes,
                                             True)
          translated_sequence = self.apply_edits(translated_sequence,
-                                                seq_edits, "translation")
+                                                seq_edits, True)
 
          return translated_sequence
 
@@ -347,7 +383,7 @@ class TranscriptSparkService:
         #Apply transcript edits
 
         edit_codes = ['_rna_edit']
-        seq_edits = self.load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
+        seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
         transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts_with_seq,

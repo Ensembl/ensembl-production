@@ -15,7 +15,7 @@
 
 process DumpGFF3_GTFFiles {
 
-  debug 'ture'
+  debug 'true'
   label 'mem20GB'
   tag '${db_name}-dump_gff'
   errorStrategy 'finish'
