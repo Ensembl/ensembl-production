@@ -65,7 +65,7 @@ transcript_service = TranscriptSparkService(spark_session)
 
 # Genome fasta
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
-fastaDf.write.orc("./sequence", mode="overwrite")
+fastaDf.write.orc("./"+ out_subfolder, mode="overwrite")
 #Get genes information
 genes = spark_session.read\
             .format("jdbc")\

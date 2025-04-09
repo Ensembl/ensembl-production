@@ -159,6 +159,7 @@ class TranscriptSparkService:
     """
     def spliced_seq(self, db: str, user: str, password: str,
                     exons_df=None):
+        #Every sequnce is capitalized from translation start to end
         @udf(returnType=StringType())
         def spliced_sequence(sequence, translation_region_start,
                              translation_region_end):
@@ -200,7 +201,7 @@ class TranscriptSparkService:
          @udf(returnType=StringType())
          def translatable_sequence(sequence, translation_region_start,\
                                             translation_region_end,\
-                                   phase, end_phase, translation_id):
+                                   phase, end_phase):
             
             if (len(translation_region_start) < 1 or len(translation_region_end) < 1):
                 return ""
@@ -226,8 +227,7 @@ class TranscriptSparkService:
                                                                    "translation_region_start",
                                                                    "translation_region_end",
                                                                      "phase",
-                                                                     "end_phase",
-                                                                     "translation_stable_id"))
+                                                                     "end_phase"))
 
          return transcripts_with_seq
 
@@ -313,7 +313,7 @@ class TranscriptSparkService:
                 result = result + int(exon[0])
             return result
 
-        translation_df = translation_service.load_translations_fs(db, user, password)
+        translation_df = translation_service.load_translations_fs(db, user, password, tmp_folder)
         result = None
         regions = self._spark.read\
             .format("jdbc")\

@@ -24,8 +24,7 @@ process DumpFastaFiles {
   input:
   each db_name
 
-  output:
-  path "${db_name}"
+  output: stdout
 
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
@@ -33,7 +32,7 @@ process DumpFastaFiles {
 
   ${params.nf_py_script_path}/file_dump/dump_fasta.py --base_dir=${BASE_DIR}\
    --username ${params.user} --password ${params.password} --dest "${params.ftp_path}"\
-   --db ${params.server}/${db_name} > ${db_name}.log
+   --db ${params.server}/${db_name} && echo ${db_name}
 
   """
 
