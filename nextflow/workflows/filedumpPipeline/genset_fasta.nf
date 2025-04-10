@@ -17,14 +17,15 @@ process DumpFastaFiles {
 
   debug 'ture'
   label 'mem20GB'
-  tag '${db_name}-dump_fasta'
+  tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
   publishDir "${params.output}"
 
   input:
   each db_name
 
-  output: stdout
+  output:
+  stdout
 
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 

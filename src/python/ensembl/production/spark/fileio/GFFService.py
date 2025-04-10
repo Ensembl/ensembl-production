@@ -279,11 +279,9 @@ class GFFService():
                                         on=[exons.stable_id ==
                                             exons_df.stable_id], how="inner")
         exon_transcript_df = exon_transcript_df.drop_duplicates(["exon_id"])
-        print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.join(self._transcripts.select("stable_id",
                                                          "transcript_id"),\
                                 on=[exon_transcript_df.transcript_stable_id == self._transcripts.stable_id])
-        print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.select("exon_id", "transcript_id", "rank")
         exon_transcript_df.write.mode("append")\
                 .format("jdbc")\
@@ -572,7 +570,7 @@ class GFFService():
         
         return [genes, transcripts, exons, cds, assembly_df, regions]
 
-    def write_gff(self, file_path,features=None, db="", user="", password="") -> None:
+    def write_gff(self, file_path, features=None, db="", user="", password="") -> None:
         
         # Join attribs
         @udf(returnType=StringType())
@@ -676,12 +674,12 @@ class GFFService():
             features = self.dump_all_features(db, user, password)
         
         [genes, transcripts, exons, cds, assembly_df, regions] = features       
-        tmp_fp = file_path + "_tpm"
+         
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
         assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
         genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
-        
+        tmp_fp = assembly_name + "_gff"
                 
         # Strand
         @udf(returnType=StringType())
@@ -858,19 +856,21 @@ class GFFService():
 
         return start_codons
     
-    def write_gtf(self, file_path, features=None, db="", user="", password="", ) -> None:
+    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:
         
         if (features is None):
             features = self.dump_all_features(db, user, password)
         
+        if (sequence is None):
+            return 1
         [genes, transcripts, exons, cds, assembly_df, regions] = features
-                
-        tmp_fp = file_path + "_tpm"
+
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
         assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
         genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
-        
+                        
+        tmp_fp = assembly_name
         # Join attribs
         @udf(returnType=StringType())
         def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name):
@@ -1233,7 +1233,6 @@ class GFFService():
         cds_pos = cds_pos.filter("length > 2")
         
         cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
-        cds_pos.filter("stable_id=\"ENSABMP00000002941\"").show(truncate = False)
         cds_neg = cds.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "length"), on = ["exon_stable_id"], how= "right")
         cds_neg = cds_neg.filter("length > 2")
         cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_pos.c_seq_region_end + 1)

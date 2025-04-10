@@ -70,7 +70,6 @@ division = channel.of(params.division.split(","))
 
 Channel.of(databases) \
 | DumpFastaFiles \
-
 | DumpGFF3_GTFFiles
   
 //clean the empty log files  

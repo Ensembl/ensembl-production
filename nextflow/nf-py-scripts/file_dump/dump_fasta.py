@@ -65,7 +65,7 @@ transcript_service = TranscriptSparkService(spark_session)
 
 # Genome fasta
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
-fastaDf.write.orc("./"+ out_subfolder, mode="overwrite")
+fastaDf.write.orc(base_dir + "/" + out_subfolder, mode="overwrite")
 #Get genes information
 genes = spark_session.read\
             .format("jdbc")\
@@ -123,8 +123,8 @@ pep_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./" + dest + "/fasta_pep")
-file = glob.glob("./" + dest + "/fasta_pep" + "/part-0000*")[0]
+    .csv(out_subfolder + "/fasta_pep")
+file = glob.glob(out_subfolder + "/fasta_pep" + "/part-0000*")[0]
 shutil.copy(file, dest + "/" + out_subfolder + "/pep.fa")
 
 #Unite header
@@ -148,8 +148,8 @@ cdna_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv("./" + dest + "/fasta_cdna")
-file = glob.glob("." + dest + "/fasta_cdna"  + "/part-0000*")[0]
+    .csv(out_subfolder + "/fasta_cdna")
+file = glob.glob(out_subfolder + "/fasta_cdna"  + "/part-0000*")[0]
 
 shutil.copy(file, dest + "/" + out_subfolder + "/cdna.fa")
     

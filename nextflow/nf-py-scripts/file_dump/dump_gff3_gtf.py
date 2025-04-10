@@ -31,6 +31,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--dest', action="store", dest='dest', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
+parser.add_argument('--sequence', action="store", dest='sequence', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -40,6 +41,7 @@ url = args.db
 dest = args.dest
 base_dir = args.base_dir
 out_subfolder = url.split("/")[3]
+sequence = args.sequence
 
 import os
 confi=SparkConf()
@@ -57,7 +59,8 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
+#GTF and GFF dumps should be placed together as they are sharing the same features dump
 gff_service = GFFService(spark_session)
 features = gff_service.dump_all_features(url, username, pwd)
-gff_service.write_gff(dest + "/test_gff.gff", features)
-gff_service.write_gtf(dest + "/test_gtf.gtf", features)
+gff_service.write_gff(dest + "/" + out_subfolder + "/test_gff.gff", features)
+gff_service.write_gtf(dest + "/" + out_subfolder + "/test_gtf.gtf", features, sequence)
