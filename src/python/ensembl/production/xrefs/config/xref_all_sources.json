@@ -214,7 +214,7 @@
     {
       "name" : "ZFIN_desc",
       "parser" : "ZFINDescParser",
-      "file" : "ftp://zfin.org/pub/transfer/MEOW/zfin_genes.txt",
+      "file" : "https://zfin.org/downloads/genetic_markers.txt",
       "priority" : 1
     },
     {
@@ -226,7 +226,7 @@
     {
       "name" : "Xenbase",
       "parser" : "XenopusJamboreeParser",
-      "file" : "http://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping.txt",
+      "file" : "https://ftp.xenbase.org/pub/GenePageReports/GenePageEnsemblModelMapping_4.1.txt",
       "priority" : 1
     },
     {
