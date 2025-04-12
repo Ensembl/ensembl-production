@@ -41,10 +41,11 @@ process init_pipeline {
     output:
     stdout
 
-    script:
+    shell:
     '''
-    ${hive_init_cmd}
+    !{hive_init_cmd}
     '''
+
 }
 
 process run_beekeeper {
