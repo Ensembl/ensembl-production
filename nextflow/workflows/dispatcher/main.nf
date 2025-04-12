@@ -144,6 +144,7 @@ workflow {
       =================================
   """.stripIndent()
 
-   init_pipeline(params.hive_init_cmd) | run_beekeeper | check_status
+   def hive_init_cmd = params.hive_init_cmd 
+   init_pipeline(hive_init_cmd) | run_beekeeper | check_status
 
 }
