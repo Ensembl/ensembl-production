@@ -42,9 +42,9 @@ process init_pipeline {
     stdout
 
     script:
-    """
+    '''
     ${hive_init_cmd}
-    """
+    '''
 }
 
 process run_beekeeper {
