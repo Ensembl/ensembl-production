@@ -65,6 +65,7 @@ transcript_service = TranscriptSparkService(spark_session)
 
 # Genome fasta
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
+#The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
 fastaDf.write.orc(base_dir + "/" + out_subfolder, mode="overwrite")
 #Get genes information
 genes = spark_session.read\

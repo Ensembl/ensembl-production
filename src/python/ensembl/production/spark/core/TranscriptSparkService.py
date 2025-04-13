@@ -241,8 +241,7 @@ class TranscriptSparkService:
              seq = Seq(sequence)
              sequence = seq.translate(table = int(codon_table))
              sequence = str(sequence)
-             if sequence[-1:] == "*":
-                 sequence = sequence[:-1]
+
              if sequence[:1] != 'M' and not cds_start_nf:
                 # if(str(seq)[:1] == "N"):
                 #     print("WARNING appending M to non-zero phase: " + id)
@@ -260,6 +259,7 @@ class TranscriptSparkService:
          translated_sequence = \
          translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "value", "translation_stable_id"))
+         
          #Apply translation edits
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
