@@ -131,23 +131,17 @@ class TranscriptSparkService:
         def sequence_edits(sequence, edits_list):
             if(edits_list == None):
                 return sequence
-            #Every edit in list is three values: start coordinate, new-seq and end coordinate
-            #We take seq from start to edit start, then concat new-seq and from edit end to seq end: 
-            #--original_seq[edit start coordinate]new_seq[edit end coordinate]orig_seq----
             for edit in edits_list:
                 edit = edit.split(" ")
                 sequence = sequence[:int(edit[0])-1] + edit[2] +\
                 sequence[int(edit[1]):]
             return sequence
         
-        #Group all edits and concatinate them to a list for every feature 
         edits_df =\
         edits_df.groupby(feature +"_id").agg(concat(collect_list("value")).alias("c_value"))
         
-        #Add edits column to the sequence df
         sequence_df = sequence_df.join(edits_df, on=[feature + "_id"], how="leftouter")
         
-        #Apply sequence edits to every sequence
         sequence_df = sequence_df.withColumn("sequence",\
                                              sequence_edits("sequence","c_value")).drop("c_value")
         return sequence_df
