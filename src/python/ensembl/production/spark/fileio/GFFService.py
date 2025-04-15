@@ -808,24 +808,23 @@ class GFFService():
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")
 
-        # small_cds = stop_codons.filter(stop_codons.length < 2)
+        small_cds = stop_codons.filter(stop_codons.length < 2)
+        small_cds_tmp = small_cds.withColumnRenamed("rank", "tiny_rank").withColumnRenamed("transcript_stable_id", "transcript_stable_id_old")
+        rank_prev = cds.join(small_cds_tmp.select("tiny_rank", "transcript_stable_id_old", "length"), on = [(small_cds_tmp.transcript_stable_id_old == cds.transcript_stable_id) & (cds.rank == small_cds_tmp.tiny_rank - 1)])
 
-        # rank_prev = win.filter(col("row") == 2).drop("row")
-        # rank_prev = rank_prev.join(small_cds.select("length", "transcript_stable_id"), on = ["transcript_stable_id"], how = "right").dropDuplicates()
-        # rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
-        # rank_prev_pos = rank_prev_pos.withColumn("seq_region_start", rank_prev_pos["seq_region_end"] - 2 + rank_prev_pos["length"])
-        # rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
-        # rank_prev_neg = rank_prev_neg.withColumn("seq_region_end", rank_prev_neg["seq_region_start"] + 2 - rank_prev_neg["length"])
+        rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
+        rank_prev_pos = rank_prev_pos.withColumn("seq_region_start", rank_prev_pos["seq_region_end"] - 2 + rank_prev_pos["length"])
+        rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
+        rank_prev_neg = rank_prev_neg.withColumn("seq_region_end", rank_prev_neg["seq_region_start"] + 2 - rank_prev_neg["length"])
 
-        # rank_prev = rank_prev_neg.union(rank_prev_pos)
-
+        rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")
         
         normal_cds = stop_codons.filter(stop_codons.length >= 2)
         normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_start", normal_cds_pos["seq_region_end"] - 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_end", normal_cds_neg["seq_region_start"] + 2)
-        stop_codons = normal_cds_neg.union(normal_cds_pos) #.union(rank_prev).drop("phase")
+        stop_codons = normal_cds_neg.union(normal_cds_pos).union(small_cds)
         stop_codons = stop_codons.withColumn("phase", lit("0"))
         stop_codons = stop_codons.drop("type")
         #stop_codons.filter("transcript_stable_id=\"ENSABMT00000004141\"").show(1, False)
