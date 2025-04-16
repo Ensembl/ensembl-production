@@ -402,7 +402,7 @@ sub pipeline_analyses {
                                 },
           -flow_into         => {
                                   '-1' => ['DumpProteome_HighMem'],
-                                  # '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
+                                  '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
                                 },
           -rc_name           => '16GB_D',
         },
@@ -453,24 +453,24 @@ sub pipeline_analyses {
         #   -rc_name           => '4GB_D',
           
         # },
-        # {
-        #   -logic_name        => 'ChecksumProteinsMVP',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
-        #   -analysis_capacity => 50,
-        #   -max_retry_count   => 0,
-        #   -parameters        => {
-        #                           fasta_file         => '#proteome_file#',
-        #                           uniparc_xrefs      => $self->o('uniparc_xrefs'),
-        #                           uniprot_xrefs      => $self->o('uniprot_xrefs'),
-        #                           uniparc_logic_name => $self->o('uniparc_logic_name'),
-        #                           uniprot_logic_name => $self->o('uniprot_logic_name'),
-        #                         },
-        #   -rc_name           => '8GB_D',
-        #   -flow_into         => {
-        #                           '3' => ['SplitChecksumFile'],
-        #                           '4' => ['SplitNoChecksumFile'],
-        #                         },
-        # },
+        {
+          -logic_name        => 'ChecksumProteinsMVP',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
+          -analysis_capacity => 50,
+          -max_retry_count   => 0,
+          -parameters        => {
+                                  fasta_file         => '#proteome_file#',
+                                  uniparc_xrefs      => $self->o('uniparc_xrefs'),
+                                  uniprot_xrefs      => $self->o('uniprot_xrefs'),
+                                  uniparc_logic_name => $self->o('uniparc_logic_name'),
+                                  uniprot_logic_name => $self->o('uniprot_logic_name'),
+                                },
+          -rc_name           => '8GB_D',
+          # -flow_into         => {
+          #                         '3' => ['SplitChecksumFile'],
+          #                         '4' => ['SplitNoChecksumFile'],
+          #                       },
+        },
 
         # {
         #     -logic_name        => 'SplitChecksumFile',
