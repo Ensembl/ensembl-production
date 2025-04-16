@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteins;
+package Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP;
 
 use strict;
 use warnings;
@@ -56,8 +56,14 @@ sub run {
   my $uniparc_sql = qq/
     SELECT upi FROM uniparc
     WHERE md5sum = ?
-    /;
-  my $dbh = $self->hive_dbh;
+  /;
+
+  #my $dbh =  $self->hive_dbh;
+
+  my $dba = $self->get_DBAdaptor("mvp_pf");
+  my $dbh = $dba->dbc->db_handle();
+  $self->throw("Failed to connect to MVP database") unless $dbh;
+
   my $uniparc_sth = $dbh->prepare($uniparc_sql) or $self->throw($dbh->errstr);
 
   my ($uniparc_analysis, $uniprot_analysis, $uniprot_sth, $dbea);

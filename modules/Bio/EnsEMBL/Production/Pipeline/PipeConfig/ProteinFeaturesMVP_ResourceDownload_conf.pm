@@ -362,7 +362,7 @@ sub pipeline_analyses {
             },
             -flow_into       => {
                 '3->A' => [ 'FetchFiles' ],
-                'A->3' => [ 'EmailReport' ],
+                'A->3' => [ 'TidyScratch' ],
             },
             -rc_name           => '4GB_D',
         },
@@ -453,19 +453,6 @@ sub pipeline_analyses {
                 uniprot_file_local => $self->o('uniprot_file_local'),
             },
             -rc_name           => '8GB_W',
-        },
-
-        {
-            -logic_name        => 'EmailReport',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
-            -analysis_capacity => 10,
-            -max_retry_count   => 1,
-            -parameters        => {
-                email   => $self->o('email'),
-                subject => 'Protein features pipeline: report for #dbname#',
-            },
-            -rc_name           => '2GB_D',
-            -flow_into         => [ 'TidyScratch' ],
         },
         {
           -logic_name        => 'TidyScratch',
