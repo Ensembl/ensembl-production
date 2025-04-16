@@ -383,29 +383,29 @@ sub pipeline_analyses {
           -max_retry_count   => 1,
           -analysis_capacity => 20,
           -parameters        => {},
-          # -flow_into         => {
-          #                         '2' => ['DumpProteome'],
-          #                       },
+          -flow_into         => {
+                                  '2' => ['DumpProteome'],
+                                },
           -rc_name           => '4GB_D',
 
         },
 
-        # {
-        #   -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
-        #   -max_retry_count   => 0,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {
-        #                           proteome_dir => catdir('#pipeline_dir#', '#species#'),
-        #                           header_style => 'dbID',
-        #                           overwrite    => 1,
-        #                         },
-        #   -flow_into         => {
-        #                           '-1' => ['DumpProteome_HighMem'],
-        #                           '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
-        #                         },
-        #   -rc_name           => '16GB_D',
-        # },
+        {
+          -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+          -max_retry_count   => 0,
+          -analysis_capacity => 20,
+          -parameters        => {
+                                  proteome_dir => catdir('#pipeline_dir#', '#species#'),
+                                  header_style => 'dbID',
+                                  overwrite    => 1,
+                                },
+          # -flow_into         => {
+          #                         '-1' => ['DumpProteome_HighMem'],
+          #                         '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
+          #                       },
+          -rc_name           => '16GB_D',
+        },
         # {
         #     -logic_name        => 'DumpProteome_HighMem', #chage the proteome_dir to the  standard location
         #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
