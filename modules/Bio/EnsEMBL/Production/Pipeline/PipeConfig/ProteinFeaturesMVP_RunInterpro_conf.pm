@@ -356,39 +356,39 @@ sub pipeline_analyses {
             -logic_name      => 'AnnotateProteinFeatures',
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 0,
-            # -flow_into       => {
-            #     '1' => [ 'DbFactory' ],
-            # },
+            -flow_into       => {
+                '1' => [ 'DbFactory' ],
+            },
             -rc_name           => '1GB_D',
         },
-        # {
-        #     -logic_name      => 'DbFactory',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
-        #     -max_retry_count => 1,
-        #     -parameters      => {
-        #         species      => $self->o('species'),
-        #         antispecies  => $self->o('antispecies'),
-        #         division     => $self->o('division'),
-        #         run_all      => $self->o('run_all'),
-        #         meta_filters => $self->o('meta_filters'),
-        #     },
-        #     -flow_into       => {
-        #         '2' => [ 'SpeciesFactory' ],
-        #     },
-        #     -rc_name           => '4GB_D',
-        # },
-        # {
-        #   -logic_name        => 'SpeciesFactory',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
-        #   -max_retry_count   => 1,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {},
-        #   -flow_into         => {
-        #                           '2' => ['DumpProteome'],
-        #                         },
-        #   -rc_name           => '4GB_D',
+        {
+            -logic_name      => 'DbFactory',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+            -max_retry_count => 1,
+            -parameters      => {
+                species      => $self->o('species'),
+                antispecies  => $self->o('antispecies'),
+                division     => $self->o('division'),
+                run_all      => $self->o('run_all'),
+                meta_filters => $self->o('meta_filters'),
+            },
+            -flow_into       => {
+                '2' => [ 'SpeciesFactory' ],
+            },
+            -rc_name           => '4GB_D',
+        },
+        {
+          -logic_name        => 'SpeciesFactory',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+          -max_retry_count   => 1,
+          -analysis_capacity => 20,
+          -parameters        => {},
+          # -flow_into         => {
+          #                         '2' => ['DumpProteome'],
+          #                       },
+          -rc_name           => '4GB_D',
 
-        # },
+        },
 
         # {
         #   -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
