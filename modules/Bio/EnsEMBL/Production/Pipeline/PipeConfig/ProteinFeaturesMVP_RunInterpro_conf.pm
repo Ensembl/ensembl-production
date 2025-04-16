@@ -17,7 +17,7 @@ limitations under the License.
 
 =cut
 
-package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeatures_conf;
+package Bio::EnsEMBL::Production::Pipeline::PipeConfig::ProteinFeaturesMVP_Runinterpro_conf;
 
 use strict;
 use warnings;
