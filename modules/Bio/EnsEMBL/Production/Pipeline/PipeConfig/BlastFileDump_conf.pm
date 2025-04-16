@@ -135,7 +135,7 @@ sub pipeline_analyses {
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
                 ],
-            }
+            },
             -rc_name           => '4GB_D',
             
         },        
@@ -198,7 +198,7 @@ sub pipeline_analyses {
                 cds         => $self->o('cds'),
                 fasta_header_prefix => $self->o('fasta_header_prefix'),
             },
-            -rc_name           => '32GB_D',,
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_FASTA_mem' ],
             },
