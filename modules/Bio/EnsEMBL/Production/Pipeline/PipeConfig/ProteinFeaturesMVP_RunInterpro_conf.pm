@@ -347,20 +347,20 @@ sub pipeline_analyses {
                 interproscan_version => $self->o('interproscan_version'),
                 local_computation    => $self->o('local_computation'),
             },
-            # -flow_into       => {
-            #   '3' => [ 'AnnotateProteinFeatures' ],
-            # },
+            -flow_into       => {
+              '3' => [ 'AnnotateProteinFeatures' ],
+            },
             -rc_name           => '4GB_D',
         },
-        # {
-        #     -logic_name      => 'AnnotateProteinFeatures',
-        #     -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-        #     -max_retry_count => 0,
-        #     -flow_into       => {
-        #         '1' => [ 'DbFactory' ],
-        #     },
-        #     -rc_name           => '1GB_D',
-        # },
+        {
+            -logic_name      => 'AnnotateProteinFeatures',
+            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+            -max_retry_count => 0,
+            # -flow_into       => {
+            #     '1' => [ 'DbFactory' ],
+            # },
+            -rc_name           => '1GB_D',
+        },
         # {
         #     -logic_name      => 'DbFactory',
         #     -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
