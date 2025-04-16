@@ -417,28 +417,28 @@ sub pipeline_analyses {
                 overwrite    => 1,
             },
             -rc_name           => '32GB_D',
-            # -flow_into         => {
-            #     '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
-            # },
+            -flow_into         => {
+                '1' => [ 'SplitDumpFile' ],
+            },
         },
 
-        # {
-        #   -logic_name        => 'SplitDumpFile',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-        #   -max_retry_count   => 0,
-        #   -analysis_capacity => 50,
-        #   -parameters        => {
-        #                           fasta_file              => '#proteome_file#',
-        #                           max_seqs_per_file       => $self->o('max_seqs_per_file'),
-        #                           max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-        #                           max_files_per_directory => $self->o('max_files_per_directory'),
-        #                           max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-        #                         },
-        #   -rc_name           => '4GB_D',
-        #   -flow_into         => {
-        #                           '2' => ['RunSeg'],
-        #                         },
-        # },
+        {
+          -logic_name        => 'SplitDumpFile',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+          -max_retry_count   => 0,
+          -analysis_capacity => 50,
+          -parameters        => {
+                                  fasta_file              => '#proteome_file#',
+                                  max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                                  max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                                  max_files_per_directory => $self->o('max_files_per_directory'),
+                                  max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                                },
+          -rc_name           => '4GB_D',
+          # -flow_into         => {
+          #                         '2' => ['RunSeg'],
+          #                       },
+        },
 
         # {
         #   -logic_name        => 'RunSeg',
