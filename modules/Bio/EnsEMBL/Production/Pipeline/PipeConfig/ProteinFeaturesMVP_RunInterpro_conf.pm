@@ -400,27 +400,27 @@ sub pipeline_analyses {
                                   header_style => 'dbID',
                                   overwrite    => 1,
                                 },
-          # -flow_into         => {
-          #                         '-1' => ['DumpProteome_HighMem'],
-          #                         '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
-          #                       },
+          -flow_into         => {
+                                  '-1' => ['DumpProteome_HighMem'],
+                                  # '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
+                                },
           -rc_name           => '16GB_D',
         },
-        # {
-        #     -logic_name        => 'DumpProteome_HighMem', #chage the proteome_dir to the  standard location
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
-        #     -max_retry_count   => 0,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         proteome_dir => catdir('#pipeline_dir#', '#species#'),
-        #         header_style => 'dbID',
-        #         overwrite    => 1,
-        #     },
-        #     -rc_name           => '32GB_D',
-        #     -flow_into         => {
-        #         '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
-        #     },
-        # },
+        {
+            -logic_name        => 'DumpProteome_HighMem', #chage the proteome_dir to the  standard location
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+            -max_retry_count   => 0,
+            -analysis_capacity => 20,
+            -parameters        => {
+                proteome_dir => catdir('#pipeline_dir#', '#species#'),
+                header_style => 'dbID',
+                overwrite    => 1,
+            },
+            -rc_name           => '32GB_D',
+            # -flow_into         => {
+            #     '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
+            # },
+        },
 
         # {
         #   -logic_name        => 'SplitDumpFile',
