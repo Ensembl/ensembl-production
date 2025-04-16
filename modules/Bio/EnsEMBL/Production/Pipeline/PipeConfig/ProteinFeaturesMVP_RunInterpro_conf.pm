@@ -464,49 +464,47 @@ sub pipeline_analyses {
                                   uniprot_logic_name => $self->o('uniprot_logic_name'),
                                 },
           -rc_name           => '8GB_D',
-          # -flow_into         => {
-          #                         '3' => ['SplitChecksumFile'],
-          #                         '4' => ['SplitNoChecksumFile'],
-          #                       },
+          -flow_into         => {
+                                  '3' => ['SplitChecksumFile'],
+                                  '4' => ['SplitNoChecksumFile'],
+                                },
         },
-
-        # {
-        #     -logic_name        => 'SplitChecksumFile',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-        #     -analysis_capacity => 50,
-        #     -max_retry_count   => 0,
-        #     -parameters        => {
-        #         fasta_file              => '#checksum_file#',
-        #         max_seqs_per_file       => $self->o('max_seqs_per_file'),
-        #         max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-        #         max_files_per_directory => $self->o('max_files_per_directory'),
-        #         max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-        #         delete_existing_files   => $self->o('run_interproscan'),
-        #     },
-        #     -flow_into         => {
-        #         '2' => [ 'InterProScanLookup', 'InterProScanNoLookup' ],
-        #     },
-        #     -rc_name           => '8GB_D',
-        # },
-
-        # {
-        #     -logic_name        => 'SplitNoChecksumFile',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-        #     -analysis_capacity => 50,
-        #     -max_retry_count   => 0,
-        #     -parameters        => {
-        #         fasta_file              => '#nochecksum_file#',
-        #         max_seqs_per_file       => $self->o('max_seqs_per_file'),
-        #         max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-        #         max_files_per_directory => $self->o('max_files_per_directory'),
-        #         max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-        #         delete_existing_files   => $self->o('run_interproscan'),
-        #     },
-        #     -flow_into         => {
-        #         '2' => [ 'InterProScanLocal' ],
-        #     },
-        #     -rc_name           => '8GB_D',
-        # },
+        {
+            -logic_name        => 'SplitChecksumFile',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+            -analysis_capacity => 50,
+            -max_retry_count   => 0,
+            -parameters        => {
+                fasta_file              => '#checksum_file#',
+                max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                max_files_per_directory => $self->o('max_files_per_directory'),
+                max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                delete_existing_files   => $self->o('run_interproscan'),
+            },
+            # -flow_into         => {
+            #     '2' => [ 'InterProScanLookup', 'InterProScanNoLookup' ],
+            # },
+            -rc_name           => '8GB_D',
+        },
+        {
+            -logic_name        => 'SplitNoChecksumFile',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+            -analysis_capacity => 50,
+            -max_retry_count   => 0,
+            -parameters        => {
+                fasta_file              => '#nochecksum_file#',
+                max_seqs_per_file       => $self->o('max_seqs_per_file'),
+                max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+                max_files_per_directory => $self->o('max_files_per_directory'),
+                max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+                delete_existing_files   => $self->o('run_interproscan'),
+            },
+            # -flow_into         => {
+            #     '2' => [ 'InterProScanLocal' ],
+            # },
+            -rc_name           => '8GB_D',
+        },
 
         # {
         #     -logic_name      => 'InterProScanLookup',
