@@ -358,7 +358,7 @@ sub pipeline_analyses {
             -max_retry_count => 0,
             -flow_into       => {
                 '1' => [ 'DbFactory' ],
-            }
+            },
             -rc_name           => '1GB_D',
         },
         {
@@ -374,7 +374,7 @@ sub pipeline_analyses {
             },
             -flow_into       => {
                 '2' => [ 'SpeciesFactory' ],
-            }
+            },
             -rc_name           => '4GB_D',
         },
         {
