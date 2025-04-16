@@ -418,7 +418,7 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_D',
             -flow_into         => {
-                '1' => [ 'SplitDumpFile' ],
+                '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
             },
         },
 
@@ -435,24 +435,22 @@ sub pipeline_analyses {
                                   max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                                 },
           -rc_name           => '4GB_D',
-          # -flow_into         => {
-          #                         '2' => ['RunSeg'],
-          #                       },
+          -flow_into         => {
+                                  '2' => ['RunSeg'],
+                                },
         },
-
-        # {
-        #   -logic_name        => 'RunSeg',
-        #   -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        #   -analysis_capacity => 10,
-        #   -batch_size        => 10,
-        #   -max_retry_count   => 1,
-        #   -parameters        =>
-        #   {
-        #     cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
-        #   },
-        #   -rc_name           => '4GB_D',
-          
-        # },
+        {
+          -logic_name        => 'RunSeg',
+          -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+          -analysis_capacity => 10,
+          -batch_size        => 10,
+          -max_retry_count   => 1,
+          -parameters        =>
+          {
+            cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
+          },
+          -rc_name           => '4GB_D',
+        },
         {
           -logic_name        => 'ChecksumProteinsMVP',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
