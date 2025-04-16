@@ -347,268 +347,268 @@ sub pipeline_analyses {
                 interproscan_version => $self->o('interproscan_version'),
                 local_computation    => $self->o('local_computation'),
             },
-            -flow_into       => {
-              '3' => [ 'AnnotateProteinFeatures' ],
-            },
+            # -flow_into       => {
+            #   '3' => [ 'AnnotateProteinFeatures' ],
+            # },
             -rc_name           => '4GB_D',
         },
-        {
-            -logic_name      => 'AnnotateProteinFeatures',
-            -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
-            -max_retry_count => 0,
-            -flow_into       => {
-                '1' => [ 'DbFactory' ],
-            },
-            -rc_name           => '1GB_D',
-        },
-        {
-            -logic_name      => 'DbFactory',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
-            -max_retry_count => 1,
-            -parameters      => {
-                species      => $self->o('species'),
-                antispecies  => $self->o('antispecies'),
-                division     => $self->o('division'),
-                run_all      => $self->o('run_all'),
-                meta_filters => $self->o('meta_filters'),
-            },
-            -flow_into       => {
-                '2' => [ 'SpeciesFactory' ],
-            },
-            -rc_name           => '4GB_D',
-        },
-        {
-          -logic_name        => 'SpeciesFactory',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
-          -max_retry_count   => 1,
-          -analysis_capacity => 20,
-          -parameters        => {},
-          -flow_into         => {
-                                  '2' => ['DumpProteome'],
-                                },
-          -rc_name           => '4GB_D',
+        # {
+        #     -logic_name      => 'AnnotateProteinFeatures',
+        #     -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
+        #     -max_retry_count => 0,
+        #     -flow_into       => {
+        #         '1' => [ 'DbFactory' ],
+        #     },
+        #     -rc_name           => '1GB_D',
+        # },
+        # {
+        #     -logic_name      => 'DbFactory',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+        #     -max_retry_count => 1,
+        #     -parameters      => {
+        #         species      => $self->o('species'),
+        #         antispecies  => $self->o('antispecies'),
+        #         division     => $self->o('division'),
+        #         run_all      => $self->o('run_all'),
+        #         meta_filters => $self->o('meta_filters'),
+        #     },
+        #     -flow_into       => {
+        #         '2' => [ 'SpeciesFactory' ],
+        #     },
+        #     -rc_name           => '4GB_D',
+        # },
+        # {
+        #   -logic_name        => 'SpeciesFactory',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+        #   -max_retry_count   => 1,
+        #   -analysis_capacity => 20,
+        #   -parameters        => {},
+        #   -flow_into         => {
+        #                           '2' => ['DumpProteome'],
+        #                         },
+        #   -rc_name           => '4GB_D',
 
-        },
+        # },
 
-        {
-          -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
-          -max_retry_count   => 0,
-          -analysis_capacity => 20,
-          -parameters        => {
-                                  proteome_dir => catdir('#pipeline_dir#', '#species#'),
-                                  header_style => 'dbID',
-                                  overwrite    => 1,
-                                },
-          -flow_into         => {
-                                  '-1' => ['DumpProteome_HighMem'],
-                                  '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
-                                },
-          -rc_name           => '16GB_D',
-        },
-        {
-            -logic_name        => 'DumpProteome_HighMem', #chage the proteome_dir to the  standard location
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
-            -max_retry_count   => 0,
-            -analysis_capacity => 20,
-            -parameters        => {
-                proteome_dir => catdir('#pipeline_dir#', '#species#'),
-                header_style => 'dbID',
-                overwrite    => 1,
-            },
-            -rc_name           => '32GB_D',
-            -flow_into         => {
-                '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
-            },
-        },
+        # {
+        #   -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+        #   -max_retry_count   => 0,
+        #   -analysis_capacity => 20,
+        #   -parameters        => {
+        #                           proteome_dir => catdir('#pipeline_dir#', '#species#'),
+        #                           header_style => 'dbID',
+        #                           overwrite    => 1,
+        #                         },
+        #   -flow_into         => {
+        #                           '-1' => ['DumpProteome_HighMem'],
+        #                           '1'  => ['SplitDumpFile', 'ChecksumProteinsMVP'],
+        #                         },
+        #   -rc_name           => '16GB_D',
+        # },
+        # {
+        #     -logic_name        => 'DumpProteome_HighMem', #chage the proteome_dir to the  standard location
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+        #     -max_retry_count   => 0,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         proteome_dir => catdir('#pipeline_dir#', '#species#'),
+        #         header_style => 'dbID',
+        #         overwrite    => 1,
+        #     },
+        #     -rc_name           => '32GB_D',
+        #     -flow_into         => {
+        #         '1' => [ 'SplitDumpFile', 'ChecksumProteinsMVP' ],
+        #     },
+        # },
 
-        {
-          -logic_name        => 'SplitDumpFile',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-          -max_retry_count   => 0,
-          -analysis_capacity => 50,
-          -parameters        => {
-                                  fasta_file              => '#proteome_file#',
-                                  max_seqs_per_file       => $self->o('max_seqs_per_file'),
-                                  max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-                                  max_files_per_directory => $self->o('max_files_per_directory'),
-                                  max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                                },
-          -rc_name           => '4GB_D',
-          -flow_into         => {
-                                  '2' => ['RunSeg'],
-                                },
-        },
+        # {
+        #   -logic_name        => 'SplitDumpFile',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+        #   -max_retry_count   => 0,
+        #   -analysis_capacity => 50,
+        #   -parameters        => {
+        #                           fasta_file              => '#proteome_file#',
+        #                           max_seqs_per_file       => $self->o('max_seqs_per_file'),
+        #                           max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+        #                           max_files_per_directory => $self->o('max_files_per_directory'),
+        #                           max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+        #                         },
+        #   -rc_name           => '4GB_D',
+        #   -flow_into         => {
+        #                           '2' => ['RunSeg'],
+        #                         },
+        # },
 
-        {
-          -logic_name        => 'RunSeg',
-          -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-          -analysis_capacity => 10,
-          -batch_size        => 10,
-          -max_retry_count   => 1,
-          -parameters        =>
-          {
-            cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
-          },
-          -rc_name           => '4GB_D',
+        # {
+        #   -logic_name        => 'RunSeg',
+        #   -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        #   -analysis_capacity => 10,
+        #   -batch_size        => 10,
+        #   -max_retry_count   => 1,
+        #   -parameters        =>
+        #   {
+        #     cmd => $self->o('seg_exe').' #split_file# '.$self->o('seg_params').' > #split_file#.seg.txt',
+        #   },
+        #   -rc_name           => '4GB_D',
           
-        },
-        {
-          -logic_name        => 'ChecksumProteinsMVP',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
-          -analysis_capacity => 50,
-          -max_retry_count   => 0,
-          -parameters        => {
-                                  fasta_file         => '#proteome_file#',
-                                  uniparc_xrefs      => $self->o('uniparc_xrefs'),
-                                  uniprot_xrefs      => $self->o('uniprot_xrefs'),
-                                  uniparc_logic_name => $self->o('uniparc_logic_name'),
-                                  uniprot_logic_name => $self->o('uniprot_logic_name'),
-                                },
-          -rc_name           => '8GB_D',
-          -flow_into         => {
-                                  '3' => ['SplitChecksumFile'],
-                                  '4' => ['SplitNoChecksumFile'],
-                                },
-        },
+        # },
+        # {
+        #   -logic_name        => 'ChecksumProteinsMVP',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
+        #   -analysis_capacity => 50,
+        #   -max_retry_count   => 0,
+        #   -parameters        => {
+        #                           fasta_file         => '#proteome_file#',
+        #                           uniparc_xrefs      => $self->o('uniparc_xrefs'),
+        #                           uniprot_xrefs      => $self->o('uniprot_xrefs'),
+        #                           uniparc_logic_name => $self->o('uniparc_logic_name'),
+        #                           uniprot_logic_name => $self->o('uniprot_logic_name'),
+        #                         },
+        #   -rc_name           => '8GB_D',
+        #   -flow_into         => {
+        #                           '3' => ['SplitChecksumFile'],
+        #                           '4' => ['SplitNoChecksumFile'],
+        #                         },
+        # },
 
-        {
-            -logic_name        => 'SplitChecksumFile',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-            -analysis_capacity => 50,
-            -max_retry_count   => 0,
-            -parameters        => {
-                fasta_file              => '#checksum_file#',
-                max_seqs_per_file       => $self->o('max_seqs_per_file'),
-                max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-                max_files_per_directory => $self->o('max_files_per_directory'),
-                max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                delete_existing_files   => $self->o('run_interproscan'),
-            },
-            -flow_into         => {
-                '2' => [ 'InterProScanLookup', 'InterProScanNoLookup' ],
-            },
-            -rc_name           => '8GB_D',
-        },
+        # {
+        #     -logic_name        => 'SplitChecksumFile',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+        #     -analysis_capacity => 50,
+        #     -max_retry_count   => 0,
+        #     -parameters        => {
+        #         fasta_file              => '#checksum_file#',
+        #         max_seqs_per_file       => $self->o('max_seqs_per_file'),
+        #         max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+        #         max_files_per_directory => $self->o('max_files_per_directory'),
+        #         max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+        #         delete_existing_files   => $self->o('run_interproscan'),
+        #     },
+        #     -flow_into         => {
+        #         '2' => [ 'InterProScanLookup', 'InterProScanNoLookup' ],
+        #     },
+        #     -rc_name           => '8GB_D',
+        # },
 
-        {
-            -logic_name        => 'SplitNoChecksumFile',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
-            -analysis_capacity => 50,
-            -max_retry_count   => 0,
-            -parameters        => {
-                fasta_file              => '#nochecksum_file#',
-                max_seqs_per_file       => $self->o('max_seqs_per_file'),
-                max_seq_length_per_file => $self->o('max_seq_length_per_file'),
-                max_files_per_directory => $self->o('max_files_per_directory'),
-                max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
-                delete_existing_files   => $self->o('run_interproscan'),
-            },
-            -flow_into         => {
-                '2' => [ 'InterProScanLocal' ],
-            },
-            -rc_name           => '8GB_D',
-        },
+        # {
+        #     -logic_name        => 'SplitNoChecksumFile',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::FastaSplit',
+        #     -analysis_capacity => 50,
+        #     -max_retry_count   => 0,
+        #     -parameters        => {
+        #         fasta_file              => '#nochecksum_file#',
+        #         max_seqs_per_file       => $self->o('max_seqs_per_file'),
+        #         max_seq_length_per_file => $self->o('max_seq_length_per_file'),
+        #         max_files_per_directory => $self->o('max_files_per_directory'),
+        #         max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
+        #         delete_existing_files   => $self->o('run_interproscan'),
+        #     },
+        #     -flow_into         => {
+        #         '2' => [ 'InterProScanLocal' ],
+        #     },
+        #     -rc_name           => '8GB_D',
+        # },
 
-        {
-            -logic_name      => 'InterProScanLookup',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-            -hive_capacity   => 200,
-            -max_retry_count => 1,
-            -parameters      =>
-                {
-                    input_file                => '#split_file#',
-                    run_mode                  => 'lookup',
-                    interproscan_applications => '#interproscan_lookup_applications#',
-                    run_interproscan          => $self->o('run_interproscan'),
-                },
-            -rc_name         => '8GB_W',
-            -flow_into       => {
-                '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
-                '-1' => [ 'InterProScanLookup_HighMem' ],
-            },
-        },
+        # {
+        #     -logic_name      => 'InterProScanLookup',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #     -hive_capacity   => 200,
+        #     -max_retry_count => 1,
+        #     -parameters      =>
+        #         {
+        #             input_file                => '#split_file#',
+        #             run_mode                  => 'lookup',
+        #             interproscan_applications => '#interproscan_lookup_applications#',
+        #             run_interproscan          => $self->o('run_interproscan'),
+        #         },
+        #     -rc_name         => '8GB_W',
+        #     -flow_into       => {
+        #         '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
+        #         '-1' => [ 'InterProScanLookup_HighMem' ],
+        #     },
+        # },
 
-        {
-            -logic_name      => 'InterProScanLookup_HighMem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-            -hive_capacity   => 200,
-            -max_retry_count => 1,
-            -parameters      =>
-                {
-                    input_file                => '#split_file#',
-                    run_mode                  => 'lookup',
-                    interproscan_applications => '#interproscan_lookup_applications#',
-                    run_interproscan          => $self->o('run_interproscan'),
-                },
-            -rc_name         => '50GB_D',
-        },
+        # {
+        #     -logic_name      => 'InterProScanLookup_HighMem',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #     -hive_capacity   => 200,
+        #     -max_retry_count => 1,
+        #     -parameters      =>
+        #         {
+        #             input_file                => '#split_file#',
+        #             run_mode                  => 'lookup',
+        #             interproscan_applications => '#interproscan_lookup_applications#',
+        #             run_interproscan          => $self->o('run_interproscan'),
+        #         },
+        #     -rc_name         => '50GB_D',
+        # },
 
-        {
-          -logic_name        => 'InterProScanNoLookup',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-          -hive_capacity     => 200,
-          -max_retry_count   => 1,
-          -parameters        =>
-          {
-            input_file                => '#split_file#',
-            run_mode                  => 'nolookup',
-            interproscan_applications => '#interproscan_nolookup_applications#',
-            run_interproscan          => $self->o('run_interproscan'),
-          },
-          -rc_name           => '32GB_8CPU',
-          -flow_into         => {
-                                  '-1' => ['InterProScanNoLookup_HighMem'],
-                                },
-        },
+        # {
+        #   -logic_name        => 'InterProScanNoLookup',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #   -hive_capacity     => 200,
+        #   -max_retry_count   => 1,
+        #   -parameters        =>
+        #   {
+        #     input_file                => '#split_file#',
+        #     run_mode                  => 'nolookup',
+        #     interproscan_applications => '#interproscan_nolookup_applications#',
+        #     run_interproscan          => $self->o('run_interproscan'),
+        #   },
+        #   -rc_name           => '32GB_8CPU',
+        #   -flow_into         => {
+        #                           '-1' => ['InterProScanNoLookup_HighMem'],
+        #                         },
+        # },
 
-        {
-            -logic_name      => 'InterProScanNoLookup_HighMem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-            -hive_capacity   => 200,
-            -max_retry_count => 1,
-            -parameters      =>
-                {
-                    input_file                => '#split_file#',
-                    run_mode                  => 'nolookup',
-                    interproscan_applications => '#interproscan_nolookup_applications#',
-                    run_interproscan          => $self->o('run_interproscan'),
-                },
-            -rc_name         => '64GB_8CPU',
-        },
+        # {
+        #     -logic_name      => 'InterProScanNoLookup_HighMem',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #     -hive_capacity   => 200,
+        #     -max_retry_count => 1,
+        #     -parameters      =>
+        #         {
+        #             input_file                => '#split_file#',
+        #             run_mode                  => 'nolookup',
+        #             interproscan_applications => '#interproscan_nolookup_applications#',
+        #             run_interproscan          => $self->o('run_interproscan'),
+        #         },
+        #     -rc_name         => '64GB_8CPU',
+        # },
 
-        {
-          -logic_name        => 'InterProScanLocal',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-          -hive_capacity     => 200,
-          -max_retry_count   => 1,
-          -parameters        =>
-          {
-            input_file                => '#split_file#',
-            run_mode                  => 'local',
-            interproscan_applications => '#interproscan_local_applications#',
-            run_interproscan          => $self->o('run_interproscan'),
-          },
-          -rc_name           => '32GB_8CPU',
-          -flow_into         => {
-                                  '-1' => ['InterProScanLocal_HighMem'],
-                                },
-        },
+        # {
+        #   -logic_name        => 'InterProScanLocal',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #   -hive_capacity     => 200,
+        #   -max_retry_count   => 1,
+        #   -parameters        =>
+        #   {
+        #     input_file                => '#split_file#',
+        #     run_mode                  => 'local',
+        #     interproscan_applications => '#interproscan_local_applications#',
+        #     run_interproscan          => $self->o('run_interproscan'),
+        #   },
+        #   -rc_name           => '32GB_8CPU',
+        #   -flow_into         => {
+        #                           '-1' => ['InterProScanLocal_HighMem'],
+        #                         },
+        # },
 
-        {
-            -logic_name      => 'InterProScanLocal_HighMem',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-            -hive_capacity   => 200,
-            -max_retry_count => 1,
-            -parameters      =>
-                {
-                    input_file                => '#split_file#',
-                    run_mode                  => 'local',
-                    interproscan_applications => '#interproscan_local_applications#',
-                    run_interproscan          => $self->o('run_interproscan'),
-                },
-            -rc_name         => '64GB_8CPU',
-        },
+        # {
+        #     -logic_name      => 'InterProScanLocal_HighMem',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #     -hive_capacity   => 200,
+        #     -max_retry_count => 1,
+        #     -parameters      =>
+        #         {
+        #             input_file                => '#split_file#',
+        #             run_mode                  => 'local',
+        #             interproscan_applications => '#interproscan_local_applications#',
+        #             run_interproscan          => $self->o('run_interproscan'),
+        #         },
+        #     -rc_name         => '64GB_8CPU',
+        # },
 
     ];
 }
