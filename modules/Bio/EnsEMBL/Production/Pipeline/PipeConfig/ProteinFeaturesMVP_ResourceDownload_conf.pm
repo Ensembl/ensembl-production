@@ -330,6 +330,8 @@ sub pipeline_create_commands {
         @{$self->SUPER::pipeline_create_commands},
         'mkdir -p ' . $self->o('pipeline_dir'),
         'mkdir -p ' . $self->o('scratch_large_dir'),
+        $self->db_cmd("DROP TABLE IF EXISTS uniparc"),
+        $self->db_cmd("DROP TABLE IF EXISTS uniprot"),
         $self->db_cmd($uniparc_table_sql),
         $self->db_cmd($uniprot_table_sql),
     ];
