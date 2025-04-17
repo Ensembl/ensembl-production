@@ -390,8 +390,23 @@ sub pipeline_analyses {
           -rc_name           => '8GB_D',
 
           -flow_into 	       => {
-                                  '3' => ['SpeciesFactory'],
+                                  '2->A' => ['AnalysisSetup'],            #Todo: we can remove analsysi step in inthis pipleine assumimg analysis logics are added via production db pipleine by datateams before handover 
+                                  'A->3' => ['SpeciesFactory'],
                                 }
+        },
+        {
+            -logic_name        => 'AnalysisSetup',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
+            -max_retry_count   => 0,
+            -analysis_capacity => 20,
+            -parameters        => {
+                db_backup_required => 1,
+                db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                delete_existing    => $self->o('delete_existing'),
+                linked_tables      => [ 'protein_feature', 'object_xref' ],
+                production_lookup  => 1,
+            },
+            -rc_name           => '8GB_D',
         },
         {
           -logic_name        => 'SpeciesFactory',
