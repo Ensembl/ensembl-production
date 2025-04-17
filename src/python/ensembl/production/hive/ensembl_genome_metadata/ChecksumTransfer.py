@@ -11,7 +11,7 @@
 #  limitations under the License.
 
 from ensembl.core.models import SeqRegion, SeqRegionAttrib, AttribType, CoordSystem, Meta
-from ensembl.database import DBConnection
+from ensembl.utils.database import DBConnection
 from ensembl.production.metadata.api.models import Assembly, AssemblySequence
 from sqlalchemy import update
 from sqlalchemy.engine.url import make_url
