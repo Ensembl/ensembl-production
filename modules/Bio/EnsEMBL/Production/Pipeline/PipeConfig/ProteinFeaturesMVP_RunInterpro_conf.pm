@@ -500,9 +500,9 @@ sub pipeline_analyses {
                 max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                 delete_existing_files   => $self->o('run_interproscan'),
             },
-            # -flow_into         => {
-            #     '2' => [ 'InterProScanLocal' ],
-            # },
+            -flow_into         => {
+                '2' => [ 'InterProScanLocal' ],
+            },
             -rc_name           => '8GB_D',
         },
 
@@ -573,38 +573,37 @@ sub pipeline_analyses {
         #     -rc_name         => '64GB_8CPU',
         # },
 
-        # {
-        #   -logic_name        => 'InterProScanLocal',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-        #   -hive_capacity     => 200,
-        #   -max_retry_count   => 1,
-        #   -parameters        =>
-        #   {
-        #     input_file                => '#split_file#',
-        #     run_mode                  => 'local',
-        #     interproscan_applications => '#interproscan_local_applications#',
-        #     run_interproscan          => $self->o('run_interproscan'),
-        #   },
-        #   -rc_name           => '32GB_8CPU',
-        #   -flow_into         => {
-        #                           '-1' => ['InterProScanLocal_HighMem'],
-        #                         },
-        # },
-
-        # {
-        #     -logic_name      => 'InterProScanLocal_HighMem',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-        #     -hive_capacity   => 200,
-        #     -max_retry_count => 1,
-        #     -parameters      =>
-        #         {
-        #             input_file                => '#split_file#',
-        #             run_mode                  => 'local',
-        #             interproscan_applications => '#interproscan_local_applications#',
-        #             run_interproscan          => $self->o('run_interproscan'),
-        #         },
-        #     -rc_name         => '64GB_8CPU',
-        # },
+        {
+          -logic_name        => 'InterProScanLocal',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+          -hive_capacity     => 200,
+          -max_retry_count   => 1,
+          -parameters        =>
+          {
+            input_file                => '#split_file#',
+            run_mode                  => 'local',
+            interproscan_applications => '#interproscan_local_applications#',
+            run_interproscan          => $self->o('run_interproscan'),
+          },
+          -rc_name           => '32GB_8CPU',
+          -flow_into         => {
+                                  '-1' => ['InterProScanLocal_HighMem'],
+                                },
+        },
+        {
+            -logic_name      => 'InterProScanLocal_HighMem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+            -hive_capacity   => 200,
+            -max_retry_count => 1,
+            -parameters      =>
+                {
+                    input_file                => '#split_file#',
+                    run_mode                  => 'local',
+                    interproscan_applications => '#interproscan_local_applications#',
+                    run_interproscan          => $self->o('run_interproscan'),
+                },
+            -rc_name         => '64GB_8CPU',
+        },
 
     ];
 }
