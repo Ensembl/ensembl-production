@@ -373,9 +373,25 @@ sub pipeline_analyses {
                 meta_filters => $self->o('meta_filters'),
             },
             -flow_into       => {
-                '2' => [ 'SpeciesFactory' ],
+                '2' => [ 'AnalysisConfiguration' ],
             },
             -rc_name           => '4GB_D',
+        },
+        {
+          -logic_name        => 'AnalysisConfiguration',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
+          -max_retry_count   => 0,
+          -parameters        => {
+                                  protein_feature_analyses  => $self->o('protein_feature_analyses'),
+                                  check_interpro_db_version => $self->o('check_interpro_db_version'),
+                                  run_seg                   => $self->o('run_seg'),
+                                  xref_analyses             => $self->o('xref_analyses'),
+                                },
+          -rc_name           => '8GB_D',
+
+          -flow_into 	       => {
+                                  '3' => ['SpeciesFactory'],
+                                }
         },
         {
           -logic_name        => 'SpeciesFactory',
