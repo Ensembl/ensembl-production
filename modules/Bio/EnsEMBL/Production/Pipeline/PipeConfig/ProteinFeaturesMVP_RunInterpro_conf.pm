@@ -519,26 +519,26 @@ sub pipeline_analyses {
                     run_interproscan          => $self->o('run_interproscan'),
                 },
             -rc_name         => '8GB_W',
-            # -flow_into       => {
-            #     '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
-            #     '-1' => [ 'InterProScanLookup_HighMem' ],
-            # },
+            -flow_into       => {
+                # '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
+                '-1' => [ 'InterProScanLookup_HighMem' ],
+            },
         },
 
-        # {
-        #     -logic_name      => 'InterProScanLookup_HighMem',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-        #     -hive_capacity   => 200,
-        #     -max_retry_count => 1,
-        #     -parameters      =>
-        #         {
-        #             input_file                => '#split_file#',
-        #             run_mode                  => 'lookup',
-        #             interproscan_applications => '#interproscan_lookup_applications#',
-        #             run_interproscan          => $self->o('run_interproscan'),
-        #         },
-        #     -rc_name         => '50GB_D',
-        # },
+        {
+            -logic_name      => 'InterProScanLookup_HighMem',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+            -hive_capacity   => 200,
+            -max_retry_count => 1,
+            -parameters      =>
+                {
+                    input_file                => '#split_file#',
+                    run_mode                  => 'lookup',
+                    interproscan_applications => '#interproscan_lookup_applications#',
+                    run_interproscan          => $self->o('run_interproscan'),
+                },
+            -rc_name         => '50GB_D',
+        },
 
         {
           -logic_name        => 'InterProScanNoLookup',
