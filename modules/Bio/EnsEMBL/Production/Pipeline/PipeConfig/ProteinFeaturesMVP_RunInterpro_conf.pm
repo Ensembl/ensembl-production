@@ -500,30 +500,30 @@ sub pipeline_analyses {
                 max_dirs_per_directory  => $self->o('max_dirs_per_directory'),
                 delete_existing_files   => $self->o('run_interproscan'),
             },
-            -flow_into         => {
-                '2' => [ 'InterProScanLocal' ],
-            },
+            # -flow_into         => {
+            #     '2' => [ 'InterProScanLocal' ],
+            # },
             -rc_name           => '8GB_D',
         },
 
-        {
-            -logic_name      => 'InterProScanLookup',
-            -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
-            -hive_capacity   => 200,
-            -max_retry_count => 1,
-            -parameters      =>
-                {
-                    input_file                => '#split_file#',
-                    run_mode                  => 'lookup',
-                    interproscan_applications => '#interproscan_lookup_applications#',
-                    run_interproscan          => $self->o('run_interproscan'),
-                },
-            -rc_name         => '8GB_W',
-            # -flow_into       => {
-            #     '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
-            #     '-1' => [ 'InterProScanLookup_HighMem' ],
-            # },
-        },
+        # {
+        #     -logic_name      => 'InterProScanLookup',
+        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::InterProScan',
+        #     -hive_capacity   => 200,
+        #     -max_retry_count => 1,
+        #     -parameters      =>
+        #         {
+        #             input_file                => '#split_file#',
+        #             run_mode                  => 'lookup',
+        #             interproscan_applications => '#interproscan_lookup_applications#',
+        #             run_interproscan          => $self->o('run_interproscan'),
+        #         },
+        #     -rc_name         => '8GB_W',
+        #     # -flow_into       => {
+        #     #     '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
+        #     #     '-1' => [ 'InterProScanLookup_HighMem' ],
+        #     # },
+        # },
 
         # {
         #     -logic_name      => 'InterProScanLookup_HighMem',
