@@ -61,7 +61,7 @@ sub param_defaults {
     meta_filters => {},
     group        => 'core',
     registry_file => undef,
-    shout_db_not_found_in_registry => 0,
+    shout_db_not_found_in_registry => 1,
   };
 }
 
