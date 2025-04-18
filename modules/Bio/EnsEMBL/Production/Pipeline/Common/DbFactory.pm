@@ -124,9 +124,9 @@ sub run {
         }
       } else {
         $self->warning("Database $dbname not found in registry.");
-	if($self->param("shout_db_not_found_in_registry")){
-	  $self->throw("Database $dbname not found in registry.");	
-	}
+	      if($self->param("shout_db_not_found_in_registry")){
+	        $self->throw("Database $dbname not found in registry.");	
+	      }
       }
     }
   } else {
@@ -282,6 +282,9 @@ sub process_species {
 
   if ( ! $loaded ) {
     $self->warning("Database not found for $species; check registry parameters.");
+    if($self->param("shout_db_not_found_in_registry")){
+      $self->throw("Database not found for $species; check registry parameters.");
+    }
   }
 }
 
