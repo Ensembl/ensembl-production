@@ -373,9 +373,30 @@ sub pipeline_analyses {
                 meta_filters => $self->o('meta_filters'),
             },
             -flow_into       => {
-                '2' => [ 'AnalysisConfiguration' ],
+                '2' => [ 'BackupTables' ],
             },
             -rc_name           => '4GB_D',
+        },
+        {
+          -logic_name        => 'BackupTables',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+          -max_retry_count   => 1,
+          -analysis_capacity => 20,
+          -parameters        => {
+                                  table_list  => [
+                                    'analysis',
+                                    'analysis_description',
+                                    'dependent_xref',
+                                    'interpro',
+                                    'object_xref',
+                                    'ontology_xref',
+                                    'protein_feature',
+                                    'xref',
+                                  ],
+                                  output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                                },
+          -rc_name           => '8GB_D',
+          -flow_into         => ['AnalysisConfiguration'],
         },
         {
           -logic_name        => 'AnalysisConfiguration',
@@ -390,7 +411,7 @@ sub pipeline_analyses {
           -rc_name           => '8GB_D',
 
           -flow_into 	       => {
-                                  '2->A' => ['AnalysisSetup'],            #Todo: we can remove analsysi step in inthis pipleine assumimg analysis logics are added via production db pipleine by datateams before handover 
+                                  '2->A' => ['AnalysisSetup'],            #Todo: we can remove analysis step in in this pipleine assumimg analysis logics are added via production db pipleine by datateams before handover 
                                   'A->3' => ['SpeciesFactory'],
                                 }
         },
