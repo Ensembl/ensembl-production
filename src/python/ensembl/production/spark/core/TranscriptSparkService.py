@@ -233,6 +233,7 @@ class TranscriptSparkService:
              if ((sequence is None) or (len(sequence) == 0)):
                  return
              seq = Seq(sequence)
+             seq = seq.replace("N", "")
              try:
                 sequence = seq.translate(table = int(codon_table), cds = True)
              except: 
