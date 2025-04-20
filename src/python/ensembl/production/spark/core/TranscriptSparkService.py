@@ -233,13 +233,18 @@ class TranscriptSparkService:
              if ((sequence is None) or (len(sequence) == 0)):
                  return
              seq = Seq(sequence)
-             sequence = seq.translate(table = int(codon_table))
+             try:
+                sequence = seq.translate(table = int(codon_table), cds = True)
+             except: 
+                sequence = seq.translate(table = int(codon_table))
+                 
              sequence = str(sequence)
 
-             if sequence[:1] != 'M' and not cds_start_nf:
-                # if(str(seq)[:1] == "N"):
-                #     print("WARNING appending M to non-zero phase: " + id)
-                 sequence = "M" + sequence[1:]
+            # It was an option before, but turned out cds_start_nf dosn't work properly
+            #  if sequence[:1] != 'M' and not cds_start_nf:  
+            #     # if(str(seq)[:1] == "N"):
+            #     #     print("WARNING appending M to non-zero phase: " + id)
+            #     sequence = "M" + sequence[1:]
              return sequence
          cds_start_nf_df = self._spark.read\
             .format("jdbc")\

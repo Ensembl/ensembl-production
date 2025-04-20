@@ -805,7 +805,7 @@ class GFFService():
         cds = cds.filter("type=\"CDS\"")
         
         stop_codons = cds.withColumn("length", cds.seq_region_end - cds.seq_region_start)\
-            .join(sequence.filter(substring(col("sequence"), -1, 1) == "*")\
+            .join(sequence.filter((substring(sequence.sequence, -1, 1) == "*") | (substring(sequence.sequence, 1, 1) == "M"))\
                   .select("transcript_stable_id", "end_exon_id"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")
@@ -841,10 +841,12 @@ class GFFService():
 
         start_codons = cds.filter("type=\"CDS\"").withColumn("length", cds.seq_region_end - cds.seq_region_start)\
             .join(sequence\
-                  .select("transcript_stable_id", "start_exon_id"),\
+                  .select("transcript_stable_id", "start_exon_id", "sequence"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == start_exon_id")
-
+        
+        start_codons = start_codons.filter(substring(col("sequence"), 1, 1) == "M")
+        start_codons.filter("transcript_stable_id=\"ENSABMT00000004074\"").show(4, False)
         # small_cds = start_codons.filter(start_codons.length < 2)
         # rank_prev = win.filter(col("row") == 2).drop("row")
         # rank_prev = rank_prev.join(small_cds.select("length", "exon_id"), on = ["exon_id"], how = "right").dropDuplicates()
