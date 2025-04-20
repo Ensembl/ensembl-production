@@ -805,7 +805,7 @@ class GFFService():
         cds = cds.filter("type=\"CDS\"")
         
         stop_codons = cds.withColumn("length", cds.seq_region_end - cds.seq_region_start)\
-            .join(sequence.filter((substring(sequence.sequence, -1, 1) == "*") | (substring(sequence.sequence, 1, 1) == "M"))\
+            .join(sequence.filter((substring(sequence.sequence, -1, 1) == "*"))\
                   .select("transcript_stable_id", "end_exon_id"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")

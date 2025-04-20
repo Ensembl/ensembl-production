@@ -236,6 +236,7 @@ class TranscriptSparkService:
              seq = seq.replace("N", "")
              try:
                 sequence = seq.translate(table = int(codon_table), cds = True)
+                sequence = sequence + "*"
              except: 
                 sequence = seq.translate(table = int(codon_table))
                  
