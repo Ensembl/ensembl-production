@@ -863,7 +863,7 @@ class GFFService():
         stop_codons = stop_codons.withColumn("phase", lit("0"))
         stop_codons = stop_codons.drop("type")
         stop_codons.filter("transcript_stable_id=\"ENSABMT00000001194\"").show(2, False)
-
+        
         return stop_codons
     
     def get_start_codons(self, cds, sequence) -> None:
@@ -885,7 +885,37 @@ class GFFService():
         rank_prev_neg = rank_prev_neg.withColumn("seq_region_start", rank_prev_neg["seq_region_end"] - 1 + rank_prev_neg["length"])
 
         rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")  
-
+        rank_prev = rank_prev.withColumn("length", rank_prev.seq_region_end - rank_prev.seq_region_start).select(\
+        "transcript_stable_id",\
+        "gene_id",\
+        "seq_region_id",\
+        "exon_id",\
+        "type",\
+        "seq_region_start",\
+        "seq_region_end",\
+        "seq_region_strand",\
+        "phase",\
+        "exon_stable_id",\
+        "version",\
+        "stable_id", "tl_version",\
+        "rank",\
+        "source",\
+        "name",\
+        "score",\
+        "canonical",\
+        "basic",\
+        "mane_select",\
+        "mane_clinical",\
+        "transcript_source",\
+        "transcript_version",\
+        "transcript_biotype",\
+        "gene_biotype",\
+        "gene_source",\
+        "gene_version",\
+        "gene_stable_id",\
+        "gene_name",\
+        "length"
+        ).filter("length>0")
         normal_cds = start_codons.filter(start_codons.length >= 2)
         normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
@@ -894,11 +924,8 @@ class GFFService():
         
         print(normal_cds_neg)
         print(rank_prev)
-        start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id")).drop("phase")
-
-        start_codons = start_codons.withColumn("phase", lit("0"))
+        start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
-
 
         return start_codons
     
