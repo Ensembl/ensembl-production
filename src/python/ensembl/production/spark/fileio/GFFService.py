@@ -823,8 +823,11 @@ class GFFService():
                   .select("transcript_stable_id", "end_exon_id"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")
-        
+        stop_codons.filter("transcript_stable_id=\"ENSABMT00000007690\"").show(2, False)
+        print("Fals to small or to norm?")
         small_cds = stop_codons.filter(stop_codons.length < 2)
+        normal_cds = stop_codons.filter(stop_codons.length >= 2)
+
         small_cds_tmp = small_cds.withColumnRenamed("rank", "tiny_rank").withColumnRenamed("transcript_stable_id", "transcript_stable_id_old")
         rank_prev = cds.join(small_cds_tmp.select("tiny_rank", "transcript_stable_id_old", "length"), on = [(small_cds_tmp.transcript_stable_id_old == cds.transcript_stable_id) & (cds.rank == small_cds_tmp.tiny_rank - 1)])
         rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
@@ -865,18 +868,17 @@ class GFFService():
         "gene_name",\
         "length"
         ).filter("length>-1")
-        normal_cds = stop_codons.filter(stop_codons.length >= 2)
+   
         normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_start", normal_cds_pos["seq_region_end"] - 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_end", normal_cds_neg["seq_region_start"] + 2)
-
+    
+        
         stop_codons = normal_cds_neg.drop("end_exon_id").union(normal_cds_pos.drop("end_exon_id")).union(rank_prev)
-
         stop_codons = stop_codons.withColumn("phase", lit("0"))
-        stop_codons = stop_codons.union(small_cds.drop("end_exon_id")).union(rank_prev)
+        stop_codons = stop_codons.union(small_cds.drop("end_exon_id"))
         stop_codons = stop_codons.drop("type")
-
         return stop_codons
     
     def get_start_codons(self, cds, sequence) -> None:
