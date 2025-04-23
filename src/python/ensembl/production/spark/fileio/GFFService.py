@@ -874,8 +874,9 @@ class GFFService():
 
         print(normal_cds_neg)
         
-        stop_codons = normal_cds_neg.drop("end_exon_id").union(normal_cds_pos.drop("end_exon_id")).union(rank_prev).union(small_cds.drop("end_exon_id")).drop("phase")
+        stop_codons = normal_cds_neg.drop("end_exon_id").union(normal_cds_pos.drop("end_exon_id")).union(rank_prev)
         stop_codons = stop_codons.withColumn("phase", lit("0"))
+        stop_codons = stop_codons.union(small_cds.drop("end_exon_id")).union(rank_prev)
         stop_codons = stop_codons.drop("type")
         stop_codons.filter("transcript_stable_id=\"ENSABMT00000001194\"").show(2, False)
         
