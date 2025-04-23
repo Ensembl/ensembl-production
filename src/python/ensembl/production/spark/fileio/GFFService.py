@@ -444,6 +444,16 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
+        
+        translation_attrib = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","translation_attrib")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+        
                 
         biotype_df = self._spark.read\
                 .format("jdbc")\
@@ -473,6 +483,7 @@ class GFFService():
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
+        translation_attrib_seleno=translation_attrib.filter("attrib_type_id=12").withColumnRenamed("value", "seleno")
         
         #Type for transcripts and genes is by default feature type - if so_term is not defined. 
         @udf(returnType=StringType())
@@ -533,7 +544,10 @@ class GFFService():
                                 .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
                                     on= "transcript_id", how = "left")\
                                 .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
-                                    on = "transcript_id", how = "left") 
+                                    on = "transcript_id", how = "left")\
+                                .join(translation_attrib_seleno.select("translation_id", "seleno"),\
+                                 on = [transcripts.canonical_translation_id == translation_attrib_seleno.translation_id], how = "left").drop("translation_id")
+        transcripts.filter("seleno != NULL").show()
                                                                                       
         transcripts = transcripts\
                 .withColumn("type", construct_type(lit("transcript"), "so_term"))\
@@ -626,17 +640,17 @@ class GFFService():
             if canonical or basic or mane_select or mane_clinical:
                 result = result + "tag="
             if canonical:
-                result = result + "Ensembl_canonical;"
+                result = result + "tag=Ensembl_canonical;"
             if basic:
-                result = result + "basic;"
+                result = result + "tag=basic;"
             if mane_clinical:
-                result = result + "mane_clinical;"
+                result = result + "tag=mane_clinical;"
             if mane_select:
-                result = result + "mane_select;"
+                result = result + "tag=mane_select;"
             if feature_id:
-                result = result + "transcript_id=" + feature_id + ";"
+                result = result + "tag=transcript_id=" + feature_id + ";"
             if version:
-                result = result + "version=" + str(version)
+                result = result + "tag=version=" + str(version)
 
 
             return result
@@ -848,9 +862,10 @@ class GFFService():
         "gene_source",\
         "gene_version",\
         "gene_stable_id",\
+        "seleno",\
         "gene_name",\
         "length"
-        ).filter("length>0")
+        ).filter("length>-1")
         normal_cds = stop_codons.filter(stop_codons.length >= 2)
         normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_start", normal_cds_pos["seq_region_end"] - 2)
@@ -913,9 +928,10 @@ class GFFService():
         "gene_source",\
         "gene_version",\
         "gene_stable_id",\
+        "seleno",\
         "gene_name",\
         "length"
-        ).filter("length>0")
+        ).filter("length>-1")
         normal_cds = start_codons.filter(start_codons.length >= 2)
         normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
@@ -947,7 +963,7 @@ class GFFService():
         tmp_fp = assembly_name
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name):
+        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -973,23 +989,24 @@ class GFFService():
                 result = result + "exon_id \"" + feature_id + "\"; "
             if version:
                 result = result + "exon_version \"" + str(version) + "\"; "
-            if canonical or basic or mane_select or mane_clinical:
-                result = result + "tag "
+            if seleno:
+                result = result + "tag \"seleno\";"
             if canonical:
-                result = result + "\"Ensembl_canonical\";"
+                result = result + "tag \"Ensembl_canonical\";"
             if basic:
-                result = result + "\"basic\";"
+                result = result + "tag \"basic\";"
             if mane_clinical:
-                result = result + "\"mane_clinical\";"
+                result = result + "tag \"mane_clinical\";"
             if mane_select:
-                result = result + "\"mane_select\";"
+                result = result + "tag \"mane_select\";"
+
 
             return result
 
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name, f_type):
+        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name, f_type, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1015,22 +1032,23 @@ class GFFService():
                 result = result + "protein_id \"" + str(protein) + "\"; "
             if tl_version and f_type == "CDS":
                 result = result + "protein_version \"" + str(version) + "\"; "
-            if canonical or basic or mane_select or mane_clinical:
-                result = result + "tag "
+            if seleno:
+                result = result + "tag \"seleno\";"
             if canonical:
-                result = result + "\"Ensembl_canonical\";"
+                result = result + "tag \"Ensembl_canonical\";"
             if basic:
-                result = result + "\"basic\";"
+                result = result + "tag \"basic\";"
             if mane_clinical:
-                result = result + "\"mane_clinical\";"
+                result = result + "tag \"mane_clinical\";"
             if mane_select:
-                result = result + "\"mane_select\";"
+                result = result + "tag \"mane_select\";"
+
 
             return result
         
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name):
+        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1052,22 +1070,23 @@ class GFFService():
                 result = result + "transcript_source \"" + tr_source + "\"; "
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
-            if canonical or basic or mane_select or mane_clinical:
-                result = result + "tag "
+            if seleno:
+                result = result + "tag \"seleno\";"
             if canonical:
-                result = result + "\"Ensembl_canonical\";"
+                result = result + "tag \"Ensembl_canonical\";"
             if basic:
-                result = result + "\"basic\";"
+                result = result + "tag \"basic\";"
             if mane_clinical:
-                result = result + "\"mane_clinical\";"
+                result = result + "tag \"mane_clinical\";"
             if mane_select:
-                result = result + "\"mane_select\";"
+                result = result + "tag \"mane_select\";"
+
 
             return result
         
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name):
+        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1089,23 +1108,24 @@ class GFFService():
                 result = result + "transcript_source \"" + tr_source + "\"; "
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
-            if canonical or basic or mane_select or mane_clinical:
-                result = result + "tag "
+            if seleno:
+                result = result + "tag \"seleno\";"
             if canonical:
-                result = result + "\"Ensembl_canonical\";"
+                result = result + "tag \"Ensembl_canonical\";"
             if basic:
-                result = result + "\"basic\";"
+                result = result + "tag \"basic\";"
             if mane_clinical:
-                result = result + "\"mane_clinical\";"
+                result = result + "tag \"mane_clinical\";"
             if mane_select:
-                result = result + "\"mane_select\";"
+                result = result + "tag \"mane_select\";"
+
 
             return result
 
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source, g_name):
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source, g_name, seleno):
             result = ""
 
             if parent:
@@ -1125,16 +1145,17 @@ class GFFService():
             result = result + "transcript_source \"" + transcript_source +"\"; " 
             if biotype:
                 result = result + "transcript_biotype \"" + biotype + "\"; "
-            if canonical or basic or mane_select or mane_clinical:
-                result = result + "tag "
+            if seleno:
+                result = result + "tag \"seleno\";"
             if canonical:
-                result = result + "\"Ensembl_canonical\";"
+                result = result + "tag \"Ensembl_canonical\";"
             if basic:
-                result = result + "\"basic\";"
+                result = result + "tag \"basic\";"
             if mane_clinical:
-                result = result + "\"mane_clinical\";"
+                result = result + "tag \"mane_clinical\";"
             if mane_select:
-                result = result + "\"mane_select\";"
+                result = result + "tag \"mane_select\";"
+
             return result
 
         # Join attribs
@@ -1169,7 +1190,7 @@ class GFFService():
                                                                    "canonical",
                                                                    "basic",
                                                                    "mane_select",
-                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source", "gene_name"))
+                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source", "gene_name", "seleno"))
         
         transcripts = transcripts.withColumn("feature_type", lit("transcript"))
 
@@ -1185,7 +1206,7 @@ class GFFService():
                                               "gene_source",
                                               "gene_version",
                                               "stable_id",
-                                              "transcript_stable_id", "gene_id")\
+                                              "transcript_stable_id", "gene_id", "seleno")\
             .withColumnRenamed("source", "transcript_source")\
             .withColumnRenamed("stable_id", "gene_stable_id")\
             .withColumnRenamed("version", "transcript_version")\
@@ -1208,7 +1229,7 @@ class GFFService():
                                                                 "basic",
                                                                 "mane_select",
                                                                 "mane_clinical",
-                                                                "canonical", "gene_name"))
+                                                                "canonical", "gene_name", "seleno"))
         exons = exons.withColumn("feature_type", lit("exon"))
 
         exons = exons.select("name", "source", "feature_type",
@@ -1226,7 +1247,7 @@ class GFFService():
                                               "gene_version",
                                               "stable_id",
                                               "transcript_stable_id",\
-                                              "gene_id"\
+                                              "gene_id", "seleno"\
                                               )\
             .withColumnRenamed("source", "transcript_source")\
             .withColumnRenamed("stable_id", "gene_stable_id")\
@@ -1255,7 +1276,7 @@ class GFFService():
                                                 "mane_clinical",\
                                                 "canonical",\
                                                 "name",\
-                                                "gene_name"\
+                                                "gene_name", "seleno"\
                                                 ))   
         stop_codons = stop_codons.withColumn("attributes", joinColumnsStopCodon("exon_stable_id",\
                                                 "version",\
@@ -1273,7 +1294,7 @@ class GFFService():
                                                 "mane_clinical",\
                                                 "canonical",\
                                                 "name",\
-                                                "gene_name"\
+                                                "gene_name", "seleno"\
                                                 ))   
 
   
@@ -1295,7 +1316,7 @@ class GFFService():
                                                 "stable_id",\
                                                 "tl_version",\
                                                 "name",\
-                                                "gene_name", "type"\
+                                                "gene_name", "type", "seleno"\
                                                 ))   
 
         cds = cds.withColumnRenamed("type", "feature_type")
