@@ -257,11 +257,14 @@ class TranscriptSparkService:
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
+         
+         translated_seq.filter("transcript_stable_id=\"ENSABMT00000003917\"").show(1, False)
+
          translated_sequence = \
          translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "value", "translation_stable_id"))
          
-         #Apply translation edits
+         #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
          seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes,
