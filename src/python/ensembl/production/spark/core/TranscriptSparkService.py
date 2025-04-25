@@ -237,16 +237,14 @@ class TranscriptSparkService:
              try:
                 sequence = seq.translate(table = int(codon_table), cds = True)
                 sequence = sequence + "*"
-             except: 
+                sequence = "!" + sequence
+             except Exception as e:     
                 sequence = seq.translate(table = int(codon_table))
-                 
+                error = str(e)
+                if(error.find("start codon") == -1):
+                    sequence = "!" + sequence
              sequence = str(sequence)
 
-            # It was an option before, but turned out cds_start_nf dosn't work properly
-            #  if sequence[:1] != 'M' and not cds_start_nf:  
-            #     # if(str(seq)[:1] == "N"):
-            #     #     print("WARNING appending M to non-zero phase: " + id)
-            #     sequence = "M" + sequence[1:]
              return sequence
          cds_start_nf_df = self._spark.read\
             .format("jdbc")\
@@ -258,7 +256,6 @@ class TranscriptSparkService:
             .option("password", password)\
             .load().dropDuplicates()
          
-         translated_seq.filter("transcript_stable_id=\"ENSABMT00000003917\"").show(1, False)
 
          translated_sequence = \
          translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",

@@ -888,8 +888,7 @@ class GFFService():
             .filter("exon_id == start_exon_id")
         start_codons.filter("transcript_stable_id=\"ENSABMT00000003917\"").show(1, False)
 
-        start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "M").drop("sequence")
-
+        start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "!").drop("sequence")
         small_cds = start_codons.filter(start_codons.length < 2)
         small_cds_tmp = small_cds.withColumnRenamed("rank", "tiny_rank").withColumnRenamed("transcript_stable_id", "transcript_stable_id_old")
         rank_prev = cds.filter("type=\"CDS\"").join(small_cds_tmp.select("tiny_rank", "transcript_stable_id_old", "length"), on = [(small_cds_tmp.transcript_stable_id_old == cds.transcript_stable_id) & (cds.rank == small_cds_tmp.tiny_rank + 1)])
@@ -937,6 +936,7 @@ class GFFService():
         normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
         normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
         normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
+
         
         start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
