@@ -60,7 +60,7 @@ sub run {
 
   #my $dbh =  $self->hive_dbh;
 
-  my $dba = $self->get_DBAdaptor("hive_pf");
+  my $dba =  Bio::EnsEMBL::Registry->get_DBAdaptor('multi', 'hive_pf');
   my $dbh = $dba->dbc->db_handle();
   $self->throw("Failed to connect to MVP database") unless $dbh;
 
