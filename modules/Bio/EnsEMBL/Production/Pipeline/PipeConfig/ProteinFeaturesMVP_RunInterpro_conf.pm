@@ -373,31 +373,31 @@ sub pipeline_analyses {
                 meta_filters => $self->o('meta_filters'),
             },
             -flow_into       => {
-                '2' => [ 'BackupTables' ],
+                '2' => [ 'AnalysisConfiguration' ],
             },
             -rc_name           => '4GB_D',
         },
-        {
-          -logic_name        => 'BackupTables',
-          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
-          -max_retry_count   => 1,
-          -analysis_capacity => 20,
-          -parameters        => {
-                                  table_list  => [
-                                    'analysis',
-                                    'analysis_description',
-                                    'dependent_xref',
-                                    'interpro',
-                                    'object_xref',
-                                    'ontology_xref',
-                                    'protein_feature',
-                                    'xref',
-                                  ],
-                                  output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
-                                },
-          -rc_name           => '8GB_D',
-          -flow_into         => ['AnalysisConfiguration'],
-        },
+        # {
+        #   -logic_name        => 'BackupTables',
+        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+        #   -max_retry_count   => 1,
+        #   -analysis_capacity => 20,
+        #   -parameters        => {
+        #                           table_list  => [
+        #                             'analysis',
+        #                             'analysis_description',
+        #                             'dependent_xref',
+        #                             'interpro',
+        #                             'object_xref',
+        #                             'ontology_xref',
+        #                             'protein_feature',
+        #                             'xref',
+        #                           ],
+        #                           output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+        #                         },
+        #   -rc_name           => '8GB_D',
+        #   -flow_into         => ['AnalysisConfiguration'],
+        # },
         {
           -logic_name        => 'AnalysisConfiguration',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
@@ -411,24 +411,24 @@ sub pipeline_analyses {
           -rc_name           => '8GB_D',
 
           -flow_into 	       => {
-                                  '2->A' => ['AnalysisSetup'],            #Todo: we can remove analysis step in in this pipleine assumimg analysis logics are added via production db pipleine by datateams before handover 
-                                  'A->3' => ['SpeciesFactory'],
+                                  # '2->A' => ['AnalysisSetup'],            #Todo: we can remove analysis step in in this pipleine assumimg analysis logics are added via production db pipleine by datateams before handover 
+                                  '3' => ['SpeciesFactory'],
                                 }
         },
-        {
-            -logic_name        => 'AnalysisSetup',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
-            -max_retry_count   => 0,
-            -analysis_capacity => 20,
-            -parameters        => {
-                db_backup_required => 1,
-                db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
-                delete_existing    => $self->o('delete_existing'),
-                linked_tables      => [ 'protein_feature', 'object_xref' ],
-                production_lookup  => 1,
-            },
-            -rc_name           => '8GB_D',
-        },
+        # {
+        #     -logic_name        => 'AnalysisSetup',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
+        #     -max_retry_count   => 0,
+        #     -analysis_capacity => 20,
+        #     -parameters        => {
+        #         db_backup_required => 1,
+        #         db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+        #         delete_existing    => $self->o('delete_existing'),
+        #         linked_tables      => [ 'protein_feature', 'object_xref' ],
+        #         production_lookup  => 1,
+        #     },
+        #     -rc_name           => '8GB_D',
+        # },
         {
           -logic_name        => 'SpeciesFactory',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
@@ -572,7 +572,6 @@ sub pipeline_analyses {
                 },
             -rc_name         => '8GB_W',
             -flow_into       => {
-                # '3'  => [ 'StoreInterProxmlforProteinFeatures' ],
                 '-1' => [ 'InterProScanLookup_HighMem' ],
             },
         },
