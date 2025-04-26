@@ -547,7 +547,6 @@ class GFFService():
                                     on = "transcript_id", how = "left")\
                                 .join(translation_attrib_seleno.select("translation_id", "seleno"),\
                                  on = [transcripts.canonical_translation_id == translation_attrib_seleno.translation_id], how = "left").drop("translation_id")
-        transcripts.filter("seleno != NULL").show()
                                                                                       
         transcripts = transcripts\
                 .withColumn("type", construct_type(lit("transcript"), "so_term"))\
@@ -886,7 +885,6 @@ class GFFService():
                   .select("transcript_stable_id", "start_exon_id", "sequence"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == start_exon_id")
-        start_codons.filter("transcript_stable_id=\"ENSABMT00000003917\"").show(1, False)
 
         start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "!").drop("sequence")
         small_cds = start_codons.filter(start_codons.length < 2)
@@ -1321,33 +1319,49 @@ class GFFService():
 
         stop_codons_cds = stop_codons.withColumnRenamed("seq_region_start", "c_seq_region_start").withColumnRenamed("seq_region_end", "c_seq_region_end")
         cds_only = cds.filter("type=\"CDS\"")
+        print("CES BEOFR ANYTHING ")
+        cds_only.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         utr_only = cds.filter("type!=\"CDS\"")
-        cds_pos = cds_only.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "length"), on = ["exon_stable_id"], how = "right").dropDuplicates()
+        cds_pos = cds_only.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
         cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
         cds_neg = cds_only.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
+        
+        print("CDS JOined WITH STOP CODONS")
+        cds_neg.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
+        stop_codons_cds.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
+        
         cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_neg.c_seq_region_end + 1)
         cds_neg = cds_neg.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id")
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id")
       
 
         cds_pos = cds_pos.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id")
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id")
+        
+        cds_only = cds_only.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id")
+
         cds_croped = cds_neg.union(cds_pos)
 
-        cds = cds_only.join(cds_croped, on = ["exon_stable_id"], how = "anti")
-    
+        cds = cds_only.join(cds_croped, on = ["exon_stable_id", "transcript_stable_id"], how = "anti")
+
+        print("CDS NOT INCLUDED IN STOP CODONS")
+        cds.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         cds_croped = cds_croped.drop("exon_stable_id").filter((cds_croped.seq_region_end - cds_croped.seq_region_start) > -1)
         
         cds = cds.select("name", "source", "feature_type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
         utr_only = utr_only.select("name", "source", "feature_type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        cds_croped = cds_croped.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
         cds = cds.union(cds_croped).union(utr_only)
-
         start_codons = start_codons.select("name", "source", "feature_type", 
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
