@@ -133,8 +133,13 @@ class TranscriptSparkService:
                 return sequence
             for edit in edits_list:
                 edit = edit.split(" ")
-                sequence = sequence[:int(edit[0])-1] + edit[2] +\
-                sequence[int(edit[1]):]
+                start = int(edit[0])-1
+                end = int(edit[1])
+                if (sequence[0:1] == "!"):
+                    start = start + 1
+                    end = end + 1              
+                sequence = sequence[:start] + edit[2] +\
+                sequence[end:]
             return sequence
         
         edits_df =\
@@ -227,22 +232,27 @@ class TranscriptSparkService:
 
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
-         
          @udf(returnType=StringType())
-         def translate_sequence(sequence, codon_table, cds_start_nf, id):
-             if ((sequence is None) or (len(sequence) == 0)):
+         def translate_sequence(raw_sequence, codon_table, cds_start_nf, id, phase):
+             
+             if ((raw_sequence is None) or (len(raw_sequence) == 0)):
                  return
-             seq = Seq(sequence)
-             seq = seq.replace("N", "")
+             seq = Seq(raw_sequence)
              try:
                 sequence = seq.translate(table = int(codon_table), cds = True)
-                sequence = sequence + "*"
-                sequence = "!" + sequence
+                sequence = "!" + sequence + "*"
              except Exception as e:     
                 sequence = seq.translate(table = int(codon_table))
                 error = str(e)
                 if(error.find("start codon") == -1):
                     sequence = "!" + sequence
+                if((len(raw_sequence)%3 != 0) and (error.find("start codon") != -1) and (len(raw_sequence)%3 == phase)):
+                    stop_codon = Seq(raw_sequence[-3:])
+                    stop_codon = stop_codon.translate()
+                    if(stop_codon == "*"):
+                        sequence = str(sequence)
+                        sequence = sequence[:-1] + "*"
+                        return sequence
              sequence = str(sequence)
 
              return sequence
@@ -255,12 +265,10 @@ class TranscriptSparkService:
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
-         
-
          translated_sequence = \
          translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",
-                                     translate_sequence("sequence", "codon_table", "value", "translation_stable_id"))
-         
+                                     translate_sequence("sequence", "codon_table", "value", "translation_stable_id", "phase"))
+                  
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
@@ -268,7 +276,6 @@ class TranscriptSparkService:
                                             True)
          translated_sequence = self.apply_edits(translated_sequence,
                                                 seq_edits, True)
-
          return translated_sequence
 
 
@@ -452,7 +459,7 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-                #Phase of the exon should be . of it is -1
+        #Phase of the exon should be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase > 2):

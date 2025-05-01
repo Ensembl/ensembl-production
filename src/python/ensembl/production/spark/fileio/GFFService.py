@@ -822,7 +822,6 @@ class GFFService():
                   .select("transcript_stable_id", "end_exon_id"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")
-
         small_cds = stop_codons.filter(stop_codons.length < 2)
         normal_cds = stop_codons.filter(stop_codons.length >= 2)
 
@@ -885,6 +884,9 @@ class GFFService():
                   .select("transcript_stable_id", "start_exon_id", "sequence"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == start_exon_id")
+        print("start CODDDDOOOONS")
+       
+        start_codons.filter("transcript_stable_id=\"ENSABMT00000000017\"").show(2, False)
 
         start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "!").drop("sequence")
         small_cds = start_codons.filter(start_codons.length < 2)
@@ -938,7 +940,7 @@ class GFFService():
         
         start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
-
+        start_codons.filter("transcript_stable_id=\"ENSABMT00000000017\"").show(2, False)
         return start_codons
     
     def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:
@@ -1319,15 +1321,11 @@ class GFFService():
 
         stop_codons_cds = stop_codons.withColumnRenamed("seq_region_start", "c_seq_region_start").withColumnRenamed("seq_region_end", "c_seq_region_end")
         cds_only = cds.filter("type=\"CDS\"")
-        print("CES BEOFR ANYTHING ")
-        cds_only.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         utr_only = cds.filter("type!=\"CDS\"")
         cds_pos = cds_only.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
         cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
         cds_neg = cds_only.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
         
-        print("CDS JOined WITH STOP CODONS")
-        cds_neg.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         stop_codons_cds.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         
         cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_neg.c_seq_region_end + 1)
@@ -1348,8 +1346,6 @@ class GFFService():
 
         cds = cds_only.join(cds_croped, on = ["exon_stable_id", "transcript_stable_id"], how = "anti")
 
-        print("CDS NOT INCLUDED IN STOP CODONS")
-        cds.filter("transcript_stable_id=\"ENSABMT00000036082\"").show(10, False)
         cds_croped = cds_croped.drop("exon_stable_id").filter((cds_croped.seq_region_end - cds_croped.seq_region_start) > -1)
         
         cds = cds.select("name", "source", "feature_type",
