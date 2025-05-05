@@ -11,7 +11,7 @@
 #  limitations under the License.
 
 """
-Fetch Protein Features InterPro and seg files from the proteome directory and load them into the core database.
+Fetch InterPro and seg files from the proteome directory and load them into the core database.
 """
 import os
 import logging
