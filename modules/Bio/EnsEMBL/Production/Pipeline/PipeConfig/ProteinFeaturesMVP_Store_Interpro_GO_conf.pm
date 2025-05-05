@@ -358,30 +358,30 @@ sub pipeline_analyses {
             -logic_name      => 'AnnotateProteinFeatures',
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 0,
-            # -flow_into       => {
-            #     '1->A' => [ 'DbFactory' ],
-            #     'A->1' => [ 'TidyScratch' ],
-            # },
+            -flow_into       => {
+                '1->A' => [ 'DbFactory' ],
+                'A->1' => [ 'TidyScratch' ],
+            },
             -rc_name           => '1GB_D',
         },
 
-        # {
-        #     -logic_name      => 'DbFactory',
-        #     -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
-        #     -max_retry_count => 1,
-        #     -parameters      => {
-        #         species      => $self->o('species'),
-        #         antispecies  => $self->o('antispecies'),
-        #         division     => $self->o('division'),
-        #         run_all      => $self->o('run_all'),
-        #         meta_filters => $self->o('meta_filters'),
-        #     },
-        #     -flow_into       => {
-        #         '2->A' => [ 'BackupTables' ],
-        #         'A->2' => [ 'RunDatachecks' ],
-        #     },
-        #     -rc_name           => '4GB_D',
-        # },
+        {
+            -logic_name      => 'DbFactory',
+            -module          => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
+            -max_retry_count => 1,
+            -parameters      => {
+                species      => $self->o('species'),
+                antispecies  => $self->o('antispecies'),
+                division     => $self->o('division'),
+                run_all      => $self->o('run_all'),
+                meta_filters => $self->o('meta_filters'),
+            },
+            # -flow_into       => {
+            #     '2->A' => [ 'BackupTables' ],
+            #     'A->2' => [ 'RunDatachecks' ],
+            # },
+            -rc_name           => '4GB_D',
+        },
 
         # {
         #   -logic_name        => 'BackupTables',
@@ -638,16 +638,16 @@ sub pipeline_analyses {
         #     },
         #     -rc_name           => '2GB_D',
         # },
-        # {
-        #   -logic_name        => 'TidyScratch',
-        #   -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-        #   -max_retry_count   => 1,
-        #   -parameters        => {
-        #                           cmd => 'rm -rf #scratch_dir# ',
-        #                         },
-        #   -flow_into  => 'CleanTables',
-        #   -rc_name           => '8GB_D',
-        # },
+        {
+          -logic_name        => 'TidyScratch',
+          -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+          -max_retry_count   => 1,
+          -parameters        => {
+                                  cmd => 'rm -rf #scratch_dir# ',
+                                },
+          -flow_into  => 'CleanTables',
+          -rc_name           => '8GB_D',
+        },
 
     ];
 }
