@@ -22,7 +22,7 @@ import glob
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class HiveGenomeFactory(eHive.BaseRunnable):
+class HiveFetchProteinFeaturesOutput(eHive.BaseRunnable):
   
     def run(self):
         # Get the parameters
@@ -140,12 +140,3 @@ class HiveGenomeFactory(eHive.BaseRunnable):
 
         unmatched_xml.extend(xml_dict.values())
         return pairs, unmatched_tsv, unmatched_xml
-
-        
-# sub write_output {
-#     my ($self) = @_;
-#     my $file_varname = $self->param('file_varname', 'proteome_file'); 
-#     $self->dataflow_output_id({$file_varname => $self->param('proteome_file')}, 1);
-# }
-
-# 1;

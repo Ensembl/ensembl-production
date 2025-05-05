@@ -137,7 +137,7 @@ sub run {
   $self->param('nolookup', \@nolookup);
   $self->param('all', \@all);
 }
-
+interproscan-5.67-99.0
 sub get_db_versions {
   my ($self, $interproscan_exe) = @_;
 
