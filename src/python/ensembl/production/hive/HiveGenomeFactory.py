@@ -26,13 +26,26 @@ class HiveGenomeFactory(eHive.BaseRunnable):
     
     def fetch_input(self):
 
+        # check if all required params are defined
+        if not self.param_is_defined('metadata_db_uri'):
+            raise KeyError("Missing Required Param metadata_db_uri")
+
+        if not self.param_is_defined('genome_uuid') and not self.param_is_defined('dataset_uuid') and not self.param_is_defined('species'):
+            raise KeyError("Missing Required Param genome_uuid or dataset_uuid or species")
+
+        if not self.param_is_defined('batch_size'):
+            self.param('batch_size', 0)
+        
+        if self.param('species') is None or not isinstance(self.param('species'), list):
+            self.param('species', [])
+
         for param in ['dataset_status', 'dataset_type']:
             if not self.param_is_defined(param):
                 raise KeyError(f"Missing Required Param {param}")
 
             if not isinstance(self.param('dataset_status'), list):
                 self.param('dataset_status', [param_value for param_value in self.param(param).split(',')])
-
+            
         if not self.param_is_defined('update_dataset_status') or \
                 not isinstance(self.param('update_dataset_status'), str) \
                 or self.param('update_dataset_status') not in ['Submitted',
@@ -61,20 +74,27 @@ class HiveGenomeFactory(eHive.BaseRunnable):
 
         species_list = []
         all_info = []
+        fetched_genome_info = list(fetched_genomes)
+        
+        if  self.param('species') and len(self.param('species')) and len(self.param('species')) != len(fetched_genome_info):
+            raise ValueError(f"Species list {self.param('species')} is not equal to the number of species {len(fetched_genome_info)}")
+        
+        if self.param('genome_uuid') and len(self.param('genome_uuid')) and len(self.param('genome_uuid')) != len(fetched_genome_info):
+            raise ValueError(f"Genome UUID list {self.param('genome_uuid')} is not equal to the number of species {len(fetched_genome_info)}")
 
-        for genome_info in fetched_genomes:
 
-            # standard flow similar to production modules
-            self.dataflow(
-                genome_info, 2
-            )
+        for genome_info in fetched_genome_info:
             logger.info(
                 f"Found genome {genome_info}"
             )
-            species_list.append(genome_info.get('species', None))
-            all_info.append(genome_info)
+            if genome_info.get('species', None) :
+                species_list.append(genome_info.get('species'))
+                all_info.append(genome_info)
+            
+            self.dataflow(
+                genome_info, 2
+            )
 
-        # hive flow for all species as a list
         self.dataflow(
             {
                 "species": species_list,
