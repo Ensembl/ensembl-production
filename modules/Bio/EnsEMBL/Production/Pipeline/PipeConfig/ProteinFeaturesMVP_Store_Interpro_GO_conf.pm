@@ -360,7 +360,7 @@ sub pipeline_analyses {
             -max_retry_count => 0,
             -flow_into       => {
                 '1->A' => [ 'DbFactory' ],
-                'A->2' => [ 'TidyScratch' ],
+                '1->2' => [ 'TidyScratch' ],
             },
             -rc_name           => '1GB_D',
         },
