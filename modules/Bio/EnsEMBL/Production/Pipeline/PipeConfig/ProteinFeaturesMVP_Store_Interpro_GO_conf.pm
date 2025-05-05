@@ -508,10 +508,11 @@ sub pipeline_analyses {
                                   proteome_dir => catdir('#pipeline_dir#', '#species#'),
                                   header_style => 'dbID',
                                   overwrite => 0,
-                                  skip_dump =>1,
+                                  skip_dump =>1, # skip the protein dumps , they are already ran in the Runinterpro pipeline
                                 },
           -flow_into         => {
-                                  '1'  => ['ChecksumProteinsMVP'],
+                                  '1->A'  => ['ChecksumProteinsMVP'],
+                                  'A->1'  => ['SplitProteomeFile'],
                                 },
           -rc_name           => '16GB_D',
         },
@@ -528,10 +529,37 @@ sub pipeline_analyses {
                                   uniprot_logic_name => $self->o('uniprot_logic_name'),
                                 },
           -rc_name           => '8GB_D',
-          -flow_into         => {
-                                  '3' => ['SplitChecksumFile'],
-                                  '4' => ['SplitNoChecksumFile'],
+        },
+                {
+          -logic_name        => 'ChecksumProteinsMVP',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
+          -analysis_capacity => 50,
+          -max_retry_count   => 0,
+          -parameters        => {
+                                  fasta_file         => '#proteome_file#',
+                                  uniparc_xrefs      => 1, # load uniparc xrefs
+                                  uniprot_xrefs      => 1, # load uniprot xrefs
+                                  uniparc_logic_name => $self->o('uniparc_logic_name'),
+                                  uniprot_logic_name => $self->o('uniprot_logic_name'),
                                 },
+          -rc_name           => '8GB_D',
+        },
+        {
+            -logic_name      => 'FetchInterProAndSegFiles',
+            -module          => 'ensembl.production.hive.FetchInterProAndSegFiles',
+            -language        => 'python3',
+            -max_retry_count => 1,
+            -analysis_capacity => 1,
+            -batch_size        => 20,
+            -max_retry_count   => 1,
+            -parameters        => {
+                                    proteome_fasta  => '#proteome_file#',
+                                  },
+            -flow_into         => {
+                                     '2'  => ['StoreProteinFeatures'],
+                                     '3'  => ['StoreSegFeatures'],
+                                  },
+            -rc_name           => '32GB_W',
         },
         {
             -logic_name        => 'StoreSegFeatures',
@@ -545,6 +573,8 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_W',
         },
+
+
         {
           -logic_name        => 'StoreProteinFeatures',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',

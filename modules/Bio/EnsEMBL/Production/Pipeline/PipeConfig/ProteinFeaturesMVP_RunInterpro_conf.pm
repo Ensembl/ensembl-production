@@ -510,8 +510,8 @@ sub pipeline_analyses {
           -max_retry_count   => 0,
           -parameters        => {
                                   fasta_file         => '#proteome_file#',
-                                  uniparc_xrefs      => $self->o('uniparc_xrefs'),
-                                  uniprot_xrefs      => $self->o('uniprot_xrefs'),
+                                  uniparc_xrefs      => 0, # donot load uniparc xrefs
+                                  uniprot_xrefs      => 0, # donot load uniprot xrefs
                                   uniparc_logic_name => $self->o('uniparc_logic_name'),
                                   uniprot_logic_name => $self->o('uniprot_logic_name'),
                                 },
