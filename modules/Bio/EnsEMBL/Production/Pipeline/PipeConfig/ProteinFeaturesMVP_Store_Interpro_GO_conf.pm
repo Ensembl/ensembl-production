@@ -645,7 +645,7 @@ sub pipeline_analyses {
           -parameters        => {
                                   cmd => 'rm -rf #scratch_dir# ',
                                 },
-          -flow_into  => 'CleanTables',
+    
           -rc_name           => '8GB_D',
         },
 
