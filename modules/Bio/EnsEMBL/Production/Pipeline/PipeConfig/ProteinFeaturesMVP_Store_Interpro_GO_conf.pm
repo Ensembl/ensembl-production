@@ -376,268 +376,268 @@ sub pipeline_analyses {
                 run_all      => $self->o('run_all'),
                 meta_filters => $self->o('meta_filters'),
             },
-            # -flow_into       => {
-            #     '2->A' => [ 'BackupTables' ],
-            #     'A->2' => [ 'RunDatachecks' ],
-            # },
+            -flow_into       => {
+                '2->A' => [ 'BackupTables' ],
+                'A->2' => [ 'RunDatachecks' ],
+            },
             -rc_name           => '4GB_D',
         },
 
-        # {
-        #   -logic_name        => 'BackupTables',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
-        #   -max_retry_count   => 1,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {
-        #                           table_list  => [
-        #                             'analysis',
-        #                             'analysis_description',
-        #                             'dependent_xref',
-        #                             'interpro',
-        #                             'object_xref',
-        #                             'ontology_xref',
-        #                             'protein_feature',
-        #                             'xref',
-        #                           ],
-        #                           output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
-        #                         },
-        #   -rc_name           => '8GB_D',
-        #   -flow_into         => ['AnalysisConfiguration'],
-        # },
-        # {
-        #   -logic_name        => 'AnalysisConfiguration',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
-        #   -max_retry_count   => 0,
-        #   -parameters        => {
-        #                           protein_feature_analyses  => $self->o('protein_feature_analyses'),
-        #                           check_interpro_db_version => $self->o('check_interpro_db_version'),
-        #                           run_seg                   => $self->o('run_seg'),
-        #                           xref_analyses             => $self->o('xref_analyses'),
-        #                         },
-        #   -rc_name           => '8GB_D',
+        {
+          -logic_name        => 'BackupTables',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DatabaseDumper',
+          -max_retry_count   => 1,
+          -analysis_capacity => 20,
+          -parameters        => {
+                                  table_list  => [
+                                    'analysis',
+                                    'analysis_description',
+                                    'dependent_xref',
+                                    'interpro',
+                                    'object_xref',
+                                    'ontology_xref',
+                                    'protein_feature',
+                                    'xref',
+                                  ],
+                                  output_file => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                                },
+          -rc_name           => '8GB_D',
+          -flow_into         => ['AnalysisConfiguration'],
+        },
+        {
+          -logic_name        => 'AnalysisConfiguration',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::AnalysisConfiguration',
+          -max_retry_count   => 0,
+          -parameters        => {
+                                  protein_feature_analyses  => $self->o('protein_feature_analyses'),
+                                  check_interpro_db_version => $self->o('check_interpro_db_version'),
+                                  run_seg                   => $self->o('run_seg'),
+                                  xref_analyses             => $self->o('xref_analyses'),
+                                },
+          -rc_name           => '8GB_D',
 
-        #   -flow_into 	       => {
-        #                           '2->A' => ['AnalysisSetup'],
-        #                           'A->3' => ['RemoveOrphans'],
-        #                         }
-        # },
-        # {
-        #     -logic_name        => 'AnalysisSetup',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
-        #     -max_retry_count   => 0,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         db_backup_required => 1,
-        #         db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
-        #         delete_existing    => $self->o('delete_existing'),
-        #         linked_tables      => [ 'protein_feature', 'object_xref' ],
-        #         production_lookup  => 1,
-        #     },
-        #     -rc_name           => '8GB_D',
-        # },
+          -flow_into 	       => {
+                                  '2->A' => ['AnalysisSetup'],
+                                  'A->3' => ['RemoveOrphans'],
+                                }
+        },
+        {
+            -logic_name        => 'AnalysisSetup',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::AnalysisSetup',
+            -max_retry_count   => 0,
+            -analysis_capacity => 20,
+            -parameters        => {
+                db_backup_required => 1,
+                db_backup_file     => catdir('#pipeline_dir#', '#dbname#', 'pre_pipeline_bkp.sql.gz'),
+                delete_existing    => $self->o('delete_existing'),
+                linked_tables      => [ 'protein_feature', 'object_xref' ],
+                production_lookup  => 1,
+            },
+            -rc_name           => '8GB_D',
+        },
 
-        # {
-        #   -logic_name        => 'RemoveOrphans',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
-        #   -max_retry_count   => 0,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {
-        #                           sql => [
-        #                             'DELETE dx.* FROM '.
-        #                               'dependent_xref dx LEFT OUTER JOIN '.
-        #                               'object_xref ox USING (object_xref_id) '.
-        #                               'WHERE ox.object_xref_id IS NULL',
-        #                             'DELETE onx.* FROM '.
-        #                               'ontology_xref onx LEFT OUTER JOIN '.
-        #                               'object_xref ox USING (object_xref_id) '.
-        #                               'WHERE ox.object_xref_id IS NULL',
-        #                           ]
-        #                         },
-        #   -rc_name           => '8GB_D',
-        #   -flow_into         => ['DeleteInterPro']
-        # },
+        {
+          -logic_name        => 'RemoveOrphans',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
+          -max_retry_count   => 0,
+          -analysis_capacity => 20,
+          -parameters        => {
+                                  sql => [
+                                    'DELETE dx.* FROM '.
+                                      'dependent_xref dx LEFT OUTER JOIN '.
+                                      'object_xref ox USING (object_xref_id) '.
+                                      'WHERE ox.object_xref_id IS NULL',
+                                    'DELETE onx.* FROM '.
+                                      'ontology_xref onx LEFT OUTER JOIN '.
+                                      'object_xref ox USING (object_xref_id) '.
+                                      'WHERE ox.object_xref_id IS NULL',
+                                  ]
+                                },
+          -rc_name           => '8GB_D',
+          -flow_into         => ['DeleteInterPro']
+        },
 
-        # {
-        #     -logic_name        => 'DeleteInterPro',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
-        #     -max_retry_count   => 0,
-        #     -analysis_capacity => 20,
-        #     -parameters        => {
-        #         sql => [
-        #             'DELETE i.* FROM interpro i ' .
-        #                 'LEFT OUTER JOIN protein_feature pf ON i.id = pf.hit_name ' .
-        #                 'WHERE pf.hit_name IS NULL ',
-        #             'DELETE oxr.* FROM object_xref oxr ' .
-        #                 'JOIN xref xr USING (xref_id) ' .
-        #                 'JOIN external_db edb USING (external_db_id) ' .
-        #                 'LEFT JOIN interpro i ON xr.dbprimary_acc = i.interpro_ac ' .
-        #                 'WHERE edb.db_name = "Interpro" ' .
-        #                 'AND i.interpro_ac IS NULL ',
-        #             'DELETE x.* FROM xref x ' .
-        #                 'INNER JOIN external_db edb USING (external_db_id) ' .
-        #                 'LEFT OUTER JOIN interpro i ON x.dbprimary_acc = i.interpro_ac ' .
-        #                 'WHERE edb.db_name = "Interpro" ' .
-        #                 'AND i.interpro_ac IS NULL ',
-        #         ]
-        #     },
-        #     -flow_into         => {
-        #         '1->A' => [ 'SpeciesFactory' ],
-        #         'A->1' => [ 'StoreGoXrefs' ],
-        #     },
-        #     -rc_name           => '8GB_D',
-        # },
+        {
+            -logic_name        => 'DeleteInterPro',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
+            -max_retry_count   => 0,
+            -analysis_capacity => 20,
+            -parameters        => {
+                sql => [
+                    'DELETE i.* FROM interpro i ' .
+                        'LEFT OUTER JOIN protein_feature pf ON i.id = pf.hit_name ' .
+                        'WHERE pf.hit_name IS NULL ',
+                    'DELETE oxr.* FROM object_xref oxr ' .
+                        'JOIN xref xr USING (xref_id) ' .
+                        'JOIN external_db edb USING (external_db_id) ' .
+                        'LEFT JOIN interpro i ON xr.dbprimary_acc = i.interpro_ac ' .
+                        'WHERE edb.db_name = "Interpro" ' .
+                        'AND i.interpro_ac IS NULL ',
+                    'DELETE x.* FROM xref x ' .
+                        'INNER JOIN external_db edb USING (external_db_id) ' .
+                        'LEFT OUTER JOIN interpro i ON x.dbprimary_acc = i.interpro_ac ' .
+                        'WHERE edb.db_name = "Interpro" ' .
+                        'AND i.interpro_ac IS NULL ',
+                ]
+            },
+            -flow_into         => {
+                '1->A' => [ 'SpeciesFactory' ],
+                'A->1' => [ 'StoreGoXrefs' ],
+            },
+            -rc_name           => '8GB_D',
+        },
 
-        # {
-        #   -logic_name        => 'SpeciesFactory',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
-        #   -max_retry_count   => 1,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {},
-        #   -flow_into         => {
-        #                           '2' => ['StoreSegFeatures', 'StoreProteinFeatures'],
-        #                         },
-        #   -rc_name           => '4GB_D',
+        {
+          -logic_name        => 'SpeciesFactory',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbAwareSpeciesFactory',
+          -max_retry_count   => 1,
+          -analysis_capacity => 20,
+          -parameters        => {},
+          -flow_into         => {
+                                  '2' => ['StoreSegFeatures', 'StoreProteinFeatures'],
+                                },
+          -rc_name           => '4GB_D',
 
-        # },
-        # {
-        #   -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
-        #   -max_retry_count   => 0,
-        #   -analysis_capacity => 20,
-        #   -parameters        => {
-        #                           proteome_dir => catdir('#pipeline_dir#', '#species#'),
-        #                           header_style => 'dbID',
-        #                           overwrite => 0,
-        #                           skip_dump =>1, # skip the protein dumps , they are already ran in the Runinterpro pipeline
-        #                         },
-        #   -flow_into         => {
-        #                           '1->A'  => ['ChecksumProteinsMVP'],
-        #                           'A->1'  => ['FetchInterProAndSegFiles'],
-        #                         },
-        #   -rc_name           => '16GB_D',
-        # },
-        # {
-        #   -logic_name        => 'ChecksumProteinsMVP',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
-        #   -analysis_capacity => 50,
-        #   -max_retry_count   => 0,
-        #   -parameters        => {
-        #                           fasta_file         => '#proteome_file#',
-        #                           uniparc_xrefs      => 1, # load uniparc xrefs
-        #                           uniprot_xrefs      => 1, # load uniprot xrefs
-        #                           uniparc_logic_name => $self->o('uniparc_logic_name'),
-        #                           uniprot_logic_name => $self->o('uniprot_logic_name'),
-        #                         },
-        #   -rc_name           => '8GB_D',
-        # },
-        # {
-        #     -logic_name      => 'FetchInterProAndSegFiles',
-        #     -module          => 'ensembl.production.hive.FetchInterProAndSegFiles',
-        #     -language        => 'python3',
-        #     -max_retry_count => 1,
-        #     -analysis_capacity => 1,
-        #     -batch_size        => 20,
-        #     -max_retry_count   => 1,
-        #     -parameters        => {
-        #                             proteome_fasta  => '#proteome_file#',
-        #                           },
-        #     -flow_into         => {
-        #                              '2'  => ['StoreProteinFeatures'],
-        #                              '3'  => ['StoreSegFeatures'],
-        #                           },
-        #     -rc_name           => '32GB_W',
-        # },
-        # {
-        #     -logic_name        => 'StoreSegFeatures',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreSegFeatures',
-        #     -analysis_capacity => 1,
-        #     -batch_size        => 100,
-        #     -max_retry_count   => 1,
-        #     -parameters        => {
-        #         logic_name   => 'seg',
-        #         seg_out_file => '#split_file#.seg.txt',
-        #     },
-        #     -rc_name           => '32GB_W',
-        # },
-        # {
-        #   -logic_name        => 'StoreProteinFeatures',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
-        #   -analysis_capacity => 10,
-        #   -batch_size        => 50,
-        #   -max_retry_count   => 1,
-        #   -parameters        => {
-        #                           analyses => $self->o('protein_feature_analyses')
-        #                         },
-        #   -rc_name           => '8GB_D',
-        #   -flow_into         => {
-        #                           '-1' => ['StoreProteinFeatures_HighMem'],
-        #                         },
-        # },
-        # {
-        #   -logic_name        => 'StoreProteinFeatures_HighMem',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
-        #   -analysis_capacity => 10,
-        #   -batch_size        => 50,
-        #   -max_retry_count   => 1,
-        #   -parameters        => {
-        #                           analyses => $self->o('protein_feature_analyses')
-        #                         },
-        #   -rc_name           => '32GB_D',
-        # },
-        # {
-        #   -logic_name        => 'StoreGoXrefs',
-        #   -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreGoXrefs',
-        #   -analysis_capacity => 10,
-        #   -max_retry_count   => 1,
-        #   -parameters        => {
-        #                           interpro2go_file => $self->o('interpro2go_file_local'),
-        #                           logic_name       => $self->o('interpro2go_logic_name')
-        #                         },
-        #   -rc_name           => '4GB_D',
-        #   -flow_into         => ['StoreInterProXrefs'],
-        # },
-        # {
-        #     -logic_name        => 'StoreInterProXrefs',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
-        #     -analysis_capacity => 10,
-        #     -max_retry_count   => 1,
-        #     -parameters        => {
-        #         sql =>
-        #             [
-        #                 'CREATE TEMPORARY TABLE tmp_xref (acc VARCHAR(255), description VARCHAR(255))',
-        #                 "LOAD DATA LOCAL INFILE '" . $self->o('interpro_file_local') . "' INTO TABLE tmp_xref",
-        #                 'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type) SELECT external_db_id, acc, acc, 0, tmp_xref.description, "DIRECT" FROM tmp_xref, external_db WHERE db_name = "Interpro"',
-        #                 'DROP TEMPORARY TABLE tmp_xref',
-        #             ],
-        #     },
-        #     -rc_name           => '4GB_D',
-        # },
-        # {
-        #   -logic_name        => 'RunDatachecks',
-        #   -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
-        #   -analysis_capacity => 10,
-        #   -max_retry_count   => 1,
-        #   -parameters        => {
-        #                           datacheck_names  => ['ForeignKeys', 'PepstatsAttributes'],
-        #                           datacheck_groups => ['protein_features'],
-        #                           config_file      => $self->o('config_file'),
-        #                           history_file     => $self->o('history_file'),
-        #                           failures_fatal   => 1,
-        #                         },
-        #   -rc_name           => '8GB_D',
-        #   -flow_into         => WHEN('#email_report#' => ['EmailReport']),
-        # },
-        # {
-        #     -logic_name        => 'EmailReport',
-        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
-        #     -analysis_capacity => 10,
-        #     -max_retry_count   => 1,
-        #     -parameters        => {
-        #         email   => $self->o('email'),
-        #         subject => 'Protein features pipeline: report for #dbname#',
-        #     },
-        #     -rc_name           => '2GB_D',
-        # },
+        },
+        {
+          -logic_name        => 'DumpProteome',   #chage the proteome_dir to the  standard location 
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DumpProteome',
+          -max_retry_count   => 0,
+          -analysis_capacity => 20,
+          -parameters        => {
+                                  proteome_dir => catdir('#pipeline_dir#', '#species#'),
+                                  header_style => 'dbID',
+                                  overwrite => 0,
+                                  skip_dump =>1, # skip the protein dumps , they are already ran in the Runinterpro pipeline
+                                },
+          -flow_into         => {
+                                  '1->A'  => ['ChecksumProteinsMVP'],
+                                  'A->1'  => ['FetchInterProAndSegFiles'],
+                                },
+          -rc_name           => '16GB_D',
+        },
+        {
+          -logic_name        => 'ChecksumProteinsMVP',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::ChecksumProteinsMVP',
+          -analysis_capacity => 50,
+          -max_retry_count   => 0,
+          -parameters        => {
+                                  fasta_file         => '#proteome_file#',
+                                  uniparc_xrefs      => 1, # load uniparc xrefs
+                                  uniprot_xrefs      => 1, # load uniprot xrefs
+                                  uniparc_logic_name => $self->o('uniparc_logic_name'),
+                                  uniprot_logic_name => $self->o('uniprot_logic_name'),
+                                },
+          -rc_name           => '8GB_D',
+        },
+        {
+            -logic_name      => 'FetchInterProAndSegFiles',
+            -module          => 'ensembl.production.hive.FetchInterProAndSegFiles',
+            -language        => 'python3',
+            -max_retry_count => 1,
+            -analysis_capacity => 1,
+            -batch_size        => 20,
+            -max_retry_count   => 1,
+            -parameters        => {
+                                    proteome_fasta  => '#proteome_file#',
+                                  },
+            -flow_into         => {
+                                     '2'  => ['StoreProteinFeatures'],
+                                     '3'  => ['StoreSegFeatures'],
+                                  },
+            -rc_name           => '32GB_W',
+        },
+        {
+            -logic_name        => 'StoreSegFeatures',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreSegFeatures',
+            -analysis_capacity => 1,
+            -batch_size        => 100,
+            -max_retry_count   => 1,
+            -parameters        => {
+                logic_name   => 'seg',
+                seg_out_file => '#split_file#.seg.txt',
+            },
+            -rc_name           => '32GB_W',
+        },
+        {
+          -logic_name        => 'StoreProteinFeatures',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
+          -analysis_capacity => 10,
+          -batch_size        => 50,
+          -max_retry_count   => 1,
+          -parameters        => {
+                                  analyses => $self->o('protein_feature_analyses')
+                                },
+          -rc_name           => '8GB_D',
+          -flow_into         => {
+                                  '-1' => ['StoreProteinFeatures_HighMem'],
+                                },
+        },
+        {
+          -logic_name        => 'StoreProteinFeatures_HighMem',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
+          -analysis_capacity => 10,
+          -batch_size        => 50,
+          -max_retry_count   => 1,
+          -parameters        => {
+                                  analyses => $self->o('protein_feature_analyses')
+                                },
+          -rc_name           => '32GB_D',
+        },
+        {
+          -logic_name        => 'StoreGoXrefs',
+          -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreGoXrefs',
+          -analysis_capacity => 10,
+          -max_retry_count   => 1,
+          -parameters        => {
+                                  interpro2go_file => $self->o('interpro2go_file_local'),
+                                  logic_name       => $self->o('interpro2go_logic_name')
+                                },
+          -rc_name           => '4GB_D',
+          -flow_into         => ['StoreInterProXrefs'],
+        },
+        {
+            -logic_name        => 'StoreInterProXrefs',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::SqlCmd',
+            -analysis_capacity => 10,
+            -max_retry_count   => 1,
+            -parameters        => {
+                sql =>
+                    [
+                        'CREATE TEMPORARY TABLE tmp_xref (acc VARCHAR(255), description VARCHAR(255))',
+                        "LOAD DATA LOCAL INFILE '" . $self->o('interpro_file_local') . "' INTO TABLE tmp_xref",
+                        'INSERT IGNORE INTO xref (external_db_id, dbprimary_acc, display_label, version, description, info_type) SELECT external_db_id, acc, acc, 0, tmp_xref.description, "DIRECT" FROM tmp_xref, external_db WHERE db_name = "Interpro"',
+                        'DROP TEMPORARY TABLE tmp_xref',
+                    ],
+            },
+            -rc_name           => '4GB_D',
+        },
+        {
+          -logic_name        => 'RunDatachecks',
+          -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
+          -analysis_capacity => 10,
+          -max_retry_count   => 1,
+          -parameters        => {
+                                  datacheck_names  => ['ForeignKeys', 'PepstatsAttributes'],
+                                  datacheck_groups => ['protein_features'],
+                                  config_file      => $self->o('config_file'),
+                                  history_file     => $self->o('history_file'),
+                                  failures_fatal   => 1,
+                                },
+          -rc_name           => '8GB_D',
+          -flow_into         => WHEN('#email_report#' => ['EmailReport']),
+        },
+        {
+            -logic_name        => 'EmailReport',
+            -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
+            -analysis_capacity => 10,
+            -max_retry_count   => 1,
+            -parameters        => {
+                email   => $self->o('email'),
+                subject => 'Protein features pipeline: report for #dbname#',
+            },
+            -rc_name           => '2GB_D',
+        },
         {
           -logic_name        => 'TidyScratch',
           -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
