@@ -512,7 +512,7 @@ sub pipeline_analyses {
                                 },
           -flow_into         => {
                                   '1->A'  => ['ChecksumProteinsMVP'],
-                                  'A->1'  => ['SplitProteomeFile'],
+                                  'A->1'  => ['FetchInterProAndSegFiles'],
                                 },
           -rc_name           => '16GB_D',
         },
@@ -559,8 +559,6 @@ sub pipeline_analyses {
             },
             -rc_name           => '32GB_W',
         },
-
-
         {
           -logic_name        => 'StoreProteinFeatures',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
@@ -575,7 +573,6 @@ sub pipeline_analyses {
                                   '-1' => ['StoreProteinFeatures_HighMem'],
                                 },
         },
-    
         {
           -logic_name        => 'StoreProteinFeatures_HighMem',
           -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::StoreProteinFeatures',
@@ -615,7 +612,6 @@ sub pipeline_analyses {
             },
             -rc_name           => '4GB_D',
         },
-
         {
           -logic_name        => 'RunDatachecks',
           -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
@@ -631,7 +627,6 @@ sub pipeline_analyses {
           -rc_name           => '8GB_D',
           -flow_into         => WHEN('#email_report#' => ['EmailReport']),
         },
-
         {
             -logic_name        => 'EmailReport',
             -module            => 'Bio::EnsEMBL::Production::Pipeline::ProteinFeatures::EmailReport',
@@ -643,25 +638,15 @@ sub pipeline_analyses {
             },
             -rc_name           => '2GB_D',
         },
-
         {
           -logic_name        => 'TidyScratch',
           -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
           -max_retry_count   => 1,
           -parameters        => {
-                                  cmd => 'rm -rf #scratch_dir# && rm -rf #pipeline_dir# ',
+                                  cmd => 'rm -rf #scratch_dir# ',
                                 },
           -flow_into  => 'CleanTables',
           -rc_name           => '8GB_D',
-        },
-
-        {
-            -logic_name => 'CleanTables',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-            -parameters => {
-                sql => 'DROP table IF EXISTS uniparc; DROP table IF EXISTS uniprot;',
-            },
-            -rc_name           => '8GB_D',
         },
 
     ];
