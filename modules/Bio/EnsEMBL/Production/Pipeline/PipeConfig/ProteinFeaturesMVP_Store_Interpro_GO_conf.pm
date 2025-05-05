@@ -359,8 +359,8 @@ sub pipeline_analyses {
             -module          => 'Bio::EnsEMBL::Hive::RunnableDB::Dummy',
             -max_retry_count => 0,
             -flow_into       => {
-                '1->A' => [ 'DbFactory' ],
-                'A->1' => [ 'TidyScratch' ],
+                '1' => [ 'DbFactory' ],
+                # 'A->1' => [ 'TidyScratch' ],
             },
             -rc_name           => '1GB_D',
         },
@@ -638,16 +638,16 @@ sub pipeline_analyses {
         #     },
         #     -rc_name           => '2GB_D',
         # },
-        {
-          -logic_name        => 'TidyScratch',
-          -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-          -max_retry_count   => 1,
-          -parameters        => {
-                                  cmd => 'rm -rf #scratch_dir# ',
-                                },
-          -flow_into  => 'CleanTables',
-          -rc_name           => '8GB_D',
-        },
+        # {
+        #   -logic_name        => 'TidyScratch',
+        #   -module            => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+        #   -max_retry_count   => 1,
+        #   -parameters        => {
+        #                           cmd => 'rm -rf #scratch_dir# ',
+        #                         },
+        #   -flow_into  => 'CleanTables',
+        #   -rc_name           => '8GB_D',
+        # },
 
     ];
 }
