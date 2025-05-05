@@ -494,7 +494,7 @@ sub pipeline_analyses {
           -analysis_capacity => 20,
           -parameters        => {},
           -flow_into         => {
-                                  '2' => ['StoreSegFeatures', 'StoreProteinFeatures'],
+                                  '2' => ['DumpProteome'],
                                 },
           -rc_name           => '4GB_D',
 
