@@ -13,12 +13,12 @@
 # limitations under the License.
 
 __all__ = ['GFFService']
-from pyspark.sql.types import StringType, BooleanType, IntegerType
+from pyspark.sql.types import StringType, BooleanType, DecimalType
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
 import warnings
-from pyspark.sql.functions import udf, col, row_number, substring
+from pyspark.sql.functions import udf, col, row_number, substring, format_number
 from pyspark.sql.window import Window
 from typing import Optional
 import os
@@ -547,7 +547,7 @@ class GFFService():
                                     on = "transcript_id", how = "left")\
                                 .join(translation_attrib_seleno.select("translation_id", "seleno"),\
                                  on = [transcripts.canonical_translation_id == translation_attrib_seleno.translation_id], how = "left").drop("translation_id")
-                                                                                      
+                                                                      
         transcripts = transcripts\
                 .withColumn("type", construct_type(lit("transcript"), "so_term"))\
                 .withColumn("score", lit("."))\
@@ -813,7 +813,55 @@ class GFFService():
        # os.rmdir(tmp_fp + "_regions")
 
         return
-    
+    def get_seleno(self, seleno_feat, exons) -> None:
+
+                # Join attribs
+        @udf(returnType=StringType())
+        def pep_to_exon(coordinate_on_pep, exons, strand):
+
+            exons = exons.split(" ")
+            coordinate_on_pep = int(coordinate_on_pep)*3
+            exon = 0
+            coord = 0
+            current_pep_length = 0
+            for exon in exons:
+                exon = exon.split(":")
+                exon_length = int(exon[0])
+                exon_id = exon[1]
+                if (coordinate_on_pep < current_pep_length + exon_length):
+                    exon = exon_id
+                    coord = coordinate_on_pep - current_pep_length
+                    break
+                current_pep_length = current_pep_length + exon_length
+            return str(exon)+ ":" + str(coord)
+        
+        @udf(returnType=StringType())
+        def split_column(string, sep, i):
+            i = int(i)
+            value = string.split(sep)[i]
+            return value
+ 
+        seleno_feat = seleno_feat.withColumn("seleno_pep_start", split_column(seleno_feat.seleno, lit(" "), lit(0)))
+        seleno_feat = seleno_feat.withColumn("seleno_pep_end", split_column(seleno_feat.seleno, lit(" "), lit(1)))
+        #First and last exons must bee adjusted start and length due to translation
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon(seleno_feat.seleno_pep_start-1, "length", "seq_region_strand"))
+        seleno_feat.show(7, False)
+        seleno_feat = seleno_feat.withColumn("seleno_region_end", pep_to_exon("seleno_pep_end", "length", "seq_region_strand"))
+        #Need to get start/end exon ids for exons join
+        seleno_feat = seleno_feat.withColumn("seleno_start_exon",  split_column(seleno_feat.seleno_region_start, lit(":"), lit("0")))
+        seleno_feat = seleno_feat.withColumn("seleno_end_exon", split_column(seleno_feat.seleno_region_end, lit(":"), lit("0")))
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", split_column(seleno_feat.seleno_region_start, lit(":"), lit("1")))
+        seleno_feat = seleno_feat.withColumn("seleno_region_end", split_column(seleno_feat.seleno_region_end, lit(":"), lit("1")))
+        exons_seleno = exons.select("exon_id", "seq_region_start", "seq_region_end")\
+            .withColumnRenamed("seq_region_start", "exon_region_start")\
+            .withColumnRenamed("seq_region_end", "exon_region_end")
+        seleno_feat = seleno_feat.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat.seleno_start_exon])
+        seleno_feat = seleno_feat.withColumn("seq_region_start", seleno_feat.exon_region_start + seleno_feat.seleno_region_start)
+        seleno_feat = seleno_feat.drop("exon_region_start", "exon_region_end", "exon_id")
+        seleno_feat = seleno_feat.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat.seleno_end_exon])
+        seleno_feat = seleno_feat.withColumn("seq_region_start", (seleno_feat.exon_region_end + seleno_feat.seleno_region_end).cast(DecimalType(18, 0)))
+        seleno_feat.show(7, False)
+        return seleno_feat
     def get_stop_codons(self, cds, sequence) -> None:
         cds = cds.filter("type=\"CDS\"")
         
@@ -884,9 +932,6 @@ class GFFService():
                   .select("transcript_stable_id", "start_exon_id", "sequence"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == start_exon_id")
-        print("start CODDDDOOOONS")
-       
-        start_codons.filter("transcript_stable_id=\"ENSABMT00000000017\"").show(2, False)
 
         start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "!").drop("sequence")
         small_cds = start_codons.filter(start_codons.length < 2)
@@ -951,7 +996,7 @@ class GFFService():
         if (sequence is None):
             return 1
         sequence = self._spark.read.orc(sequence)
-
+        
         [genes, transcripts, exons, cds, assembly_df, regions] = features
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
@@ -1230,9 +1275,6 @@ class GFFService():
                                                                 "canonical", "gene_name", "seleno"))
         exons = exons.withColumn("feature_type", lit("exon"))
 
-        exons = exons.select("name", "source", "feature_type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
         cds = cds.join(transcripts.select("canonical",
                                               "basic",
                                               "mane_select",
@@ -1257,7 +1299,13 @@ class GFFService():
         stop_codons = stop_codons.withColumn("feature_type", lit("stop_codon"))
         start_codons = self.get_start_codons(cds, sequence)
         start_codons = start_codons.withColumn("feature_type", lit("start_codon"))
-
+        seleno_feat = transcripts.join(sequence.select("transcript_id", "length"), on = ["transcript_id"]).filter("seleno is not null")
+        seleno = self.get_seleno(seleno_feat, exons)
+        seleno = seleno.withColumn("feature_type", lit("Selenocysteine"))
+        
+        exons = exons.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
         start_codons = start_codons.withColumn("attributes", joinColumnsStartCodon("exon_stable_id",\
                                                 "version",\
                                                 "rank",\
