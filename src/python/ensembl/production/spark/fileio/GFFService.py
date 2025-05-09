@@ -23,6 +23,7 @@ from pyspark.sql.window import Window
 from typing import Optional
 import os
 from pyspark.sql.functions import lit
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 
 
 class GFFService():
@@ -815,9 +816,9 @@ class GFFService():
         return
     def get_seleno(self, seleno_feat, cds) -> None:
 
-                # Join attribs
+        # Join attribs
         @udf(returnType=StringType())
-        def pep_to_exon(coordinate_on_pep, exons, strand):
+        def pep_to_exon(coordinate_on_pep, exons):
 
             exons = exons.split(" ")
             coordinate_on_pep = int(coordinate_on_pep)*3
@@ -844,6 +845,11 @@ class GFFService():
             value = string.split(sep)[i]
             return value
         cds = cds.join(seleno_feat.select("transcript_stable_id"), on = ["transcript_stable_id"], how = "right")
+        file_service = FileSystemSparkService(self._spark)
+        cds = file_service.write_df_to_orc(cds, "cds", "./")
+        seleno_feat = seleno_feat.drop("seq_region_id")
+        seleno_feat = file_service.write_df_to_orc(seleno_feat, "seleno_feat", "./")
+
         cds_df_tmp = cds.sort("transcript_stable_id", "rank", ascending=[True, True])
         cds_df_tmp = cds_df_tmp.withColumn("length",\
                                        calc_length("seq_region_start",\
@@ -861,9 +867,9 @@ class GFFService():
         seleno_feat = seleno_feat.withColumn("seleno_pep_end", split_column(seleno_feat.seleno, lit(" "), lit(1)))
         #First and last exons must bee adjusted start and length due to translation
         
-        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon("seleno_pep_start", "length", "seq_region_strand"))
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon("seleno_pep_start", "length"))
        
-        seleno_feat = seleno_feat.withColumn("seleno_region_end", pep_to_exon("seleno_pep_end", "length", "seq_region_strand"))
+        seleno_feat = seleno_feat.withColumn("seleno_region_end", pep_to_exon("seleno_pep_end", "length"))
         #Here all goes right
         seleno_feat = seleno_feat.withColumn("seleno_start_exon",  split_column(seleno_feat.seleno_region_start, lit(":"), lit("0")))
         seleno_feat = seleno_feat.withColumn("seleno_end_exon", split_column(seleno_feat.seleno_region_end, lit(":"), lit("0")))
@@ -872,11 +878,23 @@ class GFFService():
         exons_seleno = cds.select("exon_id", "seq_region_start", "seq_region_end")\
             .withColumnRenamed("seq_region_start", "exon_region_start")\
             .withColumnRenamed("seq_region_end", "exon_region_end")
-        seleno_feat = seleno_feat.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat.seleno_start_exon])
-        seleno_feat = seleno_feat.withColumn("seq_region_start", seleno_feat.exon_region_start + seleno_feat.seleno_region_start.cast(DecimalType(18, 0)))
-        seleno_feat = seleno_feat.drop("exon_region_start", "exon_region_end", "exon_id")
-        seleno_feat = seleno_feat.join(exons_seleno.select("exon_id", "exon_region_start"), on = [exons_seleno.exon_id == seleno_feat.seleno_end_exon])
-        seleno_feat = seleno_feat.withColumn("seq_region_end", (seleno_feat.exon_region_start + seleno_feat.seleno_region_end-1).cast(DecimalType(18, 0)) )
+        
+        
+        seleno_feat_pos = seleno_feat.filter("seq_region_strand > 0")
+        seleno_feat_pos = seleno_feat_pos.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat_pos.seleno_start_exon])
+        seleno_feat_pos = seleno_feat_pos.withColumn("seq_region_start", seleno_feat_pos.exon_region_start + seleno_feat_pos.seleno_region_start.cast(DecimalType(18, 0)))
+        seleno_feat_pos = seleno_feat_pos.drop("exon_region_start", "exon_region_end", "exon_id")
+        seleno_feat_pos = seleno_feat_pos.join(exons_seleno.select("exon_id", "exon_region_start"), on = [exons_seleno.exon_id == seleno_feat_pos.seleno_end_exon])
+        seleno_feat_pos = seleno_feat_pos.withColumn("seq_region_end", (seleno_feat_pos.exon_region_start + seleno_feat_pos.seleno_region_end-1).cast(DecimalType(18, 0)) )
+        
+        seleno_feat_neg = seleno_feat.filter("seq_region_strand < 0")
+        seleno_feat_neg =seleno_feat_neg.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat_neg.seleno_start_exon])
+        seleno_feat_neg = seleno_feat_neg.withColumn("seq_region_end", seleno_feat_neg.exon_region_end - seleno_feat_neg.seleno_region_start.cast(DecimalType(18, 0)))
+        seleno_feat_neg = seleno_feat_neg.drop("exon_region_start", "exon_region_end", "exon_id")
+        seleno_feat_neg = seleno_feat_neg.join(exons_seleno.select("exon_id", "exon_region_end"), on = [exons_seleno.exon_id == seleno_feat_neg.seleno_end_exon])
+        seleno_feat_neg = seleno_feat_neg.withColumn("seq_region_start", (seleno_feat_neg.exon_region_end - seleno_feat_neg.seleno_region_end+1).cast(DecimalType(18, 0)) )
+
+        seleno_feat = seleno_feat_pos.union(seleno_feat_neg)
         seleno_feat.show(8, False)
 
         return seleno_feat
