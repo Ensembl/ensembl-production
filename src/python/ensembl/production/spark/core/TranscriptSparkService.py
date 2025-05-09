@@ -346,7 +346,7 @@ class TranscriptSparkService:
             exons_df_tmp = exons_df_tmp.sort("transcript_id", "rank", ascending=[True, True])
             exons_df_tmp = exons_df_tmp.withColumn("length",\
                                        calc_length("seq_region_start",\
-                                                   "seq_region_end", "exon_id"))\
+                                                   "seq_region_end", "exon_id"))
 
             #print(region + " " + str(count))
             #Mark translation start and end
