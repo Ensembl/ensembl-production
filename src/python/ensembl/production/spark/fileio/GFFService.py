@@ -861,7 +861,7 @@ class GFFService():
         seleno_feat = seleno_feat.withColumn("seleno_pep_end", split_column(seleno_feat.seleno, lit(" "), lit(1)))
         #First and last exons must bee adjusted start and length due to translation
         
-        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon(seleno_feat.seleno_pep_start, "length", "seq_region_strand"))
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon("seleno_pep_start", "length", "seq_region_strand"))
        
         seleno_feat = seleno_feat.withColumn("seleno_region_end", pep_to_exon("seleno_pep_end", "length", "seq_region_strand"))
         #Here all goes right
@@ -874,11 +874,10 @@ class GFFService():
             .withColumnRenamed("seq_region_end", "exon_region_end")
         seleno_feat = seleno_feat.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat.seleno_start_exon])
         seleno_feat = seleno_feat.withColumn("seq_region_start", seleno_feat.exon_region_start + seleno_feat.seleno_region_start.cast(DecimalType(18, 0)))
-        seleno_feat.filter("transcript_stable_id=\"ENSABMT00000052455\"").show(1, False)
         seleno_feat = seleno_feat.drop("exon_region_start", "exon_region_end", "exon_id")
-        seleno_feat = seleno_feat.join(exons_seleno.select("exon_id", "exon_region_end"), on = [exons_seleno.exon_id == seleno_feat.seleno_end_exon])
-        seleno_feat = seleno_feat.withColumn("seq_region_end", (seleno_feat.exon_region_end + seleno_feat.seleno_region_end).cast(DecimalType(18, 0)))
-        seleno_feat.filter("transcript_stable_id=\"ENSABMT00000052455\"").show(1, False)
+        seleno_feat = seleno_feat.join(exons_seleno.select("exon_id", "exon_region_start"), on = [exons_seleno.exon_id == seleno_feat.seleno_end_exon])
+        seleno_feat = seleno_feat.withColumn("seq_region_end", (seleno_feat.exon_region_start + seleno_feat.seleno_region_end-1).cast(DecimalType(18, 0)) )
+        seleno_feat.show(8, False)
 
         return seleno_feat
     def get_stop_codons(self, cds, sequence) -> None:
