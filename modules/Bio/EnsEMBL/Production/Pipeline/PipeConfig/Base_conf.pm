@@ -57,7 +57,7 @@ sub default_options {
         'dataset_uuid' => [],
         'division' => [],
         'dataset_status' => 'Submitted',
-        'organism_group_type' => 'DIVISION',
+        'organism_group_type' => '',
         'species' => [],
         'antispecies' => [],
         'batch_size' => 50,

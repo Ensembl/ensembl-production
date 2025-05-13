@@ -36,6 +36,9 @@ class HiveGenomeFactory(eHive.BaseRunnable):
         if not self.param_is_defined('batch_size'):
             self.param('batch_size', 0)
         
+        if not self.param_is_defined('release_id'):
+            self.param('release_id', 0)
+        
         if self.param('species') is None or not isinstance(self.param('species'), list):
             self.param('species', [])
 
@@ -51,7 +54,7 @@ class HiveGenomeFactory(eHive.BaseRunnable):
                 or self.param('update_dataset_status') not in ['Submitted',
                                                                'Processing',
                                                                'Processed',
-                                                               'Released']:
+                                                               ]:
 
             raise KeyError("""Missing Required Param update_dataset_status or 
                             Param update_dataset_status is not a type string""")
@@ -69,6 +72,7 @@ class HiveGenomeFactory(eHive.BaseRunnable):
             organism_group_type=self.param('organism_group_type'),
             species=self.param('species'),
             antispecies=self.param('antispecies'),
+            release_id=self.param('release_id'),
             batch_size=self.param('batch_size'),
         )
 
@@ -76,11 +80,15 @@ class HiveGenomeFactory(eHive.BaseRunnable):
         all_info = []
         fetched_genome_info = list(fetched_genomes)
         
+        if not len(fetched_genome_info):
+            raise ValueError("No genome information found for the given parameters")
+        
         if  self.param('species') and len(self.param('species')) and len(self.param('species')) != len(fetched_genome_info):
             raise ValueError(f"Species list {self.param('species')} is not equal to the number of species {len(fetched_genome_info)}")
         
         if self.param('genome_uuid') and len(self.param('genome_uuid')) and len(self.param('genome_uuid')) != len(fetched_genome_info):
             raise ValueError(f"Genome UUID list {self.param('genome_uuid')} is not equal to the number of species {len(fetched_genome_info)}")
+
 
 
         for genome_info in fetched_genome_info:
