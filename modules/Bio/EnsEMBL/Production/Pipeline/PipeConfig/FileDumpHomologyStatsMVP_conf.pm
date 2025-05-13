@@ -217,15 +217,6 @@ sub pipeline_analyses {
             -analysis_capacity => 10,
             -batch_size        => 10,
         },
-        {
-            -logic_name => 'UpdateDatasetAttribute',
-            -module     => 'ensembl.production.hive.HiveDatasetFactory',
-            -language   => 'python3',
-            -rc_name    => 'default',
-            -parameters => {
-                'metadata_db_uri' => $self->o('metadata_db_uri'),
-            },
-        },
     ];
 }
 
