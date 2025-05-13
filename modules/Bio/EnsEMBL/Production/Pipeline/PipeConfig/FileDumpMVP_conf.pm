@@ -186,51 +186,8 @@ sub pipeline_analyses {
                 '2' => [
                     'GenomeDirectoryPaths',
                     'GenesetDirectoryPaths',
-                    'HomologyDirectoryPaths',
                 ],
             },
-        },
-        {
-            -logic_name        => 'HomologyDirectoryPaths',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::FileDump::DirectoryPaths',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                analysis_types  => $self->o('homology_types'),
-                data_category   => 'homology',
-                species_dirname => $self->o('species_dirname')
-            },
-            -flow_into         => {
-                '3->A' => 'Homologies_TSV',
-                'A->3' => [ 'Checksum' ]
-            }
-        },
-        {
-            -logic_name        => 'Homologies_TSV',
-            -module            => 'Bio::EnsEMBL::Compara::RunnableDB::HomologyAnnotation::DumpSpeciesDBToTsv',
-            -max_retry_count   => 1,
-            -analysis_capacity => 20,
-            -parameters        => {
-                ref_dbname             => $self->o('ref_dbname'),
-                dump_homologies_script => $self->o('dump_homologies_script'),
-                per_species_db         => $self->o("compara_host_uri") . '#species#' . '_compara_' . $self->o('ens_version'),
-            },
-            -flow_into         => {
-                '2' => [
-                    'CompressHomologyTSV',
-                ],
-            }
-        },
-        {
-            -logic_name        => 'CompressHomologyTSV',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::Gzip',
-            -max_retry_count   => 1,
-            -analysis_capacity => 10,
-            -batch_size        => 10,
-            -parameters        => {
-                compress => "#filepath#"
-            },
-            -rc_name           => '1GB',
         },
         {
             -logic_name        => 'Checksum',
@@ -333,8 +290,6 @@ sub pipeline_analyses {
                 3 => [ 'Compress_File' ],
             },
         },
-
-
         {
             -logic_name      => 'Chromosome_TSV',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Chromosome_TSV',
@@ -346,7 +301,6 @@ sub pipeline_analyses {
                 '2' => [ 'Compress_File' ]
             },
         },
-
         {
             -logic_name      => 'Geneset_EMBL',
             -module          => 'Bio::EnsEMBL::Production::Pipeline::FileDump::Geneset_EMBL',
@@ -436,8 +390,6 @@ sub pipeline_analyses {
                 'A->1' => [ 'Compress_File' ],
             },
         },
-
-
         {
             -logic_name    => 'GFFbgzip',
             -module        => 'ensembl.production.hive.filedumps.GFFbgzip',
