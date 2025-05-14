@@ -111,7 +111,7 @@ sub load_file {
                      'PRINCIPAL:3'   => [ 'appris', 'principal3' ],
                      'PRINCIPAL:4'   => [ 'appris', 'principal4' ],
                      'PRINCIPAL:5'   => [ 'appris', 'principal5' ],
-                     'ALTERNATIVE:M' => [ 'appris', 'alternative1' ],
+                     'ALTERNATIVE:M' => [ 'appris', 'alternativeM' ],
                      'ALTERNATIVE:0' => [ 'appris', 'alternative1' ],
                      'ALTERNATIVE:1' => [ 'appris', 'alternative1' ],
                      'ALTERNATIVE:2' => [ 'appris', 'alternative2' ], };
