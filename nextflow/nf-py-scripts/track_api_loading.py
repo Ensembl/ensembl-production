@@ -59,7 +59,11 @@ class TrackUtils:
         if filename == "variant-details" or filename.endswith("-summary"):
             return
         # Exact match
+        logger.info(self.yaml_templates_list)
+        logger.info(filename)
         if filename in self.yaml_templates_list:
+            logger.info(filename)
+            logger.info("-------===============--------")
             track_payload = self.get_track_payload(template_name=filename)
             self.post_track(track_payload)
             return
@@ -85,6 +89,7 @@ class TrackUtils:
         if track_api_json["type"] == "gene":
             track_api_json.update(self.custom_gene_track_data)
         if track_api_json["type"] == "variant":
+            print(self.custom_variant_track_data)
             track_api_json.update(self.custom_variant_track_data)
         return track_api_json
 
@@ -144,13 +149,15 @@ class TrackUtils:
                             "source_names": line["Source_name"].split(","),
                             "source_urls": line["Source_URL"].split(","),
                         }
+                        print(variant_data_dict)
                         # Remove key, value if value is empty:
                         variant_data_dict = {
                             k: v for k, v in variant_data_dict.items() if v
                         }
-                        break
+                        
 
-                return variant_data_dict.get(self.genome_uuid, {})
+                        return variant_data_dict
+                return {}
         except FileNotFoundError:
             logger.error(
                 f"Error: track description CSV file not found in {variant_data_csv}"
