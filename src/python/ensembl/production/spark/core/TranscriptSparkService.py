@@ -232,7 +232,6 @@ class TranscriptSparkService:
 
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
-         translated_seq.show()
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, cds_start_nf, id, phase):
              

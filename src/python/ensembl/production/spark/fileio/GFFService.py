@@ -895,7 +895,6 @@ class GFFService():
         seleno_feat_neg = seleno_feat_neg.withColumn("seq_region_start", (seleno_feat_neg.exon_region_end - seleno_feat_neg.seleno_region_end+1).cast(DecimalType(18, 0)) )
 
         seleno_feat = seleno_feat_pos.union(seleno_feat_neg)
-        seleno_feat.show(8, False)
 
         return seleno_feat
     def get_stop_codons(self, cds, sequence) -> None:
@@ -1021,7 +1020,6 @@ class GFFService():
         
         start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
         start_codons = start_codons.drop("type")        
-        start_codons.filter("transcript_stable_id=\"ENSABMT00000000017\"").show(2, False)
         return start_codons
     
     def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:

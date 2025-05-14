@@ -34,7 +34,6 @@ parser = argparse.ArgumentParser(description='Fasta files dump')
 parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
-parser.add_argument('--dest', action="store", dest='dest', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 
 args = parser.parse_args()
@@ -42,9 +41,7 @@ args = parser.parse_args()
 pwd = args.password
 username = args.username
 url = args.db
-dest = args.dest
 base_dir = args.base_dir
-out_subfolder = url.split("/")[3]
 
 import os
 confi=SparkConf()
@@ -66,7 +63,7 @@ transcript_service = TranscriptSparkService(spark_session)
 # Genome fasta
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
 #The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
-fastaDf.write.orc(base_dir + "/" + out_subfolder, mode="overwrite")
+fastaDf.write.orc("sequence", mode="overwrite")
 #Get genes information
 genes = spark_session.read\
             .format("jdbc")\
@@ -100,7 +97,6 @@ csversion = spark_session.read\
 
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
-os.makedirs(os.path.dirname(dest + "/" + out_subfolder + "/"), exist_ok=True)
 
 #Unite pep header
 pep_fasta = pep_fasta\
@@ -124,9 +120,9 @@ pep_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv(out_subfolder + "/fasta_pep")
-file = glob.glob(out_subfolder + "/fasta_pep" + "/part-0000*")[0]
-shutil.copy(file, dest + "/" + out_subfolder + "/pep.fa")
+    .csv("./fasta_pep")
+file = glob.glob("./fasta_pep" + "/part-0000*")[0]
+shutil.copy(file, "pep.fa")
 
 #Unite header
 cdna_fasta = cdna_fasta\
@@ -149,9 +145,9 @@ cdna_fasta.repartition(1)\
     .mode('overwrite')\
     .option("header", False)\
     .option("delimiter", "\n")\
-    .csv(out_subfolder + "/fasta_cdna")
-file = glob.glob(out_subfolder + "/fasta_cdna"  + "/part-0000*")[0]
+    .csv("./fasta_cdna")
+file = glob.glob( "./fasta_cdna"  + "/part-0000*")[0]
 
-shutil.copy(file, dest + "/" + out_subfolder + "/cdna.fa")
+shutil.copy(file, "cdna.fa")
     
     
