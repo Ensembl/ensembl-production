@@ -19,7 +19,7 @@ process DumpFastaFiles {
   label 'mem20GB'
   tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}"
+  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
 
   input:
   each db_name

@@ -640,17 +640,17 @@ class GFFService():
             if canonical or basic or mane_select or mane_clinical:
                 result = result + "tag="
             if canonical:
-                result = result + "tag=Ensembl_canonical;"
+                result = result + "Ensembl_canonical;"
             if basic:
-                result = result + "tag=basic;"
+                result = result + "basic;"
             if mane_clinical:
-                result = result + "tag=mane_clinical;"
+                result = result + "mane_clinical;"
             if mane_select:
-                result = result + "tag=mane_select;"
+                result = result + "mane_select;"
             if feature_id:
-                result = result + "tag=transcript_id=" + feature_id + ";"
+                result = result + "transcript_id=" + feature_id + ";"
             if version:
-                result = result + "tag=version=" + str(version)
+                result = result + "version=" + str(version) 
 
 
             return result
@@ -780,7 +780,6 @@ class GFFService():
         # Find file in temp spark dir
         feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
         region_file = glob.glob(tmp_fp + "_regions/part-0000*")[0]
-        print(region_file)
         f = open(file_path, "a")
         #Write header
         f.write("##gff-version 3\n")

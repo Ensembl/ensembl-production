@@ -18,7 +18,8 @@ process DumpGFF3_GTFFiles {
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}"
+  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
+  tag "${db_name}-dump_gff_gtf"
 
   input: 
   each db_name
@@ -37,6 +38,5 @@ process DumpGFF3_GTFFiles {
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/dump_gff3_gtf.py --base_dir=${BASE_DIR}\
    --username ${params.user} --sequence ${sequence} --password ${params.password}  --db ${params.server}/${db_name}
-
   """
 }
