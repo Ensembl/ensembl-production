@@ -160,6 +160,7 @@ sub pipeline_analyses {
             -parameters      => {
                 metadata_uri   => $self->o('metadata_uri'),
             },
+            -analysis_capacity => 1,
             -rc_name           => '4GB_D'
         },
 
