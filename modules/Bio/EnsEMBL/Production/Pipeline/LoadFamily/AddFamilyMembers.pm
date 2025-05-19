@@ -112,7 +112,7 @@ sub run {
                                                                     $genome_db);
     my $existing_canonical;
     if (defined $gene_member) {
-      $existing_canonical = $seq_member_dba->fetch_by_dbID( $gene_member->canonical_member_id );
+      $existing_canonical = $seq_member_dba->fetch_by_dbID( $gene_member->canonical_member_id ) if defined $gene_member->canonical_member_id;
     } else {
       $gene_member =
         Bio::EnsEMBL::Compara::GeneMember->new_from_Gene(
