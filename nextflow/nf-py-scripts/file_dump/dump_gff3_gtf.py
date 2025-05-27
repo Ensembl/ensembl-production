@@ -29,17 +29,16 @@ parser = argparse.ArgumentParser(description='Fasta files dump')
 parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
-parser.add_argument('--dest', action="store", dest='dest', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
+parser.add_argument('--sequence', action="store", dest='sequence', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
 pwd = args.password
 username = args.username
 url = args.db
-dest = args.dest
 base_dir = args.base_dir
-out_subfolder = url.split("/")[3]
+sequence = args.sequence
 
 import os
 confi=SparkConf()
@@ -57,6 +56,8 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
+#GTF and GFF dumps should be placed together as they are sharing the same features dump
 gff_service = GFFService(spark_session)
-
-gff_service.dump_all_features(dest + "test_gff.gff", url, username, pwd)
+features = gff_service.dump_all_features(url, username, pwd)
+gff_service.write_gff("./test_gff.gff", features)
+gff_service.write_gtf("./test_gtf.gtf", features, sequence)

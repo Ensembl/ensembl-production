@@ -68,8 +68,9 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
 databases = "abramis_brama_gca022829085v1_core_110_1"
 division = channel.of(params.division.split(","))
 
-// Dump fasta files commented while testing gff
-Channel.of(databases) | /*DumpFastaFiles &*/ DumpGFF3_GTFFiles | view
+Channel.of(databases) \
+| DumpFastaFiles \
+| DumpGFF3_GTFFiles
   
 //clean the empty log files  
  

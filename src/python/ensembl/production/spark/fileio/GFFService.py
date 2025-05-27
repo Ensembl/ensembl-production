@@ -13,15 +13,18 @@
 # limitations under the License.
 
 __all__ = ['GFFService']
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, BooleanType, DecimalType
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pathlib import Path
 import glob
 import warnings
-from pyspark.sql.functions import udf
+from pyspark.sql.functions import udf, substring, concat_ws, expr, collect_list, sort_array
+from pyspark.sql.window import Window
 from typing import Optional
 import os
 from pyspark.sql.functions import lit
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
+
 
 class GFFService():
 
@@ -165,9 +168,9 @@ class GFFService():
             'gene': [],
             'transcript': [],
             'translation': []
-        };
+        }
 
-        empty = True;
+        empty = True
         #Create dataframes if any feature of a kind is found 
         if (len(exons) > 0):
             empty = False
@@ -277,11 +280,9 @@ class GFFService():
                                         on=[exons.stable_id ==
                                             exons_df.stable_id], how="inner")
         exon_transcript_df = exon_transcript_df.drop_duplicates(["exon_id"])
-        print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.join(self._transcripts.select("stable_id",
                                                          "transcript_id"),\
                                 on=[exon_transcript_df.transcript_stable_id == self._transcripts.stable_id])
-        print(str(exon_transcript_df.count()))
         exon_transcript_df = exon_transcript_df.select("exon_id", "transcript_id", "rank")
         exon_transcript_df.write.mode("append")\
                 .format("jdbc")\
@@ -386,13 +387,14 @@ class GFFService():
         if isinstance(gff_frame["translation"], list) == False: #If it is not df
             self.write_translations(gff_frame["translation"])
 
-    def dump_all_features (self, file_path, db, user, password) -> None:
+    def dump_all_features (self, db, user, password) -> None:
         
+        #Read all features from db
         self._regions = self._spark.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", db)\
-                .option("query","select s.*, syn.synonym as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id")\
+                .option("query","select s.*, group_concat(syn.synonym separator ', ')  as synonym from seq_region s left join seq_region_synonym syn on syn.seq_region_id=s.seq_region_id group by s.seq_region_id, s.name, s.length, s.coord_system_id")\
                 .option("user", user)\
                 .option("password", password)\
                 .load()
@@ -443,6 +445,16 @@ class GFFService():
                 .option("user", user)\
                 .option("password", password)\
                 .load()
+        
+        translation_attrib = self._spark.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", db)\
+                .option("dbtable","translation_attrib")\
+                .option("user", user)\
+                .option("password", password)\
+                .load()
+        
                 
         biotype_df = self._spark.read\
                 .format("jdbc")\
@@ -462,19 +474,118 @@ class GFFService():
                 .option("password", password)\
                 .load()
 
-        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
-        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
-        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
-        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.start_date")).collect()[0][3]
+        #To differ biotype name from seq_region name
         biotype_df = biotype_df.select("name", "object_type", "so_term").withColumnRenamed("name", "biotype_name")
         
-        tmp_fp = file_path + "_tpm"
-        
+        #Assembly name
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+
+        #Find transcript attributesrelated to transcript tags
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
+        translation_attrib_seleno=translation_attrib.filter("attrib_type_id=12").withColumnRenamed("value", "seleno")
         
+        #Type for transcripts and genes is by default feature type - if so_term is not defined. 
+        @udf(returnType=StringType())
+        def construct_type(type, so_term):
+            result = type
+            if(len(so_term)>1):
+                #Special type case
+                if so_term == "protein_coding_gene":
+                    so_term ="gene"
+                result = so_term
+            return result
+        
+        #Is transcript canonical
+        @udf(returnType=BooleanType())
+        def is_canonical(canonical, transcript_id):
+            return canonical == transcript_id
+        
+        regions = self._regions.select("name", "synonym", "length")\
+                    .withColumn("source", lit(assembly_name))\
+                    .withColumn("type", lit("region"))\
+                    .withColumn("seq_region_start", lit("1"))\
+                    .withColumnRenamed("length", "seq_region_end")\
+                    .withColumn("score", lit("."))\
+                    .withColumn("phase", lit("."))\
+                    .withColumn("seq_region_strand", lit("."))
 
+        genes = self._genes.join(self._regions.select("seq_region_id",
+                                                    "name"), on = "seq_region_id")\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._genes.biotype])\
+                            .drop("biotype_name")
+        
+        genes = genes\
+                .withColumn("type", construct_type(lit("gene"), "so_term"))\
+                .withColumn("score", lit("."))\
+                .withColumn("phase", lit("."))
+
+        transcripts = self._transcripts.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               [self._transcripts.seq_region_id ==
+                                self._regions.seq_region_id])\
+                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
+                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
+                            .drop("biotype_name")
+
+        transcripts = transcripts.withColumnRenamed("stable_id",
+                                                    "transcript_stable_id")
+
+        
+        transcripts = transcripts.join(self._genes.select("stable_id",\
+                                                          "gene_id", "canonical_transcript_id", "version", "biotype", "source")\
+                                                              .withColumnRenamed("version", "gene_version")\
+                                                              .withColumnRenamed("source", "gene_source")\
+                                                              .withColumnRenamed("biotype", "gene_biotype"),\
+                                       on="gene_id")\
+                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
+                                    on= "transcript_id", how = "left")\
+                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(translation_attrib_seleno.select("translation_id", "seleno"),\
+                                 on = [transcripts.canonical_translation_id == translation_attrib_seleno.translation_id], how = "left").drop("translation_id")
+                                                                      
+        transcripts = transcripts\
+                .withColumn("type", construct_type(lit("transcript"), "so_term"))\
+                .withColumn("score", lit("."))\
+                .withColumn("phase", lit("."))\
+                .withColumn("canonical", is_canonical("canonical_transcript_id", "transcript_id"))
+
+
+        exons = self._exons.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+
+        exons = exons.join(self._exon_transcript, on = ["exon_id"],
+                          how = "inner")
+        exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
+
+        exons = exons.join(self._transcripts.select("stable_id", "transcript_id", "source"),
+                                       on=["transcript_id"])
+
+        exons = exons\
+                .withColumn("type", lit("exon"))\
+                .withColumn("score", lit("."))\
+                .withColumn("phase", lit("."))
+
+        
+        transcript_service = TranscriptSparkService(self._spark)
+        cds = transcript_service.translatable_exons(db, user, password)
+        cds = cds.join(self._regions.select("seq_region_id",
+                                                    "name"), on =
+                               ["seq_region_id"], how="left")
+
+        cds = cds\
+                .withColumn("score", lit("."))
+        
+        return [genes, transcripts, exons, cds, assembly_df, regions]
+
+    def write_gff(self, file_path, features=None, db="", user="", password="") -> None:
+        
         # Join attribs
         @udf(returnType=StringType())
         def joinColumnsExon(feature_id, parent, version, rank, start_phase,
@@ -499,7 +610,9 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, parent, version, protein):
+        def joinColumnsCds(feature_id, parent, version, protein, typec):
+            if (typec != "CDS"):
+                return "Parent=transcript:" + parent
             result = ""
             if feature_id:
                 result = result + "ID=CDS:" + str(protein) + ";"
@@ -537,7 +650,7 @@ class GFFService():
             if feature_id:
                 result = result + "transcript_id=" + feature_id + ";"
             if version:
-                result = result + "version=" + str(version)
+                result = result + "version=" + str(version) 
 
 
             return result
@@ -571,6 +684,17 @@ class GFFService():
      
             return result
         
+        if (features is None):
+            features = self.dump_all_features(db, user, password)
+        
+        [genes, transcripts, exons, cds, assembly_df, regions] = features       
+         
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+        tmp_fp = assembly_name + "_gff"
+                
         # Strand
         @udf(returnType=StringType())
         def code_strand(strand):
@@ -579,102 +703,36 @@ class GFFService():
                 result = "-"
             return result
         
-        # Type
-        @udf(returnType=StringType())
-        def type(type, so_term):
-            result = "type"
-            if(len(so_term)>1):
-                if so_term == "protein_coding_gene":
-                    so_term ="gene"
-                result = so_term
-            return result
-        regions = self._regions.select("name", "synonym", "length")\
-                    .withColumn("source", lit(assembly_name))\
-                    .withColumn("type", lit("region"))\
-                    .withColumn("seq_region_start", self._regions.name)\
-                    .withColumnRenamed("length", "seq_region_end")\
-                    .withColumn("score", lit("."))\
-                    .withColumn("phase", lit("."))\
-                    .withColumn("seq_region_strand", lit("."))\
-                    .withColumn("attributes", joinColumnsRegion("name", "synonym"))
+        regions = regions.withColumn("attributes", joinColumnsRegion("name", "synonym"))
+                            
         regions = regions.select("name", "source", "type",\
                                        "seq_region_start", "seq_region_end",\
                                          "score", "seq_region_strand", "phase", "attributes")
-
-
-
-        genes = self._genes.join(self._regions.select("seq_region_id",
-                                                    "name"), on = "seq_region_id")\
-                            .join(biotype_df.filter(biotype_df["object_type"]=="gene").drop("object_type")\
-                                , on=[biotype_df.biotype_name==self._genes.biotype])\
-                            .drop("biotype_name")
-        
-
         genes = genes.withColumn("attributes",
                                  joinColumnsGene("stable_id",\
                                                        "version",\
                                                        "gene_name",\
                                                        "biotype",\
-                                                       "description"))\
-                .withColumn("type", type(lit("gene"), "so_term"))\
-                .withColumn("score", lit("."))\
-                .withColumn("phase", lit("."))
-
+                                                       "description"))
         genes = genes.select("name", "source", "type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
-        genes.filter("seq_region_start=10026080").show()
-        transcripts = self._transcripts.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               [self._transcripts.seq_region_id ==
-                                self._regions.seq_region_id])\
-                            .join(biotype_df.filter(biotype_df["object_type"]=="transcript").drop("object_type")\
-                                , on=[biotype_df.biotype_name==self._transcripts.biotype])\
-                            .drop("biotype_name")
-
-        transcripts = transcripts.withColumnRenamed("stable_id",
-                                                    "transcript_stable_id")
-    
-        transcripts = transcripts.join(self._genes.select("stable_id",
-                                                          "gene_id", "canonical_transcript_id"),
-                                       on="gene_id")\
-                                .join(transcript_attrib_basic.select("transcript_id", "basic"),\
-                                    on = "transcript_id", how = "left")\
-                                .join(transcript_attrib_mane_select.select("transcript_id", "mane_select"),\
-                                    on= "transcript_id", how = "left")\
-                                .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
-                                    on = "transcript_id", how = "left") 
-                                                                                      
-    
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        
         transcripts = transcripts.withColumn("attributes",
                                              joinColumnsTranscript("stable_id",
                                                                    "transcript_stable_id",
                                                                    "version",
                                                                    "biotype", 
-                                                                   "canonical_transcript_id",
+                                                                   "canonical",
                                                                    "basic",
                                                                    "mane_select",
-                                                                   "mane_clinical"))\
-                .withColumn("type", type(lit("transcript"), "so_term"))\
-                .withColumn("score", lit("."))\
-                .withColumn("phase", lit("."))
+                                                                   "mane_clinical"))
 
         transcripts = transcripts.select("name", "source", "type",
-                                       "seq_region_start", "seq_region_end",
-                                         "score", "seq_region_strand", "phase", "attributes")
-
-
-        exons = self._exons.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               ["seq_region_id"], how="left")
-
-        exons = exons.join(self._exon_transcript, on = ["exon_id"],
-                          how = "inner")
-        exons = exons.withColumnRenamed("stable_id", "exon_stable_id")
-
-        exons = exons.join(self._transcripts.select("stable_id", "transcript_id"),
-                                       on=["transcript_id"])
-
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        
+        
         exons = exons.withColumn("attributes",
                                              joinColumnsExon("exon_stable_id",\
                                                                    "stable_id",\
@@ -683,45 +741,34 @@ class GFFService():
                                                                   "phase",\
                                                                    "end_phase",\
                                                                 "is_constitutive",\
-                                                                 ))\
-                .withColumn("type", lit("exon"))\
-                .withColumn("score", lit("."))\
-                 .withColumn("source", lit("ensembl"))
-
+                                                                 ))
         exons = exons.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-
-        transcript_service = TranscriptSparkService(self._spark)
-        cds = transcript_service.translatable_exons(db, user, password)
-        cds = cds.join(self._regions.select("seq_region_id",
-                                                    "name"), on =
-                               ["seq_region_id"], how="left")
+        
         cds = cds.withColumn("attributes",
                                              joinColumnsCds("exon_stable_id",\
                                                                    "transcript_stable_id",\
                                                                    "version",\
-                                                                  "stable_id"
-                                                                 ))\
-                .withColumn("score", lit("."))\
-                .withColumn("source", lit("ensembl"))
+                                                                  "stable_id", "type"
+                                                                 ))
         cds = cds.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
 
 
-        combined_df = genes.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3"))
+        combined_df = genes.dropDuplicates().withColumn("priority", lit("3"))
         # Combined df append transcripts
-        combined_df = combined_df.union(transcripts.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
-        combined_df = combined_df.union(exons.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
-        combined_df = combined_df.union(cds.withColumn("seq_region_strand", code_strand("seq_region_strand")).withColumn("priority", lit("3")))
-        combined_df = combined_df.union(regions.withColumn("priority", lit("1"))) 
+        combined_df = combined_df.union(transcripts.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
+        combined_df = combined_df.union(regions.dropDuplicates().withColumn("priority", lit("1"))) 
         combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
-        head = "##sequence-region"
-        regions_header = self._regions.withColumn("prompt", lit(head)).withColumn("start", lit("1"))
-        regions_header = regions_header.select("prompt", "name", "start", "length")
+        regions_header = self._regions.withColumn("start", lit("1"))
+        regions_header = regions_header.select("name", "start", "length")
         regions_header.dropDuplicates().repartition(1).orderBy("name").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\t").csv(tmp_fp + "_regions")
         
         try:
@@ -733,7 +780,6 @@ class GFFService():
         # Find file in temp spark dir
         feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
         region_file = glob.glob(tmp_fp + "_regions/part-0000*")[0]
-        print(region_file)
         f = open(file_path, "a")
         #Write header
         f.write("##gff-version 3\n")
@@ -741,17 +787,17 @@ class GFFService():
         f_cvs = open(region_file)
         file_line = f_cvs.readline()
         while file_line:
-            f.write(file_line)
+            f.write("##sequence-region\t" + file_line)
             file_line = f_cvs.readline()
         f_cvs.close()
         #Write assembly
 
         
-        f.write("#!genome-build " + assembly_name)
-        f.write("\n#!genome-version " + assembly_name)
-        f.write("\n#!genome-date " + assembly_date)
-        f.write("\n#!genome-build-accession " + assembly_acc)
-        f.write("\n#!genebuild-last-updated " + genebuild_date + "\n")
+        f.write("#!genome-build " + assembly_name.strip())
+        f.write("\n#!genome-version " + assembly_name.strip())
+        f.write("\n#!genome-date " + assembly_date.strip())
+        f.write("\n#!genome-build-accession " + assembly_acc.strip())
+        f.write("\n#!genebuild-last-updated " + genebuild_date.strip() + "\n")
 
         #Write features       
         f_cvs = open(feature_file)
@@ -763,10 +809,712 @@ class GFFService():
             file_line = f_cvs.readline()
         f_cvs.close()
         f.close()
-        #os.rmdir(tmp_fp)
- 
-        #write exons
-        return None
+       # os.rmdir(tmp_fp + "_features")
+       # os.rmdir(tmp_fp + "_regions")
+
+        return
+    def get_seleno(self, seleno_feat, cds) -> None:
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def pep_to_exon(coordinate_on_pep, exons):
+
+            exons = exons.split(" ")
+            coordinate_on_pep = int(coordinate_on_pep)*3
+            exon = 0
+            coord = 0
+            current_pep_length = 0
+            for exon in exons:
+                exon = exon.split(":")
+                exon_length = int(exon[0])
+                exon_id = exon[1]               
+                if (coordinate_on_pep < current_pep_length + exon_length):
+                    exon = exon_id
+                    coord = coordinate_on_pep - current_pep_length
+                    break
+                current_pep_length = current_pep_length + exon_length
+            return str(exon)+ ":" + str(coord)
+        @udf(returnType=StringType())
+        def calc_length(start, end, id):
+            return  str(abs(int(end) - int(start) + 1)) + ":" + str(id)
+        
+        @udf(returnType=StringType())
+        def split_column(string, sep, i):
+            i = int(i)
+            value = string.split(sep)[i]
+            return value
+        cds = cds.join(seleno_feat.select("transcript_stable_id"), on = ["transcript_stable_id"], how = "right")
+        file_service = FileSystemSparkService(self._spark)
+        cds = file_service.write_df_to_orc(cds, "cds", "./")
+        seleno_feat = seleno_feat.drop("seq_region_id")
+        seleno_feat = file_service.write_df_to_orc(seleno_feat, "seleno_feat", "./")
+
+        cds_df_tmp = cds.sort("transcript_stable_id", "rank", ascending=[True, True])
+        cds_df_tmp = cds_df_tmp.withColumn("length",\
+                                       calc_length("seq_region_start",\
+                                                   "seq_region_end", "exon_id"))
+        
+        cds_df =\
+            cds_df_tmp.groupBy("transcript_stable_id")\
+            .agg(concat_ws(" ", expr("""transform(sort_array(collect_list(struct(rank,length)),True), x -> x.length)"""))\
+                    .alias("length"))\
+                    .select("transcript_stable_id", "length")
+
+        seleno_feat = seleno_feat.drop("length").join(cds_df, on = ["transcript_stable_id"])
+
+        seleno_feat = seleno_feat.withColumn("seleno_pep_start", split_column(seleno_feat.seleno, lit(" "), lit(0)) - 1)
+        seleno_feat = seleno_feat.withColumn("seleno_pep_end", split_column(seleno_feat.seleno, lit(" "), lit(1)))
+        #First and last exons must bee adjusted start and length due to translation
+        
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", pep_to_exon("seleno_pep_start", "length"))
+       
+        seleno_feat = seleno_feat.withColumn("seleno_region_end", pep_to_exon("seleno_pep_end", "length"))
+        #Here all goes right
+        seleno_feat = seleno_feat.withColumn("seleno_start_exon",  split_column(seleno_feat.seleno_region_start, lit(":"), lit("0")))
+        seleno_feat = seleno_feat.withColumn("seleno_end_exon", split_column(seleno_feat.seleno_region_end, lit(":"), lit("0")))
+        seleno_feat = seleno_feat.withColumn("seleno_region_start", split_column(seleno_feat.seleno_region_start, lit(":"), lit("1")))
+        seleno_feat = seleno_feat.withColumn("seleno_region_end", split_column(seleno_feat.seleno_region_end, lit(":"), lit("1")))
+        exons_seleno = cds.select("exon_id", "seq_region_start", "seq_region_end")\
+            .withColumnRenamed("seq_region_start", "exon_region_start")\
+            .withColumnRenamed("seq_region_end", "exon_region_end")
+        
+        
+        seleno_feat_pos = seleno_feat.filter("seq_region_strand > 0")
+        seleno_feat_pos = seleno_feat_pos.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat_pos.seleno_start_exon])
+        seleno_feat_pos = seleno_feat_pos.withColumn("seq_region_start", seleno_feat_pos.exon_region_start + seleno_feat_pos.seleno_region_start.cast(DecimalType(18, 0)))
+        seleno_feat_pos = seleno_feat_pos.drop("exon_region_start", "exon_region_end", "exon_id")
+        seleno_feat_pos = seleno_feat_pos.join(exons_seleno.select("exon_id", "exon_region_start"), on = [exons_seleno.exon_id == seleno_feat_pos.seleno_end_exon])
+        seleno_feat_pos = seleno_feat_pos.withColumn("seq_region_end", (seleno_feat_pos.exon_region_start + seleno_feat_pos.seleno_region_end-1).cast(DecimalType(18, 0)) )
+        
+        seleno_feat_neg = seleno_feat.filter("seq_region_strand < 0")
+        seleno_feat_neg =seleno_feat_neg.join(exons_seleno, on = [exons_seleno.exon_id == seleno_feat_neg.seleno_start_exon])
+        seleno_feat_neg = seleno_feat_neg.withColumn("seq_region_end", seleno_feat_neg.exon_region_end - seleno_feat_neg.seleno_region_start.cast(DecimalType(18, 0)))
+        seleno_feat_neg = seleno_feat_neg.drop("exon_region_start", "exon_region_end", "exon_id")
+        seleno_feat_neg = seleno_feat_neg.join(exons_seleno.select("exon_id", "exon_region_end"), on = [exons_seleno.exon_id == seleno_feat_neg.seleno_end_exon])
+        seleno_feat_neg = seleno_feat_neg.withColumn("seq_region_start", (seleno_feat_neg.exon_region_end - seleno_feat_neg.seleno_region_end+1).cast(DecimalType(18, 0)) )
+
+        seleno_feat = seleno_feat_pos.union(seleno_feat_neg)
+
+        return seleno_feat
+    def get_stop_codons(self, cds, sequence) -> None:
+        cds = cds.filter("type=\"CDS\"")
+        
+        stop_codons = cds.withColumn("length", cds.seq_region_end - cds.seq_region_start)\
+            .join(sequence.filter((substring(sequence.sequence, -1, 1) == "*"))\
+                  .select("transcript_stable_id", "end_exon_id"),\
+                  on = ["transcript_stable_id"], how = "left")\
+            .filter("exon_id == end_exon_id")
+        small_cds = stop_codons.filter(stop_codons.length < 2)
+        normal_cds = stop_codons.filter(stop_codons.length >= 2)
+
+        small_cds_tmp = small_cds.withColumnRenamed("rank", "tiny_rank").withColumnRenamed("transcript_stable_id", "transcript_stable_id_old")
+        rank_prev = cds.join(small_cds_tmp.select("tiny_rank", "transcript_stable_id_old", "length"), on = [(small_cds_tmp.transcript_stable_id_old == cds.transcript_stable_id) & (cds.rank == small_cds_tmp.tiny_rank - 1)])
+        rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
+        rank_prev_pos = rank_prev_pos.withColumn("seq_region_start", rank_prev_pos["seq_region_end"] - 1 + rank_prev_pos["length"])
+        rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
+        rank_prev_neg = rank_prev_neg.withColumn("seq_region_end", rank_prev_neg["seq_region_start"] + 1 - rank_prev_neg["length"])
+        
+        rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")
+        rank_prev = rank_prev.withColumn("length", rank_prev.seq_region_end - rank_prev.seq_region_start).select(\
+        "transcript_stable_id",\
+        "gene_id",\
+        "seq_region_id",\
+        "exon_id",\
+        "type",\
+        "seq_region_start",\
+        "seq_region_end",\
+        "seq_region_strand",\
+        "phase",\
+        "exon_stable_id",\
+        "version",\
+        "stable_id", "tl_version",\
+        "rank",\
+        "source",\
+        "name",\
+        "score",\
+        "canonical",\
+        "basic",\
+        "mane_select",\
+        "mane_clinical",\
+        "transcript_source",\
+        "transcript_version",\
+        "transcript_biotype",\
+        "gene_biotype",\
+        "gene_source",\
+        "gene_version",\
+        "gene_stable_id",\
+        "seleno",\
+        "gene_name",\
+        "length"
+        ).filter("length>-1")
+   
+        normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
+        normal_cds_pos = normal_cds_pos.withColumn("seq_region_start", normal_cds_pos["seq_region_end"] - 2)
+        normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
+        normal_cds_neg = normal_cds_neg.withColumn("seq_region_end", normal_cds_neg["seq_region_start"] + 2)
+    
+        
+        stop_codons = normal_cds_neg.drop("end_exon_id").union(normal_cds_pos.drop("end_exon_id")).union(rank_prev)
+        stop_codons = stop_codons.withColumn("phase", lit("0"))
+        stop_codons = stop_codons.union(small_cds.drop("end_exon_id"))
+        stop_codons = stop_codons.drop("type")
+        return stop_codons
+    
+    def get_start_codons(self, cds, sequence) -> None:
+        start_codons = cds.filter("type=\"CDS\"").withColumn("length", cds.seq_region_end - cds.seq_region_start)\
+            .join(sequence\
+                  .select("transcript_stable_id", "start_exon_id", "sequence"),\
+                  on = ["transcript_stable_id"], how = "left")\
+            .filter("exon_id == start_exon_id")
+
+        start_codons = start_codons.filter(substring(start_codons.sequence, 1, 1) == "!").drop("sequence")
+        small_cds = start_codons.filter(start_codons.length < 2)
+        small_cds_tmp = small_cds.withColumnRenamed("rank", "tiny_rank").withColumnRenamed("transcript_stable_id", "transcript_stable_id_old")
+        rank_prev = cds.filter("type=\"CDS\"").join(small_cds_tmp.select("tiny_rank", "transcript_stable_id_old", "length"), on = [(small_cds_tmp.transcript_stable_id_old == cds.transcript_stable_id) & (cds.rank == small_cds_tmp.tiny_rank + 1)])
+        
+        rank_prev_pos = rank_prev.filter("seq_region_strand > 0")
+        rank_prev_pos = rank_prev_pos.withColumn("seq_region_end", rank_prev_pos["seq_region_start"] + 1 - rank_prev_pos["length"])
+        rank_prev_neg = rank_prev.filter("seq_region_strand < 0")
+        rank_prev_neg = rank_prev_neg.withColumn("seq_region_start", rank_prev_neg["seq_region_end"] - 1 + rank_prev_neg["length"])
+
+        rank_prev = rank_prev_neg.union(rank_prev_pos).drop("tiny_rank", "transcript_stable_id_old")  
+        rank_prev = rank_prev.withColumn("length", rank_prev.seq_region_end - rank_prev.seq_region_start).select(\
+        "transcript_stable_id",\
+        "gene_id",\
+        "seq_region_id",\
+        "exon_id",\
+        "type",\
+        "seq_region_start",\
+        "seq_region_end",\
+        "seq_region_strand",\
+        "phase",\
+        "exon_stable_id",\
+        "version",\
+        "stable_id", "tl_version",\
+        "rank",\
+        "source",\
+        "name",\
+        "score",\
+        "canonical",\
+        "basic",\
+        "mane_select",\
+        "mane_clinical",\
+        "transcript_source",\
+        "transcript_version",\
+        "transcript_biotype",\
+        "gene_biotype",\
+        "gene_source",\
+        "gene_version",\
+        "gene_stable_id",\
+        "seleno",\
+        "gene_name",\
+        "length"
+        ).filter("length>-1")
+        normal_cds = start_codons.filter(start_codons.length >= 2)
+        normal_cds_pos = normal_cds.filter("seq_region_strand > 0")
+        normal_cds_pos = normal_cds_pos.withColumn("seq_region_end", normal_cds_pos["seq_region_start"] + 2)
+        normal_cds_neg = normal_cds.filter("seq_region_strand < 0")
+        normal_cds_neg = normal_cds_neg.withColumn("seq_region_start", normal_cds_neg["seq_region_end"] - 2)
+
+        
+        start_codons = normal_cds_neg.drop("start_exon_id").union(normal_cds_pos.drop("start_exon_id")).union(rank_prev).union(small_cds.drop("start_exon_id"))
+        start_codons = start_codons.drop("type")        
+        return start_codons
+    
+    def write_gtf(self, file_path, features=None, sequence=None, db="", user="", password="", ) -> None:
+        
+        if (features is None):
+            features = self.dump_all_features(db, user, password)
+        
+        if (sequence is None):
+            return 1
+        sequence = self._spark.read.orc(sequence)
+        
+        [genes, transcripts, exons, cds, assembly_df, regions] = features
+        assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
+        assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
+        assembly_acc = assembly_df.where(assembly_df.meta_key == lit("assembly.accession")).collect()[0][3]
+        genebuild_date = assembly_df.where(assembly_df.meta_key == lit("genebuild.last_geneset_update")).collect()[0][3]
+                        
+        tmp_fp = assembly_name
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name, seleno):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank:
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\"; "
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
+            if feature_id: 
+                result = result + "exon_id \"" + feature_id + "\"; "
+            if version:
+                result = result + "exon_version \"" + str(version) + "\"; "
+            if seleno:
+                result = result + "tag \"seleno\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\";"
+            if basic:
+                result = result + "tag \"basic\";"
+            if mane_clinical:
+                result = result + "tag \"mane_clinical\";"
+            if mane_select:
+                result = result + "tag \"mane_select\";"
+
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name, f_type, seleno):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank and f_type == "CDS":
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\"; "
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
+            if protein and f_type == "CDS":
+                result = result + "protein_id \"" + str(protein) + "\"; "
+            if tl_version and f_type == "CDS":
+                result = result + "protein_version \"" + str(version) + "\"; "
+            if seleno:
+                result = result + "tag \"seleno\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\";"
+            if basic:
+                result = result + "tag \"basic\";"
+            if mane_clinical:
+                result = result + "tag \"mane_clinical\";"
+            if mane_select:
+                result = result + "tag \"mane_select\";"
+
+
+            return result
+        
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, seleno):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank:
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\"; "
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
+            if seleno:
+                result = result + "tag \"seleno\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\";"
+            if basic:
+                result = result + "tag \"basic\";"
+            if mane_clinical:
+                result = result + "tag \"mane_clinical\";"
+            if mane_select:
+                result = result + "tag \"mane_select\";"
+
+
+            return result
+        
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, seleno):
+            result = ""
+            if g_stable_id:
+                result = result + "gene_id \"" + g_stable_id + "\"; "
+            if g_version:
+                result = result + "gene_version \"" + str(g_version) + "\"; "
+            if tr_stable_id:
+                result = result + "transcript_id \"" + tr_stable_id + "\"; "
+            if tr_version:
+                result = result + "transcript_version \"" + str(tr_version) + "\"; "
+            if rank:
+                result = result + "exon_number \"" + str(rank) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
+            if g_source:
+                result = result + "gene_source \"" + g_source + "\"; "
+            if g_biotype:
+                result = result + "gene_biotype \"" + g_biotype + "\"; "
+            if tr_source:
+                result = result + "transcript_source \"" + tr_source + "\"; "
+            if tr_biotype:
+                result = result + "transcript_biotype \"" + tr_biotype + "\"; "
+            if seleno:
+                result = result + "tag \"seleno\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\";"
+            if basic:
+                result = result + "tag \"basic\";"
+            if mane_clinical:
+                result = result + "tag \"mane_clinical\";"
+            if mane_select:
+                result = result + "tag \"mane_select\";"
+
+
+            return result
+
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source, g_name, seleno):
+            result = ""
+
+            if parent:
+                result = result + "gene_id \"" + parent + "\"; "
+            if gene_version:
+                result = result + "gene_version \"" + str(gene_version) + "\"; " 
+            if feature_id:
+                result = result + "transcript_id \"" + feature_id + "\"; "           
+            if version:
+                result = result + "transcript_version \"" + str(version) + "\"; "  
+            if g_name:
+                result = result + "gene_name \"" + g_name +"\"; " 
+            if gene_source:
+                result = result + "gene_source \"" + gene_source +"\"; " 
+            if gene_biotype:
+                result = result + "gene_biotype \"" + gene_biotype + "\"; "
+            result = result + "transcript_source \"" + transcript_source +"\"; " 
+            if biotype:
+                result = result + "transcript_biotype \"" + biotype + "\"; "
+            if seleno:
+                result = result + "tag \"seleno\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\";"
+            if basic:
+                result = result + "tag \"basic\";"
+            if mane_clinical:
+                result = result + "tag \"mane_clinical\";"
+            if mane_select:
+                result = result + "tag \"mane_select\";"
+
+            return result
+
+        # Join attribs
+        @udf(returnType=StringType())
+        def joinColumnsGene(feature_id, version, biotype, gene_source, name, g_name):
+            result = ""
+            if feature_id:
+                result = result + "gene_id \"" + feature_id + "\"; "
+            if version:
+                result = result + "gene_version \"" + str(version) + "\"; "
+            if g_name:
+                result = result + "gene_name \"" + str(g_name) + "\";"
+            result = result + "gene_source \"" + gene_source +"\"; "
+            if biotype:
+                result = result + "gene_biotype \"" + biotype + "\"; "
+
+            return result
+                
+        # Strand
+        @udf(returnType=StringType())
+        def code_strand(strand):
+            result = "+"
+            if(strand == -1):
+                result = "-"
+            return result
+        transcripts = transcripts.join(genes.select("gene_id", "gene_name"), on = ["gene_id"], how = "left").dropDuplicates()
+        transcripts = transcripts.withColumn("attributes",
+                                             joinColumnsTranscript("stable_id",
+                                                                   "transcript_stable_id",
+                                                                   "version",
+                                                                   "biotype", 
+                                                                   "canonical",
+                                                                   "basic",
+                                                                   "mane_select",
+                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source", "gene_name", "seleno"))
+        
+        transcripts = transcripts.withColumn("feature_type", lit("transcript"))
+
+        exons = exons.join(transcripts.select("transcript_id",
+                                              "canonical",
+                                              "basic",
+                                              "mane_select",
+                                              "mane_clinical",
+                                              "source",
+                                              "version",
+                                              "biotype",
+                                              "gene_biotype",
+                                              "gene_source",
+                                              "gene_version",
+                                              "stable_id",
+                                              "transcript_stable_id", "gene_id", "seleno")\
+            .withColumnRenamed("source", "transcript_source")\
+            .withColumnRenamed("stable_id", "gene_stable_id")\
+            .withColumnRenamed("version", "transcript_version")\
+            .withColumnRenamed("biotype", "transcript_biotype"),\
+            on = ["transcript_id"])
+        exons = exons.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
+
+        exons = exons.withColumn("attributes",
+                                             joinColumnsExon("exon_stable_id",\
+                                                                "version",\
+                                                                "rank",\
+                                                                "transcript_stable_id",\
+                                                                "transcript_biotype",\
+                                                                "transcript_source",\
+                                                                "transcript_version",\
+                                                                "gene_stable_id",\
+                                                                "gene_biotype",\
+                                                                "gene_source",\
+                                                                "gene_version",
+                                                                "basic",
+                                                                "mane_select",
+                                                                "mane_clinical",
+                                                                "canonical", "gene_name", "seleno"))
+        exons = exons.withColumn("feature_type", lit("exon"))
+
+        cds = cds.join(transcripts.select("canonical",
+                                              "basic",
+                                              "mane_select",
+                                              "mane_clinical",
+                                              "source",
+                                              "version",
+                                              "biotype",
+                                              "gene_biotype",
+                                              "gene_source",
+                                              "gene_version",
+                                              "stable_id",
+                                              "transcript_stable_id",\
+                                              "gene_id", "seleno"\
+                                              )\
+            .withColumnRenamed("source", "transcript_source")\
+            .withColumnRenamed("stable_id", "gene_stable_id")\
+            .withColumnRenamed("version", "transcript_version")\
+            .withColumnRenamed("biotype", "transcript_biotype"),\
+            on = ["transcript_stable_id"])
+        cds = cds.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
+        stop_codons = self.get_stop_codons(cds, sequence)
+        stop_codons = stop_codons.withColumn("feature_type", lit("stop_codon"))
+        start_codons = self.get_start_codons(cds, sequence)
+        start_codons = start_codons.withColumn("feature_type", lit("start_codon"))
+        
+        exons = exons.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        start_codons = start_codons.withColumn("attributes", joinColumnsStartCodon("exon_stable_id",\
+                                                "version",\
+                                                "rank",\
+                                                "transcript_stable_id",\
+                                                "transcript_biotype",\
+                                                "transcript_source",\
+                                                "transcript_version",\
+                                                "gene_stable_id",\
+                                                "gene_biotype",\
+                                                "gene_source",\
+                                                "gene_version",\
+                                                "basic",\
+                                                "mane_select",\
+                                                "mane_clinical",\
+                                                "canonical",\
+                                                "name",\
+                                                "gene_name", "seleno"\
+                                                ))   
+        stop_codons = stop_codons.withColumn("attributes", joinColumnsStopCodon("exon_stable_id",\
+                                                "version",\
+                                                "rank",\
+                                                "transcript_stable_id",\
+                                                "transcript_biotype",\
+                                                "transcript_source",\
+                                                "transcript_version",\
+                                                "gene_stable_id",\
+                                                "gene_biotype",\
+                                                "gene_source",\
+                                                "gene_version",\
+                                                "basic",\
+                                                "mane_select",\
+                                                "mane_clinical",\
+                                                "canonical",\
+                                                "name",\
+                                                "gene_name", "seleno"\
+                                                ))   
+
+  
+        cds = cds.withColumn("attributes", joinColumnsCds("exon_stable_id",\
+                                                "version",\
+                                                "rank",\
+                                                "transcript_stable_id",\
+                                                "transcript_biotype",\
+                                                "transcript_source",\
+                                                "transcript_version",\
+                                                "gene_stable_id",\
+                                                "gene_biotype",\
+                                                "gene_source",\
+                                                "gene_version",\
+                                                "basic",\
+                                                "mane_select",\
+                                                "mane_clinical",\
+                                                "canonical",\
+                                                "stable_id",\
+                                                "tl_version",\
+                                                "name",\
+                                                "gene_name", "type", "seleno"\
+                                                ))   
+
+        cds = cds.withColumnRenamed("type", "feature_type")
+
+        stop_codons_cds = stop_codons.withColumnRenamed("seq_region_start", "c_seq_region_start").withColumnRenamed("seq_region_end", "c_seq_region_end")
+        cds_only = cds.filter("type=\"CDS\"")
+        utr_only = cds.filter("type!=\"CDS\"")
+        cds_pos = cds_only.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
+        cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
+        cds_neg = cds_only.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
+        
+        
+        cds_neg = cds_neg.drop("seq_region_start").withColumn("seq_region_start", cds_neg.c_seq_region_end + 1)
+        cds_neg = cds_neg.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
+      
+
+        cds_pos = cds_pos.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
+        
+        cds_only = cds_only.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
+
+        cds_croped = cds_neg.union(cds_pos)
+
+        cds = cds_only.join(cds_croped, on = ["exon_stable_id", "transcript_stable_id"], how = "anti")
+
+        cds_croped = cds_croped.drop("exon_stable_id").filter((cds_croped.seq_region_end - cds_croped.seq_region_start) > -1)
+        
+        utr_only = utr_only.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        
+        cds = cds.select("name", "source", "feature_type",
+                "seq_region_start", "seq_region_end",
+                "score", "seq_region_strand", "phase", "attributes",  "transcript_stable_id", "rank", "exon_id")
+        
+        cds_croped = cds_croped.select("name", "source", "feature_type",
+                "seq_region_start", "seq_region_end",
+                "score", "seq_region_strand", "phase", "attributes", "transcript_stable_id", "rank", "exon_id")
+
+
+        cds = cds.union(cds_croped)
+
+        seleno_feat = transcripts.join(sequence.select("transcript_id", "length"), on = ["transcript_id"]).filter("seleno is not null")
+        seleno = self.get_seleno(seleno_feat, cds)
+        seleno = seleno.withColumn("feature_type", lit("Selenocysteine"))
+        seleno = seleno.select("name", "source", "feature_type",
+                "seq_region_start", "seq_region_end",
+                "score", "seq_region_strand", "phase", "attributes")
+        cds = cds.drop( "transcript_stable_id", "rank", "exon_id")
+        utr_only = utr_only.select("name", "source", "feature_type",
+                "seq_region_start", "seq_region_end",
+                "score", "seq_region_strand", "phase", "attributes")
+
+
+        cds = cds.union(utr_only).union(seleno)
+        start_codons = start_codons.select("name", "source", "feature_type", 
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+        stop_codons = stop_codons.select("name", "source", "feature_type",
+                                       "seq_region_start", "seq_region_end",
+                                         "score", "seq_region_strand", "phase", "attributes")
+      
+       
+
+        
+        genes = genes.withColumn("attributes",
+                                 joinColumnsGene("stable_id",\
+                                                       "version",\
+                                                       "biotype", "source", "name",  "gene_name"))        
+        genes = genes.withColumn("feature_type", lit("gene"))
+        genes = genes.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        transcripts = transcripts.select("name", "source", "feature_type",
+                        "seq_region_start", "seq_region_end",
+                        "score", "seq_region_strand", "phase", "attributes")
+        combined_df = genes.dropDuplicates().withColumn("priority", lit("3"))
+        # Combined df append transcripts
+        combined_df = combined_df.union(transcripts.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(exons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(cds.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(start_codons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.union(stop_codons.dropDuplicates().withColumn("priority", lit("3")))
+        combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
+        combined_df = combined_df.withColumn("seq_region_start", combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
+        combined_df.write.option("quote", "").option("escape", "\"").option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+        
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        
+        
+        # Find file in temp spark dir
+        feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
+
+        f = open(file_path, "a")
+        #Write assembly
+        
+        f.write("#!genome-build\t" + assembly_name)
+        f.write("\n#!genome-version\t" + assembly_name)
+        f.write("\n#!genome-date\t" + assembly_date)
+        f.write("\n#!genome-build-accession\t" + assembly_acc)
+        f.write("\n#!genebuild-last-updated\t" + genebuild_date + "\n")
+
+        #Write features       
+        f_cvs = open(feature_file)
+        file_line = f_cvs.readline()
+        while file_line:
+            f.write(file_line)
+            file_line = f_cvs.readline()
+        f_cvs.close()
+        f.close()
+       # os.rmdir(tmp_fp + "_feature/")
+
+        return
 
     def _check_gff_file (self, file_path) -> bool:
         if (os.path.exists(file_path) == False):
