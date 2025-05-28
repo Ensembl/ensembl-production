@@ -64,6 +64,17 @@ transcript_service = TranscriptSparkService(spark_session)
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
 #The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
 fastaDf.write.orc("sequence", mode="overwrite")
+
+@udf(returnType=StringType())
+def trimSeq(sequence):
+        if(sequence[0:1] == "!"):
+            sequence = sequence[1:]
+        if(sequence[-1:] == "*"):
+            sequence = sequence[:-1]
+        return sequence
+
+
+fastaDf = fastaDf.withColumn("sequence", trimSeq("sequence"))
 #Get genes information
 genes = spark_session.read\
             .format("jdbc")\
@@ -73,6 +84,7 @@ genes = spark_session.read\
             .option("user", username)\
             .option("password", pwd)\
             .load()
+
 @udf(returnType=StringType())
 def describe(display_label, description):
     result = ""

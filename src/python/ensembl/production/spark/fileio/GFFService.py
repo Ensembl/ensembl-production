@@ -480,8 +480,12 @@ class GFFService():
         #Assembly name
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
 
-        #Find transcript attributesrelated to transcript tags
+        #Find transcript attributes related to transcript tags
+
+
+        transcript_attrib.show(2, False)
         transcript_attrib_basic=transcript_attrib.filter("attrib_type_id=417").withColumnRenamed("value", "basic")
+        transcript_attrib_basic.show(2, False)
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
         translation_attrib_seleno=translation_attrib.filter("attrib_type_id=12").withColumnRenamed("value", "seleno")
@@ -745,7 +749,7 @@ class GFFService():
         exons = exons.select("name", "source", "type",
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes")
-        
+    
         cds = cds.withColumn("attributes",
                                              joinColumnsCds("exon_stable_id",\
                                                                    "transcript_stable_id",\
