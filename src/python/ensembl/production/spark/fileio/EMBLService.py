@@ -101,9 +101,7 @@ class EMBLService():
         tmp_fp = assembly_name + "_embl"
 
         cds.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
-
-
-               
+             
         try:
             os.remove(file_path)
         except OSError:

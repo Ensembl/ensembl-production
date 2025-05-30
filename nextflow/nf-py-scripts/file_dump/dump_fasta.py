@@ -109,15 +109,14 @@ csversion = spark_session.read\
 
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
-
 #Unite pep header
 pep_fasta = pep_fasta\
     .join(genes.drop("seq_region_strand"), on=["gene_id"])\
     .select(concat(lit(">"), col("translation_stable_id"), lit(" "),\
        lit("pep"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
-       lit(":"), col("translation_region_start"),\
-       lit(":"), col("translation_region_end"),\
+       lit(":"), col("tl_start"),\
+       lit(":"), col("tl_end"),\
        lit(":"), col("seq_region_strand"),\
        lit(" gene:"), col("stable_id"),\
        lit(" transcript:"), col("transcript_stable_id"),\
@@ -142,8 +141,8 @@ cdna_fasta = cdna_fasta\
     .select(concat(lit(">"), col("transcript_stable_id"), lit(" "),\
        lit("cds"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
-       lit(":"), col("seq_region_start"),\
-       lit(":"), col("seq_region_end"),\
+       lit(":"), col("tl_start"),\
+       lit(":"), col("tl_end"),\
        lit(":"), col("seq_region_strand"),\
        lit("gene:"), col("stable_id"),\
        lit(" gene_biotype:"), col("biotype"),\

@@ -233,7 +233,7 @@ class TranscriptSparkService:
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
          @udf(returnType=StringType())
-         def translate_sequence(raw_sequence, codon_table, cds_start_nf, id, phase):
+         def translate_sequence(raw_sequence, codon_table, phase):
              
              if ((raw_sequence is None) or (len(raw_sequence) == 0)):
                  return
@@ -256,19 +256,27 @@ class TranscriptSparkService:
              sequence = str(sequence)
 
              return sequence
-         cds_start_nf_df = self._spark.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", db)\
-            .option("dbtable", "(select ta.* from transcript_attrib ta left join attrib_type at \
-            on at.attrib_type_id = ta.attrib_type_id where at.code=\"cds_start_NF\")tmp")\
-            .option("user", user)\
-            .option("password", password)\
-            .load().dropDuplicates()
+
+         translatable_exons = self.translatable_exons(db, user, password,
+                         exons_df, None, False, True)
+         @udf(returnType=IntegerType())
+         def get_translation_start(start, end, strand):
+            if (strand > 0):
+                return start
+            return  end
+         
+         @udf(returnType=IntegerType())
+         def get_translation_end(start, end, strand):
+            if (strand < 0):
+                return end
+            return  start
+
          translated_sequence = \
-         translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",
-                                     translate_sequence("sequence", "codon_table", "value", "translation_stable_id", "phase"))
-                  
+         translated_seq.withColumn("sequence",
+                                     translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
+         #Join by exon_id
+         translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end").dropDuplicates(), on = ["transcript_stable_id"])
+                      
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
@@ -403,7 +411,7 @@ class TranscriptSparkService:
     Returns all translatable exons of the database
     """
     def translatable_exons(self, db: str, user: str, password: str,
-                         exons_df=None, tmp_folder=None, utr=True):
+                         exons_df=None, tmp_folder=None, utr=True, edge_only = False):
 
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
@@ -489,14 +497,19 @@ class TranscriptSparkService:
         
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
+
+        
         
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
 
         result=translatables.filter("translatable = 0")
-
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
+                
+        if (edge_only):
+            return result.filter("(exon_id == start_exon_id) or (exon_id == end_exon_id)")
+        
         result = result.withColumn("phase", map_phase(3 - result.phase))
         
         
