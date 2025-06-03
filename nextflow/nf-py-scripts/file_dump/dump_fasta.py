@@ -21,7 +21,7 @@ pwd = ""
 import sys
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, concat, length, udf
+from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pyspark.sql.types import StringType
 import argparse
@@ -110,16 +110,17 @@ csversion = spark_session.read\
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
 #Unite pep header
+pep_fasta = pep_fasta.orderBy("seq_region_name", "tl_start")
 pep_fasta = pep_fasta\
-    .join(genes.drop("seq_region_strand"), on=["gene_id"])\
-    .select(concat(lit(">"), col("translation_stable_id"), lit(" "),\
+    .join(genes.drop("seq_region_strand").withColumnRenamed("version", "gene_version"), on=["gene_id"])\
+    .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"), lit(" "),\
        lit("pep"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
-       lit(":"), col("tl_start"),\
-       lit(":"), col("tl_end"),\
+       lit(":"), least(col("tl_start"), col("tl_end")),\
+       lit(":"), greatest(col("tl_start"), col("tl_end")),\
        lit(":"), col("seq_region_strand"),\
-       lit(" gene:"), col("stable_id"),\
-       lit(" transcript:"), col("transcript_stable_id"),\
+       lit(" gene:"), col("stable_id"),lit("."), col("gene_version"),\
+       lit(" transcript:"), col("transcript_stable_id"), lit("."), col("version"),\
        lit(" gene_biotype:"), col("biotype"),\
        lit(" transcript_biotype:"), col("transcript_biotype"),\
        col("gene_description")),\
@@ -135,14 +136,17 @@ pep_fasta.repartition(1)\
 file = glob.glob("./fasta_pep" + "/part-0000*")[0]
 shutil.copy(file, "pep.fa")
 
+
+
+
 #Unite header
 cdna_fasta = cdna_fasta\
-    .join(genes.drop("seq_region_strand", "seq_region_start", "seq_Region_End"), on=["gene_id"])\
+    .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end"), on=["gene_id"])\
     .select(concat(lit(">"), col("transcript_stable_id"), lit(" "),\
        lit("cds"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
-       lit(":"), col("tl_start"),\
-       lit(":"), col("tl_end"),\
+       lit(":"), least(col("tl_start"), col("tl_end")),\
+       lit(":"),  greatest(col("tl_start"), col("tl_end")),\
        lit(":"), col("seq_region_strand"),\
        lit("gene:"), col("stable_id"),\
        lit(" gene_biotype:"), col("biotype"),\

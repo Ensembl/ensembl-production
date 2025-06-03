@@ -259,23 +259,13 @@ class TranscriptSparkService:
 
          translatable_exons = self.translatable_exons(db, user, password,
                          exons_df, None, False, True)
-         @udf(returnType=IntegerType())
-         def get_translation_start(start, end, strand):
-            if (strand > 0):
-                return start
-            return  end
-         
-         @udf(returnType=IntegerType())
-         def get_translation_end(start, end, strand):
-            if (strand < 0):
-                return end
-            return  start
+
 
          translated_sequence = \
          translated_seq.withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
          #Join by exon_id
-         translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end").dropDuplicates(), on = ["transcript_stable_id"])
+         translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
                       
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
@@ -284,6 +274,7 @@ class TranscriptSparkService:
                                             True)
          translated_sequence = self.apply_edits(translated_sequence,
                                                 seq_edits, True)
+         
          return translated_sequence
 
 
@@ -468,7 +459,7 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-        #Phase of the exon should be . of it is -1
+        #Phase of the exon shotuld be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase > 2):
