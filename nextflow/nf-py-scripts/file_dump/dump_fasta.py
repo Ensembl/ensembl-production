@@ -64,7 +64,6 @@ transcript_service = TranscriptSparkService(spark_session)
 fastaDf = transcript_service.translated_seq(url, username, pwd, None, True)
 #The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
 fastaDf.write.orc("sequence", mode="overwrite")
-
 @udf(returnType=StringType())
 def trimSeq(sequence):
         if(sequence[0:1] == "!"):
@@ -80,7 +79,7 @@ genes = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("query", "select gene.*, xref.display_label from gene join xref on gene.display_xref_id=xref.xref_id")\
+            .option("query", "select gene.*, xref.display_label from gene left join xref on gene.display_xref_id=xref.xref_id")\
             .option("user", username)\
             .option("password", pwd)\
             .load()
@@ -109,23 +108,37 @@ csversion = spark_session.read\
 
 cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
 pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
+
 #Unite pep header
 pep_fasta = pep_fasta.orderBy("seq_region_name", "tl_start")
+
 pep_fasta = pep_fasta\
-    .join(genes.drop("seq_region_strand").withColumnRenamed("version", "gene_version"), on=["gene_id"])\
+    .join(genes.drop("seq_region_strand").withColumnRenamed("version", "gene_version"), on=["gene_id"], how = "left")\
     .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"), lit(" "),\
        lit("pep"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("tl_start"), col("tl_end")),\
        lit(":"), greatest(col("tl_start"), col("tl_end")),\
-       lit(":"), col("seq_region_strand"),\
-       lit(" gene:"), col("stable_id"),lit("."), col("gene_version"),\
-       lit(" transcript:"), col("transcript_stable_id"), lit("."), col("version"),\
-       lit(" gene_biotype:"), col("biotype"),\
-       lit(" transcript_biotype:"), col("transcript_biotype"),\
-       col("gene_description")),\
-       col("sequence"))
+       lit(":"), col("seq_region_strand")).alias("info"),\
+       col("sequence"), "stable_id", "transcript_stable_id","version", "gene_version", "biotype", "transcript_biotype", "gene_description")
 
+@udf(returnType=StringType())
+def append_info(info, gene_stable_id, transcript_stable_id, version, gene_version, biotype, transcript_biotype, gene_description):
+        result = info
+        if (gene_stable_id):
+             result = result + " gene:" + gene_stable_id + "." + str(gene_version)
+        if (transcript_stable_id):
+             result = result + " transcript:" + transcript_stable_id + "." + str(version)
+        if (biotype):
+             result = result + " gene_biotype:" + biotype
+        if (transcript_biotype):
+             result = result + " transcript_biotype:" + transcript_biotype
+        if (gene_description):
+             result = result + gene_description
+        return result
+
+pep_fasta = pep_fasta.withColumn("info", append_info("info", "stable_id", "transcript_stable_id","version", "gene_version", "biotype", "transcript_biotype", "gene_description"))
+pep_fasta = pep_fasta.select("info", "sequence")
 #Write to fasta
 pep_fasta.repartition(1)\
     .write\
