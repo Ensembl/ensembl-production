@@ -23,8 +23,8 @@ import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
-from pyspark.sql.functions import concat, concat_ws, collect_list, lit, expr
-
+from pyspark.sql.functions import concat, concat_ws, collect_list, lit, expr, udf
+from pyspark.sql.types import BooleanType
 import argparse
 
 # Define the parser
@@ -60,12 +60,30 @@ transcript_service = TranscriptSparkService(spark_session)
 
 translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False)
 mRNA = translatable_exons
-mRNA = mRNA.withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
+mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
+mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+mRNA = mRNA_neg.unionByName(mRNA_pos)
 mRNA =\
         mRNA.groupBy("transcript_stable_id")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
-        .drop("version", "created_date", "modified_date", "stable_id")\
+        .drop("version", "created_date", "modified_date", "stable_id")
+
+#Is transcript canonical
+@udf(returnType=BooleanType())
+def is_single(coordinates):
+    return coordinates.find(",") < 0
+
+mRNA = mRNA.withColumn("single", is_single("coordinates"))
+
+mRNA_single = mRNA.filter("single=True")
+
+mRNA =\
+    mRNA.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
+
+mRNA = mRNA.unionByName(mRNA_single)
+mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA             "), "coordinates"))
+mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates")
 
 file_path = "./test.embl"
 sequence = spark_session.read.orc(sequence)
@@ -73,7 +91,7 @@ sequence = spark_session.read.orc(sequence)
 
 tmp_fp = "_embl"
 
-mRNA.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+mRNA.repartition(1).write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
