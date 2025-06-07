@@ -257,9 +257,9 @@ class TranscriptSparkService:
 
              return sequence
 
+         #We need to have in DF genomic coordinates of the translation
          translatable_exons = self.translatable_exons(db, user, password,
                          exons_df, None, False, True)
-
 
          translated_sequence = \
          translated_seq.withColumn("sequence",
@@ -289,7 +289,7 @@ class TranscriptSparkService:
         if (exons_df == None):
             exon_service = ExonSparkService(self._spark)
             exons_df = exon_service.exons_with_seq(db,  user,\
-                                                   password).repartition(10);
+                                                   password).repartition(10)
             if (exons_df == None):
                 return
         #For each exon calculate length, concat with id for further translation
@@ -378,6 +378,7 @@ class TranscriptSparkService:
                 result = transcripts_with_seq
             else:
                 result = result.union(transcripts_with_seq)
+        #Translation start and end relative to seq start
         transcripts_with_seq =\
         result.withColumn("translation_region_start",
                                         get_translation_start("length",
@@ -481,35 +482,34 @@ class TranscriptSparkService:
             .withColumnRenamed("stable_id", "transcript_stable_id")\
                 
         transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "created_date", "modified_date").withColumnRenamed("version", "tl_version"), on=["translation_id"], how="right")
+        
         #Find translation seq start and end
-
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_start", tl_start("seq_region_start", "seq_region_end", "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand")
         
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
-
         
-        
+        #Determine translatabe exons
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
 
         result=translatables.filter("translatable = 0")
+
+        #Crop exons to CDS
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
-                
+
+        #For some tasks we need only start and end exons        
         if (edge_only):
             return result.filter("(exon_id == start_exon_id) or (exon_id == end_exon_id)")
         
         result = result.withColumn("phase", map_phase(3 - result.phase))
         
-        
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
                                           "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
-        
-
-        
+        #If case we need croped part of transcript
         if (utr):
             exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
             exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
@@ -540,6 +540,8 @@ class TranscriptSparkService:
             
             result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr).dropDuplicates().withColumn("phase",lit("."))
 
-        return result.union(result_five_prime_utr)
+            return result.union(result_five_prime_utr)
+        
+        return result
         
         

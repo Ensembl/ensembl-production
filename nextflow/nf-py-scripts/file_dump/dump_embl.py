@@ -19,10 +19,11 @@ username = "ensro"
 pwd = ""
 
 import sys
+import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from ensembl.production.spark.fileio.GFFService import GFFService
-from ensembl.production.spark.fileio.EMBLService import EMBLService
+from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
+from pyspark.sql.functions import concat, concat_ws, collect_list, lit, expr
 
 import argparse
 
@@ -55,7 +56,39 @@ confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
 
-gff_service = GFFService(spark_session)
-embl_service = EMBLService(spark_session)
-features = gff_service.dump_all_features(url, username, pwd)
-embl_service.write_embl("./test.embl", features, sequence)
+transcript_service = TranscriptSparkService(spark_session)
+
+translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False)
+mRNA = translatable_exons
+mRNA = mRNA.withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
+mRNA =\
+        mRNA.groupBy("transcript_stable_id")\
+        .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
+        .alias("coordinates"))\
+        .drop("version", "created_date", "modified_date", "stable_id")\
+
+file_path = "./test.embl"
+sequence = spark_session.read.orc(sequence)
+
+
+tmp_fp = "_embl"
+
+mRNA.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+             
+try:
+    os.remove(file_path)
+except OSError:
+    pass
+
+feature_file = glob.glob(tmp_fp + "_features/part-0000*")[0]
+f = open(file_path, "a")
+
+#Write features       
+f_cvs = open(feature_file)
+file_line = f_cvs.readline()
+while file_line:
+        f.write(file_line)
+        file_line = f_cvs.readline()
+
+f_cvs.close()
+f.close()

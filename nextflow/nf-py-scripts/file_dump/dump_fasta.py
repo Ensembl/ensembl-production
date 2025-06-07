@@ -106,8 +106,8 @@ csversion = spark_session.read\
             .load()\
             .collect()[0][0]
 
-cdna_fasta = fastaDf.filter(length(fastaDf.sequence) < 1)
-pep_fasta = fastaDf.filter(length(fastaDf.sequence) > 1)
+cdna_fasta = fastaDf
+pep_fasta = fastaDf
 
 #Unite pep header
 pep_fasta = pep_fasta.orderBy("seq_region_name", "tl_start")
