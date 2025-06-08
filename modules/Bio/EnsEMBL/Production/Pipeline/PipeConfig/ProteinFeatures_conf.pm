@@ -383,7 +383,7 @@ sub pipeline_analyses {
             -flow_into       => WHEN('#local_computation#' =>
                 [ 'FetchInterPro', 'FetchInterPro2GO' ],
                 ELSE
-                    [ 'FetchUniParc', 'FetchInterPro', 'FetchInterPro2GO' ]
+                [ 'FetchUniParc', 'FetchInterPro', 'FetchInterPro2GO' ]
             ),
             -rc_name           => '4GB_D',
         },
@@ -970,7 +970,7 @@ sub pipeline_analyses {
             -logic_name => 'CleanTables',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
             -parameters => {
-                sql => 'DROP table IF EXISTS uniparc; DROP table IF EXISTS uniprot;',
+                sql => ['DROP table IF EXISTS uniparc','DROP table IF EXISTS uniprot'],
             },
             -rc_name           => '8GB_D',
         },
