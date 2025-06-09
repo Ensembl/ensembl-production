@@ -64,17 +64,17 @@ mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("
 mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 mRNA = mRNA_neg.unionByName(mRNA_pos)
 mRNA =\
-        mRNA.groupBy("transcript_stable_id")\
+        mRNA.groupBy("transcript_stable_id", "version", "gene_id")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
-        .drop("version", "created_date", "modified_date", "stable_id")
+        .drop("created_date", "modified_date", "stable_id")
 
 #Is transcript canonical
 @udf(returnType=BooleanType())
 def is_single(coordinates):
     return coordinates.find(",") < 0
 
-#Is transcript canonical
+#Slit coordinates to lines
 @udf(returnType=StringType())
 def splitCoordinates(coordinates):
     coordinates = coordinates.split(",")
@@ -106,6 +106,17 @@ def splitCoordinates(coordinates):
     
     return result[:-1]
 
+genes = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
+                     and ox.ensembl_object_type=\"Gene\" \
+                    left join xref x on x.xref_id = ox.xref_id")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+
 mRNA = mRNA.withColumn("single", is_single("coordinates"))
 
 mRNA_single = mRNA.filter("single=True")
@@ -116,14 +127,13 @@ mRNA =\
 mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
 mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
-mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("\"")))
-mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates", "feature_id")
-
-
+mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
+mRNA = mRNA.withColumn("gene_id", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
+mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
+mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates", "gene_id", "feature_id")
 
 file_path = "./test.embl"
 sequence = spark_session.read.orc(sequence)
-
 
 tmp_fp = "_embl"
 

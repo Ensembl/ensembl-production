@@ -477,7 +477,7 @@ class TranscriptSparkService:
         exons_df=exons_df.withColumnRenamed("stable_id", "exon_stable_id") 
         #Find all canonical translations    
         translations_df = translation_service.load_translations_fs(db, user, password, tmp_folder)
-        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id", "source")\
+        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id", "source", "gene_id")\
             .withColumnRenamed("canonical_translation_id", "translation_id")\
             .withColumnRenamed("stable_id", "transcript_stable_id")\
                 
@@ -492,25 +492,29 @@ class TranscriptSparkService:
         
         #Determine translatabe exons
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
+        
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
 
         result=translatables.filter("translatable = 0")
-
+        
         #Crop exons to CDS
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
-
+        
         #For some tasks we need only start and end exons        
         if (edge_only):
             return result.filter("(exon_id == start_exon_id) or (exon_id == end_exon_id)")
         
         result = result.withColumn("phase", map_phase(3 - result.phase))
-        
+
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
-                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source", "gene_id")
         #If case we need croped part of transcript
         if (utr):
+            result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
+                                       "seq_region_start", "seq_region_end",
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
             exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
             exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
             
