@@ -23,8 +23,8 @@ import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
-from pyspark.sql.functions import concat, concat_ws, collect_list, lit, expr, udf
-from pyspark.sql.types import BooleanType
+from pyspark.sql.functions import concat, concat_ws, lit, expr, udf
+from pyspark.sql.types import BooleanType, StringType
 import argparse
 
 # Define the parser
@@ -74,6 +74,38 @@ mRNA =\
 def is_single(coordinates):
     return coordinates.find(",") < 0
 
+#Is transcript canonical
+@udf(returnType=StringType())
+def splitCoordinates(coordinates):
+    coordinates = coordinates.split(",")
+    if(len(coordinates) < 2):
+         return "\nFT   " + coordinates[0]
+    length = len(coordinates[1])
+    repeats = 57//length
+    
+    i = 1
+    coord_local = "\nFT   " + coordinates[0] + ","
+    for j in range(0, repeats - 1):
+        coord_local = coord_local + coordinates[i] + ","
+        if (i < len(coordinates)-1):
+            i = i+1
+    result = coord_local
+
+    for x in range(0, len(coordinates) - 1, repeats):
+         coord_local = ""
+         if (i >= len(coordinates)-1):
+             break
+         for j in range(0, repeats):
+              coord_local = coord_local + coordinates[i] + ","
+              if (i < len(coordinates)-1):
+                i = i+1
+              else:
+                  break
+ 
+         result = result + "\nFT                   " + coord_local
+    
+    return result[:-1]
+
 mRNA = mRNA.withColumn("single", is_single("coordinates"))
 
 mRNA_single = mRNA.filter("single=True")
@@ -82,8 +114,12 @@ mRNA =\
     mRNA.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
 
 mRNA = mRNA.unionByName(mRNA_single)
-mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA             "), "coordinates"))
-mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates")
+mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
+mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
+mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("\"")))
+mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates", "feature_id")
+
+
 
 file_path = "./test.embl"
 sequence = spark_session.read.orc(sequence)
@@ -91,7 +127,7 @@ sequence = spark_session.read.orc(sequence)
 
 tmp_fp = "_embl"
 
-mRNA.repartition(1).write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
+mRNA.repartition(1).write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
@@ -105,6 +141,7 @@ f = open(file_path, "a")
 f_cvs = open(feature_file)
 file_line = f_cvs.readline()
 while file_line:
+        file_line = file_line.replace("\x00", "")         
         f.write(file_line)
         file_line = f_cvs.readline()
 
