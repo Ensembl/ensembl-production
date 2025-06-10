@@ -768,7 +768,7 @@ class GFFService():
         combined_df = combined_df.union(cds.dropDuplicates().withColumn("priority", lit("3")))
         combined_df = combined_df.withColumn("seq_region_strand", code_strand("seq_region_strand"))
         combined_df = combined_df.union(regions.dropDuplicates().withColumn("priority", lit("1"))) 
-        combined_df = combined_df.withColumn("seq_region_start",combined_df.seq_region_start.cast('int'))       
+        combined_df = combined_df.withColumn("seq_region_start", combined_df.seq_region_start.cast('int'))       
         combined_df = combined_df.repartition(1).orderBy("name", "priority", "seq_region_start").drop("priority")
         combined_df.write.option("header", False).mode('overwrite').option("delimiter", "\t").csv(tmp_fp + "_features")
         regions_header = self._regions.withColumn("start", lit("1"))

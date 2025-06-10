@@ -24,7 +24,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from pyspark.sql.functions import concat, concat_ws, lit, expr, udf
-from pyspark.sql.types import BooleanType, StringType
+from pyspark.sql.types import BooleanType, StringType, IntegerType
 import argparse
 
 # Define the parser
@@ -61,13 +61,24 @@ transcript_service = TranscriptSparkService(spark_session)
 translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False)
 mRNA = translatable_exons
 mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
-mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 mRNA = mRNA_neg.unionByName(mRNA_pos)
+
 mRNA =\
         mRNA.groupBy("transcript_stable_id", "version", "gene_id")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
+
+#Is transcript canonical
+@udf(returnType=StringType())
+def gene_desc(locus_tag, desc):
+    result = ""
+    if (locus_tag):
+        result = result + "FT                   /locus_tag=" + locus_tag
+    if(desc):
+        result = result + "\nFT                   /note=" + desc
+    return result
 
 #Is transcript canonical
 @udf(returnType=BooleanType())
@@ -110,13 +121,20 @@ genes = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select g.*, x.display_label as gene_name from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
+                .option("query","select g.*, x.display_label as locus_tag, x.description as note from gene g left join object_xref ox on g.gene_id = ox.ensembl_id\
                      and ox.ensembl_object_type=\"Gene\" \
                     left join xref x on x.xref_id = ox.xref_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
-
+transcripts = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select * from transcript")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
 mRNA = mRNA.withColumn("single", is_single("coordinates"))
 
 mRNA_single = mRNA.filter("single=True")
@@ -128,16 +146,28 @@ mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
 mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
-mRNA = mRNA.withColumn("gene_id", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
+
+mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
-mRNA = mRNA.orderBy("transcript_stable_id").select("coordinates", "gene_id", "feature_id")
+mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
+
+gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
+gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+gene = gene_pos.unionByName(gene_neg)
+gene = gene.withColumn("gene_id_note", concat(lit("FT                   /gene="), "stable_id", lit("."), "version"))
+gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
+
+mRNA = mRNA.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
+gene = gene.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
+
+result = gene.unionByName(mRNA)
 
 file_path = "./test.embl"
 sequence = spark_session.read.orc(sequence)
 
 tmp_fp = "_embl"
 
-mRNA.repartition(1).write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
+result.repartition(1).orderBy("gene_id", "seq_region_start").drop("gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
@@ -152,6 +182,9 @@ f_cvs = open(feature_file)
 file_line = f_cvs.readline()
 while file_line:
         file_line = file_line.replace("\x00", "")         
+        if (len(file_line) < 3):
+            file_line = f_cvs.readline()
+            continue
         f.write(file_line)
         file_line = f_cvs.readline()
 
