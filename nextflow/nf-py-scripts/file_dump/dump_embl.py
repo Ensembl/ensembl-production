@@ -23,7 +23,7 @@ import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
-from pyspark.sql.functions import concat, concat_ws, lit, expr, udf
+from pyspark.sql.functions import concat, concat_ws, lit, expr, udf, regexp_replace, desc
 from pyspark.sql.types import BooleanType, StringType, IntegerType
 import argparse
 
@@ -41,7 +41,7 @@ pwd = args.password
 username = args.username
 url = args.db
 base_dir = args.base_dir
-sequence = args.sequence
+seq = args.sequence
 
 import os
 confi=SparkConf()
@@ -85,7 +85,7 @@ def gene_desc(locus_tag, desc):
 def is_single(coordinates):
     return coordinates.find(",") < 0
 
-#Slit coordinates to lines
+#Split coordinates to lines
 @udf(returnType=StringType())
 def splitCoordinates(coordinates):
     coordinates = coordinates.split(",")
@@ -116,6 +116,18 @@ def splitCoordinates(coordinates):
          result = result + "\nFT                   " + coord_local
     
     return result[:-1]
+
+#Split coordinates to lines
+@udf(returnType=StringType())
+def splitSequence(seq):
+    seq = seq.replace("!", "")
+    seq = seq.replace("*", "")
+    result = seq[:45]
+    i = 45
+    while(i < len(seq)):
+        result = result + "\nFT                   " + seq[i:i+59]
+        i = i + 59
+    return result
 
 genes = spark_session.read\
                 .format("jdbc")\
@@ -148,8 +160,9 @@ mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
-mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
 mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
+cds = mRNA
+mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
 gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
@@ -157,17 +170,25 @@ gene = gene_pos.unionByName(gene_neg)
 gene = gene.withColumn("gene_id_note", concat(lit("FT                   /gene="), "stable_id", lit("."), "version"))
 gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
 
+sequence = spark_session.read.orc(seq)
+cds = cds.drop("version").join(sequence.drop("gene_id"), on = ["transcript_stable_id"])
+cds_codon = cds.filter("codon_table>1").withColumn("gene_id_note", concat(lit("FT                   /transl_table="), "codon_table", lit("\n"), "gene_id_note"))
+cds_codon.show()
+cds_non_codon = cds.filter("codon_table=1").withColumn("gene_id_note", cds.gene_id_note)
+cds = cds_non_codon.union(cds_codon)
+cds = cds.withColumn("coordinates", regexp_replace(cds.coordinates, "mRNA", "CDS "))
+cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=\""), "translation_stable_id", lit("."), "tl_version", lit("\"")))
+cds = cds.withColumn("sequence", splitSequence("sequence"))
+cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation=\""), "sequence", lit("\"")))
 mRNA = mRNA.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
 gene = gene.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
-
-result = gene.unionByName(mRNA)
+cds = cds.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
+result = gene.unionByName(mRNA).unionByName(cds)
 
 file_path = "./test.embl"
-sequence = spark_session.read.orc(sequence)
-
 tmp_fp = "_embl"
 
-result.repartition(1).orderBy("gene_id", "seq_region_start").drop("gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
+result.repartition(1).orderBy("gene_id", "seq_region_start", desc("seq_region_end")).drop("gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
@@ -182,7 +203,7 @@ f_cvs = open(feature_file)
 file_line = f_cvs.readline()
 while file_line:
         file_line = file_line.replace("\x00", "")         
-        if (len(file_line) < 3):
+        if (len(file_line) < 5):
             file_line = f_cvs.readline()
             continue
         f.write(file_line)
