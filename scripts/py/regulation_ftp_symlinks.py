@@ -136,9 +136,9 @@ class Utils:
         return reg_species
 
     @staticmethod
-    def get_most_recent_release_data_file_path(data_file_path):
+    def get_most_recent_release_data_file_path(analysis_type, data_file_path):
         validator.is_dir(Path(data_file_path))
-        available_releases = listdir(data_file_path)
+        available_releases = [d for d in listdir(data_file_path) if analysis_type in listdir(f"{data_file_path}/{d}")]
         releases = []
         for release in available_releases:
             try:
@@ -164,6 +164,7 @@ class RegulationSymlinkFTP:
         self.path_specifics = path_specifics
         self.target = Path(
             utils.get_most_recent_release_data_file_path(
+                self.get("analysis_type"),
                 DATA_FILES_PATH_TEMPLATE.format(**path_specifics)
             )
         )
@@ -251,7 +252,7 @@ class RegulationSymlinkFTP:
                 release=release,
             )
             for species, assemblies in result.items()
-            for assembly in assemblies if assembly not in ["GRCh37", "GRCm38", "NCBIM37"]
+            for assembly in assemblies if assembly not in ["GRCh37", "GRCm38", "NCBIM37", "ARS-UCD1.3"]
         ]
 
 
