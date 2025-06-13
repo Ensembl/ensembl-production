@@ -403,7 +403,7 @@ class TranscriptSparkService:
     Returns all translatable exons of the database
     """
     def translatable_exons(self, db: str, user: str, password: str,
-                         exons_df=None, tmp_folder=None, utr=True, edge_only = False):
+                         exons_df=None, tmp_folder=None, utr=True, edge_only = False, mRNA = False):
 
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
@@ -470,7 +470,7 @@ class TranscriptSparkService:
         translation_service = TranslationSparkService(self._spark)
         if (exons_df == None):
             exon_service = ExonSparkService(self._spark)
-            exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder);
+            exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder)
             if (exons_df == None):
                 return
         transcripts_df = self.load_transcripts_fs(db, user, password, tmp_folder) 
@@ -496,7 +496,9 @@ class TranscriptSparkService:
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
 
         result=translatables.filter("translatable = 0")
-        
+        #Uncroped for mRNA
+        if (mRNA == True):
+            return result
         #Crop exons to CDS
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))

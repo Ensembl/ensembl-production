@@ -19,6 +19,7 @@ username = "ensro"
 pwd = ""
 
 import sys
+import math
 import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
@@ -58,18 +59,6 @@ spark_session.sparkContext.setLogLevel("ERROR")
 
 transcript_service = TranscriptSparkService(spark_session)
 
-translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False)
-mRNA = translatable_exons
-mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
-mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
-mRNA = mRNA_neg.unionByName(mRNA_pos)
-
-mRNA =\
-        mRNA.groupBy("transcript_stable_id", "version", "gene_id")\
-        .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
-        .alias("coordinates"))\
-        .drop("created_date", "modified_date", "stable_id")
-
 #Is transcript canonical
 @udf(returnType=StringType())
 def gene_desc(locus_tag, desc):
@@ -93,19 +82,18 @@ def splitCoordinates(coordinates):
          return "\nFT   " + coordinates[0]
     length = len(coordinates[1])
     repeats = 57//length
-    
+    lines = math.ceil(len(coordinates)/repeats)
     i = 1
     coord_local = "\nFT   " + coordinates[0] + ","
+    
     for j in range(0, repeats - 1):
         coord_local = coord_local + coordinates[i] + ","
         if (i < len(coordinates)-1):
-            i = i+1
+            i = i+1         
     result = coord_local
 
-    for x in range(0, len(coordinates) - 1, repeats):
+    for x in range(0, lines - 1):
          coord_local = ""
-         if (i >= len(coordinates)-1):
-             break
          for j in range(0, repeats):
               coord_local = coord_local + coordinates[i] + ","
               if (i < len(coordinates)-1):
@@ -113,8 +101,7 @@ def splitCoordinates(coordinates):
               else:
                   break
  
-         result = result + "\nFT                   " + coord_local
-    
+         result = result + "\nFT                   " + coord_local  
     return result[:-1]
 
 #Split coordinates to lines
@@ -147,6 +134,18 @@ transcripts = spark_session.read\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False, False, True)
+mRNA = translatable_exons
+mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
+mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+mRNA = mRNA_neg.unionByName(mRNA_pos)
+
+mRNA =\
+        mRNA.groupBy("transcript_stable_id", "version", "gene_id")\
+        .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
+        .alias("coordinates"))\
+        .drop("created_date", "modified_date", "stable_id")
+
 mRNA = mRNA.withColumn("single", is_single("coordinates"))
 
 mRNA_single = mRNA.filter("single=True")
@@ -157,11 +156,11 @@ mRNA =\
 mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
 mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
+
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
 mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
-cds = mRNA
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
@@ -170,13 +169,39 @@ gene = gene_pos.unionByName(gene_neg)
 gene = gene.withColumn("gene_id_note", concat(lit("FT                   /gene="), "stable_id", lit("."), "version"))
 gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
 
+
 sequence = spark_session.read.orc(seq)
+
+
+cds = transcript_service.translatable_exons(url, username, pwd, None, None, False)
+cds_pos = cds.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
+cds_neg = cds.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+cds = cds_neg.unionByName(cds_pos)
+
+cds =\
+        cds.groupBy("transcript_stable_id", "version", "gene_id")\
+        .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
+        .alias("coordinates"))\
+        .drop("created_date", "modified_date", "stable_id")
+cds = cds.withColumn("single", is_single("coordinates"))
+
+cds_single = cds.filter("single=True")
+
+cds =\
+    cds.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
+
+cds = cds.unionByName(cds_single)
+cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
+cds = cds.withColumn("coordinates", splitCoordinates("coordinates"))
+cds = cds.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
+
+cds = cds.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
+cds = cds.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
+
 cds = cds.drop("version").join(sequence.drop("gene_id"), on = ["transcript_stable_id"])
 cds_codon = cds.filter("codon_table>1").withColumn("gene_id_note", concat(lit("FT                   /transl_table="), "codon_table", lit("\n"), "gene_id_note"))
-cds_codon.show()
 cds_non_codon = cds.filter("codon_table=1").withColumn("gene_id_note", cds.gene_id_note)
 cds = cds_non_codon.union(cds_codon)
-cds = cds.withColumn("coordinates", regexp_replace(cds.coordinates, "mRNA", "CDS "))
 cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=\""), "translation_stable_id", lit("."), "tl_version", lit("\"")))
 cds = cds.withColumn("sequence", splitSequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation=\""), "sequence", lit("\"")))
