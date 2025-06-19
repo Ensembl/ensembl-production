@@ -64,7 +64,7 @@ log.info """\
     source db port          : ${params.source_port}
     target db host          : ${params.target_host}
     target db port          : ${params.target_port}
-    drop source db at end   : ${params.drop_db}
+    drop source db at end   : ${params.drop_source_db}
 
     """
     .stripIndent(true)
@@ -96,6 +96,106 @@ process TAR_COMPRESSED_SQL {
     """
 }
 
+process GET_ARCHIVE_DIR {
+    
+    input:
+    tuple val(job_id), val(db_name)
+    
+    output:
+    tuple val(job_id), val(db_name), val(archive_dir)
+    
+    script:
+    """
+    if [[ "${db_name}" == *"_core_"* ]]; then
+        echo "Core database detected: ${db_name}"
+        
+        # Query the meta table for genome_uuid
+        genome_uuid=\$(mysql -h ${params.source_host} -P ${params.source_port} \\
+            -u ${params.user} -p${params.password} \\
+            -N -e "SELECT meta_value FROM ${db_name}.meta WHERE meta_key='genome.genome_uuid';" 2>/dev/null)
+        
+        if [[ -n "\$genome_uuid" && "\$genome_uuid" != "NULL" ]]; then
+            echo "Found genome UUID: \$genome_uuid"
+            echo "\$genome_uuid" > archive_dir.txt
+        else
+            echo "No genome UUID found, using database name"
+            echo "${db_name}" > archive_dir.txt
+        fi
+    else
+        echo "Non-core database detected: ${db_name}"
+        echo "core-like" > archive_dir.txt
+    fi
+    
+    # Read the result for output
+    archive_dir=\$(cat archive_dir.txt)
+    echo "Archive directory will be: \$archive_dir"
+    """
+}
+
+process VERIFY_SQL_DUMP {
+
+    publishDir "${params.target_path}/db_archive/${db_name}/validation/", mode: 'copy', overwrite: true 
+
+    // run process on cluster
+    executor = 'slurm'
+    queue = 'datamover'
+    //clusterOptions = "--mail-type=END --mail-user=${params.email}"
+    time = '24:00:00'
+    memory = '4.GB'
+
+    tag "$db_name"
+
+    input:
+    tuple val(db_name), path(sql_file), path(orig_counts)
+
+    output:
+    path("${db_name}.verify_status.txt"), emit: verify_status
+    path("${db_name}.orig.sorted.txt")
+    path("${db_name}.verify.sorted.txt")
+
+    script:
+    def restore_db = "${db_name}_verify"
+
+    """
+    echo "Restoring DB: ${restore_db}"
+
+    # Drop and recreate the DB
+    mysql -h ${params.verify_host} -P ${params.verify_port} -u ${params.verify_user} -p${params.verify_password} \\
+        -e 'DROP DATABASE IF EXISTS ${restore_db}; CREATE DATABASE ${restore_db};'
+
+    # Restore SQL dump into new DB
+    mysql -h ${params.verify_host} -P ${params.verify_port} -u ${params.verify_user} -p${params.verify_password} \\
+        ${restore_db} < ${sql_file}
+
+    # Count rows from restored DB
+    mysql -h ${params.verify_host} -P ${params.verify_port} -u ${params.verify_user} -p${params.verify_password} -N \\
+        -e "SELECT table_name, table_rows FROM information_schema.tables WHERE table_schema = '${restore_db}';" \\
+        > ${db_name}.verify_counts.txt
+
+    # Normalize delimiters: convert all spaces or tabs to tabs consistently
+    awk '{\$1=\$1; OFS="\\t"; print}' ${orig_counts} > ${db_name}.orig.normalized.txt
+    awk '{\$1=\$1; OFS="\\t"; print}' ${db_name}.verify_counts.txt > ${db_name}.verify.normalized.txt
+
+    # Sort normalized files
+    sort ${db_name}.orig.normalized.txt > ${db_name}.orig.sorted.txt
+    sort ${db_name}.verify.normalized.txt > ${db_name}.verify.sorted.txt
+
+    # Compare counts
+    if diff -q ${db_name}.orig.sorted.txt ${db_name}.verify.sorted.txt; then
+        echo "VERIFY SUCCESS: ${db_name}" > ${db_name}.verify_status.txt
+    else
+        echo "VERIFY FAILED: ${db_name}" > ${db_name}.verify_status.txt
+        exit 1
+    fi
+
+    # Drop the DB
+    mysql -h ${params.verify_host} -P ${params.verify_port} -u ${params.verify_user} -p${params.verify_password} \\
+        -e 'DROP DATABASE IF EXISTS ${restore_db};'
+    """
+}
+
+
+
 workflow {
 
     main:
@@ -104,7 +204,10 @@ workflow {
         println "Raw params.db_list: ${params.db_list}"
 
         // Split the string into a list and print it
-        db_list = params.db_list.split(',')
+        //db_list = params.db_list.split(',')
+        db_list = file(params.db_list).text
+        .split(',')              // Split by commas
+        .collect { it.trim() }   // Trim whitespace from each element
         println "Split db_list: ${db_list}"
 
         // Check if the split resulted in an empty list
@@ -120,39 +223,68 @@ workflow {
             .view()
             .set { db_names_ch }
 
-        // Submit the db copy job(s)
-        result = DB_COPY_SUBMIT(db_names_ch)
+        if (params.skip_dbcopy) {
+            // If using source DB directly, skip copy
+            println "Using source DB directly, skipping db copy"
 
-        // Extract the job id and map to db name
-        DB_COPY_SUBMIT.out.job_info_ch
-        .map { job_id_file, db_name ->  
-            def job_id = job_id_file.text.trim()  // Read and trim the contents of job_id.txt
-            tuple(job_id, db_name)  // Return the tuple (job_id, db_name)
+            // sort out input for generating sql as expecting id and db_name
+            db_names_ch
+            .map { db_name -> tuple('NA', db_name) }
+            .set { db_input_ch }
+
+            db_input_ch.view()
+
+            // Generate SQL files directly from source
+            GENERATE_SQL(db_input_ch)
+
+            // sql_output_ch = GENERATE_SQL.out.sql_output_file
+            GENERATE_SQL.out.sql_outputs.view()
+            
+            // COMPRESS_FILE(GENERATE_SQL.out.sql_output_file)
+            COMPRESS_FILE(GENERATE_SQL.out.sql_outputs)
+
+            // No cleanup needed for temp DB in this mode
+
+        } else {
+
+            // Submit the db copy job(s)
+            result = DB_COPY_SUBMIT(db_names_ch)
+
+            // Extract the job id and map to db name
+            DB_COPY_SUBMIT.out.job_info_ch
+            .map { job_id_file, db_name ->  
+                def job_id = job_id_file.text.trim()  // Read and trim the contents of job_id.txt
+                tuple(job_id, db_name)  // Return the tuple (job_id, db_name)
+            }
+            .set { job_info_mapped_ch }
+
+            // View the mapped channel contents
+            job_info_mapped_ch.view()
+
+            // Monitor the db copy job
+            MONITOR_DB_COPY(job_info_mapped_ch)
+
+            // Generate SQL files
+            GENERATE_SQL(MONITOR_DB_COPY.out.monitored_job)
+
+            // View the generated files
+            GENERATE_SQL.out.sql_output_file.view()
+
+            // Compress the SQL file
+            // also outputs compressed file to final storage path
+            // leaving this here as needs doing before cleaning up tmp db
+            // which only happens in this condition, so I can't move next step out
+            // compressed_sql_ch = COMPRESS_FILE(GENERATE_SQL.out.sql_output_file)
+            GENERATE_SQL.out.sql_outputs
+                .map { it[1] }  // Get only the sql_file
+                .set { sql_files_ch }
+
+            COMPRESS_FILE(sql_files_ch)
+
+            // Cleanup the temp db created by this pipeline
+            CLEANUP_TMP_DB(compressed_sql_ch, MONITOR_DB_COPY.out.monitored_job)
         }
-        .set { job_info_mapped_ch }
 
-        // View the mapped channel contents
-        job_info_mapped_ch.view()
-
-        // Monitor the db copy job
-        MONITOR_DB_COPY(job_info_mapped_ch)
-
-        // Generate SQL files
-        GENERATE_SQL(MONITOR_DB_COPY.out.monitored_job)
-
-        // View the generated files
-        GENERATE_SQL.out.sql_output_file.view()
-
-        // Compress the SQL file
-        // also outputs compressed file to final storage path
-        compressed_sql_ch = COMPRESS_FILE(GENERATE_SQL.out.sql_output_file)
-
-        // Cleanup the temp db created by this pipeline
-        CLEANUP_TMP_DB(compressed_sql_ch, MONITOR_DB_COPY.out.monitored_job)
-
-        // Cleanup source db (if flag set to true)
-        if (params.drop_source_db == true) {
-            DROP_SOURCE_DB(CLEANUP_TMP_DB.out.cleaned_up)
-        }
-
+        // Output restored counts and compare counts for verification
+        VERIFY_SQL_DUMP(GENERATE_SQL.out.sql_outputs)
 }
