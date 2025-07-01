@@ -133,6 +133,7 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::Production::Pipeline::Common::DbFactory',
             -max_retry_count   => 1,
             -analysis_capacity => 1,
+            -rc_name           => '8GB_D',
             -parameters        => {
                 species      => $self->o('species'),
                 antispecies  => $self->o('antispecies'),
@@ -165,6 +166,7 @@ sub pipeline_analyses {
             -module            => 'Bio::EnsEMBL::DataCheck::Pipeline::RunDataChecks',
             -max_retry_count   => 1,
             -analysis_capacity => 10,
+            -rc_name           => '8GB_D',
             -parameters        => {
                 registry_file    => $self->o('registry'),
                 history_file     => $self->o('history_file'),
@@ -182,6 +184,7 @@ sub pipeline_analyses {
             -max_retry_count   => 1,
             -analysis_capacity => 20,
             -parameters        => {},
+            -rc_name           => '8GB_D',
             -flow_into         => {
                 '2' => [
                     'GenomeDirectoryPaths',
@@ -197,7 +200,7 @@ sub pipeline_analyses {
             -parameters        => {
                 cmd => 'cd "#output_dir#"; find -L . -type f ! -name "md5sum.txt" | sed \'s!^\./!!\' | xargs md5sum > md5sum.txt',
             },
-            -rc_name           => '1GB',
+            -rc_name           => '2GB_D',
             -flow_into         => [ 'Verify' ],
         },
         {
@@ -234,7 +237,7 @@ sub pipeline_analyses {
             -parameters      => {
                 ucsc => $self->o('chain_ucsc'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '8GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ],
             },
@@ -252,7 +255,7 @@ sub pipeline_analyses {
                 overwrite      => 1,
 
             },
-            -rc_name         => '4GB',
+            -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1'   => [ 'Genome_FASTA_mem' ],
                '2' => [ 'FAAbgzip' ],
@@ -270,7 +273,7 @@ sub pipeline_analyses {
                 unmasked       => 1,
                 hardmasked     => 1,
             },
-            -rc_name         => '8GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                '2' => [ 'FAAbgzip' ],
             },
@@ -284,7 +287,7 @@ sub pipeline_analyses {
             },
             -can_be_empty  => 1,
             -hive_capacity => 10,
-            -rc_name       => '4GB',
+            -rc_name           => '8GB_D',
             -flow_into     => {
                 #TODO: trigger_next_step not declared  2 => WHEN('#trigger_next_step# == 1' => 'UpdateDatasetAttribute'),
                 3 => [ 'Compress_File' ],
@@ -296,7 +299,7 @@ sub pipeline_analyses {
             -max_retry_count => 1,
             -hive_capacity   => 10,
             -parameters      => {},
-            -rc_name         => '1GB',
+            -rc_name           => '8GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ]
             },
@@ -309,7 +312,7 @@ sub pipeline_analyses {
             -parameters      => {
                 per_chromosome => 0,
             },
-            -rc_name         => '2GB',
+            -rc_name           => '8GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_EMBL_mem' ],
                 '2'  => [ 'Compress_File' ]
@@ -324,7 +327,7 @@ sub pipeline_analyses {
                 per_chromosome => 0,
                 overwrite      => 1,
             },
-            -rc_name         => '4GB',
+            -rc_name           => '16GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ]
             },
@@ -337,7 +340,7 @@ sub pipeline_analyses {
             -parameters      => {
                 blast_index => 0,
             },
-            -rc_name         => '1GB',
+            -rc_name         => '16GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_FASTA_mem' ],
                 '2'  => [ 'Compress_File' ]
@@ -352,7 +355,7 @@ sub pipeline_analyses {
                 blast_index => 0,
                 overwrite   => 1,
             },
-            -rc_name         => '4GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ]
             },
@@ -367,11 +370,11 @@ sub pipeline_analyses {
                 gt_gff3_exe          => $self->o('gt_gff3_exe'),
                 gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1'   => [ 'Geneset_GFF3_mem' ],
                 '2->A' => [ 'GFFbgzip' ],
-                'A->1' => [ 'Compress_File' ],
+                'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -384,10 +387,10 @@ sub pipeline_analyses {
                 gt_gff3_exe          => $self->o('gt_gff3_exe'),
                 gt_gff3validator_exe => $self->o('gt_gff3validator_exe'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '2->A' => [ 'GFFbgzip' ],
-                'A->1' => [ 'Compress_File' ],
+                'A->2' => [ 'Compress_File' ],
             },
         },
         {
@@ -399,7 +402,7 @@ sub pipeline_analyses {
             },
             -can_be_empty  => 1,
             -hive_capacity => 10,
-            -rc_name       => '4GB',
+            -rc_name           => '8GB_D',
             -flow_into     => {
                 2 => [ 'UpdateDatasetAttribute' ],
             },
@@ -409,6 +412,7 @@ sub pipeline_analyses {
             -module     => 'ensembl.production.hive.HiveDatasetFactory',
             -language   => 'python3',
             -rc_name    => 'default',
+            -rc_name    => '2GB_D',
             -parameters => {
                 'metadata_db_uri' => $self->o('metadata_db_uri'),
             },
@@ -422,7 +426,7 @@ sub pipeline_analyses {
             -parameters        => {
                 compress => "#output_filename#"
             },
-            -rc_name           => '1GB',
+            -rc_name           => '4GB_D',
             -flow_into         => {
                 '-1' => [ 'Compress_File_mem' ],
             },
@@ -436,7 +440,7 @@ sub pipeline_analyses {
             -parameters        => {
                 compress => "#output_filename#"
             },
-            -rc_name           => '4GB',
+            -rc_name           => '8GB_D',
         },          
 
         {
@@ -464,7 +468,7 @@ sub pipeline_analyses {
                 gtf_to_genepred_exe => $self->o('gtf_to_genepred_exe'),
                 genepred_check_exe  => $self->o('genepred_check_exe'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1' => [ 'Geneset_GTF_mem' ],
                 '2'  => [ 'Compress_File' ],
@@ -481,7 +485,7 @@ sub pipeline_analyses {
                 genepred_check_exe  => $self->o('genepred_check_exe'),
                 overwrite           => 1,
             },
-            -rc_name         => '4GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ]
             },
@@ -494,7 +498,7 @@ sub pipeline_analyses {
             -parameters      => {
                 external_dbs => $self->o('xref_external_dbs'),
             },
-            -rc_name         => '1GB',
+            -rc_name           => '16GB_D',
             -flow_into       => {
                 '-1' => [ 'Xref_TSV_mem' ],
                 '2'  => [ 'Compress_File' ],
@@ -509,7 +513,7 @@ sub pipeline_analyses {
                 external_dbs => $self->o('xref_external_dbs'),
                 overwrite    => 1,
             },
-            -rc_name         => '2GB',
+            -rc_name           => '32GB_D',
             -flow_into       => {
                 '2' => [ 'Compress_File' ],
             },
