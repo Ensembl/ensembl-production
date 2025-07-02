@@ -494,7 +494,7 @@ class GFFService():
         @udf(returnType=StringType())
         def construct_type(type, so_term):
             result = type
-            if(len(so_term)>1):
+            if(so_term):
                 #Special type case
                 if so_term == "protein_coding_gene":
                     so_term ="gene"
