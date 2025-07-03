@@ -233,7 +233,7 @@ class TranscriptSparkService:
     def translated_seq(self, db: str, user: str, password: str, exons_df=None, keep_seq=False):
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
          @udf(returnType=StringType())
-         def translate_sequence(raw_sequence, codon_table, cds_start_nf, id, phase):
+         def translate_sequence(raw_sequence, codon_table, phase):
              
              if ((raw_sequence is None) or (len(raw_sequence) == 0)):
                  return
@@ -256,19 +256,17 @@ class TranscriptSparkService:
              sequence = str(sequence)
 
              return sequence
-         cds_start_nf_df = self._spark.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", db)\
-            .option("dbtable", "(select ta.* from transcript_attrib ta left join attrib_type at \
-            on at.attrib_type_id = ta.attrib_type_id where at.code=\"cds_start_NF\")tmp")\
-            .option("user", user)\
-            .option("password", password)\
-            .load().dropDuplicates()
+
+         #We need to have in DF genomic coordinates of the translation
+         translatable_exons = self.translatable_exons(db, user, password,
+                         exons_df, None, False, True)
+
          translated_sequence = \
-         translated_seq.join(cds_start_nf_df, "transcript_id", how="leftouter").withColumn("sequence",
-                                     translate_sequence("sequence", "codon_table", "value", "translation_stable_id", "phase"))
-                  
+         translated_seq.withColumn("sequence",
+                                     translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
+         #Join by exon_id
+         translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
+                      
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
@@ -276,6 +274,7 @@ class TranscriptSparkService:
                                             True)
          translated_sequence = self.apply_edits(translated_sequence,
                                                 seq_edits, True)
+         
          return translated_sequence
 
 
@@ -290,7 +289,7 @@ class TranscriptSparkService:
         if (exons_df == None):
             exon_service = ExonSparkService(self._spark)
             exons_df = exon_service.exons_with_seq(db,  user,\
-                                                   password).repartition(10);
+                                                   password).repartition(10)
             if (exons_df == None):
                 return
         #For each exon calculate length, concat with id for further translation
@@ -379,6 +378,7 @@ class TranscriptSparkService:
                 result = transcripts_with_seq
             else:
                 result = result.union(transcripts_with_seq)
+        #Translation start and end relative to seq start
         transcripts_with_seq =\
         result.withColumn("translation_region_start",
                                         get_translation_start("length",
@@ -403,7 +403,7 @@ class TranscriptSparkService:
     Returns all translatable exons of the database
     """
     def translatable_exons(self, db: str, user: str, password: str,
-                         exons_df=None, tmp_folder=None, utr=True):
+                         exons_df=None, tmp_folder=None, utr=True, edge_only = False, mRNA = False):
 
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
@@ -460,7 +460,7 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-        #Phase of the exon should be . of it is -1
+        #Phase of the exon shotuld be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase > 2):
@@ -470,43 +470,53 @@ class TranscriptSparkService:
         translation_service = TranslationSparkService(self._spark)
         if (exons_df == None):
             exon_service = ExonSparkService(self._spark)
-            exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder);
+            exons_df = exon_service.load_exons_fs(db, user, password, tmp_folder)
             if (exons_df == None):
                 return
         transcripts_df = self.load_transcripts_fs(db, user, password, tmp_folder) 
         exons_df=exons_df.withColumnRenamed("stable_id", "exon_stable_id") 
         #Find all canonical translations    
         translations_df = translation_service.load_translations_fs(db, user, password, tmp_folder)
-        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id", "source")\
+        transcripts_df= transcripts_df.select("transcript_id", "canonical_translation_id", "stable_id", "source", "gene_id")\
             .withColumnRenamed("canonical_translation_id", "translation_id")\
             .withColumnRenamed("stable_id", "transcript_stable_id")\
                 
         transcripts_df = transcripts_df.join(translations_df.drop("transcript_id", "created_date", "modified_date").withColumnRenamed("version", "tl_version"), on=["translation_id"], how="right")
+        
         #Find translation seq start and end
-
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.start_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_start", tl_start("seq_region_start", "seq_region_end", "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand")
         
         transcripts_df = transcripts_df.join(exons_df.select("seq_region_start", "seq_region_end", "exon_id", "seq_region_strand"), on=[transcripts_df.end_exon_id==exons_df.exon_id], how = "left").dropDuplicates()
         transcripts_df = transcripts_df.withColumn("tl_end", tl_end("seq_region_start", "seq_region_end",  "seq_start", "seq_end", "seq_region_strand")).drop("seq_region_start", "seq_region_end", "exon_id", "seq_end", "seq_start", "seq_region_strand")
         
+        #Determine translatabe exons
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
+        
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
 
         result=translatables.filter("translatable = 0")
-
+        #Uncroped for mRNA
+        if (mRNA == True):
+            return result
+        #Crop exons to CDS
         result = result.withColumn("seq_region_start", crop_tl_start("seq_region_start", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id")).drop("translatable")
         result = result.withColumn("seq_region_end", crop_tl_end("seq_region_end", "tl_start", "tl_end", "exon_id", "start_exon_id", "end_exon_id"))
+        
+        #For some tasks we need only start and end exons        
+        if (edge_only):
+            return result.filter("(exon_id == start_exon_id) or (exon_id == end_exon_id)")
+        
         result = result.withColumn("phase", map_phase(3 - result.phase))
-        
-        
+
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
-                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
-        
-
-        
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source", "gene_id")
+        #If case we need croped part of transcript
         if (utr):
+            result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
+                                       "seq_region_start", "seq_region_end",
+                                          "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source")
             exons_df = exons_df.withColumnRenamed("seq_region_start", "orig_start").withColumnRenamed("seq_region_end", "orig_end").withColumnRenamed("exon_id", "orig_exon_id")
             exons_df = exons_df.select("orig_exon_id", "orig_start", "orig_end")
             
@@ -536,6 +546,8 @@ class TranscriptSparkService:
             
             result_five_prime_utr = result_five_prime_utr.union(result_three_prime_utr).union(five_prime_utr).union(three_prime_utr).dropDuplicates().withColumn("phase",lit("."))
 
-        return result.union(result_five_prime_utr)
+            return result.union(result_five_prime_utr)
+        
+        return result
         
         

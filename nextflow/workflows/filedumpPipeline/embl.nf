@@ -13,32 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-process DumpGFF3_GTFFiles {
+process DumpEMBLFiles {
 
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
-  tag "${db_name}-dump_gff_gtf"
+  tag "${db_name}-dump_embl"
 
   input: 
   each db_name
-  path pep 
-  path cdna
+  path gff 
+  path gtf
   path sequence
 
   output:
-  stdout
-  path "test_gff.gff"
-  path "test_gtf.gtf"
-  path "${sequence}"
+  path "test.embl"
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
-  ${params.nf_py_script_path}file_dump/dump_gff3_gtf.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${sequence} --password ${params.password}  --db ${params.server}/${db_name}  && echo -n ${db_name}
+  ${params.nf_py_script_path}file_dump/dump_embl.py --base_dir=${BASE_DIR}\
+   --username ${params.user} --sequence ${sequence} --password ${params.password}  --db ${params.server}/${db_name}
   """
 }
