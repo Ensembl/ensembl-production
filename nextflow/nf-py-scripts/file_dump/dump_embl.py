@@ -24,6 +24,7 @@ import glob
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
+from ensembl.production.spark.core.ExonSparkService import ExonSparkService
 from pyspark.sql.functions import concat, concat_ws, lit, expr, udf, regexp_replace, desc
 from pyspark.sql.types import BooleanType, StringType, IntegerType
 import argparse
@@ -58,6 +59,7 @@ spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi)
 spark_session.sparkContext.setLogLevel("ERROR")
 
 transcript_service = TranscriptSparkService(spark_session)
+exon_service = ExonSparkService(spark_session)
 
 #Is transcript canonical
 @udf(returnType=StringType())
@@ -134,6 +136,9 @@ transcripts = spark_session.read\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+
+exons = exon_service.load_exons_fs(url, username, pwd, "exons")
+
 translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False, False, True)
 mRNA = translatable_exons
 mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
@@ -171,8 +176,6 @@ gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
 
 
 sequence = spark_session.read.orc(seq)
-
-
 cds = transcript_service.translatable_exons(url, username, pwd, None, None, False)
 cds_pos = cds.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
 cds_neg = cds.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
@@ -205,15 +208,26 @@ cds = cds_non_codon.union(cds_codon)
 cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=\""), "translation_stable_id", lit("."), "tl_version", lit("\"")))
 cds = cds.withColumn("sequence", splitSequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation=\""), "sequence", lit("\"")))
-mRNA = mRNA.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
-gene = gene.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
-cds = cds.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end")
-result = gene.unionByName(mRNA).unionByName(cds)
+
+exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_id", "transcript_stable_id", "gene_id"), on = ["transcript_id"])\
+    .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"])
+
+exon_pos = exon.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   exon            "), "seq_region_start", lit(".."), "seq_region_end"))
+exon_neg = exon.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   exon            "),lit("compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+exon = exon_neg.unionByName(exon_pos)
+exon = exon.withColumn("gene_id_note", concat(lit("FT                   /note=\"exon_id="), "stable_id", lit("."), "version", lit("\"")))
+exon = exon.withColumn("feature_id", lit(""))
+
+exon = exon.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
+mRNA = mRNA.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
+gene = gene.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("0"))
+cds = cds.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
+result = gene.unionByName(mRNA).unionByName(cds).unionByName(exon)
 
 file_path = "./test.embl"
 tmp_fp = "_embl"
 
-result.repartition(1).orderBy("gene_id", "seq_region_start", desc("seq_region_end")).drop("gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
+result.repartition(1).orderBy("gene_id", "transcript_stable_id", "seq_region_start", desc("seq_region_end")).drop("transcript_stable_id", "gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
