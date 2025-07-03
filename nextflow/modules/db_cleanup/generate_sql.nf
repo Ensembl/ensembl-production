@@ -22,7 +22,7 @@ process GENERATE_SQL {
     //publishDir "sql/${db_name}", mode: 'copy', overwrite: true  // Publish SQL files to 'sql' directory
 
     input:
-    tuple val(job_id), val(db_name) // Get job ID and db name from job_info_ch
+    tuple val(job_id), val(db_name), val(genome_uuid) // Get job ID and db name from job_info_ch
 
     // output:
     // path "${db_name}.pre_stats.txt", emit: pre_stats
@@ -30,7 +30,7 @@ process GENERATE_SQL {
     // path "${db_name}.table_row_counts.txt", emit: table_row_counts
 
     output:
-    tuple val(db_name), path("${db_name}.sql"), path("${db_name}.table_row_counts.txt"), emit: sql_outputs
+    tuple val(db_name), path("${db_name}.sql"), path("${db_name}.table_row_counts.txt"), val(genome_uuid), emit: sql_outputs
     path "${db_name}.sql", emit: sql_output_file  // Output from sql file dump
     path "${db_name}.dump_check.txt", emit: dump_check
     // path "${db_name}.table_row_counts.txt", emit: table_row_counts

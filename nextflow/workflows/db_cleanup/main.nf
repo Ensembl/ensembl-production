@@ -96,45 +96,45 @@ process TAR_COMPRESSED_SQL {
     """
 }
 
-process GET_ARCHIVE_DIR {
+
+process GET_GENOME_UUID {
     
     input:
     tuple val(job_id), val(db_name)
     
     output:
-    tuple val(job_id), val(db_name), val(archive_dir)
+    tuple val(job_id), val(db_name), path('genome_uuid.txt')
     
     script:
     """
     if [[ "${db_name}" == *"_core_"* ]]; then
-        echo "Core database detected: ${db_name}"
+        echo "Core database detected: ${db_name}" >&2
         
         # Query the meta table for genome_uuid
         genome_uuid=\$(mysql -h ${params.source_host} -P ${params.source_port} \\
-            -u ${params.user} -p${params.password} \\
+            -u ensro \\
             -N -e "SELECT meta_value FROM ${db_name}.meta WHERE meta_key='genome.genome_uuid';" 2>/dev/null)
         
         if [[ -n "\$genome_uuid" && "\$genome_uuid" != "NULL" ]]; then
-            echo "Found genome UUID: \$genome_uuid"
-            echo "\$genome_uuid" > archive_dir.txt
+            echo "Found genome UUID: \$genome_uuid" >&2
+            echo "\$genome_uuid" > genome_uuid.txt
         else
-            echo "No genome UUID found, using database name"
-            echo "${db_name}" > archive_dir.txt
+            echo "No genome UUID found, using database name" >&2
+            echo "${db_name}" > genome_uuid.txt
         fi
     else
-        echo "Non-core database detected: ${db_name}"
-        echo "core-like" > archive_dir.txt
+        echo "Non-core database detected: ${db_name}" >&2
+        echo "core-like" > genome_uuid.txt
     fi
-    
-    # Read the result for output
-    archive_dir=\$(cat archive_dir.txt)
-    echo "Archive directory will be: \$archive_dir"
     """
 }
 
+
 process VERIFY_SQL_DUMP {
 
-    publishDir "${params.target_path}/db_archive/${db_name}/validation/", mode: 'copy', overwrite: true 
+    // publishDir "${params.target_path}/db_archive/${db_name}/validation/", mode: 'copy', overwrite: true 
+    publishDir "${params.target_path}/db_archive/${genome_uuid}/validation/", mode: 'copy', overwrite: true 
+
 
     // run process on cluster
     executor = 'slurm'
@@ -146,7 +146,9 @@ process VERIFY_SQL_DUMP {
     tag "$db_name"
 
     input:
-    tuple val(db_name), path(sql_file), path(orig_counts)
+    // tuple val(db_name), path(sql_file), path(orig_counts)
+    tuple val(db_name), path(sql_file), path(orig_counts), val(genome_uuid)  // Add genome_uuid
+
 
     output:
     path("${db_name}.verify_status.txt"), emit: verify_status
@@ -204,7 +206,7 @@ workflow {
         println "Raw params.db_list: ${params.db_list}"
 
         // Split the string into a list and print it
-        //db_list = params.db_list.split(',')
+        // db_list = params.db_list.split(',')
         db_list = file(params.db_list).text
         .split(',')              // Split by commas
         .collect { it.trim() }   // Trim whitespace from each element
@@ -234,8 +236,22 @@ workflow {
 
             db_input_ch.view()
 
+            // Get archive directory for skip_dbcopy path
+            GET_GENOME_UUID(db_input_ch)
+
+            // After GET_GENOME_UUID, extract the UUID value
+            GET_GENOME_UUID.out
+            .map { job_id, db_name, uuid_file -> 
+                def genome_uuid = uuid_file.text.trim()
+                tuple(job_id, db_name, genome_uuid)
+            }
+            .set { genome_uuid_ch }
+
+            genome_uuid_ch.view()
+
             // Generate SQL files directly from source
-            GENERATE_SQL(db_input_ch)
+            // GENERATE_SQL(db_input_ch)
+            GENERATE_SQL(genome_uuid_ch)
 
             // sql_output_ch = GENERATE_SQL.out.sql_output_file
             GENERATE_SQL.out.sql_outputs.view()

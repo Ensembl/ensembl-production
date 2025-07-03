@@ -20,13 +20,13 @@ process COMPRESS_FILE {
     tag "$db_name"
 
     // get working and then check which compression method to use
-    publishDir "${params.target_path}/db_archive/${db_name}/sql_bz2/", mode: 'copy', overwrite: true 
+    publishDir "${params.target_path}/db_archive/${genome_uuid}/sql_bz2/", mode: 'copy', overwrite: true 
 
     // copies compressed file to user-provided target path
     // publishDir params.target_path, mode: 'copy', overwrite: true
 
     input:
-    tuple val(db_name), path(sql_file), path(orig_counts)
+    tuple val(db_name), path(sql_file), path(orig_counts), val(genome_uuid)
 
     output:
     path "${sql_file}.bz2", emit: compressed_sql_ch  // Output compressed table-named file into a channel
