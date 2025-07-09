@@ -385,6 +385,7 @@ feature for the position of this on the genome
 - mRNA_start_NF: the mRNA start could not be confirmed.
 - gencode_basic: the transcript is part of the gencode basic geneset
 - gencode_primary: the transcript is part of the gencode primary geneset
+- ens_canon_extended: the transcript is part of the Ensembl Canonical Extended set
 
 Comments
 
