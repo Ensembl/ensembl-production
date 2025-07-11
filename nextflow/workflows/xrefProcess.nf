@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+import groovy.json.JsonSlurper
 
 // Parameter default values
 params.pipeline_name = 'Xref Process Pipeline'
@@ -173,7 +174,8 @@ workflow species_flow {
 
 	    dataflow_combined = RunXrefAdvisoryDatacheck.out.dataflow_success
             .mix(RunXrefAdvisoryDatacheck.out.dataflow_fail)
-        advisory_report_ch = process_output(dataflow_combined)
+        // advisory_report_ch = process_output(dataflow_combined)
+        advisory_report_ch = process_dc_output(dataflow_combined)
 
         // Collect advisory datacheck outputs
         AdvisoryXrefReport(advisory_report_ch, timestamp)
@@ -186,6 +188,21 @@ def process_output(output_channel) {
         def result = []
         for (line in dataflow_file.readLines()) {
             result << tuple(species_name, line)
+        }
+        return result
+    }
+}
+
+def process_dc_output(output_channel) {
+    return output_channel.flatMap { species_name, dataflow_file ->
+        def result = []
+        for (line in dataflow_file.readLines()) {
+            def jsonSlurper = new JsonSlurper()
+            def dataflowMap = jsonSlurper.parseText(line)
+            if (dataflowMap.datacheck_output?.contains("Failed")) {
+                def dc_name = dataflowMap.datacheck_name
+                result << tuple(species_name, dc_name, line)
+            }
         }
         return result
     }
@@ -566,10 +583,10 @@ process RunXrefAdvisoryDatacheck {
 
 process AdvisoryXrefReport {
     label 'default_process'
-    tag "$species_name"
+    tag "$species_name - $dc_name"
 
     input:
-    tuple val(species_name), val(dataflow)
+    tuple val(species_name), val(dc_name), val(dataflow)
     val timestamp
 
     output:

@@ -41,10 +41,24 @@ class XenopusJamboreeParser(BaseParser):
             file_io.seek(0)
 
             csv_reader = csv.reader(file_io, delimiter="\t")
+            line_buffer = []
 
             # Read lines
             for line in csv_reader:
-                accession, label, desc, stable_id = line[:4]
+                # Skip empty lines
+                if not line:
+                    continue
+
+                if line_buffer and len(line_buffer) < 4:
+                    # This is likely a continuation (e.g., line starts with a tab)
+                    line = [x for x in line if x != '']
+                    line_buffer.extend(line)
+                else:
+                    line_buffer = line
+
+                if len(line_buffer) >= 4:
+                    accession, label, desc, stable_id = line_buffer[:4]
+                    line_buffer = []
 
                 # If there is a description, trim it a bit
                 if desc:
