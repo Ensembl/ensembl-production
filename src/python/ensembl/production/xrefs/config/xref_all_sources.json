@@ -7,6 +7,13 @@
       "priority" : 1
     },
     {
+      "name" : "CCDS",
+      "parser" : "CCDSParser",
+      "file" : "Database",
+      "db" : "ccds",
+      "priority" : 1
+    },
+    {
       "name" : "UniParc",
       "parser" : "ChecksumParser",
       "file" : "https://ftp.ebi.ac.uk/pub/contrib/uniparc/upidump.lis.gz",
@@ -21,9 +28,27 @@
       "priority" : 1
     },
     {
+      "name" : "DBASS3",
+      "parser" : "DBASSParser",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass3/DownloadCsv",
+      "priority" : 1
+    },
+    {
+      "name" : "DBASS5",
+      "parser" : "DBASSParser",
+      "file" : "https://www.dbass.soton.ac.uk/Dbass5/DownloadCsv",
+      "priority" : 1
+    },
+    {
       "name" : "EntrezGene",
       "parser" : "EntrezGeneParser",
       "file" : "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_info.gz",
+      "priority" : 1
+    },
+    {
+      "name" : "HPA",
+      "parser" : "HPAParser",
+      "file" : "https://www.proteinatlas.org/download/xref.php",
       "priority" : 1
     },
     {
@@ -34,9 +59,27 @@
     },
     {
       "name" : "MGI_desc",
-      "parser" : "MGIDescParser",
+      "parser" : "MGI_Desc_Parser",
       "file" : "https://www.informatics.jax.org/downloads/reports/MRK_List2.rpt",
       "priority" : 1
+    },
+    {
+      "name" : "MGI_ccds",
+      "parser" : "MGI_CCDS_Parser",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_mouse/CCDS.current.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "MIM2GENE",
+      "parser" : "Mim2GeneParser",
+      "file" : "https://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen",
+      "priority" : 3
+    },
+    {
+      "name" : "MIM",
+      "parser" : "MIMParser",
+      "file" : "https://data.omim.org/downloads/ZpPlmgwjuTBK9T5vf2sFjA/omim.txt.gz",
+      "priority" : 2
     },
     {
       "name" : "RFAM",
@@ -67,24 +110,28 @@
     },
     {
       "name" : "RefSeq_dna",
-      "parser" : "RefSeqParser",
+      "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.*rna.gbff.gz",
       "method" : "--bestn 5",
       "query_cutoff" : 90,
       "target_cutoff" : 90,
       "release" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "preparse" : 1,
       "priority" : 2,
       "release_number" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/RELEASE_NUMBER",
       "catalog" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/release-catalog/release*.files.installed"
     },
     {
       "name" : "RefSeq_peptide",
-      "parser" : "RefSeqParser",
+      "parser" : "RefSeqDatabaseParser",
+      "old_parser" : "RefSeqGPFFParser",
       "file" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.*.protein.gpff.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
       "release" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/release-notes/RefSeq-release*.txt",
+      "preparse" : 1,
       "priority" : 3,
       "release_number" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/RELEASE_NUMBER",
       "catalog" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/release-catalog/release*.files.installed"
@@ -97,6 +144,13 @@
       "priority" : 2
     },
     {
+      "name" : "UCSC_hg38",
+      "parser" : "UCSCParser",
+      "file" : "https://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/knownGene.txt.gz",
+      "release" : "https://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/README.txt",
+      "priority" : 1
+    },
+    {
       "name" : "UCSC_mm10",
       "parser" : "UCSCParser",
       "file" : "https://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/knownGene.txt.gz",
@@ -105,21 +159,25 @@
     },
     {
       "name" : "Uniprot/SWISSPROT",
-      "parser" : "UniProtParser",
+      "parser" : "UniProtDatabaseParser",
+      "old_parser" : "UniProtParser",
       "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_sprot.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
+      "preparse" : 1,
       "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
     {
       "name" : "Uniprot/SPTREMBL",
-      "parser" : "UniProtParser",
+      "parser" : "UniProtDatabaseParser",
+      "old_parser" : "UniProtParser",
       "file" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.dat.gz",
       "method" : "--bestn 1",
       "query_cutoff" : 100,
       "target_cutoff" : 100,
+      "preparse" : 1,
       "release" : "https://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/reldate.txt",
       "priority" : 1
     },
@@ -130,18 +188,6 @@
       "priority" : 1
     },
     {
-      "name" : "ZFIN_desc",
-      "parser" : "ZFINDescParser",
-      "file" : "https://zfin.org/downloads/genetic_markers.txt",
-      "priority" : 1
-    },
-    {
-      "name" : "ZFIN_ID",
-      "parser" : "ZFINParser",
-      "file" : "https://zfin.org/data_transfer/Downloads/uniprot.txt",
-      "priority" : 3
-    },
-    {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
       "file" : "https://zfin.org/data_transfer/Downloads/refseq.txt",
@@ -150,14 +196,26 @@
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
-      "file" : "https://zfin.org/data_transfer/Downloads/aliases.txt",
-      "priority" : 3
+      "file" : "https://zfin.org/data_transfer/Downloads/uniprot.txt",
+      "priority" : 2
     },
     {
       "name" : "ZFIN_ID",
       "parser" : "ZFINParser",
-      "file" : "https://zfin.org/downloads/ensembl_1_to_1.txt",
-      "priority" : 3
+      "file" : "https://zfin.org/data_transfer/Downloads/aliases.txt",
+      "priority" : 2
+    },
+    {
+      "name" : "ZFIN_ID",
+      "parser" : "ZFINParser",
+      "file" : "https://zfin.org/data_transfer/Downloads/gene_seq.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "ZFIN_desc",
+      "parser" : "ZFINDescParser",
+      "file" : "https://zfin.org/downloads/genetic_markers.txt",
+      "priority" : 1
     },
     {
       "name" : "cint_jgi_v1",
@@ -179,5 +237,12 @@
       "query_cutoff" : 90,
       "target_cutoff" : 90,
       "priority" : 1
+    },
+    {
+      "name" : "HGNC",
+      "parser" : "HGNCParser",
+      "file" : "https://www.genenames.org/cgi-bin/download/custom?col=gd_hgnc_id&col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_eg_id&col=gd_pub_ensembl_id&col=gd_pub_refseq_ids&col=gd_ccds_ids&col=gd_lsdb_links&status=Approved&status_opt=2&where=&order_by=gd_app_sym_sort&format=text&limit=&hgnc_dbtag=on&submit=submit",
+      "db" : "ccds",
+      "priority" : 3
     }
 ]
