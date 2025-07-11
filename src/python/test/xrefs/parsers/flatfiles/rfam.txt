@@ -1,0 +1,381 @@
+# STOCKHOLM 1.0
+
+#=GF AC   RF00001
+#=GF ID   5S_rRNA
+#=GF DE   5S ribosomal RNA
+#=GF AU   Griffiths-Jones SR; 0000-0001-6043-807X
+#=GF AU   Mifsud W; 0000-0002-9805-6461
+#=GF AU   Gardner PP; 0000-0002-7808-1213
+#=GF SE   Szymanski et al, 5S ribosomal database, PMID:11752286
+#=GF SS   Published; PMID:11283358
+#=GF GA   38.00
+#=GF TC   38.00
+#=GF NC   37.90
+#=GF TP   Gene; rRNA;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -T 24.99 -Z 549862.597050 CM SEQDB
+#=GF CL   CL00113
+#=GF DR   URL; http://rose.man.poznan.pl/5SData/;
+#=GF DR   SO; 0000652; rRNA_5S;
+#=GF DR   GO; 0003735; structural constituent of ribosome;
+#=GF DR   GO; 0005840; ribosome;
+#=GF RN   [1]
+#=GF RM   11752286
+#=GF RT   5S Ribosomal RNA Database.
+#=GF RA   Szymanski M, Barciszewska MZ, Erdmann VA, Barciszewski J
+#=GF RL   Nucleic Acids Res 2002;30:176-178.
+#=GF RN   [2]
+#=GF RM   11283358
+#=GF RT   Crystal structure of the ribosome at 5.5 A resolution.
+#=GF RA   Yusupov MM, Yusupova GZ, Baucom A, Lieberman K, Earnest TN, Cate JH,
+#=GF RA   Noller HF
+#=GF RL   Science 2001;292:883-896.
+#=GF RN   [3]
+#=GF RM   10926492
+#=GF RT   The role of the central zinc fingers of transcription factor IIIA in
+#=GF RT   binding to 5 S RNA.
+#=GF RA   Searles MA, Lu D, Klug A
+#=GF RL   J Mol Biol 2000;301:47-60.
+#=GF RN   [4]
+#=GF RM   23838690
+#=GF RT   Systematic analysis and evolution of 5S ribosomal DNA in metazoans.
+#=GF RA   Vierna J, Wehner S, Honer zu Siederdissen C, Martinez-Lage A, Marz M
+#=GF RL   Heredity (Edinb). 2013;111:410-421.
+#=GF CC   5S ribosomal RNA (5S rRNA) is a component of the large ribosomal subunit
+#=GF CC   in both prokaryotes and eukaryotes. In eukaryotes, it is synthesised by
+#=GF CC   RNA polymerase III (the other eukaryotic rRNAs are cleaved from a 45S
+#=GF CC   precursor synthesised by RNA polymerase I). In Xenopus oocytes, it has
+#=GF CC   been shown that fingers 4-7 of the nine-zinc finger transcription factor
+#=GF CC   TFIIIA can bind to the central region of 5S RNA. Thus, in addition to
+#=GF CC   positively regulating 5S rRNA transcription, TFIIIA also stabilises 5S
+#=GF CC   rRNA until it is required for transcription.
+#=GF WK   5S_ribosomal_RNA
+#=GF SQ   712
+
+
+
+X01556.1/3-118           --CUUGAC-GA-U-C-AU-AGA----GC-G-U-U-G---GA----------A-CC-A----------C--CUG----A-UC----CCUUCC------CGA-ACUCA-GA-AGUGAA-A-----------------CGACGCA-U-C--G---CC--GAUG----GUAGUGUG----GGGUUUC-C-CCAUG-UGA---G---AGUA----GG-U-CA-UC--G-UCAAGC
+X55260.1/3-119           --UACGGC-GG-C-C-AU-AGC----GA-A-G-G-G---GA----------A-AU-A----------C--CCG----G-UC----CCAUCC------CGA-ACCCG-GA-AGUCAA-G-----------------CCCUUCA-G-C--G---CC--GAUG----GUACUGCAA---CCGAGAG-G-CUGUG-GGA---G---AGUA----GG-A-CG-CC--G-CCGGAC
+M16174.1/3-119           --UACGGC-GG-C-C-AU-AGC----GG-C-G-G-G---GA----------A-AC-A----------C--CCG----G-UC----CCAUGC------CGA-ACCCG-GA-AGUUAA-G-----------------CCUGCCA-G-C--G---CC--GAUG----GUACUGCAA---CCGAGAG-G-CUGUG-GGA---G---AGUA----GG-A-CG-CC--G-CCGGAC
+X55267.1/3-119           --UACGGC-GG-C-C-AU-AGC----GG-A-G-G-G---GA----------A-AC-G----------C--CCG----G-UC----CCAUUC------CGA-ACCCG-GA-AGCUAA-G-----------------CCCUCCA-G-C--G---CC--GAUG----GUACUGCAC---CCGAGAG-A-GUGUG-GGA---G---AGUA----GG-A-CG-CC--G-CCGGAC
+M16172.1/3-119           --UACGGC-GG-U-C-AU-AGC----GA-A-G-G-G---GA----------A-AC-G----------C--CCG----G-UC----CCAUUC------CGA-ACCCG-GA-AGCUAA-G-----------------CCCUUCA-G-C--G---CC--GAUG----GUACUGCAC---UCGCCAG-G-GUGUG-GGA---G---AGUA----GG-A-CG-CC--G-CCGGAC
+#=GC SS_cons             ..((((((.((.(.,.,,.,<<....-<.<.<.<.<...--..........-.<<.-..........-..<<<....<.<<....______.......>>.-->>>.>-.->>---.-.................>>>>>--.>.>..<...<<..-<<---..-<-<<----..-<<____>.>.-----.>>-...>..-->>-....>>.>..).))..).))))):
+#=GC RF                  ..gccuGc.gg.c.C.AU.Acc....ag.c.g.c.g...aA..........a.gc.A..........C..cgG....a.uC....CCAUCc.......Ga.ACuCc.gA.AguUAA.G.................cgcgcUu.g.g..g...Cc..agggUA..GUAcuagGa..UGgGuGAc.C.uCcUG.ggA...A..gacca....gG.u..g.cc..g.Caggcc
+//
+# STOCKHOLM 1.0
+
+#=GF AC   RF00002
+#=GF ID   5_8S_rRNA
+#=GF DE   5.8S ribosomal RNA
+#=GF AU   Griffiths-Jones SR; 0000-0001-6043-807X
+#=GF AU   Mifsud W; 0000-0002-9805-6461
+#=GF SE   Wuyts et al, European LSU rRNA database, PMID:11125083
+#=GF SS   Published; PMID:11125083
+#=GF GA   42.00
+#=GF TC   42.00
+#=GF NC   41.90
+#=GF TP   Gene; rRNA;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -T 19.62 -Z 742849.287494 CM SEQDB
+#=GF CL   CL00112
+#=GF DR   URL; http://rrna.uia.ac.be/lsu/index.html;
+#=GF DR   SO; 0000375; rRNA_5_8S;
+#=GF DR   GO; 0003735; structural constituent of ribosome;
+#=GF DR   GO; 0005840; ribosome;
+#=GF RN   [1]
+#=GF RM   11125083
+#=GF RT   The European Large Subunit Ribosomal RNA Database.
+#=GF RA   Wuyts J, De Rijk P, Van de Peer Y, Winkelmans T, De Wachter R
+#=GF RL   Nucleic Acids Res 2001;29:175-177.
+#=GF RN   [2]
+#=GF RM   9108162
+#=GF RT   Role of the 5.8S rRNA in ribosome translocation.
+#=GF RA   Abou Elela S, Nazar RN
+#=GF RL   Nucleic Acids Res 1997;25:1788-1794.
+#=GF RN   [3]
+#=GF RM   9154813
+#=GF RT   Cytoplasmic p53 polypeptide is associated with ribosomes.
+#=GF RA   Fontoura BM, Atienza CA, Sorokina EA, Morimoto T, Carroll RB
+#=GF RL   Mol Cell Biol 1997;17:3146-3154.
+#=GF CC   5.8S ribosomal RNA (5.8S rRNA) is a component of the large subunit of the
+#=GF CC   eukaryotic ribosome. It is transcribed by RNA polymerase I as part of the
+#=GF CC   45S precursor that also contains 18S and 28S rRNA. Functionally, it is
+#=GF CC   thought that 5.8S rRNA may be involved in ribosome translocation [2]. It
+#=GF CC   is also known to form covalent linkage to the p53 tumour suppressor
+#=GF CC   protein [3]. 5.8S rRNA is also found in archaea.
+#=GF WK   5.8S_ribosomal_RNA
+#=GF SQ   61
+
+
+L78065.1/3758-3910     AACCCUAGGCAGGGGAUCACUCGGC-UCAUGGAUCGAUGAAGACCGCAGC-UAAA-UG-CGCGUCAGAAUGU-----GAACUG--CAG-GAC---------ACAU-GAACACCGACA--------CGUUGAACG-AUAUUGC-GCAUUGCAC--------GACUC------AGUGCG--AUGUACACA---UUU---UUGAGUGCCC
+AB011808.1/289-442     AACUUUCAACAACGGAUCUCUUGGU-UCUCGCAUCGAUGAAGAACGCAGC-GAAA-UG-CGAUACGUAAUGU-----GAAUUG--CAG-AAUU--------CCGUGAAUCAUCGAAU--------CUUUGAACGCACAUUGC-GCCCCUUGG--------UAUU--------CCAGG--GGGCAUGCC---UGU---UUGAGCGUCA
+X60705.1/112-265       AACUUUUAACAACGGAUCUCUUGGC-UCUAGCAUCGAUGAAGAACGCAGC-GAAA-CG-CGAUAUGUAGUGU-----GAAUUG--CAG-AAUU--------CAGUGAAUCAUCGAAU--------CUUUGAACGCACAUGGC-GCCUUCCAG--------UAUC--------CUGGG--AGGCAUGCC---UGU---CCGAGCGUCG
+M36008.1/959-1112      GACUCUUAGCGGUGGAUCACUCGGC-UCGUGCGUCGAUGAAGAACGCAGC-UAGC-UG-CGAGAAUUAGUGU-----GAAUUG--CAG-GAC---------ACAUUGAUCAUCGACA--------CUUCGAACGCACCUUGC-GGCCCCGGG--------UUCC-------UCCCGG--GGCUACGCC---UGU---CUGAGGGUCG
+#=GC SS_cons           :::::::::::::::::::::::::.::::::::::::::((((<<<<__.____.>>.>>,,,,,,,<<<-.....---<<_..___.>>--........-------->>>,,,,,........,)))),,,<<<___>>>.<<<<<<<<<........____........>>>>>..>>>>:::::...:::...::::::::::
+#=GC RF                AACUuUuAgCgAUGGAUguCUuGGc.UCucGcaUCGAUGAAgaaCGCaGC.gAAa.uG.CGAUAcgUaauGU.....GAAuuG..CAG.aauu........ccgUGAAUCauCGAau........cuuuGAACGCaaaUuGC.gcccccggg........Uuuu........cccgg..gggcAuguc...UGu...uUgAGuGUCu
+//
+# STOCKHOLM 1.0
+
+#=GF AC   RF00003
+#=GF ID   U1
+#=GF DE   U1 spliceosomal RNA
+#=GF AU   Griffiths-Jones SR; 0000-0001-6043-807X
+#=GF AU   Mifsud W; 0000-0002-9805-6461
+#=GF AU   Moxon SJ; 0000-0003-4644-1816
+#=GF AU   Ontiveros-Palacios N; 0000-0001-8457-4455
+#=GF SE   Zwieb C, The uRNA database, PMID:9016512
+#=GF SS   Published; PMID:2405391
+#=GF GA   66.00
+#=GF TC   66.00
+#=GF NC   65.90
+#=GF TP   Gene; snRNA; splicing;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -T 30.00 -Z 742849.287494 CM SEQDB
+#=GF CL   CL00005
+#=GF DR   SO; 0000391; U1_snRNA;
+#=GF DR   GO; 0000395; mRNA 5'-splice site recognition;
+#=GF DR   GO; 0030627; pre-mRNA 5'-splice site binding;
+#=GF DR   GO; 0005685; U1 snRNP;
+#=GF RN   [1]
+#=GF RM   9016512
+#=GF RT   The uRNA database.
+#=GF RA   Zwieb C
+#=GF RL   Nucleic Acids Res 1997;25:102-103.
+#=GF RN   [2]
+#=GF RM   2405391
+#=GF RT   Saccharomyces cerevisiae U1 small nuclear RNA secondary structure contains
+#=GF RT   both universal and yeast-specific domains.
+#=GF RA   Kretzner L, Krol A, Rosbash M
+#=GF RL   Proc Natl Acad Sci U S A 1990;87:851-855.
+#=GF RN   [3]
+#=GF RM   7984237
+#=GF RT   Crystal structure at 1.92 A resolution of the RNA-binding domain of the
+#=GF RT   U1A spliceosomal protein complexed with an RNA hairpin.
+#=GF RA   Oubridge C, Ito N, Evans PR, Teo CH, Nagai K
+#=GF RL   Nature 1994;372:432-438.
+#=GF RN   [4]
+#=GF RM   11297556
+#=GF RT   Two functionally distinct steps mediate high affinity binding of U1A
+#=GF RT   protein to U1 hairpin II RNA.
+#=GF RA   Katsamba PS, Myszka DG, Laird-Offringa IA
+#=GF RL   J Biol Chem 2001;276:21476-21481.
+#=GF RN   [5]
+#=GF RM   19325628
+#=GF RT   Crystal structure of human spliceosomal U1 snRNP at 5.5 A resolution.
+#=GF RA   Pomeranz Krummel DA, Oubridge C, Leung AK, Li J, Nagai K
+#=GF RL   Nature. 2009;458:475-480.
+#=GF RN   [6]
+#=GF RM   30975767
+#=GF RT   Mechanism of 5' splice site transfer for human spliceosome activation.
+#=GF RA   Charenton C, Wilkinson ME, Nagai K
+#=GF RL   Science. 2019;364:362-367.
+#=GF CC   U1 is a small nuclear RNA (snRNA) component of the spliceosome (involved
+#=GF CC   in pre-mRNA splicing). Its 5' end forms complementary base pairs with the
+#=GF CC   5' splice junction, thus defining the 5' donor site of an intron. There
+#=GF CC   are significant differences in sequence and secondary structure between
+#=GF CC   metazoan and yeast U1 snRNAs, the latter being much longer (568
+#=GF CC   nucleotides as compared to 164 nucleotides in human). Nevertheless,
+#=GF CC   secondary structure predictions suggest that all U1 snRNAs share a 'common
+#=GF CC   core' consisting of helices I, II, the proximal region of III, and IV [1].
+#=GF CC   This family does not contain the larger yeast sequences. The structure of
+#=GF CC   U1 spliceosomal RNA has been reported in [5,6]. It present 4 Stem loops
+#=GF CC   (SL1, SL2, SL3, and SL4) and a region call Helix H. SL1, SL2, and SL3 are
+#=GF CC   join for the Helix H, forming a four-helix junction that are separated of
+#=GF CC   SL4. U1 snRNA is important in the precatalytic spliceosome, where the 5'
+#=GF CC   splice site (5'SS) of the pre-mRNA is recognized by pairing with 5'-U1
+#=GF CC   snRNA. Where spliceosome activation is initiated by a disruption of the
+#=GF CC   5′SS–U1 snRNP interaction by the DEAD-box helicase Prp28 [6]. The
+#=GF CC   structure of U1 small nucleolar RNA was reported in PDB:6QX9
+#=GF WK   U1_spliceosomal_RNA
+#=GF SQ   100
+
+
+X06810.1/261-421                        AUACUUACCUGGACGG-GGUCA-AUGG---AUGAUCAA-UAAG-GUCCA-UGGCCU---AGG-GAAGUAACCUCCAUU-----GCACUU-AGGAGG-GGUGCUUU---------CCUA-AGGUCUGCCCAA---GUGG--CAG-AGCCU-ACGUCAUAAUUUGUGGUAG--UGGGGG--CUUGCGUU--CGCGCAGCCCCUUC
+X14417.1/177-340                        AUACUUACCUGGACGG-GGUCA-AUGG---GUAAUCAA-GAAG-UUCCA-UGGCCU---AGG-UUGGUGACCUCCAUU-----GCACUA-AGGAGG-GGUGCUUG---------CCUA-AGGUCGACCCAA---GUGG--UUG-AGCCU-ACGUCAUAAUUUGUUGUUGCAGAGGGG-GCCUGUGUU--CGCGCAGCCCCUAC
+X06809.1/232-392                        AUACUUACCUGGACGG-GGUCA-AUGG---AUGAUCAA-GAAG-GUCCA-UGGCCU---AGG-GAAGUAACCUCCAUU-----GCACUG-AGGAGG-GGUGCCUU---------UCUA-AGGUCUGUCCAA---GUGA--CAG-AGCCU-ACGUCAUAAUUUGUGGUAG--UGGGGG--CCUGCGUU--CGCGCGGCCCCUUU
+URS000032B6B6_9606/1-164                AUACUUACCUGGCAGG-GGAGA-UACC---AUGAUCAC-GAAG-GUGGU-UUUCCCA--GGG-CGAGGCUUAUCCAUU-----GCACUC-CGG-AU-GUGCUGAC---------CCCUGCGAUUUCCCCAAA-UGUGG--GAA-ACUCG-ACUGCAUAAUUUGUGGUAG--UGGGGG--ACUGCGUU--CGCGCUUUCCCCUG
+#=GR URS000032B6B6_9606/1-164 6QX9_1_SS ...........((((..(((((...((...((............))))..))))).(..(((..(.(((.(((((................)).)).).)))..).........)))).(((((((((.(.....)))..))).).)))..)))).................(((((..(..(((......)))..)))))).
+#=GC SS_cons                            :::::::::::((((<.<<<<<.-<<<...<<______.____.>>>>>.>>>>>><..<<<.-<-<<<-<<<<<___.....______._>>->>.>->>>-->.........>>>>,<<<<<<-<<____..__>>..->>->->>>.,))))--------------..-<<<<<.-<-<<<<__..__>>>>->>>>>>:
+#=GC RF                                 AUACUUACCUGGccgg.GGgca.accg...gcGAUCAa.GAAG.gccgg.ugcCCca..ggg.ugaggcuccccCAUU.....GCACUu.cGgagg.gugccgac.........cccuGcGguucccCCaAA..GUGg..ugaaaccCg.AcggCAUAAUUUgUGgUAG..ucgGGG.gaccGcgUU..cGcgCguuCCCcgc
+#=GC RNA_structural_elements            ==========[5pH][================Stem=loop=1============][=========================Stem=loop==========================]=[=======Stem=loop=3==========]==[3pH]================[==========Stem=loop=4========]
+//
+# STOCKHOLM 1.0
+
+#=GF ID   U2
+#=GF DE   U2 spliceosomal RNA
+#=GF AU   Griffiths-Jones SR; 0000-0001-6043-807X
+#=GF AU   Mifsud W; 0000-0002-9805-6461
+#=GF AU   Gardner PP; 0000-0002-7808-1213
+#=GF SE   The uRNA database, PMID:9016512; Griffiths-Jones SR; PMID:18390578
+#=GF SS   Published; PMID:2339054; Griffiths-Jones SR
+#=GF GA   46.00
+#=GF TC   46.00
+#=GF NC   45.90
+#=GF TP   Gene; snRNA; splicing;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -E 1000 -Z 549862.597050 CM SEQDB
+#=GF CL   CL00006
+#=GF DR   SO; 0000392; U2_snRNA;
+#=GF DR   GO; 0000348; mRNA branch site recognition;
+#=GF DR   GO; 0045131; pre-mRNA branch point binding;
+#=GF DR   GO; 0005686; U2 snRNP;
+#=GF RN   [1]
+#=GF RM   9016512
+#=GF RT   The uRNA database.
+#=GF RA   Zwieb C
+#=GF RL   Nucleic Acids Res 1997;25:102-103.
+#=GF RN   [2]
+#=GF RM   11424937
+#=GF RT   A conserved pseudouridine modification in eukaryotic U2 snRNA induces a
+#=GF RT   change in branch-site architecture.
+#=GF RA   Newby MI, Greenbaum NL
+#=GF RL   RNA 2001;7:833-845.
+#=GF RN   [3]
+#=GF RM   11350032
+#=GF RT   Crystal structure of a model branchpoint-U2 snRNA duplex containing bulged
+#=GF RT   adenosines.
+#=GF RA   Berglund JA, Rosbash M, Schultz SC
+#=GF RL   RNA 2001;7:682-691.
+#=GF RN   [4]
+#=GF RM   2339054
+#=GF RT   The spliceosomal snRNAs of Caenorhabditis elegans.
+#=GF RA   Thomas J, Lea K, Zucker-Aprison E, Blumenthal T
+#=GF RL   Nucleic Acids Res 1990;18:2633-2642.
+#=GF CC   U2 is a small nuclear RNA (snRNA) component of the spliceosome (involved
+#=GF CC   in pre-mRNA splicing). Complementary binding between U2 snRNA (in an area
+#=GF CC   lying towards the 5' end but 3' to hairpin I) and the branchpoint sequence
+#=GF CC   (BPS) of the intron results the bulging out of an unpaired adenosine, on
+#=GF CC   the BPS, which initiates a nucleophilic attack at the intronic 5' splice
+#=GF CC   site, thus starting the first of two transesterification reactions that
+#=GF CC   mediate splicing.
+#=GF WK   U2_spliceosomal_RNA
+#=GF SQ   208
+
+
+AALT01209640.1/567-377         AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAU--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--CGUCCUCU-AUCAGAGGACAA------------UAUAUUAAA------UGGAUUUUUGGAAUUA------GGAG-UUGGAAUA-------GGAGC---U-----U----G-CUCCG-------UCCA-CUCCAC-GCAUCGA---CCUGGUAUUGCAGUAC------UUCCAGG--AA--------CGGUGCACCCCCU
+AAFR03033875.1/20528-20718     AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--CGUCCUCU-AUCCGAGGACAA------------UAUAUUAAA------UGGAUUUUUGAAACAG------GGAG-UCGGAAUA-------GGAGC---U-----U----G-CUCCG-------UCCA-CUCCAC-GCAUCGA---CCUGGUAUUGCAGUAC------UUCCAGG--AA--------CGGUGCACUUCCC
+AAIY01044029.1/787-597         AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAGAUCUGAUA--UGUCCUCU-AUCUGAGGACAA------------CAUAUUAAA------CGUAUUUUUGGAAAUA------GGAG-UUGGACCA-------GGAGC---U-----U----G-CUCCA-------UCCA-CUCCAC-GCAUCAG---CCUGGUAUUGCAGUAU------UUCCAGG--AA--------UGGUGCAGCCCCU
+AAZO01007389.1/15370-15178     AUCGCU-UCU----CGGCC--UUA-U-GGCUAAGAUCAAA-GUGUAGUAUCUGUUCUUAUCAGCUUAAUAUCUGAUA--CGACCCUC-AUUGAGGGUCCAG-----------AAUAUUAAA------CUGAUUUUUGGAAACG------GAUG-GAGUGUUA-------GGGGC---U-----U----G-CUCCA-------CCUC-CGUCAC-GGGUUGG---CUCGGCAUUGCAGUAC------AGCCGAG--AU--------CGGCCCACCCUUA
+AAYZ01695118.1/310-500         AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--CGUCCUCU-AUCCGAGGACAA------------UAUAUUAAA------UGGAUUUUUGGACGCU------GGAG-UUGGACUA-------GGAGC---U-----U----G-CUCCA-------UCCA-CUCCGC-GCAUCGA---CCUGGUAUUGCAGUAC------UUCCAGG--AC--------CGGUGCACCCCGU
+AAHX01044404.1/26102-26292     AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUAUUAUCAGUUUAAUAUCUGAUA--UGUCCUCU-AUCUGAGGACAA------------UAUAUUAAA------UGAAUUUUUGGUACUA------GGAG-UUGGAAUA-------GGAGC---U-----U----G-CUCCA-------UCCA-CUCCAC-GCAUCGA---CCUGGUAUUGCAGUAU------UUCCAGG--AA--------UGGUGCACUCCUC
+AACN010750078.1/657-848        AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--CGUCCUCU-AUCCGAGGACAA------------UAUAUUAAA------UGGAUUUUUGGAGCAG------GGAGAUGGAAUAG-------GGAGC---U-----U----G-CUCCG-------UCCA-CUCCGC-GCAUCGA---CCUGGUAUUGCAGUAC------CUCCAGG--AA--------CGGUGCACCCCCU
+AAFN02000024.1/475809-475596   AUC----UCU----UUGCC--AUU-U-GGCUUAGAUCCA--GUGUAGUAUCUGUUCUUUUCAGUGUAACAGCUGAAA---UGUCAUC-AUUGAUGACUUUACAUUAUGUUACAAAUUUAUA------CUUAUUUUUGGAUAUUGG----GUAG-AUUGAUGUAUUAAAGUGGGC---U-----U----G-CUCAC----AGUCUUU-CUACAU-AGUGUCG---UUGCCA-CUGUACUUUUAUU--UUGGCUU--CU--------GACGCAAAUUCUU
+K00034.1/420-610               AUCGCU-UCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--CGUCCUCU-AUCCGAGGACAA------------UAUAUUAAA------UGGAUUUUUGGAACUA------GGAG-UUGGAAUA-------GGAGC---U-----U----G-CUCCG-------UCCA-CUCCAC-GCAUCGA---CCUGGUAUUGCAGUAC------CUCCAGG--AA--------CGGUGCACCCCCU
+ABDG02000029.1/618164-617972   UUAGCUCUCU----UUGCC--UUU-U-GGCUUAGAUCAA--GUGUAGUAUCUGUUCUUUUCAGUUUAAUCUCUGAAA---GGUCUCU-AA-GGAGACCAAUC----------GUGAUUAUU------CUUAUUUUUGUCCUCA------GGGC-GGUCUCCUC------UGUGC---U-----U----G-CACAU-----GAUUCC-GCCCAC-AGUGUC----CCUGGUAUUACACUGC------CUCCAGG---C--------GACGCGAACACUU
+AP004871.3/124344-124540       AUACCUUUCU----CGGCC--UUU-U-GGCUAAGAUCAA--GUGUAGUAUCUGUUCUUAUCAGUUUAAUAUCUGAUA--UGUGGGCC-AUGUGCCCACUUC-----------GAUAUUAAA------UUUAUUUUUUGUGGGG------GAGG-GCCCACUACA-----GUGGC---U-----U----G-CCACU------GGGGU-CCUCGC-GUGUCGC---CCAGGCGUUGCACUAC------AGCCUGG-GCC--------UGGCGCACCCCAA
+#=GC SS_cons                   ::::::.<<<....-<<<<..___._.>>>>->>>,,,,..,,,,,,,,,,,,,,,,<<<<<<________>>>>>>..,<<<<<<<.___>>>>>>>,,,...........,,,,,,,,,......,,,,,,,,,,,,,,,,......<<<<.<<<<----.......<<<<<..._....._....>.>>>>-......->>>>.>>>>,,.<<<<<<-...<<<<<<__________......_>>>>>>..--........>>>>>>:::::::
+#=GC RF                        AUacCU.UCu....cgGCc..UUU.U.gGCuaaGAUCAA..GUGUAGUAUCUGUUCUUauCAGUuUAAuAuCUGauA..uggccccc.Auugggggccaau...........uauaUUAaa......uuaAUUUUUggaacua......Gugg.gggcauuu.......uggGC...U.....U....G.Cccau......ugccc.ccaCac.ggguuga...ccuggcaUUGCAcUac......cgccagg..uu........cagcccAcccuuu
+//
+# STOCKHOLM 1.0
+
+#=GF AC   RF00005
+#=GF ID   tRNA
+#=GF DE   tRNA
+#=GF AU   Eddy SR; 0000-0001-6676-4706
+#=GF AU   Griffiths-Jones SR; 0000-0001-6043-807X
+#=GF AU   Mifsud W; 0000-0002-9805-6461
+#=GF SE   Eddy SR
+#=GF SS   Published; PMID:8256282
+#=GF GA   29.00
+#=GF TC   29.00
+#=GF NC   28.90
+#=GF TP   Gene; tRNA;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -T 22.00 -Z 549862.597050 CM SEQDB
+#=GF CL   CL00001
+#=GF DR   SO; 0000253; tRNA;
+#=GF DR   GO; 0030533; triplet codon-amino acid adaptor activity;
+#=GF RN   [1]
+#=GF RM   8256282
+#=GF RT   The tertiary structure of tRNA and the development of the genetic code.
+#=GF RA   Hou YM
+#=GF RL   Trends Biochem Sci 1993;18:362-364.
+#=GF RN   [2]
+#=GF RM   9023104
+#=GF RT   tRNAscan-SE: a program for improved detection of transfer RNA genes in
+#=GF RT   genomic sequence.
+#=GF RA   Lowe TM, Eddy SR
+#=GF RL   Nucleic Acids Res 1997;25:955-964.
+#=GF CC   Transfer RNA (tRNA) molecules are approximately 80 nucleotides in length.
+#=GF CC   Their secondary structure includes four short double-helical elements and
+#=GF CC   three loops (D, anti-codon, and T loops). Further hydrogen bonds mediate
+#=GF CC   the characteristic L-shaped molecular structure. tRNAs have two regions of
+#=GF CC   fundamental functional importance: the anti-codon, which is responsible
+#=GF CC   for specific mRNA codon recognition, and the 3' end, to which the tRNAs
+#=GF CC   corresponding amino acid is attached (by aminoacyl-tRNA synthetases).
+#=GF CC   tRNAs cope with the degeneracy of the genetic code in two manners: having
+#=GF CC   more than one tRNA (with a specific anti-codon) for a particular amino
+#=GF CC   acid; and 'wobble' base-pairing, i.e. permitting non-standard base-pairing
+#=GF CC   at the 3rd anti-codon position.
+#=GF WK   Transfer_RNA
+#=GF SQ   954
+
+
+AB003409.1/96-167          GGGCCCAU-A-GCUCAGU---GGU---AGAGUG-C-CUCCU-UUGCAAGGAG-GAU------------------------GC--CCUG-GGU-UCG-AA--UCCCA-G-UGGGUCC-A
+CP000660.1/704452-704523   GGGCCGGU-A-GUCUAGC---GGA---AGGAUG-C-CCGCC-UCGCGCGCGG-GAG------------------------AU--CCCG-GGU-UCG-AA--UCCCG-G-CCGGUCC-A
+X63776.1/648-721           CGGCACGU-A-GCGCAGCC-UGGU---AGCGCA-C-CGUCA-UGGGGUGUCG-GGG------------------------GU--CGGA-GGU-UCA-AA--UCCUC-U-CGUGCCG-A
+DQ927305.1/46859-46925     GCUGCUUG-A-AUGGU-----------UUCAGU-G-UGGGC-UCAUUUCCCA-UUA------------------------CU--CAAA-AGU-UCG-AU--UCUUU-U-AAGCGGC-C
+K01561.1/1-74              GCGUUCAU-A-GCUCAGUU--GGUU--AGAGCA-C-CACCU-UGACAUGGUG-GGG------------------------GU--CGUU-GGU-UCG-AG--UCCAA-U-UGAACGC-A
+X17321.1/66-138            GGGUGAUU-A-GCUCAGCU--GGG---AGAGCA-C-CUCCC-UUACAAGGAG-GGG------------------------GU--CGGC-GGU-UCG-AU--CCCGU-C-AUCACCC-A
+AY632242.1/10-80           CAUUAGAU-G-ACUGAA----AG----CAAGUA-C-UGGUC-UCUUAAACCA-UUU------------------------UA--UAGU-AAA-UUA-GC-AUUUAC-U-UCUAAUG-A
+J01404.1/5140-5204         AUCUAUAU-A-GUAUAAA---------AGUAUA-U-UUGAC-UUCCAAUCAU-AAG------------------------G---UCUA-UU--AAU-U----AAUA-G-UAUAGAU-A
+EU273712.1/5242-5176       AGCCUUAA-A-GUGUUU----------AUCAUG-U-CGAAU-UGCAAAUUCG-AAG------------------------G---UGUA-GAG-AAU-C-C-CUCUA-C-UAAGGCU-U
+EU255777.1/1590-1519       UGGGGCGU-G-GCCAAGU---GGU---AAGGCA-A-CGGGU-UUUGGUCCCG-CUA------------------------UU--CGGA-GGU-UCG-AA--UCCUU-C-CGUCCCA-G
+X13994.1/40-129            GAAGAUCG-U-CGUCUCC---GGUG--AGGCGG-C-UGGAC-UUCAAAUCCA-GU--UGG-GGCCGCCA--GCGGUCCCG----GGCA-GGU-UCG-AC--UCCUG-U-GAUCUUCC-
+M21681.1/156-228           CGCGGGGU-G-GAGCAGCC-UGGU---AGCUCG-U-CGG-C-UCAUAACCCG-AAG------------------------GU--CGUC-GGU-UCA-AA--UCCGG-C-CCCCGCA-A
+K00197.1/1-71              GCGGGCGU-A-GUUCAAU---GGU---AGAACG-A-GAGCU-UCCCAAGCUC-UAU------------------------A---CGAG-GGU-UCG-AU--UCCCU-U-CGCCCGC-U
+X51770.1/245-317           GGCCGCGU-G-GCGCAAU---GGAU--AACGCG-U-CUGCC-UACGGAGCAG-AAG------------------------AU--UGCA-GGU-UCG-AA--UCCUG-C-CGUGGUC-G
+K01856.1/1-82              GGAGAGAU-G-GCCGAGC---GGUCU-AAGGCG-C-UGGUU-UAAGGCACCA-GU--CCC-----UUC---G-----GGGG---CGUG-GGU-UCG-AA--UCCCA-C-UCUCUUC-A
+Z83129.1/22044-21973       UCCUCGGU-A-GUAUAGU---GGUG--AGUAUC-C-GCGUC-UGUCACAUGC-GAG------------------------A---CCCG-GGU-UCA-AU--UCCCG-G-CCGGGGA-G
+M25476.1/51-122            AGCAGCGU-G-GCGCAGU---GGA---AGCGUG-C-UGGGC-CCAUAACCCA-GAG------------------------GU--CGGU-GGA-UCG-AA--ACCAC-U-CGCUGCU-A
+X54124.1/910-981           GACUGCUU-G-GCGCAAU---GGU---AGCGCG-U-UCGAC-UCCAGAUCGA-AAG------------------------GU--UGGG-CGU-UCG-AU--CCGCU-C-AGUGGUC-A
+K01390.1/442-514           GAGCCAUU-A-GCUCAGUU--GGU---AGAGCA-U-CUGAC-UUUUAAUCAG-AGG------------------------GU--CGAA-GGU-UCG-AG--UCCUU-C-AUGGCUC-A
+#=GC SS_cons               (((((((,.,.<<<<___...___..._>>>>,.<.<<<<_.______>>>>.>,,........................,...,<<<.<<_.___.__.._>>>>.>.))))))).:
+#=GC RF                    GgagauaU.A.GCucAgU...GGU...AgaGCg.u.cgGaC.UuaaAAuCcg.aag........................g...cgcg.GGU.UCg.Aa..UCCcg.c.uaucucC.a
+//
+# STOCKHOLM 1.0
+
+#=GF AC   RF00006
+#=GF ID   Vault
+#=GF DE   Vault RNA
+#=GF AU   Bateman A; 0000-0002-6982-4660
+#=GF AU   Gardner PP; 0000-0002-7808-1213
+#=GF SE   Published; PMID:19491402
+#=GF SS   Published; PMID:19491402
+#=GF GA   34.00
+#=GF TC   34.10
+#=GF NC   33.90
+#=GF TP   Gene;
+#=GF BM   cmbuild -F CM SEED
+#=GF CB   cmcalibrate --mpi CM
+#=GF SM   cmsearch --cpu 4 --verbose --nohmmonly -E 1000 -Z 549862.597050 CM SEQDB
+#=GF DR   URL; http://vaults.arc.ucla.edu/sci/sci_home.htm;
+#=GF DR   SO; 0000404; vault_RNA;
+#=GF RN   [1]
+#=GF RM   19491402
+#=GF RT   Evolution of Vault RNAs.
+#=GF RA   Stadler PF, Chen JJ, Hackermueller J, Hoffmann S, Horn F, Khaitovich P,
+#=GF RA   Kretzschmar AK, Mosig A, Prohaska SJ, Qi X, Schutt K, Ullmann K
+#=GF RL   Mol Biol Evol. 2009;27:1-17.
+#=GF CC   This family of RNAs are found as part of the enigmatic vault
+#=GF CC   ribonucleoprotein complex. The complex consists of a major vault protein
+#=GF CC   (MVP), two minor vault proteins (VPARP and TEP1), and several small
+#=GF CC   untranslated RNA molecules. It has been suggested that the vault complex
+#=GF CC   is involved in drug resistance. We have identified a putative novel vault
+#=GF CC   RNA on chromosome 5 EMBL:AC005219.
+#=GF WK   Vault_RNA
+#=GF SQ   73
+
+
+AF045145.1/1-88              -GGCUGGC-UUUAGCUC-AGCGGUUACUUCGCGUGUCAUCAAACCACCUCUCU-------------------------------------------------------GGGUUGUUCGAGAC-----------------CCGCGGGCGCUCUCCAGCCCUCUU
+AADA01028285.1/4499-4587     GGGCUGGC-UUUAGCUC-AGCGGUUACUUCGCGUGUCAUCAAACCACCUCUCU-------------------------------------------------------GGGUGGUUCGAGAC-----------------CCGUGGGCGCUCUCCAUCUCUCUU
+AANU01185798.1/9761-9673     GGGCUGGC-UUUAGCUC-AGCGGUUACUUCGCAGUUCAGCAAACCACCUCUCU-------------------------------------------------------GGGUUGUUCGAGAC-----------------CCGCGGGCACUCUCCAGCCCUUUU
+AAGJ04060733.1/252-131       UGGCUGGC--UAAGCAG-UGUGGAUACUUCGUAUAGCUAAAUGGAAUAGCACUUACUAAUCACAUGAG------------------------------------UAUUUGUGGGUUCGAUCCCCACUAC--GUCUCUUUCUACAUGUGCGUUCCAGCUUUUUU
+#=GC SS_cons                 :<<<<<<-.----<<<<.-<<<<----<<<<<________________________________...........................................________>>>>>--.................>>>>>>>>----->>>>>>:::::
+#=GC RF                      GgGccGGC.UUUAGCuc.AGcGGUUACuUCgacuauuuuaauuuuauuuaucuuauuuuuuuuu...........................................uuguuGGUucGAgaC.................CCgCggGCGCUcUCCggCccUUUU
+//

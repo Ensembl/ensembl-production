@@ -1,0 +1,3 @@
+UniProt Knowledgebase Release 2024_03 consists of:
+UniProtKB/Swiss-Prot Release 2024_03 of 29-May-2024
+UniProtKB/TrEMBL Release 2024_03 of 29-May-2024

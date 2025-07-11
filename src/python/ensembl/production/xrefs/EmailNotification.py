@@ -14,123 +14,291 @@
 
 """Email module to send user emails notifying of xref pipelines end, with important information and statistics."""
 
-from ensembl.production.xrefs.Base import *
-
+import os
+import re
 from smtplib import SMTP
 from email.message import EmailMessage
+from typing import Dict, Any, Tuple
+
+from ensembl.production.xrefs.Base import Base
 
 class EmailNotification(Base):
-  def run(self):
-    pipeline_name = self.param_required('pipeline_name')
-    base_path     = self.param_required('base_path')
-    email_address = self.param_required('email')
-    email_server  = self.param_required('email_server')
-    log_timestamp = self.param('log_timestamp')
+    INDENT = "&nbsp;&nbsp;&nbsp;"
 
-    email_message = f'The <b>{pipeline_name}</b> has completed its run.<br>'
+    def run(self):
+        pipeline_name: str = self.get_param("pipeline_name", {"required": True, "type": str})
+        base_path: str = self.get_param("base_path", {"required": True, "type": str})
+        email_address: str = self.get_param("email", {"required": True, "type": str})
+        email_server: str = self.get_param("email_server", {"required": True, "type": str})
+        log_timestamp: str = self.get_param("log_timestamp", {"type": str})
 
-    if log_timestamp:
-      # Get the path of the log files
-      log_path = os.path.join(base_path, 'logs', log_timestamp)
+        email_message = f"<p>The <b>{pipeline_name}</b> has completed its run.<br>"
+        if re.search("Download", pipeline_name):
+            email_message += "To run the Xref Process Pipeline based on the data from this pipeline, use the same <b>--source_db_url</b>, <b>--split_files_by_species</b>, and <b>--config_file</b> values provided to this pipeline."
+        email_message += "</p>"
 
-      # Read the log file
-      if os.path.exists(log_path):
+        if log_timestamp:
+            # Get the path of the log files
+            log_path = os.path.join(base_path, "logs", log_timestamp)
+
+            if os.path.exists(log_path):
+                # Combine the logs into a single file
+                main_log_file = self.combine_logs(base_path, log_timestamp, pipeline_name)
+
+                # Read the logs
+                with open(main_log_file) as fh:
+                    data = fh.read()
+
+                # Extract the parameters and format them
+                parameters = self.extract_parameters(data)
+                email_message += self.format_parameters(parameters)
+
+                # Extract statistics data from logs
+                if re.search("Download", pipeline_name):
+                    sources_data, added_species, skipped_species = self.extract_download_statistics(data)
+                    email_message += self.format_download_statistics(sources_data, added_species, skipped_species)
+                elif re.search("Process", pipeline_name):
+                    parsed_sources, absolute_sources, species_counts = self.extract_process_statistics(data)
+                    email_message += self.format_process_statistics(parsed_sources, species_counts, absolute_sources)
+
+        # Send email
+        self.send_email(email_address, email_server, pipeline_name, email_message)
+
+    def combine_logs(self, base_path: str, timestamp: str, type: str) -> str:
+        ordered_processes = {
+            "download": [
+                "ScheduleDownload",
+                "DownloadSource",
+                "ScheduleCleanup",
+                "Checksum",
+                "Cleanup(.*)Source",
+                "EmailNotification",
+            ],
+            "process": [
+                "ScheduleSpecies",
+                "ScheduleParse",
+                "ParseSource",
+                "(.*)Parser",
+                "DumpEnsembl",
+                "DumpXref",
+                "ScheduleAlignment",
+                "Alignment",
+                "ScheduleMapping",
+                "DirectXrefs",
+                "ProcessAlignment",
+                "RNACentralMapping",
+                "UniParcMapping",
+                "CoordinateMapping",
+                "Mapping",
+                "AdvisoryXrefReport",
+                "EmailAdvisoryXrefReport",
+                "EmailNotification",
+            ],
+        }
+        log_order = ordered_processes["download"] if re.search("Download", type) else ordered_processes["process"]
+
+        log_path = os.path.join(base_path, "logs", timestamp)
         log_files = os.listdir(log_path)
 
-        parameters, sources, added_species, skipped_species = {}, {}, {}, {}
-
-        main_log_file = os.path.join(base_path, 'logs', log_timestamp, 'logfile_'+log_timestamp)
+        main_log_file = os.path.join(base_path, "logs", timestamp, "logfile_" + timestamp)
 
         # Copy different log files into a main one
-        with open(main_log_file, 'a') as out_fh:
-          for log_file in log_files:
-            if not re.search(r"^tmp_", log_file): continue
-            log_file = os.path.join(log_path, log_file)
-            with open(log_file) as in_fh:
-              log_data = in_fh.read()
-              out_fh.write(log_data)
-            os.remove(log_file)
+        with open(main_log_file, "a") as out_fh:
+            for pattern in log_order:
+                pattern = r"^tmp_logfile_" + pattern + r"_\d+"
+                matches = [s for s in log_files if re.search(pattern, s)]
 
-        # Read the full logs
-        with open(main_log_file) as fh:
-          data = fh.read()
+                for log_file in matches:
+                    log_file_path = os.path.join(log_path, log_file)
+                    with open(log_file_path) as in_fh:
+                        out_fh.write(in_fh.read())
+                    os.remove(log_file_path)
 
-        # Extract parameter data
-        parameters_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Param: (\w+) = (.*)", data)
-        parameters = {param[0]: param[1] for param in parameters_list}
+        return main_log_file
 
-        email_message += '<br>The pipeline was run with the following parameters:<br>'
-        for param_name,param_value in parameters.items():
-          email_message += f'<b>{param_name}</b> = {param_value}<br>'
+    def extract_parameters(self, data: str) -> Dict[str, str]:
+        parameters_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| \tParam: (\w+) = (.*)", data)
+        return {param[0]: param[1] for param in parameters_list if param[0] != 'order_priority'}
 
-        if re.search('Download', pipeline_name):
-          #Extract data from logs
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to download: ([\w\/]+)", data)
-          sources = {source : {'to_download' : 1} for source in sources_list}
+    def format_parameters(self, parameters: Dict[str, str]) -> str:
+        message = "<br><h5>Run Parameters</h5>"
+        for param_name, param_value in parameters.items():
+            message += f"<b>{param_name}</b> = {param_value}<br>"
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to cleanup: ([\w\/]+)", data)
-          for source in sources_list: sources[source].update({'to_cleanup' : 1})
+        return message
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to preparse: ([\w\/]+)", data)
-          for source in sources_list: sources[source].update({'to_preparse' : 1})
+    def extract_download_statistics(self, data: str) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str], Dict[str, str]]:
+        sources_data = self.extract_sources_data(data)
+        skipped_species = self.extract_skipped_species(data)
+        added_species = self.extract_added_species(data)
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source ([\w\/]+) cleaned up", data)
-          for source in sources_list: sources[source].update({'cleaned_up' : 1})
+        return sources_data, added_species, skipped_species
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source ([\w\/]+) preparsed", data)
-          for source in sources_list: sources[source].update({'preparsed' : 1})
+    def extract_sources_data(self, data: str) -> Dict[str, Dict[str, Any]]:
+        sources_data = {}
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file already exists, skipping download \((.*)\)", data)
-          for source in sources_list: sources[source[0]].update({'skipped' : os.path.dirname(source[1])})
+        # Helper function to update sources_data
+        def update_sources_data(new_data: Dict[str, Dict[str, Any]]):
+            for key, value in new_data.items():
+                if key in sources_data:
+                    sources_data[key].update(value)
+                else:
+                    sources_data[key] = value
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file downloaded via (HTTP|FTP): (.*)", data)
-          for source in sources_list: sources[source[0]].update({'downloaded' : source[1]+"|"+os.path.dirname(source[2])})
+        # Get sources set to be downloaded
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to download: ([\w\/]+)", "to_download"))
 
-          sources_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file copied from local FTP: (.*)", data)
-          for source in sources_list: sources[source[0]].update({'copied' : os.path.dirname(source[1])})
+        # Get sources set to be cleaned up
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source to cleanup: ([\w\/]+)", "to_cleanup"))
 
-          skipped_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) skipped species = (\d+)", data)
-          skipped_species = {source[0]: source[1] for source in skipped_species_list}
+        # Get sources cleaned up
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Source ([\w\/]+) cleaned up", "cleaned_up"))
 
-          added_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| (\w+) species files created = (\d+)", data)
-          added_species = {source[0]: source[1] for source in added_species_list}
+        # Get sources skipped
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file already exists, skipping download \((.*)\)", "skipped", True))
 
-          # Include source statistics
-          email_message += '<br>--Source Statistics--<br>'
-          for source_name,source_values in sources.items():
-            email_message += f'<b>{source_name}:</b><br>'
-            if source_values.get('to_download'): email_message += '&nbsp;&nbsp;&nbsp;Scheduled for download &#10004;<br>'
+        # Get sources downloaded
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file downloaded via (HTTP|FTP): (.*)", "downloaded", True))
 
-            if source_values.get('downloaded'):
-              (download_type, file_path) = source_values['downloaded'].split("|")
-              email_message += f'&nbsp;&nbsp;&nbsp;File downloaded via {download_type} into {file_path}<br>'
-            elif source_values.get('copied'): email_message += '&nbsp;&nbsp;&nbsp;File(s) copied from local FTP into %s<br>' % (source_values['copied'])
-            elif source_values.get('skipped'): email_message += '&nbsp;&nbsp;&nbsp;File(s) download skipped, already exists in %s<br>' % (source_values['skipped'])
+        # Get sources copied
+        update_sources_data(self.extract_sources(data, r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) file copied from local FTP: (.*)", "copied", True))
 
-            if source_values.get('to_cleanup'): email_message += '&nbsp;&nbsp;&nbsp;Scheduled for cleanup &#10004;<br>'
-            if source_values.get('cleaned_up'): email_message += '&nbsp;&nbsp;&nbsp;Cleaned up &#10004;<br>'
+        return sources_data
 
-            if source_values.get('to_preparse'): email_message += '&nbsp;&nbsp;&nbsp;Scheduled for pre-parse &#10004;<br>'
-            if source_values.get('preparsed'): email_message += '&nbsp;&nbsp;&nbsp;Pre-parsed &#10004;<br>'
+    def extract_sources(self, data: str, pattern: str, key: str, split: bool = False) -> Dict[str, Dict[str, Any]]:
+        sources = {}
 
-          # Include species statistics
-          email_message += '<br>--Species Statistics--<br>'
-          email_message += 'Skipped Species (files already exist):<br>'
-          for source_name, count in skipped_species.items():
-            email_message += f'&nbsp;&nbsp;&nbsp;{source_name}: {count}<br>'
-          email_message += 'Added Species (files created):<br>'
-          for source_name, count in added_species.items():
-            email_message += f'&nbsp;&nbsp;&nbsp;{source_name}: {count}<br>'
+        matches_list = re.findall(pattern, data)
+        for match in matches_list:
+            if split:
+                if key == "skipped" or key == "copied":
+                    val = os.path.dirname(match[1])
+                else:
+                    val = os.path.dirname(match[2])
+                sources[match[0]] = {key: val}
+            else:
+                sources[match] = {key: True}
 
-          email_message += '<br>To run the Xref Process Pipeline based on the data from this pipeline, use the same <b>--base_path</b>, <b>--source_db_url</b>, and <b>--central_db_url</b> (if preparse was run) values provided to this pipeline.'
+        return sources
 
-    # Send email
-    message = EmailMessage()
-    message['Subject'] = f'{pipeline_name} Finished'
-    message['From'] = email_address
-    message['To'] = email_address
-    message.set_content(email_message, 'html')
+    def extract_skipped_species(self, data: str) -> Dict[str, str]:
+        skipped_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) skipped species = (\d+)", data)
+        return {species[0]: species[1] for species in skipped_species_list}
 
-    smtp = SMTP(email_server)
-    smtp.send_message(message)
+    def extract_added_species(self, data: str) -> Dict[str, str]:
+        added_species_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ([\w\/]+) species files created = (\d+)", data)
+        return {species[0]: species[1] for species in added_species_list}
 
+    def format_download_statistics(self, sources_data: Dict[str, Dict[str, Any]], added_species: Dict[str, str], skipped_species: Dict[str, str]) -> str:
+        cell_style = 'style="border-right: 1px solid #000; padding: 5px;"'
+
+        message = "<br><h5>Source Statistics</h5>"
+        message += f"<table style=\"border-bottom: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Source</th><th {cell_style}>Scheduled</th><th {cell_style}>Downloaded</th>"
+        message += f"<th {cell_style}>Download Skipped</th><th {cell_style}>Cleaned-up</th><th style=\"padding: 5px;\">Location</th></tr>"
+        for source_name, source_values in sources_data.items():
+            message += f"<tr><td {cell_style}>{source_name}</td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("to_download") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("downloaded") or source_values.get("copied") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("skipped") else f"<td {cell_style}></td>"
+            message += f"<td {cell_style}>X</td>" if source_values.get("to_cleanup") else f"<td {cell_style}></td>"
+            message += f"<td style=\"padding: 5px;\">{source_values.get('downloaded', source_values.get('copied', source_values.get('skipped', '')))}</td>"
+            message += "</tr>"
+        message += "</table>"
+
+        message += "<br><h5>Species Statistics</h5>"
+        message += "<b>Added Species (files created)</b>:<br><ul>"
+        for source_name, count in added_species.items():
+            message += f"<li>{source_name}: {count}</li>"
+        message += "</ul>"
+        message += "<b>Skipped Species (files already exist)</b>:<br><ul>"
+        for source_name, count in skipped_species.items():
+            message += f"<li>{source_name}: {count}</li>"
+        message += "</ul>"
+
+        return message
+
+    def extract_process_statistics(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, bool], Dict[str, Dict[str, int]]]:
+        parsed_sources, absolute_sources = self.extract_parsed_sources(data)
+        species_counts = self.extract_species_counts(data)
+
+        return parsed_sources, absolute_sources, species_counts
+
+    def extract_parsed_sources(self, data: str) -> Tuple[Dict[str, Dict[str, str]], Dict[str, bool]]:
+        parsed_sources = {}
+        absolute_sources = {}
+
+        matches_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| ParseSource starting for source '([\w\/]+)' with parser '([\w\/]+)' for species '([\w\/]+)'", data)
+        for species in matches_list:
+            source_name, parser, species_name = species
+            if species_name not in parsed_sources:
+                parsed_sources[species_name] = {}
+            parsed_sources[species_name][source_name] = parser
+            absolute_sources[source_name] = True
+
+        return parsed_sources, absolute_sources
+
+    def extract_species_counts(self, data: str) -> Dict[str, Dict[str, int]]:
+        species_counts = {}
+
+        # Get species mapped
+        matches_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| Mapping starting for species '([\w\/]+)'", data)
+        for species_name in matches_list:
+            species_counts[species_name] = {
+                "DIRECT": 0,
+                "INFERRED_PAIR": 0,
+                "MISC": 0,
+                "CHECKSUM": 0,
+                "DEPENDENT": 0,
+                "SEQUENCE_MATCH": 0,
+            }
+
+        # Get number of xrefs added per species per source
+        matches_list = re.findall(r"^\d{2}-\w{3}-\d{4} \\| INFO \\| \tLoaded (\d+) ([\w\/]+) xrefs for '([\w\/]+)'", data)
+        for species in matches_list:
+            count, xref_type, species_name = int(species[0]), species[1], species[2]
+            species_counts[species_name][xref_type] += count
+
+        return species_counts
+
+    def format_process_statistics(self, parsed_sources: Dict[str, Dict[str, str]], species_counts: Dict[str, Dict[str, int]], absolute_sources: Dict[str, bool]) -> str:
+        cell_style = 'style="border-right: 1px solid #000; padding: 5px;"'
+
+        message = "<br><h5>Source Statistics</h5>"
+        message += f"<table style=\"border: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Species</th>"
+        for source_name in sorted(absolute_sources):
+            message += f"<th {cell_style}>{source_name}</th>"
+        message += f"</tr>"
+
+        for species_name, species_data in parsed_sources.items():
+            message += f"<tr><td {cell_style}>{species_name}</td>"
+            for source_name in sorted(absolute_sources):
+                message += f"<td {cell_style}>X</td>" if source_name in species_data else f"<td {cell_style}></td>"
+            message += "</tr>"
+        message += "</table>"
+
+        message += "<br><h5>Xref Data Statistics</h5>"
+        message += f"<table style=\"border: 1px solid #000;\"><tr style=\"border-bottom: 1px solid #000;\"><th {cell_style}>Species</th><th {cell_style}>DIRECT</th><th {cell_style}>DEPENDENT</th>"
+        message += f"<th {cell_style}>INFERRED_PAIR</th><th {cell_style}>CHECKSUM</th><th {cell_style}>SEQUENCE_MATCH</th><th {cell_style}>MISC</th></tr>"
+
+        for species_name, species_data in species_counts.items():
+            message += f"<tr><td {cell_style}>{species_name}</td>"
+            message += f"<td {cell_style}>{species_data['DIRECT']}</td>"
+            message += f"<td {cell_style}>{species_data['DEPENDENT']}</td>"
+            message += f"<td {cell_style}>{species_data['INFERRED_PAIR']}</td>"
+            message += f"<td {cell_style}>{species_data['CHECKSUM']}</td>"
+            message += f"<td {cell_style}>{species_data['SEQUENCE_MATCH']}</td>"
+            message += f"<td {cell_style}>{species_data['MISC']}</td>"
+            message += "</tr>"
+        message += "</table>"
+
+        return message
+
+    def send_email(self, email_address: str, email_server: str, pipeline_name: str, email_message: str) -> None:
+        message = EmailMessage()
+        message["Subject"] = f"{pipeline_name} Finished"
+        message["From"] = email_address
+        message["To"] = email_address
+        message.set_content(email_message, "html")
+
+        with SMTP(email_server) as smtp:
+            smtp.send_message(message)
