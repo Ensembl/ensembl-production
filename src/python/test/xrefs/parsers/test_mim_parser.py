@@ -4,7 +4,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.MIMParser import MIMParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_synonym
+from test.xrefs.test_helpers import check_row_count, check_synonym
 
 # Constants
 SOURCE_ID_MIM = 1

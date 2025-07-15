@@ -3,3 +3,6 @@ pydantic~=1.10.5
 ensembl-py>=2.1.0
 ensembl-utils>=0.4.4
 git+https://github.com/Ensembl/ensembl-metadata-api.git@3.0.1#egg=ensembl-metadata-api
+wget
+unidecode
+biopython

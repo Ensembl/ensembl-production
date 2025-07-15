@@ -5,7 +5,7 @@ import datetime
 from sqlalchemy import text
 from typing import Any, Dict, Callable, Optional
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count
+from test.xrefs.test_helpers import check_row_count
 
 from ensembl.production.xrefs.Checksum import Checksum
 

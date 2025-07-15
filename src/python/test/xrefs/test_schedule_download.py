@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from typing import Any, Dict, Callable, Optional
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import make_url
-from test_helpers import check_dataflow_content
+from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleDownload import ScheduleDownload
 

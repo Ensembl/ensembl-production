@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from ensembl.production.xrefs.parsers.RefSeqParser import RefSeqParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_dependent_xref_link, check_sequence, check_release
+from test.xrefs.test_helpers import check_row_count, check_dependent_xref_link, check_sequence, check_release
 
 # Constants
 SOURCE_ID_REFSEQ = 1

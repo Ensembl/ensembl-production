@@ -4,7 +4,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.RFAMParser import RFAMParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_direct_xref_link
+from test.xrefs.test_helpers import check_row_count, check_direct_xref_link
 
 # Constants
 SOURCE_ID_RFAM = 1

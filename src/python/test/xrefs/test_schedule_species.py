@@ -4,7 +4,7 @@ import re
 from typing import Any, Dict, Callable, Optional, List
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import make_url
-from test_helpers import check_dataflow_content
+from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleSpecies import ScheduleSpecies
 

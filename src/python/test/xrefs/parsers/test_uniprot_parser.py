@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from ensembl.production.xrefs.parsers.UniProtParser import UniProtParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_synonym, check_direct_xref_link, check_dependent_xref_link, check_sequence, check_release
+from test.xrefs.test_helpers import check_row_count, check_synonym, check_direct_xref_link, check_dependent_xref_link, check_sequence, check_release
 
 # Constants
 SOURCE_ID_UNIPROT = 1

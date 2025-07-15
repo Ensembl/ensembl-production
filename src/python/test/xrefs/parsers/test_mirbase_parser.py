@@ -4,7 +4,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.miRBaseParser import miRBaseParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_sequence
+from test.xrefs.test_helpers import check_row_count, check_sequence
 
 # Constants
 SOURCE_ID_MIRBASE = 1

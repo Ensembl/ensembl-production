@@ -3,7 +3,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.ZFINDescParser import ZFINDescParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count
+from test.xrefs.test_helpers import check_row_count
 
 # Constants
 SOURCE_ID_ZFIN_DESC = 1

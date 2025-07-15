@@ -5,7 +5,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.JGI_ProteinParser import JGI_ProteinParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count
+from test.xrefs.test_helpers import check_row_count
 
 # Constants
 SOURCE_ID_JGI = 1

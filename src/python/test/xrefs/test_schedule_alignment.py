@@ -2,7 +2,7 @@ import pytest
 import os
 import shutil
 from typing import Any, Dict, Callable, Optional
-from test_helpers import check_dataflow_content
+from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleAlignment import ScheduleAlignment
 

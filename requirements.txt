@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
+biopython==1.85
+    # via -r requirements.in
 certifi==2024.2.2
     # via requests
 charset-normalizer==3.3.2
@@ -22,6 +24,8 @@ idna==3.6
     # via requests
 iniconfig==2.0.0
     # via pytest
+numpy==2.2.6
+    # via biopython
 packaging==24.1
     # via pytest
 pluggy==1.5.0
@@ -51,5 +55,9 @@ typing-extensions==4.10.0
     # via
     #   pydantic
     #   sqlalchemy
+unidecode==1.4.0
+    # via -r requirements.in
 urllib3==1.26.18
     # via requests
+wget==3.2
+    # via -r requirements.in

@@ -3,7 +3,7 @@ from typing import Callable
 
 from ensembl.production.xrefs.parsers.XenopusJamboreeParser import XenopusJamboreeParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_direct_xref_link, check_description
+from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_description
 
 # Constants
 SOURCE_ID_XENOPUS_JAMBOREE = 1

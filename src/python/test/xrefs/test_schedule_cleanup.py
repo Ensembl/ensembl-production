@@ -4,7 +4,7 @@ import shutil
 from sqlalchemy import text
 from typing import Any, Dict, Callable, Optional
 from ensembl.utils.database import DBConnection
-from test_helpers import check_dataflow_content
+from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleCleanup import ScheduleCleanup
 

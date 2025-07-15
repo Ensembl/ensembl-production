@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import make_url
 from typing import Any, Dict, Callable, Optional
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_dataflow_content
+from test.xrefs.test_helpers import check_row_count, check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleParse import ScheduleParse
 

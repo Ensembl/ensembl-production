@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from ensembl.production.xrefs.parsers.CCDSParser import CCDSParser
 from ensembl.utils.database import DBConnection
-from test_helpers import check_row_count, check_direct_xref_link
+from test.xrefs.test_helpers import check_row_count, check_direct_xref_link
 
 # Constants
 SOURCE_ID_CCDS = 1
