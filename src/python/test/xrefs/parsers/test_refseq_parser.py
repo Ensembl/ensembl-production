@@ -1,4 +1,5 @@
 import pytest
+import os
 from unittest.mock import MagicMock
 from typing import Callable, Dict
 from sqlalchemy import text
@@ -6,6 +7,9 @@ from sqlalchemy import text
 from ensembl.production.xrefs.parsers.RefSeqParser import RefSeqParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_dependent_xref_link, check_sequence, check_release
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_REFSEQ = 1
@@ -109,8 +113,8 @@ def run_and_validate_parsing(refseq_parser: RefSeqParser, mock_xref_dbi: DBConne
             "source_id": SOURCE_ID_REFSEQ,
             "species_id": SPECIES_ID_HUMAN,
             "species_name": SPECIES_NAME_HUMAN,
-            "file": f"parsers/flatfiles/{file}.txt",
-            "rel_file": "parsers/flatfiles/refseq_release.txt",
+            "file": os.path.join(FLATFILES_DIR, f"{file}.txt"),
+            "rel_file": os.path.join(FLATFILES_DIR, "refseq_release.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

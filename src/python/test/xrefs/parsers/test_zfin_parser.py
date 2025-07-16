@@ -1,11 +1,14 @@
 import pytest
-from unittest.mock import MagicMock
+import os
 from typing import Callable
 from sqlalchemy import text
 
 from ensembl.production.xrefs.parsers.ZFINParser import ZFINParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_dependent_xref_link, check_synonym, check_description
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_ZFIN = 1
@@ -85,7 +88,7 @@ def run_and_validate_parsing(zfin_parser: ZFINParser, mock_xref_dbi: DBConnectio
         {
             "source_id": SOURCE_ID_ZFIN,
             "species_id": SPECIES_ID_ZEBRAFISH,
-            "file": "parsers/flatfiles/zfin/dummy_file.txt",
+            "file": os.path.join(FLATFILES_DIR, "zfin/dummy_file.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

@@ -1,9 +1,13 @@
 import pytest
+import os
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.ZFINDescParser import ZFINDescParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_ZFIN_DESC = 1
@@ -23,7 +27,7 @@ def run_and_validate_parsing(zfin_desc_parser: ZFINDescParser, mock_xref_dbi: DB
         {
             "source_id": SOURCE_ID_ZFIN_DESC,
             "species_id": SPECIES_ID_ZEBRAFISH,
-            "file": "parsers/flatfiles/zfin_desc.txt",
+            "file": os.path.join(FLATFILES_DIR, "zfin_desc.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

@@ -9,6 +9,9 @@ from test.xrefs.test_helpers import check_row_count
 
 from ensembl.production.xrefs.Checksum import Checksum
 
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
+
 DEFAULT_ARGS = {
     "base_path": "dummy_base_path",
     "source_db_url": "mysql://user:pass@host/db",
@@ -71,8 +74,8 @@ def test_successful_run(mock_source_dbi: DBConnection, checksum: Checksum, pytes
         assert not os.path.exists(checksum_file), "File checksum.txt was created"
 
         # Copy some checksum files into the Checksum folder
-        shutil.copy("flatfiles/RNACentral-md5.tsv.gz", checksum_path)
-        shutil.copy("flatfiles/UniParc-upidump.lis", checksum_path)
+        shutil.copy(os.path.join(FLATFILES_DIR, "RNACentral-md5.tsv.gz"), checksum_path)
+        shutil.copy(os.path.join(FLATFILES_DIR, "UniParc-upidump.lis"), checksum_path)
 
         # Run the Checksum instance again
         checksum_instance.run()

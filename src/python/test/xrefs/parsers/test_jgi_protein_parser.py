@@ -1,11 +1,13 @@
 import pytest
-import io
-from unittest.mock import MagicMock
+import os
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.JGI_ProteinParser import JGI_ProteinParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_JGI = 1
@@ -25,7 +27,7 @@ def run_and_validate_parsing(jgi_protein_parser: JGI_ProteinParser, mock_xref_db
         {
             "source_id": SOURCE_ID_JGI,
             "species_id": SPECIES_ID_C_INTESTINALIS,
-            "file": "parsers/flatfiles/jgi_protein.fasta",
+            "file": os.path.join(FLATFILES_DIR, "jgi_protein.fasta"),
             "xref_dbi": mock_xref_dbi,
         }
     )

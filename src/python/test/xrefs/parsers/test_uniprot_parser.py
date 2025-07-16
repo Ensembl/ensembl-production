@@ -1,11 +1,14 @@
 import pytest
-from unittest.mock import MagicMock
+import os
 from typing import Callable, Dict
 from sqlalchemy import text
 
 from ensembl.production.xrefs.parsers.UniProtParser import UniProtParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_synonym, check_direct_xref_link, check_dependent_xref_link, check_sequence, check_release
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_UNIPROT = 1
@@ -74,8 +77,8 @@ def run_and_validate_parsing(uniprot_parser: UniProtParser, mock_xref_dbi: DBCon
         {
             "source_id": SOURCE_ID_UNIPROT,
             "species_id": SPECIES_ID_HUMAN,
-            "file": f"parsers/flatfiles/{file}.txt",
-            "rel_file": "parsers/flatfiles/uniprot_release.txt",
+            "file": os.path.join(FLATFILES_DIR, f"{file}.txt"),
+            "rel_file": os.path.join(FLATFILES_DIR, "uniprot_release.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

@@ -1,4 +1,5 @@
 import pytest
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 from sqlalchemy import text
@@ -6,6 +7,9 @@ from sqlalchemy import text
 from ensembl.production.xrefs.parsers.ReactomeParser import ReactomeParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_dependent_xref_link, check_release
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_REACTOME = 1
@@ -58,8 +62,8 @@ def run_and_validate_parsing(reactome_parser: ReactomeParser, mock_xref_dbi: DBC
             "source_id": SOURCE_ID_REACTOME,
             "species_id": SPECIES_ID_HUMAN,
             "species_name": SPECIES_NAME_HUMAN,
-            "file": f"parsers/flatfiles/{file}.txt",
-            "rel_file": "parsers/flatfiles/reactome_release.txt",
+            "file": os.path.join(FLATFILES_DIR, f"{file}.txt"),
+            "rel_file": os.path.join(FLATFILES_DIR, "reactome_release.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

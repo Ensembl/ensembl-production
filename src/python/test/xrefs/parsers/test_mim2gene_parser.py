@@ -1,5 +1,6 @@
 import pytest
 import io
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 from sqlalchemy import text
@@ -7,6 +8,9 @@ from sqlalchemy import text
 from ensembl.production.xrefs.parsers.Mim2GeneParser import Mim2GeneParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_dependent_xref_link
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_MIM2GENE = 1
@@ -95,7 +99,7 @@ def run_and_validate_parsing(mim2gene_parser: Mim2GeneParser, mock_xref_dbi: DBC
         {
             "source_id": SOURCE_ID_MIM2GENE,
             "species_id": SPECIES_ID_HUMAN,
-            "file": "parsers/flatfiles/mim2gene.txt",
+            "file": os.path.join(FLATFILES_DIR, "mim2gene.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

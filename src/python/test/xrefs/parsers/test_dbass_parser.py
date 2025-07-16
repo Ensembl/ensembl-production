@@ -1,11 +1,15 @@
 import pytest
 import io
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.DBASSParser import DBASSParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_synonym, check_direct_xref_link
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_DBASS3 = 1
@@ -27,7 +31,7 @@ def run_and_validate_parsing(dbass_parser: DBASSParser, mock_xref_dbi: DBConnect
         {
             "source_id": source_id,
             "species_id": SPECIES_ID_HUMAN,
-            "file": f"parsers/flatfiles/{file}.txt",
+            "file": os.path.join(FLATFILES_DIR, f"{file}.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

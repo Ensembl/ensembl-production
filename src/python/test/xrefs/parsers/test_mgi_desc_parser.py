@@ -1,11 +1,15 @@
 import pytest
 import io
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.MGIDescParser import MGIDescParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_synonym
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_MGI_DESC = 1
@@ -26,7 +30,7 @@ def run_and_validate_parsing(mgi_desc_parser: MGIDescParser, mock_xref_dbi: DBCo
         {
             "source_id": SOURCE_ID_MGI_DESC,
             "species_id": SPECIES_ID_MOUSE,
-            "file": "parsers/flatfiles/mgi_desc.txt",
+            "file": os.path.join(FLATFILES_DIR, "mgi_desc.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

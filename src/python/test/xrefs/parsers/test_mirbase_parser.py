@@ -1,10 +1,14 @@
 import pytest
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.miRBaseParser import miRBaseParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_sequence
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_MIRBASE = 1
@@ -28,7 +32,7 @@ def run_and_validate_parsing(mirbase_parser: miRBaseParser, mock_xref_dbi: DBCon
             "source_id": SOURCE_ID_MIRBASE,
             "species_id": SPECIES_ID_C_ELEGANS,
             "species_name": SPECIES_NAME_C_ELEGANS,
-            "file": "parsers/flatfiles/mirbase.txt",
+            "file": os.path.join(FLATFILES_DIR, "mirbase.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )
@@ -76,7 +80,7 @@ def test_no_xrefs_added(mock_xref_dbi: DBConnection, mirbase_parser: miRBasePars
             "source_id": SOURCE_ID_MIRBASE,
             "species_id": SPECIES_ID_HUMAN,
             "species_name": SPECIES_NAME_HUMAN,
-            "file": f"parsers/flatfiles/mirbase.txt",
+            "file": os.path.join(FLATFILES_DIR, "mirbase.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

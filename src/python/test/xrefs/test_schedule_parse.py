@@ -9,6 +9,9 @@ from test.xrefs.test_helpers import check_row_count, check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleParse import ScheduleParse
 
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
+
 DEFAULT_ARGS = {
     "species_name": "test_homo_sapiens_test",
     "release": 999,
@@ -90,7 +93,7 @@ def test_successful_run(mock_source_dbi: DBConnection, schedule_parse: ScheduleP
     args["source_db_url"] = mock_source_dbi.engine.url
     args["xref_db_url"] = test_mysql_url
     args["dataflow_output_path"] = test_scratch_path
-    args["sources_config_file"] = "flatfiles/config.ini"
+    args["sources_config_file"] = os.path.join(FLATFILES_DIR, "config.ini")
     schedule_parse_instance = schedule_parse(args)
 
     # Add source data into source db

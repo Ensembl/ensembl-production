@@ -1,10 +1,14 @@
 import pytest
+import os
 from unittest.mock import MagicMock
 from typing import Callable, Dict
 
 from ensembl.production.xrefs.parsers.HGNCParser import HGNCParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_dependent_xref_link, check_synonym
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_HGNC = 1
@@ -49,7 +53,7 @@ def run_and_validate_parsing(hgnc_parser: HGNCParser, mock_xref_dbi: DBConnectio
         {
             "source_id": SOURCE_ID_HGNC,
             "species_id": SPECIES_ID_HUMAN,
-            "file": "parsers/flatfiles/hgnc.txt",
+            "file": os.path.join(FLATFILES_DIR, "hgnc.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

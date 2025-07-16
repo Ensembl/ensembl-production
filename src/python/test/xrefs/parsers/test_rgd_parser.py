@@ -1,10 +1,14 @@
 import pytest
+import os
 from unittest.mock import MagicMock
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.RGDParser import RGDParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_dependent_xref_link, check_synonym
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_RGD = 1
@@ -25,7 +29,7 @@ def run_and_validate_parsing(rgd_parser: RGDParser, mock_xref_dbi: DBConnection,
         {
             "source_id": SOURCE_ID_RGD,
             "species_id": SPECIES_ID_RAT,
-            "file": "parsers/flatfiles/rgd.txt",
+            "file": os.path.join(FLATFILES_DIR, "rgd.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

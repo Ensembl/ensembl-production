@@ -1,10 +1,14 @@
 import pytest
+import os
 from unittest.mock import MagicMock, patch
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.MIMParser import MIMParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_synonym
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_MIM = 1
@@ -35,7 +39,7 @@ def run_and_validate_parsing(mim_parser: MIMParser, mock_xref_dbi: DBConnection,
         {
             "source_id": SOURCE_ID_MIM,
             "species_id": SPECIES_ID_HUMAN,
-            "file": "parsers/flatfiles/mim.txt",
+            "file": os.path.join(FLATFILES_DIR, "mim.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )

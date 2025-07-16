@@ -6,6 +6,9 @@ from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleAlignment import ScheduleAlignment
 
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
+
 DEFAULT_ARGS = {
     "species_name": "homo_sapiens",
     "release": 999,
@@ -52,7 +55,7 @@ def test_successful_run(schedule_alignment: ScheduleAlignment, pytestconfig: pyt
     try:
         # Create the appropriate paths and copy a fasta file
         ensembl_path = schedule_alignment_instance.get_path(test_scratch_path, "homo_sapiens", 999, "ensembl")
-        shutil.copy("flatfiles/peptides.fa", ensembl_path)
+        shutil.copy(os.path.join(FLATFILES_DIR, "peptides.fa"), ensembl_path)
         ensembl_file_path = os.path.join(ensembl_path, "peptides.fa")
         schedule_alignment_instance.set_param("ensembl_fasta", ensembl_file_path)
 

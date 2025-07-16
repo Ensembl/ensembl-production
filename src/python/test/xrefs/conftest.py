@@ -111,7 +111,7 @@ def test_file_not_found() -> Callable[[BaseParser, int, int], None]:
                 {
                     "source_id": source_id,
                     "species_id": species_id,
-                    "file": "flatfiles/non_existent_file.txt",
+                    "file": "non_existent_file.txt",
                     "xref_dbi": MagicMock(),
                 }
             )

@@ -11,6 +11,9 @@ from test.xrefs.test_helpers import check_dataflow_content
 
 from ensembl.production.xrefs.ScheduleDownload import ScheduleDownload
 
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
+
 DEFAULT_ARGS = {
     "config_file": "dummy_config.json",
     "source_db_url": "mysql://user:pass@host/db",
@@ -76,7 +79,7 @@ def test_successful_run(schedule_download: ScheduleDownload, pytestconfig):
     user_name = os.getenv("USER", "default_user")
     test_db_name = f"{user_name}_test_xref_source_db_{timestamp}"
     args = {
-        "config_file": "flatfiles/sources_download.json",
+        "config_file": os.path.join(FLATFILES_DIR, "sources_download.json"),
         "source_db_url": f"{test_mysql_url}/{test_db_name}",
         "reuse_db": False,
         "dataflow_output_path": test_scratch_path

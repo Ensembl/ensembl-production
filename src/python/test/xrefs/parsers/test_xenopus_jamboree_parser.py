@@ -1,9 +1,13 @@
 import pytest
+import os
 from typing import Callable
 
 from ensembl.production.xrefs.parsers.XenopusJamboreeParser import XenopusJamboreeParser
 from ensembl.utils.database import DBConnection
 from test.xrefs.test_helpers import check_row_count, check_direct_xref_link, check_description
+
+TEST_DIR = os.path.dirname(__file__)
+FLATFILES_DIR = os.path.join(TEST_DIR, "flatfiles")
 
 # Constants
 SOURCE_ID_XENOPUS_JAMBOREE = 1
@@ -23,7 +27,7 @@ def run_and_validate_parsing(xenopus_jamboree_parser: XenopusJamboreeParser, moc
         {
             "source_id": SOURCE_ID_XENOPUS_JAMBOREE,
             "species_id": SPECIES_ID_XENOPUS,
-            "file": "parsers/flatfiles/xenopus_jamboree.txt",
+            "file": os.path.join(FLATFILES_DIR, "xenopus_jamboree.txt"),
             "xref_dbi": mock_xref_dbi,
         }
     )
