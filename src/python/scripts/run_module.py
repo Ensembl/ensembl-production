@@ -21,7 +21,7 @@ from ensembl.common.Params import Params
 def main():
   params = Params()
 
-  module_name = params.param_required('module')
+  module_name = params.get_param('module', {"required": True})
   class_name = module_name.split(".")[-1]
 
   module = importlib.import_module(module_name)

@@ -1,5 +1,20 @@
 language: perl
 dist: focal
+
+# Define the shared MySQL setup (used for python)
+.shared_mysql_setup: &shared_mysql_setup
+  before_install:
+    # Run MySQL 5.7 Docker container which match to production staging servers
+    - docker pull mysql:5.7
+    # Wait for MySQL to initialize
+    - docker run --name mysql57 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=ensembl_test -d -p 3306:3306 mysql:5.7
+    - until docker exec mysql57 mysqladmin ping -h127.0.0.1 --silent; do echo "Waiting for MySQL..."; sleep 2; done
+  before_script:
+    # Update permissions for Travis user on Dockerized MySQL
+    - docker exec mysql57 mysql -uroot -proot -e "CREATE USER 'travis'@'%'; GRANT ALL PRIVILEGES ON *.* TO 'travis'@'%'; FLUSH PRIVILEGES;"
+    - docker exec mysql57 mysql -uroot -proot -e "SET GLOBAL local_infile=1;"
+    - docker exec mysql57 mysql -uroot -proot -e "CREATE DATABASE test;"
+
 jobs:
   include:
     - name: "Perl Jobs"
@@ -76,6 +91,7 @@ jobs:
         - "3.10"
       env:
         - COVERALLS=true DB=mysql
+      <<: *shared_mysql_setup
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
@@ -86,6 +102,7 @@ jobs:
       language: python
       python:
         - "3.11"
+      <<: *shared_mysql_setup
       install:
         - pip install -r requirements-test.txt
         - pip install -e .
