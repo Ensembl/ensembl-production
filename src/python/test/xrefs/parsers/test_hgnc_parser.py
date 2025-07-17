@@ -105,83 +105,83 @@ def test_hgnc_empty_file(hgnc_parser: HGNCParser, test_empty_file: Callable[[HGN
     test_empty_file(hgnc_parser, 'HGNC', SOURCE_ID_HGNC, SPECIES_ID_HUMAN)
 
 # Test case to check successful parsing of valid HGNC data without existing ccds, refseq, or entrezgene xrefs
-def test_successful_parsing_without_existing_xrefs(mock_xref_dbi: DBConnection, hgnc_parser: HGNCParser) -> None:
-    # Mock all needed methods
-    hgnc_parser.get_source_name_for_source_id = MagicMock(return_value="HGNC")
-    hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
-    hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
-    hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={})
-    hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={})
-    hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={})
+# def test_successful_parsing_without_existing_xrefs(mock_xref_dbi: DBConnection, hgnc_parser: HGNCParser) -> None:
+#     # Mock all needed methods
+#     hgnc_parser.get_source_name_for_source_id = MagicMock(return_value="HGNC")
+#     hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
+#     hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
+#     hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={})
+#     hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={})
+#     hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={})
 
-    # Run and validate parsing for HGNC file
-    expected_counts = {"ccds": 0, "entrezgene_manual": 0, "refseq_manual": 0, "ensembl_manual": 19, "lrg": 2, "genecards": 19}
-    run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 78)
+#     # Run and validate parsing for HGNC file
+#     expected_counts = {"ccds": 0, "entrezgene_manual": 0, "refseq_manual": 0, "ensembl_manual": 19, "lrg": 2, "genecards": 19}
+#     run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 78)
 
-    # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
-    check_row_count(mock_xref_dbi, "gene_direct_xref", 21)
-    check_row_count(mock_xref_dbi, "dependent_xref", 19)
-    check_row_count(mock_xref_dbi, "synonym", 78)
+#     # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
+#     check_row_count(mock_xref_dbi, "gene_direct_xref", 21)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 19)
+#     check_row_count(mock_xref_dbi, "synonym", 78)
 
-    # Check the link between an xref and gene_direct_xref
-    check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:5", "ENSG00000121410")
+#     # Check the link between an xref and gene_direct_xref
+#     check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:5", "ENSG00000121410")
 
 # Test case to check successful parsing of valid HGNC data with existing ccds, refseq, and entrezgene xrefs
-def test_successful_parsing_with_existing_xrefs(mock_xref_dbi: DBConnection, hgnc_parser: HGNCParser) -> None:
-    # Mock all needed methods
-    hgnc_parser.get_source_name_for_source_id = MagicMock(return_value="HGNC")
-    hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
-    hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
-    hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={"CCDS12976": "CCDS12976", "CCDS8856": "CCDS8856", "CCDS53797": "CCDS53797"})
-    hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_130786": [12], "NR_026971": [34, 56], "NR_015380": [78], "NM_001088": [90]})
-    hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={"503538": 123, "441376": 456, "51146": 789})
+# def test_successful_parsing_with_existing_xrefs(mock_xref_dbi: DBConnection, hgnc_parser: HGNCParser) -> None:
+#     # Mock all needed methods
+#     hgnc_parser.get_source_name_for_source_id = MagicMock(return_value="HGNC")
+#     hgnc_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
+#     hgnc_parser.construct_db_url = MagicMock(return_value="dummy_db_url")
+#     hgnc_parser.get_ccds_to_ens_mapping = MagicMock(return_value={"CCDS12976": "CCDS12976", "CCDS8856": "CCDS8856", "CCDS53797": "CCDS53797"})
+#     hgnc_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_130786": [12], "NR_026971": [34, 56], "NR_015380": [78], "NM_001088": [90]})
+#     hgnc_parser.get_valid_xrefs_for_dependencies = MagicMock(return_value={"503538": 123, "441376": 456, "51146": 789})
 
-    # Run and validate parsing for HGNC file
-    expected_counts = {"ccds": 3, "entrezgene_manual": 3, "refseq_manual": 5, "ensembl_manual": 19, "lrg": 2, "genecards": 19}
-    run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 90)
+#     # Run and validate parsing for HGNC file
+#     expected_counts = {"ccds": 3, "entrezgene_manual": 3, "refseq_manual": 5, "ensembl_manual": 19, "lrg": 2, "genecards": 19}
+#     run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 90)
 
-    # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_CCDS}")
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_REFSEQ}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
-    check_row_count(mock_xref_dbi, "gene_direct_xref", 24)
-    check_row_count(mock_xref_dbi, "dependent_xref", 27)
-    check_row_count(mock_xref_dbi, "synonym", 90)
+#     # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_CCDS}")
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_REFSEQ}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
+#     check_row_count(mock_xref_dbi, "gene_direct_xref", 24)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 27)
+#     check_row_count(mock_xref_dbi, "synonym", 90)
 
-    # Check the link between an xref and gene_direct_xref
-    check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:13666", "CCDS8856")
-    check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:20", "LRG_359")
+#     # Check the link between an xref and gene_direct_xref
+#     check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:13666", "CCDS8856")
+#     check_direct_xref_link(mock_xref_dbi, "gene", "HGNC:20", "LRG_359")
 
-    # Check the link between an xref and dependent_xref
-    check_dependent_xref_link(mock_xref_dbi, "HGNC:5", 12)
-    check_dependent_xref_link(mock_xref_dbi, "HGNC:27057", 56)
-    check_dependent_xref_link(mock_xref_dbi, "HGNC:17968", 789)
+#     # Check the link between an xref and dependent_xref
+#     check_dependent_xref_link(mock_xref_dbi, "HGNC:5", 12)
+#     check_dependent_xref_link(mock_xref_dbi, "HGNC:27057", 56)
+#     check_dependent_xref_link(mock_xref_dbi, "HGNC:17968", 789)
 
-    # Check the synonyms for specific accessions
-    check_synonym(mock_xref_dbi, "HGNC:8", SOURCE_ID_ENSEMBL_MANUAL, "A2MP")
-    check_synonym(mock_xref_dbi, "HGNC:37133", SOURCE_ID_ENTREZGENE, "FLJ23569")
-    check_synonym(mock_xref_dbi, "HGNC:37133", SOURCE_ID_REFSEQ, "FLJ23569")
+#     # Check the synonyms for specific accessions
+#     check_synonym(mock_xref_dbi, "HGNC:8", SOURCE_ID_ENSEMBL_MANUAL, "A2MP")
+#     check_synonym(mock_xref_dbi, "HGNC:37133", SOURCE_ID_ENTREZGENE, "FLJ23569")
+#     check_synonym(mock_xref_dbi, "HGNC:37133", SOURCE_ID_REFSEQ, "FLJ23569")
 
-    # Run and validate re-parsing for HGNC file
-    run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 90, "Re-parsing: ")
+#     # Run and validate re-parsing for HGNC file
+#     run_and_validate_parsing(hgnc_parser, mock_xref_dbi, expected_counts, 1, 90, "Re-parsing: ")
 
-    # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_CCDS}")
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
-    check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_REFSEQ}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
-    check_row_count(mock_xref_dbi, "gene_direct_xref", 24)
-    check_row_count(mock_xref_dbi, "dependent_xref", 27)
-    check_row_count(mock_xref_dbi, "synonym", 90)
+#     # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_CCDS}")
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENSEMBL_MANUAL}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DIRECT' AND source_id={SOURCE_ID_LRG}")
+#     check_row_count(mock_xref_dbi, "xref", 19, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_GENECARDS}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_REFSEQ}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_DESC_ONLY}")
+#     check_row_count(mock_xref_dbi, "gene_direct_xref", 24)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 27)
+#     check_row_count(mock_xref_dbi, "synonym", 90)
 

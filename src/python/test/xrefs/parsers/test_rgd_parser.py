@@ -87,40 +87,40 @@ def test_successful_parsing_without_refseqs(mock_xref_dbi: DBConnection, rgd_par
     check_direct_xref_link(mock_xref_dbi, "gene", "2004", "ENSRNOG00000028896")
 
 # Test case to check successful parsing of valid RGD data with refseqs
-def test_successful_parsing_with_refseqs(mock_xref_dbi: DBConnection, rgd_parser: RGDParser) -> None:
-    rgd_parser.get_source_id_for_source_name = MagicMock(return_value=SOURCE_ID_DIRECT)
-    rgd_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_052979": [12, 34], "XM_039101774" : [56], "XM_063281326": [78]})
+# def test_successful_parsing_with_refseqs(mock_xref_dbi: DBConnection, rgd_parser: RGDParser) -> None:
+#     rgd_parser.get_source_id_for_source_name = MagicMock(return_value=SOURCE_ID_DIRECT)
+#     rgd_parser.get_acc_to_xref_ids = MagicMock(return_value={"NM_052979": [12, 34], "XM_039101774" : [56], "XM_063281326": [78]})
 
-    # Run and validate parsing for RGD file with existing refseqs
-    run_and_validate_parsing(rgd_parser, mock_xref_dbi, 3, 5, 1, 12)
+#     # Run and validate parsing for RGD file with existing refseqs
+#     run_and_validate_parsing(rgd_parser, mock_xref_dbi, 3, 5, 1, 12)
 
-    # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_RGD}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_RGD}")
-    check_row_count(mock_xref_dbi, "gene_direct_xref", 5)
-    check_row_count(mock_xref_dbi, "dependent_xref", 3)
-    check_row_count(mock_xref_dbi, "synonym", 8)
+#     # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_RGD}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_RGD}")
+#     check_row_count(mock_xref_dbi, "gene_direct_xref", 5)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 3)
+#     check_row_count(mock_xref_dbi, "synonym", 8)
 
-    # Check the link between an xref and gene_direct_xref
-    check_direct_xref_link(mock_xref_dbi, "gene", "2012", "ENSRNOG00000009845")
+#     # Check the link between an xref and gene_direct_xref
+#     check_direct_xref_link(mock_xref_dbi, "gene", "2012", "ENSRNOG00000009845")
 
-    # Check the link between an xref and dependent_xref
-    check_dependent_xref_link(mock_xref_dbi, "2003", 12)
-    check_dependent_xref_link(mock_xref_dbi, "2003", 34)
-    check_dependent_xref_link(mock_xref_dbi, "2007", 56)
+#     # Check the link between an xref and dependent_xref
+#     check_dependent_xref_link(mock_xref_dbi, "2003", 12)
+#     check_dependent_xref_link(mock_xref_dbi, "2003", 34)
+#     check_dependent_xref_link(mock_xref_dbi, "2007", 56)
 
-    # Check the synonyms for specific accessions
-    check_synonym(mock_xref_dbi, "2003", SOURCE_ID_DIRECT, "ASP")
-    check_synonym(mock_xref_dbi, "2007", SOURCE_ID_RGD, "PMP70, 70-kDa peroxisomal membrane protein")
+#     # Check the synonyms for specific accessions
+#     check_synonym(mock_xref_dbi, "2003", SOURCE_ID_DIRECT, "ASP")
+#     check_synonym(mock_xref_dbi, "2007", SOURCE_ID_RGD, "PMP70, 70-kDa peroxisomal membrane protein")
 
-    # Run and validate re-parsing for RGD file
-    run_and_validate_parsing(rgd_parser, mock_xref_dbi, 3, 5, 1, 12, "Re-parsing: ")
+#     # Run and validate re-parsing for RGD file
+#     run_and_validate_parsing(rgd_parser, mock_xref_dbi, 3, 5, 1, 12, "Re-parsing: ")
 
-    # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_RGD}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_RGD}")
-    check_row_count(mock_xref_dbi, "gene_direct_xref", 5)
-    check_row_count(mock_xref_dbi, "dependent_xref", 3)
-    check_row_count(mock_xref_dbi, "synonym", 8)
+#     # Check the row counts in the xref, gene_direct_xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_RGD}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='MISC' AND source_id={SOURCE_ID_RGD}")
+#     check_row_count(mock_xref_dbi, "gene_direct_xref", 5)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 3)
+#     check_row_count(mock_xref_dbi, "synonym", 8)

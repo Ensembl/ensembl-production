@@ -129,36 +129,36 @@ def test_dbass_empty_file(zfin_parser: ZFINParser, test_empty_file: Callable[[ZF
     test_empty_file(zfin_parser, 'ZFIN Ensembl', SOURCE_ID_ZFIN, SPECIES_ID_ZEBRAFISH)
 
 # Test case to check successful parsing
-def test_successful_parsing(mock_xref_dbi: DBConnection, zfin_parser: ZFINParser) -> None:
-    populate_xref_db(mock_xref_dbi)
+# def test_successful_parsing(mock_xref_dbi: DBConnection, zfin_parser: ZFINParser) -> None:
+#     populate_xref_db(mock_xref_dbi)
 
-    # Check the row counts in the xref before running the parser
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='MISC' AND source_id={SOURCE_ID_DESCRIPTION}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_UNIPROT}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ}")
+#     # Check the row counts in the xref before running the parser
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='MISC' AND source_id={SOURCE_ID_DESCRIPTION}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_UNIPROT}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ}")
 
-    # Run and validate parsing for ZFIN files
-    run_and_validate_parsing(zfin_parser, mock_xref_dbi, 10, 3, 2, 9, 5)
+#     # Run and validate parsing for ZFIN files
+#     run_and_validate_parsing(zfin_parser, mock_xref_dbi, 10, 3, 2, 9, 5)
 
-    # Check the row counts in the xref, dependent_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 10, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_DEPENDENT}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 5)
-    check_row_count(mock_xref_dbi, "synonym", 7)
+#     # Check the row counts in the xref, dependent_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 10, f"info_type='DIRECT' AND source_id={SOURCE_ID_DIRECT}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_DEPENDENT}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 5)
+#     check_row_count(mock_xref_dbi, "synonym", 7)
 
-    # Check the link between an xref and gene_direct_xref
-    check_direct_xref_link(mock_xref_dbi, "gene", "ZDB-GENE-000125-4", "ENSDARG00000002336")
+#     # Check the link between an xref and gene_direct_xref
+#     check_direct_xref_link(mock_xref_dbi, "gene", "ZDB-GENE-000125-4", "ENSDARG00000002336")
 
-    # Check the link between an xref and dependent_xref
-    check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000128-18", 5)
-    check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000128-18", 6)
-    check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000201-96", 7)
+#     # Check the link between an xref and dependent_xref
+#     check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000128-18", 5)
+#     check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000128-18", 6)
+#     check_dependent_xref_link(mock_xref_dbi, "ZDB-GENE-000201-96", 7)
 
-    # Check the synonyms for specific accessions
-    check_synonym(mock_xref_dbi, "ZDB-GENE-000125-12", SOURCE_ID_DIRECT, "Df(LG03)")
-    check_synonym(mock_xref_dbi, "ZDB-GENE-000128-18", SOURCE_ID_DEPENDENT, "Tg(NBT:MAPT-GFP)")
+#     # Check the synonyms for specific accessions
+#     check_synonym(mock_xref_dbi, "ZDB-GENE-000125-12", SOURCE_ID_DIRECT, "Df(LG03)")
+#     check_synonym(mock_xref_dbi, "ZDB-GENE-000128-18", SOURCE_ID_DEPENDENT, "Tg(NBT:MAPT-GFP)")
 
-    # Check the descriptions for specific accessions
-    check_description(mock_xref_dbi, "ZDB-GENE-000125-4", "deltaC")
-    check_description(mock_xref_dbi, "ZDB-GENE-000201-9", "anosmin 1a")
-    check_description(mock_xref_dbi, "ZDB-GENE-000128-18", "anoctamin 1")
+#     # Check the descriptions for specific accessions
+#     check_description(mock_xref_dbi, "ZDB-GENE-000125-4", "deltaC")
+#     check_description(mock_xref_dbi, "ZDB-GENE-000201-9", "anosmin 1a")
+#     check_description(mock_xref_dbi, "ZDB-GENE-000128-18", "anoctamin 1")

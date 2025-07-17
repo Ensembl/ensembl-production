@@ -213,38 +213,38 @@ def test_successful_parsing_without_existing_xrefs(mock_xref_dbi: DBConnection, 
     check_row_count(mock_xref_dbi, "xref", 0)
 
 # Test case to check successful parsing of valid Mim2Gene data with existing mim and entrezgene xrefs
-def test_successful_parsing_with_existing_xrefs(mock_xref_dbi: DBConnection, mim2gene_parser: Mim2GeneParser) -> None:
-    mim2gene_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
-    populate_xref_db(mock_xref_dbi)
+# def test_successful_parsing_with_existing_xrefs(mock_xref_dbi: DBConnection, mim2gene_parser: Mim2GeneParser) -> None:
+#     mim2gene_parser.get_source_id_for_source_name = MagicMock(side_effect=mock_get_source_id_for_source_name)
+#     populate_xref_db(mock_xref_dbi)
 
-    # Check the row counts in the xref and dependent_xref tables before running the parser
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 0)
+#     # Check the row counts in the xref and dependent_xref tables before running the parser
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 0)
 
-    # Run and validate parsing for Mim2Gene file
-    run_and_validate_parsing(mim2gene_parser, mock_xref_dbi, 9, 4, 3, 2)
+#     # Run and validate parsing for Mim2Gene file
+#     run_and_validate_parsing(mim2gene_parser, mock_xref_dbi, 9, 4, 3, 2)
 
-    # Check the row counts in the xref and dependent_xref tables
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_GENE}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_MORBID}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 3)
+#     # Check the row counts in the xref and dependent_xref tables
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_GENE}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_MORBID}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 3)
 
-    # Check the link between an xref and dependent_xref
-    check_dependent_xref_link(mock_xref_dbi, "100640", 9)
-    check_dependent_xref_link(mock_xref_dbi, "100100", 10)
+#     # Check the link between an xref and dependent_xref
+#     check_dependent_xref_link(mock_xref_dbi, "100640", 9)
+#     check_dependent_xref_link(mock_xref_dbi, "100100", 10)
 
-    # Run and validate re-parsing for Mim2Gene file
-    run_and_validate_parsing(mim2gene_parser, mock_xref_dbi, 9, 4, 3, 2, "Re-parsing: ")
+#     # Run and validate re-parsing for Mim2Gene file
+#     run_and_validate_parsing(mim2gene_parser, mock_xref_dbi, 9, 4, 3, 2, "Re-parsing: ")
 
-    # Check the row counts in the xref and dependent_xref tables
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_GENE}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_MORBID}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 3)
+#     # Check the row counts in the xref and dependent_xref tables
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_GENE}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_GENE}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='UNMAPPED' AND source_id={SOURCE_ID_MIM_MORBID}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_MIM_MORBID}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 3)

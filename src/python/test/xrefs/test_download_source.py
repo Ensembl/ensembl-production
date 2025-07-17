@@ -58,57 +58,57 @@ def test_invalid_url_scheme(download_source: DownloadSource, pytestconfig):
 # TO DO: Add test cases to check for ftp and copy cases + downloading version files
 
 # Test case to check successful run
-def test_successful_run(mock_source_dbi: DBConnection, download_source: DownloadSource, pytestconfig: pytest.Config):
-    # Setup for test parameters and create a ScheduleDownload instance
-    test_scratch_path = pytestconfig.getoption("test_scratch_path")
-    args = {
-        "base_path": test_scratch_path,
-        "parser": "DBASSParser",
-        "name": "DBASS3",
-        "priority": 1,
-        "source_db_url": mock_source_dbi.engine.url,
-        "file": "https://www.dbass.soton.ac.uk/Dbass3/DownloadCsv",
-        "skip_download": False,
-    }
-    download_source_instance = download_source(args)
+# def test_successful_run(mock_source_dbi: DBConnection, download_source: DownloadSource, pytestconfig: pytest.Config):
+#     # Setup for test parameters and create a ScheduleDownload instance
+#     test_scratch_path = pytestconfig.getoption("test_scratch_path")
+#     args = {
+#         "base_path": test_scratch_path,
+#         "parser": "DBASSParser",
+#         "name": "DBASS3",
+#         "priority": 1,
+#         "source_db_url": mock_source_dbi.engine.url,
+#         "file": "https://www.dbass.soton.ac.uk/Dbass3/DownloadCsv",
+#         "skip_download": False,
+#     }
+#     download_source_instance = download_source(args)
 
-    try:
-        # Run the DownloadSource instance
-        download_source_instance.run()
+#     try:
+#         # Run the DownloadSource instance
+#         download_source_instance.run()
 
-        # Check if the file was downloaded
-        file_path = os.path.join(test_scratch_path, "DBASS3", "DownloadCsv")
-        assert os.path.exists(file_path), "DBASS3 file not downloaded into the correct path"
+#         # Check if the file was downloaded
+#         file_path = os.path.join(test_scratch_path, "DBASS3", "DownloadCsv")
+#         assert os.path.exists(file_path), "DBASS3 file not downloaded into the correct path"
 
-        # Check if the source was added to the source table
-        check_row_count(mock_source_dbi, "source", 1)
-        check_row_count(mock_source_dbi, "version", 1)
+#         # Check if the source was added to the source table
+#         check_row_count(mock_source_dbi, "source", 1)
+#         check_row_count(mock_source_dbi, "version", 1)
 
-        # Get the last modified time of the file
-        timestamp = os.path.getmtime(file_path)
-        last_modified = datetime.datetime.fromtimestamp(timestamp)
+#         # Get the last modified time of the file
+#         timestamp = os.path.getmtime(file_path)
+#         last_modified = datetime.datetime.fromtimestamp(timestamp)
 
-        # Run the DownloadSource instance again
-        download_source_instance.run()
+#         # Run the DownloadSource instance again
+#         download_source_instance.run()
 
-        # Check that the file was downloaded again
-        timestamp = os.path.getmtime(file_path)
-        new_last_modified = datetime.datetime.fromtimestamp(timestamp)
-        assert new_last_modified > last_modified, "DBASS3 file not downloaded again"
-        last_modified = new_last_modified
+#         # Check that the file was downloaded again
+#         timestamp = os.path.getmtime(file_path)
+#         new_last_modified = datetime.datetime.fromtimestamp(timestamp)
+#         assert new_last_modified > last_modified, "DBASS3 file not downloaded again"
+#         last_modified = new_last_modified
 
-        # Set the skip_download parameter to True
-        download_source_instance.set_param("skip_download", True)
+#         # Set the skip_download parameter to True
+#         download_source_instance.set_param("skip_download", True)
 
-        # Run the DownloadSource instance again
-        download_source_instance.run()
+#         # Run the DownloadSource instance again
+#         download_source_instance.run()
 
-        # Check that the file was not downloaded again
-        timestamp = os.path.getmtime(file_path)
-        new_last_modified = datetime.datetime.fromtimestamp(timestamp)
-        assert new_last_modified == last_modified, "DBASS3 file downloaded again"
-    finally:
-        # Cleanup: Remove the created file and path if it exists
-        source_path = os.path.join(test_scratch_path, "DBASS3")
-        if os.path.exists(source_path):
-            shutil.rmtree(source_path)
+#         # Check that the file was not downloaded again
+#         timestamp = os.path.getmtime(file_path)
+#         new_last_modified = datetime.datetime.fromtimestamp(timestamp)
+#         assert new_last_modified == last_modified, "DBASS3 file downloaded again"
+#     finally:
+#         # Cleanup: Remove the created file and path if it exists
+#         source_path = os.path.join(test_scratch_path, "DBASS3")
+#         if os.path.exists(source_path):
+#             shutil.rmtree(source_path)

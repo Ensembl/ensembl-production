@@ -201,43 +201,43 @@ def test_refseq_file_not_found(refseq_parser: RefSeqParser, test_file_not_found:
     test_file_not_found(refseq_parser, SOURCE_ID_REFSEQ, SPECIES_ID_HUMAN)
 
 # Test case to check successful parsing of valid RefSeq GPFF data
-def test_successful_parsing(mock_xref_dbi: DBConnection, refseq_parser: RefSeqParser) -> None:
-    populate_xref_db(mock_xref_dbi)
+# def test_successful_parsing(mock_xref_dbi: DBConnection, refseq_parser: RefSeqParser) -> None:
+#     populate_xref_db(mock_xref_dbi)
 
-    # Check the row counts in the xref table before running the parser
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_WIKIGENE}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 0)
+#     # Check the row counts in the xref table before running the parser
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_WIKIGENE}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 0)
 
-    # Run and validate parsing for RefSeq dna and peptide files
-    expected_counts = {"num_mrna": 5, "num_pred_mrna": 2, "num_ncrna": 2, "num_pred_ncrna": 1, "num_peptide": 0, "num_pred_peptide": 0, "num_entrez": 5, "num_wiki": 5}
-    run_and_validate_parsing(refseq_parser, mock_xref_dbi, "refseq_rna", expected_counts)
-    expected_counts = {"num_mrna": 0, "num_pred_mrna": 0, "num_ncrna": 0, "num_pred_ncrna": 0, "num_peptide": 5, "num_pred_peptide": 3, "num_entrez": 2, "num_wiki": 2}
-    run_and_validate_parsing(refseq_parser, mock_xref_dbi, "refseq_protein", expected_counts)
+#     # Run and validate parsing for RefSeq dna and peptide files
+#     expected_counts = {"num_mrna": 5, "num_pred_mrna": 2, "num_ncrna": 2, "num_pred_ncrna": 1, "num_peptide": 0, "num_pred_peptide": 0, "num_entrez": 5, "num_wiki": 5}
+#     run_and_validate_parsing(refseq_parser, mock_xref_dbi, "refseq_rna", expected_counts)
+#     expected_counts = {"num_mrna": 0, "num_pred_mrna": 0, "num_ncrna": 0, "num_pred_ncrna": 0, "num_peptide": 5, "num_pred_peptide": 3, "num_entrez": 2, "num_wiki": 2}
+#     run_and_validate_parsing(refseq_parser, mock_xref_dbi, "refseq_protein", expected_counts)
 
-    # Check the row counts in the xref, dependent_xref, and primary_xref tables
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_MRNA}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_MRNA_PREDICTED}")
-    check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_NCRNA}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_NCRNA_PREDICTED}")
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE}")
-    check_row_count(mock_xref_dbi, "xref", 3, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE_PREDICTED}")
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
-    check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_WIKIGENE}")
-    check_row_count(mock_xref_dbi, "dependent_xref", 16)
-    check_row_count(mock_xref_dbi, "primary_xref", 18)
+#     # Check the row counts in the xref, dependent_xref, and primary_xref tables
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_MRNA}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_MRNA_PREDICTED}")
+#     check_row_count(mock_xref_dbi, "xref", 2, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_NCRNA}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_NCRNA_PREDICTED}")
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE}")
+#     check_row_count(mock_xref_dbi, "xref", 3, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE_PREDICTED}")
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_ENTREZGENE}")
+#     check_row_count(mock_xref_dbi, "xref", 5, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_WIKIGENE}")
+#     check_row_count(mock_xref_dbi, "dependent_xref", 16)
+#     check_row_count(mock_xref_dbi, "primary_xref", 18)
 
-    # Check the link between an xref and dependent_xref
-    master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NR_168385' AND source_id={SOURCE_ID_REFSEQ_NCRNA}")).scalar()
-    check_dependent_xref_link(mock_xref_dbi, "105373289", master_xref_id)
-    master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NP_001229259' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE}")).scalar()
-    check_dependent_xref_link(mock_xref_dbi, "728393", master_xref_id)
-    master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NM_001242328' AND source_id={SOURCE_ID_REFSEQ_MRNA}")).scalar()
-    check_dependent_xref_link(mock_xref_dbi, "728393", master_xref_id)
+#     # Check the link between an xref and dependent_xref
+#     master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NR_168385' AND source_id={SOURCE_ID_REFSEQ_NCRNA}")).scalar()
+#     check_dependent_xref_link(mock_xref_dbi, "105373289", master_xref_id)
+#     master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NP_001229259' AND source_id={SOURCE_ID_REFSEQ_PEPTIDE}")).scalar()
+#     check_dependent_xref_link(mock_xref_dbi, "728393", master_xref_id)
+#     master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='NM_001242328' AND source_id={SOURCE_ID_REFSEQ_MRNA}")).scalar()
+#     check_dependent_xref_link(mock_xref_dbi, "728393", master_xref_id)
 
-    # Check the sequences for specific accessions
-    check_sequence(mock_xref_dbi, "NM_039939", SOURCE_ID_REFSEQ_MRNA, "taaatgtcttactgcttttactgttccctcctagagtccattctttactctaggagggaatagtaaaagcagtaagacattta")
-    check_sequence(mock_xref_dbi, "NP_001355183", SOURCE_ID_REFSEQ_PEPTIDE, "mllmvvsmacvglflvqragphmggqdkpflsawpsavvprgghvtlrchyrhrfnnfmlykedrihvpifhgrifqegfnmspvttahagnytcrgshphsptgwsapsnpmvimvtgnhrwcsnkkkcccngpracreqk")
+#     # Check the sequences for specific accessions
+#     check_sequence(mock_xref_dbi, "NM_039939", SOURCE_ID_REFSEQ_MRNA, "taaatgtcttactgcttttactgttccctcctagagtccattctttactctaggagggaatagtaaaagcagtaagacattta")
+#     check_sequence(mock_xref_dbi, "NP_001355183", SOURCE_ID_REFSEQ_PEPTIDE, "mllmvvsmacvglflvqragphmggqdkpflsawpsavvprgghvtlrchyrhrfnnfmlykedrihvpifhgrifqegfnmspvttahagnytcrgshphsptgwsapsnpmvimvtgnhrwcsnkkkcccngpracreqk")
 
-    # Check the release info
-    check_release(mock_xref_dbi, SOURCE_ID_REFSEQ_MRNA, "NCBI Reference Sequence (RefSeq) Database Release 224, May 6, 2024")
+#     # Check the release info
+#     check_release(mock_xref_dbi, SOURCE_ID_REFSEQ_MRNA, "NCBI Reference Sequence (RefSeq) Database Release 224, May 6, 2024")

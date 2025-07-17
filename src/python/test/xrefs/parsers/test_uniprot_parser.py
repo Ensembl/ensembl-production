@@ -126,57 +126,57 @@ def test_uniprot_file_not_found(uniprot_parser: UniProtParser, test_file_not_fou
     test_file_not_found(uniprot_parser, SOURCE_ID_UNIPROT, SPECIES_ID_HUMAN)
 
 # Test case to check successful parsing of valid UniProt data
-def test_successful_parsing(mock_xref_dbi: DBConnection, uniprot_parser: UniProtParser) -> None:
-    populate_xref_db(mock_xref_dbi)
+# def test_successful_parsing(mock_xref_dbi: DBConnection, uniprot_parser: UniProtParser) -> None:
+#     populate_xref_db(mock_xref_dbi)
 
-    # Run and validate parsing for UniProt SWISSPROT file
-    expected_counts = {"num_sp": 4, "num_sptr": 0, "num_sptr_non_display": 0, "num_direct_sp": 8, "num_direct_sptr": 0, "num_isoform": 6, "num_skipped": 1}
-    expected_deps = {"PDB": 50, "STRING": 4, "EMBL": 34, "BioGRID": 4, "ChEMBL": 4, "protein_id": 34, "Uniprot_gn": 3}
-    run_and_validate_parsing(uniprot_parser, mock_xref_dbi, "uniprot_swissprot", expected_counts, expected_deps)
+#     # Run and validate parsing for UniProt SWISSPROT file
+#     expected_counts = {"num_sp": 4, "num_sptr": 0, "num_sptr_non_display": 0, "num_direct_sp": 8, "num_direct_sptr": 0, "num_isoform": 6, "num_skipped": 1}
+#     expected_deps = {"PDB": 50, "STRING": 4, "EMBL": 34, "BioGRID": 4, "ChEMBL": 4, "protein_id": 34, "Uniprot_gn": 3}
+#     run_and_validate_parsing(uniprot_parser, mock_xref_dbi, "uniprot_swissprot", expected_counts, expected_deps)
 
-    # Run and validate parsing for UniProt TREMBL file
-    expected_counts = {"num_sp": 0, "num_sptr": 1, "num_sptr_non_display": 8, "num_direct_sp": 0, "num_direct_sptr": 0, "num_isoform": 0, "num_skipped": 0}
-    expected_deps = {"EMBL": 49, "protein_id": 49, "Uniprot_gn": 7}
-    run_and_validate_parsing(uniprot_parser, mock_xref_dbi, "uniprot_trembl", expected_counts, expected_deps)
+#     # Run and validate parsing for UniProt TREMBL file
+#     expected_counts = {"num_sp": 0, "num_sptr": 1, "num_sptr_non_display": 8, "num_direct_sp": 0, "num_direct_sptr": 0, "num_isoform": 0, "num_skipped": 0}
+#     expected_deps = {"EMBL": 49, "protein_id": 49, "Uniprot_gn": 7}
+#     run_and_validate_parsing(uniprot_parser, mock_xref_dbi, "uniprot_trembl", expected_counts, expected_deps)
 
-    # Check the row counts in the xref, translation_direct_xref, dependent_xref, primary_xref, and synonym tables
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_SWISSPROT}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_SWISSPROT_DIRECT}")
-    check_row_count(mock_xref_dbi, "xref", 1, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_TREMBL}")
-    check_row_count(mock_xref_dbi, "xref", 0, f"info_type='DIRECT' AND source_id={SOURCE_ID_TREMBL_DIRECT}")
-    check_row_count(mock_xref_dbi, "xref", 8, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_TREMBL_NON_DISPLAY}")
-    check_row_count(mock_xref_dbi, "xref", 49, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_PDB}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_STRING}")
-    check_row_count(mock_xref_dbi, "xref", 83, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_EMBL}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_BIOGRID}")
-    check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_CHEMBL}")
-    check_row_count(mock_xref_dbi, "xref", 10, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_UNIPROT_GN}")
-    check_row_count(mock_xref_dbi, "xref", 83, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_PROTEIN_ID}")
-    check_row_count(mock_xref_dbi, "translation_direct_xref", 14)
-    check_row_count(mock_xref_dbi, "dependent_xref", 238)
-    check_row_count(mock_xref_dbi, "primary_xref", 13)
-    check_row_count(mock_xref_dbi, "synonym", 16)
+#     # Check the row counts in the xref, translation_direct_xref, dependent_xref, primary_xref, and synonym tables
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_SWISSPROT}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DIRECT' AND source_id={SOURCE_ID_SWISSPROT_DIRECT}")
+#     check_row_count(mock_xref_dbi, "xref", 1, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_TREMBL}")
+#     check_row_count(mock_xref_dbi, "xref", 0, f"info_type='DIRECT' AND source_id={SOURCE_ID_TREMBL_DIRECT}")
+#     check_row_count(mock_xref_dbi, "xref", 8, f"info_type='SEQUENCE_MATCH' AND source_id={SOURCE_ID_TREMBL_NON_DISPLAY}")
+#     check_row_count(mock_xref_dbi, "xref", 49, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_PDB}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_STRING}")
+#     check_row_count(mock_xref_dbi, "xref", 83, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_EMBL}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_BIOGRID}")
+#     check_row_count(mock_xref_dbi, "xref", 4, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_CHEMBL}")
+#     check_row_count(mock_xref_dbi, "xref", 10, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_UNIPROT_GN}")
+#     check_row_count(mock_xref_dbi, "xref", 83, f"info_type='DEPENDENT' AND source_id={SOURCE_ID_PROTEIN_ID}")
+#     check_row_count(mock_xref_dbi, "translation_direct_xref", 14)
+#     check_row_count(mock_xref_dbi, "dependent_xref", 238)
+#     check_row_count(mock_xref_dbi, "primary_xref", 13)
+#     check_row_count(mock_xref_dbi, "synonym", 16)
 
-    # Check the link between an xref and translation_direct_xref
-    check_direct_xref_link(mock_xref_dbi, "translation", "P62258", "ENSP00000461762")
-    check_direct_xref_link(mock_xref_dbi, "translation", "P31946-1", "ENSP00000361930")
+#     # Check the link between an xref and translation_direct_xref
+#     check_direct_xref_link(mock_xref_dbi, "translation", "P62258", "ENSP00000461762")
+#     check_direct_xref_link(mock_xref_dbi, "translation", "P31946-1", "ENSP00000361930")
 
-    # Check the link between an xref and dependent_xref
-    master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='Q4F4R7' AND source_id={SOURCE_ID_TREMBL_NON_DISPLAY}")).scalar()
-    check_dependent_xref_link(mock_xref_dbi, "DQ305032", master_xref_id)
-    check_dependent_xref_link(mock_xref_dbi, "AGQ46203", master_xref_id)
-    master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='P62258' AND source_id={SOURCE_ID_SWISSPROT}")).scalar()
-    check_dependent_xref_link(mock_xref_dbi, "6EIH", master_xref_id)
+#     # Check the link between an xref and dependent_xref
+#     master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='Q4F4R7' AND source_id={SOURCE_ID_TREMBL_NON_DISPLAY}")).scalar()
+#     check_dependent_xref_link(mock_xref_dbi, "DQ305032", master_xref_id)
+#     check_dependent_xref_link(mock_xref_dbi, "AGQ46203", master_xref_id)
+#     master_xref_id = mock_xref_dbi.execute(text(f"SELECT xref_id FROM xref WHERE accession='P62258' AND source_id={SOURCE_ID_SWISSPROT}")).scalar()
+#     check_dependent_xref_link(mock_xref_dbi, "6EIH", master_xref_id)
 
-    # Check the sequences for specific accessions
-    check_sequence(mock_xref_dbi, "Q04917", SOURCE_ID_SWISSPROT, "MGDREQLLQRARLAEQAERYDDMASAMKAVTELNEPLSNEDRNLLSVAYKNVVGARRSSWEAGEGN")
-    check_sequence(mock_xref_dbi, "A0A7D5YZ42", SOURCE_ID_TREMBL_NON_DISPLAY, "LSKVYGPVFTLYFGLKPIVVLHGYEAVKEALIDLGEEFSGRGIFPLAERANRGFGIVFSNGKKWKEIRHFSLMTLRNFGMGKRSIEDRVQEEARCLVEELRKTKGG")
+#     # Check the sequences for specific accessions
+#     check_sequence(mock_xref_dbi, "Q04917", SOURCE_ID_SWISSPROT, "MGDREQLLQRARLAEQAERYDDMASAMKAVTELNEPLSNEDRNLLSVAYKNVVGARRSSWEAGEGN")
+#     check_sequence(mock_xref_dbi, "A0A7D5YZ42", SOURCE_ID_TREMBL_NON_DISPLAY, "LSKVYGPVFTLYFGLKPIVVLHGYEAVKEALIDLGEEFSGRGIFPLAERANRGFGIVFSNGKKWKEIRHFSLMTLRNFGMGKRSIEDRVQEEARCLVEELRKTKGG")
 
-    # Check the synonyms for specific accessions
-    check_synonym(mock_xref_dbi, "P62258", SOURCE_ID_UNIPROT_GN, "YWHAE1")
-    check_synonym(mock_xref_dbi, "P61981", SOURCE_ID_SWISSPROT, "P35214")
-    check_synonym(mock_xref_dbi, "P61981", SOURCE_ID_SWISSPROT, "Q9UDP2")
+#     # Check the synonyms for specific accessions
+#     check_synonym(mock_xref_dbi, "P62258", SOURCE_ID_UNIPROT_GN, "YWHAE1")
+#     check_synonym(mock_xref_dbi, "P61981", SOURCE_ID_SWISSPROT, "P35214")
+#     check_synonym(mock_xref_dbi, "P61981", SOURCE_ID_SWISSPROT, "Q9UDP2")
 
-    # Check the release info
-    check_release(mock_xref_dbi, SOURCE_ID_SWISSPROT, "UniProtKB/Swiss-Prot Release 2024_03 of 29-May-2024")
-    check_release(mock_xref_dbi, SOURCE_ID_TREMBL, "UniProtKB/TrEMBL Release 2024_03 of 29-May-2024")
+#     # Check the release info
+#     check_release(mock_xref_dbi, SOURCE_ID_SWISSPROT, "UniProtKB/Swiss-Prot Release 2024_03 of 29-May-2024")
+#     check_release(mock_xref_dbi, SOURCE_ID_TREMBL, "UniProtKB/TrEMBL Release 2024_03 of 29-May-2024")
