@@ -74,7 +74,7 @@ sub default_options {
                     'caenorhabditis_brenneri',
                     'caenorhabditis_briggsae',
                     'caenorhabditis_japonica',
-                    'caenorhabditis_remanei',
+                    'caenorhabditis_remanei_gca010183535v1rs',
                     'pristionchus_pacificus',
                     'brugia_malayi',
                     'loa_loa',
@@ -100,7 +100,7 @@ sub default_options {
                     'drosophila_pseudoobscura_gca009870125v2rs',
                     'drosophila_sechellia_gca004382195v2rs',
                     'drosophila_simulans_gca016746395v2rs',
-                    'drosophila_virilis_gca003285735v2rs',
+                    'drosophila_virilis_gca030788295v1rs',
                     'drosophila_willistoni_gca018902025v2rs',
                     'drosophila_yakuba_gca016746365v2rs'
                   ],
