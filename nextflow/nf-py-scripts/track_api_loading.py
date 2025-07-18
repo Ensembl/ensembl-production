@@ -53,8 +53,7 @@ class TrackUtils:
         self.custom_variant_track_data = self.get_variant_track_data()
         self.custom_gene_track_data = self.get_gene_track_data()
 
-    def submit_tracks(self, track_file: str) -> None:
-        filename = os.path.splitext(track_file)[0]
+    def submit_tracks(self, filename: str) -> None:
         # Skip file
         if filename == "variant-details" or filename.endswith("-summary"):
             return
@@ -62,8 +61,6 @@ class TrackUtils:
         logger.info(self.yaml_templates_list)
         logger.info(filename)
         if filename in self.yaml_templates_list:
-            logger.info(filename)
-            logger.info("-------===============--------")
             track_payload = self.get_track_payload(template_name=filename)
             self.post_track(track_payload)
             return
@@ -87,9 +84,9 @@ class TrackUtils:
         track_api_json = self.read_yaml_template(template_name=f"{template_name}.yaml")
         track_api_json["genome_id"] = self.genome_uuid
         if track_api_json["type"] == "gene":
-            track_api_json.update(self.custom_gene_track_data)
+            if self.custom_gene_track_data:
+                track_api_json.update(self.custom_gene_track_data[self.genome_uuid])
         if track_api_json["type"] == "variant":
-            print(self.custom_variant_track_data)
             track_api_json.update(self.custom_variant_track_data)
         return track_api_json
 
@@ -129,6 +126,7 @@ class TrackUtils:
                 logger.error("Error while posting data:")
                 logger.info(track_payload)
                 logger.error(request.json())
+                logger.error(track_payload)
         except Exception as e:
             logger.error(track_payload)
             logger.error(e)
@@ -186,17 +184,24 @@ class TrackUtils:
             logger.info(f"Quering metadata : {query} ")
 
             result_dict = {}
+            row_data = {}
             with DBConnection(ARGS.metadata_db_uri).session_scope() as session:
                 for dataset in session.scalars(query):
-                    row_data = {"label": dataset.dataset_source.name}
+                    # row_data = {"label": dataset.dataset_source.name}
                     # Set species and uuid from genome
                     for genome_dataset in dataset.genome_datasets:
                         genome = genome_dataset.genome
-                        row_data["species"] = genome.production_name
+                     #   row_data["species"] = genome.production_name
                     # Set attribute values
+                    source = {}
                     for attrib in dataset.dataset_attributes:
                         if attrib.attribute.name == "genebuild.provider_url":
-                            row_data.setdefault("sources", [{"url": attrib.value}])
+                            source["url"] = attrib.value
+                            #row_data.setdefault("sources", [{"url": attrib.value}])
+                        if attrib.attribute.name == "genebuild.provider_name":
+                            source["name"] = attrib.value
+                        if source:
+                            row_data.setdefault("sources", [source])
                         if attrib.attribute.name in ARGS.dataset_attributes:
                             row_data.setdefault("description", "Annotated")
                     # Set annotation type
