@@ -1,0 +1,14 @@
+ENSG00000000419	R-HSA-162699	https://reactome.org/PathwayBrowser/#/R-HSA-162699	Synthesis of dolichyl-phosphate mannose	TAS	Homo sapiens
+ENSG00000000419	R-HSA-163125	https://reactome.org/PathwayBrowser/#/R-HSA-163125	Post-translational modification: synthesis of GPI-anchored proteins	TAS	Homo sapiens
+ENSG00000000419	R-HSA-1643685	https://reactome.org/PathwayBrowser/#/R-HSA-1643685	Disease	TAS	Homo sapiens
+ENSG00000000419	R-HSA-3781865	https://reactome.org/PathwayBrowser/#/R-HSA-3781865	Diseases of glycosylation	TAS	Homo sapiens
+ENSG00000000419	R-HSA-392499	https://reactome.org/PathwayBrowser/#/R-HSA-392499	Metabolism of proteins	TAS	Homo sapiens
+ENSX00000000419	R-HSA-446193	https://reactome.org/PathwayBrowser/#/R-HSA-446193	Biosynthesis of the N-glycan precursor (dolichol lipid-linked oligosaccharide, LLO) and transfer to a nascent protein	TAS	Homo sapiens
+ENSG00000000419	R-HSA-446203	https://reactome.org/PathwayBrowser/#/R-HSA-446203	Asparagine N-linked glycosylation	TAS	Homo sapiens
+ENST00000000233	R-HSA-199977	https://reactome.org/PathwayBrowser/#/R-HSA-199977	ER to Golgi Anterograde Transport	TAS	Homo sapiens
+ENST00000000233	R-HSA-199991	https://reactome.org/PathwayBrowser/#/R-HSA-199991	Membrane Trafficking	TAS	Homo sapiens
+ENST00000000233	R-HSA-392499	https://reactome.org/PathwayBrowser/#/R-HSA-392499	Metabolism of proteins	TAS	Homo sapiens
+ENST00000000233	R-HSA-446203	https://reactome.org/PathwayBrowser/#/R-HSA-446203	Asparagine N-linked glycosylation	TAS	Homo sapiens
+ENSP00000000233	R-HSA-199977	https://reactome.org/PathwayBrowser/#/R-HSA-199977	ER to Golgi Anterograde Transport	TAS	Homo sapiens
+ENSP00000000233	R-HSA-199991	https://reactome.org/PathwayBrowser/#/R-HSA-199991	Membrane Trafficking	TAS	Homo sapiens
+ENSP00000000233	R-HSA-392499	https://reactome.org/PathwayBrowser/#/R-HSA-392499	Metabolism of proteins	TAS	Homo sapiens

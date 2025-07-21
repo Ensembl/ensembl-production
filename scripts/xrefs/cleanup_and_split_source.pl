@@ -28,7 +28,7 @@ use POSIX qw(strftime);
 
 use Nextflow::Utils;
 
-my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $update_mode, $log_timestamp);
+my ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files, $version_file, $tax_ids_file, $tax_ids_list, $update_mode, $log_timestamp);
 GetOptions(
   'base_path=s'     => \$base_path,
   'source_db_url=s' => \$source_db_url,
@@ -37,16 +37,17 @@ GetOptions(
   'clean_files=i'   => \$clean_files,
   'version_file:s'  => \$version_file,
   'tax_ids_file:s'  => \$tax_ids_file,
+  'tax_ids_list:s'  => \$tax_ids_list,
   'update_mode:i'   => \$update_mode,
   'log_timestamp:s' => \$log_timestamp
 );
 
 # Check that all mandatory parameters are passed
-if (!defined($base_path) || !defined($source_db_url) || !defined($source_name) || !defined($clean_dir) || !defined($clean_files)) {
-  croak "Usage: cleanup_source.pl --base_path <base_path> --source_db_url <source_db_url> --name <name> --clean_dir <clean_dir> --clean_files <clean_files> [--version_file <version_file>] [--tax_ids_file <tax_ids_file>] [--update_mode <update_mode>] [--log_timestamp <log_timestamp>]";
+foreach my $param ($base_path, $source_db_url, $source_name, $clean_dir, $clean_files) {
+  defined $param or croak "Usage: cleanup_source.pl --base_path <base_path> --source_db_url <source_db_url> --name <name> --clean_dir <clean_dir> --clean_files <clean_files> [--version_file <version_file>] [--tax_ids_file <tax_ids_file>] [--update_mode <update_mode>] [--log_timestamp <log_timestamp>]";
 }
 
-if (!defined($update_mode)) {$update_mode = 0;}
+$update_mode //= 0;
 
 my $log_file;
 if (defined($log_timestamp)) {
@@ -55,7 +56,8 @@ if (defined($log_timestamp)) {
   $log_file = catfile($log_path, "tmp_logfile_CleanupSplitSource_".int(rand(500)));
 
   add_to_log_file($log_file, "CleanupSplitSource starting for source $source_name");
-  add_to_log_file($log_file, "Param: tax_ids_file = $tax_ids_file");
+  add_to_log_file($log_file, "Param: tax_ids_file = $tax_ids_file") if $tax_ids_file;
+  add_to_log_file($log_file, "Param: tax_ids_list = $tax_ids_list") if $tax_ids_list;
 }
 
 # Do nothing if not a uniprot or refseq source
@@ -65,18 +67,15 @@ if ($source_name !~ /^Uniprot/ && $source_name !~ /^RefSeq_/) {
 }
 
 # Remove last '/' character if it exists
-if ($base_path =~ /\/$/) {chop($base_path);}
+chop($base_path) if $base_path =~ /\/$/;
 
 # Remove / char from source name to access directory
-my $clean_name = $source_name;
-$clean_name =~ s/\///g;
+(my $clean_name = $source_name) =~ s/\///g;
 
-my $output_path = $clean_dir."/".$clean_name;
+my $output_path = catdir($clean_dir, $clean_name);
 
 # Create needed directories
-if (!$update_mode) {
-  rmtree($output_path);
-}
+rmtree($output_path) unless $update_mode;
 make_path($output_path);
 
 my $sources_to_remove;
@@ -89,11 +88,7 @@ if ($source_name =~ /^Uniprot/) {
   $output_file_name = ($source_name =~ /SPTREMBL/ ? 'uniprot_trembl' : 'uniprot_sprot');
 
   # Set sources to skip in parsing step
-  my @source_names = (
-    'GO', 'UniGene', 'RGD', 'CCDS', 'IPI', 'UCSC', 'SGD', 'HGNC', 'MGI', 'VGNC', 'Orphanet',
-    'ArrayExpress', 'GenomeRNAi', 'EPD', 'Xenbase', 'Reactome', 'MIM_GENE', 'MIM_MORBID', 'MIM',
-    'Interpro'
-  );
+  my @source_names = qw(GO UniGene RGD CCDS IPI UCSC SGD HGNC MGI VGNC Orphanet ArrayExpress GenomeRNAi EPD Xenbase Reactome MIM_GENE MIM_MORBID MIM Interpro);
   $sources_to_remove = join("|", @source_names);
 } elsif ($source_name =~ /^RefSeq_dna/) {
   $is_refseq_dna = 1;
@@ -107,49 +102,53 @@ if ($source_name =~ /^Uniprot/) {
 
 # Extract taxonomy IDs
 my %tax_ids;
-my ($skipped_species, $added_species) = (0, 0);
-if ($tax_ids_file && $update_mode) {
-  open my $fh, '<', $tax_ids_file;
+if ($tax_ids_list) {
+  $tax_ids_list =~ s/\s*,\s*/,/g;
+  %tax_ids = map { $_ => 1} split(",", $tax_ids_list);
+} elsif ($tax_ids_file) {
+  open my $fh, '<', $tax_ids_file or die "Couldn't open tax_ids_file '$tax_ids_file' $!";
   chomp(my @lines = <$fh>);
   close $fh;
   %tax_ids = map { $_ => 1 } @lines;
+}
 
+my $tax_ids_filter = ($tax_ids_file || $tax_ids_list ? 1 : 0);
+my ($skipped_species, $added_species) = (0, 0);
+if ($tax_ids_filter && $update_mode) {
   # Check if any taxonomy IDs already have files
-  foreach my $tax_id (keys(%tax_ids)) {
-    my @tax_files = glob($output_path . "/**/**/**/**/" . $output_file_name . "-" . $tax_id);
-    if (scalar(@tax_files) > 0) {
+  foreach my $tax_id (keys %tax_ids) {
+    my @tax_files = glob(catfile($output_path, "**", "**", "**", "**", "$output_file_name-$tax_id"));
+    if (@tax_files) {
       $tax_ids{$tax_id} = 0;
       $skipped_species++;
     }
   }
 
   # Do nothing if all taxonomy IDs already have files
-  if ($skipped_species == scalar(keys(%tax_ids))) {
+  if ($skipped_species == keys %tax_ids) {
     add_to_log_file($log_file, "All provided tax IDs already have files. Doing nothing.");
     exit;
   }
 }
 
 # Get all files for source
-my $files_path = $base_path."/".$clean_name;
-my @files = glob($files_path."/*");
+my $files_path = catdir($base_path, $clean_name);
+my @files = glob(catfile($files_path, "*"));
 my $out_fh;
 my $current_species_id;
 
 # Process each file
-foreach my $input_file_name (@files) {
+foreach my $input_file (@files) {
+  # Skip the release file
+  next if defined($version_file) && $input_file eq $version_file;
+
   local $/ = "//\n";
 
-  add_to_log_file($log_file, "Splitting up file $input_file_name");
-
-  $input_file_name = basename($input_file_name);
-  my $input_file = $files_path."/".$input_file_name;
+  add_to_log_file($log_file, "Splitting up file $input_file");
+  my $input_file_name = basename($input_file);
   my $in_fh;
 
-  # Skip the release file
-  if (defined($version_file) && $input_file eq $version_file) {next;}
-
-  # Open file normally or with zcat for zipped filed
+  # Open file normally or with zcat for zipped files
   if ($input_file_name =~ /\.(gz|Z)$/x) {
     open($in_fh, "zcat $input_file |") or die "Couldn't call 'zcat' to open input file '$input_file' $!";
     $output_file_name =~ s/\.[^.]+$//;
@@ -167,14 +166,14 @@ foreach my $input_file_name (@files) {
       my $species_id;
       if ($is_uniprot) {
         ($species_id) = $record =~ /OX\s+[a-zA-Z_]+=([0-9 ,]+).*;/;
-        $species_id =~ s/\s// if $species_id;
+        $species_id =~ s/\s//g if $species_id;
       } else {
         ($species_id) = $record =~ /db_xref=.taxon:(\d+)/;
       }
 
       # Only continue with wanted species
-      next if (!$species_id);
-      next if ($tax_ids_file && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id}));
+      next unless $species_id;
+      next if $tax_ids_filter && (!defined($tax_ids{$species_id}) || !$tax_ids{$species_id});
 
       # Clean up data
       if ($clean_files) {
@@ -205,18 +204,16 @@ foreach my $input_file_name (@files) {
               }
             }
 
-            if (!$skip_data) {
-              push(@new_record, $line);
-            }
-
-            $record = join("\n", @new_record);
+            push(@new_record, $line) unless $skip_data;
           }
+
+          $record = join("\n", @new_record);
         }
       }
 
       # Write the record in the appropriate file
       if (!defined($current_species_id) || (defined($current_species_id) && $species_id ne $current_species_id)) {
-        close($out_fh) if (defined($current_species_id));
+        close($out_fh) if defined($current_species_id);
 
         my $species_id_str = sprintf("%04d", $species_id);
         my @digits = split('', $species_id_str);
@@ -224,12 +221,10 @@ foreach my $input_file_name (@files) {
         $write_path = catdir($output_path, $digits[0], $digits[1], $digits[2], $digits[3]);
         make_path($write_path);
 
-        $write_file = $write_path."/".$output_file_name."-".$species_id;
+        $write_file = catfile($write_path, "$output_file_name-$species_id");
 
         # Check if creating new file
-        if (!-e $write_file) {
-          $added_species++;
-        }
+        $added_species++ unless -e $write_file;
 
         open($out_fh, '>>', $write_file) or die "Couldn't open output file '$write_file' $!";
 
@@ -240,42 +235,33 @@ foreach my $input_file_name (@files) {
     }
 
     close($in_fh);
-    close($out_fh) if $out_fh;
   }
 }
+
+close($out_fh) if $out_fh;
 
 add_to_log_file($log_file, "Source $source_name cleaned up");
 add_to_log_file($log_file, "$source_name skipped species = $skipped_species");
 add_to_log_file($log_file, "$source_name species files created = $added_species");
 
 # Save the clean files directory in source db
-my ($user, $pass, $host, $port, $source_db) = parse_url($source_db_url);
+my ($host, $port, $user, $pass, $source_db) = parse_url($source_db_url);
 my $dbi = get_dbi($host, $port, $user, $pass, $source_db);
-my $update_version_sth = $dbi->prepare("UPDATE IGNORE version set clean_uri=? where source_id=(SELECT source_id FROM source WHERE name=?)");
+my $update_version_sth = $dbi->prepare("UPDATE IGNORE version SET clean_path=? WHERE source_id=(SELECT source_id FROM source WHERE name=?)");
 $update_version_sth->execute($output_path, $source_name);
 $update_version_sth->finish();
 
 sub get_dbi {
   my ($host, $port, $user, $pass, $dbname) = @_;
-  my $dbconn;
-  if (defined $dbname) {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname);
-  } else {
-    $dbconn = sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
-  }
-  my $dbi = DBI->connect( $dbconn, $user, $pass, { 'RaiseError' => 1 } ) or croak( "Can't connect to database: " . $DBI::errstr );
+  my $dbconn = defined $dbname ? sprintf("dbi:mysql:host=%s;port=%s;database=%s", $host, $port, $dbname) : sprintf("dbi:mysql:host=%s;port=%s", $host, $port);
+  my $dbi = DBI->connect($dbconn, $user, $pass, { 'RaiseError' => 1 }) or croak("Can't connect to database: " . $DBI::errstr);
   return $dbi;
 }
 
 sub parse_url {
   my ($url) = @_;
   my $parsed_url = Nextflow::Utils::parse($url);
-  my $user = $parsed_url->{'user'};
-  my $pass = $parsed_url->{'pass'};
-  my $host = $parsed_url->{'host'};
-  my $port = $parsed_url->{'port'};
-  my $db   = $parsed_url->{'dbname'};
-  return ($user, $pass, $host, $port, $db);
+  return @{$parsed_url}{qw(host port user pass dbname)};
 }
 
 sub add_to_log_file {
@@ -284,7 +270,7 @@ sub add_to_log_file {
   if (defined($log_file)) {
     my $current_timestamp = strftime "%d-%b-%Y %H:%M:%S", localtime;
 
-    open(my $fh, '>>', $log_file);
+    open(my $fh, '>>', $log_file) or die "Couldn't open log file '$log_file' $!";
     print $fh "$current_timestamp | INFO | $message\n";
     close($fh);
   }
