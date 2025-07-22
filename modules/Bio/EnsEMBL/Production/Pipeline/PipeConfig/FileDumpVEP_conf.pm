@@ -96,7 +96,6 @@ sub pipeline_analyses {
       -parameters        => {
                               cmd =>
                                 'mkdir -p #target_dir#/#division_name#/variation ;'.
-                                'rsync -avW #pipeline_dir#/#division_name#/dumps/production/ #target_dir#/#division_name#/variation/vep ;'.
                                 'rsync -avW #pipeline_dir#/#division_name#/dumps/web/ #target_dir#/#division_name#/variation/indexed_vep_cache ;',
                               ,
                               target_dir => $self->o('target_dir'),

@@ -104,12 +104,14 @@ sub load_file {
   my $file = $self->param_required('file');
 
   my $label2code = { 
+                     'PRINCIPAL:M'   => [ 'appris', 'principalM' ],  
                      'PRINCIPAL:0'   => [ 'appris', 'principal1' ], 
                      'PRINCIPAL:1'   => [ 'appris', 'principal1' ],
                      'PRINCIPAL:2'   => [ 'appris', 'principal2' ],
                      'PRINCIPAL:3'   => [ 'appris', 'principal3' ],
                      'PRINCIPAL:4'   => [ 'appris', 'principal4' ],
                      'PRINCIPAL:5'   => [ 'appris', 'principal5' ],
+                     'ALTERNATIVE:M' => [ 'appris', 'alternativeM' ],
                      'ALTERNATIVE:0' => [ 'appris', 'alternative1' ],
                      'ALTERNATIVE:1' => [ 'appris', 'alternative1' ],
                      'ALTERNATIVE:2' => [ 'appris', 'alternative2' ], };

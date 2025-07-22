@@ -73,6 +73,7 @@ sub pipeline_analyses {
                       logic_names => $self->o('logic_names')
                      },
       -analysis_capacity => 20,
+      -rc_name    => '1GB_D',
     },
     @{ Bio::EnsEMBL::Compara::PipeConfig::Parts::GeneMemberHomologyStats::pipeline_analyses_fam_stats($self) },
   ];
