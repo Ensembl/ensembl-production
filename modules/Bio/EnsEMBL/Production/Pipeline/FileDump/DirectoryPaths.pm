@@ -81,14 +81,16 @@ sub directories {
   my $web_dirname           = $self->param_required('web_dirname');
   my $species_name          = $self->param('species_name');
   my $assembly              = $self->param('assembly');
+  my @assembly_dir          = $self->split_assembly($assembly);
 
   my $subdirs;
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
+    foreach my $asm_dir (@assembly_dir){
+      $subdirs = catdir( $subdirs, $asm_dir);
+    }
     $subdirs = catdir(
-      $species_dirname,
-      $species_name,
-      $assembly,
+      $subdirs,
       $self->param_required('annotation_source'),
       $self->param_required("${data_category}_dirname"),
     );
@@ -126,5 +128,24 @@ sub directories {
 
   return ($output_dir, $web_dir, $ftp_dir);
 }
+
+sub split_assembly {
+  
+  my $assembly = shift();
+  my $subdir_len = 3;
+  
+  my @substrs = split(/\_/,$assembly);
+  my @version = split(/\./,$substrs[1]);
+  my @sub_dirs = ();
+  
+  for (my $begin = 0; $begin <= length($substrs[1]) - $subdir_len; $begin += $subdir_len ) {
+    print substr($substrs[1], $begin, $subdir_len)." beg $begin\n";
+    my $sub_dir_str = substr($substrs[1], $begin, $subdir_len);
+    push (@sub_dirs, $sub_dir_str);
+  }
+  
+  return $substrs[0], @sub_dirs, $version[1] ;  
+}
+
 
 1;
