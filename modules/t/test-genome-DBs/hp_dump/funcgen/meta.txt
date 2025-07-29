@@ -1,5 +1,5 @@
 1	1	schema_type	funcgen
-2	\N	schema_version	115
+2	\N	schema_version	116
 3	\N	patch	patch_88_89_a.sql|schema_version
 4	\N	patch	patch_88_89_b.sql|Created probe_seq table
 5	\N	patch	patch_88_89_c.sql|created probe_feature_transcript table
@@ -11,7 +11,7 @@
 11	\N	patch	patch_88_89_i.sql|New columns for array table
 12	\N	patch	patch_88_89_j.sql|Added array_chip_id column to probe_set table
 13	\N	patch	patch_88_89_k.sql|Added probe_seq_id column to probe table
-534	\N	schema_version	115
+534	\N	schema_version	116
 156	1	species.production_name	homo_sapiens
 223	\N	schema_type	funcgen
 589	\N	patch	patch_78_79_a.sql|schema_version
@@ -206,3 +206,4 @@
 783	\N	patch	patch_112_113_b.sql|fix_compatibility_issues
 784	\N	patch	patch_113_114_a.sql|schema_version
 785	\N	patch	patch_114_115_a.sql|schema_version
+786	\N	patch	patch_115_116_a.sql|schema_version
