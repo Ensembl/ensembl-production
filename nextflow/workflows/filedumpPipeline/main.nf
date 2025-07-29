@@ -66,7 +66,7 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = "abramis_brama_gca022829085v1_core_110_1"
+databases = "homo_sapiens_gca042037725v1_core_114_1"
 division = channel.of(params.division.split(","))
 
 Channel.of(databases) \
