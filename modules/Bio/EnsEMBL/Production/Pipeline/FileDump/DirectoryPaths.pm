@@ -86,6 +86,7 @@ sub directories {
   my $subdirs;
   my @data_categories = ("genome", "geneset", "rnaseq", "variation", "homology", "stats");
   if ( grep( /^$data_category$/, @data_categories ) ) {
+    $subdirs = catdir($species_dirname);
     foreach my $asm_dir (@assembly_dir){
       $subdirs = catdir( $subdirs, $asm_dir);
     }
@@ -97,10 +98,11 @@ sub directories {
   }
   #Genome should just have assembly files.
   if ( $data_category =~ /genome/ ) {
+      $subdirs = catdir($species_dirname);
+      foreach my $asm_dir (@assembly_dir){
+        $subdirs = catdir( $subdirs, $asm_dir);
+      }      
       $subdirs = catdir(
-      $species_dirname,
-      $species_name,
-      $assembly,
       $self->param_required("${data_category}_dirname"),
      );
   }
