@@ -136,33 +136,33 @@ sub pipeline_analyses {
                 registry_file   => $self->o('registry'),
                 failures_fatal  => 1,
             },
-            -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
+            # -flow_into       => WHEN('#populate_mvp#' => ['uri_generator']),
             -rc_name           => '4GB_D'
         },
 
-         {
-            -logic_name        => 'uri_generator',
-            -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
-            -max_retry_count   => 1,
-            -rc_name           => 'default',
-            -parameters      => {
-                populate_mvp => $self->o('populate_mvp'),
-            },
-            -flow_into        => {2 => 'checksum_transfer'},
-            -rc_name           => '1GB_D'
+        #  {
+        #     -logic_name        => 'uri_generator',
+        #     -module            => 'Bio::EnsEMBL::Production::Pipeline::Checksum::CreateURI',
+        #     -max_retry_count   => 1,
+        #     -rc_name           => 'default',
+        #     -parameters      => {
+        #         populate_mvp => $self->o('populate_mvp'),
+        #     },
+        #     -flow_into        => {2 => 'checksum_transfer'},
+        #     -rc_name           => '1GB_D'
 
-        },
-        {
-            -logic_name      => 'checksum_transfer',
-            -module          => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
-            -language        => 'python3',
-            -max_retry_count => 1,
-            -parameters      => {
-                metadata_uri   => $self->o('metadata_uri'),
-            },
-            -analysis_capacity => 1,
-            -rc_name           => '4GB_D'
-        },
+        # },
+        # {
+        #     -logic_name      => 'checksum_transfer',
+        #     -module          => 'ensembl.production.hive.ensembl_genome_metadata.ChecksumTransfer',
+        #     -language        => 'python3',
+        #     -max_retry_count => 1,
+        #     -parameters      => {
+        #         metadata_uri   => $self->o('metadata_uri'),
+        #     },
+        #     -analysis_capacity => 1,
+        #     -rc_name           => '4GB_D'
+        # },
 
         {
             -logic_name => 'email_report',
