@@ -266,7 +266,6 @@ class TranscriptSparkService:
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
          #Join by exon_id
          translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
-                      
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']

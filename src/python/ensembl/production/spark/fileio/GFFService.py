@@ -495,6 +495,8 @@ class GFFService():
         transcript_attrib_proj=transcript_attrib.filter("attrib_type_id=519").withColumnRenamed("value", "proj_tr")
         transcript_attrib_mane_select=transcript_attrib.filter("attrib_type_id=535").withColumnRenamed("value", "mane_select")
         transcript_attrib_mane_clinical=transcript_attrib.filter("attrib_type_id=550").withColumnRenamed("value", "mane_clinical")
+        transcript_attrib_start_nf=transcript_attrib.filter("attrib_type_id=126").withColumnRenamed("value", "start_nf")
+        transcript_attrib_end_nf=transcript_attrib.filter("attrib_type_id=127").withColumnRenamed("value", "end_nf")
         translation_attrib_seleno=translation_attrib.filter("attrib_type_id=12").withColumnRenamed("value", "seleno")
         gene_attrib_projection=gene_attrib.filter("attrib_type_id=520").withColumnRenamed("value", "proj_gene")
         
@@ -561,6 +563,10 @@ class GFFService():
                                 .join(transcript_attrib_proj.select("transcript_id", "proj_tr"),\
                                     on= "transcript_id", how = "left")\
                                 .join(transcript_attrib_mane_clinical.select("transcript_id", "mane_clinical"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_start_nf.select("transcript_id", "start_nf"),\
+                                    on = "transcript_id", how = "left")\
+                                .join(transcript_attrib_end_nf.select("transcript_id", "end_nf"),\
                                     on = "transcript_id", how = "left")\
                                 .join(translation_attrib_seleno.select("translation_id", "seleno"),\
                                  on = [transcripts.canonical_translation_id == translation_attrib_seleno.translation_id], how = "left").drop("translation_id")
@@ -913,13 +919,12 @@ class GFFService():
 
         return seleno_feat
     def get_stop_codons(self, cds, sequence) -> None:
-        cds = cds.filter("type=\"CDS\"")
-        
         stop_codons = cds.withColumn("length", cds.seq_region_end - cds.seq_region_start)\
             .join(sequence.filter((substring(sequence.sequence, -1, 1) == "*"))\
                   .select("transcript_stable_id", "end_exon_id"),\
                   on = ["transcript_stable_id"], how = "left")\
             .filter("exon_id == end_exon_id")
+
         small_cds = stop_codons.filter(stop_codons.length < 2)
         normal_cds = stop_codons.filter(stop_codons.length >= 2)
 
@@ -952,6 +957,8 @@ class GFFService():
         "basic",\
         "mane_select",\
         "mane_clinical",\
+        "start_nf",\
+        "end_nf",\
         "transcript_source",\
         "transcript_version",\
         "transcript_biotype",\
@@ -1017,6 +1024,8 @@ class GFFService():
         "basic",\
         "mane_select",\
         "mane_clinical",\
+        "start_nf",\
+        "end_nf",\
         "transcript_source",\
         "transcript_version",\
         "transcript_biotype",\
@@ -1049,7 +1058,6 @@ class GFFService():
         if (sequence is None):
             return 1
         sequence = self._spark.read.orc(sequence)
-        
         [genes, transcripts, exons, cds, assembly_df, regions] = features
         assembly_name = assembly_df.where(assembly_df.meta_key == lit("assembly.name")).collect()[0][3]
         assembly_date = assembly_df.where(assembly_df.meta_key == lit("assembly.date")).collect()[0][3]
@@ -1059,7 +1067,7 @@ class GFFService():
         tmp_fp = assembly_name
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, g_name,proj_gene, proj_tr, seleno):
+        def joinColumnsExon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, start_nf, end_nf, canonical, g_name,proj_gene, proj_tr, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1088,15 +1096,19 @@ class GFFService():
             if version:
                 result = result + "exon_version \"" + str(version) + "\"; "
             if seleno:
-                result = result + "tag \"seleno\";"
-            if canonical:
-                result = result + "tag \"Ensembl_canonical\";"
+                result = result + "tag \"seleno\"; "
             if basic:
-                result = result + "tag \"basic\";"
+                result = result + "tag \"basic\"; "
             if mane_clinical:
-                result = result + "tag \"mane_clinical\";"
+                result = result + "tag \"mane_clinical\"; "
             if mane_select:
-                result = result + "tag \"mane_select\";"
+                result = result + "tag \"mane_select\"; "
+            if end_nf:
+                result = result + "tag \"cds_end_NF\"; "
+            if start_nf:
+                result = result + "tag \"cds_start_NF\";"
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\"; "
             if proj_tr:
                 result = result + "projection_parent_transcript \"" + proj_tr + "\"; "
 
@@ -1106,7 +1118,7 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, protein, tl_version, name, g_name, f_type, proj_gene, proj_tr, seleno):
+        def joinColumnsCds(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, start_nf, end_nf, canonical, protein, tl_version, name, g_name, f_type, proj_gene, proj_tr, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1135,15 +1147,19 @@ class GFFService():
             if tl_version and f_type == "CDS":
                 result = result + "protein_version \"" + str(version) + "\"; "
             if seleno:
-                result = result + "tag \"seleno\";"
-            if canonical:
-                result = result + "tag \"Ensembl_canonical\";"
+                result = result + "tag \"seleno\"; "
             if basic:
-                result = result + "tag \"basic\";"
+                result = result + "tag \"basic\"; "
             if mane_clinical:
-                result = result + "tag \"mane_clinical\";"
+                result = result + "tag \"mane_clinical\"; "
             if mane_select:
-                result = result + "tag \"mane_select\";"
+                result = result + "tag \"mane_select\"; "
+            if end_nf:
+                result = result + "tag \"cds_end_NF\"; "
+            if start_nf:
+                result = result + "tag \"cds_start_NF\"; "
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\"; "
             if proj_tr:
                 result = result + "projection_parent_transcript \"" + proj_tr + "\"; "
 
@@ -1152,7 +1168,7 @@ class GFFService():
         
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, proj_gene, proj_tr, seleno):
+        def joinColumnsStopCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, start_nf, end_nf, canonical, name, g_name, proj_gene, proj_tr, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1177,15 +1193,19 @@ class GFFService():
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
             if seleno:
-                result = result + "tag \"seleno\";"
-            if canonical:
-                result = result + "tag \"Ensembl_canonical\";"
+                result = result + "tag \"seleno\"; "
             if basic:
-                result = result + "tag \"basic\";"
+                result = result + "tag \"basic\"; "
             if mane_clinical:
-                result = result + "tag \"mane_clinical\";"
+                result = result + "tag \"mane_clinical\"; "
             if mane_select:
-                result = result + "tag \"mane_select\";"
+                result = result + "tag \"mane_select\"; "
+            if end_nf:
+                result = result + "tag \"cds_end_NF\"; "
+            if start_nf:
+                result = result + "tag \"cds_start_NF\"; "
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\"; "
             if proj_tr:
                 result = result + "projection_parent_transcript \"" + proj_tr + "\"; "
 
@@ -1193,7 +1213,7 @@ class GFFService():
         
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, canonical, name, g_name, proj_gene, proj_tr, seleno):
+        def joinColumnsStartCodon(feature_id, version, rank, tr_stable_id, tr_biotype, tr_source, tr_version, g_stable_id, g_biotype, g_source, g_version, basic, mane_select, mane_clinical, start_nf, end_nf, canonical, name, g_name, proj_gene, proj_tr, seleno):
             result = ""
             if g_stable_id:
                 result = result + "gene_id \"" + g_stable_id + "\"; "
@@ -1218,15 +1238,19 @@ class GFFService():
             if tr_biotype:
                 result = result + "transcript_biotype \"" + tr_biotype + "\"; "
             if seleno:
-                result = result + "tag \"seleno\";"
-            if canonical:
-                result = result + "tag \"Ensembl_canonical\";"
+                result = result + "tag \"seleno\"; "
             if basic:
-                result = result + "tag \"basic\";"
+                result = result + "tag \"basic\"; "
             if mane_clinical:
-                result = result + "tag \"mane_clinical\";"
+                result = result + "tag \"mane_clinical\"; "
             if mane_select:
-                result = result + "tag \"mane_select\";"
+                result = result + "tag \"mane_select\"; "
+            if end_nf:
+                result = result + "tag \"cds_end_NF\"; "
+            if start_nf:
+                result = result + "tag \"cds_start_NF\"; "
+            if canonical:
+                result = result + "tag \"Ensembl_canonical\"; "
             if proj_tr:
                 result = result + "projection_parent_transcript \"" + proj_tr + "\"; "
 
@@ -1235,7 +1259,7 @@ class GFFService():
 
         # Join attribs
         @udf(returnType=StringType())
-        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, gene_version, gene_biotype, gene_source, transcript_source, g_name, proj_gene, proj_tr, seleno):
+        def joinColumnsTranscript(parent, feature_id, version, biotype, canonical, basic, mane_select, mane_clinical, start_nf, end_nf, gene_version, gene_biotype, gene_source, transcript_source, g_name, proj_gene, proj_tr, seleno):
             result = ""
 
             if parent:
@@ -1258,15 +1282,19 @@ class GFFService():
             if biotype:
                 result = result + "transcript_biotype \"" + biotype + "\"; "
             if seleno:
-                result = result + "tag \"seleno\";"
-            if canonical:
-                result = result + "tag \"Ensembl_canonical\";"
+                result = result + "tag \"seleno\"; "
             if basic:
-                result = result + "tag \"basic\";"
+                result = result + " tag \"basic\"; "
             if mane_clinical:
-                result = result + "tag \"mane_clinical\";"
+                result = result + " tag \"mane_clinical\"; "
             if mane_select:
-                result = result + "tag \"mane_select\";"
+                result = result + " tag \"mane_select\"; "
+            if end_nf:
+                result = result + " tag \"cds_end_NF\"; "
+            if start_nf:
+                result = result + " tag \"cds_start_NF\"; "
+            if canonical:
+                result = result + " tag \"Ensembl_canonical\"; "
             if proj_tr:
                 result = result + "projection_parent_transcript \"" + proj_tr + "\"; "
 
@@ -1306,7 +1334,7 @@ class GFFService():
                                                                    "canonical",
                                                                    "basic",
                                                                    "mane_select",
-                                                                   "mane_clinical", "gene_version", "gene_biotype", "gene_source", "source", "gene_name", "proj_gene", "proj_tr",  "seleno"))
+                                                                   "mane_clinical", "start_nf", "end_nf", "gene_version", "gene_biotype", "gene_source", "source", "gene_name", "proj_gene", "proj_tr",  "seleno"))
         
         transcripts = transcripts.withColumn("feature_type", lit("transcript"))
 
@@ -1315,6 +1343,7 @@ class GFFService():
                                               "basic",
                                               "mane_select",
                                               "mane_clinical",
+                                              "start_nf", "end_nf", 
                                               "source",
                                               "version",
                                               "biotype",
@@ -1345,6 +1374,7 @@ class GFFService():
                                                                 "basic",
                                                                 "mane_select",
                                                                 "mane_clinical",
+                                                                "start_nf", "end_nf", 
                                                                 "canonical", "gene_name",  "proj_gene", "proj_tr", "seleno"))
         exons = exons.withColumn("feature_type", lit("exon"))
 
@@ -1352,6 +1382,7 @@ class GFFService():
                                               "basic",
                                               "mane_select",
                                               "mane_clinical",
+                                              "start_nf", "end_nf", 
                                               "source",
                                               "version",
                                               "biotype",
@@ -1368,8 +1399,9 @@ class GFFService():
             .withColumnRenamed("biotype", "transcript_biotype"),\
             on = ["transcript_stable_id"])
         cds = cds.join(genes.select("gene_id", "gene_name"), on =["gene_id"])
-        stop_codons = self.get_stop_codons(cds, sequence)
+        stop_codons = self.get_stop_codons(cds.filter("type=\"CDS\""), sequence)
         stop_codons = stop_codons.withColumn("feature_type", lit("stop_codon"))
+
         start_codons = self.get_start_codons(cds, sequence)
         start_codons = start_codons.withColumn("feature_type", lit("start_codon"))
         
@@ -1390,6 +1422,7 @@ class GFFService():
                                                 "basic",\
                                                 "mane_select",\
                                                 "mane_clinical",\
+                                                "start_nf", "end_nf", 
                                                 "canonical",\
                                                 "name",\
                                                 "gene_name", "proj_gene", "proj_tr", "seleno"\
@@ -1408,6 +1441,7 @@ class GFFService():
                                                 "basic",\
                                                 "mane_select",\
                                                 "mane_clinical",\
+                                                "start_nf", "end_nf", 
                                                 "canonical",\
                                                 "name",\
                                                 "gene_name",  "proj_gene",  "proj_tr", "seleno"\
@@ -1428,6 +1462,7 @@ class GFFService():
                                                 "basic",\
                                                 "mane_select",\
                                                 "mane_clinical",\
+                                                "start_nf", "end_nf", 
                                                 "canonical",\
                                                 "stable_id",\
                                                 "tl_version",\
@@ -1441,6 +1476,7 @@ class GFFService():
         cds_only = cds.filter("type=\"CDS\"")
         utr_only = cds.filter("type!=\"CDS\"")
         cds_pos = cds_only.join(stop_codons_cds.filter("seq_region_strand > 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
+        
         cds_pos = cds_pos.drop("seq_region_end").withColumn("seq_region_end", cds_pos.c_seq_region_start - 1)
         cds_neg = cds_only.join(stop_codons_cds.filter("seq_region_strand < 0").select("c_seq_region_start", "c_seq_region_end", "exon_stable_id", "transcript_stable_id", "length"), on = ["exon_stable_id", "transcript_stable_id"], how = "right")
         
@@ -1459,6 +1495,7 @@ class GFFService():
                                        "seq_region_start", "seq_region_end",
                                          "score", "seq_region_strand", "phase", "attributes", "exon_stable_id", "transcript_stable_id", "rank", "exon_id")
 
+        
         cds_croped = cds_neg.union(cds_pos)
 
         cds = cds_only.join(cds_croped, on = ["exon_stable_id", "transcript_stable_id"], how = "anti")
@@ -1478,8 +1515,9 @@ class GFFService():
                 "score", "seq_region_strand", "phase", "attributes", "transcript_stable_id", "rank", "exon_id")
 
 
-        cds = cds.union(cds_croped)
 
+
+        cds = cds.union(cds_croped)
         seleno_feat = transcripts.join(sequence.select("transcript_id", "length"), on = ["transcript_id"]).filter("seleno is not null")
         seleno = self.get_seleno(seleno_feat, cds)
         seleno = seleno.withColumn("feature_type", lit("Selenocysteine"))
