@@ -234,27 +234,30 @@ class TranscriptSparkService:
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, phase):
-             
+             table_c = int(codon_table)
+             phase = (3 - phase)
+             if(phase > 2):
+                phase=0
+
              if ((raw_sequence is None) or (len(raw_sequence) == 0)):
                  return
-             seq = Seq(raw_sequence)
-             try:
-                sequence = seq.translate(table = int(codon_table), cds = True)
-                sequence = "!" + sequence + "*"
-             except Exception as e:     
-                sequence = seq.translate(table = int(codon_table))
-                error = str(e)
-                if(error.find("start codon") == -1):
-                    sequence = "!" + sequence
-                if((len(raw_sequence)%3 != 0) and (error.find("start codon") != -1) and (len(raw_sequence)%3 == phase)):
-                    stop_codon = Seq(raw_sequence[-3:])
-                    stop_codon = stop_codon.translate()
-                    if(stop_codon == "*"):
-                        sequence = str(sequence)
-                        sequence = sequence[:-1] + "*"
-                        return sequence
-             sequence = str(sequence)
 
+             if(phase == 0):
+                seq = Seq(raw_sequence)
+                try:
+                    sequence = seq.translate(table=table_c, cds = True)
+                    sequence = "!" + sequence + "*"
+                except Exception as e:
+                    sequence = seq.translate(table=table_c)
+                    error = str(e)
+                    if(error.find("start codon") == -1):
+                        sequence = "!" + sequence
+             else:
+                raw_sequence = raw_sequence[3:]
+                seq = Seq(raw_sequence)
+                sequence = seq.translate(table=table_c) 
+                sequence =  "X" + sequence
+             sequence = str(sequence)
              return sequence
 
          #We need to have in DF genomic coordinates of the translation
@@ -264,6 +267,7 @@ class TranscriptSparkService:
          translated_sequence = \
          translated_seq.withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
+
          #Join by exon_id
          translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
          #Apply translation edits - selenocyst is translation
