@@ -51,7 +51,6 @@ GENE_SWITCH_SPECIES = [
     "gallus_gallus_gca000002315v5",
 ]
 
-PUBLIC_PUB_PATH = "PUBLIC/pub"
 DATA_FILES_PATH = "data_files/"
 DATA_FILES_PATH_TEMPLATE = "{ftp_path}/data_files/{species}/{assembly}/funcgen"
 RELEASE_FOLDER_PATH_TEMPLATE = (
@@ -301,7 +300,7 @@ if __name__ == "__main__":
     logger.info("Script started ...")
 
     args = parse_arguments()
-    ftp_path = args.ftp_path / PUBLIC_PUB_PATH
+    ftp_path = args.ftp_path
 
     logger.info("Searching for peaks in data_files ...")
     peaks = RegulationSymlinkFTP.search(
