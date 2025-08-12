@@ -234,6 +234,7 @@ class TranscriptSparkService:
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, phase):
+             #Normalize phase and codon table
              table_c = int(codon_table)
              phase = (3 - phase)
              if(phase > 2):
@@ -246,16 +247,26 @@ class TranscriptSparkService:
                 seq = Seq(raw_sequence)
                 try:
                     sequence = seq.translate(table=table_c, cds = True)
+                    #Bio python translation wuth cds parameter automatically, it search for start codon
+                    #Length dividable by three and stop codon, if all of this is present - translation is successful
+                    #So we add marks for start and stop codons
                     sequence = "!" + sequence + "*"
                 except Exception as e:
+                    #We are doing translation concidering is starts with zero frame, normal biopython translation,
+                    #Stop codon if found will be marked by biopyhton with *
                     sequence = seq.translate(table=table_c)
                     error = str(e)
                     if(error.find("start codon") == -1):
+                        #If CDS translation failed but not for the reason start not found - we add start mark
                         sequence = "!" + sequence
              else:
+                #When phase is not 0, it is prefixed with N for missing letters,
+                #We need to cut this incomplete codon and obviously no start codon - as no coplete start frame
                 raw_sequence = raw_sequence[3:]
                 seq = Seq(raw_sequence)
+                #We translate normally with biopython, starting with zero frame
                 sequence = seq.translate(table=table_c) 
+                #Sequnce is prefixed with X marking incomplete codon
                 sequence =  "X" + sequence
              sequence = str(sequence)
              return sequence
