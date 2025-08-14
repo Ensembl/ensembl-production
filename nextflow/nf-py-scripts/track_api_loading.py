@@ -1,6 +1,7 @@
 import argparse
 import csv
 import sys
+import json
 from pathlib import Path
 import yaml
 
@@ -85,7 +86,9 @@ class TrackUtils:
         track_api_json["genome_id"] = self.genome_uuid
         if track_api_json["type"] == "gene":
             if self.custom_gene_track_data:
+                description = track_api_json["description"]+self.custom_gene_track_data[self.genome_uuid]["description_postfix"]
                 track_api_json.update(self.custom_gene_track_data[self.genome_uuid])
+                track_api_json["description"] = description
         if track_api_json["type"] == "variant":
             track_api_json.update(self.custom_variant_track_data)
         return track_api_json
@@ -132,36 +135,13 @@ class TrackUtils:
             logger.error(e)
 
     def get_variant_track_data(self) -> dict:
-        variant_data_csv = f"{ARGS.track_templates_dir}variant-track-desc.csv"
         try:
-            with open(variant_data_csv) as data:
-                reader = csv.DictReader(data)
-                variant_data_dict = {}
-                for line in reader:
-                    if self.genome_uuid == line["Genome_UUID"]:
-                        variant_data_dict = {
-                            "description": line["Description"],
-                            "track_name": (
-                                line["Track_name"] if "Track_name" in line else ""
-                            ),
-                            "source_names": line["Source_name"].split(","),
-                            "source_urls": line["Source_URL"].split(","),
-                        }
-                        print(variant_data_dict)
-                        # Remove key, value if value is empty:
-                        variant_data_dict = {
-                            k: v for k, v in variant_data_dict.items() if v
-                        }
-                        
-
-                        return variant_data_dict
-                return {}
-        except FileNotFoundError:
-            logger.error(
-                f"Error: track description CSV file not found in {variant_data_csv}"
-            )
-        except KeyError as e:
-            logger.error(f"Error: unexpected CSV format in {variant_data_csv} ({e})")
+            with open(handover_json, 'r') as f:
+                data = json.load(f)
+            return data.get(self.genome_uuid, {}).pop("datafiles", None)
+        except Exception as e:
+            logger.error("No Variation handover JSON",e)
+            return {}
 
     def get_gene_track_data(self) -> dict:
         try:
@@ -193,20 +173,22 @@ class TrackUtils:
                         genome = genome_dataset.genome
                      #   row_data["species"] = genome.production_name
                     # Set attribute values
-                    source = {}
+                    source = {"url":None,"name":None}
                     for attrib in dataset.dataset_attributes:
                         if attrib.attribute.name == "genebuild.provider_url":
                             source["url"] = attrib.value
                             #row_data.setdefault("sources", [{"url": attrib.value}])
                         if attrib.attribute.name == "genebuild.provider_name":
                             source["name"] = attrib.value
-                        if source:
+                        if source["name"] and source["url"]:
                             row_data.setdefault("sources", [source])
                         if attrib.attribute.name in ARGS.dataset_attributes:
-                            row_data.setdefault("description", "Annotated")
-                    # Set annotation type
-                    if row_data.get("genebuild.provider_name") == "Ensembl":
-                        row_data["description"] = "Imported"
+                            row_data.setdefault("description_postfix", " Genes annotated by Ensembl.")
+                        # Set annotation typei
+                        if attrib.attribute.name == "genebuild.provider_name" and attrib.value == "Ensembl":
+                            row_data["description_postfix"] = " Genes annotated by Ensembl."
+                        elif attrib.attribute.name == "genebuild.provider_name":
+                            row_data["description_postfix"] = f" Genes imported from {attrib.value}." 
                     # Remove key, value if value is empty:
                     row_data = {k: v for k, v in row_data.items() if v}
                     result_dict[genome.genome_uuid] = row_data
@@ -276,6 +258,14 @@ if __name__ == "__main__":
         required=True,
         help="Track API url Ex: https://dev-2020.ensembl.org/api/tracks/",
     )
+    parser.add_argument(
+        "--handover_json",
+        type=str,
+        default="",
+        required=False,
+        help="Handover json file for more details on tracks like Description",
+    )
+
 
     ARGS = parser.parse_args()
     logger.info(f"Provided Arguments  {ARGS} ")
@@ -283,6 +273,7 @@ if __name__ == "__main__":
     genome_uuid_directory = [
         path.name for path in Path(ARGS.file_path).iterdir() if path.is_dir()
     ]
+    handover_json = ARGS.handover_json
     genome_uuid_list = ARGS.genome_uuid if ARGS.genome_uuid else genome_uuid_directory
     for genome_uuid in genome_uuid_list:
         track_utils = TrackUtils(genome_uuid=genome_uuid)
@@ -292,7 +283,7 @@ if __name__ == "__main__":
             track_utils.check_directory(ARGS.file_path + genome_uuid + "/")
         )
         track_data_file_list = [
-            entry.stem for entry in track_data_dir.iterdir() if entry.is_file()
+            entry.name for entry in track_data_dir.iterdir() if entry.is_file()
         ]
         for track_file in track_data_file_list:
-            track_utils.submit_tracks(track_file)
+            track_utils.submit_tracks(Path(track_file).stem)
