@@ -1,5 +1,4 @@
 import argparse
-import csv
 import sys
 import json
 from pathlib import Path
@@ -86,7 +85,12 @@ class TrackUtils:
         track_api_json["genome_id"] = self.genome_uuid
         if track_api_json["type"] == "gene":
             if self.custom_gene_track_data:
-                description = track_api_json["description"]+self.custom_gene_track_data[self.genome_uuid]["description_postfix"]
+                description = (
+                    track_api_json["description"]
+                    + self.custom_gene_track_data[self.genome_uuid][
+                        "description_postfix"
+                    ]
+                )
                 track_api_json.update(self.custom_gene_track_data[self.genome_uuid])
                 track_api_json["description"] = description
         if track_api_json["type"] == "variant":
@@ -136,11 +140,11 @@ class TrackUtils:
 
     def get_variant_track_data(self) -> dict:
         try:
-            with open(handover_json, 'r') as f:
+            with open(handover_json, "r") as f:
                 data = json.load(f)
             return data.get(self.genome_uuid, {}).pop("datafiles", None)
         except Exception as e:
-            logger.error("No Variation handover JSON",e)
+            logger.error("No Variation handover JSON", e)
             return {}
 
     def get_gene_track_data(self) -> dict:
@@ -171,25 +175,34 @@ class TrackUtils:
                     # Set species and uuid from genome
                     for genome_dataset in dataset.genome_datasets:
                         genome = genome_dataset.genome
-                     #   row_data["species"] = genome.production_name
+                    #   row_data["species"] = genome.production_name
                     # Set attribute values
-                    source = {"url":None,"name":None}
+                    source = {"url": None, "name": None}
                     for attrib in dataset.dataset_attributes:
                         if attrib.attribute.name == "genebuild.provider_url":
                             source["url"] = attrib.value
-                            #row_data.setdefault("sources", [{"url": attrib.value}])
+                            # row_data.setdefault("sources", [{"url": attrib.value}])
                         if attrib.attribute.name == "genebuild.provider_name":
                             source["name"] = attrib.value
                         if source["name"] and source["url"]:
                             row_data.setdefault("sources", [source])
                         if attrib.attribute.name in ARGS.dataset_attributes:
-                            row_data.setdefault("description_postfix", " Genes annotated by Ensembl.")
+                            row_data.setdefault(
+                                "description_postfix", " Genes annotated by Ensembl."
+                            )
                         # Set annotation typei
-                        if attrib.attribute.name == "genebuild.provider_name" and attrib.value == "Ensembl":
-                            row_data["description_postfix"] = " Genes annotated by Ensembl."
+                        if (
+                            attrib.attribute.name == "genebuild.provider_name"
+                            and attrib.value == "Ensembl"
+                        ):
+                            row_data["description_postfix"] = (
+                                " Genes annotated by Ensembl."
+                            )
                         elif attrib.attribute.name == "genebuild.provider_name":
-                            row_data["description_postfix"] = f" Genes imported from {attrib.value}." 
-                    # Remove key, value if value is empty:
+                            row_data["description_postfix"] = (
+                                f" Genes imported from {attrib.value}."
+                            )
+                            # Remove key, value if value is empty:
                     row_data = {k: v for k, v in row_data.items() if v}
                     result_dict[genome.genome_uuid] = row_data
             return result_dict
@@ -265,7 +278,6 @@ if __name__ == "__main__":
         required=False,
         help="Handover json file for more details on tracks like Description",
     )
-
 
     ARGS = parser.parse_args()
     logger.info(f"Provided Arguments  {ARGS} ")
