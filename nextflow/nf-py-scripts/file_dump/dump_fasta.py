@@ -90,7 +90,7 @@ def describe(display_label, description):
     if(display_label != None):
       result += " gene_symbol:" + display_label
     if(description != None):
-      result += " description:" + description
+      result += " description:" + description.replace("\"", '')
     return result        
 genes = genes.withColumn("gene_description", describe("display_label", "description"))
             
@@ -106,7 +106,7 @@ csversion = spark_session.read\
             .load()\
             .collect()[0][0]
 
-cdna_fasta = fastaDf
+cdna_fasta = spark_session.read.orc("sequence_cdna")
 pep_fasta = fastaDf
 
 #Unite pep header
@@ -156,16 +156,16 @@ shutil.copy(file, "pep.fa")
 cdna_fasta = cdna_fasta\
     .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end"), on=["gene_id"])\
     .select(concat(lit(">"), col("transcript_stable_id"), lit(" "),\
-       lit("cds"), lit(" "), lit(csversion),\
+       lit("cdna"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
-       lit(":"), least(col("tl_start"), col("tl_end")),\
-       lit(":"),  greatest(col("tl_start"), col("tl_end")),\
+       lit(":"), least(col("seq_region_start"), col("seq_region_end")),\
+       lit(":"),  greatest(col("seq_region_start"), col("seq_region_end")),\
        lit(":"), col("seq_region_strand"),\
        lit("gene:"), col("stable_id"),\
        lit(" gene_biotype:"), col("biotype"),\
        lit(" transcript_biotype:"), col("transcript_biotype"),\
        col("gene_description")),\
-       col("transcript_seq"))
+       col("sequence"))
 
 #Write cdna to fasta
 cdna_fasta.repartition(1)\
