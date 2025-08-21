@@ -401,7 +401,6 @@ class TranscriptSparkService:
         seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
         transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
         transcripts_with_seq.write.orc("sequence_cdna", mode="overwrite")
-        transcripts_with_seq.filter("transcript_stable_id=\"ENST00550000002\"").show()
         transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())
         #Translation start and end relative to seq start
         transcripts_with_seq =\

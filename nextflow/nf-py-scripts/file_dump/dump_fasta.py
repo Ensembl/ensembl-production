@@ -154,14 +154,14 @@ shutil.copy(file, "pep.fa")
 
 #Unite header
 cdna_fasta = cdna_fasta\
-    .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end"), on=["gene_id"])\
-    .select(concat(lit(">"), col("transcript_stable_id"), lit(" "),\
+    .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end").withColumnRenamed("version", "gene_version"), on=["gene_id"])\
+    .select(concat(lit(">"), col("transcript_stable_id"), lit("."), col("version"),\
        lit("cdna"), lit(" "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("seq_region_start"), col("seq_region_end")),\
        lit(":"),  greatest(col("seq_region_start"), col("seq_region_end")),\
        lit(":"), col("seq_region_strand"),\
-       lit("gene:"), col("stable_id"),\
+       lit("gene:"), col("stable_id"), lit("."), col("gene_version"),\
        lit(" gene_biotype:"), col("biotype"),\
        lit(" transcript_biotype:"), col("transcript_biotype"),\
        col("gene_description")),\
