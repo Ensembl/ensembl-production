@@ -90,11 +90,20 @@ def describe(display_label, description):
     if(display_label != None):
       result += " gene_symbol:" + display_label
     if(description != None):
-      result += " description:" + description.replace("\"", '')
+      result += " description: " + description
     return result        
 genes = genes.withColumn("gene_description", describe("display_label", "description"))
-            
 
+@udf(returnType=StringType())
+def seq_split(seq):
+    line_length = 60
+    result = seq[:line_length]
+    i = line_length
+    while(i < len(seq)):
+        result = result + "\n" + seq[i:i+line_length]
+        i = i + line_length
+    return  result
+            
 #Getting cs version
 csversion = spark_session.read\
             .format("jdbc")\
@@ -139,18 +148,29 @@ def append_info(info, gene_stable_id, transcript_stable_id, version, gene_versio
 
 pep_fasta = pep_fasta.withColumn("info", append_info("info", "stable_id", "transcript_stable_id","version", "gene_version", "biotype", "transcript_biotype", "gene_description"))
 pep_fasta = pep_fasta.select("info", "sequence")
+pep_fasta = pep_fasta.withColumn("sequence", seq_split("sequence"))
 #Write to fasta
 pep_fasta.repartition(1)\
     .write\
     .mode('overwrite')\
     .option("header", False)\
+    .option("escapeQuotes", False)\
+    .option("quote", "$")\
     .option("delimiter", "\n")\
     .csv("./fasta_pep")
 file = glob.glob("./fasta_pep" + "/part-0000*")[0]
-shutil.copy(file, "pep.fa")
-
-
-
+f_cvs = open(file)
+f = open("pep.fa", "a")
+file_line = f_cvs.readline()
+while file_line:
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    f.write(file_line)
+    file_line = f_cvs.readline()
+f_cvs.close()
+f.close()
 
 #Unite header
 cdna_fasta = cdna_fasta\
@@ -166,16 +186,30 @@ cdna_fasta = cdna_fasta\
        lit(" transcript_biotype:"), col("transcript_biotype"),\
        col("gene_description")),\
        col("sequence"))
-
+cdna_fasta = cdna_fasta.withColumn("sequence", seq_split("sequence"))
 #Write cdna to fasta
 cdna_fasta.repartition(1)\
     .write\
     .mode('overwrite')\
     .option("header", False)\
+    .option("escapeQuotes", False)\
+    .option("quote", "$")\
+    .option("quoteAll", False)\
     .option("delimiter", "\n")\
     .csv("./fasta_cdna")
 file = glob.glob( "./fasta_cdna"  + "/part-0000*")[0]
 
-shutil.copy(file, "cdna.fa")
+f_cvs = open(file)
+f = open("cdna.fa", "a")
+file_line = f_cvs.readline()
+while file_line:
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    f.write(file_line)
+    file_line = f_cvs.readline()
+f_cvs.close()
+f.close()
     
     
