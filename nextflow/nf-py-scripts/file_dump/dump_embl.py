@@ -139,6 +139,31 @@ transcripts = spark_session.read\
 
 exons = exon_service.load_exons_fs(url, username, pwd, "exons")
 
+region = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select * from seq_region")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+taxonomy_id = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select meta_value from meta where meta_key=\"species.taxonomy_id\"")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+scientific_name = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select meta_value from meta where meta_key=\"species.scientific_name\"")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+
 translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False, False, True)
 mRNA = translatable_exons
 mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
@@ -162,7 +187,7 @@ mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
 mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
 
-mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
+mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
 mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
@@ -218,16 +243,25 @@ exon = exon_neg.unionByName(exon_pos)
 exon = exon.withColumn("gene_id_note", concat(lit("FT                   /note=\"exon_id="), "stable_id", lit("."), "version", lit("\"")))
 exon = exon.withColumn("feature_id", lit(""))
 
-exon = exon.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
-mRNA = mRNA.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
-gene = gene.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("0"))
-cds = cds.select("coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
-result = gene.unionByName(mRNA).unionByName(cds).unionByName(exon)
+region = region.withColumn("coordinates", concat(lit("FH   Key             Location/Qualifiers\nFT   source          1.."), "length"))
+region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name.first()[0]), lit("\"")))
+region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id.first()[0]), lit("\"")))
+region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2)).withColumn("transcript_stable_id", lit(""))
+exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
+mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
+gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
+region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("1"))
+cds = cds.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
+result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon)
 
 file_path = "./test.embl"
 tmp_fp = "_embl"
 
-result.repartition(1).orderBy("gene_id", "transcript_stable_id", "seq_region_start", desc("seq_region_end")).drop("transcript_stable_id", "gene_id", "seq_region_start", "seq_region_end").write.option("header", False).mode('overwrite').option("quote", "").option("delimiter", "\n").csv(tmp_fp + "_features")
+result.repartition(1).orderBy("seq_region_id", "gene_id", "transcript_stable_id", "seq_region_start", desc("seq_region_end"))\
+    .drop("transcript_stable_id", "gene_id", "seq_region_start", "seq_region_end", "seq_region_id")\
+    .write\
+    .option("header", False).mode('overwrite').option("quote", "$")\
+    .option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
     os.remove(file_path)
@@ -241,12 +275,15 @@ f = open(file_path, "a")
 f_cvs = open(feature_file)
 file_line = f_cvs.readline()
 while file_line:
-        file_line = file_line.replace("\x00", "")         
-        if (len(file_line) < 5):
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    if (len(file_line) < 5):
             file_line = f_cvs.readline()
             continue
-        f.write(file_line)
-        file_line = f_cvs.readline()
+    f.write(file_line)
+    file_line = f_cvs.readline()
 
 f_cvs.close()
 f.close()
