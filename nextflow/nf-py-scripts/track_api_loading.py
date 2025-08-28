@@ -140,7 +140,6 @@ class TrackUtils:
                 data = json.load(f)
             return data.get(self.genome_uuid, {}).pop("datafiles", None)
         except Exception as e:
-            logger.error("No Variation handover JSON",e)
             return {}
 
     def get_gene_track_data(self) -> dict:
