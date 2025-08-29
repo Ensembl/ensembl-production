@@ -143,7 +143,7 @@ region = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select * from seq_region")\
+                .option("query","select seq_region.seq_region_id, seq_region.name as sr_name, seq_region.length, coord_system.* from seq_region join coord_system on seq_region.coord_system_id = coord_system.coord_system_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -243,16 +243,25 @@ exon = exon_neg.unionByName(exon_pos)
 exon = exon.withColumn("gene_id_note", concat(lit("FT                   /note=\"exon_id="), "stable_id", lit("."), "version", lit("\"")))
 exon = exon.withColumn("feature_id", lit(""))
 
+intro = region.withColumn("coordinates", concat(lit("ID   "), "sr_name", lit("    standard; DNA; HTG; "), "length", lit(" BP.\nXX\n")))
+intro = intro.withColumn("gene_id_note", concat(lit("AC   "), "name", lit(":"), "version", lit(":"), "sr_name", lit(":"), lit("1"), lit(":"), "length", lit(":"), "rank"))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "species_id", lit(":"), "version", lit("\nXX")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nDT   "), lit("\nXX")))
+intro = intro.withColumn("feature_id", concat(lit("test"), lit("\"")))
+intro = intro.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
+
 region = region.withColumn("coordinates", concat(lit("FH   Key             Location/Qualifiers\nFT   source          1.."), "length"))
 region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name.first()[0]), lit("\"")))
 region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id.first()[0]), lit("\"")))
-region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2)).withColumn("transcript_stable_id", lit(""))
+region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
+
 exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
-gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
-region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("1"))
+gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
+region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
+intro = intro.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("1"))
 cds = cds.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
-result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon)
+result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon).unionByName(intro)
 
 file_path = "./test.embl"
 tmp_fp = "_embl"
@@ -260,7 +269,7 @@ tmp_fp = "_embl"
 result.repartition(1).orderBy("seq_region_id", "gene_id", "transcript_stable_id", "seq_region_start", desc("seq_region_end"))\
     .drop("transcript_stable_id", "gene_id", "seq_region_start", "seq_region_end", "seq_region_id")\
     .write\
-    .option("header", False).mode('overwrite').option("quote", "$")\
+    .option("header", False).mode('overwrite').option("quote", "$").option("emptyValue", '')\
     .option("delimiter", "\n").csv(tmp_fp + "_features")
              
 try:
@@ -275,13 +284,13 @@ f = open(file_path, "a")
 f_cvs = open(feature_file)
 file_line = f_cvs.readline()
 while file_line:
+    if(len(file_line) < 2):
+        file_line = f_cvs.readline()
+        continue
     if(file_line[0:1] == "$"):
         file_line = file_line[1:]
     if(file_line[-2:-1] == "$"):
         file_line = file_line[:-2] + "\n"
-    if (len(file_line) < 5):
-            file_line = f_cvs.readline()
-            continue
     f.write(file_line)
     file_line = f_cvs.readline()
 
