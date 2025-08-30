@@ -111,11 +111,13 @@ def splitCoordinates(coordinates):
 def splitSequence(seq):
     seq = seq.replace("!", "")
     seq = seq.replace("*", "")
-    result = seq[:45]
-    i = 45
+    length = 59
+    first_line_length = 45
+    result = seq[:first_line_length]
+    i = first_line_length
     while(i < len(seq)):
-        result = result + "\nFT                   " + seq[i:i+59]
-        i = i + 59
+        result = result + "\nFT                   " + seq[i:i+length]
+        i = i + length
     return result
 
 genes = spark_session.read\
@@ -202,10 +204,10 @@ gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
 
 sequence = spark_session.read.orc(seq)
 cds = transcript_service.translatable_exons(url, username, pwd, None, None, False)
+
 cds_pos = cds.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
 cds_neg = cds.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 cds = cds_neg.unionByName(cds_pos)
-
 cds =\
         cds.groupBy("transcript_stable_id", "version", "gene_id")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
@@ -217,7 +219,7 @@ cds_single = cds.filter("single=True")
 
 cds =\
     cds.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
-
+#cds.show(10, False)
 cds = cds.unionByName(cds_single)
 cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
 cds = cds.withColumn("coordinates", splitCoordinates("coordinates"))
@@ -225,7 +227,6 @@ cds = cds.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumn
 
 cds = cds.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
 cds = cds.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
-
 cds = cds.drop("version").join(sequence.drop("gene_id"), on = ["transcript_stable_id"])
 cds_codon = cds.filter("codon_table>1").withColumn("gene_id_note", concat(lit("FT                   /transl_table="), "codon_table", lit("\n"), "gene_id_note"))
 cds_non_codon = cds.filter("codon_table=1").withColumn("gene_id_note", cds.gene_id_note)
@@ -254,7 +255,6 @@ region = region.withColumn("coordinates", concat(lit("FH   Key             Locat
 region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name.first()[0]), lit("\"")))
 region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id.first()[0]), lit("\"")))
 region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
-
 exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
