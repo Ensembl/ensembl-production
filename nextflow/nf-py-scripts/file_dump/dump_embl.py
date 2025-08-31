@@ -21,6 +21,7 @@ pwd = ""
 import sys
 import math
 import glob
+from datetime import datetime
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
@@ -68,7 +69,16 @@ def gene_desc(locus_tag, desc):
     if (locus_tag):
         result = result + "FT                   /locus_tag=" + locus_tag
     if(desc):
-        result = result + "\nFT                   /note=" + desc
+        desc = "\nFT                   /note="  + desc
+        desc = desc.split(" ")
+        line = ""
+        for word_desc in desc:
+            if((len(line) + len(word_desc)) < 81):
+                line = line +  " " + word_desc
+            else:
+                result = result + line 
+                line = "\nFT                   " + word_desc
+        result = result + line
     return result
 
 #Is transcript canonical
@@ -246,9 +256,10 @@ exon = exon.withColumn("feature_id", lit(""))
 
 intro = region.withColumn("coordinates", concat(lit("ID   "), "sr_name", lit("    standard; DNA; HTG; "), "length", lit(" BP.\nXX\n")))
 intro = intro.withColumn("gene_id_note", concat(lit("AC   "), "name", lit(":"), "version", lit(":"), "sr_name", lit(":"), lit("1"), lit(":"), "length", lit(":"), "rank"))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "species_id", lit(":"), "version", lit("\nXX")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "species_id", lit("."), "version"))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y'))))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nDT   "), lit("\nXX")))
-intro = intro.withColumn("feature_id", concat(lit("test"), lit("\"")))
+intro = intro.withColumn("feature_id", concat(lit("XX\nCC   This sequence was annotated by Ensembl (www.ensembl.org). Please visit the\nCC   Ensembl or EnsemblGenomes web site, http://www.ensembl.org/ or\nCC   http://www.ensemblgenomes.org/ for more information.\nXX\nCC   All feature locations are relative to the first (5') base of the sequence\nCC   in this file.  The sequence presented is always the forward strand of the\nCC   assembly. Features that lie outside of the sequence contained in this file\nCC   have clonal location coordinates in the format: <clone\nCC   accession>.<version>:<start>..<end>\nXX\nCC   The /gene indicates a unique id for a gene, /note=\"transcript_id=...\" a\nCC   unique id for a transcript, /protein_id a unique id for a peptide and\nCC   note=\"exon_id=...\" a unique id for an exon. These ids are maintained\nCC   wherever possible between versions.\nXX\nCC   All the exons and transcripts in Ensembl are confirmed by similarity to\nCC   either protein or cDNA sequences.\nXX"), lit("")))
 intro = intro.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
 
 region = region.withColumn("coordinates", concat(lit("FH   Key             Location/Qualifiers\nFT   source          1.."), "length"))
