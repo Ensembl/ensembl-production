@@ -62,6 +62,21 @@ spark_session.sparkContext.setLogLevel("ERROR")
 transcript_service = TranscriptSparkService(spark_session)
 exon_service = ExonSparkService(spark_session)
 
+def lines_break(full, prefix):
+    result = ""
+    full = "\n"+ prefix + "                   "  + full
+    full = full.split(" ")
+    line = ""
+    line_length = 81
+    for word in full:
+        if((len(line) + len(word)) < line_length):
+            line = line +  " " + word
+        else:
+            result = result + line
+            line = "\n"+ prefix + "                   " + word
+    result = result + line
+
+    return result
 #Is transcript canonical
 @udf(returnType=StringType())
 def gene_desc(locus_tag, desc):
@@ -69,16 +84,8 @@ def gene_desc(locus_tag, desc):
     if (locus_tag):
         result = result + "FT                   /locus_tag=" + locus_tag
     if(desc):
-        desc = "\nFT                   /note="  + desc
-        desc = desc.split(" ")
-        line = ""
-        for word_desc in desc:
-            if((len(line) + len(word_desc)) < 81):
-                line = line +  " " + word_desc
-            else:
-                result = result + line 
-                line = "\nFT                   " + word_desc
-        result = result + line
+        desc = "/note="  + desc
+        result = result + lines_break(desc, "FT")
     return result
 
 #Is transcript canonical
