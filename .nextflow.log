@@ -1,0 +1,50 @@
+Sept-01 16:13:12.325 [main] DEBUG nextflow.cli.Launcher - $> nextflow run ensembl-production/nextflow/workflows/filedumpPipeline/main.nf '--server=jdbc:mysql://mysql-ens-sta-5:4684' --user ensprod --password s3cr3t --ftp_path /Users/mira/test_out -w ./work --nf_py_script_path=/homes/ensprod/filedump_mira_test/ensembl-production/nextflow/nf-py-scripts/
+Sept-01 16:13:12.357 [main] DEBUG nextflow.cli.CmdRun - N E X T F L O W  ~  version 25.04.6
+Sept-01 16:13:12.382 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/Users/mira/.nextflow/plugins; core-plugins: nf-amazon@2.15.0,nf-azure@1.16.0,nf-cloudcache@0.4.3,nf-codecommit@0.2.3,nf-console@1.2.1,nf-google@1.21.1,nf-k8s@1.0.0,nf-tower@1.11.4,nf-wave@1.12.1
+Sept-01 16:13:12.403 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Sept-01 16:13:12.404 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Sept-01 16:13:12.405 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
+Sept-01 16:13:12.414 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Sept-01 16:13:12.419 [main] DEBUG nextflow.scm.ProviderConfig - Using SCM config path: /Users/mira/.nextflow/scm
+Sept-01 16:13:12.433 [main] DEBUG nextflow.scm.RepositoryFactory - Found Git repository result: [RepositoryFactory]
+Sept-01 16:13:12.437 [main] INFO  nextflow.cli.CmdRun - Pulling ensembl-production/nextflow ...
+Sept-01 16:13:12.439 [main] DEBUG nextflow.scm.RepositoryProvider - Request [credentials -:-] -> https://api.github.com/repos/ensembl-production/nextflow/contents/workflows/filedumpPipeline/main.nf
+Sept-01 16:13:12.997 [main] DEBUG nextflow.scm.RepositoryProvider - Response status: 404 -- {"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}
+Sept-01 16:13:13.005 [main] DEBUG nextflow.cli.Launcher - Operation aborted
+nextflow.exception.AbortOperationException: Remote resource not found: https://api.github.com/repos/ensembl-production/nextflow/contents/workflows/filedumpPipeline/main.nf
+	at nextflow.scm.RepositoryProvider.checkResponse(RepositoryProvider.groovy:252)
+	at nextflow.scm.RepositoryProvider.invoke(RepositoryProvider.groovy:193)
+	at nextflow.scm.RepositoryProvider.memoizedMethodPriv$invokeAndParseResponseString(RepositoryProvider.groovy:301)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:343)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:328)
+	at groovy.lang.MetaClassImpl.doInvokeMethod(MetaClassImpl.java:1333)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1088)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1007)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokePogoMethod(InvokerHelper.java:645)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokeMethod(InvokerHelper.java:628)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokeMethodSafe(InvokerHelper.java:82)
+	at nextflow.scm.RepositoryProvider$_closure3.doCall(RepositoryProvider.groovy)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:343)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:328)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:280)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1007)
+	at groovy.lang.Closure.call(Closure.java:433)
+	at org.codehaus.groovy.runtime.memoize.Memoize$MemoizeFunction.lambda$call$0(Memoize.java:137)
+	at org.codehaus.groovy.runtime.memoize.ConcurrentCommonCache.getAndPut(ConcurrentCommonCache.java:137)
+	at org.codehaus.groovy.runtime.memoize.ConcurrentCommonCache.getAndPut(ConcurrentCommonCache.java:113)
+	at org.codehaus.groovy.runtime.memoize.Memoize$MemoizeFunction.call(Memoize.java:136)
+	at groovy.lang.Closure.call(Closure.java:422)
+	at nextflow.scm.RepositoryProvider.invokeAndParseResponse(RepositoryProvider.groovy)
+	at nextflow.scm.GithubRepositoryProvider.readBytes(GithubRepositoryProvider.groovy:117)
+	at nextflow.scm.RepositoryProvider.validateFor(RepositoryProvider.groovy:328)
+	at nextflow.scm.AssetManager.checkValidRemoteRepo(AssetManager.groovy:374)
+	at nextflow.scm.AssetManager.download(AssetManager.groovy:591)
+	at nextflow.cli.CmdRun.getScriptFile0(CmdRun.groovy:591)
+	at nextflow.cli.CmdRun.getScriptFile(CmdRun.groovy:524)
+	at nextflow.cli.CmdRun.run(CmdRun.groovy:326)
+	at nextflow.cli.Launcher.run(Launcher.groovy:513)
+	at nextflow.cli.Launcher.main(Launcher.groovy:673)

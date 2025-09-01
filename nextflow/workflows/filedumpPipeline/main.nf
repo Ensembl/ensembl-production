@@ -34,6 +34,7 @@ params.password           = ""
 include { DumpFastaFiles } from './genset_fasta.nf'
 include { DumpGFF3_GTFFiles} from './gff3_gtf.nf'
 include { DumpEMBLFiles} from './embl.nf'
+include { DumpXref} from './xref.nf'
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
 // Validate input parameters
@@ -66,13 +67,12 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = "abramis_brama_gca963993115v1_core_110_1"
+
+databases = "abramis_brama_gca022829085v1_core_110_1"
 division = channel.of(params.division.split(","))
 
 Channel.of(databases) \
-| DumpFastaFiles \
-| DumpGFF3_GTFFiles \
-| DumpEMBLFiles
+| DumpXref
   
 //clean the empty log files  
  
