@@ -71,7 +71,7 @@ xref = spark_session.read\
 xref.repartition(1)\
     .write\
     .mode('overwrite')\
-    .option("header", False)\
+    .option("header", True)\
     .option("delimiter", " \t")\
     .csv("./xref_csv")
 
