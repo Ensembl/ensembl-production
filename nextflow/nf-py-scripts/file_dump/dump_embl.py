@@ -64,7 +64,7 @@ exon_service = ExonSparkService(spark_session)
 
 def lines_break(full, prefix):
     result = ""
-    full = "\n"+ prefix + "                   "  + full
+    full = "\n"+ prefix + full
     full = full.split(" ")
     line = ""
     line_length = 81
@@ -73,7 +73,7 @@ def lines_break(full, prefix):
             line = line +  " " + word
         else:
             result = result + line
-            line = "\n"+ prefix + "                   " + word
+            line = "\n"+ prefix + word
     result = result + line
 
     return result
@@ -85,7 +85,7 @@ def gene_desc(locus_tag, desc):
         result = result + "FT                   /locus_tag=" + locus_tag
     if(desc):
         desc = "/note="  + desc
-        result = result + lines_break(desc, "FT")
+        result = result + lines_break(desc, "FT                   ")
     return result
 
 #Is transcript canonical
@@ -173,12 +173,30 @@ taxonomy_id = spark_session.read\
                 .option("query","select meta_value from meta where meta_key=\"species.taxonomy_id\"")\
                 .option("user", username)\
                 .option("password", pwd)\
-                .load()
+                .load().first()[0]
 scientific_name = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
                 .option("query","select meta_value from meta where meta_key=\"species.scientific_name\"")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load().first()[0]
+
+common_name = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select meta_value from meta where meta_key=\"species.common_name\"")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load().first()[0]
+
+classification = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select distinct group_concat(meta_value order by meta_id desc separator '; ') from meta where meta_key=\"species.classification\" order by meta_id desc")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -265,13 +283,14 @@ intro = region.withColumn("coordinates", concat(lit("ID   "), "sr_name", lit("  
 intro = intro.withColumn("gene_id_note", concat(lit("AC   "), "name", lit(":"), "version", lit(":"), "sr_name", lit(":"), lit("1"), lit(":"), "length", lit(":"), "rank"))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "species_id", lit("."), "version"))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y'))))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nDT   "), lit("\nXX")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nKW   .\nXX"), lit("\nOS   "), lit(scientific_name + " (" + common_name + ")")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit(lines_break(classification.first()[0], "OC   "))))
 intro = intro.withColumn("feature_id", concat(lit("XX\nCC   This sequence was annotated by Ensembl (www.ensembl.org). Please visit the\nCC   Ensembl or EnsemblGenomes web site, http://www.ensembl.org/ or\nCC   http://www.ensemblgenomes.org/ for more information.\nXX\nCC   All feature locations are relative to the first (5') base of the sequence\nCC   in this file.  The sequence presented is always the forward strand of the\nCC   assembly. Features that lie outside of the sequence contained in this file\nCC   have clonal location coordinates in the format: <clone\nCC   accession>.<version>:<start>..<end>\nXX\nCC   The /gene indicates a unique id for a gene, /note=\"transcript_id=...\" a\nCC   unique id for a transcript, /protein_id a unique id for a peptide and\nCC   note=\"exon_id=...\" a unique id for an exon. These ids are maintained\nCC   wherever possible between versions.\nXX\nCC   All the exons and transcripts in Ensembl are confirmed by similarity to\nCC   either protein or cDNA sequences.\nXX"), lit("")))
 intro = intro.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
 
 region = region.withColumn("coordinates", concat(lit("FH   Key             Location/Qualifiers\nFT   source          1.."), "length"))
-region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name.first()[0]), lit("\"")))
-region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id.first()[0]), lit("\"")))
+region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name), lit("\"")))
+region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id), lit("\"")))
 region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
 exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
