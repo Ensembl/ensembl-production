@@ -67,7 +67,7 @@ def lines_break(full, prefix):
     full = "\n"+ prefix + full
     full = full.split(" ")
     line = ""
-    line_length = 81
+    line_length = 82
     for word in full:
         if((len(line) + len(word)) < line_length):
             line = line +  " " + word
@@ -82,9 +82,9 @@ def lines_break(full, prefix):
 def gene_desc(locus_tag, desc):
     result = ""
     if (locus_tag):
-        result = result + "FT                   /locus_tag=" + locus_tag
+        result = result + "FT                   /locus_tag=\"" + locus_tag + "\""
     if(desc):
-        desc = "/note="  + desc
+        desc = "/note=\""  + desc + "\""
         result = result + lines_break(desc, "FT                   ")
     return result
 
@@ -254,7 +254,6 @@ cds_single = cds.filter("single=True")
 
 cds =\
     cds.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
-#cds.show(10, False)
 cds = cds.unionByName(cds_single)
 cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
 cds = cds.withColumn("coordinates", splitCoordinates("coordinates"))
@@ -293,7 +292,8 @@ region = region.withColumn("coordinates", concat(lit("FH   Key             Locat
 region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name), lit("\"")))
 region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id), lit("\"")))
 region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
-exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("z"))
+#Transcripts stable id and gene_id serve to maintain entries order in file
+exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999))
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
 region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
