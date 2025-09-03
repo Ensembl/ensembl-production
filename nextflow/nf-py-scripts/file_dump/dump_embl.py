@@ -88,10 +88,18 @@ def gene_desc(locus_tag, desc):
         result = result + lines_break(desc, "FT                   ")
     return result
 
-#Is transcript canonical
 @udf(returnType=BooleanType())
 def is_single(coordinates):
     return coordinates.find(",") < 0
+
+@udf(returnType=StringType())
+def xref_note(xref): 
+    result = ""
+    if (xref is None):
+        return ""
+    for xref_id in xref.split(";"):
+        result = result + "\nFT                   /db_xref=\"" + xref_id + "\""
+    return result
 
 #Split coordinates to lines
 @udf(returnType=StringType())
@@ -200,6 +208,34 @@ classification = spark_session.read\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+gene_xref = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select group_concat(x.dbprimary_acc separator \";\"), ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Gene\" group by ox.ensembl_id")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+genes = genes.join(gene_xref, on = [genes.gene_id == gene_xref.ensembl_id], how = "left_outer")
+
+transcript_xref = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select group_concat(x.dbprimary_acc separator \";\") as xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Transcript\" group by ox.ensembl_id")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
+transcripts = transcripts.join(transcript_xref, on = [transcripts.transcript_id == transcript_xref.ensembl_id], how = "left_outer")
+
+translation_xref = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select group_concat(x.dbprimary_acc separator \";\") as xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Translation\" group by ox.ensembl_id")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
 
 translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False, False, True)
 mRNA = translatable_exons
@@ -231,11 +267,10 @@ mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_i
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
-gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 gene = gene_pos.unionByName(gene_neg)
 gene = gene.withColumn("gene_id_note", concat(lit("FT                   /gene="), "stable_id", lit("."), "version"))
 gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
-
 
 sequence = spark_session.read.orc(seq)
 cds = transcript_service.translatable_exons(url, username, pwd, None, None, False)
@@ -260,12 +295,15 @@ cds = cds.withColumn("coordinates", splitCoordinates("coordinates"))
 cds = cds.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
 
 cds = cds.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
-cds = cds.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
+cds = cds.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end", "xref"), on = ["transcript_stable_id"] )
 cds = cds.drop("version").join(sequence.drop("gene_id"), on = ["transcript_stable_id"])
 cds_codon = cds.filter("codon_table>1").withColumn("gene_id_note", concat(lit("FT                   /transl_table="), "codon_table", lit("\n"), "gene_id_note"))
 cds_non_codon = cds.filter("codon_table=1").withColumn("gene_id_note", cds.gene_id_note)
 cds = cds_non_codon.union(cds_codon)
 cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=\""), "translation_stable_id", lit("."), "tl_version", lit("\"")))
+cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /note=\"transcript_id="), "transcript_stable_id", lit("."), "version", lit("\"")))
+cds = cds.withColumn("xref_tmp", xref_note("xref"))
+cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).drop("xref_tmp")
 cds = cds.withColumn("sequence", splitSequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation=\""), "sequence", lit("\"")))
 
@@ -273,7 +311,7 @@ exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_
     .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"])
 
 exon_pos = exon.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   exon            "), "seq_region_start", lit(".."), "seq_region_end"))
-exon_neg = exon.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   exon            "),lit("compliment("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+exon_neg = exon.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   exon            "),lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 exon = exon_neg.unionByName(exon_pos)
 exon = exon.withColumn("gene_id_note", concat(lit("FT                   /note=\"exon_id="), "stable_id", lit("."), "version", lit("\"")))
 exon = exon.withColumn("feature_id", lit(""))
