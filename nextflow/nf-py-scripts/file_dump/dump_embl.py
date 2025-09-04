@@ -67,10 +67,11 @@ def lines_break(full, prefix):
     full = "\n"+ prefix + full
     full = full.split(" ")
     line = ""
-    line_length = 82
+    line_length = 83
     for word in full:
+        word = " " + word
         if((len(line) + len(word)) < line_length):
-            line = line +  " " + word
+            line = line + word
         else:
             result = result + line
             line = "\n"+ prefix + word
@@ -103,41 +104,33 @@ def xref_note(xref):
 
 #Split coordinates to lines
 @udf(returnType=StringType())
-def splitCoordinates(coordinates):
-    coordinates = coordinates.split(",")
-    if(len(coordinates) < 2):
-         return "\nFT   " + coordinates[0]
-    length = len(coordinates[1])
-    repeats = 57//length
-    lines = math.ceil(len(coordinates)/repeats)
-    i = 1
-    coord_local = "\nFT   " + coordinates[0] + ","
-    
-    for j in range(0, repeats - 1):
-        coord_local = coord_local + coordinates[i] + ","
-        if (i < len(coordinates)-1):
-            i = i+1         
-    result = coord_local
-
-    for x in range(0, lines - 1):
-         coord_local = ""
-         for j in range(0, repeats):
-              coord_local = coord_local + coordinates[i] + ","
-              if (i < len(coordinates)-1):
-                i = i+1
-              else:
-                  break
- 
-         result = result + "\nFT                   " + coord_local  
-    return result[:-1]
+def split_coordinates(coordinates):
+    full = coordinates
+    prefix = "FT                   "
+    result = ""
+    full = "\nFT   " + full
+    full = full.split(",")
+    line = ""
+    line_length = 83
+    for word in full:
+        word = word + ","
+        if((len(line) + len(word)) < line_length):
+            line = line + word
+        else:
+            result = result + line
+            line = "\n"+ prefix + word
+    result = result + line[:-1]
+    return result
 
 #Split coordinates to lines
+#TODO Ref
 @udf(returnType=StringType())
-def splitSequence(seq):
+def split_sequence(seq):
     seq = seq.replace("!", "")
     seq = seq.replace("*", "")
+    seq = "\"" + seq + "\""
     length = 59
-    first_line_length = 45
+    first_line_length = 46
     result = seq[:first_line_length]
     i = first_line_length
     while(i < len(seq)):
@@ -237,18 +230,21 @@ translation_xref = spark_session.read\
                 .option("password", pwd)\
                 .load()
 
-translatable_exons = transcript_service.translatable_exons(url, username, pwd, None, None, False, False, True)
-mRNA = translatable_exons
-mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
-mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
+mRNA=exons.withColumnRenamed("stable_id", "exon_stable_id") 
+
+mRNA_pos = mRNA.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))\
+    .drop("seq_region_start", "seq_region_end")
+mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))\
+    .drop("seq_region_start", "seq_region_end")
 mRNA = mRNA_neg.unionByName(mRNA_pos)
+mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").withColumnRenamed("version", "transcript_version")\
+                 .select("transcript_stable_id", "gene_id", "transcript_version", "transcript_id", "seq_region_start", "seq_region_end"), on = ["transcript_id"])
 
 mRNA =\
-        mRNA.groupBy("transcript_stable_id", "version", "gene_id")\
+        mRNA.groupBy("transcript_stable_id", "transcript_version", "gene_id", "seq_region_start", "seq_region_end")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
-
 mRNA = mRNA.withColumn("single", is_single("coordinates"))
 
 mRNA_single = mRNA.filter("single=True")
@@ -258,13 +254,12 @@ mRNA =\
 
 mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
-mRNA = mRNA.withColumn("coordinates", splitCoordinates("coordinates"))
+mRNA = mRNA.withColumn("coordinates", split_coordinates("coordinates"))
 
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
-mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_stable_id", "seq_region_start", "seq_region_end"), on = ["transcript_Stable_id"] )
-mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "version",lit("\"")))
+mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
 gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
@@ -291,7 +286,7 @@ cds =\
     cds.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
 cds = cds.unionByName(cds_single)
 cds = cds.withColumn("coordinates", concat(lit("CDS             "), "coordinates"))
-cds = cds.withColumn("coordinates", splitCoordinates("coordinates"))
+cds = cds.withColumn("coordinates", split_coordinates("coordinates"))
 cds = cds.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version"), on=["gene_id"])
 
 cds = cds.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
@@ -304,8 +299,8 @@ cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /note=\"transcript_id="), "transcript_stable_id", lit("."), "version", lit("\"")))
 cds = cds.withColumn("xref_tmp", xref_note("xref"))
 cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).drop("xref_tmp")
-cds = cds.withColumn("sequence", splitSequence("sequence"))
-cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation=\""), "sequence", lit("\"")))
+cds = cds.withColumn("sequence", split_sequence("sequence"))
+cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation="), "sequence"))
 
 exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_id", "transcript_stable_id", "gene_id"), on = ["transcript_id"])\
     .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"])

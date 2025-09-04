@@ -274,11 +274,12 @@ class TranscriptSparkService:
          #We need to have in DF genomic coordinates of the translation
          translatable_exons = self.translatable_exons(db, user, password,
                          exons_df, None, False, True)
-
+         #This piece of code is very bad, need ref. Getting whole bunch translatable exons for tl_start
+         #TODO
          translated_sequence = \
          translated_seq.withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
-
+        
          #Join by exon_id
          translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
          #Apply translation edits - selenocyst is translation
@@ -428,12 +429,12 @@ class TranscriptSparkService:
         def translatable(start, end, tl_start, tl_end):
             if (tl_start < tl_end):
                 if(start >= tl_start and start <= tl_end or end >= tl_start and end <= tl_end or tl_start > start and tl_end < end):
-                    return 0
+                    return 1
                 if(end < tl_start):
                     return(-1)
             if (tl_start > tl_end):
                 if(start <= tl_start and start >= tl_end or end <= tl_start and end >= tl_end or tl_start > start and tl_end < end):
-                    return 0
+                    return 1
                 if(start > tl_start):
                     return -1
             return 1
@@ -479,7 +480,7 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-        #Phase of the exon shotuld be . of it is -1
+        #Phase of the exon should be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase > 2):
@@ -511,10 +512,9 @@ class TranscriptSparkService:
         
         #Determine translatabe exons
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
-        
+  
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
-
-        result=translatables.filter("translatable = 0")
+        result=translatables.filter("translatable = 1")
         #Uncroped for mRNA
         if (mRNA == True):
             return result
@@ -531,7 +531,7 @@ class TranscriptSparkService:
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
                                           "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source", "gene_id")
-        #If case we need croped part of transcript
+        #If case we need croped part of transcript, beyond cds
         if (utr):
             result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
