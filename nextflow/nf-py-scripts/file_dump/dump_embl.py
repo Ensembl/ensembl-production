@@ -69,15 +69,35 @@ def lines_break(full, prefix):
     line = ""
     line_length = 83
     for word in full:
-        word = " " + word
+        word = word + " " 
         if((len(line) + len(word)) < line_length):
             line = line + word
         else:
             result = result + line
             line = "\n"+ prefix + word
-    result = result + line
-
+    result = result + line[:-1]
     return result
+
+#Split coordinates to lines
+@udf(returnType=StringType())
+def split_coordinates(coordinates):
+    full = coordinates
+    prefix = "FT                   "
+    result = ""
+    full = "\nFT   " + full
+    full = full.split(",")
+    line = ""
+    line_length = 83
+    for word in full:
+        word = word + ","
+        if((len(line) + len(word)) < line_length):
+            line = line + word
+        else:
+            result = result + line
+            line = "\n"+ prefix + word
+    result = result + line[:-1]
+    return result
+
 #Is transcript canonical
 @udf(returnType=StringType())
 def gene_desc(locus_tag, desc):
@@ -102,25 +122,7 @@ def xref_note(xref):
         result = result + "\nFT                   /db_xref=\"" + xref_id + "\""
     return result
 
-#Split coordinates to lines
-@udf(returnType=StringType())
-def split_coordinates(coordinates):
-    full = coordinates
-    prefix = "FT                   "
-    result = ""
-    full = "\nFT   " + full
-    full = full.split(",")
-    line = ""
-    line_length = 83
-    for word in full:
-        word = word + ","
-        if((len(line) + len(word)) < line_length):
-            line = line + word
-        else:
-            result = result + line
-            line = "\n"+ prefix + word
-    result = result + line[:-1]
-    return result
+
 
 #Split coordinates to lines
 #TODO Ref
@@ -137,6 +139,21 @@ def split_sequence(seq):
         result = result + "\nFT                   " + seq[i:i+length]
         i = i + length
     return result
+
+@udf(returnType=StringType())
+def split_region_sequence(seq):
+    result = ' '.join(seq[i:i+10] for i in range(0, len(seq), 10))
+    result = ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, len(result), 66))
+    return ("    " + result)
+
+dna = spark_session.read\
+                .format("jdbc")\
+                .option("driver","com.mysql.cj.jdbc.Driver")\
+                .option("url", url)\
+                .option("query","select d.sequence, sr.* from dna d join seq_region sr on d.seq_region_id = sr.seq_region_id")\
+                .option("user", username)\
+                .option("password", pwd)\
+                .load()
 
 genes = spark_session.read\
                 .format("jdbc")\
@@ -303,7 +320,7 @@ cds = cds.withColumn("sequence", split_sequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation="), "sequence"))
 
 exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_id", "transcript_stable_id", "gene_id"), on = ["transcript_id"])\
-    .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"])
+    .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"]).dropDuplicates(["stable_id"])
 
 exon_pos = exon.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   exon            "), "seq_region_start", lit(".."), "seq_region_end"))
 exon_neg = exon.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   exon            "),lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
@@ -325,15 +342,21 @@ region = region.withColumn("coordinates", concat(lit("FH   Key             Locat
 region = region.withColumn("gene_id_note", concat(lit("FT                   /organism=\""), lit(scientific_name), lit("\"")))
 region = region.withColumn("feature_id", concat(lit("FT                   /db_xref=\"taxon:"), lit(taxonomy_id), lit("\"")))
 region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
+
+sequence = dna.withColumn("coordinates", concat(lit("FT   misc_feature    1.."), "length"))
+sequence = sequence.withColumn("gene_id_note", concat(lit("FT                   /note=\"contig "), "name", lit(" 1.."),  "length"))
+sequence = sequence.withColumn("feature_id", split_region_sequence("sequence"))
+
+sequence = sequence.withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2)).withColumn("transcript_stable_id", lit("1"))
 #Transcripts stable id and gene_id serve to maintain entries order in file
-exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999))
+exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999)).dropDuplicates(["coordinates"])
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
 region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
 intro = intro.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("1"))
 cds = cds.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
-result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon).unionByName(intro)
-
+sequence = sequence.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(9999999))
+result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon).unionByName(intro).unionByName(sequence)
 file_path = "./test.embl"
 tmp_fp = "_embl"
 
@@ -354,6 +377,7 @@ f = open(file_path, "a")
 #Write features       
 f_cvs = open(feature_file)
 file_line = f_cvs.readline()
+print("WRITE FILE....")
 while file_line:
     if(len(file_line) < 2):
         file_line = f_cvs.readline()
@@ -364,6 +388,6 @@ while file_line:
         file_line = file_line[:-2] + "\n"
     f.write(file_line)
     file_line = f_cvs.readline()
-
+print("FILE IS DONE!")
 f_cvs.close()
 f.close()
