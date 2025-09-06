@@ -122,29 +122,24 @@ def xref_note(xref):
         result = result + "\nFT                   /db_xref=\"" + xref_id + "\""
     return result
 
-
-
 #Split coordinates to lines
 #TODO Ref
 @udf(returnType=StringType())
 def split_sequence(seq):
     seq = seq.replace("!", "")
     seq = seq.replace("*", "")
-    seq = "\"" + seq + "\""
+    seq = "/translation=\"" + seq + "\""
     length = 59
-    first_line_length = 46
-    result = seq[:first_line_length]
-    i = first_line_length
-    while(i < len(seq)):
-        result = result + "\nFT                   " + seq[i:i+length]
-        i = i + length
+    result =  "\nFT                   " + ('\nFT                   ').join((seq[i:i+length]) for i in range(0, len(seq), length))
     return result
 
 @udf(returnType=StringType())
 def split_region_sequence(seq):
+    #This split must be kept exactly like this, not in for loop or whatever - only this function, that is python wrapper of c++
+    # give adequate performance. Other options kill perfomants immediatly. 
     result = ' '.join(seq[i:i+10] for i in range(0, len(seq), 10))
-    result = ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, len(result), 66))
-    return ("    " + result)
+    result = "    " + ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, len(result), 66))
+    return result
 
 dna = spark_session.read\
                 .format("jdbc")\
@@ -317,7 +312,7 @@ cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT               
 cds = cds.withColumn("xref_tmp", xref_note("xref"))
 cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).drop("xref_tmp")
 cds = cds.withColumn("sequence", split_sequence("sequence"))
-cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /translation="), "sequence"))
+cds = cds.withColumn("feature_id", concat("feature_id", "sequence"))
 
 exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_id", "transcript_stable_id", "gene_id"), on = ["transcript_id"])\
     .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"]).dropDuplicates(["stable_id"])
