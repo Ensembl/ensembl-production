@@ -437,7 +437,7 @@ class TranscriptSparkService:
                     return 1
                 if(start > tl_start):
                     return -1
-            return 1
+            return 0
 
         @udf(returnType=IntegerType())
         def tl_start(start, end, tl_start, tl_end,  strand):

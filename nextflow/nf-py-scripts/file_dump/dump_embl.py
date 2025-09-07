@@ -213,11 +213,12 @@ classification = spark_session.read\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
+#If performance boost needed - sorting can be romeved here, to spedd up twice
 gene_xref = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select group_concat(x.dbprimary_acc separator \";\"), ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Gene\" group by ox.ensembl_id")\
+                .option("query","select group_concat(x.dbprimary_acc  order by x.dbprimary_acc separator \";\"), ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Gene\" group by ox.ensembl_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -227,7 +228,7 @@ transcript_xref = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select group_concat(x.dbprimary_acc separator \";\") as xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Transcript\" group by ox.ensembl_id")\
+                .option("query","select group_concat(x.dbprimary_acc order by x.dbprimary_acc separator \";\" ) as xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Transcript\" group by ox.ensembl_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -281,7 +282,6 @@ gene = gene.withColumn("feature_id", gene_desc("locus_tag", "description"))
 
 sequence = spark_session.read.orc(seq)
 cds = transcript_service.translatable_exons(url, username, pwd, None, None, False)
-
 cds_pos = cds.filter("seq_region_strand>0").withColumn("coordinates", concat("seq_region_start", lit(".."), "seq_region_end"))
 cds_neg = cds.filter("seq_region_strand<0").withColumn("coordinates", concat(lit("complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
 cds = cds_neg.unionByName(cds_pos)
