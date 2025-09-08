@@ -251,10 +251,10 @@ mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(l
     .drop("seq_region_start", "seq_region_end")
 mRNA = mRNA_neg.unionByName(mRNA_pos)
 mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").withColumnRenamed("version", "transcript_version")\
-                 .select("transcript_stable_id", "gene_id", "transcript_version", "transcript_id", "seq_region_start", "seq_region_end"), on = ["transcript_id"])
+                 .select("transcript_stable_id", "gene_id", "transcript_version", "transcript_id", "seq_region_start", "seq_region_end", "biotype"), on = ["transcript_id"])
 
 mRNA =\
-        mRNA.groupBy("transcript_stable_id", "transcript_version", "gene_id", "seq_region_start", "seq_region_end")\
+        mRNA.groupBy("transcript_stable_id", "transcript_version", "gene_id", "seq_region_start", "seq_region_end", "biotype")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
@@ -266,13 +266,23 @@ mRNA =\
     mRNA.filter("single=False").withColumn("coordinates", concat(lit("join("), "coordinates", lit(")")))
 
 mRNA = mRNA.unionByName(mRNA_single)
-mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
-mRNA = mRNA.withColumn("coordinates", split_coordinates("coordinates"))
+
 
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
+
+miscRNA = mRNA.filter((mRNA.biotype != "protein_coding") & (mRNA.biotype!="IG_V_gene") & (mRNA.biotype!="IG_C_gene")& (mRNA.biotype!="IG_J_gene"))
+mRNA = mRNA.filter((mRNA.biotype == "protein_coding") | (mRNA.biotype=="IG_V_gene") | (mRNA.biotype=="IG_C_gene") | (mRNA.biotype=="IG_J_gene"))
+
+mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
+mRNA = mRNA.withColumn("coordinates", split_coordinates("coordinates"))
+
+miscRNA = miscRNA.withColumn("coordinates", concat(lit("misc_RNA        "), "coordinates"))
+miscRNA = miscRNA.withColumn("coordinates", split_coordinates("coordinates"))
+miscRNA = miscRNA.withColumn("feature_id", concat(lit("FT                   /note=\""), "biotype", lit("\"")))
+miscRNA = miscRNA.withColumn("feature_id", concat("feature_id", lit("\nFT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
 gene_neg = genes.filter("seq_region_strand < 0").withColumn("coordinates", concat(lit("FT   gene            complement("), "seq_region_start", lit(".."), "seq_region_end", lit(")")))
@@ -346,12 +356,13 @@ sequence = sequence.withColumn("seq_region_start", lit(1)).withColumn("seq_regio
 #Transcripts stable id and gene_id serve to maintain entries order in file
 exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999)).dropDuplicates(["coordinates"])
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
+miscRNA = miscRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
 region = region.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("2"))
 intro = intro.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("1"))
 cds = cds.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 sequence = sequence.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(9999999))
-result = gene.unionByName(region).unionByName(mRNA).unionByName(cds).unionByName(exon).unionByName(intro).unionByName(sequence)
+result = gene.unionByName(region).unionByName(mRNA).unionByName(miscRNA).unionByName(cds).unionByName(exon).unionByName(intro).unionByName(sequence)
 file_path = "./test.embl"
 tmp_fp = "_embl"
 
