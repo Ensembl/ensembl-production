@@ -150,7 +150,6 @@ class TranslationSparkService:
                        row.phase)
         # For exons we need to drop transcript_id not t oconfuse with
         # translation_transcript_id and take only current exons
-        exons_raw = exons
         exons = exons.drop("transcript_id").filter("is_current==1").drop_duplicates(["exon_id"])
 
         #Of start exons we need only seq_region_start

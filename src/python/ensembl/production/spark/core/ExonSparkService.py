@@ -116,12 +116,13 @@ class ExonSparkService:
     """
     Returns a dataframe of translatable exons from database.
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
+    //MUST BE TESTED, in transcript service there is similar func, but more info, that is tested
     """
     def load_translatable_exons(self, db: str, user: str, password: str,\
                                 tmp_folder=None):
 
         exons_raw = self.load_exons_fs(db, user, password, tmp_folder)
-        translation_service = TranslationSparkService(self._spark);
+        translation_service = TranslationSparkService(self._spark)
         translatable_regions =\
         translation_service.get_translatable_regions(db, user,password, tmp_folder)
 
