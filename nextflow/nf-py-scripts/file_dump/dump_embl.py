@@ -170,7 +170,6 @@ transcripts = spark_session.read\
                 .load()
 
 exons = exon_service.load_exons_fs(url, username, pwd, "exons")
-
 region = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -354,7 +353,8 @@ sequence = sequence.withColumn("feature_id", split_region_sequence("sequence"))
 
 sequence = sequence.withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2)).withColumn("transcript_stable_id", lit("1"))
 #Transcripts stable id and gene_id serve to maintain entries order in file
-exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999)).dropDuplicates(["coordinates"])
+exon = exon.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(99999)).dropDuplicates(["gene_id_note"])
+
 mRNA = mRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 miscRNA = miscRNA.select("seq_region_id","coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 gene = gene.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end").withColumn("transcript_stable_id", lit("3"))
@@ -363,6 +363,7 @@ intro = intro.select("seq_region_id", "coordinates", "gene_id_note", "feature_id
 cds = cds.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "gene_id", "seq_region_start", "seq_region_end", "transcript_stable_id")
 sequence = sequence.select("seq_region_id", "coordinates", "gene_id_note", "feature_id", "transcript_stable_id", "seq_region_start", "seq_region_end").withColumn("gene_id", lit(9999999))
 result = gene.unionByName(region).unionByName(mRNA).unionByName(miscRNA).unionByName(cds).unionByName(exon).unionByName(intro).unionByName(sequence)
+
 file_path = "./test.embl"
 tmp_fp = "_embl"
 
@@ -393,6 +394,7 @@ while file_line:
     if(file_line[-2:-1] == "$"):
         file_line = file_line[:-2] + "\n"
     f.write(file_line)
+
     file_line = f_cvs.readline()
 print("FILE IS DONE!")
 f_cvs.close()
