@@ -114,12 +114,17 @@ def is_single(coordinates):
     return coordinates.find(",") < 0
 
 @udf(returnType=StringType())
-def xref_note(xref): 
+def xref_note(xref, prefix=None): 
     result = ""
     if (xref is None):
         return ""
-    for xref_id in xref.split(";"):
-        result = result + "\nFT                   /db_xref=\"" + xref_id + "\""
+    if (prefix is None):
+        for xref_id in xref.split(";"):
+            result = result + "\nFT                   /db_xref=\"" + xref_id + "\""
+    else:
+        for xref_id in xref.split(";"):
+            result = result + "\nFT                   /db_xref=\"" + prefix + xref_id + "\""
+        
     return result
 
 #Split coordinates to lines
@@ -217,7 +222,7 @@ gene_xref = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select group_concat(x.dbprimary_acc  order by x.dbprimary_acc separator \";\"), ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Gene\" group by ox.ensembl_id")\
+                .option("query","select group_concat(x.dbprimary_acc  order by x.dbprimary_acc separator \";\") as gene_xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Gene\" group by ox.ensembl_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -237,7 +242,7 @@ translation_xref = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
                 .option("url", url)\
-                .option("query","select group_concat(x.dbprimary_acc separator \";\") as xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Translation\" group by ox.ensembl_id")\
+                .option("query","select group_concat(x.dbprimary_acc separator \";\") as translation_xref, ox.ensembl_id from object_xref ox join xref x on x.xref_id=ox.xref_id where ox.ensembl_object_type=\"Translation\" group by ox.ensembl_id")\
                 .option("user", username)\
                 .option("password", pwd)\
                 .load()
@@ -316,10 +321,14 @@ cds = cds.drop("version").join(sequence.drop("gene_id"), on = ["transcript_stabl
 cds_codon = cds.filter("codon_table>1").withColumn("gene_id_note", concat(lit("FT                   /transl_table="), "codon_table", lit("\n"), "gene_id_note"))
 cds_non_codon = cds.filter("codon_table=1").withColumn("gene_id_note", cds.gene_id_note)
 cds = cds_non_codon.union(cds_codon)
+cds = cds.join(translation_xref, on=[cds.canonical_translation_id==translation_xref.ensembl_id], how = "left_outer")
 cds = cds.withColumn("feature_id", concat(lit("FT                   /protein_id=\""), "translation_stable_id", lit("."), "tl_version", lit("\"")))
 cds = cds.withColumn("feature_id", concat("feature_id", lit("\nFT                   /note=\"transcript_id="), "transcript_stable_id", lit("."), "version", lit("\"")))
 cds = cds.withColumn("xref_tmp", xref_note("xref"))
 cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).drop("xref_tmp")
+cds = cds.withColumn("xref_tmp", xref_note("translation_xref", lit("UniParc:")))
+cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).drop("xref_tmp")
+
 cds = cds.withColumn("sequence", split_sequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", "sequence"))
 
