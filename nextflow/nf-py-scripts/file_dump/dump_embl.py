@@ -143,7 +143,14 @@ def split_region_sequence(seq):
     #This split must be kept exactly like this, not in for loop or whatever - only this function, that is python wrapper of c++
     # give adequate performance. Other options kill perfomants immediatly. 
     result = ' '.join(seq[i:i+10] for i in range(0, len(seq), 10))
-    result = "    " + ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, len(result), 66))
+    length = len(result)
+    len_seq = len(seq)
+    lines = (length//66)*66
+    remain_length = len(result)%66
+    remain = result[-remain_length:]
+
+    result = "    " + ('\n    ').join((result[i:i+66]  + "   " + str(((i+66)//11)*10)) for i in range(0, lines, 66))\
+        +"\n    " + remain + (' '*(69-remain_length)) + str(len_seq) + "\n//"
     return result
 
 dna = spark_session.read\
