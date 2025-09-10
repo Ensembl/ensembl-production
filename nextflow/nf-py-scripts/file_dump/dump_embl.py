@@ -255,10 +255,10 @@ mRNA_neg = mRNA.filter("seq_region_strand<0").withColumn("coordinates", concat(l
     .drop("seq_region_start", "seq_region_end")
 mRNA = mRNA_neg.unionByName(mRNA_pos)
 mRNA = mRNA.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").withColumnRenamed("version", "transcript_version")\
-                 .select("transcript_stable_id", "gene_id", "transcript_version", "transcript_id", "seq_region_start", "seq_region_end", "biotype"), on = ["transcript_id"])
+                 .select("transcript_stable_id", "gene_id", "transcript_version", "transcript_id", "seq_region_start", "seq_region_end", "biotype", "xref"), on = ["transcript_id"])
 
 mRNA =\
-        mRNA.groupBy("transcript_stable_id", "transcript_version", "gene_id", "seq_region_start", "seq_region_end", "biotype")\
+        mRNA.groupBy("transcript_stable_id", "transcript_version", "gene_id", "seq_region_start", "seq_region_end", "biotype", "xref")\
         .agg(concat_ws(",", expr("""transform(sort_array(collect_list(struct(rank,coordinates)),True), x -> x.coordinates)"""))\
         .alias("coordinates"))\
         .drop("created_date", "modified_date", "stable_id")
@@ -275,6 +275,7 @@ mRNA = mRNA.unionByName(mRNA_single)
 mRNA = mRNA.join(genes.withColumnRenamed("stable_id", "gene_stable_id").withColumnRenamed("version", "gene_version").select("gene_id", "gene_stable_id", "gene_version", "seq_region_id"), on=["gene_id"])
 
 mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\""), "gene_stable_id", lit("."), "gene_version",lit("\"")))
+
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
 
 miscRNA = mRNA.filter((mRNA.biotype != "protein_coding") & (mRNA.biotype!="IG_V_gene") & (mRNA.biotype!="IG_C_gene")& (mRNA.biotype!="IG_J_gene"))
@@ -285,7 +286,9 @@ mRNA = mRNA.withColumn("coordinates", split_coordinates("coordinates"))
 
 miscRNA = miscRNA.withColumn("coordinates", concat(lit("misc_RNA        "), "coordinates"))
 miscRNA = miscRNA.withColumn("coordinates", split_coordinates("coordinates"))
-miscRNA = miscRNA.withColumn("feature_id", concat(lit("FT                   /note=\""), "biotype", lit("\"")))
+
+miscRNA = miscRNA.withColumn("feature_id",  xref_note("xref", lit("RNAcentral:")))
+miscRNA = miscRNA.withColumn("feature_id", concat("feature_id", lit("\nFT                   /note=\""), "biotype", lit("\"")))
 miscRNA = miscRNA.withColumn("feature_id", concat("feature_id", lit("\nFT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
 
 gene_pos = genes.filter("seq_region_strand > 0").withColumn("coordinates", concat(lit("FT   gene            "), "seq_region_start", lit(".."), "seq_region_end"))
@@ -343,7 +346,7 @@ exon = exon.withColumn("feature_id", lit(""))
 
 intro = region.withColumn("coordinates", concat(lit("ID   "), "sr_name", lit("    standard; DNA; HTG; "), "length", lit(" BP.\nXX\n")))
 intro = intro.withColumn("gene_id_note", concat(lit("AC   "), "name", lit(":"), "version", lit(":"), "sr_name", lit(":"), lit("1"), lit(":"), "length", lit(":"), "rank"))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "species_id", lit("."), "version"))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "sr_name", lit("."), "version"))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y'))))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDE   "), lit(scientific_name + " "), "name", lit(" "), "sr_name",lit(" "), "version", lit("full sequence 1.."), "length", lit("\nDE   annotated by Ensembl")))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nKW   .\nXX"), lit("\nOS   "), lit(scientific_name + " (" + common_name + ")")))
