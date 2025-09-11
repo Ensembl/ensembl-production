@@ -153,6 +153,24 @@ def split_region_sequence(seq):
         +"\n    " + remain + (' '*(69-remain_length)) + str(len_seq) + "\n//"
     return result
 
+@udf(returnType=StringType())
+def seq_stats(seq):
+    result = ""
+    int_a = seq.count("A")
+    int_c = seq.count("C")
+    int_t = seq.count("T")
+    int_g = seq.count("G")
+    int_total = len(seq)
+    total = "   " + str(int_total) + "  BP;"
+    a = "   " + str(int_a) + " A;"
+    c = "   " + str(int_c) + " C;"
+    g = "   " + str(int_g) + " G;"
+    t = "   " + str(int_t) + " T;"
+    other = "       " + str(int_total - (int_a + int_t + int_c + int_g)) + " other;"
+
+    result = "\nSQ   Sequence" + total + a + c + g + t + other
+    return  result
+
 dna = spark_session.read\
                 .format("jdbc")\
                 .option("driver","com.mysql.cj.jdbc.Driver")\
@@ -367,8 +385,9 @@ region = region.withColumn("feature_id", concat(lit("FT                   /db_xr
 region = region.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
 
 sequence = dna.withColumn("coordinates", concat(lit("FT   misc_feature    1.."), "length"))
-sequence = sequence.withColumn("gene_id_note", concat(lit("FT                   /note=\"contig "), "name", lit(" 1.."),  "length"))
+sequence = sequence.withColumn("gene_id_note", concat(lit("FT                   /note=\"contig "), "name", lit(" 1.."),  "length", lit("(1)\"")))
 sequence = sequence.withColumn("feature_id", split_region_sequence("sequence"))
+sequence = sequence.withColumn("feature_id", concat(lit("\nXX"), seq_stats("sequence"), lit("\n"), "feature_id"))
 
 sequence = sequence.withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2)).withColumn("transcript_stable_id", lit("1"))
 #Transcripts stable id and gene_id serve to maintain entries order in file
