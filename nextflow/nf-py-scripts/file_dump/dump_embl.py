@@ -241,7 +241,9 @@ classification = spark_session.read\
                 .option("query","select distinct group_concat(meta_value order by meta_id desc separator '; ') from meta where meta_key=\"species.classification\" order by meta_id desc")\
                 .option("user", username)\
                 .option("password", pwd)\
-                .load()
+                .load().first()[0]
+
+classification = classification[:classification.rfind(";")] + "."
 #If performance boost needed - sorting can be romeved here, to spedd up twice
 gene_xref = spark_session.read\
                 .format("jdbc")\
@@ -375,7 +377,7 @@ intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y'))))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDE   "), lit(scientific_name + " "), "name", lit(" "), "sr_name",lit(" "), "version", lit("full sequence 1.."), "length", lit("\nDE   annotated by Ensembl")))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nKW   .\nXX"), lit("\nOS   "), lit(scientific_name + " (" + common_name + ")")))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit(lines_break(classification.first()[0], "OC   "))))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit(lines_break(classification, "OC   "))))
 intro = intro.withColumn("feature_id", concat(lit("XX\nCC   This sequence was annotated by Ensembl (www.ensembl.org). Please visit the\nCC   Ensembl or EnsemblGenomes web site, http://www.ensembl.org/ or\nCC   http://www.ensemblgenomes.org/ for more information.\nXX\nCC   All feature locations are relative to the first (5') base of the sequence\nCC   in this file.  The sequence presented is always the forward strand of the\nCC   assembly. Features that lie outside of the sequence contained in this file\nCC   have clonal location coordinates in the format: <clone\nCC   accession>.<version>:<start>..<end>\nXX\nCC   The /gene indicates a unique id for a gene, /note=\"transcript_id=...\" a\nCC   unique id for a transcript, /protein_id a unique id for a peptide and\nCC   note=\"exon_id=...\" a unique id for an exon. These ids are maintained\nCC   wherever possible between versions.\nXX\nCC   All the exons and transcripts in Ensembl are confirmed by similarity to\nCC   either protein or cDNA sequences.\nXX"), lit("")))
 intro = intro.withColumn("gene_id", lit(1)).withColumn("seq_region_start", lit(1)).withColumn("seq_region_end", lit(2))
 
