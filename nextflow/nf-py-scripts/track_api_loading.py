@@ -144,7 +144,6 @@ class TrackUtils:
                 data = json.load(f)
             return data.get(self.genome_uuid, {}).pop("datafiles", None)
         except Exception as e:
-            logger.error("No Variation handover JSON", e)
             return {}
 
     def get_gene_track_data(self) -> dict:
@@ -190,7 +189,7 @@ class TrackUtils:
                             row_data.setdefault(
                                 "description_postfix", " Genes annotated by Ensembl."
                             )
-                        # Set annotation typei
+                        # Set annotation type
                         if (
                             attrib.attribute.name == "genebuild.provider_name"
                             and attrib.value == "Ensembl"
