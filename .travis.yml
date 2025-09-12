@@ -104,8 +104,8 @@ jobs:
         - "3.11"
       <<: *shared_mysql_setup
       install:
-        - pip install -r requirements-test.txt
         - pip install -e .
+        - pip install -e .[test]
       script:
         - pytest src/python/test
 
