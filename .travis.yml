@@ -93,19 +93,9 @@ jobs:
         - COVERALLS=true DB=mysql
       <<: *shared_mysql_setup
       install:
-        - pip install -r requirements-test.txt
         - pip install -e .
-      script:
-        - pytest src/python/test
+        - pip install -e .[test]
 
-    - name: "Python 3.11"
-      language: python
-      python:
-        - "3.11"
-      <<: *shared_mysql_setup
-      install:
-        - pip install -r requirements-test.txt
-        - pip install -e .
       script:
         - pytest src/python/test
 
