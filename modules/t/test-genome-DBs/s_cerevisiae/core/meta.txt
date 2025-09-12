@@ -1,5 +1,5 @@
 1	\N	schema_type	core
-2	\N	schema_version	115
+2	\N	schema_version	116
 3	\N	patch	patch_98_99_a.sql|schema_version
 4	\N	patch	patch_60_61_b.sql|create_seq_region_synonym_table
 5	\N	patch	patch_60_61_c.sql|rejig_object_xref_indexes
@@ -196,3 +196,4 @@
 685	\N	patch	patch_112_113_b.sql|Ensure meta_value is not null
 686	\N	patch	patch_113_114_a.sql|schema_version
 687	\N	patch	patch_114_115_a.sql|schema_version
+688	\N	patch	patch_115_116_a.sql|schema_version
