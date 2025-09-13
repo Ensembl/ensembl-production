@@ -78,6 +78,23 @@ def lines_break(full, prefix):
     result = result + line[:-1]
     return result
 
+@udf(returnType=StringType())
+def split_intro(full, prefix):
+    result = ""
+    full = "\n"+ prefix + full
+    full = full.split(" ")
+    line = ""
+    line_length = 83
+    for word in full:
+        word = word + " " 
+        if((len(line) + len(word)) < line_length):
+            line = line + word
+        else:
+            result = result + line
+            line = "\n"+ prefix + word
+    result = result + line[:-1]
+    return result
+
 #Split coordinates to lines
 @udf(returnType=StringType())
 def split_coordinates(coordinates):
@@ -305,8 +322,8 @@ mRNA = mRNA.withColumn("gene_id_note", concat(lit("FT                   /gene=\"
 
 mRNA = mRNA.withColumn("feature_id", concat(lit("FT                   /standard_name=\""), "transcript_stable_id", lit("."), "transcript_version",lit("\"")))
 
-miscRNA = mRNA.filter((mRNA.biotype != "protein_coding") & (mRNA.biotype!="IG_V_gene") & (mRNA.biotype!="IG_C_gene")& (mRNA.biotype!="IG_J_gene"))
-mRNA = mRNA.filter((mRNA.biotype == "protein_coding") | (mRNA.biotype=="IG_V_gene") | (mRNA.biotype=="IG_C_gene") | (mRNA.biotype=="IG_J_gene"))
+miscRNA = mRNA.filter((mRNA.biotype != "protein_coding") & (mRNA.biotype!="IG_V_gene") & (mRNA.biotype!="IG_C_gene")& (mRNA.biotype!="IG_J_gene") & (mRNA.biotype!="TR_V_gene")  )  
+mRNA = mRNA.filter((mRNA.biotype == "protein_coding") | (mRNA.biotype=="IG_V_gene") | (mRNA.biotype=="IG_C_gene") | (mRNA.biotype=="IG_J_gene") | (mRNA.biotype=="TR_V_gene"))
 
 mRNA = mRNA.withColumn("coordinates", concat(lit("mRNA            "), "coordinates"))
 mRNA = mRNA.withColumn("coordinates", split_coordinates("coordinates"))
@@ -374,8 +391,9 @@ exon = exon.withColumn("feature_id", lit(""))
 intro = region.withColumn("coordinates", concat(lit("ID   "), "sr_name", lit("    standard; DNA; HTG; "), "length", lit(" BP.\nXX\n")))
 intro = intro.withColumn("gene_id_note", concat(lit("AC   "), "name", lit(":"), "version", lit(":"), "sr_name", lit(":"), lit("1"), lit(":"), "length", lit(":"), "rank"))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nSV   "), "sr_name", lit("."), "version"))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y'))))
-intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDE   "), lit(scientific_name + " "), "name", lit(" "), "sr_name",lit(" "), "version", lit("full sequence 1.."), "length", lit("\nDE   annotated by Ensembl")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nDT   "), lit(datetime.today().strftime('%d-%b-%Y')), lit("\nXX")))
+intro = intro.withColumn("tmp_note", concat(lit(scientific_name + " "), "name", lit(" "), "sr_name",lit(" "), "version", lit("full sequence 1.."), "length", lit(" annotated by Ensembl")))
+intro = intro.withColumn("gene_id_note", concat("gene_id_note", split_intro("tmp_note", lit("DE   ")))).drop("tmp_note")
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit("\nXX\nKW   .\nXX"), lit("\nOS   "), lit(scientific_name + " (" + common_name + ")")))
 intro = intro.withColumn("gene_id_note", concat("gene_id_note", lit(lines_break(classification, "OC   "))))
 intro = intro.withColumn("feature_id", concat(lit("XX\nCC   This sequence was annotated by Ensembl (www.ensembl.org). Please visit the\nCC   Ensembl or EnsemblGenomes web site, http://www.ensembl.org/ or\nCC   http://www.ensemblgenomes.org/ for more information.\nXX\nCC   All feature locations are relative to the first (5') base of the sequence\nCC   in this file.  The sequence presented is always the forward strand of the\nCC   assembly. Features that lie outside of the sequence contained in this file\nCC   have clonal location coordinates in the format: <clone\nCC   accession>.<version>:<start>..<end>\nXX\nCC   The /gene indicates a unique id for a gene, /note=\"transcript_id=...\" a\nCC   unique id for a transcript, /protein_id a unique id for a peptide and\nCC   note=\"exon_id=...\" a unique id for an exon. These ids are maintained\nCC   wherever possible between versions.\nXX\nCC   All the exons and transcripts in Ensembl are confirmed by similarity to\nCC   either protein or cDNA sequences.\nXX"), lit("")))
