@@ -71,8 +71,7 @@ division = channel.of(params.division.split(","))
 
 Channel.of(databases) \
 | DumpFastaFiles \
-| DumpGFF3_GTFFiles \
-| DumpEMBLFiles
+| (DumpGFF3_GTFFiles & DumpEMBLFiles)
   
 //clean the empty log files  
  

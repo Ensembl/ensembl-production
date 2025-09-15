@@ -234,39 +234,54 @@ class TranscriptSparkService:
          translated_seq = self.translatable_seq(db, user, password, exons_df, keep_seq)
          @udf(returnType=StringType())
          def translate_sequence(raw_sequence, codon_table, phase):
-             
+             #Normalize phase and codon table
+             table_c = int(codon_table)
+             phase = (3 - phase)
+             if(phase > 2):
+                phase=0
+
              if ((raw_sequence is None) or (len(raw_sequence) == 0)):
                  return
-             seq = Seq(raw_sequence)
-             try:
-                sequence = seq.translate(table = int(codon_table), cds = True)
-                sequence = "!" + sequence + "*"
-             except Exception as e:     
-                sequence = seq.translate(table = int(codon_table))
-                error = str(e)
-                if(error.find("start codon") == -1):
-                    sequence = "!" + sequence
-                if((len(raw_sequence)%3 != 0) and (error.find("start codon") != -1) and (len(raw_sequence)%3 == phase)):
-                    stop_codon = Seq(raw_sequence[-3:])
-                    stop_codon = stop_codon.translate()
-                    if(stop_codon == "*"):
-                        sequence = str(sequence)
-                        sequence = sequence[:-1] + "*"
-                        return sequence
-             sequence = str(sequence)
 
+             if(phase == 0):
+                seq = Seq(raw_sequence)
+                try:
+                    sequence = seq.translate(table=table_c, cds = True)
+                    #Bio python translation wuth cds parameter automatically, it search for start codon
+                    #Length dividable by three and stop codon, if all of this is present - translation is successful
+                    #So we add marks for start and stop codons
+                    sequence = "!" + sequence + "*"
+                except Exception as e:
+                    #We are doing translation concidering is starts with zero frame, normal biopython translation,
+                    #Stop codon if found will be marked by biopyhton with *
+                    sequence = seq.translate(table=table_c)
+                    error = str(e)
+                    if(error.find("start codon") == -1):
+                        #If CDS translation failed but not for the reason start not found - we add start mark
+                        sequence = "!" + sequence
+             else:
+                #When phase is not 0, it is prefixed with N for missing letters,
+                #We need to cut this incomplete codon and obviously no start codon - as no coplete start frame
+                raw_sequence = raw_sequence[3:]
+                seq = Seq(raw_sequence)
+                #We translate normally with biopython, starting with zero frame
+                sequence = seq.translate(table=table_c) 
+                #Sequnce is prefixed with X marking incomplete codon
+                sequence =  "X" + sequence
+             sequence = str(sequence)
              return sequence
 
          #We need to have in DF genomic coordinates of the translation
          translatable_exons = self.translatable_exons(db, user, password,
                          exons_df, None, False, True)
-
+         #This piece of code is very bad, need ref. Getting whole bunch translatable exons for tl_start
+         #TODO
          translated_sequence = \
          translated_seq.withColumn("sequence",
                                      translate_sequence("sequence", "codon_table", "phase")).drop("seq_region_end", "seq_region_start")
+        
          #Join by exon_id
          translated_sequence = translated_sequence.join(translatable_exons.select("transcript_stable_id", "tl_start", "tl_end", "tl_version").dropDuplicates(), on = ["transcript_stable_id"])
-                      
          #Apply translation edits - selenocyst is translation
          edit_codes = ['initial_met', '_selenocysteine', 'amino_acid_sub',
                       '_stop_codon_rt']
@@ -347,7 +362,7 @@ class TranscriptSparkService:
                                                    "seq_region_end", "exon_id"))
 
             #print(region + " " + str(count))
-            #Mark translation start and end
+            #Mark translation start and end   
 
             transcripts_with_seq =\
             exons_df_tmp.groupBy("transcript_id")\
@@ -356,31 +371,41 @@ class TranscriptSparkService:
                     concat_ws(" ", expr("""transform(sort_array(collect_list(struct(rank,length)),True), x -> x.length)"""))\
                     .alias("length"))\
                     .drop("version", "created_date", "modified_date", "stable_id")\
-                    .join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"])\
+                    .join(translation_df.withColumn("translation_stable_id", translation_df.stable_id), on=["transcript_id"], how="left_outer")\
                     .drop("version", "seq_region_strand", "created_date", "modified_date", "stable_id")\
                     .join(transcripts.withColumnRenamed("biotype", "transcript_biotype")\
                         .withColumnRenamed("desription", "transcript_desription")\
                         .withColumnRenamed("stable_id", "transcript_stable_id"), on=["transcript_id"])\
                     .join(regions.select("seq_region_id", "name").withColumnRenamed("name", "seq_region_name"), on=["seq_region_id"])
-                    
+
             transcripts_with_seq =\
             transcripts_with_seq.withColumn("sequence", regexp_replace("sequence", " ", ""))\
                 .withColumn("codon_table", lit(codon_table))
 
             transcripts_with_seq =\
             transcripts_with_seq.join(exons_df_tmp.select("exon_id", "phase"),
-                                      on=[transcripts_with_seq.start_exon_id==exons_df.exon_id]).dropDuplicates()
+                                      on=[transcripts_with_seq.start_exon_id==exons_df.exon_id], how="left_outer").dropDuplicates()
             transcripts_with_seq =\
             transcripts_with_seq.drop("exon_id").join(exons_df_tmp.select("exon_id", "end_phase"),
-                                      on=[transcripts_with_seq.end_exon_id==exons_df.exon_id]).dropDuplicates()
+                                      on=[transcripts_with_seq.end_exon_id==exons_df.exon_id], how="left_outer").dropDuplicates()
+
 
             if (result == None):
                 result = transcripts_with_seq
             else:
                 result = result.union(transcripts_with_seq)
+
+        transcripts_with_seq = result
+        #Apply transcript edits
+
+        edit_codes = ['_rna_edit']
+        seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
+        transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
+        transcripts_with_seq.write.orc("sequence_cdna", mode="overwrite")
+        transcripts_with_seq = transcripts_with_seq.filter(transcripts_with_seq.translation_stable_id.isNotNull())
         #Translation start and end relative to seq start
         transcripts_with_seq =\
-        result.withColumn("translation_region_start",
+        transcripts_with_seq.withColumn("translation_region_start",
                                         get_translation_start("length",
                                                               "seq_start",
                                                               "start_exon_id"))\
@@ -389,11 +414,6 @@ class TranscriptSparkService:
                                                             "seq_end",
                                                             "end_exon_id"))
         
-        #Apply transcript edits
-
-        edit_codes = ['_rna_edit']
-        seq_edits = self._load_seq_edits_fs(db, user, password, edit_codes, tmp_folder)
-        transcripts_with_seq = self.apply_edits(transcripts_with_seq, seq_edits)
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts_with_seq,
                                             "transcripts_with_seq", tmp_folder)
@@ -405,6 +425,7 @@ class TranscriptSparkService:
     def translatable_exons(self, db: str, user: str, password: str,
                          exons_df=None, tmp_folder=None, utr=True, edge_only = False, mRNA = False):
 
+        #Return value is -1 for "before translation" (5prime utr) 1 for "after translation" (5prime utr) and 0 is inside translation
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
             if (tl_start < tl_end):
@@ -460,7 +481,7 @@ class TranscriptSparkService:
                 return "three_prime_UTR"
             return "five_prime_UTR"
 
-        #Phase of the exon shotuld be . of it is -1
+        #Phase of the exon should be . of it is -1
         @udf(returnType=StringType())
         def map_phase(phase):
             if(phase > 2):
@@ -492,9 +513,8 @@ class TranscriptSparkService:
         
         #Determine translatabe exons
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
-        
+  
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
-
         result=translatables.filter("translatable = 0")
         #Uncroped for mRNA
         if (mRNA == True):
@@ -512,7 +532,7 @@ class TranscriptSparkService:
         result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",
                                           "seq_region_strand", "phase","seq_region_id", "exon_stable_id", "transcript_stable_id", "version",  "stable_id", "tl_version", "rank", "source", "gene_id")
-        #If case we need croped part of transcript
+        #If case we need croped part of transcript, beyond cds
         if (utr):
             result = result.withColumn("type", lit("CDS")).select("exon_id", "type",
                                        "seq_region_start", "seq_region_end",

@@ -181,10 +181,10 @@ class ExonSparkService:
                     print(seq_id)
                     continue
                 results = results[0]
-                # Here is a main spark algorythm to concat dna sequnce from
+                # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
                 if (results == None):
-                    contunue
+                    continue
                 sequence_raw = results + results
                 #Reverse compliment sequence for -1 strand
                 @udf(returnType=StringType())
