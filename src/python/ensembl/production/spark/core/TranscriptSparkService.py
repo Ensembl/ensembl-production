@@ -425,19 +425,20 @@ class TranscriptSparkService:
     def translatable_exons(self, db: str, user: str, password: str,
                          exons_df=None, tmp_folder=None, utr=True, edge_only = False, mRNA = False):
 
+        #Return value is -1 for "before translation" (5prime utr) 1 for "after translation" (5prime utr) and 0 is inside translation
         @udf(returnType=IntegerType())
         def translatable(start, end, tl_start, tl_end):
             if (tl_start < tl_end):
                 if(start >= tl_start and start <= tl_end or end >= tl_start and end <= tl_end or tl_start > start and tl_end < end):
-                    return 1
+                    return 0
                 if(end < tl_start):
                     return(-1)
             if (tl_start > tl_end):
                 if(start <= tl_start and start >= tl_end or end <= tl_start and end >= tl_end or tl_start > start and tl_end < end):
-                    return 1
+                    return 0
                 if(start > tl_start):
                     return -1
-            return 0
+            return 1
 
         @udf(returnType=IntegerType())
         def tl_start(start, end, tl_start, tl_end,  strand):
@@ -514,7 +515,7 @@ class TranscriptSparkService:
         exons_df = exons_df.join(transcripts_df, on=["transcript_id"])
   
         translatables = exons_df.withColumn("translatable", translatable("seq_region_start", "seq_region_end", "tl_start", "tl_end"))
-        result=translatables.filter("translatable = 1")
+        result=translatables.filter("translatable = 0")
         #Uncroped for mRNA
         if (mRNA == True):
             return result
