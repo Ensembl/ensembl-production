@@ -66,13 +66,12 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = "abramis_brama_gca963993115v1_core_110_1"
+databases = "abramis_brama_gca022829085v1_core_110_1"
 division = channel.of(params.division.split(","))
 
 Channel.of(databases) \
 | DumpFastaFiles \
-| DumpGFF3_GTFFiles \
-| DumpEMBLFiles
+| (DumpGFF3_GTFFiles & DumpEMBLFiles)
   
 //clean the empty log files  
  

@@ -80,20 +80,7 @@ def lines_break(full, prefix):
 
 @udf(returnType=StringType())
 def split_intro(full, prefix):
-    result = ""
-    full = "\n"+ prefix + full
-    full = full.split(" ")
-    line = ""
-    line_length = 83
-    for word in full:
-        word = word + " " 
-        if((len(line) + len(word)) < line_length):
-            line = line + word
-        else:
-            result = result + line
-            line = "\n"+ prefix + word
-    result = result + line[:-1]
-    return result
+    return lines_break(full, prefix)
 
 #Split coordinates to lines
 @udf(returnType=StringType())
@@ -378,7 +365,8 @@ cds = cds.withColumn("feature_id", concat("feature_id", "xref_tmp", lit(""))).dr
 
 cds = cds.withColumn("sequence", split_sequence("sequence"))
 cds = cds.withColumn("feature_id", concat("feature_id", "sequence"))
-
+#About wierd column names: we must have some column names to maintain the union order, but there are very different features and impossible
+# to put names with correct meaning, so names of the columns are inherited from major features and spread for other features
 exon = exons.join(transcripts.withColumnRenamed("stable_id", "transcript_stable_id").select("transcript_id", "transcript_stable_id", "gene_id"), on = ["transcript_id"])\
     .join(genes.withColumnRenamed("stable_id", "gene_stable_id").select("gene_id", "gene_stable_id"), on = ["gene_id"]).dropDuplicates(["stable_id"])
 
@@ -442,7 +430,6 @@ f = open(file_path, "a")
 #Write features       
 f_cvs = open(feature_file)
 file_line = f_cvs.readline()
-print("WRITE FILE....")
 while file_line:
     if(len(file_line) < 2):
         file_line = f_cvs.readline()
@@ -454,6 +441,5 @@ while file_line:
     f.write(file_line)
 
     file_line = f_cvs.readline()
-print("FILE IS DONE!")
 f_cvs.close()
 f.close()
