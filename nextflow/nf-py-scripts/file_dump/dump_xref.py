@@ -58,96 +58,184 @@ spark_session.sparkContext.setLogLevel("ERROR")
 
 
 #Get genes information
-translation_xref = spark_session.read\
+
+gene_xref = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("query", "select t.stable_id as protein_stable_id, t.transcript_id, ox.ensembl_id, x.* from translation t left join (select * from object_xref where ensembl_object_type=\"Translation\") ox on t.translation_id = ox.ensembl_id join xref x on x.xref_id = ox.xref_id")\
+            .option("query", """select
+      g.stable_id as gene_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, "") as description,
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as source,
+      coalesce(ix.ensembl_identity, "") as ensembl_identity,
+      coalesce(ix.xref_identity, "") as xref_identity
+    from
+      gene g inner join
+      object_xref ox on g.gene_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Gene" and
+      e.db_display_name <> "GO"
+    group by
+      g.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity""")\
             .option("user", username)\
             .option("password", pwd)\
-            .load()
+            .load().withColumn("transcript_stable_id", lit("")).withColumn("protein_stable_id", lit(""))
 
 transcript_xref = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("query", "select t.stable_id as transcript_stable_id, t.canonical_translation_id, t.transcript_id, t.gene_id, ox.ensembl_id, x.* from transcript t left join (select * from object_xref where ensembl_object_type=\"Transcript\") ox on t.transcript_id = ox.ensembl_id join xref x on x.xref_id = ox.xref_id")\
+            .option("query", """
+select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      coalesce(tn.stable_id, "") as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, "") as description,
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as source,
+      coalesce(ix.ensembl_identity, "") as ensembl_identity,
+      coalesce(ix.xref_identity, "") as xref_identity
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on t.transcript_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Transcript" and
+      e.db_display_name <> "GO"
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity
+""")\
             .option("user", username)\
             .option("password", pwd)\
             .load()
-gene_xref = spark_session.read\
+
+
+translation_xref = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("query", "select g.stable_id as gene_stable_id, g.gene_id, ox.ensembl_id, x.* from gene g right join (select * from object_xref where object_xref.ensembl_object_type=\"Gene\") ox on g.gene_id = ox.ensembl_id left join xref x on x.xref_id = ox.xref_id")\
+            .option("query", """
+select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      tn.stable_id as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, "") as description,
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(e2.db_display_name, ":", x2.dbprimary_acc separator'; '), "") as source,
+      coalesce(ix.ensembl_identity, "") as ensembl_identity,
+      coalesce(ix.xref_identity, "") as xref_identity
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on tn.translation_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id left outer join
+      identity_xref ix on ox.object_xref_id = ix.object_xref_id left outer join
+      dependent_xref dx on ox.object_xref_id = dx.object_xref_id left outer join
+      xref x2 on dx.master_xref_id = x2.xref_id left outer join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Translation" and
+      e.db_display_name <> "GO"
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name,
+      ix.ensembl_identity,
+      ix.xref_identity
+""")\
             .option("user", username)\
             .option("password", pwd)\
             .load()
 
-gene = spark_session.read\
+go_xref = spark_session.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", url)\
-            .option("query", "select gene_id, stable_id as gene_stable_id from gene")\
+            .option("query", """
+select
+      g.stable_id as gene_stable_id,
+      t.stable_id as transcript_stable_id,
+      coalesce(tn.stable_id, "") as protein_stable_id,
+      x.dbprimary_acc as xref_id,
+      x.display_label as xref_label,
+      coalesce(x.description, "") as description,
+      e.db_display_name as db_name,
+      x.info_type,
+      coalesce(group_concat(distinct replace(e2.db_display_name, " generic accession number (TrEMBL or SwissProt not differentiated)", ""), ":", x2.dbprimary_acc, ":", linkage_type separator "; "), "") as source
+    from
+      gene g inner join
+      transcript t using (gene_id) left outer join
+      translation tn using (transcript_id) inner join
+      object_xref ox on t.transcript_id = ox.ensembl_id inner join
+      xref x on ox.xref_id = x.xref_id inner join
+      external_db e on x.external_db_id = e.external_db_id inner join
+      ontology_xref ontx on ox.object_xref_id = ontx.object_xref_id inner join
+      xref x2 on ontx.source_xref_id = x2.xref_id inner join
+      external_db e2 on x2.external_db_id = e2.external_db_id
+    where
+      ox.ensembl_object_type = "Transcript" and
+      e.db_display_name = "GO" 
+    group by
+      g.stable_id,
+      t.stable_id,
+      tn.stable_id,
+      x.dbprimary_acc,
+      x.display_label,
+      x.description,
+      e.db_display_name
+""")\
             .option("user", username)\
             .option("password", pwd)\
-            .load()
+            .load()\
+            .withColumn("ensembl_identity", lit(""))\
+            .withColumn("xref_identity", lit(""))\
 
-transcript = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select gene_id, transcript_id, stable_id as transcript_stable_id from transcript")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()
-
-translation = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select translation_id as canonical_translation_id, stable_id as protein_stable_id from translation")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()
-
-transcript = transcript.join(gene, on = ["gene_id"])
-
-external_db = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select external_db_id, db_display_name as db_name from external_db")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()
-
-dependent_xref = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select * from dependent_xref")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()
-
-transcript_xref = transcript_xref.join(translation, on = ["canonical_translation_id"], how = "left_outer").drop("canonical_translation_id").join(gene.select("gene_id", "gene_stable_id"), on = ["gene_id"]).drop("gene_id")
-translation_xref = translation_xref.join(transcript.select("gene_stable_id", "transcript_stable_id", "transcript_id"), on = ["transcript_id"]).drop("transcript_id")
-transcript_xref = transcript_xref.drop("transcript_id")
-
-gene_xref = gene_xref.withColumn("protein_stable_id", lit(""))\
-    .withColumn("transcript_stable_id", lit("")).drop("gene_id")
-xref = gene_xref.unionByName(transcript_xref).unionByName(translation_xref).dropDuplicates()\
-    .withColumnRenamed("display_label", "xref_label")\
-    .join(external_db, on = ["external_db_id"], how = "left_outer")
-xref = xref.join(dependent_xref, on = [xref.xref_id==dependent_xref.dependent_xref_id], how = "left_outer")
-xref.filter("protein_stable_id=\"ENSABMP00000000024\"").show()
-xref_tmp = xref.withColumn("source", concat("db_name", lit(":"), "xref_label")).select("xref_id", "source")
-xref = xref.join(xref_tmp, on = [xref.master_xref_id==xref_tmp.xref_id], how = "left_outer").drop("xref_id")
-
-xref = xref.withColumnRenamed("dbprimary_acc", "xref_id")
-    
-xref = xref.select("gene_stable_id", "transcript_stable_id", "protein_stable_id", "xref_id", "xref_label", "description", "db_name", "info_type", "source")
+xref = gene_xref.unionByName(transcript_xref).unionByName(translation_xref).unionByName(go_xref)
+xref = xref.select("gene_stable_id", "transcript_stable_id", "protein_stable_id", "xref_id",\
+                    "xref_label", "description", "db_name", "info_type", "source", "ensembl_identity", "xref_identity")
 
 #Write to fasta
 xref.repartition(1)\
@@ -155,6 +243,7 @@ xref.repartition(1)\
     .mode('overwrite')\
     .option("header", True)\
     .option("delimiter", " \t")\
+    .option("escapeQuotes", True)\
     .option("emptyValue", '')\
     .csv("./xref_csv")
 
