@@ -34,6 +34,8 @@ params.password           = ""
 include { DumpFastaFiles } from './genset_fasta.nf'
 include { DumpGFF3_GTFFiles} from './gff3_gtf.nf'
 include { DumpEMBLFiles} from './embl.nf'
+include { DumpXrefFiles} from './xref.nf'
+
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
 // Validate input parameters
@@ -72,6 +74,8 @@ division = channel.of(params.division.split(","))
 Channel.of(databases) \
 | DumpFastaFiles \
 | (DumpGFF3_GTFFiles & DumpEMBLFiles)
+
+Channel.of(databases) | DumpXrefFiles
   
 //clean the empty log files  
  
