@@ -35,6 +35,7 @@ include { DumpFastaFiles } from './genset_fasta.nf'
 include { DumpGFF3_GTFFiles} from './gff3_gtf.nf'
 include { DumpEMBLFiles} from './embl.nf'
 include { DumpXrefFiles} from './xref.nf'
+include { DumpGenomeFiles} from './genome_fasta.nf'
 
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
@@ -71,11 +72,12 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
 databases = "abramis_brama_gca022829085v1_core_110_1"
 division = channel.of(params.division.split(","))
 
-Channel.of(databases) \
-| DumpFastaFiles \
-| (DumpGFF3_GTFFiles & DumpEMBLFiles)
+//Channel.of(databases) \
+//| DumpFastaFiles \
+//| (DumpGFF3_GTFFiles & DumpEMBLFiles)
 
-Channel.of(databases) | DumpXrefFiles
+//Channel.of(databases) | DumpXrefFiles
+Channel.of(databases) | DumpGenomeFiles
   
 //clean the empty log files  
  

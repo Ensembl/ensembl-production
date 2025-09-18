@@ -21,8 +21,13 @@ pwd = ""
 import sys
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from ensembl.production.spark.fileio.GFFService import GFFService
+from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
+from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
+from pyspark.sql.types import StringType
 import argparse
+import glob
+import shutil
+import os
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -43,12 +48,12 @@ sequence = args.sequence
 import os
 confi=SparkConf()
 confi.set("spark.executor.memory", "14g")
-confi.set("spark.driver.memory", "40g")
+confi.set("spark.driver.memory", "20g")
 confi.set("spark.cores.max", "4")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
 confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "15G")
+confi.set("spark.driver.maxResultSize", "10G")
 confi.set("spark.ui.showConsoleProgress", "false")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
@@ -56,9 +61,63 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
-#GTF and GFF dumps should be placed together as they are sharing the same features dump
-#GFF features dump is in separate GFF service - becouse it is feature creation, automatic annotation - not just dump
-gff_service = GFFService(spark_session)
-features = gff_service.dump_all_features(url, username, pwd)
-gff_service.write_gff("./test_gff.gff", features)
-gff_service.write_gtf("./test_gtf.gtf", features, sequence)
+# Genome fasta
+fastaDf = spark_session.read.orc(sequence)
+#The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
+
+@udf(returnType=StringType())
+def seq_split(seq):
+    line_length = 60
+    result = seq[:line_length]
+    i = line_length
+    while(i < len(seq)):
+        result = result + "\n" + seq[i:i+line_length]
+        i = i + line_length
+    return  result
+            
+#Getting cs version
+csversion = spark_session.read\
+            .format("jdbc")\
+            .option("driver", "com.mysql.cj.jdbc.Driver")\
+            .option("url", url)\
+            .option("query", "select cs.version from coord_system cs join seq_region sr on sr.coord_system_id = cs.coord_system_id right join transcript t on t.seq_region_id = sr.seq_region_id limit 1")\
+            .option("user", username)\
+            .option("password", pwd)\
+            .load()\
+            .collect()[0][0]
+
+#Unite pep header
+fastaDf = fastaDf.orderBy("seq_region_name")
+
+fastaDf = fastaDf\
+    .select(concat(lit(">"),col("seq_region_name"),\
+       lit(":"), col("seq_region_strand")).alias("info"),\
+       col("sequence"))
+
+fastaDf = fastaDf.select("info", "sequence")
+fastaDf = fastaDf.withColumn("sequence", seq_split("sequence"))
+#Write to fasta
+fastaDf.repartition(1)\
+    .write\
+    .mode('overwrite')\
+    .option("header", False)\
+    .option("escapeQuotes", False)\
+    .option("quote", "$")\
+    .option("delimiter", "\n")\
+    .csv("./fasta_genome")
+file = glob.glob("./fasta_genome" + "/part-0000*")[0]
+f_cvs = open(file)
+f = open("pep.fa", "a")
+file_line = f_cvs.readline()
+while file_line:
+    if(file_line[0:1] == "$"):
+        file_line = file_line[1:]
+    if(file_line[-2:-1] == "$"):
+        file_line = file_line[:-2] + "\n"
+    f.write(file_line)
+    file_line = f_cvs.readline()
+f_cvs.close()
+f.close()
+
+    
+    
