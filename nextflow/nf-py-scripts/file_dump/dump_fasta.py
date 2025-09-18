@@ -114,7 +114,7 @@ csversion = spark_session.read\
             .option("password", pwd)\
             .load()\
             .collect()[0][0]
-
+#TODO: extract path to config option 
 cdna_fasta = spark_session.read.orc("sequence_cdna")
 pep_fasta = fastaDf
 

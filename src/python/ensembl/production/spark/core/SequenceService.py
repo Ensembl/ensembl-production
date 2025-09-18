@@ -19,8 +19,8 @@ from pyspark.sql.types import *
 from sqlalchemy import text
 from pyspark.sql.functions import lit, udf
 from Bio.Seq import Seq
-from ensembl.production.spark.core.TranslationSparkService import TranslationSparkService
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
+
 __all__ = ['ExonSparkService']
 
 
@@ -95,5 +95,7 @@ class SequnceService:
                 region_sequence = [[seq_id, results]]
                 tmp_seq = self._spark.createDataFrame(region_sequence)
                 sequence = sequence.union(tmp_seq)
+
+        sequence.write.orc(path, mode="overwrite")
         return 0
  

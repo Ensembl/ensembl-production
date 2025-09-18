@@ -18,6 +18,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
+from ensembl.production.spark.core.SequenceService import SequenceService
 from pyspark.sql.types import StringType
 import argparse
 import glob
@@ -57,17 +58,11 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
 # Genome fasta
-fasta = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select d.sequence, sr.* from dna d join seq_region sr on sr.seq_region_id = d.seq_region_id")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()
-
+sequence_service = SequenceService(spark_session)
+genome_path = "genome_sequence"
+fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, genome_path)
 file_service = FileSystemSparkService(spark_session)
-fasta = file_service.write_df_to_orc(fasta, "genome", "")
+#fasta = file_service.write_df_to_orc(fasta, "genome", "")
 
 @udf(returnType=StringType())
 def seq_split(seq):
