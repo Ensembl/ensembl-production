@@ -113,7 +113,6 @@ class TranscriptSparkService:
         file_service = FileSystemSparkService(self._spark)
         return file_service.write_df_to_orc(transcripts, "transcripts", tmp_folder)
 
-
     """
     Apply edits to the list of transcripts or translations
     sequence must be  in dataFrame

@@ -26,16 +26,16 @@ process DumpGenomeFiles {
 
   output:
   stdout
-  path "pep.fa"
-  path "cdna.fa"
-  path "sequence"
+  path "hardmasked.fa"
+  path "softmasked.fa"
+  path "unmasked.fa"
 
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
 
     ${params.nf_py_script_path}file_dump/dump_genome.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name}  && echo -n ${db_name}
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name}  && echo -n ${db_name}
   """
 
 }

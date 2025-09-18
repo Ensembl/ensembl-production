@@ -72,48 +72,6 @@ class ExonSparkService:
         return file_service.write_df_to_orc(exons, "exons", tmp_folder)
 
     """
-    Dumps sequence to csv file, that allows to process sequence effictefly in
-    parralel. Reading from database is done with SQLALchemy, so conn is SQL
-    alchemy object. CSV file has two colums - coord and letter of
-    sequence. If folder is not empty - it is removedbefore dump.
-    """
-    def create_seq_file(self, conn, seq_id, max_overlap: int, tmp_folder=None):
-        # Select sequence from dna table
-        if (max_overlap == None):
-            max_overlap = 0
-        query = text("SELECT sequence FROM dna WHERE seq_region_id=" + seq_id)
-        exe = conn.execute(query)
-        results = exe.scalars().all()
-        if (tmp_folder == None):
-            tmp_folder = "tmp/"
-        # Create folder for csv file
-        shutil.rmtree(tmp_folder + seq_id, ignore_errors=True)
-        if (os.path.exists(tmp_folder) == False):
-            os.mkdir(tmp_folder)
-        os.mkdir(tmp_folder + seq_id)
-
-        # In loop write every letter in new row. Every row is coord and dna letter 
-        if (len(results) > 0):
-            f = open(tmp_folder + seq_id + "/" + seq_id + ".csv", "w")
-            i = 0
-            j = 0
-            f.write("coord" + "," + "letter" + "\n")
-            for c in results[0]:
-                i = i + 1
-                f.write(str(i) + "," + c + "\n")
-            # For circulatr regions we need additional quarter-circle coordinates
-            j = i
-            for c in results[0]:
-                j = j + 1
-                f.write(str(i) + "," + c + "\n")
-                if (j > max_overlap):
-                    break
-            f.close()
-            return i
-        return None
-
-
-    """
     Returns a dataframe of translatable exons from database.
     Database URL example: jdbc:mysql://localhost:3306/ensembl_core_human_110
     //MUST BE TESTED, in transcript service there is similar func, but more info, that is tested
@@ -135,7 +93,6 @@ class ExonSparkService:
                 .select(exons_raw["*"])\
                 .orderBy("transcript_id", "rank")
         return exons
-
 
     """
     Returns exons dataframe with sequence column
@@ -185,6 +142,7 @@ class ExonSparkService:
                 # corresponding letters
                 if (results == None):
                     continue
+                #For circular regions we just get seq repeated
                 sequence_raw = results + results
                 #Reverse compliment sequence for -1 strand
                 @udf(returnType=StringType())

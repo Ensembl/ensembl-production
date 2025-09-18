@@ -13,16 +13,11 @@
    limitations under the License.
 """
 
-url =\
-"jdbc:mysql://mysql-ens-core-prod-1:4524/mus_musculus_casteij_core_114_2"
-username = "ensro"
-pwd = ""
-
 import sys
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
-from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
+from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
 from pyspark.sql.types import StringType
 import argparse
 import glob
@@ -62,8 +57,17 @@ spark_session.sparkContext.setLogLevel("ERROR")
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
 # Genome fasta
-fastaDf = spark_session.read.orc(sequence)
-#The folder where we save sequence is spicies folder in the base dir, change here will require change seq folder for gtf dump
+fasta = spark_session.read\
+            .format("jdbc")\
+            .option("driver", "com.mysql.cj.jdbc.Driver")\
+            .option("url", url)\
+            .option("query", "select d.sequence, sr.* from dna d join seq_region sr on sr.seq_region_id = d.seq_region_id")\
+            .option("user", username)\
+            .option("password", pwd)\
+            .load()
+
+file_service = FileSystemSparkService(spark_session)
+fasta = file_service.write_df_to_orc(fasta, "genome", "")
 
 @udf(returnType=StringType())
 def seq_split(seq):
@@ -86,18 +90,19 @@ csversion = spark_session.read\
             .load()\
             .collect()[0][0]
 
-#Unite pep header
-fastaDf = fastaDf.orderBy("seq_region_name")
 
-fastaDf = fastaDf\
-    .select(concat(lit(">"),col("seq_region_name"),\
-       lit(":"), col("seq_region_strand")).alias("info"),\
+#Unite pep header
+fasta = fasta.orderBy("name")
+
+fasta = fasta\
+    .select(concat(lit(">"),col("name"),\
+       lit(":")).alias("info"),\
        col("sequence"))
 
-fastaDf = fastaDf.select("info", "sequence")
-fastaDf = fastaDf.withColumn("sequence", seq_split("sequence"))
+fasta = fasta.select("info", "sequence")
+fasta = fasta.withColumn("sequence", seq_split("sequence"))
 #Write to fasta
-fastaDf.repartition(1)\
+fasta.repartition(1)\
     .write\
     .mode('overwrite')\
     .option("header", False)\
@@ -107,7 +112,7 @@ fastaDf.repartition(1)\
     .csv("./fasta_genome")
 file = glob.glob("./fasta_genome" + "/part-0000*")[0]
 f_cvs = open(file)
-f = open("pep.fa", "a")
+f = open("genome.fa", "a")
 file_line = f_cvs.readline()
 while file_line:
     if(file_line[0:1] == "$"):
