@@ -24,7 +24,7 @@ from ensembl.production.spark.core.FileSystemSparkService import FileSystemSpark
 __all__ = ['ExonSparkService']
 
 
-class SequnceService:
+class SequenceService:
 
     __type = 'exon_spark_service'
 
@@ -53,7 +53,7 @@ class SequnceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select seq_region_id from transcript)tmp")\
+            .option("dbtable", "(select sr.seq_region_id from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank = 1)tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
@@ -63,7 +63,7 @@ class SequnceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select * from sequence where seq_region_id = -3)tmp")\
+            .option("dbtable", "(select * from dna where seq_region_id = -3)tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
@@ -75,27 +75,35 @@ class SequnceService:
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)
         result = None
+        file_path = "tmp_genome.csv"
         with engine.connect() as conn:
             data_collect = regions.collect()
             # looping thorough each row of the regions dataframe
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+            f = open(file_path, "a")
+
             for row in data_collect:
                 seq_id = str(row.seq_region_id)
+             
                 query = text("select group_concat(d.sequence) from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + seq_id + " order by a.asm_start")
                 exe = conn.execute(query)
                 results = exe.scalars().all()
-                if(len(results) == 0):
-                    print(seq_id)
+                if(results is None):
                     continue
                 results = results[0]
-                if(len(results) == 0):
-                    print(seq_id)
+                if(results is None):
                     continue
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
-                region_sequence = [[seq_id, results]]
-                tmp_seq = self._spark.createDataFrame(region_sequence)
-                sequence = sequence.union(tmp_seq)
 
+                f.write(seq_id + ";" + results + "\n")
+
+        f.close()
+        tmp_seq = self._spark.read.option("delimiter", ";").csv(file_path)
+        sequence = sequence.union(tmp_seq)
         sequence.write.orc(path, mode="overwrite")
-        return 0
+        return self._spark.read.orc(path)
  

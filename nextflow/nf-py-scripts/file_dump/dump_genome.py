@@ -61,63 +61,64 @@ spark_session.sparkContext.setLogLevel("ERROR")
 sequence_service = SequenceService(spark_session)
 genome_path = "genome_sequence"
 fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, genome_path)
+fasta_df.show(2, False)
+
 file_service = FileSystemSparkService(spark_session)
 #fasta = file_service.write_df_to_orc(fasta, "genome", "")
-
-@udf(returnType=StringType())
-def seq_split(seq):
-    line_length = 60
-    result = seq[:line_length]
-    i = line_length
-    while(i < len(seq)):
-        result = result + "\n" + seq[i:i+line_length]
-        i = i + line_length
-    return  result
+# @udf(returnType=StringType())
+# def seq_split(seq):
+#     line_length = 60
+#     result = seq[:line_length]
+#     i = line_length
+#     while(i < len(seq)):
+#         result = result + "\n" + seq[i:i+line_length]
+#         i = i + line_length
+#     return  result
             
-#Getting cs version
-csversion = spark_session.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", url)\
-            .option("query", "select cs.version from coord_system cs join seq_region sr on sr.coord_system_id = cs.coord_system_id right join transcript t on t.seq_region_id = sr.seq_region_id limit 1")\
-            .option("user", username)\
-            .option("password", pwd)\
-            .load()\
-            .collect()[0][0]
+# #Getting cs version
+# csversion = spark_session.read\
+#             .format("jdbc")\
+#             .option("driver", "com.mysql.cj.jdbc.Driver")\
+#             .option("url", url)\
+#             .option("query", "select cs.version from coord_system cs join seq_region sr on sr.coord_system_id = cs.coord_system_id right join transcript t on t.seq_region_id = sr.seq_region_id limit 1")\
+#             .option("user", username)\
+#             .option("password", pwd)\
+#             .load()\
+#             .collect()[0][0]
 
 
-#Unite pep header
-fasta = fasta.orderBy("name")
+# #Unite pep header
+# fasta_df = fasta_df.orderBy("name")
 
-fasta = fasta\
-    .select(concat(lit(">"),col("name"),\
-       lit(":")).alias("info"),\
-       col("sequence"))
+# fasta_df = fasta_df\
+#     .select(concat(lit(">"),col("name"),\
+#        lit(":")).alias("info"),\
+#        col("sequence"))
 
-fasta = fasta.select("info", "sequence")
-fasta = fasta.withColumn("sequence", seq_split("sequence"))
-#Write to fasta
-fasta.repartition(1)\
-    .write\
-    .mode('overwrite')\
-    .option("header", False)\
-    .option("escapeQuotes", False)\
-    .option("quote", "$")\
-    .option("delimiter", "\n")\
-    .csv("./fasta_genome")
-file = glob.glob("./fasta_genome" + "/part-0000*")[0]
-f_cvs = open(file)
-f = open("genome.fa", "a")
-file_line = f_cvs.readline()
-while file_line:
-    if(file_line[0:1] == "$"):
-        file_line = file_line[1:]
-    if(file_line[-2:-1] == "$"):
-        file_line = file_line[:-2] + "\n"
-    f.write(file_line)
-    file_line = f_cvs.readline()
-f_cvs.close()
-f.close()
+# fasta_df = fasta_df.select("info", "sequence")
+# fasta_df = fasta_df.withColumn("sequence", seq_split("sequence"))
+# #Write to fasta
+# fasta_df.repartition(1)\
+#     .write\
+#     .mode('overwrite')\
+#     .option("header", False)\
+#     .option("escapeQuotes", False)\
+#     .option("quote", "$")\
+#     .option("delimiter", "\n")\
+#     .csv("./fasta_genome")
+# file = glob.glob("./fasta_genome" + "/part-0000*")[0]
+# f_cvs = open(file)
+# f = open("genome.fa", "a")
+# file_line = f_cvs.readline()
+# while file_line:
+#     if(file_line[0:1] == "$"):
+#         file_line = file_line[1:]
+#     if(file_line[-2:-1] == "$"):
+#         file_line = file_line[:-2] + "\n"
+#     f.write(file_line)
+#     file_line = f_cvs.readline()
+# f_cvs.close()
+# f.close()
 
     
     
