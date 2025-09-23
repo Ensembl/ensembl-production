@@ -81,22 +81,31 @@ class ReactomeParser(BaseParser):
         transcript_reactome_source_id = self.get_source_id_for_source_name("reactome_transcript", xref_dbi)
         gene_reactome_source_id = self.get_source_id_for_source_name("reactome_gene", xref_dbi)
         reactome_uniprot_source_id = self.get_source_id_for_source_name("reactome", xref_dbi, "uniprot")
+        plant_pathway_source_id = self.get_source_id_for_source_name("plant_reactome_pathway", xref_dbi, "direct")
+        plant_reaction_source_id = self.get_source_id_for_source_name("plant_reactome_reaction", xref_dbi, "direct")
 
         if verbose:
             logging.info(f"Source_id = {reactome_source_id}")
             logging.info(f"Transcript_source_id = {transcript_reactome_source_id}")
             logging.info(f"Gene_source_id = {gene_reactome_source_id}")
             logging.info(f"Uniprot_source_id = {reactome_uniprot_source_id}")
+            logging.info(f"Plant_pathway_source_id = {plant_pathway_source_id}")
+            logging.info(f"Plant_reaction_source_id = {plant_reaction_source_id}")
 
         return {
             "reactome_source_id": reactome_source_id,
             "transcript_reactome_source_id": transcript_reactome_source_id,
             "gene_reactome_source_id": gene_reactome_source_id,
-            "reactome_uniprot_source_id": reactome_uniprot_source_id
+            "reactome_uniprot_source_id": reactome_uniprot_source_id,
+            "plant_pathway_source_id": plant_pathway_source_id,
+            "plant_reaction_source_id": plant_reaction_source_id
         }
 
     def process_file(self, xref_file: str, alias_to_species_id: Dict[str, int], source_ids: Dict[str, int], species_id: int, xref_dbi: Connection, verbose: bool) -> Tuple[int, int, int, int]:
         parsed_count, dep_count, direct_count, err_count = 0, 0, 0, 0
+
+        # Check if file is for plants
+        is_plants = bool(re.search("Plant", xref_file))
 
         # Get existing uniprot accessions
         is_uniprot = bool(re.search("UniProt", xref_file))
@@ -125,7 +134,10 @@ class ReactomeParser(BaseParser):
                     info_type = "DIRECT"
                     current_source_id = source_ids["reactome_source_id"]
 
-                    if is_uniprot:
+                    if is_plants:
+                        ensembl_type = "gene"
+                        current_source_id = source_ids["plant_reaction_source_id"] if re.search("Reactions", xref_file) else source_ids["plant_pathway_source_id"]
+                    elif is_uniprot:
                         if uniprot_accessions.get(ensembl_stable_id): # Add uniprot dependent xrefs
                             for xref in uniprot_accessions[ensembl_stable_id]:
                                 self.add_dependent_xref(
@@ -172,3 +184,4 @@ class ReactomeParser(BaseParser):
                         direct_count += 1
 
         return parsed_count, dep_count, direct_count, err_count
+

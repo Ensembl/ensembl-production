@@ -41,10 +41,14 @@ class ZFINDescParser(BaseParser):
             file_io.seek(0)
 
             csv_reader = csv.DictReader(file_io, delimiter="\t")
-            csv_reader.fieldnames = ["zfin", "desc", "label", "extra1", "extra2"]
+            csv_reader.fieldnames = ["zfin", "label", "desc", "type", "so"]
 
             # Read lines
             for line in csv_reader:
+                # Only interested in genes
+                if line["type"] != "GENE":
+                    continue
+                
                 # Skip if WITHDRAWN: this precedes both desc and label
                 if self.WITHDRAWN_PATTERN.search(line["label"]):
                     withdrawn += 1

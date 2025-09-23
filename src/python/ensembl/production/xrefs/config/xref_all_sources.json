@@ -66,6 +66,18 @@
       "priority" : 2
     },
     {
+      "name" : "Plant_Reactome_Pathway",
+      "parser" : "ReactomeParser",
+      "file" : "https://plantreactomedev.gramene.org/download/current/Ensembl2PlantReactome.txt",
+      "priority" : 1
+    },
+    {
+      "name" : "Plant_Reactome_Reaction",
+      "parser" : "ReactomeParser",
+      "file" : "https://plantreactomedev.gramene.org/download/current/Ensembl2PlantReactomeReactions.txt",
+      "priority" : 1
+    },
+    {
       "name" : "RefSeq_dna",
       "parser" : "RefSeqParser",
       "file" : "https://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.*rna.gbff.gz",

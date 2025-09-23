@@ -69,11 +69,12 @@ class ZFINParser(BaseParser):
             zfin_csv_reader = csv.DictReader(zfin_io, delimiter="\t", strict=True)
             zfin_csv_reader.fieldnames = ["zfin", "so", "label", "ensembl_id"]
             for line in zfin_csv_reader:
+                zfin_acc = line["zfin"]
                 xref_id = self.add_xref(
                     {
-                        "accession": line["zfin"],
+                        "accession": zfin_acc,
                         "label": line["label"],
-                        "description": descriptions.get(line["zfin"]),
+                        "description": descriptions.get(zfin_acc),
                         "source_id": direct_src_id,
                         "species_id": species_id,
                         "info_type": "DIRECT",
@@ -82,7 +83,7 @@ class ZFINParser(BaseParser):
                 )
                 self.add_direct_xref(xref_id, line["ensembl_id"], "gene", "", xref_dbi)
 
-                zfin[line["zfin"]] = True
+                zfin[zfin_acc] = True
                 counts["direct"] += 1
 
         # Process ZFIN to Uniprot mappings
@@ -94,14 +95,15 @@ class ZFINParser(BaseParser):
             swissprot_csv_reader = csv.DictReader(swissprot_io, delimiter="\t", strict=True)
             swissprot_csv_reader.fieldnames = ["zfin", "so", "label", "acc"]
             for line in swissprot_csv_reader:
-                if swiss.get(line["acc"]) and not zfin.get(line["zfin"]):
+                zfin_acc = line["zfin"]
+                if swiss.get(line["acc"]) and not zfin.get(zfin_acc):
                     for xref_id in swiss[line["acc"]]:
                         self.add_dependent_xref(
                             {
                                 "master_xref_id": xref_id,
-                                "accession": line["zfin"],
+                                "accession": zfin_acc,
                                 "label": line["label"],
-                                "description": descriptions.get(line["zfin"]),
+                                "description": descriptions.get(zfin_acc),
                                 "source_id": dependent_src_id,
                                 "species_id": species_id,
                             },
@@ -124,14 +126,15 @@ class ZFINParser(BaseParser):
                 if self.REFSEQ_ACC_PATTERN.search(line["acc"]):
                     continue
 
-                if refseq.get(line["acc"]) and not zfin.get(line["zfin"]):
+                zfin_acc = line["zfin"]
+                if refseq.get(line["acc"]) and not zfin.get(zfin_acc):
                     for xref_id in refseq[line["acc"]]:
                         self.add_dependent_xref(
                             {
                                 "master_xref_id": xref_id,
-                                "accession": line["zfin"],
+                                "accession": zfin_acc,
                                 "label": line["label"],
-                                "description": descriptions.get(line["zfin"]),
+                                "description": descriptions.get(zfin_acc),
                                 "source_id": dependent_src_id,
                                 "species_id": species_id,
                             },
@@ -178,3 +181,4 @@ class ZFINParser(BaseParser):
         )
 
         return 0, result_message
+
