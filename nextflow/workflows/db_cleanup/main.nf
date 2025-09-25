@@ -156,7 +156,8 @@ process VERIFY_SQL_DUMP {
     path("${db_name}.verify.sorted.txt")
 
     script:
-    def restore_db = "${db_name}_verify"
+    //def restore_db = "${db_name}_verify"
+    def restore_db = "${db_name}_v"
 
     """
     echo "Restoring DB: ${restore_db}"
@@ -303,4 +304,22 @@ workflow {
 
         // Output restored counts and compare counts for verification
         VERIFY_SQL_DUMP(GENERATE_SQL.out.sql_outputs)
+
+        // Conditionally drop only verified source DBs
+        if (params.drop_source_db) {
+            println "Dropping only source databases that were successfully verified..."
+
+            VERIFY_SQL_DUMP.out.verify_status
+                .filter { file -> 
+                    file.text.contains("VERIFY SUCCESS")
+                }
+                .map { file -> 
+                    def db_name = file.getName().replace('.verify_status.txt', '')
+                    tuple('NA', db_name)
+                }
+                .set { dbs_to_drop_ch }
+
+            dbs_to_drop_ch.view()  // Optional: to see what gets dropped
+            DROP_SOURCE_DB(dbs_to_drop_ch)
+}
 }

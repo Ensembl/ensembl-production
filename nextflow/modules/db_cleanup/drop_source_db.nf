@@ -26,9 +26,9 @@ process DROP_SOURCE_DB {
     """
     echo "Attempting to drop database ${db_name} if it exists..."
 
-    mysql -h $params.target_host -P $params.target_port -u $params.dba_user -p$params.dba_pwd -e "DROP DATABASE IF EXISTS ${db_name};"
+    #mysql -h $params.target_host -P $params.target_port -u $params.dba_user -p$params.dba_pwd -e "DROP DATABASE IF EXISTS ${db_name};"
 
-    echo "Drop operation complete."
+    #echo "Drop operation complete."
     """
 
 }
