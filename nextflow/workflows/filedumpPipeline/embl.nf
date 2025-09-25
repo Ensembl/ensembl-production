@@ -23,9 +23,6 @@ process DumpEMBLFiles {
 
   input: 
   each db_name
-  path gff 
-  path gtf
-  path sequence
 
   output:
   path "test.embl"
@@ -36,6 +33,6 @@ process DumpEMBLFiles {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/dump_embl.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${sequence} --password ${params.password}  --db ${params.server}/${db_name}
+   --username ${params.user} --sequence ${params.feature_seq_dir} --password ${params.password}  --db ${params.server}/${db_name}
   """
 }

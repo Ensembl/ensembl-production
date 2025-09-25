@@ -39,9 +39,7 @@ class SequenceService:
     """
     Creates a sequence on top level (features level) from contig level, write to file
     """
-    def build_top_level_seq(self, db: str, user: str, password: str, path: None):
-        if (path is None):
-            path = "genome_sequence"
+    def build_top_level_seq(self, db: str, user: str, password: str, path = ""):
         
         #Get all transcripts seq_regions
         #Select seq_region_id from transcript group by seq_region_id
@@ -49,6 +47,16 @@ class SequenceService:
         #For every transcript region find all assemblies on sequence level and concat
         #select group_concat(d.sequence) from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=131124 order by a.asm_start
 
+        is_primary = self._spark.read\
+            .format("jdbc")\
+            .option("driver", "com.mysql.cj.jdbc.Driver")\
+            .option("url", db)\
+            .option("dbtable", "(select * from seq_region where name = \"primary_assmebly\")tmp")\
+            .option("user", user)\
+            .option("password", password)\
+            .load().dropDuplicates().collect()
+
+        
         regions = self._spark.read\
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
@@ -57,53 +65,36 @@ class SequenceService:
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates()
-        
-        #Fetching schema
-        sequence = self._spark.read\
-            .format("jdbc")\
-            .option("driver", "com.mysql.cj.jdbc.Driver")\
-            .option("url", db)\
-            .option("dbtable", "(select * from dna where seq_region_id = -3)tmp")\
-            .option("user", user)\
-            .option("password", password)\
-            .load().dropDuplicates()
-        file_service = FileSystemSparkService(self._spark)
-        sequence = file_service.write_df_to_orc(sequence, "sequence_genome", "")
 
         url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         if (len(password) > 0):
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)
-        result = None
-        file_path = "tmp_genome.csv"
+
         with engine.connect() as conn:
             data_collect = regions.collect()
-            # looping thorough each row of the regions dataframe
-            try:
-                os.remove(file_path)
-            except OSError:
-                pass
-            f = open(file_path, "a")
-
             for row in data_collect:
                 seq_id = str(row.seq_region_id)
-             
-                query = text("select group_concat(d.sequence) from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + seq_id + " order by a.asm_start")
+                print (seq_id)               
+                query = text("select d.sequence from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + seq_id + " order by a.asm_start")
+                if (len(is_primary) > 0): # Than primary assembly exists
+                    query = text("select d.sequence from  dna where seq_region_id=" + seq_id)
                 exe = conn.execute(query)
                 results = exe.scalars().all()
                 if(results is None):
                     continue
-                results = results[0]
-                if(results is None):
-                    continue
+                result = ""
+                for res in results:
+                    result = result + res
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
-
-                f.write(seq_id + ";" + results + "\n")
-
-        f.close()
-        tmp_seq = self._spark.read.option("delimiter", ";").csv(file_path)
-        sequence = sequence.union(tmp_seq)
-        sequence.write.orc(path, mode="overwrite")
-        return self._spark.read.orc(path)
+                file_path = path + "/" + seq_id  + ".txt"             
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+                f = open(file_path, "a")
+                f.write(result)
+                f.close()
+        return 0
  

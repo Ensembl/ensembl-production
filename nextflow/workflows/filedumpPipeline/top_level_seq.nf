@@ -13,29 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-process DumpFastaFiles {
+process BuildTopLevelSequence {
 
-  debug 'ture'
+  debug 'true'
   label 'mem20GB'
-  tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
+  tag "${db_name[0]}-top_level_sequence_build"
 
-  input:
+  input: 
   each db_name
 
   output:
   stdout
-  path "pep.fa"
-  path "cdna.fa"
+  path "${db_name[1]}"
 
+  //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
+  //Dont change it until it complies with fasta dump
   """
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
-
-  ${params.nf_py_script_path}/file_dump/dump_fasta.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${params.feature_seq_dir} && echo -n ${db_name}
-
+  ${params.nf_py_script_path}file_dump/top_level_sequence_build.py --base_dir=${BASE_DIR}\
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name[0]} --output_dir ${db_name[0]}/${params.top_level_dir} && echo -n ${db_name[0]}
   """
-
 }

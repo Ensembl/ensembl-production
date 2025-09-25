@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-process DumpXrefFiles {
+process DumpXrefFile {
 
   debug 'ture'
   label 'mem20GB'

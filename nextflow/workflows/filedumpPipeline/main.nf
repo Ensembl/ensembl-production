@@ -29,13 +29,26 @@ params.output             = ""
 params.ftp_path           = ""
 params.base_dir           = "$BASE_DIR"
 params.password           = ""
+// Temp sequnce directories
+params.top_level_dir      = "top_level_seq"
+params.feature_seq_dir    = "sequence"
+// Files subfolders, inside spicies folder
+params.pep_fa_dir         = "fasta"
+params.cdna_fa_dir        = "fasta"
+params.gff_gtf_dir        = "fasta"
+params.embl_dir           = "fasta"
+params.xref_dir           = "fasta"
+params.genome_fa_dir      = "fasta"
+
 
 // Import Production Common Factories
 include { DumpFastaFiles } from './genset_fasta.nf'
-include { DumpGFF3_GTFFiles} from './gff3_gtf.nf'
-include { DumpEMBLFiles} from './embl.nf'
-include { DumpXrefFiles} from './xref.nf'
-include { DumpGenomeFiles} from './genome_fasta.nf'
+include { DumpGFF3_GTFFiles } from './gff3_gtf.nf'
+include { DumpEMBLFiles } from './embl.nf'
+include { DumpXrefFile } from './xref.nf'
+include { DumpGenomeFiles } from './genome_fasta.nf'
+include { BuildTopLevelSequence } from './top_level_seq.nf'
+include { BuildFeatureSequence } from './feature_seq.nf'
 
 include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
  
@@ -69,17 +82,21 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = "abramis_brama_gca022829085v1_core_110_1"
-division = channel.of(params.division.split(","))
+databases = (["homo_sapiens_core_116_38", "128/12/15"])
 
-//Channel.of(databases) \
-//| DumpFastaFiles \
-//| (DumpGFF3_GTFFiles & DumpEMBLFiles)
+// Folder for the species is different for every species, so we pass ot over the pipeline
+// Base ftp folder and subfolders for the sequence is the same for all the secies so we don't need to pass it or change
+// so it is set up in parameters that are availbale in all the workflows
+Channel.of(databases) \
+// We need to build top level seq in the first place, as multi coord dbs doesn't have seq on the top feature level
+| BuildTopLevelSequence //\
+// We can build feature seq  - now when we have sequnce at the same top level as features, 
+//and we can dump genome (top level) seq to files
+//| (BuilFeaturesSequence & DumpGenomeFiles) \
+// All other files need features to be build to dump feature level fasta, gtf gff and embl formats
+//| (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
 
 //Channel.of(databases) | DumpXrefFiles
-Channel.of(databases) | DumpGenomeFiles
-  
-//clean the empty log files  
  
 }
 
