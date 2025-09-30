@@ -27,7 +27,7 @@ import ijson
 import logging
 import os
 from sqlalchemy import func
-from ensembl.database import DBConnection
+from ensembl.utils.database import DBConnection
 from sqlalchemy import select, text
 from ensembl.core.models import Gene, Xref, SeqRegion, Analysis, AnalysisDescription, Biotype, AttribType, CoordSystem, \
     SeqRegionAttrib, Transcript, ExternalSynonym, Meta
