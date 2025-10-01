@@ -44,7 +44,7 @@ pwd = args.password
 username = args.username
 url = args.db
 base_dir = args.base_dir
-seq = args.sequence
+seq = args.sequence + "/sequence"
 
 import os
 confi=SparkConf()

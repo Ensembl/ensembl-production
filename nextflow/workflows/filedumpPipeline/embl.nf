@@ -18,11 +18,14 @@ process DumpEMBLFiles {
   debug 'true'
   label 'mem20GB'
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
+  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
   tag "${db_name}-dump_embl"
 
-  input: 
+  input:
   each db_name
+  path output_dir
+  path top_level_dir
+  path feature_dir
 
   output:
   path "test.embl"
@@ -33,6 +36,6 @@ process DumpEMBLFiles {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/dump_embl.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --sequence ${params.feature_seq_dir} --password ${params.password}  --db ${params.server}/${db_name}
+   --username ${params.user} --sequence ${feature_dir} --password ${params.password}  --db ${params.server}/${db_name}
   """
 }

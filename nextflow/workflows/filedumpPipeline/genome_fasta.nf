@@ -17,7 +17,7 @@ process DumpGenomeFiles {
 
   debug 'ture'
   label 'mem20GB'
-  tag "${db_name}-dump_fasta"
+  tag "${db_name}-dump_fasta_genome"
   errorStrategy 'finish'
   publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
 

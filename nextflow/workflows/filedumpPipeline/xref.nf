@@ -17,9 +17,9 @@ process DumpXrefFile {
 
   debug 'ture'
   label 'mem20GB'
-  tag "${db_name}-dump_fasta"
+  tag "${db_name[0]}-dump_xref"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}/", mode: 'copy'
+  publishDir "${params.ftp_path}/${db_name[1]}", mode: 'copy'
 
   input:
   each db_name
@@ -33,7 +33,7 @@ process DumpXrefFile {
   export SPARK_LOCAL_IP="127.0.0.1"
 
   ${params.nf_py_script_path}file_dump/dump_xref.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} && echo -n ${db_name}
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name[0]} && echo -n ${db_name}
 
   """
 
