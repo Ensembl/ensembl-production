@@ -51,7 +51,7 @@ class SequenceService:
             .format("jdbc")\
             .option("driver", "com.mysql.cj.jdbc.Driver")\
             .option("url", db)\
-            .option("dbtable", "(select * from seq_region where name = \"primary_assmebly\")tmp")\
+            .option("dbtable", "(select * from coord_system where name = \"primary_assembly\")tmp")\
             .option("user", user)\
             .option("password", password)\
             .load().dropDuplicates().collect()
@@ -70,15 +70,15 @@ class SequenceService:
         if (len(password) > 0):
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)
-
+        if not os.path.exists(path):
+            os.makedirs(path)
         with engine.connect() as conn:
             data_collect = regions.collect()
             for row in data_collect:
                 seq_id = str(row.seq_region_id)
-                print (seq_id)               
                 query = text("select d.sequence from assembly a join dna d on d.seq_region_id=a.cmp_seq_region_id where a.asm_seq_region_id=" + seq_id + " order by a.asm_start")
                 if (len(is_primary) > 0): # Than primary assembly exists
-                    query = text("select d.sequence from  dna where seq_region_id=" + seq_id)
+                    query = text("select sequence from dna where seq_region_id=" + seq_id)
                 exe = conn.execute(query)
                 results = exe.scalars().all()
                 if(results is None):
@@ -88,7 +88,7 @@ class SequenceService:
                     result = result + res
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
-                file_path = path + "/" + seq_id  + ".txt"             
+                file_path =  "" + path + "/" + seq_id  + ".txt"             
                 try:
                     os.remove(file_path)
                 except OSError:

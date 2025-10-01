@@ -25,6 +25,7 @@ parser.add_argument('--username', action="store", dest='username', default="ensr
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
 parser.add_argument('--output_dir', action="store", dest='output_dir', default="")
+parser.add_argument('--top_level_seq', action="store", dest='top_level_seq', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -33,24 +34,23 @@ username = args.username
 url = args.db
 base_dir = args.base_dir
 output_dir = args.output_dir
+top_level_seq = args.top_level_seq
 
-import os
 confi=SparkConf()
-confi.set("spark.executor.memory", "14g")
-confi.set("spark.driver.memory", "20g")
+confi.set("spark.executor.memory", "10g")
+confi.set("spark.driver.memory", "16g")
 confi.set("spark.cores.max", "4")
 confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
 confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "10G")
-confi.set("spark.ui.showConsoleProgress", "false")
+confi.set("spark.driver.maxResultSize", "8G")
+confi.set("spark.ui.showConsoleProgress", "true")
 spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
 spark_session.sparkContext.setLogLevel("ERROR")
 
 transcript_service = TranscriptSparkService(spark_session)
-fasta_df = transcript_service.translated_seq(url, username, pwd, None, True)
+fasta_df = transcript_service.translated_seq(url, username, pwd, None, True, top_level_seq)
 fasta_df.write.orc(output_dir, mode="overwrite")
-fasta_df.show(2, False)
+
 
 
     

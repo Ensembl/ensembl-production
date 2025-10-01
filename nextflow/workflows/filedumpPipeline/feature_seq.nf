@@ -19,14 +19,16 @@ process BuildFeatureSequence {
   label 'mem20GB'
   errorStrategy 'finish'
   tag "${db_name}-feature_sequence_build"
+  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
 
   input: 
   each db_name
-  path species_dir
+  path output_dir
+  path top_level_dir
 
   output:
-  ${db_name}
-  path "${species_dir}"
+  stdout
+  path "${output_dir}"
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump
@@ -34,6 +36,6 @@ process BuildFeatureSequence {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
   ${params.nf_py_script_path}file_dump/feature_sequence_build.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --output_dir ${db_name}/${params.sequence_dir}
+   --username ${params.user} --password ${params.password}  --db ${params.server}/${db_name} --top_level_seq ${top_level_dir} --output_dir ${db_name}/${params.feature_seq_dir} && echo -n ${db_name}
   """
 }
