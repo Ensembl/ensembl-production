@@ -82,8 +82,9 @@ if ( params.help || params.ftp_path == false || params.conf_file ==false ){
         """.stripIndent()
         exit 1
 }
-databases = (["tupaia_belangeri_core_116_1", "128/12/15"])
+databases = (["abramis_brama_gca022829085v1_core_110_1", "128/12/15"])
 // abramis_brama_gca022829085v1_core_110_1
+//tupaia_belangeri_core_116_1
 // Folder for the species is different for every species, so we pass ot over the pipeline
 // Base ftp folder and subfolders for the sequence is the same for all the secies so we don't need to pass it or change
 // so it is set up in parameters that are availbale in all the workflows
@@ -94,7 +95,7 @@ Channel.of(databases) \
 //and we can dump genome (top level) seq to files
 | (BuildFeatureSequence )//& DumpGenomeFiles) \
 // All other files need features to be build to dump feature level fasta, gtf gff and embl formats
-//| (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
+| (DumpFastaFiles) //& DumpGFF3_GTFFiles & DumpEMBLFiles)
 
 //Channel.of(databases) | DumpXrefFiles
  

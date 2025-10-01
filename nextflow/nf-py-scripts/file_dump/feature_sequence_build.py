@@ -49,9 +49,8 @@ spark_session.sparkContext.setLogLevel("ERROR")
 
 transcript_service = TranscriptSparkService(spark_session)
 fasta_df = transcript_service.translated_seq(url, username, pwd, None, True, top_level_seq)
-fasta_df.write.orc(output_dir, mode="overwrite")
-
-
+fasta_df.write.orc(output_dir + "/sequence", mode="overwrite")
+cdna_df = spark_session.read.orc("sequence_cdna").write.orc(output_dir + "/sequence_cdna", mode="overwrite")
 
     
     

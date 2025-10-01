@@ -19,10 +19,14 @@ process DumpFastaFiles {
   label 'mem20GB'
   tag "${db_name}-dump_fasta"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
+  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
 
   input:
   each db_name
+  path output_dir
+  path top_level_dir
+  path feature_dir
+
 
   output:
   stdout
@@ -34,7 +38,7 @@ process DumpFastaFiles {
   export SPARK_LOCAL_IP="127.0.0.1"
 
   ${params.nf_py_script_path}/file_dump/dump_fasta.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${params.feature_seq_dir} && echo -n ${db_name}
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${feature_dir} && echo -n ${db_name}
 
   """
 

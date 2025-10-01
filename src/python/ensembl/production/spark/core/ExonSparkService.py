@@ -162,7 +162,6 @@ class ExonSparkService:
                     tmp = tmp.union(exonsDF)
                 except: 
                     tmp = exonsDF
-                tmp.show(3)
                 tmp.write.save(path='tmp', format='orc', mode='overwrite')
 
         result = self._spark.read.orc('tmp')

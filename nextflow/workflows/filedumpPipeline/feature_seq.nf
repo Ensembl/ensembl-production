@@ -29,6 +29,9 @@ process BuildFeatureSequence {
   output:
   stdout
   path "${output_dir}"
+  path "${top_level_dir}"
+  path "${db_name}/${params.feature_seq_dir}"
+
 
   //Sequence parameter is a folder where fasta build saves sequence. So it is just database name folder in working dir
   //Dont change it until it complies with fasta dump

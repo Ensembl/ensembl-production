@@ -32,6 +32,7 @@ parser.add_argument('--password', action="store", dest='password', default="")
 parser.add_argument('--username', action="store", dest='username', default="ensro")
 parser.add_argument('--db', action="store", dest='db', default="")
 parser.add_argument('--base_dir', action="store", dest='base_dir', default="")
+parser.add_argument('--sequence', action="store", dest='sequence', default="")
 
 args = parser.parse_args()
 # Individual arguments can be accessed as attributes...
@@ -39,6 +40,7 @@ pwd = args.password
 username = args.username
 url = args.db
 base_dir = args.base_dir
+sequence = args.sequence
 
 import os
 confi=SparkConf()
@@ -66,6 +68,7 @@ def trimSeq(sequence):
             sequence = sequence[:-1]
         return sequence
 
+fastaDf = spark_session.read.orc(sequence + "/sequence")
 
 fastaDf = fastaDf.withColumn("sequence", trimSeq("sequence"))
 #Get genes information
@@ -109,7 +112,7 @@ csversion = spark_session.read\
             .load()\
             .collect()[0][0]
 #TODO: extract path to config option 
-cdna_fasta = spark_session.read.orc("sequence_cdna")
+cdna_fasta = spark_session.read.orc(sequence + "/sequence_cdna")
 pep_fasta = fastaDf
 
 #Unite pep header
