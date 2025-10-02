@@ -13,17 +13,17 @@
    limitations under the License.
 """
 
-import sys
-from pyspark import SparkConf
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, col, concat, length, udf, least, greatest
+url =\
+"jdbc:mysql://mysql-ens-core-prod-1:4524/mus_musculus_casteij_core_114_2"
+username = "ensro"
+pwd = ""
+
+from ensembl.production.spark.core.TranscriptSparkService import TranscriptSparkService
 from ensembl.production.spark.core.FileSystemSparkService import FileSystemSparkService
-from ensembl.production.spark.core.SequenceService import SequenceService
-from pyspark.sql.types import StringType
+import sqlalchemy
 import argparse
-import glob
-import shutil
-import os
+from sqlalchemy import text
+
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Fasta files dump')
@@ -42,83 +42,63 @@ base_dir = args.base_dir
 sequence = args.sequence
 
 import os
-confi=SparkConf()
-confi.set("spark.executor.memory", "14g")
-confi.set("spark.driver.memory", "20g")
-confi.set("spark.cores.max", "4")
-confi.set("spark.jars",  base_dir + "/ensembl-production/mysql-connector-j-8.1.0.jar")
-confi.set("spark.sql.autoBroadcastJoinThreshold", 7485760)
-confi.set("spark.driver.extraJavaOptions", "-XX:+HeapDumpOnOutOfMemoryError")
-confi.set("spark.driver.maxResultSize", "10G")
-confi.set("spark.ui.showConsoleProgress", "false")
-spark_session = SparkSession.builder.appName('ensembl.org').config(conf = confi).getOrCreate()
-spark_session.sparkContext.setLogLevel("ERROR")
 #need to create working dirs $output_dir, $timestamped_dir, $web_dir, $ftp_dir for each assembly (species) and data category
 # we assume the following data categories for core fd:  
 # 'GenomeDirectoryPaths','GenesetDirectoryPaths','RNASeqDirectoryPaths', 'HomologyDirectoryPaths'
 
-# Genome fasta
-sequence_service = SequenceService(spark_session)
-genome_path = "genome_sequence"
-fasta_df = sequence_service.build_top_level_seq(url,  username, pwd, genome_path)
-fasta_df.show(2, False)
+try:
+    os.remove("unmasked.fa")
+except OSError:
+    pass
 
-file_service = FileSystemSparkService(spark_session)
-#fasta = file_service.write_df_to_orc(fasta, "genome", "")
-# @udf(returnType=StringType())
-# def seq_split(seq):
-#     line_length = 60
-#     result = seq[:line_length]
-#     i = line_length
-#     while(i < len(seq)):
-#         result = result + "\n" + seq[i:i+line_length]
-#         i = i + line_length
-#     return  result
-            
-# #Getting cs version
-# csversion = spark_session.read\
-#             .format("jdbc")\
-#             .option("driver", "com.mysql.cj.jdbc.Driver")\
-#             .option("url", url)\
-#             .option("query", "select cs.version from coord_system cs join seq_region sr on sr.coord_system_id = cs.coord_system_id right join transcript t on t.seq_region_id = sr.seq_region_id limit 1")\
-#             .option("user", username)\
-#             .option("password", pwd)\
-#             .load()\
-#             .collect()[0][0]
+try:
+    os.remove("softmasked.fa")
+except OSError:
+    pass
 
+try:
+    os.remove("hardmasked.fa")
+except OSError:
+    pass
 
-# #Unite pep header
-# fasta_df = fasta_df.orderBy("name")
+f_unmasked = open("unmasked.fa", "a")
+f_smasked = open("softmasked.fa", "a")
+f_hmasked = open("hardmasked.fa", "a")
 
-# fasta_df = fasta_df\
-#     .select(concat(lit(">"),col("name"),\
-#        lit(":")).alias("info"),\
-#        col("sequence"))
+result = None
+if (len(pwd) > 0):
+    url = "mysql://" + username + ":" + pwd + "@" + url.split("//")[1]
+else: 
+    url = "mysql://" + username + "@" + url.split("//")[1]
 
-# fasta_df = fasta_df.select("info", "sequence")
-# fasta_df = fasta_df.withColumn("sequence", seq_split("sequence"))
-# #Write to fasta
-# fasta_df.repartition(1)\
-#     .write\
-#     .mode('overwrite')\
-#     .option("header", False)\
-#     .option("escapeQuotes", False)\
-#     .option("quote", "$")\
-#     .option("delimiter", "\n")\
-#     .csv("./fasta_genome")
-# file = glob.glob("./fasta_genome" + "/part-0000*")[0]
-# f_cvs = open(file)
-# f = open("genome.fa", "a")
-# file_line = f_cvs.readline()
-# while file_line:
-#     if(file_line[0:1] == "$"):
-#         file_line = file_line[1:]
-#     if(file_line[-2:-1] == "$"):
-#         file_line = file_line[:-2] + "\n"
-#     f.write(file_line)
-#     file_line = f_cvs.readline()
-# f_cvs.close()
-# f.close()
+engine = sqlalchemy.create_engine(url)
 
-    
-    
+with engine.connect() as conn:
+    query = text("select * from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1")
+    regions = conn.execute(query)
+    result = ""
+    for region in regions:
+        seq_id = str(region.seq_region_id)
+        results = ""
+        try:
+            f = open(sequence + "/" + seq_id + ".txt", "r")
+            sequence_str = f.read()
+            f.close()
+        except OSError:
+            pass             
+        if(len(sequence_str) == 0):
+            print(seq_id)
+            print(sequence + "/" + seq_id + ".txt")
+            continue
+
+        info = ">" + seq_id + "\n"
+        f_unmasked.write(info)
+        f_hmasked.write(info)
+        f_smasked.write(info)
+        sequence_str = ('\n').join((sequence_str[i:i+60]) for i in range(0, len(sequence_str), 60)) + "\n"
+        f_unmasked.write(sequence_str)
+        
+
+f_unmasked.close()
+f_smasked.close()
+f_hmasked.close()

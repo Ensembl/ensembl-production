@@ -17,12 +17,15 @@ process DumpGenomeFiles {
 
   debug 'ture'
   label 'mem20GB'
-  tag "${db_name}-dump_fasta_genome"
+  tag "${db_name}-dump_genome"
   errorStrategy 'finish'
-  publishDir "${params.ftp_path}/${db_name}", mode: 'copy'
+  publishDir "${params.ftp_path}/${output_dir}", mode: 'copy'
 
   input:
   each db_name
+  path output_dir
+  path top_level_dir
+  path feature_dir
 
   output:
   stdout
@@ -34,8 +37,8 @@ process DumpGenomeFiles {
   export PYTHONPATH="$BASE_DIR/ensembl-production/src/python" 
   export SPARK_LOCAL_IP="127.0.0.1"
 
-    ${params.nf_py_script_path}file_dump/dump_genome.py --base_dir=${BASE_DIR}\
-   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name}  && echo -n ${db_name}
-  """
+  ${params.nf_py_script_path}/file_dump/dump_genome.py --base_dir=${BASE_DIR}\
+   --username ${params.user} --password ${params.password} --db ${params.server}/${db_name} --sequence ${top_level_dir} && echo -n ${db_name}
 
+  """
 }

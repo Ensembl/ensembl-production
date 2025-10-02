@@ -13,7 +13,6 @@
 # limitations under the License.
 import sqlalchemy
 import os
-import shutil
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from sqlalchemy import text
@@ -66,7 +65,7 @@ class SequenceService:
             .option("password", password)\
             .load().dropDuplicates()
 
-        url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
+        url = "mysql://" + user + "@" + db.split("//")[1]
         if (len(password) > 0):
             url = "mysql://" + user + ":" + password + "@" + db.split("//")[1]
         engine = sqlalchemy.create_engine(url)

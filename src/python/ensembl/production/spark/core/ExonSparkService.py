@@ -133,9 +133,6 @@ class ExonSparkService:
                     continue
                 # Here is an algorythm to concat dna sequnce from
                 # corresponding letters
-                if (results == None):
-                    continue
-                #For circular regions we just get seq repeated
                 sequence_raw = results.replace(" ", "")
                 #Reverse compliment sequence for -1 strand
                 @udf(returnType=StringType())

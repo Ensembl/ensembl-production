@@ -93,9 +93,10 @@ Channel.of(databases) \
 | BuildTopLevelSequence \
 // We can build feature seq  - now when we have sequnce at the same top level as features, 
 //and we can dump genome (top level) seq to files
-| (BuildFeatureSequence )//& DumpGenomeFiles) \
+| BuildFeatureSequence | (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles & DumpGenomeFiles )
 // All other files need features to be build to dump feature level fasta, gtf gff and embl formats
-| (DumpFastaFiles & DumpGFF3_GTFFiles & DumpEMBLFiles)
+
+
 
 Channel.of(databases) | DumpXrefFile
  

@@ -94,11 +94,7 @@ genes = genes.withColumn("gene_description", describe("display_label", "descript
 @udf(returnType=StringType())
 def seq_split(seq):
     line_length = 60
-    result = seq[:line_length]
-    i = line_length
-    while(i < len(seq)):
-        result = result + "\n" + seq[i:i+line_length]
-        i = i + line_length
+    result = ('\n').join((seq[i:i+line_length]) for i in range(0, len(seq), line_length))
     return  result
             
 #Getting cs version
@@ -120,8 +116,8 @@ pep_fasta = pep_fasta.orderBy("seq_region_name", "tl_start")
 
 pep_fasta = pep_fasta\
     .join(genes.drop("seq_region_strand").withColumnRenamed("version", "gene_version"), on=["gene_id"], how = "left")\
-    .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"), lit(" "),\
-       lit("pep"), lit(" "), lit(csversion),\
+    .select(concat(lit(">"), col("translation_stable_id"), lit("."), col("tl_version"),\
+       lit(" pep "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("tl_start"), col("tl_end")),\
        lit(":"), greatest(col("tl_start"), col("tl_end")),\
@@ -173,7 +169,7 @@ f.close()
 cdna_fasta = cdna_fasta\
     .join(genes.drop("seq_region_strand", "seq_region_start", "seq_region_end").withColumnRenamed("version", "gene_version"), on=["gene_id"])\
     .select(concat(lit(">"), col("transcript_stable_id"), lit("."), col("version"),\
-       lit("cdna"), lit(" "), lit(csversion),\
+       lit(" cdna "), lit(csversion),\
        lit(":"), col("seq_region_name"),\
        lit(":"), least(col("seq_region_start"), col("seq_region_end")),\
        lit(":"),  greatest(col("seq_region_start"), col("seq_region_end")),\
