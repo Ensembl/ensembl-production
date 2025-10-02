@@ -386,6 +386,7 @@ feature for the position of this on the genome
 - gencode_basic: the transcript is part of the gencode basic geneset
 - gencode_primary: the transcript is part of the gencode primary geneset
 - ens_canon_extended: the transcript is part of the Ensembl Canonical Extended set
+- readthrough_transcript: a HAVANA readthrough transcript
 
 Comments
 
