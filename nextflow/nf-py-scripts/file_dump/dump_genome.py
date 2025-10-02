@@ -74,7 +74,12 @@ else:
 engine = sqlalchemy.create_engine(url)
 
 with engine.connect() as conn:
-    query = text("select * from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1")
+    query = text('select meta_value from meta where meta_key="assembly.level"')
+    assembly_level = conn.execute(query)
+    for row in assembly_level:
+        assembly_level = str(row.meta_value)
+
+    query = text("select sr.name as sr_name, sr.seq_region_id, sr.length, cs.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1")
     regions = conn.execute(query)
     result = ""
     for region in regions:
@@ -91,12 +96,14 @@ with engine.connect() as conn:
             print(sequence + "/" + seq_id + ".txt")
             continue
 
-        info = ">" + seq_id + "\n"
+        info = ">" + seq_id + " unmasked:" + assembly_level + " " + str(region.name) + ":"\
+              +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
         f_unmasked.write(info)
-        f_hmasked.write(info)
-        f_smasked.write(info)
         sequence_str = ('\n').join((sequence_str[i:i+60]) for i in range(0, len(sequence_str), 60)) + "\n"
         f_unmasked.write(sequence_str)
+
+        f_hmasked.write(info)
+        f_smasked.write(info)
         
 
 f_unmasked.close()
