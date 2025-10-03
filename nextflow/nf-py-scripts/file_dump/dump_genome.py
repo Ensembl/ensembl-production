@@ -95,16 +95,41 @@ with engine.connect() as conn:
             print(seq_id)
             print(sequence + "/" + seq_id + ".txt")
             continue
-
-        info = ">" + seq_id + " unmasked:" + assembly_level + " " + str(region.name) + ":"\
+        sequence_raw = sequence_str
+        info = ">" + str(region.sr_name) + " unmasked:" + assembly_level + " " + str(region.name) + ":"\
               +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
         f_unmasked.write(info)
         sequence_str = ('\n').join((sequence_str[i:i+60]) for i in range(0, len(sequence_str), 60)) + "\n"
         f_unmasked.write(sequence_str)
 
-        f_hmasked.write(info)
-        f_smasked.write(info)
+        query = text("select * from repeat_feature where seq_region_id=" + seq_id + " and score > 0 order by seq_region_start")
+        repeats = conn.execute(query)
+        i = 0
+        sequence_rep = ""
+        sequence_hrep = ""
+        for repeat in repeats:
+            seq_start = repeat.seq_region_start - 1
+            if repeat.seq_region_end < i:
+                continue
+            if repeat.seq_region_start <= i:
+                seq_start = i          
+            sequence_rep = sequence_rep + sequence_raw[i:seq_start] + sequence_raw[seq_start:repeat.seq_region_end].lower()
+            sequence_hrep = sequence_hrep + sequence_raw[i:seq_start] + "N"*(repeat.seq_region_end - seq_start)
+
+            i = repeat.seq_region_end
+        sequence_rep = sequence_rep + sequence_raw[i:]
+        sequence_rep = ('\n').join((sequence_rep[i:i+60]) for i in range(0, len(sequence_rep), 60)) + "\n"
+        sequence_hep = ('\n').join((sequence_hrep[i:i+60]) for i in range(0, len(sequence_hrep), 60)) + "\n"
         
+        info = ">" + str(region.sr_name) + " softmasked:" + assembly_level + " " + str(region.name) + ":"\
+        +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
+        f_smasked.write(info)
+        f_smasked.write(sequence_rep)
+        
+        info = ">" + str(region.sr_name) + " hardmasked:" + assembly_level + " " + str(region.name) + ":"\
+        +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
+        f_hmasked.write(info)
+        f_hmasked.write(sequence_hrep)
 
 f_unmasked.close()
 f_smasked.close()
