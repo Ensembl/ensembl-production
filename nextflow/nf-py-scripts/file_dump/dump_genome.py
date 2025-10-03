@@ -119,7 +119,7 @@ with engine.connect() as conn:
             i = repeat.seq_region_end
         sequence_rep = sequence_rep + sequence_raw[i:]
         sequence_rep = ('\n').join((sequence_rep[i:i+60]) for i in range(0, len(sequence_rep), 60)) + "\n"
-        sequence_hep = ('\n').join((sequence_hrep[i:i+60]) for i in range(0, len(sequence_hrep), 60)) + "\n"
+        sequence_hrep = ('\n').join((sequence_hrep[i:i+60]) for i in range(0, len(sequence_hrep), 60)) + "\n"
         
         info = ">" + str(region.sr_name) + " softmasked:" + assembly_level + " " + str(region.name) + ":"\
         +  str(region.version) + ":" +  str(region.sr_name) + ":1:" + str(region.length) + ":" +  str(region.rank) + "\n"
