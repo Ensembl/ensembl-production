@@ -78,6 +78,8 @@ with engine.connect() as conn:
     assembly_level = conn.execute(query)
     for row in assembly_level:
         assembly_level = str(row.meta_value)
+    if(len(assembly_level.all()) < 1):
+        assembly_level = 'Chromosome'
 
     query = text("select sr.name as sr_name, sr.seq_region_id, sr.length, cs.* from seq_region sr join coord_system cs on cs.coord_system_id = sr.coord_system_id where cs.rank=1")
     regions = conn.execute(query)
