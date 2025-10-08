@@ -68,7 +68,7 @@ sub default_options {
         chain_ucsc                         => 1,
         xref_external_dbs                  => [],
         dump_homologies_script             => $self->o('ENV', 'ENSEMBL_ROOT_DIR') . "/ensembl-compara/scripts/dumps/dump_homologies.py",
-        ref_dbname                         => 'ensembl_compara_references_mvp',
+        ref_dbname                         => 'ensembl_compara_references_202502',
         ens_version                        => $self->o('ENV', 'ENS_VERSION'),
         compara_host_uri                   => '',
         species_dirname                    => 'organisms',
