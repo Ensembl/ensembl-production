@@ -456,8 +456,8 @@ class XrefLoader(BasicMapper):
     def delete_projection_data(self, dbi: Connection) -> None:
         # Delete all the projections from the core DB
 
-        dbi.execute(delete(OntologyXrefORM))
-        logging.info("Deleted all ontology_xref rows")
+        #dbi.execute(delete(OntologyXrefORM))
+        #logging.info("Deleted all ontology_xref rows")
 
         row_count = dbi.execute(
             update(GeneORM)
